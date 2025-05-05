@@ -2,7 +2,9 @@ package com.tangem.data.nft
 
 import arrow.core.Either
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.fromNetworkId
+import com.tangem.data.common.currency.getNetwork
 import com.tangem.datasource.local.nft.NFTPersistenceStore
 import com.tangem.datasource.local.nft.NFTPersistenceStoreFactory
 import com.tangem.datasource.local.nft.NFTRuntimeStore
@@ -10,7 +12,9 @@ import com.tangem.datasource.local.nft.NFTRuntimeStoreFactory
 import com.tangem.datasource.local.nft.converter.NFTSdkAssetIdentifierConverter
 import com.tangem.datasource.local.nft.converter.NFTSdkCollectionConverter
 import com.tangem.datasource.local.nft.converter.NFTSdkCollectionIdentifierConverter
+import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.nft.models.NFTAsset
 import com.tangem.domain.nft.models.NFTCollection
 import com.tangem.domain.nft.models.NFTCollections
 import com.tangem.domain.nft.models.NFTSalePrice
@@ -18,6 +22,7 @@ import com.tangem.domain.nft.repository.NFTRepository
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.features.nft.NFTFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -25,17 +30,21 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
+import java.lang.UnsupportedOperationException
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import com.tangem.blockchain.nft.models.NFTAsset as SdkNFTAsset
 import com.tangem.blockchain.nft.models.NFTCollection as SdkNFTCollection
 
-@Suppress("LargeClass")
+@Suppress("LargeClass", "LongParameterList")
 internal class DefaultNFTRepository @Inject constructor(
     private val nftPersistenceStoreFactory: NFTPersistenceStoreFactory,
     private val nftRuntimeStoreFactory: NFTRuntimeStoreFactory,
     private val walletManagersFacade: WalletManagersFacade,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val excludedBlockchains: ExcludedBlockchains,
+    private val userWalletsStore: UserWalletsStore,
+    private val nftFeatureToggles: NFTFeatureToggles,
 ) : NFTRepository {
 
     private val networkJobs = ConcurrentHashMap<Network, JobHolder>()
@@ -63,38 +72,11 @@ internal class DefaultNFTRepository @Inject constructor(
         flowOf(NFTCollections.empty(network))
     }
 
-    override suspend fun refreshCollections(userWalletId: UserWalletId, networks: List<Network>) = coroutineScope {
-        networks.mapNotNull { network ->
-            if (network.canHandleNFTs()) {
-                launch(dispatchers.io) {
-                    Either.catch {
-                        expireCollections(userWalletId, network)
+    override suspend fun refreshCollections(userWalletId: UserWalletId, networks: List<Network>) =
+        refreshCollectionsInternal(userWalletId, networks, refreshAssets = false)
 
-                        val collections = walletManagersFacade.getNFTCollections(userWalletId, network)
-                        val mergedCollections = collections.mergeWithStoredAssets(userWalletId, network)
-
-                        saveCollectionsInRuntime(
-                            userWalletId = userWalletId,
-                            network = network,
-                            collections = mergedCollections,
-                        )
-                        saveCollectionsInPersistence(
-                            userWalletId = userWalletId,
-                            network = network,
-                            collections = mergedCollections,
-                        )
-                    }.onLeft {
-                        saveFailedStateInRuntime(
-                            userWalletId = userWalletId,
-                            network = network,
-                            error = it,
-                        )
-                    }
-                }.saveIn(getNetworkJobHolder(network))
-            } else {
-                null
-            }
-        }.joinAll()
+    override suspend fun refreshAll(userWalletId: UserWalletId, networks: List<Network>) {
+        refreshCollectionsInternal(userWalletId, networks, refreshAssets = true)
     }
 
     override suspend fun refreshAssets(
@@ -104,8 +86,6 @@ internal class DefaultNFTRepository @Inject constructor(
     ) = coroutineScope {
         launch(dispatchers.io) {
             Either.catch {
-                expireAssets(userWalletId, network, collectionId)
-
                 val sdkCollectionId = NFTSdkCollectionIdentifierConverter.convertBack(collectionId)
 
                 val assets = walletManagersFacade.getNFTAssets(
@@ -114,10 +94,12 @@ internal class DefaultNFTRepository @Inject constructor(
                     collectionIdentifier = sdkCollectionId,
                 )
 
+                expireAssets(userWalletId, network, collectionId)
+
                 assets.forEach {
                     val assetId = NFTSdkAssetIdentifierConverter.convert(it.identifier)
                     val price = getNFTRuntimeStore(userWalletId, network).getSalePriceSync(assetId)
-                    if (price is NFTSalePrice.Error) {
+                    if (price is NFTSalePrice.Empty || price is NFTSalePrice.Error) {
                         refreshSalePrice(userWalletId, network, sdkCollectionId, it.identifier)
                     }
                 }
@@ -144,16 +126,87 @@ internal class DefaultNFTRepository @Inject constructor(
                         )
                     }
             }.onLeft {
-                saveFailedStateInRuntime(
-                    userWalletId = userWalletId,
-                    network = network,
-                    error = it,
-                )
+                if (it !is UnsupportedOperationException) {
+                    saveFailedStateInRuntime(
+                        userWalletId = userWalletId,
+                        network = network,
+                        error = it,
+                    )
+                }
             }
         }.saveIn(getCollectionJobHolder(collectionId)).join()
     }
 
     override suspend fun isNFTSupported(network: Network): Boolean = network.canHandleNFTs()
+
+    override suspend fun getNFTSupportedNetworks(userWalletId: UserWalletId): List<Network> {
+        val userWallet = userWalletsStore.getSyncStrict(userWalletId)
+        return Blockchain
+            .entries
+            .filter { it.canHandleNFTs() && !it.isTestnet() }
+            .mapNotNull {
+                getNetwork(
+                    blockchain = it,
+                    extraDerivationPath = null,
+                    scanResponse = userWallet.scanResponse,
+                    excludedBlockchains = excludedBlockchains,
+                )
+            }
+    }
+
+    override suspend fun getNFTExploreUrl(network: Network, assetIdentifier: NFTAsset.Identifier): String? =
+        walletManagersFacade.getNFTExploreUrl(
+            network = network,
+            assetIdentifier = NFTSdkAssetIdentifierConverter.convertBack(assetIdentifier),
+        )
+
+    private suspend fun refreshCollectionsInternal(
+        userWalletId: UserWalletId,
+        networks: List<Network>,
+        refreshAssets: Boolean,
+    ) = coroutineScope {
+        networks.mapNotNull { network ->
+            if (network.canHandleNFTs()) {
+                launch(dispatchers.io) {
+                    Either.catch {
+                        expireCollections(userWalletId, network)
+
+                        val collections = walletManagersFacade.getNFTCollections(userWalletId, network)
+                        val mergedCollections = collections.mergeWithStoredAssets(userWalletId, network)
+
+                        saveCollectionsInRuntime(
+                            userWalletId = userWalletId,
+                            network = network,
+                            collections = mergedCollections,
+                        )
+                        saveCollectionsInPersistence(
+                            userWalletId = userWalletId,
+                            network = network,
+                            collections = mergedCollections,
+                        )
+
+                        if (refreshAssets) {
+                            mergedCollections.forEach { collection ->
+                                refreshAssets(
+                                    userWalletId = userWalletId,
+                                    network = network,
+                                    collectionId = NFTSdkCollectionIdentifierConverter.convert(collection.identifier),
+                                )
+                            }
+                        }
+                    }.onLeft {
+                        saveFailedStateInRuntime(
+                            userWalletId = userWalletId,
+                            network = network,
+                            error = it,
+                        )
+                    }
+                }.saveIn(getNetworkJobHolder(network))
+            } else {
+                null
+            }
+        }.joinAll()
+    }
 
     private suspend fun refreshSalePrice(
         userWalletId: UserWalletId,
@@ -431,5 +484,14 @@ internal class DefaultNFTRepository @Inject constructor(
         return walletId.stringValue + "_" + network.id.value + "_" + network.derivationPath.value
     }
 
-    private fun Network.canHandleNFTs(): Boolean = Blockchain.fromNetworkId(backendId)?.canHandleNFTs() == true
+    private fun Network.canHandleNFTs(): Boolean {
+        val blockchain = Blockchain.fromNetworkId(backendId)
+        return when {
+            blockchain == null -> false
+            blockchain.isEvm() && !nftFeatureToggles.isNFTEVMEnabled -> false
+            (blockchain == Blockchain.Solana || blockchain == Blockchain.SolanaTestnet) &&
+                !nftFeatureToggles.isNFTSolanaEnabled -> false
+            else -> blockchain.canHandleNFTs()
+        }
+    }
 }
