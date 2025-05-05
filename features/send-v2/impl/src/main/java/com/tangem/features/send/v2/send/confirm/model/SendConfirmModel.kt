@@ -26,7 +26,7 @@ import com.tangem.domain.settings.NeverShowTapHelpUseCase
 import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.IsAmountSubtractAvailableUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.transaction.usecase.CreateTransactionUseCase
+import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.utils.convertToSdkAmount
@@ -74,7 +74,7 @@ internal class SendConfirmModel @Inject constructor(
     private val router: Router,
     private val isSendTapHelpEnabledUseCase: IsSendTapHelpEnabledUseCase,
     private val neverShowTapHelpUseCase: NeverShowTapHelpUseCase,
-    private val createTransactionUseCase: CreateTransactionUseCase,
+    private val createTransferTransactionUseCase: CreateTransferTransactionUseCase,
     private val sendTransactionUseCase: SendTransactionUseCase,
     private val saveBlockchainErrorUseCase: SaveBlockchainErrorUseCase,
     private val getCardInfoUseCase: GetCardInfoUseCase,
@@ -326,7 +326,7 @@ internal class SendConfirmModel @Inject constructor(
         )
 
         modelScope.launch {
-            createTransactionUseCase(
+            createTransferTransactionUseCase(
                 amount = receivingAmount.convertToSdkAmount(cryptoCurrency),
                 fee = fee,
                 memo = memo,

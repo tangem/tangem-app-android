@@ -28,7 +28,7 @@ interface TransactionRepository {
     @Suppress("LongParameterList")
     suspend fun createTransferTransaction(
         amount: Amount,
-        fee: Fee,
+        fee: Fee?,
         memo: String?,
         destination: String,
         userWalletId: UserWalletId,
