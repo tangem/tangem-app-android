@@ -97,7 +97,7 @@ internal class OnrampSelectCurrencyModel @Inject constructor(
 
     private fun updateCurrenciesList() {
         modelScope.launch {
-            fetchOnrampCurrenciesUseCase().onLeft {
+            fetchOnrampCurrenciesUseCase(userWallet = params.userWallet).onLeft {
                 controller.update(UpdateCurrencyItemsErrorTransformer(onRetry = ::onRetry))
             }
         }
