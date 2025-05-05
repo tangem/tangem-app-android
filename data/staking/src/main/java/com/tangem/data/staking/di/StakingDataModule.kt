@@ -9,7 +9,9 @@ import com.tangem.data.staking.DefaultStakingErrorResolver
 import com.tangem.data.staking.DefaultStakingRepository
 import com.tangem.data.staking.DefaultStakingTransactionHashRepository
 import com.tangem.data.staking.converters.error.StakeKitErrorConverter
+import com.tangem.data.staking.store.YieldsBalancesStore
 import com.tangem.data.staking.toggles.DefaultStakingFeatureToggles
+import com.tangem.data.staking.utils.StakingIdFactory
 import com.tangem.datasource.api.stakekit.StakeKitApi
 import com.tangem.datasource.api.stakekit.models.response.model.error.StakeKitErrorResponse
 import com.tangem.datasource.di.NetworkMoshi
@@ -41,23 +43,27 @@ internal object StakingDataModule {
         stakeKitApi: StakeKitApi,
         stakingYieldsStore: StakingYieldsStore,
         stakingBalanceStore: StakingBalanceStore,
+        yieldsBalancesStore: YieldsBalancesStore,
         cacheRegistry: CacheRegistry,
         dispatchers: CoroutineDispatcherProvider,
         walletManagersFacade: WalletManagersFacade,
         getUserWalletUseCase: GetUserWalletUseCase,
         stakingFeatureToggles: StakingFeatureToggles,
+        stakingIdFactory: StakingIdFactory,
         @NetworkMoshi moshi: Moshi,
     ): StakingRepository {
         return DefaultStakingRepository(
             stakeKitApi = stakeKitApi,
             stakingYieldsStore = stakingYieldsStore,
             stakingBalanceStore = stakingBalanceStore,
+            stakingBalanceStoreV2 = yieldsBalancesStore,
             cacheRegistry = cacheRegistry,
             dispatchers = dispatchers,
             walletManagersFacade = walletManagersFacade,
             getUserWalletUseCase = getUserWalletUseCase,
             stakingFeatureToggles = stakingFeatureToggles,
             moshi = moshi,
+            stakingIdFactory = stakingIdFactory,
         )
     }
 
@@ -89,7 +95,7 @@ internal object StakingDataModule {
 
     @Provides
     @Singleton
-    internal fun provideStakingErrorResolver(
+    fun provideStakingErrorResolver(
         @NetworkMoshi moshi: Moshi,
         analyticsEventHandler: AnalyticsEventHandler,
     ): StakingErrorResolver {
@@ -102,7 +108,7 @@ internal object StakingDataModule {
 
     @Provides
     @Singleton
-    internal fun provideFeatureToggles(featureTogglesManager: FeatureTogglesManager): StakingFeatureToggles {
+    fun provideFeatureToggles(featureTogglesManager: FeatureTogglesManager): StakingFeatureToggles {
         return DefaultStakingFeatureToggles(featureTogglesManager)
     }
 }
