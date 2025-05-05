@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -15,6 +16,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import com.tangem.core.ui.components.SecondaryButtonIconStart
 import com.tangem.core.ui.components.SpacerW12
 import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
@@ -36,26 +38,45 @@ internal fun VisaTxDetailsBottomSheet(config: TangemBottomSheetConfig) {
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun VisaTxDetailsBottomSheetContent(config: VisaTxDetailsBottomSheetConfig, modifier: Modifier = Modifier) {
-    ContentContainer(
-        modifier = modifier,
-        blocksCount = config.requests.size.inc(),
-        title = {
+    Column {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = TangemTheme.dimens.size44)
+                .background(TangemTheme.colors.background.secondary),
+            contentAlignment = Alignment.Center,
+        ) {
             Text(
                 text = stringResourceSafe(R.string.visa_transaction_details_header),
                 style = TangemTheme.typography.subtitle1,
                 color = TangemTheme.colors.text.primary1,
             )
-        },
-        block = { index ->
-            if (index == 0) {
+        }
+
+        LazyColumn(
+            modifier = modifier.background(TangemTheme.colors.background.secondary),
+            contentPadding = PaddingValues(
+                bottom = TangemTheme.dimens.spacing16,
+            ),
+            verticalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing12),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            item {
                 TransactionBlock(config.transaction)
-            } else {
-                BlockchainRequestBlock(config.requests[index - 1])
             }
-        },
-    )
+
+            items(config.requests) { item ->
+                BlockchainRequestBlock(item)
+            }
+
+            item {
+                DisputeButton(config.onDisputeClick)
+            }
+        }
+    }
 }
 
 @Composable
@@ -173,38 +194,14 @@ private fun BlockchainRequestBlock(request: VisaTxDetailsBottomSheetConfig.Reque
     )
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun ContentContainer(
-    blocksCount: Int,
-    title: @Composable BoxScope.() -> Unit,
-    block: @Composable ColumnScope.(Int) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    LazyColumn(
-        modifier = modifier.background(TangemTheme.colors.background.secondary),
-        contentPadding = PaddingValues(
-            bottom = TangemTheme.dimens.spacing16,
-        ),
-        verticalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing12),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        stickyHeader {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = TangemTheme.dimens.size44)
-                    .background(TangemTheme.colors.background.secondary),
-                contentAlignment = Alignment.Center,
-                content = title,
-            )
-        }
-        items(blocksCount) { index ->
-            Column {
-                block(index)
-            }
-        }
-    }
+private fun DisputeButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    SecondaryButtonIconStart(
+        modifier = modifier.fillMaxWidth(),
+        text = stringResourceSafe(R.string.visa_tx_dispute_button),
+        iconResId = R.drawable.ic_alert_triangle_20,
+        onClick = onClick,
+    )
 }
 
 // region Preview
@@ -249,20 +246,8 @@ private class VisaTxDetailsBottomSheetParameterProvider :
                         txStatus = "confirmed",
                         onExploreClick = {},
                     ),
-                    VisaTxDetailsBottomSheetConfig.Request(
-                        id = "524582128501966799",
-                        type = "settlement",
-                        status = "accepted",
-                        blockchainAmount = "1.0614 USDT",
-                        transactionAmount = "0.99 €",
-                        currencyCode = "978",
-                        errorCode = 0,
-                        date = "2023-12-01 00:01:00.000 +0300",
-                        txHash = "0x635841d5fbdf1087cdd929019c863ee88a7165e4340bc17ddd0b1d04dfb11daa",
-                        txStatus = "confirmed",
-                        onExploreClick = {},
-                    ),
                 ),
+                onDisputeClick = {},
             ),
         ),
     )
