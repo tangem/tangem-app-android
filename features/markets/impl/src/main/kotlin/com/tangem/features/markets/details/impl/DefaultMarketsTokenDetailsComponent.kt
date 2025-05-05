@@ -124,10 +124,6 @@ internal class DefaultMarketsTokenDetailsComponent @AssistedInject constructor(
 
     @Composable
     override fun Content(modifier: Modifier) {
-        BackHandler {
-            navigateBack()
-        }
-
         LifecycleStartEffect(Unit) {
             model.isVisibleOnScreen.value = true
             onStopOrDispose {
