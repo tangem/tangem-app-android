@@ -34,4 +34,12 @@ dependencies {
     /** Other deps */
     implementation(deps.androidx.datastore)
     implementation(deps.arrow.core)
+
+    /** tests */
+    testImplementation(deps.test.junit)
+    testImplementation(deps.test.coroutine)
+    testImplementation(deps.test.truth)
+    testImplementation(deps.test.mockk)
+    testImplementation(deps.moshi)
+    testImplementation(deps.moshi.kotlin)
 }
