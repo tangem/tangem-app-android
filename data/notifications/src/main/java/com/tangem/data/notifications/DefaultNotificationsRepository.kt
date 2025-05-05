@@ -44,6 +44,23 @@ internal class DefaultNotificationsRepository @Inject constructor(
         return appPreferencesStore.getSyncOrNull(PreferencesKeys.NOTIFICATIONS_APPLICATION_ID_KEY)
     }
 
+    override suspend fun incrementTronTokenFeeNotificationShowCounter() {
+        appPreferencesStore.editData { preferences ->
+            val count = preferences.getOrDefault(
+                key = PreferencesKeys.TRON_NETWORK_FEE_NOTIFICATION_SHOW_COUNT_KEY,
+                default = 0,
+            )
+            preferences[PreferencesKeys.TRON_NETWORK_FEE_NOTIFICATION_SHOW_COUNT_KEY] = count + 1
+        }
+    }
+
+    override suspend fun getTronTokenFeeNotificationShowCounter(): Int {
+        return appPreferencesStore.getSyncOrDefault(
+            key = PreferencesKeys.TRON_NETWORK_FEE_NOTIFICATION_SHOW_COUNT_KEY,
+            default = 0,
+        )
+    }
+
     override suspend fun associateApplicationIdWithWallets(appId: String, wallets: List<String>) =
         withContext(dispatchers.io) {
             tangemTechApi.associateApplicationIdWithWallets(
