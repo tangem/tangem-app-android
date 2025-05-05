@@ -36,6 +36,7 @@ internal class SwapDataModule {
         errorsDataConverter: ErrorsDataConverter,
         @NetworkMoshi moshi: Moshi,
         excludedBlockchains: ExcludedBlockchains,
+        appPreferencesStore: AppPreferencesStore,
     ): SwapRepository {
         return DefaultSwapRepository(
             tangemExpressApi = tangemExpressApi,
@@ -46,6 +47,7 @@ internal class SwapDataModule {
             dataSignatureVerifier = dataSignature,
             moshi = moshi,
             excludedBlockchains = excludedBlockchains,
+            appPreferencesStore = appPreferencesStore,
         )
     }
 
