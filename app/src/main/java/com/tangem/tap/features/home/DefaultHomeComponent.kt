@@ -2,14 +2,18 @@ package com.tangem.tap.features.home
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import com.arkivanov.essenty.lifecycle.subscribe
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.SystemBarsIconsDisposable
+import com.tangem.core.ui.res.LocalRootBackgroundColor
 import com.tangem.core.ui.utils.findActivity
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.home.api.HomeComponent
@@ -61,6 +65,17 @@ internal class DefaultHomeComponent @AssistedInject constructor(
             onShopButtonClick = model::onShopClick,
             onSearchTokensClick = model::onSearchClick,
         )
+
+        val rootBackgroundColor = LocalRootBackgroundColor.current
+        val previousColor = remember { rootBackgroundColor.value }
+        val storiesBackgroundColor = Color(color = 0xFF010101)
+
+        DisposableEffect(Unit) {
+            rootBackgroundColor.value = storiesBackgroundColor
+            onDispose {
+                rootBackgroundColor.value = previousColor
+            }
+        }
     }
 
     override fun newState(state: HomeState) {
