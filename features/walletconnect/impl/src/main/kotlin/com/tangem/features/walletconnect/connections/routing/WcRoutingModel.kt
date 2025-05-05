@@ -4,6 +4,7 @@ import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
+import com.tangem.data.card.sdk.CardSdkProvider
 import com.tangem.domain.walletconnect.WcPairService
 import com.tangem.domain.walletconnect.WcRequestService
 import com.tangem.domain.walletconnect.model.WcEthMethodName
@@ -18,6 +19,7 @@ import javax.inject.Inject
 internal class WcRoutingModel @Inject constructor(
     private val requestService: WcRequestService,
     private val pairService: WcPairService,
+    private val cardSdkProvider: CardSdkProvider,
     override val dispatchers: CoroutineDispatcherProvider,
     private val featureToggles: WalletConnectFeatureToggles,
 ) : Model() {
@@ -70,8 +72,10 @@ internal class WcRoutingModel @Inject constructor(
     private suspend fun awaitQueueReady() = combine(
         isSlotEmpty,
         permittedAppRoute,
-    ) { isSlotEmpty, permittedAppRoute -> isSlotEmpty && permittedAppRoute }
-        .first { it }
+        cardSdkProvider.sdk.uiVisibility(),
+    ) { isSlotEmpty, permittedAppRoute, isCardSdkVisible ->
+        isSlotEmpty && permittedAppRoute && !isCardSdkVisible
+    }.first { it }
 
     fun onAppRouteChange(appRoute: AppRoute) {
         permittedAppRoute.value = when (appRoute) {
