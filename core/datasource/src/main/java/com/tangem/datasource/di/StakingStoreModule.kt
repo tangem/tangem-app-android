@@ -1,6 +1,7 @@
 package com.tangem.datasource.di
 
 import android.content.Context
+import androidx.datastore.core.DataStore
 import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
@@ -49,21 +50,29 @@ internal object StakingStoreModule {
 
     @Provides
     @Singleton
-    fun provideStakingBalanceStore(
+    fun provideYieldsBalancesPersistenceStore(
         @NetworkMoshi moshi: Moshi,
         @ApplicationContext context: Context,
         dispatchers: CoroutineDispatcherProvider,
+    ): DataStore<Map<String, Set<YieldBalanceWrapperDTO>>> {
+        return DataStoreFactory.create(
+            serializer = MoshiDataStoreSerializer(
+                moshi = moshi,
+                types = mapWithStringKeyTypes(valueTypes = setTypes<YieldBalanceWrapperDTO>()),
+                defaultValue = emptyMap(),
+            ),
+            produceFile = { context.dataStoreFile(fileName = "yield_balances") },
+            scope = CoroutineScope(context = dispatchers.io + SupervisorJob()),
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideStakingBalanceStore(
+        persistenceStore: DataStore<Map<String, Set<YieldBalanceWrapperDTO>>>,
     ): StakingBalanceStore {
         return DefaultStakingBalanceStore(
-            persistenceStore = DataStoreFactory.create(
-                serializer = MoshiDataStoreSerializer(
-                    moshi = moshi,
-                    types = mapWithStringKeyTypes(valueTypes = setTypes<YieldBalanceWrapperDTO>()),
-                    defaultValue = emptyMap(),
-                ),
-                produceFile = { context.dataStoreFile(fileName = "yield_balances") },
-                scope = CoroutineScope(context = dispatchers.io + SupervisorJob()),
-            ),
+            persistenceStore = persistenceStore,
             runtimeStore = RuntimeSharedStore(),
         )
     }
