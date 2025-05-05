@@ -2,11 +2,42 @@ package com.tangem.domain.feedback
 
 import com.tangem.domain.feedback.models.*
 import com.tangem.domain.feedback.utils.breakLine
+import com.tangem.domain.visa.model.VisaTxDetails
 import com.tangem.domain.feedback.models.BlockchainInfo.Addresses as BlockchainAddresses
 
 internal class FeedbackDataBuilder {
 
     private val builder = StringBuilder()
+
+    fun addVisaTxInfo(txDetails: VisaTxDetails) {
+        builder.appendKeyValue("Type", txDetails.type)
+        builder.appendKeyValue("Status", txDetails.status)
+        builder.appendKeyValue("Blockchain amount", txDetails.blockchainAmount.toString())
+        builder.appendKeyValue("Transaction amount", txDetails.transactionAmount.toString())
+        builder.appendKeyValue("Currency code", txDetails.transactionCurrencyCode.toString())
+        builder.appendKeyValue("Merchant name", txDetails.merchantName)
+        builder.appendKeyValue("Merchant city", txDetails.merchantCity)
+        builder.appendKeyValue("Merchant country code", txDetails.merchantCountryCode)
+        builder.appendKeyValue("Merchant category code", txDetails.merchantCategoryCode)
+
+        builder.appendDelimiter()
+        builder.breakLine()
+        builder.append("Requests:")
+
+        txDetails.requests.forEach { request ->
+            builder.appendKeyValue("Type", request.requestType)
+            builder.appendKeyValue("Status", request.requestStatus)
+            builder.appendKeyValue("Blockchain amount", request.blockchainAmount.toString())
+            builder.appendKeyValue("Transaction amount", request.transactionAmount.toString())
+            builder.appendKeyValue("Currency code", request.txCurrencyCode.toString())
+            builder.appendKeyValue("Error code", request.errorCode.toString())
+            builder.appendKeyValue("Date", request.requestDate.toString())
+            builder.appendKeyValue("Transaction hash", request.txHash)
+            builder.appendKeyValue("Transaction status", request.txStatus)
+            builder.appendDelimiter()
+            builder.breakLine()
+        }
+    }
 
     fun addUserWalletsInfo(userWalletsInfo: UserWalletsInfo) {
         builder.appendKeyValue("User Wallet ID", userWalletsInfo.selectedUserWalletId)
