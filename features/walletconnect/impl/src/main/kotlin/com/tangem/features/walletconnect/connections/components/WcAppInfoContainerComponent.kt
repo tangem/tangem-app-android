@@ -16,7 +16,6 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
-import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
@@ -28,7 +27,7 @@ import com.tangem.features.walletconnect.impl.R
 internal class WcAppInfoContainerComponent(
     private val appComponentContext: AppComponentContext,
     params: Params,
-) : AppComponentContext by appComponentContext, ComposableBottomSheetComponent {
+) : AppComponentContext by appComponentContext, ComposableContentComponent {
 
     private val model: WcAppInfoModel = getOrCreateModel(params = params)
     private val contentNavigation = StackNavigation<WcAppInfoRoutes>()
@@ -39,12 +38,12 @@ internal class WcAppInfoContainerComponent(
         childFactory = ::screenChild,
     )
 
-    override fun dismiss() {
+    private fun dismiss() {
         model.dismiss()
     }
 
     @Composable
-    override fun BottomSheet() {
+    override fun Content(modifier: Modifier) {
         val content by contentStack.subscribeAsState()
         TangemModalBottomSheet<WcAppInfoRoutes>(
             config = TangemBottomSheetConfig(
@@ -103,5 +102,5 @@ internal class WcAppInfoContainerComponent(
             WcAppInfoRoutes.SelectWallet -> TODO()
         }
 
-    data class Params(val wcUrl: String, val source: WcPairRequest.Source, val onDismiss: () -> Unit)
+    data class Params(val wcUrl: String, val source: WcPairRequest.Source)
 }
