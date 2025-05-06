@@ -1,5 +1,6 @@
 package com.tangem.data.wallets
 
+import com.tangem.data.wallets.converters.UserWalletRemoteInfoConverter
 import com.tangem.datasource.api.common.response.ApiResponseError.HttpException
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
@@ -18,6 +19,7 @@ import com.tangem.datasource.local.preferences.utils.store
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.wallets.models.SeedPhraseNotificationsStatus
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.models.UserWalletRemoteInfo
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.utils.WEEK_MILLIS
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -28,6 +30,7 @@ import kotlinx.coroutines.withContext
 
 typealias SeedPhraseNotificationsStatuses = Map<UserWalletId, SeedPhraseNotificationsStatus>
 
+@Suppress("TooManyFunctions")
 internal class DefaultWalletsRepository(
     private val appPreferencesStore: AppPreferencesStore,
     private val tangemTechApi: TangemTechApi,
@@ -253,6 +256,37 @@ internal class DefaultWalletsRepository(
             setNotificationsEnabledLocally(userWalletId, isEnabled)
         }
     }
+
+    override suspend fun setWalletName(walletId: String, walletName: String) = withContext(dispatchers.io) {
+        tangemTechApi.updateWallet(
+            walletId = walletId,
+            body = WalletBody(name = walletName),
+        ).getOrThrow()
+    }
+
+    override suspend fun getWalletInfo(walletId: String): UserWalletRemoteInfo = withContext(dispatchers.io) {
+        UserWalletRemoteInfoConverter.convert(
+            value = tangemTechApi.getWalletById(walletId).getOrThrow(),
+        )
+    }
+
+    override suspend fun getWalletsInfo(applicationId: String, updateCache: Boolean): List<UserWalletRemoteInfo> =
+        withContext(dispatchers.io) {
+            tangemTechApi.getWallets(applicationId)
+                .getOrThrow()
+                .map { walletInfo ->
+                    val userWallet = UserWalletRemoteInfoConverter.convert(
+                        value = walletInfo,
+                    )
+                    if (updateCache) {
+                        setNotificationsEnabledLocally(
+                            userWalletId = userWallet.walletId,
+                            isEnabled = userWallet.isNotificationsEnabled,
+                        )
+                    }
+                    userWallet
+                }
+        }
 
     private suspend fun loadAndSaveNotificationsEnabled(userWalletId: UserWalletId): Boolean {
         val walletResponse = tangemTechApi.getWalletById(walletId = userWalletId.stringValue).getOrThrow()
