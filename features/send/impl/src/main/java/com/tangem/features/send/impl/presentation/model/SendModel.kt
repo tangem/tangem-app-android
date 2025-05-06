@@ -1048,7 +1048,6 @@ internal class SendModel @Inject constructor(
                         userWalletId = userWallet.walletId,
                         network = cryptoCurrency.network,
                         delayMillis = BALANCE_UPDATE_DELAY,
-                        refresh = true,
                     )
                 },
             ).awaitAll()
