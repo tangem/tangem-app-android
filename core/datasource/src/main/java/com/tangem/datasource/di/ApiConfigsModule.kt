@@ -49,5 +49,5 @@ internal object ApiConfigsModule {
 
     @Provides
     @IntoSet
-    fun provideTangemCardSdkConfig(): ApiConfig = TangemCardSdk()
+    fun provideAttestationConfig(): ApiConfig = Attestation()
 }
