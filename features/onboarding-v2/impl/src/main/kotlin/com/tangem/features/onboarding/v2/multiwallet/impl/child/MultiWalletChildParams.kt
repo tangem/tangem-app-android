@@ -1,5 +1,7 @@
 package com.tangem.features.onboarding.v2.multiwallet.impl.child
 
+import com.tangem.common.card.Card.Manufacturer
+import com.tangem.common.card.FirmwareVersion
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.MultiWalletInnerNavigationState
 import com.tangem.features.onboarding.v2.multiwallet.impl.model.OnboardingMultiWalletState
@@ -18,6 +20,8 @@ class MultiWalletChildParams(
         data class BackupCardInfo(
             val cardId: String,
             val cardPublicKey: ByteArray,
+            val manufacturer: Manufacturer,
+            val firmwareVersion: FirmwareVersion,
         ) {
             override fun equals(other: Any?): Boolean {
                 if (this === other) return true
