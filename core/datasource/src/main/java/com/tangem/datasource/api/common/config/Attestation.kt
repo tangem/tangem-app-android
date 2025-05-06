@@ -1,11 +1,11 @@
 package com.tangem.datasource.api.common.config
 
 /**
- * Tangem API [ApiConfig] that used in CardSDK
+ * Attestation [ApiConfig] that used in CardSDK
  *
 [REDACTED_AUTHOR]
  */
-internal class TangemCardSdk : ApiConfig() {
+internal class Attestation : ApiConfig() {
 
     override val defaultEnvironment: ApiEnvironment = ApiEnvironment.PROD
 
