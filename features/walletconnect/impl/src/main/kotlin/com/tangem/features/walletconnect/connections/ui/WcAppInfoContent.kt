@@ -220,7 +220,12 @@ private fun WcAppInfoSecondBlock(state: WcAppInfoUM.Content, modifier: Modifier 
         val itemsModifier = Modifier
             .fillMaxWidth()
             .padding(TangemTheme.dimens.spacing12)
-        WalletRowItem(modifier = itemsModifier, walletName = state.walletName)
+        WalletRowItem(
+            modifier = Modifier
+                .clickable(onClick = state.onWalletClick)
+                .then(itemsModifier),
+            walletName = state.walletName,
+        )
         HorizontalDivider(thickness = 1.dp, color = TangemTheme.colors.stroke.primary)
         SelectNetworksBlock(
             networksInfo = state.networksInfo,
@@ -565,6 +570,7 @@ private class WcAppInfoStateProvider : CollectionPreviewParameterProvider<WcAppI
             appSubtitle = "react-app.walletconnect.com",
             notification = WcAppInfoSecurityNotification.SecurityRisk,
             walletName = "Tangem 2.0",
+            onWalletClick = {},
             networksInfo = WcNetworksInfo.ContainsAllRequiredNetworks(
                 items = persistentListOf(
                     WcNetworkInfoItem(
@@ -604,6 +610,7 @@ private class WcAppInfoStateProvider : CollectionPreviewParameterProvider<WcAppI
             appSubtitle = "react-app.walletconnect.com",
             notification = WcAppInfoSecurityNotification.UnknownDomain,
             walletName = "Tangem 2.0",
+            onWalletClick = {},
             networksInfo = WcNetworksInfo.MissingRequiredNetworkInfo(networks = "Solana"),
             onDismiss = {},
             connectButtonConfig = WcPrimaryButtonConfig(showProgress = false, enabled = true, onClick = {}),
