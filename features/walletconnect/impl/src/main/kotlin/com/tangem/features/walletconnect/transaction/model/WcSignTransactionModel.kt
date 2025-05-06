@@ -11,8 +11,8 @@ import com.tangem.domain.walletconnect.usecase.method.WcSignState
 import com.tangem.domain.walletconnect.usecase.method.WcSignStep
 import com.tangem.domain.walletconnect.usecase.method.WcSignUseCase
 import com.tangem.features.walletconnect.transaction.components.WcSignTransactionComponent
-import com.tangem.features.walletconnect.transaction.entity.WcSignTransactionUM
-import com.tangem.features.walletconnect.transaction.entity.WcTransactionActionsUM
+import com.tangem.features.walletconnect.transaction.entity.sign.WcSignTransactionUM
+import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionActionsUM
 import com.tangem.features.walletconnect.transaction.utils.toUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -48,7 +48,7 @@ internal class WcSignTransactionModel @Inject constructor(
                         actions = WcTransactionActionsUM(
                             onDismiss = { cancel(useCase) },
                             onBack = ::showTransactionState,
-                            onSign = useCase::sign,
+                            activeButtonOnClick = useCase::sign,
                             onCopy = { copyData(useCase.rawSdkRequest.request.params) },
                             transactionRequestOnClick = ::showTransactionRequestState,
                         ),
