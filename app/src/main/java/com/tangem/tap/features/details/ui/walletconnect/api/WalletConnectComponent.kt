@@ -2,7 +2,9 @@ package com.tangem.tap.features.details.ui.walletconnect.api
 
 import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.domain.wallets.models.UserWalletId
 
 interface WalletConnectComponent : ComposableContentComponent {
-    interface Factory : ComponentFactory<Unit, WalletConnectComponent>
+    data class Params(val userWalletId: UserWalletId)
+    interface Factory : ComponentFactory<Params, WalletConnectComponent>
 }
