@@ -364,7 +364,6 @@ internal class TokenDetailsModel @Inject constructor(
             updateDelayedCurrencyStatusUseCase(
                 userWalletId = userWalletId,
                 network = toCryptoCurrency.network,
-                refresh = true,
             )
         }
     }
