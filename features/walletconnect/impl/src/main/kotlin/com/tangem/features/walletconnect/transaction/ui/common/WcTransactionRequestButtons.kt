@@ -7,12 +7,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.tangem.core.ui.components.PrimaryButtonIconEnd
 import com.tangem.core.ui.components.SecondaryButton
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.walletconnect.impl.R
 
 @Composable
 internal fun WcTransactionRequestButtons(
+    activeButtonText: TextReference,
     isLoading: Boolean,
     onDismiss: () -> Unit,
     onSign: () -> Unit,
@@ -30,7 +33,7 @@ internal fun WcTransactionRequestButtons(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f),
-            text = stringResourceSafe(R.string.common_sign),
+            text = activeButtonText.resolveReference(),
             onClick = onSign,
             iconResId = R.drawable.ic_tangem_24,
             showProgress = isLoading,
