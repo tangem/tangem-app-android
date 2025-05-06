@@ -173,4 +173,62 @@ class DefaultWalletsRepositoryTest {
         }
         coVerify(exactly = 1) { preferencesDataStore.updateData(any()) }
     }
+
+    @Test
+    fun `GIVEN API returns wallets WHEN getWalletsInfo THEN should return converted wallets and update cache if requested`() = runTest {
+        // GIVEN
+        val applicationId = "test_app_id"
+        val wallet1Id = "1234567890abcdef"
+        val wallet2Id = "fedcba0987654321"
+        val walletResponses = listOf(
+            WalletResponse(
+                id = wallet1Id,
+                notifyStatus = true,
+            ),
+            WalletResponse(
+                id = wallet2Id,
+                notifyStatus = false,
+            ),
+        )
+        coEvery { tangemTechApi.getWallets(applicationId) } returns ApiResponse.Success(walletResponses)
+        coEvery { preferencesDataStore.updateData(any()) } returns mockk<Preferences>()
+
+        // WHEN
+        val result = repository.getWalletsInfo(applicationId, updateCache = true)
+
+        // THEN
+        assertThat(result).hasSize(2)
+        assertThat(result[0].walletId.stringValue).isEqualTo(wallet1Id)
+        assertThat(result[0].isNotificationsEnabled).isTrue()
+        assertThat(result[1].walletId.stringValue).isEqualTo(wallet2Id)
+        assertThat(result[1].isNotificationsEnabled).isFalse()
+
+        coVerify(exactly = 1) { tangemTechApi.getWallets(applicationId) }
+        coVerify(exactly = 2) { preferencesDataStore.updateData(any()) }
+    }
+
+    @Test
+    fun `GIVEN API returns wallets WHEN getWalletsInfo with updateCache false THEN should return converted wallets without updating cache`() = runTest {
+        // GIVEN
+        val applicationId = "test_app_id"
+        val wallet1Id = "1234567890abcdef"
+        val walletResponses = listOf(
+            WalletResponse(
+                id = wallet1Id,
+                notifyStatus = true,
+            ),
+        )
+        coEvery { tangemTechApi.getWallets(applicationId) } returns ApiResponse.Success(walletResponses)
+
+        // WHEN
+        val result = repository.getWalletsInfo(applicationId, updateCache = false)
+
+        // THEN
+        assertThat(result).hasSize(1)
+        assertThat(result[0].walletId.stringValue).isEqualTo(wallet1Id)
+        assertThat(result[0].isNotificationsEnabled).isTrue()
+
+        coVerify(exactly = 1) { tangemTechApi.getWallets(applicationId) }
+        coVerify(exactly = 0) { preferencesDataStore.updateData(any()) }
+    }
 }
