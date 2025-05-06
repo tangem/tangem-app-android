@@ -61,7 +61,11 @@ internal class DefaultWcRoutingComponent @AssistedInject constructor(
             )
             is WcInnerRoute.Pair -> WcAppInfoContainerComponent(
                 childContext,
-                WcAppInfoContainerComponent.Params(config.request.uri, config.request.source),
+                WcAppInfoContainerComponent.Params(
+                    userWalletId = config.request.userWalletId,
+                    wcUrl = config.request.uri,
+                    source = config.request.source,
+                ),
             )
         }
     }
