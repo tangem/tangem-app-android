@@ -219,7 +219,11 @@ internal class TokenDetailsOnrampTransactionStateConverter(
                 resourceReference(R.string.express_status_bought, wrappedList(cryptoCurrency.name))
             }
         },
-        state = getStatusState(OnrampStatus.Status.Paid),
+        state = when {
+            this == OnrampStatus.Status.RefundInProgress ||
+                this == OnrampStatus.Status.Refunded -> ExpressStatusItemState.Error
+            else -> getStatusState(OnrampStatus.Status.Paid)
+        }
     )
 
     private fun OnrampStatus.Status.getSendingItem() = ExpressStatusItemUM(
