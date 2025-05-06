@@ -20,6 +20,9 @@ import com.tangem.domain.onramp.model.OnrampAvailability
 import com.tangem.domain.onramp.model.OnrampProviderWithQuote
 import com.tangem.domain.onramp.model.OnrampQuote
 import com.tangem.domain.onramp.model.error.OnrampError
+import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
+import com.tangem.domain.settings.usercountry.models.UserCountry
+import com.tangem.domain.settings.usercountry.models.needApplyFCARestrictions
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.onramp.main.OnrampMainComponent
 import com.tangem.features.onramp.main.entity.*
@@ -35,6 +38,7 @@ import com.tangem.utils.isNullOrZero
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.util.Locale
 import javax.inject.Inject
 
 @Suppress("LongParameterList", "LargeClass")
@@ -53,6 +57,7 @@ internal class OnrampMainComponentModel @Inject constructor(
     private val messageSender: UiMessageSender,
     private val urlOpener: UrlOpener,
     getWalletsUseCase: GetWalletsUseCase,
+    getUserCountryUseCase: GetUserCountryUseCase,
     paramsContainer: ParamsContainer,
 ) : Model(), OnrampIntents {
 
@@ -70,6 +75,7 @@ internal class OnrampMainComponentModel @Inject constructor(
         analyticsEventHandler = analyticsEventHandler,
         onrampIntents = this,
         cryptoCurrency = params.cryptoCurrency,
+        needApplyFCARestrictions = Provider { userCountry.needApplyFCARestrictions() },
     )
     private val _state: MutableStateFlow<OnrampMainComponentUM> = MutableStateFlow(
         value = stateFactory.getInitialState(
@@ -82,8 +88,12 @@ internal class OnrampMainComponentModel @Inject constructor(
     val bottomSheetNavigation: SlotNavigation<OnrampMainBottomSheetConfig> = SlotNavigation()
 
     private val lastUpdateState = mutableStateOf<OnrampLastUpdate?>(null)
+    private var userCountry: UserCountry? = null
 
     init {
+        userCountry = getUserCountryUseCase.invokeSync().getOrNull()
+            ?: UserCountry.Other(Locale.getDefault().country)
+
         sendScreenOpenAnalytics()
         checkResidenceCountry()
         subscribeToAmountChanges()
@@ -387,7 +397,8 @@ internal class OnrampMainComponentModel @Inject constructor(
                     providerName = errorState.provider.info.name,
                     paymentMethod = errorState.paymentMethod.name,
                 )
-                else -> { /* no-op */ }
+                else -> { /* no-op */
+                }
             }
         }
     }
