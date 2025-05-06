@@ -80,6 +80,7 @@ internal class DetailsModel @Inject constructor(
         items = MutableStateFlow(
             itemsBuilder.buildAll(
                 isWalletConnectAvailable = isWalletConnectAvailable,
+                userWalletId = params.userWalletId,
                 onSupportClick = ::sendFeedback,
                 onBuyClick = ::onBuyClick,
             ),
