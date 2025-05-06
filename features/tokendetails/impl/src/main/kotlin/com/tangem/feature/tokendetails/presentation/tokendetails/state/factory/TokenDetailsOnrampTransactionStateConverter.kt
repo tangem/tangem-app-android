@@ -223,7 +223,7 @@ internal class TokenDetailsOnrampTransactionStateConverter(
             this == OnrampStatus.Status.RefundInProgress ||
                 this == OnrampStatus.Status.Refunded -> ExpressStatusItemState.Error
             else -> getStatusState(OnrampStatus.Status.Paid)
-        }
+        },
     )
 
     private fun OnrampStatus.Status.getSendingItem() = ExpressStatusItemUM(
@@ -255,7 +255,7 @@ internal class TokenDetailsOnrampTransactionStateConverter(
         },
         state = when {
             this == OnrampStatus.Status.RefundInProgress -> ExpressStatusItemState.Active
-            this == OnrampStatus.Status.Refunded -> ExpressStatusItemState.Error
+            this == OnrampStatus.Status.Refunded -> ExpressStatusItemState.Done
             else -> getStatusState(OnrampStatus.Status.Sending)
         },
     )
