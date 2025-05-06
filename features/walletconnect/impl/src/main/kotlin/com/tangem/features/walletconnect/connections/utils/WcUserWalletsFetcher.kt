@@ -82,10 +82,13 @@ internal class WcUserWalletsFetcher(
         return flow {
             emit(hashMapOf()) // emits right away so the transform doesn't wait for the images' loading to finish
             wallets.forEach { wallet ->
+                val card = wallet.scanResponse.card
                 val artwork = getCardImageUseCase(
                     cardId = wallet.cardId,
-                    cardPublicKey = wallet.scanResponse.card.cardPublicKey,
+                    cardPublicKey = card.cardPublicKey,
                     size = ArtworkSize.SMALL,
+                    manufacturerName = card.manufacturer.name,
+                    firmwareVersion = card.firmwareVersion.toSdkFirmwareVersion(),
                 )
                 loadedArtworks[wallet.walletId] = artwork
                 emit(loadedArtworks)
