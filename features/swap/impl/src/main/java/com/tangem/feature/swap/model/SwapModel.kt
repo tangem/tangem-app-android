@@ -98,7 +98,7 @@ internal class SwapModel @Inject constructor(
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val shouldShowStoriesUseCase: ShouldShowStoriesUseCase,
     private val getStoryContentUseCase: GetStoryContentUseCase,
-    private val getUserCountryUseCase: GetUserCountryUseCase,
+    getUserCountryUseCase: GetUserCountryUseCase,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     swapInteractorFactory: SwapInteractor.Factory,
     private val urlOpener: UrlOpener,
@@ -1311,7 +1311,6 @@ internal class SwapModel @Inject constructor(
             userWalletId = userWalletId,
             network = network,
             delayMillis = UPDATE_BALANCE_DELAY_MILLIS,
-            refresh = true,
         )
     }
 
