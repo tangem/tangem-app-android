@@ -26,6 +26,7 @@ dependencies {
     implementation(projects.domain.tokens)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets.models)
+    implementation(projects.domain.notifications.models)
     // endregion
 
     // region Tangem libraries
@@ -36,5 +37,12 @@ dependencies {
     // region DI
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
+    // end
+
+    // region Tests
+    testImplementation(deps.test.junit)
+    testImplementation(deps.test.coroutine)
+    testImplementation(deps.test.truth)
+    testImplementation(deps.test.mockk)
     // end
 }
