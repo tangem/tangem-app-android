@@ -14,7 +14,7 @@ import androidx.compose.ui.res.painterResource
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.walletconnect.impl.R
-import com.tangem.features.walletconnect.transaction.entity.WcNetworkInfoUM
+import com.tangem.features.walletconnect.transaction.entity.common.WcNetworkInfoUM
 
 @Composable
 internal fun WcNetworkItem(networkInfo: WcNetworkInfoUM, modifier: Modifier = Modifier) {
