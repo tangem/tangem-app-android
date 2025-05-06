@@ -13,15 +13,17 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.walletconnect.connections.model.WcConnectionsModel
 import com.tangem.features.walletconnect.connections.routes.WcConnectionsBottomSheetConfig
 import com.tangem.features.walletconnect.connections.ui.WcConnectionsContent
 
 internal class ConnectionsComponent(
     appComponentContext: AppComponentContext,
+    params: Params,
 ) : AppComponentContext by appComponentContext, ComposableContentComponent {
 
-    private val model: WcConnectionsModel = getOrCreateModel()
+    private val model: WcConnectionsModel = getOrCreateModel(params)
     private val bottomSheetSlot = childSlot(
         source = model.bottomSheetNavigation,
         serializer = null,
@@ -52,4 +54,6 @@ internal class ConnectionsComponent(
             )
         }
     }
+
+    data class Params(val userWalletId: UserWalletId)
 }
