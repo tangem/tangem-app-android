@@ -1063,7 +1063,7 @@
   <string name="transaction_history_transaction_validator">validator: %s</string>
   <string name="transfer_min_amount_error">Minimum %s</string>
   <string name="transfer_notification_invalid_minimum_transaction_amount_text">The minimum transaction amount is %1$s.</string>
-  <string name="tron_will_be_send_token_fee_description">Tron network fees for popular tokens are higher. Stake some TRX for cheaper or free transactions.</string>
+  <string name="tron_will_be_send_token_fee_description">Tron network fees for popular tokens can be higher. Staking TRX may help reduce transaction costs.</string>
   <string name="tron_will_be_send_token_fee_title">Save on Tron network fees</string>
   <string name="try_to_load_data_again_button_title">Try again</string>
   <string name="twin_error_same_card">You\'ve scanned the same card. To create a twin wallet you need to scan the card with number %d</string>
@@ -1334,6 +1334,8 @@
   <string name="wc_transaction_request">Transaction request</string>
   <string name="wc_transaction_request_title">Transaction request</string>
   <string name="wc_wallet_connect">Wallet connect</string>
+  <string name="wc_custom_allowance_title">Custom allowance</string>
+  <string name="wc_allow_to_spend">Allow to spend</string>
   <string name="welcome_interrupted_backup_alert_discard">Discard</string>
   <string name="welcome_interrupted_backup_alert_message">You have an interrupted backup. Do you want to resume?</string>
   <string name="welcome_interrupted_backup_alert_resume">Yes, resume</string>
