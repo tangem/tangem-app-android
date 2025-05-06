@@ -12,7 +12,6 @@ import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.repository.CurrenciesRepository
-import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.wallets.models.UserWalletId
 
@@ -30,7 +29,6 @@ class SaveMarketTokensUseCase(
     private val derivationsRepository: DerivationsRepository,
     private val marketsTokenRepository: MarketsTokenRepository,
     private val currenciesRepository: CurrenciesRepository,
-    private val networksRepository: NetworksRepository,
     private val stakingRepository: StakingRepository,
     private val quotesRepository: QuotesRepository,
     private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
@@ -83,20 +81,12 @@ class SaveMarketTokensUseCase(
     }
 
     private suspend fun refreshUpdatedNetworks(userWalletId: UserWalletId, addedCurrencies: List<CryptoCurrency>) {
-        if (tokensFeatureToggles.isNetworksLoadingRefactoringEnabled) {
-            multiNetworkStatusFetcher(
-                MultiNetworkStatusFetcher.Params(
-                    userWalletId = userWalletId,
-                    networks = addedCurrencies.map(CryptoCurrency::network).toSet(),
-                ),
-            )
-        } else {
-            networksRepository.getNetworkStatusesSync(
+        multiNetworkStatusFetcher(
+            MultiNetworkStatusFetcher.Params(
                 userWalletId = userWalletId,
                 networks = addedCurrencies.map(CryptoCurrency::network).toSet(),
-                refresh = true,
-            )
-        }
+            ),
+        )
     }
 
     private suspend fun refreshUpdatedYieldBalances(
