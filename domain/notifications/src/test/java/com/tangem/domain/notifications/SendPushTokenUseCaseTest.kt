@@ -2,6 +2,7 @@ package com.tangem.domain.notifications
 
 import arrow.core.Either
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.notifications.models.ApplicationId
 import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.utils.notifications.PushNotificationsTokenProvider
 import io.mockk.coEvery
@@ -33,7 +34,7 @@ class SendPushTokenUseCaseTest {
     @Test
     fun `GIVEN valid application ID and token WHEN invoke THEN token is sent successfully`() = runTest {
         // GIVEN
-        val applicationId = "test-app-id"
+        val applicationId = ApplicationId("test-app-id")
         val token = "test-token"
         coEvery { getApplicationIdUseCase() } returns Either.Right(applicationId)
         coEvery { pushNotificationsTokenProvider.getToken() } returns token
@@ -62,7 +63,7 @@ class SendPushTokenUseCaseTest {
     @Test
     fun `GIVEN repository throws error WHEN invoke THEN returns error`() = runTest {
         // GIVEN
-        val applicationId = "test-app-id"
+        val applicationId = ApplicationId("test-app-id")
         val token = "test-token"
         val expectedError = RuntimeException("Network error")
         coEvery { getApplicationIdUseCase() } returns Either.Right(applicationId)
