@@ -15,11 +15,11 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.walletconnect.impl.R
 
 @Composable
-internal fun WcWalletItem(walletName: String, modifier: Modifier = Modifier) {
+internal fun WcAddressItem(addressText: String, modifier: Modifier = Modifier) {
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
         Icon(
             modifier = Modifier.size(TangemTheme.dimens.size24),
-            painter = painterResource(R.drawable.ic_wallet_new_24),
+            painter = painterResource(R.drawable.ic_user_square_24),
             contentDescription = null,
             tint = TangemTheme.colors.icon.accent,
         )
@@ -27,7 +27,7 @@ internal fun WcWalletItem(walletName: String, modifier: Modifier = Modifier) {
             modifier = Modifier
                 .padding(start = TangemTheme.dimens.spacing8)
                 .weight(1f),
-            text = stringResourceSafe(R.string.manage_tokens_network_selector_wallet),
+            text = stringResourceSafe(R.string.wc_common_address),
             style = TangemTheme.typography.body1,
             color = TangemTheme.colors.text.primary1,
         )
@@ -35,7 +35,7 @@ internal fun WcWalletItem(walletName: String, modifier: Modifier = Modifier) {
             modifier = Modifier
                 .padding(start = TangemTheme.dimens.spacing16)
                 .weight(1f),
-            text = walletName,
+            text = addressText,
             textAlign = TextAlign.End,
             style = TangemTheme.typography.body1,
             color = TangemTheme.colors.text.tertiary,
