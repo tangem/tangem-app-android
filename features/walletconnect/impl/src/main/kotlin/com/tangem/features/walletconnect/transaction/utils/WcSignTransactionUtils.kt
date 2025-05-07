@@ -11,13 +11,13 @@ import com.tangem.domain.walletconnect.usecase.method.WcSignState
 import com.tangem.domain.walletconnect.usecase.method.WcSignStep
 import com.tangem.domain.walletconnect.usecase.method.WcSignUseCase
 import com.tangem.features.walletconnect.impl.R
-import com.tangem.features.walletconnect.transaction.entity.common.WcNetworkInfoUM
-import com.tangem.features.walletconnect.transaction.entity.sign.WcSignTransactionUM
-import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionActionsUM
-import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionRequestBlockUM
-import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionRequestInfoItemUM
-import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionRequestInfoUM
-import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionUM
+import com.tangem.features.walletconnect.transaction.entity.WcNetworkInfoUM
+import com.tangem.features.walletconnect.transaction.entity.WcSignTransactionUM
+import com.tangem.features.walletconnect.transaction.entity.WcTransactionActionsUM
+import com.tangem.features.walletconnect.transaction.entity.WcTransactionRequestBlockUM
+import com.tangem.features.walletconnect.transaction.entity.WcTransactionRequestInfoItemUM
+import com.tangem.features.walletconnect.transaction.entity.WcTransactionRequestInfoUM
+import com.tangem.features.walletconnect.transaction.entity.WcTransactionUM
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
@@ -47,7 +47,6 @@ private fun WcMessageSignUseCase.signTypedDataToUM(
     signModel: WcMessageSignUseCase.SignModel,
     actions: WcTransactionActionsUM,
 ) = WcSignTransactionUM(
-    state = WcSignTransactionUM.State.TRANSACTION,
     actions = actions,
     transaction = WcTransactionUM(
         appName = session.sdkModel.appMetaData.name,
@@ -60,7 +59,6 @@ private fun WcMessageSignUseCase.signTypedDataToUM(
             iconRes = getActiveIconRes(network.id.value),
         ),
         addressText = walletAddress.toShortAddressText(),
-        activeButtonText = resourceReference(R.string.common_sign),
         isLoading = signState.domainStep == WcSignStep.Signing,
     ),
     transactionRequestInfo = WcTransactionRequestInfoUM(
@@ -94,7 +92,6 @@ private fun WcMessageSignUseCase.messageSignToUM(
     signModel: WcMessageSignUseCase.SignModel,
     actions: WcTransactionActionsUM,
 ) = WcSignTransactionUM(
-    state = WcSignTransactionUM.State.TRANSACTION,
     actions = actions,
     transaction = WcTransactionUM(
         appName = session.sdkModel.appMetaData.name,
@@ -106,7 +103,6 @@ private fun WcMessageSignUseCase.messageSignToUM(
             name = network.name,
             iconRes = getActiveIconRes(network.id.value),
         ),
-        activeButtonText = resourceReference(R.string.common_sign),
         isLoading = signState.domainStep == WcSignStep.Signing,
     ),
     transactionRequestInfo = WcTransactionRequestInfoUM(
