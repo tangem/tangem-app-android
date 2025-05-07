@@ -6,12 +6,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.walletconnect.transaction.model.WcSignTransactionModel
-import com.tangem.features.walletconnect.transaction.ui.sign.WcSignTransactionModalBottomSheetContent
+import com.tangem.features.walletconnect.transaction.ui.common.TransactionRequestInfoContent
 
-internal class WcSignTransactionComponent(
+internal class WcSignTransactionRequestInfoComponent(
     private val appComponentContext: AppComponentContext,
     private val model: WcSignTransactionModel,
-    private val transactionInfoOnClick: () -> Unit,
 ) : AppComponentContext by appComponentContext, ComposableContentComponent {
 
     @Composable
@@ -19,10 +18,7 @@ internal class WcSignTransactionComponent(
         val content = model.uiState.collectAsStateWithLifecycle().value
 
         if (content != null) {
-            WcSignTransactionModalBottomSheetContent(
-                state = content,
-                onClickTransactionRequest = transactionInfoOnClick,
-            )
+            TransactionRequestInfoContent(content)
         }
     }
 }
