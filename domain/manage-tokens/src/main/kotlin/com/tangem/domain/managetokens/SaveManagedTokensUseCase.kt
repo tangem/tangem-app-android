@@ -14,7 +14,6 @@ import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.repository.CurrenciesRepository
-import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWalletId
@@ -24,7 +23,6 @@ class SaveManagedTokensUseCase(
     private val customTokensRepository: CustomTokensRepository,
     private val walletManagersFacade: WalletManagersFacade,
     private val currenciesRepository: CurrenciesRepository,
-    private val networksRepository: NetworksRepository,
     private val derivationsRepository: DerivationsRepository,
     private val stakingRepository: StakingRepository,
     private val quotesRepository: QuotesRepository,
@@ -102,20 +100,12 @@ class SaveManagedTokensUseCase(
         val networkToUpdate = currenciesToAdd.map { it.network }
             .subtract(existingCurrencies.map { it.network }.toSet())
 
-        if (tokensFeatureToggles.isNetworksLoadingRefactoringEnabled) {
-            multiNetworkStatusFetcher(
-                MultiNetworkStatusFetcher.Params(
-                    userWalletId = userWalletId,
-                    networks = networksToUpdate + networkToUpdate,
-                ),
-            )
-        } else {
-            networksRepository.getNetworkStatusesSync(
+        multiNetworkStatusFetcher(
+            MultiNetworkStatusFetcher.Params(
                 userWalletId = userWalletId,
                 networks = networksToUpdate + networkToUpdate,
-                refresh = true,
-            )
-        }
+            ),
+        )
     }
 
     private suspend fun refreshUpdatedYieldBalances(

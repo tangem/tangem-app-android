@@ -12,6 +12,7 @@ import com.tangem.domain.walletconnect.model.legacy.WalletConnectSessionsReposit
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.filterNotNull
@@ -139,7 +140,11 @@ class WalletConnectInteractor(
             if (deeplinkStack.empty()) return
             val lastDeeplink = deeplinkStack.pop()
             val action = WalletConnectAction
-                .OpenSession(lastDeeplink, WalletConnectAction.OpenSession.SourceType.DEEPLINK)
+                .OpenSession(
+                    wcUri = lastDeeplink,
+                    source = WalletConnectAction.OpenSession.SourceType.DEEPLINK,
+                    userWalletId = UserWalletId(userWalletId),
+                )
             store.dispatchOnMain(action)
         }.onFailure {
             Timber.e("WC deeplink handling failed. $it")
@@ -393,7 +398,11 @@ class WalletConnectInteractor(
         }
 
         if (isWalletConnectReadyForDeepLinks) {
-            val action = WalletConnectAction.OpenSession(deeplink, WalletConnectAction.OpenSession.SourceType.DEEPLINK)
+            val action = WalletConnectAction.OpenSession(
+                wcUri = deeplink,
+                source = WalletConnectAction.OpenSession.SourceType.DEEPLINK,
+                userWalletId = UserWalletId(userWalletId),
+            )
             store.dispatchOnMain(action)
         } else {
             deeplinkStack.push(deeplink)

@@ -30,7 +30,7 @@ internal fun WcNetworkItem(networkInfo: WcNetworkInfoUM, modifier: Modifier = Mo
         )
         Text(
             modifier = Modifier
-                .padding(start = TangemTheme.dimens.spacing4)
+                .padding(start = TangemTheme.dimens.spacing8)
                 .weight(1f),
             text = stringResourceSafe(R.string.wc_common_network),
             style = TangemTheme.typography.body1,
