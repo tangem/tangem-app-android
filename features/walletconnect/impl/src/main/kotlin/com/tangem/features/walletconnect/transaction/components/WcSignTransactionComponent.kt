@@ -20,7 +20,7 @@ internal class WcSignTransactionComponent(
 
         if (content != null) {
             WcSignTransactionModalBottomSheetContent(
-                state = content,
+                state = content.transaction,
                 onClickTransactionRequest = transactionInfoOnClick,
             )
         }
