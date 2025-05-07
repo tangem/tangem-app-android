@@ -1,6 +1,7 @@
 package com.tangem.features.nft.details.ui
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -11,6 +12,7 @@ import androidx.compose.ui.Modifier
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
+import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshContainer
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.nft.details.entity.NFTDetailsUM
@@ -34,14 +36,19 @@ internal fun NFTDetails(state: NFTDetailsUM, modifier: Modifier = Modifier) {
             )
         },
         content = { innerPadding ->
-            NFTDetailsAsset(
-                state = state.nftAsset,
-                onReadMoreClick = state.onReadMoreClick,
-                onSeeAllTraitsClick = state.onSeeAllTraitsClick,
-                onExploreClick = state.onExploreClick,
+            TangemPullToRefreshContainer(
+                config = state.pullToRefreshConfig,
                 modifier = Modifier
-                    .padding(innerPadding),
-            )
+                    .padding(innerPadding)
+                    .fillMaxSize(),
+            ) {
+                NFTDetailsAsset(
+                    state = state.nftAsset,
+                    onReadMoreClick = state.onReadMoreClick,
+                    onSeeAllTraitsClick = state.onSeeAllTraitsClick,
+                    onExploreClick = state.onExploreClick,
+                )
+            }
         },
         floatingActionButtonPosition = FabPosition.Center,
         floatingActionButton = {
