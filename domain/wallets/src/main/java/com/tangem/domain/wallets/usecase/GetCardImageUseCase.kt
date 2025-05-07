@@ -1,5 +1,6 @@
 package com.tangem.domain.wallets.usecase
 
+import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.extensions.toHexString
 import com.tangem.common.services.Result
 import com.tangem.domain.common.TwinCardNumber
@@ -30,11 +31,19 @@ class GetCardImageUseCase(
      * @param cardId        card id
      * @param cardPublicKey card public key
      */
-    suspend operator fun invoke(cardId: String, cardPublicKey: ByteArray, size: ArtworkSize): ArtworkModel {
+    suspend operator fun invoke(
+        cardId: String,
+        cardPublicKey: ByteArray,
+        manufacturerName: String,
+        firmwareVersion: FirmwareVersion,
+        size: ArtworkSize,
+    ): ArtworkModel {
         return if (cardSdkFeatureToggles.isNewArtworkLoadingEnabled) {
             val result = cardArtworksProvider.getArtwork(
                 cardId = cardId,
                 cardPublicKey = cardPublicKey,
+                manufacturerName = manufacturerName,
+                firmwareVersion = firmwareVersion,
                 size = size,
             )
             when (result) {
