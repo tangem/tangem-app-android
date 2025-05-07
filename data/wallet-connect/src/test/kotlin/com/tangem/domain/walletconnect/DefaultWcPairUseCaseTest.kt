@@ -92,6 +92,7 @@ internal class DefaultWcPairUseCaseTest {
             wallet = sessionForApprove.wallet,
             sdkModel = WcSdkSessionConverter.convert(this),
             securityStatus = CheckDAppResult.SAFE,
+            networks = setOf(),
         )
 
     private fun useCaseFactory() = DefaultWcPairUseCase(
