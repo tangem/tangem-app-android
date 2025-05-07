@@ -2,10 +2,9 @@ package com.tangem.features.nft.collections.entity.transformer
 
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.components.notifications.NotificationConfig
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.getActiveIconRes
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.nft.models.*
 import com.tangem.features.nft.collections.entity.*
 import com.tangem.features.nft.impl.R
@@ -146,20 +145,31 @@ internal class UpdateDataStateTransformer(
         )
     }
 
-    private fun NFTAsset.transform(collectionName: String): NFTCollectionAssetUM = NFTCollectionAssetUM(
-        id = id.toString(),
-        name = name.orEmpty(),
-        imageUrl = media?.url,
-        price = when (val salePrice = salePrice) {
-            is NFTSalePrice.Empty -> NFTSalePriceUM.Failed
-            is NFTSalePrice.Loading -> NFTSalePriceUM.Loading
-            is NFTSalePrice.Error -> NFTSalePriceUM.Failed
-            is NFTSalePrice.Value -> NFTSalePriceUM.Content(salePrice.value.toString())
-        },
-        onItemClick = {
-            onAssetClick(this, collectionName)
-        },
-    )
+    private fun NFTAsset.transform(collectionName: String): NFTCollectionAssetUM {
+        return NFTCollectionAssetUM(
+            id = id.toString(),
+            name = name.orEmpty(),
+            imageUrl = media?.url,
+            price = when (val salePrice = salePrice) {
+                is NFTSalePrice.Empty -> NFTSalePriceUM.Failed
+                is NFTSalePrice.Loading -> NFTSalePriceUM.Loading
+                is NFTSalePrice.Error -> NFTSalePriceUM.Failed
+                is NFTSalePrice.Value -> NFTSalePriceUM.Content(
+                    price = stringReference(
+                        salePrice.value.format {
+                            crypto(
+                                symbol = salePrice.symbol,
+                                decimals = salePrice.decimals,
+                            )
+                        },
+                    ),
+                )
+            },
+            onItemClick = {
+                onAssetClick(this, collectionName)
+            },
+        )
+    }
 
     private fun NFTCollection.isExpanded(state: NFTCollectionsStateUM): Boolean =
         (state.content as? NFTCollectionsUM.Content)
