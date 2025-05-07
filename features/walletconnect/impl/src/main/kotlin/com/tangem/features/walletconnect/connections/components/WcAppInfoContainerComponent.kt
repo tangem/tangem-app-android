@@ -1,13 +1,12 @@
 package com.tangem.features.walletconnect.connections.components
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.stack.Children
-import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
-import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
 import com.tangem.core.decompose.context.AppComponentContext
@@ -18,8 +17,10 @@ import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.walletconnect.model.WcPairRequest
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.walletconnect.connections.model.WcAppInfoModel
 import com.tangem.features.walletconnect.connections.routes.WcAppInfoRoutes
 import com.tangem.features.walletconnect.impl.R
@@ -30,9 +31,8 @@ internal class WcAppInfoContainerComponent(
 ) : AppComponentContext by appComponentContext, ComposableContentComponent {
 
     private val model: WcAppInfoModel = getOrCreateModel(params = params)
-    private val contentNavigation = StackNavigation<WcAppInfoRoutes>()
     private val contentStack = childStack(
-        source = contentNavigation,
+        source = model.contentNavigation,
         serializer = WcAppInfoRoutes.serializer(),
         initialConfiguration = WcAppInfoRoutes.AppInfo,
         childFactory = ::screenChild,
@@ -51,10 +51,17 @@ internal class WcAppInfoContainerComponent(
                 onDismissRequest = ::dismiss,
                 content = content.active.configuration,
             ),
-            containerColor = TangemTheme.colors.background.tertiary,
+            onBack = ::contentBack,
+            containerColor = when (content.active.configuration) {
+                is WcAppInfoRoutes.Alert,
+                is WcAppInfoRoutes.SelectNetworks,
+                is WcAppInfoRoutes.AppInfo,
+                -> TangemTheme.colors.background.tertiary
+                is WcAppInfoRoutes.SelectWallet -> TangemTheme.colors.background.primary
+            },
             title = { config -> Title(route = config) },
             content = {
-                Children(stack = content, animation = stackAnimation()) { child ->
+                Children(modifier = Modifier.animateContentSize(), stack = content) { child ->
                     child.instance.Content(modifier = Modifier)
                 }
             },
@@ -64,7 +71,12 @@ internal class WcAppInfoContainerComponent(
     @Composable
     private fun Title(route: WcAppInfoRoutes) {
         TangemModalBottomSheetTitle(
-            title = resourceReference(R.string.wc_wallet_connect),
+            title = when (route) {
+                is WcAppInfoRoutes.Alert -> null
+                WcAppInfoRoutes.AppInfo -> resourceReference(R.string.wc_wallet_connect)
+                WcAppInfoRoutes.SelectNetworks -> TODO("[REDACTED_TASK_KEY]")
+                WcAppInfoRoutes.SelectWallet -> stringReference("Choose wallet")
+            },
             startIconRes = when (route) {
                 is WcAppInfoRoutes.AppInfo, is WcAppInfoRoutes.Alert -> null
                 is WcAppInfoRoutes.SelectNetworks, is WcAppInfoRoutes.SelectWallet -> R.drawable.ic_back_24
@@ -88,19 +100,25 @@ internal class WcAppInfoContainerComponent(
     }
 
     private fun contentBack() {
-        contentNavigation.pop()
+        if (contentStack.value.active.configuration == WcAppInfoRoutes.AppInfo) {
+            dismiss()
+        } else {
+            model.contentNavigation.pop()
+        }
     }
 
-    private fun screenChild(config: WcAppInfoRoutes, componentContext: ComponentContext): ComposableContentComponent =
-        when (config) {
-            is WcAppInfoRoutes.AppInfo -> WcAppInfoComponent(
-                appComponentContext = childByContext(componentContext),
-                model = model,
-            )
+    private fun screenChild(config: WcAppInfoRoutes, componentContext: ComponentContext): ComposableContentComponent {
+        val appComponentContext = childByContext(componentContext)
+        return when (config) {
+            is WcAppInfoRoutes.AppInfo -> WcAppInfoComponent(appComponentContext = appComponentContext, model = model)
             is WcAppInfoRoutes.Alert -> TODO()
             WcAppInfoRoutes.SelectNetworks -> TODO()
-            WcAppInfoRoutes.SelectWallet -> TODO()
+            WcAppInfoRoutes.SelectWallet -> WcSelectWalletComponent(
+                appComponentContext = appComponentContext,
+                model = model,
+            )
         }
+    }
 
-    data class Params(val wcUrl: String, val source: WcPairRequest.Source)
+    data class Params(val userWalletId: UserWalletId, val wcUrl: String, val source: WcPairRequest.Source)
 }
