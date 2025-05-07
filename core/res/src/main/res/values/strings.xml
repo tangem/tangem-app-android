@@ -535,13 +535,13 @@
   <string name="nft_details_base_information">Base information</string>
   <string name="nft_details_chain">Chain</string>
   <string name="nft_details_contract_address">Contract Address</string>
-  <string name="nft_details_info_chain">stub</string>
-  <string name="nft_details_info_contract_address">stub</string>
-  <string name="nft_details_info_rarity_label">stub</string>
-  <string name="nft_details_info_rarity_rank">stub</string>
-  <string name="nft_details_info_token_address">stub</string>
-  <string name="nft_details_info_token_id">stub</string>
-  <string name="nft_details_info_token_standard">stub</string>
+  <string name="nft_details_info_chain">Chain is the blockchain where the NFT exists.</string>
+  <string name="nft_details_info_contract_address">The contract address is a unique identifier for the smart contract that governs the tokens on the blockchain</string>
+  <string name="nft_details_info_rarity_label">A label that describes how rare the NFT is. The lower the value, the more unique the NFT.</string>
+  <string name="nft_details_info_rarity_rank">The position of an NFT in the rarity ranking among other tokens. The higher the rank, the rarer and more valuable the NFT.</string>
+  <string name="nft_details_info_token_address">The token address is a unique identifier for the token on the blockchain, allowing tracking of transactions and ownership</string>
+  <string name="nft_details_info_token_id">The token ID is a unique identifier assigned to each token, distinguishing it from others in the collection</string>
+  <string name="nft_details_info_token_standard">Token standard defines what type of token it is and how it works with different wallets and platforms</string>
   <string name="nft_details_last_sale_price">Last sale price</string>
   <string name="nft_details_rarity_label">Rarity label</string>
   <string name="nft_details_rarity_rank">Rarity rank</string>
@@ -554,7 +554,7 @@
   <string name="nft_receive_available_section_title">Available</string>
   <string name="nft_receive_choose_network">Choose network</string>
   <string name="nft_receive_title">Receive NFT</string>
-  <string name="nft_receive_unavailable_asset_warning_message">You haven\'t added this network yet. To start receiving NFTs, add it to the main screen!</string>
+  <string name="nft_receive_unavailable_asset_warning_message">You haven\'t added this network yet. To receive NFTs, add it to your portfolio.</string>
   <string name="nft_receive_unavailable_asset_warning_title">Network not added</string>
   <string name="nft_receive_unavailable_section_title">Not Added</string>
   <string name="nft_send">Send NFT</string>
@@ -1121,7 +1121,7 @@
   <string name="visa_onboarding_in_progress_issuer_description">This won’t take long. We’re completing the activation.</string>
   <string name="visa_onboarding_in_progress_title">Getting everything ready!</string>
   <string name="visa_onboarding_other_wallet">Other wallet</string>
-  <string name="visa_onboarding_pin_code_description">Set up a 4-digit code.  It will be used for payments.</string>
+  <string name="visa_onboarding_pin_code_description">Set up a 4-digit code.\nIt will be used for payments.</string>
   <string name="visa_onboarding_pin_code_navigation_title">PIN code</string>
   <string name="visa_onboarding_pin_code_title">Create PIN Code</string>
   <string name="visa_onboarding_pin_not_accepted">PIN was not accepted. Try again or use a different code.</string>
@@ -1295,7 +1295,7 @@
   <string name="wc_alert_connection_timeout_description">Timeout error. Please, try again later.</string>
   <string name="wc_alert_connection_timeout_title">Failed to establish WalletConnect</string>
   <string name="wc_alert_domain_issues_description">This domain cannot be verified. Check the request carefully approving.</string>
-  <string name="wc_alert_session_disconnected_description">Go back to your browser and connect via WalletConnect again.</string>
+  <string name="wc_alert_session_disconnected_description">Please return to your browser and reconnect via WalletConnect.</string>
   <string name="wc_alert_session_disconnected_title">WalletConnect session was disconnected</string>
   <string name="wc_alert_unknown_error_description">Error code: %s. If the problem persists — feel free to contact our support.</string>
   <string name="wc_alert_unknown_error_title">We\'ve encountered unknown error</string>
@@ -1303,8 +1303,9 @@
   <string name="wc_alert_unsupported_networks_title">Unsuported networks</string>
   <string name="wc_alert_verified_domain_description">Tangem support a required network by %s.</string>
   <string name="wc_alert_verified_domain_title">Verified domain</string>
-  <string name="wc_alert_wrong_card_description">Wrong card or ring selected in Tangem App</string>
+  <string name="wc_alert_wrong_card_description">Wrong card or ring selected in the App</string>
   <string name="wc_alert_wrong_card_title">We\'ve got some kind of problem</string>
+  <string name="wc_allow_to_spend">Allow to spend</string>
   <string name="wc_common_address">Address</string>
   <string name="wc_common_connect">Connect</string>
   <string name="wc_common_network">Network</string>
@@ -1320,6 +1321,7 @@
   <string name="wc_connections">Connections</string>
   <string name="wc_contents">Contents</string>
   <string name="wc_copy_data_button_text">Copy data</string>
+  <string name="wc_custom_allowance_title">Custom allowance</string>
   <string name="wc_disconnect_all">Disconnect all</string>
   <string name="wc_disconnect_all_alert_desc">Text about discnected all dApps</string>
   <string name="wc_disconnect_all_alert_title">Disconect All dApps</string>
@@ -1336,8 +1338,6 @@
   <string name="wc_transaction_request">Transaction request</string>
   <string name="wc_transaction_request_title">Transaction request</string>
   <string name="wc_wallet_connect">Wallet connect</string>
-  <string name="wc_custom_allowance_title">Custom allowance</string>
-  <string name="wc_allow_to_spend">Allow to spend</string>
   <string name="welcome_interrupted_backup_alert_discard">Discard</string>
   <string name="welcome_interrupted_backup_alert_message">You have an interrupted backup. Do you want to resume?</string>
   <string name="welcome_interrupted_backup_alert_resume">Yes, resume</string>
