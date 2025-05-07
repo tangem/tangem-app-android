@@ -14,7 +14,6 @@ import com.tangem.domain.walletconnect.model.sdkcopy.WcAppMetaData
 import com.tangem.domain.walletconnect.repository.WcSessionsManager
 import com.tangem.domain.walletconnect.usecase.pair.WcPairState
 import com.tangem.domain.walletconnect.usecase.pair.WcPairUseCase
-import com.tangem.domain.wallets.models.UserWallet
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -78,9 +77,11 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
                 sessionForApprove = sessionForApprove,
                 sdkSessionProposal = sdkSessionProposal,
             ).map { settledSession ->
-                val newSession = settledSession.session.toDomain(
+                val newSession = WcSession(
                     wallet = sessionForApprove.wallet,
+                    sdkModel = WcSdkSessionConverter.convert(settledSession.session),
                     securityStatus = proposalState.dAppSession.securityStatus,
+                    networks = sessionForApprove.network.toSet(),
                 )
                 sessionsManager.saveSession(newSession)
                 newSession
@@ -140,14 +141,6 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
             else -> WcPairError.Unknown(it.localizedMessage.orEmpty()).left()
         }
     },)
-
-    private fun Wallet.Model.Session.toDomain(wallet: UserWallet, securityStatus: CheckDAppResult): WcSession {
-        return WcSession(
-            wallet = wallet,
-            sdkModel = WcSdkSessionConverter.convert(this),
-            securityStatus = securityStatus,
-        )
-    }
 
     private sealed interface TerminalAction {
         data class Approve(val sessionForApprove: WcSessionApprove) : TerminalAction
