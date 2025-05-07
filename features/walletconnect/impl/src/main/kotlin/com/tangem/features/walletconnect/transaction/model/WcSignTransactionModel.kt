@@ -11,8 +11,8 @@ import com.tangem.domain.walletconnect.usecase.method.WcSignState
 import com.tangem.domain.walletconnect.usecase.method.WcSignStep
 import com.tangem.domain.walletconnect.usecase.method.WcSignUseCase
 import com.tangem.features.walletconnect.transaction.components.WcSignTransactionContainerComponent
-import com.tangem.features.walletconnect.transaction.entity.WcSignTransactionUM
-import com.tangem.features.walletconnect.transaction.entity.WcTransactionActionsUM
+import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionActionsUM
+import com.tangem.features.walletconnect.transaction.entity.sign.WcSignTransactionUM
 import com.tangem.features.walletconnect.transaction.utils.toUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -58,7 +58,7 @@ internal class WcSignTransactionModel @Inject constructor(
     }
 
     fun dismiss() {
-        _uiState.value?.actions?.onDismiss?.invoke() ?: router.pop()
+        _uiState.value?.transaction?.onDismiss?.invoke() ?: router.pop()
     }
 
     private fun signingIsDone(signState: WcSignState<*>): Boolean {
