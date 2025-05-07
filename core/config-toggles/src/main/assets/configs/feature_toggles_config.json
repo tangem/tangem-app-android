@@ -41,7 +41,7 @@
     },
     {
         "name": "NEW_ATTESTATION_ENABLED",
-        "version": "undefined"
+        "version": "5.24.0"
     },
     {
         "name": "SEND_V2_ENABLED",
@@ -50,10 +50,6 @@
     {
         "name": "WALLET_CONNECT_REDESIGN_ENABLED",
         "version": "undefined"
-    },
-    {
-        "name": "NETWORKS_LOADING_REFACTORING_ENABLED",
-        "version": "5.23.0"
     },
     {
         "name": "QUOTES_LOADING_REFACTORING_ENABLED",
