@@ -122,7 +122,7 @@ sealed class AppRoute(val path: String) : Route {
     }
 
     @Serializable
-    data object WalletConnectSessions : AppRoute(path = "/wallet_connect_sessions")
+    data class WalletConnectSessions(val userWalletId: UserWalletId) : AppRoute(path = "/wallet_connect_sessions")
 
     @Serializable
     data class QrScanning(val source: Source) : AppRoute(path = "/$source/qr_scanning${source.path}") {
