@@ -1,5 +1,6 @@
 package com.tangem.tap.features.details.redux.walletconnect
 
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.tap.domain.walletconnect2.domain.WcPreparedRequest
 import com.tangem.tap.domain.walletconnect2.domain.models.WalletConnectError
 import com.tangem.tap.domain.walletconnect2.domain.models.WalletConnectEvents
@@ -14,6 +15,7 @@ sealed class WalletConnectAction : Action {
     data class OpenSession(
         val wcUri: String,
         val source: SourceType,
+        val userWalletId: UserWalletId,
     ) : WalletConnectAction() {
         enum class SourceType { QR, DEEPLINK, CLIPBOARD, ETC }
     }
