@@ -2,6 +2,8 @@ package com.tangem.tap.di.domain
 
 import com.tangem.domain.nft.*
 import com.tangem.domain.nft.repository.NFTRepository
+import com.tangem.domain.quotes.single.SingleQuoteFetcher
+import com.tangem.domain.quotes.single.SingleQuoteSupplier
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -83,4 +85,22 @@ internal object NFTDomainModule {
         GetNFTExploreUrlUseCase(
             nftRepository = nftRepository,
         )
+
+    @Provides
+    @Singleton
+    fun provideGetNFTPriceUseCase(
+        nftRepository: NFTRepository,
+        singleQuoteSupplier: SingleQuoteSupplier,
+    ): GetNFTPriceUseCase {
+        return GetNFTPriceUseCase(nftRepository, singleQuoteSupplier)
+    }
+
+    @Provides
+    @Singleton
+    fun provideFetchNFTPriceUseCase(
+        nftRepository: NFTRepository,
+        singleQuoteFetcher: SingleQuoteFetcher,
+    ): FetchNFTPriceUseCase {
+        return FetchNFTPriceUseCase(nftRepository, singleQuoteFetcher)
+    }
 }
