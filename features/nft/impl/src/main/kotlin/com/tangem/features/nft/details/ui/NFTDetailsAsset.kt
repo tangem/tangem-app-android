@@ -16,11 +16,9 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.features.nft.details.entity.NFTAssetUM
 import com.tangem.features.nft.impl.R
 import kotlinx.collections.immutable.persistentListOf
-import java.math.BigDecimal
 
 @Composable
 internal fun NFTDetailsAsset(
@@ -127,11 +125,9 @@ private class NFTAssetProvider : CollectionPreviewParameterProvider<NFTAssetUM>(
             topInfo = NFTAssetUM.TopInfo.Content(
                 title = resourceReference(R.string.nft_details_last_sale_price),
                 salePrice = NFTAssetUM.SalePrice.Content(
-                    value = BigDecimal("18.75"),
-                    symbol = "ETH",
-                    decimals = 18,
-                    rate = BigDecimal("1"),
-                    appCurrency = AppCurrency.Default,
+                    cryptoPrice = stringReference("ETH 18.75"),
+                    fiatPrice = stringReference("$ 1"),
+                    isFlickering = true,
                 ),
                 description = "Base edition by Piux. An illustration of Crypto Robot #7804".repeat(3),
                 rarity = NFTAssetUM.Rarity.Content(
