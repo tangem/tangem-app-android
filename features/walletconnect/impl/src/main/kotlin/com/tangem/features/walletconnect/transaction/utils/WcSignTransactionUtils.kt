@@ -11,13 +11,9 @@ import com.tangem.domain.walletconnect.usecase.method.WcSignState
 import com.tangem.domain.walletconnect.usecase.method.WcSignStep
 import com.tangem.domain.walletconnect.usecase.method.WcSignUseCase
 import com.tangem.features.walletconnect.impl.R
-import com.tangem.features.walletconnect.transaction.entity.WcNetworkInfoUM
-import com.tangem.features.walletconnect.transaction.entity.WcSignTransactionUM
-import com.tangem.features.walletconnect.transaction.entity.WcTransactionActionsUM
-import com.tangem.features.walletconnect.transaction.entity.WcTransactionRequestBlockUM
-import com.tangem.features.walletconnect.transaction.entity.WcTransactionRequestInfoItemUM
-import com.tangem.features.walletconnect.transaction.entity.WcTransactionRequestInfoUM
-import com.tangem.features.walletconnect.transaction.entity.WcTransactionUM
+import com.tangem.features.walletconnect.transaction.entity.common.*
+import com.tangem.features.walletconnect.transaction.entity.sign.WcSignTransactionItemUM
+import com.tangem.features.walletconnect.transaction.entity.sign.WcSignTransactionUM
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
@@ -47,12 +43,15 @@ private fun WcMessageSignUseCase.signTypedDataToUM(
     signModel: WcMessageSignUseCase.SignModel,
     actions: WcTransactionActionsUM,
 ) = WcSignTransactionUM(
-    actions = actions,
-    transaction = WcTransactionUM(
-        appName = session.sdkModel.appMetaData.name,
-        appIcon = session.sdkModel.appMetaData.url,
-        isVerified = session.securityStatus == CheckDAppResult.SAFE,
-        appSubtitle = session.sdkModel.appMetaData.description,
+    transaction = WcSignTransactionItemUM(
+        onDismiss = actions.onDismiss,
+        onSign = actions.onSign,
+        appInfo = WcTransactionAppInfoContentUM(
+            appName = session.sdkModel.appMetaData.name,
+            appIcon = session.sdkModel.appMetaData.url,
+            isVerified = session.securityStatus == CheckDAppResult.SAFE,
+            appSubtitle = session.sdkModel.appMetaData.description,
+        ),
         walletName = session.wallet.name,
         networkInfo = WcNetworkInfoUM(
             name = network.name,
@@ -62,7 +61,7 @@ private fun WcMessageSignUseCase.signTypedDataToUM(
         isLoading = signState.domainStep == WcSignStep.Signing,
     ),
     transactionRequestInfo = WcTransactionRequestInfoUM(
-        buildList {
+        blocks = buildList {
             add(createInfoBlockUM(rawSdkRequest, signModel))
             (method as? WcEthMethod.SignTypedData)?.params?.message?.to?.let { to ->
                 add(
@@ -84,6 +83,7 @@ private fun WcMessageSignUseCase.signTypedDataToUM(
                 )
             }
         }.toImmutableList(),
+        onCopy = actions.onCopy,
     ),
 )
 
@@ -92,12 +92,15 @@ private fun WcMessageSignUseCase.messageSignToUM(
     signModel: WcMessageSignUseCase.SignModel,
     actions: WcTransactionActionsUM,
 ) = WcSignTransactionUM(
-    actions = actions,
-    transaction = WcTransactionUM(
-        appName = session.sdkModel.appMetaData.name,
-        appIcon = session.sdkModel.appMetaData.url,
-        isVerified = session.securityStatus == CheckDAppResult.SAFE,
-        appSubtitle = session.sdkModel.appMetaData.description,
+    transaction = WcSignTransactionItemUM(
+        onDismiss = actions.onDismiss,
+        onSign = actions.onSign,
+        appInfo = WcTransactionAppInfoContentUM(
+            appName = session.sdkModel.appMetaData.name,
+            appIcon = session.sdkModel.appMetaData.url,
+            isVerified = session.securityStatus == CheckDAppResult.SAFE,
+            appSubtitle = session.sdkModel.appMetaData.description,
+        ),
         walletName = session.wallet.name,
         networkInfo = WcNetworkInfoUM(
             name = network.name,
@@ -107,6 +110,7 @@ private fun WcMessageSignUseCase.messageSignToUM(
     ),
     transactionRequestInfo = WcTransactionRequestInfoUM(
         persistentListOf(createInfoBlockUM(rawSdkRequest, signModel)),
+        onCopy = actions.onCopy,
     ),
 )
 
