@@ -22,4 +22,5 @@ dependencies {
     implementation(projects.domain.tokens)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets.models)
+    implementation(projects.domain.quotes)
 }
