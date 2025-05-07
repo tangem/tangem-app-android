@@ -87,6 +87,8 @@ internal class UserWalletsFetcher @Inject constructor(
             wallets.forEach { wallet ->
                 val artwork = getCardImageUseCase(
                     cardId = wallet.cardId,
+                    manufacturerName = wallet.scanResponse.card.manufacturer.name,
+                    firmwareVersion = wallet.scanResponse.card.firmwareVersion.toSdkFirmwareVersion(),
                     cardPublicKey = wallet.scanResponse.card.cardPublicKey,
                     size = ArtworkSize.SMALL,
                 )
