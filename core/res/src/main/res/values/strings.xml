@@ -1063,7 +1063,7 @@
   <string name="transaction_history_transaction_validator">validator: %s</string>
   <string name="transfer_min_amount_error">Minimum %s</string>
   <string name="transfer_notification_invalid_minimum_transaction_amount_text">The minimum transaction amount is %1$s.</string>
-  <string name="tron_will_be_send_token_fee_description">Tron network fees for popular tokens are higher. Stake some TRX for cheaper or free transactions.</string>
+  <string name="tron_will_be_send_token_fee_description">Tron network fees for popular tokens can be higher. Staking TRX may help reduce transaction costs.</string>
   <string name="tron_will_be_send_token_fee_title">Save on Tron network fees</string>
   <string name="try_to_load_data_again_button_title">Try again</string>
   <string name="twin_error_same_card">You\'ve scanned the same card. To create a twin wallet you need to scan the card with number %d</string>
@@ -1305,6 +1305,7 @@
   <string name="wc_alert_verified_domain_title">Verified domain</string>
   <string name="wc_alert_wrong_card_description">Wrong card or ring selected in Tangem App</string>
   <string name="wc_alert_wrong_card_title">We\'ve got some kind of problem</string>
+  <string name="wc_common_address">Address</string>
   <string name="wc_common_connect">Connect</string>
   <string name="wc_common_network">Network</string>
   <string name="wc_common_networks">Networks</string>
@@ -1331,6 +1332,7 @@
   <string name="wc_notification_security_risk_title">Known security risk</string>
   <string name="wc_request_from">Request from</string>
   <string name="wc_signature_type">Signature Type</string>
+  <string name="wc_transaction_info_to_title">To</string>
   <string name="wc_transaction_request">Transaction request</string>
   <string name="wc_transaction_request_title">Transaction request</string>
   <string name="wc_wallet_connect">Wallet connect</string>
