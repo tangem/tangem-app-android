@@ -5,8 +5,8 @@ import com.tangem.blockchain.common.address.AddressType
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.data.common.cache.CacheRegistry
+import com.tangem.data.common.currency.CardCryptoCurrencyFactory
 import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
-import com.tangem.data.tokens.utils.CardCryptoCurrenciesFactory
 import com.tangem.data.tokens.utils.NetworkStatusFactory
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.local.network.NetworksStatusesStore
@@ -15,7 +15,6 @@ import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectSyncOrNull
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.common.util.cardTypesResolver
-import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyAddress
 import com.tangem.domain.tokens.model.Network
@@ -38,12 +37,11 @@ internal class DefaultNetworksRepository(
     private val userWalletsStore: UserWalletsStore,
     private val appPreferencesStore: AppPreferencesStore,
     private val cacheRegistry: CacheRegistry,
+    private val cardCryptoCurrencyFactory: CardCryptoCurrencyFactory,
     private val dispatchers: CoroutineDispatcherProvider,
     excludedBlockchains: ExcludedBlockchains,
 ) : NetworksRepository {
 
-    private val demoConfig = DemoConfig()
-    private val cardCurrenciesFactory = CardCryptoCurrenciesFactory(demoConfig, excludedBlockchains)
     private val responseCurrenciesFactory = ResponseCryptoCurrenciesFactory(excludedBlockchains)
     private val networkStatusFactory = NetworkStatusFactory()
 
@@ -225,10 +223,14 @@ internal class DefaultNetworksRepository(
             responseCurrenciesFactory.createCurrencies(response, userWallet.scanResponse).asSequence()
         } else {
             if (userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()) {
-                cardCurrenciesFactory.createCurrenciesForSingleCurrencyCardWithToken(userWallet.scanResponse)
+                cardCryptoCurrencyFactory.createCurrenciesForSingleCurrencyCardWithToken(
+                    scanResponse = userWallet.scanResponse,
+                )
                     .asSequence()
             } else {
-                val currency = cardCurrenciesFactory.createPrimaryCurrencyForSingleCurrencyCard(userWallet.scanResponse)
+                val currency = cardCryptoCurrencyFactory.createPrimaryCurrencyForSingleCurrencyCard(
+                    scanResponse = userWallet.scanResponse,
+                )
 
                 sequenceOf(currency)
             }
