@@ -15,7 +15,6 @@ import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.repository.CurrenciesRepository
-import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.async
@@ -27,7 +26,6 @@ import kotlinx.coroutines.coroutineScope
  * network statuses, and quotes for tokens associated with a user's wallet.
  *
  * @param currenciesRepository The repository for retrieving currency-related data.
- * @param networksRepository The repository for retrieving network-related data.
  * @param quotesRepository The repository for retrieving cryptocurrency quotes.
  * @param stakingRepository The repository for retrieving staking-related data.
  */
@@ -35,7 +33,6 @@ import kotlinx.coroutines.coroutineScope
 @Suppress("LongParameterList")
 class FetchTokenListUseCase(
     private val currenciesRepository: CurrenciesRepository,
-    private val networksRepository: NetworksRepository,
     private val quotesRepository: QuotesRepository,
     private val stakingRepository: StakingRepository,
     private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
@@ -71,7 +68,6 @@ class FetchTokenListUseCase(
                 fetchNetworksStatuses(
                     userWalletId = userWalletId,
                     networks = currencies.mapTo(hashSetOf()) { it.network },
-                    refresh = mode.refreshNetworksStatuses,
                 )
             }
             val fetchQuotes = async {
@@ -111,23 +107,12 @@ class FetchTokenListUseCase(
     private suspend fun Raise<TokenListError>.fetchNetworksStatuses(
         userWalletId: UserWalletId,
         networks: Set<Network>,
-        refresh: Boolean,
     ) {
-        if (tokensFeatureToggles.isNetworksLoadingRefactoringEnabled) {
-            if (refresh) {
-                multiNetworkStatusFetcher(
-                    params = MultiNetworkStatusFetcher.Params(userWalletId, networks),
-                )
-                    .mapLeft { TokenListError.DataError(it) }
-                    .bind()
-            }
-        } else {
-            catch(
-                block = { networksRepository.getNetworkStatusesSync(userWalletId, networks, refresh) },
-            ) {
-                raise(TokenListError.DataError(it))
-            }
-        }
+        multiNetworkStatusFetcher(
+            params = MultiNetworkStatusFetcher.Params(userWalletId = userWalletId, networks = networks),
+        )
+            .mapLeft(TokenListError::DataError)
+            .bind()
     }
 
     private suspend fun fetchQuotes(currenciesIds: Set<CryptoCurrency.ID>, refresh: Boolean) {
@@ -175,25 +160,21 @@ class FetchTokenListUseCase(
      */
     enum class RefreshMode(
         internal val refreshCurrencies: Boolean,
-        internal val refreshNetworksStatuses: Boolean,
         internal val refreshQuotes: Boolean,
         internal val refreshYieldBalances: Boolean,
     ) {
         NONE(
             refreshCurrencies = false,
-            refreshNetworksStatuses = false,
             refreshQuotes = false,
             refreshYieldBalances = false,
         ),
         FULL(
             refreshCurrencies = true,
-            refreshNetworksStatuses = true,
             refreshQuotes = true,
             refreshYieldBalances = true,
         ),
         SKIP_CURRENCIES(
             refreshCurrencies = false,
-            refreshNetworksStatuses = true,
             refreshQuotes = true,
             refreshYieldBalances = true,
         ),

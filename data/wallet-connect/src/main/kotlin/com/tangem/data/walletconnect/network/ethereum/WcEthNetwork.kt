@@ -22,12 +22,10 @@ import jakarta.inject.Inject
 
 internal class WcEthNetwork(
     private val moshi: Moshi,
-    private val excludedBlockchains: ExcludedBlockchains,
     private val sessionsManager: WcSessionsManager,
     private val factories: Factories,
-) : WcRequestToUseCaseConverter, WcNamespaceConverter {
-
-    override val namespaceKey: NamespaceKey = NamespaceKey("eip155")
+    private val namespaceConverter: NamespaceConverter,
+) : WcRequestToUseCaseConverter {
 
     override fun toWcMethodName(request: WcSdkSessionRequest): WcEthMethodName? {
         val methodKey = request.request.method
@@ -39,7 +37,7 @@ internal class WcEthNetwork(
         val name = toWcMethodName(request) ?: return null
         val method: WcEthMethod = name.toMethod(request) ?: return null
         val session = sessionsManager.findSessionByTopic(request.topic) ?: return null
-        val network = toNetwork(request.chainId.orEmpty(), session.wallet) ?: return null
+        val network = namespaceConverter.toNetwork(request.chainId.orEmpty(), session.wallet) ?: return null
         val accountAddress = when (method) {
             is WcEthMethod.MessageSign -> method.account
             is WcEthMethod.SendTransaction -> method.transaction.from
@@ -100,24 +98,31 @@ internal class WcEthNetwork(
         return WcEthMethod.SignTypedData(params = params, account = account, dataForSign = data)
     }
 
-    override fun toNetwork(chainId: String, wallet: UserWallet): Network? {
-        return toNetwork(chainId, wallet, excludedBlockchains)
-    }
+    internal class NamespaceConverter constructor(
+        private val excludedBlockchains: ExcludedBlockchains,
+    ) : WcNamespaceConverter {
 
-    override fun toBlockchain(chainId: CAIP2): Blockchain? {
-        if (chainId.namespace != namespaceKey.key) return null
-        val ethChainId = chainId.reference.toIntOrNull() ?: return null
-        return Blockchain.fromChainId(ethChainId)
-    }
+        override val namespaceKey: NamespaceKey = NamespaceKey("eip155")
 
-    override fun toCAIP2(network: Network): CAIP2? {
-        val blockchain = Blockchain.fromId(network.id.value)
-        if (!blockchain.isEvm()) return null
-        val chainId = blockchain.getChainId() ?: return null
-        return CAIP2(
-            namespace = namespaceKey.key,
-            reference = chainId.toString(),
-        )
+        override fun toNetwork(chainId: String, wallet: UserWallet): Network? {
+            return toNetwork(chainId, wallet, excludedBlockchains)
+        }
+
+        override fun toBlockchain(chainId: CAIP2): Blockchain? {
+            if (chainId.namespace != namespaceKey.key) return null
+            val ethChainId = chainId.reference.toIntOrNull() ?: return null
+            return Blockchain.fromChainId(ethChainId)
+        }
+
+        override fun toCAIP2(network: Network): CAIP2? {
+            val blockchain = Blockchain.fromId(network.id.value)
+            if (!blockchain.isEvm()) return null
+            val chainId = blockchain.getChainId() ?: return null
+            return CAIP2(
+                namespace = namespaceKey.key,
+                reference = chainId.toString(),
+            )
+        }
     }
 
     internal class Factories @Inject constructor(
