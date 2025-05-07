@@ -20,6 +20,7 @@ import com.tangem.domain.walletconnect.model.WcSession
 import com.tangem.domain.walletconnect.model.WcSessionApprove
 import com.tangem.domain.walletconnect.repository.WcSessionsManager
 import com.tangem.domain.walletconnect.usecase.pair.WcPairState
+import com.tangem.domain.wallets.models.UserWalletId
 import io.mockk.coEvery
 import io.mockk.coVerifyOrder
 import io.mockk.mockk
@@ -91,6 +92,7 @@ internal class DefaultWcPairUseCaseTest {
             wallet = sessionForApprove.wallet,
             sdkModel = WcSdkSessionConverter.convert(this),
             securityStatus = CheckDAppResult.SAFE,
+            networks = setOf(),
         )
 
     private fun useCaseFactory() = DefaultWcPairUseCase(
@@ -99,7 +101,7 @@ internal class DefaultWcPairUseCaseTest {
         caipNamespaceDelegate = caipNamespaceDelegate,
         sdkDelegate = sdkDelegate,
         blockAidVerifier = blockAidVerifier,
-        pairRequest = WcPairRequest(url, source),
+        pairRequest = WcPairRequest(userWalletId = UserWalletId(""), uri = url, source = source),
     )
 
     @Before
