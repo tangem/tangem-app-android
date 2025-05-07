@@ -18,7 +18,7 @@ internal fun WcTransactionRequestButtons(
     activeButtonText: TextReference,
     isLoading: Boolean,
     onDismiss: () -> Unit,
-    onSign: () -> Unit,
+    onClickActiveButton: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8)) {
@@ -34,7 +34,7 @@ internal fun WcTransactionRequestButtons(
                 .fillMaxWidth()
                 .weight(1f),
             text = activeButtonText.resolveReference(),
-            onClick = onSign,
+            onClick = onClickActiveButton,
             iconResId = R.drawable.ic_tangem_24,
             showProgress = isLoading,
         )
