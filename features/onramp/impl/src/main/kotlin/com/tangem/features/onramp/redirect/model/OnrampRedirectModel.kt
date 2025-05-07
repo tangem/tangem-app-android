@@ -46,7 +46,7 @@ internal class OnrampRedirectModel @Inject constructor(
     private val params: OnrampRedirectComponent.Params = paramsContainer.require()
     private val selectedUserWallet = getWalletsUseCase.invokeSync().first { it.walletId == params.userWalletId }
 
-    private var latestOnrampTransaction: OnrampTransaction? = null
+    var latestOnrampTransaction: OnrampTransaction? = null
 
     val state = OnrampRedirectUM(
         topBarConfig = OnrampRedirectTopBarUM(
@@ -100,10 +100,12 @@ internal class OnrampRedirectModel @Inject constructor(
                     val replaceOnrampScreens = appRouter.stack
                         .filterNot { it is AppRoute.Onramp }
                         .toMutableList()
+                    latestOnrampTransaction = null
                     replaceOnrampScreens.add(AppRoute.OnrampSuccess(latestTxId))
                     appRouter.replaceAll(*replaceOnrampScreens.toTypedArray())
                 } else {
                     // Close redirect screen and show last onramp state
+                    latestOnrampTransaction = null
                     params.onBack()
                 }
             }
