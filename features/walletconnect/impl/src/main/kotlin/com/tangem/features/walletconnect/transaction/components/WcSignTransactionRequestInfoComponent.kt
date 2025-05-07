@@ -18,7 +18,7 @@ internal class WcSignTransactionRequestInfoComponent(
         val content = model.uiState.collectAsStateWithLifecycle().value
 
         if (content != null) {
-            TransactionRequestInfoContent(content)
+            TransactionRequestInfoContent(content.transactionRequestInfo)
         }
     }
 }
