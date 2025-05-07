@@ -8,19 +8,10 @@ import kotlinx.collections.immutable.ImmutableList
 
 @Immutable
 internal data class WcSignTransactionUM(
-    @DrawableRes val startIconRes: Int,
-    @DrawableRes val endIconRes: Int,
-    @DrawableRes val transactionIconRes: Int,
     val actions: WcTransactionActionsUM,
-    val state: State = State.TRANSACTION,
     val transaction: WcTransactionUM,
     val transactionRequestInfo: WcTransactionRequestInfoUM,
-) : TangemBottomSheetConfigContent {
-
-    enum class State {
-        TRANSACTION, TRANSACTION_REQUEST_INFO
-    }
-}
+) : TangemBottomSheetConfigContent
 
 @Immutable
 internal data class WcTransactionUM(
@@ -30,26 +21,31 @@ internal data class WcTransactionUM(
     val appSubtitle: String,
     val walletName: String,
     val networkInfo: WcNetworkInfoUM,
+    val addressText: String? = null,
+    val networkFee: String? = null,
     val isLoading: Boolean = false,
 )
 
 @Immutable
 internal data class WcTransactionRequestInfoUM(
+    val blocks: ImmutableList<WcTransactionRequestBlockUM>,
+)
+
+@Immutable
+internal data class WcTransactionRequestBlockUM(
     val info: ImmutableList<WcTransactionRequestInfoItemUM>,
 )
 
 @Immutable
 internal data class WcTransactionRequestInfoItemUM(
     val title: TextReference,
-    val description: String,
+    val description: String = "",
 )
 
 @Immutable
 internal data class WcTransactionActionsUM(
-    val transactionRequestOnClick: () -> Unit,
     val onDismiss: () -> Unit,
     val onSign: () -> Unit,
-    val onBack: () -> Unit,
     val onCopy: () -> Unit,
 )
 
