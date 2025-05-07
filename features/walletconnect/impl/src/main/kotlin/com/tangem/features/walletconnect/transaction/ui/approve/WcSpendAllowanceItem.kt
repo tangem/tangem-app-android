@@ -15,11 +15,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import coil.compose.AsyncImage
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.features.walletconnect.transaction.entity.approve.SpendAllowanceUM
+import com.tangem.features.walletconnect.transaction.entity.approve.WcSpendAllowanceUM
 import com.tangem.features.walletconnect.transaction.ui.common.WcSmallTitleItem
 
 @Composable
-internal fun SpendAllowanceItem(spendAllowance: SpendAllowanceUM, modifier: Modifier = Modifier) {
+internal fun WcSpendAllowanceItem(spendAllowance: WcSpendAllowanceUM, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(TangemTheme.dimens.radius14))
