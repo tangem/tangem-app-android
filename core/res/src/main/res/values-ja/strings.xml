@@ -527,13 +527,13 @@
   <string name="nft_details_base_information">基本情報</string>
   <string name="nft_details_chain">チェーン</string>
   <string name="nft_details_contract_address">コントラクトアドレス</string>
-  <string name="nft_details_info_chain">スタブ</string>
-  <string name="nft_details_info_contract_address">スタブ</string>
-  <string name="nft_details_info_rarity_label">スタブ</string>
-  <string name="nft_details_info_rarity_rank">スタブ</string>
-  <string name="nft_details_info_token_address">スタブ</string>
-  <string name="nft_details_info_token_id">スタブ</string>
-  <string name="nft_details_info_token_standard">スタブ</string>
+  <string name="nft_details_info_chain">チェーンは、NFTが存在するブロックチェーンです。</string>
+  <string name="nft_details_info_contract_address">コントラクトアドレスは、ブロックチェーン上のトークンを管理するスマートコントラクトの識別子です。</string>
+  <string name="nft_details_info_rarity_label">NFTの希少性を示すラベル。数値が低いほどユニークなNFTであることを示します。</string>
+  <string name="nft_details_info_rarity_rank">他のトークンの中での希少性ランキングにおけるNFTの位置。ランクが高ければ高いほど、NFTの希少性と価値は高くなります。</string>
+  <string name="nft_details_info_token_address">トークンアドレスは、ブロックチェーン上のトークンの識別子であり、取引と所有権の追跡を可能にします</string>
+  <string name="nft_details_info_token_id">トークンIDは、各トークンに割り当てられる識別子であり、コレクション内の他のトークンと区別されます</string>
+  <string name="nft_details_info_token_standard">トークン標準は、トークンの種類と、さまざまなウォレットやプラットフォームでどのように機能するかを定義します</string>
   <string name="nft_details_last_sale_price">最終販売価格</string>
   <string name="nft_details_rarity_label">レアリティ・ラベル</string>
   <string name="nft_details_rarity_rank">レアリティ・ランク</string>
@@ -546,7 +546,7 @@
   <string name="nft_receive_available_section_title">利用可能</string>
   <string name="nft_receive_choose_network">ネットワークを選択</string>
   <string name="nft_receive_title">NFTを受け取る</string>
-  <string name="nft_receive_unavailable_asset_warning_message">このネットワークはまだ追加されていません。NFTの受け取りを開始するには、メイン画面に追加してください。</string>
+  <string name="nft_receive_unavailable_asset_warning_message">このネットワークはまだ追加されていません。NFTを受け取るには、ポートフォリオに追加してください。</string>
   <string name="nft_receive_unavailable_asset_warning_title">ネットワークが追加されていません</string>
   <string name="nft_receive_unavailable_section_title">未追加</string>
   <string name="nft_send">NFTを送信する</string>
@@ -1234,7 +1234,7 @@
   <string name="wc_alert_connection_timeout_description">タイムアウトエラーが発生しました。しばらくしてからもう一度お試しください。</string>
   <string name="wc_alert_connection_timeout_title">WalletConnectを確立できませんでした</string>
   <string name="wc_alert_domain_issues_description">このドメインは検証できません。承認前にリクエスト内容をよく確認してください。</string>
-  <string name="wc_alert_session_disconnected_description">ブラウザに戻り、WalletConnect経由で再度接続してください。</string>
+  <string name="wc_alert_session_disconnected_description">ブラウザに戻り、WalletConnect経由で再接続してください。</string>
   <string name="wc_alert_session_disconnected_title">WalletConnectセッションが接続解除されました</string>
   <string name="wc_alert_unknown_error_description">エラーコード: %s 。問題が解決しない場合は、お気軽にサポートまでお問い合わせください。</string>
   <string name="wc_alert_unknown_error_title">不明なエラーが発生しました</string>
@@ -1242,7 +1242,7 @@
   <string name="wc_alert_unsupported_networks_title">サポートされていないネットワーク</string>
   <string name="wc_alert_verified_domain_description">Tangemは%sで必要なネットワークをサポートします。</string>
   <string name="wc_alert_verified_domain_title">検証済みドメイン</string>
-  <string name="wc_alert_wrong_card_description">Tangemアプリで誤ったカードまたはリングが選択されました</string>
+  <string name="wc_alert_wrong_card_description">アプリで間違ったカードまたはリングが選択されました</string>
   <string name="wc_alert_wrong_card_title">問題が起きています</string>
   <string name="wc_common_address">アドレス</string>
   <string name="wc_common_connect">接続する</string>
