@@ -6,7 +6,6 @@ import com.tangem.blockchainsdk.utils.*
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.common.currency.*
-import com.tangem.data.tokens.utils.CardCryptoCurrenciesFactory
 import com.tangem.data.tokens.utils.CustomTokensMerger
 import com.tangem.data.tokens.utils.UserTokensBackwardCompatibility
 import com.tangem.datasource.api.common.response.ApiResponseError
@@ -51,12 +50,12 @@ internal class DefaultCurrenciesRepository(
     private val expressServiceLoader: ExpressServiceLoader,
     private val dispatchers: CoroutineDispatcherProvider,
     private val excludedBlockchains: ExcludedBlockchains,
+    private val cardCryptoCurrencyFactory: CardCryptoCurrencyFactory,
 ) : CurrenciesRepository {
 
     private val demoConfig = DemoConfig()
     private val responseCurrenciesFactory = ResponseCryptoCurrenciesFactory(excludedBlockchains)
     private val cryptoCurrencyFactory = CryptoCurrencyFactory(excludedBlockchains)
-    private val cardCurrenciesFactory = CardCryptoCurrenciesFactory(demoConfig, excludedBlockchains)
     private val userTokensResponseFactory = UserTokensResponseFactory()
     private val userTokensBackwardCompatibility = UserTokensBackwardCompatibility()
     private val customTokensMerger = CustomTokensMerger(tangemTechApi, dispatchers)
@@ -223,7 +222,7 @@ internal class DefaultCurrenciesRepository(
             val userWallet = getUserWallet(userWalletId)
             ensureIsCorrectUserWallet(userWallet, isMultiCurrencyWalletExpected = false)
 
-            val currency = cardCurrenciesFactory.createPrimaryCurrencyForSingleCurrencyCard(userWallet.scanResponse)
+            val currency = cardCryptoCurrencyFactory.createPrimaryCurrencyForSingleCurrencyCard(userWallet.scanResponse)
             fetchExpressAssetsByNetworkIds(userWalletId, listOf(currency), refresh)
             currency
         }
@@ -237,8 +236,8 @@ internal class DefaultCurrenciesRepository(
             val userWallet = getUserWallet(userWalletId)
             ensureIsCorrectUserWallet(userWallet, isMultiCurrencyWalletExpected = false)
 
-            val currencies = cardCurrenciesFactory.createCurrenciesForSingleCurrencyCardWithToken(
-                userWallet.scanResponse,
+            val currencies = cardCryptoCurrencyFactory.createCurrenciesForSingleCurrencyCardWithToken(
+                scanResponse = userWallet.scanResponse,
             )
             fetchExpressAssetsByNetworkIds(userWalletId, currencies, refresh)
             currencies
@@ -253,7 +252,9 @@ internal class DefaultCurrenciesRepository(
             val userWallet = getUserWallet(userWalletId)
             ensureIsCorrectUserWallet(userWallet, isMultiCurrencyWalletExpected = false)
 
-            val currency = cardCurrenciesFactory.createCurrenciesForSingleCurrencyCardWithToken(userWallet.scanResponse)
+            val currency = cardCryptoCurrencyFactory.createCurrenciesForSingleCurrencyCardWithToken(
+                scanResponse = userWallet.scanResponse,
+            )
                 .find { it.id == id }
             requireNotNull(currency) { "Unable to find currency with provided ID: $id" }
             fetchExpressAssetsByNetworkIds(userWalletId, listOf(currency))
@@ -672,7 +673,7 @@ internal class DefaultCurrenciesRepository(
 
     private fun createDefaultUserTokensResponse(userWallet: UserWallet) =
         userTokensResponseFactory.createUserTokensResponse(
-            currencies = cardCurrenciesFactory.createDefaultCoinsForMultiCurrencyCard(userWallet.scanResponse),
+            currencies = cardCryptoCurrencyFactory.createDefaultCoinsForMultiCurrencyCard(userWallet.scanResponse),
             isGroupedByNetwork = false,
             isSortedByBalance = false,
         )
