@@ -950,6 +950,9 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                     swapData = null,
                     txFeeState = txFee,
                     provider = provider,
+                    rating = quoteModel.rating,
+                    averageDuration = quoteModel.averageDuration,
+
                 ).copy(
                     currencyCheck = manageWarnings(
                         fromTokenStatus = fromToken,
@@ -1206,6 +1209,10 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                     swapData = swapData,
                     txFeeState = txFeeState,
                     provider = provider,
+                    rating = null,
+                    averageDuration = null,
+                    // TODO feature/AND-9165_9837_swap_provider_item_redesign what about
+                    // TODO these fields in exchange-data
                 )
                 swapState.copy(
                     permissionState = PermissionDataState.Empty,
@@ -1294,6 +1301,8 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         toTokenAmount: SwapAmount,
         swapData: SwapDataModel?,
         txFeeState: TxFeeState,
+        rating: Double?,
+        averageDuration: Int?,
     ): SwapState.QuotesLoadedState {
         val fromToken = fromTokenStatus.currency
         val toToken = toTokenStatus.currency
@@ -1322,6 +1331,8 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             txFee = txFeeState,
             swapProvider = provider,
             minAdaValue = null,
+            rating = rating,
+            averageDuration = averageDuration,
         )
     }
 
