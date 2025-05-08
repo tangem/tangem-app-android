@@ -428,11 +428,21 @@ private class ProviderItemParameterProvider : CollectionPreviewParameterProvider
             selectionType = ProviderState.SelectionType.SELECT,
             namePrefix = ProviderState.PrefixType.PROVIDED_BY,
             onProviderClick = {},
+            details = ProviderState.ProviderDetails(
+                rating = 4.9,
+                averageDuration = 145,
+                gasFeeFiat = 3.6,
+            ),
         )
         val contentState2 = contentState.copy(
             subtitle = stringReference(value = "1 132,46 MATIC"),
             additionalBadge = ProviderState.AdditionalBadge.PermissionRequired,
             percentLowerThenBest = PercentDifference.Value(value = 5f),
+            details = contentState.details.copy(
+                rating = null,
+                averageDuration = null,
+                gasFeeFiat = null,
+            ),
         )
         val unavailableState = ProviderState.Unavailable(
             id = "1",

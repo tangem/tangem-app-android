@@ -25,4 +25,10 @@ data class ExchangeQuoteResponse(
     @Json(name = "minAmount")
     val minAmount: BigDecimal,
 
+    @Json(name = "rating")
+    val rating: Double?,
+
+    @Json(name = "averageDuration")
+    val averageDuration: Int?,
+
 )
