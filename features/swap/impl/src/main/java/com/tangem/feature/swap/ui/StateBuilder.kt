@@ -354,6 +354,8 @@ internal class StateBuilder(
                 isNeedBestRateBadge = isNeedBestRateBadge,
                 selectionType = ProviderState.SelectionType.CLICK,
                 onProviderClick = actions.onProviderClick,
+                rating = quoteModel.rating,
+                averageDuration = quoteModel.averageDuration,
             ),
             priceImpact = if (quoteModel.priceImpact.value > PRICE_IMPACT_THRESHOLD) {
                 quoteModel.priceImpact
@@ -478,7 +480,7 @@ internal class StateBuilder(
     }
 
     private fun getProviderStateForError(
-        swapProvider: SwapProvider,
+        swapProvider: SwapProvider, // TODO remove this
         fromToken: CryptoCurrency,
         expressDataError: ExpressDataError,
         onProviderClick: (String) -> Unit,
@@ -1147,6 +1149,8 @@ internal class StateBuilder(
         selectionType: ProviderState.SelectionType,
         isNeedBestRateBadge: Boolean,
         onProviderClick: (String) -> Unit,
+        rating: Double?,
+        averageDuration: Int?,
     ): ProviderState {
         val rate = toTokenInfo.tokenAmount.value.calculateRate(
             fromTokenInfo.tokenAmount.value,
@@ -1177,6 +1181,12 @@ internal class StateBuilder(
             percentLowerThenBest = PercentDifference.Empty,
             namePrefix = ProviderState.PrefixType.NONE,
             onProviderClick = onProviderClick,
+            details = ProviderState.ProviderDetails(
+                rating = rating,
+                averageDuration = averageDuration,
+                gasFeeFiat = 3.6,
+            ),
+            // TODO feature/AND-9165_9837_swap_provider_item_redesign
         )
     }
 
@@ -1208,6 +1218,12 @@ internal class StateBuilder(
             } ?: PercentDifference.Value(0f),
             namePrefix = ProviderState.PrefixType.NONE,
             onProviderClick = onProviderClick,
+            details = ProviderState.ProviderDetails(
+                rating = state.rating,
+                averageDuration = state.averageDuration,
+                gasFeeFiat = 3.6,
+            ),
+            // TODO feature/AND-9165_9837_swap_provider_item_redesign
         )
     }
 
@@ -1233,6 +1249,11 @@ internal class StateBuilder(
             percentLowerThenBest = PercentDifference.Empty,
             namePrefix = ProviderState.PrefixType.NONE,
             onProviderClick = onProviderClick,
+            details = ProviderState.ProviderDetails(
+                rating = null,
+                averageDuration = null,
+                gasFeeFiat = null,
+            ),
         )
     }
 
