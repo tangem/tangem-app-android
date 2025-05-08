@@ -29,6 +29,7 @@ sealed class ProviderState {
         val additionalBadge: AdditionalBadge,
         val percentLowerThenBest: PercentDifference = PercentDifference.Empty,
         val namePrefix: PrefixType,
+        val details: ProviderDetails,
         override val onProviderClick: (String) -> Unit,
     ) : ProviderState()
 
@@ -60,6 +61,13 @@ sealed class ProviderState {
     enum class PrefixType {
         NONE, PROVIDED_BY
     }
+
+    @Immutable
+    data class ProviderDetails(
+        val rating: Double?,
+        val averageDuration: Int?,
+        val gasFeeFiat: Double?,
+    )
 }
 
 @Immutable

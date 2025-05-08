@@ -32,6 +32,8 @@ sealed interface SwapState {
         val validationResult: Throwable? = null,
         val minAdaValue: BigDecimal?,
         val swapProvider: SwapProvider,
+        val rating: Double?,
+        val averageDuration: Int?,
     ) : SwapState
 
     data class EmptyAmountState(val zeroAmountEquivalent: String) : SwapState

@@ -253,6 +253,8 @@ internal class DefaultSwapRepository(
                 QuoteModel(
                     toTokenAmount = createFromAmountWithOffset(response.toAmount, response.toDecimals),
                     allowanceContract = response.allowanceContract,
+                    rating = response.rating,
+                    averageDuration = response.averageDuration,
                 ).right()
             } catch (ex: Exception) {
                 getDataError(ex).left()

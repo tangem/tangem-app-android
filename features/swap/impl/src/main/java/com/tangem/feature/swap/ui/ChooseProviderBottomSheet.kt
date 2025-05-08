@@ -117,6 +117,12 @@ private fun Preview_ChooseProviderBottomSheet() {
             selectionType = ProviderState.SelectionType.SELECT,
             namePrefix = ProviderState.PrefixType.NONE,
             onProviderClick = {},
+            details = ProviderState.ProviderDetails(
+                rating = 4.9,
+                averageDuration = 145,
+                gasFeeFiat = 3.6,
+            ),
+
         ),
         ProviderState.Unavailable(
             id = "2",
