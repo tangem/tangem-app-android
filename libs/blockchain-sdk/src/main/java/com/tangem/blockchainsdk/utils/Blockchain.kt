@@ -427,8 +427,8 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Bitrock, Blockchain.BitrockTestnet -> "bitrock"
         Blockchain.Sonic, Blockchain.SonicTestnet -> "sonic-3"
         Blockchain.ApeChain, Blockchain.ApeChainTestnet -> "apecoin"
-        Blockchain.Scroll, Blockchain.ScrollTestnet -> "scroll"
-        Blockchain.ZkLinkNova, Blockchain.ZkLinkNovaTestnet -> "zklink"
+        Blockchain.Scroll, Blockchain.ScrollTestnet -> "scroll-ethereum"
+        Blockchain.ZkLinkNova, Blockchain.ZkLinkNovaTestnet -> "zklink-ethereum"
         Blockchain.Pepecoin, Blockchain.PepecoinTestnet -> "pepecoin-network"
     }
 }
