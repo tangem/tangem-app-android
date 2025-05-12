@@ -372,7 +372,7 @@ internal class DefaultOnrampRepository(
                         refCode = ExpressUtils.getRefCode(
                             userWallet = userWallet,
                             appPreferencesStore = appPreferencesStore,
-                        ).takeUnless { it.isEmpty() },
+                        ),
                     ).bind()
                 },
                 onError = { e ->
