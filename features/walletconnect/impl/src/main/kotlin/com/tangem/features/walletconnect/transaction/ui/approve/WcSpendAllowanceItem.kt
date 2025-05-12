@@ -1,5 +1,6 @@
 package com.tangem.features.walletconnect.transaction.ui.approve
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -12,8 +13,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import com.tangem.features.walletconnect.impl.R
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import coil.compose.AsyncImage
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.walletconnect.transaction.entity.approve.WcSpendAllowanceUM
 import com.tangem.features.walletconnect.transaction.ui.common.WcSmallTitleItem
@@ -52,11 +53,16 @@ internal fun WcSpendAllowanceItem(spendAllowance: WcSpendAllowanceUM, modifier: 
 
                 Spacer(modifier = Modifier.width(TangemTheme.dimens.spacing12))
 
-                Text(
-                    text = spendAllowance.amountText,
-                    style = TangemTheme.typography.body1,
-                    color = TangemTheme.colors.text.primary1,
-                )
+                AnimatedContent(
+                    targetState = spendAllowance.amountText,
+                    label = "Animate Spend allowance text",
+                ) { amount ->
+                    Text(
+                        text = amount,
+                        style = TangemTheme.typography.body1,
+                        color = TangemTheme.colors.text.primary1,
+                    )
+                }
             }
 
             Row(
@@ -64,7 +70,7 @@ internal fun WcSpendAllowanceItem(spendAllowance: WcSpendAllowanceUM, modifier: 
                 horizontalArrangement = Arrangement.End,
             ) {
                 Text(
-                    text = stringResource(R.string.manage_tokens_edit),
+                    text = stringResourceSafe(R.string.manage_tokens_edit),
                     style = TangemTheme.typography.body1,
                     color = TangemTheme.colors.text.tertiary,
                 )
