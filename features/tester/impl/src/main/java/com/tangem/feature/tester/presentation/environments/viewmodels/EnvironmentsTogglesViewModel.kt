@@ -96,15 +96,15 @@ internal class EnvironmentsTogglesViewModel @Inject constructor(
         viewModelScope.launch {
             val environment = ApiEnvironment.valueOf(name)
 
-            handleIfTangemCardSdkConfig(id = id, environment = environment)
+            handleIfAttestationConfig(id = id, environment = environment)
 
             mutableApiConfigsManager.changeEnvironment(id = id, environment = environment)
         }
     }
 
-    /** Special logic for [ApiConfig.ID.TangemCardSdk] */
-    private fun handleIfTangemCardSdkConfig(id: String, environment: ApiEnvironment) {
-        if (id == ApiConfig.ID.TangemCardSdk.name) {
+    /** Special logic for [ApiConfig.ID.Attestation] */
+    private fun handleIfAttestationConfig(id: String, environment: ApiEnvironment) {
+        if (id == ApiConfig.ID.Attestation.name) {
             cardSdkConfigRepository.setTangemApiProdEnvFlag(
                 flag = when (environment) {
                     ApiEnvironment.PROD -> true
