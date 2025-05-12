@@ -52,7 +52,6 @@ internal class SendBalanceUpdater @AssistedInject constructor(
             userWalletId = userWallet.walletId,
             network = cryptoCurrency.network,
             delayMillis = delay,
-            refresh = true,
         )
     }
 
