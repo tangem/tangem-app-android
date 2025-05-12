@@ -3,6 +3,7 @@ package com.tangem.feature.swap.ui
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.CircularProgressIndicator
@@ -395,6 +396,28 @@ private fun RecommendedItem(modifier: Modifier = Modifier) {
             style = TangemTheme.typography.caption1,
             color = TangemTheme.colors.icon.accent,
             modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing6),
+        )
+    }
+}
+
+@Composable
+private fun RowScope.OutlinedText(text: String) {
+    Box(
+        modifier = Modifier
+            .alignByBaseline()
+            .heightIn(min = TangemTheme.dimens.size16)
+            .border(
+                width = TangemTheme.dimens.size1,
+                color = TangemTheme.colors.field.primary,
+                shape = TangemTheme.shapes.roundedCornersSmall2,
+            )
+            .padding(horizontal = TangemTheme.dimens.spacing5),
+    ) {
+        Text(
+            text = text,
+            color = TangemTheme.colors.text.tertiary,
+            style = TangemTheme.typography.caption1,
+            maxLines = 1,
         )
     }
 }
