@@ -27,19 +27,16 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.walletconnect.impl.R
-import com.tangem.features.walletconnect.transaction.entity.*
-import com.tangem.features.walletconnect.transaction.entity.WcNetworkInfoUM
-import com.tangem.features.walletconnect.transaction.entity.WcSignTransactionUM
-import com.tangem.features.walletconnect.transaction.entity.WcTransactionActionsUM
-import com.tangem.features.walletconnect.transaction.entity.WcTransactionRequestInfoUM
-import com.tangem.features.walletconnect.transaction.entity.WcTransactionUM
+import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionRequestBlockUM
+import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionRequestInfoItemUM
+import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionRequestInfoUM
 import kotlinx.collections.immutable.persistentListOf
 
 private const val MIN_HEIGHT_SCREEN_PERCENT = 0.35f
 private const val MAX_HEIGHT_SCREEN_PERCENT = 0.75f
 
 @Composable
-internal fun TransactionRequestInfoContent(state: WcSignTransactionUM) {
+internal fun TransactionRequestInfoContent(state: WcTransactionRequestInfoUM) {
     val screenHeight = LocalConfiguration.current.screenHeightDp
     val minHeight = (screenHeight * MIN_HEIGHT_SCREEN_PERCENT).dp
     val maxHeight = (screenHeight * MAX_HEIGHT_SCREEN_PERCENT).dp
@@ -55,7 +52,7 @@ internal fun TransactionRequestInfoContent(state: WcSignTransactionUM) {
                 .fillMaxWidth(),
             contentPadding = PaddingValues(top = TangemTheme.dimens.spacing8, bottom = TangemTheme.dimens.spacing70),
         ) {
-            items(state.transactionRequestInfo.blocks) { block ->
+            items(state.blocks) { block ->
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -98,7 +95,7 @@ internal fun TransactionRequestInfoContent(state: WcSignTransactionUM) {
                 .padding(bottom = TangemTheme.dimens.spacing20)
                 .fillMaxWidth(),
             text = stringResourceSafe(R.string.wc_copy_data_button_text),
-            onClick = state.actions.onCopy,
+            onClick = state.onCopy,
             iconResId = R.drawable.ic_copy_24,
         )
     }
@@ -108,10 +105,10 @@ internal fun TransactionRequestInfoContent(state: WcSignTransactionUM) {
 @Preview(showBackground = true, device = Devices.PIXEL_7_PRO)
 @Preview(showBackground = true, device = Devices.PIXEL_7_PRO, uiMode = Configuration.UI_MODE_NIGHT_YES)
 private fun WcSignTransactionRequestInfoBottomSheetPreview(
-    @PreviewParameter(WcSignTransactionStateProvider::class) state: WcSignTransactionUM,
+    @PreviewParameter(WcSignTransactionStateProvider::class) state: WcTransactionRequestInfoUM,
 ) {
     TangemThemePreview {
-        TangemModalBottomSheet<WcSignTransactionUM>(
+        TangemModalBottomSheet<WcTransactionRequestInfoUM>(
             config = TangemBottomSheetConfig(
                 isShown = true,
                 onDismissRequest = {},
@@ -134,86 +131,56 @@ private fun WcSignTransactionRequestInfoBottomSheetPreview(
     }
 }
 
-private class WcSignTransactionStateProvider : CollectionPreviewParameterProvider<WcSignTransactionUM>(
+private class WcSignTransactionStateProvider : CollectionPreviewParameterProvider<WcTransactionRequestInfoUM>(
     listOf(
-        WcSignTransactionUM(
-            transaction = WcTransactionUM(
-                appName = "React App",
-                appIcon = "",
-                isVerified = true,
-                appSubtitle = "react-app.walletconnect.com",
-                walletName = "Tangem 2.0",
-                networkInfo = WcNetworkInfoUM(name = "Ethereum", iconRes = R.drawable.img_eth_22),
-            ),
-            transactionRequestInfo = WcTransactionRequestInfoUM(
-                blocks = persistentListOf(
-                    WcTransactionRequestBlockUM(
-                        persistentListOf(
-                            WcTransactionRequestInfoItemUM(
-                                title = resourceReference(R.string.wc_signature_type),
-                                description = "personal_sign",
-                            ),
-                            WcTransactionRequestInfoItemUM(
-                                title = resourceReference(R.string.wc_contents),
-                                description = "Hello! My name is John Dow. test@tange.com",
-                            ),
+        WcTransactionRequestInfoUM(
+            blocks = persistentListOf(
+                WcTransactionRequestBlockUM(
+                    persistentListOf(
+                        WcTransactionRequestInfoItemUM(
+                            title = resourceReference(R.string.wc_signature_type),
+                            description = "personal_sign",
+                        ),
+                        WcTransactionRequestInfoItemUM(
+                            title = resourceReference(R.string.wc_contents),
+                            description = "Hello! My name is John Dow. test@tange.com",
                         ),
                     ),
                 ),
             ),
-            actions = WcTransactionActionsUM(
-                onDismiss = {},
-                onSign = {},
-                onCopy = {},
-            ),
+            onCopy = {},
         ),
-        WcSignTransactionUM(
-            transaction = WcTransactionUM(
-                appName = "React App",
-                appIcon = "",
-                isVerified = true,
-                appSubtitle = "react-app.walletconnect.com",
-                walletName = "Tangem 2.0",
-                networkInfo = WcNetworkInfoUM(name = "Ethereum", iconRes = R.drawable.img_eth_22),
-                addressText = "0x345FF...34FA",
-                networkFee = "~ 0.22 $",
-            ),
-            transactionRequestInfo = WcTransactionRequestInfoUM(
-                blocks = persistentListOf(
-                    WcTransactionRequestBlockUM(
-                        persistentListOf(
-                            WcTransactionRequestInfoItemUM(
-                                title = resourceReference(R.string.wc_signature_type),
-                                description = "personal_sign",
-                            ),
-                            WcTransactionRequestInfoItemUM(
-                                title = resourceReference(R.string.wc_contents),
-                                description = "Hello! My name is John Dow. test@tange.com",
-                            ),
+        WcTransactionRequestInfoUM(
+            blocks = persistentListOf(
+                WcTransactionRequestBlockUM(
+                    persistentListOf(
+                        WcTransactionRequestInfoItemUM(
+                            title = resourceReference(R.string.wc_signature_type),
+                            description = "personal_sign",
+                        ),
+                        WcTransactionRequestInfoItemUM(
+                            title = resourceReference(R.string.wc_contents),
+                            description = "Hello! My name is John Dow. test@tange.com",
                         ),
                     ),
-                    WcTransactionRequestBlockUM(
-                        persistentListOf(
-                            WcTransactionRequestInfoItemUM(
-                                title = resourceReference(R.string.wc_transaction_info_to_title),
-                            ),
-                            WcTransactionRequestInfoItemUM(
-                                title = resourceReference(R.string.settings_wallet_name_title),
-                                description = "Bob",
-                            ),
-                            WcTransactionRequestInfoItemUM(
-                                title = resourceReference(R.string.wc_common_wallet),
-                                description = "0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826",
-                            ),
+                ),
+                WcTransactionRequestBlockUM(
+                    persistentListOf(
+                        WcTransactionRequestInfoItemUM(
+                            title = resourceReference(R.string.wc_transaction_info_to_title),
+                        ),
+                        WcTransactionRequestInfoItemUM(
+                            title = resourceReference(R.string.settings_wallet_name_title),
+                            description = "Bob",
+                        ),
+                        WcTransactionRequestInfoItemUM(
+                            title = resourceReference(R.string.wc_common_wallet),
+                            description = "0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826",
                         ),
                     ),
                 ),
             ),
-            actions = WcTransactionActionsUM(
-                onDismiss = {},
-                onSign = {},
-                onCopy = {},
-            ),
+            onCopy = {},
         ),
     ),
 )
