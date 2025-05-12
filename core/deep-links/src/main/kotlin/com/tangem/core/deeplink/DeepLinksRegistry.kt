@@ -2,6 +2,11 @@ package com.tangem.core.deeplink
 
 import android.content.Intent
 
+/**
+ * Key to pass deeplink via intent
+ */
+const val DEEPLINK_KEY = "deeplink"
+
 // TODO: Add tests
 /**
  * Provides functionality to handle deep links.
@@ -44,9 +49,9 @@ interface DeepLinksRegistry {
 
     /**
      * Triggers run last launched [Intent] with deeplink handlers that can handle delayed deeplink
-     * after handle [Intent] clear that and second time no intent will be handled
+     * of specific [deepLinkClass] after handle [Intent] clear that and second time no intent will be handled
      */
-    fun triggerDelayedDeeplink()
+    fun triggerDelayedDeeplink(deepLinkClass: Class<out DeepLink>)
 
     fun cancelDelayedDeeplink()
 }
