@@ -83,11 +83,20 @@ internal class DefaultSingleNetworkStatusFetcher @Inject constructor(
 
         val statusValue = status.value
         if (statusValue is NetworkStatus.Unreachable) {
-            networksStatusesStore.storeError(
+            val prevStatus = networksStatusesStore.getSyncOrNull(
                 userWalletId = params.userWalletId,
                 network = params.network,
-                value = statusValue,
             )
+
+            if (prevStatus?.value is NetworkStatus.MissedDerivation) {
+                networksStatusesStore.storeUnreachableStatus(userWalletId = params.userWalletId, value = status)
+            } else {
+                networksStatusesStore.storeError(
+                    userWalletId = params.userWalletId,
+                    network = params.network,
+                    value = statusValue,
+                )
+            }
         } else {
             networksStatusesStore.storeSuccess(userWalletId = params.userWalletId, value = status)
         }
