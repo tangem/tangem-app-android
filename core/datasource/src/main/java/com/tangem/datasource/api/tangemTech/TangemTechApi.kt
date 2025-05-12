@@ -172,6 +172,9 @@ interface TangemTechApi {
 
     @GET("user-wallets/wallets/{wallet_id}")
     suspend fun getWalletById(@Path("wallet_id") walletId: String): ApiResponse<WalletResponse>
+
+    @GET("user-wallets/wallets/by-app/{app_id}")
+    suspend fun getWallets(@Path("app_id") appId: String): ApiResponse<List<WalletResponse>>
     // endregion
 
     companion object {
