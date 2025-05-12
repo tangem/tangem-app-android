@@ -102,7 +102,13 @@ class MockCryptoCurrencyFactory(private val scanResponse: ScanResponse = default
 
     fun createToken(blockchain: Blockchain): CryptoCurrency {
         return factory.createToken(
-            sdkToken = Token(symbol = "NEVER-MIND", contractAddress = "NEVER-MIND", decimals = 8),
+            sdkToken = Token(
+                name = "NEVER-MIND",
+                symbol = "NEVER-MIND",
+                contractAddress = "NEVER-MIND",
+                decimals = 8,
+                id = "NEVER-MIND",
+            ),
             blockchain = blockchain,
             extraDerivationPath = null,
             scanResponse = scanResponse,
