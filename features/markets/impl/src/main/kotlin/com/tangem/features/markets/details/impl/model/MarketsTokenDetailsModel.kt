@@ -26,6 +26,9 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.markets.*
+import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
+import com.tangem.domain.settings.usercountry.models.UserCountry
+import com.tangem.domain.settings.usercountry.models.needApplyFCARestrictions
 import com.tangem.features.markets.details.MarketsTokenDetailsComponent
 import com.tangem.features.markets.details.impl.analytics.MarketDetailsAnalyticsEvent
 import com.tangem.features.markets.details.impl.model.converters.DescriptionConverter
@@ -49,6 +52,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import org.joda.time.DateTime
 import java.math.BigDecimal
+import java.util.Locale
 import javax.inject.Inject
 
 @Suppress("LargeClass", "LongParameterList")
@@ -66,9 +70,11 @@ internal class MarketsTokenDetailsModel @Inject constructor(
     private val urlOpener: UrlOpener,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val excludedBlockchains: ExcludedBlockchains,
+    private val getUserCountryUseCase: GetUserCountryUseCase,
 ) : Model() {
 
     private var quotesJob = JobHolder()
+    private var userCountry: UserCountry? = null
     private val params = paramsContainer.require<MarketsTokenDetailsComponent.Params>()
     private val analyticsEventBuilder = MarketDetailsAnalyticsEvent.EventBuilder(token = params.token)
 
@@ -121,6 +127,9 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                 ),
             )
         },
+        needApplyFCARestrictions = Provider {
+            userCountry.needApplyFCARestrictions()
+        },
         // ==================
     )
 
@@ -129,6 +138,9 @@ internal class MarketsTokenDetailsModel @Inject constructor(
             showBottomSheet(it)
             // === Analytics ===
             analyticsEventHandler.send(analyticsEventBuilder.readMoreClicked())
+        },
+        needApplyFCARestrictions = Provider {
+            userCountry.needApplyFCARestrictions()
         },
         onGeneratedAINotificationClick = {
             modelScope.launch {
@@ -231,6 +243,8 @@ internal class MarketsTokenDetailsModel @Inject constructor(
     private val loadChartJobHolder = JobHolder()
 
     init {
+        userCountry = getUserCountryUseCase.invokeSync().getOrNull()
+            ?: UserCountry.Other(Locale.getDefault().country)
         // reload screen if currency changed
         modelScope.launch {
             currentAppCurrency
