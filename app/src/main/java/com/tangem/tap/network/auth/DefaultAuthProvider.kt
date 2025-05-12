@@ -13,4 +13,10 @@ internal class DefaultAuthProvider(private val userWalletsListManager: UserWalle
     override fun getCardId(): String {
         return userWalletsListManager.selectedUserWalletSync?.scanResponse?.card?.cardId ?: ""
     }
+
+    override fun getCardsPublicKeys(): Map<String, String> {
+        return userWalletsListManager.userWalletsSync.associate {
+            it.scanResponse.card.cardId to it.scanResponse.card.cardPublicKey.toHexString()
+        }
+    }
 }
