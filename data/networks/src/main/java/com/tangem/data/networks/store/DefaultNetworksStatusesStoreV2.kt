@@ -105,6 +105,17 @@ internal class DefaultNetworksStatusesStoreV2(
         )
     }
 
+    override suspend fun storeError(userWalletId: UserWalletId, networks: Set<Network>) {
+        updateInRuntime(
+            userWalletId = userWalletId,
+            networks = networks,
+            ifNotFound = ::createUnreachableStatus,
+            update = { status ->
+                status.copy(value = status.value.copySealed(source = StatusSource.ONLY_CACHE))
+            },
+        )
+    }
+
     private suspend fun updateInRuntime(
         userWalletId: UserWalletId,
         networks: Set<Network>,
