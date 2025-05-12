@@ -24,10 +24,10 @@ import com.tangem.feature.swap.domain.models.domain.ExchangeStatus.Companion.isF
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatusModel
 import com.tangem.feature.swap.domain.models.domain.SavedSwapTransactionListModel
 import com.tangem.feature.swap.domain.models.domain.SavedSwapTransactionModel
+import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.ExchangeStatusNotification
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExchangeStatusState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExchangeUM
-import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
@@ -131,7 +131,10 @@ internal class TokenDetailsSwapTransactionsStateConverter(
             notification = notification,
             statuses = getStatuses(statusModel.status, hasFailed),
             showProviderLink = showProviderLink,
-            info = tx.info.copy(txExternalUrl = statusModel.txExternalUrl),
+            info = tx.info.copy(
+                txExternalId = statusModel.txExternalId,
+                txExternalUrl = statusModel.txExternalUrl,
+            ),
         )
     }
 
