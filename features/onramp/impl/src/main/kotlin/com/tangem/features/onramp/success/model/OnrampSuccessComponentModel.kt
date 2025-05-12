@@ -20,6 +20,7 @@ import com.tangem.domain.onramp.model.cache.OnrampTransaction
 import com.tangem.domain.onramp.model.error.OnrampError
 import com.tangem.domain.tokens.GetCryptoCurrencyUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.analytics.TokenOnrampAnalyticsEvent
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.onramp.component.OnrampSuccessComponent
 import com.tangem.features.onramp.impl.R
@@ -64,6 +65,7 @@ internal class OnrampSuccessComponentModel @Inject constructor(
     }
 
     override fun goToProviderClick(providerLink: String) {
+        analyticsEventHandler.send(TokenOnrampAnalyticsEvent.GoToProvider)
         urlOpener.openUrl(providerLink)
     }
 
