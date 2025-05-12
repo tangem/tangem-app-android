@@ -34,6 +34,7 @@ import javax.inject.Inject
  *
 [REDACTED_AUTHOR]
  */
+@Suppress("LongParameterList")
 internal class DefaultMultiNetworkStatusFetcher @Inject constructor(
     excludedBlockchains: ExcludedBlockchains,
     private val networksStatusesStore: NetworksStatusesStoreV2,
