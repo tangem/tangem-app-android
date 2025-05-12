@@ -1,5 +1,6 @@
 package com.tangem.features.walletconnect.transaction.ui.common
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
@@ -48,11 +49,16 @@ internal fun WcNetworkFeeItem(networkFeeText: String, modifier: Modifier = Modif
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.End,
         ) {
-            Text(
-                text = networkFeeText,
-                style = TangemTheme.typography.body1,
-                color = TangemTheme.colors.text.tertiary,
-            )
+            AnimatedContent(
+                targetState = networkFeeText,
+                label = "Animate Network fee text",
+            ) { fee ->
+                Text(
+                    text = fee,
+                    style = TangemTheme.typography.body1,
+                    color = TangemTheme.colors.text.tertiary,
+                )
+            }
             Spacer(modifier = Modifier.width(TangemTheme.dimens.spacing6))
             Icon(
                 modifier = Modifier
