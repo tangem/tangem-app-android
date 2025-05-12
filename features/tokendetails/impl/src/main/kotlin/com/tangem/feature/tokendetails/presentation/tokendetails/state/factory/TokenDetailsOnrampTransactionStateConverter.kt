@@ -116,7 +116,10 @@ internal class TokenDetailsOnrampTransactionStateConverter(
     }
 
     private fun onProviderClick(externalTxUrl: String?) = if (externalTxUrl != null) {
-        { clickIntents.onGoToProviderClick(externalTxUrl) }
+        {
+            analyticsEventHandler.send(TokenOnrampAnalyticsEvent.GoToProvider)
+            clickIntents.onGoToProviderClick(externalTxUrl)
+        }
     } else {
         null
     }
@@ -270,6 +273,7 @@ internal class TokenDetailsOnrampTransactionStateConverter(
                     icon = R.drawable.ic_arrow_top_right_24,
                     text = resourceReference(R.string.common_go_to_provider),
                     onClick = {
+                        analyticsEventHandler.send(TokenOnrampAnalyticsEvent.GoToProvider)
                         clickIntents.onGoToProviderClick(externalTxUrl)
                     },
                 )
