@@ -17,38 +17,38 @@ interface OnrampApi {
     @GET("currencies")
     suspend fun getCurrencies(
         @Header("user-id") userWalletId: String,
-        @Header("refcode") refCode: String,
+        @Header("refcode") refCode: String?,
     ): ApiResponse<List<OnrampCurrencyDTO>>
 
     @GET("countries")
     suspend fun getCountries(
         @Header("user-id") userWalletId: String,
-        @Header("refcode") refCode: String,
+        @Header("refcode") refCode: String?,
     ): ApiResponse<List<OnrampCountryDTO>>
 
     @GET("country-by-ip")
     suspend fun getCountryByIp(
         @Header("user-id") userWalletId: String,
-        @Header("refcode") refCode: String,
+        @Header("refcode") refCode: String?,
     ): ApiResponse<OnrampCountryDTO>
 
     @GET("payment-methods")
     suspend fun getPaymentMethods(
         @Header("user-id") userWalletId: String,
-        @Header("refcode") refCode: String,
+        @Header("refcode") refCode: String?,
     ): ApiResponse<List<PaymentMethodDTO>>
 
     @POST("onramp-pairs")
     suspend fun getPairs(
         @Header("user-id") userWalletId: String,
-        @Header("refcode") refCode: String,
+        @Header("refcode") refCode: String?,
         @Body body: OnrampPairsRequest,
     ): ApiResponse<List<OnrampPairDTO>>
 
     @GET("onramp-quote")
     suspend fun getQuote(
         @Header("user-id") userWalletId: String,
-        @Header("refcode") refCode: String,
+        @Header("refcode") refCode: String?,
         @Query("fromCurrencyCode") fromCurrencyCode: String,
         @Query("fromPrecision") fromPrecision: Int,
         @Query("toContractAddress") toContractAddress: String,
@@ -83,7 +83,7 @@ interface OnrampApi {
     @GET("onramp-status")
     suspend fun getStatus(
         @Header("user-id") userWalletId: String,
-        @Header("refcode") refCode: String,
+        @Header("refcode") refCode: String?,
         @Query("txId") txId: String,
     ): ApiResponse<OnrampStatusResponse>
 }
