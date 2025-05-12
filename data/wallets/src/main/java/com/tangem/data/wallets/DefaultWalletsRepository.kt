@@ -1,6 +1,8 @@
 package com.tangem.data.wallets
 
 import com.tangem.data.wallets.converters.UserWalletRemoteInfoConverter
+import com.tangem.data.wallets.converters.WalletIdBodyConverter
+import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.api.common.response.ApiResponseError.HttpException
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
@@ -18,6 +20,7 @@ import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
 import com.tangem.datasource.local.preferences.utils.store
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.wallets.models.SeedPhraseNotificationsStatus
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.models.UserWalletRemoteInfo
 import com.tangem.domain.wallets.repository.WalletsRepository
@@ -37,6 +40,7 @@ internal class DefaultWalletsRepository(
     private val userWalletsStore: UserWalletsStore,
     private val seedPhraseNotificationVisibilityStore: RuntimeStateStore<SeedPhraseNotificationsStatuses>,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val authProvider: AuthProvider,
 ) : WalletsRepository {
 
     override suspend fun shouldSaveUserWalletsSync(): Boolean {
@@ -286,6 +290,22 @@ internal class DefaultWalletsRepository(
                     }
                     userWallet
                 }
+        }
+
+    override suspend fun associateWallets(applicationId: String, wallets: List<UserWallet>) =
+        withContext(dispatchers.io) {
+            val publicKeys = authProvider.getCardsPublicKeys()
+            val walletsBody = wallets.map { userWallet ->
+                WalletIdBodyConverter.convert(
+                    userWallet = userWallet,
+                    publicKeys = publicKeys.filterKeys { userWallet.cardsInWallet.contains(it) },
+                )
+            }
+
+            tangemTechApi.associateApplicationIdWithWallets(
+                applicationId = applicationId,
+                body = walletsBody,
+            ).getOrThrow()
         }
 
     private suspend fun loadAndSaveNotificationsEnabled(userWalletId: UserWalletId): Boolean {
