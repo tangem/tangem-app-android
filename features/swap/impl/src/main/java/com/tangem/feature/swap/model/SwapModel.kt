@@ -31,6 +31,9 @@ import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.promo.GetStoryContentUseCase
 import com.tangem.domain.promo.ShouldShowStoriesUseCase
 import com.tangem.domain.promo.models.StoryContentIds
+import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
+import com.tangem.domain.settings.usercountry.models.UserCountry
+import com.tangem.domain.settings.usercountry.models.needApplyFCARestrictions
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -95,6 +98,7 @@ internal class SwapModel @Inject constructor(
     private val getMinimumTransactionAmountSyncUseCase: GetMinimumTransactionAmountSyncUseCase,
     private val shouldShowStoriesUseCase: ShouldShowStoriesUseCase,
     private val getStoryContentUseCase: GetStoryContentUseCase,
+    private val getUserCountryUseCase: GetUserCountryUseCase,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     swapInteractorFactory: SwapInteractor.Factory,
     private val urlOpener: UrlOpener,
@@ -145,6 +149,7 @@ internal class SwapModel @Inject constructor(
     private val lastAmount = mutableStateOf(INITIAL_AMOUNT)
     private val lastReducedBalanceBy = mutableStateOf(BigDecimal.ZERO)
     private var swapRouter: SwapRouter = SwapRouter(router = router)
+    private var userCountry: UserCountry? = null
 
     private val isUserResolvableError: (SwapState) -> Boolean = {
         it is SwapState.SwapError &&
@@ -163,10 +168,13 @@ internal class SwapModel @Inject constructor(
         get() = swapRouter.currentScreen
 
     init {
+        userCountry = getUserCountryUseCase.invokeSync().getOrNull()
+            ?: UserCountry.Other(Locale.getDefault().country)
         modelScope.launch {
             initStories()
             swapRouter.openScreen(SwapNavScreen.PromoStories)
         }
+
         modelScope.launch(dispatchers.io) {
             val fromStatus = getCryptoCurrencyStatusUseCase(userWalletId, initialCurrencyFrom.id).getOrNull()
             val toStatus = initialCurrencyTo?.let { getCryptoCurrencyStatusUseCase(userWalletId, it.id).getOrNull() }
@@ -441,6 +449,7 @@ internal class SwapModel @Inject constructor(
                     isNeedBestRateBadge = dataState.lastLoadedSwapStates.consideredProvidersStates().size > 1,
                     selectedFeeType = dataState.selectedFee?.feeType ?: FeeType.NORMAL,
                     isReverseSwapPossible = isReverseSwapPossible(),
+                    needApplyFCARestrictions = userCountry.needApplyFCARestrictions(),
                 )
                 if (uiState.notifications.any { it is SwapNotificationUM.Error.UnableToCoverFeeWarning }) {
                     analyticsEventHandler.send(
