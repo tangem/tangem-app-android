@@ -12,6 +12,7 @@ import com.squareup.moshi.Moshi
 import com.tangem.data.notifications.converters.NotificationsEligibleNetworkConverter
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.tangemTech.models.*
+import com.tangem.domain.notifications.models.ApplicationId
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -41,9 +42,9 @@ class DefaultNotificationsRepositoryTest {
     fun `GIVEN valid push token WHEN createApplicationId THEN returns application id`() = runTest {
         // GIVEN
         val pushToken = "test-push-token"
-        val expectedAppId = "test-app-id"
+        val expectedAppId = ApplicationId("test-app-id")
         val expectedAppIdResponse = NotificationApplicationIdResponse(
-            appId = expectedAppId,
+            appId = expectedAppId.value,
         )
         coEvery { appInfoProvider.platform } returns "android"
         coEvery { appInfoProvider.device } returns "test-device"
@@ -76,7 +77,7 @@ class DefaultNotificationsRepositoryTest {
     @Test
     fun `GIVEN application id WHEN saveApplicationId THEN stores it in preferences`() = runTest {
         // GIVEN
-        val appId = "test-app-id"
+        val appId = ApplicationId("test-app-id")
         val preferences = mockk<Preferences>(relaxed = true)
         coEvery { preferencesDataStore.updateData(any()) } returns preferences
 
@@ -90,10 +91,10 @@ class DefaultNotificationsRepositoryTest {
     @Test
     fun `GIVEN stored application id WHEN getApplicationId THEN returns it`() = runTest {
         // GIVEN
-        val expectedAppId = "test-app-id"
+        val expectedAppId = ApplicationId("test-app-id")
         val preferences = mockk<Preferences>(relaxed = true)
         val key = stringPreferencesKey(PreferencesKeys.NOTIFICATIONS_APPLICATION_ID_KEY.name)
-        every { preferences[key] } returns expectedAppId
+        every { preferences[key] } returns expectedAppId.value
         coEvery { preferencesDataStore.data } returns flowOf(preferences)
 
         // WHEN
@@ -104,74 +105,23 @@ class DefaultNotificationsRepositoryTest {
     }
 
     @Test
-    fun `GIVEN application id and wallet list WHEN associateApplicationIdWithWallets THEN associates them`() = runTest {
-        // GIVEN
-        val appId = "test-app-id"
-        val wallets = listOf("wallet1", "wallet2")
-        coEvery {
-            tangemTechApi.associateApplicationIdWithWallets(
-                appId,
-                wallets.map { WalletIdBody(it) },
-            )
-        } returns ApiResponse.Success(Unit)
-
-        // WHEN
-        repository.associateApplicationIdWithWallets(appId, wallets)
-
-        // THEN
-        coVerify { tangemTechApi.associateApplicationIdWithWallets(appId, wallets.map { WalletIdBody(it) }) }
-    }
-
-    @Test
-    fun `GIVEN wallet id and name WHEN setWalletName THEN updates wallet name`() = runTest {
-        // GIVEN
-        val walletId = "test-wallet-id"
-        val walletName = "Test Wallet"
-        coEvery {
-            tangemTechApi.updateWallet(
-                walletId,
-                WalletBody(name = walletName),
-            )
-        } returns ApiResponse.Success(Unit)
-
-        // WHEN
-        repository.setWalletName(walletId, walletName)
-
-        // THEN
-        coVerify { tangemTechApi.updateWallet(walletId, WalletBody(name = walletName)) }
-    }
-
-    @Test
-    fun `GIVEN wallet id WHEN getWalletName THEN returns wallet name`() = runTest {
-        // GIVEN
-        val walletId = "test-wallet-id"
-        val expectedName = "Test Wallet"
-        coEvery { tangemTechApi.getWalletById(walletId) } returns ApiResponse.Success(
-            WalletResponse(
-                notifyStatus = false,
-                name = expectedName,
-                id = walletId,
-            ),
-        )
-
-        // WHEN
-        val result = repository.getWalletName(walletId)
-
-        // THEN
-        assertThat(result).isEqualTo(expectedName)
-    }
-
-    @Test
     fun `GIVEN application id and push token WHEN sendPushToken THEN updates push token`() = runTest {
         // GIVEN
-        val appId = "test-app-id"
+        val appId = ApplicationId("test-app-id")
         val pushToken = "test-push-token"
         coEvery {
             tangemTechApi.updatePushTokenForApplicationId(
-                appId,
-                NotificationApplicationCreateBody(pushToken = pushToken),
+                appId.value,
+                NotificationApplicationCreateBody(
+                    pushToken = pushToken,
+                    platform = null,
+                    device = null,
+                    systemVersion = null,
+                    language = null,
+                    timezone = null,
+                ),
             )
-        } returns ApiResponse.Success(appId)
+        } returns ApiResponse.Success(appId.value)
 
         // WHEN
         repository.sendPushToken(appId, pushToken)
@@ -179,8 +129,15 @@ class DefaultNotificationsRepositoryTest {
         // THEN
         coVerify {
             tangemTechApi.updatePushTokenForApplicationId(
-                appId,
-                NotificationApplicationCreateBody(pushToken = pushToken),
+                appId.value,
+                NotificationApplicationCreateBody(
+                    pushToken = pushToken,
+                    platform = null,
+                    device = null,
+                    systemVersion = null,
+                    language = null,
+                    timezone = null,
+                ),
             )
         }
     }
