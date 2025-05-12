@@ -1,7 +1,10 @@
 package com.tangem.features.nft.details.ui
 
 import android.content.res.Configuration
-import androidx.compose.animation.*
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -14,21 +17,17 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
-import com.tangem.common.ui.amountScreen.utils.getFiatString
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.atoms.text.ReadMoreText
 import com.tangem.core.ui.components.block.information.InformationBlock
+import com.tangem.core.ui.components.flicker
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.format.bigdecimal.crypto
-import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.features.nft.details.entity.NFTAssetUM
 import com.tangem.features.nft.impl.R
-import java.math.BigDecimal
 
 private const val READ_MORE_MAX_LINES = 3
 
@@ -68,7 +67,9 @@ internal fun NFTDetailsInfoGroup(
 @Composable
 private fun SalePrice(state: NFTAssetUM.SalePrice, modifier: Modifier = Modifier) {
     AnimatedVisibility(
-        modifier = Modifier.fillMaxWidth().animateContentSize(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .animateContentSize(),
         visible = state !is NFTAssetUM.SalePrice.Empty,
         enter = fadeIn(),
         exit = fadeOut(),
@@ -108,19 +109,15 @@ private fun SalePrice(state: NFTAssetUM.SalePrice, modifier: Modifier = Modifier
                     verticalArrangement = Arrangement.SpaceAround,
                 ) {
                     Text(
-                        text = state.value.format {
-                            crypto(
-                                symbol = state.symbol,
-                                decimals = state.decimals,
-                            )
-                        },
+                        text = state.cryptoPrice.resolveReference(),
                         style = TangemTheme.typography.head,
                         color = TangemTheme.colors.text.primary1,
                     )
                     Text(
                         modifier = Modifier
-                            .padding(top = TangemTheme.dimens.spacing4),
-                        text = getFiatString(state.value, state.rate, state.appCurrency),
+                            .padding(top = TangemTheme.dimens.spacing4)
+                            .flicker(state.isFlickering),
+                        text = state.fiatPrice.resolveReference(),
                         style = TangemTheme.typography.caption2,
                         color = TangemTheme.colors.text.tertiary,
                     )
@@ -237,11 +234,9 @@ private class NFTAssetInfoProvider : CollectionPreviewParameterProvider<NFTAsset
         NFTAssetUM.TopInfo.Content(
             title = resourceReference(R.string.nft_details_last_sale_price),
             salePrice = NFTAssetUM.SalePrice.Content(
-                value = BigDecimal("18.75"),
-                symbol = "ETH",
-                decimals = 18,
-                rate = BigDecimal("1"),
-                appCurrency = AppCurrency.Default,
+                cryptoPrice = stringReference("ETH 18.75"),
+                fiatPrice = stringReference("$ 1"),
+                isFlickering = false,
             ),
             description = "Base edition by Piux. An illustration of Crypto Robot #7804".repeat(3),
             rarity = NFTAssetUM.Rarity.Content(
@@ -267,11 +262,9 @@ private class NFTAssetInfoProvider : CollectionPreviewParameterProvider<NFTAsset
         NFTAssetUM.TopInfo.Content(
             title = resourceReference(R.string.nft_details_last_sale_price),
             salePrice = NFTAssetUM.SalePrice.Content(
-                value = BigDecimal("18.75"),
-                symbol = "ETH",
-                decimals = 18,
-                rate = BigDecimal("1"),
-                appCurrency = AppCurrency.Default,
+                cryptoPrice = stringReference("ETH 18.75"),
+                fiatPrice = stringReference("$ 1"),
+                isFlickering = true,
             ),
             description = null,
             rarity = NFTAssetUM.Rarity.Content(
@@ -285,11 +278,9 @@ private class NFTAssetInfoProvider : CollectionPreviewParameterProvider<NFTAsset
         NFTAssetUM.TopInfo.Content(
             title = resourceReference(R.string.nft_details_last_sale_price),
             salePrice = NFTAssetUM.SalePrice.Content(
-                value = BigDecimal("18.75"),
-                symbol = "ETH",
-                decimals = 18,
-                rate = BigDecimal("1"),
-                appCurrency = AppCurrency.Default,
+                cryptoPrice = stringReference("ETH 18.75"),
+                fiatPrice = stringReference("$ 1"),
+                isFlickering = true,
             ),
             description = "Base edition by Piux. An illustration of Crypto Robot #7804".repeat(3),
             rarity = NFTAssetUM.Rarity.Empty,
@@ -297,11 +288,9 @@ private class NFTAssetInfoProvider : CollectionPreviewParameterProvider<NFTAsset
         NFTAssetUM.TopInfo.Content(
             title = resourceReference(R.string.nft_details_last_sale_price),
             salePrice = NFTAssetUM.SalePrice.Content(
-                value = BigDecimal("18.75"),
-                symbol = "ETH",
-                decimals = 18,
-                rate = BigDecimal("1"),
-                appCurrency = AppCurrency.Default,
+                cryptoPrice = stringReference("ETH 18.75"),
+                fiatPrice = stringReference("$ 1"),
+                isFlickering = true,
             ),
             description = null,
             rarity = NFTAssetUM.Rarity.Empty,
