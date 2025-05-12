@@ -7,7 +7,7 @@ import org.rekotlin.StateType
 // todo refactor [REDACTED_TASK_KEY]
 data class HomeState(
     val scanInProgress: Boolean = false,
-    val stories: ImmutableList<Stories> = Stories.entries.toImmutableList(),
+    val stories: ImmutableList<Stories> = getRestrictedStories().toImmutableList(),
 ) : StateType {
 
     val firstStory: Stories get() = stories[0]
@@ -22,4 +22,11 @@ enum class Stories(val duration: Int = 6000) {
     Currencies,
     Web3,
     WalletForEveryone,
+}
+
+/**
+ * For FCA restriction stories
+ */
+fun getRestrictedStories(): List<Stories> {
+    return Stories.entries.filterNot { it == Stories.Currencies }
 }
