@@ -297,17 +297,6 @@ internal class OnrampMainComponentModel @Inject constructor(
             lastUpdateState.value = null
             return
         }
-
-        if (checkLastInputState(quote)) {
-            lastUpdateState.value = OnrampLastUpdate(
-                quote.fromAmount,
-                quote.countryCode,
-            )
-
-            _state.update {
-                amountStateFactory.getUpdatedProviderState(selectedQuote = quote, quotes = quotes)
-            }
-        }
         _state.update { amountStateFactory.getAmountSecondaryUpdatedState(quote = quote) }
     }
 
@@ -322,7 +311,7 @@ internal class OnrampMainComponentModel @Inject constructor(
         val quoteToCheck = quotes.firstOrNull { it !is OnrampQuote.Error }
 
         // Check if amount, country or currency has changed
-        return if (checkLastInputState(quoteToCheck)) {
+        val newQuote = if (checkLastInputState(quoteToCheck)) {
             quoteToCheck
         } else {
             val state = state.value as? OnrampMainComponentUM.Content
@@ -340,6 +329,20 @@ internal class OnrampMainComponentModel @Inject constructor(
             } else {
                 lastSelectedQuote
             }
+        }
+        newQuote?.let { updateProvider(newQuote, quotes) }
+
+        return newQuote
+    }
+
+    private fun updateProvider(quote: OnrampQuote, quotes: List<OnrampQuote>) {
+        lastUpdateState.value = OnrampLastUpdate(
+            quote.fromAmount,
+            quote.countryCode,
+        )
+
+        _state.update {
+            amountStateFactory.getUpdatedProviderState(selectedQuote = quote, quotes = quotes)
         }
     }
 
