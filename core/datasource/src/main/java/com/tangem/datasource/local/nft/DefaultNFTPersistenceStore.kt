@@ -43,7 +43,7 @@ internal class DefaultNFTPersistenceStore(
 
     override suspend fun saveSalePrice(assetId: NFTAsset.Identifier, salePrice: NFTAsset.SalePrice) {
         pricesPersistenceStore.updateData {
-            it.toMutableList().plus(NFTPriceId(assetId = assetId, price = salePrice))
+            it.toMutableList() + NFTPriceId(assetId = assetId, price = salePrice)
         }
     }
 
