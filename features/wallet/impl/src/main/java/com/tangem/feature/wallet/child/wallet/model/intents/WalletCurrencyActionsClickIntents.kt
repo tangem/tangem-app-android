@@ -34,7 +34,7 @@ import com.tangem.domain.promo.GetStoryContentUseCase
 import com.tangem.domain.promo.models.StoryContentIds
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.staking.model.stakekit.Yield
-import com.tangem.domain.tokens.GetPrimaryCurrencyStatusUpdatesUseCase
+import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.IsCryptoCurrencyCoinCouldHideUseCase
 import com.tangem.domain.tokens.RemoveCurrencyUseCase
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
@@ -110,7 +110,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val walletManagersFacade: WalletManagersFacade,
     private val isDemoCardUseCase: IsDemoCardUseCase,
-    private val getPrimaryCurrencyStatusUpdatesUseCase: GetPrimaryCurrencyStatusUpdatesUseCase,
+    private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
     private val isCryptoCurrencyCoinCouldHide: IsCryptoCurrencyCoinCouldHideUseCase,
     private val removeCurrencyUseCase: RemoveCurrencyUseCase,
     private val getExploreUrlUseCase: GetExploreUrlUseCase,
@@ -489,7 +489,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         val userWalletId = stateHolder.getSelectedWalletId()
 
         modelScope.launch(dispatchers.main) {
-            val currencyStatus = getPrimaryCurrencyStatusUpdatesUseCase.unwrap(userWalletId) ?: return@launch
+            val currencyStatus = getSingleCryptoCurrencyStatusUseCase.unwrap(userWalletId) ?: return@launch
 
             when (val addresses = currencyStatus.value.networkAddress) {
                 is NetworkAddress.Selectable -> {
