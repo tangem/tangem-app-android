@@ -2,7 +2,6 @@ package com.tangem.features.send.v2.common.ui
 
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -26,10 +25,12 @@ import com.tangem.core.ui.components.SpacerW12
 import com.tangem.core.ui.components.buttons.common.TangemButton
 import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
 import com.tangem.core.ui.components.buttons.common.TangemButtonsDefaults
-import com.tangem.features.send.v2.send.ui.state.ButtonsUM
+import com.tangem.core.ui.extensions.clickableSingle
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.utils.singleEvent
 import com.tangem.features.send.v2.common.ui.state.NavigationUM
+import com.tangem.features.send.v2.send.ui.state.ButtonsUM
 
 @Composable
 internal fun SendNavigationButtons(navigationUM: NavigationUM, modifier: Modifier = Modifier) {
@@ -70,7 +71,7 @@ private fun SendNavigationButton(navigationUM: NavigationUM, modifier: Modifier 
                     modifier = Modifier
                         .clip(RoundedCornerShape(16.dp))
                         .background(TangemTheme.colors.button.secondary)
-                        .clickable(onClick = wrappedNavigationUM.onClick)
+                        .clickableSingle(onClick = wrappedNavigationUM.onClick)
                         .padding(12.dp),
                 )
                 SpacerW12()
@@ -110,7 +111,11 @@ private fun SendDoneButtons(pairButtonsUM: ButtonsUM.SecondaryPairButtonsUM?, mo
             SecondaryButtonIconStart(
                 text = wrappedPairButtonsUM.leftText.resolveReference(),
                 iconResId = wrappedPairButtonsUM.leftIconResId!!,
-                onClick = wrappedPairButtonsUM.onLeftClick,
+                onClick = {
+                    singleEvent {
+                        wrappedPairButtonsUM.onLeftClick
+                    }
+                },
                 modifier = Modifier.weight(1f),
             )
             SpacerW12()
@@ -118,8 +123,10 @@ private fun SendDoneButtons(pairButtonsUM: ButtonsUM.SecondaryPairButtonsUM?, mo
                 text = wrappedPairButtonsUM.rightText.resolveReference(),
                 iconResId = wrappedPairButtonsUM.rightIconResId!!,
                 onClick = {
-                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                    wrappedPairButtonsUM.onRightClick()
+                    singleEvent {
+                        hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                        wrappedPairButtonsUM.onRightClick()
+                    }
                 },
                 modifier = Modifier.weight(1f),
             )
