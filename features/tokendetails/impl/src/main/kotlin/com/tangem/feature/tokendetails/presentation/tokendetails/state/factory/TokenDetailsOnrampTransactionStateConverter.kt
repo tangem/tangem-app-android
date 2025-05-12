@@ -116,7 +116,10 @@ internal class TokenDetailsOnrampTransactionStateConverter(
     }
 
     private fun onProviderClick(externalTxUrl: String?) = if (externalTxUrl != null) {
-        { clickIntents.onGoToProviderClick(externalTxUrl) }
+        {
+            analyticsEventHandler.send(TokenOnrampAnalyticsEvent.GoToProvider)
+            clickIntents.onGoToProviderClick(externalTxUrl)
+        }
     } else {
         null
     }
@@ -219,7 +222,11 @@ internal class TokenDetailsOnrampTransactionStateConverter(
                 resourceReference(R.string.express_status_bought, wrappedList(cryptoCurrency.name))
             }
         },
-        state = getStatusState(OnrampStatus.Status.Paid),
+        state = when {
+            this == OnrampStatus.Status.RefundInProgress ||
+                this == OnrampStatus.Status.Refunded -> ExpressStatusItemState.Error
+            else -> getStatusState(OnrampStatus.Status.Paid)
+        },
     )
 
     private fun OnrampStatus.Status.getSendingItem() = ExpressStatusItemUM(
@@ -251,7 +258,7 @@ internal class TokenDetailsOnrampTransactionStateConverter(
         },
         state = when {
             this == OnrampStatus.Status.RefundInProgress -> ExpressStatusItemState.Active
-            this == OnrampStatus.Status.Refunded -> ExpressStatusItemState.Error
+            this == OnrampStatus.Status.Refunded -> ExpressStatusItemState.Done
             else -> getStatusState(OnrampStatus.Status.Sending)
         },
     )
@@ -266,6 +273,7 @@ internal class TokenDetailsOnrampTransactionStateConverter(
                     icon = R.drawable.ic_arrow_top_right_24,
                     text = resourceReference(R.string.common_go_to_provider),
                     onClick = {
+                        analyticsEventHandler.send(TokenOnrampAnalyticsEvent.GoToProvider)
                         clickIntents.onGoToProviderClick(externalTxUrl)
                     },
                 )
