@@ -1157,11 +1157,11 @@ internal class StateBuilder(
             toTokenInfo.cryptoCurrencyStatus.currency.decimals,
         )
         val fromCurrencySymbol = fromTokenInfo.cryptoCurrencyStatus.currency.symbol
-        val rateString = buildString {
-            append(BigDecimal.ONE.format { crypto(symbol = fromCurrencySymbol, decimals = 0).anyDecimals() })
-            append(" ≈ ")
-            append(rate.format { crypto(toTokenInfo.cryptoCurrencyStatus.currency) })
-        }
+        // val rateString = buildString {
+            // append(BigDecimal.ONE.format { crypto(symbol = fromCurrencySymbol, decimals = 0).anyDecimals() })
+            // append(" ≈ ")
+            // append(rate.format { crypto(toTokenInfo.cryptoCurrencyStatus.currency) })
+        // }
         // val rateString = "1 $fromCurrencySymbol ≈ $rate $toCurrencySymbol"
         val badge = if (isRecommended) {
             ProviderState.AdditionalBadge.Recommended
@@ -1175,7 +1175,7 @@ internal class StateBuilder(
             name = this.name,
             iconUrl = this.imageLarge,
             type = this.type.providerName,
-            subtitle = stringReference(rateString),
+            subtitle = TextReference.EMPTY,
             additionalBadge = badge,
             selectionType = selectionType,
             percentLowerThenBest = PercentDifference.Empty,
