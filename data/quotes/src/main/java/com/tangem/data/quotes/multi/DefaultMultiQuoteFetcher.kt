@@ -10,6 +10,7 @@ import com.tangem.domain.core.utils.catchOn
 import com.tangem.domain.quotes.multi.MultiQuoteFetcher
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -53,7 +54,11 @@ internal class DefaultMultiQuoteFetcher @Inject constructor(
         val coinIds = replacementIdsResult.idsForRequest.joinToString(separator = ",")
 
         val response = safeApiCallWithTimeout(
-            call = { tangemTechApi.getQuotes(currencyId = appCurrencyId, coinIds = coinIds).bind() },
+            call = {
+                withContext(dispatchers.io) {
+                    tangemTechApi.getQuotes(currencyId = appCurrencyId, coinIds = coinIds).bind()
+                }
+            },
             onError = { error -> throw error },
         )
 
