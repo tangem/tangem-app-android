@@ -20,6 +20,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.components.inputrow.inner.DividerContainer
@@ -76,7 +77,7 @@ fun InputRowBestRate(
                     text = subtitle.resolveReference(),
                     style = TangemTheme.typography.body2,
                     color = TangemTheme.colors.text.tertiary,
-                    modifier = Modifier.padding(top = TangemTheme.dimens.spacing8),
+                    modifier = Modifier.padding(top = 2.dp),
                 )
             }
             SpacerWMax()
