@@ -26,6 +26,7 @@ import com.tangem.features.send.v2.common.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.v2.common.analytics.CommonSendAnalyticEvents.SendScreenSource
 import com.tangem.features.send.v2.common.ui.SendContent
 import com.tangem.features.send.v2.common.ui.state.ConfirmUM
+import com.tangem.features.send.v2.common.utils.safeNextClick
 import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.send.confirm.SendConfirmComponent
 import com.tangem.features.send.v2.send.model.SendModel
@@ -139,28 +140,31 @@ internal class DefaultSendComponent @AssistedInject constructor(
         CommonSendRoute.Confirm -> getConfirmComponent(factoryContext)
     }
 
-    private fun getDestinationComponent(factoryContext: AppComponentContext, route: CommonSendRoute) =
-        SendDestinationComponent(
-            appComponentContext = factoryContext,
-            params = SendDestinationComponentParams.DestinationParams(
-                state = model.uiState.value.destinationUM,
-                currentRoute = currentRoute.filterIsInstance<CommonSendRoute.Destination>(),
-                isBalanceHidingFlow = model.isBalanceHiddenFlow,
-                analyticsCategoryName = analyticCategoryName,
-                title = resourceReference(R.string.send_recipient_label),
-                userWalletId = params.userWalletId,
-                cryptoCurrency = params.currency,
-                callback = model,
-                onBackClick = ::onChildBack,
-                onNextClick = {
-                    if (route.isEditMode) {
-                        onChildBack()
-                    } else {
-                        innerRouter.push(CommonSendRoute.Amount(isEditMode = false))
-                    }
-                },
-            ),
-        )
+    private fun getDestinationComponent(
+        factoryContext: AppComponentContext,
+        route: CommonSendRoute,
+    ): SendDestinationComponent = SendDestinationComponent(
+        appComponentContext = factoryContext,
+        params = SendDestinationComponentParams.DestinationParams(
+            state = model.uiState.value.destinationUM,
+            currentRoute = currentRoute.filterIsInstance<CommonSendRoute.Destination>(),
+            isBalanceHidingFlow = model.isBalanceHiddenFlow,
+            analyticsCategoryName = analyticCategoryName,
+            title = resourceReference(R.string.send_recipient_label),
+            userWalletId = params.userWalletId,
+            cryptoCurrency = params.currency,
+            callback = model,
+            onBackClick = ::onChildBack,
+            onNextClick = {
+                innerRouter.safeNextClick(
+                    currentRoute = route,
+                    nextRoute = CommonSendRoute.Amount(isEditMode = false),
+                    popBack = ::onChildBack,
+                    childStack = childStack,
+                )
+            },
+        ),
+    )
 
     private fun getAmountComponent(
         factoryContext: AppComponentContext,
@@ -196,11 +200,12 @@ internal class DefaultSendComponent @AssistedInject constructor(
                         }
                     },
                     onNextClick = {
-                        if (route.isEditMode) {
-                            onChildBack()
-                        } else {
-                            innerRouter.push(CommonSendRoute.Confirm)
-                        }
+                        innerRouter.safeNextClick(
+                            currentRoute = route,
+                            nextRoute = CommonSendRoute.Confirm,
+                            popBack = ::onChildBack,
+                            childStack = childStack,
+                        )
                     },
                 ),
             )
