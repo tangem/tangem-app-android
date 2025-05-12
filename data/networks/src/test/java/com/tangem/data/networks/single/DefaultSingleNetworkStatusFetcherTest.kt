@@ -37,11 +37,7 @@ internal class DefaultSingleNetworkStatusFetcherTest {
 
     @Test
     fun `fetch network status successfully`() = runTest {
-        val params = SingleNetworkStatusFetcher.Params(
-            userWalletId = userWalletId,
-            network = network,
-            applyRefresh = true,
-        )
+        val params = SingleNetworkStatusFetcher.Params.Simple(userWalletId = userWalletId, network = network)
 
         val result = UpdateWalletManagerResult.MissedDerivation
         coEvery { walletManagersFacade.update(userWalletId, network, emptySet()) } returns result
@@ -63,11 +59,7 @@ internal class DefaultSingleNetworkStatusFetcherTest {
 
     @Test
     fun `fetch network status failure`() = runTest {
-        val params = SingleNetworkStatusFetcher.Params(
-            userWalletId = userWalletId,
-            network = network,
-            applyRefresh = true,
-        )
+        val params = SingleNetworkStatusFetcher.Params.Simple(userWalletId = userWalletId, network = network)
 
         val exception = IllegalStateException()
         coEvery { userWalletsStore.getSyncStrict(key = userWalletId) } throws exception
@@ -87,35 +79,6 @@ internal class DefaultSingleNetworkStatusFetcherTest {
 
         Truth.assertThat(actual.isLeft()).isTrue()
         Truth.assertThat(actual.leftOrNull()).isEqualTo(exception)
-    }
-
-    @Test
-    fun `fetch network status if applyRefresh is false`() = runTest {
-        val params = SingleNetworkStatusFetcher.Params(
-            userWalletId = userWalletId,
-            network = network,
-            applyRefresh = false,
-        )
-
-        val result = UpdateWalletManagerResult.MissedDerivation
-        coEvery { walletManagersFacade.update(userWalletId, network, emptySet()) } returns result
-
-        val actual = fetcher(params)
-
-        coVerifyOrder {
-            userWalletsStore.getSyncStrict(key = userWalletId)
-            walletManagersFacade.update(userWalletId, network, emptySet())
-            networksStatusesStore.storeSuccess(
-                userWalletId = userWalletId,
-                value = NetworkStatus(network, NetworkStatus.MissedDerivation),
-            )
-        }
-
-        coVerify(inverse = true) {
-            networksStatusesStore.refresh(userWalletId = any(), network = any())
-        }
-
-        Truth.assertThat(actual.isRight()).isTrue()
     }
 
     private companion object {
