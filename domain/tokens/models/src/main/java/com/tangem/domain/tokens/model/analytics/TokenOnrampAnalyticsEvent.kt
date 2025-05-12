@@ -5,12 +5,12 @@ import com.tangem.core.analytics.models.AnalyticsParam.Key.PROVIDER
 import com.tangem.core.analytics.models.AnalyticsParam.Key.STATUS
 import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
 
-class TokenOnrampAnalyticsEvent(
+sealed class TokenOnrampAnalyticsEvent(
     event: String,
     params: Map<String, String> = mapOf(),
 ) : AnalyticsEvent("Onramp", event, params) {
 
-    class OnrampStatusOpened(tokenSymbol: String, provider: String, fiatCurrency: String) : TokenScreenAnalyticsEvent(
+    class OnrampStatusOpened(tokenSymbol: String, provider: String, fiatCurrency: String) : TokenOnrampAnalyticsEvent(
         event = "Onramp Status Opened",
         params = mapOf(
             TOKEN_PARAM to tokenSymbol,
@@ -20,7 +20,7 @@ class TokenOnrampAnalyticsEvent(
     )
 
     class OnrampStatusChanged(tokenSymbol: String, status: String, provider: String, fiatCurrency: String) :
-        TokenScreenAnalyticsEvent(
+        TokenOnrampAnalyticsEvent(
             event = "Onramp Status",
             params = mapOf(
                 TOKEN_PARAM to tokenSymbol,
@@ -30,12 +30,12 @@ class TokenOnrampAnalyticsEvent(
             ),
         )
 
-    data object GoToProvider : TokenScreenAnalyticsEvent(event = "Button - Go To Provider")
+    data object GoToProvider : TokenOnrampAnalyticsEvent(event = "Button - Go To Provider")
 
     data class NoticeKYC(
         val tokenSymbol: String,
         val provider: String,
-    ) : TokenScreenAnalyticsEvent(
+    ) : TokenOnrampAnalyticsEvent(
         event = "Notice - KYC",
         params = mapOf(
             TOKEN_PARAM to tokenSymbol,
