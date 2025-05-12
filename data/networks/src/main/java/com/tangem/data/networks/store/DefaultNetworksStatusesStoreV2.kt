@@ -55,6 +55,12 @@ internal class DefaultNetworksStatusesStoreV2(
         return runtimeStore.get().mapNotNull { it[userWalletId.stringValue] }
     }
 
+    override suspend fun getSyncOrNull(userWalletId: UserWalletId, network: Network): SimpleNetworkStatus? {
+        val simpleStatusId = SimpleNetworkStatus.Id(network = network)
+
+        return runtimeStore.getSyncOrNull()?.get(userWalletId.stringValue)?.firstOrNull { it.id == simpleStatusId }
+    }
+
     override suspend fun refresh(userWalletId: UserWalletId, network: Network) {
         refresh(userWalletId = userWalletId, networks = setOf(network))
     }
@@ -114,6 +120,17 @@ internal class DefaultNetworksStatusesStoreV2(
                 status.copy(value = status.value.copySealed(source = StatusSource.ONLY_CACHE))
             },
         )
+    }
+
+    override suspend fun storeUnreachableStatus(userWalletId: UserWalletId, value: NetworkStatus) {
+        if (value.value !is NetworkStatus.Unreachable) {
+            val message = "Use storeError method to save unreachable status"
+            Timber.d(message)
+
+            error(message)
+        }
+
+        storeInRuntime(userWalletId = userWalletId, status = value)
     }
 
     private suspend fun updateInRuntime(
