@@ -34,7 +34,7 @@ interface SettingsRepository {
 
     suspend fun setMarketsTooltipShown(value: Boolean)
 
-    suspend fun getUserCountryCodeSync(): UserCountry?
+    fun getUserCountryCodeSync(): UserCountry?
 
     fun getUserCountryCode(): StateFlow<UserCountry?>
 

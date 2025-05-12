@@ -31,7 +31,7 @@ class GetUserCountryUseCase(
         }
     }
 
-    suspend fun invokeSync(): Either<UserCountryError, UserCountry> {
+    fun invokeSync(): Either<UserCountryError, UserCountry> {
         return either {
             val userCountryCode = catch(
                 block = { settingsRepository.getUserCountryCodeSync() },

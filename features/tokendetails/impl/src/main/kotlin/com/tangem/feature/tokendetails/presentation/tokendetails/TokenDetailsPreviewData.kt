@@ -144,10 +144,7 @@ internal object TokenDetailsPreviewData {
     val stakingLoadingBlock = StakingBlockUM.Loading(iconState)
 
     val stakingAvailableBlock = StakingBlockUM.StakeAvailable(
-        titleText = resourceReference(
-            id = R.string.token_details_staking_block_title,
-            formatArgs = wrappedList("3.27%"),
-        ),
+        titleText = resourceReference(id = R.string.token_details_staking_block_title),
         subtitleText = resourceReference(
             id = R.string.staking_notification_earn_rewards_text_period_day,
             formatArgs = wrappedList("Solana"),

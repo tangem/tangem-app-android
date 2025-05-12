@@ -27,11 +27,12 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.features.staking.impl.R
+import com.tangem.features.staking.impl.presentation.model.StakingClickIntents
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.state.previewdata.ValidatorStatePreviewData
 import com.tangem.features.staking.impl.presentation.state.stub.StakingClickIntentsStub
-import com.tangem.features.staking.impl.presentation.model.StakingClickIntents
 import com.tangem.utils.extensions.orZero
 
 /**
@@ -62,16 +63,7 @@ internal fun StakingValidatorListContent(
 
                 InputRowImageSelector(
                     subtitle = stringReference(item.name),
-                    caption = combinedReference(
-                        resourceReference(R.string.staking_details_annual_percentage_rate),
-                        annotatedReference {
-                            appendSpace()
-                            appendColored(
-                                text = item.apr.orZero().format { percent() },
-                                color = TangemTheme.colors.text.accent,
-                            )
-                        },
-                    ),
+                    caption = item.getAprTextNeutral(),
                     imageUrl = item.image.orEmpty(),
                     isSelected = item == state.chosenValidator,
                     onSelect = { clickIntents.onValidatorSelect(item) },
@@ -107,6 +99,28 @@ internal fun StakingValidatorListContent(
         }
     }
 }
+
+/**
+ * For FCA fixes remove coloring for now
+ */
+@Suppress("UnusedPrivateMember")
+@Composable
+private fun Yield.Validator.getAprTextColored() = combinedReference(
+    resourceReference(R.string.staking_details_annual_percentage_rate),
+    annotatedReference {
+        appendSpace()
+        appendColored(
+            text = apr.orZero().format { percent() },
+            color = TangemTheme.colors.text.accent,
+        )
+    },
+)
+
+@Composable
+private fun Yield.Validator.getAprTextNeutral() = combinedReference(
+    resourceReference(R.string.staking_details_annual_percentage_rate),
+    stringReference(" " + apr.orZero().format { percent() }),
+)
 
 @Composable
 private fun RowScope.ValidatorLabel(isStrategicPartner: Boolean) {

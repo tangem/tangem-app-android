@@ -33,7 +33,6 @@ internal fun NFTReceive(state: NFTReceiveUM, modifier: Modifier = Modifier) {
                     onIconClicked = state.onBackClick,
                 ),
                 title = stringResourceSafe(id = R.string.nft_receive_title),
-                subtitle = stringResourceSafe(id = R.string.nft_receive_subtitle),
             )
         },
         content = { innerPadding ->
