@@ -7,7 +7,7 @@ import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.common.currency.CardCryptoCurrencyFactory
 import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
-import com.tangem.data.tokens.utils.NetworkStatusFactory
+import com.tangem.data.networks.utils.NetworkStatusFactory
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.local.network.NetworksStatusesStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
@@ -43,7 +43,6 @@ internal class DefaultNetworksRepository(
 ) : NetworksRepository {
 
     private val responseCurrenciesFactory = ResponseCryptoCurrenciesFactory(excludedBlockchains)
-    private val networkStatusFactory = NetworkStatusFactory()
 
     override fun getNetworkStatusesUpdates(
         userWalletId: UserWalletId,
@@ -168,10 +167,10 @@ internal class DefaultNetworksRepository(
             invalidateCacheKeyIfNeeded(userWalletId, network, result)
         }
 
-        val networkStatus = networkStatusFactory.createNetworkStatus(
+        val networkStatus = NetworkStatusFactory.create(
             network = network,
-            result = result,
-            currencies = networkCurrencies.toSet(),
+            updatingResult = result,
+            addedCurrencies = networkCurrencies.toSet(),
         )
 
         networksStatusesStore.store(userWalletId, networkStatus)
@@ -191,10 +190,10 @@ internal class DefaultNetworksRepository(
             invalidateCacheKeyIfNeeded(userWalletId, network, result)
         }
 
-        val networkStatus = networkStatusFactory.createNetworkStatus(
+        val networkStatus = NetworkStatusFactory.create(
             network = network,
-            result = result,
-            currencies = currencies.toSet(),
+            updatingResult = result,
+            addedCurrencies = currencies.toSet(),
         )
 
         networksStatusesStore.store(userWalletId, networkStatus)
