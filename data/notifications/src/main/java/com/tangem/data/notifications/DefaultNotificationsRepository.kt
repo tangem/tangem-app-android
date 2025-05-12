@@ -4,7 +4,6 @@ import com.tangem.data.notifications.converters.NotificationsEligibleNetworkConv
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.NotificationApplicationCreateBody
-import com.tangem.datasource.api.tangemTech.models.WalletIdBody
 import com.tangem.utils.info.AppInfoProvider
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
@@ -61,16 +60,6 @@ internal class DefaultNotificationsRepository @Inject constructor(
             default = 0,
         )
     }
-
-    override suspend fun associateApplicationIdWithWallets(appId: String, wallets: List<String>) =
-        withContext(dispatchers.io) {
-            tangemTechApi.associateApplicationIdWithWallets(
-                applicationId = appId,
-                body = wallets.map {
-                    WalletIdBody(it)
-                },
-            ).getOrThrow()
-        }
 
     override suspend fun sendPushToken(appId: ApplicationId, pushToken: String) {
         withContext(dispatchers.io) {

@@ -17,9 +17,6 @@ interface NotificationsRepository {
     suspend fun incrementTronTokenFeeNotificationShowCounter()
 
     @Throws
-    suspend fun associateApplicationIdWithWallets(appId: String, wallets: List<String>)
-
-    @Throws
     suspend fun sendPushToken(appId: ApplicationId, pushToken: String)
 
     @Throws
