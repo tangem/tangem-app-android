@@ -105,25 +105,6 @@ class DefaultNotificationsRepositoryTest {
     }
 
     @Test
-    fun `GIVEN application id and wallet list WHEN associateApplicationIdWithWallets THEN associates them`() = runTest {
-        // GIVEN
-        val appId = "test-app-id"
-        val wallets = listOf("wallet1", "wallet2")
-        coEvery {
-            tangemTechApi.associateApplicationIdWithWallets(
-                appId,
-                wallets.map { WalletIdBody(it) },
-            )
-        } returns ApiResponse.Success(Unit)
-
-        // WHEN
-        repository.associateApplicationIdWithWallets(appId, wallets)
-
-        // THEN
-        coVerify { tangemTechApi.associateApplicationIdWithWallets(appId, wallets.map { WalletIdBody(it) }) }
-    }
-
-    @Test
     fun `GIVEN application id and push token WHEN sendPushToken THEN updates push token`() = runTest {
         // GIVEN
         val appId = ApplicationId("test-app-id")
