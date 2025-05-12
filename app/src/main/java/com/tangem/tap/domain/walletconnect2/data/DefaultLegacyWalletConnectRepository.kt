@@ -13,6 +13,7 @@ import com.tangem.domain.walletconnect.WcPairService
 import com.tangem.domain.walletconnect.model.WcPairRequest
 import com.tangem.domain.walletconnect.model.legacy.Account
 import com.tangem.domain.walletconnect.usecase.initialize.WcInitializeUseCase
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.walletconnect.components.WalletConnectFeatureToggles
 import com.tangem.tap.common.analytics.events.WalletConnect
 import com.tangem.tap.domain.walletconnect2.app.TangemWcBlockchainHelper
@@ -64,14 +65,18 @@ internal class DefaultLegacyWalletConnectRepositoryFacade constructor(
         if (isNewWc) stub.updateSessions() else legacy.updateSessions()
     }
 
-    override fun pair(uri: String, source: SourceType) {
+    override fun pair(userWalletId: UserWalletId, uri: String, source: SourceType) {
         val src = when (source) {
             SourceType.QR -> WcPairRequest.Source.QR
             SourceType.DEEPLINK -> WcPairRequest.Source.DEEPLINK
             SourceType.CLIPBOARD -> WcPairRequest.Source.CLIPBOARD
             SourceType.ETC -> WcPairRequest.Source.ETC
         }
-        if (isNewWc) wcPairService.pair(WcPairRequest(uri, src)) else legacy.pair(uri, source)
+        if (isNewWc) {
+            wcPairService.pair(WcPairRequest(uri = uri, source = src, userWalletId = userWalletId))
+        } else {
+            legacy.pair(userWalletId = userWalletId, uri = uri, source = source)
+        }
     }
 
     override fun disconnect(topic: String) {
@@ -110,7 +115,7 @@ internal class LegacyWalletConnectRepositoryStub : LegacyWalletConnectRepository
 
     override fun updateSessions() = Unit
 
-    override fun pair(uri: String, source: SourceType) = Unit
+    override fun pair(userWalletId: UserWalletId, uri: String, source: SourceType) = Unit
 
     override fun disconnect(topic: String) = Unit
 
@@ -405,7 +410,7 @@ internal class DefaultLegacyWalletConnectRepository(
         this.userNamespaces = userNamespaces
     }
 
-    override fun pair(uri: String, source: SourceType) {
+    override fun pair(userWalletId: UserWalletId, uri: String, source: SourceType) {
         analyticsHandler.send(WalletConnect.NewSessionInitiated(source = source))
         WalletKit.pair(
             params = Wallet.Params.Pair(uri),
