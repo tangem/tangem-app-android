@@ -527,6 +527,13 @@
   <string name="nft_details_base_information">基本情報</string>
   <string name="nft_details_chain">チェーン</string>
   <string name="nft_details_contract_address">コントラクトアドレス</string>
+  <string name="nft_details_info_chain">スタブ</string>
+  <string name="nft_details_info_contract_address">スタブ</string>
+  <string name="nft_details_info_rarity_label">スタブ</string>
+  <string name="nft_details_info_rarity_rank">スタブ</string>
+  <string name="nft_details_info_token_address">スタブ</string>
+  <string name="nft_details_info_token_id">スタブ</string>
+  <string name="nft_details_info_token_standard">スタブ</string>
   <string name="nft_details_last_sale_price">最終販売価格</string>
   <string name="nft_details_rarity_label">レアリティ・ラベル</string>
   <string name="nft_details_rarity_rank">レアリティ・ランク</string>
@@ -1044,7 +1051,7 @@
   <string name="transaction_history_transaction_validator">バリデーター: %s</string>
   <string name="transfer_min_amount_error">最小%s</string>
   <string name="transfer_notification_invalid_minimum_transaction_amount_text">最小取引金額は%1$sです。</string>
-  <string name="tron_will_be_send_token_fee_description">Tronネットワークの人気トークンの手数料は高めです。TRXをステーキングすると、より安く、あるいは無料で取引できます。</string>
+  <string name="tron_will_be_send_token_fee_description">Tronネットワークの人気トークンの手数料は高い可能性があります。TRXをステーキングすると、取引コストを削減できる可能性があります。</string>
   <string name="tron_will_be_send_token_fee_title">Tronネットワーク手数料を節約</string>
   <string name="try_to_load_data_again_button_title">もう一度やり直してください</string>
   <string name="twin_error_same_card">同じカードをスキャンしました。ツインウォレットを作成するには、番号%dのカードをスキャンする必要があります。</string>
@@ -1237,6 +1244,7 @@
   <string name="wc_alert_verified_domain_title">検証済みドメイン</string>
   <string name="wc_alert_wrong_card_description">Tangemアプリで誤ったカードまたはリングが選択されました</string>
   <string name="wc_alert_wrong_card_title">問題が起きています</string>
+  <string name="wc_common_address">アドレス</string>
   <string name="wc_common_connect">接続する</string>
   <string name="wc_common_network">ネットワーク</string>
   <string name="wc_common_networks">ネットワーク</string>
@@ -1249,6 +1257,8 @@
   <string name="wc_connection_reqeust_would_like">したい</string>
   <string name="wc_connection_request">接続リクエスト</string>
   <string name="wc_connections">接続</string>
+  <string name="wc_contents">内容</string>
+  <string name="wc_copy_data_button_text">データをコピー</string>
   <string name="wc_disconnect_all">すべての接続を解除する</string>
   <string name="wc_disconnect_all_alert_desc">すべてのdAppsの接続解除に関するテキスト</string>
   <string name="wc_disconnect_all_alert_title">すべてのdAppを接続解除する</string>
@@ -1259,6 +1269,11 @@
   <string name="wc_no_sessions_title">セッションなし</string>
   <string name="wc_notification_security_risk_subtitle">このドメインは複数のセキュリティプロバイダーから安全でないとの警告を受けています。あなたの資産を守るため、直ちにアクセスを中止してください。</string>
   <string name="wc_notification_security_risk_title">既知のセキュリティリスク</string>
+  <string name="wc_request_from">リクエスト元</string>
+  <string name="wc_signature_type">署名タイプ</string>
+  <string name="wc_transaction_info_to_title">宛先</string>
+  <string name="wc_transaction_request">取引リクエスト</string>
+  <string name="wc_transaction_request_title">取引リクエスト</string>
   <string name="wc_wallet_connect">ウォレットコネクト</string>
   <string name="welcome_interrupted_backup_alert_discard">破棄</string>
   <string name="welcome_interrupted_backup_alert_message">バックアップが中断されました。再開しますか?</string>
