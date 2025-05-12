@@ -3,7 +3,7 @@ package com.tangem.data.networks.single
 import arrow.core.Either
 import com.tangem.data.common.currency.CardCryptoCurrencyFactory
 import com.tangem.data.networks.store.NetworksStatusesStoreV2
-import com.tangem.data.tokens.utils.NetworkStatusFactory
+import com.tangem.data.networks.utils.NetworkStatusFactory
 import com.tangem.domain.core.utils.catchOn
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -31,8 +31,6 @@ internal class DefaultSingleNetworkStatusFetcher @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
 ) : SingleNetworkStatusFetcher {
 
-    private val networkStatusFactory = NetworkStatusFactory()
-
     override suspend fun invoke(params: SingleNetworkStatusFetcher.Params) = Either.catchOn(dispatchers.default) {
         val networkCurrencies = when (params) {
             is SingleNetworkStatusFetcher.Params.Prepared -> params.addedNetworkCurrencies
@@ -56,10 +54,10 @@ internal class DefaultSingleNetworkStatusFetcher @Inject constructor(
             )
         }
 
-        val status = networkStatusFactory.createNetworkStatus(
+        val status = NetworkStatusFactory.create(
             network = params.network,
-            result = result,
-            currencies = networkCurrencies.toSet(),
+            updatingResult = result,
+            addedCurrencies = networkCurrencies.toSet(),
         )
 
         val statusValue = status.value
