@@ -25,7 +25,7 @@ sealed class ApiConfig {
         TangemTech,
         StakeKit,
         TangemVisa,
-        TangemCardSdk,
+        Attestation,
         BlockAid,
     }
 
@@ -35,7 +35,7 @@ sealed class ApiConfig {
             is TangemTech -> ID.TangemTech
             is StakeKit -> ID.StakeKit
             is TangemVisa -> ID.TangemVisa
-            is TangemCardSdk -> ID.TangemCardSdk
+            is Attestation -> ID.Attestation
             is BlockAid -> ID.BlockAid
         }
     }
