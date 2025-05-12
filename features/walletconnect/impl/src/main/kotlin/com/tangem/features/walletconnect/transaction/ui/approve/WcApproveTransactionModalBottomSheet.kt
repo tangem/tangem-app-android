@@ -1,12 +1,10 @@
-package com.tangem.features.walletconnect.transaction.ui.sign
+package com.tangem.features.walletconnect.transaction.ui.approve
 
 import android.content.res.Configuration
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
@@ -26,23 +24,24 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.walletconnect.connections.ui.WcAppInfoItem
 import com.tangem.features.walletconnect.impl.R
+import com.tangem.features.walletconnect.transaction.entity.approve.WcApproveTransactionItemUM
+import com.tangem.features.walletconnect.transaction.entity.approve.WcSpendAllowanceUM
 import com.tangem.features.walletconnect.transaction.entity.common.WcNetworkInfoUM
 import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionAppInfoContentUM
-import com.tangem.features.walletconnect.transaction.entity.sign.WcSignTransactionItemUM
 import com.tangem.features.walletconnect.transaction.ui.common.*
 
 @Composable
-internal fun WcSignTransactionModalBottomSheetContent(
-    state: WcSignTransactionItemUM,
+internal fun WcApproveTransactionModalBottomSheetContent(
+    state: WcApproveTransactionItemUM,
     onClickTransactionRequest: () -> Unit,
 ) {
     Column(
         modifier = Modifier
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = TangemTheme.dimens.spacing16),
     ) {
         Column(
             modifier = Modifier
-                .clip(RoundedCornerShape(14.dp))
+                .clip(RoundedCornerShape(TangemTheme.dimens.radius14))
                 .background(color = TangemTheme.colors.background.action)
                 .fillMaxWidth()
                 .animateContentSize(),
@@ -60,16 +59,20 @@ internal fun WcSignTransactionModalBottomSheetContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable { onClickTransactionRequest() }
-                    .padding(12.dp),
+                    .padding(TangemTheme.dimens.spacing12),
             )
         }
-        Column(modifier = Modifier.padding(top = 16.dp)) {
-            WcSignTransactionItems(state)
+        Column(modifier = Modifier.padding(top = TangemTheme.dimens.spacing16)) {
+            if (state.spendAllowance != null) {
+                WcSpendAllowanceItem(state.spendAllowance)
+                Spacer(Modifier.height(TangemTheme.dimens.spacing16))
+            }
+            WcApproveTransactionItems(state)
             WcTransactionRequestButtons(
-                modifier = Modifier.padding(vertical = 16.dp),
+                modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing16),
                 onDismiss = state.onDismiss,
-                onClickActiveButton = state.onSign,
-                activeButtonText = resourceReference(R.string.common_sign),
+                onClickActiveButton = state.onSend,
+                activeButtonText = resourceReference(R.string.common_send),
                 isLoading = state.isLoading,
             )
         }
@@ -77,33 +80,33 @@ internal fun WcSignTransactionModalBottomSheetContent(
 }
 
 @Composable
-private fun WcSignTransactionItems(state: WcSignTransactionItemUM) {
+private fun WcApproveTransactionItems(state: WcApproveTransactionItemUM) {
     Column(
         modifier = Modifier
-            .clip(RoundedCornerShape(14.dp))
+            .clip(RoundedCornerShape(TangemTheme.dimens.radius14))
             .background(color = TangemTheme.colors.background.action)
             .fillMaxWidth()
             .animateContentSize(),
     ) {
         val itemsModifier = Modifier
             .fillMaxWidth()
-            .padding(12.dp)
+            .padding(TangemTheme.dimens.spacing12)
 
         DividerWithPadding(start = 0.dp, end = 0.dp)
         WcWalletItem(
             modifier = itemsModifier,
             walletName = state.walletName,
         )
-        DividerWithPadding(start = 40.dp, end = 12.dp)
+        DividerWithPadding(start = TangemTheme.dimens.spacing40, end = TangemTheme.dimens.spacing12)
         WcNetworkItem(
             modifier = itemsModifier,
             networkInfo = state.networkInfo,
         )
-        if (!state.addressText.isNullOrEmpty()) {
-            DividerWithPadding(start = 40.dp, end = 12.dp)
-            WcAddressItem(
+        if (!state.networkFee.isNullOrEmpty()) {
+            DividerWithPadding(start = TangemTheme.dimens.spacing40, end = TangemTheme.dimens.spacing12)
+            WcNetworkFeeItem(
                 modifier = itemsModifier,
-                addressText = state.addressText,
+                networkFeeText = state.networkFee,
             )
         }
     }
@@ -116,7 +119,7 @@ internal fun DividerWithPadding(start: Dp, end: Dp) {
             start = start,
             end = end,
         ),
-        thickness = 1.dp,
+        thickness = TangemTheme.dimens.size1,
         color = TangemTheme.colors.stroke.primary,
     )
 }
@@ -124,11 +127,11 @@ internal fun DividerWithPadding(start: Dp, end: Dp) {
 @Composable
 @Preview(showBackground = true, device = Devices.PIXEL_7_PRO)
 @Preview(showBackground = true, device = Devices.PIXEL_7_PRO, uiMode = Configuration.UI_MODE_NIGHT_YES)
-private fun WcSignTransactionBottomSheetPreview(
-    @PreviewParameter(WcSignTransactionStateProvider::class) state: WcSignTransactionItemUM,
+private fun WcApproveTransactionBottomSheetPreview(
+    @PreviewParameter(WcApproveTransactionStateProvider::class) state: WcApproveTransactionItemUM,
 ) {
     TangemThemePreview {
-        TangemModalBottomSheet<WcSignTransactionItemUM>(
+        TangemModalBottomSheet<WcApproveTransactionItemUM>(
             config = TangemBottomSheetConfig(
                 isShown = true,
                 onDismissRequest = {},
@@ -145,38 +148,27 @@ private fun WcSignTransactionBottomSheetPreview(
                 )
             },
             content = {
-                WcSignTransactionModalBottomSheetContent(state = state, onClickTransactionRequest = {})
+                WcApproveTransactionModalBottomSheetContent(state = state, onClickTransactionRequest = {})
             },
         )
     }
 }
 
-private class WcSignTransactionStateProvider : CollectionPreviewParameterProvider<WcSignTransactionItemUM>(
+private class WcApproveTransactionStateProvider : CollectionPreviewParameterProvider<WcApproveTransactionItemUM>(
     listOf(
-        WcSignTransactionItemUM(
+        WcApproveTransactionItemUM(
             onDismiss = {},
-            onSign = {},
+            onSend = {},
             appInfo = WcTransactionAppInfoContentUM(
                 appName = "React App",
                 appIcon = "",
                 isVerified = true,
                 appSubtitle = "react-app.walletconnect.com",
             ),
+            spendAllowance = WcSpendAllowanceUM(amountText = "Unlimited USDT", tokenImageUrl = ""),
             walletName = "Tangem 2.0",
             networkInfo = WcNetworkInfoUM(name = "Ethereum", iconRes = R.drawable.img_eth_22),
-        ),
-        WcSignTransactionItemUM(
-            onDismiss = {},
-            onSign = {},
-            appInfo = WcTransactionAppInfoContentUM(
-                appName = "React App",
-                appIcon = "",
-                isVerified = true,
-                appSubtitle = "react-app.walletconnect.com",
-            ),
-            walletName = "Tangem 2.0",
-            addressText = "0x345FF...34FA",
-            networkInfo = WcNetworkInfoUM(name = "Ethereum", iconRes = R.drawable.img_eth_22),
+            networkFee = "~ 0.22 $",
         ),
     ),
 )
