@@ -103,9 +103,9 @@ internal class SendAmountModel @Inject constructor(
                 )
             }
         }
-        val predefinedValues = params.predefinedValues as? PredefinedValues.Content
-        if (predefinedValues?.amount != null) {
-            onAmountValueChange(predefinedValues.amount)
+        val predefinedAmount = (params.predefinedValues as? PredefinedValues.Content)?.amount
+        if (predefinedAmount != null) {
+            onAmountValueChange(predefinedAmount)
         }
     }
 
@@ -220,7 +220,12 @@ internal class SendAmountModel @Inject constructor(
 
     private fun saveResult() {
         val params = params as? SendAmountComponentParams.AmountParams ?: return
-        params.callback.onAmountResult(uiState.value)
+        val predefinedAmount = (params.predefinedValues as? PredefinedValues.Content.QrCode)?.amount
+        val enteredAmount = (uiState.value as? AmountState.Data)?.amountTextField?.value
+        params.callback.onAmountResult(
+            amountUM = uiState.value,
+            isResetPredefined = predefinedAmount != enteredAmount,
+        )
     }
 
     private fun configAmountNavigation() {
