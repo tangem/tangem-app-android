@@ -190,12 +190,19 @@ internal class DefaultTransactionRepository(
             null
         }
 
+        val contractAddress = when (val identifier = nftAsset.identifier) {
+            is NFTAsset.Identifier.EVM -> identifier.tokenAddress
+            is NFTAsset.Identifier.Solana -> identifier.tokenAddress
+            is NFTAsset.Identifier.TON -> identifier.tokenAddress
+            NFTAsset.Identifier.Unknown -> ""
+        }
+
         return@withContext createTransaction(
             amount = Amount(
                 value = nftAsset.amount?.toBigDecimal() ?: error("Invalid amount"),
                 token = Token(
                     symbol = blockchain.currency,
-                    contractAddress = "",
+                    contractAddress = contractAddress,
                     decimals = nftAsset.decimals ?: error("Invalid decimals"),
                 ),
             ),

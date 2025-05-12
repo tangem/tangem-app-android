@@ -2,6 +2,7 @@ package com.tangem.data.tokens.di
 
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.data.common.cache.CacheRegistry
+import com.tangem.data.common.currency.CardCryptoCurrencyFactory
 import com.tangem.data.tokens.repository.*
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.exchangeservice.swap.ExpressServiceLoader
@@ -33,6 +34,7 @@ internal object TokensDataModule {
         dispatchers: CoroutineDispatcherProvider,
         expressServiceLoader: ExpressServiceLoader,
         excludedBlockchains: ExcludedBlockchains,
+        cardCryptoCurrencyFactory: CardCryptoCurrencyFactory,
     ): CurrenciesRepository {
         return DefaultCurrenciesRepository(
             tangemTechApi = tangemTechApi,
@@ -43,6 +45,7 @@ internal object TokensDataModule {
             expressServiceLoader = expressServiceLoader,
             dispatchers = dispatchers,
             excludedBlockchains = excludedBlockchains,
+            cardCryptoCurrencyFactory = cardCryptoCurrencyFactory,
         )
     }
 
@@ -74,6 +77,7 @@ internal object TokensDataModule {
         cacheRegistry: CacheRegistry,
         dispatchers: CoroutineDispatcherProvider,
         excludedBlockchains: ExcludedBlockchains,
+        cardCryptoCurrencyFactory: CardCryptoCurrencyFactory,
     ): NetworksRepository {
         return DefaultNetworksRepository(
             networksStatusesStore = networksStatusesStore,
@@ -83,6 +87,7 @@ internal object TokensDataModule {
             cacheRegistry = cacheRegistry,
             dispatchers = dispatchers,
             excludedBlockchains = excludedBlockchains,
+            cardCryptoCurrencyFactory = cardCryptoCurrencyFactory,
         )
     }
 
