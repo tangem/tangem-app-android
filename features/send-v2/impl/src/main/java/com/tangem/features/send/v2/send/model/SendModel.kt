@@ -121,8 +121,8 @@ internal class SendModel @Inject constructor(
         _uiState.update { it.copy(destinationUM = destinationUM) }
     }
 
-    override fun onAmountResult(amountUM: AmountState) {
-        resetPredefinedAmount()
+    override fun onAmountResult(amountUM: AmountState, isResetPredefined: Boolean) {
+        if (isResetPredefined) resetPredefinedAmount()
         _uiState.update { it.copy(amountUM = amountUM) }
     }
 
@@ -131,7 +131,6 @@ internal class SendModel @Inject constructor(
     }
 
     override fun onResult(sendUM: SendUM) {
-        resetPredefinedAmount()
         _uiState.update { sendUM }
     }
 
@@ -163,8 +162,8 @@ internal class SendModel @Inject constructor(
         // reset predefined amount
         val internalPredefinedValues = predefinedValues
         predefinedValues = when (internalPredefinedValues) {
-            is PredefinedValues.Content.Deeplink -> internalPredefinedValues.copy(amount = "")
-            is PredefinedValues.Content.QrCode -> internalPredefinedValues.copy(amount = "")
+            is PredefinedValues.Content.Deeplink -> internalPredefinedValues.copy(amount = null)
+            is PredefinedValues.Content.QrCode -> internalPredefinedValues.copy(amount = null)
             PredefinedValues.Empty -> internalPredefinedValues
         }
     }
