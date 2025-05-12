@@ -534,13 +534,13 @@
   <string name="nft_details_base_information">Basisinformationen</string>
   <string name="nft_details_chain">Netzwerk</string>
   <string name="nft_details_contract_address">Vertragsadresse</string>
-  <string name="nft_details_info_chain">Kontrollabschnitt</string>
-  <string name="nft_details_info_contract_address">Kontrollabschnitt</string>
-  <string name="nft_details_info_rarity_label">Kontrollabschnitt</string>
-  <string name="nft_details_info_rarity_rank">Kontrollabschnitt</string>
-  <string name="nft_details_info_token_address">Kontrollabschnitt</string>
-  <string name="nft_details_info_token_id">Kontrollabschnitt</string>
-  <string name="nft_details_info_token_standard">Kontrollabschnitt</string>
+  <string name="nft_details_info_chain">Chain ist die Blockchain, in der das NFT existiert.</string>
+  <string name="nft_details_info_contract_address">Die Vertragsadresse ist eine eindeutige Kennung für den Smart Contract, der die Token auf der Blockchain verwaltet.</string>
+  <string name="nft_details_info_rarity_label">Eine Bezeichnung, die beschreibt, wie selten das NFT ist. Je niedriger der Wert, desto einzigartiger das NFT.</string>
+  <string name="nft_details_info_rarity_rank">Die Position eines NFT im Seltenheitsranking unter anderen Token. Je höher der Rang, desto seltener und wertvoller ist das NFT.</string>
+  <string name="nft_details_info_token_address">Die Token-Adresse ist eine eindeutige Kennung für das Token in der Blockchain und ermöglicht die Verfolgung von Transaktionen und Eigentumsverhältnissen</string>
+  <string name="nft_details_info_token_id">Die Token-ID ist eine eindeutige Kennung, die jedem Token zugewiesen wird und es von anderen in der Sammlung unterscheidet.</string>
+  <string name="nft_details_info_token_standard">Der Token-Standard definiert, um welche Art von Token es sich handelt und wie es mit verschiedenen Wallets und Plattformen funktioniert</string>
   <string name="nft_details_last_sale_price">Letzter Verkaufspreis</string>
   <string name="nft_details_rarity_label">Raritätsetikett</string>
   <string name="nft_details_rarity_rank">Seltenheitsgrad</string>
@@ -553,7 +553,7 @@
   <string name="nft_receive_available_section_title">Verfügbar</string>
   <string name="nft_receive_choose_network">Netzwerk auswählen</string>
   <string name="nft_receive_title">NFT erhalten</string>
-  <string name="nft_receive_unavailable_asset_warning_message">Du hast dieses Netzwerk noch nicht hinzugefügt. Um NFTs zu empfangen, füge es zum Hauptbildschirm hinzu!</string>
+  <string name="nft_receive_unavailable_asset_warning_message">Du hast dieses Netzwerk noch nicht hinzugefügt. Um NFTs zu erhalten, füge es Deinem Portfolio hinzu.</string>
   <string name="nft_receive_unavailable_asset_warning_title">Netzwerk nicht hinzugefügt</string>
   <string name="nft_receive_unavailable_section_title">Nicht hinzugefügt</string>
   <string name="nft_send">NFT senden</string>
@@ -1250,7 +1250,7 @@
   <string name="wc_alert_connection_timeout_description">Zeitüberschreitungsfehler. Bitte versuche es später erneut.</string>
   <string name="wc_alert_connection_timeout_title">WalletConnect konnte nicht hergestellt werden</string>
   <string name="wc_alert_domain_issues_description">Diese Domäne kann nicht verifiziert werden. Überprüfe die Anfrage sorgfältig und bestätige diese dann.</string>
-  <string name="wc_alert_session_disconnected_description">Geh zurück zu Deinem Browser und stell erneut eine Verbindung über WalletConnect her.</string>
+  <string name="wc_alert_session_disconnected_description">Bitte kehre zu Deinem Browser zurück und stellen die Verbindung über WalletConnect erneut her.</string>
   <string name="wc_alert_session_disconnected_title">WalletConnect-Sitzung wurde getrennt</string>
   <string name="wc_alert_unknown_error_description">Fehlercode: %s. Wenn das Problem weiterhin besteht, wende Dich bitte an unseren Support.</string>
   <string name="wc_alert_unknown_error_title">Wir haben einen unbekannten Fehler festgestellt.</string>
@@ -1258,8 +1258,9 @@
   <string name="wc_alert_unsupported_networks_title">Nicht unterstützte Netzwerke</string>
   <string name="wc_alert_verified_domain_description">Tangem unterstützt ein erforderliches Netzwerk um %s.</string>
   <string name="wc_alert_verified_domain_title">Verifizierte Domain</string>
-  <string name="wc_alert_wrong_card_description">Falsche Karte oder falscher Ring in der Tangem-App ausgewählt</string>
+  <string name="wc_alert_wrong_card_description">Falsche Karte oder falscher Ring in der App ausgewählt</string>
   <string name="wc_alert_wrong_card_title">Wir haben eine Art Problem</string>
+  <string name="wc_common_address">Vertragsadresse</string>
   <string name="wc_common_connect">Verbinden</string>
   <string name="wc_common_network">Netzwerk</string>
   <string name="wc_common_networks">Netzwerke</string>
@@ -1286,6 +1287,7 @@
   <string name="wc_notification_security_risk_title">Bekanntes Sicherheitsrisiko</string>
   <string name="wc_request_from">Anfrage von</string>
   <string name="wc_signature_type">Art der Signatur</string>
+  <string name="wc_transaction_info_to_title">An</string>
   <string name="wc_transaction_request">Transaktionsanfrage</string>
   <string name="wc_transaction_request_title">Transaktionsanfrage</string>
   <string name="wc_wallet_connect">Wallet verbinden</string>
