@@ -1,11 +1,13 @@
 package com.tangem.feature.swap.ui
 
 import android.content.res.Configuration
+import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -13,12 +15,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.tangem.core.ui.R
@@ -98,7 +102,7 @@ private fun ProviderContentState(
     isSelected: Boolean = false,
 ) {
     Box(modifier = modifier.fillMaxWidth()) {
-        Row {
+        Row(verticalAlignment = Alignment.CenterVertically) {
             SubcomposeAsyncImage(
                 modifier = Modifier
                     .padding(start = TangemTheme.dimens.spacing12)
@@ -118,13 +122,16 @@ private fun ProviderContentState(
             )
 
             Column(
-                modifier = Modifier.padding(start = TangemTheme.dimens.spacing12),
+                modifier = Modifier
+                    .padding(start = TangemTheme.dimens.spacing12)
+                    .weight(1F),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 Row {
-                    if (state.namePrefix == ProviderState.PrefixType.PROVIDED_BY) {
+                    if (state.namePrefix == ProviderState.PrefixType.SWAP_WITH) {
                         Text(
-                            text = stringResourceSafe(id = R.string.express_by_provider),
-                            style = TangemTheme.typography.caption2,
+                            text = stringResourceSafe(id = R.string.express_swap_with),
+                            style = TangemTheme.typography.subtitle2,
                             color = TangemTheme.colors.text.tertiary,
                             modifier = Modifier.padding(end = TangemTheme.dimens.spacing4),
                         )
@@ -132,33 +139,48 @@ private fun ProviderContentState(
                     AnimatedContent(targetState = state.name, label = "") {
                         Text(
                             text = it,
-                            style = TangemTheme.typography.caption2,
+                            style = TangemTheme.typography.body2,
                             color = TangemTheme.colors.text.primary1,
                         )
                     }
                     AnimatedContent(targetState = state.type, label = "") {
                         Text(
                             text = it,
-                            style = TangemTheme.typography.caption2,
+                            style = TangemTheme.typography.body2,
                             color = TangemTheme.colors.text.tertiary,
                             modifier = Modifier.padding(start = TangemTheme.dimens.spacing4),
                         )
                     }
-                    val badgeModifier = Modifier.padding(start = TangemTheme.dimens.spacing4)
-                    when (state.additionalBadge) {
-                        ProviderState.AdditionalBadge.BestTrade -> BestTradeItem(badgeModifier)
-                        ProviderState.AdditionalBadge.PermissionRequired -> PermissionBadgeItem(badgeModifier)
-                        ProviderState.AdditionalBadge.Recommended -> RecommendedItem(badgeModifier)
-                        ProviderState.AdditionalBadge.Empty -> Unit
-                    }
                 }
-                Row(
-                    modifier = Modifier.padding(
-                        top = TangemTheme.dimens.spacing6,
-                        end = TangemTheme.dimens.spacing56,
-                    ),
-                ) {
-                    AnimatedContent(targetState = state.subtitle, label = "") {
+                Row {
+                    with(state.details) {
+                        rating?.let {
+                            OutlinedText(
+                                text = it.toString(),
+                                iconResId = R.drawable.ic_star_outline_12,
+                                modifier = Modifier.padding(end = TangemTheme.dimens.spacing4),
+                            )
+
+                        }
+                        averageDuration?.let {
+                            OutlinedText(
+                                text = it.toString(), // TODO
+                                iconResId = R.drawable.ic_speed_outline_12,
+                            )
+                        }
+                    }
+
+                }
+            }
+
+
+            Column(
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
+                modifier = Modifier.padding(end = TangemTheme.dimens.spacing12),
+            ) {
+                AnimatedContent(targetState = state.subtitle, label = "") {
+                    if (state.selectionType == ProviderState.SelectionType.SELECT) {
                         Text(
                             text = it.resolveReference(),
                             style = TangemTheme.typography.body2,
@@ -167,30 +189,71 @@ private fun ProviderContentState(
                             maxLines = 1,
                         )
                     }
-                    if (state.percentLowerThenBest is PercentDifference.Value &&
-                        state.percentLowerThenBest.value != 0f
-                    ) {
-                        val textColor = if (state.percentLowerThenBest.value > 0) {
-                            TangemTheme.colors.icon.accent
-                        } else {
-                            TangemTheme.colors.text.warning
-                        }
-                        AnimatedContent(targetState = state.percentLowerThenBest.value, label = "") {
-                            Text(
-                                text = if (it > 0) "+$it%" else "$it%",
-                                style = TangemTheme.typography.body2,
-                                color = textColor,
-                                modifier = Modifier.padding(start = TangemTheme.dimens.spacing4),
-                                overflow = TextOverflow.Ellipsis,
-                                maxLines = 1,
-                            )
+
+                }
+                val badgeModifier = Modifier.padding(start = TangemTheme.dimens.spacing4)
+                when (state.additionalBadge) {
+                    ProviderState.AdditionalBadge.BestTrade -> BestTradeItem(badgeModifier)
+                    ProviderState.AdditionalBadge.PermissionRequired -> PermissionBadgeItem(badgeModifier)
+                    ProviderState.AdditionalBadge.Recommended -> RecommendedItem(badgeModifier)
+                    ProviderState.AdditionalBadge.Empty -> {
+                        if (state.percentLowerThenBest is PercentDifference.Value &&
+                            state.percentLowerThenBest.value != 0f
+                        ) {
+                            val textColor = if (state.percentLowerThenBest.value > 0) {
+                                TangemTheme.colors.icon.accent
+                            } else {
+                                TangemTheme.colors.text.warning
+                            }
+                            AnimatedContent(targetState = state.percentLowerThenBest.value, label = "") {
+                                Text(
+                                    text = if (it > 0) "+$it%" else "$it%",
+                                    style = TangemTheme.typography.body2,
+                                    color = textColor,
+                                    modifier = Modifier.padding(start = TangemTheme.dimens.spacing4),
+                                    overflow = TextOverflow.Ellipsis,
+                                    maxLines = 1,
+                                )
+                            }
                         }
                     }
                 }
             }
         }
 
-        ProviderChevron(selectionType = state.selectionType, isSelected = isSelected)
+        // Column(
+        //     horizontalAlignment = Alignment.End,
+        //     verticalArrangement = Arrangement.spacedBy(4.dp),
+        // ) {
+        //     Text(
+        //         text = state.rate,
+        //         style = TangemTheme.typography.body2,
+        //         color = TangemTheme.colors.text.primary1,
+        //     )
+        //     when {
+        //         state.isBestRate -> {
+        //             Text(
+        //                 text = stringResourceSafe(R.string.express_provider_best_rate),
+        //                 style = TangemTheme.typography.caption1,
+        //                 color = TangemTheme.colors.text.constantWhite,
+        //                 modifier = Modifier
+        //                     .clip(RoundedCornerShape(4.dp))
+        //                     .background(TangemTheme.colors.icon.accent)
+        //                     .padding(vertical = 1.dp, horizontal = 6.dp),
+        //             )
+        //         }
+        //         state.diffRate != null -> {
+        //             Text(
+        //                 text = state.diffRate.resolveReference(),
+        //                 style = TangemTheme.typography.caption2,
+        //                 color = TangemTheme.colors.text.warning,
+        //                 modifier = Modifier.padding(vertical = 1.dp),
+        //             )
+        //         }
+        //     }
+        // }
+
+        // ProviderChevron(selectionType = state.selectionType, isSelected = isSelected)
     }
 }
 
@@ -201,7 +264,7 @@ private fun ProviderUnavailableState(
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier.fillMaxWidth()) {
-        Row {
+        Row(verticalAlignment = Alignment.CenterVertically) {
             val (alpha, colorFilter) = GRAY_SCALE_ALPHA to GrayscaleColorFilter
             SubcomposeAsyncImage(
                 modifier = Modifier
@@ -254,7 +317,7 @@ private fun ProviderUnavailableState(
             }
         }
 
-        ProviderChevron(selectionType = state.selectionType, isSelected = isSelected)
+        // ProviderChevron(selectionType = state.selectionType, isSelected = isSelected)
     }
 }
 
@@ -351,59 +414,62 @@ private fun ErrorProviderIcon(modifier: Modifier = Modifier) {
 
 @Composable
 private fun BestTradeItem(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier.background(
-            color = TangemTheme.colors.icon.accent.copy(alpha = 0.1f),
-            shape = TangemTheme.shapes.roundedCornersLarge,
-        ),
-    ) {
-        Text(
-            text = stringResourceSafe(R.string.express_provider_best_rate),
-            style = TangemTheme.typography.caption1,
-            color = TangemTheme.colors.icon.accent,
-            modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing6),
-        )
-    }
+    ProviderBadge(
+        textResId = R.string.express_provider_best_rate,
+        backgroundColor = TangemTheme.colors.icon.accent,
+        textColor = TangemTheme.colors.text.constantWhite,
+        modifier = modifier,
+    )
 }
 
 @Composable
 private fun PermissionBadgeItem(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier.background(
-            color = TangemTheme.colors.background.secondary,
-            shape = TangemTheme.shapes.roundedCornersLarge,
-        ),
-    ) {
-        Text(
-            text = stringResourceSafe(id = R.string.express_provider_permission_needed),
-            style = TangemTheme.typography.caption1,
-            color = TangemTheme.colors.text.tertiary,
-            modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing6),
-        )
-    }
+    ProviderBadge(
+        textResId = R.string.express_provider_permission_needed,
+        backgroundColor = TangemTheme.colors.background.secondary,
+        textColor = TangemTheme.colors.text.tertiary,
+        modifier = modifier,
+    )
 }
 
 @Composable
 private fun RecommendedItem(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier.background(
-            color = TangemTheme.colors.icon.accent.copy(alpha = 0.1f),
-            shape = TangemTheme.shapes.roundedCornersLarge,
-        ),
-    ) {
-        Text(
-            text = stringResourceSafe(id = R.string.express_provider_recommended),
-            style = TangemTheme.typography.caption1,
-            color = TangemTheme.colors.icon.accent,
-            modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing6),
-        )
-    }
+    ProviderBadge(
+        textResId = R.string.express_provider_recommended,
+        backgroundColor = TangemTheme.colors.icon.accent.copy(alpha = 0.1f),
+        textColor = TangemTheme.colors.icon.accent,
+        modifier = modifier,
+    )
 }
 
 @Composable
-private fun RowScope.OutlinedText(text: String) {
-    Box(
-        modifier = Modifier
+private fun ProviderBadge(
+    textResId: Int,
+    backgroundColor: Color,
+    textColor: Color,
+    modifier: Modifier = Modifier,
+) {
+    Text(
+        text = stringResourceSafe(textResId),
+        style = TangemTheme.typography.caption1,
+        color = textColor,
+        modifier = modifier
+            .clip(RoundedCornerShape(4.dp))
+            .background(backgroundColor)
+            .padding(vertical = 1.dp, horizontal = 6.dp),
+    )
+}
+
+@Composable
+private fun RowScope.OutlinedText(
+    text: String,
+    @DrawableRes iconResId: Int,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing1),
+        modifier = modifier
             .alignByBaseline()
             .heightIn(min = TangemTheme.dimens.size16)
             .border(
@@ -411,9 +477,17 @@ private fun RowScope.OutlinedText(text: String) {
                 color = TangemTheme.colors.field.primary,
                 shape = TangemTheme.shapes.roundedCornersSmall2,
             )
-            .padding(horizontal = TangemTheme.dimens.spacing5),
+            .padding(vertical = 1.dp, horizontal = 6.dp),
     ) {
+        Icon(
+            painter = painterResource(id = iconResId),
+            contentDescription = null,
+            tint = TangemTheme.colors.icon.informative,
+            modifier = Modifier.size(TangemTheme.dimens.size12)
+        )
+
         Text(
+            modifier = Modifier.padding(start = TangemTheme.dimens.spacing2),
             text = text,
             color = TangemTheme.colors.text.tertiary,
             style = TangemTheme.typography.caption1,
@@ -445,11 +519,11 @@ private class ProviderItemParameterProvider : CollectionPreviewParameterProvider
             name = "1inch",
             type = "DEX",
             iconUrl = "",
-            subtitle = stringReference(value = "0,64554846 DAI ≈ 1 MATIC"),
-            additionalBadge = ProviderState.AdditionalBadge.Empty,
+            subtitle = stringReference(value = "1 MATIC"),
+            additionalBadge = ProviderState.AdditionalBadge.BestTrade,
             percentLowerThenBest = PercentDifference.Value(value = 12.0f),
             selectionType = ProviderState.SelectionType.SELECT,
-            namePrefix = ProviderState.PrefixType.PROVIDED_BY,
+            namePrefix = ProviderState.PrefixType.SWAP_WITH,
             onProviderClick = {},
             details = ProviderState.ProviderDetails(
                 rating = 4.9,
@@ -459,7 +533,7 @@ private class ProviderItemParameterProvider : CollectionPreviewParameterProvider
         )
         val contentState2 = contentState.copy(
             subtitle = stringReference(value = "1 132,46 MATIC"),
-            additionalBadge = ProviderState.AdditionalBadge.PermissionRequired,
+            additionalBadge = ProviderState.AdditionalBadge.Empty,
             percentLowerThenBest = PercentDifference.Value(value = 5f),
             details = contentState.details.copy(
                 rating = null,

@@ -57,7 +57,7 @@ internal object SelectProviderPreviewData {
                 rate = "1 BTC",
                 isSelected = false,
                 isBestRate = false,
-                diffRate = stringReference("-0.03%"),
+                diffRate = null,
                 providerResult = SelectProviderResult.ProviderWithQuote(
                     paymentMethod = paymentMethod,
                     provider = provider,
