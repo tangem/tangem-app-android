@@ -52,7 +52,7 @@ internal class SelectProviderModel @Inject constructor(
     private val getOnrampSelectedPaymentMethodUseCase: GetOnrampSelectedPaymentMethodUseCase,
     private val getOnrampProviderWithQuoteUseCase: GetOnrampProviderWithQuoteUseCase,
     private val saveSelectedPaymentMethod: OnrampSaveSelectedPaymentMethod,
-    private val getUserCountryUseCase: GetUserCountryUseCase,
+    getUserCountryUseCase: GetUserCountryUseCase,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
