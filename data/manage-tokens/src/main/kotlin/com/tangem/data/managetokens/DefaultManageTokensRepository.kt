@@ -6,12 +6,12 @@ import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.data.common.api.safeApiCall
+import com.tangem.data.common.currency.CardCryptoCurrencyFactory
 import com.tangem.data.common.currency.UserTokensResponseFactory
 import com.tangem.data.common.currency.getBlockchain
 import com.tangem.data.common.utils.retryOnError
 import com.tangem.data.managetokens.utils.ManageTokensUpdateFetcher
 import com.tangem.data.managetokens.utils.ManagedCryptoCurrencyFactory
-import com.tangem.data.tokens.utils.CardCryptoCurrenciesFactory
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
@@ -26,7 +26,6 @@ import com.tangem.domain.common.extensions.canHandleToken
 import com.tangem.domain.common.extensions.supportedBlockchains
 import com.tangem.domain.common.extensions.supportedTokens
 import com.tangem.domain.common.util.cardTypesResolver
-import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.managetokens.model.*
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency.SourceNetwork
 import com.tangem.domain.managetokens.repository.ManageTokensRepository
@@ -48,12 +47,12 @@ internal class DefaultManageTokensRepository(
     private val appPreferencesStore: AppPreferencesStore,
     private val testnetTokensStorage: TestnetTokensStorage,
     private val excludedBlockchains: ExcludedBlockchains,
+    private val cardCryptoCurrencyFactory: CardCryptoCurrencyFactory,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : ManageTokensRepository {
 
     private val managedCryptoCurrencyFactory = ManagedCryptoCurrencyFactory(excludedBlockchains)
     private val userTokensResponseFactory = UserTokensResponseFactory()
-    private val cardCurrenciesFactory = CardCryptoCurrenciesFactory(DemoConfig(), excludedBlockchains)
 
     // region getTokenListBatchFlow
     override fun getTokenListBatchFlow(
@@ -77,7 +76,7 @@ internal class DefaultManageTokensRepository(
         prefetchDistance = batchSize,
         batchSize = batchSize,
         subFetcher = { request, _, isFirstBatchFetching ->
-            val userWallet = request.params.userWalletId?.let { getUserWallet(it) }
+            val userWallet = request.params.userWalletId?.let(userWalletsStore::getSyncStrict)
 
             if (userWallet?.scanResponse?.card?.isTestCard == true) {
                 fetchTestnetCurrencies(userWallet, request)
@@ -190,16 +189,10 @@ internal class DefaultManageTokensRepository(
 
     private fun createDefaultUserTokensResponse(userWallet: UserWallet) =
         userTokensResponseFactory.createUserTokensResponse(
-            currencies = cardCurrenciesFactory.createDefaultCoinsForMultiCurrencyCard(userWallet.scanResponse),
+            currencies = cardCryptoCurrencyFactory.createDefaultCoinsForMultiCurrencyCard(userWallet.scanResponse),
             isGroupedByNetwork = false,
             isSortedByBalance = false,
         )
-
-    private suspend fun getUserWallet(userWalletId: UserWalletId): UserWallet {
-        return requireNotNull(userWalletsStore.getSyncOrNull(userWalletId)) {
-            "Unable to find a user wallet with provided ID: $userWalletId"
-        }
-    }
 
     private fun getSupportedBlockchains(userWallet: UserWallet?): List<Blockchain> {
         return userWallet?.scanResponse?.let {
@@ -261,7 +254,7 @@ internal class DefaultManageTokensRepository(
         userWalletId: UserWalletId,
         sourceNetwork: SourceNetwork,
     ): CurrencyUnsupportedState? {
-        val userWallet = getUserWallet(userWalletId = userWalletId)
+        val userWallet = userWalletsStore.getSyncStrict(key = userWalletId)
         val blockchain = getBlockchain(sourceNetwork.id)
         return when (sourceNetwork) {
             is SourceNetwork.Default -> checkTokenUnsupportedState(userWallet = userWallet, blockchain = blockchain)
@@ -274,7 +267,7 @@ internal class DefaultManageTokensRepository(
         rawNetworkId: String,
         isMainNetwork: Boolean,
     ): CurrencyUnsupportedState? {
-        val userWallet = getUserWallet(userWalletId = userWalletId)
+        val userWallet = userWalletsStore.getSyncStrict(key = userWalletId)
         val blockchain = Blockchain.fromNetworkId(networkId = rawNetworkId)
             ?: error("Can not create blockchain with given networkId -> $rawNetworkId")
         return if (isMainNetwork) {
