@@ -38,11 +38,11 @@ internal fun WcSignTransactionModalBottomSheetContent(
 ) {
     Column(
         modifier = Modifier
-            .padding(horizontal = TangemTheme.dimens.spacing16),
+            .padding(horizontal = 16.dp),
     ) {
         Column(
             modifier = Modifier
-                .clip(RoundedCornerShape(TangemTheme.dimens.radius14))
+                .clip(RoundedCornerShape(14.dp))
                 .background(color = TangemTheme.colors.background.action)
                 .fillMaxWidth()
                 .animateContentSize(),
@@ -60,13 +60,13 @@ internal fun WcSignTransactionModalBottomSheetContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable { onClickTransactionRequest() }
-                    .padding(TangemTheme.dimens.spacing12),
+                    .padding(12.dp),
             )
         }
-        Column(modifier = Modifier.padding(top = TangemTheme.dimens.spacing16)) {
+        Column(modifier = Modifier.padding(top = 16.dp)) {
             WcSignTransactionItems(state)
             WcTransactionRequestButtons(
-                modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing16),
+                modifier = Modifier.padding(vertical = 16.dp),
                 onDismiss = state.onDismiss,
                 onClickActiveButton = state.onSign,
                 activeButtonText = resourceReference(R.string.common_sign),
@@ -80,27 +80,27 @@ internal fun WcSignTransactionModalBottomSheetContent(
 private fun WcSignTransactionItems(state: WcSignTransactionItemUM) {
     Column(
         modifier = Modifier
-            .clip(RoundedCornerShape(TangemTheme.dimens.radius14))
+            .clip(RoundedCornerShape(14.dp))
             .background(color = TangemTheme.colors.background.action)
             .fillMaxWidth()
             .animateContentSize(),
     ) {
         val itemsModifier = Modifier
             .fillMaxWidth()
-            .padding(TangemTheme.dimens.spacing12)
+            .padding(12.dp)
 
         DividerWithPadding(start = 0.dp, end = 0.dp)
         WcWalletItem(
             modifier = itemsModifier,
             walletName = state.walletName,
         )
-        DividerWithPadding(start = TangemTheme.dimens.spacing40, end = TangemTheme.dimens.spacing12)
+        DividerWithPadding(start = 40.dp, end = 12.dp)
         WcNetworkItem(
             modifier = itemsModifier,
             networkInfo = state.networkInfo,
         )
         if (!state.addressText.isNullOrEmpty()) {
-            DividerWithPadding(start = TangemTheme.dimens.spacing40, end = TangemTheme.dimens.spacing12)
+            DividerWithPadding(start = 40.dp, end = 12.dp)
             WcAddressItem(
                 modifier = itemsModifier,
                 addressText = state.addressText,
@@ -116,7 +116,7 @@ internal fun DividerWithPadding(start: Dp, end: Dp) {
             start = start,
             end = end,
         ),
-        thickness = TangemTheme.dimens.size1,
+        thickness = 1.dp,
         color = TangemTheme.colors.stroke.primary,
     )
 }
