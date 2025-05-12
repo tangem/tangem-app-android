@@ -117,7 +117,7 @@ internal class SetInitialDataStateTransformer(
             startText = TextReference.Res(R.string.staking_details_annual_percentage_rate),
             endText = getAprRange(validators),
             iconClick = { clickIntents.onInfoClick(InfoType.ANNUAL_PERCENTAGE_RATE) },
-            isEndTextHighlighted = true,
+            isEndTextHighlighted = false,
         )
     }
 
