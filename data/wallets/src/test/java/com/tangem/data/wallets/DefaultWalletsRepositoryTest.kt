@@ -18,6 +18,8 @@ import io.mockk.coVerify
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import com.google.common.truth.Truth.assertThat
+import com.tangem.datasource.api.common.AuthProvider
+import com.tangem.domain.wallets.models.UserWallet
 import org.junit.Before
 import org.junit.Test
 
@@ -48,6 +50,7 @@ class DefaultWalletsRepositoryTest {
             userWalletsStore = mockk(),
             seedPhraseNotificationVisibilityStore = mockk(),
             dispatchers = dispatchers,
+            authProvider = mockk(),
         )
     }
 
@@ -230,5 +233,74 @@ class DefaultWalletsRepositoryTest {
 
         coVerify(exactly = 1) { tangemTechApi.getWallets(applicationId) }
         coVerify(exactly = 0) { preferencesDataStore.updateData(any()) }
+    }
+
+    @Test
+    fun `GIVEN user wallets and application ID WHEN associateWallets THEN should convert and send to API`() = runTest {
+        // GIVEN
+        val applicationId = "test_app_id"
+        val wallet1Id = "1234567890abcdef"
+        val wallet2Id = "fedcba0987654321"
+        val card1PublicKey = "card1_public_key"
+        val card2PublicKey = "card2_public_key"
+
+        val userWallets = listOf(
+            mockk<UserWallet> {
+                every { cardsInWallet } returns setOf(card1PublicKey)
+                every { walletId } returns UserWalletId(wallet1Id)
+                every { name } returns "Wallet 1"
+            },
+            mockk<UserWallet> {
+                every { cardsInWallet } returns setOf(card2PublicKey)
+                every { walletId } returns UserWalletId(wallet2Id)
+                every { name } returns "Wallet 2"
+            },
+        )
+
+        val publicKeys = mapOf(
+            card1PublicKey to "public_key_1",
+            card2PublicKey to "public_key_2",
+        )
+
+        val authProvider = mockk<AuthProvider> {
+            every { getCardsPublicKeys() } returns publicKeys
+        }
+
+        repository = DefaultWalletsRepository(
+            appPreferencesStore = appPreferenceStore,
+            tangemTechApi = tangemTechApi,
+            userWalletsStore = mockk(),
+            seedPhraseNotificationVisibilityStore = mockk(),
+            dispatchers = dispatchers,
+            authProvider = authProvider,
+        )
+
+        coEvery {
+            tangemTechApi.associateApplicationIdWithWallets(
+                eq(applicationId),
+                any(),
+            )
+        } returns ApiResponse.Success(Unit)
+
+        // WHEN
+        repository.associateWallets(applicationId, userWallets)
+
+        // THEN
+        coVerify(exactly = 1) {
+            tangemTechApi.associateApplicationIdWithWallets(
+                eq(applicationId),
+                match { body ->
+                    body.size == 2 &&
+                        body.any {
+                            it.walletId == wallet1Id && it.cards.any { card -> card.cardPublicKey == "public_key_1" } &&
+                                it.name == "Wallet 1"
+                        } &&
+                        body.any {
+                            it.walletId == wallet2Id && it.cards.any { card -> card.cardPublicKey == "public_key_2" } &&
+                                it.name == "Wallet 2"
+                        }
+                },
+            )
+        }
     }
 }
