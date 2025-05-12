@@ -86,7 +86,7 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
                 is TangemTech -> createTangemTechModel()
                 is StakeKit -> createStakeKitModel()
                 is TangemVisa -> createVisaModel()
-                is TangemCardSdk -> createTangemCardSdkModel()
+                is Attestation -> createAttestationModel()
                 is BlockAid -> createBlockAidSdkModel()
             }
         }
@@ -189,9 +189,9 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
             )
         }
 
-        private fun createTangemCardSdkModel(): Model {
+        private fun createAttestationModel(): Model {
             return Model(
-                id = ApiConfig.ID.TangemCardSdk,
+                id = ApiConfig.ID.Attestation,
                 expected = ApiEnvironmentConfig(
                     environment = ApiEnvironment.PROD,
                     baseUrl = "https://api.tangem-tech.com/",
