@@ -27,4 +27,7 @@ internal interface NetworksStatusesStoreV2 {
      * If [value] is null, default unreachable status will be stored.
      */
     suspend fun storeError(userWalletId: UserWalletId, network: Network, value: NetworkStatus.Unreachable? = null)
+
+    /** Store error for [networks] by [userWalletId] */
+    suspend fun storeError(userWalletId: UserWalletId, networks: Set<Network>)
 }
