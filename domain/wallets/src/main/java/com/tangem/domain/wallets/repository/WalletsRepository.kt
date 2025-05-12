@@ -1,6 +1,7 @@
 package com.tangem.domain.wallets.repository
 
 import com.tangem.domain.wallets.models.SeedPhraseNotificationsStatus
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.models.UserWalletRemoteInfo
 import kotlinx.coroutines.flow.Flow
@@ -54,4 +55,7 @@ interface WalletsRepository {
 
     @Throws
     suspend fun getWalletsInfo(applicationId: String, updateCache: Boolean = true): List<UserWalletRemoteInfo>
+
+    @Throws
+    suspend fun associateWallets(applicationId: String, wallets: List<UserWallet>)
 }
