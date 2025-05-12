@@ -1,4 +1,4 @@
-package com.tangem.data.tokens.utils
+package com.tangem.data.networks.utils
 
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.tokens.model.*
@@ -9,37 +9,77 @@ import com.tangem.domain.walletmanager.model.CryptoCurrencyTransaction
 import com.tangem.domain.walletmanager.model.UpdateWalletManagerResult
 import timber.log.Timber
 
-class NetworkStatusFactory {
+/** Factory for creating [NetworkStatus] */
+object NetworkStatusFactory {
 
-    fun createNetworkStatus(
+    /**
+     * Create [NetworkStatus]
+     *
+     * @param network         network
+     * @param updatingResult  result of updating wallet manager
+     * @param addedCurrencies added currencies
+     */
+    fun create(
         network: Network,
-        result: UpdateWalletManagerResult,
-        currencies: Set<CryptoCurrency>,
+        updatingResult: UpdateWalletManagerResult,
+        addedCurrencies: Set<CryptoCurrency>,
     ): NetworkStatus {
         return NetworkStatus(
             network = network,
-            value = when (result) {
+            value = when (updatingResult) {
                 is UpdateWalletManagerResult.MissedDerivation -> NetworkStatus.MissedDerivation
-                is UpdateWalletManagerResult.Unreachable -> NetworkStatus.Unreachable(
-                    address = getNetworkAddressOrNull(result.selectedAddress, result.addresses),
-                )
-                is UpdateWalletManagerResult.NoAccount -> NetworkStatus.NoAccount(
-                    address = getNetworkAddress(result.selectedAddress, result.addresses),
-                    amountToCreateAccount = result.amountToCreateAccount,
-                    errorMessage = result.errorMessage,
-                    source = StatusSource.ACTUAL,
-                )
-                is UpdateWalletManagerResult.Verified -> NetworkStatus.Verified(
-                    address = getNetworkAddress(result.selectedAddress, result.addresses),
-                    amounts = formatAmounts(result.currenciesAmounts, currencies),
-                    pendingTransactions = formatTransactions(
-                        transactions = result.currentTransactions,
-                        currencies = currencies,
-                    ),
-                    source = StatusSource.ACTUAL,
-                )
+                is UpdateWalletManagerResult.Unreachable -> createUnreachableStatus(result = updatingResult)
+                is UpdateWalletManagerResult.NoAccount -> createNoAccount(result = updatingResult)
+                is UpdateWalletManagerResult.Verified -> {
+                    createVerifiedStatus(result = updatingResult, addedCurrencies = addedCurrencies)
+                }
             },
         )
+    }
+
+    private fun createUnreachableStatus(result: UpdateWalletManagerResult.Unreachable): NetworkStatus.Unreachable {
+        return NetworkStatus.Unreachable(
+            address = getNetworkAddressOrNull(
+                selectedAddress = result.selectedAddress,
+                availableAddresses = result.addresses,
+            ),
+        )
+    }
+
+    private fun createNoAccount(result: UpdateWalletManagerResult.NoAccount): NetworkStatus.NoAccount {
+        return NetworkStatus.NoAccount(
+            address = getNetworkAddress(
+                selectedAddress = result.selectedAddress,
+                availableAddresses = result.addresses,
+            ),
+            amountToCreateAccount = result.amountToCreateAccount,
+            errorMessage = result.errorMessage,
+            source = StatusSource.ACTUAL,
+        )
+    }
+
+    private fun createVerifiedStatus(
+        result: UpdateWalletManagerResult.Verified,
+        addedCurrencies: Set<CryptoCurrency>,
+    ): NetworkStatus.Verified {
+        return NetworkStatus.Verified(
+            address = getNetworkAddress(
+                selectedAddress = result.selectedAddress,
+                availableAddresses = result.addresses,
+            ),
+            amounts = formatAmounts(amounts = result.currenciesAmounts, currencies = addedCurrencies),
+            pendingTransactions = formatTransactions(
+                transactions = result.currentTransactions,
+                currencies = addedCurrencies,
+            ),
+            source = StatusSource.ACTUAL,
+        )
+    }
+
+    private fun getNetworkAddressOrNull(selectedAddress: String?, availableAddresses: Set<Address>?): NetworkAddress? {
+        if (selectedAddress.isNullOrBlank() || availableAddresses == null) return null
+
+        return getNetworkAddress(selectedAddress, availableAddresses)
     }
 
     private fun formatAmounts(
@@ -97,23 +137,20 @@ class NetworkStatusFactory {
         return transactions.mapTo(hashSetOf()) { it.txHistoryItem }
     }
 
-    private fun getNetworkAddressOrNull(selectedAddress: String?, availableAddresses: Set<Address>?): NetworkAddress? {
-        if (selectedAddress == null || availableAddresses == null) {
-            return null
-        }
-
-        return getNetworkAddress(selectedAddress, availableAddresses)
-    }
-
     private fun getNetworkAddress(selectedAddress: String, availableAddresses: Set<Address>): NetworkAddress {
         val defaultAddress = availableAddresses
             .firstOrNull { it.value == selectedAddress }
             ?.let(::mapToDomainAddress)
 
-        requireNotNull(defaultAddress) { "Selected address must not be null" }
+        require(defaultAddress != null && defaultAddress.value.isNotBlank()) {
+            "Selected address must not be null"
+        }
 
         return if (availableAddresses.size != 1) {
-            NetworkAddress.Selectable(defaultAddress, availableAddresses.mapTo(hashSetOf(), ::mapToDomainAddress))
+            NetworkAddress.Selectable(
+                defaultAddress = defaultAddress,
+                availableAddresses = availableAddresses.mapTo(hashSetOf(), ::mapToDomainAddress),
+            )
         } else {
             NetworkAddress.Single(defaultAddress)
         }
