@@ -53,6 +53,7 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
                 source = AnalyticsParam.ScreensSources.Main,
                 programName = ProgramName.Empty, // Use it on new promo action
             )
+            is WalletNotification.ReferralPromo -> MainScreen.ReferralPromo
             is WalletNotification.UnlockWallets -> null // See [SelectedWalletAnalyticsSender]
             is WalletNotification.Informational.NoAccount,
             is WalletNotification.Warning.LowSignatures,
