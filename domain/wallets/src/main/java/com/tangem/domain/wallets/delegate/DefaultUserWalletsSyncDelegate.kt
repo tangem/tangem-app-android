@@ -26,7 +26,7 @@ class DefaultUserWalletsSyncDelegate(
             renameUserWallet(userWallet.walletId, userWallet.name).bind()
         }
     }
-
+// [REDACTED_TODO_COMMENT]
     private suspend fun renameUserWallet(
         userWalletId: UserWalletId,
         name: String,
