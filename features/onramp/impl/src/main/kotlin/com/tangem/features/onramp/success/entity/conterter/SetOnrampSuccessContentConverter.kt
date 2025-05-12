@@ -213,7 +213,7 @@ internal class SetOnrampSuccessContentConverter(
             else -> if (externalTxId != null) {
                 ExpressLinkUM.Content(
                     icon = R.drawable.ic_copy_24,
-                    text = resourceReference(R.string.express_transaction_id, wrappedList(externalTxId)),
+                    text = stringReference(externalTxId),
                     onClick = { onCopyClick(externalTxId) },
                 )
             } else {
