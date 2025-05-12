@@ -34,14 +34,17 @@ internal class DefaultSingleNetworkStatusFetcher @Inject constructor(
     private val networkStatusFactory = NetworkStatusFactory()
 
     override suspend fun invoke(params: SingleNetworkStatusFetcher.Params) = Either.catchOn(dispatchers.default) {
-        if (params.applyRefresh) {
-            networksStatusesStore.refresh(userWalletId = params.userWalletId, network = params.network)
-        }
+        val networkCurrencies = when (params) {
+            is SingleNetworkStatusFetcher.Params.Prepared -> params.addedNetworkCurrencies
+            is SingleNetworkStatusFetcher.Params.Simple -> {
+                networksStatusesStore.refresh(userWalletId = params.userWalletId, network = params.network)
 
-        val networkCurrencies = cardCryptoCurrencyFactory.create(
-            userWalletId = params.userWalletId,
-            network = params.network,
-        )
+                cardCryptoCurrencyFactory.create(
+                    userWalletId = params.userWalletId,
+                    network = params.network,
+                )
+            }
+        }
 
         val result = withContext(dispatchers.io) {
             walletManagersFacade.update(
@@ -61,11 +64,20 @@ internal class DefaultSingleNetworkStatusFetcher @Inject constructor(
 
         val statusValue = status.value
         if (statusValue is NetworkStatus.Unreachable) {
-            networksStatusesStore.storeError(
+            val prevStatus = networksStatusesStore.getSyncOrNull(
                 userWalletId = params.userWalletId,
                 network = params.network,
-                value = statusValue,
             )
+
+            if (prevStatus?.value is NetworkStatus.MissedDerivation) {
+                networksStatusesStore.storeUnreachableStatus(userWalletId = params.userWalletId, value = status)
+            } else {
+                networksStatusesStore.storeError(
+                    userWalletId = params.userWalletId,
+                    network = params.network,
+                    value = statusValue,
+                )
+            }
         } else {
             networksStatusesStore.storeSuccess(userWalletId = params.userWalletId, value = status)
         }
