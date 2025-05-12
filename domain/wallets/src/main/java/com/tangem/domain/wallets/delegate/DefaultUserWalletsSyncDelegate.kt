@@ -27,6 +27,7 @@ class DefaultUserWalletsSyncDelegate(
         }
     }
 
+    // TODO remove dispatchers whnen UserWalletsListManager will be main safe
     private suspend fun renameUserWallet(
         userWalletId: UserWalletId,
         name: String,
