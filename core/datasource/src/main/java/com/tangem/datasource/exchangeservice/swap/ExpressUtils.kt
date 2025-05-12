@@ -11,12 +11,12 @@ object ExpressUtils {
     private const val BATCH_ID_CHANGENOW = "BB000013"
     private const val BATCH_ID_PARTNER = "AF990015"
 
-    fun getRefCode(userWallet: UserWallet, appPreferencesStore: AppPreferencesStore): String {
+    fun getRefCode(userWallet: UserWallet, appPreferencesStore: AppPreferencesStore): String? {
         return when {
             isRing(userWallet, appPreferencesStore) -> "ring"
             isChangeNow(userWallet) -> "ChangeNow"
             isPartner(userWallet) -> "partner"
-            else -> ""
+            else -> null
         }
     }
 
