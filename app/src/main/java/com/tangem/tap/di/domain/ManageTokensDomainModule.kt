@@ -10,7 +10,6 @@ import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.tokens.repository.CurrenciesRepository
-import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -70,7 +69,6 @@ internal object ManageTokensDomainModule {
         customTokensRepository: CustomTokensRepository,
         walletManagersFacade: WalletManagersFacade,
         currenciesRepository: CurrenciesRepository,
-        networksRepository: NetworksRepository,
         derivationsRepository: DerivationsRepository,
         stakingRepository: StakingRepository,
         quotesRepository: QuotesRepository,
@@ -83,7 +81,6 @@ internal object ManageTokensDomainModule {
             customTokensRepository = customTokensRepository,
             walletManagersFacade = walletManagersFacade,
             currenciesRepository = currenciesRepository,
-            networksRepository = networksRepository,
             derivationsRepository = derivationsRepository,
             stakingRepository = stakingRepository,
             quotesRepository = quotesRepository,
