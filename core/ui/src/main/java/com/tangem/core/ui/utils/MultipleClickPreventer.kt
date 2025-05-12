@@ -2,6 +2,9 @@ package com.tangem.core.ui.utils
 
 import android.os.SystemClock
 
+/**
+ * Debounce multiple events (e.i. clicks, etc) in a short period of time
+ */
 interface MultipleClickPreventer {
 
     fun processEvent(event: () -> Unit)
@@ -25,3 +28,8 @@ private class DefaultMultipleClickPreventer : MultipleClickPreventer {
         private const val TIME_BETWEEN_CLICK_IN_MS = 500L
     }
 }
+
+/**
+ * Debounce multiple events (e.i. clicks, etc) in a short period of time
+ */
+fun singleEvent(event: () -> Unit) = MultipleClickPreventer.get().processEvent(event)
