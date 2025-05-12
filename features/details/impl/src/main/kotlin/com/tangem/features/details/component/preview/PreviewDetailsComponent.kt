@@ -5,6 +5,7 @@ import androidx.compose.ui.Modifier
 import com.tangem.core.decompose.navigation.DummyRouter
 import com.tangem.core.navigation.url.DummyUrlOpener
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.details.component.DetailsComponent
 import com.tangem.features.details.entity.DetailsFooterUM
 import com.tangem.features.details.entity.DetailsUM
@@ -18,7 +19,12 @@ internal class PreviewDetailsComponent : DetailsComponent {
     private val previewBlocks = runBlocking {
         ItemsBuilder(
             router = DummyRouter(),
-        ).buildAll(isWalletConnectAvailable = true, onSupportClick = {}, onBuyClick = {})
+        ).buildAll(
+            isWalletConnectAvailable = true,
+            userWalletId = UserWalletId(""),
+            onSupportClick = {},
+            onBuyClick = {},
+        )
     }
 
     private val previewFooter = DetailsFooterUM(

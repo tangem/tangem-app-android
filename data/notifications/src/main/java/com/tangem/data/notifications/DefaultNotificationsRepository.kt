@@ -4,12 +4,11 @@ import com.tangem.data.notifications.converters.NotificationsEligibleNetworkConv
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.NotificationApplicationCreateBody
-import com.tangem.datasource.api.tangemTech.models.WalletBody
-import com.tangem.datasource.api.tangemTech.models.WalletIdBody
 import com.tangem.utils.info.AppInfoProvider
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.*
+import com.tangem.domain.notifications.models.ApplicationId
 import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.notifications.models.NotificationsEligibleNetwork
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -23,7 +22,7 @@ internal class DefaultNotificationsRepository @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
 ) : NotificationsRepository {
 
-    override suspend fun createApplicationId(pushToken: String?): String = withContext(dispatchers.io) {
+    override suspend fun createApplicationId(pushToken: String?): ApplicationId = withContext(dispatchers.io) {
         tangemTechApi.createApplicationId(
             NotificationApplicationCreateBody(
                 platform = appInfoProvider.platform,
@@ -33,15 +32,16 @@ internal class DefaultNotificationsRepository @Inject constructor(
                 timezone = appInfoProvider.timezone,
                 pushToken = pushToken,
             ),
-        ).getOrThrow().appId
+        ).getOrThrow().appId.let(::ApplicationId)
     }
 
-    override suspend fun saveApplicationId(appId: String) {
-        appPreferencesStore.store(PreferencesKeys.NOTIFICATIONS_APPLICATION_ID_KEY, appId)
+    override suspend fun saveApplicationId(appId: ApplicationId) {
+        appPreferencesStore.store(PreferencesKeys.NOTIFICATIONS_APPLICATION_ID_KEY, appId.value)
     }
 
-    override suspend fun getApplicationId(): String? {
+    override suspend fun getApplicationId(): ApplicationId? {
         return appPreferencesStore.getSyncOrNull(PreferencesKeys.NOTIFICATIONS_APPLICATION_ID_KEY)
+            ?.let(::ApplicationId)
     }
 
     override suspend fun incrementTronTokenFeeNotificationShowCounter() {
@@ -61,31 +61,10 @@ internal class DefaultNotificationsRepository @Inject constructor(
         )
     }
 
-    override suspend fun associateApplicationIdWithWallets(appId: String, wallets: List<String>) =
-        withContext(dispatchers.io) {
-            tangemTechApi.associateApplicationIdWithWallets(
-                applicationId = appId,
-                body = wallets.map {
-                    WalletIdBody(it)
-                },
-            ).getOrThrow()
-        }
-
-    override suspend fun setWalletName(walletId: String, walletName: String) = withContext(dispatchers.io) {
-        tangemTechApi.updateWallet(
-            walletId,
-            WalletBody(name = walletName),
-        ).getOrThrow()
-    }
-
-    override suspend fun getWalletName(walletId: String): String? = withContext(dispatchers.io) {
-        tangemTechApi.getWalletById(walletId).getOrThrow().name
-    }
-
-    override suspend fun sendPushToken(appId: String, pushToken: String) {
+    override suspend fun sendPushToken(appId: ApplicationId, pushToken: String) {
         withContext(dispatchers.io) {
             tangemTechApi.updatePushTokenForApplicationId(
-                appId,
+                appId.value,
                 NotificationApplicationCreateBody(
                     pushToken = pushToken,
                 ),

@@ -83,7 +83,6 @@ internal class StakingBalanceUpdater @AssistedInject constructor(
             userWalletId = userWallet.walletId,
             network = cryptoCurrencyStatus.currency.network,
             delayMillis = delay,
-            refresh = true,
         )
     }
 

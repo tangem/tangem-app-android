@@ -4,10 +4,12 @@ import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
+import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectState
+import com.tangem.tap.features.details.ui.walletconnect.api.WalletConnectComponent
 import com.tangem.tap.store
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.toImmutableList
@@ -22,13 +24,22 @@ import javax.inject.Inject
 internal class WalletConnectModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val listenToQrScanningUseCase: ListenToQrScanningUseCase,
+    paramsContainer: ParamsContainer,
 ) : Model() {
+
+    private val params = paramsContainer.require<WalletConnectComponent.Params>()
 
     init {
         modelScope.launch {
             listenToQrScanningUseCase(SourceType.WALLET_CONNECT)
                 .getOrElse { emptyFlow() }
-                .map { WalletConnectAction.OpenSession(it, WalletConnectAction.OpenSession.SourceType.QR) }
+                .map {
+                    WalletConnectAction.OpenSession(
+                        wcUri = it,
+                        source = WalletConnectAction.OpenSession.SourceType.QR,
+                        userWalletId = params.userWalletId,
+                    )
+                }
                 .collect { store.dispatch(it) }
         }
     }
