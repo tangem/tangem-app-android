@@ -59,14 +59,14 @@ sealed class ProviderState {
     // Prefix will be disabled in 5.12 but mechanism is still implemented
     @Immutable
     enum class PrefixType {
-        NONE, PROVIDED_BY
+        NONE, SWAP_WITH
     }
 
     @Immutable
     data class ProviderDetails(
         val rating: Double?,
         val averageDuration: Int?,
-        val gasFeeFiat: Double?,
+        val gasFeeFiat: Double?, // TODO delete
     )
 }
 
