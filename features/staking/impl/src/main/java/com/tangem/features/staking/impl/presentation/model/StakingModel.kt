@@ -93,7 +93,7 @@ internal class StakingModel @Inject constructor(
     private val stateController: StakingStateController,
     override val dispatchers: CoroutineDispatcherProvider,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
-    private val getCurrencyStatusUpdatesUseCase: GetCurrencyStatusUpdatesUseCase,
+    private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
     private val getMinimumTransactionAmountSyncUseCase: GetMinimumTransactionAmountSyncUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
@@ -920,7 +920,7 @@ internal class StakingModel @Inject constructor(
                 )
             },
         )
-        getCurrencyStatusUpdatesUseCase(
+        getSingleCryptoCurrencyStatusUseCase.invokeMultiWallet(
             userWalletId = userWalletId,
             currencyId = cryptoCurrencyId,
             isSingleWalletWithTokens = false,

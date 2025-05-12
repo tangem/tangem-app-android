@@ -8,7 +8,7 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.onramp.GetOnrampTransactionsUseCase
 import com.tangem.domain.onramp.OnrampRemoveTransactionUseCase
 import com.tangem.domain.onramp.model.cache.OnrampTransaction
-import com.tangem.domain.tokens.GetPrimaryCurrencyStatusUpdatesUseCase
+import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
@@ -26,7 +26,7 @@ internal class SingleWalletExpressStatusesSubscriber(
     private val clickIntents: WalletClickIntents,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
-    private val getPrimaryCurrencyStatusUpdatesUseCase: GetPrimaryCurrencyStatusUpdatesUseCase,
+    private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
     private val getOnrampTransactionsUseCase: GetOnrampTransactionsUseCase,
     private val onrampRemoveTransactionUseCase: OnrampRemoveTransactionUseCase,
 ) : WalletSubscriber() {
@@ -35,7 +35,7 @@ internal class SingleWalletExpressStatusesSubscriber(
         coroutineScope: CoroutineScope,
     ): Flow<Pair<Either<CurrencyStatusError, CryptoCurrencyStatus>, AppCurrency>> {
         return combine(
-            flow = getPrimaryCurrencyStatusUpdatesUseCase(userWalletId = userWallet.walletId)
+            flow = getSingleCryptoCurrencyStatusUseCase.invokeSingleWallet(userWalletId = userWallet.walletId)
                 .conflate()
                 .distinctUntilChanged(),
             flow2 = getSelectedAppCurrencyUseCase()
