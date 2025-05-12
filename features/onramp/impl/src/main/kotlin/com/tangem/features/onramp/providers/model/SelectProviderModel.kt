@@ -21,6 +21,9 @@ import com.tangem.domain.onramp.analytics.OnrampAnalyticsEvent
 import com.tangem.domain.onramp.model.OnrampPaymentMethod
 import com.tangem.domain.onramp.model.OnrampProviderWithQuote
 import com.tangem.domain.onramp.model.error.OnrampError
+import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
+import com.tangem.domain.settings.usercountry.models.UserCountry
+import com.tangem.domain.settings.usercountry.models.needApplyFCARestrictions
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.paymentmethod.entity.PaymentMethodUM
 import com.tangem.features.onramp.providers.SelectProviderComponent
@@ -37,6 +40,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.math.BigDecimal
+import java.util.Locale
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -48,6 +52,7 @@ internal class SelectProviderModel @Inject constructor(
     private val getOnrampSelectedPaymentMethodUseCase: GetOnrampSelectedPaymentMethodUseCase,
     private val getOnrampProviderWithQuoteUseCase: GetOnrampProviderWithQuoteUseCase,
     private val saveSelectedPaymentMethod: OnrampSaveSelectedPaymentMethod,
+    private val getUserCountryUseCase: GetUserCountryUseCase,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
@@ -56,7 +61,12 @@ internal class SelectProviderModel @Inject constructor(
     private val params: SelectProviderComponent.Params = paramsContainer.require()
     private val _state = MutableStateFlow(getInitialState())
 
+    private var userCountry: UserCountry? = null
+
     init {
+        userCountry = getUserCountryUseCase.invokeSync().getOrNull()
+            ?: UserCountry.Other(Locale.getDefault().country)
+
         analyticsEventHandler.send(OnrampAnalyticsEvent.ProvidersScreenOpened)
         getPaymentMethods()
         getProviders(params.selectedPaymentMethod)
@@ -202,7 +212,8 @@ internal class SelectProviderModel @Inject constructor(
                     val rateDiff = bestProvider?.toAmount?.value?.let { bestRate ->
                         BigDecimal.ONE - quote.toAmount.value / bestRate
                     }
-                    val isBestProvider = quote == bestProvider && hasBestProvider
+                    val isBestProvider =
+                        quote == bestProvider && hasBestProvider && !userCountry.needApplyFCARestrictions()
                     val providerResult = SelectProviderResult.ProviderWithQuote(
                         paymentMethod = quote.paymentMethod,
                         provider = quote.provider,
@@ -253,7 +264,7 @@ internal class SelectProviderModel @Inject constructor(
                         onClick = {
                             onProviderSelected(
                                 result = providerResult,
-                                isBestRate = bestProvider == quote,
+                                isBestRate = bestProvider == quote && !userCountry.needApplyFCARestrictions(),
                             )
                             params.onDismiss()
                         },
