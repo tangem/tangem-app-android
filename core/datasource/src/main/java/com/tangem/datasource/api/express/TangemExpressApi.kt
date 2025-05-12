@@ -16,27 +16,27 @@ interface TangemExpressApi {
     @POST("assets")
     suspend fun getAssets(
         @Header("user-id") userWalletId: String,
-        @Header("refcode") refCode: String,
+        @Header("refcode") refCode: String?,
         @Body body: AssetsRequestBody,
     ): ApiResponse<List<Asset>>
 
     @POST("pairs")
     suspend fun getPairs(
         @Header("user-id") userWalletId: String,
-        @Header("refcode") refCode: String,
+        @Header("refcode") refCode: String?,
         @Body body: PairsRequestBody,
     ): ApiResponse<List<SwapPair>>
 
     @GET("providers")
     suspend fun getProviders(
         @Header("user-id") userWalletId: String,
-        @Header("refcode") refCode: String,
+        @Header("refcode") refCode: String?,
     ): ApiResponse<List<ExchangeProvider>>
 
     @GET("exchange-quote")
     suspend fun getExchangeQuote(
         @Header("user-id") userWalletId: String,
-        @Header("refcode") refCode: String,
+        @Header("refcode") refCode: String?,
         @Query("fromContractAddress") fromContractAddress: String,
         @Query("fromNetwork") fromNetwork: String,
         @Query("toContractAddress") toContractAddress: String,
@@ -51,7 +51,7 @@ interface TangemExpressApi {
     @GET("exchange-data")
     suspend fun getExchangeData(
         @Header("user-id") userWalletId: String,
-        @Header("refcode") refCode: String,
+        @Header("refcode") refCode: String?,
         @Query("fromContractAddress") fromContractAddress: String,
         @Query("fromNetwork") fromNetwork: String,
         @Query("toContractAddress") toContractAddress: String,
@@ -71,14 +71,14 @@ interface TangemExpressApi {
     @GET("exchange-status")
     suspend fun getExchangeStatus(
         @Header("user-id") userWalletId: String,
-        @Header("refcode") refCode: String,
+        @Header("refcode") refCode: String?,
         @Query("txId") txId: String,
     ): ApiResponse<ExchangeStatusResponse>
 
     @POST("exchange-sent")
     suspend fun exchangeSent(
         @Header("user-id") userWalletId: String,
-        @Header("refcode") refCode: String,
+        @Header("refcode") refCode: String?,
         @Body body: ExchangeSentRequestBody,
     ): ApiResponse<ExchangeSentResponseBody>
 }
