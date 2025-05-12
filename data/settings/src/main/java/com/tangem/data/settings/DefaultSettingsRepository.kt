@@ -8,12 +8,11 @@ import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
 import com.tangem.datasource.local.preferences.utils.store
 import com.tangem.domain.settings.repositories.SettingsRepository
+import com.tangem.domain.settings.usercountry.models.GB_COUNTRY
 import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.util.Locale
@@ -108,14 +107,10 @@ internal class DefaultSettingsRepository(
         appPreferencesStore.store(key = PreferencesKeys.SHOULD_SHOW_MARKETS_TOOLTIP_KEY, value = !value)
     }
 
-    override suspend fun getUserCountryCodeSync(): UserCountry? {
+    override fun getUserCountryCodeSync(): UserCountry? {
         // If user country code is already set, return it
         val countryCode = userCountryFlow.value
         if (countryCode != null) return countryCode
-
-        coroutineScope {
-            launch { fetchUserCountryCode() }
-        }
 
         return null
     }
@@ -124,6 +119,12 @@ internal class DefaultSettingsRepository(
 
     override suspend fun fetchUserCountryCode() {
         Timber.i("Start fetching user country code")
+
+        // for GB locale avoid request geo and use device default (FCA fixes)
+        if (Locale.getDefault().country == GB_COUNTRY.code) {
+            userCountryFlow.value = GB_COUNTRY
+            return
+        }
 
         withContext(dispatchers.io) {
             val country = runCatching { tangemTechApi.getUserCountryCode() }
