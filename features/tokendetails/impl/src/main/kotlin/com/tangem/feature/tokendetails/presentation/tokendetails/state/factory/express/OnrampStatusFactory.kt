@@ -14,8 +14,8 @@ import com.tangem.domain.onramp.model.OnrampStatus.Status.*
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.analytics.TokenOnrampAnalyticsEvent
-import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsOnrampTransactionStateConverter
 import com.tangem.utils.Provider
@@ -89,7 +89,13 @@ internal class OnrampStatusFactory @AssistedInject constructor(
                 },
                 ifRight = { statusModel ->
                     sendStatusUpdateAnalytics(onrampTx, statusModel)
-                    onrampTx.copy(activeStatus = statusModel.status)
+                    onrampTx.copy(
+                        activeStatus = statusModel.status,
+                        info = onrampTx.info.copy(
+                            txExternalId = statusModel.externalTxId,
+                            txExternalUrl = statusModel.externalTxUrl,
+                        ),
+                    )
                 },
             )
         }
