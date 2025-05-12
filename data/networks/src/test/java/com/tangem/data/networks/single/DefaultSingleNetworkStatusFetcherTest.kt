@@ -81,38 +81,10 @@ internal class DefaultSingleNetworkStatusFetcherTest {
         Truth.assertThat(actual.leftOrNull()).isEqualTo(exception)
     }
 
-    @Test
-    fun `fetch network status if applyRefresh is false`() = runTest {
-        val params = createParams(applyRefresh = false)
-
-        coEvery { cardCryptoCurrencyFactory.create(params.userWalletId, params.network) } returns listOf(ethereum)
-
-        val result = UpdateWalletManagerResult.MissedDerivation
-        coEvery { walletManagersFacade.update(params.userWalletId, params.network, emptySet()) } returns result
-
-        val actual = fetcher(params)
-
-        coVerifyOrder {
-            cardCryptoCurrencyFactory.create(params.userWalletId, params.network)
-            walletManagersFacade.update(params.userWalletId, params.network, emptySet())
-            networksStatusesStore.storeSuccess(
-                userWalletId = params.userWalletId,
-                value = NetworkStatus(params.network, NetworkStatus.MissedDerivation),
-            )
-        }
-
-        coVerify(inverse = true) {
-            networksStatusesStore.refresh(userWalletId = any(), network = any())
-        }
-
-        Truth.assertThat(actual.isRight()).isTrue()
-    }
-
-    private fun createParams(applyRefresh: Boolean = true): SingleNetworkStatusFetcher.Params {
-        return SingleNetworkStatusFetcher.Params(
+    private fun createParams(): SingleNetworkStatusFetcher.Params {
+        return SingleNetworkStatusFetcher.Params.Simple(
             userWalletId = UserWalletId("011"),
             network = ethereum.network,
-            applyRefresh = applyRefresh,
         )
     }
 
