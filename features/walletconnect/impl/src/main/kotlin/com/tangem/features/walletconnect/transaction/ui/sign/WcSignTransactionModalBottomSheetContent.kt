@@ -26,32 +26,33 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.walletconnect.connections.ui.WcAppInfoItem
 import com.tangem.features.walletconnect.impl.R
-import com.tangem.features.walletconnect.transaction.entity.*
+import com.tangem.features.walletconnect.transaction.entity.common.WcNetworkInfoUM
+import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionAppInfoContentUM
+import com.tangem.features.walletconnect.transaction.entity.sign.WcSignTransactionItemUM
 import com.tangem.features.walletconnect.transaction.ui.common.*
-import kotlinx.collections.immutable.persistentListOf
 
 @Composable
 internal fun WcSignTransactionModalBottomSheetContent(
-    state: WcSignTransactionUM,
+    state: WcSignTransactionItemUM,
     onClickTransactionRequest: () -> Unit,
 ) {
     Column(
         modifier = Modifier
-            .padding(horizontal = TangemTheme.dimens.spacing16),
+            .padding(horizontal = 16.dp),
     ) {
         Column(
             modifier = Modifier
-                .clip(RoundedCornerShape(TangemTheme.dimens.radius14))
+                .clip(RoundedCornerShape(14.dp))
                 .background(color = TangemTheme.colors.background.action)
                 .fillMaxWidth()
                 .animateContentSize(),
         ) {
-            RequestFromItem()
+            WcSmallTitleItem(R.string.wc_request_from)
             WcAppInfoItem(
-                iconUrl = state.transaction.appIcon,
-                title = state.transaction.appName,
-                subtitle = state.transaction.appSubtitle,
-                isVerified = state.transaction.isVerified,
+                iconUrl = state.appInfo.appIcon,
+                title = state.appInfo.appName,
+                subtitle = state.appInfo.appSubtitle,
+                isVerified = state.appInfo.isVerified,
             )
             DividerWithPadding(start = 0.dp, end = 0.dp)
             WcTransactionRequestItem(
@@ -59,69 +60,63 @@ internal fun WcSignTransactionModalBottomSheetContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable { onClickTransactionRequest() }
-                    .padding(TangemTheme.dimens.spacing12),
+                    .padding(12.dp),
             )
         }
-        Column(modifier = Modifier.padding(top = TangemTheme.dimens.spacing16)) {
+        Column(modifier = Modifier.padding(top = 16.dp)) {
             WcSignTransactionItems(state)
             WcTransactionRequestButtons(
-                modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing16),
-                onDismiss = state.actions.onDismiss,
-                onSign = state.actions.onSign,
-                isLoading = state.transaction.isLoading,
+                modifier = Modifier.padding(vertical = 16.dp),
+                onDismiss = state.onDismiss,
+                onClickActiveButton = state.onSign,
+                activeButtonText = resourceReference(R.string.common_sign),
+                isLoading = state.isLoading,
             )
         }
     }
 }
 
 @Composable
-private fun WcSignTransactionItems(state: WcSignTransactionUM) {
+private fun WcSignTransactionItems(state: WcSignTransactionItemUM) {
     Column(
         modifier = Modifier
-            .clip(RoundedCornerShape(TangemTheme.dimens.radius14))
+            .clip(RoundedCornerShape(14.dp))
             .background(color = TangemTheme.colors.background.action)
             .fillMaxWidth()
             .animateContentSize(),
     ) {
         val itemsModifier = Modifier
             .fillMaxWidth()
-            .padding(TangemTheme.dimens.spacing12)
+            .padding(12.dp)
 
         DividerWithPadding(start = 0.dp, end = 0.dp)
         WcWalletItem(
             modifier = itemsModifier,
-            walletName = state.transaction.walletName,
+            walletName = state.walletName,
         )
-        DividerWithPadding(start = TangemTheme.dimens.spacing40, end = TangemTheme.dimens.spacing12)
+        DividerWithPadding(start = 40.dp, end = 12.dp)
         WcNetworkItem(
             modifier = itemsModifier,
-            networkInfo = state.transaction.networkInfo,
+            networkInfo = state.networkInfo,
         )
-        if (!state.transaction.addressText.isNullOrEmpty()) {
-            DividerWithPadding(start = TangemTheme.dimens.spacing40, end = TangemTheme.dimens.spacing12)
+        if (!state.addressText.isNullOrEmpty()) {
+            DividerWithPadding(start = 40.dp, end = 12.dp)
             WcAddressItem(
                 modifier = itemsModifier,
-                addressText = state.transaction.addressText,
-            )
-        }
-        if (!state.transaction.networkFee.isNullOrEmpty()) {
-            DividerWithPadding(start = TangemTheme.dimens.spacing40, end = TangemTheme.dimens.spacing12)
-            WcNetworkFeeItem(
-                modifier = itemsModifier,
-                networkFeeText = state.transaction.networkFee,
+                addressText = state.addressText,
             )
         }
     }
 }
 
 @Composable
-private fun DividerWithPadding(start: Dp, end: Dp) {
+internal fun DividerWithPadding(start: Dp, end: Dp) {
     HorizontalDivider(
         modifier = Modifier.padding(
             start = start,
             end = end,
         ),
-        thickness = TangemTheme.dimens.size1,
+        thickness = 1.dp,
         color = TangemTheme.colors.stroke.primary,
     )
 }
@@ -130,10 +125,10 @@ private fun DividerWithPadding(start: Dp, end: Dp) {
 @Preview(showBackground = true, device = Devices.PIXEL_7_PRO)
 @Preview(showBackground = true, device = Devices.PIXEL_7_PRO, uiMode = Configuration.UI_MODE_NIGHT_YES)
 private fun WcSignTransactionBottomSheetPreview(
-    @PreviewParameter(WcSignTransactionStateProvider::class) state: WcSignTransactionUM,
+    @PreviewParameter(WcSignTransactionStateProvider::class) state: WcSignTransactionItemUM,
 ) {
     TangemThemePreview {
-        TangemModalBottomSheet<WcSignTransactionUM>(
+        TangemModalBottomSheet<WcSignTransactionItemUM>(
             config = TangemBottomSheetConfig(
                 isShown = true,
                 onDismissRequest = {},
@@ -156,41 +151,32 @@ private fun WcSignTransactionBottomSheetPreview(
     }
 }
 
-private class WcSignTransactionStateProvider : CollectionPreviewParameterProvider<WcSignTransactionUM>(
+private class WcSignTransactionStateProvider : CollectionPreviewParameterProvider<WcSignTransactionItemUM>(
     listOf(
-        WcSignTransactionUM(
-            transaction = WcTransactionUM(
+        WcSignTransactionItemUM(
+            onDismiss = {},
+            onSign = {},
+            appInfo = WcTransactionAppInfoContentUM(
                 appName = "React App",
                 appIcon = "",
                 isVerified = true,
                 appSubtitle = "react-app.walletconnect.com",
-                walletName = "Tangem 2.0",
-                networkInfo = WcNetworkInfoUM(name = "Ethereum", iconRes = R.drawable.img_eth_22),
             ),
-            transactionRequestInfo = WcTransactionRequestInfoUM(persistentListOf()),
-            actions = WcTransactionActionsUM(
-                onDismiss = {},
-                onSign = {},
-                onCopy = {},
-            ),
+            walletName = "Tangem 2.0",
+            networkInfo = WcNetworkInfoUM(name = "Ethereum", iconRes = R.drawable.img_eth_22),
         ),
-        WcSignTransactionUM(
-            transaction = WcTransactionUM(
+        WcSignTransactionItemUM(
+            onDismiss = {},
+            onSign = {},
+            appInfo = WcTransactionAppInfoContentUM(
                 appName = "React App",
                 appIcon = "",
                 isVerified = true,
                 appSubtitle = "react-app.walletconnect.com",
-                walletName = "Tangem 2.0",
-                networkInfo = WcNetworkInfoUM(name = "Ethereum", iconRes = R.drawable.img_eth_22),
-                addressText = "0x345FF...34FA",
-                networkFee = "~ 0.22 $",
             ),
-            transactionRequestInfo = WcTransactionRequestInfoUM(persistentListOf()),
-            actions = WcTransactionActionsUM(
-                onDismiss = {},
-                onSign = {},
-                onCopy = {},
-            ),
+            walletName = "Tangem 2.0",
+            addressText = "0x345FF...34FA",
+            networkInfo = WcNetworkInfoUM(name = "Ethereum", iconRes = R.drawable.img_eth_22),
         ),
     ),
 )
