@@ -13,6 +13,7 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.tokens.GetWalletTotalBalanceUseCase
+import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.walletconnect.model.WcPairRequest
 import com.tangem.domain.walletconnect.model.WcSessionApprove
 import com.tangem.domain.walletconnect.model.WcSessionProposal
@@ -26,15 +27,20 @@ import com.tangem.features.walletconnect.connections.components.WcAppInfoContain
 import com.tangem.features.walletconnect.connections.entity.WcAppInfoUM
 import com.tangem.features.walletconnect.connections.entity.WcAppInfoWalletUM
 import com.tangem.features.walletconnect.connections.entity.WcPrimaryButtonConfig
+import com.tangem.features.walletconnect.connections.entity.WcSelectNetworksUM
 import com.tangem.features.walletconnect.connections.model.transformers.WcAppInfoTransformer
 import com.tangem.features.walletconnect.connections.model.transformers.WcAppInfoWalletChangedTransformer
 import com.tangem.features.walletconnect.connections.model.transformers.WcConnectButtonProgressTransformer
+import com.tangem.features.walletconnect.connections.model.transformers.WcSelectNetworksClearCheckedTransformer
+import com.tangem.features.walletconnect.connections.model.transformers.WcSelectNetworksCheckedTransformer
+import com.tangem.features.walletconnect.connections.model.transformers.WcSelectNetworksTransformer
 import com.tangem.features.walletconnect.connections.routes.WcAppInfoRoutes
 import com.tangem.features.walletconnect.connections.utils.WcUserWalletsFetcher
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.*
+import timber.log.Timber
 import javax.inject.Inject
 import kotlin.properties.Delegates
 import com.tangem.utils.transformer.update as transformerUpdate
@@ -75,7 +81,6 @@ internal class WcAppInfoModel @Inject constructor(
 
     private val selectedUserWalletFlow =
         MutableStateFlow(getWalletsUseCase.invokeSync().first { it.walletId == params.userWalletId })
-    // TODO(wc) Doston: Temp solution, will be fixed in next PR`s
     private var proposalNetwork by Delegates.notNull<WcSessionProposal.ProposalNetwork>()
     internal var sessionProposal by Delegates.notNull<WcSessionProposal>()
 
@@ -85,6 +90,18 @@ internal class WcAppInfoModel @Inject constructor(
     field = MutableStateFlow<WcAppInfoUM>(createLoadingState())
     val walletsUiState: StateFlow<WcAppInfoWalletUM>
     field = MutableStateFlow(WcAppInfoWalletUM(persistentListOf(), selectedUserWalletFlow.value))
+    val networksState: StateFlow<WcSelectNetworksUM>
+    field = MutableStateFlow(
+        WcSelectNetworksUM(
+            missing = persistentListOf(),
+            required = persistentListOf(),
+            available = persistentListOf(),
+            notAdded = persistentListOf(),
+            onDone = ::onNetworksDone,
+        ),
+    )
+    // TODO: [REDACTED_JIRA] Change it to UiManager
+    private val tempAvailableNetworksState = MutableStateFlow<Set<Network.ID>>(setOf())
 
     init {
         loadDAppInfo()
@@ -109,22 +126,24 @@ internal class WcAppInfoModel @Inject constructor(
                         router.pop()
                     }
                     is WcPairState.Error -> {
-                        // TODO: wc show toast/snackbar/alert?
+                        Timber.e(state.error)
                     }
                     is WcPairState.Loading -> appInfoUiState.update { createLoadingState() }
                     is WcPairState.Proposal -> {
                         sessionProposal = state.dAppSession
-                        proposalNetwork = sessionProposal.proposalNetwork.getValue(selectedUserWalletFlow.value)
+                        val proposalNetwork = sessionProposal.proposalNetwork.getValue(selectedUserWalletFlow.value)
                         appInfoUiState.transformerUpdate(
                             WcAppInfoTransformer(
                                 dAppSession = state.dAppSession,
                                 onDismiss = ::dismiss,
                                 onConnect = ::onConnect,
                                 onWalletClick = { contentNavigation.pushNew(WcAppInfoRoutes.SelectWallet) },
+                                onNetworksClick = { contentNavigation.pushNew(WcAppInfoRoutes.SelectNetworks) },
                                 userWallet = selectedUserWalletFlow.value,
                                 proposalNetwork = proposalNetwork,
                             ),
                         )
+                        updateNetworksState(proposalNetwork = proposalNetwork)
                     }
                 }
             }
@@ -136,25 +155,50 @@ internal class WcAppInfoModel @Inject constructor(
         router.pop()
     }
 
+    fun clearAvailableNetworks() {
+        networksState.transformerUpdate(WcSelectNetworksClearCheckedTransformer)
+        tempAvailableNetworksState.update { setOf() }
+    }
+
     private fun onConnect() {
+        val enabledAvailableNetworks =
+            proposalNetwork.available.filter { network -> network.id in tempAvailableNetworksState.value }
         wcPairUseCase.approve(
             WcSessionApprove(
                 wallet = selectedUserWalletFlow.value,
-                network = proposalNetwork.required.plus(proposalNetwork.available).toList(),
+                network = enabledAvailableNetworks + proposalNetwork.required,
             ),
         )
     }
 
     private fun onWalletSelected(userWalletId: UserWalletId) {
         val selectedUserWallet = sessionProposal.proposalNetwork.keys.first { it.walletId == userWalletId }
+        val proposalNetwork = sessionProposal.proposalNetwork.getValue(selectedUserWallet)
         selectedUserWalletFlow.update { selectedUserWallet }
-        proposalNetwork = sessionProposal.proposalNetwork.getValue(selectedUserWallet)
+        updateNetworksState(proposalNetwork)
         appInfoUiState.transformerUpdate(WcAppInfoWalletChangedTransformer(selectedUserWallet, proposalNetwork))
         contentNavigation.pop()
     }
 
     private fun updateWalletsState(items: ImmutableList<UserWalletItemUM>, userWallet: UserWallet) {
         walletsUiState.update { state -> state.copy(wallets = items, selectedUserWallet = userWallet) }
+    }
+
+    private fun onNetworksDone() {
+        contentNavigation.pop()
+    }
+
+    private fun updateNetworksState(proposalNetwork: WcSessionProposal.ProposalNetwork) {
+        this.proposalNetwork = proposalNetwork
+        networksState.transformerUpdate(WcSelectNetworksTransformer(proposalNetwork, ::onCheckedChange))
+        tempAvailableNetworksState.update { setOf() }
+    }
+
+    private fun onCheckedChange(isChecked: Boolean, networkId: String) {
+        tempAvailableNetworksState.update {
+            if (isChecked) it.plus(Network.ID(networkId)) else it.minus(Network.ID(networkId))
+        }
+        networksState.transformerUpdate(WcSelectNetworksCheckedTransformer(networkId, isChecked))
     }
 
     private fun createLoadingState(): WcAppInfoUM.Loading {
