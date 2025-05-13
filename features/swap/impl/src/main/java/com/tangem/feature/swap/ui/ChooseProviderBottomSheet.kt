@@ -126,6 +126,7 @@ private fun Preview_ChooseProviderBottomSheet() {
             iconUrl = "",
             selectionType = ProviderState.SelectionType.SELECT,
             alertText = stringReference("Unavailable"),
+            additionalBadge = ProviderState.AdditionalBadge.Empty,
         ),
     )
     val content = ChooseProviderBottomSheetConfig(
