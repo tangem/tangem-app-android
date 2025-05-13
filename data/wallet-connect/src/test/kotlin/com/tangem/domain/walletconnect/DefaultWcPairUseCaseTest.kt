@@ -8,6 +8,7 @@ import com.domain.blockaid.models.dapp.CheckDAppResult
 import com.domain.blockaid.models.dapp.DAppData
 import com.reown.walletkit.client.Wallet
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.data.walletconnect.pair.AssociateNetworksDelegate
 import com.tangem.data.walletconnect.pair.CaipNamespaceDelegate
 import com.tangem.data.walletconnect.pair.DefaultWcPairUseCase
@@ -34,6 +35,7 @@ internal class DefaultWcPairUseCaseTest {
     private val sessionsManager: WcSessionsManager = mockk<WcSessionsManager>()
     private val associateNetworksDelegate: AssociateNetworksDelegate = mockk<AssociateNetworksDelegate>()
     private val caipNamespaceDelegate: CaipNamespaceDelegate = mockk<CaipNamespaceDelegate>()
+    private val analytics: AnalyticsEventHandler = mockk<AnalyticsEventHandler>(relaxed = true)
     private val sdkDelegate: WcPairSdkDelegate = mockk<WcPairSdkDelegate>()
     private val blockAidVerifier: BlockAidVerifier = mockk<BlockAidVerifier>()
 
@@ -101,6 +103,7 @@ internal class DefaultWcPairUseCaseTest {
         caipNamespaceDelegate = caipNamespaceDelegate,
         sdkDelegate = sdkDelegate,
         blockAidVerifier = blockAidVerifier,
+        analytics = analytics,
         pairRequest = WcPairRequest(userWalletId = UserWalletId(""), uri = url, source = source),
     )
 
