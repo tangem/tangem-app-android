@@ -15,10 +15,10 @@ import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.utils.selectedBorder
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.paymentmethod.entity.PaymentMethodUM
 import com.tangem.features.onramp.paymentmethod.entity.PaymentMethodsBottomSheetConfig
-import com.tangem.features.onramp.utils.selectedBorder
 import kotlinx.collections.immutable.ImmutableList
 
 @Composable

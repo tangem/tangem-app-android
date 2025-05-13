@@ -1,4 +1,4 @@
-package com.tangem.features.onramp.utils
+package com.tangem.core.ui.utils
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.padding
@@ -10,7 +10,7 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.res.TangemTheme
 
 @Composable
-internal fun Modifier.selectedBorder() = border(
+fun Modifier.selectedBorder() = border(
     width = 2.5.dp,
     color = TangemTheme.colors.text.accent.copy(alpha = 0.1f),
     shape = RoundedCornerShape(18.dp),
