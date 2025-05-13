@@ -9,6 +9,7 @@ import com.reown.walletkit.client.WalletKit
 import com.tangem.data.walletconnect.pair.AssociateNetworksDelegate
 import com.tangem.data.walletconnect.utils.WcSdkObserver
 import com.tangem.data.walletconnect.utils.WcSdkSessionConverter
+import com.tangem.data.walletconnect.utils.WC_TAG
 import com.tangem.datasource.local.walletconnect.WalletConnectStore
 import com.tangem.domain.walletconnect.model.WcSession
 import com.tangem.domain.walletconnect.model.WcSessionDTO
@@ -143,6 +144,7 @@ internal class DefaultWcSessionsManager(
         val haveSomeUnknown = unknownStoredSessions.isNotEmpty()
 
         if (haveSomeUnknown) {
+            Timber.tag(WC_TAG).i("removeUnknownSessions $unknownStoredSessions")
             store.removeSessions(unknownStoredSessions.toSet())
         }
         return haveSomeUnknown
