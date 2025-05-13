@@ -60,7 +60,7 @@ internal class WcConnectedAppInfoModel @Inject constructor(
                         walletName = session.wallet.name,
                         networks = session.networks
                             .map {
-                                WcNetworkInfoItem(
+                                WcNetworkInfoItem.Required(
                                     id = it.id.value,
                                     icon = it.iconResId,
                                     name = it.name,
