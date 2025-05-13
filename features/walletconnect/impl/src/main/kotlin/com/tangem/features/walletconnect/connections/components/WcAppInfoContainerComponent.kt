@@ -74,7 +74,7 @@ internal class WcAppInfoContainerComponent(
             title = when (route) {
                 is WcAppInfoRoutes.Alert -> null
                 WcAppInfoRoutes.AppInfo -> resourceReference(R.string.wc_wallet_connect)
-                WcAppInfoRoutes.SelectNetworks -> TODO("[REDACTED_TASK_KEY]")
+                WcAppInfoRoutes.SelectNetworks -> stringReference("Choose networks")
                 WcAppInfoRoutes.SelectWallet -> stringReference("Choose wallet")
             },
             startIconRes = when (route) {
@@ -100,10 +100,13 @@ internal class WcAppInfoContainerComponent(
     }
 
     private fun contentBack() {
-        if (contentStack.value.active.configuration == WcAppInfoRoutes.AppInfo) {
-            dismiss()
-        } else {
-            model.contentNavigation.pop()
+        when (contentStack.value.active.configuration) {
+            WcAppInfoRoutes.AppInfo -> dismiss()
+            WcAppInfoRoutes.SelectNetworks -> {
+                model.clearAvailableNetworks()
+                model.contentNavigation.pop()
+            }
+            else -> model.contentNavigation.pop()
         }
     }
 
@@ -112,7 +115,10 @@ internal class WcAppInfoContainerComponent(
         return when (config) {
             is WcAppInfoRoutes.AppInfo -> WcAppInfoComponent(appComponentContext = appComponentContext, model = model)
             is WcAppInfoRoutes.Alert -> TODO()
-            WcAppInfoRoutes.SelectNetworks -> TODO()
+            WcAppInfoRoutes.SelectNetworks -> WcSelectNetworksComponent(
+                appComponentContext = appComponentContext,
+                model = model,
+            )
             WcAppInfoRoutes.SelectWallet -> WcSelectWalletComponent(
                 appComponentContext = appComponentContext,
                 model = model,
