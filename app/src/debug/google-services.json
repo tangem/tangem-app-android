@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "40605656937",
+    "project_id": "tangem-test-cf0c6",
+    "storage_bucket": "tangem-test-cf0c6.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:40605656937:android:35c18713d61f37d7cbfff8",
+        "android_client_info": {
+          "package_name": "com.tangem.wallet.debug"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA4wuCqwtPAT4Mw7fQkQYbXwI5SYq3ilU0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:40605656937:android:a265edea0bdeb15ccbfff8",
+        "android_client_info": {
+          "package_name": "com.tangem.wallet.internal"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA4wuCqwtPAT4Mw7fQkQYbXwI5SYq3ilU0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
