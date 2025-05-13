@@ -34,6 +34,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.GRAY_SCALE_ALPHA
 import com.tangem.core.ui.utils.GrayscaleColorFilter
+import com.tangem.core.ui.utils.selectedBorder
 import com.tangem.feature.swap.models.states.PercentDifference
 import com.tangem.feature.swap.models.states.ProviderState
 
@@ -44,12 +45,17 @@ import com.tangem.feature.swap.models.states.ProviderState
  */
 
 @Composable
-fun ProviderItemBlock(state: ProviderState, modifier: Modifier = Modifier) {
+fun ProviderItemBlock(state: ProviderState, modifier: Modifier = Modifier, isSelected: Boolean = false) {
     if (state !is ProviderState.Empty) {
         ProviderItem(
             state = state,
-            modifier = modifier
+            modifier = if (isSelected) {
+                modifier.selectedBorder()
+            } else {
+                modifier.clip(RoundedCornerShape(16.dp))
+            }
                 .clip(shape = TangemTheme.shapes.roundedCornersXMedium)
+
                 .background(
                     color = TangemTheme.colors.background.action,
                     shape = TangemTheme.shapes.roundedCornersXMedium,
@@ -60,6 +66,7 @@ fun ProviderItemBlock(state: ProviderState, modifier: Modifier = Modifier) {
                 )
                 .fillMaxWidth()
                 .padding(vertical = TangemTheme.dimens.spacing12),
+            isSelected = isSelected,
         )
     }
 }
@@ -354,14 +361,14 @@ private fun ProviderLoadingState(modifier: Modifier = Modifier) {
             }
         }
 
-        Icon(
-            painter = painterResource(id = R.drawable.ic_chevron_right_24),
-            contentDescription = null,
-            modifier = Modifier
-                .align(alignment = Alignment.CenterEnd)
-                .padding(end = TangemTheme.dimens.spacing12),
-            tint = TangemTheme.colors.icon.informative,
-        )
+        // Icon(
+        //     painter = painterResource(id = R.drawable.ic_chevron_right_24),
+        //     contentDescription = null,
+        //     modifier = Modifier
+        //         .align(alignment = Alignment.CenterEnd)
+        //         .padding(end = TangemTheme.dimens.spacing12),
+        //     tint = TangemTheme.colors.icon.informative,
+        // )
     }
 }
 
@@ -504,7 +511,7 @@ private fun ProviderItemPreview(
     @PreviewParameter(ProviderItemParameterProvider::class) state: Pair<ProviderState, Boolean>,
 ) {
     TangemThemePreview {
-        ProviderItem(
+        ProviderItemBlock(
             modifier = Modifier.background(TangemTheme.colors.background.action),
             state = state.first,
             isSelected = state.second,
