@@ -31,7 +31,7 @@ import kotlinx.collections.immutable.persistentListOf
 fun ChooseProviderBottomSheet(config: TangemBottomSheetConfig) {
     TangemBottomSheet(
         config = config,
-        containerColor = TangemTheme.colors.background.tertiary,
+        containerColor = TangemTheme.colors.background.primary,
         titleText = resourceReference(R.string.express_choose_providers_title),
     ) { content: ChooseProviderBottomSheetConfig ->
         ChooseProviderBottomSheetContent(content = content)
@@ -67,7 +67,7 @@ private fun ChooseProviderBottomSheetContent(content: ChooseProviderBottomSheetC
         ) {
             content.providers.forEach { provider ->
                 val isSelected = provider.id == content.selectedProviderId
-                ProviderItem(
+                ProviderItemBlock(
                     state = provider,
                     isSelected = isSelected,
                     modifier = Modifier
@@ -75,11 +75,6 @@ private fun ChooseProviderBottomSheetContent(content: ChooseProviderBottomSheetC
                             enabled = provider.onProviderClick != null,
                             onClick = { provider.onProviderClick?.invoke(provider.id) },
                         )
-                        .padding(
-                            top = TangemTheme.dimens.spacing12,
-                            bottom = TangemTheme.dimens.spacing12,
-                            end = TangemTheme.dimens.spacing12,
-                        ),
                 )
             }
         }

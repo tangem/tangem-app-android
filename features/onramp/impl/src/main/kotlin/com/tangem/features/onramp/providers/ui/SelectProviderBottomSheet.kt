@@ -35,13 +35,13 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.utils.selectedBorder
 import com.tangem.domain.onramp.model.OnrampPaymentMethod
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.paymentmethod.ui.PaymentMethodIcon
 import com.tangem.features.onramp.providers.entity.ProviderListItemUM
 import com.tangem.features.onramp.providers.entity.SelectPaymentAndProviderUM
 import com.tangem.features.onramp.providers.model.previewData.SelectProviderPreviewData
-import com.tangem.features.onramp.utils.selectedBorder
 
 @Composable
 internal fun SelectProviderBottomSheet(config: TangemBottomSheetConfig, content: @Composable () -> Unit) {
