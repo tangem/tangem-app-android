@@ -1,7 +1,6 @@
 package com.tangem.features.walletconnect.connections.ui
 
 import android.content.res.Configuration
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -95,7 +94,7 @@ private fun WcAppInfoModalBottomSheetContent(state: WcAppInfoUM.Content, modifie
 @Composable
 private fun WcAppInfoFirstBlock(state: WcAppInfoUM.Content, modifier: Modifier = Modifier) {
     var connectionRequestExpanded by remember { mutableStateOf(false) }
-    Column(modifier = modifier.animateContentSize()) {
+    Column(modifier = modifier) {
         WcAppInfoItem(
             iconUrl = state.appIcon,
             title = state.appName,
@@ -228,8 +227,10 @@ private fun WcAppInfoSecondBlock(state: WcAppInfoUM.Content, modifier: Modifier 
         )
         HorizontalDivider(thickness = 1.dp, color = TangemTheme.colors.stroke.primary)
         SelectNetworksBlock(
+            modifier = Modifier
+                .clickable(onClick = state.onNetworksClick)
+                .then(itemsModifier),
             networksInfo = state.networksInfo,
-            modifier = itemsModifier,
         )
         when (state.networksInfo) {
             is WcNetworksInfo.ContainsAllRequiredNetworks -> Unit
@@ -562,7 +563,7 @@ private fun WcAppInfoBottomSheetPreview(@PreviewParameter(WcAppInfoStateProvider
 
 private class WcAppInfoStateProvider : CollectionPreviewParameterProvider<WcAppInfoUM>(
     collection = listOf(
-        // WcAppInfoUM.Loading(onDismiss = {}, WcPrimaryButtonConfig(showProgress = false, enabled = false, onClick = {})),
+        WcAppInfoUM.Loading(onDismiss = {}, WcPrimaryButtonConfig(showProgress = false, enabled = false, onClick = {})),
         WcAppInfoUM.Content(
             appName = "React App",
             appIcon = "",
@@ -573,26 +574,31 @@ private class WcAppInfoStateProvider : CollectionPreviewParameterProvider<WcAppI
             onWalletClick = {},
             networksInfo = WcNetworksInfo.ContainsAllRequiredNetworks(
                 items = persistentListOf(
-                    WcNetworkInfoItem(
+                    WcNetworkInfoItem.Required(
                         id = "1",
                         icon = R.drawable.img_optimism_22,
                         name = "img_optimism_22",
                         symbol = "optimism",
                     ),
-                    WcNetworkInfoItem(id = "2", icon = R.drawable.img_bsc_22, name = "img_bsc_22", symbol = "bsc"),
-                    WcNetworkInfoItem(
+                    WcNetworkInfoItem.Required(
+                        id = "2",
+                        icon = R.drawable.img_bsc_22,
+                        name = "img_bsc_22",
+                        symbol = "bsc",
+                    ),
+                    WcNetworkInfoItem.Required(
                         id = "3",
                         icon = R.drawable.img_avalanche_22,
                         name = "img_avalanche_22",
                         symbol = "avalanche",
                     ),
-                    WcNetworkInfoItem(
+                    WcNetworkInfoItem.Required(
                         id = "4",
                         icon = R.drawable.img_solana_22,
                         name = "img_solana_22",
                         symbol = "solana",
                     ),
-                    WcNetworkInfoItem(
+                    WcNetworkInfoItem.Required(
                         id = "5",
                         icon = R.drawable.img_avalanche_22,
                         name = "img_avalanche_22",
@@ -600,6 +606,7 @@ private class WcAppInfoStateProvider : CollectionPreviewParameterProvider<WcAppI
                     ),
                 ),
             ),
+            onNetworksClick = {},
             onDismiss = {},
             connectButtonConfig = WcPrimaryButtonConfig(showProgress = false, enabled = true, onClick = {}),
         ),
@@ -612,6 +619,7 @@ private class WcAppInfoStateProvider : CollectionPreviewParameterProvider<WcAppI
             walletName = "Tangem 2.0",
             onWalletClick = {},
             networksInfo = WcNetworksInfo.MissingRequiredNetworkInfo(networks = "Solana"),
+            onNetworksClick = {},
             onDismiss = {},
             connectButtonConfig = WcPrimaryButtonConfig(showProgress = false, enabled = true, onClick = {}),
         ),
