@@ -16,7 +16,6 @@ dependencies {
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.notifications.models)
-    implementation(projects.domain.wallets)
     implementation(projects.libs.crypto)
 
     // region DI
