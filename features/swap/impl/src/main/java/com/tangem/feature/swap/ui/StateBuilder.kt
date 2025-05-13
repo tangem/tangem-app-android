@@ -1238,22 +1238,15 @@ internal class StateBuilder(
         } else {
             ProviderState.AdditionalBadge.Empty
         }
-        return ProviderState.Content(
+        return ProviderState.Unavailable(
             id = this.providerId,
             name = this.name,
             iconUrl = this.imageLarge,
             type = this.type.providerName,
             selectionType = selectionType,
-            subtitle = alertText,
+            alertText = alertText,
             additionalBadge = additionalBadge,
-            percentLowerThenBest = PercentDifference.Empty,
-            namePrefix = ProviderState.PrefixType.NONE,
             onProviderClick = onProviderClick,
-            details = ProviderState.ProviderDetails(
-                rating = null,
-                averageDuration = null,
-                gasFeeFiat = null,
-            ),
         )
     }
 

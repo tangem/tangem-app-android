@@ -38,6 +38,7 @@ sealed class ProviderState {
         val name: String,
         val type: String,
         val iconUrl: String,
+        val additionalBadge: AdditionalBadge,
         val alertText: TextReference,
         val selectionType: SelectionType,
         override val onProviderClick: ((String) -> Unit)? = null,
