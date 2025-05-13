@@ -21,7 +21,6 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.features.send.v2.api.SendComponent
 import com.tangem.features.send.v2.common.CommonSendRoute
-import com.tangem.features.send.v2.common.PredefinedValues
 import com.tangem.features.send.v2.common.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.v2.common.analytics.CommonSendAnalyticEvents.SendScreenSource
 import com.tangem.features.send.v2.common.ui.SendContent
@@ -252,20 +251,7 @@ internal class DefaultSendComponent @AssistedInject constructor(
     private fun getConfirmComponent(factoryContext: AppComponentContext): ComposableContentComponent {
         val cryptoCurrencyStatus = model.cryptoCurrencyStatus
         val feeCryptoCurrencyStatus = model.feeCryptoCurrencyStatus
-        val predefinedAmount = params.amount
-        val predefinedTxId = params.transactionId
-        val predefinedAddress = params.destinationAddress
-        val predefinedValues =
-            if (predefinedAmount != null && predefinedTxId != null && predefinedAddress != null) {
-                PredefinedValues.Content.Deeplink(
-                    amount = predefinedAmount,
-                    address = predefinedAddress,
-                    memo = params.tag,
-                    transactionId = predefinedTxId,
-                )
-            } else {
-                PredefinedValues.Empty
-            }
+
         return if (cryptoCurrencyStatus != null && feeCryptoCurrencyStatus != null) {
             SendConfirmComponent(
                 appComponentContext = factoryContext,
@@ -279,7 +265,7 @@ internal class DefaultSendComponent @AssistedInject constructor(
                     feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
                     appCurrency = model.appCurrency,
                     callback = model,
-                    predefinedValues = predefinedValues,
+                    predefinedValues = model.predefinedValues,
                     onLoadFee = model::loadFee,
                 ),
             )
