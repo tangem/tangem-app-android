@@ -556,6 +556,7 @@ private class ProviderItemParameterProvider : CollectionPreviewParameterProvider
             alertText = stringReference(value = "Not available"),
             selectionType = ProviderState.SelectionType.SELECT,
             onProviderClick = {},
+            additionalBadge = ProviderState.AdditionalBadge.Empty,
         )
         val loadingState = ProviderState.Loading()
 
