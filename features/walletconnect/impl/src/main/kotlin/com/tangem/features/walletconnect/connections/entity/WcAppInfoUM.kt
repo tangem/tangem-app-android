@@ -28,6 +28,7 @@ internal sealed class WcAppInfoUM : TangemBottomSheetConfigContent {
         val walletName: String,
         val onWalletClick: () -> Unit,
         val networksInfo: WcNetworksInfo,
+        val onNetworksClick: () -> Unit,
         override val connectButtonConfig: WcPrimaryButtonConfig,
         override val onDismiss: () -> Unit,
     ) : WcAppInfoUM()
