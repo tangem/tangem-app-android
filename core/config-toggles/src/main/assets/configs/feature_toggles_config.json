@@ -58,5 +58,9 @@
     {
         "name": "STAKING_LOADING_REFACTORING_ENABLED",
         "version": "5.25.0"
+    },
+    {
+        "name": "PUSH_NOTIFICATIONS_ENABLED",
+        "version": "undefined"
     }
 ]
