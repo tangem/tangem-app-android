@@ -6,11 +6,13 @@ import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.walletconnect.connections.entity.*
 import com.tangem.utils.transformer.Transformer
 
+@Suppress("LongParameterList")
 internal class WcAppInfoTransformer(
     private val dAppSession: WcSessionProposal,
     private val onDismiss: () -> Unit,
     private val onConnect: () -> Unit,
     private val onWalletClick: () -> Unit,
+    private val onNetworksClick: () -> Unit,
     private val userWallet: UserWallet,
     private val proposalNetwork: WcSessionProposal.ProposalNetwork,
 ) : Transformer<WcAppInfoUM> {
@@ -25,6 +27,7 @@ internal class WcAppInfoTransformer(
             walletName = userWallet.name,
             onWalletClick = onWalletClick,
             networksInfo = WcNetworksInfoConverter.convert(proposalNetwork),
+            onNetworksClick = onNetworksClick,
             connectButtonConfig = WcPrimaryButtonConfig(
                 showProgress = false,
                 enabled = proposalNetwork.missingRequired.isEmpty(),

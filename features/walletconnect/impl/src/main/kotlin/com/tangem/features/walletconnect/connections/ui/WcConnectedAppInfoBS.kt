@@ -134,7 +134,7 @@ private fun AppInfoFirstBlock(state: WcConnectedAppInfoUM, modifier: Modifier = 
 }
 
 @Composable
-private fun NetworksBlock(networks: ImmutableList<WcNetworkInfoItem>, modifier: Modifier = Modifier) {
+private fun NetworksBlock(networks: ImmutableList<WcNetworkInfoItem.Required>, modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
         Text(
             modifier = Modifier
@@ -163,14 +163,19 @@ private fun WcConnectedAppInfoBS_Preview() {
                 appSubtitle = "react-app.walletconnect.com",
                 walletName = "Tangem 2.0",
                 networks = persistentListOf(
-                    WcNetworkInfoItem(
+                    WcNetworkInfoItem.Required(
                         id = "1",
                         icon = R.drawable.img_optimism_22,
                         name = "img_optimism_22img_optimism_22",
                         symbol = "optimism",
                     ),
-                    WcNetworkInfoItem(id = "2", icon = R.drawable.img_bsc_22, name = "img_bsc_22", symbol = "bsc"),
-                    WcNetworkInfoItem(
+                    WcNetworkInfoItem.Required(
+                        id = "2",
+                        icon = R.drawable.img_bsc_22,
+                        name = "img_bsc_22",
+                        symbol = "bsc",
+                    ),
+                    WcNetworkInfoItem.Required(
                         id = "3",
                         icon = R.drawable.img_solana_22,
                         name = "img_solana_22",
