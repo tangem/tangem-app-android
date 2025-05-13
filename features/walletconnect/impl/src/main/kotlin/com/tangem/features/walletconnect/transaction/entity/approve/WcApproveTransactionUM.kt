@@ -28,4 +28,4 @@ internal data class WcCustomAllowanceUM(
     val tokenIconUrl: String,
     val amountText: String,
     val isUnlimited: Boolean,
-)
+) : TangemBottomSheetConfigContent
