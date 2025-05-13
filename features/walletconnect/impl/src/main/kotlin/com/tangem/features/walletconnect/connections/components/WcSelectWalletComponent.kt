@@ -1,7 +1,6 @@
 package com.tangem.features.walletconnect.connections.components
 
 import android.content.res.Configuration
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -22,12 +21,17 @@ import com.tangem.common.ui.userwallet.UserWalletItem
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.ui.components.block.TangemBlockCardColors
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
+import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
+import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.walletconnect.connections.model.WcAppInfoModel
+import com.tangem.features.walletconnect.impl.R
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -86,45 +90,60 @@ private fun WcSelectWalletContent(
 @Preview(showBackground = true, device = Devices.PIXEL_7_PRO, uiMode = Configuration.UI_MODE_NIGHT_YES)
 private fun WcSelectWalletContent_Preview() {
     TangemThemePreview {
-        WcSelectWalletContent(
-            modifier = Modifier
-                .background(TangemTheme.colors.background.tertiary)
-                .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
-            selectedWalletId = UserWalletId("user_wallet_1".encodeToByteArray()),
-            wallets = persistentListOf(
-                UserWalletItemUM(
-                    id = UserWalletId("user_wallet_1".encodeToByteArray()),
-                    name = stringReference("Tangem 2.0"),
-                    information = stringReference("42 tokens"),
-                    balance = UserWalletItemUM.Balance.Loaded("1 496,34 \$", isFlickering = false),
-                    isEnabled = true,
-                    onClick = {},
-                ),
-                UserWalletItemUM(
-                    id = UserWalletId("user_wallet_2".encodeToByteArray()),
-                    name = stringReference("Tangem White"),
-                    information = stringReference("24 tokens"),
-                    balance = UserWalletItemUM.Balance.Loaded("1 496,34 \$", isFlickering = false),
-                    isEnabled = true,
-                    onClick = {},
-                ),
-                UserWalletItemUM(
-                    id = UserWalletId("user_wallet_3".encodeToByteArray()),
-                    name = stringReference("Bitcoin"),
-                    information = stringReference("1 token"),
-                    balance = UserWalletItemUM.Balance.Loaded("1 496,34 \$", isFlickering = false),
-                    isEnabled = true,
-                    onClick = {},
-                ),
-                UserWalletItemUM(
-                    id = UserWalletId("user_wallet_4".encodeToByteArray()),
-                    name = stringReference("Tangem 1.0"),
-                    information = stringReference("21 tokens"),
-                    balance = UserWalletItemUM.Balance.Loaded("1 496,34 \$", isFlickering = false),
-                    isEnabled = true,
-                    onClick = {},
-                ),
+        TangemModalBottomSheet<TangemBottomSheetConfigContent.Empty>(
+            containerColor = TangemTheme.colors.background.primary,
+            config = TangemBottomSheetConfig(
+                isShown = true,
+                onDismissRequest = {},
+                content = TangemBottomSheetConfigContent.Empty,
             ),
+            title = {
+                TangemModalBottomSheetTitle(
+                    title = stringReference("Choose wallet"),
+                    onEndClick = {},
+                    endIconRes = R.drawable.ic_close_24,
+                )
+            },
+            content = {
+                WcSelectWalletContent(
+                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+                    selectedWalletId = UserWalletId("user_wallet_1".encodeToByteArray()),
+                    wallets = persistentListOf(
+                        UserWalletItemUM(
+                            id = UserWalletId("user_wallet_1".encodeToByteArray()),
+                            name = stringReference("Tangem 2.0"),
+                            information = stringReference("42 tokens"),
+                            balance = UserWalletItemUM.Balance.Loaded("1 496,34 \$", isFlickering = false),
+                            isEnabled = true,
+                            onClick = {},
+                        ),
+                        UserWalletItemUM(
+                            id = UserWalletId("user_wallet_2".encodeToByteArray()),
+                            name = stringReference("Tangem White"),
+                            information = stringReference("24 tokens"),
+                            balance = UserWalletItemUM.Balance.Loaded("1 496,34 \$", isFlickering = false),
+                            isEnabled = true,
+                            onClick = {},
+                        ),
+                        UserWalletItemUM(
+                            id = UserWalletId("user_wallet_3".encodeToByteArray()),
+                            name = stringReference("Bitcoin"),
+                            information = stringReference("1 token"),
+                            balance = UserWalletItemUM.Balance.Loaded("1 496,34 \$", isFlickering = false),
+                            isEnabled = true,
+                            onClick = {},
+                        ),
+                        UserWalletItemUM(
+                            id = UserWalletId("user_wallet_4".encodeToByteArray()),
+                            name = stringReference("Tangem 1.0"),
+                            information = stringReference("21 tokens"),
+                            balance = UserWalletItemUM.Balance.Loaded("1 496,34 \$", isFlickering = false),
+                            isEnabled = true,
+                            onClick = {},
+                        ),
+                    ),
+                )
+            },
         )
     }
 }
