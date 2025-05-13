@@ -3,6 +3,7 @@ package com.tangem.data.walletconnect.di
 import android.app.Application
 import com.squareup.moshi.Moshi
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.data.walletconnect.DefaultWalletConnectRepository
 import com.tangem.data.walletconnect.initialize.DefaultWcInitializeUseCase
 import com.tangem.data.walletconnect.network.ethereum.WcEthNetwork
@@ -213,8 +214,11 @@ internal object WalletConnectDataModule {
 
     @Provides
     @Singleton
-    fun providesWcDisconnectUseCase(sessionsManager: WcSessionsManager): WcDisconnectUseCase {
-        return WcDisconnectUseCase(sessionsManager)
+    fun providesWcDisconnectUseCase(
+        sessionsManager: WcSessionsManager,
+        analytics: AnalyticsEventHandler,
+    ): WcDisconnectUseCase {
+        return WcDisconnectUseCase(sessionsManager, analytics)
     }
 
     internal class DiHelperBox(
