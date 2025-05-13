@@ -30,6 +30,7 @@ dependencies {
 
     /* Project - Core */
     implementation(projects.core.utils)
+    implementation(projects.core.analytics)
 
     /* DI */
     implementation(deps.hilt.core)
