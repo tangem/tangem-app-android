@@ -3,6 +3,7 @@ package com.tangem.data.walletconnect.network.ethereum
 import arrow.core.left
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.extensions.formatHex
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.data.walletconnect.utils.BlockAidVerificationDelegate
 import com.tangem.data.walletconnect.respond.WcRespondService
 import com.tangem.data.walletconnect.sign.BaseWcSignUseCase
@@ -25,6 +26,7 @@ internal class WcEthSendTransactionUseCase @AssistedInject constructor(
     @Assisted override val context: WcMethodUseCaseContext,
     @Assisted override val method: WcEthMethod.SendTransaction,
     override val respondService: WcRespondService,
+    override val analytics: AnalyticsEventHandler,
     private val sendTransaction: SendTransactionUseCase,
     blockAidDelegate: BlockAidVerificationDelegate,
 ) : BaseWcSignUseCase<Fee, WcEthTransaction>(),
