@@ -74,13 +74,13 @@ internal class DefaultMultiNetworkStatusFetcher @Inject constructor(
 
         val result = coroutineScope {
             params.networks
-                .map {
+                .map { network ->
                     async {
                         singleNetworkStatusFetcher(
                             params = SingleNetworkStatusFetcher.Params.Prepared(
                                 userWalletId = params.userWalletId,
-                                network = it,
-                                addedNetworkCurrencies = networksCurrencies,
+                                network = network,
+                                addedNetworkCurrencies = networksCurrencies.filter { it.network == network }.toSet(),
                             ),
                         )
                     }
