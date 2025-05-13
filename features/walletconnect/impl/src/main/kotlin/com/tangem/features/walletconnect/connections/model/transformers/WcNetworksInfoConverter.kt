@@ -18,7 +18,7 @@ internal object WcNetworksInfoConverter : Converter<WcSessionProposal.ProposalNe
             WcNetworksInfo.ContainsAllRequiredNetworks(
                 items = (value.required + value.available)
                     .map {
-                        WcNetworkInfoItem(
+                        WcNetworkInfoItem.Required(
                             id = it.id.value,
                             icon = it.iconResId,
                             name = it.name,

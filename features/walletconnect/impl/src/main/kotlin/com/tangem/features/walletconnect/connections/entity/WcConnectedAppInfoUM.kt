@@ -9,7 +9,7 @@ data class WcConnectedAppInfoUM(
     val isVerified: Boolean,
     val appSubtitle: String,
     val walletName: String,
-    val networks: ImmutableList<WcNetworkInfoItem>,
+    val networks: ImmutableList<WcNetworkInfoItem.Required>,
     val disconnectButtonConfig: WcPrimaryButtonConfig,
     val onDismiss: () -> Unit,
 ) : TangemBottomSheetConfigContent

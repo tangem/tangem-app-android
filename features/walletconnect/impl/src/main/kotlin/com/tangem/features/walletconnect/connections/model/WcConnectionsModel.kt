@@ -33,7 +33,6 @@ import com.tangem.utils.transformer.update
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -77,10 +76,8 @@ internal class WcConnectionsModel @Inject constructor(
     private fun listenWcSessions() {
         wcSessionsUseCase.invoke()
             .conflate()
-            .onEach { Timber.tag("ddk9499").d("listenWcSessions before: ${it.size}") }
             .distinctUntilChanged()
             .onEach { sessionsMap ->
-                Timber.tag("ddk9499").d("listenWcSessions after: ${sessionsMap.size}")
                 uiState.update(
                     WcSessionsTransformer(
                         sessionsMap = sessionsMap,
