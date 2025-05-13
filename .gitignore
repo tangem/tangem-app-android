@@ -9,6 +9,7 @@ local.properties
 
 # Google services
 
+app/src/release/google-services.json
 
 # Gradle generated files
 .gradle
