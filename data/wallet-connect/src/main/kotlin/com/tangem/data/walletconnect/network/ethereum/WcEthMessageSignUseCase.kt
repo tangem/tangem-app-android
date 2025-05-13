@@ -9,6 +9,7 @@ import com.tangem.blockchain.extensions.isAscii
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toDecompressedPublicKey
 import com.tangem.common.extensions.toHexString
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.data.walletconnect.network.ethereum.LegacySdkHelper.prepareToSendMessageData
 import com.tangem.data.walletconnect.respond.WcRespondService
 import com.tangem.data.walletconnect.sign.BaseWcSignUseCase
@@ -28,8 +29,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 
+@Suppress("LongParameterList")
 internal class WcEthMessageSignUseCase @AssistedInject constructor(
     override val respondService: WcRespondService,
+    override val analytics: AnalyticsEventHandler,
     @Assisted override val context: WcMethodUseCaseContext,
     @Assisted override val method: WcEthMethod.MessageSign,
     private val walletManagersFacade: WalletManagersFacade,

@@ -3,6 +3,7 @@ package com.tangem.data.walletconnect.network.solana
 import arrow.core.left
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.extensions.encodeBase64
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.data.walletconnect.respond.WcRespondService
 import com.tangem.data.walletconnect.sign.BaseWcSignUseCase
 import com.tangem.data.walletconnect.sign.SignCollector
@@ -23,6 +24,7 @@ import org.json.JSONObject
 
 internal class DefaultWcSolanaSignAllTransactionUseCase @AssistedInject constructor(
     override val respondService: WcRespondService,
+    override val analytics: AnalyticsEventHandler,
     private val prepareForSend: PrepareForSendUseCase,
     @Assisted override val context: WcMethodUseCaseContext,
     @Assisted override val method: WcSolanaMethod.SignAllTransaction,
