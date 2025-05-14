@@ -12,6 +12,7 @@ data class TokenMarket(
     val isUnderMarketCapLimit: Boolean,
     val tokenQuotesShort: TokenQuotesShort,
     val tokenCharts: Charts,
+    val stakingRate: BigDecimal?,
     private val imageHost: String,
 ) {
 
