@@ -8,6 +8,8 @@ import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.data.common.currency.CardCryptoCurrencyFactory
 import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
 import com.tangem.data.networks.store.NetworksStatusesStoreV2
+import com.tangem.data.networks.store.setSourceAsCache
+import com.tangem.data.networks.store.setSourceAsOnlyCache
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
@@ -51,12 +53,16 @@ internal class DefaultMultiNetworkStatusFetcher @Inject constructor(
         // Optimization!
         // Every singleNetworkStatusFetcher with applyRefresh as true will refresh every network in the store.
         // So if we update all networks at once, it will be more efficient.
-        networksStatusesStore.refresh(userWalletId = params.userWalletId, networks = params.networks)
+        networksStatusesStore.setSourceAsCache(userWalletId = params.userWalletId, networks = params.networks)
 
         val userWallet = catch(
             block = { userWalletsStore.getSyncStrict(key = params.userWalletId) },
             catch = {
-                networksStatusesStore.storeError(userWalletId = params.userWalletId, networks = params.networks)
+                networksStatusesStore.setSourceAsOnlyCache(
+                    userWalletId = params.userWalletId,
+                    networks = params.networks,
+                )
+
                 raise(it)
             },
         )
@@ -66,7 +72,7 @@ internal class DefaultMultiNetworkStatusFetcher @Inject constructor(
         }
 
         ensure(isNotSingleWallet) {
-            networksStatusesStore.storeError(userWalletId = params.userWalletId, networks = params.networks)
+            networksStatusesStore.setSourceAsOnlyCache(userWalletId = params.userWalletId, networks = params.networks)
             IllegalStateException("User wallet is not multi-currency")
         }
 
