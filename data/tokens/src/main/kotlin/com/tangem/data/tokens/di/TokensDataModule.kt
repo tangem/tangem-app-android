@@ -3,14 +3,19 @@ package com.tangem.data.tokens.di
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.common.currency.CardCryptoCurrencyFactory
-import com.tangem.data.tokens.repository.*
+import com.tangem.data.tokens.repository.DefaultCurrenciesRepository
+import com.tangem.data.tokens.repository.DefaultCurrencyChecksRepository
+import com.tangem.data.tokens.repository.DefaultPolkadotAccountHealthCheckRepository
+import com.tangem.data.tokens.repository.DefaultQuotesRepository
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.exchangeservice.swap.ExpressServiceLoader
-import com.tangem.datasource.local.network.NetworksStatusesStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.quote.QuotesStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
-import com.tangem.domain.tokens.repository.*
+import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.tokens.repository.CurrencyChecksRepository
+import com.tangem.domain.tokens.repository.PolkadotAccountHealthCheckRepository
+import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -64,30 +69,6 @@ internal object TokensDataModule {
             quotesStore = quotesStore,
             cacheRegistry = cacheRegistry,
             dispatchers = dispatchers,
-        )
-    }
-
-    @Provides
-    @Singleton
-    fun provideNetworksRepository(
-        networksStatusesStore: NetworksStatusesStore,
-        walletManagersFacade: WalletManagersFacade,
-        userWalletsStore: UserWalletsStore,
-        appPreferencesStore: AppPreferencesStore,
-        cacheRegistry: CacheRegistry,
-        dispatchers: CoroutineDispatcherProvider,
-        excludedBlockchains: ExcludedBlockchains,
-        cardCryptoCurrencyFactory: CardCryptoCurrencyFactory,
-    ): NetworksRepository {
-        return DefaultNetworksRepository(
-            networksStatusesStore = networksStatusesStore,
-            walletManagersFacade = walletManagersFacade,
-            userWalletsStore = userWalletsStore,
-            appPreferencesStore = appPreferencesStore,
-            cacheRegistry = cacheRegistry,
-            dispatchers = dispatchers,
-            excludedBlockchains = excludedBlockchains,
-            cardCryptoCurrencyFactory = cardCryptoCurrencyFactory,
         )
     }
 
