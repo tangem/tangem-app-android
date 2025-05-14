@@ -1,6 +1,7 @@
 package com.tangem.data.networks.store
 
 import com.tangem.data.networks.models.SimpleNetworkStatus
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.NetworkStatus
 import com.tangem.domain.wallets.models.UserWalletId
@@ -15,25 +16,29 @@ internal interface NetworksStatusesStoreV2 {
     /** Get status of [network] by [userWalletId] synchronously or null */
     suspend fun getSyncOrNull(userWalletId: UserWalletId, network: Network): SimpleNetworkStatus?
 
-    /** Refresh status of [network] by [userWalletId] */
-    suspend fun refresh(userWalletId: UserWalletId, network: Network)
+    /**
+     * Update [source] of [network] by [userWalletId].
+     * If the status is not found, create a new one by [ifNotFound].
+     */
+    suspend fun updateStatusSource(
+        userWalletId: UserWalletId,
+        network: Network,
+        source: StatusSource,
+        ifNotFound: (SimpleNetworkStatus.Id) -> SimpleNetworkStatus? = { null },
+    )
 
-    /** Refresh statuses of [networks] by [userWalletId] */
-    suspend fun refresh(userWalletId: UserWalletId, networks: Set<Network>)
-
-    /** Store success [value] by [userWalletId]. If status's value is unreachable, throws exception */
-    @Throws
-    suspend fun storeSuccess(userWalletId: UserWalletId, value: NetworkStatus)
+    /** Update [source] of [networks] by [userWalletId]. If the status is not found, create a new one by [ifNotFound] */
+    suspend fun updateStatusSource(
+        userWalletId: UserWalletId,
+        networks: Set<Network>,
+        source: StatusSource,
+        ifNotFound: (SimpleNetworkStatus.Id) -> SimpleNetworkStatus? = { null },
+    )
 
     /**
-     * Store error [value] by [userWalletId] and [network].
-     * If [value] is null, default unreachable status will be stored.
+     * Store [status] by [userWalletId]. Rewrite the stored status with a new [status].
+     *
+     * See complex methods in `NetworksStatusesStoreExt`.
      */
-    suspend fun storeError(userWalletId: UserWalletId, network: Network, value: NetworkStatus.Unreachable? = null)
-
-    /** Store unreachable [value] by [userWalletId] */
-    suspend fun storeUnreachableStatus(userWalletId: UserWalletId, value: NetworkStatus)
-
-    /** Store error for [networks] by [userWalletId] */
-    suspend fun storeError(userWalletId: UserWalletId, networks: Set<Network>)
+    suspend fun store(userWalletId: UserWalletId, status: NetworkStatus)
 }
