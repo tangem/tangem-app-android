@@ -3,6 +3,8 @@ package com.tangem.datasource.api.common.config.managers
 import com.tangem.datasource.api.common.config.ApiConfig
 import com.tangem.datasource.api.common.config.ApiConfigs
 import com.tangem.datasource.api.common.config.ApiEnvironmentConfig
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 
 /**
  * Implementation of [ApiConfigsManager] in PROD environment
@@ -12,6 +14,10 @@ import com.tangem.datasource.api.common.config.ApiEnvironmentConfig
 internal class ProdApiConfigsManager(
     private val apiConfigs: ApiConfigs,
 ) : ApiConfigsManager {
+
+    override val isInitialized: StateFlow<Boolean> = MutableStateFlow(value = true)
+
+    override fun initialize() = Unit
 
     override fun getEnvironmentConfig(id: ApiConfig.ID): ApiEnvironmentConfig {
         val config = apiConfigs.firstOrNull { it.id == id }
