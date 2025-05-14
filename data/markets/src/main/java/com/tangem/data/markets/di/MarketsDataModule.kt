@@ -22,7 +22,7 @@ internal object MarketsDataModule {
 
     @Provides
     @Singleton
-    fun provideMarketsRepository(
+    fun provideMarketsTokenRepository(
         marketsApi: TangemTechMarketsApi,
         tangemTechApi: TangemTechApi,
         userWalletsStore: UserWalletsStore,
@@ -40,6 +40,7 @@ internal object MarketsDataModule {
             cacheRegistry = cacheRegistry,
             tokenExchangesStore = RuntimeStateStore(defaultValue = emptyList()),
             excludedBlockchains = excludedBlockchains,
+            maxApyStore = RuntimeStateStore(defaultValue = null),
         )
     }
 }
