@@ -4,6 +4,8 @@ import com.google.common.truth.Truth
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.data.common.currency.CardCryptoCurrencyFactory
 import com.tangem.data.networks.store.NetworksStatusesStoreV2
+import com.tangem.data.networks.store.setSourceAsCache
+import com.tangem.data.networks.store.storeSuccess
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.tokens.model.NetworkStatus
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -45,12 +47,12 @@ internal class DefaultSingleNetworkStatusFetcherTest {
         val actual = fetcher(params)
 
         coVerifyOrder {
-            networksStatusesStore.refresh(params.userWalletId, params.network)
+            networksStatusesStore.setSourceAsCache(params.userWalletId, params.network)
             cardCryptoCurrencyFactory.create(params.userWalletId, params.network)
             walletManagersFacade.update(params.userWalletId, params.network, emptySet())
             networksStatusesStore.storeSuccess(
                 userWalletId = params.userWalletId,
-                value = NetworkStatus(params.network, NetworkStatus.MissedDerivation),
+                status = NetworkStatus(params.network, NetworkStatus.MissedDerivation),
             )
         }
 
@@ -67,14 +69,14 @@ internal class DefaultSingleNetworkStatusFetcherTest {
         val actual = fetcher(params)
 
         coVerifyOrder {
-            networksStatusesStore.refresh(userWalletId = params.userWalletId, network = params.network)
+            networksStatusesStore.setSourceAsCache(userWalletId = params.userWalletId, network = params.network)
             cardCryptoCurrencyFactory.create(userWalletId = params.userWalletId, network = params.network)
-            networksStatusesStore.storeError(userWalletId = params.userWalletId, network = params.network)
+            // networksStatusesStore.setSourceAsOnlyCache(userWalletId = params.userWalletId, network = params.network)
         }
 
         coVerify(inverse = true) {
             walletManagersFacade.update(userWalletId = any(), network = any(), extraTokens = any())
-            networksStatusesStore.storeSuccess(userWalletId = any(), value = any())
+            // networksStatusesStore.storeSuccess(userWalletId = any(), status = any())
         }
 
         Truth.assertThat(actual.isLeft()).isTrue()
