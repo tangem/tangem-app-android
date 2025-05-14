@@ -15,6 +15,7 @@ import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.data.card.TransactionSignerFactory
+import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
 import com.tangem.datasource.local.config.issuers.IssuersConfigStorage
@@ -142,4 +143,6 @@ interface ApplicationEntryPoint {
     fun getOnlineCardVerifier(): OnlineCardVerifier
 
     fun getUserWalletBuilderFactory(): UserWalletBuilder.Factory
+
+    fun getApiConfigsManager(): ApiConfigsManager
 }
