@@ -3,6 +3,8 @@ package com.tangem.domain.markets.repositories
 import com.tangem.domain.markets.*
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
+import kotlinx.coroutines.flow.Flow
+import java.math.BigDecimal
 
 interface MarketsTokenRepository {
 
@@ -51,4 +53,6 @@ interface MarketsTokenRepository {
      * @param tokenId token id
      */
     suspend fun getTokenExchanges(tokenId: CryptoCurrency.RawID): List<TokenMarketExchange>
+
+    suspend fun getMaxApy(): Flow<BigDecimal?>
 }
