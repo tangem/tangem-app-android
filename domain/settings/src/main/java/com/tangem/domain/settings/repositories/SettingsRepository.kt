@@ -30,6 +30,10 @@ interface SettingsRepository {
 
     suspend fun incrementAppLaunchCounter()
 
+    suspend fun getWalletFirstUsageDate(): Long
+
+    suspend fun setWalletFirstUsageDate(value: Long)
+
     suspend fun shouldShowMarketsTooltip(): Boolean
 
     suspend fun setMarketsTooltipShown(value: Boolean)
