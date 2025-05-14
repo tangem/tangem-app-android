@@ -14,7 +14,7 @@ object MockNetworkStatusFactory {
 
     private val defaultNetwork = MockCryptoCurrencyFactory().ethereum.network
 
-    fun createVerified(network: Network = defaultNetwork): NetworkStatus {
+    fun createVerified(network: Network = defaultNetwork, source: StatusSource = StatusSource.ACTUAL): NetworkStatus {
         return NetworkStatus(
             network = network,
             value = NetworkStatus.Verified(
@@ -26,12 +26,12 @@ object MockNetworkStatusFactory {
                 ),
                 amounts = mapOf(),
                 pendingTransactions = mapOf(),
-                source = StatusSource.ACTUAL,
+                source = source,
             ),
         )
     }
 
-    fun createNoAccount(network: Network = defaultNetwork): NetworkStatus {
+    fun createNoAccount(network: Network = defaultNetwork, source: StatusSource = StatusSource.ACTUAL): NetworkStatus {
         return NetworkStatus(
             network = network,
             value = NetworkStatus.NoAccount(
@@ -43,7 +43,7 @@ object MockNetworkStatusFactory {
                 ),
                 amountToCreateAccount = BigDecimal.ONE,
                 errorMessage = "",
-                source = StatusSource.ACTUAL,
+                source = source,
             ),
         )
     }
