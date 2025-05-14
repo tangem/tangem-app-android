@@ -3,11 +3,13 @@ package com.tangem.data.networks.single
 import arrow.core.Either
 import com.tangem.data.common.currency.CardCryptoCurrencyFactory
 import com.tangem.data.networks.store.NetworksStatusesStoreV2
+import com.tangem.data.networks.store.setSourceAsCache
+import com.tangem.data.networks.store.setSourceAsOnlyCache
+import com.tangem.data.networks.store.storeStatus
 import com.tangem.data.networks.utils.NetworkStatusFactory
 import com.tangem.domain.core.utils.catchOn
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.NetworkStatus
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
@@ -35,7 +37,7 @@ internal class DefaultSingleNetworkStatusFetcher @Inject constructor(
         val networkCurrencies = when (params) {
             is SingleNetworkStatusFetcher.Params.Prepared -> params.addedNetworkCurrencies
             is SingleNetworkStatusFetcher.Params.Simple -> {
-                networksStatusesStore.refresh(userWalletId = params.userWalletId, network = params.network)
+                networksStatusesStore.setSourceAsCache(userWalletId = params.userWalletId, network = params.network)
 
                 cardCryptoCurrencyFactory.create(
                     userWalletId = params.userWalletId,
@@ -60,28 +62,10 @@ internal class DefaultSingleNetworkStatusFetcher @Inject constructor(
             addedCurrencies = networkCurrencies.toSet(),
         )
 
-        val statusValue = status.value
-        if (statusValue is NetworkStatus.Unreachable) {
-            val prevStatus = networksStatusesStore.getSyncOrNull(
-                userWalletId = params.userWalletId,
-                network = params.network,
-            )
-
-            if (prevStatus?.value is NetworkStatus.MissedDerivation) {
-                networksStatusesStore.storeUnreachableStatus(userWalletId = params.userWalletId, value = status)
-            } else {
-                networksStatusesStore.storeError(
-                    userWalletId = params.userWalletId,
-                    network = params.network,
-                    value = statusValue,
-                )
-            }
-        } else {
-            networksStatusesStore.storeSuccess(userWalletId = params.userWalletId, value = status)
-        }
+        networksStatusesStore.storeStatus(userWalletId = params.userWalletId, status = status)
     }
         .onLeft {
             Timber.e("Failed to fetch network status for $params: $it")
-            networksStatusesStore.storeError(userWalletId = params.userWalletId, network = params.network)
+            networksStatusesStore.setSourceAsOnlyCache(userWalletId = params.userWalletId, network = params.network)
         }
 }
