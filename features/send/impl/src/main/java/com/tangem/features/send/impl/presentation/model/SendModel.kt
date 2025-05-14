@@ -1037,7 +1037,10 @@ internal class SendModel @Inject constructor(
             listOf(
                 // we should update network to find pending tx after 1 sec
                 async {
-                    fetchPendingTransactionsUseCase(userWallet.walletId, setOf(cryptoCurrency.network))
+                    fetchPendingTransactionsUseCase(
+                        userWalletId = userWallet.walletId,
+                        network = cryptoCurrency.network,
+                    )
                 },
                 // we should update tx history and network for new balance
                 async {
