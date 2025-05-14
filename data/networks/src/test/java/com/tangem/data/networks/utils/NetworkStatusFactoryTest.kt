@@ -3,12 +3,11 @@ package com.tangem.data.networks.utils
 import com.google.common.truth.Truth
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
+import com.tangem.common.test.domain.walletmanager.MockUpdateWalletManagerResultFactory
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.tokens.model.*
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.walletmanager.model.Address
-import com.tangem.domain.walletmanager.model.CryptoCurrencyAmount
-import com.tangem.domain.walletmanager.model.CryptoCurrencyTransaction
 import com.tangem.domain.walletmanager.model.UpdateWalletManagerResult
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -68,6 +67,8 @@ internal class NetworkStatusFactoryTest(private val model: Model) {
             amount = BigDecimal.ONE,
         )
 
+        val updateWalletManagerResultFactory = MockUpdateWalletManagerResultFactory()
+
         @JvmStatic
         @Parameterized.Parameters
         fun data(): Collection<Model> = listOf(
@@ -80,7 +81,7 @@ internal class NetworkStatusFactoryTest(private val model: Model) {
 
             // region Unreachable
             createSuccess(
-                result = UpdateWalletManagerResult.Unreachable(selectedAddress = null, addresses = null),
+                result = updateWalletManagerResultFactory.createUnreachable(),
                 status = NetworkStatus.Unreachable(address = null),
             ),
             createSuccess(
@@ -98,10 +99,7 @@ internal class NetworkStatusFactoryTest(private val model: Model) {
                 status = NetworkStatus.Unreachable(address = null),
             ),
             createSuccess(
-                result = UpdateWalletManagerResult.Unreachable(
-                    selectedAddress = "0x1",
-                    addresses = setOf(Address(value = "0x1", type = Address.Type.Primary)),
-                ),
+                result = updateWalletManagerResultFactory.createUnreachableWithAddress(),
                 status = NetworkStatus.Unreachable(
                     address = NetworkAddress.Single(
                         defaultAddress = NetworkAddress.Address(
@@ -149,12 +147,7 @@ internal class NetworkStatusFactoryTest(private val model: Model) {
                 throwable = selectedAddressThrowable,
             ),
             createSuccess(
-                result = UpdateWalletManagerResult.NoAccount(
-                    selectedAddress = "0x1",
-                    addresses = setOf(Address(value = "0x1", type = Address.Type.Primary)),
-                    amountToCreateAccount = BigDecimal.ZERO,
-                    errorMessage = "",
-                ),
+                result = updateWalletManagerResultFactory.createNoAccount(),
                 status = NetworkStatus.NoAccount(
                     address = NetworkAddress.Single(
                         defaultAddress = NetworkAddress.Address(
@@ -207,16 +200,7 @@ internal class NetworkStatusFactoryTest(private val model: Model) {
                 throwable = selectedAddressThrowable,
             ),
             createSuccess(
-                result = UpdateWalletManagerResult.Verified(
-                    selectedAddress = "0x1",
-                    addresses = setOf(Address(value = "0x1", type = Address.Type.Primary)),
-                    currenciesAmounts = setOf(
-                        CryptoCurrencyAmount.Coin(value = BigDecimal.ONE),
-                    ),
-                    currentTransactions = setOf(
-                        CryptoCurrencyTransaction.Coin(txHistoryItem),
-                    ),
-                ),
+                result = updateWalletManagerResultFactory.createVerified(),
                 currencies = currencies,
                 status = NetworkStatus.Verified(
                     address = NetworkAddress.Single(
