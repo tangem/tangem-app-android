@@ -49,12 +49,12 @@ internal class HomeModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val scanCardProcessor: ScanCardProcessor,
     private val saveWalletUseCase: SaveWalletUseCase,
-    private val getUserCountryUseCase: GetUserCountryUseCase,
     private val cardSdkConfigRepository: CardSdkConfigRepository,
     private val settingsRepository: SettingsRepository,
     private val urlOpener: UrlOpener,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val userWalletBuilderFactory: UserWalletBuilder.Factory,
+    getUserCountryUseCase: GetUserCountryUseCase,
 ) : Model() {
 
     private val tangemErrorHandler = TangemTangemErrorsHandler(store)
