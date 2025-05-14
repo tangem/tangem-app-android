@@ -11,6 +11,7 @@ import com.tangem.core.analytics.models.event.TechAnalyticsEvent
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.deeplink.DeepLinksRegistry
+import com.tangem.core.ui.BuildConfig
 import com.tangem.core.ui.R
 import com.tangem.core.ui.coil.ImagePreloader
 import com.tangem.core.ui.extensions.resourceReference
@@ -40,10 +41,13 @@ import com.tangem.tap.features.onboarding.products.wallet.redux.BackupDialog
 import com.tangem.tap.store
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import timber.log.Timber
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
 
 @Suppress("LongParameterList")
 @HiltViewModel
@@ -57,7 +61,6 @@ internal class MainViewModel @Inject constructor(
     private val userWalletsListManager: UserWalletsListManager,
     private val dispatchers: CoroutineDispatcherProvider,
     private val fetchStakingTokensUseCase: FetchStakingTokensUseCase,
-    private val apiConfigsManager: ApiConfigsManager,
     private val fetchUserCountryUseCase: FetchUserCountryUseCase,
     @GlobalUiMessageSender private val messageSender: UiMessageSender,
     private val keyboardValidator: KeyboardValidator,
@@ -68,6 +71,7 @@ internal class MainViewModel @Inject constructor(
     private val onboardingRepository: OnboardingRepository,
     private val deepLinksRegistry: DeepLinksRegistry,
     private val onrampDeepLinkFactory: OnrampDeepLink.Factory,
+    private val apiConfigsManager: ApiConfigsManager,
     routingFeatureToggle: RoutingFeatureToggle,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
 ) : ViewModel() {
@@ -79,24 +83,26 @@ internal class MainViewModel @Inject constructor(
         private set
 
     init {
+        /**
+         * Run any data initialization here that needs to happen before the app starts
+         * and is hidden behind the SplashScreen
+         */
         loadApplicationResources()
 
-        viewModelScope.launch(dispatchers.main) { incrementAppLaunchCounterUseCase() }
+        /** Run any API data load here that runs in parallel and does not block the app from starting */
+        launchAPIRequests {
+            launch { fetchHotCryptoUseCase() }
 
-        viewModelScope.launch {
-            fetchUserCountryUseCase().onLeft {
-                Timber.e("Unable to fetch the user country code $it")
-            }
+            launch { fetchAppCurrenciesUseCase() }
+
+            launch { fetchStakingTokens() }
         }
 
-        viewModelScope.launch { fetchHotCryptoUseCase() }
+        viewModelScope.launch { incrementAppLaunchCounterUseCase() }
 
-        updateAppCurrencies()
         observeFlips()
         displayBalancesHidingStatusToast()
         displayHiddenBalancesModalNotification()
-
-        fetchStakingTokens()
 
         deleteDeprecatedLogsUseCase()
 
@@ -118,13 +124,38 @@ internal class MainViewModel @Inject constructor(
 
     /** Loading the resources needed to run the application */
     private fun loadApplicationResources() {
-        viewModelScope.launch(dispatchers.main) {
-            apiConfigsManager.initialize()
+        viewModelScope.launch {
+            launchAPIRequests {
+                launch { blockchainSDKFactory.init() }
 
-            blockchainSDKFactory.init()
+                launch {
+                    withTimeout(timeMillis = 1.seconds.inWholeMilliseconds) { fetchUserCountry() }
+                }
+            }
+
             prepareSelectedWalletFeedback()
 
             isSplashScreenShown = false
+        }
+    }
+
+    private suspend fun fetchUserCountry() {
+        fetchUserCountryUseCase().onLeft {
+            Timber.e("Unable to fetch the user country code $it")
+        }
+    }
+
+    private fun launchAPIRequests(function: suspend CoroutineScope.() -> Unit) {
+        viewModelScope.launch {
+            if (BuildConfig.TESTER_MENU_ENABLED) {
+                apiConfigsManager.isInitialized
+                    .filter { it }
+                    .first() // wait until isInitialized becomes true
+
+                function()
+            } else {
+                function()
+            }
         }
     }
 
@@ -138,18 +169,10 @@ internal class MainViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
-    private fun updateAppCurrencies() {
-        viewModelScope.launch(dispatchers.main) {
-            fetchAppCurrenciesUseCase.invoke()
-        }
-    }
-
-    private fun fetchStakingTokens() {
-        viewModelScope.launch(dispatchers.main) {
-            fetchStakingTokensUseCase()
-                .onLeft { Timber.e(it.toString(), "Unable to fetch the staking tokens list") }
-                .onRight { Timber.d("Staking token list was fetched successfully") }
-        }
+    private suspend fun fetchStakingTokens() {
+        fetchStakingTokensUseCase()
+            .onLeft { Timber.e(it.toString(), "Unable to fetch the staking tokens list") }
+            .onRight { Timber.d("Staking token list was fetched successfully") }
     }
 
     private fun observeFlips() {
