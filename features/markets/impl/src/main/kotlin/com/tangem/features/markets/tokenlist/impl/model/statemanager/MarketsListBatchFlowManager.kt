@@ -323,6 +323,7 @@ internal class MarketsListBatchFlowManager(
             SortByTypeUM.ExperiencedBuyers -> TokenMarketListConfig.Order.Buyers
             SortByTypeUM.TopGainers -> TokenMarketListConfig.Order.TopGainers
             SortByTypeUM.TopLosers -> TokenMarketListConfig.Order.TopLosers
+            SortByTypeUM.Staking -> TokenMarketListConfig.Order.Staking
         }
     }
 
