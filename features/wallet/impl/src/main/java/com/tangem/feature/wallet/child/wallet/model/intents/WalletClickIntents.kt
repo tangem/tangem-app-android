@@ -14,6 +14,7 @@ import com.tangem.domain.tokens.FetchTokenListUseCase.RefreshMode
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.domain.wallets.usecase.SelectWalletUseCase
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
+import com.tangem.feature.wallet.presentation.wallet.domain.OnrampStatusFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.unwrap
 import com.tangem.feature.wallet.presentation.wallet.loaders.WalletScreenContentLoader
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
@@ -50,6 +51,7 @@ internal class WalletClickIntents @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
     private val onrampFeatureToggles: OnrampFeatureToggles,
     private val fetchHotCryptoUseCase: FetchHotCryptoUseCase,
+    private val onrampStatusFactory: OnrampStatusFactory,
 ) : BaseWalletClickIntents(),
     WalletCardClickIntents by walletCardClickIntentsImplementor,
     WalletWarningsClickIntents by warningsClickIntentsImplementer,
@@ -168,7 +170,7 @@ internal class WalletClickIntents @Inject constructor(
 
         modelScope.launch(dispatchers.main) {
             fetchCurrencyStatusUseCase(userWallet.walletId, refresh = true)
-
+            onrampStatusFactory.updateOnrmapTransactionStatuses(userWallet)
             walletScreenContentLoader.load(
                 userWallet = userWallet,
                 clickIntents = this@WalletClickIntents,
