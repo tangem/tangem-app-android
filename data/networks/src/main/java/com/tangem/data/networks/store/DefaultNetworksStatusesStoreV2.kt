@@ -61,76 +61,41 @@ internal class DefaultNetworksStatusesStoreV2(
         return runtimeStore.getSyncOrNull()?.get(userWalletId.stringValue)?.firstOrNull { it.id == simpleStatusId }
     }
 
-    override suspend fun refresh(userWalletId: UserWalletId, network: Network) {
-        refresh(userWalletId = userWalletId, networks = setOf(network))
+    override suspend fun updateStatusSource(
+        userWalletId: UserWalletId,
+        network: Network,
+        source: StatusSource,
+        ifNotFound: (SimpleNetworkStatus.Id) -> SimpleNetworkStatus?,
+    ) {
+        updateStatusSource(
+            userWalletId = userWalletId,
+            networks = setOf(network),
+            source = source,
+            ifNotFound = ifNotFound,
+        )
     }
 
-    override suspend fun refresh(userWalletId: UserWalletId, networks: Set<Network>) {
+    override suspend fun updateStatusSource(
+        userWalletId: UserWalletId,
+        networks: Set<Network>,
+        source: StatusSource,
+        ifNotFound: (SimpleNetworkStatus.Id) -> SimpleNetworkStatus?,
+    ) {
         if (networks.isEmpty()) {
-            Timber.d("Nothing to refresh: networks is empty")
+            Timber.d("Nothing to update: networks is empty")
             return
         }
 
-        updateInRuntime(userWalletId = userWalletId, networks = networks) { status ->
-            status.copy(value = status.value.copySealed(source = StatusSource.CACHE))
+        updateInRuntime(userWalletId = userWalletId, networks = networks, ifNotFound = ifNotFound) { status ->
+            status.copy(value = status.value.copySealed(source = source))
         }
     }
 
-    override suspend fun storeSuccess(userWalletId: UserWalletId, value: NetworkStatus) {
-        if (value.value is NetworkStatus.Unreachable) {
-            val message = "Use storeError method to save unreachable status"
-            Timber.d(message)
-
-            error(message)
-        }
-
-        if (value.value.source != StatusSource.ACTUAL) {
-            val message = "Method storeActual can be called only with StatusSource.ACTUAL"
-            Timber.d(message)
-
-            error(message)
-        }
-
+    override suspend fun store(userWalletId: UserWalletId, status: NetworkStatus) {
         coroutineScope {
-            launch { storeInRuntime(userWalletId = userWalletId, status = value) }
-            launch { storeInPersistence(userWalletId = userWalletId, status = value) }
+            launch { storeInRuntime(userWalletId = userWalletId, status = status) }
+            launch { storeInPersistence(userWalletId = userWalletId, status = status) }
         }
-    }
-
-    override suspend fun storeError(userWalletId: UserWalletId, network: Network, value: NetworkStatus.Unreachable?) {
-        updateInRuntime(
-            userWalletId = userWalletId,
-            networks = setOf(network),
-            ifNotFound = { id ->
-                value?.let { SimpleNetworkStatus(id = id, value = value) }
-                    ?: createUnreachableStatus(id = id)
-            },
-            update = { status ->
-                status.copy(value = status.value.copySealed(source = StatusSource.ONLY_CACHE))
-            },
-        )
-    }
-
-    override suspend fun storeError(userWalletId: UserWalletId, networks: Set<Network>) {
-        updateInRuntime(
-            userWalletId = userWalletId,
-            networks = networks,
-            ifNotFound = ::createUnreachableStatus,
-            update = { status ->
-                status.copy(value = status.value.copySealed(source = StatusSource.ONLY_CACHE))
-            },
-        )
-    }
-
-    override suspend fun storeUnreachableStatus(userWalletId: UserWalletId, value: NetworkStatus) {
-        if (value.value !is NetworkStatus.Unreachable) {
-            val message = "Use storeError method to save unreachable status"
-            Timber.d(message)
-
-            error(message)
-        }
-
-        storeInRuntime(userWalletId = userWalletId, status = value)
     }
 
     private suspend fun updateInRuntime(
@@ -188,9 +153,5 @@ internal class DefaultNetworksStatusesStoreV2(
                 this[userWalletId.stringValue] = updatedValues
             }
         }
-    }
-
-    private fun createUnreachableStatus(id: SimpleNetworkStatus.Id): SimpleNetworkStatus {
-        return SimpleNetworkStatus(id = id, value = NetworkStatus.Unreachable(address = null))
     }
 }
