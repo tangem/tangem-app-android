@@ -20,7 +20,7 @@ import org.junit.Test
 /**
 [REDACTED_AUTHOR]
  */
-internal class NetworksStatusesStoreInitializationTest {
+internal class InitializationTest {
 
     @Test
     fun `test initialization if cache store is empty`() = runTest {
