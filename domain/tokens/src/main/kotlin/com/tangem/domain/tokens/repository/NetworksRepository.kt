@@ -59,8 +59,6 @@ interface NetworksRepository {
         refresh: Boolean = false,
     ): Set<NetworkStatus>
 
-    fun isNeedToCreateAccountWithoutReserve(network: Network): Boolean
-
     /**
      * Returns list of addresses and crypto currency info of added currencies of [network] in selected wallet [userWalletId]
      */
