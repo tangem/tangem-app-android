@@ -1,5 +1,6 @@
 package com.tangem.domain.tokens
 
+import com.tangem.blockchainsdk.utils.isNeedToCreateAccountWithoutReserve
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.tokens.model.*
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
@@ -8,7 +9,6 @@ import com.tangem.domain.tokens.model.warnings.KaspaWarnings
 import com.tangem.domain.tokens.operations.BaseCurrencyStatusOperations
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
-import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWalletId
@@ -21,7 +21,6 @@ import java.math.BigDecimal
 class GetCurrencyWarningsUseCase(
     private val walletManagersFacade: WalletManagersFacade,
     private val currenciesRepository: CurrenciesRepository,
-    private val networksRepository: NetworksRepository,
     private val dispatchers: CoroutineDispatcherProvider,
     private val currencyChecksRepository: CurrencyChecksRepository,
     private val currencyStatusOperations: BaseCurrencyStatusOperations,
@@ -191,7 +190,7 @@ class GetCurrencyWarningsUseCase(
 
     private fun getNetworkNoAccountWarning(currencyStatus: CryptoCurrencyStatus): CryptoCurrencyWarning? {
         return (currencyStatus.value as? CryptoCurrencyStatus.NoAccount)?.let {
-            if (networksRepository.isNeedToCreateAccountWithoutReserve(network = currencyStatus.currency.network)) {
+            if (isNeedToCreateAccountWithoutReserve(networkId = currencyStatus.currency.network.id.value)) {
                 CryptoCurrencyWarning.TopUpWithoutReserve
             } else {
                 CryptoCurrencyWarning.SomeNetworksNoAccount(
