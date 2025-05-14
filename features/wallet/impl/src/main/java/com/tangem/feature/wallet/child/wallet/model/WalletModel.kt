@@ -67,6 +67,7 @@ internal class WalletModel @Inject constructor(
     private val getWalletsUseCase: GetWalletsUseCase,
     private val shouldShowSaveWalletScreenUseCase: ShouldShowSaveWalletScreenUseCase,
     private val shouldShowMarketsTooltipUseCase: ShouldShowMarketsTooltipUseCase,
+    private val setWalletFirstTimeUsageUseCase: SetWalletFirstTimeUsageUseCase,
     private val canUseBiometryUseCase: CanUseBiometryUseCase,
     private val isWalletsScrollPreviewEnabled: IsWalletsScrollPreviewEnabled,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
@@ -103,6 +104,7 @@ internal class WalletModel @Inject constructor(
         suggestToOpenMarkets()
 
         maybeMigrateNames()
+        maybeSetWalletFirstTimeUsage()
         subscribeToUserWalletsUpdates()
         subscribeOnBalanceHiding()
         subscribeOnSelectedWalletFlow()
@@ -114,6 +116,12 @@ internal class WalletModel @Inject constructor(
     private fun maybeMigrateNames() {
         modelScope.launch {
             walletNameMigrationUseCase()
+        }
+    }
+
+    private fun maybeSetWalletFirstTimeUsage() {
+        modelScope.launch {
+            setWalletFirstTimeUsageUseCase()
         }
     }
 
