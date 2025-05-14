@@ -50,7 +50,6 @@ internal class SetOnrampSuccessContentConverter(
             statusBlock = convertStatuses(
                 status = value.status,
                 externalTxId = value.externalTxId,
-                externalTxUrl = value.externalTxUrl,
             ),
             notification = getNotification(status = value.status, externalTxUrl = value.externalTxUrl),
         )
@@ -78,11 +77,7 @@ internal class SetOnrampSuccessContentConverter(
         null
     }
 
-    private fun convertStatuses(
-        status: OnrampStatus.Status,
-        externalTxId: String?,
-        externalTxUrl: String?,
-    ): ExpressStatusUM {
+    private fun convertStatuses(status: OnrampStatus.Status, externalTxId: String?): ExpressStatusUM {
         val statuses = with(status) {
             persistentListOf(
                 getAwaitingDepositItem(),
@@ -94,7 +89,7 @@ internal class SetOnrampSuccessContentConverter(
 
         return ExpressStatusUM(
             title = resourceReference(R.string.common_transaction_status),
-            link = getStatusLink(status = status, externalTxId = externalTxId, externalTxUrl = externalTxUrl),
+            link = getStatusLink(externalTxId = externalTxId),
             statuses = statuses,
         )
     }
@@ -192,33 +187,15 @@ internal class SetOnrampSuccessContentConverter(
         state = getStatusState(OnrampStatus.Status.Sending),
     )
 
-    private fun getStatusLink(
-        status: OnrampStatus.Status,
-        externalTxId: String?,
-        externalTxUrl: String?,
-    ): ExpressLinkUM {
-        if (externalTxUrl == null) return ExpressLinkUM.Empty
-        return when (status) {
-            OnrampStatus.Status.Verifying,
-            OnrampStatus.Status.Failed,
-            -> {
-                ExpressLinkUM.Content(
-                    icon = R.drawable.ic_arrow_top_right_24,
-                    text = resourceReference(R.string.common_go_to_provider),
-                    onClick = {
-                        goToProviderClick(externalTxUrl)
-                    },
-                )
-            }
-            else -> if (externalTxId != null) {
-                ExpressLinkUM.Content(
-                    icon = R.drawable.ic_copy_24,
-                    text = stringReference(externalTxId),
-                    onClick = { onCopyClick(externalTxId) },
-                )
-            } else {
-                ExpressLinkUM.Empty
-            }
+    private fun getStatusLink(externalTxId: String?): ExpressLinkUM {
+        return if (externalTxId != null) {
+            ExpressLinkUM.Content(
+                icon = R.drawable.ic_copy_24,
+                text = resourceReference(R.string.express_transaction_id, wrappedList(externalTxId)),
+                onClick = { onCopyClick(externalTxId) },
+            )
+        } else {
+            ExpressLinkUM.Empty
         }
     }
 
