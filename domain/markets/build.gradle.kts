@@ -23,9 +23,11 @@ dependencies {
     api(projects.domain.quotes)
     api(projects.domain.wallets)
     api(projects.domain.wallets.models)
+    api(projects.domain.promo)
 
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.tokens)
+    implementation(projects.domain.settings)
 
     api(projects.core.pagination)
 

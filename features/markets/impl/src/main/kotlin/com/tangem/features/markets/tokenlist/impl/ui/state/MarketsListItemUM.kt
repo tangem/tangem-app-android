@@ -4,6 +4,7 @@ import androidx.compose.runtime.Immutable
 import com.tangem.common.ui.charts.state.MarketChartLook
 import com.tangem.common.ui.charts.state.MarketChartRawData
 import com.tangem.core.ui.components.marketprice.PriceChangeType
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.tokens.model.CryptoCurrency
 
 @Immutable
@@ -17,8 +18,9 @@ data class MarketsListItemUM(
     val price: Price,
     val trendPercentText: String,
     val trendType: PriceChangeType,
-    val chardData: MarketChartRawData?,
+    val chartData: MarketChartRawData?,
     val isUnder100kMarketCap: Boolean,
+    val stakingRate: TextReference?,
 ) {
     val chartType: MarketChartLook.Type = when (trendType) {
         PriceChangeType.UP -> MarketChartLook.Type.Growing
