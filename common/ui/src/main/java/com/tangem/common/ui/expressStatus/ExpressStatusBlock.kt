@@ -79,10 +79,7 @@ fun ExpressStatusBlock(state: ExpressStatusUM, modifier: Modifier = Modifier) {
                     )
                     Text(
                         modifier = Modifier.align(Alignment.CenterVertically),
-                        text = resourceReference(
-                            id = R.string.express_transaction_id,
-                            formatArgs = wrappedList(link.text),
-                        ).resolveReference(),
+                        text = link.text.resolveReference(),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         style = TangemTheme.typography.subtitle2,
