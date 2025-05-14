@@ -143,7 +143,6 @@ internal object TokensDomainModule {
     fun provideGetCurrencyWarningsUseCase(
         walletManagersFacade: WalletManagersFacade,
         currenciesRepository: CurrenciesRepository,
-        networksRepository: NetworksRepository,
         currencyChecksRepository: CurrencyChecksRepository,
         dispatchers: CoroutineDispatcherProvider,
         baseCurrencyStatusOperations: BaseCurrencyStatusOperations,
@@ -151,9 +150,8 @@ internal object TokensDomainModule {
         return GetCurrencyWarningsUseCase(
             walletManagersFacade = walletManagersFacade,
             currenciesRepository = currenciesRepository,
-            networksRepository = networksRepository,
-            currencyChecksRepository = currencyChecksRepository,
             dispatchers = dispatchers,
+            currencyChecksRepository = currencyChecksRepository,
             currencyStatusOperations = baseCurrencyStatusOperations,
         )
     }
