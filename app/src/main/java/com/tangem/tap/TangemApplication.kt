@@ -30,6 +30,7 @@ import com.tangem.core.navigation.settings.SettingsManager
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.data.card.TransactionSignerFactory
 import com.tangem.datasource.api.common.MoshiConverter
+import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.api.common.createNetworkLoggingInterceptor
 import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
@@ -228,6 +229,9 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
     private val userWalletBuilderFactory: UserWalletBuilder.Factory
         get() = entryPoint.getUserWalletBuilderFactory()
 
+    private val apiConfigsManager: ApiConfigsManager
+        get() = entryPoint.getApiConfigsManager()
+
     // endregion
 
     private val appScope = MainScope()
@@ -275,6 +279,8 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
     }
 
     fun init() {
+        apiConfigsManager.initialize()
+
         store = createReduxStore()
 
         tangemAppLoggerInitializer.initialize()
@@ -285,12 +291,8 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
         // We need to initialize the toggles and excludedBlockchainsManager before the MainActivity starts using them.
         runBlocking {
             awaitAll(
-                async {
-                    featureTogglesManager.init()
-                },
-                async {
-                    excludedBlockchainsManager.init()
-                },
+                async { featureTogglesManager.init() },
+                async { excludedBlockchainsManager.init() },
             )
             initWithConfigDependency(environmentConfig = environmentConfigStorage.initialize())
         }
