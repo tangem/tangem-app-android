@@ -4,6 +4,7 @@ import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
+import com.tangem.domain.networks.repository.NetworksRepository
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
 import com.tangem.domain.promo.PromoRepository
@@ -18,7 +19,10 @@ import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.operations.BaseCurrenciesStatusesOperations
 import com.tangem.domain.tokens.operations.BaseCurrencyStatusOperations
 import com.tangem.domain.tokens.operations.CachedCurrenciesStatusesOperations
-import com.tangem.domain.tokens.repository.*
+import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.tokens.repository.CurrencyChecksRepository
+import com.tangem.domain.tokens.repository.PolkadotAccountHealthCheckRepository
+import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.tap.domain.tokens.DefaultTokensFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider

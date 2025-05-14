@@ -33,7 +33,7 @@ internal class SendBalanceUpdater @AssistedInject constructor(
                 async {
                     fetchPendingTransactionsUseCase(
                         userWalletId = userWallet.walletId,
-                        networks = setOf(cryptoCurrency.network),
+                        network = cryptoCurrency.network,
                     )
                 },
                 // we should update tx history and network for new balances
