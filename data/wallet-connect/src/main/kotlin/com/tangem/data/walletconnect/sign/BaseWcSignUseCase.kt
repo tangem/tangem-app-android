@@ -35,16 +35,6 @@ internal abstract class BaseWcSignUseCase<MiddleAction, SignModel> :
         )
     }
 
-    init {
-        analytics.send(
-            WcAnalyticEvents.SignatureRequestReceived(
-                session = context.session,
-                rawRequest = context.rawSdkRequest,
-                network = context.network,
-            ),
-        )
-    }
-
     override suspend fun onCancel(currentState: WcSignState<SignModel>) {
         defaultReject()
     }
