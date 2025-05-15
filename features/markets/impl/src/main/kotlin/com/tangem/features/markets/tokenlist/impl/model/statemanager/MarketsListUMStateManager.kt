@@ -28,6 +28,7 @@ internal class MarketsListUMStateManager(
     private val onTokenClick: (MarketsListItemUM) -> Unit,
     private val onStakingNotificationClick: () -> Unit,
     private val onStakingNotificationCloseClick: () -> Unit,
+    private val onShowTokensUnder100kClicked: () -> Unit,
 ) {
 
     private var sortByBottomSheetIsShown
@@ -148,6 +149,7 @@ internal class MarketsListUMStateManager(
                     showUnder100kTokensNotificationWasHidden = false,
                     showUnder100kTokensNotification = true,
                     onShowTokensUnder100kClicked = {
+                        onShowTokensUnder100kClicked()
                         state.update { s ->
                             (s.list as? ListUM.Content)?.let {
                                 s.copy(
