@@ -1,4 +1,4 @@
-package com.tangem.datasource.local.network.converter
+package com.tangem.data.networks.converters
 
 import com.tangem.datasource.local.network.entity.NetworkStatusDM
 import com.tangem.domain.tokens.model.NetworkStatus
@@ -9,7 +9,7 @@ import com.tangem.utils.converter.Converter
  *
 [REDACTED_AUTHOR]
  */
-object NetworkStatusDataModelConverter : Converter<NetworkStatus, NetworkStatusDM?> {
+internal object NetworkStatusDataModelConverter : Converter<NetworkStatus, NetworkStatusDM?> {
 
     override fun convert(value: NetworkStatus): NetworkStatusDM? {
         return when (val status = value.value) {
