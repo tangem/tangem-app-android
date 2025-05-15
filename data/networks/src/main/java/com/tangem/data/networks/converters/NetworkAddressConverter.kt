@@ -6,43 +6,49 @@ import com.tangem.utils.converter.TwoWayConverter
 import timber.log.Timber
 
 /**
- * Converter from [Set<NetworkStatusDM.Address>] to [NetworkAddress] and vice versa
+ * Converter from [NetworkAddressConverter.Value] to [NetworkAddress] and vice versa
  *
 [REDACTED_AUTHOR]
  */
-internal class NetworkAddressConverter(
-    private val selectedAddress: String,
-) : TwoWayConverter<Set<NetworkStatusDM.Address>, NetworkAddress> {
+internal object NetworkAddressConverter : TwoWayConverter<NetworkAddressConverter.Value, NetworkAddress> {
 
-    override fun convert(value: Set<NetworkStatusDM.Address>): NetworkAddress {
-        val defaultAddress = value
-            .firstOrNull { it.value == selectedAddress }
+    data class Value(
+        val selectedAddress: String,
+        val addresses: Set<NetworkStatusDM.Address>,
+    )
+
+    override fun convert(value: Value): NetworkAddress {
+        val defaultAddress = value.addresses
+            .firstOrNull { it.value == value.selectedAddress }
             ?.let(::toNetworkAddress)
 
         requireNotNull(defaultAddress) { "Selected address must not be null" }
 
-        return if (value.size != 1) {
+        return if (value.addresses.size != 1) {
             NetworkAddress.Selectable(
                 defaultAddress = defaultAddress,
-                availableAddresses = value.mapTo(destination = hashSetOf(), transform = ::toNetworkAddress),
+                availableAddresses = value.addresses.mapTo(destination = hashSetOf(), transform = ::toNetworkAddress),
             )
         } else {
             NetworkAddress.Single(defaultAddress = defaultAddress)
         }
     }
 
-    override fun convertBack(value: NetworkAddress): Set<NetworkStatusDM.Address> {
-        return value.availableAddresses
-            .map { address ->
-                NetworkStatusDM.Address(
-                    value = address.value,
-                    type = when (address.type) {
-                        NetworkAddress.Address.Type.Primary -> NetworkStatusDM.Address.Type.Primary
-                        NetworkAddress.Address.Type.Secondary -> NetworkStatusDM.Address.Type.Secondary
-                    },
-                )
-            }
-            .toSet()
+    override fun convertBack(value: NetworkAddress): Value {
+        return Value(
+            selectedAddress = value.defaultAddress.value,
+            addresses = value.availableAddresses
+                .map { address ->
+                    NetworkStatusDM.Address(
+                        value = address.value,
+                        type = when (address.type) {
+                            NetworkAddress.Address.Type.Primary -> NetworkStatusDM.Address.Type.Primary
+                            NetworkAddress.Address.Type.Secondary -> NetworkStatusDM.Address.Type.Secondary
+                        },
+                    )
+                }
+                .toSet(),
+        )
     }
 
     private fun toNetworkAddress(address: NetworkStatusDM.Address): NetworkAddress.Address {
