@@ -5,6 +5,7 @@ import com.tangem.blockchain.blockchains.ethereum.EthereumUtils.toKeccak
 import com.tangem.blockchain.common.HEX_PREFIX
 import com.tangem.blockchain.common.UnmarshalHelper
 import com.tangem.blockchain.common.WalletManager
+import com.tangem.blockchain.extensions.formatHex
 import com.tangem.blockchain.extensions.isAscii
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toDecompressedPublicKey
@@ -81,15 +82,12 @@ internal class WcEthMessageSignUseCase @AssistedInject constructor(
 object LegacySdkHelper {
     private const val ETH_MESSAGE_PREFIX = "\u0019Ethereum Signed Message:\n"
 
-    internal fun prepareToSendMessageData(
-        signedHash: ByteArray,
-        hashToSign: ByteArray,
-        walletManager: WalletManager,
-    ): String = UnmarshalHelper.unmarshalSignatureExtended(
-        signature = signedHash,
-        hash = hashToSign,
-        publicKey = walletManager.wallet.publicKey.blockchainKey.toDecompressedPublicKey(),
-    ).asRSVLegacyEVM().toHexString()
+    fun prepareToSendMessageData(signedHash: ByteArray, hashToSign: ByteArray, walletManager: WalletManager): String =
+        UnmarshalHelper.unmarshalSignatureExtended(
+            signature = signedHash,
+            hash = hashToSign,
+            publicKey = walletManager.wallet.publicKey.blockchainKey.toDecompressedPublicKey(),
+        ).asRSVLegacyEVM().toHexString().formatHex()
 
     fun createMessageData(message: String): ByteArray {
         val messageData = try {
