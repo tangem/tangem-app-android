@@ -195,6 +195,8 @@
   <string name="common_server_unavailable">The server is not available, please try again later</string>
   <string name="common_share">Share</string>
   <string name="common_share_link">Share Link</string>
+  <string name="common_show_less">Show less</string>
+  <string name="common_show_more">Show more</string>
   <string name="common_sign">Sign</string>
   <string name="common_sign_and_send">Sign and send</string>
   <string name="common_stake">Stake</string>
@@ -452,7 +454,6 @@
   <string name="markets_sort_by_top_losers_title">Top Losers</string>
   <string name="markets_sort_by_trending_title">Trending</string>
   <string name="markets_staking_banner_description_placeholder">Staking is the easiest way to receive rewards on your crypto. %s</string>
-  <string name="markets_staking_banner_description_show_more">Show more</string>
   <string name="markets_staking_banner_title">Earn up to %s APY</string>
   <string name="markets_token_details_about_token_title">About %s</string>
   <plurals name="markets_token_details_amount_exchanges">
@@ -560,6 +561,7 @@
   <string name="nft_receive_unavailable_section_title">Not Added</string>
   <string name="nft_send">Send NFT</string>
   <string name="nft_traits_title">Traits</string>
+  <string name="nft_untitled_collection">Untitled collection</string>
   <string name="nft_wallet_count">%1$d NFTs in %2$d collection</string>
   <string name="nft_wallet_receive_nft">Tap here to receive first NFT</string>
   <string name="nft_wallet_title">NFT collections</string>
@@ -1204,6 +1206,8 @@
   <string name="wallet_promo_banner_button_title">Get now with 10% off</string>
   <string name="wallet_promo_banner_description">Access 13,000+ cryptocurrencies. Buy, sell, swap, and stake with a single tap.\nLink up to three cards for a backup.</string>
   <string name="wallet_promo_banner_title">Discover Tangem Wallet</string>
+  <string name="wallet_settings_push_notifications_description">Stay notified on wallet incoming transactions and Tangem updates.</string>
+  <string name="wallet_settings_push_notifications_title">Push Notifications</string>
   <string name="wallet_settings_title">Wallet settings</string>
   <string name="wallet_title">Tangem</string>
   <string name="warning_access_denied_message">Use %s or scan a card/ring to unlock access to your wallet</string>
@@ -1326,6 +1330,8 @@
   <string name="wc_disconnect_all">Disconnect all</string>
   <string name="wc_disconnect_all_alert_desc">Text about discnected all dApps</string>
   <string name="wc_disconnect_all_alert_title">Disconect All dApps</string>
+  <string name="wc_estimated_wallet_changes">Estimated wallet changes</string>
+  <string name="wc_malicious_transaction">Malicious transaction</string>
   <string name="wc_missing_required_network_description">Add the %s network to your profile for this wallet</string>
   <string name="wc_missing_required_network_title">The wallet has no required networks</string>
   <string name="wc_new_connection">New connection</string>
