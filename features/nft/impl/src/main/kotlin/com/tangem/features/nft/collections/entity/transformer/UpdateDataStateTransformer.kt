@@ -15,7 +15,6 @@ import kotlinx.collections.immutable.toPersistentList
 @Suppress("LongParameterList")
 internal class UpdateDataStateTransformer(
     private val nftCollections: List<NFTCollections>,
-    private val searchQuery: String,
     private val onReceiveClick: () -> Unit,
     private val onRetryClick: () -> Unit,
     private val onExpandCollectionClick: (NFTCollection) -> Unit,
@@ -55,7 +54,7 @@ internal class UpdateDataStateTransformer(
                         .map { it.content }
                         .asSequence()
                         .filterIsInstance<NFTCollections.Content.Collections>()
-                        .map { it.collections.orEmpty().transform(prevState, searchQuery) }
+                        .map { it.collections.orEmpty().transform(prevState) }
                         .flatten()
                         .toPersistentList(),
                     warnings = transformNotifications(),
@@ -74,48 +73,23 @@ internal class UpdateDataStateTransformer(
         )
     }
 
-    private fun List<NFTCollection>.transform(
-        state: NFTCollectionsStateUM,
-        query: String,
-    ): ImmutableList<NFTCollectionUM> = mapNotNull {
-        val assetsFulfillQuery = if (query.isEmpty()) {
-            true
-        } else {
-            when (val assets = it.assets) {
-                is NFTCollection.Assets.Empty,
-                is NFTCollection.Assets.Failed,
-                is NFTCollection.Assets.Loading,
-                -> false
-                is NFTCollection.Assets.Value -> {
-                    assets.items.any { asset ->
-                        asset.name?.lowercase()?.contains(query.lowercase()) == true
-                    }
-                }
-            }
-        }
-
-        val collectionFulfillQuery = query.isEmpty() || it.name?.lowercase()?.contains(query.lowercase()) == true
-
-        if (collectionFulfillQuery || assetsFulfillQuery) {
-            NFTCollectionUM(
-                id = it.collectionIdProvider(),
-                networkIconId = getActiveIconRes(it.network.id.value),
-                name = it.name,
-                description = TextReference.PluralRes(
-                    R.plurals.nft_collections_count,
-                    it.count,
-                    wrappedList(it.count),
-                ),
-                logoUrl = it.logoUrl,
-                assets = it.transformAssets(),
-                onExpandClick = {
-                    onExpandCollectionClick(it)
-                },
-                isExpanded = it.isExpanded(state),
-            )
-        } else {
-            null
-        }
+    private fun List<NFTCollection>.transform(state: NFTCollectionsStateUM): ImmutableList<NFTCollectionUM> = map {
+        NFTCollectionUM(
+            id = it.collectionIdProvider(),
+            networkIconId = getActiveIconRes(it.network.id.value),
+            name = it.name.orEmpty(),
+            description = TextReference.PluralRes(
+                R.plurals.nft_collections_count,
+                it.count,
+                wrappedList(it.count),
+            ),
+            logoUrl = it.logoUrl,
+            assets = it.transformAssets(),
+            onExpandClick = {
+                onExpandCollectionClick(it)
+            },
+            isExpanded = it.isExpanded(state),
+        )
     }.toPersistentList()
 
     private fun transformNotifications(): ImmutableList<NFTCollectionsWarningUM> = buildList {
