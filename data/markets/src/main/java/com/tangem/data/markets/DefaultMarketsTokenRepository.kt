@@ -113,7 +113,7 @@ internal class DefaultMarketsTokenRepository(
             tangemTechApi = tangemTechApi,
             marketsApi = marketsApi,
             analyticsEventHandler = analyticsEventHandler,
-            onApiError = {
+            onApiResponseError = {
                 analyticsEventHandler.send(createListErrorEvent(it).toEvent())
             },
         )
