@@ -5,6 +5,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.essenty.lifecycle.subscribe
+import com.tangem.common.routing.RoutingFeatureToggle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -32,6 +33,7 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
     txHistoryComponentFactory: TxHistoryComponent.Factory,
     txHistoryFeatureToggles: TxHistoryFeatureToggles,
     onrampFeatureToggles: OnrampFeatureToggles,
+    routingFeatureToggle: RoutingFeatureToggle,
     deepLinksRegistry: DeepLinksRegistry,
 ) : TokenDetailsComponent, AppComponentContext by appComponentContext {
 
@@ -51,20 +53,22 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
             onResume = model::onResume,
         )
 
-        val deeplinks = buildList {
-            if (!onrampFeatureToggles.isFeatureEnabled) {
-                add(
-                    BuyCurrencyDeepLink(
-                        onReceive = model::onBuyCurrencyDeepLink,
-                    ),
-                )
+        if (!routingFeatureToggle.isDeepLinkNavigationEnabled) {
+            val deeplinks = buildList {
+                if (!onrampFeatureToggles.isFeatureEnabled) {
+                    add(
+                        BuyCurrencyDeepLink(
+                            onReceive = model::onBuyCurrencyDeepLink,
+                        ),
+                    )
+                }
             }
-        }
 
-        registerDeepLinks(
-            registry = deepLinksRegistry,
-            deeplinks,
-        )
+            registerDeepLinks(
+                registry = deepLinksRegistry,
+                deepLinks = deeplinks,
+            )
+        }
     }
 
     private val tokenMarketBlockComponent = params.currency.toTokenMarketParam()?.let { tokenMarketParams ->
