@@ -91,7 +91,10 @@ internal class ReferralModel @Inject constructor(
             uiState = uiState.copy(referralInfoState = ReferralInfoState.Loading)
             modelScope.launch {
                 runCatching { referralInteractor.startReferral(params.userWalletId) }
-                    .onSuccess(::showContent)
+                    .onSuccess {
+                        analyticsEventHandler.send(ReferralEvents.ParticipateSuccessful)
+                        showContent(it)
+                    }
                     .onFailure { throwable ->
                         if (throwable is ReferralError.UserCancelledException) {
                             lastReferralData?.let { referralData ->
