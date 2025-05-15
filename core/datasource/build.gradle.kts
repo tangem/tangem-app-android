@@ -23,6 +23,7 @@ dependencies {
     /** Project */
     implementation(projects.core.analytics)
     implementation(projects.core.utils)
+    implementation(projects.core.res)
     implementation(projects.libs.auth)
     implementation(projects.domain.appTheme.models)
     implementation(projects.domain.core)

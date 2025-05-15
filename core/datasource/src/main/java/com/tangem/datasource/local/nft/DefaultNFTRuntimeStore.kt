@@ -122,7 +122,7 @@ internal class DefaultNFTRuntimeStore(
                     )
                 }
                 ?.filter { it.count > 0 }
-                ?.sortedBy { it.name },
+                ?.sortedBy { it.name?.lowercase() },
             source = this.source,
         )
 
