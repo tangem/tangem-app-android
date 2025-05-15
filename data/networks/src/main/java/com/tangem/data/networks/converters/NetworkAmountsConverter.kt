@@ -1,9 +1,9 @@
-package com.tangem.datasource.local.network.converter
+package com.tangem.data.networks.converters
 
-import com.tangem.common.extensions.mapNotNullValues
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyAmountStatus
 import com.tangem.utils.converter.TwoWayConverter
+import com.tangem.utils.extensions.mapNotNullValues
 import java.math.BigDecimal
 
 private typealias AmountsDataModel = Map<String, BigDecimal>
@@ -14,7 +14,7 @@ private typealias AmountsDomainModel = Map<CryptoCurrency.ID, CryptoCurrencyAmou
  *
 [REDACTED_AUTHOR]
  */
-object NetworkAmountsConverter : TwoWayConverter<AmountsDataModel, AmountsDomainModel> {
+internal object NetworkAmountsConverter : TwoWayConverter<AmountsDataModel, AmountsDomainModel> {
 
     override fun convert(value: AmountsDataModel): AmountsDomainModel {
         return value
