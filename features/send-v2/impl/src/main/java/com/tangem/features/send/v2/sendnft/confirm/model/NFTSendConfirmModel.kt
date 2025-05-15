@@ -12,7 +12,7 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.datasource.local.nft.converter.NFTSdkAssetConverter
 import com.tangem.domain.feedback.GetCardInfoUseCase
 import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
@@ -228,6 +228,7 @@ internal class NFTSendConfirmModel @Inject constructor(
                     it.copy(
                         confirmUM = NFTSendConfirmInitialStateTransformer(
                             isShowTapHelp = isShowTapHelp,
+                            walletName = stringReference(userWallet.name),
                         ).transform(uiState.value.confirmUM),
                     )
                 }
@@ -357,6 +358,7 @@ internal class NFTSendConfirmModel @Inject constructor(
                     analyticsEventHandler = analyticsEventHandler,
                     cryptoCurrency = cryptoCurrencyStatus.currency,
                     analyticsCategoryName = analyticsCategoryName,
+                    appCurrency = params.appCurrency,
                 ).transform(uiState.value.confirmUM),
             )
         }
@@ -369,15 +371,13 @@ internal class NFTSendConfirmModel @Inject constructor(
             transform = { state, route -> state to route },
         ).onEach { (state, _) ->
             val confirmUM = state.confirmUM
-            val isReadyToSend = confirmUM is ConfirmUM.Content && !confirmUM.isSending
+            val confirmUMContent = confirmUM as? ConfirmUM.Content
+            val isReadyToSend = confirmUMContent != null && !confirmUM.isSending
             params.callback.onResult(
                 state.copy(
                     navigationUM = NavigationUM.Content(
-                        title = resourceReference(
-                            id = R.string.send_summary_title,
-                            formatArgs = wrappedList(params.cryptoCurrencyStatus.currency.name),
-                        ),
-                        subtitle = null,
+                        title = resourceReference(R.string.nft_send),
+                        subtitle = confirmUMContent?.walletName,
                         backIconRes = R.drawable.ic_close_24,
                         backIconClick = {
                             analyticsEventHandler.send(
