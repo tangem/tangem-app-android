@@ -8,11 +8,12 @@ import com.google.firebase.crashlytics.recordException
 import com.google.firebase.ktx.Firebase
 import com.tangem.core.analytics.api.ExceptionLogger
 import com.tangem.core.analytics.api.EventLogger
+import com.tangem.core.analytics.api.UserIdHolder
 
 /**
 [REDACTED_AUTHOR]
  */
-interface FirebaseAnalyticsClient : EventLogger, ExceptionLogger
+interface FirebaseAnalyticsClient : EventLogger, ExceptionLogger, UserIdHolder
 
 internal class FirebaseClient : FirebaseAnalyticsClient {
 
@@ -20,6 +21,14 @@ internal class FirebaseClient : FirebaseAnalyticsClient {
     private val fbCrashlytics = Firebase.crashlytics
 
     private val eventConverter = FirebaseAnalyticsEventConverter()
+
+    override fun setUserId(userId: String) {
+        Firebase.analytics.setUserId(userId)
+    }
+
+    override fun clearUserId() {
+        Firebase.analytics.setUserId(null)
+    }
 
     override fun logEvent(event: String, params: Map<String, String>) {
         fbAnalytics.logEvent(
