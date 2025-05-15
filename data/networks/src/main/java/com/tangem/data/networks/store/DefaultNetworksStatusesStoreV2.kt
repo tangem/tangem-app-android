@@ -1,10 +1,10 @@
 package com.tangem.data.networks.store
 
 import androidx.datastore.core.DataStore
+import com.tangem.data.networks.converters.NetworkStatusDataModelConverter
 import com.tangem.data.networks.converters.SimpleNetworkStatusConverter
 import com.tangem.data.networks.models.SimpleNetworkStatus
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
-import com.tangem.datasource.local.network.converter.NetworkStatusDataModelConverter
 import com.tangem.datasource.local.network.entity.NetworkStatusDM
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.tokens.model.Network
