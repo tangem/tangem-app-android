@@ -14,22 +14,24 @@ internal object NetworkStatusDataModelConverter : Converter<NetworkStatus, Netwo
     override fun convert(value: NetworkStatus): NetworkStatusDM? {
         return when (val status = value.value) {
             is NetworkStatus.Verified -> {
+                val address = NetworkAddressConverter.convertBack(value = status.address)
+
                 NetworkStatusDM.Verified(
                     networkId = value.network.id,
                     derivationPath = NetworkDerivationPathConverter.convertBack(value = value.network.derivationPath),
-                    selectedAddress = status.address.defaultAddress.value,
-                    availableAddresses = NetworkAddressConverter(selectedAddress = status.address.defaultAddress.value)
-                        .convertBack(value = status.address),
+                    selectedAddress = address.selectedAddress,
+                    availableAddresses = address.addresses,
                     amounts = NetworkAmountsConverter.convertBack(value = status.amounts),
                 )
             }
             is NetworkStatus.NoAccount -> {
+                val address = NetworkAddressConverter.convertBack(value = status.address)
+
                 NetworkStatusDM.NoAccount(
                     networkId = value.network.id,
                     derivationPath = NetworkDerivationPathConverter.convertBack(value = value.network.derivationPath),
-                    selectedAddress = status.address.defaultAddress.value,
-                    availableAddresses = NetworkAddressConverter(selectedAddress = status.address.defaultAddress.value)
-                        .convertBack(value = status.address),
+                    selectedAddress = address.selectedAddress,
+                    availableAddresses = address.addresses,
                     amountToCreateAccount = status.amountToCreateAccount,
                     errorMessage = status.errorMessage,
                 )
