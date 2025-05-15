@@ -1,9 +1,6 @@
 package com.tangem.data.networks.converters
 
 import com.tangem.data.networks.models.SimpleNetworkStatus
-import com.tangem.datasource.local.network.converter.NetworkAddressConverter
-import com.tangem.datasource.local.network.converter.NetworkAmountsConverter
-import com.tangem.datasource.local.network.converter.NetworkDerivationPathConverter
 import com.tangem.datasource.local.network.entity.NetworkStatusDM
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.tokens.model.NetworkStatus
