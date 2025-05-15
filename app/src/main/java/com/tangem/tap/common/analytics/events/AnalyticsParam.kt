@@ -104,7 +104,6 @@ sealed class AnalyticsParam {
         const val PERMISSION_TYPE = "Permission Type"
         const val PRODUCT_TYPE = "Product Type"
         const val FIRMWARE = "Firmware"
-        const val USER_WALLET_ID = "User Wallet ID"
         const val CURRENCY = "Currency"
         const val ERROR_DESCRIPTION = "Error Description"
         const val ERROR_CODE = "Error Code"
