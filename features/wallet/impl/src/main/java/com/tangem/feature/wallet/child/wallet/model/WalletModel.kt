@@ -6,6 +6,7 @@ import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.routing.RoutingFeatureToggle
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
@@ -82,6 +83,7 @@ internal class WalletModel @Inject constructor(
     private val deepLinksRegistry: DeepLinksRegistry,
     private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
     private val appRouter: AppRouter,
+    private val routingFeatureToggle: RoutingFeatureToggle,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
 ) : Model() {
@@ -213,10 +215,13 @@ internal class WalletModel @Inject constructor(
                     if (selectedWallet.isMultiCurrency) {
                         selectedWalletAnalyticsSender.send(selectedWallet)
                     }
-                    // Registering here, because `WalletDeepLinksHandler` unregisters deeplink when scope is cancelled
-                    // This is temporary solution, will be removed with complete deeplink navigation overhaul
-                    addReferralDeepLink(selectedWallet)
-                    walletDeepLinksHandler.registerForWallet(scope = modelScope, userWallet = selectedWallet)
+
+                    if (!routingFeatureToggle.isDeepLinkNavigationEnabled) {
+                        // Registering here, because `WalletDeepLinksHandler` unregisters deeplink when scope is cancelled
+                        // This is temporary solution, will be removed with complete deeplink navigation overhaul
+                        addReferralDeepLink(selectedWallet)
+                        walletDeepLinksHandler.registerForWallet(scope = modelScope, userWallet = selectedWallet)
+                    }
                     subscribeOnExpressTransactionsUpdates(selectedWallet)
                     subscribeToScreenBackgroundState(selectedWallet)
                 }

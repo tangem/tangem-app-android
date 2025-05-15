@@ -128,7 +128,7 @@
                 <category android:name="android.intent.category.BROWSABLE" />
 
                 <data
-                    android:host="*"
+                    android:host="onramp"
                     android:scheme="tangem" />
             </intent-filter>
 
@@ -150,7 +150,7 @@
                 <category android:name="android.intent.category.BROWSABLE" />
 
                 <data
-                    android:host="*"
+                    android:host="referral"
                     android:scheme="tangem" />
             </intent-filter>
 
