@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.loaders.implementors
 
+import com.tangem.common.routing.RoutingFeatureToggle
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.deeplink.DeepLinksRegistry
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -40,6 +41,7 @@ internal class MultiWalletContentLoaderFactory @Inject constructor(
     private val nftFeatureToggles: NFTFeatureToggles,
     private val walletsRepository: WalletsRepository,
     private val getNFTCollectionsUseCase: GetNFTCollectionsUseCase,
+    private val routingFeatureToggle: RoutingFeatureToggle,
 ) {
 
     fun create(userWallet: UserWallet, clickIntents: WalletClickIntents): WalletContentLoader {
@@ -62,6 +64,7 @@ internal class MultiWalletContentLoaderFactory @Inject constructor(
             nftFeatureToggles = nftFeatureToggles,
             walletsRepository = walletsRepository,
             getNFTCollectionsUseCase = getNFTCollectionsUseCase,
+            routingFeatureToggle = routingFeatureToggle,
         )
     }
 }
