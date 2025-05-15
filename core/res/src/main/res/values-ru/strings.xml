@@ -199,6 +199,7 @@
   <string name="common_server_unavailable">Сервер недоступен, повторите попытку позднее</string>
   <string name="common_share">Поделиться</string>
   <string name="common_share_link">Поделиться ссылкой</string>
+  <string name="common_show_more">Показать больше</string>
   <string name="common_sign">Подписать</string>
   <string name="common_sign_and_send">Подписать и отправить</string>
   <string name="common_stake">Застейкать</string>
@@ -454,7 +455,6 @@
   <string name="markets_sort_by_top_losers_title">Лидеры падения</string>
   <string name="markets_sort_by_trending_title">В тренде</string>
   <string name="markets_staking_banner_description_placeholder">Стейкинг — простой способ получать доход с вашей криптовалюты. %s</string>
-  <string name="markets_staking_banner_description_show_more">Показать больше</string>
   <string name="markets_staking_banner_title">Получайте до %s APY</string>
   <string name="markets_token_details_about_token_title">О %s</string>
   <plurals name="markets_token_details_amount_exchanges">
