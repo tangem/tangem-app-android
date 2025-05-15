@@ -393,7 +393,7 @@ class WalletConnectSdkHelper {
                         signature = signedHash,
                         hash = hashToSign,
                         publicKey = wallet.publicKey.blockchainKey.toDecompressedPublicKey(),
-                    ).asRSVLegacyEVM().toHexString()
+                    ).asRSVLegacyEVM().toHexString().formatHex()
                 }
             }
             is CompletionResult.Failure -> {
