@@ -159,8 +159,6 @@ internal class SendFeeModel @Inject constructor(
 
                 saveResult()
             }
-        } else {
-            saveResult()
         }
     }
 
@@ -198,6 +196,7 @@ internal class SendFeeModel @Inject constructor(
         )
         val params = params as? SendFeeComponentParams.FeeParams ?: return
         params.callback.onFeeResult(uiState.value)
+        params.onNextClick()
     }
 
     private fun checkLoadFee() {
@@ -272,10 +271,7 @@ internal class SendFeeModel @Inject constructor(
                     primaryButton = ButtonsUM.PrimaryButtonUM(
                         text = resourceReference(R.string.common_continue),
                         isEnabled = state.isPrimaryButtonEnabled,
-                        onClick = {
-                            onNextClick()
-                            params.onNextClick()
-                        },
+                        onClick = ::onNextClick,
                     ),
                     prevButton = null,
                     secondaryPairButtonsUM = null,
