@@ -1,5 +1,6 @@
 package com.tangem.data.nft
 
+import android.content.res.Resources
 import arrow.core.Either
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
@@ -48,6 +49,7 @@ internal class DefaultNFTRepository @Inject constructor(
     private val excludedBlockchains: ExcludedBlockchains,
     private val userWalletsStore: UserWalletsStore,
     private val nftFeatureToggles: NFTFeatureToggles,
+    resources: Resources,
 ) : NFTRepository {
 
     private val networkJobs = ConcurrentHashMap<Network, JobHolder>()
@@ -59,6 +61,7 @@ internal class DefaultNFTRepository @Inject constructor(
 
     private val collectionIdConverter = NFTSdkCollectionIdentifierConverter
     private val assetIdConverter = NFTSdkAssetIdentifierConverter
+    private val nftSdkCollectionConverter by lazy { NFTSdkCollectionConverter(resources) }
 
     override fun observeCollections(userWalletId: UserWalletId, networks: List<Network>): Flow<List<NFTCollections>> =
         flow { emitAll(observeCollectionsInternal(userWalletId, networks)) }
@@ -319,7 +322,7 @@ internal class DefaultNFTRepository @Inject constructor(
                 content = NFTCollections.Content.Collections(
                     collections = collections
                         .map { collection ->
-                            NFTSdkCollectionConverter.convert(network to collection)
+                            nftSdkCollectionConverter.convert(network to collection)
                         }
                         .filter {
                             it.id !is NFTCollection.Identifier.Unknown
@@ -417,7 +420,7 @@ internal class DefaultNFTRepository @Inject constructor(
                     content = NFTCollections.Content.Collections(
                         collections = it
                             ?.map { collection ->
-                                NFTSdkCollectionConverter.convert(network to collection)
+                                nftSdkCollectionConverter.convert(network to collection)
                             }
                             ?.filter {
                                 it.id !is NFTCollection.Identifier.Unknown
