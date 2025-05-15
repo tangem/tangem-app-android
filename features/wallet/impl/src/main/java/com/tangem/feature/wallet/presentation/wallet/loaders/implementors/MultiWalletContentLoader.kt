@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.loaders.implementors
 
+import com.tangem.common.routing.RoutingFeatureToggle
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.deeplink.DeepLinksRegistry
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -46,6 +47,7 @@ internal class MultiWalletContentLoader(
     private val deepLinksRegistry: DeepLinksRegistry,
     private val nftFeatureToggles: NFTFeatureToggles,
     private val walletsRepository: WalletsRepository,
+    private val routingFeatureToggle: RoutingFeatureToggle,
 ) : WalletContentLoader(id = userWallet.walletId) {
 
     override fun create(): List<WalletSubscriber> {
@@ -61,6 +63,7 @@ internal class MultiWalletContentLoader(
                 applyTokenListSortingUseCase = applyTokenListSortingUseCase,
                 runPolkadotAccountHealthCheckUseCase = runPolkadotAccountHealthCheckUseCase,
                 deepLinksRegistry = deepLinksRegistry,
+                routingFeatureToggle = routingFeatureToggle,
             ).let(::add)
             if (nftFeatureToggles.isNFTEnabled) {
                 WalletNFTListSubscriber(
