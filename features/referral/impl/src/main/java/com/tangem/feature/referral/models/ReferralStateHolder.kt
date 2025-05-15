@@ -39,7 +39,7 @@ internal data class ReferralStateHolder(
             val onParticipateClicked: () -> Unit,
         ) : ReferralInfoState, ReferralInfoContentState
 
-        object Loading : ReferralInfoState
+        data object Loading : ReferralInfoState
     }
 
     data class ErrorSnackbar(
