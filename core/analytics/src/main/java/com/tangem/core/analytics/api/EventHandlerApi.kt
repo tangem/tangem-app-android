@@ -18,6 +18,11 @@ interface AnalyticsExceptionHandler {
     fun sendException(event: ExceptionAnalyticsEvent)
 }
 
+interface AnalyticsUserIdHandler {
+    fun setUserId(userId: String)
+    fun clearUserId()
+}
+
 interface AnalyticsHandler : AnalyticsEventHandler {
 
     fun id(): String
