@@ -14,15 +14,19 @@ import com.tangem.utils.converter.Converter
 internal object SimpleNetworkStatusConverter : Converter<NetworkStatusDM, SimpleNetworkStatus> {
 
     override fun convert(value: NetworkStatusDM): SimpleNetworkStatus {
-        val address = NetworkAddressConverter(selectedAddress = value.selectedAddress)
-            .convert(value = value.availableAddresses)
+        val address = NetworkAddressConverter.convert(
+            value = NetworkAddressConverter.Value(
+                selectedAddress = value.selectedAddress,
+                addresses = value.availableAddresses,
+            ),
+        )
 
         val status = when (value) {
             is NetworkStatusDM.Verified -> {
                 NetworkStatus.Verified(
                     address = address,
                     amounts = NetworkAmountsConverter.convert(value = value.amounts),
-                    pendingTransactions = mapOf(),
+                    pendingTransactions = emptyMap(),
                     source = StatusSource.CACHE,
                 )
             }
