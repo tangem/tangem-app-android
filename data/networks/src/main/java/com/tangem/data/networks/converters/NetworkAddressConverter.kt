@@ -1,4 +1,4 @@
-package com.tangem.datasource.local.network.converter
+package com.tangem.data.networks.converters
 
 import com.tangem.datasource.local.network.entity.NetworkStatusDM
 import com.tangem.domain.tokens.model.NetworkAddress
@@ -10,7 +10,7 @@ import timber.log.Timber
  *
 [REDACTED_AUTHOR]
  */
-class NetworkAddressConverter(
+internal class NetworkAddressConverter(
     private val selectedAddress: String,
 ) : TwoWayConverter<Set<NetworkStatusDM.Address>, NetworkAddress> {
 
