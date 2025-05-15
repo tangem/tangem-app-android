@@ -1,6 +1,7 @@
 package com.tangem.feature.wallet.presentation.wallet.subscribers
 
 import arrow.core.getOrElse
+import com.tangem.common.routing.RoutingFeatureToggle
 import com.tangem.core.deeplink.DeepLinksRegistry
 import com.tangem.core.deeplink.global.ReferralDeepLink
 import com.tangem.core.deeplink.global.SellCurrencyDeepLink
@@ -39,6 +40,7 @@ internal abstract class BasicTokenListSubscriber(
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val runPolkadotAccountHealthCheckUseCase: RunPolkadotAccountHealthCheckUseCase,
     private val deepLinksRegistry: DeepLinksRegistry,
+    private val routingFeatureToggle: RoutingFeatureToggle,
 ) : WalletSubscriber() {
 
     private val sendAnalyticsJobHolder = JobHolder()
@@ -56,9 +58,11 @@ internal abstract class BasicTokenListSubscriber(
                 }
                 .distinctUntilChanged()
                 .onEach { maybeTokenList ->
-                    coroutineScope.launch {
-                        onTokenListReceived(maybeTokenList)
-                    }.saveIn(onTokenListReceivedJobHolder)
+                    if (!routingFeatureToggle.isDeepLinkNavigationEnabled) {
+                        coroutineScope.launch {
+                            onTokenListReceived(maybeTokenList)
+                        }.saveIn(onTokenListReceivedJobHolder)
+                    }
 
                     coroutineScope.launch { startCheck(maybeTokenList) }
                 },
