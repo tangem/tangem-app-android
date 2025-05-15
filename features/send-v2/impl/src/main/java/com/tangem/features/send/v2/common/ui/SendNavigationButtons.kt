@@ -113,7 +113,7 @@ private fun SendDoneButtons(pairButtonsUM: ButtonsUM.SecondaryPairButtonsUM?, mo
                 iconResId = wrappedPairButtonsUM.leftIconResId!!,
                 onClick = {
                     singleEvent {
-                        wrappedPairButtonsUM.onLeftClick
+                        wrappedPairButtonsUM.onLeftClick()
                     }
                 },
                 modifier = Modifier.weight(1f),
