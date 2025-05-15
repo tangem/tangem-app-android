@@ -2,6 +2,7 @@ package com.tangem.tap.common.extensions
 
 import com.tangem.core.analytics.Analytics
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.tap.common.analytics.paramsInterceptor.LinkedCardContextInterceptor
 
 /**
@@ -12,6 +13,11 @@ import com.tangem.tap.common.analytics.paramsInterceptor.LinkedCardContextInterc
  * Sets the new context
  */
 fun Analytics.setContext(scanResponse: ScanResponse) {
+    val userWalletId = UserWalletIdBuilder.scanResponse(scanResponse).build()
+    if (userWalletId != null) {
+        setUserId(userWalletId.stringValue)
+    }
+
     addParamsInterceptor(LinkedCardContextInterceptor(scanResponse))
 }
 
@@ -19,6 +25,7 @@ fun Analytics.setContext(scanResponse: ScanResponse) {
  * Erases the context
  */
 fun Analytics.eraseContext() {
+    clearUserId()
     removeParamsInterceptor(LinkedCardContextInterceptor.id())
 }
 
@@ -26,6 +33,11 @@ fun Analytics.eraseContext() {
  * Adds a new context and keeps a previous context as the parent of the new one
  */
 fun Analytics.addContext(scanResponse: ScanResponse) {
+    val userWalletId = UserWalletIdBuilder.scanResponse(scanResponse).build()
+    if (userWalletId != null) {
+        setUserId(userWalletId.stringValue)
+    }
+
     val currentContext = removeParamsInterceptor(LinkedCardContextInterceptor.id()) as? LinkedCardContextInterceptor
     val newContext = LinkedCardContextInterceptor(scanResponse, parent = currentContext)
 
