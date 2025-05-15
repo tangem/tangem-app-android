@@ -71,6 +71,7 @@ internal class MarketsListModel @Inject constructor(
         onTokenClick = { onTokenUIClicked(it) },
         onStakingNotificationClick = { analyticsEventHandler.send(MarketsListAnalyticsEvent.StakingMoreInfoClicked) },
         onStakingNotificationCloseClick = { onStakingNotificationCloseClick() },
+        onShowTokensUnder100kClicked = { analyticsEventHandler.send(MarketsListAnalyticsEvent.ShowTokens) },
     )
 
     private val mainMarketsListManager = MarketsListBatchFlowManager(
@@ -247,6 +248,16 @@ internal class MarketsListModel @Inject constructor(
                 modelScope.loadQuotesWithTimer(timeMillis = UPDATE_QUOTES_TIMER_MILLIS)
             }
         }
+
+        searchMarketsListManager.isSearchNotFoundState.onEach {
+            if (it) {
+                analyticsEventHandler.send(MarketsListAnalyticsEvent.TokenSearched(tokenFound = false))
+            }
+        }.launchIn(modelScope)
+
+        searchMarketsListManager.onFirstBatchLoadedSuccess.onEach {
+            analyticsEventHandler.send(MarketsListAnalyticsEvent.TokenSearched(tokenFound = true))
+        }.launchIn(modelScope)
 
         // analytics
         initAnalytics()
