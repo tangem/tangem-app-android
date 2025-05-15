@@ -1,7 +1,6 @@
-package com.tangem.datasource.local.network.converter
+package com.tangem.data.networks.converters
 
 import com.tangem.datasource.local.network.entity.NetworkStatusDM
-import com.tangem.datasource.local.network.entity.NetworkStatusDM.DerivationPath.Type
 import com.tangem.domain.tokens.model.Network
 import com.tangem.utils.converter.TwoWayConverter
 
@@ -10,14 +9,14 @@ import com.tangem.utils.converter.TwoWayConverter
  *
 [REDACTED_AUTHOR]
  */
-object NetworkDerivationPathConverter :
+internal object NetworkDerivationPathConverter :
     TwoWayConverter<NetworkStatusDM.DerivationPath, Network.DerivationPath> {
 
     override fun convert(value: NetworkStatusDM.DerivationPath): Network.DerivationPath {
         return when (value.type) {
-            Type.CARD -> Network.DerivationPath.Card(value.value)
-            Type.CUSTOM -> Network.DerivationPath.Custom(value.value)
-            Type.NONE -> Network.DerivationPath.None
+            NetworkStatusDM.DerivationPath.Type.CARD -> Network.DerivationPath.Card(value.value)
+            NetworkStatusDM.DerivationPath.Type.CUSTOM -> Network.DerivationPath.Custom(value.value)
+            NetworkStatusDM.DerivationPath.Type.NONE -> Network.DerivationPath.None
         }
     }
 
@@ -25,9 +24,9 @@ object NetworkDerivationPathConverter :
         return NetworkStatusDM.DerivationPath(
             value = value.value.orEmpty(),
             type = when (value) {
-                is Network.DerivationPath.Card -> Type.CARD
-                is Network.DerivationPath.Custom -> Type.CUSTOM
-                Network.DerivationPath.None -> Type.NONE
+                is Network.DerivationPath.Card -> NetworkStatusDM.DerivationPath.Type.CARD
+                is Network.DerivationPath.Custom -> NetworkStatusDM.DerivationPath.Type.CUSTOM
+                Network.DerivationPath.None -> NetworkStatusDM.DerivationPath.Type.NONE
             },
         )
     }
