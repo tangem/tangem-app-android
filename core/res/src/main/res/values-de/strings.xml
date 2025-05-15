@@ -195,6 +195,7 @@
   <string name="common_server_unavailable">Der Server ist nicht verfügbar. Bitte versuche es später erneut.</string>
   <string name="common_share">Teilen</string>
   <string name="common_share_link">Link teilen</string>
+  <string name="common_show_more">Mehr anzeigen</string>
   <string name="common_sign">Signieren</string>
   <string name="common_sign_and_send">Signieren und senden</string>
   <string name="common_stake">Staken</string>
@@ -450,7 +451,6 @@
   <string name="markets_sort_by_top_losers_title">Top-Verlierer</string>
   <string name="markets_sort_by_trending_title">Beliebt</string>
   <string name="markets_staking_banner_description_placeholder">Staking ist der einfachste Weg, um Belohnungen für Deine Kryptowährung zu erhalten. %s</string>
-  <string name="markets_staking_banner_description_show_more">Mehr anzeigen</string>
   <string name="markets_staking_banner_title">Verdiene bis zu %s APY</string>
   <string name="markets_token_details_about_token_title">Über %s</string>
   <plurals name="markets_token_details_amount_exchanges">
