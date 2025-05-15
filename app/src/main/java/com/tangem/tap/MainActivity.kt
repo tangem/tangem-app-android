@@ -25,6 +25,7 @@ import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import arrow.core.getOrElse
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.RoutingFeatureToggle
 import com.tangem.common.routing.entity.SerializableIntent
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.context.AppComponentContext
@@ -171,6 +172,9 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     @Inject
     internal lateinit var defaultDeviceFlipDetector: DefaultDeviceFlipDetector
 
+    @Inject
+    internal lateinit var routingFeatureToggle: RoutingFeatureToggle
+
     internal val viewModel: MainViewModel by viewModels()
 
     private lateinit var appThemeModeFlow: SharedFlow<AppThemeMode>
@@ -225,7 +229,11 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
         if (intent != null && savedInstanceState == null) {
             // handle intent only on start, not on recreate
-            deepLinksRegistry.launch(intent)
+            if (routingFeatureToggle.isDeepLinkNavigationEnabled) {
+                // todo [REDACTED_TASK_KEY]
+            } else {
+                deepLinksRegistry.launch(intent)
+            }
         }
 
         lifecycle.addObserver(WindowObscurationObserver)
@@ -374,7 +382,11 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         }
 
         if (intent != null) {
-            deepLinksRegistry.launch(intent)
+            if (routingFeatureToggle.isDeepLinkNavigationEnabled) {
+                // todo [REDACTED_TASK_KEY]
+            } else {
+                deepLinksRegistry.launch(intent)
+            }
         }
     }
 
