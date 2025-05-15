@@ -192,6 +192,8 @@
   <string name="common_server_unavailable">サーバーが利用できません。しばらくしてからもう一度お試しください。</string>
   <string name="common_share">共有</string>
   <string name="common_share_link">リンクを共有</string>
+  <string name="common_show_less">詳細を非表示</string>
+  <string name="common_show_more">もっと見る</string>
   <string name="common_sign">署名</string>
   <string name="common_sign_and_send">署名して送信</string>
   <string name="common_stake">ステーキング</string>
@@ -447,7 +449,6 @@
   <string name="markets_sort_by_top_losers_title">下落率上位</string>
   <string name="markets_sort_by_trending_title">トレンド</string>
   <string name="markets_staking_banner_description_placeholder">ステーキングは暗号資産で報酬を受け取る最も簡単な方法です。 %s</string>
-  <string name="markets_staking_banner_description_show_more">もっと見る</string>
   <string name="markets_staking_banner_title">最大%s APYを獲得</string>
   <string name="markets_token_details_about_token_title">%sについて</string>
   <plurals name="markets_token_details_amount_exchanges">
@@ -552,6 +553,7 @@
   <string name="nft_receive_unavailable_section_title">未追加</string>
   <string name="nft_send">NFTを送信する</string>
   <string name="nft_traits_title">特徴</string>
+  <string name="nft_untitled_collection">無題のコレクション</string>
   <string name="nft_wallet_count">%1$dコレクションの%2$dNFT</string>
   <string name="nft_wallet_receive_nft">ここをタップして最初のNFTを受け取ります</string>
   <string name="nft_wallet_title">NFTコレクション</string>
@@ -1265,6 +1267,8 @@
   <string name="wc_disconnect_all">すべての接続を解除する</string>
   <string name="wc_disconnect_all_alert_desc">すべてのdAppsの接続解除に関するテキスト</string>
   <string name="wc_disconnect_all_alert_title">すべてのdAppを接続解除する</string>
+  <string name="wc_estimated_wallet_changes">ウォレットの変更の予測</string>
+  <string name="wc_malicious_transaction">悪意のある取引</string>
   <string name="wc_missing_required_network_description">このウォレットのプロフィールに%sネットワークを追加する</string>
   <string name="wc_missing_required_network_title">ウォレットに必要なネットワークはありません</string>
   <string name="wc_new_connection">新しい接続</string>
