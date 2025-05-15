@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.common.keyboard.KeyboardValidator
+import com.tangem.common.routing.RoutingFeatureToggle
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.event.TechAnalyticsEvent
@@ -67,6 +68,7 @@ internal class MainViewModel @Inject constructor(
     private val onboardingRepository: OnboardingRepository,
     private val deepLinksRegistry: DeepLinksRegistry,
     private val onrampDeepLinkFactory: OnrampDeepLink.Factory,
+    routingFeatureToggle: RoutingFeatureToggle,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
 ) : ViewModel() {
 
@@ -102,7 +104,9 @@ internal class MainViewModel @Inject constructor(
 
         preloadImages()
 
-        initializeDeepLinks()
+        if (!routingFeatureToggle.isDeepLinkNavigationEnabled) {
+            initializeDeepLinks()
+        }
     }
 
     fun checkForUnfinishedBackup() {

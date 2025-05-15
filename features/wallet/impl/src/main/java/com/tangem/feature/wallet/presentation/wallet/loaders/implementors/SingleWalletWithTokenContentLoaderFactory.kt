@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.loaders.implementors
 
+import com.tangem.common.routing.RoutingFeatureToggle
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.deeplink.DeepLinksRegistry
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -32,6 +33,7 @@ internal class SingleWalletWithTokenContentLoaderFactory @Inject constructor(
     private val shouldSaveUserWalletsUseCase: ShouldSaveUserWalletsUseCase,
     private val getStoryContentUseCase: GetStoryContentUseCase,
     private val deepLinksRegistry: DeepLinksRegistry,
+    private val routingFeatureToggle: RoutingFeatureToggle,
 ) {
 
     fun create(userWallet: UserWallet, clickIntents: WalletClickIntents): SingleWalletWithTokenContentLoader {
@@ -50,6 +52,7 @@ internal class SingleWalletWithTokenContentLoaderFactory @Inject constructor(
             getStoryContentUseCase = getStoryContentUseCase,
             shouldSaveUserWalletsUseCase = shouldSaveUserWalletsUseCase,
             deepLinksRegistry = deepLinksRegistry,
+            routingFeatureToggle = routingFeatureToggle,
         )
     }
 }
