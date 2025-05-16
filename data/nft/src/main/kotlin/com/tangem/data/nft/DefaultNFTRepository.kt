@@ -215,6 +215,13 @@ internal class DefaultNFTRepository @Inject constructor(
             assetIdentifier = assetIdConverter.convertBack(assetIdentifier),
         )
 
+    override suspend fun clearCache(userWalletId: UserWalletId, networks: List<Network>) {
+        networks.forEach {
+            getNFTPersistenceStore(userWalletId, it).clear()
+            getNFTRuntimeStore(userWalletId, it).clear()
+        }
+    }
+
     private suspend fun refreshCollectionsInternal(
         userWalletId: UserWalletId,
         networks: List<Network>,
