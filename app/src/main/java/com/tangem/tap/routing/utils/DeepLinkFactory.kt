@@ -4,7 +4,10 @@ import android.net.Uri
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.DeepLinkRoute
 import com.tangem.common.routing.DeepLinkScheme
+import com.tangem.feature.referral.api.deeplink.ReferralDeepLinkHandler
+import com.tangem.features.onramp.deeplink.BuyDeepLinkHandler
 import com.tangem.features.onramp.deeplink.OnrampDeepLinkHandler
+import com.tangem.features.send.v2.api.deeplink.SellDeepLinkHandler
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import dagger.hilt.android.scopes.ActivityScoped
@@ -19,6 +22,9 @@ import javax.inject.Inject
 @ActivityScoped
 internal class DeepLinkFactory @Inject constructor(
     private val onrampDeepLink: OnrampDeepLinkHandler.Factory,
+    private val sellDeepLink: SellDeepLinkHandler.Factory,
+    private val buyDeepLink: BuyDeepLinkHandler.Factory,
+    private val referralDeepLink: ReferralDeepLinkHandler.Factory,
 ) {
     private val permittedAppRoute = MutableStateFlow(false)
 
@@ -82,6 +88,9 @@ internal class DeepLinkFactory @Inject constructor(
         val params = getParams(deeplinkUri)
         when (deeplinkUri.host) {
             DeepLinkRoute.Onramp.host -> onrampDeepLink.create(coroutineScope, params)
+            DeepLinkRoute.Sell.host -> sellDeepLink.create(coroutineScope, params)
+            DeepLinkRoute.Buy.host -> buyDeepLink.create(coroutineScope)
+            DeepLinkRoute.Referral.host -> referralDeepLink.create()
             else -> {
                 Timber.i(
                     """
