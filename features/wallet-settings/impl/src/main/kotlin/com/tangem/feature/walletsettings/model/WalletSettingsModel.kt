@@ -103,7 +103,7 @@ internal class WalletSettingsModel @Inject constructor(
         isManageTokensAvailable = userWallet.isMultiCurrency,
         isRenameWalletAvailable = isRenameWalletAvailable,
         renameWallet = { openRenameWalletDialog(userWallet, dialogNavigation) },
-        isNFTFeatureEnabled = isNFTFeatureEnabled,
+        isNFTFeatureEnabled = isNFTFeatureEnabled && userWallet.isMultiCurrency,
         isNFTEnabled = isNFTEnabled,
         onCheckedNFTChange = ::onCheckedNFTChange,
         forgetWallet = {
