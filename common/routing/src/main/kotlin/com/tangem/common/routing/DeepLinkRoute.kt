@@ -7,6 +7,18 @@ sealed class DeepLinkRoute {
     data object Onramp : DeepLinkRoute() {
         override val host: String = "onramp"
     }
+
+    data object Sell : DeepLinkRoute() {
+        override val host: String = "redirect_sell"
+    }
+
+    data object Buy : DeepLinkRoute() {
+        override val host: String = "redirect"
+    }
+
+    data object Referral : DeepLinkRoute() {
+        override val host: String = "referral"
+    }
 }
 
 enum class DeepLinkScheme(val scheme: String) {
