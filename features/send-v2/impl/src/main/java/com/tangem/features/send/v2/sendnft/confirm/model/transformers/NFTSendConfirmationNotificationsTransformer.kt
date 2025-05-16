@@ -1,12 +1,20 @@
 package com.tangem.features.send.v2.sendnft.confirm.model.transformers
 
+import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.utils.parseToBigDecimal
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.features.send.v2.common.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.v2.common.ui.state.ConfirmUM
+import com.tangem.features.send.v2.common.utils.formatFooterFiatFee
+import com.tangem.features.send.v2.common.utils.getTronTokenFeeSendingText
+import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.subcomponents.fee.model.checkIfFeeTooHigh
 import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeSelectorUM
 import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeType
@@ -19,11 +27,13 @@ internal class NFTSendConfirmationNotificationsTransformer(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val cryptoCurrency: CryptoCurrency,
     private val analyticsCategoryName: String,
+    private val appCurrency: AppCurrency,
 ) : Transformer<ConfirmUM> {
     override fun transform(prevState: ConfirmUM): ConfirmUM {
         val state = prevState as? ConfirmUM.Content ?: return prevState
         val feeUM = feeUM as? FeeUM.Content ?: return prevState
         return state.copy(
+            sendingFooter = getSendingFooterText(),
             notifications = buildList {
                 addTooHighNotification(feeUM.feeSelectorUM)
                 addTooLowNotification(feeUM)
@@ -43,6 +53,38 @@ internal class NFTSendConfirmationNotificationsTransformer(
                 CommonSendAnalyticEvents.NoticeTransactionDelays(
                     categoryName = analyticsCategoryName,
                     token = cryptoCurrency.symbol,
+                ),
+            )
+        }
+    }
+
+    private fun getSendingFooterText(): TextReference {
+        val feeUM = feeUM as? FeeUM.Content
+        val fee = (feeUM?.feeSelectorUM as? FeeSelectorUM.Content)?.selectedFee ?: return TextReference.EMPTY
+
+        val fiatFee = formatFooterFiatFee(
+            amount = fee.amount,
+            isFeeConvertibleToFiat = feeUM.isFeeConvertibleToFiat,
+            isFeeApproximate = feeUM.isFeeApproximate,
+            appCurrency = appCurrency,
+        )
+
+        return if (feeUM.isTronToken && fee is Fee.Tron) {
+            getTronTokenFeeSendingText(
+                fee = fee,
+                fiatFee = fiatFee,
+                fiatSending = resourceReference(R.string.common_nft),
+            )
+        } else {
+            resourceReference(
+                id = if (feeUM.isFeeConvertibleToFiat) {
+                    R.string.send_summary_transaction_description
+                } else {
+                    R.string.send_summary_transaction_description_no_fiat_fee
+                },
+                formatArgs = wrappedList(
+                    resourceReference(R.string.common_nft),
+                    fiatFee,
                 ),
             )
         }
