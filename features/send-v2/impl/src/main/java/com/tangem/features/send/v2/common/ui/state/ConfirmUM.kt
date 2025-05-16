@@ -12,6 +12,7 @@ internal sealed class ConfirmUM {
 
     data class Content(
         override val isPrimaryButtonEnabled: Boolean = false,
+        val walletName: TextReference,
         val isSending: Boolean,
         val showTapHelp: Boolean,
         val sendingFooter: TextReference,
