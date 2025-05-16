@@ -51,6 +51,7 @@ import com.tangem.domain.tokens.GetPolkadotCheckHasResetUseCase
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
+import com.tangem.features.walletconnect.components.WalletConnectFeatureToggles
 import com.tangem.google.GoogleServicesHelper
 import com.tangem.operations.backup.BackupService
 import com.tangem.sdk.api.BackupServiceHolder
@@ -180,6 +181,9 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
     @Inject
     internal lateinit var deeplinkFactory: DeepLinkFactory
+
+    @Inject
+    internal lateinit var walletConnectFeatureToggles: WalletConnectFeatureToggles
 
     internal val viewModel: MainViewModel by viewModels()
 
@@ -351,7 +355,10 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         val hasSavedWalletsProvider = { userWalletsListManager.hasUserWallets }
         intentProcessor.addHandler(OnPushClickedIntentHandler(analyticsEventsHandler))
         intentProcessor.addHandler(BackgroundScanIntentHandler(hasSavedWalletsProvider, lifecycleScope))
-        intentProcessor.addHandler(WalletConnectLinkIntentHandler())
+
+        if (!walletConnectFeatureToggles.isRedesignedWalletConnectEnabled) {
+            intentProcessor.addHandler(WalletConnectLinkIntentHandler())
+        }
     }
 
     private fun updateAppTheme(appThemeMode: AppThemeMode) {
