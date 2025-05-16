@@ -6,6 +6,7 @@ import com.tangem.feature.referral.api.deeplink.ReferralDeepLinkHandler
 import com.tangem.features.onramp.deeplink.BuyDeepLinkHandler
 import com.tangem.features.onramp.deeplink.OnrampDeepLinkHandler
 import com.tangem.features.send.v2.api.deeplink.SellDeepLinkHandler
+import com.tangem.features.walletconnect.components.deeplink.WalletConnectDeepLinkHandler
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -33,6 +34,9 @@ class DeepLinkFactoryTest {
     private val referralDeepLinkFactory = mockk<ReferralDeepLinkHandler.Factory>(relaxed = true) {
         every { create() } returns mockk()
     }
+    private val walletConnectDeepLinkFactory = mockk<WalletConnectDeepLinkHandler.Factory>(relaxed = true) {
+        every { create(any()) } returns mockk()
+    }
 
     private val mockedUri = mockk<Uri>(relaxed = true)
 
@@ -44,6 +48,7 @@ class DeepLinkFactoryTest {
         sellDeepLinkFactory,
         buyDeepLinkFactory,
         referralDeepLinkFactory,
+        walletConnectDeepLinkFactory,
     )
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -128,6 +133,21 @@ class DeepLinkFactoryTest {
     }
 
     @Test
+    fun `launchDeepLink handles wc scheme correctly`() = runTest {
+        every { mockedUri.scheme } returns "wc"
+        every { mockedUri.host } returns ""
+
+        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope)
+
+        advanceUntilIdle()
+
+        verify {
+            walletConnectDeepLinkFactory.create(eq(mockedUri))
+        }
+    }
+
+    @Test
     fun `launchDeepLink ignores unknown scheme`() = runTest {
         every { mockedUri.scheme } returns "https"
         every { mockedUri.host } returns "example.com"
@@ -141,6 +161,7 @@ class DeepLinkFactoryTest {
             sellDeepLinkFactory.create(any(), any())
             buyDeepLinkFactory.create(any())
             referralDeepLinkFactory.create()
+            walletConnectDeepLinkFactory.create(any())
         }
     }
 
@@ -197,6 +218,7 @@ class DeepLinkFactoryTest {
             sellDeepLinkFactory.create(any(), any())
             buyDeepLinkFactory.create(any())
             referralDeepLinkFactory.create()
+            walletConnectDeepLinkFactory.create(any())
         }
     }
 
