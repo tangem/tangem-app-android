@@ -71,6 +71,16 @@ internal class DefaultNFTRuntimeStore(
         }
     }
 
+    override suspend fun clear() {
+        collectionsRuntimeStore.store(
+            NFTCollections(
+                network = network,
+                content = NFTCollections.Content.Collections(null, StatusSource.ONLY_CACHE),
+            ),
+        )
+        pricesRuntimeStore.store(emptyMap())
+    }
+
     private fun NFTCollections.getCollection(collectionId: NFTCollection.Identifier): NFTCollection? =
         (content as? NFTCollections.Content.Collections)
             ?.collections
