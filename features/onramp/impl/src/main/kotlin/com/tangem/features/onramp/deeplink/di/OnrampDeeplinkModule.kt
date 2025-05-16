@@ -1,7 +1,6 @@
 package com.tangem.features.onramp.deeplink.di
 
 import com.tangem.features.onramp.deeplink.*
-import com.tangem.features.onramp.deeplink.DefaultOnrampDeepLink
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -18,5 +17,9 @@ internal interface OnrampDeeplinkModule {
 
     @Binds
     @Singleton
-    fun bindFactoryV2(impl: DefaultOnrampDeepLinkHandler.Factory): OnrampDeepLinkHandler.Factory
+    fun bindOnrampDeepLinkHandlerFactory(impl: DefaultOnrampDeepLinkHandler.Factory): OnrampDeepLinkHandler.Factory
+
+    @Binds
+    @Singleton
+    fun bindBuyDeepLinkHandler(impl: DefaultBuyDeepLinkHandler.Factory): BuyDeepLinkHandler.Factory
 }
