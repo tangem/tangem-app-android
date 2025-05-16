@@ -47,5 +47,10 @@ internal class DefaultNFTPersistenceStore(
         }
     }
 
+    override suspend fun clear() {
+        collectionsPersistenceStore.updateData { emptyList() }
+        pricesPersistenceStore.updateData { emptyList() }
+    }
+
     private fun NFTCollection.getAsset(assetId: NFTAsset.Identifier) = assets.firstOrNull { it.identifier == assetId }
 }
