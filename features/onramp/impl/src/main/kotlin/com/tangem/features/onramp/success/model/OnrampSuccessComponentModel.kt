@@ -21,6 +21,7 @@ import com.tangem.domain.onramp.model.error.OnrampError
 import com.tangem.domain.tokens.GetCryptoCurrencyUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.analytics.TokenOnrampAnalyticsEvent
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.onramp.component.OnrampSuccessComponent
 import com.tangem.features.onramp.impl.R
@@ -29,6 +30,8 @@ import com.tangem.features.onramp.success.entity.OnrampSuccessComponentUM
 import com.tangem.features.onramp.success.entity.conterter.SetOnrampSuccessContentConverter
 import com.tangem.features.onramp.utils.sendOnrampErrorEvent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.PeriodicTask
+import com.tangem.utils.coroutines.SingleTaskScheduler
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -36,6 +39,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
+import kotlin.properties.Delegates
 
 @Suppress("LongParameterList")
 internal class OnrampSuccessComponentModel @Inject constructor(
@@ -60,6 +64,10 @@ internal class OnrampSuccessComponentModel @Inject constructor(
 
     val state: StateFlow<OnrampSuccessComponentUM> get() = _state.asStateFlow()
 
+    private var userWallet: UserWallet by Delegates.notNull()
+    private var cryptoCurrency: CryptoCurrency by Delegates.notNull()
+    private var expressTxStatusTaskScheduler = SingleTaskScheduler<Unit>()
+
     init {
         loadData()
     }
@@ -82,67 +90,87 @@ internal class OnrampSuccessComponentModel @Inject constructor(
                         showErrorAlert(error)
                     },
                     ifRight = { transaction ->
-                        loadTransactionStatus(transaction)
+                        userWallet = getUserWalletUseCase(transaction.userWalletId).getOrElse {
+                            Timber.e("UserWallet found")
+                            // this case should never happened
+                            showErrorAlert(OnrampError.DomainError("UserWallet not found"))
+                            return@launch
+                        }
+                        cryptoCurrency = getCryptoCurrencyUseCase(
+                            userWallet = userWallet,
+                            cryptoCurrencyId = transaction.toCurrencyId,
+                        ).getOrElse {
+                            Timber.e("Crypto currency not found")
+                            showErrorAlert(OnrampError.DomainError(null))
+                            return@launch
+                        }
+
+                        startStatusUpdateTask(transaction)
                     },
                 )
         }
     }
 
-    private suspend fun loadTransactionStatus(transaction: OnrampTransaction) {
-        val userWallet = getUserWalletUseCase(transaction.userWalletId).getOrNull()
-        if (userWallet == null) {
-            Timber.e("UserWallet found")
-            // this case should never happened
-            showErrorAlert(OnrampError.DomainError("UserWallet not found"))
-            return
-        }
-        val cryptoCurrency = getCryptoCurrencyUseCase(
-            userWallet = userWallet,
-            cryptoCurrencyId = transaction.toCurrencyId,
-        ).getOrElse {
-            Timber.e("Crypto currency not found")
-            showErrorAlert(OnrampError.DomainError(null))
-            return
-        }
-
-        getOnrampStatusUseCase(userWallet = userWallet, txId = transaction.txId)
-            .fold(
-                ifLeft = { error ->
-                    analyticsEventHandler.sendOnrampErrorEvent(
-                        error = error,
-                        tokenSymbol = cryptoCurrency.symbol,
-                        providerName = transaction.providerName,
-                        paymentMethod = transaction.paymentMethod,
-                    )
-                    Timber.e(error.toString())
-                    showErrorAlert(error)
-                },
-                ifRight = { status ->
-                    analyticsEventHandler.send(
-                        OnrampAnalyticsEvent.SuccessScreenOpened(
-                            providerName = transaction.providerName,
-                            currency = transaction.fromCurrency.code,
-                            tokenSymbol = cryptoCurrency.symbol,
-                            residence = transaction.residency,
-                            paymentMethod = transaction.paymentMethod,
-                        ),
-                    )
-                    _state.update {
-                        SetOnrampSuccessContentConverter(
-                            cryptoCurrency = cryptoCurrency,
-                            transaction = transaction,
-                            goToProviderClick = ::goToProviderClick,
-                            onCopyClick = ::onCopyClick,
-                        ).convert(status)
+    private fun startStatusUpdateTask(transaction: OnrampTransaction) {
+        expressTxStatusTaskScheduler.cancelTask()
+        expressTxStatusTaskScheduler.scheduleTask(
+            modelScope,
+            PeriodicTask(
+                isDelayFirst = false,
+                delay = EXPRESS_STATUS_UPDATE_DELAY,
+                task = {
+                    runCatching {
+                        loadTransactionStatus(transaction)
                     }
-                    removeTransactionIfTerminalStatus(
-                        cryptoCurrency = cryptoCurrency,
-                        providerName = transaction.providerName,
-                        paymentMethod = transaction.paymentMethod,
-                        status = status,
-                    )
                 },
-            )
+                onSuccess = { /* no-op */ },
+                onError = { /* no-op */ },
+            ),
+        )
+    }
+
+    private suspend fun loadTransactionStatus(transaction: OnrampTransaction) {
+        val isTerminal = (state.value as? OnrampSuccessComponentUM.Content)?.activeStatus?.isTerminal
+        if (isTerminal == null || isTerminal == false) {
+            getOnrampStatusUseCase(userWallet = userWallet, txId = transaction.txId)
+                .fold(
+                    ifLeft = { error ->
+                        analyticsEventHandler.sendOnrampErrorEvent(
+                            error = error,
+                            tokenSymbol = cryptoCurrency.symbol,
+                            providerName = transaction.providerName,
+                            paymentMethod = transaction.paymentMethod,
+                        )
+                        Timber.e(error.toString())
+                        showErrorAlert(error)
+                    },
+                    ifRight = { status ->
+                        analyticsEventHandler.send(
+                            OnrampAnalyticsEvent.SuccessScreenOpened(
+                                providerName = transaction.providerName,
+                                currency = transaction.fromCurrency.code,
+                                tokenSymbol = cryptoCurrency.symbol,
+                                residence = transaction.residency,
+                                paymentMethod = transaction.paymentMethod,
+                            ),
+                        )
+                        _state.update {
+                            SetOnrampSuccessContentConverter(
+                                cryptoCurrency = cryptoCurrency,
+                                transaction = transaction,
+                                goToProviderClick = ::goToProviderClick,
+                                onCopyClick = ::onCopyClick,
+                            ).convert(status)
+                        }
+                        removeTransactionIfTerminalStatus(
+                            cryptoCurrency = cryptoCurrency,
+                            providerName = transaction.providerName,
+                            paymentMethod = transaction.paymentMethod,
+                            status = status,
+                        )
+                    },
+                )
+        }
     }
 
     private fun showErrorAlert(error: OnrampError) {
@@ -177,5 +205,9 @@ internal class OnrampSuccessComponentModel @Inject constructor(
                 }
             }
         }
+    }
+
+    private companion object {
+        const val EXPRESS_STATUS_UPDATE_DELAY = 10_000L
     }
 }
