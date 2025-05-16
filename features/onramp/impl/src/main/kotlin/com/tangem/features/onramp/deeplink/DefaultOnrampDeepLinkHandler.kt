@@ -10,11 +10,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
-class DefaultOnrampDeepLinkHandler @AssistedInject constructor(
-    appRouter: AppRouter,
-    private val onrampSuccessScreenTrigger: OnrampSuccessScreenTrigger,
-    @Assisted private val scope: CoroutineScope,
+internal class DefaultOnrampDeepLinkHandler @AssistedInject constructor(
+    @Assisted scope: CoroutineScope,
     @Assisted params: Map<String, String>,
+    appRouter: AppRouter,
+    onrampSuccessScreenTrigger: OnrampSuccessScreenTrigger,
 ) : OnrampDeepLinkHandler {
 
     init {
