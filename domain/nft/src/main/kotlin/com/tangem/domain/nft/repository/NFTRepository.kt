@@ -32,4 +32,6 @@ interface NFTRepository {
     suspend fun getNFTSupportedNetworks(userWalletId: UserWalletId): List<Network>
 
     suspend fun getNFTExploreUrl(network: Network, assetIdentifier: NFTAsset.Identifier): String?
+
+    suspend fun clearCache(userWalletId: UserWalletId, networks: List<Network>)
 }
