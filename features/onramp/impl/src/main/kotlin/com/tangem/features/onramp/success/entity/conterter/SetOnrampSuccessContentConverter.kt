@@ -51,6 +51,7 @@ internal class SetOnrampSuccessContentConverter(
                 status = value.status,
                 externalTxId = value.externalTxId,
             ),
+            activeStatus = value.status,
             notification = getNotification(status = value.status, externalTxUrl = value.externalTxUrl),
         )
     }
