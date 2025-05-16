@@ -6,6 +6,7 @@ import com.tangem.domain.nft.repository.NFTRepository
 import com.tangem.domain.quotes.single.SingleQuoteFetcher
 import com.tangem.domain.quotes.single.SingleQuoteSupplier
 import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -103,5 +104,27 @@ internal object NFTDomainModule {
         singleQuoteFetcher: SingleQuoteFetcher,
     ): FetchNFTPriceUseCase {
         return FetchNFTPriceUseCase(nftRepository, singleQuoteFetcher)
+    }
+
+    @Provides
+    @Singleton
+    fun provideEnableWalletNFTUseCase(walletsRepository: WalletsRepository): EnableWalletNFTUseCase {
+        return EnableWalletNFTUseCase(walletsRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideDisableWalletNFTUseCase(
+        walletsRepository: WalletsRepository,
+        nftRepository: NFTRepository,
+        currenciesRepository: CurrenciesRepository,
+    ): DisableWalletNFTUseCase {
+        return DisableWalletNFTUseCase(walletsRepository, nftRepository, currenciesRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetWalletNFTEnabledUseCase(walletsRepository: WalletsRepository): GetWalletNFTEnabledUseCase {
+        return GetWalletNFTEnabledUseCase(walletsRepository)
     }
 }
