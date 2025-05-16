@@ -2,6 +2,7 @@ package com.tangem.core.deeplink.global
 
 import com.tangem.core.deeplink.DeepLink
 
+@Deprecated("Use ReferralDeepLinkHandler")
 class ReferralDeepLink(
     val onReceive: () -> Unit,
 ) : DeepLink(shouldHandleDelayed = true) {
