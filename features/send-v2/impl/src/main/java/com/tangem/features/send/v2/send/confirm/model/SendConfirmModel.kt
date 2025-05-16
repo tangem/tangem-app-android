@@ -15,6 +15,7 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.feedback.GetCardInfoUseCase
 import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
@@ -286,6 +287,7 @@ internal class SendConfirmModel @Inject constructor(
                     it.copy(
                         confirmUM = SendConfirmInitialStateTransformer(
                             isShowTapHelp = isShowTapHelp,
+                            walletName = stringReference(userWallet.name),
                         ).transform(uiState.value.confirmUM),
                     )
                 }
