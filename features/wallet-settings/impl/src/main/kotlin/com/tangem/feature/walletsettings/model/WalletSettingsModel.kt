@@ -19,8 +19,10 @@ import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.nft.DisableWalletNFTUseCase
+import com.tangem.domain.nft.EnableWalletNFTUseCase
+import com.tangem.domain.nft.GetWalletNFTEnabledUseCase
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.DeleteWalletUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsSyncUseCase
@@ -54,8 +56,10 @@ internal class WalletSettingsModel @Inject constructor(
     private val analyticsContextProxy: AnalyticsContextProxy,
     private val getShouldSaveUserWalletsSyncUseCase: ShouldSaveUserWalletsSyncUseCase,
     private val isDemoCardUseCase: IsDemoCardUseCase,
-    private val walletsRepository: WalletsRepository,
     private val nftFeatureToggles: NFTFeatureToggles,
+    private val getWalletNFTEnabledUseCase: GetWalletNFTEnabledUseCase,
+    private val enableWalletNFTUseCase: EnableWalletNFTUseCase,
+    private val disableWalletNFTUseCase: DisableWalletNFTUseCase,
 ) : Model() {
 
     val params: WalletSettingsComponent.Params = paramsContainer.require()
@@ -71,7 +75,7 @@ internal class WalletSettingsModel @Inject constructor(
     init {
         getWalletUseCase.invokeFlow(params.userWalletId)
             .distinctUntilChanged()
-            .combine(walletsRepository.nftEnabledStatus(params.userWalletId)) { maybeWallet, nftEnabled ->
+            .combine(getWalletNFTEnabledUseCase.invoke(params.userWalletId)) { maybeWallet, nftEnabled ->
                 val wallet = maybeWallet.getOrNull() ?: return@combine
                 val isRenameWalletAvailable = getShouldSaveUserWalletsSyncUseCase()
                 state.update { value ->
@@ -169,9 +173,9 @@ internal class WalletSettingsModel @Inject constructor(
     private fun onCheckedNFTChange(isChecked: Boolean) {
         modelScope.launch {
             if (isChecked) {
-                walletsRepository.enableNFT(params.userWalletId)
+                enableWalletNFTUseCase.invoke(params.userWalletId)
             } else {
-                walletsRepository.disableNFT(params.userWalletId)
+                disableWalletNFTUseCase.invoke(params.userWalletId)
             }
         }
     }
