@@ -157,7 +157,7 @@ internal class SingleWalletOnrampTransactionConverter(
 
         return ExpressStatusUM(
             title = resourceReference(R.string.common_transaction_status),
-            link = getStatusLink(status, externalTxUrl),
+            link = getStatusLink(externalTxUrl),
             statuses = statuses,
         )
     }
@@ -264,22 +264,15 @@ internal class SingleWalletOnrampTransactionConverter(
         state = getStatusState(OnrampStatus.Status.Sending),
     )
 
-    private fun getStatusLink(status: OnrampStatus.Status, externalTxUrl: String?): ExpressLinkUM {
+    private fun getStatusLink(externalTxUrl: String?): ExpressLinkUM {
         if (externalTxUrl == null) return ExpressLinkUM.Empty
-        return when (status) {
-            OnrampStatus.Status.Verifying,
-            OnrampStatus.Status.Failed,
-            -> {
-                ExpressLinkUM.Content(
-                    icon = R.drawable.ic_arrow_top_right_24,
-                    text = resourceReference(R.string.common_go_to_provider),
-                    onClick = {
-                        clickIntents.onGoToProviderClick(externalTxUrl)
-                    },
-                )
-            }
-            else -> ExpressLinkUM.Empty
-        }
+        return ExpressLinkUM.Content(
+            icon = R.drawable.ic_arrow_top_right_24,
+            text = resourceReference(R.string.common_go_to_provider),
+            onClick = {
+                clickIntents.onGoToProviderClick(externalTxUrl)
+            },
+        )
     }
 
     private fun OnrampStatus.Status.getStatusState(targetState: OnrampStatus.Status) = when {
