@@ -9,6 +9,10 @@ android {
     namespace = "com.tangem.data.common"
 }
 
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+}
+
 dependencies {
     /* Core */
     implementation(projects.core.datasource)
@@ -39,7 +43,8 @@ dependencies {
     /* Test */
     testImplementation(projects.common.test)
     testImplementation(deps.test.coroutine)
-    testImplementation(deps.test.junit)
+    testImplementation(deps.test.junit5)
+    testRuntimeOnly(deps.test.junit5.engine)
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)
 }
