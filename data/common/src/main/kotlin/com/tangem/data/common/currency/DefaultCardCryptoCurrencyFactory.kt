@@ -37,7 +37,9 @@ internal class DefaultCardCryptoCurrencyFactory(
         val blockchain = Blockchain.fromNetworkId(networkId = network.backendId)
 
         // multi-currency wallet
-        if (userWallet.isMultiCurrency) return getMultiWalletCurrencies(userWallet = userWallet, network = network)
+        if (userWallet.isMultiCurrency) {
+            return getMultiWalletCurrencies(userWallet = userWallet, networks = setOf(network))[network].orEmpty()
+        }
 
         // check if the blockchain of single-currency wallet is the same as network
         val cardBlockchain = userWallet.scanResponse.cardTypesResolver.getBlockchain()
@@ -52,7 +54,18 @@ internal class DefaultCardCryptoCurrencyFactory(
         return createPrimaryCurrencyForSingleCurrencyCard(userWallet.scanResponse).let(::listOf)
     }
 
+    override suspend fun createCurrenciesForMultiCurrencyCard(
+        userWallet: UserWallet,
+        networks: Set<Network>,
+    ): Map<Network, List<CryptoCurrency>> {
+        require(userWallet.isMultiCurrency) { "It isn't multi-currency wallet" }
+
+        return getMultiWalletCurrencies(userWallet = userWallet, networks = networks)
+    }
+
     override fun createDefaultCoinsForMultiCurrencyCard(scanResponse: ScanResponse): List<CryptoCurrency.Coin> {
+        require(scanResponse.cardTypesResolver.isMultiwalletAllowed()) { "It isn't multi-currency wallet" }
+
         val card = scanResponse.card
 
         var blockchains = if (demoConfig.isDemoCardId(card.cardId)) {
@@ -75,29 +88,39 @@ internal class DefaultCardCryptoCurrencyFactory(
     }
 
     override fun createPrimaryCurrencyForSingleCurrencyCard(scanResponse: ScanResponse): CryptoCurrency {
+        require(scanResponse.cardTypesResolver.isSingleWallet()) { "It isn't single-currency wallet" }
+
         return with(getSingleWalletCurrencies(scanResponse)) {
             primaryToken ?: coin
         }
     }
 
     override fun createCurrenciesForSingleCurrencyCardWithToken(scanResponse: ScanResponse): List<CryptoCurrency> {
+        require(scanResponse.cardTypesResolver.isSingleWalletWithToken()) {
+            "It isn't single-currency wallet with token"
+        }
+
         return with(getSingleWalletCurrencies(scanResponse)) {
             listOfNotNull(coin, primaryToken)
         }
     }
 
-    private suspend fun getMultiWalletCurrencies(userWallet: UserWallet, network: Network): List<CryptoCurrency> {
+    private suspend fun getMultiWalletCurrencies(
+        userWallet: UserWallet,
+        networks: Set<Network>,
+    ): Map<Network, List<CryptoCurrency>> {
         val response = userTokensResponseStore.getSyncOrNull(userWalletId = userWallet.walletId)
-            ?: return emptyList()
+            ?: return emptyMap()
 
         val responseCurrenciesFactory = ResponseCryptoCurrenciesFactory(excludedBlockchains)
 
         return responseCurrenciesFactory.createCurrencies(
-            tokens = response.tokens.filter {
-                it.networkId == network.backendId && it.derivationPath == network.derivationPath.value
+            tokens = response.tokens.filter { token ->
+                networks.any { it.backendId == token.networkId && it.derivationPath.value == token.derivationPath }
             },
             scanResponse = userWallet.scanResponse,
         )
+            .groupBy(CryptoCurrency::network)
     }
 
     private fun getSingleWalletCurrencies(scanResponse: ScanResponse): SingleWalletCurrencies {
