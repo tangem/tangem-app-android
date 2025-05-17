@@ -31,4 +31,6 @@ dependencies {
 
     implementation(tangemDeps.blockchain)
     implementation(tangemDeps.card.core)
+
+    implementation(deps.test.junit5)
 }
