@@ -27,7 +27,7 @@ class MockUpdateWalletManagerResultFactory {
         return UpdateWalletManagerResult.NoAccount(
             selectedAddress = "0x1",
             addresses = setOf(Address(value = "0x1", type = Address.Type.Primary)),
-            amountToCreateAccount = BigDecimal.ZERO,
+            amountToCreateAccount = BigDecimal.ONE,
             errorMessage = "",
         )
     }
