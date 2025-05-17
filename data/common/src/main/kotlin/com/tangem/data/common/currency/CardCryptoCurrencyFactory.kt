@@ -3,6 +3,7 @@ package com.tangem.data.common.currency
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 
 /**
@@ -20,6 +21,18 @@ interface CardCryptoCurrencyFactory {
      */
     @Throws
     suspend fun create(userWalletId: UserWalletId, network: Network): List<CryptoCurrency>
+
+    /**
+     * Create currencies for multi currency card
+     *
+     * @param userWallet user wallet
+     * @param networks   networks
+     */
+    @Throws
+    suspend fun createCurrenciesForMultiCurrencyCard(
+        userWallet: UserWallet,
+        networks: Set<Network>,
+    ): Map<Network, List<CryptoCurrency>>
 
     /**
      * Create default coins for multi currency card
