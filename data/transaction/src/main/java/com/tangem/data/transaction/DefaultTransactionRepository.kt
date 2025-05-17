@@ -172,10 +172,15 @@ internal class DefaultTransactionRepository(
     ): TransactionData.Uncompiled = withContext(coroutineDispatcherProvider.io) {
         val blockchain = Blockchain.fromId(network.id.value)
 
+        // For now transfer one nft asset at a time
+        val updatedNFTAsset = nftAsset.copy(
+            amount = BigInteger.ONE,
+        )
+
         val nftTransferCallData = SmartContractCallDataProviderFactory.getNFTTransferCallData(
             destinationAddress = destinationAddress,
             ownerAddress = ownerAddress,
-            nftAsset = nftAsset,
+            nftAsset = updatedNFTAsset,
             blockchain = blockchain,
         )
 
@@ -199,7 +204,7 @@ internal class DefaultTransactionRepository(
 
         return@withContext createTransaction(
             amount = Amount(
-                value = nftAsset.amount?.toBigDecimal() ?: error("Invalid amount"),
+                value = updatedNFTAsset.amount?.toBigDecimal() ?: error("Invalid amount"),
                 token = Token(
                     symbol = blockchain.currency,
                     contractAddress = contractAddress,
