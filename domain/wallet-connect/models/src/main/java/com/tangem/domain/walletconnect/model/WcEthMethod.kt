@@ -1,5 +1,7 @@
 package com.tangem.domain.walletconnect.model
 
+import com.tangem.domain.tokens.model.Network
+
 sealed interface WcEthMethod : WcMethod {
 
     data class MessageSign(
@@ -22,5 +24,10 @@ sealed interface WcEthMethod : WcMethod {
 
     data class SignTransaction(
         val transaction: WcEthTransactionParams,
+    ) : WcEthMethod
+
+    data class AddEthereumChain(
+        val rawChain: WcEthAddChain,
+        val network: Network,
     ) : WcEthMethod
 }
