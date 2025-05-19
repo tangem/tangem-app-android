@@ -31,12 +31,10 @@ internal object NotificationsDomainModule {
     @Singleton
     fun providesSendPushTokenUseCase(
         notificationsRepository: NotificationsRepository,
-        getApplicationIdUseCase: GetApplicationIdUseCase,
         pushNotificationsTokenProvider: PushNotificationsTokenProvider,
     ): SendPushTokenUseCase {
         return SendPushTokenUseCase(
             notificationsRepository = notificationsRepository,
-            getApplicationIdUseCase = getApplicationIdUseCase,
             pushNotificationsTokenProvider = pushNotificationsTokenProvider,
         )
     }
