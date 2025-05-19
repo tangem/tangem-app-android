@@ -67,7 +67,6 @@ sealed class ProviderState {
     data class ProviderDetails(
         val rating: Double?,
         val averageDuration: Int?,
-        val gasFeeFiat: Double?, // TODO delete
     )
 }
 
