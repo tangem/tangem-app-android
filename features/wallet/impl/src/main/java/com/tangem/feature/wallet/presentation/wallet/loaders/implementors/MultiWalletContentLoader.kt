@@ -8,6 +8,7 @@ import com.tangem.domain.nft.GetNFTCollectionsUseCase
 import com.tangem.domain.promo.GetStoryContentUseCase
 import com.tangem.domain.tokens.ApplyTokenListSortingUseCase
 import com.tangem.domain.tokens.RunPolkadotAccountHealthCheckUseCase
+import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsUseCase
@@ -47,6 +48,7 @@ internal class MultiWalletContentLoader(
     private val deepLinksRegistry: DeepLinksRegistry,
     private val nftFeatureToggles: NFTFeatureToggles,
     private val walletsRepository: WalletsRepository,
+    private val currenciesRepository: CurrenciesRepository,
     private val routingFeatureToggle: RoutingFeatureToggle,
 ) : WalletContentLoader(id = userWallet.walletId) {
 
@@ -72,6 +74,7 @@ internal class MultiWalletContentLoader(
                     stateHolder = stateHolder,
                     walletsRepository = walletsRepository,
                     clickIntents = clickIntents,
+                    currenciesRepository = currenciesRepository,
                 ).let(::add)
             }
             MultiWalletWarningsSubscriber(
