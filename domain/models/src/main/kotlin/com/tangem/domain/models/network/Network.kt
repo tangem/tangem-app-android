@@ -1,4 +1,4 @@
-package com.tangem.domain.tokens.model
+package com.tangem.domain.models.network
 
 import kotlinx.serialization.Serializable
 
@@ -9,17 +9,17 @@ import kotlinx.serialization.Serializable
  * whether it operates as a test network, and the type of blockchain standard it conforms to
  * (e.g., ERC20, BEP20).
  *
- * @property id The unique identifier of the network.
- * @property backendId The name of this network in the Tangem backend.
- * @property name The human-readable name of the network, such as "Ethereum" or "Bitcoin".
- * @property derivationPath The path used to derive keys for this network.
- * @property isTestnet Indicates whether the network is a test network or a main network.
- * @property standardType The type of blockchain standard the network adheres to.
- * @property hasFiatFeeRate Indicates whether there is a fee in the network
- * that cannot be represented in a fiat currency.
- * (For those blockchains that have FeeResource instead of a standard type of fee)
- * @property canHandleTokens Indicates whether the network can handle tokens.
- * @property transactionExtrasType The type of extras supported for sending a transaction.
+ * @property id                    the unique identifier of the network
+ * @property backendId             the name of this network in the Tangem backend
+ * @property name                  the human-readable name of the network, such as "Ethereum" or "Bitcoin"
+ * @property currencySymbol        the symbol of the currency associated with the network
+ * @property derivationPath        the path used to derive keys for this network
+ * @property isTestnet             indicates whether the network is a test network or a main network
+ * @property standardType          the type of blockchain standard the network adheres to
+ * @property hasFiatFeeRate        indicates whether there is a fee in the network that cannot be represented in a fiat
+ * currency (for those blockchains that have FeeResource instead of a standard type of fee)
+ * @property canHandleTokens       indicates whether the network can handle tokens
+ * @property transactionExtrasType the type of extras supported for sending a transaction
  */
 @Serializable
 data class Network(
@@ -39,11 +39,7 @@ data class Network(
         require(name.isNotBlank()) { "Network name must not be blank" }
     }
 
-    /**
-     * Represents a unique identifier for a blockchain network.
-     *
-     * @property value The string representation of the network ID.
-     */
+    /** Represents a unique identifier [value] for a blockchain network */
     @JvmInline
     @Serializable
     value class ID(val value: String) {
@@ -56,34 +52,24 @@ data class Network(
     /**
      * Represents a path used to derive cryptographic keys for a blockchain network.
      *
-     * This class represents such paths in a generic manner, allowing for predefined card-based paths,
-     * custom paths, or even no derivation path at all.
+     * This class represents such paths in a generic manner, allowing for predefined card-based paths, custom paths,
+     * or even no derivation path at all.
      */
     @Serializable
     sealed class DerivationPath {
 
-        /** The actual derivation path value, if any. */
+        /** The actual derivation path value, if any */
         abstract val value: String?
 
-        /**
-         * Represents a predefined card-based derivation path.
-         *
-         * @property value The derivation path string.
-         */
+        /** Represents a predefined card-based derivation path [value] */
         @Serializable
         data class Card(override val value: String) : DerivationPath()
 
-        /**
-         * Represents a custom derivation path specified by the user.
-         *
-         * @property value The derivation path string.
-         */
+        /** Represents a custom derivation path [value] specified by the user */
         @Serializable
         data class Custom(override val value: String) : DerivationPath()
 
-        /**
-         * Represents a lack of derivation path, which means the wallet does not support the HD wallet feature.
-         */
+        /** Represents a lack of derivation path, which means the wallet does not support the HD wallet feature */
         @Serializable
         data object None : DerivationPath() {
             override val value: String? get() = null
@@ -96,45 +82,43 @@ data class Network(
      * Blockchain networks often follow certain standards that dictate how tokens operate on them.
      * These standards can define functionalities such as how transactions are processed,
      * how tokens are minted or burned, and more.
-     *
-     * @property name The human-readable name of the standard type.
      */
     @Serializable
     sealed class StandardType {
+
+        /** The human-readable name of the standard type */
         abstract val name: String
 
-        /** Represents the ERC20 token standard, common on the Ethereum network. */
+        /** Represents the ERC20 token standard, common on the Ethereum network */
         @Serializable
         data object ERC20 : StandardType() {
             override val name: String get() = "ERC20"
         }
 
-        /** Represents the TRC20 token standard, common on the TRON network. */
+        /** Represents the TRC20 token standard, common on the TRON network */
         @Serializable
         data object TRC20 : StandardType() {
             override val name: String get() = "TRC20"
         }
 
-        /** Represents the BEP20 token standard, common on the Binance Smart Chain network. */
+        /** Represents the BEP20 token standard, common on the Binance Smart Chain network */
         @Serializable
         data object BEP20 : StandardType() {
             override val name: String get() = "BEP20"
         }
 
-        /** Represents the BEP2 token standard, common on the Binance Chain network. */
+        /** Represents the BEP2 token standard, common on the Binance Chain network */
         @Serializable
         data object BEP2 : StandardType() {
             override val name: String get() = "BEP2"
         }
 
-        /** Represents a network that does not adhere to a predefined standard type. */
+        /** Represents a network that does not adhere to a predefined standard type */
         @Serializable
         data class Unspecified(override val name: String) : StandardType()
     }
 
-    /**
-     * Represents the supported type of extras for sending a transaction.
-     * */
+    /** Represents the supported type of extras for sending a transaction */
     enum class TransactionExtrasType {
 
         /** No transaction extras supported */
