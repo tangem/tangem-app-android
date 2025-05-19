@@ -1,7 +1,7 @@
 package com.tangem.domain.walletconnect.usecase.solana
 
 import com.tangem.blockchain.common.TransactionData
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.walletconnect.model.WcSession
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
 import com.tangem.domain.walletconnect.usecase.blockaid.WcBlockAidEligibleTransactionUseCase
