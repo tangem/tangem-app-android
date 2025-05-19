@@ -238,26 +238,18 @@ internal class DefaultWalletsRepository(
         }
     }
 
-    override suspend fun isNotificationsEnabled(userWalletId: UserWalletId, force: Boolean): Boolean =
-        withContext(dispatchers.io) {
-            if (force) {
-                return@withContext loadAndSaveNotificationsEnabled(userWalletId)
-            }
-
-            val localValue = appPreferencesStore.getObjectMap<Boolean>(PreferencesKeys.NOTIFICATIONS_ENABLED_STATES_KEY)
-                .map { it[userWalletId.stringValue] }
-                .firstOrNull()
-
-            localValue ?: loadAndSaveNotificationsEnabled(userWalletId)
-        }
+    override suspend fun isNotificationsEnabled(userWalletId: UserWalletId): Boolean =
+        appPreferencesStore.getObjectMap<Boolean>(PreferencesKeys.NOTIFICATIONS_ENABLED_STATES_KEY)
+            .map { it[userWalletId.stringValue] }
+            .firstOrNull() ?: false
 
     override suspend fun setNotificationsEnabled(userWalletId: UserWalletId, isEnabled: Boolean) {
-        withContext(dispatchers.io) {
-            tangemTechApi.setNotificationsEnabled(
-                walletId = userWalletId.stringValue,
-                body = WalletBody(notifyStatus = isEnabled),
-            ).getOrThrow()
-            setNotificationsEnabledLocally(userWalletId, isEnabled)
+        appPreferencesStore.editData {
+            it.setObjectMap(
+                key = PreferencesKeys.NOTIFICATIONS_ENABLED_STATES_KEY,
+                value = it.getObjectMap<Boolean>(PreferencesKeys.NOTIFICATIONS_ENABLED_STATES_KEY)
+                    .plus(userWalletId.stringValue to isEnabled),
+            )
         }
     }
 
@@ -283,7 +275,7 @@ internal class DefaultWalletsRepository(
                         value = walletInfo,
                     )
                     if (updateCache) {
-                        setNotificationsEnabledLocally(
+                        setNotificationsEnabled(
                             userWalletId = userWallet.walletId,
                             isEnabled = userWallet.isNotificationsEnabled,
                         )
@@ -307,21 +299,4 @@ internal class DefaultWalletsRepository(
                 body = walletsBody,
             ).getOrThrow()
         }
-
-    private suspend fun loadAndSaveNotificationsEnabled(userWalletId: UserWalletId): Boolean {
-        val walletResponse = tangemTechApi.getWalletById(walletId = userWalletId.stringValue).getOrThrow()
-        val isEnabled = walletResponse.notifyStatus
-        setNotificationsEnabledLocally(userWalletId, isEnabled)
-        return isEnabled
-    }
-
-    private suspend fun setNotificationsEnabledLocally(userWalletId: UserWalletId, isEnabled: Boolean) {
-        appPreferencesStore.editData {
-            it.setObjectMap(
-                key = PreferencesKeys.NOTIFICATIONS_ENABLED_STATES_KEY,
-                value = it.getObjectMap<Boolean>(PreferencesKeys.NOTIFICATIONS_ENABLED_STATES_KEY)
-                    .plus(userWalletId.stringValue to isEnabled),
-            )
-        }
-    }
 }
