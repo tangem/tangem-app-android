@@ -2,17 +2,13 @@ package com.tangem.tap.domain.visa
 
 import arrow.core.getOrElse
 import com.tangem.common.CompletionResult
-import com.tangem.common.card.CardWallet
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.core.CardSession
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toHexString
 import com.tangem.core.error.ext.tangemError
-import com.tangem.crypto.hdWallet.DerivationPath
-import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.datasource.local.visa.VisaAuthTokenStorage
-import com.tangem.domain.common.visa.VisaUtilities
 import com.tangem.domain.common.visa.VisaWalletPublicKeyUtility
 import com.tangem.domain.visa.error.VisaActivationError
 import com.tangem.domain.visa.error.VisaAuthorizationAPIError
@@ -22,7 +18,6 @@ import com.tangem.domain.visa.repository.VisaActivationRepository
 import com.tangem.domain.visa.repository.VisaAuthRepository
 import com.tangem.operations.attestation.AttestCardKeyCommand
 import com.tangem.operations.attestation.AttestCardKeyResponse
-import com.tangem.operations.derivation.DeriveWalletPublicKeyTask
 import com.tangem.operations.sign.SignHashCommand
 import com.tangem.operations.sign.SignHashResponse
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -61,53 +56,18 @@ internal class VisaCardScanHandler @Inject constructor(
             session = session,
         )
 
-        val wallet = card.wallets.firstOrNull { it.curve == EllipticCurve.Secp256k1 } ?: run {
+        card.wallets.firstOrNull { it.curve == EllipticCurve.Secp256k1 } ?: run {
             val activationInput =
                 VisaActivationInput(card.cardId, card.cardPublicKey.toHexString(), card.isAccessCodeSet)
             val activationStatus = VisaCardActivationStatus.NotStartedActivation(activationInput)
             return CompletionResult.Success(activationStatus)
         }
 
-        return context.deriveKey(wallet)
-    }
-
-    private suspend fun SessionContext.deriveKey(wallet: CardWallet): CompletionResult<VisaCardActivationStatus> {
-        val derivationPath = VisaUtilities.visaDefaultDerivationPath ?: run {
-            Timber.e("Failed to create derivation path while first scan")
-
-            return CompletionResult.Failure(VisaCardScanError.FailedToCreateDerivationPath.tangemError)
-        }
-
-        val derivationTask = DeriveWalletPublicKeyTask(wallet.publicKey, derivationPath)
-        val derivationTaskResult = suspendCancellableCoroutine { continuation ->
-            derivationTask.run(session) { result ->
-                continuation.resume(result)
-            }
-        }
-        return handleDerivationResponse(derivationTaskResult)
-    }
-
-    private suspend fun SessionContext.handleDerivationResponse(
-        result: CompletionResult<ExtendedPublicKey>,
-    ): CompletionResult<VisaCardActivationStatus> {
-        return when (result) {
-            is CompletionResult.Success -> {
-                Timber.i("Start task for loading challenge for Visa wallet")
-                handleWalletAuthorization()
-            }
-            is CompletionResult.Failure -> {
-                CompletionResult.Failure(result.error)
-            }
-        }
+        return context.handleWalletAuthorization()
     }
 
     private suspend fun SessionContext.handleWalletAuthorization(): CompletionResult<VisaCardActivationStatus> {
         Timber.i("Started handling authorization using Visa wallet")
-
-        val derivationPath = VisaUtilities.visaDefaultDerivationPath ?: run {
-            Timber.e("Failed to create derivation path while handling wallet authorization")
-            return CompletionResult.Failure(VisaCardScanError.FailedToCreateDerivationPath.tangemError)
-        }
 
         val card = session.environment.card ?: return CompletionResult.Failure(TangemSdkError.MissingPreflightRead())
 
@@ -116,12 +76,7 @@ internal class VisaCardScanHandler @Inject constructor(
             return CompletionResult.Failure(VisaCardScanError.FailedToFindWallet.tangemError)
         }
 
-        val extendedPublicKey = wallet.derivedKeys[derivationPath] ?: run {
-            Timber.e("Failed to find extended public key while handling wallet authorization")
-            return CompletionResult.Failure(VisaCardScanError.FailedToFindDerivedWalletKey.tangemError)
-        }
-
-        val walletAddress = VisaWalletPublicKeyUtility.generateAddressOnSecp256k1(extendedPublicKey.publicKey)
+        val walletAddress = VisaWalletPublicKeyUtility.generateAddressOnSecp256k1(wallet.publicKey)
             .getOrElse {
                 return CompletionResult.Failure(it.tangemError)
             }
@@ -132,9 +87,7 @@ internal class VisaCardScanHandler @Inject constructor(
             error("sign and get specific error to switch to card_id flow")
             visaAuthRepository.getCardWalletAuthChallenge(cardWalletAddress = walletAddress.value)
         }.getOrElse {
-            Timber.i(
-                "Failed to get Access token for Wallet public key authoziation. Authorizing using Card Pub key",
-            )
+            Timber.i("Failed to get Access token for Wallet public key authorization. Authorizing using Card Pub key")
             return handleCardAuthorization(
                 cardWalletAddress = walletAddress.value,
             )
@@ -142,7 +95,6 @@ internal class VisaCardScanHandler @Inject constructor(
 
         val signChallengeResult = signChallengeWithWallet(
             publicKey = wallet.publicKey,
-            derivationPath = derivationPath,
             nonce = challengeResponse.challenge,
         )
 
@@ -169,9 +121,7 @@ internal class VisaCardScanHandler @Inject constructor(
         val authorizationTokensResponse = runCatching {
             visaAuthRepository.getAccessTokens(signedChallenge = signedChallenge)
         }.getOrElse {
-            Timber.i(
-                "Failed to get Access token for Wallet public key authoziation. Authorizing using Card Pub key",
-            )
+            Timber.i("Failed to get Access token for Wallet public key authorization. Authorizing using Card Pub key")
             return handleCardAuthorization(
                 cardWalletAddress = cardWalletAddress,
             )
@@ -271,13 +221,11 @@ internal class VisaCardScanHandler @Inject constructor(
 
     private suspend fun SessionContext.signChallengeWithWallet(
         publicKey: ByteArray,
-        derivationPath: DerivationPath,
         nonce: String,
     ): CompletionResult<SignHashResponse> {
         val signHashCommand = SignHashCommand(
             hash = nonce.hexToBytes(),
             walletPublicKey = publicKey,
-            derivationPath = derivationPath,
         )
         return suspendCancellableCoroutine {
             signHashCommand.run(session) { result ->
