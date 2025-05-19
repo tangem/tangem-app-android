@@ -27,10 +27,10 @@ import com.tangem.datasource.local.walletmanager.WalletManagersStore
 import com.tangem.domain.common.util.hasDerivation
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.txhistory.models.PaginationWrapper
-import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryState
 import com.tangem.domain.walletmanager.model.RentData
 import com.tangem.domain.walletmanager.model.SmartContractMethod
@@ -234,7 +234,7 @@ class DefaultWalletManagersFacade(
         currency: CryptoCurrency,
         page: Page,
         pageSize: Int,
-    ): PaginationWrapper<TxHistoryItem> {
+    ): PaginationWrapper<TxInfo> {
         val walletManager = getOrCreateWalletManager(
             userWalletId = userWalletId,
             network = currency.network,
@@ -534,10 +534,7 @@ class DefaultWalletManagersFacade(
         return walletManager?.createTransaction(amount, fee, destination)
     }
 
-    override suspend fun getRecentTransactions(
-        userWalletId: UserWalletId,
-        currency: CryptoCurrency,
-    ): List<TxHistoryItem> {
+    override suspend fun getRecentTransactions(userWalletId: UserWalletId, currency: CryptoCurrency): List<TxInfo> {
         val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = currency.network)
 
         if (walletManager == null) {
