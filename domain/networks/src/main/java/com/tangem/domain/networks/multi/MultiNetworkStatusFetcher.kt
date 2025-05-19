@@ -5,7 +5,7 @@ import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWalletId
 
 /**
- * Fetcher of network status [Network] for wallet with [UserWalletId]
+ * Fetcher of network status [Network] for multi-currency wallet with [UserWalletId]
  *
 [REDACTED_AUTHOR]
  */
