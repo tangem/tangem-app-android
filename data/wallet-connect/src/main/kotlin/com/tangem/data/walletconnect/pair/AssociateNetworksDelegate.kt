@@ -3,15 +3,15 @@ package com.tangem.data.walletconnect.pair
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.Wallet.Model.Namespace
 import com.tangem.data.walletconnect.utils.WcNamespaceConverter
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletconnect.model.WcPairError
 import com.tangem.domain.walletconnect.model.WcSessionProposal.ProposalNetwork
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 
-internal class AssociateNetworksDelegate constructor(
+internal class AssociateNetworksDelegate(
     private val namespaceConverters: Set<WcNamespaceConverter>,
     private val getWallets: GetWalletsUseCase,
     private val currenciesRepository: CurrenciesRepository,
@@ -88,7 +88,7 @@ internal class AssociateNetworksDelegate constructor(
             .filterIsInstance<CryptoCurrency.Coin>()
             .map { it.network }
 
-    private fun Map<String, Wallet.Model.Namespace.Proposal>.setOfChainId(): Set<String> =
+    private fun Map<String, Namespace.Proposal>.setOfChainId(): Set<String> =
         this.values.flatMap { proposal -> proposal.chains ?: listOf() }.toSet()
 
     private fun missingNetworkName(chainId: String): String = chainId.replaceFirstChar(Char::titlecase)

@@ -5,11 +5,11 @@ import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.data.networks.models.SimpleNetworkStatus
 import com.tangem.datasource.local.network.entity.NetworkStatusDM
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.tokens.model.CryptoCurrency.ID
 import com.tangem.domain.tokens.model.CryptoCurrency.ID.Body
 import com.tangem.domain.tokens.model.CryptoCurrency.ID.Prefix
 import com.tangem.domain.tokens.model.CryptoCurrencyAmountStatus
-import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.NetworkAddress
 import com.tangem.domain.tokens.model.NetworkStatus
 import org.junit.jupiter.api.TestInstance
