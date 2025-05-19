@@ -153,7 +153,9 @@ internal class OnrampSuccessComponentModel @Inject constructor(
             } else {
                 resourceReference(R.string.express_error_code, wrappedList(errorCode))
             },
-            onDismissRequest = router::pop,
+            firstActionBuilder = {
+                okAction(router::pop)
+            },
         )
 
         messageSender.send(message)
