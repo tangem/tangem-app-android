@@ -10,9 +10,9 @@ import com.tangem.data.txhistory.repository.paging.TxHistoryPagingSource
 import com.tangem.datasource.local.txhistory.TxHistoryItemsStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.txhistory.models.Page
-import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryState
 import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.domain.txhistory.repository.TxHistoryRepository
@@ -56,7 +56,7 @@ class DefaultTxHistoryRepository(
         currency: CryptoCurrency,
         pageSize: Int,
         refresh: Boolean,
-    ): Flow<PagingData<TxHistoryItem>> {
+    ): Flow<PagingData<TxInfo>> {
         val pager = Pager(
             config = PagingConfig(
                 pageSize = pageSize,
@@ -102,7 +102,7 @@ class DefaultTxHistoryRepository(
         currency: CryptoCurrency,
         pageSize: Int,
         refresh: Boolean,
-    ): List<TxHistoryItem> = withContext(dispatchers.io) {
+    ): List<TxInfo> = withContext(dispatchers.io) {
         try {
             cacheRegistry.invokeOnExpire(
                 key = getTxHistoryPageKey(currency, userWalletId, Page.Initial),
