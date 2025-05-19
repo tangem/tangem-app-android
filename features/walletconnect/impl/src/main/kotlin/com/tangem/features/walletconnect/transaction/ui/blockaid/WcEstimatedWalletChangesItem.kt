@@ -138,7 +138,7 @@ private class EstimatedWalletChangesPreviewProviderTwoItems :
                     tokenIconUrl = "https://tangem.com",
                 ),
                 WcEstimatedWalletChangeUM(
-                    iconRes = R.drawable.ic_recieve_new_24,
+                    iconRes = R.drawable.ic_receive_new_24,
                     title = resourceReference(R.string.common_receive),
                     description = "+ 1,131.46 MATIC",
                     tokenIconUrl = "https://tangem.com",
