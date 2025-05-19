@@ -2,7 +2,6 @@ package com.tangem.feature.swap.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
@@ -59,10 +58,6 @@ private fun ChooseProviderBottomSheetContent(content: ChooseProviderBottomSheetC
                     end = TangemTheme.dimens.spacing16,
                     bottom = TangemTheme.dimens.spacing14,
                 )
-                .background(
-                    color = TangemTheme.colors.background.action,
-                    shape = TangemTheme.shapes.roundedCornersXMedium,
-                )
                 .clip(shape = TangemTheme.shapes.roundedCornersXMedium),
         ) {
             content.providers.forEach { provider ->
@@ -70,11 +65,7 @@ private fun ChooseProviderBottomSheetContent(content: ChooseProviderBottomSheetC
                 ProviderItemBlock(
                     state = provider,
                     isSelected = isSelected,
-                    modifier = Modifier
-                        .clickable(
-                            enabled = provider.onProviderClick != null,
-                            onClick = { provider.onProviderClick?.invoke(provider.id) },
-                        )
+                    modifier = Modifier,
                 )
             }
         }
@@ -106,7 +97,7 @@ private fun Preview_ChooseProviderBottomSheet() {
             name = "1inch",
             type = "DEX",
             iconUrl = "",
-            subtitle = stringReference("1 000 000"),
+            subtitle = stringReference("1 000 USDT"),
             additionalBadge = ProviderState.AdditionalBadge.BestTrade,
             percentLowerThenBest = PercentDifference.Value(-1.0f),
             selectionType = ProviderState.SelectionType.SELECT,
@@ -115,7 +106,6 @@ private fun Preview_ChooseProviderBottomSheet() {
             details = ProviderState.ProviderDetails(
                 rating = 4.9,
                 averageDuration = 145,
-                gasFeeFiat = 3.6,
             ),
 
         ),
