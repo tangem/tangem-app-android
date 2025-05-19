@@ -5,9 +5,9 @@ import androidx.paging.cachedIn
 import androidx.paging.map
 import arrow.core.Either
 import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryListError
 import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
@@ -27,7 +27,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 
 typealias MaybeTxHistoryCount = Either<TxHistoryStateError, Int>
-typealias MaybeTxHistoryItems = Either<TxHistoryListError, Flow<PagingData<TxHistoryItem>>>
+typealias MaybeTxHistoryItems = Either<TxHistoryListError, Flow<PagingData<TxInfo>>>
 
 @Suppress("LongParameterList")
 internal class TxHistorySubscriber(
@@ -40,7 +40,7 @@ internal class TxHistorySubscriber(
     private val txHistoryItemsUseCase: GetTxHistoryItemsUseCase,
 ) : WalletSubscriber() {
 
-    override fun create(coroutineScope: CoroutineScope): Flow<PagingData<TxHistoryItem>> {
+    override fun create(coroutineScope: CoroutineScope): Flow<PagingData<TxInfo>> {
         return flow {
             getSingleCryptoCurrencyStatusUseCase.collectLatest(userWalletId = userWallet.walletId) { status ->
                 val maybeTxHistoryItemCount = txHistoryItemsCountUseCase(
