@@ -127,4 +127,13 @@ internal object NFTDomainModule {
     fun provideGetWalletNFTEnabledUseCase(walletsRepository: WalletsRepository): GetWalletNFTEnabledUseCase {
         return GetWalletNFTEnabledUseCase(walletsRepository)
     }
+
+    @Provides
+    @Singleton
+    fun provideClearNFTCacheUseCase(
+        nftRepository: NFTRepository,
+        currenciesRepository: CurrenciesRepository,
+    ): ObserveAndClearNFTCacheIfNeedUseCase {
+        return ObserveAndClearNFTCacheIfNeedUseCase(nftRepository, currenciesRepository)
+    }
 }
