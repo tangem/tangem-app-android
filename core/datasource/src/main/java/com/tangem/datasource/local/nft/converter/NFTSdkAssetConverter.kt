@@ -1,9 +1,9 @@
 package com.tangem.datasource.local.nft.converter
 
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.nft.models.NFTAsset
 import com.tangem.domain.nft.models.NFTSalePrice
-import com.tangem.domain.tokens.model.Network
 import com.tangem.utils.converter.TwoWayConverter
 import com.tangem.blockchain.nft.models.NFTAsset as SdkNFTAsset
 
