@@ -1,97 +1,141 @@
 package com.tangem.data.networks.single
 
+import arrow.core.Either
+import arrow.core.left
 import com.google.common.truth.Truth
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.data.common.currency.CardCryptoCurrencyFactory
+import com.tangem.data.networks.fetcher.CommonNetworkStatusFetcher
 import com.tangem.data.networks.store.NetworksStatusesStoreV2
 import com.tangem.data.networks.store.setSourceAsCache
-import com.tangem.data.networks.store.storeSuccess
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
-import com.tangem.domain.tokens.model.NetworkStatus
-import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.walletmanager.model.UpdateWalletManagerResult
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
-import io.mockk.coEvery
-import io.mockk.coVerify
-import io.mockk.coVerifyOrder
-import io.mockk.mockk
+import io.mockk.*
 import kotlinx.coroutines.test.runTest
-import org.junit.Test
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 
 /**
 [REDACTED_AUTHOR]
  */
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class DefaultSingleNetworkStatusFetcherTest {
 
-    private val walletManagersFacade: WalletManagersFacade = mockk(relaxUnitFun = true)
+    private val commonNetworkStatusFetcher: CommonNetworkStatusFetcher = mockk()
     private val networksStatusesStore: NetworksStatusesStoreV2 = mockk(relaxUnitFun = true)
     private val cardCryptoCurrencyFactory: CardCryptoCurrencyFactory = mockk()
 
     private val fetcher = DefaultSingleNetworkStatusFetcher(
-        walletManagersFacade = walletManagersFacade,
+        commonNetworkStatusFetcher = commonNetworkStatusFetcher,
         networksStatusesStore = networksStatusesStore,
         cardCryptoCurrencyFactory = cardCryptoCurrencyFactory,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
 
+    @BeforeEach
+    fun resetMocks() {
+        clearMocks(commonNetworkStatusFetcher, networksStatusesStore, cardCryptoCurrencyFactory)
+    }
+
     @Test
-    fun `fetch network status successfully`() = runTest {
-        val params = createParams()
+    fun `fetch successfully`() = runTest {
+        // Arrange
+        val params = SingleNetworkStatusFetcher.Params(userWalletId = userWalletId, network = ethereum.network)
+        val networkCurrencies = listOf(ethereum)
+        val commonFetcherResult = Either.Right(Unit)
 
-        coEvery { cardCryptoCurrencyFactory.create(params.userWalletId, params.network) } returns listOf(ethereum)
+        coEvery { networksStatusesStore.setSourceAsCache(params.userWalletId, params.network) } returns Unit
+        coEvery { cardCryptoCurrencyFactory.create(params.userWalletId, params.network) } returns networkCurrencies
+        coEvery {
+            commonNetworkStatusFetcher.fetch(
+                userWalletId = params.userWalletId,
+                network = params.network,
+                networkCurrencies = networkCurrencies.toSet(),
+            )
+        } returns commonFetcherResult
 
-        val result = UpdateWalletManagerResult.MissedDerivation
-        coEvery { walletManagersFacade.update(params.userWalletId, params.network, emptySet()) } returns result
-
+        // Act
         val actual = fetcher(params)
+
+        // Assert
+        val expected = commonFetcherResult
+
+        Truth.assertThat(actual).isEqualTo(expected)
 
         coVerifyOrder {
             networksStatusesStore.setSourceAsCache(params.userWalletId, params.network)
             cardCryptoCurrencyFactory.create(params.userWalletId, params.network)
-            walletManagersFacade.update(params.userWalletId, params.network, emptySet())
-            networksStatusesStore.storeSuccess(
-                userWalletId = params.userWalletId,
-                status = NetworkStatus(params.network, NetworkStatus.MissedDerivation),
-            )
+            commonNetworkStatusFetcher.fetch(params.userWalletId, params.network, setOf(ethereum))
         }
-
-        Truth.assertThat(actual.isRight()).isTrue()
     }
 
     @Test
-    fun `fetch network status failure`() = runTest {
-        val params = createParams()
+    fun `fetch failure if cardCryptoCurrencyFactory throws exception`() = runTest {
+        // Arrange
+        val params = SingleNetworkStatusFetcher.Params(userWalletId = userWalletId, network = ethereum.network)
+        val factoryException = IllegalStateException()
 
-        val exception = IllegalStateException()
-        coEvery { cardCryptoCurrencyFactory.create(params.userWalletId, params.network) } throws exception
+        coEvery { networksStatusesStore.setSourceAsCache(params.userWalletId, params.network) } returns Unit
+        coEvery { cardCryptoCurrencyFactory.create(params.userWalletId, params.network) } throws factoryException
 
+        // Act
         val actual = fetcher(params)
+
+        // Arrange
+        val expected = Either.Left(factoryException)
+        Truth.assertThat(actual).isEqualTo(expected)
 
         coVerifyOrder {
             networksStatusesStore.setSourceAsCache(userWalletId = params.userWalletId, network = params.network)
             cardCryptoCurrencyFactory.create(userWalletId = params.userWalletId, network = params.network)
-            // networksStatusesStore.setSourceAsOnlyCache(userWalletId = params.userWalletId, network = params.network)
         }
 
         coVerify(inverse = true) {
-            walletManagersFacade.update(userWalletId = any(), network = any(), extraTokens = any())
-            // networksStatusesStore.storeSuccess(userWalletId = any(), status = any())
+            commonNetworkStatusFetcher.fetch(userWalletId = any(), network = any(), networkCurrencies = any())
         }
-
-        Truth.assertThat(actual.isLeft()).isTrue()
-        Truth.assertThat(actual.leftOrNull()).isEqualTo(exception)
     }
 
-    private fun createParams(): SingleNetworkStatusFetcher.Params {
-        return SingleNetworkStatusFetcher.Params.Simple(
-            userWalletId = UserWalletId("011"),
-            network = ethereum.network,
-        )
+    @Test
+    fun `fetch failure if commonNetworkStatusFetcher returns exception`() = runTest {
+        // Arrange
+        val params = SingleNetworkStatusFetcher.Params(userWalletId = userWalletId, network = ethereum.network)
+        val networkCurrencies = listOf(ethereum)
+        val commonFetcherResult = IllegalStateException().left()
+
+        coEvery { networksStatusesStore.setSourceAsCache(params.userWalletId, params.network) } returns Unit
+        coEvery { cardCryptoCurrencyFactory.create(params.userWalletId, params.network) } returns networkCurrencies
+        coEvery {
+            commonNetworkStatusFetcher.fetch(
+                userWalletId = params.userWalletId,
+                network = params.network,
+                networkCurrencies = networkCurrencies.toSet(),
+            )
+        } returns commonFetcherResult
+
+        // Act
+        val actual = fetcher(params)
+
+        // Arrange
+        val expected = commonFetcherResult
+
+        Truth.assertThat(actual).isEqualTo(expected)
+
+        coVerifyOrder {
+            networksStatusesStore.setSourceAsCache(userWalletId = params.userWalletId, network = params.network)
+            cardCryptoCurrencyFactory.create(userWalletId = params.userWalletId, network = params.network)
+            commonNetworkStatusFetcher.fetch(
+                userWalletId = params.userWalletId,
+                network = params.network,
+                networkCurrencies = setOf(ethereum),
+            )
+        }
     }
 
     private companion object {
 
+        val userWalletId = UserWalletId("011")
         val ethereum = MockCryptoCurrencyFactory().ethereum
     }
 }
