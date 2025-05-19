@@ -55,30 +55,23 @@ fun ProviderItemBlock(state: ProviderState, modifier: Modifier = Modifier, isSel
                 modifier.clip(RoundedCornerShape(16.dp))
             }
                 .clip(shape = TangemTheme.shapes.roundedCornersXMedium)
-
-                .background(
-                    color = TangemTheme.colors.background.action,
-                    shape = TangemTheme.shapes.roundedCornersXMedium,
-                )
                 .clickable(
                     enabled = state.onProviderClick != null,
                     onClick = { state.onProviderClick?.invoke(state.id) },
                 )
                 .fillMaxWidth()
                 .padding(vertical = TangemTheme.dimens.spacing12),
-            isSelected = isSelected,
         )
     }
 }
 
 @Composable
-fun ProviderItem(state: ProviderState, modifier: Modifier = Modifier, isSelected: Boolean = false) {
+fun ProviderItem(state: ProviderState, modifier: Modifier = Modifier) {
     when (state) {
         is ProviderState.Content -> {
             ProviderContentState(
                 state = state,
                 modifier = modifier,
-                isSelected = isSelected,
             )
         }
         is ProviderState.Loading -> {
@@ -90,7 +83,6 @@ fun ProviderItem(state: ProviderState, modifier: Modifier = Modifier, isSelected
             ProviderUnavailableState(
                 state = state,
                 modifier = modifier,
-                isSelected = isSelected,
             )
         }
         is ProviderState.Empty -> {
@@ -99,15 +91,9 @@ fun ProviderItem(state: ProviderState, modifier: Modifier = Modifier, isSelected
     }
 }
 
-// Be careful when will replace with InputRowBestRate, because RecommendedBadge was added
-@Deprecated("Replace with InputRowBestRate")
 @Suppress("LongMethod")
 @Composable
-private fun ProviderContentState(
-    state: ProviderState.Content,
-    modifier: Modifier = Modifier,
-    isSelected: Boolean = false,
-) {
+private fun ProviderContentState(state: ProviderState.Content, modifier: Modifier = Modifier) {
     Box(modifier = modifier.fillMaxWidth()) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             SubcomposeAsyncImage(
@@ -167,7 +153,6 @@ private fun ProviderContentState(
                                 iconResId = R.drawable.ic_star_outline_12,
                                 modifier = Modifier.padding(end = TangemTheme.dimens.spacing4),
                             )
-
                         }
                         averageDuration?.let {
                             OutlinedText(
@@ -176,10 +161,8 @@ private fun ProviderContentState(
                             )
                         }
                     }
-
                 }
             }
-
 
             Column(
                 horizontalAlignment = Alignment.End,
@@ -196,7 +179,6 @@ private fun ProviderContentState(
                             maxLines = 1,
                         )
                     }
-
                 }
                 val badgeModifier = Modifier.padding(start = TangemTheme.dimens.spacing4)
                 when (state.additionalBadge) {
@@ -215,7 +197,7 @@ private fun ProviderContentState(
                             AnimatedContent(targetState = state.percentLowerThenBest.value, label = "") {
                                 Text(
                                     text = if (it > 0) "+$it%" else "$it%",
-                                    style = TangemTheme.typography.body2,
+                                    style = TangemTheme.typography.caption2,
                                     color = textColor,
                                     modifier = Modifier.padding(start = TangemTheme.dimens.spacing4),
                                     overflow = TextOverflow.Ellipsis,
@@ -227,49 +209,11 @@ private fun ProviderContentState(
                 }
             }
         }
-
-        // Column(
-        //     horizontalAlignment = Alignment.End,
-        //     verticalArrangement = Arrangement.spacedBy(4.dp),
-        // ) {
-        //     Text(
-        //         text = state.rate,
-        //         style = TangemTheme.typography.body2,
-        //         color = TangemTheme.colors.text.primary1,
-        //     )
-        //     when {
-        //         state.isBestRate -> {
-        //             Text(
-        //                 text = stringResourceSafe(R.string.express_provider_best_rate),
-        //                 style = TangemTheme.typography.caption1,
-        //                 color = TangemTheme.colors.text.constantWhite,
-        //                 modifier = Modifier
-        //                     .clip(RoundedCornerShape(4.dp))
-        //                     .background(TangemTheme.colors.icon.accent)
-        //                     .padding(vertical = 1.dp, horizontal = 6.dp),
-        //             )
-        //         }
-        //         state.diffRate != null -> {
-        //             Text(
-        //                 text = state.diffRate.resolveReference(),
-        //                 style = TangemTheme.typography.caption2,
-        //                 color = TangemTheme.colors.text.warning,
-        //                 modifier = Modifier.padding(vertical = 1.dp),
-        //             )
-        //         }
-        //     }
-        // }
-
-        // ProviderChevron(selectionType = state.selectionType, isSelected = isSelected)
     }
 }
 
 @Composable
-private fun ProviderUnavailableState(
-    state: ProviderState.Unavailable,
-    isSelected: Boolean,
-    modifier: Modifier = Modifier,
-) {
+private fun ProviderUnavailableState(state: ProviderState.Unavailable, modifier: Modifier = Modifier) {
     Box(modifier = modifier.fillMaxWidth()) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             val (alpha, colorFilter) = GRAY_SCALE_ALPHA to GrayscaleColorFilter
@@ -300,14 +244,14 @@ private fun ProviderUnavailableState(
                     AnimatedContent(targetState = state.name, label = "") {
                         Text(
                             text = it,
-                            style = TangemTheme.typography.caption2,
+                            style = TangemTheme.typography.subtitle2,
                             color = TangemTheme.colors.text.tertiary,
                         )
                     }
                     AnimatedContent(targetState = state.type, label = "") {
                         Text(
                             text = it,
-                            style = TangemTheme.typography.caption2,
+                            style = TangemTheme.typography.body2,
                             color = TangemTheme.colors.text.tertiary,
                             modifier = Modifier.padding(start = TangemTheme.dimens.spacing4),
                         )
@@ -316,15 +260,13 @@ private fun ProviderUnavailableState(
                 AnimatedContent(targetState = state.alertText, label = "") {
                     Text(
                         text = it.resolveReference(),
-                        style = TangemTheme.typography.body2,
+                        style = TangemTheme.typography.caption2,
                         color = TangemTheme.colors.text.tertiary,
                         modifier = Modifier.padding(top = TangemTheme.dimens.spacing6),
                     )
                 }
             }
         }
-
-        // ProviderChevron(selectionType = state.selectionType, isSelected = isSelected)
     }
 }
 
@@ -357,45 +299,6 @@ private fun ProviderLoadingState(modifier: Modifier = Modifier) {
                     style = TangemTheme.typography.body2,
                     color = TangemTheme.colors.text.tertiary,
                     modifier = Modifier.padding(start = TangemTheme.dimens.spacing4),
-                )
-            }
-        }
-
-        // Icon(
-        //     painter = painterResource(id = R.drawable.ic_chevron_right_24),
-        //     contentDescription = null,
-        //     modifier = Modifier
-        //         .align(alignment = Alignment.CenterEnd)
-        //         .padding(end = TangemTheme.dimens.spacing12),
-        //     tint = TangemTheme.colors.icon.informative,
-        // )
-    }
-}
-
-@Composable
-private fun BoxScope.ProviderChevron(selectionType: ProviderState.SelectionType, isSelected: Boolean) {
-    when (selectionType) {
-        ProviderState.SelectionType.NONE -> { /* no-op */
-        }
-        ProviderState.SelectionType.CLICK -> {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_chevron_right_24),
-                contentDescription = null,
-                modifier = Modifier
-                    .align(alignment = Alignment.CenterEnd)
-                    .padding(end = TangemTheme.dimens.spacing12),
-                tint = TangemTheme.colors.icon.informative,
-            )
-        }
-        ProviderState.SelectionType.SELECT -> {
-            if (isSelected) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_check_24),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .align(alignment = Alignment.CenterEnd)
-                        .padding(end = TangemTheme.dimens.spacing12),
-                    tint = TangemTheme.colors.icon.accent,
                 )
             }
         }
@@ -450,12 +353,7 @@ private fun RecommendedItem(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun ProviderBadge(
-    textResId: Int,
-    backgroundColor: Color,
-    textColor: Color,
-    modifier: Modifier = Modifier,
-) {
+private fun ProviderBadge(textResId: Int, backgroundColor: Color, textColor: Color, modifier: Modifier = Modifier) {
     Text(
         text = stringResourceSafe(textResId),
         style = TangemTheme.typography.caption1,
@@ -468,11 +366,7 @@ private fun ProviderBadge(
 }
 
 @Composable
-private fun RowScope.OutlinedText(
-    text: String,
-    @DrawableRes iconResId: Int,
-    modifier: Modifier = Modifier,
-) {
+private fun RowScope.OutlinedText(text: String, @DrawableRes iconResId: Int, modifier: Modifier = Modifier) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing1),
@@ -481,16 +375,16 @@ private fun RowScope.OutlinedText(
             .heightIn(min = TangemTheme.dimens.size16)
             .border(
                 width = TangemTheme.dimens.size1,
-                color = TangemTheme.colors.field.primary,
+                color = TangemTheme.colors.stroke.primary,
                 shape = TangemTheme.shapes.roundedCornersSmall2,
             )
-            .padding(vertical = 1.dp, horizontal = 6.dp),
+            .padding(vertical = 1.dp, horizontal = 4.dp),
     ) {
         Icon(
             painter = painterResource(id = iconResId),
             contentDescription = null,
             tint = TangemTheme.colors.icon.informative,
-            modifier = Modifier.size(TangemTheme.dimens.size12)
+            modifier = Modifier.size(TangemTheme.dimens.size12),
         )
 
         Text(
@@ -504,8 +398,8 @@ private fun RowScope.OutlinedText(
 }
 
 // region Preview
-@Preview(showBackground = true, widthDp = 360)
-@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Preview(showBackground = true, widthDp = 328)
+@Preview(showBackground = true, widthDp = 328, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun ProviderItemPreview(
     @PreviewParameter(ProviderItemParameterProvider::class) state: Pair<ProviderState, Boolean>,
@@ -535,7 +429,6 @@ private class ProviderItemParameterProvider : CollectionPreviewParameterProvider
             details = ProviderState.ProviderDetails(
                 rating = 4.9,
                 averageDuration = 145,
-                gasFeeFiat = 3.6,
             ),
         )
         val contentState2 = contentState.copy(
@@ -545,7 +438,6 @@ private class ProviderItemParameterProvider : CollectionPreviewParameterProvider
             details = contentState.details.copy(
                 rating = null,
                 averageDuration = null,
-                gasFeeFiat = null,
             ),
         )
         val unavailableState = ProviderState.Unavailable(

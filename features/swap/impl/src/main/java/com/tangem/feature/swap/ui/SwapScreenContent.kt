@@ -70,7 +70,13 @@ internal fun SwapScreenContent(state: SwapStateHolder, modifier: Modifier = Modi
         ) {
             MainInfo(state)
 
-            ProviderItemBlock(state = state.providerState)
+            ProviderItemBlock(
+                state = state.providerState,
+                modifier = Modifier.background(
+                    color = TangemTheme.colors.background.action,
+                    shape = TangemTheme.shapes.roundedCornersXMedium,
+                ),
+            )
 
             FeeItemBlock(state = state.fee)
 

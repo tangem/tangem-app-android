@@ -11,7 +11,6 @@ import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIco
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.core.ui.extensions.*
-import com.tangem.core.ui.format.bigdecimal.anyDecimals
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.utils.BigDecimalFormatter
@@ -44,9 +43,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
-import java.math.RoundingMode
 import java.util.Locale
-import kotlin.math.min
 
 /**
  * State builder creates a specific states for SwapScreen
@@ -349,8 +346,6 @@ internal class StateBuilder(
             providerState = swapProvider.convertToContentClickableProviderState(
                 needApplyFCARestrictions = needApplyFCARestrictions,
                 isBestRate = bestRatedProviderId == swapProvider.providerId,
-                fromTokenInfo = quoteModel.fromTokenInfo,
-                toTokenInfo = quoteModel.toTokenInfo,
                 isNeedBestRateBadge = isNeedBestRateBadge,
                 selectionType = ProviderState.SelectionType.CLICK,
                 onProviderClick = actions.onProviderClick,
@@ -1144,32 +1139,18 @@ internal class StateBuilder(
     private fun SwapProvider.convertToContentClickableProviderState(
         needApplyFCARestrictions: Boolean,
         isBestRate: Boolean,
-        fromTokenInfo: TokenSwapInfo,
-        toTokenInfo: TokenSwapInfo,
         selectionType: ProviderState.SelectionType,
         isNeedBestRateBadge: Boolean,
         onProviderClick: (String) -> Unit,
         rating: Double?,
         averageDuration: Int?,
     ): ProviderState {
-        val rate = toTokenInfo.tokenAmount.value.calculateRate(
-            fromTokenInfo.tokenAmount.value,
-            toTokenInfo.cryptoCurrencyStatus.currency.decimals,
-        )
-        val fromCurrencySymbol = fromTokenInfo.cryptoCurrencyStatus.currency.symbol
-        // val rateString = buildString {
-            // append(BigDecimal.ONE.format { crypto(symbol = fromCurrencySymbol, decimals = 0).anyDecimals() })
-            // append(" ≈ ")
-            // append(rate.format { crypto(toTokenInfo.cryptoCurrencyStatus.currency) })
-        // }
-        // val rateString = "1 $fromCurrencySymbol ≈ $rate $toCurrencySymbol"
-        val badge = if (isRecommended) {
-            ProviderState.AdditionalBadge.Recommended
-        } else if (isNeedBestRateBadge && isBestRate && !needApplyFCARestrictions) {
-            ProviderState.AdditionalBadge.BestTrade
-        } else {
-            ProviderState.AdditionalBadge.Empty
+        val badge = when {
+            isRecommended -> ProviderState.AdditionalBadge.Recommended
+            isNeedBestRateBadge && isBestRate && !needApplyFCARestrictions -> ProviderState.AdditionalBadge.BestTrade
+            else -> ProviderState.AdditionalBadge.Empty
         }
+
         return ProviderState.Content(
             id = this.providerId,
             name = this.name,
@@ -1184,9 +1165,7 @@ internal class StateBuilder(
             details = ProviderState.ProviderDetails(
                 rating = rating,
                 averageDuration = averageDuration,
-                gasFeeFiat = 3.6,
             ),
-            // TODO feature/AND-9165_9837_swap_provider_item_redesign
         )
     }
 
@@ -1221,9 +1200,7 @@ internal class StateBuilder(
             details = ProviderState.ProviderDetails(
                 rating = state.rating,
                 averageDuration = state.averageDuration,
-                gasFeeFiat = 3.6,
             ),
-            // TODO feature/AND-9165_9837_swap_provider_item_redesign
         )
     }
 
@@ -1266,11 +1243,6 @@ internal class StateBuilder(
         return value.format { crypto(token) }
     }
 
-    private fun BigDecimal.calculateRate(to: BigDecimal, decimals: Int): BigDecimal {
-        val rateDecimals = if (decimals == 0) IF_ZERO_DECIMALS_TO_SHOW else decimals
-        return this.divide(to, min(rateDecimals, MAX_DECIMALS_TO_SHOW), RoundingMode.HALF_UP)
-    }
-
     private fun getLocaleName(): String {
         return if (Locale.getDefault().language == "ru") {
             RU_LOCALE
@@ -1290,8 +1262,6 @@ internal class StateBuilder(
         const val ADDRESS_FIRST_PART_LENGTH = 7
         const val ADDRESS_SECOND_PART_LENGTH = 4
         private const val PRICE_IMPACT_THRESHOLD = 0.1
-        private const val MAX_DECIMALS_TO_SHOW = 8
-        private const val IF_ZERO_DECIMALS_TO_SHOW = 2
         private const val FEE_READ_MORE_URL_FIRST_PART = "https://tangem.com/"
         private const val FEE_READ_MORE_URL_SECOND_PART =
             "/blog/post/what-is-a-transaction-fee-and-why-do-we-need-it/"
