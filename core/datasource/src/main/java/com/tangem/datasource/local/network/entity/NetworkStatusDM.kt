@@ -4,7 +4,7 @@ import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 import com.tangem.datasource.local.network.entity.NetworkStatusDM.NoAccount
 import com.tangem.datasource.local.network.entity.NetworkStatusDM.Verified
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.network.Network
 import dev.onenowy.moshipolymorphicadapter.annotations.NameLabel
 import java.math.BigDecimal
 

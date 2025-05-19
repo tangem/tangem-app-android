@@ -1,5 +1,6 @@
 package com.tangem.domain.tokens.model
 
+import com.tangem.domain.models.network.Network
 import kotlinx.serialization.Serializable
 
 /**

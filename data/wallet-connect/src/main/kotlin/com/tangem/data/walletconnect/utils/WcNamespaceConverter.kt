@@ -5,7 +5,7 @@ import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.data.common.currency.getNetwork
 import com.tangem.data.walletconnect.model.CAIP2
 import com.tangem.data.walletconnect.model.NamespaceKey
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.wallets.models.UserWallet
 
 internal interface WcNamespaceConverter {

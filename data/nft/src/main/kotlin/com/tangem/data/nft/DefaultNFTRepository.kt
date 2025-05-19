@@ -17,13 +17,13 @@ import com.tangem.datasource.local.nft.converter.NFTSdkCollectionConverter
 import com.tangem.datasource.local.nft.converter.NFTSdkCollectionIdentifierConverter
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.nft.models.NFTAsset
 import com.tangem.domain.nft.models.NFTCollection
 import com.tangem.domain.nft.models.NFTCollections
 import com.tangem.domain.nft.models.NFTSalePrice
 import com.tangem.domain.nft.repository.NFTRepository
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.nft.NFTFeatureToggles

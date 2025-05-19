@@ -18,8 +18,8 @@ import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.demo.DemoTransactionSender
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
-import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.transaction.TransactionRepository
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.error.parseWrappedError

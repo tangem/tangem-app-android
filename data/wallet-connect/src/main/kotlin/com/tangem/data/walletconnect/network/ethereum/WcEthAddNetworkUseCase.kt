@@ -3,7 +3,7 @@ package com.tangem.data.walletconnect.network.ethereum
 import arrow.core.Either
 import com.tangem.data.walletconnect.respond.WcRespondService
 import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.walletconnect.model.WcEthMethod
 import com.tangem.domain.walletconnect.model.WcSession
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest

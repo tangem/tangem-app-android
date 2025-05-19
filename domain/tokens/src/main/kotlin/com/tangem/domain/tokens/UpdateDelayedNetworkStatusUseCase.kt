@@ -3,9 +3,9 @@ package com.tangem.domain.tokens
 import arrow.core.Either
 import arrow.core.raise.Raise
 import arrow.core.raise.either
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.tokens.error.CurrencyStatusError
-import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.delay
 
