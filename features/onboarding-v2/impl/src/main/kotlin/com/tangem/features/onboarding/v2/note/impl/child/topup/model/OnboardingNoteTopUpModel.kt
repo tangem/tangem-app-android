@@ -13,12 +13,12 @@ import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.exchange.RampStateManager
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.onramp.GetLegacyTopUpUrlUseCase
 import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
 import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.NetworkAddress
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.analytics.TokenReceiveAnalyticsEvent
