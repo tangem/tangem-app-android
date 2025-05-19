@@ -1,7 +1,7 @@
 package com.tangem.domain.networks.multi
 
 import com.tangem.domain.core.flow.FlowFetcher
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.wallets.models.UserWalletId
 
 /**
