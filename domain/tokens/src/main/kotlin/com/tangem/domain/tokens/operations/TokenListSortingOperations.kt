@@ -7,9 +7,13 @@ import arrow.core.raise.either
 import arrow.core.raise.ensure
 import arrow.core.raise.ensureNotNull
 import arrow.core.toNonEmptyListOrNull
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.staking.utils.getTotalWithRewardsStakingBalance
-import com.tangem.domain.tokens.model.*
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.model.NetworkGroup
+import com.tangem.domain.tokens.model.TokenList
+import com.tangem.domain.tokens.model.TotalFiatBalance
 import com.tangem.utils.extensions.orZero
 import java.math.BigDecimal
 
