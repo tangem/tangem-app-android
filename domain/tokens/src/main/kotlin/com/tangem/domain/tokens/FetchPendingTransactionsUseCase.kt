@@ -1,8 +1,8 @@
 package com.tangem.domain.tokens
 
 import arrow.core.Either
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.networks.repository.NetworksRepository
-import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWalletId
 
 /**

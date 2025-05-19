@@ -3,8 +3,8 @@ package com.tangem.domain.card
 import arrow.core.Either
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.domain.common.util.hasDerivation
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.tokens.model.Network
 
 class NetworkHasDerivationUseCase {
 
