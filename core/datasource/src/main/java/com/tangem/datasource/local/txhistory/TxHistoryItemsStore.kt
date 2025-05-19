@@ -1,18 +1,18 @@
 package com.tangem.datasource.local.txhistory
 
+import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.txhistory.models.Page
 import com.tangem.domain.txhistory.models.PaginationWrapper
-import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.wallets.models.UserWalletId
 
 interface TxHistoryItemsStore {
 
-    suspend fun getSyncOrNull(key: Key, page: Page): PaginationWrapper<TxHistoryItem>?
+    suspend fun getSyncOrNull(key: Key, page: Page): PaginationWrapper<TxInfo>?
 
     suspend fun remove(key: Key)
 
-    suspend fun store(key: Key, value: PaginationWrapper<TxHistoryItem>)
+    suspend fun store(key: Key, value: PaginationWrapper<TxInfo>)
 
     data class Key(
         val userWalletId: UserWalletId,
