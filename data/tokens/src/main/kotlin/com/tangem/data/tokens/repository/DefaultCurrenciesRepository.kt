@@ -7,7 +7,6 @@ import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.common.currency.*
 import com.tangem.data.tokens.utils.CustomTokensMerger
-import com.tangem.data.tokens.utils.UserTokensBackwardCompatibility
 import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.express.models.TangemExpressValues.EMPTY_CONTRACT_ADDRESS_VALUE
@@ -19,7 +18,6 @@ import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObject
 import com.tangem.datasource.local.preferences.utils.getObjectSyncOrNull
-import com.tangem.datasource.local.preferences.utils.storeObject
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.common.extensions.canHandleBlockchain
 import com.tangem.domain.common.util.cardTypesResolver
@@ -51,14 +49,18 @@ internal class DefaultCurrenciesRepository(
     private val dispatchers: CoroutineDispatcherProvider,
     private val excludedBlockchains: ExcludedBlockchains,
     private val cardCryptoCurrencyFactory: CardCryptoCurrencyFactory,
+    private val userTokensSaver: UserTokensSaver,
 ) : CurrenciesRepository {
 
     private val demoConfig = DemoConfig()
     private val responseCurrenciesFactory = ResponseCryptoCurrenciesFactory(excludedBlockchains)
     private val cryptoCurrencyFactory = CryptoCurrencyFactory(excludedBlockchains)
     private val userTokensResponseFactory = UserTokensResponseFactory()
-    private val userTokensBackwardCompatibility = UserTokensBackwardCompatibility()
-    private val customTokensMerger = CustomTokensMerger(tangemTechApi, dispatchers)
+    private val customTokensMerger = CustomTokensMerger(
+        tangemTechApi = tangemTechApi,
+        dispatchers = dispatchers,
+        userTokensSaver = userTokensSaver,
+    )
 
     override suspend fun saveTokens(
         userWalletId: UserWalletId,
@@ -73,8 +75,7 @@ internal class DefaultCurrenciesRepository(
             isGroupedByNetwork = isGroupedByNetwork,
             isSortedByBalance = isSortedByBalance,
         )
-
-        storeAndPushTokens(userWalletId, response)
+        userTokensSaver.storeAndPush(userWalletId, response)
     }
 
     override suspend fun saveNewCurrenciesList(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
@@ -89,7 +90,7 @@ internal class DefaultCurrenciesRepository(
             val updatedResponse = savedResponse.copy(
                 tokens = newCurrencies.map(userTokensResponseFactory::createResponseToken),
             )
-            storeAndPushTokens(
+            userTokensSaver.storeAndPush(
                 userWalletId = userWalletId,
                 response = updatedResponse,
             )
@@ -113,7 +114,7 @@ internal class DefaultCurrenciesRepository(
             val updatedResponse = savedCurrencies.copy(
                 tokens = savedCurrencies.tokens + currenciesToAdd.map(userTokensResponseFactory::createResponseToken),
             )
-            storeAndPushTokens(
+            userTokensSaver.storeAndPush(
                 userWalletId = userWalletId,
                 response = updatedResponse,
             )
@@ -177,9 +178,10 @@ internal class DefaultCurrenciesRepository(
             )
 
             val token = userTokensResponseFactory.createResponseToken(currency)
-            storeAndPushTokens(
+            val updatedResponse = savedCurrencies.copy(tokens = savedCurrencies.tokens.filterNot { it == token })
+            userTokensSaver.storeAndPush(
                 userWalletId = userWalletId,
-                response = savedCurrencies.copy(tokens = savedCurrencies.tokens.filterNot { it == token }),
+                response = updatedResponse,
             )
         }
 
@@ -191,11 +193,12 @@ internal class DefaultCurrenciesRepository(
             )
 
             val tokens = currencies.map(userTokensResponseFactory::createResponseToken)
-            storeAndPushTokens(
+            val updatedResponse = savedCurrencies.copy(
+                tokens = savedCurrencies.tokens.filterNot(tokens::contains),
+            )
+            userTokensSaver.storeAndPush(
                 userWalletId = userWalletId,
-                response = savedCurrencies.copy(
-                    tokens = savedCurrencies.tokens.filterNot(tokens::contains),
-                ),
+                response = updatedResponse,
             )
         }
     }
@@ -583,13 +586,9 @@ internal class DefaultCurrenciesRepository(
 
         val compatibleUserTokensResponse = response
             .let { it.copy(tokens = it.tokens.distinct()) }
-            .let { customTokensMerger.mergeIfPresented(userWalletId, response) }
-            .let(userTokensBackwardCompatibility::applyCompatibilityAndGetUpdated)
+            .let { customTokensMerger.mergeIfPresented(userWalletId, it) }
 
-        appPreferencesStore.storeObject(
-            key = PreferencesKeys.getUserTokensKey(userWalletId = userWallet.walletId.stringValue),
-            value = compatibleUserTokensResponse,
-        )
+        userTokensSaver.store(userWalletId, compatibleUserTokensResponse)
 
         fetchExpressAssetsByNetworkIds(userWalletId, compatibleUserTokensResponse)
     }
@@ -598,16 +597,6 @@ internal class DefaultCurrenciesRepository(
         val response = getSavedUserTokensResponseSync(key = userWallet.walletId)
 
         return demoConfig.isDemoCardId(userWallet.cardId) && response == null
-    }
-
-    private suspend fun storeAndPushTokens(userWalletId: UserWalletId, response: UserTokensResponse) {
-        val compatibleUserTokensResponse = userTokensBackwardCompatibility.applyCompatibilityAndGetUpdated(response)
-        appPreferencesStore.storeObject(
-            key = PreferencesKeys.getUserTokensKey(userWalletId = userWalletId.stringValue),
-            value = compatibleUserTokensResponse,
-        )
-
-        pushTokens(userWalletId, response)
     }
 
     private suspend fun fetchExpressAssetsByNetworkIds(userWalletId: UserWalletId, userTokens: UserTokensResponse) {
@@ -657,18 +646,12 @@ internal class DefaultCurrenciesRepository(
         if (e is ApiResponseError.HttpException && e.code == ApiResponseError.HttpException.Code.NOT_FOUND) {
             Timber.w(e, "Requested currencies could not be found in the remote store for: $userWalletId")
 
-            pushTokens(userWalletId, response)
+            userTokensSaver.push(userWalletId, response)
         } else {
             cacheRegistry.invalidate(getTokensCacheKey(userWalletId))
         }
 
         return response
-    }
-
-    private suspend fun pushTokens(userWalletId: UserWalletId, response: UserTokensResponse) {
-        safeApiCall({ tangemTechApi.saveUserTokens(userWalletId.stringValue, response).bind() }) {
-            Timber.e(it, "Unable to save user tokens for: ${userWalletId.stringValue}")
-        }
     }
 
     private fun createDefaultUserTokensResponse(userWallet: UserWallet) =
