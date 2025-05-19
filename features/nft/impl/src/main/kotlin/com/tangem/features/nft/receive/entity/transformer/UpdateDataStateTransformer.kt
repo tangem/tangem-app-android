@@ -3,8 +3,8 @@ package com.tangem.features.nft.receive.entity.transformer
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.rows.model.ChainRowUM
 import com.tangem.core.ui.extensions.getActiveIconRes
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.nft.models.NFTNetworks
-import com.tangem.domain.tokens.model.Network
 import com.tangem.features.nft.receive.entity.NFTNetworkUM
 import com.tangem.features.nft.receive.entity.NFTReceiveUM
 import com.tangem.utils.transformer.Transformer
