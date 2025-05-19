@@ -16,13 +16,13 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.card.NetworkHasDerivationUseCase
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.staking.GetStakingIntegrationIdUseCase
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.*
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
-import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryListError
 import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.domain.wallets.models.UserWalletId
@@ -168,7 +168,7 @@ internal class TokenDetailsStateFactory(
     }
 
     fun getLoadedTxHistoryState(
-        txHistoryEither: Either<TxHistoryListError, Flow<PagingData<TxHistoryItem>>>,
+        txHistoryEither: Either<TxHistoryListError, Flow<PagingData<TxInfo>>>,
     ): TokenDetailsState {
         return currentStateProvider().copy(
             txHistoryState = loadedTxHistoryConverter.convert(txHistoryEither),
