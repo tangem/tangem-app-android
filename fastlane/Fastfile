@@ -17,10 +17,6 @@ default_platform(:android)
 
 platform :android do
 
-  before_all do |lane, options|
-    FileUtils.cp("../app/src/main/assets/tangem-app-config/android/google-services/release/google-services.json", "../app")
-  end
-
   desc "Run detekt"
   lane :detekt do
     FileUtils.cp("../ci_resources/tests_8gb_ram_ci_gradle.properties", "../gradle.properties")
@@ -30,56 +26,16 @@ platform :android do
 
   desc "Run tests"
   lane :test do
+    FileUtils.cp("../app/src/main/assets/tangem-app-config/android/google-services/dev/google-services.json", "../app")
     FileUtils.cp("../ci_resources/tests_8gb_ram_ci_gradle.properties", "../gradle.properties")
     puts File.read("../gradle.properties")
     gradle(task: "testDebugUnitTest")
   end
 
-  desc "Build a signed release APK"
-  lane :release do |options|  # TODO: remove after fully moving from old CI
-     gradle(
-       task: "clean assemble",
-       build_type: "Release",
-       properties: {
-         "android.injected.signing.store.file" => options[:keystore],
-         "android.injected.signing.store.password" => options[:store_password],
-         "android.injected.signing.key.alias" => options[:key_alias],
-         "android.injected.signing.key.password" => options[:key_password],
-       })
-  end
-
-  desc "Build external and release APKs"
-  lane :build do |options|  # TODO: remove after fully moving from old CI
-     gradle(task: 'clean')
-
-     gradle(
-       task: "bundle",
-       build_type: "Release",
-       properties: {
-          'versionCode' => options[:versionCode],
-          'versionName' => options[:versionName],
-          "android.injected.signing.store.file" => options[:keystore],
-          "android.injected.signing.store.password" => options[:store_password],
-          "android.injected.signing.key.alias" => options[:key_alias],
-          "android.injected.signing.key.password" => options[:key_password],
-       }
-     )
-     gradle(
-       task: "assemble",
-       build_type: "Release",
-       properties: {
-         'versionCode' => options[:versionCode],
-         'versionName' => options[:versionName],
-         "android.injected.signing.store.file" => options[:keystore],
-         "android.injected.signing.store.password" => options[:store_password],
-         "android.injected.signing.key.alias" => options[:key_alias],
-         "android.injected.signing.key.password" => options[:key_password],
-       }
-     )
-  end
 
   desc "Build release AAB and APK"
     lane :buildRelease do |options|
+       FileUtils.cp("../app/src/main/assets/tangem-app-config/android/google-services/release/google-services.json", "../app")
        FileUtils.cp("../ci_resources/build_ci_gradle.properties", "../gradle.properties")
        puts File.read("../gradle.properties")
 
@@ -109,17 +65,10 @@ platform :android do
        )
     end
 
-  desc "Submit a new Beta Build to Firebase App Distribution"
-  lane :beta do |options| # TODO: remove after fully moving from old CI
-       firebase_app_distribution(
-            app: options[:app_id],
-            apk_path: options[:apk_path],
-            groups: options[:groups])
-  end
-
 
   desc "Build internal APK Firebase App Distribution"
   lane :buildInternal do |options|
+    FileUtils.cp("../app/src/main/assets/tangem-app-config/android/google-services/dev/google-services.json", "../app")
     FileUtils.cp("../ci_resources/build_ci_gradle.properties", "../gradle.properties")
     puts File.read("../gradle.properties")
 
