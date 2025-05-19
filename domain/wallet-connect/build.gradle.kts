@@ -10,11 +10,12 @@ android {
 
 dependencies {
     /* Project - Domain */
+    implementation(projects.domain.blockaid.models)
     implementation(projects.domain.core)
+    implementation(projects.domain.models)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.walletConnect.models)
-    implementation(projects.domain.blockaid.models)
 
     /* Project - Core */
     implementation(projects.core.analytics)
