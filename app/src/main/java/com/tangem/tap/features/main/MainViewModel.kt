@@ -11,7 +11,6 @@ import com.tangem.core.analytics.models.event.TechAnalyticsEvent
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.deeplink.DeepLinksRegistry
-import com.tangem.core.ui.BuildConfig
 import com.tangem.core.ui.R
 import com.tangem.core.ui.coil.ImagePreloader
 import com.tangem.core.ui.extensions.resourceReference
@@ -24,6 +23,10 @@ import com.tangem.domain.balancehiding.BalanceHidingSettings
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.balancehiding.ListenToFlipsUseCase
 import com.tangem.domain.balancehiding.UpdateBalanceHidingSettingsUseCase
+import com.tangem.domain.notifications.GetApplicationIdUseCase
+import com.tangem.domain.notifications.SendPushTokenUseCase
+import com.tangem.domain.notifications.models.ApplicationId
+import com.tangem.domain.notifications.toggles.NotificationsFeatureToggles
 import com.tangem.domain.onboarding.repository.OnboardingRepository
 import com.tangem.domain.onramp.FetchHotCryptoUseCase
 import com.tangem.domain.promo.GetStoryContentUseCase
@@ -33,6 +36,9 @@ import com.tangem.domain.settings.IncrementAppLaunchCounterUseCase
 import com.tangem.domain.settings.usercountry.FetchUserCountryUseCase
 import com.tangem.domain.staking.FetchStakingTokensUseCase
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
+import com.tangem.domain.wallets.usecase.AssociateWalletsWithApplicationIdUseCase
+import com.tangem.domain.wallets.usecase.GetSavedWalletChangesUseCase
+import com.tangem.domain.wallets.usecase.UpdateRemoteWalletsInfoUseCase
 import com.tangem.feature.swap.analytics.StoriesEvents
 import com.tangem.features.onramp.deeplink.OnrampDeepLink
 import com.tangem.tap.common.extensions.setContext
@@ -40,6 +46,7 @@ import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupDialog
 import com.tangem.tap.store
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.wallet.BuildConfig
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
@@ -71,6 +78,12 @@ internal class MainViewModel @Inject constructor(
     private val onboardingRepository: OnboardingRepository,
     private val deepLinksRegistry: DeepLinksRegistry,
     private val onrampDeepLinkFactory: OnrampDeepLink.Factory,
+    private val notificationsToggles: NotificationsFeatureToggles,
+    private val getApplicationIdUseCase: GetApplicationIdUseCase,
+    private val subscribeOnWalletsUseCase: GetSavedWalletChangesUseCase,
+    private val associateWalletsWithApplicationIdUseCase: AssociateWalletsWithApplicationIdUseCase,
+    private val updateRemoteWalletsInfoUseCase: UpdateRemoteWalletsInfoUseCase,
+    private val sendPushTokenUseCase: SendPushTokenUseCase,
     private val apiConfigsManager: ApiConfigsManager,
     routingFeatureToggle: RoutingFeatureToggle,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
@@ -96,6 +109,8 @@ internal class MainViewModel @Inject constructor(
             launch { fetchAppCurrenciesUseCase() }
 
             launch { fetchStakingTokens() }
+
+            launch { initPushNotifications() }
         }
 
         viewModelScope.launch { incrementAppLaunchCounterUseCase() }
@@ -369,5 +384,21 @@ internal class MainViewModel @Inject constructor(
 
     private fun initializeDeepLinks() {
         deepLinksRegistry.register(onrampDeepLinkFactory.create(viewModelScope))
+    }
+
+    private suspend fun initPushNotifications() {
+        if (notificationsToggles.isNotificationsEnabled) {
+            getApplicationIdUseCase().onRight { applicationId ->
+                sendPushTokenUseCase(applicationId = applicationId)
+                associateWalletsWithApplicationId(applicationId = applicationId)
+                updateRemoteWalletsInfoUseCase(applicationId = applicationId)
+            }.onLeft { Timber.e(it.toString()) }
+        }
+    }
+
+    private fun associateWalletsWithApplicationId(applicationId: ApplicationId) {
+        subscribeOnWalletsUseCase().onEach { wallets ->
+            associateWalletsWithApplicationIdUseCase(applicationId, wallets)
+        }.launchIn(viewModelScope)
     }
 }
