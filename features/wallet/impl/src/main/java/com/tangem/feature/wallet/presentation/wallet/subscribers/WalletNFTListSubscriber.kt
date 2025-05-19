@@ -1,6 +1,7 @@
 package com.tangem.feature.wallet.presentation.wallet.subscribers
 
 import com.tangem.domain.nft.GetNFTCollectionsUseCase
+import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
@@ -15,17 +16,21 @@ internal class WalletNFTListSubscriber(
     private val userWallet: UserWallet,
     private val stateHolder: WalletStateController,
     private val walletsRepository: WalletsRepository,
+    private val currenciesRepository: CurrenciesRepository,
     private val getNFTCollectionsUseCase: GetNFTCollectionsUseCase,
     private val clickIntents: WalletClickIntents,
 ) : WalletSubscriber() {
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    override fun create(coroutineScope: CoroutineScope): Flow<*> = walletsRepository
-        .nftEnabledStatus(userWallet.walletId)
+    override fun create(coroutineScope: CoroutineScope): Flow<*> = combine(
+        walletsRepository.nftEnabledStatus(userWallet.walletId),
+        currenciesRepository.getWalletCurrenciesUpdates(userWallet.walletId),
+    ) { nftEnabled, currencies -> nftEnabled to currencies }
         .distinctUntilChanged()
-        .flatMapLatest { nftEnabled ->
-            // if NFT is enabled for this wallet, then start observing changes from store and apply transformer if need
-            if (nftEnabled) {
+        .flatMapLatest { (nftEnabled, currencies) ->
+            // if NFT is enabled for this wallet and there are currencies,
+            // then start observing changes from store and apply transformer if need
+            if (nftEnabled && currencies.isNotEmpty()) {
                 getNFTCollectionsUseCase(userWallet.walletId)
                     .shareIn(
                         scope = coroutineScope,
