@@ -2,7 +2,7 @@ package com.tangem.data.walletconnect.sign
 
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.data.walletconnect.respond.WcRespondService
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.walletconnect.WcAnalyticEvents
 import com.tangem.domain.walletconnect.model.WcSession
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
@@ -48,6 +48,7 @@ internal abstract class BaseWcSignUseCase<MiddleAction, SignModel> :
         analytics.send(WcAnalyticEvents.ButtonCancel(WcAnalyticEvents.ButtonCancel.Type.Sign))
         delegate.cancel()
     }
+
     protected fun middleAction(action: MiddleAction) = delegate.middleAction(action)
 
     protected fun defaultReject() {
