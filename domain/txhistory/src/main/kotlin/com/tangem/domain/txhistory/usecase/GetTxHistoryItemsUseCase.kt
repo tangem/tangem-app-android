@@ -3,8 +3,8 @@ package com.tangem.domain.txhistory.usecase
 import androidx.paging.PagingData
 import arrow.core.Either
 import arrow.core.raise.either
+import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryListError
 import com.tangem.domain.txhistory.repository.TxHistoryRepository
 import com.tangem.domain.wallets.models.UserWalletId
@@ -22,7 +22,7 @@ class GetTxHistoryItemsUseCase(private val repository: TxHistoryRepository) {
         currency: CryptoCurrency,
         pageSize: Int = DEFAULT_PAGE_SIZE,
         refresh: Boolean = false,
-    ): Either<TxHistoryListError, Flow<PagingData<TxHistoryItem>>> {
+    ): Either<TxHistoryListError, Flow<PagingData<TxInfo>>> {
         return either {
             repository
                 .getTxHistoryItems(userWalletId, currency, pageSize, refresh)
