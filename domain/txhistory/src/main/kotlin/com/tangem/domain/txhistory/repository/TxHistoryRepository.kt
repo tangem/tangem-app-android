@@ -1,8 +1,8 @@
 package com.tangem.domain.txhistory.repository
 
 import androidx.paging.PagingData
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryListError
 import com.tangem.domain.txhistory.models.TxHistoryStateError
