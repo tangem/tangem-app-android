@@ -8,10 +8,10 @@ import com.tangem.common.extensions.toMapKey
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.common.configs.CardConfig
 import com.tangem.domain.common.util.derivationStyleProvider
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.scan.KeyWalletPublicKey
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.Network
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 
 private typealias DerivationData = Pair<ByteArrayKey, List<DerivationPath>>
