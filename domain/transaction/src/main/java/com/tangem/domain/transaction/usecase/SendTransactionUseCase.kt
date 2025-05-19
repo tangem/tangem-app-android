@@ -82,7 +82,7 @@ class SendTransactionUseCase(
         return sendResult
             .onRight {
                 singleNetworkStatusFetcher(
-                    params = SingleNetworkStatusFetcher.Params.Simple(
+                    params = SingleNetworkStatusFetcher.Params(
                         userWalletId = userWallet.walletId,
                         network = network,
                     ),
