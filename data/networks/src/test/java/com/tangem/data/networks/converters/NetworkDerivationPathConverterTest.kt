@@ -2,7 +2,7 @@ package com.tangem.data.networks.converters
 
 import com.google.common.truth.Truth
 import com.tangem.datasource.local.network.entity.NetworkStatusDM
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.network.Network
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest

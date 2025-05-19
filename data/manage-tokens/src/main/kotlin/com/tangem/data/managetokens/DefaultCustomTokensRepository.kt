@@ -24,8 +24,8 @@ import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.managetokens.model.AddCustomTokenForm
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
 import com.tangem.domain.managetokens.repository.CustomTokensRepository
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
