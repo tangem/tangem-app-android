@@ -2,17 +2,40 @@ package com.tangem.datasource.local.network.entity
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
+import com.tangem.datasource.local.network.entity.NetworkStatusDM.NoAccount
+import com.tangem.datasource.local.network.entity.NetworkStatusDM.Verified
 import com.tangem.domain.tokens.model.Network
 import dev.onenowy.moshipolymorphicadapter.annotations.NameLabel
 import java.math.BigDecimal
 
+/**
+ * Network status for storage in the local cache. Supports two types - the [Verified] and [NoAccount].
+ *
+ * @see [com.tangem.domain.tokens.model.NetworkStatus]
+ */
 sealed interface NetworkStatusDM {
 
+    /** Network id */
     val networkId: Network.ID
+
+    /** Derivation path */
     val derivationPath: DerivationPath
+
+    /** Selected address */
     val selectedAddress: String
+
+    /** Available address */
     val availableAddresses: Set<Address>
 
+    /**
+     * Verified
+     *
+     * @property networkId          network id
+     * @property derivationPath     derivation path
+     * @property selectedAddress    selected address
+     * @property availableAddresses available addresses
+     * @property amounts            amounts
+     */
     @NameLabel("amounts")
     data class Verified(
         @Json(name = "network_id") override val networkId: Network.ID,
@@ -22,6 +45,16 @@ sealed interface NetworkStatusDM {
         @Json(name = "amounts") val amounts: Map<String, BigDecimal>,
     ) : NetworkStatusDM
 
+    /**
+     * No account
+     *
+     * @property networkId             network id
+     * @property derivationPath        derivation path
+     * @property selectedAddress       selected address
+     * @property availableAddresses    available addresses
+     * @property amountToCreateAccount amount to create account
+     * @property errorMessage          error message
+     */
     @NameLabel("amount_to_create_account")
     data class NoAccount(
         @Json(name = "network_id") override val networkId: Network.ID,
