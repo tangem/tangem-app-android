@@ -6,11 +6,11 @@ import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.test.domain.walletmanager.MockUpdateWalletManagerResultFactory
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyAmountStatus
 import com.tangem.domain.tokens.model.NetworkAddress
 import com.tangem.domain.tokens.model.NetworkStatus
-import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.walletmanager.model.Address
 import com.tangem.domain.walletmanager.model.UpdateWalletManagerResult
 import org.junit.Test
@@ -57,17 +57,17 @@ internal class NetworkStatusFactoryTest(private val model: Model) {
 
         val currencies = with(MockCryptoCurrencyFactory()) { setOf(ethereum, createToken(Blockchain.Ethereum)) }
 
-        val txHistoryItem = TxHistoryItem(
+        val txInfo = TxInfo(
             txHash = "erroribus",
             timestampInMillis = 2771,
             isOutgoing = false,
-            destinationType = TxHistoryItem.DestinationType.Single(
-                addressType = TxHistoryItem.AddressType.User("0x1"),
+            destinationType = TxInfo.DestinationType.Single(
+                addressType = TxInfo.AddressType.User("0x1"),
             ),
-            sourceType = TxHistoryItem.SourceType.Single("0x2"),
+            sourceType = TxInfo.SourceType.Single("0x2"),
             interactionAddressType = null,
-            status = TxHistoryItem.TransactionStatus.Confirmed,
-            type = TxHistoryItem.TransactionType.Transfer,
+            status = TxInfo.TransactionStatus.Confirmed,
+            type = TxInfo.TransactionType.Transfer,
             amount = BigDecimal.ONE,
         )
 
@@ -218,7 +218,7 @@ internal class NetworkStatusFactoryTest(private val model: Model) {
                         currencies.last().id to CryptoCurrencyAmountStatus.NotFound,
                     ),
                     pendingTransactions = mapOf(
-                        currencies.first().id to setOf(txHistoryItem),
+                        currencies.first().id to setOf(txInfo),
                         currencies.last().id to setOf(),
                     ),
                     source = StatusSource.ACTUAL,
