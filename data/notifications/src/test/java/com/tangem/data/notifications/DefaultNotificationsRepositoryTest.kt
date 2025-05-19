@@ -121,7 +121,7 @@ class DefaultNotificationsRepositoryTest {
                     timezone = null,
                 ),
             )
-        } returns ApiResponse.Success(appId.value)
+        } returns ApiResponse.Success(Unit)
 
         // WHEN
         repository.sendPushToken(appId, pushToken)

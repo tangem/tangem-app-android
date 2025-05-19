@@ -1,10 +1,8 @@
 package com.tangem.domain.wallets.usecase
 
 import arrow.core.Either
-import arrow.core.raise.either
 import com.tangem.domain.notifications.models.ApplicationId
 import com.tangem.domain.wallets.delegate.UserWalletsSyncDelegate
-import com.tangem.domain.wallets.models.UpdateWalletError
 import com.tangem.domain.wallets.repository.WalletsRepository
 
 class UpdateRemoteWalletsInfoUseCase(
@@ -12,8 +10,8 @@ class UpdateRemoteWalletsInfoUseCase(
     private val userWalletsSyncDelegate: UserWalletsSyncDelegate,
 ) {
 
-    suspend operator fun invoke(applicationId: ApplicationId): Either<UpdateWalletError, Unit> = either {
+    suspend operator fun invoke(applicationId: ApplicationId): Either<Throwable, Unit> = Either.catch {
         val walletsInfo = walletsRepository.getWalletsInfo(applicationId.value)
-        userWalletsSyncDelegate.syncWallets(walletsInfo).bind()
+        userWalletsSyncDelegate.syncWallets(walletsInfo)
     }
 }
