@@ -4,7 +4,7 @@ import com.tangem.blockchain.blockchains.cardano.CardanoTokenAddressConverter
 import com.tangem.blockchain.blockchains.hedera.HederaTokenAddressConverter
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.data.common.currency.getBlockchain
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.network.Network
 
 internal class TokenAddressesConverter {
     private val hederaTokenAddressConverter = HederaTokenAddressConverter()
