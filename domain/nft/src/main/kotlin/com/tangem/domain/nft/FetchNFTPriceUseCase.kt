@@ -1,9 +1,9 @@
 package com.tangem.domain.nft
 
 import arrow.core.Either
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.nft.repository.NFTRepository
 import com.tangem.domain.quotes.single.SingleQuoteFetcher
-import com.tangem.domain.tokens.model.Network
 
 class FetchNFTPriceUseCase(
     private val nftRepository: NFTRepository,
