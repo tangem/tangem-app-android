@@ -119,7 +119,7 @@ class FetchCurrencyStatusUseCase(
 
     private suspend fun Raise<CurrencyStatusError>.fetchNetworkStatus(userWalletId: UserWalletId, network: Network) {
         singleNetworkStatusFetcher(
-            params = SingleNetworkStatusFetcher.Params.Simple(userWalletId = userWalletId, network = network),
+            params = SingleNetworkStatusFetcher.Params(userWalletId = userWalletId, network = network),
         )
             .mapLeft { CurrencyStatusError.DataError(it) }
             .bind()
