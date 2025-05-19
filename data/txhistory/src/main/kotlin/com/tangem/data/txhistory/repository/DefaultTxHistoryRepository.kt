@@ -9,8 +9,8 @@ import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.txhistory.repository.paging.TxHistoryPagingSource
 import com.tangem.datasource.local.txhistory.TxHistoryItemsStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.txhistory.models.Page
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryState
@@ -139,7 +139,7 @@ class DefaultTxHistoryRepository(
         txHistoryItemsStore.store(TxHistoryItemsStore.Key(userWalletId, currency), wrappedItems)
     }
 
-    private suspend fun getUserWallet(userWalletId: UserWalletId): UserWallet {
+    private fun getUserWallet(userWalletId: UserWalletId): UserWallet {
         return requireNotNull(userWalletsStore.getSyncOrNull(userWalletId)) {
             "Unable to find user wallet with provided ID: $userWalletId"
         }
