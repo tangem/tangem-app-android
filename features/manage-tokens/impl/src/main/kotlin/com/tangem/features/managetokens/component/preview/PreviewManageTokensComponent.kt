@@ -11,7 +11,7 @@ import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.network.Network
 import com.tangem.features.managetokens.component.ManageTokensComponent
 import com.tangem.features.managetokens.entity.item.CurrencyItemUM
 import com.tangem.features.managetokens.entity.item.CurrencyNetworkUM
@@ -27,7 +27,7 @@ import kotlinx.coroutines.flow.update
 
 internal class PreviewManageTokensComponent(
     private val isLoading: Boolean,
-    private val showTangemIcon: Boolean,
+    showTangemIcon: Boolean,
     params: ManageTokensComponent.Params,
 ) : ManageTokensComponent {
 
