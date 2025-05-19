@@ -1,7 +1,7 @@
 package com.tangem.data.networks.converters
 
 import com.tangem.datasource.local.network.entity.NetworkStatusDM
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.network.Network
 import com.tangem.utils.converter.TwoWayConverter
 
 /**
