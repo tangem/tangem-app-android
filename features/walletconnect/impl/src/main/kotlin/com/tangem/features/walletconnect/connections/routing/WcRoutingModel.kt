@@ -53,6 +53,7 @@ internal class WcRoutingModel @Inject constructor(
                     WcEthMethodName.SendTransaction -> TODO()
                     WcSolanaMethodName.SignTransaction -> TODO()
                     WcSolanaMethodName.SendAllTransaction -> TODO()
+                    WcEthMethodName.AddEthereumChain -> TODO()
                     is WcMethodName.Unsupported -> TODO()
                 }
             }
