@@ -3,9 +3,9 @@ package com.tangem.datasource.local.nft.converter
 import android.content.res.Resources
 import com.tangem.datasource.R
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.nft.models.NFTAsset
 import com.tangem.domain.nft.models.NFTCollection
-import com.tangem.domain.tokens.model.Network
 import com.tangem.utils.converter.Converter
 import com.tangem.blockchain.nft.models.NFTCollection as SdkNFTCollection
 
