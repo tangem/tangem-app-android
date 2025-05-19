@@ -16,6 +16,7 @@ tasks.withType<Test>().configureEach {
 dependencies {
     /* Core */
     implementation(projects.core.datasource)
+    implementation(projects.core.utils)
 
     /* Domain */
     implementation(projects.domain.demo)
@@ -23,6 +24,9 @@ dependencies {
     implementation(projects.domain.models)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets.models)
+    implementation(projects.domain.notifications.toggles)
+    implementation(projects.domain.networks)
+    implementation(projects.domain.wallets)
 
     /* Libs - SDK */
     implementation(tangemDeps.blockchain)
@@ -47,4 +51,5 @@ dependencies {
     testRuntimeOnly(deps.test.junit5.engine)
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)
+    testImplementation(deps.moshi)
 }
