@@ -1,7 +1,7 @@
 package com.tangem.domain.staking
 
 import arrow.core.Either
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWalletId
 

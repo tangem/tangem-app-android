@@ -12,8 +12,8 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.tokens.GetWalletTotalBalanceUseCase
-import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.walletconnect.model.WcPairRequest
 import com.tangem.domain.walletconnect.model.WcSessionApprove
 import com.tangem.domain.walletconnect.model.WcSessionProposal
@@ -28,12 +28,7 @@ import com.tangem.features.walletconnect.connections.entity.WcAppInfoUM
 import com.tangem.features.walletconnect.connections.entity.WcAppInfoWalletUM
 import com.tangem.features.walletconnect.connections.entity.WcPrimaryButtonConfig
 import com.tangem.features.walletconnect.connections.entity.WcSelectNetworksUM
-import com.tangem.features.walletconnect.connections.model.transformers.WcAppInfoTransformer
-import com.tangem.features.walletconnect.connections.model.transformers.WcAppInfoWalletChangedTransformer
-import com.tangem.features.walletconnect.connections.model.transformers.WcConnectButtonProgressTransformer
-import com.tangem.features.walletconnect.connections.model.transformers.WcSelectNetworksClearCheckedTransformer
-import com.tangem.features.walletconnect.connections.model.transformers.WcSelectNetworksCheckedTransformer
-import com.tangem.features.walletconnect.connections.model.transformers.WcSelectNetworksTransformer
+import com.tangem.features.walletconnect.connections.model.transformers.*
 import com.tangem.features.walletconnect.connections.routes.WcAppInfoRoutes
 import com.tangem.features.walletconnect.connections.utils.WcUserWalletsFetcher
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider

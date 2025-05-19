@@ -11,9 +11,9 @@ import com.tangem.data.common.currency.getNetworkDerivationPath
 import com.tangem.data.common.currency.getNetworkStandardType
 import com.tangem.domain.common.configs.GenericCardConfig
 import com.tangem.domain.common.util.derivationStyleProvider
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.Network
 
 /**
 [REDACTED_AUTHOR]
