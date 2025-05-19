@@ -139,7 +139,7 @@ internal class UpdateWalletManagerResultFactory {
                 CryptoCurrencyTransaction.Token(
                     tokenId = type.token.id,
                     tokenContractAddress = type.token.contractAddress,
-                    txHistoryItem = txHistoryItem,
+                    txInfo = txHistoryItem,
                 )
             }
             is AmountType.FeeResource,
