@@ -4,9 +4,9 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.IconsUtil
 import com.tangem.blockchainsdk.utils.toCoinId
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrency.ID
-import com.tangem.domain.tokens.model.Network
 import com.tangem.blockchain.common.Token as SdkToken
 import com.tangem.domain.tokens.model.CryptoCurrency.ID.Body as CurrencyIdBody
 import com.tangem.domain.tokens.model.CryptoCurrency.ID.Prefix.COIN_PREFIX as COIN_ID_PREFIX
