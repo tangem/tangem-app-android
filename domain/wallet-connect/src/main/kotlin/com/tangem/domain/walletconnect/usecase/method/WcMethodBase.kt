@@ -2,7 +2,7 @@ package com.tangem.domain.walletconnect.usecase.method
 
 import arrow.core.Either
 import com.tangem.blockchain.common.transaction.Fee
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.walletconnect.model.WcMethod
 import com.tangem.domain.walletconnect.model.WcSession
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
