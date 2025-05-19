@@ -1,0 +1,227 @@
+{
+  "project_info": {
+    "project_number": "721920782444",
+    "firebase_url": "https://tangemapp.firebaseio.com",
+    "project_id": "tangemapp",
+    "storage_bucket": "tangemapp.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:721920782444:android:2202a761840271413f2849",
+        "android_client_info": {
+          "package_name": "com.tangem.wallet"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "721920782444-3mraidpfchil4n955cik61b4g51u5bk2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBZGdNxa5-ADNQWsceYobnsNoG1UdneUFQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "721920782444-3mraidpfchil4n955cik61b4g51u5bk2.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "721920782444-ceesk1ei7lobjoepcbmjsum6c2k66s0m.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.tangem.TangemBeta"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:721920782444:android:cbf18f16883d34993f2849",
+        "android_client_info": {
+          "package_name": "com.tangem.wallet.debug"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "721920782444-3mraidpfchil4n955cik61b4g51u5bk2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBZGdNxa5-ADNQWsceYobnsNoG1UdneUFQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "721920782444-3mraidpfchil4n955cik61b4g51u5bk2.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "721920782444-ceesk1ei7lobjoepcbmjsum6c2k66s0m.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.tangem.TangemBeta"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:721920782444:android:beeac65a2a1787173f2849",
+        "android_client_info": {
+          "package_name": "com.tangem.wallet.dev"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "721920782444-3mraidpfchil4n955cik61b4g51u5bk2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBZGdNxa5-ADNQWsceYobnsNoG1UdneUFQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "721920782444-3mraidpfchil4n955cik61b4g51u5bk2.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "721920782444-ceesk1ei7lobjoepcbmjsum6c2k66s0m.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.tangem.TangemBeta"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:721920782444:android:113159928788e6103f2849",
+        "android_client_info": {
+          "package_name": "com.tangem.wallet.external"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "721920782444-3mraidpfchil4n955cik61b4g51u5bk2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBZGdNxa5-ADNQWsceYobnsNoG1UdneUFQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "721920782444-3mraidpfchil4n955cik61b4g51u5bk2.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "721920782444-ceesk1ei7lobjoepcbmjsum6c2k66s0m.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.tangem.TangemBeta"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:721920782444:android:d97de53a7196475c3f2849",
+        "android_client_info": {
+          "package_name": "com.tangem.wallet.internal"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "721920782444-3mraidpfchil4n955cik61b4g51u5bk2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBZGdNxa5-ADNQWsceYobnsNoG1UdneUFQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "721920782444-3mraidpfchil4n955cik61b4g51u5bk2.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "721920782444-ceesk1ei7lobjoepcbmjsum6c2k66s0m.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.tangem.TangemBeta"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:721920782444:android:c7a4fdca720283c73f2849",
+        "android_client_info": {
+          "package_name": "com.tangem.wallet.mocked"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "721920782444-3mraidpfchil4n955cik61b4g51u5bk2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBZGdNxa5-ADNQWsceYobnsNoG1UdneUFQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "721920782444-3mraidpfchil4n955cik61b4g51u5bk2.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "721920782444-ceesk1ei7lobjoepcbmjsum6c2k66s0m.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.tangem.TangemBeta"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
