@@ -16,6 +16,7 @@ import com.tangem.core.deeplink.DeepLinksRegistry
 import com.tangem.core.deeplink.global.ReferralDeepLink
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.nft.ObserveAndClearNFTCacheIfNeedUseCase
 import com.tangem.domain.settings.*
 import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
 import com.tangem.domain.tokens.RefreshMultiCurrencyWalletQuotesUseCase
@@ -84,6 +85,7 @@ internal class WalletModel @Inject constructor(
     private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
     private val appRouter: AppRouter,
     private val routingFeatureToggle: RoutingFeatureToggle,
+    private val observeAndClearNFTCacheIfNeedUseCase: ObserveAndClearNFTCacheIfNeedUseCase,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
 ) : Model() {
@@ -94,6 +96,7 @@ internal class WalletModel @Inject constructor(
     private val walletsUpdateJobHolder = JobHolder()
     private val refreshWalletJobHolder = JobHolder()
     private val expressStatusJobHolder = JobHolder()
+    private val clearNFTCacheJobHolder = JobHolder()
     private var needToRefreshWallet = false
 
     private var expressTxStatusTaskScheduler = SingleTaskScheduler<Unit>()
@@ -224,6 +227,7 @@ internal class WalletModel @Inject constructor(
                     }
                     subscribeOnExpressTransactionsUpdates(selectedWallet)
                     subscribeToScreenBackgroundState(selectedWallet)
+                    observeAndClearNFTCacheIfNeedUseCase(selectedWallet)
                 }
                 .flowOn(dispatchers.main)
                 .launchIn(modelScope)
@@ -281,6 +285,13 @@ internal class WalletModel @Inject constructor(
                 onError = { /* no-op */ },
             ),
         )
+    }
+
+    private fun observeAndClearNFTCacheIfNeedUseCase(selectedWallet: UserWallet) {
+        observeAndClearNFTCacheIfNeedUseCase
+            .invoke(selectedWallet.walletId)
+            .launchIn(modelScope)
+            .saveIn(clearNFTCacheJobHolder)
     }
 
     private fun needToRefreshTimer() {
