@@ -3,6 +3,7 @@ package com.tangem.domain.markets
 import arrow.core.Either
 import com.tangem.domain.card.repository.DerivationsRepository
 import com.tangem.domain.markets.repositories.MarketsTokenRepository
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.quotes.multi.MultiQuoteFetcher
 import com.tangem.domain.staking.fetcher.YieldBalanceFetcherParams
@@ -10,7 +11,6 @@ import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.wallets.models.UserWalletId
