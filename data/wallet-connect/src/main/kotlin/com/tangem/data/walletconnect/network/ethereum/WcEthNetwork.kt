@@ -9,8 +9,8 @@ import com.tangem.data.walletconnect.request.WcRequestToUseCaseConverter
 import com.tangem.data.walletconnect.request.WcRequestToUseCaseConverter.Companion.fromJson
 import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
 import com.tangem.data.walletconnect.utils.WcNamespaceConverter
-import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.walletconnect.model.WcEthAddChain
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.walletconnect.model.WcEthMethod
 import com.tangem.domain.walletconnect.model.WcEthMethodName
 import com.tangem.domain.walletconnect.model.WcEthSignTypedDataParams
@@ -112,7 +112,7 @@ internal class WcEthNetwork(
         return WcEthMethod.SignTypedData(params = params, account = account, dataForSign = data)
     }
 
-    internal class NamespaceConverter constructor(
+    internal class NamespaceConverter(
         private val excludedBlockchains: ExcludedBlockchains,
     ) : WcNamespaceConverter {
 
