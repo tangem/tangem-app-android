@@ -2,7 +2,7 @@ package com.tangem.data.networks.store
 
 import com.tangem.data.networks.models.SimpleNetworkStatus
 import com.tangem.domain.models.StatusSource
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.tokens.model.NetworkStatus
 import com.tangem.domain.wallets.models.UserWalletId
 import timber.log.Timber
