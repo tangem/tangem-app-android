@@ -8,8 +8,8 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.utils.toTimeFormat
+import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.features.txhistory.impl.R
 import com.tangem.features.txhistory.utils.TxHistoryUiActions
 import com.tangem.utils.StringsSigns
@@ -20,8 +20,8 @@ import com.tangem.utils.toBriefAddressFormat
 internal class TxHistoryItemToTransactionStateConverter(
     private val currency: CryptoCurrency,
     private val txHistoryUiActions: TxHistoryUiActions,
-) : Converter<TxHistoryItem, TransactionState> {
-    override fun convert(value: TxHistoryItem): TransactionState {
+) : Converter<TxInfo, TransactionState> {
+    override fun convert(value: TxInfo): TransactionState {
         return TransactionState.Content(
             txHash = value.txHash,
             amount = value.getAmount(),
@@ -36,94 +36,93 @@ internal class TxHistoryItemToTransactionStateConverter(
         )
     }
 
-    private fun TxHistoryItem.extractIcon(): Int = if (status == TxHistoryItem.TransactionStatus.Failed) {
+    private fun TxInfo.extractIcon(): Int = if (status == TxInfo.TransactionStatus.Failed) {
         R.drawable.ic_close_24
     } else {
         when (type) {
-            is TxHistoryItem.TransactionType.Approve -> R.drawable.ic_doc_24
-            is TxHistoryItem.TransactionType.Staking.Stake,
-            is TxHistoryItem.TransactionType.Staking.Vote,
-            is TxHistoryItem.TransactionType.Staking.Restake,
+            is TxInfo.TransactionType.Approve -> R.drawable.ic_doc_24
+            is TxInfo.TransactionType.Staking.Stake,
+            is TxInfo.TransactionType.Staking.Vote,
+            is TxInfo.TransactionType.Staking.Restake,
             -> R.drawable.ic_transaction_history_staking_24
-            is TxHistoryItem.TransactionType.Staking.ClaimRewards,
+            is TxInfo.TransactionType.Staking.ClaimRewards,
             -> R.drawable.ic_transaction_history_claim_rewards_24
-            is TxHistoryItem.TransactionType.Staking.Unstake,
-            is TxHistoryItem.TransactionType.Staking.Withdraw,
+            is TxInfo.TransactionType.Staking.Unstake,
+            is TxInfo.TransactionType.Staking.Withdraw,
             -> R.drawable.ic_transaction_history_unstaking_24
-            is TxHistoryItem.TransactionType.Operation,
-            is TxHistoryItem.TransactionType.Swap,
-            is TxHistoryItem.TransactionType.Transfer,
-            is TxHistoryItem.TransactionType.UnknownOperation,
+            is TxInfo.TransactionType.Operation,
+            is TxInfo.TransactionType.Swap,
+            is TxInfo.TransactionType.Transfer,
+            is TxInfo.TransactionType.UnknownOperation,
             -> if (isOutgoing) R.drawable.ic_arrow_up_24 else R.drawable.ic_arrow_down_24
         }
     }
 
-    private fun TxHistoryItem.extractTitle(): TextReference = when (val type = type) {
-        is TxHistoryItem.TransactionType.Approve -> resourceReference(R.string.common_approval)
-        is TxHistoryItem.TransactionType.Operation -> stringReference(type.name)
-        is TxHistoryItem.TransactionType.Swap -> resourceReference(R.string.common_swap)
-        is TxHistoryItem.TransactionType.Transfer -> resourceReference(R.string.common_transfer)
-        is TxHistoryItem.TransactionType.Staking.Stake -> resourceReference(R.string.common_stake)
-        is TxHistoryItem.TransactionType.Staking.Unstake -> resourceReference(R.string.common_unstake)
-        is TxHistoryItem.TransactionType.Staking.Vote -> resourceReference(R.string.staking_vote)
-        is TxHistoryItem.TransactionType.Staking.ClaimRewards -> resourceReference(R.string.common_claim_rewards)
-        is TxHistoryItem.TransactionType.Staking.Withdraw -> resourceReference(R.string.staking_withdraw)
-        is TxHistoryItem.TransactionType.Staking.Restake -> resourceReference(R.string.staking_restake)
-        is TxHistoryItem.TransactionType.UnknownOperation -> resourceReference(R.string.transaction_history_operation)
+    private fun TxInfo.extractTitle(): TextReference = when (val type = type) {
+        is TxInfo.TransactionType.Approve -> resourceReference(R.string.common_approval)
+        is TxInfo.TransactionType.Operation -> stringReference(type.name)
+        is TxInfo.TransactionType.Swap -> resourceReference(R.string.common_swap)
+        is TxInfo.TransactionType.Transfer -> resourceReference(R.string.common_transfer)
+        is TxInfo.TransactionType.Staking.Stake -> resourceReference(R.string.common_stake)
+        is TxInfo.TransactionType.Staking.Unstake -> resourceReference(R.string.common_unstake)
+        is TxInfo.TransactionType.Staking.Vote -> resourceReference(R.string.staking_vote)
+        is TxInfo.TransactionType.Staking.ClaimRewards -> resourceReference(R.string.common_claim_rewards)
+        is TxInfo.TransactionType.Staking.Withdraw -> resourceReference(R.string.staking_withdraw)
+        is TxInfo.TransactionType.Staking.Restake -> resourceReference(R.string.staking_restake)
+        is TxInfo.TransactionType.UnknownOperation -> resourceReference(R.string.transaction_history_operation)
     }
 
-    private fun TxHistoryItem.extractSubtitle(): TextReference =
-        when (val interactionAddress = interactionAddressType) {
-            is TxHistoryItem.InteractionAddressType.Contract -> resourceReference(
-                id = R.string.transaction_history_contract_address,
-                formatArgs = wrappedList(interactionAddress.address.toBriefAddressFormat()),
-            )
-            is TxHistoryItem.InteractionAddressType.Multiple -> resourceReference(
-                id = if (isOutgoing) {
-                    R.string.transaction_history_transaction_to_address
-                } else {
-                    R.string.transaction_history_transaction_from_address
-                },
-                formatArgs = wrappedList(resourceReference(R.string.transaction_history_multiple_addresses)),
-            )
-            is TxHistoryItem.InteractionAddressType.User -> resourceReference(
-                id = if (isOutgoing) {
-                    R.string.transaction_history_transaction_to_address
-                } else {
-                    R.string.transaction_history_transaction_from_address
-                },
-                formatArgs = wrappedList(interactionAddress.address.toBriefAddressFormat()),
-            )
-            is TxHistoryItem.InteractionAddressType.Validator -> resourceReference(
-                id = R.string.transaction_history_transaction_validator,
-                formatArgs = wrappedList(interactionAddress.address.toBriefAddressFormat()),
-            )
-            null -> {
-                TextReference.EMPTY
-            }
+    private fun TxInfo.extractSubtitle(): TextReference = when (val interactionAddress = interactionAddressType) {
+        is TxInfo.InteractionAddressType.Contract -> resourceReference(
+            id = R.string.transaction_history_contract_address,
+            formatArgs = wrappedList(interactionAddress.address.toBriefAddressFormat()),
+        )
+        is TxInfo.InteractionAddressType.Multiple -> resourceReference(
+            id = if (isOutgoing) {
+                R.string.transaction_history_transaction_to_address
+            } else {
+                R.string.transaction_history_transaction_from_address
+            },
+            formatArgs = wrappedList(resourceReference(R.string.transaction_history_multiple_addresses)),
+        )
+        is TxInfo.InteractionAddressType.User -> resourceReference(
+            id = if (isOutgoing) {
+                R.string.transaction_history_transaction_to_address
+            } else {
+                R.string.transaction_history_transaction_from_address
+            },
+            formatArgs = wrappedList(interactionAddress.address.toBriefAddressFormat()),
+        )
+        is TxInfo.InteractionAddressType.Validator -> resourceReference(
+            id = R.string.transaction_history_transaction_validator,
+            formatArgs = wrappedList(interactionAddress.address.toBriefAddressFormat()),
+        )
+        null -> {
+            TextReference.EMPTY
         }
+    }
 
-    private fun TxHistoryItem.extractDirection() =
+    private fun TxInfo.extractDirection() =
         if (isOutgoing) TransactionState.Content.Direction.OUTGOING else TransactionState.Content.Direction.INCOMING
 
-    private fun TxHistoryItem.getAmount(): String {
-        if (type is TxHistoryItem.TransactionType.Staking.Vote ||
-            type == TxHistoryItem.TransactionType.Staking.ClaimRewards ||
-            type == TxHistoryItem.TransactionType.Staking.Withdraw
+    private fun TxInfo.getAmount(): String {
+        if (type is TxInfo.TransactionType.Staking.Vote ||
+            type == TxInfo.TransactionType.Staking.ClaimRewards ||
+            type == TxInfo.TransactionType.Staking.Withdraw
         ) {
             return ""
         }
         val prefix = when {
-            status == TxHistoryItem.TransactionStatus.Failed -> ""
+            status == TxInfo.TransactionStatus.Failed -> ""
             this.amount.isZero() -> ""
             else -> if (isOutgoing) StringsSigns.MINUS else StringsSigns.PLUS
         }
         return prefix + amount.format { crypto(symbol = currency.symbol, decimals = currency.decimals) }
     }
 
-    private fun TxHistoryItem.TransactionStatus.tiUiStatus() = when (this) {
-        TxHistoryItem.TransactionStatus.Confirmed -> TransactionState.Content.Status.Confirmed
-        TxHistoryItem.TransactionStatus.Failed -> TransactionState.Content.Status.Failed
-        TxHistoryItem.TransactionStatus.Unconfirmed -> TransactionState.Content.Status.Unconfirmed
+    private fun TxInfo.TransactionStatus.tiUiStatus() = when (this) {
+        TxInfo.TransactionStatus.Confirmed -> TransactionState.Content.Status.Confirmed
+        TxInfo.TransactionStatus.Failed -> TransactionState.Content.Status.Failed
+        TxInfo.TransactionStatus.Unconfirmed -> TransactionState.Content.Status.Unconfirmed
     }
 }
