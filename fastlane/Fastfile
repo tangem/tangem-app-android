@@ -18,7 +18,7 @@ default_platform(:android)
 platform :android do
 
   before_all do |lane, options|
-    FileUtils.cp("../app/src/main/assets/tangem-app-config/android/google-services.json", "../app")
+    FileUtils.cp("../app/src/main/assets/tangem-app-config/android/google-services/release/google-services.json", "../app")
   end
 
   desc "Run detekt"
