@@ -2,8 +2,8 @@ package com.tangem.domain.tokens.model
 
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.getResultStatusSource
+import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.staking.model.stakekit.YieldBalance
-import com.tangem.domain.txhistory.models.TxHistoryItem
 import java.math.BigDecimal
 
 /**
@@ -44,7 +44,7 @@ data class CryptoCurrencyStatus(
         open val hasCurrentNetworkTransactions: Boolean = false
 
         /** The pending cryptocurrency transactions. */
-        open val pendingTransactions: Set<TxHistoryItem> = emptySet()
+        open val pendingTransactions: Set<TxInfo> = emptySet()
 
         /** The network address */
         open val networkAddress: NetworkAddress? = null
@@ -132,7 +132,7 @@ data class CryptoCurrencyStatus(
         override val priceChange: BigDecimal,
         override val yieldBalance: YieldBalance?,
         override val hasCurrentNetworkTransactions: Boolean,
-        override val pendingTransactions: Set<TxHistoryItem>,
+        override val pendingTransactions: Set<TxInfo>,
         override val networkAddress: NetworkAddress,
         override val sources: Sources,
     ) : Value(isError = false)
@@ -155,7 +155,7 @@ data class CryptoCurrencyStatus(
         override val priceChange: BigDecimal?,
         override val yieldBalance: YieldBalance?,
         override val hasCurrentNetworkTransactions: Boolean,
-        override val pendingTransactions: Set<TxHistoryItem>,
+        override val pendingTransactions: Set<TxInfo>,
         override val networkAddress: NetworkAddress,
         override val sources: Sources,
     ) : Value(isError = false)
@@ -172,7 +172,7 @@ data class CryptoCurrencyStatus(
         override val amount: BigDecimal,
         override val yieldBalance: YieldBalance?,
         override val hasCurrentNetworkTransactions: Boolean,
-        override val pendingTransactions: Set<TxHistoryItem>,
+        override val pendingTransactions: Set<TxInfo>,
         override val networkAddress: NetworkAddress,
         override val sources: Sources,
     ) : Value(isError = false)

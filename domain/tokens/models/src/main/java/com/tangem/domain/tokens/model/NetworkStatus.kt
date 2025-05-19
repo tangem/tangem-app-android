@@ -2,7 +2,7 @@ package com.tangem.domain.tokens.model
 
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.txhistory.models.TxHistoryItem
+import com.tangem.domain.models.network.TxInfo
 import java.math.BigDecimal
 
 /**
@@ -58,7 +58,7 @@ data class NetworkStatus(val network: Network, val value: Value) {
     data class Verified(
         val address: NetworkAddress,
         val amounts: Map<CryptoCurrency.ID, CryptoCurrencyAmountStatus>,
-        val pendingTransactions: Map<CryptoCurrency.ID, Set<TxHistoryItem>>,
+        val pendingTransactions: Map<CryptoCurrency.ID, Set<TxInfo>>,
         override val source: StatusSource,
     ) : Value()
 

@@ -2,11 +2,11 @@ package com.tangem.data.networks.utils
 
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyAmountStatus
 import com.tangem.domain.tokens.model.NetworkAddress
 import com.tangem.domain.tokens.model.NetworkStatus
-import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.walletmanager.model.Address
 import com.tangem.domain.walletmanager.model.CryptoCurrencyAmount
 import com.tangem.domain.walletmanager.model.CryptoCurrencyTransaction
@@ -116,7 +116,7 @@ object NetworkStatusFactory {
     private fun formatTransactions(
         transactions: Set<CryptoCurrencyTransaction>,
         currencies: Set<CryptoCurrency>,
-    ): Map<CryptoCurrency.ID, Set<TxHistoryItem>> {
+    ): Map<CryptoCurrency.ID, Set<TxInfo>> {
         if (transactions.isEmpty()) return emptyMap()
 
         return currencies
@@ -137,8 +137,8 @@ object NetworkStatusFactory {
             .toMap()
     }
 
-    private fun createCurrentTransactions(transactions: Set<CryptoCurrencyTransaction>): Set<TxHistoryItem> {
-        return transactions.mapTo(hashSetOf()) { it.txHistoryItem }
+    private fun createCurrentTransactions(transactions: Set<CryptoCurrencyTransaction>): Set<TxInfo> {
+        return transactions.mapTo(hashSetOf()) { it.txInfo }
     }
 
     private fun getNetworkAddress(selectedAddress: String, availableAddresses: Set<Address>): NetworkAddress {

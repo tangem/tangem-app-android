@@ -1,6 +1,6 @@
 package com.tangem.common.test.domain.walletmanager
 
-import com.tangem.domain.txhistory.models.TxHistoryItem
+import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.walletmanager.model.Address
 import com.tangem.domain.walletmanager.model.CryptoCurrencyAmount
 import com.tangem.domain.walletmanager.model.CryptoCurrencyTransaction
@@ -40,24 +40,24 @@ class MockUpdateWalletManagerResultFactory {
                 CryptoCurrencyAmount.Coin(value = BigDecimal.ONE),
             ),
             currentTransactions = setOf(
-                CryptoCurrencyTransaction.Coin(txHistoryItem),
+                CryptoCurrencyTransaction.Coin(txInfo),
             ),
         )
     }
 
     private companion object {
 
-        val txHistoryItem = TxHistoryItem(
+        val txInfo = TxInfo(
             txHash = "erroribus",
             timestampInMillis = 2771,
             isOutgoing = false,
-            destinationType = TxHistoryItem.DestinationType.Single(
-                addressType = TxHistoryItem.AddressType.User(address = "0x1"),
+            destinationType = TxInfo.DestinationType.Single(
+                addressType = TxInfo.AddressType.User(address = "0x1"),
             ),
-            sourceType = TxHistoryItem.SourceType.Single(address = "0x2"),
+            sourceType = TxInfo.SourceType.Single(address = "0x2"),
             interactionAddressType = null,
-            status = TxHistoryItem.TransactionStatus.Confirmed,
-            type = TxHistoryItem.TransactionType.Transfer,
+            status = TxInfo.TransactionStatus.Confirmed,
+            type = TxInfo.TransactionType.Transfer,
             amount = BigDecimal.ONE,
         )
     }
