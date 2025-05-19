@@ -128,11 +128,13 @@ internal object WalletConnectDataModule {
         sessionsManager: WcSessionsManager,
         factories: WcEthNetwork.Factories,
         namespaceConverter: WcEthNetwork.NamespaceConverter,
+        walletManagersFacade: WalletManagersFacade,
     ): WcEthNetwork = WcEthNetwork(
         moshi = moshi,
         namespaceConverter = namespaceConverter,
         sessionsManager = sessionsManager,
         factories = factories,
+        walletManagersFacade = walletManagersFacade,
     )
 
     @Provides
