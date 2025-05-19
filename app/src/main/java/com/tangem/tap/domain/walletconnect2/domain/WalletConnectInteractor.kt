@@ -3,8 +3,8 @@ package com.tangem.tap.domain.walletconnect2.domain
 import arrow.core.flatten
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.toNetworkId
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletconnect.model.legacy.Account
 import com.tangem.domain.walletconnect.model.legacy.Session
