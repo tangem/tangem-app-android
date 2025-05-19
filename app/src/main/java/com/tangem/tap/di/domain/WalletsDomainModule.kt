@@ -225,4 +225,24 @@ internal object WalletsDomainModule {
             userWalletsSyncDelegate = userWalletsSyncDelegate,
         )
     }
+
+    @Provides
+    @Singleton
+    fun providesGetSavedWalletChangesIdUseCase(
+        userWalletsListManager: UserWalletsListManager,
+    ): GetSavedWalletChangesUseCase {
+        return GetSavedWalletChangesUseCase(
+            userWalletsListManager = userWalletsListManager,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providesAssociateWalletsWithApplicationIdUseCase(
+        walletsRepository: WalletsRepository,
+    ): AssociateWalletsWithApplicationIdUseCase {
+        return AssociateWalletsWithApplicationIdUseCase(
+            walletsRepository = walletsRepository,
+        )
+    }
 }
