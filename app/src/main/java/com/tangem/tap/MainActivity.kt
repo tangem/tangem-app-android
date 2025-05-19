@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.core.net.toUri
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.flowWithLifecycle
@@ -30,6 +31,7 @@ import com.tangem.common.routing.entity.SerializableIntent
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.di.RootAppComponentContext
+import com.tangem.core.deeplink.DEEPLINK_KEY
 import com.tangem.core.deeplink.DeepLinksRegistry
 import com.tangem.core.navigation.email.EmailSender
 import com.tangem.core.ui.UiDependencies
@@ -68,6 +70,7 @@ import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.proxy.redux.DaggerGraphAction
 import com.tangem.tap.routing.component.RoutingComponent
 import com.tangem.tap.routing.configurator.AppRouterConfig
+import com.tangem.tap.routing.utils.DeepLinkFactory
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.FeatureCoroutineExceptionHandler
 import dagger.hilt.android.AndroidEntryPoint
@@ -175,6 +178,9 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     @Inject
     internal lateinit var routingFeatureToggle: RoutingFeatureToggle
 
+    @Inject
+    internal lateinit var deeplinkFactory: DeepLinkFactory
+
     internal val viewModel: MainViewModel by viewModels()
 
     private lateinit var appThemeModeFlow: SharedFlow<AppThemeMode>
@@ -227,13 +233,9 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         sendStakingUnsubmittedHashes()
         checkGoogleServicesAvailability()
 
-        if (intent != null && savedInstanceState == null) {
+        if (routingFeatureToggle.isDeepLinkNavigationEnabled.not() && intent != null && savedInstanceState == null) {
             // handle intent only on start, not on recreate
-            if (routingFeatureToggle.isDeepLinkNavigationEnabled) {
-                // todo [REDACTED_TASK_KEY]
-            } else {
-                deepLinksRegistry.launch(intent)
-            }
+            handleDeepLink(intent)
         }
 
         lifecycle.addObserver(WindowObscurationObserver)
@@ -382,11 +384,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         }
 
         if (intent != null) {
-            if (routingFeatureToggle.isDeepLinkNavigationEnabled) {
-                // todo [REDACTED_TASK_KEY]
-            } else {
-                deepLinksRegistry.launch(intent)
-            }
+            handleDeepLink(intent)
         }
     }
 
@@ -467,7 +465,22 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
             }
         }
 
+        if (routingFeatureToggle.isDeepLinkNavigationEnabled && intent != null) {
+            handleDeepLink(intent)
+        }
+
         viewModel.checkForUnfinishedBackup()
+    }
+
+    private fun handleDeepLink(intent: Intent) {
+        if (routingFeatureToggle.isDeepLinkNavigationEnabled) {
+            val deepLinkExtras = intent.getStringExtra(DEEPLINK_KEY)?.toUri()
+            val receivedDeepLink = intent.data ?: deepLinkExtras ?: return
+
+            deeplinkFactory.handleDeeplink(deeplinkUri = receivedDeepLink, coroutineScope = lifecycleScope)
+        } else {
+            deepLinksRegistry.launch(intent)
+        }
     }
 
     private fun observePolkadotAccountHealthCheck() {
