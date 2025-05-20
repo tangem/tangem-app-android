@@ -4,15 +4,15 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.IconsUtil
 import com.tangem.blockchainsdk.utils.toCoinId
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency.ID
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.CryptoCurrency.ID
 import com.tangem.blockchain.common.Token as SdkToken
-import com.tangem.domain.tokens.model.CryptoCurrency.ID.Body as CurrencyIdBody
-import com.tangem.domain.tokens.model.CryptoCurrency.ID.Prefix.COIN_PREFIX as COIN_ID_PREFIX
-import com.tangem.domain.tokens.model.CryptoCurrency.ID.Prefix.TOKEN_PREFIX as TOKEN_ID_PREFIX
-import com.tangem.domain.tokens.model.CryptoCurrency.ID.Suffix.ContractAddress as CustomCurrencyIdSuffix
-import com.tangem.domain.tokens.model.CryptoCurrency.ID.Suffix.RawID as CurrencyIdSuffix
+import com.tangem.domain.models.currency.CryptoCurrency.ID.Body as CurrencyIdBody
+import com.tangem.domain.models.currency.CryptoCurrency.ID.Prefix.COIN_PREFIX as COIN_ID_PREFIX
+import com.tangem.domain.models.currency.CryptoCurrency.ID.Prefix.TOKEN_PREFIX as TOKEN_ID_PREFIX
+import com.tangem.domain.models.currency.CryptoCurrency.ID.Suffix.ContractAddress as CustomCurrencyIdSuffix
+import com.tangem.domain.models.currency.CryptoCurrency.ID.Suffix.RawID as CurrencyIdSuffix
 
 private const val DEFAULT_TOKENS_ICONS_HOST = "https://s3.eu-central-1.amazonaws.com/tangem.api/coins"
 private const val TOKEN_ICON_SIZE = "large"
