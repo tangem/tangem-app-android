@@ -533,7 +533,7 @@ internal class DefaultNFTRepository @Inject constructor(
 
     private fun Pair<UserWalletId, Network>.formatted(): String {
         val (walletId, network) = this
-        return walletId.stringValue + "_" + network.id.value + "_" + network.derivationPath.value
+        return walletId.stringValue + "_" + network.rawId + "_" + network.derivationPath.value
     }
 
     private fun Network.canHandleNFTs(): Boolean {
