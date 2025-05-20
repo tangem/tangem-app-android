@@ -19,7 +19,7 @@ internal object WcNetworksInfoConverter : Converter<WcSessionProposal.ProposalNe
                 items = (value.required + value.available)
                     .map {
                         WcNetworkInfoItem.Required(
-                            id = it.id.value,
+                            id = it.rawId,
                             icon = it.iconResId,
                             name = it.name,
                             symbol = it.currencySymbol,

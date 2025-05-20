@@ -266,20 +266,23 @@ private fun Preview_CustomTokenNetworkSelectorContent(
 
 private class CustomTokenNetworkSelectorComponentPreviewProvider :
     PreviewParameterProvider<CustomTokenSelectorComponent> {
+
+    private val derivationPath = Network.DerivationPath.Card("m/44'/0'/0'/0/0")
+
     override val values: Sequence<CustomTokenSelectorComponent>
         get() = sequenceOf(
             PreviewCustomTokenSelectorComponent(
                 params = CustomTokenSelectorComponent.Params.DerivationPathSelector(
                     userWalletId = UserWalletId(stringValue = "321"),
                     selectedNetwork = SelectedNetwork(
-                        id = Network.ID(value = "0"),
+                        id = Network.ID(value = "0", derivationPath = derivationPath),
                         name = "Ethereum",
-                        derivationPath = Network.DerivationPath.Card("m/44'/0'/0'/0/0"),
+                        derivationPath = derivationPath,
                         canHandleTokens = true,
                     ),
                     selectedDerivationPath = SelectedDerivationPath(
-                        id = Network.ID(value = "0"),
-                        value = Network.DerivationPath.Card("m/44'/0'/0'/0/0"),
+                        id = Network.ID(value = "0", derivationPath = derivationPath),
+                        value = derivationPath,
                         name = "",
                         isDefault = false,
                     ),
@@ -290,9 +293,9 @@ private class CustomTokenNetworkSelectorComponentPreviewProvider :
                 params = CustomTokenSelectorComponent.Params.NetworkSelector(
                     userWalletId = UserWalletId(stringValue = "321"),
                     selectedNetwork = SelectedNetwork(
-                        id = Network.ID(value = "0"),
+                        id = Network.ID(value = "0", derivationPath = derivationPath),
                         name = "Ethereum",
-                        derivationPath = Network.DerivationPath.Card("m/44'/0'/0'/0/0"),
+                        derivationPath = derivationPath,
                         canHandleTokens = true,
                     ),
                     onNetworkSelected = {},

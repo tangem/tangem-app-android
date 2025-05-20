@@ -98,7 +98,7 @@ internal class TokenDetailsSkeletonStateConverter(
     private fun MutableList<TangemDropdownMenuItem>.addGenerateXPubMenuItem(cryptoCurrency: CryptoCurrency) {
         val userWallet = getUserWalletUseCase(userWalletId).getOrNull() ?: return
 
-        val isBitcoin = isBitcoin(cryptoCurrency.network.id.value)
+        val isBitcoin = isBitcoin(cryptoCurrency.network.rawId)
         val hasDerivations = networkHasDerivationUseCase(
             scanResponse = userWallet.scanResponse,
             network = cryptoCurrency.network,

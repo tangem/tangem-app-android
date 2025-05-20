@@ -213,7 +213,7 @@ internal class SendNotificationFactory(
                 )
             },
         )
-        if (!BlockchainUtils.isCardano(currency.network.id.value)) {
+        if (!BlockchainUtils.isCardano(currency.network.rawId)) {
             addDustWarningNotification(
                 dustValue = currencyCheck.dustValue,
                 feeValue = feeValue,
@@ -306,7 +306,7 @@ internal class SendNotificationFactory(
     ) {
         val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
         val balance = cryptoCurrencyStatus.value.amount ?: BigDecimal.ZERO
-        val isTezos = isTezos(cryptoCurrencyStatus.currency.network.id.value)
+        val isTezos = isTezos(cryptoCurrencyStatus.currency.network.rawId)
         val threshold = getTezosThreshold()
         val isTotalBalance = sendAmount >= balance && balance > threshold
         if (!ignoreAmountReduce && isTotalBalance && isTezos) {
@@ -356,7 +356,7 @@ internal class SendNotificationFactory(
     private suspend fun MutableList<NotificationUM>.addTronNetworkFeesNotification() {
         val cryptoCurrency = cryptoCurrencyStatusProvider().currency
         val isTronToken = cryptoCurrency is CryptoCurrency.Token &&
-            isTron(cryptoCurrency.network.id.value)
+            isTron(cryptoCurrency.network.rawId)
 
         if (isTronToken && getTronFeeNotificationShowCountUseCase() <= TRON_FEE_NOTIFICATION_MAX_SHOW_COUNT) {
             add(
