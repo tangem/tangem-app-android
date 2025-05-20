@@ -14,7 +14,7 @@ internal object MockNetworks {
     val amountToCreateAccount: BigDecimal = BigDecimal.TEN
 
     val network1 = Network(
-        id = Network.ID("network1"),
+        id = Network.ID(value = "network1", derivationPath = Network.DerivationPath.None),
         name = "Network One",
         isTestnet = false,
         standardType = Network.StandardType.ERC20,
@@ -27,7 +27,7 @@ internal object MockNetworks {
     )
 
     val network2 = Network(
-        id = Network.ID("network2"),
+        id = Network.ID(value = "network2", derivationPath = Network.DerivationPath.None),
         name = "Network Two",
         isTestnet = false,
         standardType = Network.StandardType.ERC20,
@@ -40,7 +40,7 @@ internal object MockNetworks {
     )
 
     val network3 = Network(
-        id = Network.ID("network3"),
+        id = Network.ID(value = "network3", derivationPath = Network.DerivationPath.None),
         name = "Network Three",
         isTestnet = false,
         standardType = Network.StandardType.ERC20,
