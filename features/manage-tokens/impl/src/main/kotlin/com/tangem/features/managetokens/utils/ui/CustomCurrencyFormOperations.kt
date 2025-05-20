@@ -5,7 +5,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.managetokens.ValidateTokenFormUseCase
 import com.tangem.domain.managetokens.model.exceptoin.CustomTokenFormValidationException
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.managetokens.entity.customtoken.CustomTokenFormUM
 import com.tangem.features.managetokens.entity.customtoken.CustomTokenFormUM.TokenFormUM.Field
 import com.tangem.features.managetokens.impl.R
