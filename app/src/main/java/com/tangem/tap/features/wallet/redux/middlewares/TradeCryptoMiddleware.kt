@@ -79,7 +79,7 @@ object TradeCryptoMiddleware {
 
         val status = action.cryptoCurrencyStatus
         val currency = status.currency
-        val blockchain = Blockchain.fromId(currency.network.id.value)
+        val blockchain = Blockchain.fromId(currency.network.rawId)
         val exchangeManager = store.state.globalState.exchangeManager
         val topUrl = exchangeManager.getUrl(
             action = CurrencyExchangeManager.Action.Buy,
