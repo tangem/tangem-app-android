@@ -1,8 +1,14 @@
 package com.tangem.data.visa
 
+import arrow.core.Either
+import com.squareup.moshi.Moshi
+import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.visa.TangemVisaApi
 import com.tangem.datasource.api.visa.models.request.*
+import com.tangem.datasource.api.visa.models.response.VisaErrorResponseJsonAdapter
+import com.tangem.datasource.di.NetworkMoshi
+import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.model.VisaAuthChallenge
 import com.tangem.domain.visa.model.VisaAuthSession
 import com.tangem.domain.visa.model.VisaAuthSignedChallenge
@@ -14,40 +20,54 @@ import javax.inject.Inject
 
 @Suppress("UnusedPrivateMember")
 internal class DefaultVisaAuthRepository @Inject constructor(
+    @NetworkMoshi private val moshi: Moshi,
     private val visaAuthApi: TangemVisaApi,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : VisaAuthRepository {
 
-    override suspend fun getCardAuthChallenge(cardId: String, cardPublicKey: String): VisaAuthChallenge.Card =
-        withContext(dispatchers.io) {
-            val response = visaAuthApi.generateNonceByCardId(
+    private val visaErrorAdapter = VisaErrorResponseJsonAdapter(moshi)
+
+    override suspend fun getCardAuthChallenge(
+        cardId: String,
+        cardPublicKey: String,
+    ): Either<VisaApiError, VisaAuthChallenge.Card> = withContext(dispatchers.io) {
+        request {
+            visaAuthApi.generateNonceByCardId(
                 GenerateNoneByCardIdRequest(
                     cardId = cardId,
                     cardPublicKey = cardPublicKey,
                 ),
-            )
+            ).getOrThrow()
+        }.map { response ->
             VisaAuthChallenge.Card(
                 challenge = response.result.nonce,
                 session = VisaAuthSession(response.result.sessionId),
             )
         }
+    }
 
-    override suspend fun getCardWalletAuthChallenge(cardWalletAddress: String): VisaAuthChallenge.Wallet =
-        withContext(dispatchers.io) {
-            val response = visaAuthApi.generateNonceByCardWallet(
+    override suspend fun getCardWalletAuthChallenge(
+        cardWalletAddress: String,
+    ): Either<VisaApiError, VisaAuthChallenge.Wallet> = withContext(dispatchers.io) {
+        request {
+            visaAuthApi.generateNonceByCardWallet(
                 GenerateNoneByCardWalletRequest(
                     cardWalletAddress = cardWalletAddress,
                 ),
-            )
+            ).getOrThrow()
+        }.map { response ->
             VisaAuthChallenge.Wallet(
                 challenge = response.result.nonce,
                 session = VisaAuthSession(response.result.sessionId),
             )
         }
+    }
 
-    override suspend fun getAccessTokens(signedChallenge: VisaAuthSignedChallenge): VisaAuthTokens =
-        withContext(dispatchers.io) {
-            val response = when (signedChallenge) {
+    override suspend fun getAccessTokens(
+        signedChallenge: VisaAuthSignedChallenge,
+    ): Either<VisaApiError, VisaAuthTokens> = withContext(dispatchers.io) {
+        request {
+            when (signedChallenge) {
                 is VisaAuthSignedChallenge.ByCardPublicKey -> {
                     visaAuthApi.getAccessTokenByCardId(
                         GetAccessTokenByCardIdRequest(
@@ -55,7 +75,7 @@ internal class DefaultVisaAuthRepository @Inject constructor(
                             signature = signedChallenge.signature,
                             salt = signedChallenge.salt,
                         ),
-                    )
+                    ).getOrThrow()
                 }
                 is VisaAuthSignedChallenge.ByWallet -> {
                     visaAuthApi.getAccessTokenByCardWallet(
@@ -63,9 +83,10 @@ internal class DefaultVisaAuthRepository @Inject constructor(
                             sessionId = signedChallenge.challenge.session.sessionId,
                             signature = signedChallenge.signature,
                         ),
-                    )
+                    ).getOrThrow()
                 }
             }
+        }.map { response ->
             VisaAuthTokens(
                 accessToken = response.result.accessToken,
                 refreshToken = VisaAuthTokens.RefreshToken(
@@ -77,10 +98,13 @@ internal class DefaultVisaAuthRepository @Inject constructor(
                 ),
             )
         }
+    }
 
-    override suspend fun refreshAccessTokens(refreshToken: VisaAuthTokens.RefreshToken): VisaAuthTokens =
-        withContext(dispatchers.io) {
-            val response = when (refreshToken.authType) {
+    override suspend fun refreshAccessTokens(
+        refreshToken: VisaAuthTokens.RefreshToken,
+    ): Either<VisaApiError, VisaAuthTokens> = withContext(dispatchers.io) {
+        request {
+            when (refreshToken.authType) {
                 VisaAuthTokens.RefreshToken.Type.CardId ->
                     visaAuthApi.refreshCardIdAccessToken(
                         RefreshTokenByCardIdRequest(refreshToken = refreshToken.value),
@@ -90,10 +114,27 @@ internal class DefaultVisaAuthRepository @Inject constructor(
                         RefreshTokenByCardIdRequest(refreshToken = refreshToken.value),
                     )
             }.getOrThrow()
-
+        }.map { response ->
             VisaAuthTokens(
                 accessToken = response.result.accessToken,
                 refreshToken = refreshToken.copy(value = response.result.refreshToken),
             )
         }
+    }
+
+    private suspend fun <T : Any> request(requestBlock: suspend () -> T): Either<VisaApiError, T> {
+        return runCatching {
+            Either.Right(requestBlock())
+        }.getOrElse { responseError ->
+            if (responseError is ApiResponseError.HttpException &&
+                responseError.errorBody != null
+            ) {
+                val errorCode =
+                    visaErrorAdapter.fromJson(responseError.errorBody!!)?.error?.code ?: responseError.code.numericCode
+                return Either.Left(VisaApiError.fromBackendError(errorCode))
+            }
+
+            return Either.Left(VisaApiError.UnknownWithoutCode)
+        }
+    }
 }
