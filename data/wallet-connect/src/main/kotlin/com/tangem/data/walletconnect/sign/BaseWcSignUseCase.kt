@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.FlowCollector
 
 internal abstract class BaseWcSignUseCase<MiddleAction, SignModel> :
     WcMethodUseCase,
-    WcSignUseCase,
+    WcSignUseCase<SignModel>,
     FinalActionCollector<SignModel>,
     MiddleActionCollector<MiddleAction, SignModel> {
 
