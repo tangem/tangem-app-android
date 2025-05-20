@@ -76,7 +76,7 @@ internal class UpdateDataStateTransformer(
     private fun List<NFTCollection>.transform(state: NFTCollectionsStateUM): ImmutableList<NFTCollectionUM> = map {
         NFTCollectionUM(
             id = it.collectionIdProvider(),
-            networkIconId = getActiveIconRes(it.network.id.value),
+            networkIconId = getActiveIconRes(it.network.rawId),
             name = it.name.orEmpty(),
             description = TextReference.PluralRes(
                 R.plurals.nft_collections_count,
