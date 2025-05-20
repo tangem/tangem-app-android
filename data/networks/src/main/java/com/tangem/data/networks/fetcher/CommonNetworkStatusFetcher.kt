@@ -62,7 +62,7 @@ internal class CommonNetworkStatusFetcher @Inject constructor(
             networksStatusesStore.storeStatus(userWalletId = userWalletId, status = status)
         }
             .onLeft {
-                Timber.e("Failed to fetch network status for $userWalletId [${network.id.value}]: $it")
+                Timber.e("Failed to fetch network status for $userWalletId [${network.rawId}]: $it")
                 networksStatusesStore.setSourceAsOnlyCache(userWalletId = userWalletId, network = network)
             }
     }
