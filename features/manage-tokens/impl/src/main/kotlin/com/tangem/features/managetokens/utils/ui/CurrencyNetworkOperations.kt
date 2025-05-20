@@ -15,7 +15,7 @@ internal fun CurrencyNetworkUM.select(isSelected: Boolean): CurrencyNetworkUM {
 
 @DrawableRes
 internal fun Network.ID.getIconRes(isColored: Boolean): Int = if (isColored) {
-    getActiveIconRes(value)
+    getActiveIconRes(rawId.value)
 } else {
-    getGreyedOutIconRes(value)
+    getGreyedOutIconRes(rawId.value)
 }

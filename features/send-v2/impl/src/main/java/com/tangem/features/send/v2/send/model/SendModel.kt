@@ -23,8 +23,8 @@ import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
 import com.tangem.domain.qrscanning.usecases.ParseQrCodeUseCase
-import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.GetFeePaidCryptoCurrencyStatusSyncUseCase
+import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
@@ -301,7 +301,7 @@ internal class SendModel @Inject constructor(
         saveBlockchainErrorUseCase(
             error = BlockchainErrorInfo(
                 errorMessage = errorMessage.orEmpty(),
-                blockchainId = cryptoCurrency.network.id.value,
+                blockchainId = cryptoCurrency.network.rawId,
                 derivationPath = cryptoCurrency.network.derivationPath.value,
                 destinationAddress = "",
                 tokenSymbol = "",
