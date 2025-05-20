@@ -141,7 +141,7 @@ class TokenItemStateConverter(
         }
 
         private fun CryptoCurrencyStatus.getStakedBalance() = (value.yieldBalance as? YieldBalance.Data)
-            ?.getTotalWithRewardsStakingBalance(blockchainId = currency.network.id.value).orZero()
+            ?.getTotalWithRewardsStakingBalance(blockchainId = currency.network.rawId).orZero()
 
         private fun createTitleState(currencyStatus: CryptoCurrencyStatus): TokenItemState.TitleState {
             return when (val value = currencyStatus.value) {

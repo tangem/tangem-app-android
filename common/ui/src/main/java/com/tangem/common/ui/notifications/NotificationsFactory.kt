@@ -4,7 +4,6 @@ import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.common.ui.R
 import com.tangem.common.ui.amountScreen.models.AmountFieldModel
 import com.tangem.common.ui.amountScreen.utils.getFiatString
-import com.tangem.common.ui.notifications.NotificationUM.Warning
 import com.tangem.core.ui.extensions.networkIconResId
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
@@ -460,7 +459,7 @@ object NotificationsFactory {
         onCloseClick: (Class<out NotificationUM>) -> Unit,
     ) {
         val balance = cryptoCurrencyStatus.value.amount ?: BigDecimal.ZERO
-        val isTezos = isTezos(cryptoCurrencyStatus.currency.network.id.value)
+        val isTezos = isTezos(cryptoCurrencyStatus.currency.network.rawId)
         val threshold = getTezosThreshold()
         val isTotalBalance = enteredAmountValue >= balance && balance > threshold
         if (!ignoreAmountReduce && isTotalBalance && isTezos) {
