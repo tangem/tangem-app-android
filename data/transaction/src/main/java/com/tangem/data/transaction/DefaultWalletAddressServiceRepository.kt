@@ -21,7 +21,7 @@ class DefaultWalletAddressServiceRepository(
 
     override suspend fun validateAddress(userWalletId: UserWalletId, network: Network, address: String): Boolean =
         withContext(dispatchers.io) {
-            val blockchain = Blockchain.fromId(network.id.value)
+            val blockchain = Blockchain.fromId(network.rawId)
 
             if (blockchain.isNear()) {
                 val walletManager = walletManagersFacade.getOrCreateWalletManager(
@@ -37,7 +37,7 @@ class DefaultWalletAddressServiceRepository(
 
     override fun validateMemo(network: Network, memo: String): Boolean {
         if (memo.isEmpty()) return true
-        return when (network.id.value) {
+        return when (network.rawId) {
             Blockchain.XRP.id -> {
                 val tag = memo.toLongOrNull()
                 tag != null && tag <= XRP_TAG_MAX_NUMBER
@@ -50,7 +50,7 @@ class DefaultWalletAddressServiceRepository(
     }
 
     override suspend fun parseSharedAddress(input: String, network: Network): ParsedQrCode {
-        val blockchain = Blockchain.fromId(network.id.value)
+        val blockchain = Blockchain.fromId(network.rawId)
         val addressSchemeSplit = when (blockchain) {
             Blockchain.BitcoinCash, Blockchain.Kaspa -> listOf(input)
             else -> input.split(":")
