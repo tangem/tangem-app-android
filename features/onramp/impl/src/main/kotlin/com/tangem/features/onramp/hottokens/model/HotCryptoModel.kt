@@ -12,10 +12,10 @@ import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.onramp.GetHotCryptoUseCase
 import com.tangem.domain.onramp.model.HotCryptoCurrency
 import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.features.onramp.hottokens.HotCryptoComponent
 import com.tangem.features.onramp.hottokens.converter.HotTokenItemStateConverter
 import com.tangem.features.onramp.hottokens.entity.HotCryptoUM
