@@ -1,8 +1,8 @@
 package com.tangem.features.send.v2.common
 
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.tokens.FetchPendingTransactionsUseCase
 import com.tangem.domain.tokens.UpdateDelayedNetworkStatusUseCase
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
 import com.tangem.domain.wallets.models.UserWallet

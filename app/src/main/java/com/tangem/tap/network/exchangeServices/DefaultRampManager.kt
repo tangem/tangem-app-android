@@ -12,9 +12,9 @@ import com.tangem.datasource.exchangeservice.swap.ExpressServiceLoader
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.exchange.ExpressAvailabilityState
 import com.tangem.domain.exchange.RampStateManager
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.tokens.GetNetworkCoinStatusUseCase
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.repository.CurrenciesRepository
