@@ -48,7 +48,7 @@ internal class SimpleNetworkStatusConverterTest {
         // region Verified
         ConvertModel(
             value = NetworkStatusDM.Verified(
-                networkId = network.id,
+                networkId = NetworkStatusDM.ID(network.rawId),
                 derivationPath = NetworkStatusDM.DerivationPath(
                     value = "card",
                     type = NetworkStatusDM.DerivationPath.Type.CARD,
@@ -70,7 +70,10 @@ internal class SimpleNetworkStatusConverterTest {
                 ),
             ),
             expected = SimpleNetworkStatus(
-                id = network.id,
+                id = Network.ID(
+                    value = network.rawId,
+                    derivationPath = Network.DerivationPath.Card("card"),
+                ),
                 value = NetworkStatus.Verified(
                     address = NetworkAddress.Selectable(
                         defaultAddress = NetworkAddress.Address(
@@ -110,7 +113,7 @@ internal class SimpleNetworkStatusConverterTest {
         // region NoAccount
         ConvertModel(
             value = NetworkStatusDM.NoAccount(
-                networkId = network.id,
+                networkId = NetworkStatusDM.ID(network.rawId),
                 derivationPath = NetworkStatusDM.DerivationPath(
                     value = "card",
                     type = NetworkStatusDM.DerivationPath.Type.CARD,
@@ -130,7 +133,10 @@ internal class SimpleNetworkStatusConverterTest {
                 errorMessage = "errorMessage",
             ),
             expected = SimpleNetworkStatus(
-                id = network.id,
+                id = Network.ID(
+                    value = network.rawId,
+                    derivationPath = Network.DerivationPath.Card("card"),
+                ),
                 value = NetworkStatus.NoAccount(
                     address = NetworkAddress.Selectable(
                         defaultAddress = NetworkAddress.Address(
@@ -159,7 +165,7 @@ internal class SimpleNetworkStatusConverterTest {
         // region Error
         ConvertModel(
             value = NetworkStatusDM.Verified(
-                networkId = network.id,
+                networkId = NetworkStatusDM.ID(network.rawId),
                 derivationPath = NetworkStatusDM.DerivationPath(
                     value = "card",
                     type = NetworkStatusDM.DerivationPath.Type.CARD,
@@ -179,7 +185,7 @@ internal class SimpleNetworkStatusConverterTest {
         ),
         ConvertModel(
             value = NetworkStatusDM.Verified(
-                networkId = network.id,
+                networkId = NetworkStatusDM.ID(network.rawId),
                 derivationPath = NetworkStatusDM.DerivationPath(
                     value = "card",
                     type = NetworkStatusDM.DerivationPath.Type.CARD,
@@ -194,7 +200,7 @@ internal class SimpleNetworkStatusConverterTest {
         ),
         ConvertModel(
             value = NetworkStatusDM.Verified(
-                networkId = network.id,
+                networkId = NetworkStatusDM.ID(network.rawId),
                 derivationPath = NetworkStatusDM.DerivationPath(
                     value = "card",
                     type = NetworkStatusDM.DerivationPath.Type.CARD,
@@ -218,7 +224,7 @@ internal class SimpleNetworkStatusConverterTest {
         ),
         ConvertModel(
             value = NetworkStatusDM.NoAccount(
-                networkId = network.id,
+                networkId = NetworkStatusDM.ID(network.rawId),
                 derivationPath = NetworkStatusDM.DerivationPath(
                     value = "card",
                     type = NetworkStatusDM.DerivationPath.Type.CARD,
@@ -243,7 +249,7 @@ internal class SimpleNetworkStatusConverterTest {
         ),
         ConvertModel(
             value = NetworkStatusDM.NoAccount(
-                networkId = network.id,
+                networkId = NetworkStatusDM.ID(network.rawId),
                 derivationPath = NetworkStatusDM.DerivationPath(
                     value = "card",
                     type = NetworkStatusDM.DerivationPath.Type.CARD,
@@ -264,7 +270,7 @@ internal class SimpleNetworkStatusConverterTest {
         ),
         ConvertModel(
             value = NetworkStatusDM.NoAccount(
-                networkId = network.id,
+                networkId = NetworkStatusDM.ID(network.rawId),
                 derivationPath = NetworkStatusDM.DerivationPath(
                     value = "card",
                     type = NetworkStatusDM.DerivationPath.Type.CARD,
