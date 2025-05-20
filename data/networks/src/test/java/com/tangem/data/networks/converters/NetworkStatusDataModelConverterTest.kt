@@ -63,7 +63,7 @@ internal class NetworkStatusDataModelConverterTest {
                 ),
             ),
             expected = NetworkStatusDM.Verified(
-                networkId = network.id,
+                networkId = NetworkStatusDM.ID(network.rawId),
                 derivationPath = NetworkStatusDM.DerivationPath(
                     value = "",
                     type = NetworkStatusDM.DerivationPath.Type.NONE,
@@ -97,7 +97,7 @@ internal class NetworkStatusDataModelConverterTest {
                 ),
             ),
             expected = NetworkStatusDM.NoAccount(
-                networkId = network.id,
+                networkId = NetworkStatusDM.ID(network.rawId),
                 derivationPath = NetworkStatusDM.DerivationPath(
                     value = "",
                     type = NetworkStatusDM.DerivationPath.Type.NONE,
