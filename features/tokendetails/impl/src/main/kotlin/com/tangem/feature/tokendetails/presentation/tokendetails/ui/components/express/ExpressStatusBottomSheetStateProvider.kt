@@ -85,7 +85,7 @@ class ExpressStatusBottomSheetStateProvider : PreviewParameterProvider<ExpressSt
         get() = CryptoCurrency.Coin(
             id = ID(
                 ID.Prefix.COIN_PREFIX,
-                ID.Body.NetworkId(network.id.value),
+                ID.Body.NetworkId(network.rawId),
                 ID.Suffix.RawID("token1"),
             ),
             network = network,
@@ -97,7 +97,7 @@ class ExpressStatusBottomSheetStateProvider : PreviewParameterProvider<ExpressSt
         )
 
     private val network = Network(
-        id = Network.ID("network1"),
+        id = Network.ID(value = "network1", derivationPath = Network.DerivationPath.None),
         name = "Network One",
         isTestnet = false,
         standardType = Network.StandardType.ERC20,
