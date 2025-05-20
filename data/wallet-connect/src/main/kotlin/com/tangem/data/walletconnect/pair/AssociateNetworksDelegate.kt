@@ -3,8 +3,8 @@ package com.tangem.data.walletconnect.pair
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.Wallet.Model.Namespace
 import com.tangem.data.walletconnect.utils.WcNamespaceConverter
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletconnect.model.WcPairError
 import com.tangem.domain.walletconnect.model.WcSessionProposal.ProposalNetwork
