@@ -14,9 +14,9 @@ import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.common.configs.GenericCardConfig
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.demo.DemoConfig
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.scan.ProductType
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import io.mockk.*
