@@ -1,8 +1,8 @@
 package com.tangem.domain.tokens.repository
 
 import com.tangem.domain.core.error.DataError
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.FeePaidCurrency
 import com.tangem.domain.wallets.models.UserWallet
