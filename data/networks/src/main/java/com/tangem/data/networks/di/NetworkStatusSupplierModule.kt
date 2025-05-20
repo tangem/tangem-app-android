@@ -20,7 +20,7 @@ internal object NetworkStatusSupplierModule {
         return object : SingleNetworkStatusSupplier(
             factory = factory,
             keyCreator = {
-                "single_network_status_${it.userWalletId.stringValue}_${it.network.id.value}_" +
+                "single_network_status_${it.userWalletId.stringValue}_${it.network.rawId}_" +
                     it.network.derivationPath.value
             },
         ) {}

@@ -96,7 +96,7 @@ internal class WcAppInfoModel @Inject constructor(
         ),
     )
     // TODO: [REDACTED_JIRA] Change it to UiManager
-    private val tempAvailableNetworksState = MutableStateFlow<Set<Network.ID>>(setOf())
+    private val tempAvailableNetworksState = MutableStateFlow<Set<Network.RawID>>(setOf())
 
     init {
         loadDAppInfo()
@@ -157,7 +157,7 @@ internal class WcAppInfoModel @Inject constructor(
 
     private fun onConnect() {
         val enabledAvailableNetworks =
-            proposalNetwork.available.filter { network -> network.id in tempAvailableNetworksState.value }
+            proposalNetwork.available.filter { network -> network.id.rawId in tempAvailableNetworksState.value }
         wcPairUseCase.approve(
             WcSessionApprove(
                 wallet = selectedUserWalletFlow.value,
@@ -191,7 +191,7 @@ internal class WcAppInfoModel @Inject constructor(
 
     private fun onCheckedChange(isChecked: Boolean, networkId: String) {
         tempAvailableNetworksState.update {
-            if (isChecked) it.plus(Network.ID(networkId)) else it.minus(Network.ID(networkId))
+            if (isChecked) it.plus(Network.RawID(networkId)) else it.minus(Network.RawID(networkId))
         }
         networksState.transformerUpdate(WcSelectNetworksCheckedTransformer(networkId, isChecked))
     }

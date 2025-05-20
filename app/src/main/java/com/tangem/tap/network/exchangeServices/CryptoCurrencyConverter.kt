@@ -44,7 +44,7 @@ internal class CryptoCurrencyConverter(
     }
 
     override fun convertBack(value: CryptoCurrency): Currency {
-        val blockchain = Blockchain.fromId(value.network.id.value)
+        val blockchain = Blockchain.fromId(value.network.rawId)
         if (blockchain == Blockchain.Unknown) error("CryptoCurrencyConverter convertBack Unknown blockchain")
         return when (value) {
             is CryptoCurrency.Coin -> Currency.Blockchain(

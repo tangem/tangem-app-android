@@ -154,7 +154,7 @@ internal class SwapNotificationsFactory(
             }
             is TxFeeState.SingleFeeState -> feeState.fee
         }
-        val isCardano = BlockchainUtils.isCardano(fromCurrencyStatus.currency.network.id.value)
+        val isCardano = BlockchainUtils.isCardano(fromCurrencyStatus.currency.network.rawId)
         // blockchain specific
 
         addExistentialWarningNotification(
@@ -305,7 +305,7 @@ internal class SwapNotificationsFactory(
         fromAmount: SwapAmount,
         onReduceByAmount: (SwapAmount, BigDecimal) -> Unit,
     ) {
-        val isTezos = isTezos(cryptoCurrencyStatus.currency.network.id.value)
+        val isTezos = isTezos(cryptoCurrencyStatus.currency.network.rawId)
         val balance = cryptoCurrencyStatus.value.amount ?: BigDecimal.ZERO
         val threshold = getTezosThreshold()
         val isTotalBalance = fromAmount.value >= balance && balance > threshold
