@@ -1,7 +1,7 @@
 package com.tangem.features.onramp.root.entity
 
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.onramp.model.OnrampProviderWithQuote
-import com.tangem.domain.tokens.model.CryptoCurrency
 import kotlinx.serialization.Serializable
 
 @Serializable
