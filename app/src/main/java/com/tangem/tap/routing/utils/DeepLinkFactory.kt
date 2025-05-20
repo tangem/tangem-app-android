@@ -8,6 +8,7 @@ import com.tangem.feature.referral.api.deeplink.ReferralDeepLinkHandler
 import com.tangem.features.onramp.deeplink.BuyDeepLinkHandler
 import com.tangem.features.onramp.deeplink.OnrampDeepLinkHandler
 import com.tangem.features.send.v2.api.deeplink.SellDeepLinkHandler
+import com.tangem.features.walletconnect.components.deeplink.WalletConnectDeepLinkHandler
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import dagger.hilt.android.scopes.ActivityScoped
@@ -25,6 +26,7 @@ internal class DeepLinkFactory @Inject constructor(
     private val sellDeepLink: SellDeepLinkHandler.Factory,
     private val buyDeepLink: BuyDeepLinkHandler.Factory,
     private val referralDeepLink: ReferralDeepLinkHandler.Factory,
+    private val walletConnectDeepLink: WalletConnectDeepLinkHandler.Factory,
 ) {
     private val permittedAppRoute = MutableStateFlow(false)
 
@@ -73,6 +75,7 @@ internal class DeepLinkFactory @Inject constructor(
     private fun launchDeepLink(deeplinkUri: Uri, coroutineScope: CoroutineScope) {
         when (deeplinkUri.scheme) {
             DeepLinkScheme.Tangem.scheme -> handleTangemDeepLinks(deeplinkUri, coroutineScope)
+            DeepLinkScheme.WalletConnect.scheme -> walletConnectDeepLink.create(deeplinkUri)
             else -> {
                 Timber.i(
                     """
