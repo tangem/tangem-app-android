@@ -102,7 +102,7 @@ internal class StakingFeeTransactionLoader @AssistedInject constructor(
             ?: error("No available address")
 
         val gasEstimate = if (isCompositePendingActions(
-                networkId = cryptoCurrencyStatus.currency.network.id.value,
+                networkId = cryptoCurrencyStatus.currency.network.rawId,
                 pendingActions = pendingActions,
             )
         ) {

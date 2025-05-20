@@ -245,7 +245,7 @@ internal class DefaultStakingRepository(
     }
 
     private fun checkFeatureToggleEnabled(networkId: Network.ID): Boolean {
-        return when (Blockchain.fromId(networkId.value)) {
+        return when (Blockchain.fromId(networkId.rawId.value)) {
             Blockchain.TON -> stakingFeatureToggles.isTonStakingEnabled
             Blockchain.Cardano -> stakingFeatureToggles.isCardanoStakingEnabled
             else -> true
@@ -256,7 +256,7 @@ internal class DefaultStakingRepository(
         val userWallet = getUserWalletUseCase(userWalletId).getOrElse {
             error("Failed to get user wallet")
         }
-        val blockchainId = cryptoCurrency.network.id.value
+        val blockchainId = cryptoCurrency.network.rawId
         return when {
             isSolana(blockchainId) -> INVALID_BATCHES_FOR_SOLANA.contains(userWallet.scanResponse.card.batchId)
             isCardano(blockchainId) -> !userWallet.scanResponse.card.isWallet2

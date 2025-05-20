@@ -19,7 +19,7 @@ internal class MercuryoTopUpRepository @Inject constructor(
 
     override suspend fun getTopUpUrl(cryptoCurrency: CryptoCurrency, walletAddress: String): String =
         withContext(dispatchersProvider.default) {
-            val blockchain = Blockchain.fromId(cryptoCurrency.network.id.value)
+            val blockchain = Blockchain.fromId(cryptoCurrency.network.rawId)
             val environmentConfig = environmentConfigStorage.getConfigSync()
 
             val builder = Uri.Builder()

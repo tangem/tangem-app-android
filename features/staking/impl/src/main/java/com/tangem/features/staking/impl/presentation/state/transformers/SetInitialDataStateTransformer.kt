@@ -67,7 +67,7 @@ internal class SetInitialDataStateTransformer(
             title = TextReference.EMPTY,
             cryptoCurrencyName = cryptoCurrency.name,
             cryptoCurrencySymbol = cryptoCurrency.symbol,
-            cryptoCurrencyBlockchainId = cryptoCurrency.network.id.value,
+            cryptoCurrencyBlockchainId = cryptoCurrency.network.rawId,
             clickIntents = clickIntents,
             currentStep = StakingStep.InitialInfo,
             initialInfoState = createInitialInfoState(),
@@ -150,7 +150,7 @@ internal class SetInitialDataStateTransformer(
         cryptoCurrencyStatus: CryptoCurrencyStatus,
     ): RoundedListWithDividersItemData? {
         val minimumCryptoAmount = yield.args.enter.args[Yield.Args.ArgType.AMOUNT]?.minimum ?: return null
-        val blockchainId = cryptoCurrencyStatus.currency.network.id.value
+        val blockchainId = cryptoCurrencyStatus.currency.network.rawId
         if (!showMinimumRequirementInfo(blockchainId)) return null
 
         val formattedAmount = minimumCryptoAmount.format { crypto(cryptoCurrencyStatus.currency) }
@@ -193,7 +193,7 @@ internal class SetInitialDataStateTransformer(
     private fun createRewardScheduleItem(): RoundedListWithDividersItemData? {
         val endTextReference = getRewardScheduleText(
             rewardSchedule = yield.metadata.rewardSchedule,
-            networkId = cryptoCurrencyStatus.currency.network.id.value,
+            networkId = cryptoCurrencyStatus.currency.network.rawId,
             decapitalize = false,
         ) ?: return null
 

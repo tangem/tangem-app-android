@@ -76,7 +76,7 @@ private class AddCustomTokenComponentPreviewProvider : PreviewParameterProvider<
                     userWalletId = UserWalletId(stringValue = "321"),
                     step = AddCustomTokenConfig.Step.FORM,
                     selectedNetwork = SelectedNetwork(
-                        id = Network.ID(value = "1"),
+                        id = Network.ID(value = "1", derivationPath = Network.DerivationPath.None),
                         name = "Ethereum",
                         derivationPath = Network.DerivationPath.None,
                         canHandleTokens = false,
@@ -88,7 +88,7 @@ private class AddCustomTokenComponentPreviewProvider : PreviewParameterProvider<
                     userWalletId = UserWalletId(stringValue = "321"),
                     step = AddCustomTokenConfig.Step.NETWORK_SELECTOR,
                     selectedNetwork = SelectedNetwork(
-                        id = Network.ID(value = "0"),
+                        id = Network.ID(value = "0", derivationPath = Network.DerivationPath.None),
                         name = "Ethereum",
                         derivationPath = Network.DerivationPath.None,
                         canHandleTokens = false,
@@ -100,7 +100,7 @@ private class AddCustomTokenComponentPreviewProvider : PreviewParameterProvider<
                     userWalletId = UserWalletId(stringValue = "321"),
                     step = AddCustomTokenConfig.Step.DERIVATION_PATH_SELECTOR,
                     selectedDerivationPath = SelectedDerivationPath(
-                        id = Network.ID(value = "0"),
+                        id = Network.ID(value = "0", derivationPath = Network.DerivationPath.None),
                         value = Network.DerivationPath.None,
                         name = "Ethereum",
                         isDefault = false,
