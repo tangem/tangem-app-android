@@ -14,8 +14,7 @@ import com.tangem.domain.walletconnect.usecase.blockaid.WcBlockAidEligibleTransa
  * solana_signMessage https://docs.reown.com/advanced/multichain/rpc-reference/solana-rpc#solana-signmessage
  */
 interface WcMessageSignUseCase :
-    WcSignUseCase,
-    WcSignUseCase.SimpleRun<WcMessageSignUseCase.SignModel>,
+    WcSignUseCase<WcMessageSignUseCase.SignModel>,
     WcBlockAidEligibleTransactionUseCase {
 
     data class SignModel(
