@@ -46,7 +46,7 @@ internal class DefaultMultiNetworkStatusProducer @AssistedInject constructor(
 
                 statuses.mapNotNullTo(hashSetOf()) { status ->
                     val network = getNetwork(
-                        networkId = status.id.networkId,
+                        networkId = status.id,
                         derivationPath = status.id.derivationPath,
                         scanResponse = userWallet.scanResponse,
                         excludedBlockchains = excludedBlockchains,
