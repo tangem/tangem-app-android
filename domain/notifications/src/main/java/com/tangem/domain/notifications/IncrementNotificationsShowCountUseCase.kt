@@ -10,7 +10,7 @@ class IncrementNotificationsShowCountUseCase(
 
     suspend operator fun invoke(cryptoCurrency: CryptoCurrency) {
         val isTronToken = cryptoCurrency is CryptoCurrency.Token &&
-            isTron(cryptoCurrency.network.id.value)
+            isTron(cryptoCurrency.network.rawId)
 
         if (isTronToken) {
             notificationsRepository.incrementTronTokenFeeNotificationShowCounter()
