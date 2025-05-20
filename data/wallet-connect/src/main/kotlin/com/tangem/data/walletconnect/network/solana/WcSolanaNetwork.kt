@@ -119,8 +119,8 @@ internal class WcSolanaNetwork(
 
     internal class Factories @Inject constructor(
         val messageSign: WcSolanaMessageSignUseCase.Factory,
-        val signTransaction: DefaultWcSolanaSignTransactionUseCase.Factory,
-        val signAllTransaction: DefaultWcSolanaSignAllTransactionUseCase.Factory,
+        val signTransaction: WcSolanaSignTransactionUseCase.Factory,
+        val signAllTransaction: WcSolanaSignAllTransactionUseCase.Factory,
     )
 
     companion object {
