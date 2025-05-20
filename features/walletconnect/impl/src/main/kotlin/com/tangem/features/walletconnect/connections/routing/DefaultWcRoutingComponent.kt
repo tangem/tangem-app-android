@@ -15,6 +15,7 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.walletconnect.components.WcRoutingComponent
+import com.tangem.features.walletconnect.connections.components.AlertsComponent
 import com.tangem.features.walletconnect.connections.components.WcAppInfoContainerComponent
 import com.tangem.features.walletconnect.transaction.components.WcSignTransactionContainerComponent
 import dagger.assisted.Assisted
@@ -65,6 +66,12 @@ internal class DefaultWcRoutingComponent @AssistedInject constructor(
                     userWalletId = config.request.userWalletId,
                     wcUrl = config.request.uri,
                     source = config.request.source,
+                ),
+            )
+            is WcInnerRoute.Alert -> AlertsComponent(
+                childContext,
+                AlertsComponent.Params(
+                    alertType = config.alertType,
                 ),
             )
         }
