@@ -201,7 +201,7 @@ internal class NFTSendConfirmModel @Inject constructor(
         saveBlockchainErrorUseCase(
             error = BlockchainErrorInfo(
                 errorMessage = errorMessage,
-                blockchainId = cryptoCurrency.network.id.value,
+                blockchainId = cryptoCurrency.network.rawId,
                 derivationPath = cryptoCurrency.network.derivationPath.value,
                 destinationAddress = confirmData.enteredDestination.orEmpty(),
                 tokenSymbol = null,

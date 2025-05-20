@@ -35,18 +35,37 @@ data class Network(
     val transactionExtrasType: TransactionExtrasType,
 ) {
 
+    /** Raw ID */
+    val rawId: String
+        get() = id.rawId.value
+
     init {
         require(name.isNotBlank()) { "Network name must not be blank" }
+        require(id.derivationPath == derivationPath) { "Derivation path must be the same as in the ID" }
     }
 
-    /** Represents a unique identifier [value] for a blockchain network */
-    @JvmInline
+    /**
+     * Represents a unique identifier for a blockchain network
+     *
+     * @property rawId          raw network ID
+     * @property derivationPath derivation path
+     */
     @Serializable
-    value class ID(val value: String) {
+    data class ID(val rawId: RawID, val derivationPath: DerivationPath) {
 
         init {
-            require(value.isNotBlank()) { "Network ID must not be blank" }
+            require(rawId.value.isNotBlank()) { "Network ID must not be blank" }
         }
+
+        constructor(value: String, derivationPath: DerivationPath) : this(
+            rawId = RawID(value),
+            derivationPath = derivationPath,
+        )
+    }
+
+    @Serializable
+    data class RawID(val value: String) {
+        override fun toString(): String = value
     }
 
     /**
