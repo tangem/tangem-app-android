@@ -70,10 +70,7 @@ internal class SimpleNetworkStatusConverterTest {
                 ),
             ),
             expected = SimpleNetworkStatus(
-                id = SimpleNetworkStatus.Id(
-                    networkId = network.id,
-                    derivationPath = Network.DerivationPath.Card(value = "card"),
-                ),
+                id = network.id,
                 value = NetworkStatus.Verified(
                     address = NetworkAddress.Selectable(
                         defaultAddress = NetworkAddress.Address(
@@ -133,10 +130,7 @@ internal class SimpleNetworkStatusConverterTest {
                 errorMessage = "errorMessage",
             ),
             expected = SimpleNetworkStatus(
-                id = SimpleNetworkStatus.Id(
-                    networkId = network.id,
-                    derivationPath = Network.DerivationPath.Card(value = "card"),
-                ),
+                id = network.id,
                 value = NetworkStatus.NoAccount(
                     address = NetworkAddress.Selectable(
                         defaultAddress = NetworkAddress.Address(
