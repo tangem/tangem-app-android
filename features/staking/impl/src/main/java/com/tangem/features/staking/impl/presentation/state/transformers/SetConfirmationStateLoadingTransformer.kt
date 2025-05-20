@@ -11,7 +11,9 @@ import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.features.staking.impl.R
-import com.tangem.features.staking.impl.presentation.state.*
+import com.tangem.features.staking.impl.presentation.state.FeeState
+import com.tangem.features.staking.impl.presentation.state.StakingStates
+import com.tangem.features.staking.impl.presentation.state.StakingUiState
 import com.tangem.features.staking.impl.presentation.state.utils.getRewardScheduleText
 import com.tangem.utils.transformer.Transformer
 
@@ -47,7 +49,7 @@ internal class SetConfirmationStateLoadingTransformer(
         }
         val rewardSchedule = getRewardScheduleText(
             rewardSchedule = yield.metadata.rewardSchedule,
-            networkId = cryptoCurrency.network.id.value,
+            networkId = cryptoCurrency.network.rawId,
             decapitalize = true,
         )
         return if (isEnterAction && amountDecimal != null && rewardSchedule != null) {

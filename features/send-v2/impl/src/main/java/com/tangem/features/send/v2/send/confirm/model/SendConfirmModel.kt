@@ -256,7 +256,7 @@ internal class SendConfirmModel @Inject constructor(
         saveBlockchainErrorUseCase(
             error = BlockchainErrorInfo(
                 errorMessage = errorMessage,
-                blockchainId = cryptoCurrency.network.id.value,
+                blockchainId = cryptoCurrency.network.rawId,
                 derivationPath = cryptoCurrency.network.derivationPath.value,
                 destinationAddress = confirmData.enteredDestination.orEmpty(),
                 tokenSymbol = if (amount?.type is AmountType.Token) {
