@@ -10,7 +10,6 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.utils.showErrorDialog
 import com.tangem.domain.visa.SetVisaPinCodeUseCase
-import com.tangem.domain.visa.error.VisaAuthorizationAPIError
 import com.tangem.domain.visa.model.VisaCardId
 import com.tangem.features.onboarding.v2.impl.R
 import com.tangem.features.onboarding.v2.visa.impl.child.pincode.OnboardingVisaPinCodeComponent
@@ -95,7 +94,7 @@ internal class OnboardingVisaPinCodeModel @Inject constructor(
                 activationOrderId = params.activationOrderInfo.orderId,
             ).onLeft {
                 loading(false)
-                uiMessageSender.showErrorDialog(VisaAuthorizationAPIError)
+                uiMessageSender.showErrorDialog(it)
                 return@launch
             }
 
