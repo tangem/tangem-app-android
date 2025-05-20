@@ -64,7 +64,7 @@ class NFTPersistenceStoreFactory @Inject constructor(
             scope = CoroutineScope(context = dispatchers.io + SupervisorJob()),
         )
 
-    private fun Network.ID.formatted(): String = value
+    private fun Network.ID.formatted(): String = rawId.value
         .filter(Char::isLetterOrDigit)
         .lowercase()
 

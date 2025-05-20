@@ -13,5 +13,5 @@ internal data class CurrencyNetworkUM(
     override val onSelectedStateChange: (Boolean) -> Unit,
 ) : SelectableItemUM {
 
-    override val id: String = network.id.value
+    override val id: String = network.rawId
 }
