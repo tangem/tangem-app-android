@@ -3,8 +3,8 @@ package com.tangem.domain.txhistory.usecase
 import androidx.paging.PagingData
 import arrow.core.Either
 import arrow.core.raise.either
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.TxInfo
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.txhistory.models.TxHistoryListError
 import com.tangem.domain.txhistory.repository.TxHistoryRepository
 import com.tangem.domain.wallets.models.UserWalletId
