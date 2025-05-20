@@ -6,7 +6,7 @@ import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.blockchainsdk.utils.amountToCreateAccount
 import com.tangem.common.services.Result
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.tap.common.TestActions
 import com.tangem.tap.common.apptheme.MutableAppThemeModeHolder
 import com.tangem.tap.domain.TapError
