@@ -3,7 +3,7 @@ package com.tangem.features.markets.token.block
 import androidx.compose.runtime.Stable
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import kotlinx.serialization.Serializable
 
 @Stable

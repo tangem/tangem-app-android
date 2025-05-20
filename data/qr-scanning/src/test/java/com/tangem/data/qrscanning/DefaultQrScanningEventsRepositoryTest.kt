@@ -3,9 +3,9 @@ package com.tangem.data.qrscanning
 import com.google.common.truth.Truth
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.data.qrscanning.repository.DefaultQrScanningEventsRepository
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.qrscanning.models.QrResult
-import com.tangem.domain.tokens.model.CryptoCurrency
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.Test
