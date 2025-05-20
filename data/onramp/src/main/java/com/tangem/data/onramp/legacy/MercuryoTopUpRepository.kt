@@ -6,8 +6,8 @@ import com.tangem.common.extensions.calculateSha512
 import com.tangem.common.extensions.toHexString
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.onramp.repositories.LegacyTopUpRepository
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
