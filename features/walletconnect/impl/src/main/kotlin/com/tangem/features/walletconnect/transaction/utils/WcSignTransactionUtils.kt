@@ -17,7 +17,7 @@ import com.tangem.features.walletconnect.transaction.entity.sign.WcSignTransacti
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
-internal fun WcSignUseCase.toUM(signState: WcSignState<*>, actions: WcTransactionActionsUM): WcSignTransactionUM? {
+internal fun WcSignUseCase<*>.toUM(signState: WcSignState<*>, actions: WcTransactionActionsUM): WcSignTransactionUM? {
     return when (this) {
         is WcMessageSignUseCase -> {
             when (method) {
