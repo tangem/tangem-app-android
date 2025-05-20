@@ -84,7 +84,7 @@ class CryptoCurrencyFactory(
     }
 
     fun createCoin(network: Network): CryptoCurrency.Coin {
-        val blockchain = Blockchain.fromId(network.id.value)
+        val blockchain = Blockchain.fromId(network.rawId)
 
         return CryptoCurrency.Coin(
             id = getCoinId(network, blockchain.toCoinId()),

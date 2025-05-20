@@ -549,7 +549,7 @@ internal class StakingModel @Inject constructor(
     }
 
     override fun onActiveStake(activeStake: BalanceState) {
-        val networkId = cryptoCurrencyStatus.currency.network.id.value
+        val networkId = cryptoCurrencyStatus.currency.network.rawId
         if (isSingleAction(networkId, activeStake)) {
             prepareForConfirmation(
                 balanceType = activeStake.type,
@@ -854,7 +854,7 @@ internal class StakingModel @Inject constructor(
             saveBlockchainErrorUseCase(
                 error = BlockchainErrorInfo(
                     errorMessage = errorMessage,
-                    blockchainId = network.id.value,
+                    blockchainId = network.rawId,
                     derivationPath = network.derivationPath.value,
                     destinationAddress = validator?.address.orEmpty(),
                     tokenSymbol = (cryptoCurrencyStatus.currency as? CryptoCurrency.Token)?.symbol,
