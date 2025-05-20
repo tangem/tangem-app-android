@@ -27,7 +27,7 @@ val CryptoCurrency.networkIconResId: Int
  * @return Drawable resource ID for the network.
  */
 val Network.iconResId: Int
-    get() = getActiveIconRes(id.value)
+    get() = getActiveIconRes(rawId)
 
 /**
  * Tries to extract a background color from the contract address of a token.
