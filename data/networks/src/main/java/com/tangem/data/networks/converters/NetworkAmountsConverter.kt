@@ -1,6 +1,6 @@
 package com.tangem.data.networks.converters
 
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyAmountStatus
 import com.tangem.utils.converter.TwoWayConverter
 import com.tangem.utils.extensions.mapNotNullValues
