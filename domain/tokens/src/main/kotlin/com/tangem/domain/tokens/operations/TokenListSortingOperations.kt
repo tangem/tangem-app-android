@@ -103,7 +103,7 @@ internal class TokenListSortingOperations(
 
     private fun CryptoCurrencyStatus.getTotalBalance(): BigDecimal {
         val yieldBalance = value.yieldBalance as? YieldBalance.Data
-        val totalYieldBalance = yieldBalance?.getTotalWithRewardsStakingBalance(currency.network.id.value).orZero()
+        val totalYieldBalance = yieldBalance?.getTotalWithRewardsStakingBalance(currency.network.rawId).orZero()
         val totalFiatYieldBalance = totalYieldBalance.multiply(value.fiatRate.orZero())
         return value.fiatAmount?.plus(totalFiatYieldBalance).orZero()
     }

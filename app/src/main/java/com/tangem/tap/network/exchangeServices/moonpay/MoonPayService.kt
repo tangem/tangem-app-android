@@ -133,7 +133,7 @@ class MoonPayService(
     ): String? {
         if (action == CurrencyExchangeManager.Action.Buy) throw UnsupportedOperationException()
 
-        val blockchain = Blockchain.fromId(cryptoCurrency.network.id.value)
+        val blockchain = Blockchain.fromId(cryptoCurrency.network.rawId)
         val supportedCurrency = blockchain.moonPaySupportedCurrency ?: return null
         val moonpayCurrency = status?.availableForSell?.firstOrNull {
             when (cryptoCurrency) {
