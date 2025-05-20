@@ -1,7 +1,7 @@
 package com.tangem.features.send.v2.subcomponents.destination.model.transformers
 
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.TxInfo
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.features.send.v2.subcomponents.destination.model.converters.SendRecipientHistoryListConverter
 import com.tangem.features.send.v2.subcomponents.destination.model.converters.SendRecipientWalletListConverter
 import com.tangem.features.send.v2.subcomponents.destination.ui.state.DestinationUM
