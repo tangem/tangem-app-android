@@ -39,7 +39,7 @@ internal class DefaultPolkadotAccountHealthCheckRepository(
 
     override suspend fun runCheck(userWalletId: UserWalletId, network: Network) {
         // Run Polkadot account health check
-        if (Blockchain.fromId(network.id.value) != Blockchain.Polkadot) return
+        if (Blockchain.fromId(network.rawId) != Blockchain.Polkadot) return
 
         val walletManager = walletManagersFacade.getOrCreateWalletManager(userWalletId, network)
         val address = requireNotNull(walletManager?.wallet?.address) {
