@@ -1304,6 +1304,8 @@
   <string name="wc_alert_session_disconnected_title">WalletConnect session was disconnected</string>
   <string name="wc_alert_unknown_error_description">Error code: %s. If the problem persists — feel free to contact our support.</string>
   <string name="wc_alert_unknown_error_title">We\'ve encountered unknown error</string>
+  <string name="wc_alert_unsupported_method_description">Error code: 8 005. If the problem persists — feel free to contact our support.</string>
+  <string name="wc_alert_unsupported_method_title">We\'ve encountered unknown error</string>
   <string name="wc_alert_unsupported_networks_description">Tangem does not currently support a required network by %s.</string>
   <string name="wc_alert_unsupported_networks_title">Unsuported networks</string>
   <string name="wc_alert_verified_domain_description">Tangem support a required network by %s.</string>
