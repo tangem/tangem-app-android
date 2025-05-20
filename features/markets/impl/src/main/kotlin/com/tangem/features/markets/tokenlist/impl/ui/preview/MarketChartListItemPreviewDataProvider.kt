@@ -4,7 +4,7 @@ package com.tangem.features.markets.tokenlist.impl.ui.preview
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.common.ui.charts.state.MarketChartRawData
 import com.tangem.core.ui.components.marketprice.PriceChangeType
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.markets.tokenlist.impl.ui.state.MarketsListItemUM
 import kotlinx.collections.immutable.persistentListOf
 
