@@ -1353,7 +1353,7 @@ internal class SwapModel @Inject constructor(
             saveBlockchainErrorUseCase(
                 error = BlockchainErrorInfo(
                     errorMessage = errorMessage,
-                    blockchainId = network.id.value,
+                    blockchainId = network.rawId,
                     derivationPath = network.derivationPath.value,
                     destinationAddress = transaction?.txTo.orEmpty(),
                     tokenSymbol = fromCurrencyStatus.currency.symbol,
@@ -1375,7 +1375,7 @@ internal class SwapModel @Inject constructor(
     private fun CryptoCurrency.getNetworkInfo(): NetworkInfo {
         return NetworkInfo(
             name = this.network.name,
-            blockchainId = this.network.id.value,
+            blockchainId = this.network.rawId,
         )
     }
 
