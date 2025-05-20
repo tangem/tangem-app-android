@@ -3,10 +3,10 @@ package com.tangem.domain.markets
 import arrow.core.None
 import arrow.core.Option
 import arrow.core.toOption
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.quotes.single.SingleQuoteProducer
 import com.tangem.domain.quotes.single.SingleQuoteSupplier
 import com.tangem.domain.tokens.TokensFeatureToggles
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Quote
 import com.tangem.domain.tokens.repository.QuotesRepository
 import kotlinx.coroutines.flow.Flow
