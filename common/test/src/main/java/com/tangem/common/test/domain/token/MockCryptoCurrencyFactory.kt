@@ -47,16 +47,18 @@ class MockCryptoCurrencyFactory(private val scanResponse: ScanResponse = default
     }
 
     fun createCoin(blockchain: Blockchain): CryptoCurrency {
+        val derivationPath = getNetworkDerivationPath(
+            blockchain = blockchain,
+            extraDerivationPath = null,
+            cardDerivationStyleProvider = scanResponse.derivationStyleProvider,
+        )
+
         val network = Network(
-            id = Network.ID(blockchain.id),
+            id = Network.ID(blockchain.id, derivationPath),
             backendId = blockchain.toNetworkId(),
             name = blockchain.fullName,
             isTestnet = blockchain.isTestnet(),
-            derivationPath = getNetworkDerivationPath(
-                blockchain = blockchain,
-                extraDerivationPath = null,
-                cardDerivationStyleProvider = scanResponse.derivationStyleProvider,
-            ),
+            derivationPath = derivationPath,
             currencySymbol = blockchain.currency,
             standardType = getNetworkStandardType(blockchain),
             hasFiatFeeRate = blockchain.feePaidCurrency() !is FeePaidCurrency.FeeResource,
@@ -69,6 +71,12 @@ class MockCryptoCurrencyFactory(private val scanResponse: ScanResponse = default
 
     // Impossible to create custom token by CryptoCurrencyFactory because it works with URI under the hood
     fun createCustomToken(blockchain: Blockchain, derivationBlockchain: Blockchain): CryptoCurrency {
+        val derivationPath = Network.DerivationPath.Custom(
+            value = derivationBlockchain.derivationPath(
+                scanResponse.derivationStyleProvider.getDerivationStyle(),
+            )!!.rawPath,
+        )
+
         return CryptoCurrency.Token(
             id = CryptoCurrency.ID(
                 prefix = CryptoCurrency.ID.Prefix.TOKEN_PREFIX,
@@ -76,15 +84,11 @@ class MockCryptoCurrencyFactory(private val scanResponse: ScanResponse = default
                 suffix = CryptoCurrency.ID.Suffix.RawID(blockchain.id),
             ),
             network = Network(
-                id = Network.ID(value = blockchain.id),
+                id = Network.ID(value = blockchain.id, derivationPath),
                 backendId = "NEVER-MIND",
                 name = blockchain.fullName,
                 currencySymbol = "NEVER-MIND",
-                derivationPath = Network.DerivationPath.Custom(
-                    value = derivationBlockchain.derivationPath(
-                        scanResponse.derivationStyleProvider.getDerivationStyle(),
-                    )!!.rawPath,
-                ),
+                derivationPath = derivationPath,
                 isTestnet = false,
                 standardType = Network.StandardType.ERC20,
                 hasFiatFeeRate = true,
