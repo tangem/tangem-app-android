@@ -10,8 +10,8 @@ import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.CurrenciesResponse
 import com.tangem.datasource.api.tangemTech.models.QuotesResponse
 import com.tangem.datasource.appcurrency.AppCurrencyResponseStore
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.quotes.single.SingleQuoteFetcher
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.coVerify
