@@ -1,7 +1,7 @@
 package com.tangem.domain.tokens.mock
 
-import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.CryptoCurrency.ID
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency.ID
 
 internal object MockTokens {
 
