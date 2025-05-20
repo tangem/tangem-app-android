@@ -68,7 +68,7 @@ class CurrencyExchangeManager(
         walletAddress: String,
         isDarkTheme: Boolean,
     ): String? {
-        val blockchain = Blockchain.fromId(cryptoCurrency.network.id.value)
+        val blockchain = Blockchain.fromId(cryptoCurrency.network.rawId)
         if (blockchain.isTestnet()) return blockchain.getTestnetTopUpUrl()
 
         val urlBuilder = getExchangeUrlBuilder(action)

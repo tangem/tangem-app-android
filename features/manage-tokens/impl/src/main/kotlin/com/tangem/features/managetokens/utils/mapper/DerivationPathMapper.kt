@@ -12,7 +12,7 @@ internal fun Network.toDerivationPathModel(
     onSelectedStateChange: (Boolean) -> Unit,
 ): DerivationPathUM? {
     return DerivationPathUM(
-        id = id.value,
+        id = rawId,
         value = derivationPath.value ?: return null,
         networkName = stringReference(name),
         isSelected = isSelected,
@@ -25,7 +25,7 @@ internal fun SelectedNetwork.toDerivationPathModel(
     onSelectedStateChange: (Boolean) -> Unit,
 ): DerivationPathUM? {
     return DerivationPathUM(
-        id = id.value,
+        id = id.rawId.value,
         value = derivationPath.value ?: return null,
         networkName = resourceReference(R.string.custom_token_derivation_path_default),
         isSelected = isSelected,
