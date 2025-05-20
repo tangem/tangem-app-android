@@ -36,7 +36,7 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.markets.entry.BottomSheetState
 import com.tangem.features.markets.impl.R
 import com.tangem.features.markets.tokenlist.impl.ui.components.MarketsListLazyColumn

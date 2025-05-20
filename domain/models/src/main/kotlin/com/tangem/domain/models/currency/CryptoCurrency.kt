@@ -1,33 +1,34 @@
-package com.tangem.domain.tokens.model
+package com.tangem.domain.models.currency
 
 import com.tangem.domain.models.network.Network
 import kotlinx.serialization.Serializable
 
-/**
- * Represents a generic cryptocurrency.
- *
- * @property id Unique identifier for the cryptocurrency.
- * @property network The network to which the cryptocurrency belongs.
- * @property name Human-readable name of the cryptocurrency.
- * @property symbol Symbol of the cryptocurrency.
- * @property decimals Number of decimal places used by the cryptocurrency.
- * @property iconUrl Optional URL of the cryptocurrency icon. `null` if not found.
- * @property isCustom Indicates whether the currency is a custom user-added currency or not.
- */
+/** Represents a generic cryptocurrency */
 @Serializable
 sealed class CryptoCurrency {
 
+    /** Unique identifier for the cryptocurrency */
     abstract val id: ID
+
+    /** The network to which the cryptocurrency belongs */
     abstract val network: Network
+
+    /** Human-readable name of the cryptocurrency */
     abstract val name: String
+
+    /** Symbol of the cryptocurrency */
     abstract val symbol: String
+
+    /** Number of decimal places used by the cryptocurrency */
     abstract val decimals: Int
+
+    /** Optional URL of the cryptocurrency icon. `null` if not found. */
     abstract val iconUrl: String?
+
+    /** Indicates whether the currency is a custom user-added currency or not */
     abstract val isCustom: Boolean
 
-    /**
-     * Represents a native coin in the blockchain network.
-     */
+    /** Represents a native coin in the blockchain network */
     @Serializable
     data class Coin(
         override val id: ID,
@@ -45,9 +46,9 @@ sealed class CryptoCurrency {
     }
 
     /**
-     * Represents a token in the blockchain network, typically a non-native asset.
+     * Represents a token in the blockchain network, typically a non-native asset
      *
-     * @property contractAddress Address of the contract managing the token.
+     * @property contractAddress address of the contract managing the token
      */
     @Serializable
     data class Token(
@@ -73,9 +74,9 @@ sealed class CryptoCurrency {
      * The ID is designed to ensure that different cryptocurrencies, whether they are standard tokens, custom tokens or
      * standard coins, can be distinctly identified within a system.
      *
-     * @property value Constructed unique identifier value, made up of prefix, network ID, and suffix.
-     * @property rawCurrencyId Represents not unique currency ID from the blockchain network. `null` if
-     * its ID of the custom token.
+     * @property prefix prefix
+     * @property body   body
+     * @property suffix suffix
      */
     @Serializable
     data class ID(
@@ -84,6 +85,7 @@ sealed class CryptoCurrency {
         private val suffix: Suffix,
     ) {
 
+        /** Constructed unique identifier value, made up of prefix, network ID, and suffix */
         val value: String
             get() = buildString {
                 append(prefix.value)
@@ -93,12 +95,13 @@ sealed class CryptoCurrency {
                 append(suffix.value)
             }
 
-        /** Represents a raw cryptocurrency ID. If it is a custom token, the value will be `null`. */
+        /** Represents a raw cryptocurrency ID. If it is a custom token, the value will be `null` */
         val rawCurrencyId: RawID? get() = (suffix as? Suffix.RawID)?.rawId?.let { RawID(it) }
 
+        /** Represents a contract address */
         val contractAddress: String? get() = (suffix as? Suffix.RawID)?.contractAddress
 
-        /** Represents a raw cryptocurrency's network ID. */
+        /** Represents a raw cryptocurrency's network ID */
         val rawNetworkId: String
             get() = when (body) {
                 is Body.NetworkId -> body.rawId
@@ -107,10 +110,10 @@ sealed class CryptoCurrency {
 
         /**
          * Represents the different types of prefixes that can be associated with a cryptocurrency ID.
-         *
          * These prefixes can help in quickly categorizing the type of cryptocurrency.
          */
         enum class Prefix(val value: String) {
+
             /** Prefix for standard coins. */
             COIN_PREFIX(value = "coin"),
 
@@ -120,7 +123,6 @@ sealed class CryptoCurrency {
 
         /**
          * Represents the body part of the cryptocurrency ID.
-         *
          * The body can be either a raw network ID or a raw network ID with a network derivation path.
          */
         @Serializable
@@ -137,9 +139,8 @@ sealed class CryptoCurrency {
 
             /**
              * Represents a raw network ID with a network derivation path.
-             *
              * Should be used for a cryptocurrencies with custom derivation path.
-             * */
+             */
             @Serializable
             data class NetworkIdWithDerivationPath(
                 val rawId: String,
@@ -162,7 +163,6 @@ sealed class CryptoCurrency {
 
         /**
          * Represents the suffix part of the cryptocurrency ID.
-         *
          * The suffix can either be a raw ID or a contract address.
          */
         @Serializable
