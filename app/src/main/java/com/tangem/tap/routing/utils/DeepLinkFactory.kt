@@ -8,6 +8,8 @@ import com.tangem.feature.referral.api.deeplink.ReferralDeepLinkHandler
 import com.tangem.features.onramp.deeplink.BuyDeepLinkHandler
 import com.tangem.features.onramp.deeplink.OnrampDeepLinkHandler
 import com.tangem.features.send.v2.api.deeplink.SellDeepLinkHandler
+import com.tangem.features.tokendetails.deeplink.TokenDetailsDeepLinkHandler
+import com.tangem.features.wallet.deeplink.WalletDeepLinkHandler
 import com.tangem.features.walletconnect.components.deeplink.WalletConnectDeepLinkHandler
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -20,6 +22,7 @@ import kotlinx.coroutines.flow.transformLatest
 import timber.log.Timber
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @ActivityScoped
 internal class DeepLinkFactory @Inject constructor(
     private val onrampDeepLink: OnrampDeepLinkHandler.Factory,
@@ -27,6 +30,8 @@ internal class DeepLinkFactory @Inject constructor(
     private val buyDeepLink: BuyDeepLinkHandler.Factory,
     private val referralDeepLink: ReferralDeepLinkHandler.Factory,
     private val walletConnectDeepLink: WalletConnectDeepLinkHandler.Factory,
+    private val walletDeepLink: WalletDeepLinkHandler.Factory,
+    private val tokenDetailsDeepLink: TokenDetailsDeepLinkHandler.Factory,
 ) {
     private val permittedAppRoute = MutableStateFlow(false)
 
@@ -94,6 +99,8 @@ internal class DeepLinkFactory @Inject constructor(
             DeepLinkRoute.Sell.host -> sellDeepLink.create(coroutineScope, params)
             DeepLinkRoute.Buy.host -> buyDeepLink.create(coroutineScope)
             DeepLinkRoute.Referral.host -> referralDeepLink.create()
+            DeepLinkRoute.Wallet.host -> walletDeepLink.create()
+            DeepLinkRoute.TokenDetails.host -> tokenDetailsDeepLink.create(coroutineScope, params)
             else -> {
                 Timber.i(
                     """
