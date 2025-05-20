@@ -56,16 +56,14 @@ internal class DefaultNetworksStatusesStoreV2(
     }
 
     override suspend fun getSyncOrNull(userWalletId: UserWalletId, network: Network): SimpleNetworkStatus? {
-        val simpleStatusId = SimpleNetworkStatus.Id(network = network)
-
-        return runtimeStore.getSyncOrNull()?.get(userWalletId.stringValue)?.firstOrNull { it.id == simpleStatusId }
+        return runtimeStore.getSyncOrNull()?.get(userWalletId.stringValue)?.firstOrNull { it.id == network.id }
     }
 
     override suspend fun updateStatusSource(
         userWalletId: UserWalletId,
         network: Network,
         source: StatusSource,
-        ifNotFound: (SimpleNetworkStatus.Id) -> SimpleNetworkStatus?,
+        ifNotFound: (Network.ID) -> SimpleNetworkStatus?,
     ) {
         updateStatusSource(
             userWalletId = userWalletId,
@@ -79,7 +77,7 @@ internal class DefaultNetworksStatusesStoreV2(
         userWalletId: UserWalletId,
         networks: Set<Network>,
         source: StatusSource,
-        ifNotFound: (SimpleNetworkStatus.Id) -> SimpleNetworkStatus?,
+        ifNotFound: (Network.ID) -> SimpleNetworkStatus?,
     ) {
         if (networks.isEmpty()) {
             Timber.d("Nothing to update: networks is empty")
@@ -101,18 +99,16 @@ internal class DefaultNetworksStatusesStoreV2(
     private suspend fun updateInRuntime(
         userWalletId: UserWalletId,
         networks: Set<Network>,
-        ifNotFound: (SimpleNetworkStatus.Id) -> SimpleNetworkStatus? = { null },
+        ifNotFound: (Network.ID) -> SimpleNetworkStatus? = { null },
         update: (SimpleNetworkStatus) -> SimpleNetworkStatus,
     ) {
-        val simpleStatusIds = networks.map(SimpleNetworkStatus::Id)
-
         runtimeStore.update(default = emptyMap()) { stored ->
             stored.toMutableMap().apply {
                 val storedStatuses = this[userWalletId.stringValue].orEmpty()
 
-                val statuses = simpleStatusIds.mapNotNullTo(hashSetOf()) { simpleStatusId ->
-                    val status = storedStatuses.firstOrNull { it.id == simpleStatusId }
-                        ?: ifNotFound(simpleStatusId)
+                val statuses = networks.mapNotNullTo(hashSetOf()) { network ->
+                    val status = storedStatuses.firstOrNull { it.id == network.id }
+                        ?: ifNotFound(network.id)
                         ?: return@mapNotNullTo null
 
                     update(status)
@@ -126,14 +122,12 @@ internal class DefaultNetworksStatusesStoreV2(
     }
 
     private suspend fun storeInRuntime(userWalletId: UserWalletId, status: NetworkStatus) {
-        val simpleStatusId = SimpleNetworkStatus.Id(network = status.network)
-
         runtimeStore.update(default = emptyMap()) { stored ->
             stored.toMutableMap().apply {
-                val simpleStatus = SimpleNetworkStatus(id = simpleStatusId, value = status.value)
+                val simpleStatus = SimpleNetworkStatus(status = status)
 
                 val updatedStatuses = this[userWalletId.stringValue].orEmpty()
-                    .addOrReplace(simpleStatus) { it.id == simpleStatusId }
+                    .addOrReplace(simpleStatus) { it.id == simpleStatus.id }
 
                 put(key = userWalletId.stringValue, value = updatedStatuses)
             }
