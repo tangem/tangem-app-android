@@ -6,6 +6,8 @@ import com.tangem.feature.referral.api.deeplink.ReferralDeepLinkHandler
 import com.tangem.features.onramp.deeplink.BuyDeepLinkHandler
 import com.tangem.features.onramp.deeplink.OnrampDeepLinkHandler
 import com.tangem.features.send.v2.api.deeplink.SellDeepLinkHandler
+import com.tangem.features.tokendetails.deeplink.TokenDetailsDeepLinkHandler
+import com.tangem.features.wallet.deeplink.WalletDeepLinkHandler
 import com.tangem.features.walletconnect.components.deeplink.WalletConnectDeepLinkHandler
 import io.mockk.every
 import io.mockk.mockk
@@ -37,6 +39,12 @@ class DeepLinkFactoryTest {
     private val walletConnectDeepLinkFactory = mockk<WalletConnectDeepLinkHandler.Factory>(relaxed = true) {
         every { create(any()) } returns mockk()
     }
+    private val walletDeepLinkFactory = mockk<WalletDeepLinkHandler.Factory>(relaxed = true) {
+        every { create() } returns mockk()
+    }
+    private val tokenDetailsDeepLinkFactory = mockk<TokenDetailsDeepLinkHandler.Factory>(relaxed = true) {
+        every { create(any(), any()) } returns mockk()
+    }
 
     private val mockedUri = mockk<Uri>(relaxed = true)
 
@@ -49,6 +57,8 @@ class DeepLinkFactoryTest {
         buyDeepLinkFactory,
         referralDeepLinkFactory,
         walletConnectDeepLinkFactory,
+        walletDeepLinkFactory,
+        tokenDetailsDeepLinkFactory,
     )
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -162,6 +172,8 @@ class DeepLinkFactoryTest {
             buyDeepLinkFactory.create(any())
             referralDeepLinkFactory.create()
             walletConnectDeepLinkFactory.create(any())
+            walletDeepLinkFactory.create()
+            tokenDetailsDeepLinkFactory.create(any(), any())
         }
     }
 
@@ -186,6 +198,12 @@ class DeepLinkFactoryTest {
         advanceUntilIdle()
         verify { sellDeepLinkFactory.create(eq(testScope), eq(mapOf("param" to "value"))) }
 
+        // Test Token Details
+        every { mockedUri.host } returns "token"
+        deepLinkFactory.handleDeeplink(mockedUri, testScope)
+        advanceUntilIdle()
+        verify { tokenDetailsDeepLinkFactory.create(eq(testScope), eq(mapOf("param" to "value"))) }
+
         // Reset params
         every { mockedUri.queryParameterNames } returns emptySet()
         every { mockedUri.getQueryParameter(any()) } returns ""
@@ -201,6 +219,12 @@ class DeepLinkFactoryTest {
         deepLinkFactory.handleDeeplink(mockedUri, testScope)
         advanceUntilIdle()
         verify { referralDeepLinkFactory.create() }
+
+        // Test Wallet
+        every { mockedUri.host } returns "main"
+        deepLinkFactory.handleDeeplink(mockedUri, testScope)
+        advanceUntilIdle()
+        verify { walletDeepLinkFactory.create() }
     }
 
     @Test
@@ -219,6 +243,8 @@ class DeepLinkFactoryTest {
             buyDeepLinkFactory.create(any())
             referralDeepLinkFactory.create()
             walletConnectDeepLinkFactory.create(any())
+            walletDeepLinkFactory.create()
+            tokenDetailsDeepLinkFactory.create(any(), any())
         }
     }
 
