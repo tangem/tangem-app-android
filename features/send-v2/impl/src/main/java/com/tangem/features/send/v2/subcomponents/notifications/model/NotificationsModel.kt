@@ -255,7 +255,7 @@ internal class NotificationsModel @Inject constructor(
                 )
             },
         )
-        if (!BlockchainUtils.isCardano(currency.network.id.value)) {
+        if (!BlockchainUtils.isCardano(currency.network.rawId)) {
             addDustWarningNotification(
                 dustValue = currencyCheck.dustValue,
                 feeValue = feeValue,
@@ -375,7 +375,7 @@ internal class NotificationsModel @Inject constructor(
     private suspend fun MutableList<NotificationUM>.addTronNetworkFeesNotification() {
         val cryptoCurrency = cryptoCurrencyStatus.currency
         val isTronToken = cryptoCurrency is CryptoCurrency.Token &&
-            isTron(cryptoCurrency.network.id.value)
+            isTron(cryptoCurrency.network.rawId)
 
         if (isTronToken && getTronFeeNotificationShowCountUseCase() <= TRON_FEE_NOTIFICATION_MAX_SHOW_COUNT) {
             add(
