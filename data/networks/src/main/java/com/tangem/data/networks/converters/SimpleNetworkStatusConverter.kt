@@ -40,12 +40,6 @@ internal object SimpleNetworkStatusConverter : Converter<NetworkStatusDM, Simple
             }
         }
 
-        return SimpleNetworkStatus(
-            id = SimpleNetworkStatus.Id(
-                networkId = value.networkId,
-                derivationPath = NetworkDerivationPathConverter.convert(value = value.derivationPath),
-            ),
-            value = status,
-        )
+        return SimpleNetworkStatus(id = value.networkId, value = status)
     }
 }
