@@ -2,7 +2,6 @@ package com.tangem.tap.domain.tasks.visa
 
 import arrow.core.Either
 import arrow.core.getOrElse
-import arrow.core.raise.catch
 import arrow.core.raise.either
 import com.tangem.blockchain.common.UnmarshalHelper
 import com.tangem.common.CompletionResult
@@ -21,7 +20,6 @@ import com.tangem.datasource.local.visa.hasSavedOTP
 import com.tangem.domain.common.visa.VisaWalletPublicKeyUtility
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.visa.error.VisaActivationError
-import com.tangem.domain.visa.error.VisaAuthorizationAPIError
 import com.tangem.domain.visa.model.*
 import com.tangem.domain.visa.repository.VisaActivationRepository
 import com.tangem.domain.visa.repository.VisaAuthRepository
@@ -170,28 +168,24 @@ class VisaCardActivationTask @AssistedInject constructor(
         signedChallenge: VisaAuthSignedChallenge,
         cardWalletAddress: String,
     ): Either<TangemError, VisaDataToSignByCardWallet> = either {
-        catch(
-            block = {
-                val tokens = visaAuthRepository.getAccessTokens(signedChallenge)
+        val tokens = visaAuthRepository.getAccessTokens(signedChallenge)
+            .getOrElse { raise(it.tangemError) }
 
-                visaAuthTokenStorage.store(cardId, tokens)
+        visaAuthTokenStorage.store(cardId, tokens)
 
-                val remoteState = visaActivationRepository.getActivationRemoteState()
-                if (remoteState !is VisaActivationRemoteState.CardWalletSignatureRequired) {
-                    raise(VisaActivationError.WrongRemoteState.tangemError)
-                }
+        val remoteState = visaActivationRepository.getActivationRemoteState()
+            .getOrElse { raise(it.tangemError) }
 
-                visaActivationRepository.getCardWalletAcceptanceData(
-                    VisaCardWalletDataToSignRequest(
-                        activationOrderInfo = remoteState.activationOrderInfo,
-                        cardWalletAddress = cardWalletAddress,
-                    ),
-                )
-            },
-            catch = {
-                raise(VisaAuthorizationAPIError.tangemError)
-            },
-        )
+        if (remoteState !is VisaActivationRemoteState.CardWalletSignatureRequired) {
+            return raise(VisaActivationError.WrongRemoteState.tangemError)
+        }
+
+        visaActivationRepository.getCardWalletAcceptanceData(
+            VisaCardWalletDataToSignRequest(
+                activationOrderInfo = remoteState.activationOrderInfo,
+                cardWalletAddress = cardWalletAddress,
+            ),
+        ).getOrElse { raise(it.tangemError) }
     }
 
     private suspend fun SessionContext.createWallet(): CompletionResult<Unit> {
