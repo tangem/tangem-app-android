@@ -2,8 +2,8 @@ package com.tangem.domain.exchange
 
 import arrow.core.Either
 import com.tangem.domain.core.lce.Lce
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.wallets.models.UserWalletId
