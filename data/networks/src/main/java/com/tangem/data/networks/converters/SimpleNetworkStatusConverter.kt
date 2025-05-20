@@ -3,6 +3,7 @@ package com.tangem.data.networks.converters
 import com.tangem.data.networks.models.SimpleNetworkStatus
 import com.tangem.datasource.local.network.entity.NetworkStatusDM
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.tokens.model.NetworkStatus
 import com.tangem.utils.converter.Converter
 
@@ -40,6 +41,12 @@ internal object SimpleNetworkStatusConverter : Converter<NetworkStatusDM, Simple
             }
         }
 
-        return SimpleNetworkStatus(id = value.networkId, value = status)
+        return SimpleNetworkStatus(
+            id = Network.ID(
+                value = value.networkId.value,
+                derivationPath = NetworkDerivationPathConverter.convert(value = value.derivationPath),
+            ),
+            value = status,
+        )
     }
 }
