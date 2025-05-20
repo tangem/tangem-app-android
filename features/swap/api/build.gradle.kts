@@ -15,6 +15,7 @@ dependencies {
     implementation(projects.core.ui)
 
     /** Project - Domain */
+    api(projects.domain.models)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets.models)
 }
