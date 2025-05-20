@@ -9,7 +9,7 @@ import com.tangem.domain.models.scan.ScanResponse
 class NetworkHasDerivationUseCase {
 
     operator fun invoke(scanResponse: ScanResponse, network: Network): Either<Throwable, Boolean> {
-        val blockchain = Blockchain.fromId(network.id.value)
+        val blockchain = Blockchain.fromId(network.rawId)
         val derivationPath = network.derivationPath.value
         return Either.catch { derivationPath != null && scanResponse.hasDerivation(blockchain, derivationPath) }
     }
