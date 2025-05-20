@@ -9,7 +9,7 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.GetMarketsTokenListFlowUseCase
 import com.tangem.domain.markets.TokenMarket
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.markets.entry.BottomSheetState
 import com.tangem.features.markets.tokenlist.impl.analytics.MarketsListAnalyticsEvent
 import com.tangem.features.markets.tokenlist.impl.model.statemanager.MarketsListBatchFlowManager
