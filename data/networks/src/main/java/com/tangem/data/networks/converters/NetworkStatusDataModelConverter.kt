@@ -17,7 +17,7 @@ internal object NetworkStatusDataModelConverter : Converter<NetworkStatus, Netwo
                 val address = NetworkAddressConverter.convertBack(value = status.address)
 
                 NetworkStatusDM.Verified(
-                    networkId = value.network.id,
+                    networkId = NetworkStatusDM.ID(value = value.network.rawId),
                     derivationPath = NetworkDerivationPathConverter.convertBack(value = value.network.derivationPath),
                     selectedAddress = address.selectedAddress,
                     availableAddresses = address.addresses,
@@ -28,7 +28,7 @@ internal object NetworkStatusDataModelConverter : Converter<NetworkStatus, Netwo
                 val address = NetworkAddressConverter.convertBack(value = status.address)
 
                 NetworkStatusDM.NoAccount(
-                    networkId = value.network.id,
+                    networkId = NetworkStatusDM.ID(value = value.network.rawId),
                     derivationPath = NetworkDerivationPathConverter.convertBack(value = value.network.derivationPath),
                     selectedAddress = address.selectedAddress,
                     availableAddresses = address.addresses,
