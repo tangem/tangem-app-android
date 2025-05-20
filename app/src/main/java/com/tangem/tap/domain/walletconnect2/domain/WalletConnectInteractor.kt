@@ -419,7 +419,7 @@ class WalletConnectInteractor(
 
     private suspend fun getAccountsForWc(userWallet: UserWallet, networks: List<Network>): List<Account> {
         val walletManagers = networks.mapNotNull {
-            val blockchain = Blockchain.fromId(it.id.value)
+            val blockchain = Blockchain.fromId(it.rawId)
             walletManagersFacade.getOrCreateWalletManager(
                 userWalletId = userWallet.walletId,
                 blockchain = blockchain,

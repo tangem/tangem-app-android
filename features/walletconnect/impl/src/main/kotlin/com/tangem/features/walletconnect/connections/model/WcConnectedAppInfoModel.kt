@@ -61,7 +61,7 @@ internal class WcConnectedAppInfoModel @Inject constructor(
                         networks = session.networks
                             .map {
                                 WcNetworkInfoItem.Required(
-                                    id = it.id.value,
+                                    id = it.rawId,
                                     icon = it.iconResId,
                                     name = it.name,
                                     symbol = it.currencySymbol,
