@@ -59,7 +59,7 @@ private fun Set<NetworkAddress.Address>.mapToAddressModels(name: TextReference, 
         }
 
 private fun Network.getAddressDisplayName(addressType: NetworkAddress.Address.Type): TextReference {
-    return when (id.value) {
+    return when (rawId) {
         "decimal", "decimal/test" -> {
             when (addressType) {
                 NetworkAddress.Address.Type.Primary -> stringReference(value = DEL_ADDRESS_NAME)
