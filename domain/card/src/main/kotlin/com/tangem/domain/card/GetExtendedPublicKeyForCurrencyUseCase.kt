@@ -26,7 +26,7 @@ class GetExtendedPublicKeyForCurrencyUseCase(
             val userWallet = walletManagersFacade.getOrCreateWalletManager(userWalletId, network)
                 ?: error("Wallet not found")
 
-            val blockchain = Blockchain.fromId(network.id.value)
+            val blockchain = Blockchain.fromId(network.rawId)
             val isSecp256k1Blockchain = Blockchain.secp256k1Blockchains(network.isTestnet).contains(blockchain)
 
             val hdKey = if (isSecp256k1Blockchain) {
@@ -76,7 +76,7 @@ class GetExtendedPublicKeyForCurrencyUseCase(
         val userWallet = walletManagersFacade.getOrCreateWalletManager(userWalletId, network)
             ?: error("Wallet not found")
 
-        val blockchain = Blockchain.fromId(network.id.value)
+        val blockchain = Blockchain.fromId(network.rawId)
         val isSecp256k1Blockchain = Blockchain.secp256k1Blockchains(network.isTestnet).contains(blockchain)
         val isHdKey = userWallet.wallet.publicKey.derivationType?.hdKey
 
