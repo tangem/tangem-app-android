@@ -41,7 +41,7 @@ internal class DefaultDerivationsRepository(
         derivePublicKeysByNetworks(userWalletId = userWalletId, networks = currencies.map(CryptoCurrency::network))
     }
 
-    override suspend fun derivePublicKeysByNetworkIds(userWalletId: UserWalletId, networkIds: List<Network.ID>) {
+    override suspend fun derivePublicKeysByNetworkIds(userWalletId: UserWalletId, networkIds: List<Network.RawID>) {
         val userWallet = userWalletsStore.getSyncOrNull(userWalletId) ?: error("User wallet not found")
 
         derivePublicKeysByNetworks(

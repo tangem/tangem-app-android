@@ -188,7 +188,7 @@ internal class AddStakingNotificationsTransformer(
             onClick = prevState.clickIntents::openTokenDetails,
             onAnalyticsEvent = { /* no-op */ },
         )
-        if (!BlockchainUtils.isCardano(network.id.value)) {
+        if (!BlockchainUtils.isCardano(network.rawId)) {
             addDustWarningNotification(
                 dustValue = currencyCheck.dustValue,
                 feeValue = feeValue,
@@ -278,7 +278,7 @@ internal class AddStakingNotificationsTransformer(
 
     private fun MutableList<NotificationUM>.addTonUnstakeNotification(actionType: StakingActionCommonType) {
         val amount = cryptoCurrencyStatusProvider().value.amount.orZero()
-        val cryptoCurrencyNetworkIdValue = cryptoCurrencyStatusProvider().currency.network.id.value
+        val cryptoCurrencyNetworkIdValue = cryptoCurrencyStatusProvider().currency.network.rawId
 
         if (isTon(cryptoCurrencyNetworkIdValue) && actionType !is StakingActionCommonType.Enter) {
             val notification = if (amount < TON_BALANCE_EXTRA_FEE_THRESHOLD) {
