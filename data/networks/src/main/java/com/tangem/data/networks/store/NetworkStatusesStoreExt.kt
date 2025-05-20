@@ -99,6 +99,6 @@ internal suspend fun NetworksStatusesStoreV2.setSourceAsOnlyCache(userWalletId: 
     )
 }
 
-private fun createUnreachableStatus(id: SimpleNetworkStatus.Id): SimpleNetworkStatus {
+private fun createUnreachableStatus(id: Network.ID): SimpleNetworkStatus {
     return SimpleNetworkStatus(id = id, value = NetworkStatus.Unreachable(address = null))
 }
