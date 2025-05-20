@@ -466,7 +466,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                     is TxFeeState.MultipleFeeState -> feeState.normalFee.feeValue
                     is TxFeeState.SingleFeeState -> feeState.fee.feeValue
                 },
-                blockchain = Blockchain.fromId(currency.network.id.value),
+                blockchain = Blockchain.fromId(currency.network.rawId),
             ),
         )
 
@@ -1387,7 +1387,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         val callData = SmartContractCallDataProviderFactory.getApprovalCallData(
             spenderAddress = requireNotNull(spenderAddress) { "Spender address is null" },
             amount = swapAmount.value.convertToSdkAmount(fromToken),
-            blockchain = Blockchain.fromId(fromToken.network.id.value),
+            blockchain = Blockchain.fromId(fromToken.network.rawId),
         )
         val feeData = try {
             val extras = createTransactionExtrasUseCase(
