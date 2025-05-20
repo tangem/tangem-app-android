@@ -2,10 +2,10 @@ package com.tangem.data.qrscanning.repository
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.core.ui.utils.parseBigDecimalOrNull
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.qrscanning.models.QrResult
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.qrscanning.repository.QrScanningEventsRepository
-import com.tangem.domain.tokens.model.CryptoCurrency
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.filter
