@@ -24,7 +24,7 @@ internal interface NetworksStatusesStoreV2 {
         userWalletId: UserWalletId,
         network: Network,
         source: StatusSource,
-        ifNotFound: (SimpleNetworkStatus.Id) -> SimpleNetworkStatus? = { null },
+        ifNotFound: (Network.ID) -> SimpleNetworkStatus? = { null },
     )
 
     /** Update [source] of [networks] by [userWalletId]. If the status is not found, create a new one by [ifNotFound] */
@@ -32,7 +32,7 @@ internal interface NetworksStatusesStoreV2 {
         userWalletId: UserWalletId,
         networks: Set<Network>,
         source: StatusSource,
-        ifNotFound: (SimpleNetworkStatus.Id) -> SimpleNetworkStatus? = { null },
+        ifNotFound: (Network.ID) -> SimpleNetworkStatus? = { null },
     )
 
     /**
