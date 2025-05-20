@@ -592,7 +592,7 @@ internal class SendModel @Inject constructor(
         saveBlockchainErrorUseCase(
             error = BlockchainErrorInfo(
                 errorMessage = errorMessage,
-                blockchainId = cryptoCurrency.network.id.value,
+                blockchainId = cryptoCurrency.network.rawId,
                 derivationPath = cryptoCurrency.network.derivationPath.value,
                 destinationAddress = recipient.orEmpty(),
                 tokenSymbol = if (amount?.type is AmountType.Token) {
@@ -742,7 +742,7 @@ internal class SendModel @Inject constructor(
     }
 
     private suspend fun checkIfXrpAddressValue(value: String): Boolean {
-        return BlockchainUtils.decodeRippleXAddress(value, cryptoCurrency.network.id.value)?.let { decodedAddress ->
+        return BlockchainUtils.decodeRippleXAddress(value, cryptoCurrency.network.rawId)?.let { decodedAddress ->
             uiState.value =
                 recipientStateFactory.onRecipientAddressValueChange(value, isXAddress = true, isValuePasted = true)
             uiState.value = recipientStateFactory.getOnXAddressMemoState()

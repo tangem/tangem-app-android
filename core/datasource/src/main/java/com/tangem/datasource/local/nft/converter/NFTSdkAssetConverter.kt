@@ -57,7 +57,7 @@ object NFTSdkAssetConverter : TwoWayConverter<Pair<Network, SdkNFTAsset>, NFTAss
         return value.network to SdkNFTAsset(
             identifier = assetId,
             collectionIdentifier = collectionId,
-            blockchainId = value.network.id.value,
+            blockchainId = value.network.rawId,
             contractType = value.contractType,
             owner = value.owner,
             name = value.name,

@@ -77,7 +77,7 @@ internal class MercuryoService(private val environment: MercuryoEnvironment) : E
     ): String {
         if (action == CurrencyExchangeManager.Action.Sell) throw UnsupportedOperationException()
 
-        val blockchain = Blockchain.fromId(cryptoCurrency.network.id.value)
+        val blockchain = Blockchain.fromId(cryptoCurrency.network.rawId)
 
         val builder = Uri.Builder()
             .scheme(ExchangeUrlBuilder.SCHEME)

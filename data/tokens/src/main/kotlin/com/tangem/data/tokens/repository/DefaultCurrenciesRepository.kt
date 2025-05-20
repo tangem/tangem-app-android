@@ -354,7 +354,7 @@ internal class DefaultCurrenciesRepository(
                     "Unable to find tokens response for user wallet with provided ID: $userWalletId"
                 },
             )
-            val blockchain = Blockchain.fromId(networkId.value)
+            val blockchain = Blockchain.fromId(networkId.rawId.value)
             val blockchainNetworkId = blockchain.toNetworkId()
             val coinId = blockchain.toCoinId()
 
@@ -407,7 +407,7 @@ internal class DefaultCurrenciesRepository(
         cryptoCurrencyStatus: CryptoCurrencyStatus,
         coinStatus: CryptoCurrencyStatus?,
     ): Boolean {
-        val blockchain = Blockchain.fromId(cryptoCurrencyStatus.currency.network.id.value)
+        val blockchain = Blockchain.fromId(cryptoCurrencyStatus.currency.network.rawId)
         val isBitcoinBlockchain = blockchain == Blockchain.Bitcoin || blockchain == Blockchain.BitcoinTestnet
         return when {
             cryptoCurrencyStatus.currency is CryptoCurrency.Coin && isBitcoinBlockchain -> {
@@ -422,7 +422,7 @@ internal class DefaultCurrenciesRepository(
 
     override suspend fun getFeePaidCurrency(userWalletId: UserWalletId, network: Network): FeePaidCurrency {
         return withContext(dispatchers.io) {
-            val blockchain = Blockchain.fromId(network.id.value)
+            val blockchain = Blockchain.fromId(network.rawId)
             when (val feePaidCurrency = blockchain.feePaidCurrency()) {
                 FeePaidSdkCurrency.Coin -> FeePaidCurrency.Coin
                 FeePaidSdkCurrency.SameCurrency -> FeePaidCurrency.SameCurrency

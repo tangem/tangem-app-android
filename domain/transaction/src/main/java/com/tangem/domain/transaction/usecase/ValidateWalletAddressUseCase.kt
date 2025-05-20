@@ -26,7 +26,7 @@ class ValidateWalletAddressUseCase(
         address: String,
         currencyAddress: Set<NetworkAddress.Address>?,
     ): AddressValidationResult {
-        val decodedXAddress = BlockchainUtils.decodeRippleXAddress(address, network.id.value)
+        val decodedXAddress = BlockchainUtils.decodeRippleXAddress(address, network.rawId)
         val isUtxoConsolidationAvailable =
             walletManagersFacade.checkUtxoConsolidationAvailability(userWalletId, network)
 
@@ -50,7 +50,7 @@ class ValidateWalletAddressUseCase(
         address: String,
         senderAddresses: List<CryptoCurrencyAddress>,
     ): AddressValidationResult {
-        val decodedXAddress = BlockchainUtils.decodeRippleXAddress(address, network.id.value)
+        val decodedXAddress = BlockchainUtils.decodeRippleXAddress(address, network.rawId)
         val isUtxoConsolidationAvailable =
             walletManagersFacade.checkUtxoConsolidationAvailability(userWalletId, network)
 

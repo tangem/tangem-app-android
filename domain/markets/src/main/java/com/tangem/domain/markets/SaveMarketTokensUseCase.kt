@@ -59,7 +59,7 @@ class SaveMarketTokensUseCase(
         if (addedNetworks.isNotEmpty()) {
             derivationsRepository.derivePublicKeysByNetworkIds(
                 userWalletId = userWalletId,
-                networkIds = addedNetworks.map { Network.ID(it.networkId) },
+                networkIds = addedNetworks.map { Network.RawID(it.networkId) },
             )
 
             val addedCurrencies = addedNetworks.mapNotNull {

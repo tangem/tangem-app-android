@@ -57,7 +57,7 @@ internal class WcSolanaNetwork(
 
     private suspend fun getAccountAddress(network: Network): String? {
         return try {
-            walletManager.getWalletAddress(network.id.value, network.derivationPath.value)
+            walletManager.getWalletAddress(network.rawId, network.derivationPath.value)
         } catch (exception: Exception) {
             Timber.e(exception)
             null
@@ -84,7 +84,7 @@ internal class WcSolanaNetwork(
         }
 
         override fun toCAIP2(network: Network): CAIP2? {
-            val blockchain = Blockchain.fromId(network.id.value)
+            val blockchain = Blockchain.fromId(network.rawId)
             val chainId = when (blockchain) {
                 Blockchain.Solana -> MAINNET_CHAIN_ID
                 Blockchain.SolanaTestnet -> TESTNET_CHAIN_ID

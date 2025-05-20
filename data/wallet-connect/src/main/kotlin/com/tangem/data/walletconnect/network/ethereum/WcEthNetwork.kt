@@ -9,12 +9,8 @@ import com.tangem.data.walletconnect.request.WcRequestToUseCaseConverter
 import com.tangem.data.walletconnect.request.WcRequestToUseCaseConverter.Companion.fromJson
 import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
 import com.tangem.data.walletconnect.utils.WcNamespaceConverter
-import com.tangem.domain.walletconnect.model.WcEthAddChain
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.walletconnect.model.WcEthMethod
-import com.tangem.domain.walletconnect.model.WcEthMethodName
-import com.tangem.domain.walletconnect.model.WcEthSignTypedDataParams
-import com.tangem.domain.walletconnect.model.WcEthTransactionParams
+import com.tangem.domain.walletconnect.model.*
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
 import com.tangem.domain.walletconnect.repository.WcSessionsManager
 import com.tangem.domain.walletconnect.usecase.method.WcMethodUseCase
@@ -129,7 +125,7 @@ internal class WcEthNetwork(
         }
 
         override fun toCAIP2(network: Network): CAIP2? {
-            val blockchain = Blockchain.fromId(network.id.value)
+            val blockchain = Blockchain.fromId(network.rawId)
             if (!blockchain.isEvm()) return null
             val chainId = blockchain.getChainId() ?: return null
             return CAIP2(

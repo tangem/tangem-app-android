@@ -16,7 +16,7 @@ internal class WcSelectNetworksTransformer(
         return prevState.copy(
             missing = proposalNetwork.missingRequired.map { network ->
                 WcNetworkInfoItem.Required(
-                    id = network.id.value,
+                    id = network.rawId,
                     icon = network.iconResId,
                     name = network.name,
                     symbol = network.currencySymbol,
@@ -24,7 +24,7 @@ internal class WcSelectNetworksTransformer(
             }.toImmutableList(),
             required = proposalNetwork.required.map { network ->
                 WcNetworkInfoItem.Checked(
-                    id = network.id.value,
+                    id = network.rawId,
                     icon = network.iconResId,
                     name = network.name,
                     symbol = network.currencySymbol,
@@ -32,18 +32,18 @@ internal class WcSelectNetworksTransformer(
             }.toImmutableList(),
             available = proposalNetwork.available.map { network ->
                 WcNetworkInfoItem.Checkable(
-                    id = network.id.value,
+                    id = network.rawId,
                     icon = network.iconResId,
                     name = network.name,
                     symbol = network.currencySymbol,
                     checked = false,
-                    onCheckedChange = { onCheckedChange(it, network.id.value) },
+                    onCheckedChange = { onCheckedChange(it, network.rawId) },
                 )
             }.toImmutableList(),
             notAdded = proposalNetwork.notAdded.map { network ->
                 WcNetworkInfoItem.ReadOnly(
-                    id = network.id.value,
-                    icon = getGreyedOutIconRes(network.id.value),
+                    id = network.rawId,
+                    icon = getGreyedOutIconRes(network.rawId),
                     name = network.name,
                     symbol = network.currencySymbol,
                 )

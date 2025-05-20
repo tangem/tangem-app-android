@@ -78,12 +78,12 @@ fun List<UserTokensResponse.Token>.hasCoinForToken(network: Network): Boolean {
 private fun getCurrencyIdBody(network: Network): CurrencyIdBody {
     return when (val path = network.derivationPath) {
         is Network.DerivationPath.Custom -> CurrencyIdBody.NetworkIdWithDerivationPath(
-            rawId = network.id.value,
+            rawId = network.rawId,
             derivationPath = path.value,
         )
         is Network.DerivationPath.Card,
         is Network.DerivationPath.None,
-        -> CurrencyIdBody.NetworkId(network.id.value)
+        -> CurrencyIdBody.NetworkId(network.rawId)
     }
 }
 
