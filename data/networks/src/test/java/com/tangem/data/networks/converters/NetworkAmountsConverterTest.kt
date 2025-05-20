@@ -1,9 +1,9 @@
 package com.tangem.data.networks.converters
 
 import com.google.common.truth.Truth
-import com.tangem.domain.tokens.model.CryptoCurrency.ID
-import com.tangem.domain.tokens.model.CryptoCurrency.ID.Body
-import com.tangem.domain.tokens.model.CryptoCurrency.ID.Prefix
+import com.tangem.domain.models.currency.CryptoCurrency.ID
+import com.tangem.domain.models.currency.CryptoCurrency.ID.Body
+import com.tangem.domain.models.currency.CryptoCurrency.ID.Prefix
 import com.tangem.domain.tokens.model.CryptoCurrencyAmountStatus
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
