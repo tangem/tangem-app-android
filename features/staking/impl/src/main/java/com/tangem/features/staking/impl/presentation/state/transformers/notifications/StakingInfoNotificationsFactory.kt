@@ -37,14 +37,17 @@ internal class StakingInfoNotificationsFactory(
      * @param actionAmount  any amount being transferred or used action
      * @param feeValue      fee amount payed from user account
      */
+    @Suppress("LongParameterList")
     fun addInfoNotifications(
         notifications: MutableList<NotificationUM>,
         prevState: StakingUiState,
         sendingAmount: BigDecimal,
         actionAmount: BigDecimal,
         feeValue: BigDecimal,
+        tonBalanceExtraFeeThreshold: BigDecimal,
     ) = with(notifications) {
         addStakingLowBalanceNotification(prevState, actionAmount)
+        addTonExtraFeeInfoNotification(tonBalanceExtraFeeThreshold)
 
         when (prevState.actionType) {
             is StakingActionCommonType.Enter -> addEnterInfoNotifications(sendingAmount, feeValue)
@@ -242,6 +245,20 @@ internal class StakingInfoNotificationsFactory(
 
         if (exitRequirements.required && isNotEnoughLeft) {
             add(StakingNotification.Warning.LowStakedBalance)
+        }
+    }
+
+    private fun MutableList<NotificationUM>.addTonExtraFeeInfoNotification(tonBalanceExtraFeeThreshold: BigDecimal) {
+        val amount = cryptoCurrencyStatusProvider().value.amount.orZero()
+        val cryptoCurrencyNetworkIdValue = cryptoCurrencyStatusProvider().currency.network.id.value
+
+        if (isTon(cryptoCurrencyNetworkIdValue) && amount >= tonBalanceExtraFeeThreshold) {
+            add(
+                StakingNotification.Info.Ordinary(
+                    title = resourceReference(R.string.staking_notification_ton_extra_reserve_title),
+                    text = resourceReference(R.string.staking_notification_ton_extra_reserve_info),
+                ),
+            )
         }
     }
 
