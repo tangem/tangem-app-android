@@ -16,6 +16,7 @@ dependencies {
     /** Project - Domain */
     implementation(projects.core.utils)
     implementation(projects.core.error)
+    api(projects.domain.models)
     implementation(projects.domain.core)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.tokens.models)
