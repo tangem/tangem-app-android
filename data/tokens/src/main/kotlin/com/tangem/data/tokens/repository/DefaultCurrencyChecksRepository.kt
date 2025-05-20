@@ -136,7 +136,7 @@ internal class DefaultCurrencyChecksRepository(
         val balanceValue = currencyStatus.value as? CryptoCurrencyStatus.Loaded ?: return null
         val stakingBalance = balanceValue.yieldBalance as? YieldBalance.Data
         val stakingTotalBalance = stakingBalance?.getTotalStakingBalance(
-            blockchainId = currencyStatus.currency.network.id.value,
+            blockchainId = currencyStatus.currency.network.rawId,
         ).orZero()
         return when {
             balanceValue.amount.isZero() && stakingTotalBalance.isZero() -> null
