@@ -9,8 +9,8 @@ import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.extensions.Result
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.demo.DemoTransactionSender
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.mapToFeeError
 import com.tangem.domain.walletmanager.WalletManagersFacade

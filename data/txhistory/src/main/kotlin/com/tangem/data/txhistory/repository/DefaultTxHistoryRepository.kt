@@ -9,9 +9,9 @@ import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.txhistory.repository.paging.TxHistoryPagingSource
 import com.tangem.datasource.local.txhistory.TxHistoryItemsStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.TxInfo
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.txhistory.models.Page
 import com.tangem.domain.txhistory.models.TxHistoryState
 import com.tangem.domain.txhistory.models.TxHistoryStateError

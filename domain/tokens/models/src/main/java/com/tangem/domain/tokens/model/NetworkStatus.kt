@@ -1,6 +1,7 @@
 package com.tangem.domain.tokens.model
 
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.TxInfo
 import java.math.BigDecimal

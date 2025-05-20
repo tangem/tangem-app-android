@@ -10,7 +10,7 @@ import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObject
 import com.tangem.datasource.local.preferences.utils.getObjectSyncOrNull
 import com.tangem.datasource.local.quote.QuotesStore
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.tokens.model.Quote
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider

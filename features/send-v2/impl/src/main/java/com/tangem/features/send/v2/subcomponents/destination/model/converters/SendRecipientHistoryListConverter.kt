@@ -9,8 +9,8 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.core.ui.utils.toDateFormatWithTodayYesterday
 import com.tangem.core.ui.utils.toTimeFormat
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.TxInfo
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.subcomponents.destination.model.transformers.RECENT_DEFAULT_COUNT
 import com.tangem.features.send.v2.subcomponents.destination.model.transformers.RECENT_KEY_TAG

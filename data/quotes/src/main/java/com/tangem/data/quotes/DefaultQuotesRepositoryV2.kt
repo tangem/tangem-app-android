@@ -1,8 +1,8 @@
 package com.tangem.data.quotes
 
 import com.tangem.data.quotes.store.QuotesStoreV2
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.quotes.QuotesRepositoryV2
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Quote
 import javax.inject.Inject
 

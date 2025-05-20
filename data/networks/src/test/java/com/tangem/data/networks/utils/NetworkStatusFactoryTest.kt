@@ -5,9 +5,9 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.test.domain.walletmanager.MockUpdateWalletManagerResultFactory
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.TxInfo
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyAmountStatus
 import com.tangem.domain.tokens.model.NetworkAddress
 import com.tangem.domain.tokens.model.NetworkStatus

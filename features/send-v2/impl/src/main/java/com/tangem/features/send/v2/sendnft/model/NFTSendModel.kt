@@ -18,10 +18,10 @@ import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.tokens.GetCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.CreateNFTTransferTransactionUseCase

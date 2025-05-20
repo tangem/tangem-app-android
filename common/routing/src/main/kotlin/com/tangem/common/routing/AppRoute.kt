@@ -7,10 +7,10 @@ import com.tangem.common.routing.entity.SerializableIntent
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.TokenMarketParams
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.nft.models.NFTAsset
 import com.tangem.domain.onramp.model.OnrampSource
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.serialization.Serializable
 

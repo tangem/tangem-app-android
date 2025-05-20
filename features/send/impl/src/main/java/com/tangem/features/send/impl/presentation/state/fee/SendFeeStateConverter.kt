@@ -1,7 +1,7 @@
 package com.tangem.features.send.impl.presentation.state.fee
 
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.send.impl.presentation.state.SendStates
 import com.tangem.lib.crypto.BlockchainUtils.isTron
