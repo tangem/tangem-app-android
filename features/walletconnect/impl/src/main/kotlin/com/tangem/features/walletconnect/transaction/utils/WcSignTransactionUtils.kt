@@ -55,7 +55,7 @@ private fun WcMessageSignUseCase.signTypedDataToUM(
         walletName = session.wallet.name,
         networkInfo = WcNetworkInfoUM(
             name = network.name,
-            iconRes = getActiveIconRes(network.id.value),
+            iconRes = getActiveIconRes(network.rawId),
         ),
         addressText = walletAddress.toShortAddressText(),
         isLoading = signState.domainStep == WcSignStep.Signing,
@@ -104,7 +104,7 @@ private fun WcMessageSignUseCase.messageSignToUM(
         walletName = session.wallet.name,
         networkInfo = WcNetworkInfoUM(
             name = network.name,
-            iconRes = getActiveIconRes(network.id.value),
+            iconRes = getActiveIconRes(network.rawId),
         ),
         isLoading = signState.domainStep == WcSignStep.Signing,
     ),
