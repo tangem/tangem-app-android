@@ -48,7 +48,7 @@ internal class DefaultCustomTokensRepository(
 
     override suspend fun validateContractAddress(contractAddress: String, networkId: Network.ID): Boolean =
         withContext(dispatchers.io) {
-            when (val blockchain = Blockchain.fromId(networkId.value)) {
+            when (val blockchain = Blockchain.fromId(networkId.rawId.value)) {
                 Blockchain.Unknown,
                 Blockchain.Binance,
                 Blockchain.BinanceTestnet,
@@ -76,7 +76,7 @@ internal class DefaultCustomTokensRepository(
             }
 
             storedCurrencies.tokens.none { token ->
-                Blockchain.fromId(networkId.value).toNetworkId() == token.networkId &&
+                Blockchain.fromId(networkId.rawId.value).toNetworkId() == token.networkId &&
                     derivationPath.value == token.derivationPath &&
                     contractAddress.equals(token.contractAddress, ignoreCase = true)
             }
