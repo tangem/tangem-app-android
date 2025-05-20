@@ -20,10 +20,10 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.notifications.GetTronFeeNotificationShowCountUseCase
 import com.tangem.domain.tokens.GetBalanceNotEnoughForFeeWarningUseCase
 import com.tangem.domain.tokens.GetCurrencyCheckUseCase
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
 import com.tangem.domain.transaction.error.GetFeeError
