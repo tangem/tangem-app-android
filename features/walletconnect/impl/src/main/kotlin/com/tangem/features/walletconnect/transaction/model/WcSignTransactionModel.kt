@@ -39,11 +39,11 @@ internal class WcSignTransactionModel @Inject constructor(
 
     init {
         modelScope.launch {
-            val useCase: WcSignUseCase.SimpleRun<*> = useCaseFactory.createUseCase(params.rawRequest)
+            val useCase: WcSignUseCase<*> = useCaseFactory.createUseCase(params.rawRequest)
             useCase.invoke()
                 .onEach { signState ->
                     if (signingIsDone(signState)) return@onEach
-                    val signTransactionUM = (useCase as? WcSignUseCase)?.toUM(
+                    val signTransactionUM = useCase.toUM(
                         signState = signState,
                         actions = WcTransactionActionsUM(
                             onDismiss = { cancel(useCase) },
@@ -69,7 +69,7 @@ internal class WcSignTransactionModel @Inject constructor(
         return false
     }
 
-    private fun cancel(useCase: WcSignUseCase) {
+    private fun cancel(useCase: WcSignUseCase<*>) {
         useCase.cancel()
         router.pop()
     }
