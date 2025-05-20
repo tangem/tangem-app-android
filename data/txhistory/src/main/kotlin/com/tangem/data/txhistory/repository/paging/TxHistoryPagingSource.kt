@@ -4,8 +4,8 @@ import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.datasource.local.txhistory.TxHistoryItemsStore
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.TxInfo
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.txhistory.models.Page
 import com.tangem.domain.txhistory.models.PaginationWrapper
 import com.tangem.domain.walletmanager.WalletManagersFacade
