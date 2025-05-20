@@ -13,7 +13,7 @@ import com.tangem.domain.models.scan.ScanResponse
 import timber.log.Timber
 
 fun getBlockchain(networkId: Network.ID): Blockchain {
-    return Blockchain.fromId(networkId.value)
+    return Blockchain.fromId(networkId.rawId.value)
 }
 
 fun getNetwork(
@@ -27,16 +27,18 @@ fun getNetwork(
         return null
     }
 
+    val derivationPath = getNetworkDerivationPath(
+        blockchain = blockchain,
+        extraDerivationPath = extraDerivationPath,
+        cardDerivationStyleProvider = derivationStyleProvider,
+    )
+
     return Network(
-        id = Network.ID(blockchain.id),
+        id = Network.ID(value = blockchain.id, derivationPath = derivationPath),
         backendId = blockchain.toNetworkId(),
         name = blockchain.fullName,
         isTestnet = blockchain.isTestnet(),
-        derivationPath = getNetworkDerivationPath(
-            blockchain = blockchain,
-            extraDerivationPath = extraDerivationPath,
-            cardDerivationStyleProvider = derivationStyleProvider,
-        ),
+        derivationPath = derivationPath,
         currencySymbol = blockchain.currency,
         standardType = getNetworkStandardType(blockchain),
         hasFiatFeeRate = blockchain.feePaidCurrency() !is FeePaidCurrency.FeeResource,
