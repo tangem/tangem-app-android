@@ -10,7 +10,7 @@ import com.tangem.common.test.utils.ProvideTestModels
 import com.tangem.data.networks.store.NetworksStatusesStoreV2
 import com.tangem.data.networks.store.setSourceAsOnlyCache
 import com.tangem.data.networks.store.storeStatus
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyAmountStatus
 import com.tangem.domain.tokens.model.NetworkAddress
 import com.tangem.domain.tokens.model.NetworkStatus

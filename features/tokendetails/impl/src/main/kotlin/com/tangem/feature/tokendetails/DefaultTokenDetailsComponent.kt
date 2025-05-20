@@ -13,7 +13,7 @@ import com.tangem.core.deeplink.DeepLinksRegistry
 import com.tangem.core.deeplink.global.BuyCurrencyDeepLink
 import com.tangem.core.deeplink.utils.registerDeepLinks
 import com.tangem.core.ui.components.NavigationBar3ButtonsScrim
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsModel
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.TokenDetailsScreen
 import com.tangem.features.markets.token.block.TokenMarketBlockComponent
