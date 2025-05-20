@@ -90,13 +90,15 @@ internal class PreviewOnboardingManageTokensComponent(
     )
 
     private fun getCurrencyNetworks() = List(size = 3) { networkIndex ->
+        val derivationPath = Network.DerivationPath.Card("")
+
         CurrencyNetworkUM(
             network = Network(
-                id = Network.ID(networkIndex.toString()),
+                id = Network.ID(value = networkIndex.toString(), derivationPath = derivationPath),
                 backendId = networkIndex.toString(),
                 name = "Network $networkIndex",
                 currencySymbol = "N$networkIndex",
-                derivationPath = Network.DerivationPath.Card(""),
+                derivationPath = derivationPath,
                 isTestnet = false,
                 standardType = Network.StandardType.ERC20,
                 hasFiatFeeRate = false,
