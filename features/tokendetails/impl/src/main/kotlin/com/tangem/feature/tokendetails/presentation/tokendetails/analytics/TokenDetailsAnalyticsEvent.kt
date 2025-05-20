@@ -1,7 +1,7 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.feature.tokendetails.presentation.tokendetails.analytics.utils.toAnalyticsParams
 
 internal open class TokenDetailsAnalyticsEvent(
