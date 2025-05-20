@@ -7,7 +7,7 @@ import com.tangem.domain.transaction.FeeRepository
 
 internal class DefaultFeeRepository : FeeRepository {
     override fun isFeeApproximate(networkId: Network.ID, amountType: AmountType): Boolean {
-        val blockchain = Blockchain.fromId(networkId.value)
+        val blockchain = Blockchain.fromId(networkId.rawId.value)
         return blockchain.isFeeApproximate(amountType)
     }
 }
