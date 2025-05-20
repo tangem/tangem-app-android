@@ -58,7 +58,7 @@ class GetCurrencyWarningsUseCase(
                 * coinRelatedWarnings.toTypedArray(),
                 getNetworkUnavailableWarning(currencyStatus),
                 getNetworkNoAccountWarning(currencyStatus),
-                getBeaconChainShutdownWarning(currency.network.id),
+                getBeaconChainShutdownWarning(rawId = currency.network.id.rawId),
                 getAssetRequirementsWarning(userWalletId = userWalletId, currency = currency),
                 getMigrationFromMaticToPolWarning(currency),
             )
@@ -147,7 +147,7 @@ class GetCurrencyWarningsUseCase(
     }
 
     private fun getIsBetaTokensWarning(currency: CryptoCurrency): CryptoCurrencyWarning? {
-        val isTokenBetaFunctionality = BlockchainUtils.isTokenBetaFunctionality(currency.network.id.value)
+        val isTokenBetaFunctionality = BlockchainUtils.isTokenBetaFunctionality(currency.network.rawId)
         return if (currency is CryptoCurrency.Token && isTokenBetaFunctionality) {
             CryptoCurrencyWarning.TokensInBetaWarning
         } else {
@@ -194,7 +194,7 @@ class GetCurrencyWarningsUseCase(
 
     private fun getNetworkNoAccountWarning(currencyStatus: CryptoCurrencyStatus): CryptoCurrencyWarning? {
         return (currencyStatus.value as? CryptoCurrencyStatus.NoAccount)?.let {
-            if (isNeedToCreateAccountWithoutReserve(networkId = currencyStatus.currency.network.id.value)) {
+            if (isNeedToCreateAccountWithoutReserve(networkId = currencyStatus.currency.network.rawId)) {
                 CryptoCurrencyWarning.TopUpWithoutReserve
             } else {
                 CryptoCurrencyWarning.SomeNetworksNoAccount(
@@ -205,8 +205,8 @@ class GetCurrencyWarningsUseCase(
         }
     }
 
-    private fun getBeaconChainShutdownWarning(networkId: Network.ID): CryptoCurrencyWarning.BeaconChainShutdown? {
-        return if (BlockchainUtils.isBeaconChain(networkId.value)) CryptoCurrencyWarning.BeaconChainShutdown else null
+    private fun getBeaconChainShutdownWarning(rawId: Network.RawID): CryptoCurrencyWarning.BeaconChainShutdown? {
+        return if (BlockchainUtils.isBeaconChain(rawId.value)) CryptoCurrencyWarning.BeaconChainShutdown else null
     }
 
     private fun getExistentialDepositWarning(
@@ -253,7 +253,7 @@ class GetCurrencyWarningsUseCase(
     }
 
     private fun getMigrationFromMaticToPolWarning(currency: CryptoCurrency): CryptoCurrencyWarning? {
-        return if (currency.symbol == MATIC_SYMBOL && !BlockchainUtils.isPolygonChain(currency.network.id.value)) {
+        return if (currency.symbol == MATIC_SYMBOL && !BlockchainUtils.isPolygonChain(currency.network.rawId)) {
             CryptoCurrencyWarning.MigrationMaticToPol
         } else {
             null
