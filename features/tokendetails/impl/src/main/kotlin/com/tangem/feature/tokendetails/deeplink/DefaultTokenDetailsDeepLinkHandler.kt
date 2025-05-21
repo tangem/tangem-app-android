@@ -16,8 +16,8 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 
 internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
-    @Assisted private val params: Map<String, String>,
     @Assisted private val scope: CoroutineScope,
+    @Assisted private val queryParams: Map<String, String>,
     private val appRouter: AppRouter,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val getCryptoCurrenciesUseCase: GetCryptoCurrenciesUseCase,
@@ -29,7 +29,7 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
 
     private fun handleDeepLink() {
         // It is okay here, we are navigating from outside, and there is no other way to getting UserWallet
-        val userWalletId = params[WALLET_ID_KEY]?.let(::UserWalletId)
+        val userWalletId = queryParams[WALLET_ID_KEY]?.let(::UserWalletId)
             ?: getSelectedWalletSyncUseCase().getOrNull()?.walletId
 
         if (userWalletId == null) {
@@ -37,9 +37,9 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
             return
         }
 
-        val networkId = params[NETWORK_ID_KEY]
-        val tokenId = params[TOKEN_ID_KEY]
-        val type = NotificationType.getType(params[TYPE_KEY])
+        val networkId = queryParams[NETWORK_ID_KEY]
+        val tokenId = queryParams[TOKEN_ID_KEY]
+        val type = NotificationType.getType(queryParams[TYPE_KEY])
 
         if (type == NotificationType.Promo) {
             scope.launch {
@@ -75,7 +75,7 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
     interface Factory : TokenDetailsDeepLinkHandler.Factory {
         override fun create(
             coroutineScope: CoroutineScope,
-            params: Map<String, String>,
+            queryParams: Map<String, String>,
         ): DefaultTokenDetailsDeepLinkHandler
     }
 
