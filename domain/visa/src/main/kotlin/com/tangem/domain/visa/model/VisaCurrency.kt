@@ -2,7 +2,7 @@ package com.tangem.domain.visa.model
 
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.tokens.model.NetworkAddress
+import com.tangem.domain.models.network.NetworkAddress
 import org.joda.time.DateTime
 import java.math.BigDecimal
 
