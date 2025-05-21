@@ -20,20 +20,7 @@ class NFTSdkCollectionConverter(
             network = network,
             // We use localised strings from resources here to proceed sorting and searching correctly
             // Sorting is invoked on data layer, searching is simplified to filtering for now and invoked in Model
-            name = when (collectionId) {
-                is NFTCollection.Identifier.EVM -> collection.name
-                is NFTCollection.Identifier.TON -> when {
-                    collectionId.contractAddress == null -> resources.getString(R.string.nft_no_collection)
-                    collection.name.isNullOrEmpty() -> resources.getString(R.string.nft_untitled_collection)
-                    else -> collection.name
-                }
-                is NFTCollection.Identifier.Solana -> when {
-                    collectionId.collectionAddress == null -> resources.getString(R.string.nft_no_collection)
-                    collection.name.isNullOrEmpty() -> resources.getString(R.string.nft_untitled_collection)
-                    else -> collection.name
-                }
-                NFTCollection.Identifier.Unknown -> null
-            },
+            name = collection.toName(collectionId),
             description = collection.description,
             logoUrl = collection.logoUrl,
             count = collection.count,
@@ -55,5 +42,27 @@ class NFTSdkCollectionConverter(
                     }
                 },
         )
+    }
+
+    private fun SdkNFTCollection.toName(collectionId: NFTCollection.Identifier) = when (collectionId) {
+        is NFTCollection.Identifier.EVM ->
+            name.toCollectionName()
+        is NFTCollection.Identifier.TON -> if (collectionId.contractAddress == null) {
+            resources.getString(R.string.nft_no_collection)
+        } else {
+            name.toCollectionName()
+        }
+        is NFTCollection.Identifier.Solana -> if (collectionId.collectionAddress == null) {
+            resources.getString(R.string.nft_no_collection)
+        } else {
+            name.toCollectionName()
+        }
+        NFTCollection.Identifier.Unknown -> null
+    }
+
+    private fun String?.toCollectionName() = if (this.isNullOrEmpty()) {
+        resources.getString(R.string.nft_untitled_collection)
+    } else {
+        this
     }
 }
