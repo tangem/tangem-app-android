@@ -11,8 +11,7 @@ import com.tangem.domain.staking.utils.getRewardStakingBalance
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.staking.impl.presentation.state.InnerYieldBalanceState
 import com.tangem.features.staking.impl.presentation.state.YieldReward
-import com.tangem.lib.crypto.BlockchainUtils.isBSC
-import com.tangem.lib.crypto.BlockchainUtils.isSolana
+import com.tangem.lib.crypto.BlockchainUtils.isStakingRewardUnavailable
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.toPersistentList
@@ -87,7 +86,7 @@ internal class YieldBalancesConverter(
         val isRewardsClaimable = rewards?.isNotEmpty() == true
 
         return when {
-            isSolana(blockchainId) || isBSC(blockchainId) -> RewardBlockType.RewardUnavailable
+            isStakingRewardUnavailable(blockchainId) -> RewardBlockType.RewardUnavailable
             isRewardsClaimable && isActionable -> RewardBlockType.Rewards
             isRewardsClaimable && !isActionable -> RewardBlockType.RewardsRequirementsError
             else -> RewardBlockType.NoRewards
