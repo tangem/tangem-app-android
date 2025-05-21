@@ -1,7 +1,7 @@
 package com.tangem.data.networks.converters
 
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.tokens.model.NetworkStatus
+import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.utils.converter.TwoWayConverter
 import com.tangem.utils.extensions.mapNotNullValues
 import java.math.BigDecimal
