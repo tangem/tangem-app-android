@@ -3,6 +3,7 @@ package com.tangem.data.tokens.di
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.common.currency.CardCryptoCurrencyFactory
+import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.data.tokens.repository.DefaultCurrenciesRepository
 import com.tangem.data.tokens.repository.DefaultCurrencyChecksRepository
 import com.tangem.data.tokens.repository.DefaultPolkadotAccountHealthCheckRepository
@@ -40,6 +41,7 @@ internal object TokensDataModule {
         expressServiceLoader: ExpressServiceLoader,
         excludedBlockchains: ExcludedBlockchains,
         cardCryptoCurrencyFactory: CardCryptoCurrencyFactory,
+        tokensSaver: UserTokensSaver,
     ): CurrenciesRepository {
         return DefaultCurrenciesRepository(
             tangemTechApi = tangemTechApi,
@@ -51,6 +53,7 @@ internal object TokensDataModule {
             dispatchers = dispatchers,
             excludedBlockchains = excludedBlockchains,
             cardCryptoCurrencyFactory = cardCryptoCurrencyFactory,
+            userTokensSaver = tokensSaver,
         )
     }
 
