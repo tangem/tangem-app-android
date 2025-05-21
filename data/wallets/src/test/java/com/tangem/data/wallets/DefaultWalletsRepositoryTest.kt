@@ -5,7 +5,6 @@ import androidx.datastore.preferences.core.Preferences
 import com.squareup.moshi.Moshi
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.datasource.api.tangemTech.models.WalletBody
 import com.tangem.datasource.api.tangemTech.models.WalletResponse
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
@@ -35,10 +34,6 @@ class DefaultWalletsRepositoryTest {
     private lateinit var dispatchers: CoroutineDispatcherProvider
 
     private val testWalletId = UserWalletId("1234567890abcdef")
-    private val testWalletResponse = WalletResponse(
-        id = testWalletId.stringValue,
-        notifyStatus = true,
-    )
 
     @Before
     fun setup() {
@@ -55,125 +50,61 @@ class DefaultWalletsRepositoryTest {
     }
 
     @Test
-    fun `GIVEN force is true WHEN isNotificationsEnabled THEN should fetch from API and update local storage`() =
-        runTest {
-            // GIVEN
-            coEvery { tangemTechApi.getWalletById(testWalletId.stringValue) } returns ApiResponse.Success(
-                testWalletResponse,
-            )
-            coEvery { preferencesDataStore.updateData(any()) } returns mockk<Preferences>()
-
-            // WHEN
-            val result = repository.isNotificationsEnabled(testWalletId, force = true)
-
-            // THEN
-            assertThat(result).isTrue()
-            coVerify(exactly = 1) {
-                tangemTechApi.getWalletById(testWalletId.stringValue)
-            }
-            coVerify(exactly = 0) {
-                tangemTechApi.setNotificationsEnabled(any(), any())
-            }
-            coVerify(exactly = 1) { preferencesDataStore.updateData(any()) }
-        }
-
-    @Test
     fun `GIVEN local storage has value WHEN isNotificationsEnabled THEN should return local value`() = runTest {
         // GIVEN
         val expectedPreferences = """{"${testWalletId.stringValue}":true}"""
         val preferences = mockk<Preferences>()
         coEvery { preferencesDataStore.data } returns flowOf(preferences)
         coEvery { preferences[PreferencesKeys.NOTIFICATIONS_ENABLED_STATES_KEY] } returns expectedPreferences
-        coEvery { tangemTechApi.getWalletById(any()) } returns ApiResponse.Success(testWalletResponse)
 
         // WHEN
-        val result = repository.isNotificationsEnabled(testWalletId, force = false)
+        val result = repository.isNotificationsEnabled(testWalletId)
 
         // THEN
         assertThat(result).isTrue()
-        coVerify(inverse = true) {
-            tangemTechApi.getWalletById(any())
-            tangemTechApi.setNotificationsEnabled(any(), any())
-        }
     }
 
     @Test
-    fun `GIVEN local storage is empty WHEN isNotificationsEnabled THEN should fetch from API and update local storage`() = runTest {
+    fun `GIVEN local storage is empty WHEN isNotificationsEnabled THEN should return false`() = runTest {
         // GIVEN
         val preferences = mockk<Preferences>()
         coEvery { preferencesDataStore.data } returns flowOf(preferences)
         coEvery { preferences[PreferencesKeys.NOTIFICATIONS_ENABLED_STATES_KEY] } returns "{}"
-        coEvery { tangemTechApi.getWalletById(testWalletId.stringValue) } returns ApiResponse.Success(
-            testWalletResponse,
-        )
-        coEvery { preferencesDataStore.updateData(any()) } returns mockk<Preferences>()
 
         // WHEN
-        val result = repository.isNotificationsEnabled(testWalletId, force = false)
+        val result = repository.isNotificationsEnabled(testWalletId)
 
         // THEN
-        assertThat(result).isTrue()
-        coVerify(exactly = 1) {
-            tangemTechApi.getWalletById(testWalletId.stringValue)
-        }
-        coVerify(exactly = 0) {
-            tangemTechApi.setNotificationsEnabled(any(), any())
-        }
-        coVerify(exactly = 1) { preferencesDataStore.updateData(any()) }
+        assertThat(result).isFalse()
     }
 
     @Test
-    fun `GIVEN enabled status WHEN setNotificationsEnabled THEN should update API and local storage`() = runTest {
+    fun `GIVEN enabled status WHEN setNotificationsEnabled THEN should update local storage`() = runTest {
         // GIVEN
-        coEvery {
-            tangemTechApi.setNotificationsEnabled(
-                eq(testWalletId.stringValue),
-                eq(WalletBody(notifyStatus = true)),
-            )
-        } returns ApiResponse.Success(Unit)
-        coEvery { preferencesDataStore.updateData(any()) } returns mockk<Preferences>()
+        val preferences = mockk<Preferences>()
+        coEvery { preferencesDataStore.data } returns flowOf(preferences)
+        coEvery { preferences[PreferencesKeys.NOTIFICATIONS_ENABLED_STATES_KEY] } returns "{}"
+        coEvery { preferencesDataStore.updateData(any()) } returns mockk()
 
         // WHEN
         repository.setNotificationsEnabled(testWalletId, isEnabled = true)
 
         // THEN
-        coVerify(exactly = 1) {
-            tangemTechApi.setNotificationsEnabled(
-                eq(testWalletId.stringValue),
-                eq(WalletBody(notifyStatus = true)),
-            )
-        }
         coVerify(exactly = 1) { preferencesDataStore.updateData(any()) }
     }
 
     @Test
-    fun `GIVEN disabled status WHEN setNotificationsEnabled THEN should update API and local storage`() = runTest {
+    fun `GIVEN disabled status WHEN setNotificationsEnabled THEN should update local storage`() = runTest {
         // GIVEN
-        coEvery {
-            tangemTechApi.setNotificationsEnabled(
-                eq(testWalletId.stringValue),
-                eq(WalletBody(notifyStatus = false)),
-            )
-        } returns ApiResponse.Success(Unit)
-        coEvery { preferencesDataStore.updateData(any()) } returns mockk<Preferences>()
+        val preferences = mockk<Preferences>()
+        coEvery { preferencesDataStore.data } returns flowOf(preferences)
+        coEvery { preferences[PreferencesKeys.NOTIFICATIONS_ENABLED_STATES_KEY] } returns "{}"
+        coEvery { preferencesDataStore.updateData(any()) } returns mockk()
 
         // WHEN
         repository.setNotificationsEnabled(testWalletId, isEnabled = false)
 
         // THEN
-        coVerifyOrder {
-            tangemTechApi.setNotificationsEnabled(
-                eq(testWalletId.stringValue),
-                eq(WalletBody(notifyStatus = false)),
-            )
-            preferencesDataStore.updateData(any())
-        }
-        coVerify(exactly = 1) {
-            tangemTechApi.setNotificationsEnabled(
-                eq(testWalletId.stringValue),
-                eq(WalletBody(notifyStatus = false)),
-            )
-        }
         coVerify(exactly = 1) { preferencesDataStore.updateData(any()) }
     }
 
@@ -194,7 +125,7 @@ class DefaultWalletsRepositoryTest {
             ),
         )
         coEvery { tangemTechApi.getWallets(applicationId) } returns ApiResponse.Success(walletResponses)
-        coEvery { preferencesDataStore.updateData(any()) } returns mockk<Preferences>()
+        coEvery { preferencesDataStore.updateData(any()) } returns mockk()
 
         // WHEN
         val result = repository.getWalletsInfo(applicationId, updateCache = true)
