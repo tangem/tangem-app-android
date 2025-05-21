@@ -8,7 +8,6 @@ import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.networks.single.SingleNetworkStatusProducer
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
-import com.tangem.domain.tokens.model.CryptoCurrencyAmountStatus
 import com.tangem.domain.tokens.model.NetworkStatus
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.transaction.error.AssociateAssetError
@@ -67,7 +66,7 @@ class AssociateAssetUseCase(
             ?.amounts
             ?.get(currency.id)
 
-        return networkCoinAmountStatus is CryptoCurrencyAmountStatus.Loaded &&
+        return networkCoinAmountStatus is NetworkStatus.Amount.Loaded &&
             networkCoinAmountStatus.value.isNullOrZero()
     }
 }
