@@ -5,11 +5,11 @@ import arrow.core.NonEmptyList
 import arrow.core.raise.either
 import arrow.core.toNonEmptySetOrNull
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.staking.model.stakekit.YieldBalanceList
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.model.NetworkStatus
 import com.tangem.domain.tokens.model.Quote
 import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations.Error
 import com.tangem.domain.tokens.operations.CurrencyStatusOperations

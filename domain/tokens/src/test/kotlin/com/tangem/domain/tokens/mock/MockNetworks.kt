@@ -4,9 +4,9 @@ import arrow.core.NonEmptySet
 import arrow.core.nonEmptySetOf
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.tokens.model.NetworkAddress
-import com.tangem.domain.tokens.model.NetworkStatus
-import com.tangem.domain.tokens.model.NetworkStatus.Amount
+import com.tangem.domain.models.network.NetworkAddress
+import com.tangem.domain.models.network.NetworkStatus
+import com.tangem.domain.models.network.NetworkStatus.Amount
 import java.math.BigDecimal
 
 internal object MockNetworks {

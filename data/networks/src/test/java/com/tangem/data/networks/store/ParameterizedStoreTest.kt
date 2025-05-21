@@ -7,7 +7,7 @@ import com.tangem.data.networks.models.SimpleNetworkStatus
 import com.tangem.data.networks.toDataModel
 import com.tangem.data.networks.toSimple
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
-import com.tangem.domain.tokens.model.NetworkStatus
+import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import kotlinx.coroutines.flow.firstOrNull
