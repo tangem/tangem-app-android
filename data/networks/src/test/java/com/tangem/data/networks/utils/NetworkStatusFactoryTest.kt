@@ -8,9 +8,9 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.TxInfo
-import com.tangem.domain.tokens.model.CryptoCurrencyAmountStatus
 import com.tangem.domain.tokens.model.NetworkAddress
 import com.tangem.domain.tokens.model.NetworkStatus
+import com.tangem.domain.tokens.model.NetworkStatus.Amount
 import com.tangem.domain.walletmanager.model.Address
 import com.tangem.domain.walletmanager.model.UpdateWalletManagerResult
 import org.junit.Test
@@ -214,8 +214,8 @@ internal class NetworkStatusFactoryTest(private val model: Model) {
                         ),
                     ),
                     amounts = mapOf(
-                        currencies.first().id to CryptoCurrencyAmountStatus.Loaded(BigDecimal.ONE),
-                        currencies.last().id to CryptoCurrencyAmountStatus.NotFound,
+                        currencies.first().id to Amount.Loaded(BigDecimal.ONE),
+                        currencies.last().id to Amount.NotFound,
                     ),
                     pendingTransactions = mapOf(
                         currencies.first().id to setOf(txInfo),
