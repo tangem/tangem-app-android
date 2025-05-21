@@ -7,8 +7,8 @@ import com.tangem.data.common.currency.CardCryptoCurrencyFactory
 import com.tangem.data.networks.store.NetworksStatusesStoreV2
 import com.tangem.data.networks.store.storeStatus
 import com.tangem.data.networks.utils.NetworkStatusFactory
+import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.tokens.model.CryptoCurrencyAddress
-import com.tangem.domain.tokens.model.NetworkStatus
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.walletmanager.model.UpdateWalletManagerResult
 import com.tangem.domain.wallets.models.UserWalletId
