@@ -7,7 +7,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.tokens.model.NetworkAddress
+import com.tangem.domain.models.network.NetworkAddress
 
 private const val DSC_ADDRESS_NAME = "DSC"
 private const val DEL_ADDRESS_NAME = "Main"
