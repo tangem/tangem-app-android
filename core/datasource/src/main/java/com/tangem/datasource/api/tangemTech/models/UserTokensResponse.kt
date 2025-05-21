@@ -22,7 +22,7 @@ data class UserTokensResponse(
         @Json(name = "symbol") val symbol: String,
         @Json(name = "decimals") val decimals: Int,
         @Json(name = "contractAddress") val contractAddress: String?,
-        @Json(name = "addresses") val list: List<String>? = null,
+        @Json(name = "addresses") val addresses: List<String>? = null,
     ) {
         override fun equals(other: Any?): Boolean {
             val otherToken = other as? Token ?: return false
