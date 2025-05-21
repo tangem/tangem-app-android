@@ -1,13 +1,13 @@
 package com.tangem.data.networks.converters
 
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.tokens.model.CryptoCurrencyAmountStatus
+import com.tangem.domain.tokens.model.NetworkStatus
 import com.tangem.utils.converter.TwoWayConverter
 import com.tangem.utils.extensions.mapNotNullValues
 import java.math.BigDecimal
 
 private typealias AmountsDataModel = Map<String, BigDecimal>
-private typealias AmountsDomainModel = Map<CryptoCurrency.ID, CryptoCurrencyAmountStatus>
+private typealias AmountsDomainModel = Map<CryptoCurrency.ID, NetworkStatus.Amount>
 
 /**
  * Converter from [AmountsDataModel] to [AmountsDomainModel] and vice versa
@@ -19,7 +19,7 @@ internal object NetworkAmountsConverter : TwoWayConverter<AmountsDataModel, Amou
     override fun convert(value: AmountsDataModel): AmountsDomainModel {
         return value
             .mapKeys { CryptoCurrency.ID.fromValue(value = it.key) }
-            .mapValues { (_, amount) -> CryptoCurrencyAmountStatus.Loaded(value = amount) }
+            .mapValues { (_, amount) -> NetworkStatus.Amount.Loaded(value = amount) }
     }
 
     override fun convertBack(value: AmountsDomainModel): AmountsDataModel {
@@ -27,8 +27,8 @@ internal object NetworkAmountsConverter : TwoWayConverter<AmountsDataModel, Amou
             .mapKeys { (id, _) -> id.value }
             .mapNotNullValues { (_, amount) ->
                 when (amount) {
-                    is CryptoCurrencyAmountStatus.Loaded -> amount.value
-                    is CryptoCurrencyAmountStatus.NotFound -> null
+                    is NetworkStatus.Amount.Loaded -> amount.value
+                    is NetworkStatus.Amount.NotFound -> null
                 }
             }
     }
