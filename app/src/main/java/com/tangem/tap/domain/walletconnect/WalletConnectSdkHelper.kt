@@ -391,7 +391,7 @@ class WalletConnectSdkHelper {
                         signature = signedHash,
                         hash = hashToSign,
                         publicKey = wallet.publicKey.blockchainKey.toDecompressedPublicKey(),
-                    ).asRSVLegacyEVM().toHexString()
+                    ).asRSVLegacyEVM().toHexString().lowercase() // use lowercase because some dapps cant handle UPPERCASE
                 }
             }
             is CompletionResult.Failure -> {
