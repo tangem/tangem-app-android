@@ -86,7 +86,7 @@ object LegacySdkHelper {
         signature = signedHash,
         hash = hashToSign,
         publicKey = walletManager.wallet.publicKey.blockchainKey.toDecompressedPublicKey(),
-    ).asRSVLegacyEVM().toHexString()
+    ).asRSVLegacyEVM().toHexString().lowercase() // use lowercase because some dapps cant handle UPPERCASE
 
     fun createMessageData(message: String): ByteArray {
         val messageData = try {
