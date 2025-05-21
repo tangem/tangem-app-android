@@ -4,7 +4,6 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.TxInfo
-import com.tangem.domain.tokens.model.CryptoCurrencyAmountStatus
 import com.tangem.domain.tokens.model.NetworkAddress
 import com.tangem.domain.tokens.model.NetworkStatus
 import com.tangem.domain.walletmanager.model.Address
@@ -89,7 +88,7 @@ object NetworkStatusFactory {
     private fun formatAmounts(
         amounts: Set<CryptoCurrencyAmount>,
         currencies: Set<CryptoCurrency>,
-    ): Map<CryptoCurrency.ID, CryptoCurrencyAmountStatus> {
+    ): Map<CryptoCurrency.ID, NetworkStatus.Amount> {
         return currencies.associate { currency ->
             val amount = when (currency) {
                 is CryptoCurrency.Coin -> {
@@ -106,9 +105,9 @@ object NetworkStatusFactory {
 
             if (amount == null) {
                 Timber.w("Unable to find amount for cryptocurrency: $currency")
-                currency.id to CryptoCurrencyAmountStatus.NotFound
+                currency.id to NetworkStatus.Amount.NotFound
             } else {
-                currency.id to CryptoCurrencyAmountStatus.Loaded(amount.value)
+                currency.id to NetworkStatus.Amount.Loaded(amount.value)
             }
         }
     }
