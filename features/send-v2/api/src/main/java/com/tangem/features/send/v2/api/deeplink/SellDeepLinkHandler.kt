@@ -5,6 +5,6 @@ import kotlinx.coroutines.CoroutineScope
 interface SellDeepLinkHandler {
 
     interface Factory {
-        fun create(coroutineScope: CoroutineScope, params: Map<String, String>): SellDeepLinkHandler
+        fun create(coroutineScope: CoroutineScope, queryParams: Map<String, String>): SellDeepLinkHandler
     }
 }
