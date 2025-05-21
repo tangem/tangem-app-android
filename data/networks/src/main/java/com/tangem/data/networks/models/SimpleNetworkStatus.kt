@@ -1,7 +1,7 @@
 package com.tangem.data.networks.models
 
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.tokens.model.NetworkStatus
+import com.tangem.domain.models.network.NetworkStatus
 
 /**
  * Simplified model of network status. Like [NetworkStatus] but without metadata.

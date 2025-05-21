@@ -3,8 +3,8 @@ package com.tangem.common.test.domain.network
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.tokens.model.NetworkAddress
-import com.tangem.domain.tokens.model.NetworkStatus
+import com.tangem.domain.models.network.NetworkAddress
+import com.tangem.domain.models.network.NetworkStatus
 import java.math.BigDecimal
 
 /**
