@@ -1,6 +1,6 @@
 package com.tangem.domain.tokens.utils
 
-import com.tangem.domain.tokens.model.NetworkStatus
+import com.tangem.domain.models.network.NetworkStatus
 
 /** Extract address from [networkStatus] */
 internal fun extractAddress(networkStatus: NetworkStatus?): String? {

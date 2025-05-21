@@ -8,9 +8,9 @@ import com.tangem.domain.models.currency.CryptoCurrency.ID
 import com.tangem.domain.models.currency.CryptoCurrency.ID.Body
 import com.tangem.domain.models.currency.CryptoCurrency.ID.Prefix
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.tokens.model.NetworkAddress
-import com.tangem.domain.tokens.model.NetworkStatus
-import com.tangem.domain.tokens.model.NetworkStatus.Amount
+import com.tangem.domain.models.network.NetworkAddress
+import com.tangem.domain.models.network.NetworkStatus
+import com.tangem.domain.models.network.NetworkStatus.Amount
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource

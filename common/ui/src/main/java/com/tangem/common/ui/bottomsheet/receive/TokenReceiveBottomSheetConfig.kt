@@ -7,7 +7,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.tokens.model.NetworkAddress
+import com.tangem.domain.models.network.NetworkAddress
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
