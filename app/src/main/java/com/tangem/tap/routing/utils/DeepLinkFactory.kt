@@ -93,27 +93,27 @@ internal class DeepLinkFactory @Inject constructor(
     }
 
     private fun handleTangemDeepLinks(deeplinkUri: Uri, coroutineScope: CoroutineScope) {
-        val params = getParams(deeplinkUri)
+        val queryParams = getQueryParams(deeplinkUri)
         when (deeplinkUri.host) {
-            DeepLinkRoute.Onramp.host -> onrampDeepLink.create(coroutineScope, params)
-            DeepLinkRoute.Sell.host -> sellDeepLink.create(coroutineScope, params)
+            DeepLinkRoute.Onramp.host -> onrampDeepLink.create(coroutineScope, queryParams)
+            DeepLinkRoute.Sell.host -> sellDeepLink.create(coroutineScope, queryParams)
             DeepLinkRoute.Buy.host -> buyDeepLink.create(coroutineScope)
             DeepLinkRoute.Referral.host -> referralDeepLink.create()
             DeepLinkRoute.Wallet.host -> walletDeepLink.create()
-            DeepLinkRoute.TokenDetails.host -> tokenDetailsDeepLink.create(coroutineScope, params)
+            DeepLinkRoute.TokenDetails.host -> tokenDetailsDeepLink.create(coroutineScope, queryParams)
             else -> {
                 Timber.i(
                     """
                         No match found for deep link
                         |- Received URI: $deeplinkUri
-                        |- With params: $params
+                        |- With params: $queryParams
                     """.trimIndent(),
                 )
             }
         }
     }
 
-    private fun getParams(uri: Uri): Map<String, String> {
+    private fun getQueryParams(uri: Uri): Map<String, String> {
         val params = mutableMapOf<String, String>()
 
         uri.queryParameterNames.forEach { paramName ->
