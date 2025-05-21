@@ -6,9 +6,9 @@ import arrow.core.raise.either
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.networks.single.SingleNetworkStatusProducer
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
-import com.tangem.domain.tokens.model.NetworkStatus
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.transaction.error.AssociateAssetError
 import com.tangem.domain.walletmanager.WalletManagersFacade
