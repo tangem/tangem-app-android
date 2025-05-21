@@ -24,23 +24,13 @@ dependencies {
     // endregion
 
     // region Project - Domain
-    implementation(projects.domain.core)
-    implementation(projects.domain.demo)
     implementation(projects.domain.legacy)
-    implementation(projects.domain.models)
+    api(projects.domain.models)
     implementation(projects.domain.networks)
-    implementation(projects.domain.tokens.models)
-    implementation(projects.domain.txhistory.models)
-    implementation(projects.domain.wallets)
-    implementation(projects.domain.wallets.models)
     // endregion
 
     // region Project - Libs
     implementation(projects.libs.blockchainSdk)
-    // endregion
-
-    // region Tangem libraries
-    implementation(tangemDeps.blockchain)
     // endregion
 
     // region DI
@@ -60,7 +50,8 @@ dependencies {
     testRuntimeOnly(deps.test.junit5.engine)
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)
-    testImplementation(projects.common.test)
+    testImplementation(tangemDeps.blockchain)
     testImplementation(tangemDeps.card.core)
+    testImplementation(projects.common.test)
     // endregion
 }
