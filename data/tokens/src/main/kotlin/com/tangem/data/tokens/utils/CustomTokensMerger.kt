@@ -2,6 +2,7 @@ package com.tangem.data.tokens.utils
 
 import arrow.atomic.AtomicBoolean
 import com.tangem.data.common.api.safeApiCall
+import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.domain.wallets.models.UserWalletId
@@ -18,6 +19,7 @@ import timber.log.Timber
 internal class CustomTokensMerger(
     private val tangemTechApi: TangemTechApi,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val userTokensSaver: UserTokensSaver,
 ) {
 
     /**
@@ -47,7 +49,7 @@ internal class CustomTokensMerger(
         // previously here was used compare response.tokens, but it's not working correctly
         // because Token.equals() skip some fields
         if (wasMerged.value) {
-            pushTokens(userWalletId, updatedResponse)
+            userTokensSaver.push(userWalletId, updatedResponse)
         }
 
         return updatedResponse
@@ -101,11 +103,5 @@ internal class CustomTokensMerger(
                 token.symbol
             },
         )
-    }
-
-    private suspend fun pushTokens(userWalletId: UserWalletId, response: UserTokensResponse) {
-        safeApiCall({ tangemTechApi.saveUserTokens(userWalletId.stringValue, response).bind() }) {
-            Timber.e(it, "Unable to save user tokens for: $userWalletId")
-        }
     }
 }

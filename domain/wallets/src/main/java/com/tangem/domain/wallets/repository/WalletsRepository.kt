@@ -41,10 +41,8 @@ interface WalletsRepository {
 
     suspend fun disableNFT(userWalletId: UserWalletId)
 
-    @Throws
-    suspend fun isNotificationsEnabled(userWalletId: UserWalletId, force: Boolean): Boolean
+    suspend fun isNotificationsEnabled(userWalletId: UserWalletId): Boolean
 
-    @Throws
     suspend fun setNotificationsEnabled(userWalletId: UserWalletId, isEnabled: Boolean)
 
     @Throws
