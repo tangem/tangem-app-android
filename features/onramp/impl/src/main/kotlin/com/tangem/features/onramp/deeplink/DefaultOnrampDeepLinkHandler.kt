@@ -12,14 +12,14 @@ import timber.log.Timber
 
 internal class DefaultOnrampDeepLinkHandler @AssistedInject constructor(
     @Assisted scope: CoroutineScope,
-    @Assisted params: Map<String, String>,
+    @Assisted queryParams: Map<String, String>,
     appRouter: AppRouter,
     onrampSuccessScreenTrigger: OnrampSuccessScreenTrigger,
 ) : OnrampDeepLinkHandler {
 
     init {
-        val txId = params[TX_ID_KEY]
-        val result = OnrampRedirectResult.getResult(params[RESULT_KEY])
+        val txId = queryParams[TX_ID_KEY]
+        val result = OnrampRedirectResult.getResult(queryParams[RESULT_KEY])
 
         when {
             !txId.isNullOrEmpty() -> {
@@ -39,7 +39,7 @@ internal class DefaultOnrampDeepLinkHandler @AssistedInject constructor(
                 Timber.e(
                     """
                        Invalid parameters for ONRAMP deeplink
-                       |- Params: $params
+                       |- Params: $queryParams
                     """.trimIndent(),
                 )
             }
@@ -48,7 +48,10 @@ internal class DefaultOnrampDeepLinkHandler @AssistedInject constructor(
 
     @AssistedFactory
     interface Factory : OnrampDeepLinkHandler.Factory {
-        override fun create(coroutineScope: CoroutineScope, params: Map<String, String>): DefaultOnrampDeepLinkHandler
+        override fun create(
+            coroutineScope: CoroutineScope,
+            queryParams: Map<String, String>,
+        ): DefaultOnrampDeepLinkHandler
     }
 
     private companion object {
