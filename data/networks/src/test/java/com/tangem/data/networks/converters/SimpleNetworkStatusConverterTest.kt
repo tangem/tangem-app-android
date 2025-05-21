@@ -9,9 +9,9 @@ import com.tangem.domain.models.currency.CryptoCurrency.ID
 import com.tangem.domain.models.currency.CryptoCurrency.ID.Body
 import com.tangem.domain.models.currency.CryptoCurrency.ID.Prefix
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.tokens.model.CryptoCurrencyAmountStatus
 import com.tangem.domain.tokens.model.NetworkAddress
 import com.tangem.domain.tokens.model.NetworkStatus
+import com.tangem.domain.tokens.model.NetworkStatus.Amount
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -96,12 +96,12 @@ internal class SimpleNetworkStatusConverterTest {
                             prefix = Prefix.COIN_PREFIX,
                             body = Body.NetworkId(rawId = "BCH"),
                             suffix = ID.Suffix.RawID(rawId = "bitcoin-cash"),
-                        ) to CryptoCurrencyAmountStatus.Loaded(value = BigDecimal.ZERO),
+                        ) to Amount.Loaded(value = BigDecimal.ZERO),
                         ID(
                             prefix = Prefix.COIN_PREFIX,
                             body = Body.NetworkIdWithDerivationPath(rawId = "ETH", derivationPathHashCode = 12367123),
                             suffix = ID.Suffix.RawID(rawId = "ethereum"),
-                        ) to CryptoCurrencyAmountStatus.Loaded(value = BigDecimal.ONE),
+                        ) to Amount.Loaded(value = BigDecimal.ONE),
                     ),
                     pendingTransactions = emptyMap(),
                     source = StatusSource.CACHE,
