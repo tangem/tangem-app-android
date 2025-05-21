@@ -16,18 +16,18 @@ import timber.log.Timber
 @Suppress("ComplexCondition")
 internal class DefaultSellDeepLinkHandler @AssistedInject constructor(
     @Assisted scope: CoroutineScope,
-    @Assisted params: Map<String, String>,
+    @Assisted queryParams: Map<String, String>,
     appRouter: AppRouter,
     getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     getCryptoCurrencyUseCase: GetCryptoCurrencyUseCase,
 ) : SellDeepLinkHandler {
 
     init {
-        val currencyId = params[CURRENCY_ID_KEY]
-        val transactionId = params[TRANSACTION_ID_KEY]
-        val amount = params[AMOUNT_KEY]
-        val destinationAddress = params[DESTINATION_ADDRESS_KEY]
-        val memo = params[MEMO_KEY]
+        val currencyId = queryParams[CURRENCY_ID_KEY]
+        val transactionId = queryParams[TRANSACTION_ID_KEY]
+        val amount = queryParams[AMOUNT_KEY]
+        val destinationAddress = queryParams[DESTINATION_ADDRESS_KEY]
+        val memo = queryParams[MEMO_KEY]
 
         // It is okay here, we are navigating from outside, and there is no other way to getting UserWallet
         getSelectedWalletSyncUseCase()
@@ -42,7 +42,7 @@ internal class DefaultSellDeepLinkHandler @AssistedInject constructor(
                         Timber.e(
                             """
                                Invalid parameters for SELL deeplink
-                               |- Params: $params
+                               |- Params: $queryParams
                             """.trimIndent(),
                         )
                         return@fold
@@ -71,7 +71,10 @@ internal class DefaultSellDeepLinkHandler @AssistedInject constructor(
 
     @AssistedFactory
     interface Factory : SellDeepLinkHandler.Factory {
-        override fun create(coroutineScope: CoroutineScope, params: Map<String, String>): DefaultSellDeepLinkHandler
+        override fun create(
+            coroutineScope: CoroutineScope,
+            queryParams: Map<String, String>,
+        ): DefaultSellDeepLinkHandler
     }
 
     private companion object {

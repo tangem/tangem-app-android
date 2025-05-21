@@ -15,6 +15,6 @@ abstract class OnrampDeepLink : DeepLink() {
 interface OnrampDeepLinkHandler {
 
     interface Factory {
-        fun create(coroutineScope: CoroutineScope, params: Map<String, String>): OnrampDeepLinkHandler
+        fun create(coroutineScope: CoroutineScope, queryParams: Map<String, String>): OnrampDeepLinkHandler
     }
 }
