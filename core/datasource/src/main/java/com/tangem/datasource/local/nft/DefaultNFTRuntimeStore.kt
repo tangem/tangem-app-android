@@ -115,7 +115,6 @@ internal class DefaultNFTRuntimeStore(
                         -> assets
                         is NFTCollection.Assets.Value -> assets.copy(
                             items = assets.items
-                                .filter { !it.name.isNullOrEmpty() }
                                 .sortedBy { it.name }
                                 .map { asset ->
                                     asset.mergeWithPrice(prices[asset.id] ?: NFTSalePrice.Empty(asset.id))
