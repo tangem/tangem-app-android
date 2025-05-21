@@ -18,4 +18,7 @@ dependencies {
     api(projects.domain.models)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets.models)
+
+    /** Compose */
+    implementation(deps.compose.runtime)
 }
