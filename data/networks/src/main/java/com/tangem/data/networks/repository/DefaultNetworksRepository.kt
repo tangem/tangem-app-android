@@ -5,9 +5,9 @@ import com.tangem.data.networks.store.NetworksStatusesStoreV2
 import com.tangem.data.networks.store.storeStatus
 import com.tangem.data.networks.utils.NetworkStatusFactory
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.CryptoCurrencyAddress
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.networks.repository.NetworksRepository
-import com.tangem.domain.tokens.model.CryptoCurrencyAddress
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
