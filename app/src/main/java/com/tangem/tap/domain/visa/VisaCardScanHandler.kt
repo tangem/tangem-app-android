@@ -18,8 +18,8 @@ import com.tangem.domain.visa.repository.VisaActivationRepository
 import com.tangem.domain.visa.repository.VisaAuthRepository
 import com.tangem.operations.attestation.AttestCardKeyCommand
 import com.tangem.operations.attestation.AttestCardKeyResponse
-import com.tangem.operations.sign.SignHashCommand
-import com.tangem.operations.sign.SignHashResponse
+import com.tangem.operations.attestation.AttestWalletKeyResponse
+import com.tangem.operations.attestation.AttestWalletKeyTask
 import kotlinx.coroutines.suspendCancellableCoroutine
 import timber.log.Timber
 import javax.inject.Inject
@@ -96,11 +96,15 @@ internal class VisaCardScanHandler @Inject constructor(
 
         return when (signChallengeResult) {
             is CompletionResult.Success -> {
+                val signature = signChallengeResult.data.cardSignature ?: run {
+                    Timber.i("Failed to sign challenge with Wallet public key")
+                    return CompletionResult.Failure(VisaCardScanError.FailedToSignChallenge.tangemError)
+                }
+
                 Timber.i("Challenge signed with Wallet public key")
                 handleWalletAuthorizationTokens(
                     cardWalletAddress = walletAddress.value,
-                    signedChallenge = challengeResponse
-                        .toSignedChallenge(signChallengeResult.data.signature.toHexString()),
+                    signedChallenge = challengeResponse.toSignedChallenge(signature.toHexString()),
                 )
             }
             is CompletionResult.Failure -> {
@@ -166,7 +170,6 @@ internal class VisaCardScanHandler @Inject constructor(
             }
         }
 
-        @Suppress("UnusedPrivateMember")
         val authorizationTokensResponse = visaAuthRepository.getAccessTokens(
             signedChallenge = challengeResponse.toSignedChallenge(
                 signedChallenge = attestCardKeyResponse.cardSignature.toHexString(),
@@ -217,10 +220,10 @@ internal class VisaCardScanHandler @Inject constructor(
     private suspend fun SessionContext.signChallengeWithWallet(
         publicKey: ByteArray,
         nonce: String,
-    ): CompletionResult<SignHashResponse> {
-        val signHashCommand = SignHashCommand(
-            hash = nonce.hexToBytes(),
-            walletPublicKey = publicKey,
+    ): CompletionResult<AttestWalletKeyResponse> {
+        val signHashCommand = AttestWalletKeyTask(
+            publicKey = publicKey,
+            challenge = nonce.hexToBytes(),
         )
         return suspendCancellableCoroutine {
             signHashCommand.run(session) { result ->
