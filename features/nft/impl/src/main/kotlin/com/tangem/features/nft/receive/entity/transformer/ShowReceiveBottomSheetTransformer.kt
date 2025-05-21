@@ -3,7 +3,7 @@ package com.tangem.features.nft.receive.entity.transformer
 import com.tangem.common.ui.bottomsheet.receive.TokenReceiveBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.tokens.model.NetworkAddress
+import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.features.nft.receive.entity.NFTReceiveUM
 import com.tangem.utils.transformer.Transformer
 
