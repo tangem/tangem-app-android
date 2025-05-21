@@ -3,8 +3,8 @@ package com.tangem.domain.transaction.usecase
 import arrow.core.left
 import arrow.core.right
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.tokens.model.CryptoCurrencyAddress
-import com.tangem.domain.tokens.model.NetworkAddress
 import com.tangem.domain.transaction.WalletAddressServiceRepository
 import com.tangem.domain.transaction.error.AddressValidation
 import com.tangem.domain.transaction.error.AddressValidationResult
