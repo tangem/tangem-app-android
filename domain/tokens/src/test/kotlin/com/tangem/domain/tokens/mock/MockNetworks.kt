@@ -4,9 +4,9 @@ import arrow.core.NonEmptySet
 import arrow.core.nonEmptySetOf
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.tokens.model.CryptoCurrencyAmountStatus
 import com.tangem.domain.tokens.model.NetworkAddress
 import com.tangem.domain.tokens.model.NetworkStatus
+import com.tangem.domain.tokens.model.NetworkStatus.Amount
 import java.math.BigDecimal
 
 internal object MockNetworks {
@@ -85,9 +85,9 @@ internal object MockNetworks {
         get() = networkStatus1.copy(
             value = NetworkStatus.Verified(
                 amounts = mapOf(
-                    MockTokens.token1.id to CryptoCurrencyAmountStatus.Loaded(BigDecimal.TEN),
-                    MockTokens.token2.id to CryptoCurrencyAmountStatus.Loaded(BigDecimal.TEN),
-                    MockTokens.token3.id to CryptoCurrencyAmountStatus.Loaded(BigDecimal.TEN),
+                    MockTokens.token1.id to Amount.Loaded(BigDecimal.TEN),
+                    MockTokens.token2.id to Amount.Loaded(BigDecimal.TEN),
+                    MockTokens.token3.id to Amount.Loaded(BigDecimal.TEN),
                 ),
                 pendingTransactions = emptyMap(),
                 address = NetworkAddress.Single(
@@ -101,9 +101,9 @@ internal object MockNetworks {
         get() = networkStatus2.copy(
             value = NetworkStatus.Verified(
                 amounts = mapOf(
-                    MockTokens.token4.id to CryptoCurrencyAmountStatus.Loaded(BigDecimal.TEN),
-                    MockTokens.token5.id to CryptoCurrencyAmountStatus.Loaded(BigDecimal.TEN),
-                    MockTokens.token6.id to CryptoCurrencyAmountStatus.Loaded(BigDecimal.TEN),
+                    MockTokens.token4.id to Amount.Loaded(BigDecimal.TEN),
+                    MockTokens.token5.id to Amount.Loaded(BigDecimal.TEN),
+                    MockTokens.token6.id to Amount.Loaded(BigDecimal.TEN),
                 ),
                 pendingTransactions = emptyMap(),
                 address = NetworkAddress.Single(
@@ -117,10 +117,10 @@ internal object MockNetworks {
         get() = networkStatus3.copy(
             value = NetworkStatus.Verified(
                 amounts = mapOf(
-                    MockTokens.token7.id to CryptoCurrencyAmountStatus.Loaded(BigDecimal.TEN),
-                    MockTokens.token8.id to CryptoCurrencyAmountStatus.Loaded(BigDecimal.TEN),
-                    MockTokens.token9.id to CryptoCurrencyAmountStatus.Loaded(BigDecimal.TEN),
-                    MockTokens.token10.id to CryptoCurrencyAmountStatus.Loaded(BigDecimal.TEN),
+                    MockTokens.token7.id to Amount.Loaded(BigDecimal.TEN),
+                    MockTokens.token8.id to Amount.Loaded(BigDecimal.TEN),
+                    MockTokens.token9.id to Amount.Loaded(BigDecimal.TEN),
+                    MockTokens.token10.id to Amount.Loaded(BigDecimal.TEN),
                 ),
                 pendingTransactions = emptyMap(),
                 address = NetworkAddress.Single(
