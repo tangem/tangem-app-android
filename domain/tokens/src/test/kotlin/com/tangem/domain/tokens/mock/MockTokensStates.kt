@@ -1,9 +1,9 @@
 package com.tangem.domain.tokens.mock
 
 import arrow.core.nonEmptyListOf
+import com.tangem.domain.models.network.NetworkAddress
+import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.model.NetworkAddress
-import com.tangem.domain.tokens.model.NetworkStatus
 import com.tangem.domain.tokens.model.Quote
 import java.math.BigDecimal
 
