@@ -2,7 +2,7 @@ package com.tangem.domain.networks.single
 
 import com.tangem.domain.core.flow.FlowProducer
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.tokens.model.NetworkStatus
+import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.wallets.models.UserWalletId
 
 /**
