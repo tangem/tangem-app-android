@@ -13,4 +13,7 @@ internal class DefaultNFTFeatureToggles(
 
     override val isNFTSolanaEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(name = "NFT_SOLANA_ENABLED")
+
+    override val isNFTMediaContentEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(name = "NFT_MEDIA_CONTENT_ENABLED")
 }
