@@ -11,7 +11,6 @@ import com.tangem.data.networks.store.NetworksStatusesStoreV2
 import com.tangem.data.networks.store.setSourceAsOnlyCache
 import com.tangem.data.networks.store.storeStatus
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.tokens.model.CryptoCurrencyAmountStatus
 import com.tangem.domain.tokens.model.NetworkAddress
 import com.tangem.domain.tokens.model.NetworkStatus
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -144,7 +143,7 @@ internal class CommonNetworkStatusFetcherTest {
                     amounts = mapOf(
                         CryptoCurrency.ID.fromValue(
                             value = "token⟨ETH⟩NEVER-MIND⚓NEVER-MIND",
-                        ) to CryptoCurrencyAmountStatus.NotFound,
+                        ) to NetworkStatus.Amount.NotFound,
                     ),
                     pendingTransactions = mapOf(
                         CryptoCurrency.ID.fromValue(value = "token⟨ETH⟩NEVER-MIND⚓NEVER-MIND") to emptySet(),
