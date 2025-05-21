@@ -8,6 +8,7 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.nft.models.*
 import com.tangem.features.nft.collections.entity.*
 import com.tangem.features.nft.impl.R
+import com.tangem.utils.StringsSigns.DASH_SIGN
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toPersistentList
@@ -122,7 +123,7 @@ internal class UpdateDataStateTransformer(
     private fun NFTAsset.transform(collectionName: String): NFTCollectionAssetUM {
         return NFTCollectionAssetUM(
             id = id.toString(),
-            name = name.orEmpty(),
+            name = name ?: DASH_SIGN,
             imageUrl = media?.url,
             price = when (val salePrice = salePrice) {
                 is NFTSalePrice.Empty -> NFTSalePriceUM.Failed
