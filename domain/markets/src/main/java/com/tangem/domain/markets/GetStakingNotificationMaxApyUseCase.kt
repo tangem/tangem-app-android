@@ -24,7 +24,7 @@ class GetStakingNotificationMaxApyUseCase(
             flow2 = marketsTokenRepository.getMaxApy(),
         ) { hideClicked, maxApy ->
             val showStakingNotification = if (!hideClicked && walletFirstUsageDate != 0L) {
-                currentDate - walletFirstUsageDate < TWO_WEEKS_IN_MILLIS
+                currentDate - walletFirstUsageDate > TWO_WEEKS_IN_MILLIS
             } else {
                 false
             }
