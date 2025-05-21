@@ -58,7 +58,7 @@ data class NetworkStatus(val network: Network, val value: Value) {
      */
     data class Verified(
         val address: NetworkAddress,
-        val amounts: Map<CryptoCurrency.ID, CryptoCurrencyAmountStatus>,
+        val amounts: Map<CryptoCurrency.ID, Amount>,
         val pendingTransactions: Map<CryptoCurrency.ID, Set<TxInfo>>,
         override val source: StatusSource,
     ) : Value()
@@ -77,4 +77,18 @@ data class NetworkStatus(val network: Network, val value: Value) {
         val errorMessage: String,
         override val source: StatusSource,
     ) : Value()
+
+    /** Represents possible statuses of cryptocurrency amount */
+    sealed interface Amount {
+
+        /**
+         * Loaded amount
+         *
+         * @property value amount value
+         */
+        data class Loaded(val value: BigDecimal) : Amount
+
+        /** Amount which failed to load */
+        data object NotFound : Amount
+    }
 }
