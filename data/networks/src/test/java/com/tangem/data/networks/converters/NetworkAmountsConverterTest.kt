@@ -4,7 +4,8 @@ import com.google.common.truth.Truth
 import com.tangem.domain.models.currency.CryptoCurrency.ID
 import com.tangem.domain.models.currency.CryptoCurrency.ID.Body
 import com.tangem.domain.models.currency.CryptoCurrency.ID.Prefix
-import com.tangem.domain.tokens.model.CryptoCurrencyAmountStatus
+import com.tangem.domain.tokens.model.NetworkStatus.Amount
+import com.tangem.domain.tokens.model.NetworkStatus.Amount.Loaded
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 
@@ -30,12 +31,12 @@ internal class NetworkAmountsConverterTest {
                 prefix = Prefix.COIN_PREFIX,
                 body = Body.NetworkId(rawId = "BCH"),
                 suffix = ID.Suffix.RawID(rawId = "bitcoin-cash"),
-            ) to CryptoCurrencyAmountStatus.Loaded(value = BigDecimal.ZERO),
+            ) to Loaded(value = BigDecimal.ZERO),
             ID(
                 prefix = Prefix.COIN_PREFIX,
                 body = Body.NetworkIdWithDerivationPath(rawId = "ETH", derivationPathHashCode = 12367123),
                 suffix = ID.Suffix.RawID(rawId = "ethereum"),
-            ) to CryptoCurrencyAmountStatus.Loaded(value = BigDecimal.ONE),
+            ) to Loaded(value = BigDecimal.ONE),
         )
 
         Truth.assertThat(actual).isEqualTo(expected)
@@ -49,17 +50,17 @@ internal class NetworkAmountsConverterTest {
                 prefix = Prefix.COIN_PREFIX,
                 body = Body.NetworkId(rawId = "BCH"),
                 suffix = ID.Suffix.RawID(rawId = "bitcoin-cash"),
-            ) to CryptoCurrencyAmountStatus.Loaded(value = BigDecimal.ZERO),
+            ) to Loaded(value = BigDecimal.ZERO),
             ID(
                 prefix = Prefix.COIN_PREFIX,
                 body = Body.NetworkIdWithDerivationPath(rawId = "ETH", derivationPathHashCode = 12367123),
                 suffix = ID.Suffix.RawID(rawId = "ethereum"),
-            ) to CryptoCurrencyAmountStatus.Loaded(value = BigDecimal.ONE),
+            ) to Loaded(value = BigDecimal.ONE),
             ID(
                 prefix = Prefix.COIN_PREFIX,
                 body = Body.NetworkId(rawId = "BTC"),
                 suffix = ID.Suffix.RawID(rawId = "bitcoin"),
-            ) to CryptoCurrencyAmountStatus.NotFound,
+            ) to Amount.NotFound,
         )
 
         // Act
