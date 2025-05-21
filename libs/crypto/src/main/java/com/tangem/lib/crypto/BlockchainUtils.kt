@@ -148,6 +148,10 @@ object BlockchainUtils {
         return blockchain != Blockchain.Cardano
     }
 
+    fun isStakingRewardUnavailable(blockchainId: String): Boolean {
+        return isSolana(blockchainId) || isBSC(blockchainId) || isTon(blockchainId)
+    }
+
     private fun getNetworkStandardName(blockchain: Blockchain): String {
         return when (blockchain) {
             Blockchain.Ethereum, Blockchain.EthereumTestnet -> "ERC20"
