@@ -8,10 +8,9 @@ class GetIsNotificationsEnabledUseCase(
     private val walletsRepository: WalletsRepository,
 ) {
 
-    suspend operator fun invoke(userWalletId: UserWalletId, force: Boolean): Either<Throwable, Boolean> = Either.catch {
+    suspend operator fun invoke(userWalletId: UserWalletId): Either<Throwable, Boolean> = Either.catch {
         walletsRepository.isNotificationsEnabled(
             userWalletId = userWalletId,
-            force = force,
         )
     }
 }
