@@ -1,4 +1,4 @@
-package com.tangem.data.tokens.utils
+package com.tangem.data.common.tokens
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.fromNetworkId
@@ -9,7 +9,7 @@ import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
  * Helper to apply compatibility changes for [UserTokensResponse] to support old saved tokens
  * in new application with new IDs
  */
-class UserTokensBackwardCompatibility {
+internal class UserTokensBackwardCompatibility {
 
     fun applyCompatibilityAndGetUpdated(userTokensResponse: UserTokensResponse): UserTokensResponse {
         return userTokensResponse.copy(
