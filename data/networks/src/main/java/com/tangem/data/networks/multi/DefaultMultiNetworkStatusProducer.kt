@@ -4,8 +4,8 @@ import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.data.common.currency.getNetwork
 import com.tangem.data.networks.store.NetworksStatusesStoreV2
 import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.networks.multi.MultiNetworkStatusProducer
-import com.tangem.domain.tokens.model.NetworkStatus
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
