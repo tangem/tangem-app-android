@@ -25,6 +25,7 @@ enum class VisaCardScanError(
     FailedToCreateDerivationPath(104002001),
     FailedToFindWallet(104002002),
     FailedToFindDerivedWalletKey(104002003),
+    FailedToSignChallenge(104002004),
 }
 
 enum class VisaActivationError(
