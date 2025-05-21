@@ -3,9 +3,9 @@ package com.tangem.data.networks.utils
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.network.NetworkAddress
+import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.network.TxInfo
-import com.tangem.domain.tokens.model.NetworkAddress
-import com.tangem.domain.tokens.model.NetworkStatus
 import com.tangem.domain.walletmanager.model.Address
 import com.tangem.domain.walletmanager.model.CryptoCurrencyAmount
 import com.tangem.domain.walletmanager.model.CryptoCurrencyTransaction

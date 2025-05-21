@@ -4,8 +4,8 @@ import com.google.common.truth.Truth
 import com.tangem.domain.models.currency.CryptoCurrency.ID
 import com.tangem.domain.models.currency.CryptoCurrency.ID.Body
 import com.tangem.domain.models.currency.CryptoCurrency.ID.Prefix
-import com.tangem.domain.tokens.model.NetworkStatus.Amount
-import com.tangem.domain.tokens.model.NetworkStatus.Amount.Loaded
+import com.tangem.domain.models.network.NetworkStatus.Amount
+import com.tangem.domain.models.network.NetworkStatus.Amount.Loaded
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 
