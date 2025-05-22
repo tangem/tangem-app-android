@@ -28,6 +28,10 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.*
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
+import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
+import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetWithFooter
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.resourceReference
@@ -42,10 +46,43 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
-internal fun WcAppInfoModalBottomSheet(state: WcAppInfoUM, modifier: Modifier = Modifier) {
+internal fun WcAppInfoModalBottomSheet(state: WcAppInfoUM, onBack: () -> Unit, onDismiss: () -> Unit) {
+    TangemModalBottomSheetWithFooter<TangemBottomSheetConfigContent.Empty>(
+        config = TangemBottomSheetConfig(
+            isShown = true,
+            onDismissRequest = onDismiss,
+            content = TangemBottomSheetConfigContent.Empty,
+        ),
+        containerColor = TangemTheme.colors.background.tertiary,
+        onBack = onBack,
+        title = {
+            TangemModalBottomSheetTitle(
+                title = resourceReference(R.string.wc_wallet_connect),
+                endIconRes = R.drawable.ic_close_24,
+                onEndClick = onDismiss,
+            )
+        },
+        content = {
+            WcAppInfoModalBottomSheet(
+                modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16),
+                state = state,
+            )
+        },
+        footer = {
+            WcAppInfoButtons(
+                modifier = Modifier.padding(16.dp),
+                onDismiss = onDismiss,
+                connectButtonConfig = state.connectButtonConfig,
+            )
+        },
+    )
+}
+
+@Composable
+private fun WcAppInfoModalBottomSheet(state: WcAppInfoUM, modifier: Modifier = Modifier) {
     when (state) {
         is WcAppInfoUM.Content -> WcAppInfoModalBottomSheetContent(state, modifier)
-        is WcAppInfoUM.Loading -> WcAppInfoModalBottomSheetLoading(state, modifier)
+        is WcAppInfoUM.Loading -> WcAppInfoModalBottomSheetLoading(modifier)
     }
 }
 
@@ -82,11 +119,6 @@ private fun WcAppInfoModalBottomSheetContent(state: WcAppInfoUM.Content, modifie
                 .padding(top = TangemTheme.dimens.spacing14)
                 .then(blocksModifier),
             state = state,
-        )
-        WcAppInfoButtons(
-            modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing16),
-            onDismiss = state.onDismiss,
-            connectButtonConfig = state.connectButtonConfig,
         )
     }
 }
@@ -410,7 +442,7 @@ private fun WcAppInfoButtons(
 
 // region Loading state
 @Composable
-private fun WcAppInfoModalBottomSheetLoading(state: WcAppInfoUM.Loading, modifier: Modifier = Modifier) {
+private fun WcAppInfoModalBottomSheetLoading(modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
         val blocksModifier = Modifier
             .clip(RoundedCornerShape(TangemTheme.dimens.radius14))
@@ -421,11 +453,6 @@ private fun WcAppInfoModalBottomSheetLoading(state: WcAppInfoUM.Loading, modifie
             modifier = Modifier
                 .padding(top = 14.dp)
                 .then(blocksModifier),
-        )
-        WcAppInfoButtons(
-            modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing16),
-            onDismiss = state.onDismiss,
-            connectButtonConfig = state.connectButtonConfig,
         )
     }
 }
