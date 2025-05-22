@@ -4,6 +4,7 @@ import android.net.Uri
 import androidx.core.text.isDigitsOnly
 import com.tangem.blockchain.blockchains.near.NearWalletManager
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.transaction.WalletAddressServiceRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -21,7 +22,7 @@ class DefaultWalletAddressServiceRepository(
 
     override suspend fun validateAddress(userWalletId: UserWalletId, network: Network, address: String): Boolean =
         withContext(dispatchers.io) {
-            val blockchain = Blockchain.fromId(network.rawId)
+            val blockchain = network.toBlockchain()
 
             if (blockchain.isNear()) {
                 val walletManager = walletManagersFacade.getOrCreateWalletManager(
@@ -50,7 +51,7 @@ class DefaultWalletAddressServiceRepository(
     }
 
     override suspend fun parseSharedAddress(input: String, network: Network): ParsedQrCode {
-        val blockchain = Blockchain.fromId(network.rawId)
+        val blockchain = network.toBlockchain()
         val addressSchemeSplit = when (blockchain) {
             Blockchain.BitcoinCash, Blockchain.Kaspa -> listOf(input)
             else -> input.split(":")
