@@ -76,7 +76,7 @@ internal class DefaultQrScanningEventsRepositoryTest {
 
     @Test
     fun testBip021() {
-        every { network.rawId } returns Blockchain.Bitcoin.id
+        every { network.id.rawId.value } returns Blockchain.Bitcoin.id
         positiveCase(
             "$schema1:$address1",
             QrResult(address = address1),
@@ -126,7 +126,7 @@ internal class DefaultQrScanningEventsRepositoryTest {
 
     @Test
     fun testErc681Coin() {
-        every { network.rawId } returns Blockchain.Ethereum.id
+        every { network.id.rawId.value } returns Blockchain.Ethereum.id
         positiveCase(
             address2,
             QrResult(address = address2),
@@ -181,7 +181,7 @@ internal class DefaultQrScanningEventsRepositoryTest {
 
     @Test
     fun testErc681Token() {
-        every { network.rawId } returns Blockchain.Ethereum.id
+        every { network.id.rawId.value } returns Blockchain.Ethereum.id
         positiveCase(
             address2,
             QrResult(address = address2),

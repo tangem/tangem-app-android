@@ -1,7 +1,7 @@
 package com.tangem.tap.features.wallet.redux.middlewares
 
 import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
-import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.Analytics
@@ -79,7 +79,7 @@ object TradeCryptoMiddleware {
 
         val status = action.cryptoCurrencyStatus
         val currency = status.currency
-        val blockchain = Blockchain.fromId(currency.network.rawId)
+        val blockchain = currency.network.toBlockchain()
         val exchangeManager = store.state.globalState.exchangeManager
         val topUrl = exchangeManager.getUrl(
             action = CurrencyExchangeManager.Action.Buy,
