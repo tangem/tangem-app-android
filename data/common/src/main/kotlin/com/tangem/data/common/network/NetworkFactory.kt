@@ -4,8 +4,8 @@ import androidx.annotation.VisibleForTesting
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.FeePaidCurrency
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
+import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.blockchainsdk.utils.toNetworkId
-import com.tangem.data.common.currency.getBlockchain
 import com.tangem.domain.common.DerivationStyleProvider
 import com.tangem.domain.common.extensions.canHandleToken
 import com.tangem.domain.common.util.cardTypesResolver
@@ -57,7 +57,7 @@ class NetworkFactory @Inject constructor(
      * @param scanResponse   scan response
      */
     fun create(networkId: Network.ID, derivationPath: Network.DerivationPath, scanResponse: ScanResponse): Network? {
-        val blockchain = getBlockchain(networkId)
+        val blockchain = networkId.toBlockchain()
 
         return create(
             blockchain = blockchain,

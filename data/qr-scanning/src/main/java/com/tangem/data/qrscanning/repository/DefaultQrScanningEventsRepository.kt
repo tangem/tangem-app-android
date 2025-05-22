@@ -1,6 +1,6 @@
 package com.tangem.data.qrscanning.repository
 
-import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.core.ui.utils.parseBigDecimalOrNull
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.qrscanning.models.QrResult
@@ -90,7 +90,7 @@ internal class DefaultQrScanningEventsRepository : QrScanningEventsRepository {
     }
 
     private fun stripSchema(raw: String, currency: CryptoCurrency): String {
-        val qrSchemas = Blockchain.fromId(currency.network.rawId).getShareScheme()
+        val qrSchemas = currency.network.toBlockchain().getShareScheme()
 
         // The most specific (i.e. the most lengthy) prefixes always come first
         qrSchemas
