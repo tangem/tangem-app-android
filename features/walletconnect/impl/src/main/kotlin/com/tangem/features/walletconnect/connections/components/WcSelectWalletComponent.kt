@@ -20,35 +20,88 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.common.ui.userwallet.UserWalletItem
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
 import com.tangem.core.decompose.context.AppComponentContext
+import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.block.TangemBlockCardColors
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
-import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.features.walletconnect.connections.model.WcAppInfoModel
+import com.tangem.features.walletconnect.connections.model.WcSelectWalletModel
 import com.tangem.features.walletconnect.impl.R
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 internal class WcSelectWalletComponent(
     appComponentContext: AppComponentContext,
-    private val model: WcAppInfoModel,
-) : AppComponentContext by appComponentContext, ComposableContentComponent {
+    private val params: WcSelectWalletParams,
+) : AppComponentContext by appComponentContext, ComposableBottomSheetComponent {
+
+    private val model: WcSelectWalletModel = getOrCreateModel(params = params)
+
+    override fun dismiss() {
+        params.onDismiss()
+    }
 
     @Composable
-    override fun Content(modifier: Modifier) {
-        val walletsState by model.walletsUiState.collectAsStateWithLifecycle()
-        WcSelectWalletContent(
-            modifier = modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
-            wallets = walletsState.wallets,
-            selectedWalletId = walletsState.selectedUserWallet.walletId,
+    override fun BottomSheet() {
+        val state by model.state.collectAsStateWithLifecycle()
+        WcSelectWalletModalBS(
+            wallets = state.wallets,
+            selectedWalletId = state.selectedUserWalletId,
+            onBack = router::pop,
+            onDismiss = ::dismiss,
         )
     }
+
+    interface ModelCallback {
+        fun onWalletSelected(userWalletId: UserWalletId)
+    }
+
+    data class WcSelectWalletParams(
+        val selectedWalletId: UserWalletId,
+        val callback: ModelCallback,
+        val onDismiss: () -> Unit,
+    )
+}
+
+@Composable
+private fun WcSelectWalletModalBS(
+    wallets: ImmutableList<UserWalletItemUM>,
+    selectedWalletId: UserWalletId,
+    onBack: () -> Unit,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    if (wallets.isEmpty()) return
+
+    TangemModalBottomSheet<TangemBottomSheetConfigContent.Empty>(
+        config = TangemBottomSheetConfig(
+            isShown = true,
+            onDismissRequest = onDismiss,
+            content = TangemBottomSheetConfigContent.Empty,
+        ),
+        onBack = onBack,
+        containerColor = TangemTheme.colors.background.primary,
+        title = {
+            TangemModalBottomSheetTitle(
+                title = stringReference("Choose networks"),
+                startIconRes = R.drawable.ic_back_24,
+                onStartClick = onBack,
+            )
+        },
+        content = {
+            WcSelectWalletContent(
+                modifier = modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+                wallets = wallets,
+                selectedWalletId = selectedWalletId,
+            )
+        },
+    )
 }
 
 @Composable
