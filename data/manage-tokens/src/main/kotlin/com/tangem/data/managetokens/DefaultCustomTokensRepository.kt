@@ -7,7 +7,8 @@ import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.data.common.currency.CryptoCurrencyFactory
 import com.tangem.data.common.currency.UserTokensResponseFactory
 import com.tangem.data.common.currency.UserTokensSaver
-import com.tangem.data.common.currency.getNetwork
+import com.tangem.data.common.currency.getBlockchain
+import com.tangem.data.common.network.NetworkFactory
 import com.tangem.data.managetokens.utils.TokenAddressesConverter
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
@@ -38,6 +39,7 @@ internal class DefaultCustomTokensRepository(
     private val excludedBlockchains: ExcludedBlockchains,
     private val dispatchers: CoroutineDispatcherProvider,
     private val userTokensSaver: UserTokensSaver,
+    private val networkFactory: NetworkFactory,
 ) : CustomTokensRepository {
 
     private val cryptoCurrencyFactory = CryptoCurrencyFactory(excludedBlockchains)
@@ -74,7 +76,7 @@ internal class DefaultCustomTokensRepository(
             }
 
             storedCurrencies.tokens.none { token ->
-                Blockchain.fromId(networkId.rawId.value).toNetworkId() == token.networkId &&
+                getBlockchain(networkId).toNetworkId() == token.networkId &&
                     derivationPath.value == token.derivationPath &&
                     contractAddress.equals(token.contractAddress, ignoreCase = true)
             }
@@ -91,7 +93,11 @@ internal class DefaultCustomTokensRepository(
             "User wallet [$userWalletId] not found while finding token"
         }
         val network = requireNotNull(
-            getNetwork(networkId, derivationPath, userWallet.scanResponse, excludedBlockchains),
+            networkFactory.create(
+                networkId = networkId,
+                derivationPath = derivationPath,
+                scanResponse = userWallet.scanResponse,
+            ),
         ) {
             "Network [$networkId] not found while finding token"
         }
@@ -143,7 +149,11 @@ internal class DefaultCustomTokensRepository(
             "User wallet [$userWalletId] not found while creating coin"
         }
         val network = requireNotNull(
-            getNetwork(networkId, derivationPath, userWallet.scanResponse, excludedBlockchains),
+            networkFactory.create(
+                networkId = networkId,
+                derivationPath = derivationPath,
+                scanResponse = userWallet.scanResponse,
+            ),
         ) {
             "Network [$networkId] not found while creating coin"
         }
@@ -176,7 +186,11 @@ internal class DefaultCustomTokensRepository(
             "User wallet [$userWalletId] not found while creating custom token"
         }
         val network = requireNotNull(
-            getNetwork(networkId, derivationPath, userWallet.scanResponse, excludedBlockchains),
+            networkFactory.create(
+                networkId = networkId,
+                derivationPath = derivationPath,
+                scanResponse = userWallet.scanResponse,
+            ),
         ) {
             "Network [$networkId] not found while creating custom token"
         }
@@ -246,11 +260,10 @@ internal class DefaultCustomTokensRepository(
                 )
 
                 if (canHandleBlockchain) {
-                    getNetwork(
+                    networkFactory.create(
                         blockchain = blockchain,
                         extraDerivationPath = null,
                         scanResponse = scanResponse,
-                        excludedBlockchains = excludedBlockchains,
                     )
                 } else {
                     null
