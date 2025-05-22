@@ -4,6 +4,7 @@ import com.squareup.moshi.Moshi
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.extensions.decodeBase58
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
+import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.common.extensions.toHexString
 import com.tangem.data.walletconnect.model.CAIP2
 import com.tangem.data.walletconnect.model.NamespaceKey
@@ -84,7 +85,7 @@ internal class WcSolanaNetwork(
         }
 
         override fun toCAIP2(network: Network): CAIP2? {
-            val blockchain = Blockchain.fromId(network.rawId)
+            val blockchain = network.toBlockchain()
             val chainId = when (blockchain) {
                 Blockchain.Solana -> MAINNET_CHAIN_ID
                 Blockchain.SolanaTestnet -> TESTNET_CHAIN_ID
