@@ -23,7 +23,7 @@ internal class SetSourceAsCacheTest {
     private val runtimeStore = RuntimeSharedStore<WalletIdWithSimpleStatus>()
     private val persistenceStore = MockStateDataStore<WalletIdWithStatusDM>(default = emptyMap())
 
-    private val store = DefaultNetworksStatusesStoreV2(
+    private val store = DefaultNetworksStatusesStore(
         runtimeStore = runtimeStore,
         persistenceDataStore = persistenceStore,
         dispatchers = TestingCoroutineDispatcherProvider(),
