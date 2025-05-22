@@ -2,6 +2,7 @@ package com.tangem.domain.card
 
 import arrow.core.Either
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.extensions.calculateRipemd160
 import com.tangem.common.extensions.calculateSha256
@@ -26,7 +27,7 @@ class GetExtendedPublicKeyForCurrencyUseCase(
             val userWallet = walletManagersFacade.getOrCreateWalletManager(userWalletId, network)
                 ?: error("Wallet not found")
 
-            val blockchain = Blockchain.fromId(network.rawId)
+            val blockchain = network.toBlockchain()
             val isSecp256k1Blockchain = Blockchain.secp256k1Blockchains(network.isTestnet).contains(blockchain)
 
             val hdKey = if (isSecp256k1Blockchain) {
@@ -76,7 +77,7 @@ class GetExtendedPublicKeyForCurrencyUseCase(
         val userWallet = walletManagersFacade.getOrCreateWalletManager(userWalletId, network)
             ?: error("Wallet not found")
 
-        val blockchain = Blockchain.fromId(network.rawId)
+        val blockchain = network.toBlockchain()
         val isSecp256k1Blockchain = Blockchain.secp256k1Blockchains(network.isTestnet).contains(blockchain)
         val isHdKey = userWallet.wallet.publicKey.derivationType?.hdKey
 

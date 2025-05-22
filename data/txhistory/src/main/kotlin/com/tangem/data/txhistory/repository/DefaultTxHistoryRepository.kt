@@ -3,8 +3,8 @@ package com.tangem.data.txhistory.repository
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.externallinkprovider.TxExploreState
+import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.txhistory.repository.paging.TxHistoryPagingSource
 import com.tangem.datasource.local.txhistory.TxHistoryItemsStore
@@ -77,7 +77,7 @@ class DefaultTxHistoryRepository(
 
     @Deprecated("Replace with getTxExploreUrl [UserWalletId, Network] instead")
     override fun getTxExploreUrl(txHash: String, networkId: Network.ID): String {
-        val blockchain = Blockchain.fromId(networkId.rawId.value)
+        val blockchain = networkId.toBlockchain()
         return when (val txExploreState = blockchain.getExploreTxUrl(txHash)) {
             is TxExploreState.Url -> txExploreState.url
             is TxExploreState.Unsupported -> ""
@@ -85,7 +85,7 @@ class DefaultTxHistoryRepository(
     }
 
     override suspend fun getTxExploreUrl(userWalletId: UserWalletId, network: Network): String {
-        val blockchain = Blockchain.fromId(network.rawId)
+        val blockchain = network.toBlockchain()
         val walletManager = walletManagersFacade.getOrCreateWalletManager(
             userWalletId = userWalletId,
             network = network,
