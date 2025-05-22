@@ -4,7 +4,7 @@ import arrow.core.raise.catch
 import arrow.core.raise.ensure
 import com.tangem.data.common.currency.CardCryptoCurrencyFactory
 import com.tangem.data.networks.fetcher.CommonNetworkStatusFetcher
-import com.tangem.data.networks.store.NetworksStatusesStoreV2
+import com.tangem.data.networks.store.NetworksStatusesStore
 import com.tangem.data.networks.store.setSourceAsCache
 import com.tangem.data.networks.store.setSourceAsOnlyCache
 import com.tangem.datasource.local.userwallet.UserWalletsStore
@@ -30,7 +30,7 @@ import javax.inject.Inject
  */
 @Suppress("LongParameterList")
 internal class DefaultMultiNetworkStatusFetcher @Inject constructor(
-    private val networksStatusesStore: NetworksStatusesStoreV2,
+    private val networksStatusesStore: NetworksStatusesStore,
     private val userWalletsStore: UserWalletsStore,
     private val cardCryptoCurrencyFactory: CardCryptoCurrencyFactory,
     private val commonNetworkStatusFetcher: CommonNetworkStatusFetcher,
