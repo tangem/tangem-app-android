@@ -3,7 +3,7 @@ package com.tangem.data.networks.single
 import arrow.core.Either
 import com.tangem.data.common.currency.CardCryptoCurrencyFactory
 import com.tangem.data.networks.fetcher.CommonNetworkStatusFetcher
-import com.tangem.data.networks.store.NetworksStatusesStoreV2
+import com.tangem.data.networks.store.NetworksStatusesStore
 import com.tangem.data.networks.store.setSourceAsCache
 import com.tangem.domain.core.utils.catchOn
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
@@ -22,7 +22,7 @@ import javax.inject.Inject
  */
 internal class DefaultSingleNetworkStatusFetcher @Inject constructor(
     private val commonNetworkStatusFetcher: CommonNetworkStatusFetcher,
-    private val networksStatusesStore: NetworksStatusesStoreV2,
+    private val networksStatusesStore: NetworksStatusesStore,
     private val cardCryptoCurrencyFactory: CardCryptoCurrencyFactory,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : SingleNetworkStatusFetcher {
