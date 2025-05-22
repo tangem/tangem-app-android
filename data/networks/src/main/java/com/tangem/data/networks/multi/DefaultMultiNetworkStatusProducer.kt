@@ -2,7 +2,7 @@ package com.tangem.data.networks.multi
 
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.data.common.currency.getNetwork
-import com.tangem.data.networks.store.NetworksStatusesStoreV2
+import com.tangem.data.networks.store.NetworksStatusesStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.networks.multi.MultiNetworkStatusProducer
@@ -24,7 +24,7 @@ import timber.log.Timber
  */
 internal class DefaultMultiNetworkStatusProducer @AssistedInject constructor(
     @Assisted val params: MultiNetworkStatusProducer.Params,
-    private val networksStatusesStore: NetworksStatusesStoreV2,
+    private val networksStatusesStore: NetworksStatusesStore,
     private val userWalletsStore: UserWalletsStore,
     private val excludedBlockchains: ExcludedBlockchains,
     private val dispatchers: CoroutineDispatcherProvider,
