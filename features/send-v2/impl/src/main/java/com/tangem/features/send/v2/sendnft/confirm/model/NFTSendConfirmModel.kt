@@ -24,6 +24,7 @@ import com.tangem.domain.settings.NeverShowTapHelpUseCase
 import com.tangem.domain.transaction.usecase.CreateNFTTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
+import com.tangem.features.nft.entity.NFTSendSuccessTrigger
 import com.tangem.features.send.v2.common.CommonSendRoute
 import com.tangem.features.send.v2.common.SendBalanceUpdater
 import com.tangem.features.send.v2.common.SendConfirmAlertFactory
@@ -78,6 +79,7 @@ internal class NFTSendConfirmModel @Inject constructor(
     private val shareManager: ShareManager,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val nftSendAnalyticHelper: NFTSendAnalyticHelper,
+    private val nftSendSuccessTrigger: NFTSendSuccessTrigger,
     sendBalanceUpdaterFactory: SendBalanceUpdater.Factory,
 ) : Model(), NFTSendConfirmClickIntents {
 
@@ -404,15 +406,7 @@ internal class NFTSendConfirmModel @Inject constructor(
                             isEnabled = confirmUM.isPrimaryButtonEnabled,
                             isHapticClick = isReadyToSend,
                             onClick = {
-                                when (confirmUM) {
-                                    is ConfirmUM.Success -> appRouter.pop()
-                                    is ConfirmUM.Content -> if (confirmUM.isSending) {
-                                        return@PrimaryButtonUM
-                                    } else {
-                                        onSendClick()
-                                    }
-                                    else -> return@PrimaryButtonUM
-                                }
+                                onNextClick(confirmUM)
                             },
                         ),
                         prevButton = null,
@@ -428,6 +422,23 @@ internal class NFTSendConfirmModel @Inject constructor(
                 ),
             )
         }.launchIn(modelScope)
+    }
+
+    private fun onNextClick(confirmUM: ConfirmUM) {
+        when (confirmUM) {
+            is ConfirmUM.Success -> {
+                modelScope.launch {
+                    nftSendSuccessTrigger.triggerSuccessNFTSend()
+                }
+                appRouter.pop()
+            }
+            is ConfirmUM.Content -> if (confirmUM.isSending) {
+                return
+            } else {
+                onSendClick()
+            }
+            else -> return
+        }
     }
 
     private companion object {
