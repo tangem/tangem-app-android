@@ -5,6 +5,7 @@ import com.tangem.blockchain.blockchains.ethereum.EthereumUtils.toKeccak
 import com.tangem.blockchain.common.HEX_PREFIX
 import com.tangem.blockchain.common.UnmarshalHelper
 import com.tangem.blockchain.common.WalletManager
+import com.tangem.blockchain.extensions.formatHex
 import com.tangem.blockchain.extensions.isAscii
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toDecompressedPublicKey
@@ -86,7 +87,7 @@ object LegacySdkHelper {
         signature = signedHash,
         hash = hashToSign,
         publicKey = walletManager.wallet.publicKey.blockchainKey.toDecompressedPublicKey(),
-    ).asRSVLegacyEVM().toHexString().lowercase() // use lowercase because some dapps cant handle UPPERCASE
+    ).asRSVLegacyEVM().toHexString().formatHex().lowercase() // use lowercase because some dapps cant handle UPPERCASE
 
     fun createMessageData(message: String): ByteArray {
         val messageData = try {
