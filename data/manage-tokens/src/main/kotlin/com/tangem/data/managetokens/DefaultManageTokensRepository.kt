@@ -9,6 +9,7 @@ import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.common.currency.CardCryptoCurrencyFactory
 import com.tangem.data.common.currency.UserTokensResponseFactory
 import com.tangem.data.common.currency.getBlockchain
+import com.tangem.data.common.network.NetworkFactory
 import com.tangem.data.common.utils.retryOnError
 import com.tangem.data.managetokens.utils.ManageTokensUpdateFetcher
 import com.tangem.data.managetokens.utils.ManagedCryptoCurrencyFactory
@@ -49,9 +50,10 @@ internal class DefaultManageTokensRepository(
     private val excludedBlockchains: ExcludedBlockchains,
     private val cardCryptoCurrencyFactory: CardCryptoCurrencyFactory,
     private val dispatchers: CoroutineDispatcherProvider,
+    networkFactory: NetworkFactory,
 ) : ManageTokensRepository {
 
-    private val managedCryptoCurrencyFactory = ManagedCryptoCurrencyFactory(excludedBlockchains)
+    private val managedCryptoCurrencyFactory = ManagedCryptoCurrencyFactory(networkFactory, excludedBlockchains)
     private val userTokensResponseFactory = UserTokensResponseFactory()
 
     // region getTokenListBatchFlow
