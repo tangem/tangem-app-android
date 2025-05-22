@@ -2,6 +2,7 @@ package com.tangem.data.nft.di
 
 import android.content.Context
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
+import com.tangem.data.common.network.NetworkFactory
 import com.tangem.data.nft.DefaultNFTRepository
 import com.tangem.datasource.local.nft.NFTPersistenceStoreFactory
 import com.tangem.datasource.local.nft.NFTRuntimeStoreFactory
@@ -32,6 +33,7 @@ internal object NFTDataModule {
         excludedBlockchains: ExcludedBlockchains,
         userWalletsStore: UserWalletsStore,
         nftFeatureToggles: NFTFeatureToggles,
+        networkFactory: NetworkFactory,
     ): NFTRepository = DefaultNFTRepository(
         nftPersistenceStoreFactory = nftPersistenceStoreFactory,
         nftRuntimeStoreFactory = nftRuntimeStoreFactory,
@@ -40,6 +42,7 @@ internal object NFTDataModule {
         excludedBlockchains = excludedBlockchains,
         userWalletsStore = userWalletsStore,
         nftFeatureToggles = nftFeatureToggles,
+        networkFactory = networkFactory,
         resources = context.resources,
     )
 }
