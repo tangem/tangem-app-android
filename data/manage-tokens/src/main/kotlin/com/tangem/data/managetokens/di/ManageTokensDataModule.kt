@@ -3,6 +3,7 @@ package com.tangem.data.managetokens.di
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.data.common.currency.CardCryptoCurrencyFactory
 import com.tangem.data.common.currency.UserTokensSaver
+import com.tangem.data.common.network.NetworkFactory
 import com.tangem.data.managetokens.DefaultCustomTokensRepository
 import com.tangem.data.managetokens.DefaultManageTokensRepository
 import com.tangem.data.managetokens.utils.ManageTokensUpdateFetcher
@@ -35,6 +36,7 @@ internal object ManageTokensDataModule {
         dispatchers: CoroutineDispatcherProvider,
         excludedBlockchains: ExcludedBlockchains,
         cardCryptoCurrencyFactory: CardCryptoCurrencyFactory,
+        networkFactory: NetworkFactory,
     ): ManageTokensRepository {
         return DefaultManageTokensRepository(
             tangemTechApi = tangemTechApi,
@@ -44,6 +46,7 @@ internal object ManageTokensDataModule {
             testnetTokensStorage = testnetTokensStorage,
             excludedBlockchains = excludedBlockchains,
             cardCryptoCurrencyFactory = cardCryptoCurrencyFactory,
+            networkFactory = networkFactory,
             dispatchers = dispatchers,
         )
     }
@@ -58,6 +61,7 @@ internal object ManageTokensDataModule {
         dispatchers: CoroutineDispatcherProvider,
         excludedBlockchains: ExcludedBlockchains,
         userTokensSaver: UserTokensSaver,
+        networkFactory: NetworkFactory,
     ): CustomTokensRepository {
         return DefaultCustomTokensRepository(
             tangemTechApi = tangemTechApi,
@@ -67,6 +71,7 @@ internal object ManageTokensDataModule {
             excludedBlockchains = excludedBlockchains,
             dispatchers = dispatchers,
             userTokensSaver = userTokensSaver,
+            networkFactory = networkFactory,
         )
     }
 }

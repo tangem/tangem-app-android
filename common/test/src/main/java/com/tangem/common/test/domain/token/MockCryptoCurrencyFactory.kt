@@ -7,8 +7,7 @@ import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.common.test.domain.card.MockScanResponseFactory
 import com.tangem.data.common.currency.CryptoCurrencyFactory
-import com.tangem.data.common.currency.getNetworkDerivationPath
-import com.tangem.data.common.currency.getNetworkStandardType
+import com.tangem.domain.common.DerivationStyleProvider
 import com.tangem.domain.common.configs.GenericCardConfig
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -47,7 +46,7 @@ class MockCryptoCurrencyFactory(private val scanResponse: ScanResponse = default
     }
 
     fun createCoin(blockchain: Blockchain): CryptoCurrency {
-        val derivationPath = getNetworkDerivationPath(
+        val derivationPath = createDerivationPath(
             blockchain = blockchain,
             extraDerivationPath = null,
             cardDerivationStyleProvider = scanResponse.derivationStyleProvider,
@@ -117,6 +116,47 @@ class MockCryptoCurrencyFactory(private val scanResponse: ScanResponse = default
             extraDerivationPath = null,
             scanResponse = scanResponse,
         )!!
+    }
+
+    private fun createDerivationPath(
+        blockchain: Blockchain,
+        extraDerivationPath: String?,
+        cardDerivationStyleProvider: DerivationStyleProvider?,
+    ): Network.DerivationPath {
+        if (cardDerivationStyleProvider == null) return Network.DerivationPath.None
+
+        val defaultDerivationPath = getDefaultDerivationPath(blockchain, cardDerivationStyleProvider)
+
+        return if (extraDerivationPath.isNullOrBlank()) {
+            if (defaultDerivationPath.isNullOrBlank()) {
+                Network.DerivationPath.None
+            } else {
+                Network.DerivationPath.Card(defaultDerivationPath)
+            }
+        } else {
+            if (extraDerivationPath == defaultDerivationPath) {
+                Network.DerivationPath.Card(defaultDerivationPath)
+            } else {
+                Network.DerivationPath.Custom(extraDerivationPath)
+            }
+        }
+    }
+
+    private fun getDefaultDerivationPath(
+        blockchain: Blockchain,
+        derivationStyleProvider: DerivationStyleProvider,
+    ): String? {
+        return blockchain.derivationPath(derivationStyleProvider.getDerivationStyle())?.rawPath
+    }
+
+    private fun getNetworkStandardType(blockchain: Blockchain): Network.StandardType {
+        return when (blockchain) {
+            Blockchain.Ethereum, Blockchain.EthereumTestnet -> Network.StandardType.ERC20
+            Blockchain.BSC, Blockchain.BSCTestnet -> Network.StandardType.BEP20
+            Blockchain.Binance, Blockchain.BinanceTestnet -> Network.StandardType.BEP2
+            Blockchain.Tron, Blockchain.TronTestnet -> Network.StandardType.TRC20
+            else -> Network.StandardType.Unspecified(blockchain.name)
+        }
     }
 
     private companion object {
