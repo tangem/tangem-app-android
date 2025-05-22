@@ -161,7 +161,11 @@ internal class SetOnrampSuccessContentConverter(
                 resourceReference(R.string.express_status_bought, wrappedList(cryptoCurrency.name))
             }
         },
-        state = getStatusState(OnrampStatus.Status.Paid),
+        state = when {
+            this == OnrampStatus.Status.RefundInProgress ||
+                this == OnrampStatus.Status.Refunded -> ExpressStatusItemState.Error
+            else -> getStatusState(OnrampStatus.Status.Paid)
+        },
     )
 
     private fun OnrampStatus.Status.getSendingItem() = ExpressStatusItemUM(
@@ -185,7 +189,11 @@ internal class SetOnrampSuccessContentConverter(
                 resourceReference(R.string.express_exchange_status_sent, wrappedList(cryptoCurrency.name))
             }
         },
-        state = getStatusState(OnrampStatus.Status.Sending),
+        state = when {
+            this == OnrampStatus.Status.RefundInProgress -> ExpressStatusItemState.Active
+            this == OnrampStatus.Status.Refunded -> ExpressStatusItemState.Done
+            else -> getStatusState(OnrampStatus.Status.Sending)
+        },
     )
 
     private fun getStatusLink(externalTxId: String?): ExpressLinkUM {
