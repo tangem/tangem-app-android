@@ -2,12 +2,12 @@ package com.tangem.data.managetokens
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
+import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.data.common.currency.CryptoCurrencyFactory
 import com.tangem.data.common.currency.UserTokensResponseFactory
 import com.tangem.data.common.currency.UserTokensSaver
-import com.tangem.data.common.currency.getBlockchain
 import com.tangem.data.common.network.NetworkFactory
 import com.tangem.data.managetokens.utils.TokenAddressesConverter
 import com.tangem.datasource.api.common.response.getOrThrow
@@ -48,7 +48,7 @@ internal class DefaultCustomTokensRepository(
 
     override suspend fun validateContractAddress(contractAddress: String, networkId: Network.ID): Boolean =
         withContext(dispatchers.io) {
-            when (val blockchain = Blockchain.fromId(networkId.rawId.value)) {
+            when (val blockchain = networkId.toBlockchain()) {
                 Blockchain.Unknown,
                 Blockchain.Binance,
                 Blockchain.BinanceTestnet,
@@ -76,7 +76,7 @@ internal class DefaultCustomTokensRepository(
             }
 
             storedCurrencies.tokens.none { token ->
-                getBlockchain(networkId).toNetworkId() == token.networkId &&
+                networkId.toBlockchain().toNetworkId() == token.networkId &&
                     derivationPath.value == token.derivationPath &&
                     contractAddress.equals(token.contractAddress, ignoreCase = true)
             }
