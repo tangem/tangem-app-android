@@ -3,7 +3,7 @@ package com.tangem.data.managetokens.utils
 import com.tangem.blockchain.blockchains.cardano.CardanoTokenAddressConverter
 import com.tangem.blockchain.blockchains.hedera.HederaTokenAddressConverter
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.data.common.currency.getBlockchain
+import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.domain.models.network.Network
 
 internal class TokenAddressesConverter {
@@ -11,7 +11,7 @@ internal class TokenAddressesConverter {
     private val cardanoTokenAddressConverter = CardanoTokenAddressConverter()
 
     fun convertTokenAddress(networkId: Network.ID, contractAddress: String, symbol: String?): String {
-        val convertedAddress = when (getBlockchain(networkId)) {
+        val convertedAddress = when (networkId.toBlockchain()) {
             Blockchain.Hedera,
             Blockchain.HederaTestnet,
             -> hederaTokenAddressConverter.convertToTokenId(contractAddress)
