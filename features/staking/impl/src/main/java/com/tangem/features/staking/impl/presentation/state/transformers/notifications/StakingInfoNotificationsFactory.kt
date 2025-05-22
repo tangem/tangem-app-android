@@ -55,39 +55,14 @@ internal class StakingInfoNotificationsFactory(
             is StakingActionCommonType.Pending -> {
                 addCardanoRestakeMinimumAmountNotification(feeValue)
                 addPendingInfoNotifications(prevState)
+                addTonHaveToUnstakeAllNotification(prevState)
             }
         }
     }
 
     private fun MutableList<NotificationUM>.addExitInfoNotifications(prevState: StakingUiState) {
-        val cooldownPeriodDays = yield.metadata.cooldownPeriod?.days
-
-        val cryptoCurrencyNetworkIdValue = cryptoCurrencyStatusProvider().currency.network.id.value
-        if (cooldownPeriodDays != null) {
-            add(
-                StakingNotification.Info.Unstake(
-                    cooldownPeriodDays = cooldownPeriodDays,
-                    subtitleRes = if (isCosmos(cryptoCurrencyNetworkIdValue)) {
-                        R.string.staking_notification_unstake_cosmos_text
-                    } else {
-                        R.string.staking_notification_unstake_text
-                    },
-                ),
-            )
-        }
-
-        val initialInfoState = prevState.initialInfoState as? StakingStates.InitialInfoState.Data
-        val stakingBalances = (initialInfoState?.yieldBalance as? InnerYieldBalanceState.Data)?.balances
-        val activeStakesCount = stakingBalances.orEmpty().filter { it.type == BalanceType.STAKED }.size
-
-        if (isTon(cryptoCurrencyNetworkIdValue) && activeStakesCount > 1) {
-            add(
-                StakingNotification.Info.Ordinary(
-                    title = resourceReference(R.string.staking_notification_ton_have_to_unstake_all_title),
-                    text = resourceReference(R.string.staking_notification_ton_have_to_unstake_all_text),
-                ),
-            )
-        }
+        addUnstakeInfoNotification()
+        addTonHaveToUnstakeAllNotification(prevState)
     }
 
     private fun MutableList<NotificationUM>.addEnterInfoNotifications(
@@ -245,6 +220,53 @@ internal class StakingInfoNotificationsFactory(
 
         if (exitRequirements.required && isNotEnoughLeft) {
             add(StakingNotification.Warning.LowStakedBalance)
+        }
+    }
+
+    private fun MutableList<NotificationUM>.addUnstakeInfoNotification() {
+        val cooldownPeriodDays = yield.metadata.cooldownPeriod?.days
+
+        val cryptoCurrencyNetworkIdValue = cryptoCurrencyStatusProvider().currency.network.id.value
+        if (cooldownPeriodDays != null) {
+            add(
+                StakingNotification.Info.Unstake(
+                    cooldownPeriodDays = cooldownPeriodDays,
+                    subtitleRes = if (isCosmos(cryptoCurrencyNetworkIdValue)) {
+                        R.string.staking_notification_unstake_cosmos_text
+                    } else {
+                        R.string.staking_notification_unstake_text
+                    },
+                ),
+            )
+        }
+    }
+
+    private fun MutableList<NotificationUM>.addTonHaveToUnstakeAllNotification(prevState: StakingUiState) {
+        val cryptoCurrencyNetworkIdValue = cryptoCurrencyStatusProvider().currency.network.id.value
+
+        if (isTon(cryptoCurrencyNetworkIdValue)) {
+            val initialInfoState = prevState.initialInfoState as? StakingStates.InitialInfoState.Data
+            val stakingBalances = (initialInfoState?.yieldBalance as? InnerYieldBalanceState.Data)?.balances
+
+            val validatorAddress = prevState.balanceState?.validator?.address ?: return
+
+            val stakesCountWithCertainValidator = stakingBalances.orEmpty()
+                .filter {
+                    it.type == BalanceType.STAKED ||
+                        it.type == BalanceType.PREPARING ||
+                        it.type == BalanceType.UNSTAKED
+                }
+                .filter { it.validator?.address == validatorAddress }
+                .size
+
+            if (stakesCountWithCertainValidator > 1) {
+                add(
+                    StakingNotification.Info.Ordinary(
+                        title = resourceReference(R.string.staking_notification_ton_have_to_unstake_all_title),
+                        text = resourceReference(R.string.staking_notification_ton_have_to_unstake_all_text),
+                    ),
+                )
+            }
         }
     }
 
