@@ -8,7 +8,7 @@ import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.common.currency.CryptoCurrencyFactory
-import com.tangem.data.common.currency.getNetwork
+import com.tangem.data.common.network.NetworkFactory
 import com.tangem.data.common.utils.retryOnError
 import com.tangem.data.markets.analytics.MarketsDataAnalyticsEvent
 import com.tangem.data.markets.converters.*
@@ -40,10 +40,11 @@ internal class DefaultMarketsTokenRepository(
     private val userWalletsStore: UserWalletsStore,
     private val dispatcherProvider: CoroutineDispatcherProvider,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val excludedBlockchains: ExcludedBlockchains,
     private val cacheRegistry: CacheRegistry,
     private val tokenExchangesStore: RuntimeStateStore<List<TokenMarketExchangesResponse.Exchange>>,
     private val maxApyStore: RuntimeStateStore<BigDecimal?>,
+    private val networkFactory: NetworkFactory,
+    excludedBlockchains: ExcludedBlockchains,
 ) : MarketsTokenRepository {
 
     private val tokenMarketInfoConverter: TokenMarketInfoConverter = TokenMarketInfoConverter(excludedBlockchains)
@@ -252,11 +253,10 @@ internal class DefaultMarketsTokenRepository(
                 scanResponse = userWallet.scanResponse,
             )
         } else {
-            val currencyNetwork = getNetwork(
+            val currencyNetwork = networkFactory.create(
                 blockchain = blockchain,
                 extraDerivationPath = null,
                 scanResponse = userWallet.scanResponse,
-                excludedBlockchains = excludedBlockchains,
             ) ?: return null
 
             cryptoCurrencyFactory.createToken(
