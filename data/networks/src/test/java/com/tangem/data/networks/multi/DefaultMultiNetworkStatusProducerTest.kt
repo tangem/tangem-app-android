@@ -1,12 +1,12 @@
 package com.tangem.data.networks.multi
 
 import com.google.common.truth.Truth
-import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.common.test.domain.card.MockScanResponseFactory
 import com.tangem.common.test.domain.network.MockNetworkStatusFactory
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
 import com.tangem.common.test.utils.getEmittedValues
+import com.tangem.data.common.network.NetworkFactory
 import com.tangem.data.networks.models.SimpleNetworkStatus
 import com.tangem.data.networks.store.NetworksStatusesStore
 import com.tangem.data.networks.toSimple
@@ -15,247 +15,409 @@ import com.tangem.domain.common.configs.GenericCardConfig
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.networks.multi.MultiNetworkStatusProducer
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.verify
+import io.mockk.*
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.test.runTest
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 
 /**
 [REDACTED_AUTHOR]
  */
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class DefaultMultiNetworkStatusProducerTest {
 
     private val params = MultiNetworkStatusProducer.Params(userWalletId = userWallet.walletId)
 
     private val networksStatusesStore = mockk<NetworksStatusesStore>()
     private val userWalletsStore = mockk<UserWalletsStore>()
-    private val excludedBlockchains = mockk<ExcludedBlockchains>()
+    private val networkFactory = mockk<NetworkFactory>()
     private val dispatchers = TestingCoroutineDispatcherProvider()
 
     private val producer = DefaultMultiNetworkStatusProducer(
         params = params,
         networksStatusesStore = networksStatusesStore,
         userWalletsStore = userWalletsStore,
-        excludedBlockchains = excludedBlockchains,
+        networkFactory = networkFactory,
         dispatchers = dispatchers,
     )
 
-    @Before
-    fun setup() {
-        every { excludedBlockchains.contains(any()) } returns false
+    @BeforeEach
+    fun resetMocks() {
+        clearMocks(networksStatusesStore, userWalletsStore, networkFactory)
     }
 
     @Test
-    fun `test that flow is mapped for user wallet id from params`() = runTest {
+    fun `flow is mapped for user wallet id from params`() = runTest {
+        // Assert
         val statuses = setOf(
             MockNetworkStatusFactory.createVerified(ethNetwork),
             MockNetworkStatusFactory.createVerified(cardanoNetwork),
         )
 
-        val networksStatusesFlow = flowOf(statuses.map(NetworkStatus::toSimple).toSet())
+        val simpleStatuses = statuses.map(NetworkStatus::toSimple).toSet()
+
+        val networksStatusesFlow = flowOf(simpleStatuses)
 
         every { networksStatusesStore.get(params.userWalletId) } returns networksStatusesFlow
         every { userWalletsStore.getSyncOrNull(params.userWalletId) } returns userWallet
 
-        val actual = producer.produce()
+        every {
+            networkFactory.create(
+                networkId = simpleStatuses.first().id,
+                derivationPath = simpleStatuses.first().id.derivationPath,
+                scanResponse = userWallet.scanResponse,
+            )
+        } returns statuses.first().network
 
-        // check after producer.produce()
-        verify { networksStatusesStore.get(params.userWalletId) }
+        every {
+            networkFactory.create(
+                networkId = simpleStatuses.last().id,
+                derivationPath = simpleStatuses.last().id.derivationPath,
+                scanResponse = userWallet.scanResponse,
+            )
+        } returns statuses.last().network
 
-        val values = getEmittedValues(flow = actual)
+        // Act
+        val actual = producer.produce().let(::getEmittedValues)
 
-        // Check after flow was observed by subscriber (getEmittedValues).
-        // Otherwise, userWalletsStore.getSyncOrNull is not called.
-        verify { userWalletsStore.getSyncOrNull(params.userWalletId) }
+        // Assert
+        val expected = statuses
 
-        Truth.assertThat(values.size).isEqualTo(1)
-        Truth.assertThat(values.first()).isEqualTo(statuses)
+        Truth.assertThat(actual.size).isEqualTo(1)
+        Truth.assertThat(actual.first()).isEqualTo(expected)
+
+        verifyOrder {
+            networksStatusesStore.get(params.userWalletId)
+            userWalletsStore.getSyncOrNull(params.userWalletId)
+            networkFactory.create(
+                networkId = simpleStatuses.first().id,
+                derivationPath = simpleStatuses.first().id.derivationPath,
+                scanResponse = userWallet.scanResponse,
+            )
+            networkFactory.create(
+                networkId = simpleStatuses.last().id,
+                derivationPath = simpleStatuses.last().id.derivationPath,
+                scanResponse = userWallet.scanResponse,
+            )
+        }
     }
 
     @Test
-    fun `test that flow is updated if statuses are updated`() = runTest {
+    fun `flow will updated if statuses are updated`() = runTest {
+        // Arrange
         val networksStatusesFlow = MutableSharedFlow<Set<SimpleNetworkStatus>>(replay = 2)
 
-        every { networksStatusesStore.get(params.userWalletId) } returns networksStatusesFlow
-        every { userWalletsStore.getSyncOrNull(params.userWalletId) } returns userWallet
-
-        val actual = producer.produce()
-
-        // check after producer.produce()
-        verify { networksStatusesStore.get(params.userWalletId) }
-
-        // first emit
         val statuses = setOf(
             MockNetworkStatusFactory.createUnreachable(ethNetwork),
             MockNetworkStatusFactory.createUnreachable(cardanoNetwork),
         )
 
-        networksStatusesFlow.emit(statuses.map(NetworkStatus::toSimple).toSet())
+        val simpleStatuses = statuses.map(NetworkStatus::toSimple).toSet()
 
-        val values1 = getEmittedValues(flow = actual)
-
-        // Check after flow was observed by subscriber (getEmittedValues).
-        // Otherwise, userWalletsStore.getSyncOrNull is not called.
-        verify { userWalletsStore.getSyncOrNull(params.userWalletId) }
-
-        Truth.assertThat(values1.size).isEqualTo(1)
-        Truth.assertThat(values1.first()).isEqualTo(statuses)
-
-        // second emit
         val updatedStatuses = setOf(
             MockNetworkStatusFactory.createVerified(ethNetwork),
             MockNetworkStatusFactory.createVerified(cardanoNetwork),
         )
 
-        networksStatusesFlow.emit(updatedStatuses.map(NetworkStatus::toSimple).toSet())
+        val updatedSimpleStatuses = updatedStatuses.map(NetworkStatus::toSimple).toSet()
 
-        val values2 = getEmittedValues(flow = actual)
+        // region every
+        every { networksStatusesStore.get(params.userWalletId) } returns networksStatusesFlow
+        every { userWalletsStore.getSyncOrNull(params.userWalletId) } returns userWallet
+        every {
+            networkFactory.create(
+                networkId = simpleStatuses.first().id,
+                derivationPath = simpleStatuses.first().id.derivationPath,
+                scanResponse = userWallet.scanResponse,
+            )
+        } returns statuses.first().network
 
-        // Check after flow was observed by subscriber (getEmittedValues).
-        // Otherwise, userWalletsStore.getSyncOrNull is not called.
-        verify { userWalletsStore.getSyncOrNull(params.userWalletId) }
+        every {
+            networkFactory.create(
+                networkId = simpleStatuses.last().id,
+                derivationPath = simpleStatuses.last().id.derivationPath,
+                scanResponse = userWallet.scanResponse,
+            )
+        } returns statuses.last().network
 
-        val expected = listOf(statuses, updatedStatuses)
-        Truth.assertThat(values2.size).isEqualTo(2)
-        Truth.assertThat(values2).isEqualTo(expected)
+        every {
+            networkFactory.create(
+                networkId = updatedSimpleStatuses.first().id,
+                derivationPath = updatedSimpleStatuses.first().id.derivationPath,
+                scanResponse = userWallet.scanResponse,
+            )
+        } returns updatedStatuses.first().network
+
+        every {
+            networkFactory.create(
+                networkId = updatedSimpleStatuses.last().id,
+                derivationPath = updatedSimpleStatuses.last().id.derivationPath,
+                scanResponse = userWallet.scanResponse,
+            )
+        } returns updatedStatuses.last().network
+        // endregion
+
+        val producerFlow = producer.produce()
+
+        // Act 1 (first emit)
+        networksStatusesFlow.emit(simpleStatuses)
+
+        val actual1 = getEmittedValues(flow = producerFlow)
+
+        // Assert
+        val expected1 = statuses
+
+        Truth.assertThat(actual1.size).isEqualTo(1)
+        Truth.assertThat(actual1.first()).isEqualTo(expected1)
+
+        verifyOrder {
+            userWalletsStore.getSyncOrNull(params.userWalletId)
+            networkFactory.create(
+                networkId = simpleStatuses.first().id,
+                derivationPath = simpleStatuses.first().id.derivationPath,
+                scanResponse = userWallet.scanResponse,
+            )
+            networkFactory.create(
+                networkId = simpleStatuses.last().id,
+                derivationPath = simpleStatuses.last().id.derivationPath,
+                scanResponse = userWallet.scanResponse,
+            )
+        }
+
+        // Act 2 (second emit)
+        networksStatusesFlow.emit(updatedSimpleStatuses)
+
+        val actual2 = getEmittedValues(flow = producerFlow)
+
+        // Assert
+        val expected2 = listOf(statuses, updatedStatuses)
+
+        Truth.assertThat(actual2.size).isEqualTo(2)
+        Truth.assertThat(actual2).isEqualTo(expected2)
+
+        verifyOrder {
+            userWalletsStore.getSyncOrNull(params.userWalletId)
+            networkFactory.create(
+                networkId = updatedSimpleStatuses.first().id,
+                derivationPath = updatedSimpleStatuses.first().id.derivationPath,
+                scanResponse = userWallet.scanResponse,
+            )
+            networkFactory.create(
+                networkId = updatedSimpleStatuses.last().id,
+                derivationPath = updatedSimpleStatuses.last().id.derivationPath,
+                scanResponse = userWallet.scanResponse,
+            )
+        }
     }
 
     @Test
-    fun `test that flow is filtered the same status`() = runTest {
+    fun `flow is filtered the same status`() = runTest {
+        // Arrange
         val networksStatusesFlow = MutableSharedFlow<Set<SimpleNetworkStatus>>(replay = 2)
 
+        val statuses = setOf(
+            MockNetworkStatusFactory.createUnreachable(ethNetwork),
+            MockNetworkStatusFactory.createUnreachable(cardanoNetwork),
+        )
+
+        val simpleStatuses = statuses.map(NetworkStatus::toSimple).toSet()
+
+        // region every
         every { networksStatusesStore.get(params.userWalletId) } returns networksStatusesFlow
         every { userWalletsStore.getSyncOrNull(params.userWalletId) } returns userWallet
 
-        val actual = producer.produce()
+        every {
+            networkFactory.create(
+                networkId = simpleStatuses.first().id,
+                derivationPath = simpleStatuses.first().id.derivationPath,
+                scanResponse = userWallet.scanResponse,
+            )
+        } returns statuses.first().network
 
-        // check after producer.produce()
-        verify { networksStatusesStore.get(params.userWalletId) }
+        every {
+            networkFactory.create(
+                networkId = simpleStatuses.last().id,
+                derivationPath = simpleStatuses.last().id.derivationPath,
+                scanResponse = userWallet.scanResponse,
+            )
+        } returns statuses.last().network
+        // endregion
 
-        // first emit
-        val statuses = setOf(
-            MockNetworkStatusFactory.createUnreachable(ethNetwork),
-            MockNetworkStatusFactory.createUnreachable(cardanoNetwork),
-        )
+        val producerFlow = producer.produce()
 
-        networksStatusesFlow.emit(statuses.map(NetworkStatus::toSimple).toSet())
+        // Act 1 (first emit)
+        networksStatusesFlow.emit(simpleStatuses)
 
-        val values1 = getEmittedValues(flow = actual)
+        val actual1 = getEmittedValues(flow = producerFlow)
 
-        // Check after flow was observed by subscriber (getEmittedValues).
-        // Otherwise, userWalletsStore.getSyncOrNull is not called.
-        verify { userWalletsStore.getSyncOrNull(params.userWalletId) }
+        // Assert
+        val expected1 = statuses
 
-        Truth.assertThat(values1.size).isEqualTo(1)
-        Truth.assertThat(values1.first()).isEqualTo(statuses)
+        Truth.assertThat(actual1.size).isEqualTo(1)
+        Truth.assertThat(actual1.first()).isEqualTo(expected1)
 
-        // second emit
-        networksStatusesFlow.emit(statuses.map(NetworkStatus::toSimple).toSet())
+        verifyOrder {
+            userWalletsStore.getSyncOrNull(params.userWalletId)
+            networkFactory.create(
+                networkId = simpleStatuses.first().id,
+                derivationPath = simpleStatuses.first().id.derivationPath,
+                scanResponse = userWallet.scanResponse,
+            )
+            networkFactory.create(
+                networkId = simpleStatuses.last().id,
+                derivationPath = simpleStatuses.last().id.derivationPath,
+                scanResponse = userWallet.scanResponse,
+            )
+        }
 
-        val values2 = getEmittedValues(flow = actual)
+        // Act 2 (second emit)
+        networksStatusesFlow.emit(simpleStatuses)
 
-        // Check after flow was observed by subscriber (getEmittedValues).
-        // Otherwise, userWalletsStore.getSyncOrNull is not called.
-        verify { userWalletsStore.getSyncOrNull(params.userWalletId) }
+        val actual2 = getEmittedValues(flow = producerFlow)
 
-        Truth.assertThat(values2.size).isEqualTo(1)
-        Truth.assertThat(values2.first()).isEqualTo(statuses)
+        // Asset
+        val expected2 = expected1
+        Truth.assertThat(actual2.size).isEqualTo(1)
+        Truth.assertThat(actual2.first()).isEqualTo(expected2)
     }
 
     @Test
-    fun `test if flow throws exception`() = runTest {
+    fun `flow throws exception`() = runTest {
+        // Arrange
         val exception = IllegalStateException()
+
         val statuses = setOf(
             MockNetworkStatusFactory.createUnreachable(ethNetwork),
             MockNetworkStatusFactory.createUnreachable(cardanoNetwork),
         )
+
+        val simpleStatuses = statuses.map(NetworkStatus::toSimple).toSet()
 
         val innerFlow = MutableStateFlow(value = false)
         val networksStatusesFlow = flow {
             if (innerFlow.value) {
-                emit(statuses.map(NetworkStatus::toSimple).toSet())
+                emit(simpleStatuses)
             } else {
                 throw exception
             }
         }
             .buffer(capacity = 5)
 
+        // region every
         every { networksStatusesStore.get(params.userWalletId) } returns networksStatusesFlow
         every { userWalletsStore.getSyncOrNull(params.userWalletId) } returns userWallet
+        every {
+            networkFactory.create(
+                networkId = simpleStatuses.first().id,
+                derivationPath = simpleStatuses.first().id.derivationPath,
+                scanResponse = userWallet.scanResponse,
+            )
+        } returns statuses.first().network
+        every {
+            networkFactory.create(
+                networkId = simpleStatuses.last().id,
+                derivationPath = simpleStatuses.last().id.derivationPath,
+                scanResponse = userWallet.scanResponse,
+            )
+        } returns statuses.last().network
+        // endregion
 
-        val actual = producer.produceWithFallback()
+        val producerFlow = producer.produceWithFallback()
 
-        // check after producer.produce()
-        verify { networksStatusesStore.get(params.userWalletId) }
+        // Act 1 (fallback)
+        val actual1 = getEmittedValues(flow = producerFlow)
 
-        val values1 = getEmittedValues(flow = actual)
+        // Assert
+        val expected1 = emptySet<NetworkStatus>()
+        Truth.assertThat(actual1.size).isEqualTo(1)
+        Truth.assertThat(actual1.first()).isEqualTo(expected1)
 
-        // Check after flow was observed by subscriber (getEmittedValues).
-        // Otherwise, userWalletsStore.getSyncOrNull is not called.
-        verify(inverse = true) { userWalletsStore.getSyncOrNull(params.userWalletId) }
+        verifyOrder(inverse = true) {
+            userWalletsStore.getSyncOrNull(any())
+            networkFactory.create(networkId = any(), derivationPath = any(), scanResponse = any())
+        }
 
-        Truth.assertThat(values1.size).isEqualTo(1)
-        Truth.assertThat(values1).isEqualTo(listOf(emptySet<NetworkStatus>()))
-
+        // Act 2 (emit)
         innerFlow.emit(value = true)
+        val actual2 = getEmittedValues(flow = producerFlow)
 
-        val values2 = getEmittedValues(flow = actual)
+        // Assert
+        val expected2 = statuses
+        Truth.assertThat(actual2.size).isEqualTo(1)
+        Truth.assertThat(actual2.first()).isEqualTo(expected2)
 
-        // Check after flow was observed by subscriber (getEmittedValues).
-        // Otherwise, userWalletsStore.getSyncOrNull is not called.
-        verify { userWalletsStore.getSyncOrNull(params.userWalletId) }
-
-        Truth.assertThat(values2.size).isEqualTo(1)
-        Truth.assertThat(values2).isEqualTo(listOf(statuses))
+        verifyOrder {
+            userWalletsStore.getSyncOrNull(params.userWalletId)
+            networkFactory.create(
+                networkId = simpleStatuses.first().id,
+                derivationPath = simpleStatuses.first().id.derivationPath,
+                scanResponse = userWallet.scanResponse,
+            )
+            networkFactory.create(
+                networkId = simpleStatuses.last().id,
+                derivationPath = simpleStatuses.last().id.derivationPath,
+                scanResponse = userWallet.scanResponse,
+            )
+        }
     }
 
     @Test
-    fun `test that flow is empty`() = runTest {
+    fun `flow is empty if store returns empty flow`() = runTest {
+        // Arrange
         every { networksStatusesStore.get(params.userWalletId) } returns emptyFlow()
-        every { userWalletsStore.getSyncOrNull(params.userWalletId) } returns userWallet
 
-        val actual = producer.produce()
+        // Act
+        val actual = producer.produce().let(::getEmittedValues)
 
-        // check after producer.produce()
+        // Assert
+        val expected = emptySet<NetworkStatus>()
+        Truth.assertThat(actual.size).isEqualTo(1)
+        Truth.assertThat(actual.first()).isEqualTo(expected)
+
         verify { networksStatusesStore.get(params.userWalletId) }
-
-        val values = getEmittedValues(flow = actual)
-
         verify(inverse = true) { userWalletsStore.getSyncOrNull(params.userWalletId) }
-
-        Truth.assertThat(values.size).isEqualTo(1)
-        Truth.assertThat(values).isEqualTo(listOf(emptySet<NetworkStatus>()))
     }
 
     @Test
-    fun `test if network is null`() = runTest {
+    fun `flow returns empty list if networkFactory returns null`() = runTest {
+        // Arrange
         val statuses = setOf(
             MockNetworkStatusFactory.createVerified(ethNetwork),
             MockNetworkStatusFactory.createVerified(cardanoNetwork),
         )
 
-        val networksStatusesFlow = flowOf(statuses.map(NetworkStatus::toSimple).toSet())
+        val simpleStatuses = statuses.map(NetworkStatus::toSimple).toSet()
+
+        val networksStatusesFlow = flowOf(simpleStatuses)
 
         every { networksStatusesStore.get(params.userWalletId) } returns networksStatusesFlow
         every { userWalletsStore.getSyncOrNull(params.userWalletId) } returns userWallet
-        every { excludedBlockchains.contains(any()) } returns true // cause network is null
+        coEvery { networkFactory.create(networkId = any(), any(), any()) } returns null
 
-        val actual = producer.produce()
+        // Act
+        val actual = producer.produce().let(::getEmittedValues)
 
-        // check after producer.produce()
-        verify { networksStatusesStore.get(params.userWalletId) }
+        // Assert
+        val expected = emptySet<NetworkStatus>()
+        Truth.assertThat(actual.size).isEqualTo(1)
+        Truth.assertThat(actual.first()).isEqualTo(expected)
 
-        val values = getEmittedValues(flow = actual)
-
-        // Check after flow was observed by subscriber (getEmittedValues).
-        // Otherwise, userWalletsStore.getSyncOrNull is not called.
-        verify { userWalletsStore.getSyncOrNull(params.userWalletId) }
-
-        Truth.assertThat(values.size).isEqualTo(1)
-        Truth.assertThat(values).isEqualTo(listOf(emptySet<NetworkStatus>()))
+        verifyOrder {
+            networksStatusesStore.get(params.userWalletId)
+            userWalletsStore.getSyncOrNull(params.userWalletId)
+            networkFactory.create(
+                networkId = simpleStatuses.first().id,
+                derivationPath = simpleStatuses.first().id.derivationPath,
+                scanResponse = userWallet.scanResponse,
+            )
+            networkFactory.create(
+                networkId = simpleStatuses.last().id,
+                derivationPath = simpleStatuses.last().id.derivationPath,
+                scanResponse = userWallet.scanResponse,
+            )
+        }
     }
 
     private companion object {
