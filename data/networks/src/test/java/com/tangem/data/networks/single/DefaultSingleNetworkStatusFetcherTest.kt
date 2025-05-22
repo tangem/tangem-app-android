@@ -6,7 +6,7 @@ import com.google.common.truth.Truth
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.data.common.currency.CardCryptoCurrencyFactory
 import com.tangem.data.networks.fetcher.CommonNetworkStatusFetcher
-import com.tangem.data.networks.store.NetworksStatusesStoreV2
+import com.tangem.data.networks.store.NetworksStatusesStore
 import com.tangem.data.networks.store.setSourceAsCache
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.wallets.models.UserWalletId
@@ -24,7 +24,7 @@ import org.junit.jupiter.api.TestInstance
 internal class DefaultSingleNetworkStatusFetcherTest {
 
     private val commonNetworkStatusFetcher: CommonNetworkStatusFetcher = mockk()
-    private val networksStatusesStore: NetworksStatusesStoreV2 = mockk(relaxUnitFun = true)
+    private val networksStatusesStore: NetworksStatusesStore = mockk(relaxUnitFun = true)
     private val cardCryptoCurrencyFactory: CardCryptoCurrencyFactory = mockk()
 
     private val fetcher = DefaultSingleNetworkStatusFetcher(
