@@ -2,7 +2,7 @@ package com.tangem.tap.network.exchangeServices.moonpay
 
 import android.net.Uri
 import android.util.Base64
-import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.common.services.Result
 import com.tangem.common.services.performRequest
 import com.tangem.datasource.api.common.createRetrofitInstance
@@ -133,7 +133,7 @@ class MoonPayService(
     ): String? {
         if (action == CurrencyExchangeManager.Action.Buy) throw UnsupportedOperationException()
 
-        val blockchain = Blockchain.fromId(cryptoCurrency.network.rawId)
+        val blockchain = cryptoCurrency.network.toBlockchain()
         val supportedCurrency = blockchain.moonPaySupportedCurrency ?: return null
         val moonpayCurrency = status?.availableForSell?.firstOrNull {
             when (cryptoCurrency) {
