@@ -25,17 +25,17 @@ internal typealias WalletIdWithSimpleStatus = Map<String, Set<SimpleNetworkStatu
 internal typealias WalletIdWithStatusDM = Map<String, Set<NetworkStatusDM>>
 
 /**
- * Default implementation of [NetworksStatusesStoreV2]
+ * Default implementation of [NetworksStatusesStore]
  *
  * @property runtimeStore         runtime store
  * @property persistenceDataStore persistence store
  * @param dispatchers             dispatchers
  */
-internal class DefaultNetworksStatusesStoreV2(
+internal class DefaultNetworksStatusesStore(
     private val runtimeStore: RuntimeSharedStore<WalletIdWithSimpleStatus>,
     private val persistenceDataStore: DataStore<WalletIdWithStatusDM>,
     dispatchers: CoroutineDispatcherProvider,
-) : NetworksStatusesStoreV2 {
+) : NetworksStatusesStore {
 
     private val scope = CoroutineScope(context = SupervisorJob() + dispatchers.io)
 
