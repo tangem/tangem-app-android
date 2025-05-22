@@ -2,6 +2,7 @@ package com.tangem.tap.domain.card
 
 import com.tangem.blockchain.blockchains.cardano.CardanoUtils
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.extensions.toMapKey
@@ -49,7 +50,7 @@ internal class MissedDerivationsFinder(private val scanResponse: ScanResponse) {
     private fun List<Network>.mapToNewDerivations(): List<DerivationData> {
         val config = CardConfig.createConfig(scanResponse.card)
         return mapNotNull { network ->
-            val blockchain = Blockchain.fromId(id = network.rawId)
+            val blockchain = network.toBlockchain()
             val curve = config.primaryCurve(blockchain) ?: return@mapNotNull null
 
             findNewDerivations(curve = curve, scanResponse = scanResponse, network = network)
@@ -74,7 +75,7 @@ internal class MissedDerivationsFinder(private val scanResponse: ScanResponse) {
     }
 
     private fun Network.getDerivationCandidates(curve: EllipticCurve): List<DerivationPath> {
-        val blockchain = Blockchain.fromId(id = rawId)
+        val blockchain = this.toBlockchain()
 
         return buildList {
             add(blockchain.getDerivationPath(curve = curve))

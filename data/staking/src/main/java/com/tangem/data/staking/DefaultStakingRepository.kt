@@ -10,6 +10,7 @@ import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.TransactionStatus
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchainsdk.utils.fromNetworkId
+import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.blockchainsdk.utils.toCoinId
 import com.tangem.blockchainsdk.utils.toMigratedCoinId
 import com.tangem.common.extensions.hexToBytes
@@ -245,7 +246,7 @@ internal class DefaultStakingRepository(
     }
 
     private fun checkFeatureToggleEnabled(networkId: Network.ID): Boolean {
-        return when (Blockchain.fromId(networkId.rawId.value)) {
+        return when (networkId.toBlockchain()) {
             Blockchain.TON -> stakingFeatureToggles.isTonStakingEnabled
             Blockchain.Cardano -> stakingFeatureToggles.isCardanoStakingEnabled
             else -> true

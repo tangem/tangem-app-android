@@ -1,7 +1,7 @@
 package com.tangem.tap.domain.walletconnect2.domain
 
 import arrow.core.flatten
-import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
@@ -419,7 +419,8 @@ class WalletConnectInteractor(
 
     private suspend fun getAccountsForWc(userWallet: UserWallet, networks: List<Network>): List<Account> {
         val walletManagers = networks.mapNotNull {
-            val blockchain = Blockchain.fromId(it.rawId)
+            val blockchain = it.toBlockchain()
+
             walletManagersFacade.getOrCreateWalletManager(
                 userWalletId = userWallet.walletId,
                 blockchain = blockchain,

@@ -4,11 +4,11 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.compatibility.l2BlockchainsCoinIds
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.fromNetworkId
+import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.common.currency.CardCryptoCurrencyFactory
 import com.tangem.data.common.currency.UserTokensResponseFactory
-import com.tangem.data.common.currency.getBlockchain
 import com.tangem.data.common.network.NetworkFactory
 import com.tangem.data.common.utils.retryOnError
 import com.tangem.data.managetokens.utils.ManageTokensUpdateFetcher
@@ -232,10 +232,11 @@ internal class DefaultManageTokensRepository(
             token.availableNetworks
                 .filter { sourceNetwork -> networks.contains(sourceNetwork.network) }
                 .map { sourceNetwork ->
-                    val blockchain = getBlockchain(sourceNetwork.network.id)
+                    val networkId = sourceNetwork.network.toBlockchain().toNetworkId()
+
                     UserTokensResponse.Token(
                         id = token.id.value,
-                        networkId = blockchain.toNetworkId(),
+                        networkId = networkId,
                         derivationPath = sourceNetwork.network.derivationPath.value,
                         name = token.name,
                         symbol = token.symbol,
@@ -257,7 +258,8 @@ internal class DefaultManageTokensRepository(
         sourceNetwork: SourceNetwork,
     ): CurrencyUnsupportedState? {
         val userWallet = userWalletsStore.getSyncStrict(key = userWalletId)
-        val blockchain = getBlockchain(sourceNetwork.id)
+        val blockchain = sourceNetwork.id.toBlockchain()
+
         return when (sourceNetwork) {
             is SourceNetwork.Default -> checkTokenUnsupportedState(userWallet = userWallet, blockchain = blockchain)
             is SourceNetwork.Main -> checkBlockchainUnsupportedState(userWallet = userWallet, blockchain = blockchain)

@@ -1,7 +1,7 @@
 package com.tangem.data.onramp.legacy
 
 import android.net.Uri
-import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.common.extensions.calculateSha512
 import com.tangem.common.extensions.toHexString
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
@@ -19,7 +19,7 @@ internal class MercuryoTopUpRepository @Inject constructor(
 
     override suspend fun getTopUpUrl(cryptoCurrency: CryptoCurrency, walletAddress: String): String =
         withContext(dispatchersProvider.default) {
-            val blockchain = Blockchain.fromId(cryptoCurrency.network.rawId)
+            val blockchain = cryptoCurrency.network.toBlockchain()
             val environmentConfig = environmentConfigStorage.getConfigSync()
 
             val builder = Uri.Builder()
