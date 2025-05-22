@@ -27,37 +27,100 @@ import androidx.compose.ui.util.fastForEach
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.decompose.context.AppComponentContext
+import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.TangemSwitch
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
+import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetWithFooter
 import com.tangem.core.ui.components.notifications.Notification
-import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.domain.models.network.Network
 import com.tangem.features.walletconnect.connections.entity.WcNetworkInfoItem
 import com.tangem.features.walletconnect.connections.entity.WcSelectNetworksUM
-import com.tangem.features.walletconnect.connections.model.WcAppInfoModel
+import com.tangem.features.walletconnect.connections.model.WcSelectNetworksModel
 import com.tangem.features.walletconnect.impl.R
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 internal class WcSelectNetworksComponent(
     appComponentContext: AppComponentContext,
-    private val model: WcAppInfoModel,
-) : AppComponentContext by appComponentContext, ComposableContentComponent {
+    private val params: WcSelectNetworksParams,
+) : AppComponentContext by appComponentContext, ComposableBottomSheetComponent {
+
+    private val model: WcSelectNetworksModel = getOrCreateModel(params = params)
+
+    override fun dismiss() {
+        params.onDismiss()
+    }
 
     @Composable
-    override fun Content(modifier: Modifier) {
-        val state by model.networksState.collectAsStateWithLifecycle()
-        WcSelectNetworksContent(
-            modifier = modifier.padding(horizontal = 16.dp),
-            state = state,
-        )
+    override fun BottomSheet() {
+        val state by model.state.collectAsStateWithLifecycle()
+        WcSelectNetworksBS(state = state, onBack = router::pop, onDismiss = ::dismiss)
     }
+
+    interface ModelCallback {
+        fun onNetworksSelected(selectedNetworks: Set<Network.RawID>)
+    }
+
+    data class WcSelectNetworksParams(
+        val missingRequiredNetworks: Set<Network>,
+        val requiredNetworks: Set<Network>,
+        val availableNetworks: Set<Network>,
+        val notAddedNetworks: Set<Network>,
+        val enabledAvailableNetworks: Set<Network.RawID>,
+        val onDismiss: () -> Unit,
+        val callback: ModelCallback,
+    )
+}
+
+@Composable
+private fun WcSelectNetworksBS(
+    state: WcSelectNetworksUM,
+    onBack: () -> Unit,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    if (state.required.isEmpty()) return // required can/must not be empty
+
+    TangemModalBottomSheetWithFooter<TangemBottomSheetConfigContent.Empty>(
+        config = TangemBottomSheetConfig(
+            isShown = true,
+            onDismissRequest = onDismiss,
+            content = TangemBottomSheetConfigContent.Empty,
+        ),
+        onBack = onBack,
+        containerColor = TangemTheme.colors.background.tertiary,
+        title = {
+            TangemModalBottomSheetTitle(
+                title = stringReference("Choose networks"),
+                startIconRes = R.drawable.ic_back_24,
+                onStartClick = onBack,
+            )
+        },
+        content = {
+            WcSelectNetworksContent(
+                modifier = modifier.padding(horizontal = 16.dp),
+                state = state,
+            )
+        },
+        footer = {
+            PrimaryButton(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxWidth(),
+                text = "Done",
+                onClick = state.onDone,
+                enabled = state.missing.isEmpty(),
+            )
+        },
+    )
 }
 
 @Composable
@@ -76,14 +139,6 @@ private fun WcSelectNetworksContent(state: WcSelectNetworksUM, modifier: Modifie
         if (state.notAdded.isNotEmpty()) {
             NotAddedBlock(modifier = blocksModifier, notAdded = state.notAdded)
         }
-        PrimaryButton(
-            modifier = Modifier
-                .padding(bottom = 16.dp)
-                .fillMaxWidth(),
-            text = "Done",
-            onClick = state.onDone,
-            enabled = state.missing.isEmpty(),
-        )
     }
 }
 
