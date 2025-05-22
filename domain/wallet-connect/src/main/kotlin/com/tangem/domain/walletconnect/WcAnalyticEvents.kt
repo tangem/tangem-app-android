@@ -130,7 +130,7 @@ sealed class WcAnalyticEvents(
     class ButtonCancel(
         type: Type,
     ) : WcAnalyticEvents(
-        event = "Button - Sign",
+        event = "Button - Cancel",
         params = mapOf(
             AnalyticsParam.Key.TYPE to type.type,
         ),
