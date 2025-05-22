@@ -1,14 +1,13 @@
 package com.tangem.data.networks.di
 
 import android.content.Context
-import androidx.datastore.core.DataStore
 import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
 import com.tangem.data.common.currency.CardCryptoCurrencyFactory
 import com.tangem.data.networks.repository.DefaultNetworksRepository
-import com.tangem.data.networks.store.DefaultNetworksStatusesStoreV2
-import com.tangem.data.networks.store.NetworksStatusesStoreV2
+import com.tangem.data.networks.store.DefaultNetworksStatusesStore
+import com.tangem.data.networks.store.NetworksStatusesStore
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
 import com.tangem.datasource.local.network.entity.NetworkStatusDM
@@ -31,33 +30,24 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 internal object NetworkDataModule {
 
-    @Singleton
     @Provides
-    fun providePersistenceNetworksStatusesStore(
+    @Singleton
+    fun provideNetworksStatusesStore(
         @NetworkMoshi moshi: Moshi,
         @ApplicationContext context: Context,
         dispatchers: CoroutineDispatcherProvider,
-    ): DataStore<Map<String, Set<NetworkStatusDM>>> {
-        return DataStoreFactory.create(
-            serializer = MoshiDataStoreSerializer(
-                moshi = moshi,
-                types = mapWithStringKeyTypes(valueTypes = setTypes<NetworkStatusDM>()),
-                defaultValue = emptyMap(),
-            ),
-            produceFile = { context.dataStoreFile(fileName = "networks_statuses") },
-            scope = CoroutineScope(context = dispatchers.io + SupervisorJob()),
-        )
-    }
-
-    @Provides
-    @Singleton
-    fun provideNetworksStatusesStoreV2(
-        persistenceNetworksStatusesStore: DataStore<Map<String, Set<NetworkStatusDM>>>,
-        dispatchers: CoroutineDispatcherProvider,
-    ): NetworksStatusesStoreV2 {
-        return DefaultNetworksStatusesStoreV2(
+    ): NetworksStatusesStore {
+        return DefaultNetworksStatusesStore(
             runtimeStore = RuntimeSharedStore(),
-            persistenceDataStore = persistenceNetworksStatusesStore,
+            persistenceDataStore = DataStoreFactory.create(
+                serializer = MoshiDataStoreSerializer(
+                    moshi = moshi,
+                    types = mapWithStringKeyTypes(valueTypes = setTypes<NetworkStatusDM>()),
+                    defaultValue = emptyMap(),
+                ),
+                produceFile = { context.dataStoreFile(fileName = "networks_statuses") },
+                scope = CoroutineScope(context = dispatchers.io + SupervisorJob()),
+            ),
             dispatchers = dispatchers,
         )
     }
@@ -67,13 +57,13 @@ internal object NetworkDataModule {
     fun provideNetworkRepository(
         cardCryptoCurrencyFactory: CardCryptoCurrencyFactory,
         walletManagersFacade: WalletManagersFacade,
-        networksStatusesStoreV2: NetworksStatusesStoreV2,
+        networksStatusesStore: NetworksStatusesStore,
         dispatchers: CoroutineDispatcherProvider,
     ): NetworksRepository {
         return DefaultNetworksRepository(
             cardCryptoCurrencyFactory = cardCryptoCurrencyFactory,
             walletManagersFacade = walletManagersFacade,
-            networksStatusesStore = networksStatusesStoreV2,
+            networksStatusesStore = networksStatusesStore,
             dispatchers = dispatchers,
         )
     }
