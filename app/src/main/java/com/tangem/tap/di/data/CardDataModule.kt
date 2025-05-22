@@ -1,6 +1,6 @@
 package com.tangem.tap.di.data
 
-import com.tangem.blockchainsdk.utils.ExcludedBlockchains
+import com.tangem.data.common.network.NetworkFactory
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.card.repository.DerivationsRepository
 import com.tangem.sdk.api.TangemSdkManager
@@ -21,9 +21,14 @@ internal object CardDataModule {
     fun providesDerivationsRepository(
         tangemSdkManager: TangemSdkManager,
         userWalletsStore: UserWalletsStore,
-        excludedBlockchains: ExcludedBlockchains,
+        networkFactory: NetworkFactory,
         dispatchers: CoroutineDispatcherProvider,
     ): DerivationsRepository {
-        return DefaultDerivationsRepository(tangemSdkManager, userWalletsStore, excludedBlockchains, dispatchers)
+        return DefaultDerivationsRepository(
+            tangemSdkManager = tangemSdkManager,
+            userWalletsStore = userWalletsStore,
+            networkFactory = networkFactory,
+            dispatchers = dispatchers,
+        )
     }
 }
