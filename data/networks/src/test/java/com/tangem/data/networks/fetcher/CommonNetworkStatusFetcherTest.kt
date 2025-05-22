@@ -7,7 +7,7 @@ import com.tangem.common.test.domain.network.MockNetworkStatusFactory
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.test.domain.walletmanager.MockUpdateWalletManagerResultFactory
 import com.tangem.common.test.utils.ProvideTestModels
-import com.tangem.data.networks.store.NetworksStatusesStoreV2
+import com.tangem.data.networks.store.NetworksStatusesStore
 import com.tangem.data.networks.store.setSourceAsOnlyCache
 import com.tangem.data.networks.store.storeStatus
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -31,7 +31,7 @@ import org.junit.jupiter.params.ParameterizedTest
 internal class CommonNetworkStatusFetcherTest {
 
     private val walletManagersFacade: WalletManagersFacade = mockk()
-    private val networksStatusesStore: NetworksStatusesStoreV2 = mockk(relaxUnitFun = true)
+    private val networksStatusesStore: NetworksStatusesStore = mockk(relaxUnitFun = true)
 
     private val fetcher = CommonNetworkStatusFetcher(
         walletManagersFacade = walletManagersFacade,
@@ -106,6 +106,7 @@ internal class CommonNetworkStatusFetcherTest {
         }
     }
 
+    @Suppress("unused")
     private fun provideTestModels() = listOf(
         SuccessTestModel(
             updateResult = UpdateWalletManagerResult.MissedDerivation,
