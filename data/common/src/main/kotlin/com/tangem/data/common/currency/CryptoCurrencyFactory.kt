@@ -3,6 +3,7 @@ package com.tangem.data.common.currency
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.fromNetworkId
+import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.blockchainsdk.utils.toCoinId
 import com.tangem.data.common.network.NetworkFactory
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -97,7 +98,7 @@ class CryptoCurrencyFactory(
     }
 
     fun createCoin(network: Network): CryptoCurrency.Coin {
-        val blockchain = Blockchain.fromId(network.rawId)
+        val blockchain = network.toBlockchain()
 
         return CryptoCurrency.Coin(
             id = getCoinId(network, blockchain.toCoinId()),
