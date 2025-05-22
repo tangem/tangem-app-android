@@ -19,6 +19,7 @@ dependencies {
     implementation(projects.domain.tokens.models)
 
     implementation(projects.core.ui)
+    implementation(projects.libs.blockchainSdk)
 
     /** SdK */
     implementation(tangemDeps.blockchain)
