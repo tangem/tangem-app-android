@@ -8,8 +8,8 @@ import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.toCoinId
 import com.tangem.data.common.currency.getCoinId
-import com.tangem.data.common.currency.getNetwork
 import com.tangem.data.common.currency.getTokenId
+import com.tangem.data.common.network.NetworkFactory
 import com.tangem.datasource.api.tangemTech.models.CoinsResponse
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.local.config.testnet.models.TestnetTokensConfig
@@ -25,6 +25,7 @@ import com.tangem.domain.models.scan.ScanResponse
 import timber.log.Timber
 
 internal class ManagedCryptoCurrencyFactory(
+    private val networkFactory: NetworkFactory,
     private val excludedBlockchains: ExcludedBlockchains,
 ) {
 
@@ -98,11 +99,10 @@ internal class ManagedCryptoCurrencyFactory(
             return null
         }
 
-        val network = getNetwork(
+        val network = networkFactory.create(
             blockchain = blockchain,
             extraDerivationPath = token.derivationPath,
             scanResponse = scanResponse,
-            excludedBlockchains = excludedBlockchains,
         ) ?: return null
         val contractAddress = token.contractAddress
 
@@ -172,11 +172,10 @@ internal class ManagedCryptoCurrencyFactory(
             ?.takeUnless { it in excludedBlockchains }
             ?: return null
 
-        val network = getNetwork(
-            blockchain,
-            extraDerivationPath,
-            scanResponse?.derivationStyleProvider,
-            excludedBlockchains,
+        val network = networkFactory.create(
+            blockchain = blockchain,
+            extraDerivationPath = extraDerivationPath,
+            derivationStyleProvider = scanResponse?.derivationStyleProvider,
             canHandleTokens = scanResponse?.let {
                 it.card.canHandleToken(blockchain, it.cardTypesResolver, excludedBlockchains)
             } ?: true,
@@ -217,11 +216,10 @@ internal class ManagedCryptoCurrencyFactory(
                 val blockchain = Blockchain.fromNetworkId(token.networkId)
 
                 if (blockchain != null && blockchain !in excludedBlockchains) {
-                    getNetwork(
-                        blockchain,
-                        token.derivationPath,
-                        scanResponse?.derivationStyleProvider,
-                        excludedBlockchains,
+                    networkFactory.create(
+                        blockchain = blockchain,
+                        extraDerivationPath = token.derivationPath,
+                        derivationStyleProvider = scanResponse?.derivationStyleProvider,
                         canHandleTokens = scanResponse?.let {
                             it.card.canHandleToken(blockchain, it.cardTypesResolver, excludedBlockchains)
                         } ?: true,
