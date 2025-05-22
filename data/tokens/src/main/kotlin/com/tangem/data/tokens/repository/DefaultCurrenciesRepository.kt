@@ -127,8 +127,7 @@ internal class DefaultCurrenciesRepository(
         currenciesToAdd: List<CryptoCurrency>,
     ): List<CryptoCurrency> {
         return currenciesToAdd.filter { currency ->
-            val blockchain = getBlockchain(networkId = currency.network.id)
-            val networkId = blockchain.toNetworkId()
+            val networkId = currency.network.toBlockchain().toNetworkId()
             val contractAddress = (currency as? CryptoCurrency.Token)?.contractAddress
 
             savedCurrencies.none { token ->
@@ -357,7 +356,7 @@ internal class DefaultCurrenciesRepository(
                     "Unable to find tokens response for user wallet with provided ID: $userWalletId"
                 },
             )
-            val blockchain = Blockchain.fromId(networkId.rawId.value)
+            val blockchain = networkId.toBlockchain()
             val blockchainNetworkId = blockchain.toNetworkId()
             val coinId = blockchain.toCoinId()
 
@@ -410,7 +409,7 @@ internal class DefaultCurrenciesRepository(
         cryptoCurrencyStatus: CryptoCurrencyStatus,
         coinStatus: CryptoCurrencyStatus?,
     ): Boolean {
-        val blockchain = Blockchain.fromId(cryptoCurrencyStatus.currency.network.rawId)
+        val blockchain = cryptoCurrencyStatus.currency.network.toBlockchain()
         val isBitcoinBlockchain = blockchain == Blockchain.Bitcoin || blockchain == Blockchain.BitcoinTestnet
         return when {
             cryptoCurrencyStatus.currency is CryptoCurrency.Coin && isBitcoinBlockchain -> {
@@ -425,7 +424,7 @@ internal class DefaultCurrenciesRepository(
 
     override suspend fun getFeePaidCurrency(userWalletId: UserWalletId, network: Network): FeePaidCurrency {
         return withContext(dispatchers.io) {
-            val blockchain = Blockchain.fromId(network.rawId)
+            val blockchain = network.toBlockchain()
             when (val feePaidCurrency = blockchain.feePaidCurrency()) {
                 FeePaidSdkCurrency.Coin -> FeePaidCurrency.Coin
                 FeePaidSdkCurrency.SameCurrency -> FeePaidCurrency.SameCurrency
