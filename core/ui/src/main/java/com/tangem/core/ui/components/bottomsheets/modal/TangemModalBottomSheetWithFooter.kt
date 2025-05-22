@@ -48,7 +48,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> TangemModalBottomSheetWi
     noinline onBack: (() -> Unit)? = null,
     crossinline title: @Composable BoxScope.(T) -> Unit = {},
     crossinline content: @Composable (T) -> Unit,
-    noinline footer: @Composable (BoxScope.(T) -> Unit),
+    crossinline footer: @Composable (BoxScope.(T) -> Unit),
 ) {
     val isAlwaysVisible = LocalBottomSheetAlwaysVisible.current
 
@@ -83,7 +83,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> DefaultModalBottomSheetW
     noinline onBack: (() -> Unit)? = null,
     crossinline title: @Composable BoxScope.(T) -> Unit,
     crossinline content: @Composable (T) -> Unit,
-    noinline footer: @Composable (BoxScope.(T) -> Unit),
+    crossinline footer: @Composable (BoxScope.(T) -> Unit),
 ) {
     var isVisible by remember { mutableStateOf(value = config.isShown) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = skipPartiallyExpanded)
@@ -117,7 +117,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> PreviewModalBottomSheetW
     skipPartiallyExpanded: Boolean = true,
     crossinline title: @Composable BoxScope.(T) -> Unit,
     crossinline content: @Composable (T) -> Unit,
-    noinline footer: @Composable BoxScope.(T) -> Unit,
+    crossinline footer: @Composable BoxScope.(T) -> Unit,
 ) {
     BasicModalBottomSheetWithFooter<T>(
         config = config,
@@ -144,7 +144,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicModalBottomSheetWit
     noinline onBack: (() -> Unit)? = null,
     crossinline title: @Composable BoxScope.(T) -> Unit,
     crossinline content: @Composable (T) -> Unit,
-    noinline footer: @Composable (BoxScope.(T) -> Unit),
+    crossinline footer: @Composable (BoxScope.(T) -> Unit),
     modifier: Modifier = Modifier,
 ) {
     val model = config.content as? T ?: return
@@ -183,13 +183,10 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicModalBottomSheetWit
                 )
             }
             Box(modifier = Modifier.weight(1f, fill = false)) {
-                val bottomBarHeight = with(LocalDensity.current) {
-                    WindowInsets.systemBars.getBottom(density = this).toDp()
-                }
                 Column(
                     modifier = Modifier
                         .verticalScroll(state = scrollState)
-                        .padding(bottom = TangemTheme.dimens.spacing76 + bottomBarHeight),
+                        .padding(bottom = TangemTheme.dimens.spacing80),
                 ) {
                     content(model)
                 }
@@ -202,6 +199,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicModalBottomSheetWit
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .height(80.dp)
                         .align(Alignment.BottomCenter),
                 ) {
                     footer(model)
