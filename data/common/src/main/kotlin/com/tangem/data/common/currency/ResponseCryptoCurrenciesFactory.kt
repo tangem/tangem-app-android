@@ -5,6 +5,7 @@ import com.tangem.blockchain.common.Token
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.toCoinId
+import com.tangem.data.common.network.NetworkFactory
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -12,9 +13,9 @@ import com.tangem.domain.models.scan.ScanResponse
 import timber.log.Timber
 import com.tangem.blockchain.common.Token as SdkToken
 
-class ResponseCryptoCurrenciesFactory(
-    private val excludedBlockchains: ExcludedBlockchains,
-) {
+class ResponseCryptoCurrenciesFactory(excludedBlockchains: ExcludedBlockchains) {
+
+    private val networkFactory by lazy(LazyThreadSafetyMode.NONE) { NetworkFactory(excludedBlockchains) }
 
     fun createCurrency(currencyId: String, response: UserTokensResponse, scanResponse: ScanResponse): CryptoCurrency {
         return response.tokens
@@ -75,11 +76,10 @@ class ResponseCryptoCurrenciesFactory(
         responseToken: UserTokensResponse.Token,
         scanResponse: ScanResponse,
     ): CryptoCurrency.Coin? {
-        val network = getNetwork(
-            blockchain,
-            responseToken.derivationPath,
-            scanResponse,
-            excludedBlockchains,
+        val network = networkFactory.create(
+            blockchain = blockchain,
+            extraDerivationPath = responseToken.derivationPath,
+            scanResponse = scanResponse,
         ) ?: return null
 
         return CryptoCurrency.Coin(
@@ -111,11 +111,10 @@ class ResponseCryptoCurrenciesFactory(
         responseDerivationPath: String?,
         scanResponse: ScanResponse,
     ): CryptoCurrency.Token? {
-        val network = getNetwork(
-            blockchain,
-            responseDerivationPath,
-            scanResponse,
-            excludedBlockchains,
+        val network = networkFactory.create(
+            blockchain = blockchain,
+            extraDerivationPath = responseDerivationPath,
+            scanResponse = scanResponse,
         ) ?: return null
 
         val id = getTokenId(network, sdkToken)
