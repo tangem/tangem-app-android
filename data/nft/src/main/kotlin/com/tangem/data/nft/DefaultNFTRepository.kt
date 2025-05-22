@@ -6,7 +6,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.data.common.currency.CryptoCurrencyFactory
-import com.tangem.data.common.currency.getNetwork
+import com.tangem.data.common.network.NetworkFactory
 import com.tangem.datasource.local.nft.NFTPersistenceStore
 import com.tangem.datasource.local.nft.NFTPersistenceStoreFactory
 import com.tangem.datasource.local.nft.NFTRuntimeStore
@@ -46,9 +46,10 @@ internal class DefaultNFTRepository @Inject constructor(
     private val nftRuntimeStoreFactory: NFTRuntimeStoreFactory,
     private val walletManagersFacade: WalletManagersFacade,
     private val dispatchers: CoroutineDispatcherProvider,
-    private val excludedBlockchains: ExcludedBlockchains,
     private val userWalletsStore: UserWalletsStore,
     private val nftFeatureToggles: NFTFeatureToggles,
+    private val networkFactory: NetworkFactory,
+    excludedBlockchains: ExcludedBlockchains,
     resources: Resources,
 ) : NFTRepository {
 
@@ -200,11 +201,10 @@ internal class DefaultNFTRepository @Inject constructor(
             .entries
             .filter { it.canHandleNFTs() && !it.isTestnet() }
             .mapNotNull {
-                getNetwork(
+                networkFactory.create(
                     blockchain = it,
                     extraDerivationPath = null,
                     scanResponse = userWallet.scanResponse,
-                    excludedBlockchains = excludedBlockchains,
                 )
             }
     }
