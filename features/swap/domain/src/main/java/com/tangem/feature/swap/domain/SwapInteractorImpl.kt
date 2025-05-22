@@ -10,6 +10,7 @@ import com.tangem.blockchain.common.smartcontract.SmartContractCallDataProviderF
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchainsdk.utils.fromNetworkId
+import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -466,7 +467,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                     is TxFeeState.MultipleFeeState -> feeState.normalFee.feeValue
                     is TxFeeState.SingleFeeState -> feeState.fee.feeValue
                 },
-                blockchain = Blockchain.fromId(currency.network.rawId),
+                blockchain = currency.network.toBlockchain(),
             ),
         )
 
@@ -1387,7 +1388,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         val callData = SmartContractCallDataProviderFactory.getApprovalCallData(
             spenderAddress = requireNotNull(spenderAddress) { "Spender address is null" },
             amount = swapAmount.value.convertToSdkAmount(fromToken),
-            blockchain = Blockchain.fromId(fromToken.network.rawId),
+            blockchain = fromToken.network.toBlockchain(),
         )
         val feeData = try {
             val extras = createTransactionExtrasUseCase(
