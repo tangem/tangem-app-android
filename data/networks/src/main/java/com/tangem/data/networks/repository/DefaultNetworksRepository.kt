@@ -1,7 +1,7 @@
 package com.tangem.data.networks.repository
 
 import com.tangem.data.common.currency.CardCryptoCurrencyFactory
-import com.tangem.data.networks.store.NetworksStatusesStoreV2
+import com.tangem.data.networks.store.NetworksStatusesStore
 import com.tangem.data.networks.store.storeStatus
 import com.tangem.data.networks.utils.NetworkStatusFactory
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -27,7 +27,7 @@ import timber.log.Timber
 internal class DefaultNetworksRepository(
     private val cardCryptoCurrencyFactory: CardCryptoCurrencyFactory,
     private val walletManagersFacade: WalletManagersFacade,
-    private val networksStatusesStore: NetworksStatusesStoreV2,
+    private val networksStatusesStore: NetworksStatusesStore,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : NetworksRepository {
 

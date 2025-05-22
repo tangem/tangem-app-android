@@ -4,7 +4,7 @@ import com.google.common.truth.Truth
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.test.domain.walletmanager.MockUpdateWalletManagerResultFactory
 import com.tangem.data.common.currency.CardCryptoCurrencyFactory
-import com.tangem.data.networks.store.NetworksStatusesStoreV2
+import com.tangem.data.networks.store.NetworksStatusesStore
 import com.tangem.data.networks.store.storeStatus
 import com.tangem.data.networks.utils.NetworkStatusFactory
 import com.tangem.domain.models.network.CryptoCurrencyAddress
@@ -28,7 +28,7 @@ internal class DefaultNetworksRepositoryTest {
 
     private val cardCryptoCurrencyFactory: CardCryptoCurrencyFactory = mockk()
     private val walletManagersFacade: WalletManagersFacade = mockk()
-    private val networksStatusesStore: NetworksStatusesStoreV2 = mockk(relaxUnitFun = true)
+    private val networksStatusesStore: NetworksStatusesStore = mockk(relaxUnitFun = true)
 
     private val repository: DefaultNetworksRepository = DefaultNetworksRepository(
         cardCryptoCurrencyFactory = cardCryptoCurrencyFactory,

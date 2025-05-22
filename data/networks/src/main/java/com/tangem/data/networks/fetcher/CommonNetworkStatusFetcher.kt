@@ -1,7 +1,7 @@
 package com.tangem.data.networks.fetcher
 
 import arrow.core.Either
-import com.tangem.data.networks.store.NetworksStatusesStoreV2
+import com.tangem.data.networks.store.NetworksStatusesStore
 import com.tangem.data.networks.store.setSourceAsOnlyCache
 import com.tangem.data.networks.store.storeStatus
 import com.tangem.data.networks.utils.NetworkStatusFactory
@@ -26,7 +26,7 @@ import javax.inject.Inject
  */
 internal class CommonNetworkStatusFetcher @Inject constructor(
     private val walletManagersFacade: WalletManagersFacade,
-    private val networksStatusesStore: NetworksStatusesStoreV2,
+    private val networksStatusesStore: NetworksStatusesStore,
     private val dispatchers: CoroutineDispatcherProvider,
 ) {
 

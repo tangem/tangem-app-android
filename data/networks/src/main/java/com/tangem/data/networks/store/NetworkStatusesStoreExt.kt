@@ -11,7 +11,7 @@ import timber.log.Timber
  * Store actual network [status] by [userWalletId].
  * If [status]'s source is not [StatusSource.ACTUAL], throws exception.
  */
-internal suspend fun NetworksStatusesStoreV2.storeStatus(userWalletId: UserWalletId, status: NetworkStatus) {
+internal suspend fun NetworksStatusesStore.storeStatus(userWalletId: UserWalletId, status: NetworkStatus) {
     if (status.value is NetworkStatus.Unreachable) {
         val prevStatus = getSyncOrNull(userWalletId = userWalletId, network = status.network)
 
@@ -38,7 +38,7 @@ internal suspend fun NetworksStatusesStoreV2.storeStatus(userWalletId: UserWalle
  * Store actual success [status] by [userWalletId].
  * If [status]'s value is [NetworkStatus.Unreachable] and/or source is not [StatusSource.ACTUAL], throws exception.
  */
-internal suspend fun NetworksStatusesStoreV2.storeSuccess(userWalletId: UserWalletId, status: NetworkStatus) {
+internal suspend fun NetworksStatusesStore.storeSuccess(userWalletId: UserWalletId, status: NetworkStatus) {
     if (status.value is NetworkStatus.Unreachable) {
         val message = "Use storeError method to save unreachable status"
         Timber.d(message)
@@ -57,12 +57,12 @@ internal suspend fun NetworksStatusesStoreV2.storeSuccess(userWalletId: UserWall
 }
 
 /** Set [StatusSource] as [StatusSource.CACHE] for [network] by [userWalletId] */
-internal suspend fun NetworksStatusesStoreV2.setSourceAsCache(userWalletId: UserWalletId, network: Network) {
+internal suspend fun NetworksStatusesStore.setSourceAsCache(userWalletId: UserWalletId, network: Network) {
     setSourceAsCache(userWalletId = userWalletId, networks = setOf(network))
 }
 
 /** Set [StatusSource] as [StatusSource.CACHE] for [networks] by [userWalletId] */
-internal suspend fun NetworksStatusesStoreV2.setSourceAsCache(userWalletId: UserWalletId, networks: Set<Network>) {
+internal suspend fun NetworksStatusesStore.setSourceAsCache(userWalletId: UserWalletId, networks: Set<Network>) {
     updateStatusSource(userWalletId = userWalletId, networks = networks, source = StatusSource.CACHE)
 }
 
@@ -70,7 +70,7 @@ internal suspend fun NetworksStatusesStoreV2.setSourceAsCache(userWalletId: User
  * Set [StatusSource] as [StatusSource.ONLY_CACHE] for [network] by [userWalletId].
  * If the stored status is not found, store the [value] or a default [NetworkStatus.Unreachable] status.
  */
-internal suspend fun NetworksStatusesStoreV2.setSourceAsOnlyCache(
+internal suspend fun NetworksStatusesStore.setSourceAsOnlyCache(
     userWalletId: UserWalletId,
     network: Network,
     value: NetworkStatus.Unreachable? = null,
@@ -90,7 +90,7 @@ internal suspend fun NetworksStatusesStoreV2.setSourceAsOnlyCache(
  * Set [StatusSource] as [StatusSource.ONLY_CACHE] for [networks] by [userWalletId].
  * If the stored status is not found, store a default [NetworkStatus.Unreachable] status.
  */
-internal suspend fun NetworksStatusesStoreV2.setSourceAsOnlyCache(userWalletId: UserWalletId, networks: Set<Network>) {
+internal suspend fun NetworksStatusesStore.setSourceAsOnlyCache(userWalletId: UserWalletId, networks: Set<Network>) {
     updateStatusSource(
         userWalletId = userWalletId,
         networks = networks,

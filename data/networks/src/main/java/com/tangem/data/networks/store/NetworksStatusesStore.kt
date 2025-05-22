@@ -8,7 +8,7 @@ import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
 
 /** Store of [NetworkStatus]'es set */
-internal interface NetworksStatusesStoreV2 {
+internal interface NetworksStatusesStore {
 
     /** Get statuses by [userWalletId] */
     fun get(userWalletId: UserWalletId): Flow<Set<SimpleNetworkStatus>>
