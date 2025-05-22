@@ -3,6 +3,7 @@ package com.tangem.data.walletconnect.network.ethereum
 import com.squareup.moshi.Moshi
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
+import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.data.walletconnect.model.CAIP2
 import com.tangem.data.walletconnect.model.NamespaceKey
 import com.tangem.data.walletconnect.request.WcRequestToUseCaseConverter
@@ -104,8 +105,8 @@ internal class WcEthNetwork(
     private fun parseTypeData(params: String): WcEthMethod.SignTypedData? {
         val account = params.substring(params.indexOf("\"") + 1, params.indexOf("\"", startIndex = 2))
         val data = params.substring(params.indexOfFirst { it == '{' }, params.indexOfLast { it == '}' } + 1)
-        val params = moshi.fromJson<WcEthSignTypedDataParams>(data) ?: return null
-        return WcEthMethod.SignTypedData(params = params, account = account, dataForSign = data)
+        val parsedParams = moshi.fromJson<WcEthSignTypedDataParams>(data) ?: return null
+        return WcEthMethod.SignTypedData(params = parsedParams, account = account, dataForSign = data)
     }
 
     internal class NamespaceConverter(
@@ -125,7 +126,7 @@ internal class WcEthNetwork(
         }
 
         override fun toCAIP2(network: Network): CAIP2? {
-            val blockchain = Blockchain.fromId(network.rawId)
+            val blockchain = network.toBlockchain()
             if (!blockchain.isEvm()) return null
             val chainId = blockchain.getChainId() ?: return null
             return CAIP2(
