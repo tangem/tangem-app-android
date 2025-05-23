@@ -423,6 +423,8 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
                     ),
                 ),
             )
+
+            stateHolder.update(CloseBottomSheetTransformer(userWalletId = stateHolder.getSelectedWalletId()))
         }
     }
 

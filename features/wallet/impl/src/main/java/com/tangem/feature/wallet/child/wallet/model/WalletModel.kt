@@ -48,10 +48,8 @@ import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.features.pushnotifications.api.utils.getPushPermissionOrNull
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -69,6 +67,7 @@ internal class WalletModel @Inject constructor(
     private val getWalletsUseCase: GetWalletsUseCase,
     private val shouldShowSaveWalletScreenUseCase: ShouldShowSaveWalletScreenUseCase,
     private val shouldShowMarketsTooltipUseCase: ShouldShowMarketsTooltipUseCase,
+    private val setWalletFirstTimeUsageUseCase: SetWalletFirstTimeUsageUseCase,
     private val canUseBiometryUseCase: CanUseBiometryUseCase,
     private val isWalletsScrollPreviewEnabled: IsWalletsScrollPreviewEnabled,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
@@ -95,9 +94,8 @@ internal class WalletModel @Inject constructor(
 
     private val walletsUpdateJobHolder = JobHolder()
     private val refreshWalletJobHolder = JobHolder()
-    private val expressStatusJobHolder = JobHolder()
-    private val clearNFTCacheJobHolder = JobHolder()
     private var needToRefreshWallet = false
+    private val clearNFTCacheJobHolder = JobHolder()
 
     private var expressTxStatusTaskScheduler = SingleTaskScheduler<Unit>()
 
@@ -108,9 +106,11 @@ internal class WalletModel @Inject constructor(
         suggestToOpenMarkets()
 
         maybeMigrateNames()
+        maybeSetWalletFirstTimeUsage()
         subscribeToUserWalletsUpdates()
         subscribeOnBalanceHiding()
         subscribeOnSelectedWalletFlow()
+        subscribeToScreenBackgroundState()
         subscribeOnPushNotificationsPermission()
 
         clickIntents.initialize(innerWalletRouter, modelScope)
@@ -119,6 +119,12 @@ internal class WalletModel @Inject constructor(
     private fun maybeMigrateNames() {
         modelScope.launch {
             walletNameMigrationUseCase()
+        }
+    }
+
+    private fun maybeSetWalletFirstTimeUsage() {
+        modelScope.launch {
+            setWalletFirstTimeUsageUseCase()
         }
     }
 
@@ -226,7 +232,6 @@ internal class WalletModel @Inject constructor(
                         walletDeepLinksHandler.registerForWallet(scope = modelScope, userWallet = selectedWallet)
                     }
                     subscribeOnExpressTransactionsUpdates(selectedWallet)
-                    subscribeToScreenBackgroundState(selectedWallet)
                     observeAndClearNFTCacheIfNeedUseCase(selectedWallet)
                 }
                 .flowOn(dispatchers.main)
@@ -250,41 +255,38 @@ internal class WalletModel @Inject constructor(
 
     // We need to update the current wallet quotes if the application was in the background for more than 10 seconds
     // and then returned to the foreground
-    private fun subscribeToScreenBackgroundState(userWallet: UserWallet) {
+    private fun subscribeToScreenBackgroundState() {
         screenLifecycleProvider.isBackgroundState
             .onEach { isBackground ->
-                expressTxStatusTaskScheduler.cancelTask()
-                expressStatusJobHolder.cancel()
                 refreshWalletJobHolder.cancel()
                 when {
                     isBackground -> needToRefreshTimer()
                     needToRefreshWallet && !isBackground -> {
                         triggerRefreshWalletQuotes()
-                        subscribeOnExpressTransactionsUpdates(userWallet)
                     }
-                    !isBackground -> subscribeOnExpressTransactionsUpdates(userWallet)
                 }
             }
             .launchIn(modelScope)
-            .saveIn(expressStatusJobHolder)
     }
 
     private fun subscribeOnExpressTransactionsUpdates(userWallet: UserWallet) {
-        expressTxStatusTaskScheduler.cancelTask()
-        expressTxStatusTaskScheduler.scheduleTask(
-            modelScope,
-            PeriodicTask(
-                isDelayFirst = false,
-                delay = EXPRESS_STATUS_UPDATE_DELAY,
-                task = {
-                    runCatching {
-                        onrampStatusFactory.updateOnrmapTransactionStatuses(userWallet)
-                    }
-                },
-                onSuccess = { /* no-op */ },
-                onError = { /* no-op */ },
-            ),
-        )
+        if (!userWallet.isMultiCurrency) {
+            expressTxStatusTaskScheduler.cancelTask()
+            expressTxStatusTaskScheduler.scheduleTask(
+                modelScope,
+                PeriodicTask(
+                    isDelayFirst = false,
+                    delay = EXPRESS_STATUS_UPDATE_DELAY,
+                    task = {
+                        runCatching {
+                            onrampStatusFactory.updateOnrmapTransactionStatuses(userWallet)
+                        }
+                    },
+                    onSuccess = { /* no-op */ },
+                    onError = { /* no-op */ },
+                ),
+            )
+        }
     }
 
     private fun observeAndClearNFTCacheIfNeedUseCase(selectedWallet: UserWallet) {
@@ -306,9 +308,18 @@ internal class WalletModel @Inject constructor(
         val state = stateHolder.uiState.value
         val wallet = state.wallets.getOrNull(state.selectedWalletIndex) ?: return
         modelScope.launch {
-            refreshMultiCurrencyWalletQuotesUseCase(wallet.walletCardState.id).getOrElse {
-                Timber.e("Failed to refreshMultiCurrencyWalletQuotesUseCase $it")
-            }
+            awaitAll(
+                async {
+                    refreshMultiCurrencyWalletQuotesUseCase(wallet.walletCardState.id).getOrElse {
+                        Timber.e("Failed to refreshMultiCurrencyWalletQuotesUseCase $it")
+                    }
+                },
+                async {
+                    getWalletsUseCase.invokeSync()
+                        .firstOrNull { it.walletId == wallet.walletCardState.id }
+                        ?.let(::subscribeOnExpressTransactionsUpdates)
+                },
+            )
         }.saveIn(refreshWalletJobHolder)
     }
 

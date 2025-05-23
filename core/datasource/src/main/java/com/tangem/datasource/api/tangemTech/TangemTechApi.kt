@@ -55,11 +55,11 @@ interface TangemTechApi {
 
     /** Returns referral status by [walletId] */
     @GET("referral/{walletId}")
-    suspend fun getReferralStatus(@Path("walletId") walletId: String): ReferralResponse
+    suspend fun getReferralStatus(@Path("walletId") walletId: String): ApiResponse<ReferralResponse>
 
     /** Make user referral, requires [StartReferralBody] */
     @POST("referral")
-    suspend fun startReferral(@Body startReferralBody: StartReferralBody): ReferralResponse
+    suspend fun startReferral(@Body startReferralBody: StartReferralBody): ApiResponse<ReferralResponse>
 
     @GET("quotes")
     suspend fun getQuotes(

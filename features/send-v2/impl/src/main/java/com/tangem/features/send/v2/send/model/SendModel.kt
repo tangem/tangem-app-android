@@ -11,6 +11,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.utils.parseBigDecimal
+import com.tangem.core.ui.utils.parseBigDecimalOrNull
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
@@ -109,6 +110,7 @@ internal class SendModel @Inject constructor(
         subscribeOnQRScannerResult()
         subscribeOnCurrencyStatusUpdates()
         initAppCurrency()
+        initPredefinedValues()
     }
 
     override fun onNavigationResult(navigationUM: NavigationUM) {
@@ -133,19 +135,31 @@ internal class SendModel @Inject constructor(
     }
 
     suspend fun loadFee(): Either<GetFeeError, TransactionFee> {
-        val destinationUM = uiState.value.destinationUM as? DestinationUM.Content ?: error("Invalid destination")
-        val amountUM = uiState.value.amountUM as? AmountState.Data ?: error("Invalid amount")
-        val enteredDestinationAddress = destinationUM.addressTextField.value
-        val enteredMemo = destinationUM.memoTextField?.value
-        val enteredAmount = amountUM.amountTextField.cryptoAmount.value ?: error("Invalid amount")
+        val predefinedValues = predefinedValues
+        val transferTransaction = if (predefinedValues is PredefinedValues.Content.Deeplink) {
+            val predefinedAmount = predefinedValues.amount.parseBigDecimalOrNull()?.convertToSdkAmount(cryptoCurrency)
+            createTransferTransactionUseCase(
+                amount = predefinedAmount ?: error("Invalid amount"),
+                memo = predefinedValues.memo,
+                destination = predefinedValues.address,
+                userWalletId = userWallet.walletId,
+                network = cryptoCurrency.network,
+            )
+        } else {
+            val destinationUM = uiState.value.destinationUM as? DestinationUM.Content ?: error("Invalid destination")
+            val amountUM = uiState.value.amountUM as? AmountState.Data ?: error("Invalid amount")
+            val enteredDestinationAddress = destinationUM.addressTextField.value
+            val enteredMemo = destinationUM.memoTextField?.value
+            val enteredAmount = amountUM.amountTextField.cryptoAmount.value ?: error("Invalid amount")
 
-        val transferTransaction = createTransferTransactionUseCase(
-            amount = enteredAmount.convertToSdkAmount(cryptoCurrency),
-            memo = enteredMemo,
-            destination = enteredDestinationAddress,
-            userWalletId = userWallet.walletId,
-            network = cryptoCurrency.network,
-        ).getOrElse {
+            createTransferTransactionUseCase(
+                amount = enteredAmount.convertToSdkAmount(cryptoCurrency),
+                memo = enteredMemo,
+                destination = enteredDestinationAddress,
+                userWalletId = userWallet.walletId,
+                network = cryptoCurrency.network,
+            )
+        }.getOrElse {
             return GetFeeError.DataError(it).left()
         }
 
@@ -154,16 +168,6 @@ internal class SendModel @Inject constructor(
             userWallet = userWallet,
             network = params.currency.network,
         )
-    }
-
-    private fun resetPredefinedAmount() {
-        // reset predefined amount
-        val internalPredefinedValues = predefinedValues
-        predefinedValues = when (internalPredefinedValues) {
-            is PredefinedValues.Content.Deeplink -> internalPredefinedValues.copy(amount = null)
-            is PredefinedValues.Content.QrCode -> internalPredefinedValues.copy(amount = null)
-            PredefinedValues.Empty -> internalPredefinedValues
-        }
     }
 
     fun showAlertError() {
@@ -176,6 +180,34 @@ internal class SendModel @Inject constructor(
     private fun initAppCurrency() {
         modelScope.launch {
             appCurrency = getSelectedAppCurrencyUseCase.invokeSync().getOrElse { AppCurrency.Default }
+        }
+    }
+
+    private fun initPredefinedValues() {
+        val predefinedAmount = params.amount
+        val predefinedTxId = params.transactionId
+        val predefinedAddress = params.destinationAddress
+
+        predefinedValues = if (predefinedAmount != null && predefinedTxId != null && predefinedAddress != null) {
+            PredefinedValues.Content.Deeplink(
+                amount = predefinedAmount,
+                address = predefinedAddress,
+                memo = params.tag,
+                transactionId = predefinedTxId,
+            )
+        } else {
+            PredefinedValues.Empty
+        }
+    }
+
+    private fun resetPredefinedAmount() {
+        // reset predefined amount
+        val internalPredefinedValues = predefinedValues
+        predefinedValues = when (internalPredefinedValues) {
+            is PredefinedValues.Content.QrCode -> internalPredefinedValues.copy(amount = null)
+            is PredefinedValues.Content.Deeplink,
+            PredefinedValues.Empty,
+            -> internalPredefinedValues
         }
     }
 
