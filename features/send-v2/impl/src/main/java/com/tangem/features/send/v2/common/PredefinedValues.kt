@@ -9,7 +9,7 @@ sealed class PredefinedValues {
         abstract val memo: String?
 
         data class Deeplink(
-            override val amount: String?,
+            override val amount: String,
             override val address: String,
             override val memo: String?,
             val transactionId: String,
