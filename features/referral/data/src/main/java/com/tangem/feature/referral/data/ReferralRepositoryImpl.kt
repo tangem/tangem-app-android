@@ -5,6 +5,7 @@ import com.tangem.blockchain.common.Token
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.data.common.currency.CryptoCurrencyFactory
+import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.StartReferralBody
 import com.tangem.datasource.local.userwallet.UserWalletsStore
@@ -38,7 +39,7 @@ internal class ReferralRepositoryImpl @Inject constructor(
             val referralData = referralConverter.convert(
                 referralApi.getReferralStatus(
                     walletId = walletId,
-                ),
+                ).getOrThrow(),
             )
 
             referralStatus[walletId] = referralData
@@ -66,7 +67,7 @@ internal class ReferralRepositoryImpl @Inject constructor(
                         tokenId = tokenId,
                         address = address,
                     ),
-                ),
+                ).getOrThrow(),
             )
             referralStatus[walletId] = referralData
             referralData

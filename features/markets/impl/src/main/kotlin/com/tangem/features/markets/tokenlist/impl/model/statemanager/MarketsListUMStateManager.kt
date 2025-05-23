@@ -16,14 +16,19 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
+import java.math.BigDecimal
 
 @Stable
+@Suppress("LongParameterList")
 internal class MarketsListUMStateManager(
     private val currentVisibleIds: Provider<List<CryptoCurrency.RawID>>,
     private val onLoadMoreUiItems: () -> Unit,
     private val visibleItemsChanged: (itemsKeys: List<CryptoCurrency.RawID>) -> Unit,
     private val onRetryButtonClicked: () -> Unit,
     private val onTokenClick: (MarketsListItemUM) -> Unit,
+    private val onStakingNotificationClick: () -> Unit,
+    private val onStakingNotificationCloseClick: () -> Unit,
+    private val onShowTokensUnder100kClicked: () -> Unit,
 ) {
 
     private var sortByBottomSheetIsShown
@@ -87,6 +92,7 @@ internal class MarketsListUMStateManager(
         isInErrorState: Boolean,
         isSearchNotFound: Boolean,
         uiItems: ImmutableList<MarketsListItemUM>,
+        stakingNotificationMaxApy: BigDecimal?,
     ) {
         state.update {
             when {
@@ -102,13 +108,19 @@ internal class MarketsListUMStateManager(
                     it.copy(list = ListUM.Loading)
                 }
                 else -> {
-                    it.updateItems(newItems = uiItems)
+                    it.updateItems(
+                        newItems = uiItems,
+                        stakingNotificationMaxApy = stakingNotificationMaxApy,
+                    )
                 }
             }
         }
     }
 
-    private fun MarketsListUM.updateItems(newItems: ImmutableList<MarketsListItemUM>): MarketsListUM {
+    private fun MarketsListUM.updateItems(
+        newItems: ImmutableList<MarketsListItemUM>,
+        stakingNotificationMaxApy: BigDecimal?,
+    ): MarketsListUM {
         val currentState = this
 
         if (isInSearchMode.not() || currentState.showUnder100kButtonAlreadyPressed()) {
@@ -119,6 +131,7 @@ internal class MarketsListUMStateManager(
                     .copy(
                         showUnder100kTokensNotificationWasHidden = currentState.showUnder100kButtonAlreadyPressed(),
                     ),
+                stakingNotificationMaxApy = stakingNotificationMaxApy,
             )
         }
 
@@ -136,6 +149,7 @@ internal class MarketsListUMStateManager(
                     showUnder100kTokensNotificationWasHidden = false,
                     showUnder100kTokensNotification = true,
                     onShowTokensUnder100kClicked = {
+                        onShowTokensUnder100kClicked()
                         state.update { s ->
                             (s.list as? ListUM.Content)?.let {
                                 s.copy(
@@ -211,6 +225,12 @@ internal class MarketsListUMStateManager(
                 onOptionClicked = ::onBottomSheetOptionClicked,
             ),
         ),
+        stakingNotificationMaxApy = null,
+        onStakingNotificationClick = {
+            onStakingNotificationClick()
+            selectedSortByType = SortByTypeUM.Staking
+        },
+        onStakingNotificationCloseClick = onStakingNotificationCloseClick,
     )
 
     private fun onBottomSheetOptionClicked(sortByTypeUM: SortByTypeUM) {
