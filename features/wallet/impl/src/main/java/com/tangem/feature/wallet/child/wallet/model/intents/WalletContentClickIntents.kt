@@ -8,7 +8,7 @@ import com.tangem.domain.nft.analytics.NFTAnalyticsEvent
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.settings.ShouldShowMarketsTooltipUseCase
 import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
-import com.tangem.domain.tokens.GetPrimaryCurrencyStatusUpdatesUseCase
+import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.TokensAction
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TokenActionsState
@@ -67,7 +67,7 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
     private val walletWarningsClickIntents: WalletWarningsClickIntentsImplementor,
     private val onrampStatusFactory: OnrampStatusFactory,
     private val getUserWalletUseCase: GetUserWalletUseCase,
-    private val getPrimaryCurrencyStatusUpdatesUseCase: GetPrimaryCurrencyStatusUpdatesUseCase,
+    private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
     private val getCryptoCurrencyActionsUseCase: GetCryptoCurrencyActionsUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val shouldShowMarketsTooltipUseCase: ShouldShowMarketsTooltipUseCase,
@@ -162,7 +162,7 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
 
     override fun onTransactionClick(txHash: String) {
         modelScope.launch(dispatchers.main) {
-            val currency = getPrimaryCurrencyStatusUpdatesUseCase.unwrap(
+            val currency = getSingleCryptoCurrencyStatusUseCase.unwrap(
                 userWalletId = stateHolder.getSelectedWalletId(),
             )
                 ?.currency
