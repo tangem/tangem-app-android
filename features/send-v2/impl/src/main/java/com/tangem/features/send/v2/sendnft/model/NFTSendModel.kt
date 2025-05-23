@@ -18,10 +18,10 @@ import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.tokens.GetCryptoCurrenciesUseCase
-import com.tangem.domain.tokens.GetCurrencyStatusUpdatesUseCase
 import com.tangem.domain.tokens.GetFeePaidCryptoCurrencyStatusSyncUseCase
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.CreateNFTTransferTransactionUseCase
@@ -60,7 +60,7 @@ internal class NFTSendModel @Inject constructor(
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val getCryptoCurrenciesUseCase: GetCryptoCurrenciesUseCase,
-    private val getCurrencyStatusUpdatesUseCase: GetCurrencyStatusUpdatesUseCase,
+    private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
     private val createNFTTransferTransactionUseCase: CreateNFTTransferTransactionUseCase,
     private val getFeeUseCase: GetFeeUseCase,
@@ -166,7 +166,7 @@ internal class NFTSendModel @Inject constructor(
         saveBlockchainErrorUseCase(
             error = BlockchainErrorInfo(
                 errorMessage = errorMessage.orEmpty(),
-                blockchainId = cryptoCurrency.network.id.value,
+                blockchainId = cryptoCurrency.network.rawId,
                 derivationPath = cryptoCurrency.network.derivationPath.value,
                 destinationAddress = "",
                 tokenSymbol = null,
@@ -183,7 +183,7 @@ internal class NFTSendModel @Inject constructor(
     }
 
     private fun getCurrenciesStatusUpdates(isSingleWalletWithToken: Boolean) {
-        getCurrencyStatusUpdatesUseCase(
+        getSingleCryptoCurrencyStatusUseCase.invokeMultiWallet(
             userWalletId = userWalletId,
             currencyId = cryptoCurrency.id,
             isSingleWalletWithTokens = isSingleWalletWithToken,
