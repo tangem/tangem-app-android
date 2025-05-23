@@ -12,5 +12,5 @@ internal data class WcEstimatedWalletChangeUM(
     @DrawableRes val iconRes: Int,
     val title: TextReference,
     val description: String,
-    val tokenIconUrl: String,
+    val tokenIconUrl: String?,
 )
