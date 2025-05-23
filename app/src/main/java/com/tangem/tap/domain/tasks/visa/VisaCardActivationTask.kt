@@ -310,7 +310,7 @@ class VisaCardActivationTask @AssistedInject constructor(
             signature = response.signature,
             hash = dataToSign.hashToSign.hexToBytes(),
             publicKey = walletPublicKey.toDecompressedPublicKey(),
-        ).asRSVLegacyEVM().toHexString()
+        ).asRSVLegacyEVM().toHexString().lowercase()
 
         val signedActivationData = dataToSign.sign(
             rootOTP = otp.rootOTP.toHexString(),

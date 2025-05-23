@@ -107,7 +107,7 @@ fun TangemTheme(
             CompositionLocalProvider(
                 LocalTangemShimmer provides TangemShimmer,
                 LocalMainBottomSheetColor provides remember { mutableStateOf(Color.Unspecified) },
-                LocalRootBackgroundColor provides remember { mutableStateOf(rootBackgroundColor) },
+                LocalRootBackgroundColor provides remember(rootBackgroundColor) { mutableStateOf(rootBackgroundColor) },
                 LocalTextSelectionColors provides TangemTextSelectionColors,
             ) {
                 ProvideTextStyle(

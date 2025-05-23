@@ -226,5 +226,13 @@ internal object SettingsDomainModule {
     fun provideIsGooglePayAvailableUseCase(settingsRepository: SettingsRepository): IsGooglePayAvailableUseCase {
         return IsGooglePayAvailableUseCase(settingsRepository)
     }
+
+    @Provides
+    @Singleton
+    fun provideMaybeSetWalletFirstTimeUsageUseCase(
+        settingsRepository: SettingsRepository,
+    ): SetWalletFirstTimeUsageUseCase {
+        return SetWalletFirstTimeUsageUseCase(settingsRepository)
+    }
     // endregion
 }
