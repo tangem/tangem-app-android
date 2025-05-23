@@ -547,7 +547,7 @@ internal class DefaultLegacyWalletConnectRepository(
             onError = { error ->
                 Timber.e(error.throwable, "Error while responging session request")
 
-                val params = WalletConnect.RequestHandledParams(
+                val handledParams = WalletConnect.RequestHandledParams(
                     dAppName = session?.name ?: "",
                     dAppUrl = session?.url ?: "",
                     methodName = requestData.method,
@@ -555,7 +555,7 @@ internal class DefaultLegacyWalletConnectRepository(
                     errorCode = WalletConnectError.ValidationError.error,
                     errorDescription = error.throwable.message,
                 )
-                analyticsHandler.send(WalletConnect.SignatureRequestFailed(params))
+                analyticsHandler.send(WalletConnect.SignatureRequestFailed(handledParams))
             },
         )
     }
