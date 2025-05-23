@@ -321,7 +321,7 @@ private fun SecondaryPairButtons(
 }
 
 @Composable
-internal fun CloseableIconButton(
+fun CloseableIconButton(
     onClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
     isEnabled: Boolean = true,
