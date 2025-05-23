@@ -12,9 +12,9 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.onramp.model.OnrampStatus
 import com.tangem.domain.onramp.model.cache.OnrampTransaction
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.success.entity.OnrampSuccessComponentUM
 import com.tangem.utils.converter.Converter

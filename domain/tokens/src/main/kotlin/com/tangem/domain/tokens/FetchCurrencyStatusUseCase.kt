@@ -4,16 +4,15 @@ import arrow.core.Either
 import arrow.core.raise.Raise
 import arrow.core.raise.catch
 import arrow.core.raise.either
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.quotes.multi.MultiQuoteFetcher
 import com.tangem.domain.staking.fetcher.YieldBalanceFetcherParams
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.staking.single.SingleYieldBalanceFetcher
 import com.tangem.domain.tokens.error.CurrencyStatusError
-import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.repository.CurrenciesRepository
-import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.async
@@ -26,14 +25,12 @@ import kotlinx.coroutines.coroutineScope
  * by providing a specific currency ID or fetching the status of the primary currency.
  *
  * @param currenciesRepository The repository for retrieving currency-related data.
- * @param networksRepository The repository for retrieving network-related data.
  * @param quotesRepository The repository for retrieving cryptocurrency quotes.
  */
 // TODO: Add tests
 @Suppress("LongParameterList")
 class FetchCurrencyStatusUseCase(
     private val currenciesRepository: CurrenciesRepository,
-    private val networksRepository: NetworksRepository,
     private val quotesRepository: QuotesRepository,
     private val stakingRepository: StakingRepository,
     private val singleNetworkStatusFetcher: SingleNetworkStatusFetcher,
@@ -86,7 +83,7 @@ class FetchCurrencyStatusUseCase(
         refresh: Boolean,
     ) = coroutineScope {
         val fetchStatus = async {
-            fetchNetworkStatus(userWalletId, currency.network, refresh)
+            fetchNetworkStatus(userWalletId, currency.network)
         }
         val fetchQuote = async {
             fetchQuote(currency.id, refresh)
@@ -120,23 +117,12 @@ class FetchCurrencyStatusUseCase(
         }
     }
 
-    private suspend fun Raise<CurrencyStatusError>.fetchNetworkStatus(
-        userWalletId: UserWalletId,
-        network: Network,
-        refresh: Boolean,
-    ) {
-        if (tokensFeatureToggles.isNetworksLoadingRefactoringEnabled) {
-            singleNetworkStatusFetcher(
-                params = SingleNetworkStatusFetcher.Params.Simple(userWalletId = userWalletId, network = network),
-            )
-                .mapLeft { CurrencyStatusError.DataError(it) }
-        } else {
-            catch(
-                block = { networksRepository.getNetworkStatusesSync(userWalletId, setOf(network), refresh) },
-            ) {
-                raise(CurrencyStatusError.DataError(it))
-            }
-        }
+    private suspend fun Raise<CurrencyStatusError>.fetchNetworkStatus(userWalletId: UserWalletId, network: Network) {
+        singleNetworkStatusFetcher(
+            params = SingleNetworkStatusFetcher.Params(userWalletId = userWalletId, network = network),
+        )
+            .mapLeft { CurrencyStatusError.DataError(it) }
+            .bind()
     }
 
     private suspend fun Raise<CurrencyStatusError>.fetchQuote(currencyId: CryptoCurrency.ID, refresh: Boolean) {
