@@ -14,6 +14,7 @@ dependencies {
     implementation(projects.core.decompose)
 
     /** Domain models */
+    api(projects.domain.models)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets.models)
 
