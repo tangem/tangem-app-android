@@ -9,7 +9,7 @@ import com.tangem.blockchain.common.smartcontract.CompiledSmartContractCallData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.extensions.hexToBigDecimal
 import com.tangem.common.extensions.hexToBytes
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.walletconnect.model.WcEthTransactionParams
 import java.math.BigDecimal
 
@@ -20,7 +20,7 @@ internal object WcEthTxHelper {
         val gasLimit = txParams.gas?.hexToBigDecimal() ?: return null
         val gasPrice = txParams.gasPrice?.hexToBigDecimal() ?: return null
 
-        val blockchain = Blockchain.fromId(network.id.value)
+        val blockchain = Blockchain.fromId(network.rawId)
 
         var feeDecimal = (gasLimit * gasPrice)
             .movePointLeft(blockchain.decimals())
@@ -38,7 +38,7 @@ internal object WcEthTxHelper {
         txParams: WcEthTransactionParams,
     ): TransactionData.Uncompiled? {
         val destinationAddress = txParams.to ?: return null
-        val blockchain = Blockchain.fromId(network.id.value)
+        val blockchain = Blockchain.fromId(network.rawId)
         val value = (txParams.value ?: "0")
             .hexToBigDecimal()
             .movePointLeft(blockchain.decimals())
