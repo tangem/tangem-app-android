@@ -31,7 +31,7 @@ internal class TokenDetailsBalanceSelectStateConverter(
 
             val yieldBalance = cryptoCurrencyStatus.value.yieldBalance as? YieldBalance.Data
             val stakingCryptoAmount = yieldBalance?.getTotalWithRewardsStakingBalance(
-                cryptoCurrencyStatus.currency.network.id.value,
+                cryptoCurrencyStatus.currency.network.rawId,
             )
             val stakingFiatAmount = stakingCryptoAmount?.let { cryptoCurrencyStatus.value.fiatRate?.multiply(it) }
             copy(

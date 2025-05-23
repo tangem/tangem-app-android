@@ -292,6 +292,7 @@ include(":domain:blockaid")
 include(":domain:blockaid:models")
 include(":domain:notifications")
 include(":domain:notifications:models")
+include(":domain:notifications:toggles")
 // endregion Domain modules
 
 // region Data modules
