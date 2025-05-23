@@ -10,9 +10,9 @@ import com.tangem.blockchain.extensions.Result
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.core.utils.lceContent
 import com.tangem.domain.core.utils.lceLoading
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -68,7 +68,7 @@ class CurrencyExchangeManager(
         walletAddress: String,
         isDarkTheme: Boolean,
     ): String? {
-        val blockchain = Blockchain.fromId(cryptoCurrency.network.id.value)
+        val blockchain = Blockchain.fromId(cryptoCurrency.network.rawId)
         if (blockchain.isTestnet()) return blockchain.getTestnetTopUpUrl()
 
         val urlBuilder = getExchangeUrlBuilder(action)
