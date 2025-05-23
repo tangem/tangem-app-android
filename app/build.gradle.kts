@@ -111,6 +111,8 @@ dependencies {
     implementation(projects.domain.networks)
     implementation(projects.domain.quotes)
     implementation(projects.domain.notifications)
+    implementation(projects.domain.notifications.models)
+    implementation(projects.domain.notifications.toggles)
 
     implementation(projects.common)
     implementation(projects.common.routing)

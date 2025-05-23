@@ -1,8 +1,11 @@
 package com.tangem.domain.tokens.operations
 
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.staking.model.stakekit.YieldBalance
-import com.tangem.domain.tokens.model.*
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.model.Quote
 import java.math.BigDecimal
 
 internal class CurrencyStatusOperations(
@@ -71,10 +74,10 @@ internal class CurrencyStatusOperations(
             null -> {
                 return CryptoCurrencyStatus.Loading
             }
-            is CryptoCurrencyAmountStatus.NotFound -> {
+            is NetworkStatus.Amount.NotFound -> {
                 return CryptoCurrencyStatus.NoAmount(priceChange = quote?.priceChange, fiatRate = quote?.fiatRate)
             }
-            is CryptoCurrencyAmountStatus.Loaded -> amount.value
+            is NetworkStatus.Amount.Loaded -> amount.value
         }
 
         val hasCurrentNetworkTransactions = networkStatusValue.pendingTransactions.isNotEmpty()
