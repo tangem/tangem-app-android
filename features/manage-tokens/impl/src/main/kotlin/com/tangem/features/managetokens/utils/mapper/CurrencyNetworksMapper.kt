@@ -2,7 +2,7 @@ package com.tangem.features.managetokens.utils.mapper
 
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency.SourceNetwork
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.network.Network
 import com.tangem.features.managetokens.entity.item.CurrencyItemUM.Basic.NetworksUM
 import com.tangem.features.managetokens.entity.item.CurrencyNetworkUM
 import com.tangem.features.managetokens.utils.ui.getIconRes

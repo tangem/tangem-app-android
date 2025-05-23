@@ -1,6 +1,7 @@
 package com.tangem.features.onboarding.v2.visa.impl.child.inprogress.model
 
 import androidx.compose.runtime.Stable
+import arrow.core.getOrElse
 import com.tangem.common.extensions.toHexString
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
@@ -12,8 +13,10 @@ import com.tangem.datasource.local.visa.VisaAuthTokenStorage
 import com.tangem.datasource.local.visa.VisaOTPStorage
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.visa.error.VisaActivationError
-import com.tangem.domain.visa.error.VisaAuthorizationAPIError
-import com.tangem.domain.visa.model.*
+import com.tangem.domain.visa.model.VisaActivationRemoteState
+import com.tangem.domain.visa.model.VisaAuthTokens
+import com.tangem.domain.visa.model.VisaCardActivationStatus
+import com.tangem.domain.visa.model.VisaCardId
 import com.tangem.domain.visa.repository.VisaActivationRepository
 import com.tangem.domain.visa.repository.VisaAuthRepository
 import com.tangem.domain.wallets.builder.UserWalletBuilder
@@ -64,9 +67,13 @@ internal class OnboardingVisaInProgressModel @Inject constructor(
     private fun runShortPolling() {
         modelScope.launch {
             while (true) {
-                val result = runCatching {
-                    visaActivationRepository.getActivationRemoteState()
-                }.getOrNull() ?: continue
+                val result = visaActivationRepository.getActivationRemoteState()
+                    .getOrElse {
+                        uiMessageSender.showErrorDialog(it)
+                        delay(timeMillis = 2000)
+                        runShortPolling()
+                        return@launch
+                    }
 
                 when (result) {
                     is VisaActivationRemoteState.CardWalletSignatureRequired,
@@ -156,12 +163,11 @@ internal class OnboardingVisaInProgressModel @Inject constructor(
         val authTokens = visaAuthTokenStorage.get(params.scanResponse.card.cardId)
             ?: error("Auth tokens are not found. This should not happen.")
 
-        val newTokens = runCatching {
-            visaAuthRepository.refreshAccessTokens(authTokens.refreshToken)
-        }.getOrElse {
-            uiMessageSender.showErrorDialog(VisaAuthorizationAPIError)
-            return
-        }
+        val newTokens = visaAuthRepository.refreshAccessTokens(authTokens.refreshToken)
+            .getOrElse {
+                uiMessageSender.showErrorDialog(it)
+                return
+            }
 
         val userWallet = createUserWallet(params.scanResponse, newTokens)
         userWalletsListManager.save(userWallet)

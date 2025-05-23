@@ -40,6 +40,8 @@ import com.tangem.datasource.local.token.StakingYieldsStore
 import com.tangem.datasource.local.token.converter.StakingNetworkTypeConverter
 import com.tangem.datasource.local.token.converter.TokenConverter
 import com.tangem.domain.common.TapWorkarounds.isWallet2
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.staking.model.StakingApproval
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
@@ -56,8 +58,6 @@ import com.tangem.domain.staking.model.stakekit.transaction.StakingGasEstimate
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.staking.toggles.StakingFeatureToggles
-import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
@@ -245,7 +245,7 @@ internal class DefaultStakingRepository(
     }
 
     private fun checkFeatureToggleEnabled(networkId: Network.ID): Boolean {
-        return when (Blockchain.fromId(networkId.value)) {
+        return when (Blockchain.fromId(networkId.rawId.value)) {
             Blockchain.TON -> stakingFeatureToggles.isTonStakingEnabled
             Blockchain.Cardano -> stakingFeatureToggles.isCardanoStakingEnabled
             else -> true
@@ -256,7 +256,7 @@ internal class DefaultStakingRepository(
         val userWallet = getUserWalletUseCase(userWalletId).getOrElse {
             error("Failed to get user wallet")
         }
-        val blockchainId = cryptoCurrency.network.id.value
+        val blockchainId = cryptoCurrency.network.rawId
         return when {
             isSolana(blockchainId) -> INVALID_BATCHES_FOR_SOLANA.contains(userWallet.scanResponse.card.batchId)
             isCardano(blockchainId) -> !userWallet.scanResponse.card.isWallet2
