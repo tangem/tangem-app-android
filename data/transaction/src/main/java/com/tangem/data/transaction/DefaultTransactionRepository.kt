@@ -20,8 +20,8 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.nft.models.NFTAsset
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.datasource.local.walletmanager.WalletManagersStore
-import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.transaction.TransactionRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWalletId
@@ -47,14 +47,14 @@ internal class DefaultTransactionRepository(
         network: Network,
         txExtras: TransactionExtras?,
     ): TransactionData.Uncompiled = withContext(coroutineDispatcherProvider.io) {
-        val blockchain = Blockchain.fromId(network.id.value)
+        val blockchain = Blockchain.fromId(network.rawId)
         val walletManager = walletManagersFacade.getOrCreateWalletManager(
             userWalletId = userWalletId,
             blockchain = blockchain,
             derivationPath = network.derivationPath.value,
         ) ?: error("Wallet manager not found")
 
-        val extras = txExtras ?: getMemoExtras(networkId = network.id.value, memo)
+        val extras = txExtras ?: getMemoExtras(networkId = network.rawId, memo)
 
         return@withContext if (fee != null) {
             walletManager.createTransaction(
@@ -83,7 +83,7 @@ internal class DefaultTransactionRepository(
         userWalletId: UserWalletId,
         network: Network,
     ): TransactionData.Uncompiled = withContext(coroutineDispatcherProvider.io) {
-        val blockchain = Blockchain.fromId(network.id.value)
+        val blockchain = Blockchain.fromId(network.rawId)
         val walletManager = walletManagersFacade.getOrCreateWalletManager(
             userWalletId = userWalletId,
             blockchain = blockchain,
@@ -115,14 +115,14 @@ internal class DefaultTransactionRepository(
                 destination = destination,
                 userWalletId = userWalletId,
                 network = network,
-                txExtras = getMemoExtras(networkId = network.id.value, memo = memo) ?: extras,
+                txExtras = getMemoExtras(networkId = network.rawId, memo = memo) ?: extras,
             )
         } else {
             TransactionData.Uncompiled(
                 amount = amount,
                 sourceAddress = walletManager.wallet.address,
                 destinationAddress = destination,
-                extras = getMemoExtras(networkId = network.id.value, memo = memo) ?: extras,
+                extras = getMemoExtras(networkId = network.rawId, memo = memo) ?: extras,
                 fee = null,
             )
         }
@@ -137,7 +137,7 @@ internal class DefaultTransactionRepository(
         userWalletId: UserWalletId,
         network: Network,
     ): TransactionData.Uncompiled = withContext(coroutineDispatcherProvider.io) {
-        val blockchain = Blockchain.fromId(network.id.value)
+        val blockchain = Blockchain.fromId(network.rawId)
 
         val extras = createTransactionDataExtras(
             callData = SmartContractCallDataProviderFactory.getApprovalCallData(
@@ -170,12 +170,17 @@ internal class DefaultTransactionRepository(
         userWalletId: UserWalletId,
         network: Network,
     ): TransactionData.Uncompiled = withContext(coroutineDispatcherProvider.io) {
-        val blockchain = Blockchain.fromId(network.id.value)
+        val blockchain = Blockchain.fromId(network.rawId)
+
+        // For now transfer one nft asset at a time
+        val updatedNFTAsset = nftAsset.copy(
+            amount = BigInteger.ONE,
+        )
 
         val nftTransferCallData = SmartContractCallDataProviderFactory.getNFTTransferCallData(
             destinationAddress = destinationAddress,
             ownerAddress = ownerAddress,
-            nftAsset = nftAsset,
+            nftAsset = updatedNFTAsset,
             blockchain = blockchain,
         )
 
@@ -190,12 +195,19 @@ internal class DefaultTransactionRepository(
             null
         }
 
+        val contractAddress = when (val identifier = nftAsset.identifier) {
+            is NFTAsset.Identifier.EVM -> identifier.tokenAddress
+            is NFTAsset.Identifier.Solana -> identifier.tokenAddress
+            is NFTAsset.Identifier.TON -> identifier.tokenAddress
+            NFTAsset.Identifier.Unknown -> ""
+        }
+
         return@withContext createTransaction(
             amount = Amount(
-                value = nftAsset.amount?.toBigDecimal() ?: error("Invalid amount"),
+                value = updatedNFTAsset.amount?.toBigDecimal() ?: error("Invalid amount"),
                 token = Token(
                     symbol = blockchain.currency,
-                    contractAddress = "",
+                    contractAddress = contractAddress,
                     decimals = nftAsset.decimals ?: error("Invalid decimals"),
                 ),
             ),
@@ -216,7 +228,7 @@ internal class DefaultTransactionRepository(
         userWalletId: UserWalletId,
         network: Network,
     ): Result<Unit> = withContext(coroutineDispatcherProvider.io) {
-        val blockchain = Blockchain.fromId(network.id.value)
+        val blockchain = Blockchain.fromId(network.rawId)
         val walletManager = walletManagersStore.getSyncOrNull(
             userWalletId = userWalletId,
             blockchain = blockchain,
@@ -231,7 +243,7 @@ internal class DefaultTransactionRepository(
                 fee = fee ?: Fee.Common(amount = amount),
                 destination = destination,
             ).copy(
-                extras = getMemoExtras(networkId = network.id.value, memo = memo),
+                extras = getMemoExtras(networkId = network.rawId, memo = memo),
             )
 
             validator.validate(transactionData = transactionData)
@@ -247,7 +259,7 @@ internal class DefaultTransactionRepository(
         userWalletId: UserWalletId,
         network: Network,
     ) = withContext(coroutineDispatcherProvider.io) {
-        val blockchain = Blockchain.fromId(network.id.value)
+        val blockchain = Blockchain.fromId(network.rawId)
         val walletManager = walletManagersFacade.getOrCreateWalletManager(
             userWalletId = userWalletId,
             blockchain = blockchain,
@@ -263,7 +275,7 @@ internal class DefaultTransactionRepository(
         network: Network,
         mode: TransactionSender.MultipleTransactionSendMode,
     ) = withContext(coroutineDispatcherProvider.io) {
-        val blockchain = Blockchain.fromId(network.id.value)
+        val blockchain = Blockchain.fromId(network.rawId)
         val walletManager = walletManagersFacade.getOrCreateWalletManager(
             userWalletId = userWalletId,
             blockchain = blockchain,
@@ -303,7 +315,7 @@ internal class DefaultTransactionRepository(
         spenderAddress: String,
     ): BigDecimal {
         val walletManager = walletManagersFacade.getOrCreateWalletManager(userWalletId, cryptoCurrency.network)
-        val blockchain = Blockchain.fromId(cryptoCurrency.network.id.value)
+        val blockchain = Blockchain.fromId(cryptoCurrency.network.rawId)
         val allowanceResult = (walletManager as? Approver)?.getAllowance(
             spenderAddress,
             Token(
@@ -376,7 +388,7 @@ internal class DefaultTransactionRepository(
     }
 
     private suspend fun getPreparer(network: Network, userWalletId: UserWalletId): TransactionPreparer {
-        val blockchain = Blockchain.fromId(network.id.value)
+        val blockchain = Blockchain.fromId(network.rawId)
         val walletManager = walletManagersFacade.getOrCreateWalletManager(
             userWalletId = userWalletId,
             blockchain = blockchain,

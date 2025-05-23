@@ -3,6 +3,8 @@ package com.tangem.data.walletconnect.utils
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 
+const val WC_TAG = "Wallet Connect"
+
 internal interface WcSdkObserver : WalletKit.WalletDelegate {
 
     override val onSessionAuthenticate: ((Wallet.Model.SessionAuthenticate, Wallet.Model.VerifyContext) -> Unit)?

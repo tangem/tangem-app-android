@@ -10,8 +10,8 @@ import com.tangem.domain.common.extensions.withIOContext
 import com.tangem.domain.core.utils.lceContent
 import com.tangem.domain.core.utils.lceError
 import com.tangem.domain.core.utils.lceLoading
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.tap.domain.model.Currency
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
 import com.tangem.tap.network.exchangeServices.ExchangeService
@@ -133,7 +133,7 @@ class MoonPayService(
     ): String? {
         if (action == CurrencyExchangeManager.Action.Buy) throw UnsupportedOperationException()
 
-        val blockchain = Blockchain.fromId(cryptoCurrency.network.id.value)
+        val blockchain = Blockchain.fromId(cryptoCurrency.network.rawId)
         val supportedCurrency = blockchain.moonPaySupportedCurrency ?: return null
         val moonpayCurrency = status?.availableForSell?.firstOrNull {
             when (cryptoCurrency) {
