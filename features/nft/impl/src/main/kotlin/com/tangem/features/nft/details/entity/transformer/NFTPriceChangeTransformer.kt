@@ -1,0 +1,53 @@
+package com.tangem.features.nft.details.entity.transformer
+
+import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.fiat
+import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.nft.models.NFTSalePrice
+import com.tangem.features.nft.details.entity.NFTAssetUM
+import com.tangem.features.nft.details.entity.NFTDetailsUM
+import com.tangem.utils.transformer.Transformer
+
+internal class NFTPriceChangeTransformer(
+    private val appCurrency: AppCurrency,
+    private val nftSalePrice: NFTSalePrice,
+) : Transformer<NFTDetailsUM> {
+
+    override fun transform(prevState: NFTDetailsUM): NFTDetailsUM {
+        val topInfo = prevState.nftAsset.topInfo as? NFTAssetUM.TopInfo.Content ?: return prevState
+
+        return prevState.copy(
+            nftAsset = prevState.nftAsset.copy(
+                topInfo = topInfo.copy(
+                    salePrice = when (nftSalePrice) {
+                        is NFTSalePrice.Empty,
+                        is NFTSalePrice.Error,
+                        -> NFTAssetUM.SalePrice.Empty
+                        is NFTSalePrice.Loading -> NFTAssetUM.SalePrice.Loading
+                        is NFTSalePrice.Value -> NFTAssetUM.SalePrice.Content(
+                            isFlickering = false,
+                            cryptoPrice = stringReference(
+                                nftSalePrice.value.format {
+                                    crypto(
+                                        symbol = nftSalePrice.symbol,
+                                        decimals = nftSalePrice.decimals,
+                                    )
+                                },
+                            ),
+                            fiatPrice = stringReference(
+                                nftSalePrice.fiatValue.format {
+                                    fiat(
+                                        fiatCurrencyCode = appCurrency.code,
+                                        fiatCurrencySymbol = appCurrency.symbol,
+                                    )
+                                },
+                            ),
+                        )
+                    },
+                ),
+            ),
+        )
+    }
+}

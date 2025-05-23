@@ -6,6 +6,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.extensions.iconResId
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.walletconnect.model.WcSession
@@ -13,9 +14,10 @@ import com.tangem.domain.walletconnect.usecase.WcSessionsUseCase
 import com.tangem.domain.walletconnect.usecase.disconnect.WcDisconnectUseCase
 import com.tangem.features.walletconnect.connections.components.WcConnectedAppInfoComponent
 import com.tangem.features.walletconnect.connections.entity.WcConnectedAppInfoUM
+import com.tangem.features.walletconnect.connections.entity.WcNetworkInfoItem
 import com.tangem.features.walletconnect.connections.entity.WcPrimaryButtonConfig
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -56,7 +58,15 @@ internal class WcConnectedAppInfoModel @Inject constructor(
                         isVerified = session.securityStatus == CheckDAppResult.SAFE,
                         appSubtitle = session.sdkModel.appMetaData.description,
                         walletName = session.wallet.name,
-                        networks = persistentListOf(), // TODO(wc): Nikolai & Doston: Where to find networks???
+                        networks = session.networks
+                            .map {
+                                WcNetworkInfoItem.Required(
+                                    id = it.rawId,
+                                    icon = it.iconResId,
+                                    name = it.name,
+                                    symbol = it.currencySymbol,
+                                )
+                            }.toImmutableList(),
                         disconnectButtonConfig = WcPrimaryButtonConfig(
                             showProgress = false,
                             enabled = true,
