@@ -5,6 +5,8 @@ import com.tangem.common.ui.charts.state.MarketChartRawData
 import com.tangem.common.ui.charts.state.converter.PriceAndTimePointValuesConverter
 import com.tangem.common.ui.charts.state.sorted
 import com.tangem.core.ui.components.marketprice.PriceChangeType
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.compact
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
@@ -12,6 +14,7 @@ import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.TokenMarket
+import com.tangem.features.markets.impl.R
 import com.tangem.features.markets.tokenlist.impl.ui.state.MarketsListItemUM
 import com.tangem.features.markets.tokenlist.impl.ui.state.MarketsListUM.TrendInterval
 import com.tangem.utils.converter.Converter
@@ -37,8 +40,11 @@ internal class MarketsTokenItemConverter(
             price = value.getCurrentPrice(),
             trendPercentText = value.getTrendPercent(),
             trendType = value.getTrendType(),
-            chardData = value.getChartData(),
+            chartData = value.getChartData(),
             isUnder100kMarketCap = value.isUnderMarketCapLimit,
+            stakingRate = value.stakingRate?.format { percent() }?.let {
+                resourceReference(R.string.markets_apy_placeholder, wrappedList(it))
+            },
         )
     }
 
@@ -64,7 +70,7 @@ internal class MarketsTokenItemConverter(
                 prevUI.trendPercentText,
             ) { new.getTrendPercent() },
             trendType = ifChanged(prev.tokenQuotesShort, new.tokenQuotesShort, prevUI.trendType) { new.getTrendType() },
-            chardData = ifChanged(prev.tokenCharts, new.tokenCharts, prevUI.chardData) { new.getChartData() },
+            chartData = ifChanged(prev.tokenCharts, new.tokenCharts, prevUI.chartData) { new.getChartData() },
         )
     }
 
