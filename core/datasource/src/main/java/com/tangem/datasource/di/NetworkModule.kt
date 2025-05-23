@@ -43,6 +43,10 @@ internal object NetworkModule {
     private const val TANGEM_TECH_MARKETS_SERVICE_TIMEOUT_SECONDS = 60L
     private const val STAKE_KIT_API_TIMEOUT_SECONDS = 60L
 
+    private val excludedApiForLogging: Set<ApiConfig.ID> = setOf(
+        // ApiConfig.ID.StakeKit,
+    )
+
     @Provides
     @Singleton
     fun provideApiConfigManager(
@@ -317,12 +321,18 @@ internal object NetworkModule {
                         }
                         b
                     }
-                    .addLoggers(context)
+                    .addLoggers(context = context, id = id)
                     .clientBuilder()
                     .build(),
             )
             .build()
             .create(T::class.java)
+    }
+
+    private fun OkHttpClient.Builder.addLoggers(context: Context, id: ApiConfig.ID): OkHttpClient.Builder {
+        if (id in excludedApiForLogging) return this
+
+        return addLoggers(context)
     }
 
     private data class Timeouts(

@@ -49,6 +49,6 @@ dependencies {
     implementation(tangemDeps.card.core)
 
     /** DI */
-    implementation(deps.hilt.core)
+    implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
 }
