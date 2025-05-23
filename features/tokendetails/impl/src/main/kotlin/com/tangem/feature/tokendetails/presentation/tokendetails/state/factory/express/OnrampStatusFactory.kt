@@ -125,6 +125,7 @@ internal class OnrampStatusFactory @AssistedInject constructor(
             onrampUpdateTransactionStatusUseCase(
                 txId = txId,
                 externalTxUrl = statusModel.externalTxUrl.orEmpty(),
+                externalTxId = statusModel.externalTxId.orEmpty(),
                 status = statusModel.status,
             )
         }
