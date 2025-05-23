@@ -6,12 +6,12 @@ import com.tangem.blockchain.common.MinimumSendAmountProvider
 import com.tangem.blockchain.common.ReserveAmountProvider
 import com.tangem.blockchain.common.UtxoAmountLimitProvider
 import com.tangem.data.tokens.converters.UtxoConverter
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.staking.utils.getTotalStakingBalance
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.CurrencyAmount
-import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.blockchains.UtxoAmountLimit
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
@@ -136,7 +136,7 @@ internal class DefaultCurrencyChecksRepository(
         val balanceValue = currencyStatus.value as? CryptoCurrencyStatus.Loaded ?: return null
         val stakingBalance = balanceValue.yieldBalance as? YieldBalance.Data
         val stakingTotalBalance = stakingBalance?.getTotalStakingBalance(
-            blockchainId = currencyStatus.currency.network.id.value,
+            blockchainId = currencyStatus.currency.network.rawId,
         ).orZero()
         return when {
             balanceValue.amount.isZero() && stakingTotalBalance.isZero() -> null

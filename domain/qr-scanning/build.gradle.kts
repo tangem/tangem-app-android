@@ -11,6 +11,7 @@ android {
 dependencies {
 
     /** Domain */
+    api(projects.domain.models)
     implementation(projects.domain.qrScanning.models)
     implementation(projects.domain.tokens.models)
 
