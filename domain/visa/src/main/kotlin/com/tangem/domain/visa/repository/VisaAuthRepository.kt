@@ -1,16 +1,21 @@
 package com.tangem.domain.visa.repository
 
+import arrow.core.Either
+import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.model.VisaAuthChallenge
 import com.tangem.domain.visa.model.VisaAuthSignedChallenge
 import com.tangem.domain.visa.model.VisaAuthTokens
 
 interface VisaAuthRepository {
 
-    suspend fun getCardAuthChallenge(cardId: String, cardPublicKey: String): VisaAuthChallenge.Card
+    suspend fun getCardAuthChallenge(
+        cardId: String,
+        cardPublicKey: String,
+    ): Either<VisaApiError, VisaAuthChallenge.Card>
 
-    suspend fun getCardWalletAuthChallenge(cardWalletAddress: String): VisaAuthChallenge.Wallet
+    suspend fun getCardWalletAuthChallenge(cardWalletAddress: String): Either<VisaApiError, VisaAuthChallenge.Wallet>
 
-    suspend fun getAccessTokens(signedChallenge: VisaAuthSignedChallenge): VisaAuthTokens
+    suspend fun getAccessTokens(signedChallenge: VisaAuthSignedChallenge): Either<VisaApiError, VisaAuthTokens>
 
-    suspend fun refreshAccessTokens(refreshToken: VisaAuthTokens.RefreshToken): VisaAuthTokens
+    suspend fun refreshAccessTokens(refreshToken: VisaAuthTokens.RefreshToken): Either<VisaApiError, VisaAuthTokens>
 }

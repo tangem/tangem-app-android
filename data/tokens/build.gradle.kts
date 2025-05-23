@@ -14,44 +14,52 @@ android {
 
 dependencies {
 
-    /** Project - Domain */
+    // region Project - Data
+    implementation(projects.data.common)
+    implementation(projects.data.networks)
+    // endregion
+
+    // region Project - Domain
     implementation(projects.domain.core)
     implementation(projects.domain.demo)
+    implementation(projects.domain.legacy)
     implementation(projects.domain.models)
+    implementation(projects.domain.staking)
+    implementation(projects.domain.staking.models)
     implementation(projects.domain.tokens)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.txhistory.models)
     implementation(projects.domain.wallets.models)
-    implementation(projects.domain.staking.models)
-    implementation(projects.domain.staking)
+    // endregion
 
-    /** Project - Data */
+    // region Project - Utils
     implementation(projects.core.datasource)
-    implementation(projects.data.common)
-
-    /** Project - Utils */
     implementation(projects.core.utils)
-    implementation(projects.domain.legacy)
     implementation(projects.libs.blockchainSdk)
+    // endregion
 
-    /** Tangem SDKs */
+    // region Tangem SDKs
     implementation(tangemDeps.blockchain)
     implementation(tangemDeps.card.core)
+    // endregion
 
-    /** AndroidX */
+    // region AndroidX
     implementation(deps.androidx.datastore)
+    implementation(deps.androidx.paging.runtime)
+    // endregion
 
-    /** DI */
+    // region DI
     implementation(deps.hilt.core)
     kapt(deps.hilt.kapt)
+    // endregion
 
-    /** Other */
+    // region Other
+    implementation(deps.jodatime)
     implementation(deps.kotlin.coroutines)
     implementation(deps.moshi.kotlin)
-    implementation(deps.jodatime)
-    implementation(deps.timber)
     implementation(deps.retrofit) // For HttpException
-    implementation(deps.androidx.paging.runtime)
+    implementation(deps.timber)
     ksp(deps.moshi.kotlin.codegen)
     kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
+    // endregion
 }

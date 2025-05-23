@@ -4,7 +4,7 @@ import arrow.core.Either
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.TransactionExtras
 import com.tangem.blockchain.common.transaction.Fee
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.transaction.TransactionRepository
 import com.tangem.domain.wallets.models.UserWalletId
 

@@ -7,10 +7,10 @@ import com.tangem.data.common.currency.CryptoCurrencyFactory
 import com.tangem.data.common.currency.getNetwork
 import com.tangem.datasource.api.tangemTech.models.HotCryptoResponse
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.onramp.model.HotCryptoCurrency
-import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.Quote
 import com.tangem.utils.converter.Converter
 import java.math.BigDecimal

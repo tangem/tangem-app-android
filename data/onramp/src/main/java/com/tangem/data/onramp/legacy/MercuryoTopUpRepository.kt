@@ -6,8 +6,8 @@ import com.tangem.common.extensions.calculateSha512
 import com.tangem.common.extensions.toHexString
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.onramp.repositories.LegacyTopUpRepository
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -19,7 +19,7 @@ internal class MercuryoTopUpRepository @Inject constructor(
 
     override suspend fun getTopUpUrl(cryptoCurrency: CryptoCurrency, walletAddress: String): String =
         withContext(dispatchersProvider.default) {
-            val blockchain = Blockchain.fromId(cryptoCurrency.network.id.value)
+            val blockchain = Blockchain.fromId(cryptoCurrency.network.rawId)
             val environmentConfig = environmentConfigStorage.getConfigSync()
 
             val builder = Uri.Builder()
