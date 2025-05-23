@@ -1,15 +1,13 @@
 package com.tangem.data.networks.utils
 
+import com.tangem.blockchainsdk.models.UpdateWalletManagerResult
+import com.tangem.blockchainsdk.models.UpdateWalletManagerResult.*
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.network.TxInfo
-import com.tangem.domain.walletmanager.model.Address
-import com.tangem.domain.walletmanager.model.CryptoCurrencyAmount
-import com.tangem.domain.walletmanager.model.CryptoCurrencyTransaction
-import com.tangem.domain.walletmanager.model.UpdateWalletManagerResult
 import timber.log.Timber
 
 /** Factory for creating [NetworkStatus] */
@@ -30,17 +28,17 @@ object NetworkStatusFactory {
         return NetworkStatus(
             network = network,
             value = when (updatingResult) {
-                is UpdateWalletManagerResult.MissedDerivation -> NetworkStatus.MissedDerivation
-                is UpdateWalletManagerResult.Unreachable -> createUnreachableStatus(result = updatingResult)
-                is UpdateWalletManagerResult.NoAccount -> createNoAccount(result = updatingResult)
-                is UpdateWalletManagerResult.Verified -> {
+                is MissedDerivation -> NetworkStatus.MissedDerivation
+                is Unreachable -> createUnreachableStatus(result = updatingResult)
+                is NoAccount -> createNoAccount(result = updatingResult)
+                is Verified -> {
                     createVerifiedStatus(result = updatingResult, addedCurrencies = addedCurrencies)
                 }
             },
         )
     }
 
-    private fun createUnreachableStatus(result: UpdateWalletManagerResult.Unreachable): NetworkStatus.Unreachable {
+    private fun createUnreachableStatus(result: Unreachable): NetworkStatus.Unreachable {
         return NetworkStatus.Unreachable(
             address = getNetworkAddressOrNull(
                 selectedAddress = result.selectedAddress,
@@ -49,7 +47,7 @@ object NetworkStatusFactory {
         )
     }
 
-    private fun createNoAccount(result: UpdateWalletManagerResult.NoAccount): NetworkStatus.NoAccount {
+    private fun createNoAccount(result: NoAccount): NetworkStatus.NoAccount {
         return NetworkStatus.NoAccount(
             address = getNetworkAddress(
                 selectedAddress = result.selectedAddress,
@@ -61,10 +59,7 @@ object NetworkStatusFactory {
         )
     }
 
-    private fun createVerifiedStatus(
-        result: UpdateWalletManagerResult.Verified,
-        addedCurrencies: Set<CryptoCurrency>,
-    ): NetworkStatus.Verified {
+    private fun createVerifiedStatus(result: Verified, addedCurrencies: Set<CryptoCurrency>): NetworkStatus.Verified {
         return NetworkStatus.Verified(
             address = getNetworkAddress(
                 selectedAddress = result.selectedAddress,
@@ -97,8 +92,8 @@ object NetworkStatusFactory {
                 is CryptoCurrency.Token -> {
                     amounts.firstOrNull { amount ->
                         amount is CryptoCurrencyAmount.Token &&
-                            currency.id.rawCurrencyId == amount.tokenId &&
-                            currency.contractAddress.equals(amount.tokenContractAddress, ignoreCase = true)
+                            currency.id.rawCurrencyId == amount.currencyRawId &&
+                            currency.contractAddress.equals(amount.contractAddress, ignoreCase = true)
                     }
                 }
             }
@@ -127,7 +122,7 @@ object NetworkStatusFactory {
                     }
                     is CryptoCurrency.Token -> transactions.filterTo(hashSetOf()) { transaction ->
                         transaction is CryptoCurrencyTransaction.Token &&
-                            transaction.tokenContractAddress.equals(currency.contractAddress, ignoreCase = true)
+                            transaction.contractAddress.equals(currency.contractAddress, ignoreCase = true)
                     }
                 }
 
