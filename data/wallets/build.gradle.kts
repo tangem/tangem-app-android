@@ -36,6 +36,7 @@ dependencies {
     implementation(deps.arrow.core)
 
     /** tests */
+    testImplementation(projects.domain.models)
     testImplementation(deps.test.junit)
     testImplementation(deps.test.coroutine)
     testImplementation(deps.test.truth)

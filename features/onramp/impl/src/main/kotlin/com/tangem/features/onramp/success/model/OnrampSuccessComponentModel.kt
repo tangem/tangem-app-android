@@ -11,6 +11,7 @@ import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.DialogMessage
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.onramp.GetOnrampStatusUseCase
 import com.tangem.domain.onramp.GetOnrampTransactionUseCase
 import com.tangem.domain.onramp.OnrampRemoveTransactionUseCase
@@ -19,7 +20,6 @@ import com.tangem.domain.onramp.model.OnrampStatus
 import com.tangem.domain.onramp.model.cache.OnrampTransaction
 import com.tangem.domain.onramp.model.error.OnrampError
 import com.tangem.domain.tokens.GetCryptoCurrencyUseCase
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.analytics.TokenOnrampAnalyticsEvent
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
@@ -181,7 +181,9 @@ internal class OnrampSuccessComponentModel @Inject constructor(
             } else {
                 resourceReference(R.string.express_error_code, wrappedList(errorCode))
             },
-            onDismissRequest = router::pop,
+            firstActionBuilder = {
+                okAction(router::pop)
+            },
         )
 
         messageSender.send(message)

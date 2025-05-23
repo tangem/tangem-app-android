@@ -2,7 +2,7 @@ package com.tangem.domain.walletmanager.utils
 
 import com.tangem.blockchain.common.*
 import com.tangem.blockchainsdk.utils.amountToCreateAccount
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.walletmanager.model.Address
 import com.tangem.domain.walletmanager.model.CryptoCurrencyAmount
 import com.tangem.domain.walletmanager.model.CryptoCurrencyTransaction
@@ -139,7 +139,7 @@ internal class UpdateWalletManagerResultFactory {
                 CryptoCurrencyTransaction.Token(
                     tokenId = type.token.id,
                     tokenContractAddress = type.token.contractAddress,
-                    txHistoryItem = txHistoryItem,
+                    txInfo = txHistoryItem,
                 )
             }
             is AmountType.FeeResource,

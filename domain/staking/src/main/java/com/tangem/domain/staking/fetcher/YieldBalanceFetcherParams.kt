@@ -1,7 +1,7 @@
 package com.tangem.domain.staking.fetcher
 
-import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.wallets.models.UserWalletId
 
 /**

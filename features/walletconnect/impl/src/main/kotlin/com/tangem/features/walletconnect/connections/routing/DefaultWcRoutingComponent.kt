@@ -15,8 +15,9 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.walletconnect.components.WcRoutingComponent
-import com.tangem.features.walletconnect.connections.components.WcAppInfoContainerComponent
-import com.tangem.features.walletconnect.transaction.components.WcSignTransactionComponent
+import com.tangem.features.walletconnect.connections.components.WcPairComponent
+import com.tangem.features.walletconnect.connections.components.AlertsComponent
+import com.tangem.features.walletconnect.transaction.components.WcSignTransactionContainerComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -55,13 +56,23 @@ internal class DefaultWcRoutingComponent @AssistedInject constructor(
             router = model.innerRouter,
         )
         return when (config) {
-            is WcInnerRoute.SignMessage -> WcSignTransactionComponent(
-                childContext,
-                params = WcSignTransactionComponent.Params(config.rawRequest),
+            is WcInnerRoute.SignMessage -> WcSignTransactionContainerComponent(
+                appComponentContext = childContext,
+                params = WcSignTransactionContainerComponent.Params(config.rawRequest),
             )
-            is WcInnerRoute.Pair -> WcAppInfoContainerComponent(
+            is WcInnerRoute.Pair -> WcPairComponent(
+                appComponentContext = childContext,
+                params = WcPairComponent.Params(
+                    userWalletId = config.request.userWalletId,
+                    wcUrl = config.request.uri,
+                    source = config.request.source,
+                ),
+            )
+            is WcInnerRoute.Alert -> AlertsComponent(
                 childContext,
-                WcAppInfoContainerComponent.Params(config.request.uri, config.request.source),
+                AlertsComponent.Params(
+                    alertType = config.alertType,
+                ),
             )
         }
     }

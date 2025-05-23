@@ -34,6 +34,8 @@ import com.tangem.domain.card.GetExtendedPublicKeyForCurrencyUseCase
 import com.tangem.domain.card.NetworkHasDerivationUseCase
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.promo.ShouldShowPromoTokenUseCase
 import com.tangem.domain.promo.models.PromoId
@@ -45,7 +47,9 @@ import com.tangem.domain.staking.GetYieldUseCase
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
-import com.tangem.domain.tokens.model.*
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
+import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.tokens.model.analytics.TokenReceiveAnalyticsEvent
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent.Companion.toReasonAnalyticsText
@@ -91,7 +95,7 @@ import javax.inject.Inject
 @ModelScoped
 internal class TokenDetailsModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
-    private val getCurrencyStatusUpdatesUseCase: GetCurrencyStatusUpdatesUseCase,
+    private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
     private val txHistoryItemsCountUseCase: GetTxHistoryItemsCountUseCase,
@@ -117,7 +121,6 @@ internal class TokenDetailsModel @Inject constructor(
     private val analyticsEventsHandler: AnalyticsEventHandler,
     private val vibratorHapticManager: VibratorHapticManager,
     private val clipboardManager: ClipboardManager,
-    private val getCryptoCurrencySyncUseCase: GetCryptoCurrencyStatusSyncUseCase,
     private val onrampFeatureToggles: OnrampFeatureToggles,
     private val shareManager: ShareManager,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
@@ -219,7 +222,7 @@ internal class TokenDetailsModel @Inject constructor(
     private fun initButtons() {
         // we need also init buttons before start all loading to avoid buttons blocking
         modelScope.launch {
-            val currentCryptoCurrencyStatus = getCryptoCurrencySyncUseCase.invoke(
+            val currentCryptoCurrencyStatus = getSingleCryptoCurrencyStatusUseCase.invokeMultiWalletSync(
                 userWalletId = userWalletId,
                 cryptoCurrencyId = cryptoCurrency.id,
                 isSingleWalletWithTokens = false,
@@ -300,7 +303,7 @@ internal class TokenDetailsModel @Inject constructor(
 
     private fun subscribeOnCurrencyStatusUpdates() {
         modelScope.launch(dispatchers.main) {
-            getCurrencyStatusUpdatesUseCase(
+            getSingleCryptoCurrencyStatusUseCase.invokeMultiWallet(
                 userWalletId = userWalletId,
                 currencyId = cryptoCurrency.id,
                 isSingleWalletWithTokens = userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
@@ -364,7 +367,6 @@ internal class TokenDetailsModel @Inject constructor(
             updateDelayedCurrencyStatusUseCase(
                 userWalletId = userWalletId,
                 network = toCryptoCurrency.network,
-                refresh = true,
             )
         }
     }
