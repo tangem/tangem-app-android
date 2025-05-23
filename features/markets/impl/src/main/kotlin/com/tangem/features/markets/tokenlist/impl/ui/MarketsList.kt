@@ -18,6 +18,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.buildAnnotatedString
 import com.tangem.core.ui.components.Keyboard
 import com.tangem.core.ui.components.SpacerH12
 import com.tangem.core.ui.components.SpacerH8
@@ -29,10 +30,11 @@ import com.tangem.core.ui.components.buttons.segmentedbutton.SegmentedButtons
 import com.tangem.core.ui.components.fields.SearchBar
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.components.keyboardAsState
+import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.event.consumedEvent
-import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -41,6 +43,7 @@ import com.tangem.features.markets.entry.BottomSheetState
 import com.tangem.features.markets.impl.R
 import com.tangem.features.markets.tokenlist.impl.ui.components.MarketsListLazyColumn
 import com.tangem.features.markets.tokenlist.impl.ui.components.MarketsListSortByBottomSheet
+import com.tangem.features.markets.tokenlist.impl.ui.components.StakingInMarketsPromoNotification
 import com.tangem.features.markets.tokenlist.impl.ui.preview.MarketChartListItemPreviewDataProvider
 import com.tangem.features.markets.tokenlist.impl.ui.state.ListUM
 import com.tangem.features.markets.tokenlist.impl.ui.state.MarketsListUM
@@ -48,6 +51,9 @@ import com.tangem.features.markets.tokenlist.impl.ui.state.SortByBottomSheetCont
 import com.tangem.features.markets.tokenlist.impl.ui.state.SortByTypeUM
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import java.math.BigDecimal
+
+private const val SHOW_MORE_KEY = "privacyPolicy"
 
 @Composable
 internal fun MarketsList(
@@ -110,14 +116,50 @@ private fun Content(state: MarketsListUM, onHeaderSizeChange: (Dp) -> Unit, modi
                     SpacerH12()
                 }
             }
-            AnimatedVisibility(state.isInSearchMode.not()) {
-                Options(
-                    modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing12),
-                    sortByTypeUM = state.selectedSortBy,
-                    trendInterval = state.selectedInterval,
-                    onIntervalClick = state.onIntervalClick,
-                    onSortByClick = state.onSortByButtonClick,
-                )
+            Column {
+                AnimatedVisibility(state.isInSearchMode.not()) {
+                    Options(
+                        modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing12),
+                        sortByTypeUM = state.selectedSortBy,
+                        trendInterval = state.selectedInterval,
+                        onIntervalClick = state.onIntervalClick,
+                        onSortByClick = state.onSortByButtonClick,
+                    )
+                }
+
+                AnimatedVisibility(
+                    state.isInSearchMode.not() &&
+                        state.stakingNotificationMaxApy != null &&
+                        state.selectedSortBy != SortByTypeUM.Staking,
+                ) {
+                    val showMore = stringResourceSafe(R.string.common_show_more)
+                    val description = stringResourceSafe(
+                        R.string.markets_staking_banner_description_placeholder,
+                        showMore,
+                    )
+
+                    val clickableDescription = buildAnnotatedString {
+                        append(description.substringBefore(showMore))
+
+                        pushStringAnnotation(SHOW_MORE_KEY, "")
+                        appendColored(showMore, TangemTheme.colors.text.accent)
+                        pop()
+                    }
+
+                    StakingInMarketsPromoNotification(
+                        config = NotificationConfig(
+                            iconResId = R.drawable.img_staking_in_market_notification,
+                            title = resourceReference(
+                                R.string.markets_staking_banner_title,
+                                wrappedList(state.stakingNotificationMaxApy.format { percent() }),
+                            ),
+                            subtitle = annotatedReference(clickableDescription),
+                            onClick = state.onStakingNotificationClick,
+                            onCloseClick = state.onStakingNotificationCloseClick,
+                        ),
+                        modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing12),
+                    )
+                }
             }
         }
         val strokeWidth = TangemTheme.dimens.size0_5
@@ -326,6 +368,9 @@ private fun Preview() {
                         onDismissRequest = {},
                         content = SortByBottomSheetContentUM(selectedOption = SortByTypeUM.Rating) {},
                     ),
+                    stakingNotificationMaxApy = BigDecimal(0.12345),
+                    onStakingNotificationClick = {},
+                    onStakingNotificationCloseClick = {},
                 ),
                 onHeaderSizeChange = {},
                 bottomSheetState = BottomSheetState.EXPANDED,
