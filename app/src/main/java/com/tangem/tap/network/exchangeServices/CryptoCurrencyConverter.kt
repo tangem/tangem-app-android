@@ -4,7 +4,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.data.common.currency.CryptoCurrencyFactory
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.domain.model.Currency
 import com.tangem.tap.proxy.redux.DaggerGraphState
@@ -44,7 +44,7 @@ internal class CryptoCurrencyConverter(
     }
 
     override fun convertBack(value: CryptoCurrency): Currency {
-        val blockchain = Blockchain.fromId(value.network.id.value)
+        val blockchain = Blockchain.fromId(value.network.rawId)
         if (blockchain == Blockchain.Unknown) error("CryptoCurrencyConverter convertBack Unknown blockchain")
         return when (value) {
             is CryptoCurrency.Coin -> Currency.Blockchain(

@@ -2,7 +2,7 @@ package com.tangem.features.send.impl.presentation.model
 
 import com.tangem.common.ui.amountScreen.AmountScreenClickIntents
 import com.tangem.common.ui.notifications.NotificationUM
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.send.impl.presentation.analytics.EnterAddressSource
 import com.tangem.features.send.impl.presentation.state.fee.FeeType
 import java.math.BigDecimal
