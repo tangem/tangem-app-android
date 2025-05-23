@@ -3,9 +3,9 @@ package com.tangem.data.qrscanning
 import com.google.common.truth.Truth
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.data.qrscanning.repository.DefaultQrScanningEventsRepository
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.qrscanning.models.QrResult
-import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.Network
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.Test
@@ -76,7 +76,7 @@ internal class DefaultQrScanningEventsRepositoryTest {
 
     @Test
     fun testBip021() {
-        every { network.id } returns Network.ID(Blockchain.Bitcoin.id)
+        every { network.rawId } returns Blockchain.Bitcoin.id
         positiveCase(
             "$schema1:$address1",
             QrResult(address = address1),
@@ -126,7 +126,7 @@ internal class DefaultQrScanningEventsRepositoryTest {
 
     @Test
     fun testErc681Coin() {
-        every { network.id } returns Network.ID(Blockchain.Ethereum.id)
+        every { network.rawId } returns Blockchain.Ethereum.id
         positiveCase(
             address2,
             QrResult(address = address2),
@@ -181,7 +181,7 @@ internal class DefaultQrScanningEventsRepositoryTest {
 
     @Test
     fun testErc681Token() {
-        every { network.id } returns Network.ID(Blockchain.Ethereum.id)
+        every { network.rawId } returns Blockchain.Ethereum.id
         positiveCase(
             address2,
             QrResult(address = address2),
