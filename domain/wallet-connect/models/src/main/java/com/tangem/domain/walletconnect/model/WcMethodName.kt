@@ -13,6 +13,7 @@ enum class WcEthMethodName(override val raw: String) : WcMethodName {
     SignTypeDataV4("eth_signTypedData_v4"),
     SignTransaction("eth_signTransaction"),
     SendTransaction("eth_sendTransaction"),
+    AddEthereumChain("wallet_addEthereumChain"),
 }
 
 enum class WcSolanaMethodName(override val raw: String) : WcMethodName {
