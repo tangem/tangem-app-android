@@ -20,6 +20,6 @@ data class Asset(
 
 @JsonClass(generateAdapter = true)
 data class Transfer(
-    @Json(name = "value") val value: String,
-    @Json(name = "raw_value") val rawValue: String,
+    @Json(name = "value") val value: String?,
+    @Json(name = "raw_value") val rawValue: String?,
 )
