@@ -2,7 +2,7 @@ package com.tangem.domain.utils
 
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Token
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import java.math.BigDecimal
 import com.tangem.blockchain.common.Amount as SdkAmount
 
