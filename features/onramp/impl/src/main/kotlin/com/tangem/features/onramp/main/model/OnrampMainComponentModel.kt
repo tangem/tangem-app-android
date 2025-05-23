@@ -94,6 +94,10 @@ internal class OnrampMainComponentModel @Inject constructor(
         userCountry = getUserCountryUseCase.invokeSync().getOrNull()
             ?: UserCountry.Other(Locale.getDefault().country)
 
+        modelScope.launch {
+            clearOnrampCacheUseCase()
+        }
+
         sendScreenOpenAnalytics()
         checkResidenceCountry()
         subscribeToAmountChanges()
