@@ -1,9 +1,12 @@
 package com.tangem.domain.wallets.repository
 
 import com.tangem.domain.wallets.models.SeedPhraseNotificationsStatus
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.models.UserWalletRemoteInfo
 import kotlinx.coroutines.flow.Flow
 
+@Suppress("TooManyFunctions")
 interface WalletsRepository {
 
     suspend fun shouldSaveUserWalletsSync(): Boolean
@@ -38,9 +41,19 @@ interface WalletsRepository {
 
     suspend fun disableNFT(userWalletId: UserWalletId)
 
-    @Throws
-    suspend fun isNotificationsEnabled(userWalletId: UserWalletId, force: Boolean): Boolean
+    suspend fun isNotificationsEnabled(userWalletId: UserWalletId): Boolean
+
+    suspend fun setNotificationsEnabled(userWalletId: UserWalletId, isEnabled: Boolean)
 
     @Throws
-    suspend fun setNotificationsEnabled(userWalletId: UserWalletId, isEnabled: Boolean)
+    suspend fun setWalletName(walletId: String, walletName: String)
+
+    @Throws
+    suspend fun getWalletInfo(walletId: String): UserWalletRemoteInfo
+
+    @Throws
+    suspend fun getWalletsInfo(applicationId: String, updateCache: Boolean = true): List<UserWalletRemoteInfo>
+
+    @Throws
+    suspend fun associateWallets(applicationId: String, wallets: List<UserWallet>)
 }
