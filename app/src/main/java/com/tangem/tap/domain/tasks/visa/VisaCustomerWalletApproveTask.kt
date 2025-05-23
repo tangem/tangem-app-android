@@ -176,7 +176,7 @@ class VisaCustomerWalletApproveTask(
                         hash = hashToSign,
                         publicKey = extendedPublicKey?.publicKey?.toDecompressedPublicKey()
                             ?: targetWalletPublicKey.toDecompressedPublicKey(),
-                    ).asRSVLegacyEVM().toHexString()
+                    ).asRSVLegacyEVM().toHexString().lowercase()
 
                     scanCard(
                         session = session,
