@@ -27,6 +27,7 @@ import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.notifications.GetTronFeeNotificationShowCountUseCase
 import com.tangem.domain.notifications.IncrementNotificationsShowCountUseCase
 import com.tangem.domain.qrscanning.models.SourceType
@@ -36,7 +37,6 @@ import com.tangem.domain.settings.IsSendTapHelpEnabledUseCase
 import com.tangem.domain.settings.NeverShowTapHelpUseCase
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.error.CurrencyStatusError
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.AddressValidation
 import com.tangem.domain.transaction.error.AddressValidationResult
@@ -84,7 +84,7 @@ import kotlin.properties.Delegates
 internal class SendModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val getUserWalletUseCase: GetUserWalletUseCase,
-    private val getCryptoCurrencyStatusSyncUseCase: GetCryptoCurrencyStatusSyncUseCase,
+    private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getWalletsUseCase: GetWalletsUseCase,
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
@@ -325,13 +325,13 @@ internal class SendModel @Inject constructor(
         isMultiCurrency: Boolean,
     ): Either<CurrencyStatusError, CryptoCurrencyStatus> {
         return if (isMultiCurrency) {
-            getCryptoCurrencyStatusSyncUseCase(
+            getSingleCryptoCurrencyStatusUseCase.invokeMultiWalletSync(
                 userWalletId = userWalletId,
                 cryptoCurrencyId = cryptoCurrency.id,
                 isSingleWalletWithTokens = isSingleWalletWithToken,
             )
         } else {
-            getCryptoCurrencyStatusSyncUseCase(userWalletId = userWalletId)
+            getSingleCryptoCurrencyStatusUseCase.invokeSingleWalletSync(userWalletId = userWalletId)
         }
     }
 
@@ -592,7 +592,7 @@ internal class SendModel @Inject constructor(
         saveBlockchainErrorUseCase(
             error = BlockchainErrorInfo(
                 errorMessage = errorMessage,
-                blockchainId = cryptoCurrency.network.id.value,
+                blockchainId = cryptoCurrency.network.rawId,
                 derivationPath = cryptoCurrency.network.derivationPath.value,
                 destinationAddress = recipient.orEmpty(),
                 tokenSymbol = if (amount?.type is AmountType.Token) {
@@ -742,7 +742,7 @@ internal class SendModel @Inject constructor(
     }
 
     private suspend fun checkIfXrpAddressValue(value: String): Boolean {
-        return BlockchainUtils.decodeRippleXAddress(value, cryptoCurrency.network.id.value)?.let { decodedAddress ->
+        return BlockchainUtils.decodeRippleXAddress(value, cryptoCurrency.network.rawId)?.let { decodedAddress ->
             uiState.value =
                 recipientStateFactory.onRecipientAddressValueChange(value, isXAddress = true, isValuePasted = true)
             uiState.value = recipientStateFactory.getOnXAddressMemoState()
@@ -1037,7 +1037,10 @@ internal class SendModel @Inject constructor(
             listOf(
                 // we should update network to find pending tx after 1 sec
                 async {
-                    fetchPendingTransactionsUseCase(userWallet.walletId, setOf(cryptoCurrency.network))
+                    fetchPendingTransactionsUseCase(
+                        userWalletId = userWallet.walletId,
+                        network = cryptoCurrency.network,
+                    )
                 },
                 // we should update tx history and network for new balance
                 async {
@@ -1048,7 +1051,6 @@ internal class SendModel @Inject constructor(
                         userWalletId = userWallet.walletId,
                         network = cryptoCurrency.network,
                         delayMillis = BALANCE_UPDATE_DELAY,
-                        refresh = true,
                     )
                 },
             ).awaitAll()

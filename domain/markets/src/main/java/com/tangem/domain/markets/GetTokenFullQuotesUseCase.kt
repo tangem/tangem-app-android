@@ -3,7 +3,7 @@ package com.tangem.domain.markets
 import arrow.core.Either
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.repositories.MarketsTokenRepository
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 
 class GetTokenFullQuotesUseCase(
     private val marketsTokenRepository: MarketsTokenRepository,

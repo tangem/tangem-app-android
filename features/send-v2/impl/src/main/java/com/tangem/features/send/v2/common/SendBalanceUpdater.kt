@@ -1,8 +1,9 @@
 package com.tangem.features.send.v2.common
 
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.nft.RefreshAllNFTUseCase
 import com.tangem.domain.tokens.FetchPendingTransactionsUseCase
 import com.tangem.domain.tokens.UpdateDelayedNetworkStatusUseCase
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
 import com.tangem.domain.wallets.models.UserWallet
@@ -22,6 +23,7 @@ internal class SendBalanceUpdater @AssistedInject constructor(
     private val getTxHistoryItemsUseCase: GetTxHistoryItemsUseCase,
     private val txHistoryFeatureToggles: TxHistoryFeatureToggles,
     private val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter,
+    private val refreshAllNFTUseCase: RefreshAllNFTUseCase,
     @DelayedWork private val coroutineScope: CoroutineScope,
     @Assisted private val userWallet: UserWallet,
     @Assisted private val cryptoCurrency: CryptoCurrency,
@@ -33,7 +35,7 @@ internal class SendBalanceUpdater @AssistedInject constructor(
                 async {
                     fetchPendingTransactionsUseCase(
                         userWalletId = userWallet.walletId,
-                        networks = setOf(cryptoCurrency.network),
+                        network = cryptoCurrency.network,
                     )
                 },
                 // we should update tx history and network for new balances
@@ -43,8 +45,18 @@ internal class SendBalanceUpdater @AssistedInject constructor(
                 async {
                     updateNetworkStatuses()
                 },
+                async {
+                    updateNFT()
+                },
             ).awaitAll()
         }
+    }
+
+    private suspend fun updateNFT() {
+        delay(BALANCE_UPDATE_DELAY)
+        refreshAllNFTUseCase(
+            userWalletId = userWallet.walletId,
+        )
     }
 
     private suspend fun updateNetworkStatuses(delay: Long = BALANCE_UPDATE_DELAY) {
@@ -52,7 +64,6 @@ internal class SendBalanceUpdater @AssistedInject constructor(
             userWalletId = userWallet.walletId,
             network = cryptoCurrency.network,
             delayMillis = delay,
-            refresh = true,
         )
     }
 
