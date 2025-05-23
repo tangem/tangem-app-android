@@ -1,10 +1,8 @@
 package com.tangem.common.test.domain.walletmanager
 
+import com.tangem.blockchainsdk.models.UpdateWalletManagerResult
+import com.tangem.blockchainsdk.models.UpdateWalletManagerResult.*
 import com.tangem.domain.models.network.TxInfo
-import com.tangem.domain.walletmanager.model.Address
-import com.tangem.domain.walletmanager.model.CryptoCurrencyAmount
-import com.tangem.domain.walletmanager.model.CryptoCurrencyTransaction
-import com.tangem.domain.walletmanager.model.UpdateWalletManagerResult
 import java.math.BigDecimal
 
 /**
@@ -13,18 +11,18 @@ import java.math.BigDecimal
 class MockUpdateWalletManagerResultFactory {
 
     fun createUnreachable(): UpdateWalletManagerResult {
-        return UpdateWalletManagerResult.Unreachable(selectedAddress = null, addresses = null)
+        return Unreachable(selectedAddress = null, addresses = null)
     }
 
     fun createUnreachableWithAddress(): UpdateWalletManagerResult {
-        return UpdateWalletManagerResult.Unreachable(
+        return Unreachable(
             selectedAddress = "0x1",
             addresses = setOf(Address(value = "0x1", type = Address.Type.Primary)),
         )
     }
 
     fun createNoAccount(): UpdateWalletManagerResult {
-        return UpdateWalletManagerResult.NoAccount(
+        return NoAccount(
             selectedAddress = "0x1",
             addresses = setOf(Address(value = "0x1", type = Address.Type.Primary)),
             amountToCreateAccount = BigDecimal.ONE,
@@ -33,15 +31,13 @@ class MockUpdateWalletManagerResultFactory {
     }
 
     fun createVerified(): UpdateWalletManagerResult {
-        return UpdateWalletManagerResult.Verified(
+        return Verified(
             selectedAddress = "0x1",
             addresses = setOf(Address(value = "0x1", type = Address.Type.Primary)),
             currenciesAmounts = setOf(
                 CryptoCurrencyAmount.Coin(value = BigDecimal.ONE),
             ),
-            currentTransactions = setOf(
-                CryptoCurrencyTransaction.Coin(txInfo),
-            ),
+            currentTransactions = setOf(CryptoCurrencyTransaction.Coin(txInfo)),
         )
     }
 
