@@ -10,27 +10,33 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.walletconnect.impl.R
 import com.tangem.features.walletconnect.transaction.entity.blockaid.WcEstimatedWalletChangeUM
 import com.tangem.features.walletconnect.transaction.entity.blockaid.WcEstimatedWalletChangesUM
-import com.tangem.features.walletconnect.transaction.entity.blockaid.TransactionCheckResultsUM
+import com.tangem.features.walletconnect.transaction.entity.blockaid.WcSendReceiveTransactionCheckResultsUM
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
-internal fun TransactionCheckResultsItem(item: TransactionCheckResultsUM, modifier: Modifier = Modifier) {
+internal fun TransactionCheckResultsItem(item: WcSendReceiveTransactionCheckResultsUM, modifier: Modifier = Modifier) {
+    if (item.notificationText == null && item.estimatedWalletChanges == null) return
+
     Column(
         modifier = modifier
             .padding(12.dp)
             .fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        if (item.notificationText != null) {
-            WcTransactionCheckErrorItem(item.notificationText)
+        item.notificationText?.let {
+            WcTransactionCheckErrorItem(it.resolveReference())
         }
-        WcEstimatedWalletChangesItem(item.estimatedWalletChanges)
+        item.estimatedWalletChanges?.let {
+            WcEstimatedWalletChangesItem(it)
+        }
     }
 }
 
@@ -38,7 +44,7 @@ internal fun TransactionCheckResultsItem(item: TransactionCheckResultsUM, modifi
 @Preview(showBackground = true, device = Devices.PIXEL_7_PRO)
 @Preview(showBackground = true, device = Devices.PIXEL_7_PRO, uiMode = Configuration.UI_MODE_NIGHT_YES)
 private fun TransactionCheckResultsItemPreview(
-    @PreviewParameter(TransactionCheckResultsItemProvider::class) item: TransactionCheckResultsUM,
+    @PreviewParameter(TransactionCheckResultsItemProvider::class) item: WcSendReceiveTransactionCheckResultsUM,
 ) {
     TangemThemePreview {
         Box(
@@ -50,10 +56,10 @@ private fun TransactionCheckResultsItemPreview(
     }
 }
 
-private class TransactionCheckResultsItemProvider : PreviewParameterProvider<TransactionCheckResultsUM> {
+private class TransactionCheckResultsItemProvider : PreviewParameterProvider<WcSendReceiveTransactionCheckResultsUM> {
     override val values = sequenceOf(
-        TransactionCheckResultsUM(
-            notificationText = "The transaction approves erc20 tokens to a known malicious address",
+        WcSendReceiveTransactionCheckResultsUM(
+            notificationText = TextReference.Str("The transaction approves erc20 tokens to a known malicious address"),
             estimatedWalletChanges = WcEstimatedWalletChangesUM(
                 items = persistentListOf(
                     WcEstimatedWalletChangeUM(
