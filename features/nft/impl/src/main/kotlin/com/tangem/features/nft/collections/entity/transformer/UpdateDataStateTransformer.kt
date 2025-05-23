@@ -2,13 +2,13 @@ package com.tangem.features.nft.collections.entity.transformer
 
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.components.notifications.NotificationConfig
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.getActiveIconRes
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.nft.models.*
 import com.tangem.features.nft.collections.entity.*
 import com.tangem.features.nft.impl.R
+import com.tangem.utils.StringsSigns.DASH_SIGN
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toPersistentList
@@ -16,7 +16,6 @@ import kotlinx.collections.immutable.toPersistentList
 @Suppress("LongParameterList")
 internal class UpdateDataStateTransformer(
     private val nftCollections: List<NFTCollections>,
-    private val searchQuery: String,
     private val onReceiveClick: () -> Unit,
     private val onRetryClick: () -> Unit,
     private val onExpandCollectionClick: (NFTCollection) -> Unit,
@@ -56,7 +55,7 @@ internal class UpdateDataStateTransformer(
                         .map { it.content }
                         .asSequence()
                         .filterIsInstance<NFTCollections.Content.Collections>()
-                        .map { it.collections.orEmpty().transform(prevState, searchQuery) }
+                        .map { it.collections.orEmpty().transform(prevState) }
                         .flatten()
                         .toPersistentList(),
                     warnings = transformNotifications(),
@@ -75,48 +74,23 @@ internal class UpdateDataStateTransformer(
         )
     }
 
-    private fun List<NFTCollection>.transform(
-        state: NFTCollectionsStateUM,
-        query: String,
-    ): ImmutableList<NFTCollectionUM> = mapNotNull {
-        val assetsFulfillQuery = if (query.isEmpty()) {
-            true
-        } else {
-            when (val assets = it.assets) {
-                is NFTCollection.Assets.Empty,
-                is NFTCollection.Assets.Failed,
-                is NFTCollection.Assets.Loading,
-                -> false
-                is NFTCollection.Assets.Value -> {
-                    assets.items.any { asset ->
-                        asset.name?.lowercase()?.contains(query.lowercase()) == true
-                    }
-                }
-            }
-        }
-
-        val collectionFulfillQuery = query.isEmpty() || it.name?.lowercase()?.contains(query.lowercase()) == true
-
-        if (collectionFulfillQuery || assetsFulfillQuery) {
-            NFTCollectionUM(
-                id = it.collectionIdProvider(),
-                networkIconId = getActiveIconRes(it.network.id.value),
-                name = it.name,
-                description = TextReference.PluralRes(
-                    R.plurals.nft_collections_count,
-                    it.count,
-                    wrappedList(it.count),
-                ),
-                logoUrl = it.logoUrl,
-                assets = it.transformAssets(),
-                onExpandClick = {
-                    onExpandCollectionClick(it)
-                },
-                isExpanded = it.isExpanded(state),
-            )
-        } else {
-            null
-        }
+    private fun List<NFTCollection>.transform(state: NFTCollectionsStateUM): ImmutableList<NFTCollectionUM> = map {
+        NFTCollectionUM(
+            id = it.collectionIdProvider(),
+            networkIconId = getActiveIconRes(it.network.rawId),
+            name = it.name.orEmpty(),
+            description = TextReference.PluralRes(
+                R.plurals.nft_collections_count,
+                it.count,
+                wrappedList(it.count),
+            ),
+            logoUrl = it.logoUrl,
+            assets = it.transformAssets(),
+            onExpandClick = {
+                onExpandCollectionClick(it)
+            },
+            isExpanded = it.isExpanded(state),
+        )
     }.toPersistentList()
 
     private fun transformNotifications(): ImmutableList<NFTCollectionsWarningUM> = buildList {
@@ -146,20 +120,31 @@ internal class UpdateDataStateTransformer(
         )
     }
 
-    private fun NFTAsset.transform(collectionName: String): NFTCollectionAssetUM = NFTCollectionAssetUM(
-        id = id.toString(),
-        name = name.orEmpty(),
-        imageUrl = media?.url,
-        price = when (val salePrice = salePrice) {
-            is NFTSalePrice.Empty -> NFTSalePriceUM.Failed
-            is NFTSalePrice.Loading -> NFTSalePriceUM.Loading
-            is NFTSalePrice.Error -> NFTSalePriceUM.Failed
-            is NFTSalePrice.Value -> NFTSalePriceUM.Content(salePrice.value.toString())
-        },
-        onItemClick = {
-            onAssetClick(this, collectionName)
-        },
-    )
+    private fun NFTAsset.transform(collectionName: String): NFTCollectionAssetUM {
+        return NFTCollectionAssetUM(
+            id = id.toString(),
+            name = name ?: DASH_SIGN,
+            imageUrl = media?.url,
+            price = when (val salePrice = salePrice) {
+                is NFTSalePrice.Empty -> NFTSalePriceUM.Failed
+                is NFTSalePrice.Loading -> NFTSalePriceUM.Loading
+                is NFTSalePrice.Error -> NFTSalePriceUM.Failed
+                is NFTSalePrice.Value -> NFTSalePriceUM.Content(
+                    price = stringReference(
+                        salePrice.value.format {
+                            crypto(
+                                symbol = salePrice.symbol,
+                                decimals = salePrice.decimals,
+                            )
+                        },
+                    ),
+                )
+            },
+            onItemClick = {
+                onAssetClick(this, collectionName)
+            },
+        )
+    }
 
     private fun NFTCollection.isExpanded(state: NFTCollectionsStateUM): Boolean =
         (state.content as? NFTCollectionsUM.Content)
