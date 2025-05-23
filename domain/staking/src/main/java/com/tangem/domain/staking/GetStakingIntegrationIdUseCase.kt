@@ -1,7 +1,7 @@
 package com.tangem.domain.staking
 
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.staking.repositories.StakingRepository
-import com.tangem.domain.tokens.model.CryptoCurrency
 
 class GetStakingIntegrationIdUseCase(
     private val stakingRepository: StakingRepository,

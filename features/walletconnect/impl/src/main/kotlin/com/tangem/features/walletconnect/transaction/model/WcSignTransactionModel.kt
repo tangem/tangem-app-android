@@ -10,9 +10,9 @@ import com.tangem.domain.walletconnect.WcRequestUseCaseFactory
 import com.tangem.domain.walletconnect.usecase.method.WcSignState
 import com.tangem.domain.walletconnect.usecase.method.WcSignStep
 import com.tangem.domain.walletconnect.usecase.method.WcSignUseCase
-import com.tangem.features.walletconnect.transaction.components.WcSignTransactionComponent
-import com.tangem.features.walletconnect.transaction.entity.WcSignTransactionUM
-import com.tangem.features.walletconnect.transaction.entity.WcTransactionActionsUM
+import com.tangem.features.walletconnect.transaction.components.WcSignTransactionContainerComponent
+import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionActionsUM
+import com.tangem.features.walletconnect.transaction.entity.sign.WcSignTransactionUM
 import com.tangem.features.walletconnect.transaction.utils.toUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -35,28 +35,30 @@ internal class WcSignTransactionModel @Inject constructor(
     private val _uiState = MutableStateFlow<WcSignTransactionUM?>(null)
     val uiState: StateFlow<WcSignTransactionUM?> = _uiState
 
-    private val params = paramsContainer.require<WcSignTransactionComponent.Params>()
+    private val params = paramsContainer.require<WcSignTransactionContainerComponent.Params>()
 
     init {
         modelScope.launch {
-            val useCase: WcSignUseCase.SimpleRun<*> = useCaseFactory.createUseCase(params.rawRequest)
+            val useCase: WcSignUseCase<*> = useCaseFactory.createUseCase(params.rawRequest)
             useCase.invoke()
                 .onEach { signState ->
                     if (signingIsDone(signState)) return@onEach
-                    val signTransactionUM = (useCase as? WcSignUseCase)?.toUM(
+                    val signTransactionUM = useCase.toUM(
                         signState = signState,
                         actions = WcTransactionActionsUM(
                             onDismiss = { cancel(useCase) },
-                            onBack = ::showTransactionState,
                             onSign = useCase::sign,
                             onCopy = { copyData(useCase.rawSdkRequest.request.params) },
-                            transactionRequestOnClick = ::showTransactionRequestState,
                         ),
                     )
                     _uiState.emit(signTransactionUM)
                 }
                 .launchIn(this)
         }
+    }
+
+    fun dismiss() {
+        _uiState.value?.transaction?.onDismiss?.invoke() ?: router.pop()
     }
 
     private fun signingIsDone(signState: WcSignState<*>): Boolean {
@@ -67,20 +69,12 @@ internal class WcSignTransactionModel @Inject constructor(
         return false
     }
 
-    private fun cancel(useCase: WcSignUseCase) {
+    private fun cancel(useCase: WcSignUseCase<*>) {
         useCase.cancel()
         router.pop()
     }
 
     private fun copyData(text: String) {
         clipboardManager.setText(text = text, isSensitive = true)
-    }
-
-    private fun showTransactionRequestState() {
-        _uiState.value = _uiState.value?.copy(state = WcSignTransactionUM.State.TRANSACTION_REQUEST_INFO)
-    }
-
-    private fun showTransactionState() {
-        _uiState.value = _uiState.value?.copy(state = WcSignTransactionUM.State.TRANSACTION)
     }
 }

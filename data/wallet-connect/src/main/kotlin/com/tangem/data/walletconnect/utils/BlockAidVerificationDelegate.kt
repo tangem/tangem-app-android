@@ -4,7 +4,7 @@ import com.domain.blockaid.models.transaction.*
 import com.tangem.domain.blockaid.BlockAidVerifier
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.core.lce.LceFlow
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.walletconnect.model.WcEthMethod
 import com.tangem.domain.walletconnect.model.WcMethod
 import com.tangem.domain.walletconnect.model.WcSession

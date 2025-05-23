@@ -9,10 +9,10 @@ import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.txhistory.repository.paging.TxHistoryPagingSource
 import com.tangem.datasource.local.txhistory.TxHistoryItemsStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
-import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.txhistory.models.Page
-import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryState
 import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.domain.txhistory.repository.TxHistoryRepository
@@ -56,7 +56,7 @@ class DefaultTxHistoryRepository(
         currency: CryptoCurrency,
         pageSize: Int,
         refresh: Boolean,
-    ): Flow<PagingData<TxHistoryItem>> {
+    ): Flow<PagingData<TxInfo>> {
         val pager = Pager(
             config = PagingConfig(
                 pageSize = pageSize,
@@ -77,7 +77,7 @@ class DefaultTxHistoryRepository(
 
     @Deprecated("Replace with getTxExploreUrl [UserWalletId, Network] instead")
     override fun getTxExploreUrl(txHash: String, networkId: Network.ID): String {
-        val blockchain = Blockchain.fromId(networkId.value)
+        val blockchain = Blockchain.fromId(networkId.rawId.value)
         return when (val txExploreState = blockchain.getExploreTxUrl(txHash)) {
             is TxExploreState.Url -> txExploreState.url
             is TxExploreState.Unsupported -> ""
@@ -85,7 +85,7 @@ class DefaultTxHistoryRepository(
     }
 
     override suspend fun getTxExploreUrl(userWalletId: UserWalletId, network: Network): String {
-        val blockchain = Blockchain.fromId(network.id.value)
+        val blockchain = Blockchain.fromId(network.rawId)
         val walletManager = walletManagersFacade.getOrCreateWalletManager(
             userWalletId = userWalletId,
             network = network,
@@ -102,7 +102,7 @@ class DefaultTxHistoryRepository(
         currency: CryptoCurrency,
         pageSize: Int,
         refresh: Boolean,
-    ): List<TxHistoryItem> = withContext(dispatchers.io) {
+    ): List<TxInfo> = withContext(dispatchers.io) {
         try {
             cacheRegistry.invokeOnExpire(
                 key = getTxHistoryPageKey(currency, userWalletId, Page.Initial),
@@ -139,7 +139,7 @@ class DefaultTxHistoryRepository(
         txHistoryItemsStore.store(TxHistoryItemsStore.Key(userWalletId, currency), wrappedItems)
     }
 
-    private suspend fun getUserWallet(userWalletId: UserWalletId): UserWallet {
+    private fun getUserWallet(userWalletId: UserWalletId): UserWallet {
         return requireNotNull(userWalletsStore.getSyncOrNull(userWalletId)) {
             "Unable to find user wallet with provided ID: $userWalletId"
         }
