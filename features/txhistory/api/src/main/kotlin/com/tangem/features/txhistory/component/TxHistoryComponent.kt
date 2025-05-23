@@ -1,10 +1,10 @@
 package com.tangem.features.txhistory.component
 
-import androidx.compose.runtime.Stable
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.runtime.Stable
 import com.tangem.core.decompose.factory.ComponentFactory
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.txhistory.entity.TxHistoryUM
 import kotlinx.coroutines.flow.StateFlow
