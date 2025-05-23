@@ -12,6 +12,7 @@ import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.blockchain.nft.models.NFTAsset
 import com.tangem.blockchain.nft.models.NFTCollection
+import com.tangem.blockchainsdk.models.UpdateWalletManagerResult
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.TxInfo
@@ -20,7 +21,6 @@ import com.tangem.domain.txhistory.models.PaginationWrapper
 import com.tangem.domain.txhistory.models.TxHistoryState
 import com.tangem.domain.walletmanager.model.RentData
 import com.tangem.domain.walletmanager.model.TokenInfo
-import com.tangem.domain.walletmanager.model.UpdateWalletManagerResult
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
 import java.math.BigDecimal
