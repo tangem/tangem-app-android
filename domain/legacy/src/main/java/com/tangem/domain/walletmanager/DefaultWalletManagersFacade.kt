@@ -20,6 +20,7 @@ import com.tangem.blockchain.nft.models.NFTAsset
 import com.tangem.blockchain.nft.models.NFTCollection
 import com.tangem.blockchain.transactionhistory.models.TransactionHistoryRequest
 import com.tangem.blockchainsdk.BlockchainSDKFactory
+import com.tangem.blockchainsdk.models.UpdateWalletManagerResult
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.datasource.asset.loader.AssetLoader
@@ -36,7 +37,6 @@ import com.tangem.domain.txhistory.models.TxHistoryState
 import com.tangem.domain.walletmanager.model.RentData
 import com.tangem.domain.walletmanager.model.SmartContractMethod
 import com.tangem.domain.walletmanager.model.TokenInfo
-import com.tangem.domain.walletmanager.model.UpdateWalletManagerResult
 import com.tangem.domain.walletmanager.utils.*
 import com.tangem.domain.walletmanager.utils.WalletManagerFactory
 import com.tangem.domain.wallets.models.UserWallet

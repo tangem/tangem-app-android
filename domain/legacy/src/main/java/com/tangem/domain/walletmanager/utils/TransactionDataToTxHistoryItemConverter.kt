@@ -1,8 +1,8 @@
 package com.tangem.domain.walletmanager.utils
 
 import com.tangem.blockchain.common.*
+import com.tangem.blockchainsdk.models.UpdateWalletManagerResult.Address
 import com.tangem.domain.models.network.TxInfo
-import com.tangem.domain.walletmanager.model.Address
 import com.tangem.utils.converter.Converter
 import timber.log.Timber
 import java.math.BigDecimal
