@@ -1,8 +1,8 @@
 package com.tangem.features.txhistory.utils
 
 import com.tangem.core.ui.utils.toDateFormatWithTodayYesterday
+import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.txhistory.models.PaginationWrapper
-import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.features.txhistory.converter.TxHistoryItemToTransactionStateConverter
 import com.tangem.features.txhistory.entity.TxHistoryUM
 import com.tangem.pagination.Batch
@@ -10,11 +10,7 @@ import com.tangem.pagination.PaginationStatus
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.*
 import java.util.UUID
 
 internal class TxHistoryUiManager(
@@ -35,7 +31,7 @@ internal class TxHistoryUiManager(
         .distinctUntilChanged()
 
     fun createOrUpdateUiBatches(
-        newCurrencyBatches: List<Batch<Int, PaginationWrapper<TxHistoryItem>>>,
+        newCurrencyBatches: List<Batch<Int, PaginationWrapper<TxInfo>>>,
         clearUiBatches: Boolean,
     ): List<Batch<Int, List<TxHistoryUM.TxHistoryItemUM>>> {
         val currentUiBatches = state.value.uiBatches
@@ -67,7 +63,7 @@ internal class TxHistoryUiManager(
         return batches
     }
 
-    private fun generateUiItems(key: Int, data: PaginationWrapper<TxHistoryItem>): List<TxHistoryUM.TxHistoryItemUM> {
+    private fun generateUiItems(key: Int, data: PaginationWrapper<TxInfo>): List<TxHistoryUM.TxHistoryItemUM> {
         val items = mutableListOf<TxHistoryUM.TxHistoryItemUM>()
 
         // Add title for the first batch
@@ -109,9 +105,7 @@ internal class TxHistoryUiManager(
         return items
     }
 
-    private fun List<TxHistoryUM.TxHistoryItemUM>.transactionItemsSizeNotEqual(
-        txHistoryItems: List<TxHistoryItem>,
-    ): Boolean {
-        return this.filterIsInstance<TxHistoryUM.TxHistoryItemUM.Transaction>().size != txHistoryItems.size
+    private fun List<TxHistoryUM.TxHistoryItemUM>.transactionItemsSizeNotEqual(txInfos: List<TxInfo>): Boolean {
+        return this.filterIsInstance<TxHistoryUM.TxHistoryItemUM.Transaction>().size != txInfos.size
     }
 }
