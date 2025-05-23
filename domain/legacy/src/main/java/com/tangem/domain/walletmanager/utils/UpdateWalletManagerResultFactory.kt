@@ -1,25 +1,23 @@
 package com.tangem.domain.walletmanager.utils
 
 import com.tangem.blockchain.common.*
+import com.tangem.blockchainsdk.models.UpdateWalletManagerResult
+import com.tangem.blockchainsdk.models.UpdateWalletManagerResult.*
 import com.tangem.blockchainsdk.utils.amountToCreateAccount
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.walletmanager.model.Address
-import com.tangem.domain.walletmanager.model.CryptoCurrencyAmount
-import com.tangem.domain.walletmanager.model.CryptoCurrencyTransaction
-import com.tangem.domain.walletmanager.model.UpdateWalletManagerResult
 import timber.log.Timber
 import java.math.BigDecimal
 import com.tangem.blockchain.common.address.Address as SdkAddress
 
 internal class UpdateWalletManagerResultFactory {
 
-    fun getResult(walletManager: WalletManager): UpdateWalletManagerResult.Verified {
+    fun getResult(walletManager: WalletManager): Verified {
         val wallet = walletManager.wallet
         val addresses = getAvailableAddresses(wallet.addresses)
         val feePaidCurrency = wallet.blockchain.feePaidCurrency()
         val txHistoryItemConverter = TransactionDataToTxHistoryItemConverter(addresses, feePaidCurrency)
 
-        return UpdateWalletManagerResult.Verified(
+        return Verified(
             selectedAddress = wallet.address,
             addresses = addresses,
             currenciesAmounts = getTokensAmounts(wallet.amounts.values.toSet()),
@@ -27,13 +25,13 @@ internal class UpdateWalletManagerResultFactory {
         )
     }
 
-    fun getDemoResult(walletManager: WalletManager, demoAmount: Amount): UpdateWalletManagerResult.Verified {
+    fun getDemoResult(walletManager: WalletManager, demoAmount: Amount): Verified {
         val wallet = walletManager.wallet
         val addresses = getAvailableAddresses(wallet.addresses)
         val feePaidCurrency = wallet.blockchain.feePaidCurrency()
         val txHistoryItemConverter = TransactionDataToTxHistoryItemConverter(addresses, feePaidCurrency)
 
-        return UpdateWalletManagerResult.Verified(
+        return Verified(
             selectedAddress = wallet.address,
             addresses = addresses,
             currenciesAmounts = getDemoTokensAmounts(demoAmount, walletManager.cardTokens),
@@ -53,12 +51,12 @@ internal class UpdateWalletManagerResultFactory {
 
         return if (amount == null) {
             Timber.w("Unable to get required amount to create account for: $blockchain")
-            UpdateWalletManagerResult.Unreachable(
+            Unreachable(
                 selectedAddress = wallet.address,
                 addresses = getAvailableAddresses(wallet.addresses),
             )
         } else {
-            UpdateWalletManagerResult.NoAccount(
+            NoAccount(
                 selectedAddress = wallet.address,
                 addresses = getAvailableAddresses(wallet.addresses),
                 amountToCreateAccount = amount,
@@ -70,7 +68,7 @@ internal class UpdateWalletManagerResultFactory {
     fun getUnreachableResult(walletManager: WalletManager): UpdateWalletManagerResult {
         val wallet = walletManager.wallet
 
-        return UpdateWalletManagerResult.Unreachable(
+        return Unreachable(
             selectedAddress = wallet.address,
             addresses = getAvailableAddresses(wallet.addresses),
         )
@@ -86,8 +84,8 @@ internal class UpdateWalletManagerResultFactory {
 
         return tokens.mapTo(demoAmounts) { token ->
             CryptoCurrencyAmount.Token(
-                tokenId = token.id?.let { CryptoCurrency.RawID(it) },
-                tokenContractAddress = token.contractAddress,
+                currencyRawId = token.id?.let(CryptoCurrency::RawID),
+                contractAddress = token.contractAddress,
                 value = amountValue,
             )
         }
@@ -112,8 +110,8 @@ internal class UpdateWalletManagerResultFactory {
     private fun createCurrencyAmount(amount: Amount): CryptoCurrencyAmount? {
         return when (val type = amount.type) {
             is AmountType.Token -> CryptoCurrencyAmount.Token(
-                tokenId = type.token.id?.let { CryptoCurrency.RawID(it) },
-                tokenContractAddress = type.token.contractAddress,
+                currencyRawId = type.token.id?.let(CryptoCurrency::RawID),
+                contractAddress = type.token.contractAddress,
                 value = getCurrencyAmountValue(amount) ?: return null,
             )
             is AmountType.Coin -> CryptoCurrencyAmount.Coin(
@@ -138,7 +136,7 @@ internal class UpdateWalletManagerResultFactory {
                 val txHistoryItem = txHistoryItemConverter.convert(data) ?: return null
                 CryptoCurrencyTransaction.Token(
                     tokenId = type.token.id,
-                    tokenContractAddress = type.token.contractAddress,
+                    contractAddress = type.token.contractAddress,
                     txInfo = txHistoryItem,
                 )
             }
