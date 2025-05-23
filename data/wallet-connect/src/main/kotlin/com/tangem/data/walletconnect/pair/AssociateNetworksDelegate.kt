@@ -1,20 +1,31 @@
 package com.tangem.data.walletconnect.pair
 
 import com.reown.walletkit.client.Wallet
+import com.reown.walletkit.client.Wallet.Model.Namespace
 import com.tangem.data.walletconnect.utils.WcNamespaceConverter
-import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletconnect.model.WcPairError
 import com.tangem.domain.walletconnect.model.WcSessionProposal.ProposalNetwork
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 
-internal class AssociateNetworksDelegate constructor(
+internal class AssociateNetworksDelegate(
     private val namespaceConverters: Set<WcNamespaceConverter>,
     private val getWallets: GetWalletsUseCase,
     private val currenciesRepository: CurrenciesRepository,
 ) {
+
+    suspend fun associate(wallet: UserWallet, namespaces: Map<String, Namespace.Session>): Set<Network> {
+        val walletNetworks = getWalletNetworks(wallet)
+        val namespacesSet = namespaces.values.flatMap { proposal -> proposal.chains ?: listOf() }.toSet()
+        return namespacesSet.mapNotNullTo(mutableSetOf()) { chainId ->
+            val wcNetwork = namespaceConverters
+                .firstNotNullOfOrNull { it.toNetwork(chainId, wallet) } ?: return@mapNotNullTo null
+            walletNetworks.find { network -> wcNetwork.id == network.id }
+        }
+    }
 
     @Throws(WcPairError.UnsupportedNetworks::class)
     suspend fun associate(sessionProposal: Wallet.Model.SessionProposal): Map<UserWallet, ProposalNetwork> {
@@ -31,9 +42,7 @@ internal class AssociateNetworksDelegate constructor(
         requiredNamespaces: Set<String>,
         optionalNamespaces: Set<String>,
     ): ProposalNetwork {
-        val walletNetworks = currenciesRepository.getMultiCurrencyWalletCurrenciesSync(wallet.walletId)
-            .filterIsInstance<CryptoCurrency.Coin>()
-            .map { it.network }
+        val walletNetworks = getWalletNetworks(wallet)
 
         val unknownRequired = mutableSetOf<String>()
         val missingRequired = mutableSetOf<Network>()
@@ -74,7 +83,12 @@ internal class AssociateNetworksDelegate constructor(
         )
     }
 
-    private fun Map<String, Wallet.Model.Namespace.Proposal>.setOfChainId(): Set<String> =
+    private suspend fun getWalletNetworks(wallet: UserWallet): List<Network> =
+        currenciesRepository.getMultiCurrencyWalletCurrenciesSync(wallet.walletId)
+            .filterIsInstance<CryptoCurrency.Coin>()
+            .map { it.network }
+
+    private fun Map<String, Namespace.Proposal>.setOfChainId(): Set<String> =
         this.values.flatMap { proposal -> proposal.chains ?: listOf() }.toSet()
 
     private fun missingNetworkName(chainId: String): String = chainId.replaceFirstChar(Char::titlecase)
