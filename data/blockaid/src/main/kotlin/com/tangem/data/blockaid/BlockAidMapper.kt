@@ -67,6 +67,7 @@ internal object BlockAidMapper {
         return when {
             from.assetsDiffs.isEmpty() && from.exposures.isNotEmpty() -> mapApproveTransaction(from.exposures)
             from.assetsDiffs.isNotEmpty() && from.exposures.isEmpty() -> mapSendReceiveTransaction(from.assetsDiffs)
+            !from.traces.isNullOrEmpty() -> mapNftSendReceiveTransaction(from.traces)
             else -> SimulationResult.FailedToSimulate
         }
     }
@@ -107,19 +108,31 @@ internal object BlockAidMapper {
                 symbol = diff.asset.symbol,
             )
             diff.outTransfer.orEmpty().forEach { transfer ->
-                transfer.value.toBigDecimalOrNull()?.let { amount ->
-                    sendInfo.add(AmountInfo(amount = amount, token = token))
+                transfer.value?.toBigDecimalOrNull()?.let { amount ->
+                    sendInfo.add(AmountInfo.FungibleTokens(amount = amount, token = token))
                 }
             }
             diff.inTransfer.orEmpty().forEach { transfer ->
-                transfer.value.toBigDecimalOrNull()?.let { amount ->
-                    receiveInfo.add(AmountInfo(amount = amount, token = token))
+                transfer.value?.toBigDecimalOrNull()?.let { amount ->
+                    receiveInfo.add(AmountInfo.FungibleTokens(amount = amount, token = token))
                 }
             }
         }
 
         return if (sendInfo.isNotEmpty() || receiveInfo.isNotEmpty()) {
             SimulationResult.Success(SimulationData.SendAndReceive(send = sendInfo, receive = receiveInfo))
+        } else {
+            SimulationResult.FailedToSimulate
+        }
+    }
+
+    private fun mapNftSendReceiveTransaction(traces: List<Trace>?): SimulationResult {
+        val sendInfo = traces?.map {
+            AmountInfo.NonFungibleTokens(name = "${it.asset.name} #${it.exposed.tokenId}", logoUrl = it.exposed.logoUrl)
+        }
+
+        return if (!sendInfo.isNullOrEmpty()) {
+            SimulationResult.Success(SimulationData.SendAndReceive(send = sendInfo, receive = listOf()))
         } else {
             SimulationResult.FailedToSimulate
         }
