@@ -1,5 +1,7 @@
 package com.tangem.domain.tokens.model
 
+import com.tangem.domain.models.network.Network
+
 /**
  * Represents a group of cryptocurrencies associated with a specific network.
  *
