@@ -37,6 +37,7 @@ dependencies {
     // endregion
 
     // region Others dependencies
+    implementation(deps.androidx.datastore)
     implementation(deps.kotlin.coroutines)
     implementation(deps.jodatime)
     implementation(deps.moshi)
