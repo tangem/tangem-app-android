@@ -1,5 +1,6 @@
 package com.tangem.features.onboarding.v2.visa.impl.child.welcome.model
 
+import arrow.core.getOrElse
 import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.toHexString
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -7,9 +8,9 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.error.UniversalError
 import com.tangem.core.error.ext.universalError
 import com.tangem.core.ui.utils.showErrorDialog
-import com.tangem.domain.visa.error.VisaAPIError
 import com.tangem.domain.visa.model.VisaCardId
 import com.tangem.domain.visa.model.VisaCustomerWalletDataToSignRequest
 import com.tangem.domain.visa.repository.VisaActivationRepository
@@ -78,13 +79,11 @@ internal class OnboardingVisaWelcomeModel @Inject constructor(
         loading(true)
 
         modelScope.launch {
-            val dataToSignByCardWallet = runCatching {
-                visaActivationRepository.getCardWalletAcceptanceData(params.dataToSignRequest)
-            }.getOrElse {
-                loading(false)
-                uiMessageSender.showErrorDialog(VisaAPIError)
-                return@launch
-            }
+            val dataToSignByCardWallet = visaActivationRepository.getCardWalletAcceptanceData(params.dataToSignRequest)
+                .getOrElse {
+                    onError(it)
+                    return@launch
+                }
 
             val result = tangemSdkManager.activateVisaCard(
                 mode = VisaCardActivationTaskMode.SignOnly(dataToSignByCardWallet = dataToSignByCardWallet),
@@ -93,21 +92,17 @@ internal class OnboardingVisaWelcomeModel @Inject constructor(
 
             val resultData = when (result) {
                 is CompletionResult.Failure -> {
-                    loading(false)
-                    uiMessageSender.showErrorDialog(result.error.universalError)
-                    analyticsEventsHandler.send(VisaAnalyticsEvent.ErrorOnboarding(result.error.universalError))
+                    onError(result.error.universalError)
                     return@launch
                 }
                 is CompletionResult.Success -> result.data
             }
 
-            runCatching {
-                visaActivationRepository.activateCard(resultData.signedActivationData)
-            }.onFailure {
-                loading(false)
-                uiMessageSender.showErrorDialog(VisaAPIError)
-                return@launch
-            }
+            visaActivationRepository.activateCard(resultData.signedActivationData)
+                .onLeft {
+                    onError(it)
+                    return@launch
+                }
 
             val request = result.data.signedActivationData.dataToSign.request
             val targetAddress = request.activationOrderInfo.customerWalletAddress
@@ -130,6 +125,12 @@ internal class OnboardingVisaWelcomeModel @Inject constructor(
                 )
             }
         }
+    }
+
+    private fun onError(error: UniversalError) {
+        loading(false)
+        uiMessageSender.showErrorDialog(error)
+        analyticsEventsHandler.send(VisaAnalyticsEvent.ErrorOnboarding(error))
     }
 
     private fun loading(state: Boolean) {
