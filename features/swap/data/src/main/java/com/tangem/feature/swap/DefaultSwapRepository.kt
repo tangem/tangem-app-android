@@ -6,7 +6,9 @@ import arrow.core.raise.catch
 import arrow.core.raise.either
 import arrow.core.right
 import com.squareup.moshi.Moshi
-import com.tangem.blockchain.common.*
+import com.tangem.blockchain.common.Approver
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.Token
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.data.common.currency.CryptoCurrencyFactory
@@ -23,7 +25,7 @@ import com.tangem.datasource.api.express.models.response.TxDetails
 import com.tangem.datasource.crypto.DataSignatureVerifier
 import com.tangem.datasource.exchangeservice.swap.ExpressUtils
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.models.UserWallet
