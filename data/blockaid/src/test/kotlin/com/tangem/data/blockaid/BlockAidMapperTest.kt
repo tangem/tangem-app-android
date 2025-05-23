@@ -3,6 +3,7 @@ package com.tangem.data.blockaid
 import com.domain.blockaid.models.dapp.CheckDAppResult
 import com.domain.blockaid.models.transaction.SimulationResult
 import com.domain.blockaid.models.transaction.ValidationResult
+import com.domain.blockaid.models.transaction.simultation.AmountInfo
 import com.domain.blockaid.models.transaction.simultation.SimulationData
 import com.google.common.truth.Truth
 import com.tangem.datasource.api.common.blockaid.models.response.*
@@ -48,7 +49,11 @@ class BlockAidMapperTest {
             validation = ValidationResponse(status = "Success", resultType = "Benign"),
             simulation = SimulationResponse(
                 status = "Success",
-                accountSummary = AccountSummaryResponse(assetsDiffs = emptyList(), exposures = listOf(exposure)),
+                accountSummary = AccountSummaryResponse(
+                    assetsDiffs = emptyList(),
+                    exposures = listOf(exposure),
+                    traces = null,
+                ),
             ),
         )
 
@@ -77,7 +82,11 @@ class BlockAidMapperTest {
             validation = ValidationResponse(status = "Success", resultType = "Benign"),
             simulation = SimulationResponse(
                 status = "Success",
-                accountSummary = AccountSummaryResponse(exposures = emptyList(), assetsDiffs = listOf(assetDiff)),
+                accountSummary = AccountSummaryResponse(
+                    exposures = emptyList(),
+                    assetsDiffs = listOf(assetDiff),
+                    traces = null,
+                ),
             ),
         )
 
@@ -89,8 +98,8 @@ class BlockAidMapperTest {
 
         val data = simulation?.data as? SimulationData.SendAndReceive
         Truth.assertThat(data).isNotNull()
-        Truth.assertThat(data?.send?.first()?.amount).isEqualTo(BigDecimal("1.5"))
-        Truth.assertThat(data?.receive?.first()?.amount).isEqualTo(BigDecimal("2.0"))
+        Truth.assertThat((data?.send?.first() as? AmountInfo.FungibleTokens)?.amount).isEqualTo(BigDecimal("1.5"))
+        Truth.assertThat((data?.receive?.first() as? AmountInfo.FungibleTokens)?.amount).isEqualTo(BigDecimal("2.0"))
     }
 
     @Test
@@ -99,7 +108,7 @@ class BlockAidMapperTest {
             validation = ValidationResponse(status = "Error", resultType = "Benign"),
             simulation = SimulationResponse(
                 status = "Success",
-                accountSummary = AccountSummaryResponse(emptyList(), emptyList()),
+                accountSummary = AccountSummaryResponse(emptyList(), emptyList(), null),
             ),
         )
 
@@ -114,7 +123,7 @@ class BlockAidMapperTest {
             validation = ValidationResponse(status = "Success", resultType = "Phishing"),
             simulation = SimulationResponse(
                 status = "Success",
-                accountSummary = AccountSummaryResponse(emptyList(), emptyList()),
+                accountSummary = AccountSummaryResponse(emptyList(), emptyList(), null),
             ),
         )
 
@@ -128,7 +137,7 @@ class BlockAidMapperTest {
             validation = ValidationResponse(status = "Success", resultType = "Benign"),
             simulation = SimulationResponse(
                 status = "Error",
-                accountSummary = AccountSummaryResponse(emptyList(), emptyList()),
+                accountSummary = AccountSummaryResponse(emptyList(), emptyList(), null),
             ),
         )
 
@@ -145,6 +154,7 @@ class BlockAidMapperTest {
                 accountSummary = AccountSummaryResponse(
                     assetsDiffs = emptyList(),
                     exposures = emptyList(),
+                    traces = null,
                 ),
             ),
         )
