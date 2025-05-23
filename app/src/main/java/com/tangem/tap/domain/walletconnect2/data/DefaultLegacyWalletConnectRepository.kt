@@ -530,14 +530,17 @@ internal class DefaultLegacyWalletConnectRepository(
             )
         }
 
-        WalletKit.respondSessionRequest(
-            params = Wallet.Params.SessionRequestResponse(
-                sessionTopic = requestData.topic,
-                jsonRpcResponse = Wallet.Model.JsonRpcResponse.JsonRpcResult(
-                    id = requestData.requestId,
-                    result = result,
-                ),
+        val params = Wallet.Params.SessionRequestResponse(
+            sessionTopic = requestData.topic,
+            jsonRpcResponse = Wallet.Model.JsonRpcResponse.JsonRpcResult(
+                id = requestData.requestId,
+                result = result,
             ),
+        )
+        Timber.i("Session request response: $params")
+
+        WalletKit.respondSessionRequest(
+            params = params,
             onSuccess = { response ->
                 Timber.i("Session request responded successfully: $response")
             },
