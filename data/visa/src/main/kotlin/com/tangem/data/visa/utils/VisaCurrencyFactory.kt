@@ -5,8 +5,8 @@ import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.data.common.currency.CryptoCurrencyFactory
 import com.tangem.data.common.currency.getNetwork
 import com.tangem.domain.common.util.derivationStyleProvider
-import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.NetworkAddress
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.visa.model.VisaCurrency
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.lib.visa.model.VisaContractInfo

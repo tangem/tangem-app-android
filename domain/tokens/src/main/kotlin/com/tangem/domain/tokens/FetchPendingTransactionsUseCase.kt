@@ -1,9 +1,9 @@
 package com.tangem.domain.tokens
 
-import com.tangem.domain.tokens.model.Network
-import com.tangem.domain.tokens.repository.NetworksRepository
+import arrow.core.Either
+import com.tangem.domain.models.network.Network
+import com.tangem.domain.networks.repository.NetworksRepository
 import com.tangem.domain.wallets.models.UserWalletId
-import kotlinx.coroutines.coroutineScope
 
 /**
  * Use case responsible for fetching current pending transactions
@@ -14,9 +14,7 @@ class FetchPendingTransactionsUseCase(
     private val networksRepository: NetworksRepository,
 ) {
 
-    suspend operator fun invoke(userWalletId: UserWalletId, networks: Set<Network>) {
-        coroutineScope {
-            networksRepository.fetchNetworkPendingTransactions(userWalletId, networks)
-        }
+    suspend operator fun invoke(userWalletId: UserWalletId, network: Network) = Either.catch {
+        networksRepository.fetchPendingTransactions(userWalletId = userWalletId, network = network)
     }
 }
