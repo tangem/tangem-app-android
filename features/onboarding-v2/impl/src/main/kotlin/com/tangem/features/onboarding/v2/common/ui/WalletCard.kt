@@ -15,7 +15,7 @@ internal fun WalletCard(artwork: ArtworkUM?, modifier: Modifier = Modifier) {
     AsyncImage(
         modifier = modifier,
         model = ImageRequest.Builder(LocalContext.current)
-            .data(artwork?.verifiedArtwork ?: artwork?.defaultUrl)
+            .data(artwork?.verifiedArtwork?.toByteArray() ?: artwork?.defaultUrl)
             .crossfade(true)
             .build(),
         placeholder = painterResource(R.drawable.card_placeholder_black),
