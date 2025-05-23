@@ -2,6 +2,8 @@ package com.tangem.data.networks.utils
 
 import com.google.common.truth.Truth
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.models.UpdateWalletManagerResult
+import com.tangem.blockchainsdk.models.UpdateWalletManagerResult.Address
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.test.domain.walletmanager.MockUpdateWalletManagerResultFactory
 import com.tangem.domain.models.StatusSource
@@ -11,8 +13,6 @@ import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.network.NetworkStatus.Amount
 import com.tangem.domain.models.network.TxInfo
-import com.tangem.domain.walletmanager.model.Address
-import com.tangem.domain.walletmanager.model.UpdateWalletManagerResult
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
