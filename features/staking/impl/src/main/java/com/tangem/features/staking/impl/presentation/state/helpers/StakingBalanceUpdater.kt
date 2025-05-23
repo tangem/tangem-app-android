@@ -42,7 +42,7 @@ internal class StakingBalanceUpdater @AssistedInject constructor(
                 async {
                     fetchPendingTransactionsUseCase(
                         userWalletId = userWallet.walletId,
-                        networks = setOf(cryptoCurrencyStatus.currency.network),
+                        network = cryptoCurrencyStatus.currency.network,
                     )
                 },
                 // we should update tx history and network for new balances
@@ -83,7 +83,6 @@ internal class StakingBalanceUpdater @AssistedInject constructor(
             userWalletId = userWallet.walletId,
             network = cryptoCurrencyStatus.currency.network,
             delayMillis = delay,
-            refresh = true,
         )
     }
 
