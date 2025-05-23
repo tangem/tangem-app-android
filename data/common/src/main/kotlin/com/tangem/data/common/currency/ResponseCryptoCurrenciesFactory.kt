@@ -7,8 +7,8 @@ import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.toCoinId
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.tokens.model.CryptoCurrency
 import timber.log.Timber
 import com.tangem.blockchain.common.Token as SdkToken
 
