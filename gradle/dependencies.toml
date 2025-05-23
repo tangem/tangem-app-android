@@ -100,6 +100,7 @@ detekt = "1.22.0"
 espresso = "3.5.1"
 espresso-intents = "3.5.1"
 junit = "4.13.2"
+junit5 = "5.8.2"
 junitAndroidExt = "1.1.5"
 mockk = "1.13.4"
 turbine = "1.2.0"
@@ -197,6 +198,8 @@ test-coroutine = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", ver
 test-espresso = { module = "androidx.test.espresso:espresso-core", version.ref = "espresso" }
 test-espresso-intents = { module = "androidx.test.espresso:espresso-intents", version.ref = "espresso-intents" }
 test-junit = { module = "junit:junit", version.ref = "junit" }
+test-junit5 = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit5" }
+test-junit5-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit5" }
 test-junit-android = { module = "androidx.test.ext:junit", version.ref = "junitAndroidExt" }
 test-truth = { module = "com.google.truth:truth", version.ref = "truth" }
 test-mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
