@@ -9,7 +9,7 @@ import com.tangem.crypto.NetworkType
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.domain.card.repository.DerivationsRepository
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
@@ -26,7 +26,7 @@ class GetExtendedPublicKeyForCurrencyUseCase(
             val userWallet = walletManagersFacade.getOrCreateWalletManager(userWalletId, network)
                 ?: error("Wallet not found")
 
-            val blockchain = Blockchain.fromId(network.id.value)
+            val blockchain = Blockchain.fromId(network.rawId)
             val isSecp256k1Blockchain = Blockchain.secp256k1Blockchains(network.isTestnet).contains(blockchain)
 
             val hdKey = if (isSecp256k1Blockchain) {
@@ -76,7 +76,7 @@ class GetExtendedPublicKeyForCurrencyUseCase(
         val userWallet = walletManagersFacade.getOrCreateWalletManager(userWalletId, network)
             ?: error("Wallet not found")
 
-        val blockchain = Blockchain.fromId(network.id.value)
+        val blockchain = Blockchain.fromId(network.rawId)
         val isSecp256k1Blockchain = Blockchain.secp256k1Blockchains(network.isTestnet).contains(blockchain)
         val isHdKey = userWallet.wallet.publicKey.derivationType?.hdKey
 
