@@ -6,11 +6,11 @@ import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.promo.ShouldShowPromoWalletUseCase
 import com.tangem.domain.promo.models.PromoId
 import com.tangem.domain.settings.IsReadyToShowRateAppUseCase
 import com.tangem.domain.tokens.error.TokenListError
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.tokens.model.TotalFiatBalance
