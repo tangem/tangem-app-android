@@ -25,16 +25,18 @@ interface TangemVisaApi {
     // region: auth
 
     @POST("v1/auth/challenge")
-    suspend fun generateNonceByCardId(@Body request: GenerateNoneByCardIdRequest): GenerateNonceResponse
+    suspend fun generateNonceByCardId(@Body request: GenerateNoneByCardIdRequest): ApiResponse<GenerateNonceResponse>
 
     @POST("v1/auth/challenge")
-    suspend fun generateNonceByCardWallet(@Body request: GenerateNoneByCardWalletRequest): GenerateNonceResponse
+    suspend fun generateNonceByCardWallet(
+        @Body request: GenerateNoneByCardWalletRequest,
+    ): ApiResponse<GenerateNonceResponse>
 
     @POST("v1/auth/token")
-    suspend fun getAccessTokenByCardId(@Body request: GetAccessTokenByCardIdRequest): JWTResponse
+    suspend fun getAccessTokenByCardId(@Body request: GetAccessTokenByCardIdRequest): ApiResponse<JWTResponse>
 
     @POST("v1/auth/token")
-    suspend fun getAccessTokenByCardWallet(@Body request: GetAccessTokenByCardWalletRequest): JWTResponse
+    suspend fun getAccessTokenByCardWallet(@Body request: GetAccessTokenByCardWalletRequest): ApiResponse<JWTResponse>
 
     @POST("v1/auth/token/refresh")
     suspend fun refreshCardIdAccessToken(@Body request: RefreshTokenByCardIdRequest): ApiResponse<JWTResponse>

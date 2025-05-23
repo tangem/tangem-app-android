@@ -1,6 +1,8 @@
 package com.tangem.data.managetokens.di
 
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
+import com.tangem.data.common.currency.CardCryptoCurrencyFactory
+import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.data.managetokens.DefaultCustomTokensRepository
 import com.tangem.data.managetokens.DefaultManageTokensRepository
 import com.tangem.data.managetokens.utils.ManageTokensUpdateFetcher
@@ -32,15 +34,17 @@ internal object ManageTokensDataModule {
         testnetTokensStorage: TestnetTokensStorage,
         dispatchers: CoroutineDispatcherProvider,
         excludedBlockchains: ExcludedBlockchains,
+        cardCryptoCurrencyFactory: CardCryptoCurrencyFactory,
     ): ManageTokensRepository {
         return DefaultManageTokensRepository(
-            tangemTechApi,
-            userWalletsStore,
-            manageTokensUpdateFetcher,
-            appPreferencesStore,
-            testnetTokensStorage,
-            excludedBlockchains,
-            dispatchers,
+            tangemTechApi = tangemTechApi,
+            userWalletsStore = userWalletsStore,
+            manageTokensUpdateFetcher = manageTokensUpdateFetcher,
+            appPreferencesStore = appPreferencesStore,
+            testnetTokensStorage = testnetTokensStorage,
+            excludedBlockchains = excludedBlockchains,
+            cardCryptoCurrencyFactory = cardCryptoCurrencyFactory,
+            dispatchers = dispatchers,
         )
     }
 
@@ -53,14 +57,16 @@ internal object ManageTokensDataModule {
         walletManagersFacade: WalletManagersFacade,
         dispatchers: CoroutineDispatcherProvider,
         excludedBlockchains: ExcludedBlockchains,
+        userTokensSaver: UserTokensSaver,
     ): CustomTokensRepository {
         return DefaultCustomTokensRepository(
-            tangemTechApi,
-            userWalletsStore,
-            appPreferencesStore,
-            walletManagersFacade,
-            excludedBlockchains,
-            dispatchers,
+            tangemTechApi = tangemTechApi,
+            userWalletsStore = userWalletsStore,
+            appPreferencesStore = appPreferencesStore,
+            walletManagersFacade = walletManagersFacade,
+            excludedBlockchains = excludedBlockchains,
+            dispatchers = dispatchers,
+            userTokensSaver = userTokensSaver,
         )
     }
 }
