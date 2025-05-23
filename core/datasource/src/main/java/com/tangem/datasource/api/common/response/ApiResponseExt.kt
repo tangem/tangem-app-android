@@ -11,3 +11,12 @@ fun <T : Any, R : Any> ApiResponse<T>.fold(onSuccess: (T) -> R, onError: (ApiRes
         is ApiResponse.Success -> onSuccess(data)
     }
 }
+
+inline fun <T> catchApiResponseError(onError: (ApiResponseError) -> Unit, block: () -> T): T {
+    return try {
+        block()
+    } catch (e: ApiResponseError) {
+        onError(e)
+        throw e
+    }
+}
