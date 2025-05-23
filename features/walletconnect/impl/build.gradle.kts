@@ -12,9 +12,8 @@ android {
 }
 
 dependencies {
+    implementation(projects.features.wallet.api)
     implementation(projects.features.walletconnect.api)
-    implementation(projects.domain.walletConnect)
-    implementation(projects.domain.walletConnect.models)
 
     /** Core */
     implementation(projects.core.configToggles)
@@ -24,13 +23,22 @@ dependencies {
     implementation(projects.common.ui)
 
     /** Domain models */
+    implementation(projects.domain.appCurrency.models)
+    implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.blockaid.models)
+    implementation(projects.domain.models)
     implementation(projects.domain.qrScanning.models)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets.models)
+    implementation(projects.domain.walletConnect)
+    implementation(projects.domain.walletConnect.models)
 
     /** Domain */
+    implementation(projects.domain.appCurrency)
+    implementation(projects.domain.balanceHiding)
     implementation(projects.domain.qrScanning)
+    implementation(projects.domain.tokens)
+    implementation(projects.domain.wallets)
 
     /** DI */
     implementation(deps.hilt.android)

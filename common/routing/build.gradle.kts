@@ -12,6 +12,7 @@ android {
 dependencies {
     /* Core */
     implementation(projects.core.decompose)
+    implementation(projects.core.configToggles)
 
     /* Domain */
     implementation(projects.domain.qrScanning.models)
