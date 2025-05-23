@@ -1,6 +1,7 @@
 package com.tangem.data.networks.repository
 
 import com.google.common.truth.Truth
+import com.tangem.blockchainsdk.models.UpdateWalletManagerResult
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.test.domain.walletmanager.MockUpdateWalletManagerResultFactory
 import com.tangem.data.common.currency.CardCryptoCurrencyFactory
@@ -10,7 +11,6 @@ import com.tangem.data.networks.utils.NetworkStatusFactory
 import com.tangem.domain.models.network.CryptoCurrencyAddress
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.walletmanager.model.UpdateWalletManagerResult
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
