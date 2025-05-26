@@ -11,6 +11,7 @@ import com.tangem.core.ui.components.DialogButtonUM
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheet
 import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUM
+import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetV2
 import com.tangem.core.ui.event.EventEffect
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.LocalEventMessageHandler
@@ -29,6 +30,7 @@ fun EventMessageEffect(
 
     var dialogMessage: DialogMessage? by remember { mutableStateOf(value = null) }
     var bottomSheetMessage: BottomSheetMessage? by remember { mutableStateOf(value = null) }
+    var bottomSheetMessageV2: BottomSheetMessageV2? by remember { mutableStateOf(value = null) }
 
     EventEffect(event = messageEvent) { message ->
         when (message) {
@@ -40,6 +42,9 @@ fun EventMessageEffect(
             }
             is BottomSheetMessage -> {
                 bottomSheetMessage = message
+            }
+            is BottomSheetMessageV2 -> {
+                bottomSheetMessageV2 = message
             }
         }
     }
@@ -61,6 +66,13 @@ fun EventMessageEffect(
                 bottomSheetMessage = null
                 message.onDismissRequest()
             },
+        )
+    }
+
+    bottomSheetMessageV2?.let { message ->
+        MessageBottomSheetV2(
+            state = message.messageBottomSheetUMV2,
+            onDismissRequest = { bottomSheetMessageV2 = null },
         )
     }
 }
