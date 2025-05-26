@@ -22,10 +22,9 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.nft.DisableWalletNFTUseCase
 import com.tangem.domain.nft.EnableWalletNFTUseCase
 import com.tangem.domain.nft.GetWalletNFTEnabledUseCase
+import com.tangem.domain.notifications.toggles.NotificationsFeatureToggles
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.usecase.DeleteWalletUseCase
-import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
-import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsSyncUseCase
+import com.tangem.domain.wallets.usecase.*
 import com.tangem.feature.walletsettings.analytics.Settings
 import com.tangem.feature.walletsettings.component.WalletSettingsComponent
 import com.tangem.feature.walletsettings.entity.DialogConfig
@@ -60,6 +59,9 @@ internal class WalletSettingsModel @Inject constructor(
     private val getWalletNFTEnabledUseCase: GetWalletNFTEnabledUseCase,
     private val enableWalletNFTUseCase: EnableWalletNFTUseCase,
     private val disableWalletNFTUseCase: DisableWalletNFTUseCase,
+    private val notificationsToggles: NotificationsFeatureToggles,
+    private val getWalletNotificationsEnabledUseCase: GetWalletNotificationsEnabledUseCase,
+    private val setNotificationsEnabledUseCase: SetNotificationsEnabledUseCase,
 ) : Model() {
 
     val params: WalletSettingsComponent.Params = paramsContainer.require()
@@ -73,23 +75,27 @@ internal class WalletSettingsModel @Inject constructor(
     )
 
     init {
-        getWalletUseCase.invokeFlow(params.userWalletId)
-            .distinctUntilChanged()
-            .combine(getWalletNFTEnabledUseCase.invoke(params.userWalletId)) { maybeWallet, nftEnabled ->
-                val wallet = maybeWallet.getOrNull() ?: return@combine
-                val isRenameWalletAvailable = getShouldSaveUserWalletsSyncUseCase()
-                state.update { value ->
-                    value.copy(
-                        items = buildItems(
-                            userWallet = wallet,
-                            dialogNavigation = dialogNavigation,
-                            isRenameWalletAvailable = isRenameWalletAvailable,
-                            isNFTFeatureEnabled = nftFeatureToggles.isNFTEnabled,
-                            isNFTEnabled = nftEnabled,
-                        ),
-                    )
-                }
+        combine(
+            getWalletUseCase.invokeFlow(params.userWalletId).distinctUntilChanged(),
+            getWalletNFTEnabledUseCase.invoke(params.userWalletId),
+            getWalletNotificationsEnabledUseCase(params.userWalletId),
+        ) { maybeWallet, nftEnabled, notificationsEnabled ->
+            val wallet = maybeWallet.getOrNull() ?: return@combine
+            val isRenameWalletAvailable = getShouldSaveUserWalletsSyncUseCase()
+            state.update { value ->
+                value.copy(
+                    items = buildItems(
+                        userWallet = wallet,
+                        dialogNavigation = dialogNavigation,
+                        isRenameWalletAvailable = isRenameWalletAvailable,
+                        isNFTFeatureEnabled = nftFeatureToggles.isNFTEnabled,
+                        isNFTEnabled = nftEnabled,
+                        isNotificationsEnabled = notificationsEnabled,
+                        isNotificationsFeatureEnabled = notificationsToggles.isNotificationsEnabled,
+                    ),
+                )
             }
+        }
             .launchIn(modelScope)
     }
 
@@ -99,6 +105,8 @@ internal class WalletSettingsModel @Inject constructor(
         isRenameWalletAvailable: Boolean,
         isNFTFeatureEnabled: Boolean,
         isNFTEnabled: Boolean,
+        isNotificationsFeatureEnabled: Boolean,
+        isNotificationsEnabled: Boolean,
     ): PersistentList<WalletSettingsItemUM> = itemsBuilder.buildItems(
         userWalletId = userWallet.walletId,
         userWalletName = userWallet.name,
@@ -129,6 +137,10 @@ internal class WalletSettingsModel @Inject constructor(
             onLinkMoreCardsClick(scanResponse = userWallet.scanResponse)
         },
         onReferralClick = { onReferralClick(userWallet) },
+        isNotificationsEnabled = isNotificationsEnabled,
+        isNotificationsFeatureEnabled = isNotificationsFeatureEnabled,
+        onCheckedNotificationsChanged = ::onCheckedNotificationsChange,
+        onNotificationsDescriptionClick = ::onNotificationsDescriptionClick,
     )
 
     private fun openRenameWalletDialog(userWallet: UserWallet, dialogNavigation: SlotNavigation<DialogConfig>) {
@@ -178,6 +190,17 @@ internal class WalletSettingsModel @Inject constructor(
                 disableWalletNFTUseCase.invoke(params.userWalletId)
             }
         }
+    }
+
+    private fun onCheckedNotificationsChange(isChecked: Boolean) {
+        // TODO [REDACTED_JIRA]
+        modelScope.launch {
+            setNotificationsEnabledUseCase(params.userWalletId, isChecked)
+        }
+    }
+
+    private fun onNotificationsDescriptionClick() {
+        // TODO [REDACTED_JIRA]
     }
 
     private fun onReferralClick(userWallet: UserWallet) {
