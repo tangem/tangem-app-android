@@ -669,7 +669,7 @@
   <string name="onboarding_wallet_info_title_second">Identische Karten oder Ring</string>
   <string name="onboarding_wallet_info_title_third">Zugangscode</string>
   <string name="onramp_avaiable_with_payment_methods">Verfügbar mit %s</string>
-  <string name="onramp_choose_provider_title_hint">Der Kauf von Kryptowährungen bei Tangem wird von Drittanbietern zu deren Bedingungen durchgeführt.</string>
+  <string name="onramp_choose_provider_title_hint">Anbieter erleichtern Transaktionen</string>
   <string name="onramp_country_search">Suche nach Land</string>
   <string name="onramp_country_unavailable">Nicht verfügbar</string>
   <string name="onramp_currency_other">Andere Währungen</string>
@@ -696,6 +696,10 @@
   <string name="organize_tokens_sort_by_balance">Nach Guthaben</string>
   <string name="organize_tokens_title">Token organisieren</string>
   <string name="organize_tokens_ungroup">Gruppe löschen</string>
+  <string name="push_notifications_permission_alert_description">Du kannst Benachrichtigungen für Tangem in den Einstellungen aktivieren.</string>
+  <string name="push_notifications_permission_alert_negative_button">Später aktivieren</string>
+  <string name="push_notifications_permission_alert_positive_button">Einstellungen</string>
+  <string name="push_notifications_permission_alert_title">Benachrichtigungen aktivieren</string>
   <string name="qr_scanner_camera_denied_gallery_button">Wählen aus der Galerie aus</string>
   <string name="qr_scanner_camera_denied_settings_button">Einstellungen</string>
   <string name="qr_scanner_camera_denied_text">Du hast keinen Zugriff auf deine Kamera gewährt</string>
@@ -867,7 +871,7 @@
   <string name="staking_details_auto_claiming_rewards_daily_text">Belohnungen sammeln sich täglich automatisch in deinem Staking-Konto an.</string>
   <string name="staking_details_available">Verfügbar</string>
   <string name="staking_details_average_reward_rate">Durchschnittliche Belohnungsquote</string>
-  <string name="staking_details_banner_text">Was ist Staking?</string>
+  <string name="staking_details_banner_text">Wie funktioniert Staking?</string>
   <string name="staking_details_estimated_profit">%s geschätzter Profit</string>
   <string name="staking_details_market_rating">Marktposition</string>
   <string name="staking_details_metrics_block_header">Metriken</string>
@@ -899,10 +903,10 @@
   <string name="staking_notification_earn_rewards_text_daily">Tangem ermöglicht es Benutzern, ihre Kryptowährungen zu Staken</string>
   <string name="staking_notification_earn_rewards_text_hourly">Tangem ermöglicht es Benutzern, ihre Kryptowährungen zu Staken</string>
   <string name="staking_notification_earn_rewards_text_monthly">Tangem ermöglicht es Benutzern, ihre Kryptowährungen zu Staken</string>
-  <string name="staking_notification_earn_rewards_text_period_day">Mit dem Staking kannst Du %1$s verdienen. Deine Staking-Belohnungen erhältst Du jeden tag.</string>
-  <string name="staking_notification_earn_rewards_text_period_hour">Mit dem Staking kannst Du %1$s verdienen. Deine Staking-Belohnungen erhältst Du jede Stunde.</string>
-  <string name="staking_notification_earn_rewards_text_period_month">Mit dem Staking kannst Du %1$s verdienen. Deine Staking-Belohnungen erhältst Du jeden Monat.</string>
-  <string name="staking_notification_earn_rewards_text_period_week">Mit dem Staking kannst Du %1$s verdienen. Deine Staking-Belohnungen erhältst Du jede Woche.</string>
+  <string name="staking_notification_earn_rewards_text_period_day">Durch Staking kannst Du %1$s erhalten. Deine Staking-Belohnungen kommen täglich an.</string>
+  <string name="staking_notification_earn_rewards_text_period_hour">Durch Staking kannst Du %1$s erhalten. Deine Staking-Belohnungen werden stündlich gutgeschrieben.</string>
+  <string name="staking_notification_earn_rewards_text_period_month">Durch Staking kannst Du %1$s erhalten. Deine Staking-Belohnungen werden Dir jeden Monat gutgeschrieben.</string>
+  <string name="staking_notification_earn_rewards_text_period_week">Durch Staking kannst Du %1$s erhalten. Deine Staking-Belohnungen kommen jede Woche.</string>
   <string name="staking_notification_earn_rewards_text_weekly">Tangem ermöglicht es Benutzern, ihre Kryptowährungen zu Staken</string>
   <string name="staking_notification_earn_rewards_title">Verdiene Staking-Belohnungen</string>
   <string name="staking_notification_low_staked_balance_text">Dein verbleibender Stakingbetrag ist zu niedrig, um den Einsatz aufzuheben. Du musst mehr Staken, um den Mindestbetrag zum Aufheben des Einsatzes zu erreichen.</string>
@@ -1258,6 +1262,8 @@
   <string name="wc_alert_session_disconnected_title">WalletConnect-Sitzung wurde getrennt</string>
   <string name="wc_alert_unknown_error_description">Fehlercode: %s. Wenn das Problem weiterhin besteht, wende Dich bitte an unseren Support.</string>
   <string name="wc_alert_unknown_error_title">Wir haben einen unbekannten Fehler festgestellt.</string>
+  <string name="wc_alert_unsupported_method_description">Fehlercode: 8 005. Wenn das Problem weiterhin besteht, wende Dich bitte an unseren Support.</string>
+  <string name="wc_alert_unsupported_method_title">Wir haben einen unbekannten Fehler festgestellt.</string>
   <string name="wc_alert_unsupported_networks_description">Tangem unterstützt derzeit das erforderliches Netzwerk von %s nicht.</string>
   <string name="wc_alert_unsupported_networks_title">Nicht unterstützte Netzwerke</string>
   <string name="wc_alert_verified_domain_description">Tangem unterstützt ein erforderliches Netzwerk um %s.</string>
