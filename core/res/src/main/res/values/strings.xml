@@ -562,7 +562,10 @@
   <string name="nft_send">Send NFT</string>
   <string name="nft_traits_title">Traits</string>
   <string name="nft_untitled_collection">Untitled collection</string>
-  <string name="nft_wallet_count">%1$d NFTs in %2$d collection</string>
+  <plurals name="nft_wallet_count">
+    <item quantity="one">%1$d NFTs in %2$d collection</item>
+    <item quantity="other">%1$d NFTs in %2$d collections</item>
+  </plurals>
   <string name="nft_wallet_receive_nft">Tap here to receive first NFT</string>
   <string name="nft_wallet_title">NFT collections</string>
   <string name="nft_wallet_unable_to_load">Unable to load the data</string>
