@@ -23,6 +23,7 @@ import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.utils.*
 import com.tangem.datasource.utils.RequestHeader.AppVersionPlatformHeaders
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.info.AppInfoProvider
 import com.tangem.utils.version.AppVersionProvider
 import dagger.Module
 import dagger.Provides
@@ -162,6 +163,7 @@ internal object NetworkModule {
         @ApplicationContext context: Context,
         analyticsErrorHandler: AnalyticsErrorHandler,
         appVersionProvider: AppVersionProvider,
+        appInfoProvider: AppInfoProvider,
     ): TangemTechApiV2 {
         return provideTangemTechApiInternal(
             moshi = moshi,
@@ -169,6 +171,7 @@ internal object NetworkModule {
             appVersionProvider = appVersionProvider,
             baseUrl = PROD_V2_TANGEM_TECH_BASE_URL,
             analyticsErrorHandler = analyticsErrorHandler,
+            appInfoProvider = appInfoProvider,
         )
     }
 
@@ -218,15 +221,17 @@ internal object NetworkModule {
         )
     }
 
+    @Suppress("LongParameterList")
     @Deprecated("use createApi instead")
     private inline fun <reified T> provideTangemTechApiInternal(
         moshi: Moshi,
         context: Context,
         appVersionProvider: AppVersionProvider,
+        appInfoProvider: AppInfoProvider,
         baseUrl: String,
         analyticsErrorHandler: AnalyticsErrorHandler,
         timeouts: Timeouts = Timeouts(),
-        requestHeaders: List<RequestHeader> = listOf(AppVersionPlatformHeaders(appVersionProvider)),
+        requestHeaders: List<RequestHeader> = listOf(AppVersionPlatformHeaders(appVersionProvider, appInfoProvider)),
     ): T {
         val client = OkHttpClient.Builder()
             .applyTimeoutAnnotations()
