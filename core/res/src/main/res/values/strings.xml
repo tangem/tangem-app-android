@@ -701,6 +701,11 @@
   <string name="organize_tokens_sort_by_balance">By balance</string>
   <string name="organize_tokens_title">Organize tokens</string>
   <string name="organize_tokens_ungroup">Ungroup</string>
+  <string name="push_notifications_more_info">More info</string>
+  <string name="push_notifications_permission_alert_description">You can enable Notifications for Tangem in Settings.</string>
+  <string name="push_notifications_permission_alert_negative_button">Enable Later</string>
+  <string name="push_notifications_permission_alert_positive_button">Settings</string>
+  <string name="push_notifications_permission_alert_title">Enable Notifications</string>
   <string name="qr_scanner_camera_denied_gallery_button">Select from the gallery</string>
   <string name="qr_scanner_camera_denied_settings_button">Settings</string>
   <string name="qr_scanner_camera_denied_text">You have not given access to your camera</string>
