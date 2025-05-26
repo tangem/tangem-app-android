@@ -41,6 +41,8 @@ interface WalletsRepository {
 
     suspend fun disableNFT(userWalletId: UserWalletId)
 
+    fun notificationsEnabledStatus(userWalletId: UserWalletId): Flow<Boolean>
+
     suspend fun isNotificationsEnabled(userWalletId: UserWalletId): Boolean
 
     suspend fun setNotificationsEnabled(userWalletId: UserWalletId, isEnabled: Boolean)
