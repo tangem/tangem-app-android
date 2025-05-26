@@ -516,7 +516,6 @@
   <string name="nft_collections_title">Collections NFT</string>
   <string name="nft_collections_warning_subtitle">Certaines données peuvent ne pas se charger</string>
   <string name="nft_collections_warning_title">Problèmes de chargement temporaires</string>
-  <string name="nft_wallet_count">%1$d NFT dans la collection %2$d</string>
   <string name="nft_wallet_receive_nft">Appuyez ici pour recevoir le premier NFT</string>
   <string name="nft_wallet_title">Collections NFT</string>
   <string name="nft_wallet_unable_to_load">Impossible de charger les données</string>
