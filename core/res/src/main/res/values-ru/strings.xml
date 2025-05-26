@@ -530,10 +530,10 @@
   <string name="nft_about_title">Об NFT</string>
   <string name="nft_asset">NFT</string>
   <plurals name="nft_collections_count">
-    <item quantity="one">NFT</item>
-    <item quantity="few">NFT</item>
-    <item quantity="many">NFT</item>
-    <item quantity="other">NFT</item>
+    <item quantity="one">%d NFT</item>
+    <item quantity="few">%d NFTs</item>
+    <item quantity="many">%d NFTs</item>
+    <item quantity="other">%d NFTs</item>
   </plurals>
   <string name="nft_collections_empty_description">Здесь будут отображаться NFT, полученные на ваш кошелёк</string>
   <string name="nft_collections_empty_title">У вас ещё нет коллекций</string>
@@ -568,7 +568,12 @@
   <string name="nft_receive_unavailable_section_title">Не добавлено</string>
   <string name="nft_send">Отправить NFT</string>
   <string name="nft_traits_title">Черты</string>
-  <string name="nft_wallet_count">%1$d NFTs в %2$d коллекциях</string>
+  <plurals name="nft_wallet_count">
+    <item quantity="one">%1$d NFTs в %2$d коллекции</item>
+    <item quantity="few">%1$d NFTs в %2$d коллекциях</item>
+    <item quantity="many">%1$d NFTs в %2$d коллекциях</item>
+    <item quantity="other">%1$d NFTs в %2$d коллекциях</item>
+  </plurals>
   <string name="nft_wallet_receive_nft">Нажмите здесь, чтобы получить первую NFT</string>
   <string name="nft_wallet_title">NFT коллекции</string>
   <string name="nft_wallet_unable_to_load">Невозможно загрузить данные</string>
