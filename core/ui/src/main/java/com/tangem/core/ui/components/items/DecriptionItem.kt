@@ -1,4 +1,4 @@
-package com.tangem.features.markets.details.impl.ui.components
+package com.tangem.core.ui.components.items
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -7,9 +7,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
+import com.tangem.core.ui.R
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
@@ -18,15 +20,15 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.PreviewShimmerContainer
-import com.tangem.features.markets.impl.R
 import com.tangem.utils.StringsSigns
 
 @Composable
-internal fun Description(
+fun DescriptionItem(
     description: TextReference,
     hasFullDescription: Boolean,
     onReadMoreClick: () -> Unit,
     modifier: Modifier = Modifier,
+    textStyle: TextStyle = TangemTheme.typography.body2,
 ) {
     if (hasFullDescription) {
         val text = buildAnnotatedString {
@@ -51,20 +53,20 @@ internal fun Description(
                     onClick = onReadMoreClick,
                 ),
             text = text,
-            style = TangemTheme.typography.body2,
+            style = textStyle,
         )
     } else {
         Text(
             modifier = modifier,
             text = description.resolveReference(),
-            style = TangemTheme.typography.body2,
+            style = textStyle,
             color = TangemTheme.colors.text.secondary,
         )
     }
 }
 
 @Composable
-internal fun DescriptionPlaceholder(modifier: Modifier = Modifier) {
+public fun DescriptionPlaceholder(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier,
     ) {
@@ -90,7 +92,7 @@ internal fun DescriptionPlaceholder(modifier: Modifier = Modifier) {
 @Composable
 private fun ContentPreview() {
     TangemThemePreview {
-        Description(
+        DescriptionItem(
             description = stringReference(
                 "XRP (XRP) is a cryptocurrency launched in January 2009, where the first " +
                     "genesis block was mined on 9th January 2009",

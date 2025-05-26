@@ -13,11 +13,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.TangemSwitch
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.block.BlockCard
 import com.tangem.core.ui.components.block.BlockItem
+import com.tangem.core.ui.components.items.DescriptionItem
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
@@ -97,6 +100,12 @@ private fun Content(state: WalletSettingsUM, modifier: Modifier = Modifier) {
                 is WalletSettingsItemUM.WithSwitch -> SwitchBlock(
                     modifier = itemModifier,
                     model = item,
+                )
+                is WalletSettingsItemUM.DescriptionWithMore -> DescriptionWithMoreBlock(
+                    modifier = itemModifier,
+                    model = item,
+                    yOffset = DESCRIPTION_OFFSET,
+                    onDescriptionClick = item.onClick,
                 )
             }
         }
@@ -194,6 +203,26 @@ private fun SwitchBlock(model: WalletSettingsItemUM.WithSwitch, modifier: Modifi
         }
     }
 }
+
+@Composable
+private fun DescriptionWithMoreBlock(
+    model: WalletSettingsItemUM.DescriptionWithMore,
+    onDescriptionClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    yOffset: Dp = 0.dp,
+) {
+    DescriptionItem(
+        modifier = modifier
+            .offset(y = yOffset)
+            .padding(horizontal = 12.dp),
+        description = model.text,
+        hasFullDescription = true,
+        textStyle = TangemTheme.typography.caption2,
+        onReadMoreClick = onDescriptionClick,
+    )
+}
+
+private val DESCRIPTION_OFFSET = -8.dp
 
 // region Preview
 @Composable

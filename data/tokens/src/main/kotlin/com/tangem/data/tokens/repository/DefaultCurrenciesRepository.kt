@@ -548,6 +548,16 @@ internal class DefaultCurrenciesRepository(
         return blockchain?.isNetworkFeeZero() ?: false
     }
 
+    override suspend fun syncTokens(userWalletId: UserWalletId) {
+        val savedCurrencies = requireNotNull(
+            value = getSavedUserTokensResponseSync(key = userWalletId),
+            lazyMessage = { "Saved tokens empty. Can not perform add currencies action" },
+        )
+        userTokensSaver.push(userWalletId, savedCurrencies, onFailSend = {
+            throw IllegalStateException("Unable to push tokens")
+        },)
+    }
+
     private fun getMultiCurrencyWalletCurrencies(userWallet: UserWallet): Flow<List<CryptoCurrency>> {
         return getSavedUserTokensResponse(userWallet.walletId).map { storedTokens ->
             responseCurrenciesFactory.createCurrencies(

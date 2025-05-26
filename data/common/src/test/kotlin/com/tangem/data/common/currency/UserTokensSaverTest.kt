@@ -110,66 +110,42 @@ class UserTokensSaverTest {
     }
 
     @Test
-    fun `GIVEN user wallet id and response WHEN push THEN should push enriched response`() = runTest {
-        // GIVEN
-        val userWalletId = UserWalletId("1234567890abcdef")
-        val response = UserTokensResponse(
-            version = 0,
-            group = UserTokensResponse.GroupType.NETWORK,
-            sort = UserTokensResponse.SortType.BALANCE,
-            tokens = emptyList(),
-        )
-        val enrichedResponse = UserTokensResponse(
-            version = 0,
-            group = UserTokensResponse.GroupType.NETWORK,
-            sort = UserTokensResponse.SortType.BALANCE,
-            tokens = emptyList(),
-        )
-        coEvery { userTokensResponseAddressesEnricher(userWalletId, response) } returns enrichedResponse
-        coEvery { tangemTechApi.saveUserTokens(any(), any()) } returns ApiResponse.Success(Unit)
+    fun `GIVEN user wallet id and response WHEN push AND api call fails THEN should log error and call onFailSend`() =
+        runTest {
+            // GIVEN
+            val userWalletId = UserWalletId("1234567890abcdef")
+            val response = UserTokensResponse(
+                version = 0,
+                group = UserTokensResponse.GroupType.NETWORK,
+                sort = UserTokensResponse.SortType.BALANCE,
+                tokens = emptyList(),
+            )
+            val enrichedResponse = UserTokensResponse(
+                version = 0,
+                group = UserTokensResponse.GroupType.NETWORK,
+                sort = UserTokensResponse.SortType.BALANCE,
+                tokens = emptyList(),
+            )
+            val error = ApiResponseError.UnknownException(Exception("API Error"))
+            var onFailSendCalled = false
+            coEvery { userTokensResponseAddressesEnricher(userWalletId, response) } returns enrichedResponse
+            coEvery { tangemTechApi.saveUserTokens(any(), any()) } returns
+                ApiResponse.Error(error) as ApiResponse<Unit>
 
-        // WHEN
-        userTokensSaver.push(userWalletId, response)
+            // WHEN
+            userTokensSaver.push(
+                userWalletId = userWalletId,
+                response = response,
+                onFailSend = { onFailSendCalled = true },
+            )
 
-        // THEN
-        coVerify {
-            tangemTechApi.saveUserTokens(userWalletId.stringValue, enrichedResponse)
+            // THEN
+            coVerify {
+                tangemTechApi.saveUserTokens(userWalletId.stringValue, enrichedResponse)
+            }
+            coVerify(exactly = 0) {
+                dataStore.updateData(any())
+            }
+            assert(onFailSendCalled) { "onFailSend callback should be called when API call fails" }
         }
-        coVerify(exactly = 0) {
-            dataStore.updateData(any())
-        }
-    }
-
-    @Test
-    fun `GIVEN user wallet id and response WHEN push AND api call fails THEN should log error`() = runTest {
-        // GIVEN
-        val userWalletId = UserWalletId("1234567890abcdef")
-        val response = UserTokensResponse(
-            version = 0,
-            group = UserTokensResponse.GroupType.NETWORK,
-            sort = UserTokensResponse.SortType.BALANCE,
-            tokens = emptyList(),
-        )
-        val enrichedResponse = UserTokensResponse(
-            version = 0,
-            group = UserTokensResponse.GroupType.NETWORK,
-            sort = UserTokensResponse.SortType.BALANCE,
-            tokens = emptyList(),
-        )
-        val error = ApiResponseError.UnknownException(Exception("API Error"))
-        coEvery { userTokensResponseAddressesEnricher(userWalletId, response) } returns enrichedResponse
-        coEvery { tangemTechApi.saveUserTokens(any(), any()) } returns
-            ApiResponse.Error(error) as ApiResponse<Unit>
-
-        // WHEN
-        userTokensSaver.push(userWalletId, response)
-
-        // THEN
-        coVerify {
-            tangemTechApi.saveUserTokens(userWalletId.stringValue, enrichedResponse)
-        }
-        coVerify(exactly = 0) {
-            dataStore.updateData(any())
-        }
-    }
 }
