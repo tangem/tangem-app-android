@@ -1,6 +1,7 @@
 package com.tangem.tap.di.domain
 
 import com.tangem.domain.redux.ReduxStateHolder
+import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.transaction.WalletAddressServiceRepository
 import com.tangem.domain.transaction.usecase.ParseSharedAddressUseCase
 import com.tangem.domain.transaction.usecase.ValidateWalletAddressUseCase
@@ -242,6 +243,28 @@ internal object WalletsDomainModule {
         walletsRepository: WalletsRepository,
     ): AssociateWalletsWithApplicationIdUseCase {
         return AssociateWalletsWithApplicationIdUseCase(
+            walletsRepository = walletsRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providesSetNotificationsEnabledUseCase(
+        walletsRepository: WalletsRepository,
+        currenciesRepository: CurrenciesRepository,
+    ): SetNotificationsEnabledUseCase {
+        return SetNotificationsEnabledUseCase(
+            walletsRepository = walletsRepository,
+            currenciesRepository = currenciesRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providesGetWalletNotificationsEnabledUseCase(
+        walletsRepository: WalletsRepository,
+    ): GetWalletNotificationsEnabledUseCase {
+        return GetWalletNotificationsEnabledUseCase(
             walletsRepository = walletsRepository,
         )
     }
