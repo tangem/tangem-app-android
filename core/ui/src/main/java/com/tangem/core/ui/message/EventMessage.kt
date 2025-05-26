@@ -4,6 +4,9 @@ import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
 import com.tangem.core.decompose.ui.UiMessage
 import com.tangem.core.ui.R
+import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUMV2
+import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetV2Dsl
+import com.tangem.core.ui.components.bottomsheets.message.messageBottomSheetUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage.Duration
@@ -176,6 +179,13 @@ data class BottomSheetMessage(
         }
     }
 }
+
+data class BottomSheetMessageV2(
+    val messageBottomSheetUMV2: MessageBottomSheetUMV2,
+) : EventMessage
+
+internal fun bottomSheetMessage(init: @MessageBottomSheetV2Dsl MessageBottomSheetUMV2.() -> Unit) =
+    BottomSheetMessageV2(messageBottomSheetUM(init))
 
 /**
  * Represents an action button in the dialog.
