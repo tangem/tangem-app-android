@@ -157,8 +157,13 @@ private fun TokenSubtitle(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         TokenRatingPlace(ratingPosition = ratingPosition)
-        SpacerW4()
-        TokenMarketCapText(text = marketCap ?: "")
+        if (marketCap != null) {
+            SpacerW4()
+            TokenMarketCapText(
+                modifier = Modifier.weight(1f, fill = false),
+                text = marketCap,
+            )
+        }
         if (stakingRate != null) {
             SpacerW4()
             StakingRate(stakingRate = stakingRate.resolveReference())
@@ -210,9 +215,9 @@ private fun RowScope.StakingRate(stakingRate: String) {
 }
 
 @Composable
-private fun RowScope.TokenMarketCapText(text: String) {
+private fun RowScope.TokenMarketCapText(text: String, modifier: Modifier = Modifier) {
     Text(
-        modifier = Modifier.alignByBaseline(),
+        modifier = modifier.alignByBaseline(),
         text = text,
         color = TangemTheme.colors.text.tertiary,
         style = TangemTheme.typography.caption2,
@@ -249,7 +254,7 @@ private fun Chart(chartType: MarketChartLook.Type, chartRawData: MarketChartRawD
 // region preview
 @Preview(showBackground = true, widthDp = 360, name = "normal")
 @Preview(showBackground = true, widthDp = 360, name = "normal night", uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Preview(showBackground = true, widthDp = 320, name = "small width")
+@Preview(showBackground = true, widthDp = 260, name = "small width")
 @Composable
 private fun Preview(@PreviewParameter(MarketChartListItemPreviewDataProvider::class) state: MarketsListItemUM) {
     TangemThemePreview {
