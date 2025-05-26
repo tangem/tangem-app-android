@@ -518,7 +518,7 @@
   <string name="nft_about_title">NFTについて</string>
   <string name="nft_asset">NFTアセット</string>
   <plurals name="nft_collections_count">
-    <item quantity="other">アイテム</item>
+    <item quantity="other">%d アイテム</item>
   </plurals>
   <string name="nft_collections_empty_description">ウォレットに送信されたNFTがここに表示されます。</string>
   <string name="nft_collections_empty_title">コレクションはまだありません</string>
@@ -687,6 +687,10 @@
   <string name="organize_tokens_sort_by_balance">残高順</string>
   <string name="organize_tokens_title">トークンを整理する</string>
   <string name="organize_tokens_ungroup">グループ解除</string>
+  <string name="push_notifications_permission_alert_description">Tangemの通知は設定で有効にできます。</string>
+  <string name="push_notifications_permission_alert_negative_button">後で有効にする</string>
+  <string name="push_notifications_permission_alert_positive_button">設定</string>
+  <string name="push_notifications_permission_alert_title">通知を有効にする</string>
   <string name="qr_scanner_camera_denied_gallery_button">ギャラリーから選択</string>
   <string name="qr_scanner_camera_denied_settings_button">設定</string>
   <string name="qr_scanner_camera_denied_text">カメラへのアクセスを許可していません。</string>
@@ -1242,6 +1246,8 @@
   <string name="wc_alert_session_disconnected_title">WalletConnectセッションが接続解除されました</string>
   <string name="wc_alert_unknown_error_description">エラーコード: %s 。問題が解決しない場合は、お気軽にサポートまでお問い合わせください。</string>
   <string name="wc_alert_unknown_error_title">不明なエラーが発生しました</string>
+  <string name="wc_alert_unsupported_method_description">エラーコード: 8 005。問題が解決しない場合は、お気軽にサポートまでお問い合わせください。</string>
+  <string name="wc_alert_unsupported_method_title">不明なエラーが発生しました</string>
   <string name="wc_alert_unsupported_networks_description">Tangemは現在%sで必要なネットワークをサポートしていません。</string>
   <string name="wc_alert_unsupported_networks_title">サポートされていないネットワーク</string>
   <string name="wc_alert_verified_domain_description">Tangemは%sで必要なネットワークをサポートします。</string>

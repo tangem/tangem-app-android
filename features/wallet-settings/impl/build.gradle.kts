@@ -35,6 +35,7 @@ dependencies {
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.demo)
     implementation(projects.domain.nft)
+    implementation(projects.domain.notifications.toggles)
 
     /* AndroidX */
     implementation(deps.androidx.fragment.ktx)
