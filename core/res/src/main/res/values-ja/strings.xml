@@ -554,7 +554,6 @@
   <string name="nft_send">NFTを送信する</string>
   <string name="nft_traits_title">特徴</string>
   <string name="nft_untitled_collection">無題のコレクション</string>
-  <string name="nft_wallet_count">%1$dコレクションの%2$dNFT</string>
   <string name="nft_wallet_receive_nft">ここをタップして最初のNFTを受け取ります</string>
   <string name="nft_wallet_title">NFTコレクション</string>
   <string name="nft_wallet_unable_to_load">データを読み込めません</string>
