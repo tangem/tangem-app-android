@@ -30,7 +30,7 @@ class MockUpdateWalletManagerResultFactory {
         )
     }
 
-    fun createVerified(): UpdateWalletManagerResult {
+    fun createVerified(): Verified {
         return Verified(
             selectedAddress = "0x1",
             addresses = setOf(Address(value = "0x1", type = Address.Type.Primary)),
