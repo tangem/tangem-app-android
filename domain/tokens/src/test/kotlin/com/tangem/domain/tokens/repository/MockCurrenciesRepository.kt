@@ -163,4 +163,8 @@ internal class MockCurrenciesRepository(
     override fun isNetworkFeeZero(userWalletId: UserWalletId, network: Network): Boolean {
         return false
     }
+
+    override suspend fun syncTokens(userWalletId: UserWalletId) {
+        return Unit
+    }
 }
