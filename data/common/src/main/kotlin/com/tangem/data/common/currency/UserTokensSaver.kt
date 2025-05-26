@@ -46,18 +46,23 @@ class UserTokensSaver constructor(
         push(userWalletId, enrichedUserTokensResponse, false)
     }
 
-    suspend fun push(userWalletId: UserWalletId, response: UserTokensResponse, useEnricher: Boolean = true) =
-        withContext(dispatchers.io) {
-            val enrichedUserTokensResponse = if (useEnricher) {
-                userTokensResponseAddressesEnricher(
-                    userWalletId = userWalletId,
-                    response = response,
-                )
-            } else {
-                response
-            }
-            safeApiCall({ tangemTechApi.saveUserTokens(userWalletId.stringValue, enrichedUserTokensResponse).bind() }) {
-                Timber.e(it, "Unable to push user tokens for: ${userWalletId.stringValue}")
-            }
+    suspend fun push(
+        userWalletId: UserWalletId,
+        response: UserTokensResponse,
+        useEnricher: Boolean = true,
+        onFailSend: () -> Unit = {},
+    ) = withContext(dispatchers.io) {
+        val enrichedUserTokensResponse = if (useEnricher) {
+            userTokensResponseAddressesEnricher(
+                userWalletId = userWalletId,
+                response = response,
+            )
+        } else {
+            response
         }
+        safeApiCall({ tangemTechApi.saveUserTokens(userWalletId.stringValue, enrichedUserTokensResponse).bind() }) {
+            Timber.e(it, "Unable to push user tokens for: ${userWalletId.stringValue}")
+            onFailSend()
+        }
+    }
 }
