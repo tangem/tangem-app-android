@@ -7,6 +7,7 @@ import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
+import kotlinx.serialization.Serializable
 
 @Immutable
 data class MessageBottomSheetUMV2(
@@ -24,6 +25,7 @@ data class MessageBottomSheetUMV2(
     val closeScope = CloseScope()
 
     @Immutable
+    @Serializable
     sealed interface Element
 
     @Immutable
@@ -90,7 +92,7 @@ annotation class MessageBottomSheetV2Dsl
 
 // region: DSL
 
-internal fun messageBottomSheetUM(init: @MessageBottomSheetV2Dsl MessageBottomSheetUMV2.() -> Unit) =
+fun messageBottomSheetUM(init: @MessageBottomSheetV2Dsl MessageBottomSheetUMV2.() -> Unit) =
     MessageBottomSheetUMV2().apply(init)
 
 fun MessageBottomSheetUMV2.onDismiss(block: () -> Unit) = MessageBottomSheetUMV2().apply { onDismissRequest = block }
