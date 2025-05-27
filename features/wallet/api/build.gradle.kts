@@ -12,7 +12,14 @@ dependencies {
     /** AndroidX */
     implementation(deps.androidx.fragment.ktx)
 
+    /** Project - Domain */
+    implementation(projects.domain.wallets.models)
+
     /** Core */
     implementation(projects.core.ui)
     implementation(projects.core.decompose)
+    implementation(projects.common.ui)
+
+    /** Other */
+    implementation(deps.kotlin.immutable.collections)
 }

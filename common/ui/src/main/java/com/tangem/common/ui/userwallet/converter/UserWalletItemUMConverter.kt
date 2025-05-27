@@ -53,13 +53,14 @@ class UserWalletItemUMConverter(
         }
     }
 
-    private fun getInfo(userWallet: UserWallet): TextReference {
+    private fun getInfo(userWallet: UserWallet): UserWalletItemUM.Information.Loaded {
         val cardCount = userWallet.getCardsCount() ?: 1
-        return TextReference.PluralRes(
+        val text = TextReference.PluralRes(
             id = R.plurals.card_label_card_count,
             count = cardCount,
             formatArgs = wrappedList(cardCount),
         )
+        return UserWalletItemUM.Information.Loaded(text)
     }
 
     private fun getBalanceInfo(userWallet: UserWallet): UserWalletItemUM.Balance {
