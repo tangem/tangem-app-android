@@ -36,6 +36,8 @@ internal class PreviewWalletSettingsComponent : WalletSettingsComponent {
             onCheckedNotificationsChanged = {},
             onNotificationsDescriptionClick = {},
         ),
+        requestPushNotificationsPermission = false,
+        onPushNotificationPermissionGranted = {},
     )
 
     @Composable
