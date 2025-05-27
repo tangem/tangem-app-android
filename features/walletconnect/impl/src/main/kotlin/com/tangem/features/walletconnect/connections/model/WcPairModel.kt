@@ -1,10 +1,18 @@
 package com.tangem.features.walletconnect.connections.model
 
 import androidx.compose.runtime.Stable
+import com.arkivanov.decompose.router.stack.StackNavigation
+import com.arkivanov.decompose.router.stack.pop
+import com.arkivanov.decompose.router.stack.pushNew
+import com.domain.blockaid.models.dapp.CheckDAppResult
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.ui.R
+import com.tangem.core.ui.components.bottomsheets.message.*
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.walletconnect.model.WcPairRequest
 import com.tangem.domain.walletconnect.model.WcSessionApprove
@@ -21,6 +29,7 @@ import com.tangem.features.walletconnect.connections.entity.WcPrimaryButtonConfi
 import com.tangem.features.walletconnect.connections.model.transformers.WcAppInfoTransformer
 import com.tangem.features.walletconnect.connections.model.transformers.WcAppInfoWalletChangedTransformer
 import com.tangem.features.walletconnect.connections.model.transformers.WcConnectButtonProgressTransformer
+import com.tangem.features.walletconnect.connections.model.transformers.WcDAppVerifiedStateConverter
 import com.tangem.features.walletconnect.connections.routes.WcAppInfoRoutes
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
@@ -52,11 +61,14 @@ internal class WcPairModel @Inject constructor(
         ),
     )
 
+    val stackNavigation = StackNavigation<WcAppInfoRoutes>()
+
     private val selectedUserWalletFlow =
         MutableStateFlow(getWalletsUseCase.invokeSync().first { it.walletId == params.userWalletId })
     private var proposalNetwork by Delegates.notNull<WcSessionProposal.ProposalNetwork>()
-    internal var sessionProposal by Delegates.notNull<WcSessionProposal>()
+    private var sessionProposal by Delegates.notNull<WcSessionProposal>()
     private val additionallyEnabledNetworks = mutableSetOf<Network.RawID>()
+    private val dAppVerifiedStateConverter = WcDAppVerifiedStateConverter(onVerifiedClick = ::showVerifiedAlert)
 
     val appInfoUiState: StateFlow<WcAppInfoUM>
     field = MutableStateFlow<WcAppInfoUM>(createLoadingState())
@@ -87,16 +99,17 @@ internal class WcPairModel @Inject constructor(
                         proposalNetwork = sessionProposal.proposalNetwork.getValue(selectedUserWalletFlow.value)
                         appInfoUiState.transformerUpdate(
                             WcAppInfoTransformer(
-                                dAppSession = pairState.dAppSession,
+                                dAppSession = sessionProposal,
+                                dAppVerifiedStateConverter = dAppVerifiedStateConverter,
                                 onDismiss = ::rejectPairing,
                                 onConnect = ::onConnect,
                                 onWalletClick = {
-                                    router.push(
+                                    stackNavigation.pushNew(
                                         WcAppInfoRoutes.SelectWallet(selectedUserWalletFlow.value.walletId),
                                     )
                                 },
                                 onNetworksClick = {
-                                    router.push(
+                                    stackNavigation.pushNew(
                                         WcAppInfoRoutes.SelectNetworks(
                                             missingRequiredNetworks = proposalNetwork.missingRequired,
                                             requiredNetworks = proposalNetwork.required,
@@ -120,7 +133,15 @@ internal class WcPairModel @Inject constructor(
         wcPairUseCase.reject()
     }
 
-    private fun onConnect() {
+    private fun onConnect(securityStatus: CheckDAppResult) {
+        when (securityStatus) {
+            CheckDAppResult.SAFE -> connect()
+            CheckDAppResult.UNSAFE -> showSecurityRiskAlert()
+            CheckDAppResult.FAILED_TO_VERIFY -> showUnknownDomainAlert()
+        }
+    }
+
+    private fun connect() {
         val enabledAvailableNetworks =
             proposalNetwork.available.filter { network -> network.id.rawId in additionallyEnabledNetworks }
         wcPairUseCase.approve(
@@ -129,6 +150,79 @@ internal class WcPairModel @Inject constructor(
                 network = enabledAvailableNetworks + proposalNetwork.required,
             ),
         )
+    }
+
+    private fun connectFromAlert() {
+        stackNavigation.pop()
+        connect()
+    }
+
+    private fun showUnknownDomainAlert() {
+        val message = messageBottomSheetUM {
+            infoBlock {
+                icon(R.drawable.img_knight_shield_32) {
+                    type = MessageBottomSheetUMV2.Icon.Type.Attention
+                    backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.SameAsTint
+                }
+                title = resourceReference(R.string.security_alert_title)
+                body = resourceReference(R.string.wc_alert_domain_issues_description)
+                chip(resourceReference(R.string.wc_alert_audit_unknown_domain)) {
+                    type = MessageBottomSheetUMV2.Chip.Type.Unspecified
+                }
+            }
+            primaryButton {
+                text = resourceReference(R.string.common_cancel)
+                onClick { closeBs() }
+            }
+            secondaryButton {
+                text = resourceReference(R.string.wc_alert_connect_anyway)
+                onClick { connectFromAlert() }
+            }
+        }
+        stackNavigation.pushNew(WcAppInfoRoutes.Alert(elements = message.elements))
+    }
+
+    private fun showSecurityRiskAlert() {
+        val message = messageBottomSheetUM {
+            infoBlock {
+                icon(R.drawable.img_knight_shield_32) {
+                    type = MessageBottomSheetUMV2.Icon.Type.Warning
+                    backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.SameAsTint
+                }
+                title = resourceReference(R.string.security_alert_title)
+                body = resourceReference(R.string.wc_alert_domain_issues_description)
+                chip(resourceReference(R.string.wc_alert_audit_unknown_domain)) {
+                    type = MessageBottomSheetUMV2.Chip.Type.Warning
+                }
+            }
+            primaryButton {
+                text = resourceReference(R.string.common_cancel)
+                onClick { closeBs() }
+            }
+            secondaryButton {
+                text = resourceReference(R.string.wc_alert_connect_anyway)
+                onClick { connectFromAlert() }
+            }
+        }
+        stackNavigation.pushNew(WcAppInfoRoutes.Alert(elements = message.elements))
+    }
+
+    private fun showVerifiedAlert(appName: String) {
+        val message = messageBottomSheetUM {
+            infoBlock {
+                icon(R.drawable.img_approvale2_20) {
+                    type = MessageBottomSheetUMV2.Icon.Type.Accent
+                    backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.Unspecified
+                }
+                title = resourceReference(R.string.wc_alert_verified_domain_title)
+                body = resourceReference(R.string.wc_alert_verified_domain_description, wrappedList(appName))
+            }
+            secondaryButton {
+                text = resourceReference(R.string.common_done)
+                onClick { closeBs() }
+            }
+        }
+        stackNavigation.pushNew(WcAppInfoRoutes.Alert(elements = message.elements))
     }
 
     override fun onWalletSelected(userWalletId: UserWalletId) {
@@ -147,7 +241,7 @@ internal class WcPairModel @Inject constructor(
     private fun createLoadingState(): WcAppInfoUM.Loading {
         return WcAppInfoUM.Loading(
             onDismiss = ::rejectPairing,
-            connectButtonConfig = WcPrimaryButtonConfig(showProgress = false, enabled = false, onClick = ::onConnect),
+            connectButtonConfig = WcPrimaryButtonConfig(showProgress = false, enabled = false, onClick = {}),
         )
     }
 }
