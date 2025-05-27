@@ -12,12 +12,15 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.decompose.navigation.inner.InnerRouter
+import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUMV2
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.walletconnect.model.WcPairRequest
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.walletconnect.connections.model.WcPairModel
 import com.tangem.features.walletconnect.connections.routes.WcAppInfoRoutes
+import com.tangem.features.walletconnect.connections.routes.WcAppInfoRoutes.Alert
+import com.tangem.features.walletconnect.connections.utils.WcAlertsFactory
 
 internal class WcPairComponent(
     private val appComponentContext: AppComponentContext,
@@ -75,9 +78,9 @@ internal class WcPairComponent(
                 onDismiss = ::dismiss,
                 model = model,
             )
-            is WcAppInfoRoutes.Alert -> AlertsComponentV2(
+            is Alert -> AlertsComponentV2(
                 appComponentContext = appComponentContext,
-                elements = config.elements,
+                messageUM = createBottomSheetMessageUM(config.type),
             )
             is WcAppInfoRoutes.SelectNetworks -> WcSelectNetworksComponent(
                 appComponentContext = appComponentContext,
@@ -99,6 +102,14 @@ internal class WcPairComponent(
                     callback = model,
                 ),
             )
+        }
+    }
+
+    private fun createBottomSheetMessageUM(alertType: Alert.Type): MessageBottomSheetUMV2 {
+        return when (alertType) {
+            is Alert.Type.Verified -> WcAlertsFactory.createVerifiedDomainAlert(alertType.appName)
+            Alert.Type.UnknownDomain -> WcAlertsFactory.createUnknownDomainAlert(model::connectFromAlert)
+            Alert.Type.UnsafeDomain -> WcAlertsFactory.createUnsafeDomainAlert(model::connectFromAlert)
         }
     }
 
