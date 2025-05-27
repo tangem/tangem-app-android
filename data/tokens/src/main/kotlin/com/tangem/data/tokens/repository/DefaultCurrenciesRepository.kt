@@ -235,12 +235,16 @@ internal class DefaultCurrenciesRepository(
         refresh: Boolean,
     ): List<CryptoCurrency> {
         return withContext(dispatchers.io) {
-            val userWallet = getUserWallet(userWalletId)
-            ensureIsCorrectUserWallet(userWallet, isMultiCurrencyWalletExpected = false)
+            val scanResponse = getUserWallet(userWalletId).scanResponse
 
-            val currencies = cardCryptoCurrencyFactory.createCurrenciesForSingleCurrencyCardWithToken(
-                scanResponse = userWallet.scanResponse,
-            )
+            val currencies = if (scanResponse.cardTypesResolver.isSingleWalletWithToken()) {
+                cardCryptoCurrencyFactory.createCurrenciesForSingleCurrencyCardWithToken(scanResponse = scanResponse)
+            } else {
+                cardCryptoCurrencyFactory.createPrimaryCurrencyForSingleCurrencyCard(scanResponse = scanResponse).run {
+                    listOf(this)
+                }
+            }
+
             fetchExpressAssetsByNetworkIds(userWalletId, currencies, refresh)
             currencies
         }
