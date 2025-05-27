@@ -13,6 +13,7 @@ import com.tangem.domain.walletconnect.model.WcSession
 import com.tangem.domain.walletconnect.usecase.WcSessionsUseCase
 import com.tangem.domain.walletconnect.usecase.disconnect.WcDisconnectUseCase
 import com.tangem.features.walletconnect.connections.components.WcConnectedAppInfoComponent
+import com.tangem.features.walletconnect.connections.entity.VerifiedDAppState
 import com.tangem.features.walletconnect.connections.entity.WcConnectedAppInfoUM
 import com.tangem.features.walletconnect.connections.entity.WcNetworkInfoItem
 import com.tangem.features.walletconnect.connections.entity.WcPrimaryButtonConfig
@@ -56,6 +57,7 @@ internal class WcConnectedAppInfoModel @Inject constructor(
                         appName = session.sdkModel.appMetaData.name,
                         appIcon = session.sdkModel.appMetaData.icons.firstOrNull().orEmpty(),
                         isVerified = session.securityStatus == CheckDAppResult.SAFE,
+                        verifiedDAppState = extractVerifiedState(session),
                         appSubtitle = session.sdkModel.appMetaData.description,
                         walletName = session.wallet.name,
                         networks = session.networks
@@ -76,6 +78,15 @@ internal class WcConnectedAppInfoModel @Inject constructor(
                     )
                 }
             }
+        }
+    }
+
+    private fun extractVerifiedState(session: WcSession): VerifiedDAppState {
+        return VerifiedDAppState.Verified(onVerifiedClick = {})
+        return if (session.securityStatus == CheckDAppResult.SAFE) {
+            VerifiedDAppState.Verified(onVerifiedClick = {})
+        } else {
+            VerifiedDAppState.Unknown
         }
     }
 
