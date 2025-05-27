@@ -3,9 +3,10 @@ package com.tangem.features.walletconnect.connections.routes
 import androidx.compose.runtime.Immutable
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
+import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUMV2
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.features.walletconnect.connections.components.AlertsComponent
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -27,5 +28,5 @@ internal sealed class WcAppInfoRoutes : TangemBottomSheetConfigContent, Route {
     ) : WcAppInfoRoutes()
 
     @Serializable
-    data class Alert(val alertType: AlertsComponent.AlertType) : WcAppInfoRoutes()
+    data class Alert(val elements: ImmutableList<MessageBottomSheetUMV2.Element>) : WcAppInfoRoutes()
 }
