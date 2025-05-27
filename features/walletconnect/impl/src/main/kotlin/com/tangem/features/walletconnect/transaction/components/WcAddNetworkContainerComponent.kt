@@ -11,7 +11,7 @@ import com.arkivanov.decompose.extensions.compose.stack.Children
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
-import com.arkivanov.decompose.router.stack.navigate
+import com.arkivanov.decompose.router.stack.pushNew
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -20,16 +20,16 @@ import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
-import com.tangem.features.walletconnect.transaction.model.WcSignTransactionModel
+import com.tangem.features.walletconnect.transaction.model.WcAddNetworkModel
 import com.tangem.features.walletconnect.transaction.routes.WcTransactionRoutes
 import com.tangem.features.walletconnect.transaction.ui.common.WcTransactionCommonBottomSheetTitle
 
-internal class WcSignTransactionContainerComponent(
+internal class WcAddNetworkContainerComponent(
     private val appComponentContext: AppComponentContext,
     params: Params,
 ) : AppComponentContext by appComponentContext, ComposableContentComponent {
 
-    private val model: WcSignTransactionModel = getOrCreateModel(params = params)
+    private val model: WcAddNetworkModel = getOrCreateModel(params = params)
     private val contentNavigation = StackNavigation<WcTransactionRoutes>()
     private val contentStack = childStack(
         source = contentNavigation,
@@ -74,22 +74,18 @@ internal class WcSignTransactionContainerComponent(
     }
 
     private fun toTransactionRequestInfo() {
-        contentNavigation.navigate {
-            listOf(WcTransactionRoutes.TransactionRequestInfo)
-        }
+        contentNavigation.pushNew(WcTransactionRoutes.TransactionRequestInfo)
     }
 
     private fun toTransaction() {
-        contentNavigation.navigate {
-            listOf(WcTransactionRoutes.Transaction)
-        }
+        contentNavigation.pushNew(WcTransactionRoutes.Transaction)
     }
 
     private fun screenChild(
         config: WcTransactionRoutes,
         componentContext: ComponentContext,
     ): ComposableContentComponent = when (config) {
-        is WcTransactionRoutes.Transaction -> WcSignTransactionComponent(
+        is WcTransactionRoutes.Transaction -> WcAddNetworkComponent(
             appComponentContext = childByContext(componentContext),
             model = model,
             transactionInfoOnClick = ::toTransactionRequestInfo,
