@@ -1,11 +1,8 @@
-package com.tangem.features.details.utils
+package com.tangem.feature.wallet.utils
 
 import arrow.core.Either
-import com.tangem.common.routing.AppRoute
 import com.tangem.common.ui.userwallet.converter.UserWalletItemUMConverter
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
-import com.tangem.core.decompose.di.ModelScoped
-import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
@@ -15,6 +12,7 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.BalanceHidingSettings
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.core.lce.Lce
+import com.tangem.feature.wallet.impl.R
 import com.tangem.domain.core.lce.lce
 import com.tangem.domain.core.utils.getOrElse
 import com.tangem.domain.core.utils.toLce
@@ -26,31 +24,32 @@ import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetCardImageUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
-import com.tangem.features.details.impl.R
+import com.tangem.features.wallet.utils.UserWalletsFetcher
 import com.tangem.operations.attestation.ArtworkSize
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.*
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
-import javax.inject.Inject
 
 @Suppress("LongParameterList")
-@ModelScoped
-internal class UserWalletsFetcher @Inject constructor(
+internal class DefaultUserWalletsFetcher @AssistedInject constructor(
     getWalletsUseCase: GetWalletsUseCase,
     private val getWalletTotalBalanceUseCase: GetWalletTotalBalanceUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
-    private val router: Router,
-    private val messageSender: UiMessageSender,
+    @Assisted private val onWalletClick: (UserWalletId) -> Unit,
+    @Assisted private val messageSender: UiMessageSender,
     private val getCardImageUseCase: GetCardImageUseCase,
-) {
+) : UserWalletsFetcher {
 
     private var loadedArtworks: HashMap<UserWalletId, ArtworkModel> = hashMapOf()
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val userWallets: Flow<ImmutableList<UserWalletItemUM>> = getWalletsUseCase().transformLatest { wallets ->
-        val uiModels = UserWalletItemUMConverter(onClick = ::navigateToWalletSettings).convertList(wallets)
+    override val userWallets: Flow<ImmutableList<UserWalletItemUM>> = getWalletsUseCase().transformLatest { wallets ->
+        val uiModels = UserWalletItemUMConverter(onClick = { onWalletClick(it) }).convertList(wallets)
             .toImmutableList()
 
         emit(uiModels)
@@ -122,7 +121,7 @@ internal class UserWalletsFetcher @Inject constructor(
         balances
             .map { (userWallet, balance) ->
                 UserWalletItemUMConverter(
-                    onClick = ::navigateToWalletSettings,
+                    onClick = { onWalletClick(it) },
                     appCurrency = appCurrency,
                     balance = balance,
                     isBalanceHidden = balanceHidingSettings.isBalanceHidden,
@@ -133,14 +132,18 @@ internal class UserWalletsFetcher @Inject constructor(
             .toImmutableList()
     }
 
-    private fun navigateToWalletSettings(userWalletId: UserWalletId) {
-        router.push(AppRoute.WalletSettings(userWalletId))
-    }
-
     sealed class Error {
 
         data object UnableToGetAppCurrency : Error()
 
         data object UnableToGetBalances : Error()
+    }
+
+    @AssistedFactory
+    interface Factory : UserWalletsFetcher.Factory {
+        override fun create(
+            messageSender: UiMessageSender,
+            onWalletClick: (UserWalletId) -> Unit,
+        ): DefaultUserWalletsFetcher
     }
 }
