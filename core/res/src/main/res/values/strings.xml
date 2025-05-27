@@ -65,6 +65,10 @@
     <item quantity="one">%d device</item>
     <item quantity="other">%d devices</item>
   </plurals>
+  <plurals name="card_label_token_count">
+    <item quantity="one">%d token</item>
+    <item quantity="other">%d tokens</item>
+  </plurals>
   <string name="card_settings_access_code_recovery_disabled_description">Disable this option if you don\'t want this card to be used to reset access codes on other cards or rings in this wallet. Please note that this will also prevent you from resetting the access code on this card.</string>
   <string name="card_settings_access_code_recovery_enabled_description">Allows you to use this card to reset access code on other cards in this wallet</string>
   <string name="card_settings_access_code_recovery_title">Access code recovery</string>
@@ -929,7 +933,7 @@
   <string name="staking_notification_restake_text">Restake lets you move your funds from one validator to another without the need to unstake</string>
   <string name="staking_notification_stake_entire_balance_text">You’re about to stake your entire balance. We recommend leaving a small amount to cover network fees for unstaking or claiming rewards.</string>
   <string name="staking_notification_ton_activate_account">To start staking in TON, first make an outgoing transaction of any amount — this will activate your wallet.</string>
-  <string name="staking_notification_ton_extra_reserve_info">In addition to the network fee, up to 0.2 TON is needed to complete all steps of the transaction. Unused amount will be returned after it\'s finished.</string>
+  <string name="staking_notification_ton_extra_reserve_info">Up to 0.2 TON may be required in addition to the network fee to complete the transaction. Any unused amount will be refunded.</string>
   <string name="staking_notification_ton_extra_reserve_is_required">0.2 TON is required to proceed with this operation, in addition to the network fee. Please top up your balance.</string>
   <string name="staking_notification_ton_extra_reserve_title">0.2 Ton Reserved</string>
   <string name="staking_notification_ton_have_to_unstake_all_text">This action will close other positions or switch them to withdrawal status, according to network rules.</string>
@@ -1215,7 +1219,7 @@
   <string name="wallet_promo_banner_description">Access 13,000+ cryptocurrencies. Buy, sell, swap, and stake with a single tap.\nLink up to three cards for a backup.</string>
   <string name="wallet_promo_banner_title">Discover Tangem Wallet</string>
   <string name="wallet_settings_push_notifications_description">Stay notified on wallet incoming transactions and Tangem updates.</string>
-  <string name="wallet_settings_push_notifications_title">Push Notifications</string>
+  <string name="wallet_settings_push_notifications_title">Transaction Notifications</string>
   <string name="wallet_settings_title">Wallet settings</string>
   <string name="wallet_title">Tangem</string>
   <string name="warning_access_denied_message">Use %s or scan a card/ring to unlock access to your wallet</string>
