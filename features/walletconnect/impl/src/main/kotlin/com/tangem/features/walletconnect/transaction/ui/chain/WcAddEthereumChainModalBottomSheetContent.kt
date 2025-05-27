@@ -4,7 +4,9 @@ import android.content.res.Configuration
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -21,11 +23,15 @@ import com.tangem.core.ui.components.divider.DividerWithPadding
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.features.walletconnect.connections.entity.VerifiedDAppState
 import com.tangem.features.walletconnect.connections.ui.WcAppInfoItem
 import com.tangem.features.walletconnect.impl.R
 import com.tangem.features.walletconnect.transaction.entity.chain.WcAddEthereumChainItemUM
 import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionAppInfoContentUM
-import com.tangem.features.walletconnect.transaction.ui.common.*
+import com.tangem.features.walletconnect.transaction.ui.common.WcSmallTitleItem
+import com.tangem.features.walletconnect.transaction.ui.common.WcTransactionRequestButtons
+import com.tangem.features.walletconnect.transaction.ui.common.WcTransactionRequestItem
+import com.tangem.features.walletconnect.transaction.ui.common.WcWalletItem
 
 @Composable
 internal fun WcAddEthereumChainModalBottomSheetContent(
@@ -48,7 +54,7 @@ internal fun WcAddEthereumChainModalBottomSheetContent(
                 iconUrl = state.appInfo.appIcon,
                 title = state.appInfo.appName,
                 subtitle = state.appInfo.appSubtitle,
-                isVerified = state.appInfo.isVerified,
+                verifiedDAppState = state.appInfo.verifiedState,
             )
             DividerWithPadding(start = 0.dp, end = 0.dp)
             WcTransactionRequestItem(
@@ -130,7 +136,7 @@ private class WcAddEthereumChainStateProvider : CollectionPreviewParameterProvid
             appInfo = WcTransactionAppInfoContentUM(
                 appName = "React App",
                 appIcon = "",
-                isVerified = true,
+                verifiedState = VerifiedDAppState.Verified {},
                 appSubtitle = "react-app.walletconnect.com",
             ),
             walletName = "Tangem 2.0",
