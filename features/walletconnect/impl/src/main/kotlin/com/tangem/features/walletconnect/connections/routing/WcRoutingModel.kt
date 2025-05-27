@@ -50,11 +50,12 @@ internal class WcRoutingModel @Inject constructor(
                     WcEthMethodName.SignTypeDataV4,
                     WcSolanaMethodName.SignMessage,
                     -> WcInnerRoute.SignMessage(rawRequest)
+                    WcEthMethodName.AddEthereumChain,
+                    -> WcInnerRoute.AddNetwork(rawRequest)
                     WcEthMethodName.SignTransaction,
                     WcEthMethodName.SendTransaction,
                     WcSolanaMethodName.SignTransaction,
                     WcSolanaMethodName.SendAllTransaction,
-                    WcEthMethodName.AddEthereumChain,
                     is WcMethodName.Unsupported,
                     -> WcInnerRoute.Alert(
                         alertType = AlertsComponent.AlertType.UnsupportedMethod { innerRouter.pop() },

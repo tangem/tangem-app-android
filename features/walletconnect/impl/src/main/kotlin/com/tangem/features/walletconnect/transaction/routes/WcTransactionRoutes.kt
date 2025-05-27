@@ -6,10 +6,10 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 @Immutable
-internal sealed class WcSignTransactionRoutes : TangemBottomSheetConfigContent {
+internal sealed class WcTransactionRoutes : TangemBottomSheetConfigContent {
     @Serializable
-    data object Transaction : WcSignTransactionRoutes()
+    data object Transaction : WcTransactionRoutes()
 
     @Serializable
-    data object TransactionRequestInfo : WcSignTransactionRoutes()
+    data object TransactionRequestInfo : WcTransactionRoutes()
 }
