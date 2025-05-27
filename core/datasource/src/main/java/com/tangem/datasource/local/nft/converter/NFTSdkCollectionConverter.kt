@@ -1,6 +1,7 @@
 package com.tangem.datasource.local.nft.converter
 
 import android.content.res.Resources
+import com.tangem.core.res.getStringSafe
 import com.tangem.datasource.R
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.network.Network
@@ -48,12 +49,12 @@ class NFTSdkCollectionConverter(
         is NFTCollection.Identifier.EVM ->
             name.toCollectionName()
         is NFTCollection.Identifier.TON -> if (collectionId.contractAddress == null) {
-            resources.getString(R.string.nft_no_collection)
+            resources.getStringSafe(R.string.nft_no_collection)
         } else {
             name.toCollectionName()
         }
         is NFTCollection.Identifier.Solana -> if (collectionId.collectionAddress == null) {
-            resources.getString(R.string.nft_no_collection)
+            resources.getStringSafe(R.string.nft_no_collection)
         } else {
             name.toCollectionName()
         }
@@ -61,7 +62,7 @@ class NFTSdkCollectionConverter(
     }
 
     private fun String?.toCollectionName() = if (this.isNullOrEmpty()) {
-        resources.getString(R.string.nft_untitled_collection)
+        resources.getStringSafe(R.string.nft_untitled_collection)
     } else {
         this
     }
