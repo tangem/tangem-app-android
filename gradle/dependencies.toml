@@ -191,6 +191,7 @@ firebase-perf = { module = "com.google.firebase:firebase-perf" }
 # region Detekt
 detekt-compose = { module = "ru.kode:detekt-rules-compose", version.ref = "detektComposeRules" }
 detekt-formatting = { module = "io.gitlab.arturbosch.detekt:detekt-formatting", version.ref = "detekt" }
+detekt-api = { module = "io.gitlab.arturbosch.detekt:detekt-api", version.ref = "detekt" }
 # endregion Detekt
 
 # region Test
