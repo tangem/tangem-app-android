@@ -2,10 +2,11 @@ package com.tangem.data.blockaid
 
 import com.domain.blockaid.models.dapp.CheckDAppResult
 import com.domain.blockaid.models.transaction.*
+import com.domain.blockaid.models.transaction.simultation.AmountInfo
 import com.domain.blockaid.models.transaction.simultation.ApprovedAmount
 import com.domain.blockaid.models.transaction.simultation.SimulationData
 import com.domain.blockaid.models.transaction.simultation.TokenInfo
-import com.domain.blockaid.models.transaction.simultation.AmountInfo
+import com.tangem.blockchain.extensions.hexToBigDecimal
 import com.tangem.datasource.api.common.blockaid.models.request.EvmTransactionScanRequest
 import com.tangem.datasource.api.common.blockaid.models.request.RpcData
 import com.tangem.datasource.api.common.blockaid.models.request.SolanaTransactionScanRequest
@@ -78,12 +79,14 @@ internal object BlockAidMapper {
                 chainId = exposure.asset.chainId,
                 logoUrl = exposure.asset.logoUrl,
                 symbol = exposure.asset.symbol,
+                decimals = exposure.asset.decimals,
             )
             exposure.spenders.flatMap { (_, spender) ->
                 val isUnlimited = spender.isApprovedForAll == true
+                val approval = spender.approval?.hexToBigDecimal()
                 spender.exposure.mapNotNull { detail ->
                     ApprovedAmount(
-                        approvedAmount = detail.value.toBigDecimalOrNull() ?: return@mapNotNull null,
+                        approvedAmount = approval ?: detail.value.toBigDecimalOrNull() ?: return@mapNotNull null,
                         isUnlimited = isUnlimited,
                         tokenInfo = tokenInfo,
                     )
@@ -106,6 +109,7 @@ internal object BlockAidMapper {
                 chainId = diff.asset.chainId,
                 logoUrl = diff.asset.logoUrl,
                 symbol = diff.asset.symbol,
+                decimals = diff.asset.decimals,
             )
             diff.outTransfer.orEmpty().forEach { transfer ->
                 transfer.value?.toBigDecimalOrNull()?.let { amount ->
