@@ -244,7 +244,7 @@ internal class DefaultWalletsRepository(
 
     override suspend fun isNotificationsEnabled(userWalletId: UserWalletId): Boolean =
         appPreferencesStore.getObjectMap<Boolean>(PreferencesKeys.NOTIFICATIONS_ENABLED_STATES_KEY)
-            .map { it[userWalletId.stringValue] }
+            .map { it[userWalletId.stringValue] == true }
             .firstOrNull() ?: false
 
     override suspend fun setNotificationsEnabled(userWalletId: UserWalletId, isEnabled: Boolean) {
