@@ -42,7 +42,7 @@ class BlockAidMapperTest {
             exposure = listOf(ExposureDetail(value = "1000.0", rawValue = "0x123")),
         )
         val exposure = Exposure(
-            asset = Asset(chainId = 1, logoUrl = "logo", symbol = "PEPE"),
+            asset = Asset(chainId = 1, logoUrl = "logo", symbol = "PEPE", decimals = 8),
             spenders = mapOf("spender" to spenderDetails),
         )
         val response = TransactionScanResponse(
@@ -74,7 +74,7 @@ class BlockAidMapperTest {
     fun `when response benign validation and success simulation then returns send receive result`() {
         val assetDiff = AssetDiff(
             assetType = "ERC20",
-            asset = Asset(chainId = 1, logoUrl = "logo", symbol = "ETH"),
+            asset = Asset(chainId = 1, logoUrl = "logo", symbol = "ETH", decimals = 8),
             inTransfer = listOf(Transfer(value = "2.0", rawValue = "0x1")),
             outTransfer = listOf(Transfer(value = "1.5", rawValue = "0x2")),
         )
