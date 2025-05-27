@@ -7,6 +7,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,23 +34,31 @@ import kotlinx.collections.immutable.toPersistentList
 
 @Composable
 fun MessageBottomSheetV2(state: MessageBottomSheetUMV2, onDismissRequest: () -> Unit) {
+    val stateWithOnDismiss = remember(state) {
+        state.copy(
+            onDismissRequest = {
+                state.onDismissRequest.invoke()
+                onDismissRequest()
+            },
+        )
+    }
+
     val config = TangemBottomSheetConfig(
         isShown = true,
-        content = state,
-        onDismissRequest = onDismissRequest,
+        content = stateWithOnDismiss,
+        onDismissRequest = stateWithOnDismiss.onDismissRequest,
     )
 
     TangemModalBottomSheet(
-        config,
+        config = config,
         title = {
             TangemModalBottomSheetTitle(
                 endIconRes = R.drawable.ic_close_24,
-                onEndClick = state.onDismissRequest,
+                onEndClick = stateWithOnDismiss.onDismissRequest,
             )
         },
-    ) { content: MessageBottomSheetUMV2 ->
-        MessageBottomSheetV2Content(content.copy(onDismissRequest = onDismissRequest))
-    }
+        content = { content: MessageBottomSheetUMV2 -> MessageBottomSheetV2Content(content) },
+    )
 }
 
 @Composable
