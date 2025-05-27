@@ -18,7 +18,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-internal object FeedbackRepositoryModule {
+internal object FeedbackModule {
 
     @Provides
     @Singleton
@@ -40,7 +40,7 @@ internal object FeedbackRepositoryModule {
 
     @Provides
     @Singleton
-    fun provideFeatureToggles(featureTogglesManager: FeatureTogglesManager): FeedbackFeatureToggles {
+    fun provideFeedbackFeatureToggles(featureTogglesManager: FeatureTogglesManager): FeedbackFeatureToggles {
         return DefaultFeedbackFeatureToggles(featureTogglesManager)
     }
 }
