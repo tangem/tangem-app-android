@@ -26,10 +26,12 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.TestTags
+import com.tangem.core.ui.utils.requestPushPermission
 import com.tangem.feature.walletsettings.component.preview.PreviewWalletSettingsComponent
 import com.tangem.feature.walletsettings.entity.WalletSettingsItemUM
 import com.tangem.feature.walletsettings.entity.WalletSettingsUM
 import com.tangem.feature.walletsettings.impl.R
+import com.tangem.features.pushnotifications.api.utils.getPushPermissionOrNull
 
 @Composable
 internal fun WalletSettingsScreen(
@@ -109,6 +111,16 @@ private fun Content(state: WalletSettingsUM, modifier: Modifier = Modifier) {
                 )
             }
         }
+    }
+
+    val requestPushPermission = requestPushPermission(
+        onAllow = { state.onPushNotificationPermissionGranted(true) },
+        onDeny = { state.onPushNotificationPermissionGranted(false) },
+        pushPermission = getPushPermissionOrNull(),
+    )
+
+    if (state.requestPushNotificationsPermission) {
+        requestPushPermission()
     }
 }
 
