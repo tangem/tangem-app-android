@@ -40,6 +40,7 @@ internal class WcAddNetworkModel @Inject constructor(
             val useCase: WcMethodUseCase = useCaseFactory.createUseCase(params.rawRequest)
             val transactionUM = (useCase as? WcAddNetworkUseCase)?.toUM(
                 actions = WcTransactionActionsUM(
+                    onShowVerifiedAlert = ::showVerifiedAlert,
                     onDismiss = { cancel(useCase) },
                     onSign = { sign(useCase) },
                     onCopy = { copyData(useCase.rawSdkRequest.request.params) },
@@ -51,6 +52,12 @@ internal class WcAddNetworkModel @Inject constructor(
 
     fun dismiss() {
         _uiState.value?.transaction?.onDismiss?.invoke() ?: router.pop()
+    }
+
+    @Suppress("UnusedPrivateMember")
+    private fun showVerifiedAlert(appName: String) {
+        // TODO(wc): Nastya [REDACTED_JIRA] // see WcPairComponent and WcPairModel
+        // router.push(WcAppInfoRoutes.Alert(elements = message.elements))
     }
 
     private fun sign(useCase: WcAddNetworkUseCase) {
