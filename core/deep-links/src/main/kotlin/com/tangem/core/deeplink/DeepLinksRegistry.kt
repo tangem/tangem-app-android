@@ -6,6 +6,7 @@ import android.content.Intent
  * Key to pass deeplink via intent
  */
 const val DEEPLINK_KEY = "deeplink"
+const val WEBLINK_KEY = "link"
 
 // TODO: Add tests
 /**
