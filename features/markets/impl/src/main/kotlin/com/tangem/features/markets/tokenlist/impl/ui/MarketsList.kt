@@ -132,7 +132,7 @@ private fun Content(state: MarketsListUM, onHeaderSizeChange: (Dp) -> Unit, modi
                         state.stakingNotificationMaxApy != null &&
                         state.selectedSortBy != SortByTypeUM.Staking,
                 ) {
-                    val showMore = stringResourceSafe(R.string.markets_staking_banner_description_show_more)
+                    val showMore = stringResourceSafe(R.string.common_show_more)
                     val description = stringResourceSafe(
                         R.string.markets_staking_banner_description_placeholder,
                         showMore,
