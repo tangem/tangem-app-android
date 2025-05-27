@@ -1,5 +1,6 @@
 package com.tangem.domain.walletconnect.usecase.method
 
+import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.domain.walletconnect.usecase.blockaid.WcBlockAidEligibleTransactionUseCase
@@ -16,7 +17,7 @@ import com.tangem.domain.walletconnect.usecase.blockaid.WcBlockAidEligibleTransa
  */
 interface WcTransactionUseCase :
     WcSignUseCase<TransactionData>,
-    WcBlockAidEligibleTransactionUseCase
+    BlockAidTransactionCheck
 
 /**
  * Base UseCase for wc methods with list of TransactionData
@@ -31,7 +32,7 @@ interface WcListTransactionUseCase :
 /**
  * Wc Methods that support an updatable fee
  * [dAppFee] call to gee fee from dApp
- * [updateFee] call when user update the fee
+ * [updateFee] triggered a new [TransactionData] emit
  */
 interface WcMutableFee {
     suspend fun dAppFee(): Fee?
@@ -39,9 +40,11 @@ interface WcMutableFee {
 }
 
 /**
- * Wc Methods that support an updatable allowance
- * [updateFee] call when user update the fee
+ * Wc Approval Method
+ * If [Amount] is null it means unlimited
+ * [updateAmount] triggered a new [TransactionData] emit
  */
-interface WcMutableAllowance {
-    fun updateAllowance(allowance: Any) // todo wc
+interface WcApproval {
+    suspend fun getAmount(): Amount?
+    fun updateAmount(amount: Amount?)
 }
