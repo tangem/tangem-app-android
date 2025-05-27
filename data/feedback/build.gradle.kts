@@ -33,6 +33,7 @@ dependencies {
     implementation(projects.core.datasource)
     implementation(projects.core.navigation)
     implementation(projects.core.utils)
+    implementation(projects.core.configToggles)
     // endregion
 
 
