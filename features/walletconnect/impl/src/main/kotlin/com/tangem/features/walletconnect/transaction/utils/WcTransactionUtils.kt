@@ -1,21 +1,35 @@
 package com.tangem.features.walletconnect.transaction.utils
 
-import com.domain.blockaid.models.dapp.CheckDAppResult
 import com.tangem.core.ui.extensions.getActiveIconRes
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.walletconnect.model.WcEthMethod
 import com.tangem.domain.walletconnect.model.WcSolanaMethod
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
-import com.tangem.domain.walletconnect.usecase.method.WcMessageSignUseCase
-import com.tangem.domain.walletconnect.usecase.method.WcSignState
-import com.tangem.domain.walletconnect.usecase.method.WcSignStep
-import com.tangem.domain.walletconnect.usecase.method.WcSignUseCase
+import com.tangem.domain.walletconnect.usecase.method.*
 import com.tangem.features.walletconnect.impl.R
+import com.tangem.features.walletconnect.transaction.entity.chain.WcAddEthereumChainItemUM
+import com.tangem.features.walletconnect.transaction.entity.chain.WcAddEthereumChainUM
 import com.tangem.features.walletconnect.transaction.entity.common.*
 import com.tangem.features.walletconnect.transaction.entity.sign.WcSignTransactionItemUM
 import com.tangem.features.walletconnect.transaction.entity.sign.WcSignTransactionUM
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+
+internal fun WcAddNetworkUseCase.toUM(actions: WcTransactionActionsUM): WcAddEthereumChainUM {
+    return WcAddEthereumChainUM(
+        transaction = WcAddEthereumChainItemUM(
+            onDismiss = actions.onDismiss,
+            onSign = actions.onSign,
+            appInfo = appInfo(),
+            walletName = session.wallet.name,
+            isLoading = false,
+        ),
+        transactionRequestInfo = WcTransactionRequestInfoUM(
+            blocks = basicTransactionRequestInfoBlocks(),
+            onCopy = actions.onCopy,
+        ),
+    )
+}
 
 internal fun WcSignUseCase<*>.toUM(signState: WcSignState<*>, actions: WcTransactionActionsUM): WcSignTransactionUM? {
     return when (this) {
@@ -46,17 +60,9 @@ private fun WcMessageSignUseCase.signTypedDataToUM(
     transaction = WcSignTransactionItemUM(
         onDismiss = actions.onDismiss,
         onSign = actions.onSign,
-        appInfo = WcTransactionAppInfoContentUM(
-            appName = session.sdkModel.appMetaData.name,
-            appIcon = session.sdkModel.appMetaData.url,
-            isVerified = session.securityStatus == CheckDAppResult.SAFE,
-            appSubtitle = session.sdkModel.appMetaData.description,
-        ),
+        appInfo = appInfo(),
         walletName = session.wallet.name,
-        networkInfo = WcNetworkInfoUM(
-            name = network.name,
-            iconRes = getActiveIconRes(network.rawId),
-        ),
+        networkInfo = networkInfo(),
         addressText = walletAddress.toShortAddressText(),
         isLoading = signState.domainStep == WcSignStep.Signing,
     ),
@@ -95,17 +101,9 @@ private fun WcMessageSignUseCase.messageSignToUM(
     transaction = WcSignTransactionItemUM(
         onDismiss = actions.onDismiss,
         onSign = actions.onSign,
-        appInfo = WcTransactionAppInfoContentUM(
-            appName = session.sdkModel.appMetaData.name,
-            appIcon = session.sdkModel.appMetaData.url,
-            isVerified = session.securityStatus == CheckDAppResult.SAFE,
-            appSubtitle = session.sdkModel.appMetaData.description,
-        ),
+        appInfo = appInfo(),
         walletName = session.wallet.name,
-        networkInfo = WcNetworkInfoUM(
-            name = network.name,
-            iconRes = getActiveIconRes(network.rawId),
-        ),
+        networkInfo = networkInfo(),
         isLoading = signState.domainStep == WcSignStep.Signing,
     ),
     transactionRequestInfo = WcTransactionRequestInfoUM(
@@ -131,3 +129,30 @@ private fun createInfoBlockUM(
         ),
     )
 }
+
+private fun WcMethodContext.basicTransactionRequestInfoBlocks() = persistentListOf(
+    WcTransactionRequestBlockUM(
+        persistentListOf(
+            WcTransactionRequestInfoItemUM(
+                title = resourceReference(R.string.wc_signature_type),
+                description = rawSdkRequest.request.method,
+            ),
+            WcTransactionRequestInfoItemUM(
+                title = resourceReference(R.string.wc_contents),
+                description = rawSdkRequest.request.params,
+            ),
+        ),
+    ),
+)
+
+private fun WcMethodContext.appInfo() = WcTransactionAppInfoContentUM(
+    appName = session.sdkModel.appMetaData.name,
+    appIcon = session.sdkModel.appMetaData.url,
+    isVerified = session.securityStatus == com.domain.blockaid.models.dapp.CheckDAppResult.SAFE,
+    appSubtitle = session.sdkModel.appMetaData.description,
+)
+
+private fun WcMethodContext.networkInfo() = WcNetworkInfoUM(
+    name = network.name,
+    iconRes = getActiveIconRes(network.rawId),
+)
