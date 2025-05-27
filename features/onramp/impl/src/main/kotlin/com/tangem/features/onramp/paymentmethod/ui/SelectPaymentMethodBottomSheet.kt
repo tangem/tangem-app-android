@@ -11,8 +11,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.onramp.impl.R
@@ -26,7 +26,7 @@ internal fun SelectPaymentMethodBottomSheet(config: TangemBottomSheetConfig) {
     TangemBottomSheet<PaymentMethodsBottomSheetConfig>(
         config = config,
         addBottomInsets = true,
-        containerColor = TangemTheme.colors.background.tertiary,
+        containerColor = TangemTheme.colors.background.primary,
         titleText = resourceReference(R.string.onramp_pay_with),
         content = { contentConfig ->
             SelectPaymentMethodBottomSheetContent(
