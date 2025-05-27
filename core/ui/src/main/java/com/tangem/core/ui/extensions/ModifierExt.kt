@@ -28,3 +28,14 @@ fun Modifier.clickableSingle(
         interactionSource = remember { MutableInteractionSource() },
     )
 }
+
+/**
+ * Conditionally applies a modifier based on a boolean condition.
+ */
+fun Modifier.conditional(condition: Boolean, modifier: Modifier.() -> Modifier): Modifier {
+    return if (condition) {
+        then(modifier(Modifier))
+    } else {
+        this
+    }
+}
