@@ -30,10 +30,11 @@ dependencies {
     // endregion
 
     // region Core modules
+    implementation(projects.core.configToggles)
     implementation(projects.core.datasource)
     implementation(projects.core.navigation)
     implementation(projects.core.utils)
-    implementation(projects.core.configToggles)
+
     // endregion
 
 
