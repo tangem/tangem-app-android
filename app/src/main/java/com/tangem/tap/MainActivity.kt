@@ -76,7 +76,7 @@ import com.tangem.tap.routing.configurator.AppRouterConfig
 import com.tangem.tap.routing.utils.DeepLinkFactory
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.FeatureCoroutineExceptionHandler
-import com.tangem.utils.extensions.validate
+import com.tangem.utils.extensions.uriValidate
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -496,7 +496,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
                 receivedDeepLink != null -> {
                     deeplinkFactory.handleDeeplink(deeplinkUri = receivedDeepLink, coroutineScope = lifecycleScope)
                 }
-                webLink?.validate() == true -> {
+                webLink?.uriValidate() == true -> {
                     urlOpener.openUrl(webLink)
                 }
             }
