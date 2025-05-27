@@ -6,7 +6,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
-import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
 import com.tangem.core.decompose.context.AppComponentContext
@@ -25,15 +24,14 @@ internal class WcPairComponent(
     params: Params,
 ) : AppComponentContext by appComponentContext, ComposableContentComponent {
 
-    private val stackNavigation = StackNavigation<WcAppInfoRoutes>()
+    private val model: WcPairModel = getOrCreateModel(params = params)
     private val innerRouter = InnerRouter<WcAppInfoRoutes>(
-        stackNavigation = stackNavigation,
+        stackNavigation = model.stackNavigation,
         popCallback = { onChildBack() },
     )
-    private val model: WcPairModel = getOrCreateModel(params = params, router = innerRouter)
     private val contentStack = childStack(
         key = "WcConnectionFlowStack",
-        source = stackNavigation,
+        source = model.stackNavigation,
         serializer = WcAppInfoRoutes.serializer(),
         initialConfiguration = WcAppInfoRoutes.AppInfo,
         handleBackButton = true,
@@ -59,7 +57,7 @@ internal class WcPairComponent(
             is WcAppInfoRoutes.Alert,
             is WcAppInfoRoutes.SelectNetworks,
             is WcAppInfoRoutes.SelectWallet,
-            -> stackNavigation.pop()
+            -> model.stackNavigation.pop()
         }
     }
 
@@ -77,7 +75,10 @@ internal class WcPairComponent(
                 onDismiss = ::dismiss,
                 model = model,
             )
-            is WcAppInfoRoutes.Alert -> TODO()
+            is WcAppInfoRoutes.Alert -> AlertsComponentV2(
+                appComponentContext = appComponentContext,
+                elements = config.elements,
+            )
             is WcAppInfoRoutes.SelectNetworks -> WcSelectNetworksComponent(
                 appComponentContext = appComponentContext,
                 params = WcSelectNetworksComponent.WcSelectNetworksParams(
