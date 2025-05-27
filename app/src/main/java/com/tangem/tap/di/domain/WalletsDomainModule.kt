@@ -268,4 +268,14 @@ internal object WalletsDomainModule {
             walletsRepository = walletsRepository,
         )
     }
+
+    @Provides
+    @Singleton
+    fun providesGetIsNotificationsEnabledUseCase(
+        walletsRepository: WalletsRepository,
+    ): GetIsNotificationsEnabledUseCase {
+        return GetIsNotificationsEnabledUseCase(
+            walletsRepository = walletsRepository,
+        )
+    }
 }
