@@ -6,6 +6,7 @@ import com.tangem.feature.referral.api.deeplink.ReferralDeepLinkHandler
 import com.tangem.features.onramp.deeplink.BuyDeepLinkHandler
 import com.tangem.features.onramp.deeplink.OnrampDeepLinkHandler
 import com.tangem.features.send.v2.api.deeplink.SellDeepLinkHandler
+import com.tangem.features.staking.api.deeplink.StakingDeepLinkHandler
 import com.tangem.features.tokendetails.deeplink.TokenDetailsDeepLinkHandler
 import com.tangem.features.wallet.deeplink.WalletDeepLinkHandler
 import com.tangem.features.walletconnect.components.deeplink.WalletConnectDeepLinkHandler
@@ -45,6 +46,9 @@ class DeepLinkFactoryTest {
     private val tokenDetailsDeepLinkFactory = mockk<TokenDetailsDeepLinkHandler.Factory>(relaxed = true) {
         every { create(any(), any()) } returns mockk()
     }
+    private val stakingDeepLinkFactory = mockk<StakingDeepLinkHandler.Factory>(relaxed = true) {
+        every { create(any(), any()) } returns mockk()
+    }
 
     private val mockedUri = mockk<Uri>(relaxed = true)
 
@@ -59,6 +63,7 @@ class DeepLinkFactoryTest {
         walletConnectDeepLinkFactory,
         walletDeepLinkFactory,
         tokenDetailsDeepLinkFactory,
+        stakingDeepLinkFactory,
     )
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -200,6 +205,12 @@ class DeepLinkFactoryTest {
 
         // Test Token Details
         every { mockedUri.host } returns "token"
+        deepLinkFactory.handleDeeplink(mockedUri, testScope)
+        advanceUntilIdle()
+        verify { tokenDetailsDeepLinkFactory.create(eq(testScope), eq(mapOf("param" to "value"))) }
+
+        // Test Staking
+        every { mockedUri.host } returns "staking"
         deepLinkFactory.handleDeeplink(mockedUri, testScope)
         advanceUntilIdle()
         verify { tokenDetailsDeepLinkFactory.create(eq(testScope), eq(mapOf("param" to "value"))) }
