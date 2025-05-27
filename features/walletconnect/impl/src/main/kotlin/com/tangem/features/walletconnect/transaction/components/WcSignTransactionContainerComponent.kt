@@ -17,14 +17,12 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
-import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
-import com.tangem.features.walletconnect.impl.R
 import com.tangem.features.walletconnect.transaction.model.WcSignTransactionModel
-import com.tangem.features.walletconnect.transaction.routes.WcSignTransactionRoutes
+import com.tangem.features.walletconnect.transaction.routes.WcTransactionRoutes
+import com.tangem.features.walletconnect.transaction.ui.common.WcTransactionCommonBottomSheetTitle
 
 internal class WcSignTransactionContainerComponent(
     private val appComponentContext: AppComponentContext,
@@ -32,11 +30,11 @@ internal class WcSignTransactionContainerComponent(
 ) : AppComponentContext by appComponentContext, ComposableContentComponent {
 
     private val model: WcSignTransactionModel = getOrCreateModel(params = params)
-    private val contentNavigation = StackNavigation<WcSignTransactionRoutes>()
+    private val contentNavigation = StackNavigation<WcTransactionRoutes>()
     private val contentStack = childStack(
         source = contentNavigation,
-        serializer = WcSignTransactionRoutes.serializer(),
-        initialConfiguration = WcSignTransactionRoutes.Transaction,
+        serializer = WcTransactionRoutes.serializer(),
+        initialConfiguration = WcTransactionRoutes.Transaction,
         childFactory = ::screenChild,
     )
 
@@ -47,14 +45,20 @@ internal class WcSignTransactionContainerComponent(
     @Composable
     override fun Content(modifier: Modifier) {
         val content by contentStack.subscribeAsState()
-        TangemModalBottomSheet<WcSignTransactionRoutes>(
+        TangemModalBottomSheet<WcTransactionRoutes>(
             config = TangemBottomSheetConfig(
                 isShown = true,
                 onDismissRequest = ::dismiss,
                 content = content.active.configuration,
             ),
             containerColor = TangemTheme.colors.background.tertiary,
-            title = { config -> Title(route = config) },
+            title = { config ->
+                WcTransactionCommonBottomSheetTitle(
+                    route = config,
+                    onStartClick = ::toTransaction,
+                    onEndClick = ::dismiss,
+                )
+            },
             content = {
                 Box(
                     modifier = Modifier
@@ -69,53 +73,30 @@ internal class WcSignTransactionContainerComponent(
         )
     }
 
-    @Composable
-    private fun Title(route: WcSignTransactionRoutes) {
-        TangemModalBottomSheetTitle(
-            title = resourceReference(R.string.wc_wallet_connect),
-            startIconRes = when (route) {
-                is WcSignTransactionRoutes.Transaction -> null
-                else -> R.drawable.ic_back_24
-            },
-            onStartClick = when (route) {
-                is WcSignTransactionRoutes.Transaction -> null
-                else -> ::toTransaction
-            },
-            endIconRes = when (route) {
-                is WcSignTransactionRoutes.Transaction -> R.drawable.ic_close_24
-                else -> null
-            },
-            onEndClick = when (route) {
-                is WcSignTransactionRoutes.Transaction -> ::dismiss
-                else -> null
-            },
-        )
-    }
-
     private fun toTransactionRequestInfo() {
         contentNavigation.navigate {
-            listOf(WcSignTransactionRoutes.TransactionRequestInfo)
+            listOf(WcTransactionRoutes.TransactionRequestInfo)
         }
     }
 
     private fun toTransaction() {
         contentNavigation.navigate {
-            listOf(WcSignTransactionRoutes.Transaction)
+            listOf(WcTransactionRoutes.Transaction)
         }
     }
 
     private fun screenChild(
-        config: WcSignTransactionRoutes,
+        config: WcTransactionRoutes,
         componentContext: ComponentContext,
     ): ComposableContentComponent = when (config) {
-        is WcSignTransactionRoutes.Transaction -> WcSignTransactionComponent(
+        is WcTransactionRoutes.Transaction -> WcSignTransactionComponent(
             appComponentContext = childByContext(componentContext),
             model = model,
             transactionInfoOnClick = ::toTransactionRequestInfo,
         )
-        is WcSignTransactionRoutes.TransactionRequestInfo -> WcSignTransactionRequestInfoComponent(
+        is WcTransactionRoutes.TransactionRequestInfo -> WcTransactionRequestInfoComponent(
             appComponentContext = childByContext(componentContext),
-            model = model,
+            model = model.uiState.value?.transactionRequestInfo,
         )
     }
 
