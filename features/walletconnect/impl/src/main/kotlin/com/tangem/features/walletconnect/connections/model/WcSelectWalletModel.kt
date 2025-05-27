@@ -6,12 +6,9 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
-import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
-import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
-import com.tangem.domain.tokens.GetWalletTotalBalanceUseCase
+import com.tangem.domain.tokens.GetTokenListUseCase
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.domain.wallets.usecase.GetCardImageUseCase
-import com.tangem.domain.wallets.usecase.GetWalletsUseCase
+import com.tangem.features.wallet.utils.UserWalletsFetcher
 import com.tangem.features.walletconnect.connections.components.WcSelectWalletComponent.WcSelectWalletParams
 import com.tangem.features.walletconnect.connections.entity.WcAppInfoWalletUM
 import com.tangem.features.walletconnect.connections.utils.WcUserWalletsFetcher
@@ -25,12 +22,9 @@ import javax.inject.Inject
 @ModelScoped
 internal class WcSelectWalletModel @Inject constructor(
     paramsContainer: ParamsContainer,
-    getWalletsUseCase: GetWalletsUseCase,
-    getWalletTotalBalanceUseCase: GetWalletTotalBalanceUseCase,
-    getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
-    getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     messageSender: UiMessageSender,
-    getCardImageUseCase: GetCardImageUseCase,
+    userWalletsFetcherFactory: UserWalletsFetcher.Factory,
+    getTokenListUseCase: GetTokenListUseCase,
     private val router: Router,
     override val dispatchers: CoroutineDispatcherProvider,
 ) : Model() {
@@ -46,12 +40,9 @@ internal class WcSelectWalletModel @Inject constructor(
     )
 
     private val userWalletsFetcher = WcUserWalletsFetcher(
-        getWalletsUseCase = getWalletsUseCase,
-        getWalletTotalBalanceUseCase = getWalletTotalBalanceUseCase,
-        getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
-        getBalanceHidingSettingsUseCase = getBalanceHidingSettingsUseCase,
+        userWalletsFetcherFactory = userWalletsFetcherFactory,
+        getTokenListUseCase = getTokenListUseCase,
         messageSender = messageSender,
-        getCardImageUseCase = getCardImageUseCase,
         onWalletSelected = ::onWalletSelected,
     )
 
