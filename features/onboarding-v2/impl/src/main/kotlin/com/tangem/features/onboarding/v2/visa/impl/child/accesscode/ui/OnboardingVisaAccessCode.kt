@@ -10,7 +10,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
@@ -134,7 +133,7 @@ private fun Content(
             } else {
                 state.onAccessCodeFirstChange
             },
-            label = stringResource(id = R.string.onboarding_wallet_info_title_third),
+            label = stringResourceSafe(id = R.string.onboarding_wallet_info_title_third),
             isError = state.codesNotMatchError || state.atLeastMinCharsError,
             visualTransformation = if (state.accessCodeHidden) {
                 PasswordVisualTransformation()
@@ -143,9 +142,9 @@ private fun Content(
             },
             caption = when {
                 state.codesNotMatchError && reEnterAccessCodeState ->
-                    stringResource(R.string.onboarding_access_codes_doesnt_match)
+                    stringResourceSafe(R.string.onboarding_access_codes_doesnt_match)
                 state.atLeastMinCharsError && !reEnterAccessCodeState ->
-                    stringResource(R.string.onboarding_access_code_too_short)
+                    stringResourceSafe(R.string.onboarding_access_code_too_short)
                 else -> null
             },
         )
