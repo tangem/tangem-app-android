@@ -66,46 +66,17 @@ internal fun WcApproveTransactionModalBottomSheetContent(
                 WcSpendAllowanceItem(state.spendAllowance)
                 Spacer(Modifier.height(TangemTheme.dimens.spacing16))
             }
-            WcApproveTransactionItems(state)
+            WcSendTransactionItems(
+                walletName = state.walletName,
+                networkInfo = state.networkInfo,
+                networkFee = state.networkFee,
+            )
             WcTransactionRequestButtons(
                 modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing16),
                 onDismiss = state.onDismiss,
                 onClickActiveButton = state.onSend,
                 activeButtonText = resourceReference(R.string.common_send),
                 isLoading = state.isLoading,
-            )
-        }
-    }
-}
-
-@Composable
-private fun WcApproveTransactionItems(state: WcApproveTransactionItemUM) {
-    Column(
-        modifier = Modifier
-            .clip(RoundedCornerShape(TangemTheme.dimens.radius14))
-            .background(color = TangemTheme.colors.background.action)
-            .fillMaxWidth()
-            .animateContentSize(),
-    ) {
-        val itemsModifier = Modifier
-            .fillMaxWidth()
-            .padding(TangemTheme.dimens.spacing12)
-
-        DividerWithPadding(start = 0.dp, end = 0.dp)
-        WcWalletItem(
-            modifier = itemsModifier,
-            walletName = state.walletName,
-        )
-        DividerWithPadding(start = TangemTheme.dimens.spacing40, end = TangemTheme.dimens.spacing12)
-        WcNetworkItem(
-            modifier = itemsModifier,
-            networkInfo = state.networkInfo,
-        )
-        if (!state.networkFee.isNullOrEmpty()) {
-            DividerWithPadding(start = TangemTheme.dimens.spacing40, end = TangemTheme.dimens.spacing12)
-            WcNetworkFeeItem(
-                modifier = itemsModifier,
-                networkFeeText = state.networkFee,
             )
         }
     }
