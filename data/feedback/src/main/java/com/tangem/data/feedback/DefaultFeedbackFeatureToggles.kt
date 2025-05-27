@@ -7,6 +7,6 @@ internal class DefaultFeedbackFeatureToggles(
     private val featureTogglesManager: FeatureTogglesManager,
 ) : FeedbackFeatureToggles {
 
-    override val isFeatureEnabled: Boolean
+    override val isUsedeskEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(name = "USEDESK_FEEDBACK_ENABLED")
 }
