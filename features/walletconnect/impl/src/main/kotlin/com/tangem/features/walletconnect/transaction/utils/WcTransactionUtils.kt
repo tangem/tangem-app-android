@@ -1,12 +1,13 @@
 package com.tangem.features.walletconnect.transaction.utils
 
-import com.domain.blockaid.models.dapp.CheckDAppResult
 import com.tangem.core.ui.extensions.getActiveIconRes
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.walletconnect.model.WcEthMethod
 import com.tangem.domain.walletconnect.model.WcSolanaMethod
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
+import com.tangem.domain.walletconnect.usecase.method.WcAddNetworkUseCase
 import com.tangem.domain.walletconnect.usecase.method.WcMessageSignUseCase
+import com.tangem.domain.walletconnect.usecase.method.WcMethodContext
 import com.tangem.domain.walletconnect.usecase.method.WcSignState
 import com.tangem.domain.walletconnect.usecase.method.WcSignStep
 import com.tangem.domain.walletconnect.usecase.method.WcSignUseCase
@@ -25,7 +26,7 @@ internal fun WcAddNetworkUseCase.toUM(actions: WcTransactionActionsUM): WcAddEth
         transaction = WcAddEthereumChainItemUM(
             onDismiss = actions.onDismiss,
             onSign = actions.onSign,
-            appInfo = appInfo(),
+            appInfo = appInfo(onShowVerifiedAlert = actions.onShowVerifiedAlert),
             walletName = session.wallet.name,
             isLoading = false,
         ),
@@ -65,7 +66,7 @@ private fun WcMessageSignUseCase.signTypedDataToUM(
     transaction = WcSignTransactionItemUM(
         onDismiss = actions.onDismiss,
         onSign = actions.onSign,
-        appInfo = appInfo(),
+        appInfo = appInfo(onShowVerifiedAlert = actions.onShowVerifiedAlert),
         walletName = session.wallet.name,
         networkInfo = networkInfo(),
         addressText = walletAddress.toShortAddressText(),
@@ -106,7 +107,7 @@ private fun WcMessageSignUseCase.messageSignToUM(
     transaction = WcSignTransactionItemUM(
         onDismiss = actions.onDismiss,
         onSign = actions.onSign,
-        appInfo = appInfo(),
+        appInfo = appInfo(onShowVerifiedAlert = actions.onShowVerifiedAlert),
         walletName = session.wallet.name,
         networkInfo = networkInfo(),
         isLoading = signState.domainStep == WcSignStep.Signing,
@@ -150,10 +151,10 @@ private fun WcMethodContext.basicTransactionRequestInfoBlocks() = persistentList
     ),
 )
 
-private fun WcMethodContext.appInfo() = WcTransactionAppInfoContentUM(
+private fun WcMethodContext.appInfo(onShowVerifiedAlert: (String) -> Unit) = WcTransactionAppInfoContentUM(
     appName = session.sdkModel.appMetaData.name,
     appIcon = session.sdkModel.appMetaData.url,
-    verifiedState = WcDAppVerifiedStateConverter(onVerifiedClick = actions.onShowVerifiedAlert).convert(
+    verifiedState = WcDAppVerifiedStateConverter(onVerifiedClick = onShowVerifiedAlert).convert(
         session.securityStatus to session.sdkModel.appMetaData.name,
     ),
     appSubtitle = session.sdkModel.appMetaData.description,
