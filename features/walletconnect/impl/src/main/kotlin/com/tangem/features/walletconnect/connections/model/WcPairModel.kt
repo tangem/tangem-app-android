@@ -9,10 +9,6 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
-import com.tangem.core.ui.R
-import com.tangem.core.ui.components.bottomsheets.message.*
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.walletconnect.model.WcPairRequest
 import com.tangem.domain.walletconnect.model.WcSessionApprove
@@ -133,6 +129,11 @@ internal class WcPairModel @Inject constructor(
         wcPairUseCase.reject()
     }
 
+    fun connectFromAlert() {
+        stackNavigation.pop()
+        connect()
+    }
+
     private fun onConnect(securityStatus: CheckDAppResult) {
         when (securityStatus) {
             CheckDAppResult.SAFE -> connect()
@@ -152,77 +153,16 @@ internal class WcPairModel @Inject constructor(
         )
     }
 
-    private fun connectFromAlert() {
-        stackNavigation.pop()
-        connect()
-    }
-
     private fun showUnknownDomainAlert() {
-        val message = messageBottomSheetUM {
-            infoBlock {
-                icon(R.drawable.img_knight_shield_32) {
-                    type = MessageBottomSheetUMV2.Icon.Type.Attention
-                    backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.SameAsTint
-                }
-                title = resourceReference(R.string.security_alert_title)
-                body = resourceReference(R.string.wc_alert_domain_issues_description)
-                chip(resourceReference(R.string.wc_alert_audit_unknown_domain)) {
-                    type = MessageBottomSheetUMV2.Chip.Type.Unspecified
-                }
-            }
-            primaryButton {
-                text = resourceReference(R.string.common_cancel)
-                onClick { closeBs() }
-            }
-            secondaryButton {
-                text = resourceReference(R.string.wc_alert_connect_anyway)
-                onClick { connectFromAlert() }
-            }
-        }
-        stackNavigation.pushNew(WcAppInfoRoutes.Alert(elements = message.elements))
+        stackNavigation.pushNew(WcAppInfoRoutes.Alert(WcAppInfoRoutes.Alert.Type.UnknownDomain))
     }
 
     private fun showSecurityRiskAlert() {
-        val message = messageBottomSheetUM {
-            infoBlock {
-                icon(R.drawable.img_knight_shield_32) {
-                    type = MessageBottomSheetUMV2.Icon.Type.Warning
-                    backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.SameAsTint
-                }
-                title = resourceReference(R.string.security_alert_title)
-                body = resourceReference(R.string.wc_alert_domain_issues_description)
-                chip(resourceReference(R.string.wc_alert_audit_unknown_domain)) {
-                    type = MessageBottomSheetUMV2.Chip.Type.Warning
-                }
-            }
-            primaryButton {
-                text = resourceReference(R.string.common_cancel)
-                onClick { closeBs() }
-            }
-            secondaryButton {
-                text = resourceReference(R.string.wc_alert_connect_anyway)
-                onClick { connectFromAlert() }
-            }
-        }
-        stackNavigation.pushNew(WcAppInfoRoutes.Alert(elements = message.elements))
+        stackNavigation.pushNew(WcAppInfoRoutes.Alert(WcAppInfoRoutes.Alert.Type.UnsafeDomain))
     }
 
     private fun showVerifiedAlert(appName: String) {
-        val message = messageBottomSheetUM {
-            infoBlock {
-                icon(R.drawable.img_approvale2_20) {
-                    type = MessageBottomSheetUMV2.Icon.Type.Accent
-                    backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.Unspecified
-                }
-                title = resourceReference(R.string.wc_alert_verified_domain_title)
-                body = resourceReference(R.string.wc_alert_verified_domain_description, wrappedList(appName))
-            }
-            secondaryButton {
-                text = resourceReference(R.string.common_done)
-                onClick { closeBs() }
-            }
-        }
-        stackNavigation.pushNew(WcAppInfoRoutes.Alert(elements = message.elements))
+        stackNavigation.pushNew(WcAppInfoRoutes.Alert(WcAppInfoRoutes.Alert.Type.Verified(appName)))
     }
 
     override fun onWalletSelected(userWalletId: UserWalletId) {
