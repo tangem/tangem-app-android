@@ -6,6 +6,7 @@ import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.tangem.common.authentication.storage.AuthenticatedStorage
 import com.tangem.common.json.TangemSdkAdapter
 import com.tangem.common.services.secure.SecureStorage
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.models.scan.serialization.*
 import com.tangem.domain.visa.model.VisaActivationRemoteState
@@ -42,16 +43,23 @@ internal object UserWalletsListManagerModule {
         @ApplicationContext applicationContext: Context,
         appPreferencesStore: AppPreferencesStore,
         dispatchers: CoroutineDispatcherProvider,
+        analyticsEventHandler: AnalyticsEventHandler,
     ): UserWalletsListManager {
         return GeneralUserWalletsListManager(
             runtimeUserWalletsListManager = RuntimeUserWalletsListManager(),
-            biometricUserWalletsListManager = createBiometricUserWalletsListManager(applicationContext),
+            biometricUserWalletsListManager = createBiometricUserWalletsListManager(
+                applicationContext,
+                analyticsEventHandler,
+            ),
             appPreferencesStore = appPreferencesStore,
             dispatchers = dispatchers,
         )
     }
 
-    private fun createBiometricUserWalletsListManager(applicationContext: Context): UserWalletsListManager {
+    private fun createBiometricUserWalletsListManager(
+        applicationContext: Context,
+        analyticsEventHandler: AnalyticsEventHandler,
+    ): UserWalletsListManager {
         val moshi = Moshi.Builder()
             .add(WalletDerivedKeysMapAdapter())
             .add(ScanResponseDerivedKeysMapAdapter())
@@ -88,6 +96,7 @@ internal object UserWalletsListManagerModule {
             moshi = moshi,
             secureStorage = secureStorage,
             authenticatedStorage = authenticatedStorage,
+            analyticsEventHandler = analyticsEventHandler,
         )
 
         val publicInformationRepository = DefaultUserWalletsPublicInformationRepository(
