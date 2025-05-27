@@ -16,6 +16,7 @@ data class Asset(
     @Json(name = "chain_id") val chainId: Int? = null,
     @Json(name = "logo_url") val logoUrl: String? = null,
     @Json(name = "symbol") val symbol: String,
+    @Json(name = "decimals") val decimals: Int,
 )
 
 @JsonClass(generateAdapter = true)
