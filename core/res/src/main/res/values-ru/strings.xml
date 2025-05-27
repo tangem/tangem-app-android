@@ -713,6 +713,8 @@
   <string name="organize_tokens_sort_by_balance">По балансу</string>
   <string name="organize_tokens_title">Упорядочить токены</string>
   <string name="organize_tokens_ungroup">Список</string>
+  <string name="push_notifications_more_info">Подробнее</string>
+  <string name="push_notifications_permission_alert_title">Подключить нотификации</string>
   <string name="qr_scanner_camera_denied_gallery_button">Выбрать из галереи</string>
   <string name="qr_scanner_camera_denied_settings_button">Настройки</string>
   <string name="qr_scanner_camera_denied_text">Вы не предоставили доступ к вашей камере</string>
@@ -937,9 +939,11 @@
   <string name="staking_notification_restake_text">Рестейк позволяет вам переместить средства из одного валидатора в другого без необходимости выхода из стейкинга.</string>
   <string name="staking_notification_stake_entire_balance_text">Вы собираетесь застейкать весь баланс, рекомендуем оставить небольшую сумму для оплаты комиссии сети при выходе из стейкинга или получении награды.</string>
   <string name="staking_notification_ton_activate_account">Чтобы начать стейкинг в TON, сначала осуществите исходящую транзакцию на любую сумму — это активирует ваш кошелек.</string>
-  <string name="staking_notification_ton_extra_reserve_info">В дополнение к сетевой комиссии может потребоваться до 0.2 TON для завершения всех этапов транзакции. Неиспользованная часть будет возвращена после выполнения.</string>
+  <string name="staking_notification_ton_extra_reserve_info">До 0.2 TON может потребоваться сверх сетевой комиссии для завершения транзакции. Неиспользованная часть будет возвращена.</string>
   <string name="staking_notification_ton_extra_reserve_is_required">Для выполнения операции требуется дополнительно 0.2 TON, помимо сетевой комиссии. Пожалуйста, пополните баланс.</string>
   <string name="staking_notification_ton_extra_reserve_title">Зарезервировано 0.2 TON</string>
+  <string name="staking_notification_ton_have_to_unstake_all_text">Это действие закроет другие позиции или переведёт их в статус вывода средств в соответствии с правилами сети.</string>
+  <string name="staking_notification_ton_have_to_unstake_all_title">Статус позиций</string>
   <string name="staking_notification_unlock_text">Разблокируйте свои средства, чтобы вывести их из стейкинга. Разблокировка займёт %s.</string>
   <string name="staking_notification_unstake_cosmos_text">Ваши средства будут доступны для использования после 21-дневного периода отзыва. Награда будет выведена вместе с вашими выводими средствами.</string>
   <string name="staking_notification_unstake_text">Ваши средства будут доступны после %s периода отзыва.</string>
@@ -1153,6 +1157,7 @@
   <string name="wallet_promo_banner_button_title">Получить с 10% скидкой</string>
   <string name="wallet_promo_banner_description">Получите доступ к более чем 13 000 криптовалют. Покупайте, продавайте, обменивайте и стейкайте в один клик. Свяжите до трех карт для резервного копирования. </string>
   <string name="wallet_promo_banner_title">Откройте Tangem Wallet</string>
+  <string name="wallet_settings_push_notifications_title">Уведомления о транзакциях</string>
   <string name="wallet_settings_title">Настройки кошелька</string>
   <string name="wallet_title">Tangem</string>
   <string name="warning_access_denied_message">Используйте %s или отсканируйте карту/кольцо, чтобы разблокировать доступ к вашему кошельку</string>
