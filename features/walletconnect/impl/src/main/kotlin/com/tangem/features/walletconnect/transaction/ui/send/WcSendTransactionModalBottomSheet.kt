@@ -23,6 +23,7 @@ import com.tangem.core.ui.components.divider.DividerWithPadding
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.features.walletconnect.connections.entity.VerifiedDAppState
 import com.tangem.features.walletconnect.connections.ui.WcAppInfoItem
 import com.tangem.features.walletconnect.impl.R
 import com.tangem.features.walletconnect.transaction.entity.blockaid.WcEstimatedWalletChangeUM
@@ -74,7 +75,7 @@ internal fun WcSendTransactionModalBottomSheet(
                         iconUrl = state.appInfo.appIcon,
                         title = state.appInfo.appName,
                         subtitle = state.appInfo.appSubtitle,
-                        isVerified = state.appInfo.isVerified,
+                        verifiedDAppState = state.appInfo.verifiedState,
                     )
                     DividerWithPadding(start = 0.dp, end = 0.dp)
                     WcTransactionRequestItem(
@@ -147,7 +148,7 @@ private class WcSendTransactionStateProvider : CollectionPreviewParameterProvide
             appInfo = WcTransactionAppInfoContentUM(
                 appName = "React App",
                 appIcon = "",
-                isVerified = true,
+                verifiedState = VerifiedDAppState.Verified {},
                 appSubtitle = "react-app.walletconnect.com",
             ),
             estimatedWalletChanges = WcEstimatedWalletChangesUM(
