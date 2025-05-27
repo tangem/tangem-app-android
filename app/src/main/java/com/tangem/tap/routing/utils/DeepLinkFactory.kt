@@ -126,17 +126,4 @@ internal class DeepLinkFactory @Inject constructor(
 
         return params
     }
-
-    /**
-     * Check for malicious symbol in uri part
-     */
-    private fun String.validate(): Boolean {
-        val regex = DEEPLINK_VALIDATION_REGEX.toRegex()
-
-        return !regex.containsMatchIn(this)
-    }
-
-    private companion object {
-        const val DEEPLINK_VALIDATION_REGEX = "['\";<>()+\\\\]"
-    }
 }
