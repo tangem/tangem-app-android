@@ -7,6 +7,7 @@ data class WcConnectedAppInfoUM(
     val appName: String,
     val appIcon: String,
     val isVerified: Boolean,
+    val verifiedDAppState: VerifiedDAppState,
     val appSubtitle: String,
     val walletName: String,
     val networks: ImmutableList<WcNetworkInfoItem.Required>,
