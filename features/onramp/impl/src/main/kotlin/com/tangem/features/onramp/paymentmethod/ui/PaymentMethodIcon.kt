@@ -9,7 +9,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
-import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 
 @Composable
@@ -18,7 +17,7 @@ internal fun PaymentMethodIcon(imageUrl: String, modifier: Modifier = Modifier) 
         modifier = modifier
             .size(TangemTheme.dimens.size40)
             .clip(TangemTheme.shapes.roundedCorners8)
-            .background(TangemColorPalette.Light1) // Ignore themed color.
+            .background(TangemTheme.colors.background.secondary)
             .padding(TangemTheme.dimens.spacing6),
         model = ImageRequest.Builder(context = LocalContext.current)
             .data(imageUrl)
