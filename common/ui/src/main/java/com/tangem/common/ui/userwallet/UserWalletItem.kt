@@ -15,7 +15,6 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -30,10 +29,7 @@ import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.block.BlockCard
 import com.tangem.core.ui.components.block.TangemBlockCardColors
 import com.tangem.core.ui.components.text.applyBladeBrush
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.domain.wallets.models.UserWalletId
@@ -218,7 +214,7 @@ fun getBalanceValueAndFlickerState(balance: UserWalletItemUM.Balance): Pair<Stri
         is UserWalletItemUM.Balance.Failed -> DASH_SIGN to false
         is UserWalletItemUM.Balance.Hidden -> THREE_STARS to false
         is UserWalletItemUM.Balance.Loading -> null to false
-        is UserWalletItemUM.Balance.Locked -> stringResource(R.string.common_locked) to false
+        is UserWalletItemUM.Balance.Locked -> stringResourceSafe(R.string.common_locked) to false
         is UserWalletItemUM.Balance.Loaded -> balance.value to balance.isFlickering
     }
 }
