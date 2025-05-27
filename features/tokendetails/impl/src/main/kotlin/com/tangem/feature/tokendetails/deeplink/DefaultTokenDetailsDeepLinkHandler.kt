@@ -4,6 +4,7 @@ import arrow.core.getOrElse
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.domain.notifications.models.NotificationType
+import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
 import com.tangem.domain.tokens.GetCryptoCurrenciesUseCase
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
@@ -21,6 +22,7 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
     private val appRouter: AppRouter,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val getCryptoCurrenciesUseCase: GetCryptoCurrenciesUseCase,
+    private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
 ) : TokenDetailsDeepLinkHandler {
 
     init {
@@ -66,6 +68,11 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
                         userWalletId = userWalletId,
                         currency = cryptoCurrency,
                     ),
+                )
+                fetchCurrencyStatusUseCase.invoke(
+                    userWalletId = userWalletId,
+                    id = cryptoCurrency.id,
+                    refresh = true,
                 )
             }
         }
