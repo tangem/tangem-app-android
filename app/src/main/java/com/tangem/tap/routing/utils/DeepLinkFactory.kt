@@ -8,11 +8,13 @@ import com.tangem.feature.referral.api.deeplink.ReferralDeepLinkHandler
 import com.tangem.features.onramp.deeplink.BuyDeepLinkHandler
 import com.tangem.features.onramp.deeplink.OnrampDeepLinkHandler
 import com.tangem.features.send.v2.api.deeplink.SellDeepLinkHandler
+import com.tangem.features.staking.api.deeplink.StakingDeepLinkHandler
 import com.tangem.features.tokendetails.deeplink.TokenDetailsDeepLinkHandler
 import com.tangem.features.wallet.deeplink.WalletDeepLinkHandler
 import com.tangem.features.walletconnect.components.deeplink.WalletConnectDeepLinkHandler
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
+import com.tangem.utils.extensions.uriValidate
 import dagger.hilt.android.scopes.ActivityScoped
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -32,6 +34,7 @@ internal class DeepLinkFactory @Inject constructor(
     private val walletConnectDeepLink: WalletConnectDeepLinkHandler.Factory,
     private val walletDeepLink: WalletDeepLinkHandler.Factory,
     private val tokenDetailsDeepLink: TokenDetailsDeepLinkHandler.Factory,
+    private val stakingDeepLink: StakingDeepLinkHandler.Factory,
 ) {
     private val permittedAppRoute = MutableStateFlow(false)
 
@@ -101,6 +104,7 @@ internal class DeepLinkFactory @Inject constructor(
             DeepLinkRoute.Referral.host -> referralDeepLink.create()
             DeepLinkRoute.Wallet.host -> walletDeepLink.create()
             DeepLinkRoute.TokenDetails.host -> tokenDetailsDeepLink.create(coroutineScope, queryParams)
+            DeepLinkRoute.Staking.host -> stakingDeepLink.create(coroutineScope, queryParams)
             else -> {
                 Timber.i(
                     """
@@ -119,7 +123,7 @@ internal class DeepLinkFactory @Inject constructor(
         uri.queryParameterNames.forEach { paramName ->
             val paramValue = uri.getQueryParameter(paramName)
 
-            if (paramName.validate() && paramValue?.validate() == true) {
+            if (paramName.uriValidate() && paramValue?.uriValidate() == true) {
                 params[paramName] = paramValue
             }
         }
