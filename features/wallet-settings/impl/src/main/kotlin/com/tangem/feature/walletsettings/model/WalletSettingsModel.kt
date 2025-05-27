@@ -11,6 +11,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.navigation.settings.SettingsManager
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
@@ -62,6 +63,7 @@ internal class WalletSettingsModel @Inject constructor(
     private val notificationsToggles: NotificationsFeatureToggles,
     private val getWalletNotificationsEnabledUseCase: GetWalletNotificationsEnabledUseCase,
     private val setNotificationsEnabledUseCase: SetNotificationsEnabledUseCase,
+    private val settingsManager: SettingsManager,
 ) : Model() {
 
     val params: WalletSettingsComponent.Params = paramsContainer.require()
@@ -71,6 +73,8 @@ internal class WalletSettingsModel @Inject constructor(
         value = WalletSettingsUM(
             popBack = router::pop,
             items = persistentListOf(),
+            requestPushNotificationsPermission = false,
+            onPushNotificationPermissionGranted = ::onPushNotificationPermissionGranted,
         ),
     )
 
@@ -193,14 +197,57 @@ internal class WalletSettingsModel @Inject constructor(
     }
 
     private fun onCheckedNotificationsChange(isChecked: Boolean) {
-        // TODO [REDACTED_JIRA]
         modelScope.launch {
-            setNotificationsEnabledUseCase(params.userWalletId, isChecked)
+            if (isChecked) {
+                state.update { value ->
+                    value.copy(
+                        requestPushNotificationsPermission = true,
+                    )
+                }
+            } else {
+                setNotificationsEnabledUseCase(params.userWalletId, false)
+            }
         }
     }
 
     private fun onNotificationsDescriptionClick() {
         // TODO [REDACTED_JIRA]
+    }
+
+    private fun openPushSystemSettings() {
+        settingsManager.openAppSettings()
+    }
+
+    private fun onPushNotificationPermissionGranted(isGranted: Boolean) {
+        state.update { value ->
+            value.copy(
+                requestPushNotificationsPermission = false,
+            )
+        }
+        if (isGranted) {
+            modelScope.launch {
+                setNotificationsEnabledUseCase(params.userWalletId, true)
+            }
+        } else {
+            val message = DialogMessage(
+                title = resourceReference(R.string.push_notifications_permission_alert_title),
+                message = resourceReference(R.string.push_notifications_permission_alert_description),
+                firstActionBuilder = {
+                    EventMessageAction(
+                        title = resourceReference(R.string.push_notifications_permission_alert_positive_button),
+                        onClick = ::openPushSystemSettings,
+                    )
+                },
+                secondActionBuilder = {
+                    EventMessageAction(
+                        title = resourceReference(R.string.push_notifications_permission_alert_negative_button),
+                        onClick = { cancelAction() },
+                    )
+                },
+            )
+
+            messageSender.send(message)
+        }
     }
 
     private fun onReferralClick(userWallet: UserWallet) {
