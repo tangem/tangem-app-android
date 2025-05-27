@@ -18,6 +18,9 @@ internal sealed interface WcInnerRoute : Route {
     data class SignMessage(override val rawRequest: WcSdkSessionRequest) : Method
 
     @Serializable
+    data class AddNetwork(override val rawRequest: WcSdkSessionRequest) : Method
+
+    @Serializable
     data class Pair(val request: WcPairRequest) : WcInnerRoute
 
     @Serializable
