@@ -127,11 +127,12 @@ private fun WcAppInfoModalBottomSheetContent(state: WcAppInfoUM.Content, modifie
 private fun WcAppInfoFirstBlock(state: WcAppInfoUM.Content, modifier: Modifier = Modifier) {
     var connectionRequestExpanded by remember { mutableStateOf(false) }
     Column(modifier = modifier) {
+        val verifiedDAppState = state.verifiedDAppState
         WcAppInfoItem(
             iconUrl = state.appIcon,
             title = state.appName,
             subtitle = state.appSubtitle,
-            isVerified = state.isVerified,
+            verifiedDAppState = state.verifiedDAppState,
         )
         HorizontalDivider(thickness = 1.dp, color = TangemTheme.colors.stroke.primary)
         ConnectionRequestBlock(
@@ -594,7 +595,7 @@ private class WcAppInfoStateProvider : CollectionPreviewParameterProvider<WcAppI
         WcAppInfoUM.Content(
             appName = "React App",
             appIcon = "",
-            isVerified = true,
+            verifiedDAppState = VerifiedDAppState.Verified {},
             appSubtitle = "react-app.walletconnect.com",
             notification = WcAppInfoSecurityNotification.SecurityRisk,
             walletName = "Tangem 2.0",
@@ -640,7 +641,7 @@ private class WcAppInfoStateProvider : CollectionPreviewParameterProvider<WcAppI
         WcAppInfoUM.Content(
             appName = "React App",
             appIcon = "",
-            isVerified = false,
+            verifiedDAppState = VerifiedDAppState.Unknown,
             appSubtitle = "react-app.walletconnect.com",
             notification = WcAppInfoSecurityNotification.UnknownDomain,
             walletName = "Tangem 2.0",
