@@ -7,7 +7,6 @@ import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
-import kotlinx.serialization.Serializable
 
 @Immutable
 data class MessageBottomSheetUMV2(
@@ -25,7 +24,6 @@ data class MessageBottomSheetUMV2(
     val closeScope = CloseScope()
 
     @Immutable
-    @Serializable
     sealed interface Element
 
     @Immutable
