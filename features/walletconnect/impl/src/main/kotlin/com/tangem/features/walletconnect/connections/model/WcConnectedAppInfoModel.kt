@@ -82,7 +82,6 @@ internal class WcConnectedAppInfoModel @Inject constructor(
     }
 
     private fun extractVerifiedState(session: WcSession): VerifiedDAppState {
-        return VerifiedDAppState.Verified(onVerifiedClick = {})
         return if (session.securityStatus == CheckDAppResult.SAFE) {
             VerifiedDAppState.Verified(onVerifiedClick = {})
         } else {
