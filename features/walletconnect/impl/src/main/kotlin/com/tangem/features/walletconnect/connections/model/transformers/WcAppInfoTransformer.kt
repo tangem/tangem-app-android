@@ -3,14 +3,17 @@ package com.tangem.features.walletconnect.connections.model.transformers
 import com.domain.blockaid.models.dapp.CheckDAppResult
 import com.tangem.domain.walletconnect.model.WcSessionProposal
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.features.walletconnect.connections.entity.*
+import com.tangem.features.walletconnect.connections.entity.WcAppInfoSecurityNotification
+import com.tangem.features.walletconnect.connections.entity.WcAppInfoUM
+import com.tangem.features.walletconnect.connections.entity.WcPrimaryButtonConfig
 import com.tangem.utils.transformer.Transformer
 
 @Suppress("LongParameterList")
 internal class WcAppInfoTransformer(
     private val dAppSession: WcSessionProposal,
+    private val dAppVerifiedStateConverter: WcDAppVerifiedStateConverter,
     private val onDismiss: () -> Unit,
-    private val onConnect: () -> Unit,
+    private val onConnect: (securityStatus: CheckDAppResult) -> Unit,
     private val onWalletClick: () -> Unit,
     private val onNetworksClick: () -> Unit,
     private val userWallet: UserWallet,
@@ -21,7 +24,9 @@ internal class WcAppInfoTransformer(
         return WcAppInfoUM.Content(
             appName = dAppSession.dAppMetaData.name,
             appIcon = dAppSession.dAppMetaData.icons.firstOrNull().orEmpty(),
-            isVerified = dAppSession.securityStatus == CheckDAppResult.SAFE,
+            verifiedDAppState = dAppVerifiedStateConverter.convert(
+                dAppSession.securityStatus to dAppSession.dAppMetaData.name,
+            ),
             appSubtitle = dAppSession.dAppMetaData.description,
             notification = createNotification(dAppSession.securityStatus),
             walletName = userWallet.name,
@@ -31,7 +36,7 @@ internal class WcAppInfoTransformer(
             connectButtonConfig = WcPrimaryButtonConfig(
                 showProgress = false,
                 enabled = proposalNetwork.missingRequired.isEmpty(),
-                onClick = onConnect,
+                onClick = { onConnect(dAppSession.securityStatus) },
             ),
             onDismiss = onDismiss,
         )
