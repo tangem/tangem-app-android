@@ -27,7 +27,9 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.domain.wallets.models.UserWalletId
@@ -138,6 +140,7 @@ private fun WcSelectWalletContent(
     }
 }
 
+@Suppress("LongMethod")
 @Composable
 @Preview(showBackground = true, device = Devices.PIXEL_7_PRO)
 @Preview(showBackground = true, device = Devices.PIXEL_7_PRO, uiMode = Configuration.UI_MODE_NIGHT_YES)
@@ -165,7 +168,7 @@ private fun WcSelectWalletContent_Preview() {
                         UserWalletItemUM(
                             id = UserWalletId("user_wallet_1".encodeToByteArray()),
                             name = stringReference("Tangem 2.0"),
-                            information = stringReference("42 tokens"),
+                            information = getInformation(42),
                             balance = UserWalletItemUM.Balance.Loaded("1 496,34 \$", isFlickering = false),
                             isEnabled = true,
                             onClick = {},
@@ -173,7 +176,7 @@ private fun WcSelectWalletContent_Preview() {
                         UserWalletItemUM(
                             id = UserWalletId("user_wallet_2".encodeToByteArray()),
                             name = stringReference("Tangem White"),
-                            information = stringReference("24 tokens"),
+                            information = getInformation(24),
                             balance = UserWalletItemUM.Balance.Loaded("1 496,34 \$", isFlickering = false),
                             isEnabled = true,
                             onClick = {},
@@ -181,7 +184,7 @@ private fun WcSelectWalletContent_Preview() {
                         UserWalletItemUM(
                             id = UserWalletId("user_wallet_3".encodeToByteArray()),
                             name = stringReference("Bitcoin"),
-                            information = stringReference("1 token"),
+                            information = getInformation(1),
                             balance = UserWalletItemUM.Balance.Loaded("1 496,34 \$", isFlickering = false),
                             isEnabled = true,
                             onClick = {},
@@ -189,7 +192,23 @@ private fun WcSelectWalletContent_Preview() {
                         UserWalletItemUM(
                             id = UserWalletId("user_wallet_4".encodeToByteArray()),
                             name = stringReference("Tangem 1.0"),
-                            information = stringReference("21 tokens"),
+                            information = getInformation(21),
+                            balance = UserWalletItemUM.Balance.Loaded("1 496,34 \$", isFlickering = false),
+                            isEnabled = true,
+                            onClick = {},
+                        ),
+                        UserWalletItemUM(
+                            id = UserWalletId("user_wallet_4".encodeToByteArray()),
+                            name = stringReference("Tangem 1.0"),
+                            information = UserWalletItemUM.Information.Loading,
+                            balance = UserWalletItemUM.Balance.Loaded("1 496,34 \$", isFlickering = false),
+                            isEnabled = true,
+                            onClick = {},
+                        ),
+                        UserWalletItemUM(
+                            id = UserWalletId("user_wallet_4".encodeToByteArray()),
+                            name = stringReference("Tangem 1.0"),
+                            information = UserWalletItemUM.Information.Failed,
                             balance = UserWalletItemUM.Balance.Loaded("1 496,34 \$", isFlickering = false),
                             isEnabled = true,
                             onClick = {},
@@ -199,4 +218,13 @@ private fun WcSelectWalletContent_Preview() {
             },
         )
     }
+}
+
+private fun getInformation(tokenCount: Int): UserWalletItemUM.Information.Loaded {
+    val text = TextReference.PluralRes(
+        id = R.plurals.card_label_token_count,
+        count = tokenCount,
+        formatArgs = wrappedList(tokenCount),
+    )
+    return UserWalletItemUM.Information.Loaded(text)
 }
