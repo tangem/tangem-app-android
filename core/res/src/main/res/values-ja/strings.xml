@@ -554,6 +554,9 @@
   <string name="nft_send">NFTを送信する</string>
   <string name="nft_traits_title">特徴</string>
   <string name="nft_untitled_collection">無題のコレクション</string>
+  <plurals name="nft_wallet_count">
+    <item quantity="other">%1$dコレクションの%2$dNFT</item>
+  </plurals>
   <string name="nft_wallet_receive_nft">ここをタップして最初のNFTを受け取ります</string>
   <string name="nft_wallet_title">NFTコレクション</string>
   <string name="nft_wallet_unable_to_load">データを読み込めません</string>
@@ -687,6 +690,7 @@
   <string name="organize_tokens_sort_by_balance">残高順</string>
   <string name="organize_tokens_title">トークンを整理する</string>
   <string name="organize_tokens_ungroup">グループ解除</string>
+  <string name="push_notifications_more_info">詳細はこちら</string>
   <string name="push_notifications_permission_alert_description">Tangemの通知は設定で有効にできます。</string>
   <string name="push_notifications_permission_alert_negative_button">後で有効にする</string>
   <string name="push_notifications_permission_alert_positive_button">設定</string>
@@ -912,7 +916,7 @@
   <string name="staking_notification_restake_text">再ステーキングを使うと、ステーキングを解除することなく、あるバリデータから別のバリデータに資金を移動できます。</string>
   <string name="staking_notification_stake_entire_balance_text">残高のすべてをステーキングしようとしています。ステーキング解除や報酬請求にかかるネットワーク手数料をカバーするために、少額を残しておくことをお勧めします。</string>
   <string name="staking_notification_ton_activate_account">TONでステーキングを開始するには、まず任意の金額の送金を行ってください。これにより、ウォレットがアクティブになります。</string>
-  <string name="staking_notification_ton_extra_reserve_info">ネットワーク手数料に加え、取引の全ステップを完了するには最大0.2 TONが必要です。未使用分は取引完了後に返金されます。</string>
+  <string name="staking_notification_ton_extra_reserve_info">取引を完了するには、ネットワーク手数料に加えて最大0.2TONが必要になる場合があります。未使用分は返金されます。</string>
   <string name="staking_notification_ton_extra_reserve_is_required">この操作を続行するには、ネットワーク手数料に加えて0.2 TONが必要です。残高を補充してください。</string>
   <string name="staking_notification_ton_extra_reserve_title">0.2 TON保留済み</string>
   <string name="staking_notification_ton_have_to_unstake_all_text">このアクションは、ネットワークのルールに従って、他のポジションをクローズするか、引き出しステータスに切り替えます。</string>

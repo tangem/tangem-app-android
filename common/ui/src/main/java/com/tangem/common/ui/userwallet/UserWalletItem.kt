@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -93,7 +93,7 @@ fun UserWalletItem(
 @Composable
 private fun NameAndInfo(
     name: TextReference,
-    information: TextReference,
+    information: UserWalletItemUM.Information,
     balance: UserWalletItemUM.Balance,
     modifier: Modifier = Modifier,
 ) {
@@ -113,8 +113,28 @@ private fun NameAndInfo(
         Row(
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            AnimatedContent(
+                targetState = information,
+                label = "Information content",
+            ) { information ->
+                val informationValue = getInformationValue(information)
+
+                if (informationValue == null) {
+                    TextShimmer(
+                        style = TangemTheme.typography.caption2,
+                        text = "aaaaa",
+                    )
+                } else {
+                    Text(
+                        text = informationValue,
+                        style = TangemTheme.typography.caption2,
+                        color = TangemTheme.colors.text.tertiary,
+                        maxLines = 1,
+                    )
+                }
+            }
             Text(
-                text = information.resolveReference() + " $DOT ",
+                text = " $DOT ",
                 style = TangemTheme.typography.caption2,
                 color = TangemTheme.colors.text.tertiary,
                 maxLines = 1,
@@ -203,6 +223,15 @@ fun getBalanceValueAndFlickerState(balance: UserWalletItemUM.Balance): Pair<Stri
     }
 }
 
+@Composable
+fun getInformationValue(information: UserWalletItemUM.Information): String? {
+    return when (information) {
+        UserWalletItemUM.Information.Failed -> DASH_SIGN
+        UserWalletItemUM.Information.Loading -> null
+        is UserWalletItemUM.Information.Loaded -> information.value.resolveReference()
+    }
+}
+
 // region Preview
 @Composable
 @Preview(showBackground = true, widthDp = 360)
@@ -258,6 +287,15 @@ private class UserWalletItemUMPreviewProvider : PreviewParameterProvider<UserWal
             UserWalletItemUM(
                 id = UserWalletId("user_wallet_3".encodeToByteArray()),
                 name = stringReference("Multi Card"),
+                information = UserWalletItemUM.Information.Loading,
+                balance = UserWalletItemUM.Balance.Loading,
+                isEnabled = false,
+                endIcon = UserWalletItemUM.EndIcon.Checkmark,
+                onClick = {},
+            ),
+            UserWalletItemUM(
+                id = UserWalletId("user_wallet_3".encodeToByteArray()),
+                name = stringReference("Multi Card"),
                 information = getInformation(cardCount = 3),
                 balance = UserWalletItemUM.Balance.Loaded(
                     value = "1.2345 BTC",
@@ -279,14 +317,37 @@ private class UserWalletItemUMPreviewProvider : PreviewParameterProvider<UserWal
                 endIcon = UserWalletItemUM.EndIcon.Checkmark,
                 onClick = {},
             ),
+            UserWalletItemUM(
+                id = UserWalletId("user_wallet_3".encodeToByteArray()),
+                name = stringReference("Multi Card"),
+                information = UserWalletItemUM.Information.Loading,
+                balance = UserWalletItemUM.Balance.Loaded(
+                    value = "1.2345 BTC",
+                    isFlickering = false,
+                ),
+                isEnabled = true,
+                onClick = {},
+            ),
+            UserWalletItemUM(
+                id = UserWalletId("user_wallet_3".encodeToByteArray()),
+                name = stringReference("Multi Card"),
+                information = UserWalletItemUM.Information.Failed,
+                balance = UserWalletItemUM.Balance.Loaded(
+                    value = "1.2345 BTC",
+                    isFlickering = false,
+                ),
+                isEnabled = true,
+                onClick = {},
+            ),
         )
 
-    private fun getInformation(cardCount: Int): TextReference {
-        return TextReference.PluralRes(
+    private fun getInformation(cardCount: Int): UserWalletItemUM.Information.Loaded {
+        val text = TextReference.PluralRes(
             id = R.plurals.card_label_card_count,
             count = cardCount,
             formatArgs = wrappedList(cardCount),
         )
+        return UserWalletItemUM.Information.Loaded(text)
     }
 }
 // endregion Preview
