@@ -25,6 +25,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.features.walletconnect.connections.entity.VerifiedDAppState
 import com.tangem.features.walletconnect.connections.entity.WcConnectedAppInfoUM
 import com.tangem.features.walletconnect.connections.entity.WcNetworkInfoItem
 import com.tangem.features.walletconnect.connections.entity.WcPrimaryButtonConfig
@@ -97,7 +98,7 @@ private fun AppInfoFirstBlock(state: WcConnectedAppInfoUM, modifier: Modifier = 
             iconUrl = state.appIcon,
             title = state.appName,
             subtitle = state.appSubtitle,
-            isVerified = state.isVerified,
+            verifiedDAppState = state.verifiedDAppState,
         )
         HorizontalDivider(thickness = 1.dp, color = TangemTheme.colors.stroke.primary)
         Row(
@@ -159,6 +160,7 @@ private fun WcConnectedAppInfoBS_Preview() {
             state = WcConnectedAppInfoUM(
                 appName = "React App",
                 appIcon = "",
+                verifiedDAppState = VerifiedDAppState.Verified {},
                 isVerified = true,
                 appSubtitle = "react-app.walletconnect.com",
                 walletName = "Tangem 2.0",
