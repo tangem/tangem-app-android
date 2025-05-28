@@ -17,8 +17,10 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
+import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetWithFooter
 import com.tangem.core.ui.components.divider.DividerWithPadding
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
@@ -35,45 +37,67 @@ import com.tangem.features.walletconnect.transaction.ui.common.*
 internal fun WcSignTransactionModalBottomSheetContent(
     state: WcSignTransactionItemUM,
     onClickTransactionRequest: () -> Unit,
+    onBack: () -> Unit,
+    onDismiss: () -> Unit,
 ) {
-    Column(
-        modifier = Modifier
-            .padding(horizontal = 16.dp),
-    ) {
-        Column(
-            modifier = Modifier
-                .clip(RoundedCornerShape(14.dp))
-                .background(color = TangemTheme.colors.background.action)
-                .fillMaxWidth()
-                .animateContentSize(),
-        ) {
-            WcSmallTitleItem(R.string.wc_request_from)
-            WcAppInfoItem(
-                iconUrl = state.appInfo.appIcon,
-                title = state.appInfo.appName,
-                subtitle = state.appInfo.appSubtitle,
-                verifiedDAppState = state.appInfo.verifiedState,
+    TangemModalBottomSheetWithFooter<TangemBottomSheetConfigContent.Empty>(
+        config = TangemBottomSheetConfig(
+            isShown = true,
+            onDismissRequest = onDismiss,
+            content = TangemBottomSheetConfigContent.Empty,
+        ),
+        containerColor = TangemTheme.colors.background.tertiary,
+        onBack = onBack,
+        title = {
+            TangemModalBottomSheetTitle(
+                title = resourceReference(R.string.wc_wallet_connect),
+                endIconRes = R.drawable.ic_close_24,
+                onEndClick = onDismiss,
             )
-            DividerWithPadding(start = 0.dp, end = 0.dp)
-            WcTransactionRequestItem(
-                iconRes = R.drawable.ic_doc_new_24,
+        },
+        content = {
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onClickTransactionRequest() }
-                    .padding(12.dp),
-            )
-        }
-        Column(modifier = Modifier.padding(top = 16.dp)) {
-            WcSignTransactionItems(state)
+                    .padding(horizontal = 16.dp),
+            ) {
+                Column(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(color = TangemTheme.colors.background.action)
+                        .fillMaxWidth()
+                        .animateContentSize(),
+                ) {
+                    WcSmallTitleItem(R.string.wc_request_from)
+                    WcAppInfoItem(
+                        iconUrl = state.appInfo.appIcon,
+                        title = state.appInfo.appName,
+                        subtitle = state.appInfo.appSubtitle,
+                        verifiedDAppState = state.appInfo.verifiedState,
+                    )
+                    DividerWithPadding(start = 0.dp, end = 0.dp)
+                    WcTransactionRequestItem(
+                        iconRes = R.drawable.ic_doc_new_24,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onClickTransactionRequest() }
+                            .padding(12.dp),
+                    )
+                }
+                Column(modifier = Modifier.padding(top = 16.dp)) {
+                    WcSignTransactionItems(state)
+                }
+            }
+        },
+        footer = {
             WcTransactionRequestButtons(
-                modifier = Modifier.padding(vertical = 16.dp),
+                modifier = Modifier.padding(16.dp),
                 onDismiss = state.onDismiss,
                 onClickActiveButton = state.onSign,
                 activeButtonText = resourceReference(R.string.common_sign),
                 isLoading = state.isLoading,
             )
-        }
-    }
+        },
+    )
 }
 
 @Composable
@@ -133,7 +157,7 @@ private fun WcSignTransactionBottomSheetPreview(
                 )
             },
             content = {
-                WcSignTransactionModalBottomSheetContent(state = state, onClickTransactionRequest = {})
+                WcSignTransactionModalBottomSheetContent(state, {}, {}, {})
             },
         )
     }
