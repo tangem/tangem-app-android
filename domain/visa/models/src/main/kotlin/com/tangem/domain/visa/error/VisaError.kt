@@ -49,15 +49,16 @@ enum class VisaActivationError(
 sealed class VisaApiError(
     override val errorCode: Int,
 ) : UniversalError {
-// [REDACTED_TODO_COMMENT]
-    data object Unspecified : VisaApiError(104100000)
-    data object ProductInstanceNotFoundActivationRequired : VisaApiError(104100100)
-    data object ProductInstanceIsBlocked : VisaApiError(104101000)
-    data object ProductInstanceIsNotActivated : VisaApiError(104101100)
-    data object ProductInstanceIsAlreadyActivated : VisaApiError(104101200)
-    data object CustomerIsBlocked : VisaApiError(104102000)
-    data object UnknownWithoutCode : VisaApiError(104101999)
+    data object Unspecified : VisaApiError(104110205)
+    data object ProductInstanceNotFoundActivationRequired : VisaApiError(104110206)
+    data object ProductInstanceIsBlocked : VisaApiError(104110209)
+    data object ProductInstanceIsNotActivated : VisaApiError(104110208)
+    data object ProductInstanceIsAlreadyActivated : VisaApiError(104110207)
+    data object CustomerIsBlocked : VisaApiError(104110210)
+    data object UnknownWithoutCode : VisaApiError(104110999)
     data class Unknown(override val errorCode: Int) : VisaApiError(errorCode)
+
+    fun isUnknown() = this is UnknownWithoutCode || this is Unknown
 
     data object RefreshTokenExpired : VisaApiError(104004001)
 
@@ -65,12 +66,12 @@ sealed class VisaApiError(
         fun fromBackendError(backendErrorCode: Int): VisaApiError {
             val universalErrorCode = 104_000_000 + backendErrorCode
             return when (universalErrorCode) {
-                104100000 -> Unspecified
-                104100100 -> ProductInstanceNotFoundActivationRequired
-                104101000 -> ProductInstanceIsBlocked
-                104101100 -> ProductInstanceIsNotActivated
-                104101200 -> ProductInstanceIsAlreadyActivated
-                104102000 -> CustomerIsBlocked
+                Unspecified.errorCode -> Unspecified
+                ProductInstanceNotFoundActivationRequired.errorCode -> ProductInstanceNotFoundActivationRequired
+                ProductInstanceIsBlocked.errorCode -> ProductInstanceIsBlocked
+                ProductInstanceIsNotActivated.errorCode -> ProductInstanceIsNotActivated
+                ProductInstanceIsAlreadyActivated.errorCode -> ProductInstanceIsAlreadyActivated
+                CustomerIsBlocked.errorCode -> CustomerIsBlocked
                 else -> Unknown(universalErrorCode)
             }
         }
