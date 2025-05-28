@@ -8,7 +8,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalConfiguration
@@ -16,11 +15,14 @@ import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SecondaryButtonIconEnd
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
+import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetWithFooter
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -36,33 +38,66 @@ private const val MIN_HEIGHT_SCREEN_PERCENT = 0.35f
 private const val MAX_HEIGHT_SCREEN_PERCENT = 0.75f
 
 @Composable
-internal fun TransactionRequestInfoContent(state: WcTransactionRequestInfoUM) {
+internal fun TransactionRequestInfoContent(
+    state: WcTransactionRequestInfoUM,
+    onBack: () -> Unit,
+    onDismiss: () -> Unit,
+) {
     val screenHeight = LocalConfiguration.current.screenHeightDp
     val minHeight = (screenHeight * MIN_HEIGHT_SCREEN_PERCENT).dp
     val maxHeight = (screenHeight * MAX_HEIGHT_SCREEN_PERCENT).dp
 
+    TangemModalBottomSheetWithFooter<TangemBottomSheetConfigContent.Empty>(
+        config = TangemBottomSheetConfig(
+            isShown = true,
+            onDismissRequest = onDismiss,
+            content = TangemBottomSheetConfigContent.Empty,
+        ),
+        containerColor = TangemTheme.colors.background.tertiary,
+        onBack = onBack,
+        title = {
+            TangemModalBottomSheetTitle(
+                title = resourceReference(R.string.wc_transaction_request_title),
+                startIconRes = R.drawable.ic_back_24,
+                onStartClick = onDismiss,
+            )
+        },
+        content = {
+            TransactionRequestContent(state = state, minHeight = minHeight, maxHeight = maxHeight)
+        },
+        footer = {
+            SecondaryButtonIconEnd(
+                modifier = Modifier
+                    .padding(bottom = 20.dp, start = 16.dp, end = 16.dp)
+                    .fillMaxWidth(),
+                text = stringResourceSafe(R.string.wc_copy_data_button_text),
+                onClick = state.onCopy,
+                iconResId = R.drawable.ic_copy_24,
+            )
+        },
+    )
+}
+
+@Composable
+private fun TransactionRequestContent(state: WcTransactionRequestInfoUM, minHeight: Dp, maxHeight: Dp) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(min = minHeight, max = maxHeight)
-            .padding(horizontal = TangemTheme.dimens.spacing16),
+            .padding(horizontal = 16.dp),
     ) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxWidth(),
-            contentPadding = PaddingValues(top = TangemTheme.dimens.spacing8, bottom = TangemTheme.dimens.spacing70),
+            contentPadding = PaddingValues(top = 8.dp, bottom = 70.dp),
         ) {
             items(state.blocks) { block ->
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(TangemTheme.dimens.radius16))
+                        .clip(RoundedCornerShape(16.dp))
                         .background(TangemTheme.colors.background.action)
-                        .padding(
-                            start = TangemTheme.dimens.spacing16,
-                            end = TangemTheme.dimens.spacing16,
-                            top = TangemTheme.dimens.spacing20,
-                        ),
+                        .padding(start = 16.dp, end = 16.dp, top = 20.dp),
                 ) {
                     block.info.forEach { item ->
                         Text(
@@ -73,31 +108,18 @@ internal fun TransactionRequestInfoContent(state: WcTransactionRequestInfoUM) {
                         if (item.description.isNotEmpty()) {
                             Text(
                                 text = item.description,
-                                modifier = Modifier.padding(
-                                    top = TangemTheme.dimens.spacing4,
-                                    bottom = TangemTheme.dimens.spacing20,
-                                ),
+                                modifier = Modifier.padding(top = 4.dp, bottom = 20.dp),
                                 style = TangemTheme.typography.body2,
                                 color = TangemTheme.colors.text.primary1,
                             )
                         } else {
-                            Spacer(modifier = Modifier.size(TangemTheme.dimens.size12))
+                            Spacer(modifier = Modifier.size(12.dp))
                         }
                     }
                 }
-                Spacer(modifier = Modifier.size(TangemTheme.dimens.size20))
+                Spacer(modifier = Modifier.size(20.dp))
             }
         }
-
-        SecondaryButtonIconEnd(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = TangemTheme.dimens.spacing20)
-                .fillMaxWidth(),
-            text = stringResourceSafe(R.string.wc_copy_data_button_text),
-            onClick = state.onCopy,
-            iconResId = R.drawable.ic_copy_24,
-        )
     }
 }
 
@@ -125,7 +147,7 @@ private fun WcSignTransactionRequestInfoBottomSheetPreview(
                 )
             },
             content = {
-                TransactionRequestInfoContent(state = state)
+                TransactionRequestInfoContent(state, {}, {})
             },
         )
     }
