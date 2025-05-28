@@ -59,7 +59,7 @@ internal fun TransactionRequestInfoContent(
             TangemModalBottomSheetTitle(
                 title = resourceReference(R.string.wc_transaction_request_title),
                 startIconRes = R.drawable.ic_back_24,
-                onStartClick = onDismiss,
+                onStartClick = onBack,
             )
         },
         content = {
