@@ -10,7 +10,7 @@ import com.tangem.domain.walletconnect.WcRequestUseCaseFactory
 import com.tangem.domain.walletconnect.usecase.method.WcSignState
 import com.tangem.domain.walletconnect.usecase.method.WcSignStep
 import com.tangem.domain.walletconnect.usecase.method.WcSignUseCase
-import com.tangem.features.walletconnect.transaction.components.sign.WcSignTransactionContainerComponent
+import com.tangem.features.walletconnect.transaction.components.common.WcTransactionModelParams
 import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionActionsUM
 import com.tangem.features.walletconnect.transaction.entity.sign.WcSignTransactionUM
 import com.tangem.features.walletconnect.transaction.utils.toUM
@@ -35,7 +35,7 @@ internal class WcSignTransactionModel @Inject constructor(
     private val _uiState = MutableStateFlow<WcSignTransactionUM?>(null)
     val uiState: StateFlow<WcSignTransactionUM?> = _uiState
 
-    private val params = paramsContainer.require<WcSignTransactionContainerComponent.Params>()
+    private val params = paramsContainer.require<WcTransactionModelParams>()
 
     init {
         modelScope.launch {
