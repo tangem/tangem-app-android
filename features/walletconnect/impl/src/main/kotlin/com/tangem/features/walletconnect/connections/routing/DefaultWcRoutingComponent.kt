@@ -17,8 +17,8 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.walletconnect.components.WcRoutingComponent
 import com.tangem.features.walletconnect.connections.components.WcPairComponent
 import com.tangem.features.walletconnect.connections.components.AlertsComponent
-import com.tangem.features.walletconnect.transaction.components.WcAddNetworkContainerComponent
-import com.tangem.features.walletconnect.transaction.components.WcSignTransactionContainerComponent
+import com.tangem.features.walletconnect.transaction.components.chain.WcAddNetworkContainerComponent
+import com.tangem.features.walletconnect.transaction.components.sign.WcSignTransactionContainerComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
