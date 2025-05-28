@@ -153,9 +153,6 @@ internal class OnboardingVisaInProgressModel @Inject constructor(
                 )
                 complete()
             }
-            VisaActivationRemoteState.AwaitingPinCode.Status.InProgress -> {
-                /** waiting for the new state */
-            }
         }
     }
 
