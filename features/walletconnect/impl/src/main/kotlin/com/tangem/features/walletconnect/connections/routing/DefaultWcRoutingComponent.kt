@@ -18,6 +18,8 @@ import com.tangem.features.walletconnect.components.WcRoutingComponent
 import com.tangem.features.walletconnect.connections.components.WcPairComponent
 import com.tangem.features.walletconnect.connections.components.AlertsComponent
 import com.tangem.features.walletconnect.transaction.components.chain.WcAddNetworkContainerComponent
+import com.tangem.features.walletconnect.transaction.components.common.WcTransactionModelParams
+import com.tangem.features.walletconnect.transaction.components.send.WcSendTransactionContainerComponent
 import com.tangem.features.walletconnect.transaction.components.sign.WcSignTransactionContainerComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -59,11 +61,15 @@ internal class DefaultWcRoutingComponent @AssistedInject constructor(
         return when (config) {
             is WcInnerRoute.SignMessage -> WcSignTransactionContainerComponent(
                 appComponentContext = childContext,
-                params = WcSignTransactionContainerComponent.Params(config.rawRequest),
+                params = WcTransactionModelParams(config.rawRequest),
             )
             is WcInnerRoute.AddNetwork -> WcAddNetworkContainerComponent(
                 appComponentContext = childContext,
-                params = WcAddNetworkContainerComponent.Params(config.rawRequest),
+                params = WcTransactionModelParams(config.rawRequest),
+            )
+            is WcInnerRoute.Send -> WcSendTransactionContainerComponent(
+                appComponentContext = childContext,
+                params = WcTransactionModelParams(config.rawRequest),
             )
             is WcInnerRoute.Pair -> WcPairComponent(
                 appComponentContext = childContext,
