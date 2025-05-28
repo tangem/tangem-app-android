@@ -155,6 +155,7 @@
   <string name="common_generate_addresses">Synchronize addresses</string>
   <string name="common_go_to_provider">Go to provider</string>
   <string name="common_go_to_token">Go to token</string>
+  <string name="common_got_it">Got it</string>
   <string name="common_hide">Hide</string>
   <string name="common_hour">hour</string>
   <string name="common_import">Import</string>
@@ -209,6 +210,7 @@
   <string name="common_submit">Submit</string>
   <string name="common_success">Success</string>
   <string name="common_support">Support</string>
+  <string name="common_supported_networks">Supported networks</string>
   <string name="common_swap">Swap</string>
   <string name="common_tangem_wallet">Tangem Wallet</string>
   <string name="common_terms_and_conditions">terms and conditions</string>
@@ -566,10 +568,7 @@
   <string name="nft_send">Send NFT</string>
   <string name="nft_traits_title">Traits</string>
   <string name="nft_untitled_collection">Untitled collection</string>
-  <plurals name="nft_wallet_count">
-    <item quantity="one">%1$d NFTs in %2$d collection</item>
-    <item quantity="other">%1$d NFTs in %2$d collections</item>
-  </plurals>
+  <string name="nft_wallet_count">%1$d NFTs in %2$d collections</string>
   <string name="nft_wallet_receive_nft">Tap here to receive first NFT</string>
   <string name="nft_wallet_title">NFT collections</string>
   <string name="nft_wallet_unable_to_load">Unable to load the data</string>
@@ -710,6 +709,8 @@
   <string name="push_notifications_permission_alert_negative_button">Enable Later</string>
   <string name="push_notifications_permission_alert_positive_button">Settings</string>
   <string name="push_notifications_permission_alert_title">Enable Notifications</string>
+  <string name="push_transactions_notifications_description">Receive alerts for incoming transactions on supported networks</string>
+  <string name="push_transactions_notifications_title">Transaction Notifications</string>
   <string name="qr_scanner_camera_denied_gallery_button">Select from the gallery</string>
   <string name="qr_scanner_camera_denied_settings_button">Settings</string>
   <string name="qr_scanner_camera_denied_text">You have not given access to your camera</string>
@@ -1092,6 +1093,8 @@
   <string name="twins_recreate_toolbar">Tangem Twin</string>
   <string name="twins_recreate_warning">This action is irreversible. You will not have access to the old wallet.</string>
   <string name="twins_scan_twin_with_number">Tap the twin card with number %s and do not remove until the end of the operation</string>
+  <string name="unexpected_error_description">Please try again later. If the issue persists, please contact support.</string>
+  <string name="unexpected_error_title">Something went wrong!</string>
   <string name="universal_error">We\'ve encountered an error. Error code: %s. Please contact our support.</string>
   <string name="unlock_wallet_description_full">Use %s or scan a card/ring to have access to your wallet</string>
   <string name="unsupported_wc_version">Connection failed: This dApp uses Wallet Connect version 1.0, which is not supported. Please ensure the dApp supports Wallet Connect version 2.0 to connect successfully.</string>
