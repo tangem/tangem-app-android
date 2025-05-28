@@ -9,7 +9,7 @@ import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.domain.walletconnect.WcRequestUseCaseFactory
 import com.tangem.domain.walletconnect.usecase.method.WcAddNetworkUseCase
 import com.tangem.domain.walletconnect.usecase.method.WcMethodUseCase
-import com.tangem.features.walletconnect.transaction.components.sign.WcSignTransactionContainerComponent
+import com.tangem.features.walletconnect.transaction.components.common.WcTransactionModelParams
 import com.tangem.features.walletconnect.transaction.entity.chain.WcAddEthereumChainUM
 import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionActionsUM
 import com.tangem.features.walletconnect.transaction.utils.toUM
@@ -33,7 +33,7 @@ internal class WcAddNetworkModel @Inject constructor(
     private val _uiState = MutableStateFlow<WcAddEthereumChainUM?>(null)
     val uiState: StateFlow<WcAddEthereumChainUM?> = _uiState
 
-    private val params = paramsContainer.require<WcSignTransactionContainerComponent.Params>()
+    private val params = paramsContainer.require<WcTransactionModelParams>()
 
     init {
         modelScope.launch {
