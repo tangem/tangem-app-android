@@ -13,14 +13,14 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
+import com.tangem.features.walletconnect.transaction.components.common.WcTransactionModelParams
 import com.tangem.features.walletconnect.transaction.components.common.WcTransactionRequestInfoComponent
 import com.tangem.features.walletconnect.transaction.model.WcSignTransactionModel
 import com.tangem.features.walletconnect.transaction.routes.WcTransactionRoutes
 
 internal class WcSignTransactionContainerComponent(
     private val appComponentContext: AppComponentContext,
-    params: Params,
+    params: WcTransactionModelParams,
 ) : AppComponentContext by appComponentContext, ComposableContentComponent {
 
     private val contentNavigation = StackNavigation<WcTransactionRoutes>()
@@ -28,7 +28,7 @@ internal class WcSignTransactionContainerComponent(
         stackNavigation = contentNavigation,
         popCallback = { onChildBack() },
     )
-    private val model: WcSignTransactionModel = getOrCreateModel(params = params, router = innerRouter)
+    private val model: WcSignTransactionModel = getOrCreateModel(params = params)
     private val contentStack = childStack(
         key = "WcSignTransactionStack",
         source = contentNavigation,
@@ -72,6 +72,4 @@ internal class WcSignTransactionContainerComponent(
             )
         }
     }
-
-    data class Params(val rawRequest: WcSdkSessionRequest)
 }
