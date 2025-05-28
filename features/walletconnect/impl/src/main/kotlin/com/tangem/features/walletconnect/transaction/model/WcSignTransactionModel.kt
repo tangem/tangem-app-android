@@ -10,7 +10,7 @@ import com.tangem.domain.walletconnect.WcRequestUseCaseFactory
 import com.tangem.domain.walletconnect.usecase.method.WcSignState
 import com.tangem.domain.walletconnect.usecase.method.WcSignStep
 import com.tangem.domain.walletconnect.usecase.method.WcSignUseCase
-import com.tangem.features.walletconnect.transaction.components.WcSignTransactionContainerComponent
+import com.tangem.features.walletconnect.transaction.components.sign.WcSignTransactionContainerComponent
 import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionActionsUM
 import com.tangem.features.walletconnect.transaction.entity.sign.WcSignTransactionUM
 import com.tangem.features.walletconnect.transaction.utils.toUM
