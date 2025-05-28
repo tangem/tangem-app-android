@@ -17,8 +17,10 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
+import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetWithFooter
 import com.tangem.core.ui.components.divider.DividerWithPadding
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
@@ -37,52 +39,74 @@ import com.tangem.features.walletconnect.transaction.ui.common.WcWalletItem
 internal fun WcAddEthereumChainModalBottomSheetContent(
     state: WcAddEthereumChainItemUM,
     onClickTransactionRequest: () -> Unit,
+    onBack: () -> Unit,
+    onDismiss: () -> Unit,
 ) {
-    Column(
-        modifier = Modifier
-            .padding(horizontal = TangemTheme.dimens.spacing16),
-    ) {
-        Column(
-            modifier = Modifier
-                .clip(RoundedCornerShape(TangemTheme.dimens.radius14))
-                .background(color = TangemTheme.colors.background.action)
-                .fillMaxWidth()
-                .animateContentSize(),
-        ) {
-            WcSmallTitleItem(R.string.wc_request_from)
-            WcAppInfoItem(
-                iconUrl = state.appInfo.appIcon,
-                title = state.appInfo.appName,
-                subtitle = state.appInfo.appSubtitle,
-                verifiedDAppState = state.appInfo.verifiedState,
+    TangemModalBottomSheetWithFooter<TangemBottomSheetConfigContent.Empty>(
+        config = TangemBottomSheetConfig(
+            isShown = true,
+            onDismissRequest = onDismiss,
+            content = TangemBottomSheetConfigContent.Empty,
+        ),
+        containerColor = TangemTheme.colors.background.tertiary,
+        onBack = onBack,
+        title = {
+            TangemModalBottomSheetTitle(
+                title = resourceReference(R.string.wc_wallet_connect),
+                endIconRes = R.drawable.ic_close_24,
+                onEndClick = onDismiss,
             )
-            DividerWithPadding(start = 0.dp, end = 0.dp)
-            WcTransactionRequestItem(
-                iconRes = R.drawable.ic_doc_new_24,
+        },
+        content = {
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onClickTransactionRequest() }
-                    .padding(TangemTheme.dimens.spacing12),
-            )
-        }
-        Column(modifier = Modifier.padding(top = TangemTheme.dimens.spacing16)) {
-            WcAddEthereumChainItems(state)
+                    .padding(horizontal = 16.dp),
+            ) {
+                Column(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(color = TangemTheme.colors.background.action)
+                        .fillMaxWidth()
+                        .animateContentSize(),
+                ) {
+                    WcSmallTitleItem(R.string.wc_request_from)
+                    WcAppInfoItem(
+                        iconUrl = state.appInfo.appIcon,
+                        title = state.appInfo.appName,
+                        subtitle = state.appInfo.appSubtitle,
+                        verifiedDAppState = state.appInfo.verifiedState,
+                    )
+                    DividerWithPadding(start = 0.dp, end = 0.dp)
+                    WcTransactionRequestItem(
+                        iconRes = R.drawable.ic_doc_new_24,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onClickTransactionRequest() }
+                            .padding(12.dp),
+                    )
+                }
+                Column(modifier = Modifier.padding(top = 16.dp)) {
+                    WcAddEthereumChainItems(state)
+                }
+            }
+        },
+        footer = {
             WcTransactionRequestButtons(
-                modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing16),
+                modifier = Modifier.padding(16.dp),
                 onDismiss = state.onDismiss,
                 onClickActiveButton = state.onSign,
                 activeButtonText = resourceReference(R.string.common_sign),
                 isLoading = state.isLoading,
             )
-        }
-    }
+        },
+    )
 }
 
 @Composable
 private fun WcAddEthereumChainItems(state: WcAddEthereumChainItemUM) {
     Column(
         modifier = Modifier
-            .clip(RoundedCornerShape(TangemTheme.dimens.radius14))
+            .clip(RoundedCornerShape(14.dp))
             .background(color = TangemTheme.colors.background.action)
             .fillMaxWidth()
             .animateContentSize(),
@@ -91,10 +115,10 @@ private fun WcAddEthereumChainItems(state: WcAddEthereumChainItemUM) {
         WcWalletItem(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(TangemTheme.dimens.spacing12),
+                .padding(12.dp),
             walletName = state.walletName,
         )
-        DividerWithPadding(start = TangemTheme.dimens.spacing40, end = TangemTheme.dimens.spacing12)
+        DividerWithPadding(start = 40.dp, end = 12.dp)
     }
 }
 
@@ -122,7 +146,7 @@ private fun WcAddEthereumChainBottomSheetPreview(
                 )
             },
             content = {
-                WcAddEthereumChainModalBottomSheetContent(state = state, onClickTransactionRequest = {})
+                WcAddEthereumChainModalBottomSheetContent(state, {}, {}, {})
             },
         )
     }
