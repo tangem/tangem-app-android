@@ -1,21 +1,25 @@
-package com.tangem.features.walletconnect.transaction.components
+package com.tangem.features.walletconnect.transaction.components.common
 
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import com.tangem.core.decompose.context.AppComponentContext
-import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionRequestInfoUM
 import com.tangem.features.walletconnect.transaction.ui.common.TransactionRequestInfoContent
 
 internal class WcTransactionRequestInfoComponent(
     private val appComponentContext: AppComponentContext,
     private val model: WcTransactionRequestInfoUM?,
-) : AppComponentContext by appComponentContext, ComposableContentComponent {
+    private val onDismiss: () -> Unit,
+) : AppComponentContext by appComponentContext, ComposableBottomSheetComponent {
+
+    override fun dismiss() {
+        onDismiss()
+    }
 
     @Composable
-    override fun Content(modifier: Modifier) {
+    override fun BottomSheet() {
         if (model != null) {
-            TransactionRequestInfoContent(model)
+            TransactionRequestInfoContent(model, onBack = router::pop, onDismiss = ::dismiss)
         }
     }
 }
