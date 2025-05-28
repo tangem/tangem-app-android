@@ -42,6 +42,7 @@ import kotlinx.collections.immutable.persistentListOf
 internal fun WcSendTransactionModalBottomSheet(
     state: WcSendTransactionItemUM,
     onClickTransactionRequest: () -> Unit,
+    onBack: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     TangemModalBottomSheetWithFooter<TangemBottomSheetConfigContent.Empty>(
@@ -50,6 +51,7 @@ internal fun WcSendTransactionModalBottomSheet(
             onDismissRequest = onDismiss,
             content = TangemBottomSheetConfigContent.Empty,
         ),
+        onBack = onBack,
         containerColor = TangemTheme.colors.background.tertiary,
         title = { config ->
             TangemModalBottomSheetTitle(
@@ -134,7 +136,7 @@ private fun WcSendTransactionBottomSheetPreview(
                 )
             },
             content = {
-                WcSendTransactionModalBottomSheet(state = state, onClickTransactionRequest = {}, onDismiss = {})
+                WcSendTransactionModalBottomSheet(state, {}, {}, {})
             },
         )
     }
