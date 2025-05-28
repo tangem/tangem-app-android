@@ -94,6 +94,8 @@ sealed class Basic(
             data object AuthenticationLockoutPermanent : BiometricFailReason("BiometricsAuthenticationLockoutPermanent")
             data object BiometricsAuthenticationDisabled : BiometricFailReason("BiometricsAuthenticationDisabled")
             data object AllKeysInvalidated : BiometricFailReason("AllKeysInvalidated")
+            data object AuthenticationCancelled : BiometricFailReason("AuthenticationCancelled")
+            data object AuthenticationAlreadyInProgress : BiometricFailReason("AuthenticationAlreadyInProgress")
             data class Other(val reason: String) : BiometricFailReason(reason)
         }
     }
