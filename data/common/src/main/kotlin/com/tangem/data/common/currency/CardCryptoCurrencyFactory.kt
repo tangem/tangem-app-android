@@ -23,6 +23,15 @@ interface CardCryptoCurrencyFactory {
     suspend fun create(userWalletId: UserWalletId, network: Network): List<CryptoCurrency>
 
     /**
+     * Universal method for creating list of [CryptoCurrency] in [network] for any card
+     *
+     * @param userWalletId user wallet id that determines type of card
+     * @param network      network
+     */
+    @Throws
+    suspend fun createByRawId(userWalletId: UserWalletId, network: Network.RawID): List<CryptoCurrency>
+
+    /**
      * Create currencies for multi currency card
      *
      * @param userWallet user wallet
