@@ -22,7 +22,11 @@ internal class TxHistoryUiManager(
     @OptIn(ExperimentalCoroutinesApi::class)
     val items: Flow<ImmutableList<TxHistoryUM.TxHistoryItemUM>> = state
         // filter initial states, since we dont emit loading items as UI items
-        .filter { it.status !is PaginationStatus.None && it.status !is PaginationStatus.InitialLoading }
+        .filter {
+            it.status !is PaginationStatus.None &&
+                it.status !is PaginationStatus.InitialLoading &&
+                it.status !is PaginationStatus.InitialLoadingError
+        }
         .mapLatest { state ->
             state.uiBatches.asSequence()
                 .flatMap { it.data }
