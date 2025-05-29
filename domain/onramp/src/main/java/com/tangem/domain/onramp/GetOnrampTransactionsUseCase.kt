@@ -3,11 +3,11 @@ package com.tangem.domain.onramp
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.onramp.model.cache.OnrampTransaction
 import com.tangem.domain.onramp.model.error.OnrampError
 import com.tangem.domain.onramp.repositories.OnrampErrorResolver
 import com.tangem.domain.onramp.repositories.OnrampTransactionRepository
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
