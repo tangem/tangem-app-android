@@ -23,6 +23,7 @@ import com.tangem.features.txhistory.entity.TxHistoryUM
 import com.tangem.features.txhistory.entity.TxHistoryUpdateListener
 import com.tangem.features.txhistory.utils.TxHistoryListManager
 import com.tangem.features.txhistory.utils.TxHistoryUiActions
+import com.tangem.pagination.PaginationStatus
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -75,6 +76,9 @@ internal class TxHistoryModel @Inject constructor(
     private fun subscribeToUiItemChanges() {
         txHistoryListManager.uiItems
             .onEach { updateState(it) }
+            .launchIn(modelScope)
+        txHistoryListManager.paginationStatus
+            .onEach { paginationStatus -> handlePaginationStatus(paginationStatus) }
             .launchIn(modelScope)
     }
 
@@ -136,14 +140,24 @@ internal class TxHistoryModel @Inject constructor(
         }
     }
 
+    private fun handlePaginationStatus(status: PaginationStatus<*>) {
+        _uiState.update { state ->
+            when (status) {
+                is PaginationStatus.InitialLoadingError -> getErrorState(state.isBalanceHidden)
+                PaginationStatus.EndOfPagination,
+                PaginationStatus.InitialLoading,
+                PaginationStatus.NextBatchLoading,
+                PaginationStatus.None,
+                is PaginationStatus.Paginating<*>,
+                -> state
+            }
+        }
+    }
+
     private fun handleErrorState(error: TxHistoryStateError) {
         _uiState.update { state ->
             when (error) {
-                is TxHistoryStateError.DataError -> TxHistoryUM.Error(
-                    isBalanceHidden = state.isBalanceHidden,
-                    onReloadClick = ::reload,
-                    onExploreClick = ::openExplorer,
-                )
+                is TxHistoryStateError.DataError -> getErrorState(isBalanceHidden = state.isBalanceHidden)
                 TxHistoryStateError.EmptyTxHistories -> TxHistoryUM.Empty(
                     isBalanceHidden = state.isBalanceHidden,
                     onExploreClick = ::openExplorer,
@@ -155,6 +169,14 @@ internal class TxHistoryModel @Inject constructor(
                 )
             }
         }
+    }
+
+    private fun getErrorState(isBalanceHidden: Boolean): TxHistoryUM.Error {
+        return TxHistoryUM.Error(
+            isBalanceHidden = isBalanceHidden,
+            onReloadClick = ::reload,
+            onExploreClick = ::openExplorer,
+        )
     }
 
     private fun getLoadingState(isBalanceHidden: Boolean): TxHistoryUM.Loading {
