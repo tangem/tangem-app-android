@@ -4,7 +4,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.demo.DemoConfig
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWallet
 import kotlinx.coroutines.flow.Flow
