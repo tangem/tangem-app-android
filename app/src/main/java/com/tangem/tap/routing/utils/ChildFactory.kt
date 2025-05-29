@@ -291,13 +291,13 @@ internal class ChildFactory @Inject constructor(
                 if (walletConnectFeatureToggles.isRedesignedWalletConnectEnabled) {
                     createComponentChild(
                         context = context,
-                        params = Unit,
+                        params = RedesignedWalletConnectComponent.Params(route.userWalletId),
                         componentFactory = redesignedWalletConnectComponentFactory,
                     )
                 } else {
                     createComponentChild(
                         context = context,
-                        params = Unit,
+                        params = WalletConnectComponent.Params(route.userWalletId),
                         componentFactory = walletConnectComponentFactory,
                     )
                 }
