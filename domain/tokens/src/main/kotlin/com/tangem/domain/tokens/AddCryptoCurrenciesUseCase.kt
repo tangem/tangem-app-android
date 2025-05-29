@@ -4,15 +4,14 @@ import arrow.core.Either
 import arrow.core.raise.Raise
 import arrow.core.raise.catch
 import arrow.core.raise.either
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.quotes.multi.MultiQuoteFetcher
 import com.tangem.domain.staking.fetcher.YieldBalanceFetcherParams
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.staking.single.SingleYieldBalanceFetcher
-import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.repository.CurrenciesRepository
-import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.async
@@ -29,7 +28,6 @@ import kotlinx.coroutines.coroutineScope
 @Suppress("LongParameterList")
 class AddCryptoCurrenciesUseCase(
     private val currenciesRepository: CurrenciesRepository,
-    private val networksRepository: NetworksRepository,
     private val stakingRepository: StakingRepository,
     private val quotesRepository: QuotesRepository,
     private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
@@ -139,26 +137,13 @@ class AddCryptoCurrenciesUseCase(
         }
             ?.network
 
-        if (tokensFeatureToggles.isNetworksLoadingRefactoringEnabled) {
-            multiNetworkStatusFetcher(
-                MultiNetworkStatusFetcher.Params(
-                    userWalletId = userWalletId,
-                    networks = setOfNotNull(networksToUpdate, networkToUpdate),
-                ),
-            )
-        } else {
-            catch(
-                {
-                    networksRepository.getNetworkStatusesSync(
-                        userWalletId = userWalletId,
-                        networks = setOfNotNull(networksToUpdate, networkToUpdate),
-                        refresh = true,
-                    )
-                },
-            ) {
-                raise(it)
-            }
-        }
+        multiNetworkStatusFetcher(
+            MultiNetworkStatusFetcher.Params(
+                userWalletId = userWalletId,
+                networks = setOfNotNull(networksToUpdate, networkToUpdate),
+            ),
+        )
+            .bind()
     }
 
     private suspend fun refreshUpdatedYieldBalances(userWalletId: UserWalletId, addedCurrency: CryptoCurrency) {

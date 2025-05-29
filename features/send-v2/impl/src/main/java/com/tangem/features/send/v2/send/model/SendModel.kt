@@ -24,9 +24,8 @@ import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
 import com.tangem.domain.qrscanning.usecases.ParseQrCodeUseCase
-import com.tangem.domain.tokens.GetCurrencyStatusUpdatesUseCase
 import com.tangem.domain.tokens.GetFeePaidCryptoCurrencyStatusSyncUseCase
-import com.tangem.domain.tokens.GetPrimaryCurrencyStatusUpdatesUseCase
+import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
@@ -73,8 +72,7 @@ internal class SendModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
     private val getUserWalletUseCase: GetUserWalletUseCase,
-    private val getCurrencyStatusUpdatesUseCase: GetCurrencyStatusUpdatesUseCase,
-    private val getPrimaryCurrencyStatusUpdatesUseCase: GetPrimaryCurrencyStatusUpdatesUseCase,
+    private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val listenToQrScanningUseCase: ListenToQrScanningUseCase,
@@ -275,13 +273,13 @@ internal class SendModel @Inject constructor(
         isMultiCurrency: Boolean,
     ): Flow<Either<CurrencyStatusError, CryptoCurrencyStatus>> {
         return if (isMultiCurrency) {
-            getCurrencyStatusUpdatesUseCase(
+            getSingleCryptoCurrencyStatusUseCase.invokeMultiWallet(
                 userWalletId = userWalletId,
                 currencyId = cryptoCurrency.id,
                 isSingleWalletWithTokens = isSingleWalletWithToken,
             )
         } else {
-            getPrimaryCurrencyStatusUpdatesUseCase(userWalletId = userWalletId)
+            getSingleCryptoCurrencyStatusUseCase.invokeSingleWallet(userWalletId = userWalletId)
         }
     }
 
@@ -335,7 +333,7 @@ internal class SendModel @Inject constructor(
         saveBlockchainErrorUseCase(
             error = BlockchainErrorInfo(
                 errorMessage = errorMessage.orEmpty(),
-                blockchainId = cryptoCurrency.network.id.value,
+                blockchainId = cryptoCurrency.network.rawId,
                 derivationPath = cryptoCurrency.network.derivationPath.value,
                 destinationAddress = "",
                 tokenSymbol = "",
