@@ -23,14 +23,12 @@ import com.tangem.domain.quotes.QuotesRepositoryV2
 import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
 import com.tangem.domain.tokens.GetCurrencyCheckUseCase
 import com.tangem.domain.tokens.GetMultiCryptoCurrencyStatusUseCase
-import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.FeePaidCurrency
 import com.tangem.domain.tokens.model.Quote
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
-import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.utils.convertToSdkAmount
@@ -67,9 +65,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     private val createTransactionExtrasUseCase: CreateTransactionDataExtrasUseCase,
     private val createApprovalTransactionUseCase: CreateApprovalTransactionUseCase,
     private val isDemoCardUseCase: IsDemoCardUseCase,
-    private val quotesRepository: QuotesRepository,
     private val quotesRepositoryV2: QuotesRepositoryV2,
-    private val tokensFeatureToggles: TokensFeatureToggles,
     private val swapTransactionRepository: SwapTransactionRepository,
     private val currencyChecksRepository: CurrencyChecksRepository,
     private val appCurrencyRepository: AppCurrencyRepository,
@@ -1802,7 +1798,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     private suspend fun getQuotes(vararg ids: CryptoCurrency.ID): Map<CryptoCurrency.ID, Quote.Value> {
         val set = ids.mapNotNull { it.rawCurrencyId }
             .toSet()
-            .getQuotesOrEmpty(false)
+            .getQuotesOrEmpty()
             .filterIsInstance<Quote.Value>()
 
         return ids
@@ -1810,16 +1806,10 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             .toMap()
     }
 
-    private suspend fun Set<CryptoCurrency.RawID>.getQuotesOrEmpty(refresh: Boolean): Set<Quote> {
-        return try {
-            if (tokensFeatureToggles.isQuotesLoadingRefactoringEnabled) {
-                quotesRepositoryV2.getMultiQuoteSyncOrNull(currenciesIds = this).orEmpty()
-            } else {
-                quotesRepository.getQuotesSync(this, refresh)
-            }
-        } catch (t: Throwable) {
-            emptySet()
-        }
+    private suspend fun Set<CryptoCurrency.RawID>.getQuotesOrEmpty(): Set<Quote> {
+        return runCatching { quotesRepositoryV2.getMultiQuoteSyncOrNull(currenciesIds = this) }
+            .getOrNull()
+            .orEmpty()
     }
 
     companion object {
