@@ -9,7 +9,7 @@ import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.StartReferralBody
 import com.tangem.datasource.local.userwallet.UserWalletsStore
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.referral.converters.ReferralConverter
 import com.tangem.feature.referral.domain.ReferralRepository
