@@ -15,6 +15,7 @@ dependencies {
 
     /* Project - API */
     implementation(projects.features.details.api)
+    implementation(projects.features.wallet.api)
     implementation(projects.features.disclaimer.api)
     implementation(projects.features.tester.api)
 
