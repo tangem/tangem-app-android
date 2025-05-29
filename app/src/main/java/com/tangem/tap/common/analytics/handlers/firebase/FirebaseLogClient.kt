@@ -11,6 +11,15 @@ internal class FirebaseLogClient(
 ) : FirebaseAnalyticsClient {
 
     private val logger: AnalyticsEventsLogger = AnalyticsEventsLogger(FirebaseAnalyticsHandler.ID, jsonConverter)
+    private var userId: String? = null
+
+    override fun setUserId(userId: String) {
+        this.userId = userId
+    }
+
+    override fun clearUserId() {
+        this.userId = null
+    }
 
     override fun logEvent(event: String, params: Map<String, String>) {
         logger.logEvent(event, params)

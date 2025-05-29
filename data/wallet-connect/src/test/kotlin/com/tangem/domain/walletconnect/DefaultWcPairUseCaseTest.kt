@@ -8,6 +8,7 @@ import com.domain.blockaid.models.dapp.CheckDAppResult
 import com.domain.blockaid.models.dapp.DAppData
 import com.reown.walletkit.client.Wallet
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.data.walletconnect.pair.AssociateNetworksDelegate
 import com.tangem.data.walletconnect.pair.CaipNamespaceDelegate
 import com.tangem.data.walletconnect.pair.DefaultWcPairUseCase
@@ -20,6 +21,7 @@ import com.tangem.domain.walletconnect.model.WcSession
 import com.tangem.domain.walletconnect.model.WcSessionApprove
 import com.tangem.domain.walletconnect.repository.WcSessionsManager
 import com.tangem.domain.walletconnect.usecase.pair.WcPairState
+import com.tangem.domain.wallets.models.UserWalletId
 import io.mockk.coEvery
 import io.mockk.coVerifyOrder
 import io.mockk.mockk
@@ -33,6 +35,7 @@ internal class DefaultWcPairUseCaseTest {
     private val sessionsManager: WcSessionsManager = mockk<WcSessionsManager>()
     private val associateNetworksDelegate: AssociateNetworksDelegate = mockk<AssociateNetworksDelegate>()
     private val caipNamespaceDelegate: CaipNamespaceDelegate = mockk<CaipNamespaceDelegate>()
+    private val analytics: AnalyticsEventHandler = mockk<AnalyticsEventHandler>(relaxed = true)
     private val sdkDelegate: WcPairSdkDelegate = mockk<WcPairSdkDelegate>()
     private val blockAidVerifier: BlockAidVerifier = mockk<BlockAidVerifier>()
 
@@ -91,6 +94,7 @@ internal class DefaultWcPairUseCaseTest {
             wallet = sessionForApprove.wallet,
             sdkModel = WcSdkSessionConverter.convert(this),
             securityStatus = CheckDAppResult.SAFE,
+            networks = setOf(),
         )
 
     private fun useCaseFactory() = DefaultWcPairUseCase(
@@ -99,7 +103,8 @@ internal class DefaultWcPairUseCaseTest {
         caipNamespaceDelegate = caipNamespaceDelegate,
         sdkDelegate = sdkDelegate,
         blockAidVerifier = blockAidVerifier,
-        pairRequest = WcPairRequest(url, source),
+        analytics = analytics,
+        pairRequest = WcPairRequest(userWalletId = UserWalletId(""), uri = url, source = source),
     )
 
     @Before
