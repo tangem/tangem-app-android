@@ -12,7 +12,6 @@ import com.tangem.domain.staking.fetcher.YieldBalanceFetcherParams
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.staking.single.SingleYieldBalanceFetcher
 import com.tangem.domain.tokens.repository.CurrenciesRepository
-import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -29,7 +28,6 @@ import kotlinx.coroutines.coroutineScope
 class AddCryptoCurrenciesUseCase(
     private val currenciesRepository: CurrenciesRepository,
     private val stakingRepository: StakingRepository,
-    private val quotesRepository: QuotesRepository,
     private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
     private val multiQuoteFetcher: MultiQuoteFetcher,
     private val singleYieldBalanceFetcher: SingleYieldBalanceFetcher,
@@ -165,19 +163,12 @@ class AddCryptoCurrenciesUseCase(
     }
 
     private suspend fun refreshUpdatedQuotes(currencyToAdd: CryptoCurrency) {
-        if (tokensFeatureToggles.isQuotesLoadingRefactoringEnabled) {
-            multiQuoteFetcher(
-                params = MultiQuoteFetcher.Params(
-                    currenciesIds = setOfNotNull(currencyToAdd.id.rawCurrencyId),
-                    appCurrencyId = null,
-                ),
-            )
-        } else {
-            quotesRepository.fetchQuotes(
+        multiQuoteFetcher(
+            params = MultiQuoteFetcher.Params(
                 currenciesIds = setOfNotNull(currencyToAdd.id.rawCurrencyId),
-                refresh = true,
-            )
-        }
+                appCurrencyId = null,
+            ),
+        )
     }
 
     private suspend fun Raise<Throwable>.createTokenCurrency(
