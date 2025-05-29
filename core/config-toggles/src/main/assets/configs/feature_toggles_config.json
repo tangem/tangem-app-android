@@ -56,10 +56,6 @@
         "version": "undefined"
     },
     {
-        "name": "QUOTES_LOADING_REFACTORING_ENABLED",
-        "version": "5.24.0"
-    },
-    {
         "name": "STAKING_LOADING_REFACTORING_ENABLED",
         "version": "5.25.0"
     },
