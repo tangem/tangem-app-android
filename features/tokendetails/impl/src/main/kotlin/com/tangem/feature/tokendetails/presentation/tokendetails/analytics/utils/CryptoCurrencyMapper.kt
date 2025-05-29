@@ -1,6 +1,6 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.analytics.utils
 
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 
 internal fun CryptoCurrency.toAnalyticsParams(): Map<String, String> {
     return mapOf(

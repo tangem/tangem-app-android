@@ -30,7 +30,7 @@ internal class BitcoinCustomFeeConverter(
 ) : CustomFeeConverter<Fee.Bitcoin> {
 
     private val currencyStatus = feeCryptoCurrencyStatus.value
-    private val network = feeCryptoCurrencyStatus.currency.network.id.value
+    private val network = feeCryptoCurrencyStatus.currency.network.rawId
 
     override fun convert(value: Fee.Bitcoin): ImmutableList<CustomFeeFieldUM> {
         val feeValue = value.amount.value
