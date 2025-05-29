@@ -11,8 +11,7 @@ data class CardActivationRemoteStateResponse(
     data class Result(
         @Json(name = "status") val status: String,
         @Json(name = "order") val activationOrder: ActivationOrder?,
-        @Json(name = "stepChangeCode") val stepChangeCode: Int?,
-        @Json(name = "updatedAt") val updatedAt: String?,
+        @Json(name = "step_error") val stepError: String?,
     )
 
     @JsonClass(generateAdapter = true)

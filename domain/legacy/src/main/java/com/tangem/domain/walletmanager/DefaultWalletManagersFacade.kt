@@ -20,22 +20,23 @@ import com.tangem.blockchain.nft.models.NFTAsset
 import com.tangem.blockchain.nft.models.NFTCollection
 import com.tangem.blockchain.transactionhistory.models.TransactionHistoryRequest
 import com.tangem.blockchainsdk.BlockchainSDKFactory
+import com.tangem.blockchainsdk.models.UpdateWalletManagerResult
+import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.datasource.asset.loader.AssetLoader
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.datasource.local.walletmanager.WalletManagersStore
 import com.tangem.domain.common.util.hasDerivation
 import com.tangem.domain.demo.DemoConfig
-import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.txhistory.models.PaginationWrapper
-import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryState
 import com.tangem.domain.walletmanager.model.RentData
 import com.tangem.domain.walletmanager.model.SmartContractMethod
 import com.tangem.domain.walletmanager.model.TokenInfo
-import com.tangem.domain.walletmanager.model.UpdateWalletManagerResult
 import com.tangem.domain.walletmanager.utils.*
 import com.tangem.domain.walletmanager.utils.WalletManagerFactory
 import com.tangem.domain.wallets.models.UserWallet
@@ -78,7 +79,7 @@ class DefaultWalletManagersFacade(
         extraTokens: Set<CryptoCurrency.Token>,
     ): UpdateWalletManagerResult {
         val userWallet = getUserWallet(userWalletId)
-        val blockchain = Blockchain.fromId(network.id.value)
+        val blockchain = network.toBlockchain()
         val derivationPath = network.derivationPath.value
 
         return getAndUpdateWalletManager(userWallet, blockchain, derivationPath, extraTokens)
@@ -88,7 +89,7 @@ class DefaultWalletManagersFacade(
         if (networks.isEmpty()) return
 
         val blockchainsToDerivationPaths = networks.map {
-            Blockchain.fromId(it.id.value) to it.derivationPath.value
+            it.toBlockchain() to it.derivationPath.value
         }
 
         withContext(dispatchers.io) {
@@ -141,7 +142,7 @@ class DefaultWalletManagersFacade(
         withContext(dispatchers.io) {
             val walletManager = walletManagersStore.getSyncOrNull(
                 userWalletId = userWalletId,
-                blockchain = Blockchain.fromId(network.id.value),
+                blockchain = network.toBlockchain(),
                 derivationPath = network.derivationPath.value,
             ) ?: return@withContext
 
@@ -158,7 +159,7 @@ class DefaultWalletManagersFacade(
         network: Network,
     ): UpdateWalletManagerResult {
         val userWallet = getUserWallet(userWalletId)
-        val blockchain = Blockchain.fromId(network.id.value)
+        val blockchain = network.toBlockchain()
         val derivationPath = network.derivationPath.value
 
         if (derivationPath != null && !userWallet.scanResponse.hasDerivation(blockchain, derivationPath)) {
@@ -181,7 +182,7 @@ class DefaultWalletManagersFacade(
         addressType: AddressType,
         contractAddress: String?,
     ): String {
-        val blockchain = Blockchain.fromId(network.id.value)
+        val blockchain = network.toBlockchain()
         val walletManager = getOrCreateWalletManager(
             userWalletId = userWalletId,
             network = network,
@@ -234,7 +235,7 @@ class DefaultWalletManagersFacade(
         currency: CryptoCurrency,
         page: Page,
         pageSize: Int,
-    ): PaginationWrapper<TxHistoryItem> {
+    ): PaginationWrapper<TxInfo> {
         val walletManager = getOrCreateWalletManager(
             userWalletId = userWalletId,
             network = currency.network,
@@ -385,7 +386,7 @@ class DefaultWalletManagersFacade(
 
     @Deprecated("Will be removed in future")
     override suspend fun getOrCreateWalletManager(userWalletId: UserWalletId, network: Network): WalletManager? {
-        val blockchain = Blockchain.fromId(network.id.value)
+        val blockchain = network.toBlockchain()
         return getOrCreateWalletManager(
             userWalletId = userWalletId,
             blockchain = blockchain,
@@ -477,7 +478,7 @@ class DefaultWalletManagersFacade(
         userWalletId: UserWalletId,
         network: Network,
     ): Result<TransactionFee>? = withContext(dispatchers.io) {
-        val blockchain = Blockchain.fromId(network.id.value)
+        val blockchain = network.toBlockchain()
         val walletManager = getOrCreateWalletManager(
             userWalletId = userWalletId,
             blockchain = blockchain,
@@ -534,10 +535,7 @@ class DefaultWalletManagersFacade(
         return walletManager?.createTransaction(amount, fee, destination)
     }
 
-    override suspend fun getRecentTransactions(
-        userWalletId: UserWalletId,
-        currency: CryptoCurrency,
-    ): List<TxHistoryItem> {
+    override suspend fun getRecentTransactions(userWalletId: UserWalletId, currency: CryptoCurrency): List<TxInfo> {
         val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = currency.network)
 
         if (walletManager == null) {
@@ -569,7 +567,7 @@ class DefaultWalletManagersFacade(
         decimals: Int,
         id: String?,
     ): BigDecimal {
-        val blockchain = Blockchain.fromId(network.id.value)
+        val blockchain = network.toBlockchain()
         val walletManager = getOrCreateWalletManager(
             userWalletId = userWalletId,
             blockchain = blockchain,
@@ -640,7 +638,7 @@ class DefaultWalletManagersFacade(
     }
 
     override suspend fun checkUtxoConsolidationAvailability(userWalletId: UserWalletId, network: Network): Boolean {
-        val blockchain = Blockchain.fromId(network.id.value)
+        val blockchain = network.toBlockchain()
         val walletManager = getOrCreateWalletManager(
             userWalletId = userWalletId,
             blockchain = blockchain,
@@ -651,7 +649,7 @@ class DefaultWalletManagersFacade(
     }
 
     override suspend fun getNFTCollections(userWalletId: UserWalletId, network: Network): List<NFTCollection> {
-        val blockchain = Blockchain.fromId(network.id.value)
+        val blockchain = network.toBlockchain()
         val walletManager = getOrCreateWalletManager(
             userWalletId = userWalletId,
             blockchain = blockchain,
@@ -666,7 +664,7 @@ class DefaultWalletManagersFacade(
         network: Network,
         collectionIdentifier: NFTCollection.Identifier,
     ): List<NFTAsset> {
-        val blockchain = Blockchain.fromId(network.id.value)
+        val blockchain = network.toBlockchain()
         val walletManager = getOrCreateWalletManager(
             userWalletId = userWalletId,
             blockchain = blockchain,
@@ -682,7 +680,7 @@ class DefaultWalletManagersFacade(
         collectionIdentifier: NFTCollection.Identifier,
         assetIdentifier: NFTAsset.Identifier,
     ): NFTAsset? {
-        val blockchain = Blockchain.fromId(network.id.value)
+        val blockchain = network.toBlockchain()
         val walletManager = getOrCreateWalletManager(
             userWalletId = userWalletId,
             blockchain = blockchain,
@@ -697,7 +695,7 @@ class DefaultWalletManagersFacade(
         collectionIdentifier: NFTCollection.Identifier,
         assetIdentifier: NFTAsset.Identifier,
     ): NFTAsset.SalePrice? {
-        val blockchain = Blockchain.fromId(network.id.value)
+        val blockchain = network.toBlockchain()
         val walletManager = getOrCreateWalletManager(
             userWalletId = userWalletId,
             blockchain = blockchain,
@@ -707,7 +705,7 @@ class DefaultWalletManagersFacade(
     }
 
     override suspend fun getNFTExploreUrl(network: Network, assetIdentifier: NFTAsset.Identifier): String? {
-        val blockchain = Blockchain.fromId(network.id.value)
+        val blockchain = network.toBlockchain()
         return blockchain.getNFTExploreUrl(assetIdentifier)
     }
 

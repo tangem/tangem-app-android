@@ -8,7 +8,7 @@ import com.tangem.blockchain.common.TransactionSigner
 import com.tangem.domain.card.models.TwinKey
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.transaction.TransactionRepository
 import com.tangem.domain.wallets.models.UserWallet
 
@@ -30,6 +30,7 @@ class PrepareForSendUseCase(
         )
             .fold(onSuccess = { it.right() }, onFailure = { it.left() })
     }
+
     suspend operator fun invoke(
         transactionData: List<TransactionData>,
         userWallet: UserWallet,

@@ -2,11 +2,11 @@ package com.tangem.features.staking.impl.presentation.state.stub
 
 import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.common.ui.notifications.NotificationUM
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.staking.model.stakekit.Yield
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.features.staking.impl.presentation.model.StakingClickIntents
 import com.tangem.features.staking.impl.presentation.state.BalanceState
 import com.tangem.features.staking.impl.presentation.state.bottomsheet.InfoType
-import com.tangem.features.staking.impl.presentation.model.StakingClickIntents
 import java.math.BigDecimal
 
 @Suppress("TooManyFunctions")

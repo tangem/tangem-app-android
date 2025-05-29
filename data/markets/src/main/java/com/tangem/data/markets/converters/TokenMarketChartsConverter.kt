@@ -4,7 +4,7 @@ import com.tangem.datasource.api.markets.models.response.TokenMarketChartListRes
 import com.tangem.domain.markets.PriceChangeInterval
 import com.tangem.domain.markets.TokenMarket
 import com.tangem.domain.markets.TokenMarketListConfig
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 
 internal object TokenMarketChartsConverter {
 

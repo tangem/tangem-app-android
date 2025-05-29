@@ -17,8 +17,9 @@ android {
 
 dependencies {
     /** Project - Domain */
-    implementation(projects.domain.tokens.models)
     implementation(projects.domain.appTheme.models)
+    implementation(projects.domain.models)
+    implementation(projects.domain.tokens.models)
 
     /** Project - Core */
     implementation(projects.core.res)

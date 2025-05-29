@@ -55,7 +55,7 @@ internal class TokenDetailsStakingInfoConverter(
     private fun getStakingInfoBlock(status: CryptoCurrencyStatus, state: TokenDetailsState): StakingBlockUM? {
         val yieldBalance = status.value.yieldBalance as? YieldBalance.Data
 
-        val stakingCryptoAmount = yieldBalance?.getTotalStakingBalance(status.currency.network.id.value)
+        val stakingCryptoAmount = yieldBalance?.getTotalStakingBalance(status.currency.network.rawId)
         val pendingBalances = yieldBalance?.balance?.items ?: emptyList()
 
         val iconState = state.tokenInfoBlockState.iconState
@@ -143,7 +143,7 @@ internal class TokenDetailsStakingInfoConverter(
     }
 
     private fun getRewardText(status: CryptoCurrencyStatus, stakingRewardAmount: BigDecimal?): TextReference {
-        val blockchainId = status.currency.network.id.value
+        val blockchainId = status.currency.network.rawId
         val rewardBlockType = when {
             isStakingRewardUnavailable(blockchainId) -> RewardBlockType.RewardUnavailable
             stakingRewardAmount.isNullOrZero() -> RewardBlockType.NoRewards
