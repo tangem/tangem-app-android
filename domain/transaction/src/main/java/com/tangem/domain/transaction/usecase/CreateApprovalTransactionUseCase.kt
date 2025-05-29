@@ -2,7 +2,7 @@ package com.tangem.domain.transaction.usecase
 
 import arrow.core.Either
 import com.tangem.blockchain.common.transaction.Fee
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.transaction.TransactionRepository
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.wallets.models.UserWalletId
