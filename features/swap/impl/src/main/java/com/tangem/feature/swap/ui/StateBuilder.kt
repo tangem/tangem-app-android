@@ -750,6 +750,9 @@ internal class StateBuilder(
 
     fun loadingPermissionState(uiState: SwapStateHolder): SwapStateHolder {
         return uiState.copy(
+            swapButton = uiState.swapButton.copy(
+                enabled = false,
+            ),
             permissionState = GiveTxPermissionState.InProgress,
             notifications = notificationsFactory.getApprovalInProgressStateNotification(uiState.notifications),
         )
