@@ -3,12 +3,12 @@ package com.tangem.data.txhistory.repository
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.txhistory.repository.paging.TxHistoryPageBatchFetcher
 import com.tangem.datasource.local.txhistory.TxHistoryItemsStore
+import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.txhistory.model.TxHistoryListBatchFlow
 import com.tangem.domain.txhistory.model.TxHistoryListBatchingContext
 import com.tangem.domain.txhistory.model.TxHistoryListConfig
 import com.tangem.domain.txhistory.models.Page
 import com.tangem.domain.txhistory.models.PaginationWrapper
-import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.repository.TxHistoryRepositoryV2
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.walletmanager.utils.SdkPageConverter
@@ -39,7 +39,7 @@ internal class RefactoredTxHistoryRepository(
 
     private fun createFetcher(
         batchSize: Int,
-    ): TxHistoryPageBatchFetcher<TxHistoryListConfig, PaginationWrapper<TxHistoryItem>> =
+    ): TxHistoryPageBatchFetcher<TxHistoryListConfig, PaginationWrapper<TxInfo>> =
         TxHistoryPageBatchFetcher { request, _ ->
             val wrappedItems = loadItems(request, batchSize)
             BatchFetchResult.Success(
@@ -52,7 +52,7 @@ internal class RefactoredTxHistoryRepository(
     private suspend fun loadItems(
         request: TxHistoryPageBatchFetcher.Request<TxHistoryListConfig>,
         batchSize: Int,
-    ): PaginationWrapper<TxHistoryItem> {
+    ): PaginationWrapper<TxInfo> {
         cacheRegistry.invokeOnExpire(
             key = getTxHistoryPageKey(request.page, request.params),
             skipCache = request.params.refresh,
@@ -76,7 +76,7 @@ internal class RefactoredTxHistoryRepository(
     private suspend fun TxHistoryItemsStore.getSync(
         pageToLoad: Page,
         config: TxHistoryListConfig,
-    ): PaginationWrapper<TxHistoryItem> {
+    ): PaginationWrapper<TxInfo> {
         val storedItems = requireNotNull(getSyncOrNull(config.storeKey, pageToLoad)) {
             "The transaction history page #$pageToLoad could not be retrieved"
         }
@@ -84,9 +84,9 @@ internal class RefactoredTxHistoryRepository(
         return if (pageToLoad is Page.Initial) storedItems.addRecentTransactions(config) else storedItems
     }
 
-    private suspend fun PaginationWrapper<TxHistoryItem>.addRecentTransactions(
+    private suspend fun PaginationWrapper<TxInfo>.addRecentTransactions(
         config: TxHistoryListConfig,
-    ): PaginationWrapper<TxHistoryItem> {
+    ): PaginationWrapper<TxInfo> {
         val recentItems = walletManagersFacade.getRecentTransactions(
             userWalletId = config.userWalletId,
             currency = config.currency,
@@ -104,7 +104,7 @@ internal class RefactoredTxHistoryRepository(
                 recentItems.joinToString(
                     prefix = "[",
                     postfix = "]",
-                    transform = TxHistoryItem::txHash,
+                    transform = TxInfo::txHash,
                 ),
             )
 
@@ -112,11 +112,11 @@ internal class RefactoredTxHistoryRepository(
         }
     }
 
-    private fun List<TxHistoryItem>.filterUnconfirmedTransaction(): List<TxHistoryItem> {
-        return filter { it.status == TxHistoryItem.TransactionStatus.Unconfirmed }
+    private fun List<TxInfo>.filterUnconfirmedTransaction(): List<TxInfo> {
+        return filter { it.status == TxInfo.TransactionStatus.Unconfirmed }
     }
 
-    private fun List<TxHistoryItem>.filterIfTxAlreadyAdded(apiItems: List<TxHistoryItem>): List<TxHistoryItem> {
+    private fun List<TxInfo>.filterIfTxAlreadyAdded(apiItems: List<TxInfo>): List<TxInfo> {
         return filter { item -> apiItems.none { it.txHash == item.txHash } }
     }
 
