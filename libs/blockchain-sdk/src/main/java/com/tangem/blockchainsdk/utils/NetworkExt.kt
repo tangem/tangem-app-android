@@ -7,4 +7,6 @@ import com.tangem.domain.models.network.Network
 fun Network.toBlockchain(): Blockchain = id.toBlockchain()
 
 /** Converts [Network.ID] to [Blockchain] */
-fun Network.ID.toBlockchain(): Blockchain = Blockchain.fromId(id = rawId.value)
+fun Network.ID.toBlockchain(): Blockchain = rawId.toBlockchain()
+
+fun Network.RawID.toBlockchain(): Blockchain = Blockchain.fromId(id = value)
