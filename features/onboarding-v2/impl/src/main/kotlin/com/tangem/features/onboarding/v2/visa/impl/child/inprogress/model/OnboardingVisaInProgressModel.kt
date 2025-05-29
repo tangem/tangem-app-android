@@ -26,6 +26,7 @@ import com.tangem.features.onboarding.v2.visa.impl.child.inprogress.OnboardingVi
 import com.tangem.features.onboarding.v2.visa.impl.child.inprogress.OnboardingVisaInProgressComponent.Params
 import com.tangem.features.onboarding.v2.visa.impl.child.welcome.model.analytics.OnboardingVisaAnalyticsEvent
 import com.tangem.features.onboarding.v2.visa.impl.child.welcome.model.analytics.VisaAnalyticsEvent
+import com.tangem.features.onboarding.v2.visa.impl.common.unexpectedErrorAlertBS
 import com.tangem.features.onboarding.v2.visa.impl.route.OnboardingVisaRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.delay
@@ -69,7 +70,12 @@ internal class OnboardingVisaInProgressModel @Inject constructor(
             while (true) {
                 val result = visaActivationRepository.getActivationRemoteState()
                     .getOrElse {
-                        uiMessageSender.showErrorDialog(it)
+                        if (it.isUnknown()) {
+                            uiMessageSender.send(unexpectedErrorAlertBS)
+                        } else {
+                            uiMessageSender.showErrorDialog(it)
+                        }
+                        analyticsEventHandler.send(VisaAnalyticsEvent.ErrorOnboarding(it))
                         delay(timeMillis = 2000)
                         runShortPolling()
                         return@launch
