@@ -1,11 +1,10 @@
 package com.tangem.data.networks.multi
 
-import com.tangem.blockchainsdk.utils.ExcludedBlockchains
-import com.tangem.data.common.currency.getNetwork
-import com.tangem.data.networks.store.NetworksStatusesStoreV2
+import com.tangem.data.common.network.NetworkFactory
+import com.tangem.data.networks.store.NetworksStatusesStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.networks.multi.MultiNetworkStatusProducer
-import com.tangem.domain.tokens.model.NetworkStatus
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -19,14 +18,14 @@ import timber.log.Timber
  * @property params                params
  * @property networksStatusesStore networks statuses store
  * @property userWalletsStore      user wallets store
- * @property excludedBlockchains   excluded blockchains
+ * @property networkFactory        network factory
  * @property dispatchers           dispatchers
  */
 internal class DefaultMultiNetworkStatusProducer @AssistedInject constructor(
     @Assisted val params: MultiNetworkStatusProducer.Params,
-    private val networksStatusesStore: NetworksStatusesStoreV2,
+    private val networksStatusesStore: NetworksStatusesStore,
     private val userWalletsStore: UserWalletsStore,
-    private val excludedBlockchains: ExcludedBlockchains,
+    private val networkFactory: NetworkFactory,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : MultiNetworkStatusProducer {
 
@@ -34,8 +33,8 @@ internal class DefaultMultiNetworkStatusProducer @AssistedInject constructor(
         get() = setOf()
 
     override fun produce(): Flow<Set<NetworkStatus>> {
-        return networksStatusesStore
-            .get(userWalletId = params.userWalletId)
+        return networksStatusesStore.get(userWalletId = params.userWalletId)
+            .distinctUntilChanged()
             .mapNotNull { statuses ->
                 val userWallet = userWalletsStore.getSyncOrNull(params.userWalletId)
 
@@ -45,11 +44,10 @@ internal class DefaultMultiNetworkStatusProducer @AssistedInject constructor(
                 }
 
                 statuses.mapNotNullTo(hashSetOf()) { status ->
-                    val network = getNetwork(
-                        networkId = status.id.networkId,
+                    val network = networkFactory.create(
+                        networkId = status.id,
                         derivationPath = status.id.derivationPath,
                         scanResponse = userWallet.scanResponse,
-                        excludedBlockchains = excludedBlockchains,
                     ) ?: return@mapNotNullTo null
 
                     NetworkStatus(network = network, value = status.value)
