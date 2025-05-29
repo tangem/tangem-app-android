@@ -29,7 +29,13 @@ internal class DevApiConfigsManager(
 
     private val _apiConfigs = MutableStateFlow(value = apiConfigs.associateWith { it.defaultEnvironment })
 
+    override val isInitialized: StateFlow<Boolean> get() = _isInitialized.asStateFlow()
+
+    private val _isInitialized = MutableStateFlow(value = false)
+
     override fun initialize() {
+        _isInitialized.value = false
+
         // We can't use appPreferencesStore.getObjectMap as base flow,
         // because we should keep possibility to work with configs synchronous.
         // See [getBaseUrl]
@@ -42,8 +48,12 @@ internal class DevApiConfigsManager(
                         savedEnvironments[config.id.name] ?: currentEnvironment
                     }
                 }
+
+                if (!_isInitialized.value) {
+                    _isInitialized.value = true
+                }
             }
-            .launchIn(CoroutineScope(SupervisorJob() + dispatchers.main))
+            .launchIn(CoroutineScope(SupervisorJob() + dispatchers.default))
     }
 
     override fun getEnvironmentConfig(id: ApiConfig.ID): ApiEnvironmentConfig {

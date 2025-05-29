@@ -26,7 +26,7 @@ internal data class WcConnectionsUM(
 internal data class WcConnectedAppInfo(
     val name: String,
     val iconUrl: String,
+    val verifiedState: VerifiedDAppState,
     val subtitle: TextReference = stringReference("Connected App"),
-    val isVerified: Boolean = false,
     val onClick: () -> Unit,
 )

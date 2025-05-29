@@ -1,22 +1,26 @@
 package com.tangem.domain.visa.repository
 
+import arrow.core.Either
+import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.model.*
 
 interface VisaActivationRepository {
 
-    suspend fun getActivationRemoteState(): VisaActivationRemoteState
+    suspend fun getActivationRemoteState(): Either<VisaApiError, VisaActivationRemoteState>
 
-    suspend fun getCardWalletAcceptanceData(request: VisaCardWalletDataToSignRequest): VisaDataToSignByCardWallet
+    suspend fun getCardWalletAcceptanceData(
+        request: VisaCardWalletDataToSignRequest,
+    ): Either<VisaApiError, VisaDataToSignByCardWallet>
 
     suspend fun getCustomerWalletAcceptanceData(
         request: VisaCustomerWalletDataToSignRequest,
-    ): VisaDataToSignByCustomerWallet
+    ): Either<VisaApiError, VisaDataToSignByCustomerWallet>
 
-    suspend fun activateCard(signedData: VisaSignedActivationDataByCardWallet)
+    suspend fun activateCard(signedData: VisaSignedActivationDataByCardWallet): Either<VisaApiError, Unit>
 
-    suspend fun approveByCustomerWallet(signedData: VisaSignedDataByCustomerWallet)
+    suspend fun approveByCustomerWallet(signedData: VisaSignedDataByCustomerWallet): Either<VisaApiError, Unit>
 
-    suspend fun sendPinCode(pinCode: VisaEncryptedPinCode)
+    suspend fun sendPinCode(pinCode: VisaEncryptedPinCode): Either<VisaApiError, Unit>
 
     suspend fun getPinCodeRsaEncryptionPublicKey(): String
 
