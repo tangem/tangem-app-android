@@ -95,7 +95,7 @@ internal class SendConfirmationNotificationsTransformer(
             )
         }
         val fiatFee = formatFooterFiatFee(
-            amount = fee.amount,
+            amount = fee.amount.copy(value = fiatFeeValue),
             isFeeConvertibleToFiat = feeUM.isFeeConvertibleToFiat,
             isFeeApproximate = feeUM.isFeeApproximate,
             appCurrency = appCurrency,
