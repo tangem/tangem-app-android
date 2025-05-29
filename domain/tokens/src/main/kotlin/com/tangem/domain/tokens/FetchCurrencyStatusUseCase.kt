@@ -13,7 +13,6 @@ import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.staking.single.SingleYieldBalanceFetcher
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.repository.CurrenciesRepository
-import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -25,13 +24,11 @@ import kotlinx.coroutines.coroutineScope
  * by providing a specific currency ID or fetching the status of the primary currency.
  *
  * @param currenciesRepository The repository for retrieving currency-related data.
- * @param quotesRepository The repository for retrieving cryptocurrency quotes.
  */
 // TODO: Add tests
 @Suppress("LongParameterList")
 class FetchCurrencyStatusUseCase(
     private val currenciesRepository: CurrenciesRepository,
-    private val quotesRepository: QuotesRepository,
     private val stakingRepository: StakingRepository,
     private val singleNetworkStatusFetcher: SingleNetworkStatusFetcher,
     private val multiQuoteFetcher: MultiQuoteFetcher,
@@ -86,7 +83,7 @@ class FetchCurrencyStatusUseCase(
             fetchNetworkStatus(userWalletId, currency.network)
         }
         val fetchQuote = async {
-            fetchQuote(currency.id, refresh)
+            fetchQuote(currency.id)
         }
         val fetchStakingBalance = async {
             fetchStakingBalance(userWalletId, currency, refresh)
@@ -125,21 +122,15 @@ class FetchCurrencyStatusUseCase(
             .bind()
     }
 
-    private suspend fun Raise<CurrencyStatusError>.fetchQuote(currencyId: CryptoCurrency.ID, refresh: Boolean) {
-        if (tokensFeatureToggles.isQuotesLoadingRefactoringEnabled) {
-            multiQuoteFetcher(
-                params = MultiQuoteFetcher.Params(
-                    currenciesIds = setOfNotNull(currencyId.rawCurrencyId),
-                    appCurrencyId = null,
-                ),
-            )
-        } else {
-            catch(
-                block = { quotesRepository.getQuotesSync(setOfNotNull(currencyId.rawCurrencyId), refresh) },
-            ) {
-                raise(CurrencyStatusError.DataError(it))
-            }
-        }
+    private suspend fun Raise<CurrencyStatusError>.fetchQuote(currencyId: CryptoCurrency.ID) {
+        multiQuoteFetcher(
+            params = MultiQuoteFetcher.Params(
+                currenciesIds = setOfNotNull(currencyId.rawCurrencyId),
+                appCurrencyId = null,
+            ),
+        )
+            .mapLeft { CurrencyStatusError.DataError(it) }
+            .bind()
     }
 
     private suspend fun Raise<CurrencyStatusError>.fetchStakingBalance(
