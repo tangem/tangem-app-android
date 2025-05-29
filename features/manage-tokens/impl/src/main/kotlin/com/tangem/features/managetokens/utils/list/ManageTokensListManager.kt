@@ -10,7 +10,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.managetokens.*
 import com.tangem.domain.managetokens.model.*
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.managetokens.analytics.ManageTokensAnalyticEvent
 import com.tangem.features.managetokens.component.ManageTokensSource
