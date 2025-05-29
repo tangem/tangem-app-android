@@ -2,7 +2,7 @@ package com.tangem.domain.walletmanager.utils
 
 import com.tangem.blockchain.common.CryptoCurrencyType
 import com.tangem.blockchain.common.Token
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.utils.converter.Converter
 
 internal class CryptoCurrencyTypeConverter : Converter<CryptoCurrency, CryptoCurrencyType> {

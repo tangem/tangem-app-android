@@ -1,8 +1,8 @@
 package com.tangem.data.txhistory.repository.paging
 
+import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.txhistory.models.Page
 import com.tangem.domain.txhistory.models.PaginationWrapper
-import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.exception.EndOfPaginationException
 import com.tangem.pagination.fetcher.BatchFetcher
@@ -10,7 +10,7 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 
-internal class TxHistoryPageBatchFetcher<TRequestParams : Any, TData : PaginationWrapper<TxHistoryItem>>(
+internal class TxHistoryPageBatchFetcher<TRequestParams : Any, TData : PaginationWrapper<TxInfo>>(
     private val subFetcher: SubFetcher<TRequestParams, TData>,
 ) : BatchFetcher<TRequestParams, TData> {
     data class Request<TRequestParams>(val page: Page, val params: TRequestParams)

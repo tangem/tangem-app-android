@@ -2,11 +2,11 @@ package com.tangem.features.send.impl.presentation.state.recipient
 
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.AddressValidation
 import com.tangem.domain.transaction.error.AddressValidationResult
 import com.tangem.domain.transaction.usecase.ValidateWalletMemoUseCase
-import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.domain.AvailableWallet
 import com.tangem.features.send.impl.presentation.state.SendUiState
@@ -42,7 +42,7 @@ internal class RecipientSendFactory(
         )
     }
 
-    fun onLoadedHistoryList(txHistory: List<TxHistoryItem>): SendUiState {
+    fun onLoadedHistoryList(txHistory: List<TxInfo>): SendUiState {
         val state = currentStateProvider()
         return state.copy(
             recipientState = state.recipientState?.copy(

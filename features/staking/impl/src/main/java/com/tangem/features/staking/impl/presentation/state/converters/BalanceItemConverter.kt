@@ -74,7 +74,7 @@ internal class BalanceItemConverter(
 
     private fun BalanceItem.getBalanceValue(): BigDecimal {
         val isIncludeStakingTotalBalance = BlockchainUtils.isIncludeStakingTotalBalance(
-            blockchainId = cryptoCurrencyStatus.currency.network.id.value,
+            blockchainId = cryptoCurrencyStatus.currency.network.rawId,
         )
         val yieldBalance = cryptoCurrencyStatus.value.yieldBalance as? YieldBalance.Data
         return if (isIncludeStakingTotalBalance) {
