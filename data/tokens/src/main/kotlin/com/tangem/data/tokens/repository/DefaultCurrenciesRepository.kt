@@ -19,6 +19,7 @@ import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObject
 import com.tangem.datasource.local.preferences.utils.getObjectSyncOrNull
 import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.core.error.DataError
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -542,9 +543,13 @@ internal class DefaultCurrenciesRepository(
             value = getSavedUserTokensResponseSync(key = userWalletId),
             lazyMessage = { "Saved tokens empty. Can not perform add currencies action" },
         )
-        userTokensSaver.push(userWalletId, savedCurrencies, onFailSend = {
-            throw IllegalStateException("Unable to push tokens")
-        },)
+        userTokensSaver.push(
+            userWalletId,
+            savedCurrencies,
+            onFailSend = {
+                throw IllegalStateException("Unable to push tokens")
+            },
+        )
     }
 
     private fun getMultiCurrencyWalletCurrencies(userWallet: UserWallet): Flow<List<CryptoCurrency>> {
