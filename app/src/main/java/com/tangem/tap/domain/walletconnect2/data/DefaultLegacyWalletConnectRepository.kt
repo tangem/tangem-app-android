@@ -535,21 +535,24 @@ internal class DefaultLegacyWalletConnectRepository(
             )
         }
 
-        WalletKit.respondSessionRequest(
-            params = Wallet.Params.SessionRequestResponse(
-                sessionTopic = requestData.topic,
-                jsonRpcResponse = Wallet.Model.JsonRpcResponse.JsonRpcResult(
-                    id = requestData.requestId,
-                    result = result,
-                ),
+        val params = Wallet.Params.SessionRequestResponse(
+            sessionTopic = requestData.topic,
+            jsonRpcResponse = Wallet.Model.JsonRpcResponse.JsonRpcResult(
+                id = requestData.requestId,
+                result = result,
             ),
+        )
+        Timber.i("Session request response: $params")
+
+        WalletKit.respondSessionRequest(
+            params = params,
             onSuccess = { response ->
                 Timber.i("Session request responded successfully: $response")
             },
             onError = { error ->
                 Timber.e(error.throwable, "Error while responging session request")
 
-                val params = WalletConnect.RequestHandledParams(
+                val handledParams = WalletConnect.RequestHandledParams(
                     dAppName = session?.name ?: "",
                     dAppUrl = session?.url ?: "",
                     methodName = requestData.method,
@@ -557,7 +560,7 @@ internal class DefaultLegacyWalletConnectRepository(
                     errorCode = WalletConnectError.ValidationError.error,
                     errorDescription = error.throwable.message,
                 )
-                analyticsHandler.send(WalletConnect.SignatureRequestFailed(params))
+                analyticsHandler.send(WalletConnect.SignatureRequestFailed(handledParams))
             },
         )
     }

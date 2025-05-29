@@ -116,7 +116,7 @@ internal class OnrampAmountStateFactory(
             ),
         )
 
-        val bestProvider = selectedQuote as? OnrampQuote.Data
+        val bestProvider = quotes.firstOrNull()
         val isMultipleQuotes = !quotes.isSingleItem()
         val isOtherQuotesHasData = quotes
             .filter { it.paymentMethod == selectedQuote.paymentMethod }
