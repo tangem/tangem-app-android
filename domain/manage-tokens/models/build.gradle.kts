@@ -6,5 +6,6 @@ plugins {
 dependencies {
 
     /* Domain */
+    implementation(projects.domain.models)
     implementation(projects.domain.tokens.models)
 }
