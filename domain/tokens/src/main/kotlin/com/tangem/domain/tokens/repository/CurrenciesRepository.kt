@@ -249,10 +249,7 @@ interface CurrenciesRepository {
     ): CryptoCurrency.Token
 
     /** Get crypto currencies by [currencyRawId] from all user wallets */
-    fun getAllWalletsCryptoCurrencies(
-        currencyRawId: CryptoCurrency.RawID,
-        needFilterByAvailable: Boolean,
-    ): Flow<Map<UserWallet, List<CryptoCurrency>>>
+    fun getAllWalletsCryptoCurrencies(currencyRawId: CryptoCurrency.RawID): Flow<Map<UserWallet, List<CryptoCurrency>>>
 
     fun isNetworkFeeZero(userWalletId: UserWalletId, network: Network): Boolean
 
