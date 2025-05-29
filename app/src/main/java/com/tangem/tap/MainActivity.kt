@@ -245,7 +245,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
         if (routingFeatureToggle.isDeepLinkNavigationEnabled.not() && intent != null && savedInstanceState == null) {
             // handle intent only on start, not on recreate
-            handleDeepLink(intent)
+            handleDeepLink(intent = intent, isFromOnNewIntent = false)
         }
 
         lifecycle.addObserver(WindowObscurationObserver)
@@ -397,7 +397,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         }
 
         if (intent != null) {
-            handleDeepLink(intent)
+            handleDeepLink(intent = intent, isFromOnNewIntent = true)
         }
     }
 
@@ -479,13 +479,13 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         }
 
         if (routingFeatureToggle.isDeepLinkNavigationEnabled && intent != null) {
-            handleDeepLink(intent)
+            handleDeepLink(intent = intent, isFromOnNewIntent = false)
         }
 
         viewModel.checkForUnfinishedBackup()
     }
 
-    private fun handleDeepLink(intent: Intent) {
+    private fun handleDeepLink(intent: Intent, isFromOnNewIntent: Boolean) {
         if (routingFeatureToggle.isDeepLinkNavigationEnabled) {
             val deepLinkExtras = intent.getStringExtra(DEEPLINK_KEY)?.toUri()
             val webLink = intent.getStringExtra(WEBLINK_KEY)
@@ -494,7 +494,11 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
             when {
                 receivedDeepLink != null -> {
-                    deeplinkFactory.handleDeeplink(deeplinkUri = receivedDeepLink, coroutineScope = lifecycleScope)
+                    deeplinkFactory.handleDeeplink(
+                        deeplinkUri = receivedDeepLink,
+                        coroutineScope = lifecycleScope,
+                        isFromOnNewIntent = isFromOnNewIntent,
+                    )
                 }
                 webLink?.uriValidate() == true -> {
                     urlOpener.openUrl(webLink)
