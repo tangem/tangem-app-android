@@ -21,4 +21,6 @@ interface NetworksRepository {
      * @param network      network
      */
     suspend fun getNetworkAddresses(userWalletId: UserWalletId, network: Network): List<CryptoCurrencyAddress>
+
+    suspend fun getNetworkAddresses(userWalletId: UserWalletId, network: Network.RawID): List<CryptoCurrencyAddress>
 }
