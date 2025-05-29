@@ -44,6 +44,7 @@ internal class TxHistoryListManager(
     )
 
     val uiItems: Flow<ImmutableList<TxHistoryUM.TxHistoryItemUM>> = uiManager.items
+    val paginationStatus: Flow<PaginationStatus<*>> = state.map { it.status }.distinctUntilChanged()
 
     suspend fun init() = coroutineScope {
         val batchFlow = repository.getTxHistoryBatchFlow(
