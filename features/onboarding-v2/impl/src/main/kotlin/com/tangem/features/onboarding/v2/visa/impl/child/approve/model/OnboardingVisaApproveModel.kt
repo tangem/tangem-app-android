@@ -12,6 +12,7 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.error.UniversalError
 import com.tangem.core.error.ext.universalError
 import com.tangem.core.ui.utils.showErrorDialog
+import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.model.VisaCardId
 import com.tangem.domain.visa.model.VisaDataForApprove
 import com.tangem.domain.visa.repository.VisaActivationRepository
@@ -19,6 +20,7 @@ import com.tangem.features.onboarding.v2.visa.impl.child.approve.OnboardingVisaA
 import com.tangem.features.onboarding.v2.visa.impl.child.approve.ui.state.OnboardingVisaApproveUM
 import com.tangem.features.onboarding.v2.visa.impl.child.welcome.model.analytics.OnboardingVisaAnalyticsEvent
 import com.tangem.features.onboarding.v2.visa.impl.child.welcome.model.analytics.VisaAnalyticsEvent
+import com.tangem.features.onboarding.v2.visa.impl.common.unexpectedErrorAlertBS
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -103,7 +105,11 @@ internal class OnboardingVisaApproveModel @Inject constructor(
 
     private fun onError(error: UniversalError) {
         loading(false)
-        uiMessageSender.showErrorDialog(error)
+        if (error is VisaApiError && error.isUnknown()) {
+            uiMessageSender.send(unexpectedErrorAlertBS)
+        } else {
+            uiMessageSender.showErrorDialog(error)
+        }
         analyticsEventHandler.send(VisaAnalyticsEvent.ErrorOnboarding(error))
     }
 
