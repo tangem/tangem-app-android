@@ -191,6 +191,7 @@
   <string name="common_server_unavailable">El servidor no está disponible, por favor inténtelo de nuevo más tarde</string>
   <string name="common_share">Compartir</string>
   <string name="common_share_link">Compartir enlace</string>
+  <string name="common_show_more">Mostrar más</string>
   <string name="common_sign">Firme</string>
   <string name="common_sign_and_send">Firme y envíe</string>
   <string name="common_stake">Stake</string>
