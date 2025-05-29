@@ -1,5 +1,8 @@
 package com.tangem.data.visa
 
+import arrow.core.Either
+import arrow.core.getOrElse
+import com.squareup.moshi.Moshi
 import com.tangem.data.visa.config.VisaLibLoader
 import com.tangem.data.visa.converter.VisaActivationStatusConverterWithState
 import com.tangem.datasource.api.common.config.ApiConfig
@@ -8,14 +11,11 @@ import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.visa.TangemVisaApi
-import com.tangem.datasource.api.visa.models.request.ActivationByCardWalletRequest
-import com.tangem.datasource.api.visa.models.request.ActivationByCustomerWalletRequest
-import com.tangem.datasource.api.visa.models.request.ActivationStatusRequest
-import com.tangem.datasource.api.visa.models.request.GetCardWalletAcceptanceRequest
-import com.tangem.datasource.api.visa.models.request.GetCustomerWalletAcceptanceRequest
-import com.tangem.datasource.api.visa.models.request.SetPinCodeRequest
+import com.tangem.datasource.api.visa.models.request.*
+import com.tangem.datasource.api.visa.models.response.VisaErrorResponseJsonAdapter
+import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.visa.VisaAuthTokenStorage
-import com.tangem.domain.visa.exception.RefreshTokenExpiredException
+import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.model.*
 import com.tangem.domain.visa.repository.VisaActivationRepository
 import com.tangem.domain.visa.repository.VisaAuthRepository
@@ -28,6 +28,7 @@ import kotlinx.coroutines.withContext
 @Suppress("LongParameterList")
 internal class DefaultVisaActivationRepository @AssistedInject constructor(
     @Assisted private val visaCardId: VisaCardId,
+    @NetworkMoshi private val moshi: Moshi,
     private val visaApi: TangemVisaApi,
     private val dispatcherProvider: CoroutineDispatcherProvider,
     private val visaAuthTokenStorage: VisaAuthTokenStorage,
@@ -36,27 +37,30 @@ internal class DefaultVisaActivationRepository @AssistedInject constructor(
     private val apiConfigsManager: ApiConfigsManager,
 ) : VisaActivationRepository {
 
-    override suspend fun getActivationRemoteState(): VisaActivationRemoteState = withContext(dispatcherProvider.io) {
-        val result = request {
-            val authTokens =
-                checkNotNull(visaAuthTokenStorage.get(visaCardId.cardId)) { "Visa auth tokens are not stored" }
+    private val visaErrorAdapter = VisaErrorResponseJsonAdapter(moshi)
 
-            visaApi.getRemoteActivationStatus(
-                authHeader = authTokens.getAuthHeader(),
-                request = ActivationStatusRequest(
-                    cardId = visaCardId.cardId,
-                    cardPublicKey = visaCardId.cardPublicKey,
-                ),
-            ).getOrThrow()
+    override suspend fun getActivationRemoteState(): Either<VisaApiError, VisaActivationRemoteState> =
+        withContext(dispatcherProvider.io) {
+            request {
+                val authTokens =
+                    checkNotNull(visaAuthTokenStorage.get(visaCardId.cardId)) { "Visa auth tokens are not stored" }
+
+                visaApi.getRemoteActivationStatus(
+                    authHeader = authTokens.getAuthHeader(),
+                    request = ActivationStatusRequest(
+                        cardId = visaCardId.cardId,
+                        cardPublicKey = visaCardId.cardPublicKey,
+                    ),
+                ).getOrThrow()
+            }.map {
+                VisaActivationStatusConverterWithState.convert(it)
+            }
         }
-
-        VisaActivationStatusConverterWithState.convert(result)
-    }
 
     override suspend fun getCardWalletAcceptanceData(
         request: VisaCardWalletDataToSignRequest,
-    ): VisaDataToSignByCardWallet = withContext(dispatcherProvider.io) {
-        val result = request {
+    ): Either<VisaApiError, VisaDataToSignByCardWallet> = withContext(dispatcherProvider.io) {
+        request {
             val authTokens =
                 checkNotNull(visaAuthTokenStorage.get(visaCardId.cardId)) { "Visa auth tokens are not stored" }
 
@@ -67,18 +71,18 @@ internal class DefaultVisaActivationRepository @AssistedInject constructor(
                     cardWalletAddress = request.cardWalletAddress,
                 ),
             ).getOrThrow()
+        }.map {
+            VisaDataToSignByCardWallet(
+                request = request,
+                hashToSign = it.result.hash,
+            )
         }
-
-        VisaDataToSignByCardWallet(
-            request = request,
-            hashToSign = result.result.hash,
-        )
     }
 
     override suspend fun getCustomerWalletAcceptanceData(
         request: VisaCustomerWalletDataToSignRequest,
-    ): VisaDataToSignByCustomerWallet = withContext(dispatcherProvider.io) {
-        val result = request {
+    ): Either<VisaApiError, VisaDataToSignByCustomerWallet> = withContext(dispatcherProvider.io) {
+        request {
             val authTokens =
                 checkNotNull(visaAuthTokenStorage.get(visaCardId.cardId)) { "Visa auth tokens are not stored" }
 
@@ -89,15 +93,15 @@ internal class DefaultVisaActivationRepository @AssistedInject constructor(
                     customerWalletAddress = request.customerWalletAddress,
                 ),
             ).getOrThrow()
+        }.map {
+            VisaDataToSignByCustomerWallet(
+                request = request,
+                hashToSign = it.result.hash,
+            )
         }
-
-        VisaDataToSignByCustomerWallet(
-            request = request,
-            hashToSign = result.result.hash,
-        )
     }
 
-    override suspend fun activateCard(signedData: VisaSignedActivationDataByCardWallet) {
+    override suspend fun activateCard(signedData: VisaSignedActivationDataByCardWallet): Either<VisaApiError, Unit> =
         withContext(dispatcherProvider.io) {
             request {
                 val authTokens =
@@ -120,9 +124,8 @@ internal class DefaultVisaActivationRepository @AssistedInject constructor(
                 ).getOrThrow()
             }
         }
-    }
 
-    override suspend fun approveByCustomerWallet(signedData: VisaSignedDataByCustomerWallet) {
+    override suspend fun approveByCustomerWallet(signedData: VisaSignedDataByCustomerWallet) =
         withContext(dispatcherProvider.io) {
             request {
                 val authTokens =
@@ -140,24 +143,21 @@ internal class DefaultVisaActivationRepository @AssistedInject constructor(
                 ).getOrThrow()
             }
         }
-    }
 
-    override suspend fun sendPinCode(pinCode: VisaEncryptedPinCode) {
-        withContext(dispatcherProvider.io) {
-            request {
-                val authTokens =
-                    checkNotNull(visaAuthTokenStorage.get(visaCardId.cardId)) { "Visa auth tokens are not stored" }
+    override suspend fun sendPinCode(pinCode: VisaEncryptedPinCode) = withContext(dispatcherProvider.io) {
+        request {
+            val authTokens =
+                checkNotNull(visaAuthTokenStorage.get(visaCardId.cardId)) { "Visa auth tokens are not stored" }
 
-                visaApi.setPinCode(
-                    authHeader = authTokens.getAuthHeader(),
-                    body = SetPinCodeRequest(
-                        orderId = pinCode.activationOrderId,
-                        sessionId = pinCode.sessionId,
-                        iv = pinCode.iv,
-                        pin = pinCode.encryptedPin,
-                    ),
-                ).getOrThrow()
-            }
+            visaApi.setPinCode(
+                authHeader = authTokens.getAuthHeader(),
+                body = SetPinCodeRequest(
+                    orderId = pinCode.activationOrderId,
+                    sessionId = pinCode.sessionId,
+                    iv = pinCode.iv,
+                    pin = pinCode.encryptedPin,
+                ),
+            ).getOrThrow()
         }
     }
 
@@ -172,24 +172,42 @@ internal class DefaultVisaActivationRepository @AssistedInject constructor(
         }
     }
 
-    private suspend fun <T : Any> request(requestBlock: suspend () -> T): T {
+    private suspend fun <T : Any> request(requestBlock: suspend () -> T): Either<VisaApiError, T> {
         return runCatching {
-            requestBlock()
+            Either.Right(requestBlock())
         }.getOrElse { responseError ->
-            if (responseError !is ApiResponseError.HttpException ||
-                responseError.code != ApiResponseError.HttpException.Code.UNAUTHORIZED
+            if (responseError is ApiResponseError.HttpException &&
+                responseError.code != ApiResponseError.HttpException.Code.UNAUTHORIZED &&
+                responseError.errorBody != null
             ) {
-                throw responseError
+                val errorCode =
+                    visaErrorAdapter.fromJson(responseError.errorBody!!)?.error?.code ?: responseError.code.numericCode
+                return Either.Left(VisaApiError.fromBackendError(errorCode))
+            }
+
+            if (responseError !is ApiResponseError.HttpException) {
+                return Either.Left(VisaApiError.UnknownWithoutCode)
             }
 
             val authTokens = visaAuthTokenStorage.get(visaCardId.cardId) ?: error("Auth tokens are not stored")
-            val newTokens = runCatching {
-                visaAuthRepository.refreshAccessTokens(authTokens.refreshToken)
-            }.getOrElse { throw RefreshTokenExpiredException() }
+            val newTokens = visaAuthRepository.refreshAccessTokens(authTokens.refreshToken).getOrElse {
+                return Either.Left(VisaApiError.RefreshTokenExpired)
+            }
 
             visaAuthTokenStorage.store(visaCardId.cardId, newTokens)
 
-            requestBlock()
+            runCatching {
+                Either.Right(requestBlock())
+            }.getOrElse { responseError ->
+                if (responseError is ApiResponseError.HttpException && responseError.errorBody != null) {
+                    val errorCode =
+                        visaErrorAdapter.fromJson(responseError.errorBody!!)?.error?.code
+                            ?: responseError.code.numericCode
+                    Either.Left(VisaApiError.fromBackendError(errorCode))
+                } else {
+                    Either.Left(VisaApiError.UnknownWithoutCode)
+                }
+            }
         }
     }
 
