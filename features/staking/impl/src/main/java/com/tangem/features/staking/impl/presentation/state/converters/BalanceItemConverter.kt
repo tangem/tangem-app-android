@@ -153,7 +153,7 @@ internal class BalanceItemConverter(
     }
 
     private fun BalanceItem.isClickable(): Boolean {
-        val networkId = cryptoCurrencyStatus.currency.network.id.value
+        val networkId = cryptoCurrencyStatus.currency.network.rawId
         return when {
             // TON allows withdrawing funds in the preparing state, unlike other networks.
             isTon(networkId) && this.type == BalanceType.PREPARING -> {
