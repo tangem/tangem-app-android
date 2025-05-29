@@ -11,6 +11,7 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.error.UniversalError
 import com.tangem.core.error.ext.universalError
 import com.tangem.core.ui.utils.showErrorDialog
+import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.model.VisaCardId
 import com.tangem.domain.visa.model.VisaCustomerWalletDataToSignRequest
 import com.tangem.domain.visa.repository.VisaActivationRepository
@@ -20,6 +21,7 @@ import com.tangem.features.onboarding.v2.visa.impl.child.welcome.model.analytics
 import com.tangem.features.onboarding.v2.visa.impl.child.welcome.model.analytics.VisaAnalyticsEvent
 import com.tangem.features.onboarding.v2.visa.impl.child.welcome.ui.state.OnboardingVisaWelcomeUM
 import com.tangem.features.onboarding.v2.visa.impl.common.ActivationReadyEvent
+import com.tangem.features.onboarding.v2.visa.impl.common.unexpectedErrorAlertBS
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.sdk.api.visa.VisaCardActivationTaskMode
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -129,7 +131,11 @@ internal class OnboardingVisaWelcomeModel @Inject constructor(
 
     private fun onError(error: UniversalError) {
         loading(false)
-        uiMessageSender.showErrorDialog(error)
+        if (error is VisaApiError && error.isUnknown()) {
+            uiMessageSender.send(unexpectedErrorAlertBS)
+        } else {
+            uiMessageSender.showErrorDialog(error)
+        }
         analyticsEventsHandler.send(VisaAnalyticsEvent.ErrorOnboarding(error))
     }
 
