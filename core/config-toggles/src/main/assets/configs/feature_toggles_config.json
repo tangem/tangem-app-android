@@ -28,6 +28,10 @@
         "version": "undefined"
     },
     {
+        "name": "NFT_MEDIA_CONTENT_ENABLED",
+        "version": "undefined"
+    },
+    {
         "name": "STAKING_CARDANO_ENABLED",
         "version": "undefined"
     },
@@ -52,15 +56,23 @@
         "version": "undefined"
     },
     {
-        "name": "NETWORKS_LOADING_REFACTORING_ENABLED",
-        "version": "5.23.0"
-    },
-    {
         "name": "QUOTES_LOADING_REFACTORING_ENABLED",
         "version": "5.24.0"
     },
     {
         "name": "STAKING_LOADING_REFACTORING_ENABLED",
         "version": "5.25.0"
+    },
+    {
+        "name": "DEEPLINK_NAVIGATION_ENABLED",
+        "version": "5.25.0"
+    },
+    {
+        "name": "PUSH_NOTIFICATIONS_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "USEDESK_FEEDBACK_ENABLED",
+        "version": "undefined"
     }
 ]
