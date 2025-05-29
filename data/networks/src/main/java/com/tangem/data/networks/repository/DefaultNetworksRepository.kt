@@ -62,6 +62,23 @@ internal class DefaultNetworksRepository(
             }
     }
 
+    override suspend fun getNetworkAddresses(
+        userWalletId: UserWalletId,
+        network: Network.RawID,
+    ): List<CryptoCurrencyAddress> {
+        return runCatching { cardCryptoCurrencyFactory.createByRawId(userWalletId = userWalletId, network = network) }
+            .getOrElse {
+                Timber.e(it, "Unable to create wallet currencies")
+                return emptyList()
+            }
+            .map { currency ->
+                CryptoCurrencyAddress(
+                    cryptoCurrency = currency,
+                    address = getDefaultAddress(userWalletId, currency.network),
+                )
+            }
+    }
+
     private suspend fun fetchPendingTransactions(
         userWalletId: UserWalletId,
         network: Network,
