@@ -19,7 +19,6 @@ import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObject
 import com.tangem.datasource.local.preferences.utils.getObjectSyncOrNull
 import com.tangem.datasource.local.userwallet.UserWalletsStore
-import com.tangem.domain.common.extensions.canHandleBlockchain
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.core.error.DataError
 import com.tangem.domain.demo.DemoConfig
@@ -32,7 +31,6 @@ import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.extensions.filterIf
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import timber.log.Timber
@@ -47,9 +45,9 @@ internal class DefaultCurrenciesRepository(
     private val appPreferencesStore: AppPreferencesStore,
     private val expressServiceLoader: ExpressServiceLoader,
     private val dispatchers: CoroutineDispatcherProvider,
-    private val excludedBlockchains: ExcludedBlockchains,
     private val cardCryptoCurrencyFactory: CardCryptoCurrencyFactory,
     private val userTokensSaver: UserTokensSaver,
+    excludedBlockchains: ExcludedBlockchains,
 ) : CurrenciesRepository {
 
     private val demoConfig = DemoConfig()
@@ -497,14 +495,12 @@ internal class DefaultCurrenciesRepository(
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun getAllWalletsCryptoCurrencies(
         currencyRawId: CryptoCurrency.RawID,
-        needFilterByAvailable: Boolean,
     ): Flow<Map<UserWallet, List<CryptoCurrency>>> {
         return userWalletsStore.userWallets.flatMapLatest { userWallets ->
             userWallets.forEach { fetchTokensIfCacheExpired(userWallet = it, refresh = false) }
 
             val userWalletsWithCurrencies = userWallets
                 .filterNot(UserWallet::isLocked)
-                .filterIf(needFilterByAvailable) { it.filterWalletByAvailableBlockchain(currencyRawId) }
                 .map { userWallet ->
                     if (userWallet.isMultiCurrency) {
                         getSavedUserTokensResponse(userWallet.walletId).map { storedTokens ->
@@ -529,22 +525,12 @@ internal class DefaultCurrenciesRepository(
 
                             emit(currencies)
                         }
-                    }
-                        .map { userWallet to it }
+                    }.map { userWallet to it }
                 }
 
             combine(userWalletsWithCurrencies) { it.toMap() }
                 .onEmpty { emit(value = emptyMap()) }
         }
-    }
-
-    private fun UserWallet.filterWalletByAvailableBlockchain(currencyRawId: CryptoCurrency.RawID): Boolean {
-        val blockchain = Blockchain.fromNetworkId(currencyRawId.value) ?: return true
-        return this.scanResponse.card.canHandleBlockchain(
-            blockchain = blockchain,
-            cardTypesResolver = this.cardTypesResolver,
-            excludedBlockchains = excludedBlockchains,
-        )
     }
 
     override fun isNetworkFeeZero(userWalletId: UserWalletId, network: Network): Boolean {
@@ -557,9 +543,13 @@ internal class DefaultCurrenciesRepository(
             value = getSavedUserTokensResponseSync(key = userWalletId),
             lazyMessage = { "Saved tokens empty. Can not perform add currencies action" },
         )
-        userTokensSaver.push(userWalletId, savedCurrencies, onFailSend = {
-            throw IllegalStateException("Unable to push tokens")
-        },)
+        userTokensSaver.push(
+            userWalletId,
+            savedCurrencies,
+            onFailSend = {
+                throw IllegalStateException("Unable to push tokens")
+            },
+        )
     }
 
     private fun getMultiCurrencyWalletCurrencies(userWallet: UserWallet): Flow<List<CryptoCurrency>> {
