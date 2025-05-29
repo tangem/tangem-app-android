@@ -13,7 +13,7 @@ object NFTSdkCollectionIdentifierConverter : TwoWayConverter<SdkNFTCollection.Id
             contractAddress = value.contractAddress,
         )
         is SdkNFTCollection.Identifier.Solana -> NFTCollection.Identifier.Solana(
-            collection = value.collection,
+            collectionAddress = value.collectionAddress,
         )
         is SdkNFTCollection.Identifier.Unknown -> NFTCollection.Identifier.Unknown
     }
@@ -26,7 +26,7 @@ object NFTSdkCollectionIdentifierConverter : TwoWayConverter<SdkNFTCollection.Id
             contractAddress = value.contractAddress,
         )
         is NFTCollection.Identifier.Solana -> SdkNFTCollection.Identifier.Solana(
-            collection = value.collection,
+            collectionAddress = value.collectionAddress,
         )
         is NFTCollection.Identifier.Unknown -> SdkNFTCollection.Identifier.Unknown
     }
