@@ -430,13 +430,19 @@ internal class SendModel @Inject constructor(
                         cryptoCurrencyId = cryptoCurrency.id.value,
                     ).getOrNull()?.let {
                         if (it.network.id == cryptoCurrency.network.id) {
-                            getNetworkAddressesUseCase.invokeSync(wallet.walletId, it.network)
+                            getNetworkAddressesUseCase.invokeSync(
+                                userWalletId = wallet.walletId,
+                                networkRawId = it.network.id.rawId,
+                            )
                         } else {
                             null
                         }
                     }
                 } else {
-                    getNetworkAddressesUseCase.invokeSync(wallet.walletId, cryptoCurrency.network)
+                    getNetworkAddressesUseCase.invokeSync(
+                        userWalletId = wallet.walletId,
+                        networkRawId = cryptoCurrency.network.id.rawId,
+                    )
                 }
                 addresses?.map { (cryptoCurrency, address) ->
                     AvailableWallet(
