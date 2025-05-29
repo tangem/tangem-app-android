@@ -5,7 +5,7 @@ import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.send.impl.presentation.analytics.SelectedCurrencyType
 import com.tangem.features.send.impl.presentation.analytics.SendAnalyticEvents
 import com.tangem.features.send.impl.presentation.analytics.SendScreenSource
@@ -62,7 +62,7 @@ internal class SendScreenAnalyticSender(
             -> SendScreenSource.Address to (state.editRecipientState?.isPrimaryButtonEnabled ?: false)
             SendUiStateType.Amount,
             SendUiStateType.EditAmount,
-            -> SendScreenSource.Amount to (state.editAmountState?.isPrimaryButtonEnabled ?: false)
+            -> SendScreenSource.Amount to state.editAmountState.isPrimaryButtonEnabled
             SendUiStateType.Fee,
             SendUiStateType.EditFee,
             -> SendScreenSource.Fee to (state.editFeeState?.isPrimaryButtonEnabled ?: false)
