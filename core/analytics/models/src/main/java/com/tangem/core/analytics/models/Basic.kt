@@ -78,4 +78,25 @@ sealed class Basic(
             AnalyticsParam.SOURCE to source.value,
         ),
     )
+
+    class BiometryFailed(
+        source: AnalyticsParam.ScreensSources,
+        reason: BiometricFailReason,
+    ) : Basic(
+        event = "Biometry Failed",
+        params = mapOf(
+            AnalyticsParam.SOURCE to source.value,
+            "Reason" to reason.value,
+        ),
+    ) {
+        sealed class BiometricFailReason(val value: String) {
+            data object AuthenticationLockout : BiometricFailReason("BiometricsAuthenticationLockout")
+            data object AuthenticationLockoutPermanent : BiometricFailReason("BiometricsAuthenticationLockoutPermanent")
+            data object BiometricsAuthenticationDisabled : BiometricFailReason("BiometricsAuthenticationDisabled")
+            data object AllKeysInvalidated : BiometricFailReason("AllKeysInvalidated")
+            data object AuthenticationCancelled : BiometricFailReason("AuthenticationCancelled")
+            data object AuthenticationAlreadyInProgress : BiometricFailReason("AuthenticationAlreadyInProgress")
+            data class Other(val reason: String) : BiometricFailReason(reason)
+        }
+    }
 }
