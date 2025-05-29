@@ -12,8 +12,8 @@ import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.send.impl.R
-import com.tangem.features.send.impl.presentation.state.fields.SendTextField
 import com.tangem.features.send.impl.presentation.model.SendClickIntents
+import com.tangem.features.send.impl.presentation.state.fields.SendTextField
 import com.tangem.utils.Provider
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -29,7 +29,7 @@ internal class KaspaCustomFeeConverter(
     override fun convert(value: Fee.Kaspa): ImmutableList<SendTextField.CustomFee> {
         val feeValue = value.amount.value
         val feeCurrency = feeCryptoCurrencyStatusProvider()?.value
-        val network = feeCryptoCurrencyStatusProvider()?.currency?.network?.id?.value
+        val network = feeCryptoCurrencyStatusProvider()?.currency?.network?.rawId
         return if (network != null) {
             persistentListOf(
                 SendTextField.CustomFee(
