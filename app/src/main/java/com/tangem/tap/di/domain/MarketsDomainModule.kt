@@ -13,7 +13,6 @@ import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.tokens.repository.CurrenciesRepository
-import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import dagger.Module
@@ -72,7 +71,6 @@ object MarketsDomainModule {
         derivationsRepository: DerivationsRepository,
         marketsTokenRepository: MarketsTokenRepository,
         currenciesRepository: CurrenciesRepository,
-        networksRepository: NetworksRepository,
         stakingRepository: StakingRepository,
         quotesRepository: QuotesRepository,
         multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
@@ -84,7 +82,6 @@ object MarketsDomainModule {
             derivationsRepository = derivationsRepository,
             marketsTokenRepository = marketsTokenRepository,
             currenciesRepository = currenciesRepository,
-            networksRepository = networksRepository,
             stakingRepository = stakingRepository,
             quotesRepository = quotesRepository,
             multiNetworkStatusFetcher = multiNetworkStatusFetcher,

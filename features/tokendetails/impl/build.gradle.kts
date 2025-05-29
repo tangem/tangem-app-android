@@ -87,6 +87,7 @@ dependencies {
     implementation(projects.domain.promo)
     implementation(projects.domain.promo.models)
     implementation(projects.domain.quotes)
+    implementation(projects.domain.notifications.models)
 
     /** Temp dependency to swap domain */
     implementation(projects.features.swap.domain)
