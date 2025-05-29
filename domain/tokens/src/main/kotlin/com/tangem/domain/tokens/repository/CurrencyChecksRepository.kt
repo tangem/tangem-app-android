@@ -1,9 +1,9 @@
 package com.tangem.domain.tokens.repository
 
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.CurrencyAmount
-import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.blockchains.UtxoAmountLimit
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.wallets.models.UserWalletId

@@ -2,6 +2,7 @@ package com.tangem.core.deeplink.global
 
 import com.tangem.core.deeplink.DeepLink
 
+@Deprecated("Use SellDeepLinkHandler")
 class SellCurrencyDeepLink(
     val onReceive: (data: Data) -> Unit,
     shouldHandleDelayed: Boolean,

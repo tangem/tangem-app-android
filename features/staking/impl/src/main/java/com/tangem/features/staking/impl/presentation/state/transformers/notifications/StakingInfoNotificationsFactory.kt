@@ -133,7 +133,7 @@ internal class StakingInfoNotificationsFactory(
 
     private fun MutableList<NotificationUM>.addTronRevoteNotification() {
         val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
-        val isTron = isTron(cryptoCurrencyStatus.currency.network.id.value)
+        val isTron = isTron(cryptoCurrencyStatus.currency.network.rawId)
         val hasStakedBalance = (cryptoCurrencyStatus.value.yieldBalance as? YieldBalance.Data)?.balance
             ?.items?.any {
                 it.type == BalanceType.PREPARING ||
@@ -152,7 +152,7 @@ internal class StakingInfoNotificationsFactory(
 
     private fun MutableList<NotificationUM>.addCardanoStakeNotification() {
         val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
-        val isCardano = isCardano(cryptoCurrencyStatus.currency.network.id.value)
+        val isCardano = isCardano(cryptoCurrencyStatus.currency.network.rawId)
 
         if (isCardano) {
             add(
@@ -166,7 +166,7 @@ internal class StakingInfoNotificationsFactory(
 
     private fun MutableList<NotificationUM>.addCardanoStakeMinimumAmountNotification(feeValue: BigDecimal) {
         val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
-        val isCardano = isCardano(cryptoCurrencyStatus.currency.network.id.value)
+        val isCardano = isCardano(cryptoCurrencyStatus.currency.network.rawId)
         val balance = cryptoCurrencyStatus.value.amount.orZero()
         if (isCardano && balance - feeValue < MINIMUM_STAKE_BALANCE) {
             add(
@@ -180,7 +180,7 @@ internal class StakingInfoNotificationsFactory(
 
     private fun MutableList<NotificationUM>.addCardanoRestakeMinimumAmountNotification(feeValue: BigDecimal) {
         val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
-        val isCardano = isCardano(cryptoCurrencyStatus.currency.network.id.value)
+        val isCardano = isCardano(cryptoCurrencyStatus.currency.network.rawId)
         val balance = cryptoCurrencyStatus.value.amount.orZero()
         if (isCardano && balance - feeValue < MINIMUM_RESTAKE_BALANCE) {
             add(
@@ -201,7 +201,7 @@ internal class StakingInfoNotificationsFactory(
 
         val isEntireBalance = sendingAmount.plus(feeValue) == balance
 
-        if (isEntireBalance && isSubtractAvailable && !isCardano(cryptoCurrencyStatus.currency.network.id.value)) {
+        if (isEntireBalance && isSubtractAvailable && !isCardano(cryptoCurrencyStatus.currency.network.rawId)) {
             add(StakingNotification.Info.StakeEntireBalance)
         }
     }
@@ -226,7 +226,7 @@ internal class StakingInfoNotificationsFactory(
     private fun MutableList<NotificationUM>.addUnstakeInfoNotification() {
         val cooldownPeriodDays = yield.metadata.cooldownPeriod?.days
 
-        val cryptoCurrencyNetworkIdValue = cryptoCurrencyStatusProvider().currency.network.id.value
+        val cryptoCurrencyNetworkIdValue = cryptoCurrencyStatusProvider().currency.network.rawId
         if (cooldownPeriodDays != null) {
             add(
                 StakingNotification.Info.Unstake(
@@ -242,7 +242,7 @@ internal class StakingInfoNotificationsFactory(
     }
 
     private fun MutableList<NotificationUM>.addTonHaveToUnstakeAllNotification(prevState: StakingUiState) {
-        val cryptoCurrencyNetworkIdValue = cryptoCurrencyStatusProvider().currency.network.id.value
+        val cryptoCurrencyNetworkIdValue = cryptoCurrencyStatusProvider().currency.network.rawId
 
         if (isTon(cryptoCurrencyNetworkIdValue)) {
             val initialInfoState = prevState.initialInfoState as? StakingStates.InitialInfoState.Data
@@ -272,7 +272,7 @@ internal class StakingInfoNotificationsFactory(
 
     private fun MutableList<NotificationUM>.addTonExtraFeeInfoNotification(tonBalanceExtraFeeThreshold: BigDecimal) {
         val amount = cryptoCurrencyStatusProvider().value.amount.orZero()
-        val cryptoCurrencyNetworkIdValue = cryptoCurrencyStatusProvider().currency.network.id.value
+        val cryptoCurrencyNetworkIdValue = cryptoCurrencyStatusProvider().currency.network.rawId
 
         if (isTon(cryptoCurrencyNetworkIdValue) && amount >= tonBalanceExtraFeeThreshold) {
             add(

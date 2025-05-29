@@ -4,6 +4,7 @@ import com.squareup.moshi.Moshi
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.extensions.decodeBase58
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
+import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.common.extensions.toHexString
 import com.tangem.data.walletconnect.model.CAIP2
 import com.tangem.data.walletconnect.model.NamespaceKey
@@ -11,7 +12,7 @@ import com.tangem.data.walletconnect.request.WcRequestToUseCaseConverter
 import com.tangem.data.walletconnect.request.WcRequestToUseCaseConverter.Companion.fromJson
 import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
 import com.tangem.data.walletconnect.utils.WcNamespaceConverter
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.walletconnect.model.WcSolanaMethod
 import com.tangem.domain.walletconnect.model.WcSolanaMethodName
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
@@ -26,11 +27,9 @@ internal class WcSolanaNetwork(
     private val moshi: Moshi,
     private val sessionsManager: WcSessionsManager,
     private val factories: Factories,
-    private val excludedBlockchains: ExcludedBlockchains,
+    private val namespaceConverter: NamespaceConverter,
     private val walletManager: UserWalletManager,
-) : WcNamespaceConverter, WcRequestToUseCaseConverter {
-
-    override val namespaceKey: NamespaceKey = NamespaceKey("solana")
+) : WcRequestToUseCaseConverter {
 
     override fun toWcMethodName(request: WcSdkSessionRequest): WcSolanaMethodName? {
         val methodKey = request.request.method
@@ -42,7 +41,7 @@ internal class WcSolanaNetwork(
         val name = toWcMethodName(request) ?: return null
         val method: WcSolanaMethod = name.toMethod(request) ?: return null
         val session = sessionsManager.findSessionByTopic(request.topic) ?: return null
-        val network = toNetwork(request.chainId.orEmpty(), session.wallet) ?: return null
+        val network = namespaceConverter.toNetwork(request.chainId.orEmpty(), session.wallet) ?: return null
         val accountAddress = getAccountAddress(network)
         val context = WcMethodUseCaseContext(
             session = session,
@@ -59,38 +58,45 @@ internal class WcSolanaNetwork(
 
     private suspend fun getAccountAddress(network: Network): String? {
         return try {
-            walletManager.getWalletAddress(network.id.value, network.derivationPath.value)
+            walletManager.getWalletAddress(network.rawId, network.derivationPath.value)
         } catch (exception: Exception) {
             Timber.e(exception)
             null
         }
     }
 
-    override fun toBlockchain(chainId: CAIP2): Blockchain? {
-        if (chainId.namespace != namespaceKey.key) return null
-        return when (chainId.reference) {
-            MAINNET_CHAIN_ID -> Blockchain.Solana
-            TESTNET_CHAIN_ID -> Blockchain.SolanaTestnet
-            else -> null
-        }
-    }
+    internal class NamespaceConverter @Inject constructor(
+        private val excludedBlockchains: ExcludedBlockchains,
+    ) : WcNamespaceConverter {
 
-    override fun toNetwork(chainId: String, wallet: UserWallet): Network? {
-        return toNetwork(chainId, wallet, excludedBlockchains)
-    }
+        override val namespaceKey: NamespaceKey = NamespaceKey("solana")
 
-    override fun toCAIP2(network: Network): CAIP2? {
-        val blockchain = Blockchain.fromId(network.id.value)
-        val chainId = when (blockchain) {
-            Blockchain.Solana -> MAINNET_CHAIN_ID
-            Blockchain.SolanaTestnet -> TESTNET_CHAIN_ID
-            else -> null
+        override fun toBlockchain(chainId: CAIP2): Blockchain? {
+            if (chainId.namespace != namespaceKey.key) return null
+            return when (chainId.reference) {
+                MAINNET_CHAIN_ID -> Blockchain.Solana
+                TESTNET_CHAIN_ID -> Blockchain.SolanaTestnet
+                else -> null
+            }
         }
-        chainId ?: return null
-        return CAIP2(
-            namespace = namespaceKey.key,
-            reference = chainId,
-        )
+
+        override fun toNetwork(chainId: String, wallet: UserWallet): Network? {
+            return toNetwork(chainId, wallet, excludedBlockchains)
+        }
+
+        override fun toCAIP2(network: Network): CAIP2? {
+            val blockchain = network.toBlockchain()
+            val chainId = when (blockchain) {
+                Blockchain.Solana -> MAINNET_CHAIN_ID
+                Blockchain.SolanaTestnet -> TESTNET_CHAIN_ID
+                else -> null
+            }
+            chainId ?: return null
+            return CAIP2(
+                namespace = namespaceKey.key,
+                reference = chainId,
+            )
+        }
     }
 
     private fun WcSolanaMethodName.toMethod(request: WcSdkSessionRequest): WcSolanaMethod? {
@@ -114,8 +120,8 @@ internal class WcSolanaNetwork(
 
     internal class Factories @Inject constructor(
         val messageSign: WcSolanaMessageSignUseCase.Factory,
-        val signTransaction: DefaultWcSolanaSignTransactionUseCase.Factory,
-        val signAllTransaction: DefaultWcSolanaSignAllTransactionUseCase.Factory,
+        val signTransaction: WcSolanaSignTransactionUseCase.Factory,
+        val signAllTransaction: WcSolanaSignAllTransactionUseCase.Factory,
     )
 
     companion object {
