@@ -3,6 +3,7 @@ package com.tangem.features.walletconnect.connections.routing
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.domain.walletconnect.model.WcPairRequest
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
+import com.tangem.features.walletconnect.connections.components.AlertsComponent
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -14,8 +15,17 @@ internal sealed interface WcInnerRoute : Route {
     }
 
     @Serializable
+    data class Send(override val rawRequest: WcSdkSessionRequest) : Method
+
+    @Serializable
     data class SignMessage(override val rawRequest: WcSdkSessionRequest) : Method
 
     @Serializable
+    data class AddNetwork(override val rawRequest: WcSdkSessionRequest) : Method
+
+    @Serializable
     data class Pair(val request: WcPairRequest) : WcInnerRoute
+
+    @Serializable
+    data class Alert(val alertType: AlertsComponent.AlertType) : WcInnerRoute
 }
