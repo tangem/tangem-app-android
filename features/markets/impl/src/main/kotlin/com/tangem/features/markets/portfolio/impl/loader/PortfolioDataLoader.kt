@@ -31,7 +31,7 @@ import javax.inject.Inject
 [REDACTED_AUTHOR]
  */
 internal class PortfolioDataLoader @Inject constructor(
-    private val filterAvailableNetworksForWallet: FilterAvailableNetworksForWalletUseCase,
+    private val filterAvailableNetworksForWalletUseCase: FilterAvailableNetworksForWalletUseCase,
     private val getAllWalletsCryptoCurrencyStatusesUseCase: GetAllWalletsCryptoCurrencyStatusesUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
@@ -157,7 +157,7 @@ internal class PortfolioDataLoader @Inject constructor(
         availableNetworks: Set<TokenMarketInfo.Network>,
     ): Map<UserWallet, List<PortfolioData.CryptoCurrencyData>> {
         return filter {
-            val networksSupportedByWallet = filterAvailableNetworksForWallet(it.key.walletId, availableNetworks)
+            val networksSupportedByWallet = filterAvailableNetworksForWalletUseCase(it.key.walletId, availableNetworks)
             networksSupportedByWallet.isNotEmpty()
         }
     }
