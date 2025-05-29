@@ -197,6 +197,7 @@
   <string name="common_server_unavailable">Сервер недоступний, спробуйте пізніше</string>
   <string name="common_share">Поширити</string>
   <string name="common_share_link">Поділитися посиланням</string>
+  <string name="common_show_more">Показати більше</string>
   <string name="common_sign">Підписати</string>
   <string name="common_sign_and_send">Підписати та надіслати</string>
   <string name="common_stake">Застейкати</string>
@@ -451,6 +452,8 @@
   <string name="markets_sort_by_top_gainers_title">Лідери росту</string>
   <string name="markets_sort_by_top_losers_title">Лідери падіння</string>
   <string name="markets_sort_by_trending_title">В тренді</string>
+  <string name="markets_staking_banner_description_placeholder">Стейкінг — простий спосіб отримувати дохід з вашої криптовалюти. %s</string>
+  <string name="markets_staking_banner_title">Отримуйте до %s APY</string>
   <string name="markets_token_details_about_token_title">Про %s</string>
   <plurals name="markets_token_details_amount_exchanges">
     <item quantity="one">%d біржа</item>
@@ -658,6 +661,8 @@
   <string name="organize_tokens_sort_by_balance">За балансом</string>
   <string name="organize_tokens_title">Сортування токенів</string>
   <string name="organize_tokens_ungroup">Список</string>
+  <string name="push_notifications_more_info">Більше</string>
+  <string name="push_notifications_permission_alert_title">Увімкнути сповіщення</string>
   <string name="qr_scanner_camera_denied_gallery_button">Виберіть з галереї</string>
   <string name="qr_scanner_camera_denied_settings_button">Налаштування</string>
   <string name="qr_scanner_camera_denied_text">Ви не надали доступ до своєї камери</string>
@@ -884,6 +889,11 @@
   <string name="staking_notification_restake_text">Рестейк дозволяє вам перемістити ваші кошти від одного валідатора до іншого без необхідності виводити кошти зі стейкінгу</string>
   <string name="staking_notification_stake_entire_balance_text">Ви збираєтеся застейкати весь свій баланс. Ми рекомендуємо залишити невелику суму, щоб покрити комісію мережі за зняття коштів або отримання винагороди.</string>
   <string name="staking_notification_ton_activate_account">Щоб почати стейкінг в TON, спочатку здійсніть вихідну транзакцію на будь-яку суму — це активує ваш гаманець.</string>
+  <string name="staking_notification_ton_extra_reserve_info">До 0.2 TON може знадобитися додатково мережевої комісії для завершення транзакції. Невикористана частина буде повернута.</string>
+  <string name="staking_notification_ton_extra_reserve_is_required">Для виконання операції потребується додатково 0.2 TON, крім мережевої комісії. Будь ласка, поповніть баланс.</string>
+  <string name="staking_notification_ton_extra_reserve_title">Зарезервовано 0.2 TON</string>
+  <string name="staking_notification_ton_have_to_unstake_all_text">Ця дія закриє інші позиції або переведе їх у статус виведення, відповідно до правил мережі.</string>
+  <string name="staking_notification_ton_have_to_unstake_all_title">Статус позицій</string>
   <string name="staking_notification_unlock_text">Розблокуйте свої кошти, щоб вивести їх зі стейкінгу. Розблокування займе %s.</string>
   <string name="staking_notification_unstake_cosmos_text">Ваші кошти будуть доступні для використання після закінчення 21-денного періоду розблокування. Винагорода буде отримана разом з вашими незастейканими коштами.</string>
   <string name="staking_notification_unstake_text">Ваші кошти будуть доступні після %s періоду розблокування.</string>
@@ -1094,6 +1104,7 @@
   <string name="wallet_promo_banner_button_title">Отримати з 10% знижкою</string>
   <string name="wallet_promo_banner_description">Доступ до 13,000+ криптовалют. Купуйте, продавайте, обмінюйте та стейкайте одним дотиком.\nЗ’єднайте до трьох карток для бекапу.</string>
   <string name="wallet_promo_banner_title">Відкрийте Tangem Wallet</string>
+  <string name="wallet_settings_push_notifications_title">Сповіщення про транзакції</string>
   <string name="wallet_settings_title">Налаштування гаманця</string>
   <string name="wallet_title">Tangem</string>
   <string name="warning_access_denied_message">Використовуйте %s або відскануйте картку/кільце, щоб розблокувати доступ до вашого гаманця</string>
@@ -1183,6 +1194,8 @@
   <string name="warning_testnet_card_message">Це картка Testnet. Вона не може обробляти транзакції і повинна використовуватися лише для тестування та розробки.</string>
   <string name="warning_testnet_card_title">Лише для цілей тестування</string>
   <string name="warning_token_balance_not_updated">Баланс може бути застарілим. Оновіть сторінку.</string>
+  <string name="wc_common_address">Адреса</string>
+  <string name="wc_contents">Вміст</string>
   <string name="welcome_interrupted_backup_alert_discard">Відмовитися</string>
   <string name="welcome_interrupted_backup_alert_message">Ви не завершили резервне копіювання. Бажаєте продовжити?</string>
   <string name="welcome_interrupted_backup_alert_resume">Так, поновити</string>
