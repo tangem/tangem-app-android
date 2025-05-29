@@ -4,11 +4,11 @@ import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
-import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
-import com.tangem.domain.staking.model.stakekit.action.StakingActionType
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.staking.analytics.StakeScreenSource
 import com.tangem.domain.staking.analytics.StakingAnalyticsEvent
+import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
+import com.tangem.domain.staking.model.stakekit.action.StakingActionType
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.staking.impl.presentation.state.*
 
