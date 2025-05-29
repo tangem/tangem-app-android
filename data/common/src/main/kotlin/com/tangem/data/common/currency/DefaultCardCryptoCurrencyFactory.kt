@@ -3,6 +3,8 @@ package com.tangem.data.common.currency
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.fromNetworkId
+import com.tangem.blockchainsdk.utils.toBlockchain
+import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.common.TapWorkarounds.isTestCard
@@ -39,6 +41,32 @@ internal class DefaultCardCryptoCurrencyFactory(
         // multi-currency wallet
         if (userWallet.isMultiCurrency) {
             return getMultiWalletCurrencies(userWallet = userWallet, networks = setOf(network))[network].orEmpty()
+        }
+
+        // check if the blockchain of single-currency wallet is the same as network
+        val cardBlockchain = userWallet.scanResponse.cardTypesResolver.getBlockchain()
+        if (cardBlockchain != blockchain) return emptyList()
+
+        // single-currency wallet with token (NODL)
+        if (userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()) {
+            return createCurrenciesForSingleCurrencyCardWithToken(userWallet.scanResponse)
+        }
+
+        // single-currency wallet
+        return createPrimaryCurrencyForSingleCurrencyCard(userWallet.scanResponse).let(::listOf)
+    }
+
+    override suspend fun createByRawId(userWalletId: UserWalletId, networkRawId: Network.RawID): List<CryptoCurrency> {
+        val userWallet = userWalletsStore.getSyncStrict(key = userWalletId)
+
+        val blockchain = networkRawId.toBlockchain()
+
+        // multi-currency wallet
+        if (userWallet.isMultiCurrency) {
+            return getMultiWalletCurrenciesByRawId(
+                userWallet = userWallet,
+                rawIds = setOf(networkRawId),
+            )[networkRawId].orEmpty()
         }
 
         // check if the blockchain of single-currency wallet is the same as network
@@ -121,6 +149,24 @@ internal class DefaultCardCryptoCurrencyFactory(
             scanResponse = userWallet.scanResponse,
         )
             .groupBy(CryptoCurrency::network)
+    }
+
+    private suspend fun getMultiWalletCurrenciesByRawId(
+        userWallet: UserWallet,
+        rawIds: Set<Network.RawID>,
+    ): Map<Network.RawID, List<CryptoCurrency>> {
+        val response = userTokensResponseStore.getSyncOrNull(userWalletId = userWallet.walletId)
+            ?: return emptyMap()
+
+        val responseCurrenciesFactory = ResponseCryptoCurrenciesFactory(excludedBlockchains)
+
+        val networkIds = rawIds.map { it.toBlockchain().toNetworkId() }
+
+        return responseCurrenciesFactory.createCurrencies(
+            tokens = response.tokens.filter { token -> token.networkId in networkIds },
+            scanResponse = userWallet.scanResponse,
+        )
+            .groupBy { it.network.id.rawId }
     }
 
     private fun getSingleWalletCurrencies(scanResponse: ScanResponse): SingleWalletCurrencies {
