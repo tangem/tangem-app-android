@@ -64,6 +64,9 @@
   <plurals name="card_label_card_count">
     <item quantity="other">%d デバイス</item>
   </plurals>
+  <plurals name="card_label_token_count">
+    <item quantity="other">%1$dトークン</item>
+  </plurals>
   <string name="card_settings_access_code_recovery_disabled_description">このカードを使用して、このウォレット内の他のカードまたはリングのアクセスコードをリセットしたくない場合は、このオプションを無効にしてください。これにより、このカードのアクセスコードもリセットできなくなりますのでご注意ください。</string>
   <string name="card_settings_access_code_recovery_enabled_description">このカードを使用して、このウォレット内の他のカードのアクセスコードをリセットできます。</string>
   <string name="card_settings_access_code_recovery_title">アクセスコードの復元</string>
@@ -148,6 +151,7 @@
   <string name="common_generate_addresses">アドレスを同期する</string>
   <string name="common_go_to_provider">プロバイダーへ移動</string>
   <string name="common_go_to_token">トークンへ移動</string>
+  <string name="common_got_it">わかりました</string>
   <string name="common_hide">非表示</string>
   <string name="common_hour">時間</string>
   <string name="common_import">インポート</string>
@@ -202,6 +206,7 @@
   <string name="common_submit">送信</string>
   <string name="common_success">成功</string>
   <string name="common_support">サポート</string>
+  <string name="common_supported_networks">対応ネットワーク</string>
   <string name="common_swap">スワップ</string>
   <string name="common_terms_and_conditions">利用規約</string>
   <string name="common_terms_of_use">利用規約</string>
@@ -554,9 +559,7 @@
   <string name="nft_send">NFTを送信する</string>
   <string name="nft_traits_title">特徴</string>
   <string name="nft_untitled_collection">無題のコレクション</string>
-  <plurals name="nft_wallet_count">
-    <item quantity="other">%1$dコレクションの%2$dNFT</item>
-  </plurals>
+  <string name="nft_wallet_count">%2$dコレクションの%1$dNFT</string>
   <string name="nft_wallet_receive_nft">ここをタップして最初のNFTを受け取ります</string>
   <string name="nft_wallet_title">NFTコレクション</string>
   <string name="nft_wallet_unable_to_load">データを読み込めません</string>
@@ -695,6 +698,8 @@
   <string name="push_notifications_permission_alert_negative_button">後で有効にする</string>
   <string name="push_notifications_permission_alert_positive_button">設定</string>
   <string name="push_notifications_permission_alert_title">通知を有効にする</string>
+  <string name="push_transactions_notifications_description">対応ネットワーク上の受信取引の通知を受け取る</string>
+  <string name="push_transactions_notifications_title">取引通知</string>
   <string name="qr_scanner_camera_denied_gallery_button">ギャラリーから選択</string>
   <string name="qr_scanner_camera_denied_settings_button">設定</string>
   <string name="qr_scanner_camera_denied_text">カメラへのアクセスを許可していません。</string>
@@ -1075,6 +1080,7 @@
   <string name="twins_recreate_toolbar">Tangemツイン</string>
   <string name="twins_recreate_warning">この操作は元に戻せません。古いウォレットにはアクセスできなくなります。</string>
   <string name="twins_scan_twin_with_number">番号%sのツインカードをタップし、操作が終了するまで取り外さないでください。</string>
+  <string name="unexpected_error_title">問題が発生しました。</string>
   <string name="universal_error">エラーが発生しました。エラー コード：%s。サポートにお問い合わせください。</string>
   <string name="unlock_wallet_description_full">%sを使用するか、カード / リングをスキャンしてウォレットにアクセスしてください</string>
   <string name="unsupported_wc_version">接続に失敗しました：このdAppは、サポートされていないWallet Connectバージョン1.0を使用しています。正常に接続するには、dAppがWallet Connectバージョン2.0をサポートしていることを確認してください。</string>
@@ -1154,7 +1160,7 @@
   <string name="wallet_promo_banner_description">1.3万種類以上の暗号資産にアクセス。ワンタップで買付、売却、スワップ、ステーキングが可能です。\nバックアップ用に最大3枚のカードを連携できます。</string>
   <string name="wallet_promo_banner_title">Tangemウォレットを見る</string>
   <string name="wallet_settings_push_notifications_description">ウォレットの受信取引とTangemの更新について通知を受け取る。</string>
-  <string name="wallet_settings_push_notifications_title">プッシュ通知</string>
+  <string name="wallet_settings_push_notifications_title">取引通知</string>
   <string name="wallet_settings_title">ウォレット設定</string>
   <string name="wallet_title">Tangem</string>
   <string name="warning_access_denied_message">%sを使用するか、カード / リングをスキャンしてウォレットにアクセスしてください</string>
