@@ -184,7 +184,7 @@ data class BottomSheetMessageV2(
     val messageBottomSheetUMV2: MessageBottomSheetUMV2,
 ) : EventMessage
 
-internal fun bottomSheetMessage(init: @MessageBottomSheetV2Dsl MessageBottomSheetUMV2.() -> Unit) =
+fun bottomSheetMessage(init: @MessageBottomSheetV2Dsl MessageBottomSheetUMV2.() -> Unit) =
     BottomSheetMessageV2(messageBottomSheetUM(init))
 
 /**
