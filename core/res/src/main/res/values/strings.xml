@@ -1093,6 +1093,8 @@
   <string name="twins_recreate_toolbar">Tangem Twin</string>
   <string name="twins_recreate_warning">This action is irreversible. You will not have access to the old wallet.</string>
   <string name="twins_scan_twin_with_number">Tap the twin card with number %s and do not remove until the end of the operation</string>
+  <string name="unexpected_error_description">Please try again later. If the issue persists, please contact support.</string>
+  <string name="unexpected_error_title">Something went wrong!</string>
   <string name="universal_error">We\'ve encountered an error. Error code: %s. Please contact our support.</string>
   <string name="unlock_wallet_description_full">Use %s or scan a card/ring to have access to your wallet</string>
   <string name="unsupported_wc_version">Connection failed: This dApp uses Wallet Connect version 1.0, which is not supported. Please ensure the dApp supports Wallet Connect version 2.0 to connect successfully.</string>
