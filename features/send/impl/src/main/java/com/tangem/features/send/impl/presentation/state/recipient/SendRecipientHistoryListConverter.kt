@@ -9,9 +9,9 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.core.ui.utils.toDateFormatWithTodayYesterday
 import com.tangem.core.ui.utils.toTimeFormat
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.domain.SendRecipientListContent
 import com.tangem.features.send.impl.presentation.state.recipient.utils.RECENT_DEFAULT_COUNT
@@ -24,22 +24,22 @@ import kotlinx.collections.immutable.toPersistentList
 
 internal class SendRecipientHistoryListConverter(
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
-) : Converter<List<TxHistoryItem>, ImmutableList<SendRecipientListContent>> {
+) : Converter<List<TxInfo>, ImmutableList<SendRecipientListContent>> {
 
-    override fun convert(value: List<TxHistoryItem>): ImmutableList<SendRecipientListContent> {
+    override fun convert(value: List<TxInfo>): ImmutableList<SendRecipientListContent> {
         val cryptoCurrency = cryptoCurrencyStatusProvider().currency
         return value.filterRecipients(cryptoCurrency).ifEmpty {
             emptyListState(RECENT_KEY_TAG, RECENT_DEFAULT_COUNT)
         }
     }
 
-    private fun List<TxHistoryItem>.filterRecipients(cryptoCurrency: CryptoCurrency) = this.filter { item ->
-        val isTransfer = item.type == TxHistoryItem.TransactionType.Transfer
-        val isNotContract = item.interactionAddressType is TxHistoryItem.InteractionAddressType.User
+    private fun List<TxInfo>.filterRecipients(cryptoCurrency: CryptoCurrency) = this.filter { item ->
+        val isTransfer = item.type == TxInfo.TransactionType.Transfer
+        val isNotContract = item.interactionAddressType is TxInfo.InteractionAddressType.User
         val isSingleAddress = if (item.isOutgoing) {
-            item.destinationType is TxHistoryItem.DestinationType.Single
+            item.destinationType is TxInfo.DestinationType.Single
         } else {
-            item.sourceType is TxHistoryItem.SourceType.Single
+            item.sourceType is TxInfo.SourceType.Single
         }
         val notZero = !item.amount.isZero()
         isTransfer && isSingleAddress && isNotContract && item.isOutgoing && notZero
@@ -56,31 +56,31 @@ internal class SendRecipientHistoryListConverter(
             )
         }.toPersistentList()
 
-    private fun TxHistoryItem.extractAddress(): TextReference = if (isOutgoing) {
+    private fun TxInfo.extractAddress(): TextReference = if (isOutgoing) {
         when (val destination = destinationType) {
-            is TxHistoryItem.DestinationType.Multiple -> TextReference.Res(
+            is TxInfo.DestinationType.Multiple -> TextReference.Res(
                 R.string.transaction_history_multiple_addresses,
             )
-            is TxHistoryItem.DestinationType.Single -> TextReference.Str(destination.addressType.address)
+            is TxInfo.DestinationType.Single -> TextReference.Str(destination.addressType.address)
         }
     } else {
         when (val source = sourceType) {
-            is TxHistoryItem.SourceType.Multiple -> TextReference.Res(R.string.transaction_history_multiple_addresses)
-            is TxHistoryItem.SourceType.Single -> TextReference.Str(source.address)
+            is TxInfo.SourceType.Multiple -> TextReference.Res(R.string.transaction_history_multiple_addresses)
+            is TxInfo.SourceType.Single -> TextReference.Str(source.address)
         }
     }
 
-    private fun TxHistoryItem.extractIconRes() = if (isOutgoing) {
+    private fun TxInfo.extractIconRes() = if (isOutgoing) {
         R.drawable.ic_arrow_up_24
     } else {
         R.drawable.ic_arrow_down_24
     }
 
-    private fun TxHistoryItem.getAmount(cryptoCurrency: CryptoCurrency): String {
+    private fun TxInfo.getAmount(cryptoCurrency: CryptoCurrency): String {
         return amount.format { crypto(cryptoCurrency) }
     }
 
-    private fun TxHistoryItem.extractTimestamp(): TextReference {
+    private fun TxInfo.extractTimestamp(): TextReference {
         val date = timestampInMillis.toDateFormatWithTodayYesterday(
             formatter = DateTimeFormatters.dateDDMMYYYY,
         )
