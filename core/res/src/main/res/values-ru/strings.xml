@@ -199,7 +199,7 @@
   <string name="common_server_unavailable">Сервер недоступен, повторите попытку позднее</string>
   <string name="common_share">Поделиться</string>
   <string name="common_share_link">Поделиться ссылкой</string>
-  <string name="common_show_more">Показать больше</string>
+  <string name="common_show_more">Подробнее</string>
   <string name="common_sign">Подписать</string>
   <string name="common_sign_and_send">Подписать и отправить</string>
   <string name="common_stake">Застейкать</string>
@@ -568,12 +568,7 @@
   <string name="nft_receive_unavailable_section_title">Не добавлено</string>
   <string name="nft_send">Отправить NFT</string>
   <string name="nft_traits_title">Черты</string>
-  <plurals name="nft_wallet_count">
-    <item quantity="one">%1$d NFTs в %2$d коллекции</item>
-    <item quantity="few">%1$d NFTs в %2$d коллекциях</item>
-    <item quantity="many">%1$d NFTs в %2$d коллекциях</item>
-    <item quantity="other">%1$d NFTs в %2$d коллекциях</item>
-  </plurals>
+  <string name="nft_wallet_count">%1$d NFTs в %2$d коллекциях</string>
   <string name="nft_wallet_receive_nft">Нажмите здесь, чтобы получить первую NFT</string>
   <string name="nft_wallet_title">NFT коллекции</string>
   <string name="nft_wallet_unable_to_load">Невозможно загрузить данные</string>
