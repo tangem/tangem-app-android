@@ -13,7 +13,6 @@ import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.tokens.repository.CurrenciesRepository
-import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import dagger.Module
 import dagger.Provides
@@ -53,16 +52,8 @@ object MarketsDomainModule {
 
     @Provides
     @Singleton
-    fun provideGetTokenQuotesUseCase(
-        quotesRepository: QuotesRepository,
-        singleQuoteSupplier: SingleQuoteSupplier,
-        tokensFeatureToggles: TokensFeatureToggles,
-    ): GetCurrencyQuotesUseCase {
-        return GetCurrencyQuotesUseCase(
-            quotesRepository = quotesRepository,
-            singleQuoteSupplier = singleQuoteSupplier,
-            tokensFeatureToggles = tokensFeatureToggles,
-        )
+    fun provideGetTokenQuotesUseCase(singleQuoteSupplier: SingleQuoteSupplier): GetCurrencyQuotesUseCase {
+        return GetCurrencyQuotesUseCase(singleQuoteSupplier = singleQuoteSupplier)
     }
 
     @Provides
@@ -72,7 +63,6 @@ object MarketsDomainModule {
         marketsTokenRepository: MarketsTokenRepository,
         currenciesRepository: CurrenciesRepository,
         stakingRepository: StakingRepository,
-        quotesRepository: QuotesRepository,
         multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
         multiQuoteFetcher: MultiQuoteFetcher,
         multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
@@ -83,7 +73,6 @@ object MarketsDomainModule {
             marketsTokenRepository = marketsTokenRepository,
             currenciesRepository = currenciesRepository,
             stakingRepository = stakingRepository,
-            quotesRepository = quotesRepository,
             multiNetworkStatusFetcher = multiNetworkStatusFetcher,
             multiQuoteFetcher = multiQuoteFetcher,
             multiYieldBalanceFetcher = multiYieldBalanceFetcher,
