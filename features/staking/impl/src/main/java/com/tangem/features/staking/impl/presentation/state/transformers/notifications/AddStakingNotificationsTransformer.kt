@@ -13,11 +13,11 @@ import com.tangem.common.ui.notifications.NotificationsFactory.addTransactionLim
 import com.tangem.core.ui.extensions.networkIconResId
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.model.stakekit.StakingErrors
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
@@ -185,7 +185,7 @@ internal class AddStakingNotificationsTransformer(
             onClick = prevState.clickIntents::openTokenDetails,
             onAnalyticsEvent = { /* no-op */ },
         )
-        if (!BlockchainUtils.isCardano(network.id.value)) {
+        if (!BlockchainUtils.isCardano(network.rawId)) {
             addDustWarningNotification(
                 dustValue = currencyCheck.dustValue,
                 feeValue = feeValue,
@@ -275,7 +275,7 @@ internal class AddStakingNotificationsTransformer(
 
     private fun MutableList<NotificationUM>.addTonExtraFeeErrorNotification() {
         val amount = cryptoCurrencyStatusProvider().value.amount.orZero()
-        val cryptoCurrencyNetworkIdValue = cryptoCurrencyStatusProvider().currency.network.id.value
+        val cryptoCurrencyNetworkIdValue = cryptoCurrencyStatusProvider().currency.network.rawId
 
         if (isTon(cryptoCurrencyNetworkIdValue) && amount < TON_BALANCE_EXTRA_FEE_THRESHOLD) {
             add(NotificationUM.Error.TonStakingExtraFeeError)

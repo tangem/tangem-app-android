@@ -6,6 +6,7 @@ import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.common.CompletionResult
 import com.tangem.common.test.domain.card.MockScanResponseFactory
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
+import com.tangem.data.common.network.NetworkFactory
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.card.ScanCardException
 import com.tangem.domain.common.configs.GenericCardConfig
@@ -32,7 +33,7 @@ internal class DefaultDerivationsRepositoryTest {
         tangemSdkManager = tangemSdkManager,
         userWalletsStore = userWalletsStore,
         dispatchers = TestingCoroutineDispatcherProvider(),
-        excludedBlockchains = ExcludedBlockchains(),
+        networkFactory = NetworkFactory(excludedBlockchains = ExcludedBlockchains()),
     )
 
     private val defaultUserWalletId = UserWalletId("011")
