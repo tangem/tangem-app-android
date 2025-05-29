@@ -1,7 +1,6 @@
 package com.tangem.tap.domain.card
 
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.EllipticCurve
@@ -11,13 +10,13 @@ import com.tangem.common.doOnSuccess
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.extensions.toMapKey
 import com.tangem.crypto.hdWallet.DerivationPath
-import com.tangem.data.common.currency.getNetwork
+import com.tangem.data.common.network.NetworkFactory
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.card.BackendId
 import com.tangem.domain.card.repository.DerivationsRepository
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
@@ -33,7 +32,7 @@ private typealias DerivedKeys = Map<ByteArrayKey, ExtendedPublicKeysMap>
 internal class DefaultDerivationsRepository(
     private val tangemSdkManager: TangemSdkManager,
     private val userWalletsStore: UserWalletsStore,
-    private val excludedBlockchains: ExcludedBlockchains,
+    private val networkFactory: NetworkFactory,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : DerivationsRepository {
 
@@ -41,17 +40,16 @@ internal class DefaultDerivationsRepository(
         derivePublicKeysByNetworks(userWalletId = userWalletId, networks = currencies.map(CryptoCurrency::network))
     }
 
-    override suspend fun derivePublicKeysByNetworkIds(userWalletId: UserWalletId, networkIds: List<Network.ID>) {
+    override suspend fun derivePublicKeysByNetworkIds(userWalletId: UserWalletId, networkIds: List<Network.RawID>) {
         val userWallet = userWalletsStore.getSyncOrNull(userWalletId) ?: error("User wallet not found")
 
         derivePublicKeysByNetworks(
             userWalletId = userWalletId,
             networks = networkIds.mapNotNull {
-                getNetwork(
+                networkFactory.create(
                     blockchain = Blockchain.fromNetworkId(it.value) ?: return@mapNotNull null,
                     extraDerivationPath = null,
                     scanResponse = userWallet.scanResponse,
-                    excludedBlockchains = excludedBlockchains,
                 )
             },
         )
@@ -86,11 +84,10 @@ internal class DefaultDerivationsRepository(
         val derivations = MissedDerivationsFinder(scanResponse = userWallet.scanResponse)
             .findByNetworks(
                 networksWithDerivationPath.mapNotNull { (backendId, extraDerivationPath) ->
-                    getNetwork(
+                    networkFactory.create(
                         blockchain = Blockchain.fromNetworkId(backendId) ?: return@mapNotNull null,
                         extraDerivationPath = extraDerivationPath,
                         scanResponse = userWallet.scanResponse,
-                        excludedBlockchains = excludedBlockchains,
                     )
                 },
             )

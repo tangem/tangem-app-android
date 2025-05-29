@@ -1,6 +1,6 @@
 package com.tangem.features.send.impl.navigation
 
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
 
 interface InnerSendRouter {
