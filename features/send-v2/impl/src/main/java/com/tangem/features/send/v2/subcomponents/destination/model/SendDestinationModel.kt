@@ -142,8 +142,10 @@ internal class SendDestinationModel @Inject constructor(
 
     private fun initSenderAddress() {
         modelScope.launch {
-            senderAddresses.value = getNetworkAddressesUseCase.invokeSync(userWalletId, cryptoCurrency.network)
-                .filter { cryptoCurrency.id == it.cryptoCurrency.id }
+            senderAddresses.value = getNetworkAddressesUseCase.invokeSync(
+                userWalletId = userWalletId,
+                networkRawId = cryptoCurrency.network.id.rawId,
+            ).filter { cryptoCurrency.id == it.cryptoCurrency.id }
         }
         senderAddresses.onEach {
             getWalletsAndRecent()
@@ -212,13 +214,19 @@ internal class SendDestinationModel @Inject constructor(
                         val addresses = if (!wallet.isMultiCurrency) {
                             getCryptoCurrencyUseCase(wallet.walletId).getOrNull()?.let {
                                 if (it.network.id == cryptoCurrencyNetwork.id) {
-                                    getNetworkAddressesUseCase.invokeSync(wallet.walletId, it.network)
+                                    getNetworkAddressesUseCase.invokeSync(
+                                        userWalletId = wallet.walletId,
+                                        networkRawId = it.network.id.rawId,
+                                    )
                                 } else {
                                     null
                                 }
                             }
                         } else {
-                            getNetworkAddressesUseCase.invokeSync(wallet.walletId, cryptoCurrencyNetwork)
+                            getNetworkAddressesUseCase.invokeSync(
+                                userWalletId = wallet.walletId,
+                                networkRawId = cryptoCurrencyNetwork.id.rawId,
+                            )
                         }
                         wallet to addresses
                     }
