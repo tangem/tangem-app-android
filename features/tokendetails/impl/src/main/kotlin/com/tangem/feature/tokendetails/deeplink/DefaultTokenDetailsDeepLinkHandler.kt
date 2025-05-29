@@ -16,9 +16,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
+@Suppress("LongParameterList")
 internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
     @Assisted private val scope: CoroutineScope,
     @Assisted private val queryParams: Map<String, String>,
+    @Assisted private val isFromOnNewIntent: Boolean,
     private val appRouter: AppRouter,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val getCryptoCurrenciesUseCase: GetCryptoCurrenciesUseCase,
@@ -69,11 +71,14 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
                         currency = cryptoCurrency,
                     ),
                 )
-                fetchCurrencyStatusUseCase.invoke(
-                    userWalletId = userWalletId,
-                    id = cryptoCurrency.id,
-                    refresh = true,
-                )
+
+                if (isFromOnNewIntent) {
+                    fetchCurrencyStatusUseCase.invoke(
+                        userWalletId = userWalletId,
+                        id = cryptoCurrency.id,
+                        refresh = true,
+                    )
+                }
             }
         }
     }
@@ -83,6 +88,7 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
         override fun create(
             coroutineScope: CoroutineScope,
             queryParams: Map<String, String>,
+            isFromOnNewIntent: Boolean,
         ): DefaultTokenDetailsDeepLinkHandler
     }
 
