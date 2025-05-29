@@ -25,7 +25,6 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.text.applyBladeBrush
-import com.tangem.core.ui.extensions.pluralStringResourceSafe
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -107,9 +106,8 @@ private fun WalletNFTItemContent(state: WalletNFTItemUM.Content, onClick: () -> 
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
-                text = pluralStringResourceSafe(
-                    id = R.plurals.nft_wallet_count,
-                    state.collectionsCount,
+                text = stringResourceSafe(
+                    id = R.string.nft_wallet_count,
                     state.assetsCount,
                     state.collectionsCount,
                 ),
