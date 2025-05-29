@@ -34,7 +34,6 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.Quote
 import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations.Error
 import com.tangem.domain.tokens.repository.CurrenciesRepository
-import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.tokens.utils.extractAddress
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.extensions.addOrReplace
@@ -44,7 +43,6 @@ import kotlinx.coroutines.flow.*
 @Suppress("LongParameterList", "LargeClass")
 class CachedCurrenciesStatusesOperations(
     private val currenciesRepository: CurrenciesRepository,
-    private val quotesRepository: QuotesRepository,
     quotesRepositoryV2: QuotesRepositoryV2,
     private val stakingRepository: StakingRepository,
     private val singleNetworkStatusSupplier: SingleNetworkStatusSupplier,
@@ -58,7 +56,6 @@ class CachedCurrenciesStatusesOperations(
 ) : BaseCurrenciesStatusesOperations,
     BaseCurrencyStatusOperations(
         currenciesRepository = currenciesRepository,
-        quotesRepository = quotesRepository,
         quotesRepositoryV2 = quotesRepositoryV2,
         stakingRepository = stakingRepository,
         multiNetworkStatusSupplier = multiNetworkStatusSupplier,
@@ -192,13 +189,9 @@ class CachedCurrenciesStatusesOperations(
                 async {
                     val rawCurrenciesIds = currenciesIds.mapNotNullTo(mutableSetOf()) { it.rawCurrencyId }
 
-                    if (tokensFeatureToggles.isQuotesLoadingRefactoringEnabled) {
-                        multiQuoteFetcher(
-                            params = MultiQuoteFetcher.Params(currenciesIds = rawCurrenciesIds, appCurrencyId = null),
-                        )
-                    } else {
-                        quotesRepository.fetchQuotes(rawCurrenciesIds)
-                    }
+                    multiQuoteFetcher(
+                        params = MultiQuoteFetcher.Params(currenciesIds = rawCurrenciesIds, appCurrencyId = null),
+                    )
                 },
                 async {
                     if (tokensFeatureToggles.isStakingLoadingRefactoringEnabled) {
@@ -280,44 +273,20 @@ class CachedCurrenciesStatusesOperations(
     }
 
     private fun getQuotes(tokensIds: NonEmptySet<CryptoCurrency.ID>): Flow<Either<TokenListError, Set<Quote>>> {
-        return if (tokensFeatureToggles.isQuotesLoadingRefactoringEnabled) {
-            getQuotesUpdates(
-                rawCurrencyIds = tokensIds.mapNotNullTo(
-                    destination = hashSetOf(),
-                    transform = CryptoCurrency.ID::rawCurrencyId,
-                ),
-            )
-        } else {
-            quotesRepository.getQuotesUpdates(tokensIds.mapNotNull { it.rawCurrencyId }.toSet())
-                .map<Set<Quote>, Either<TokenListError, Set<Quote>>> { it.right() }
-                .retryWhen { cause, _ ->
-                    emit(TokenListError.DataError(cause).left())
-                    // adding delay before retry to avoid spam when flow restarted
-                    delay(RETRY_DELAY)
-                    true
-                }
-                .distinctUntilChanged()
-        }
+        return getQuotesUpdates(
+            rawCurrencyIds = tokensIds.mapNotNullTo(
+                destination = hashSetOf(),
+                transform = CryptoCurrency.ID::rawCurrencyId,
+            ),
+        )
     }
 
     override fun getQuotes(id: CryptoCurrency.RawID): Flow<Either<Error, Set<Quote>>> {
-        return if (tokensFeatureToggles.isQuotesLoadingRefactoringEnabled) {
-            singleQuoteSupplier(
-                params = SingleQuoteProducer.Params(rawCurrencyId = id),
-            )
-                .map<Quote, Either<Error, Set<Quote>>> { setOf(it).right() }
-                .distinctUntilChanged()
-        } else {
-            quotesRepository.getQuotesUpdates(setOf(id))
-                .map<Set<Quote>, Either<Error, Set<Quote>>> { it.right() }
-                .retryWhen { cause, _ ->
-                    emit(Error.DataError(cause).left())
-                    // adding delay before retry to avoid spam when flow restarted
-                    delay(RETRY_DELAY)
-                    true
-                }
-                .distinctUntilChanged()
-        }
+        return singleQuoteSupplier(
+            params = SingleQuoteProducer.Params(rawCurrencyId = id),
+        )
+            .map<Quote, Either<Error, Set<Quote>>> { setOf(it).right() }
+            .distinctUntilChanged()
     }
 
     override fun getNetworksStatuses(
