@@ -22,7 +22,6 @@ import com.tangem.domain.tokens.operations.CachedCurrenciesStatusesOperations
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.tokens.repository.PolkadotAccountHealthCheckRepository
-import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.tap.domain.tokens.DefaultTokensFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -42,7 +41,6 @@ internal object TokensDomainModule {
     fun provideAddCryptoCurrenciesUseCase(
         currenciesRepository: CurrenciesRepository,
         stakingRepository: StakingRepository,
-        quotesRepository: QuotesRepository,
         multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
         multiQuoteFetcher: MultiQuoteFetcher,
         singleYieldBalanceFetcher: SingleYieldBalanceFetcher,
@@ -51,7 +49,6 @@ internal object TokensDomainModule {
         return AddCryptoCurrenciesUseCase(
             currenciesRepository = currenciesRepository,
             stakingRepository = stakingRepository,
-            quotesRepository = quotesRepository,
             multiNetworkStatusFetcher = multiNetworkStatusFetcher,
             multiQuoteFetcher = multiQuoteFetcher,
             singleYieldBalanceFetcher = singleYieldBalanceFetcher,
@@ -63,7 +60,6 @@ internal object TokensDomainModule {
     @Singleton
     fun provideFetchTokenListUseCase(
         currenciesRepository: CurrenciesRepository,
-        quotesRepository: QuotesRepository,
         stakingRepository: StakingRepository,
         multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
         multiQuoteFetcher: MultiQuoteFetcher,
@@ -72,7 +68,6 @@ internal object TokensDomainModule {
     ): FetchTokenListUseCase {
         return FetchTokenListUseCase(
             currenciesRepository = currenciesRepository,
-            quotesRepository = quotesRepository,
             stakingRepository = stakingRepository,
             multiNetworkStatusFetcher = multiNetworkStatusFetcher,
             multiQuoteFetcher = multiQuoteFetcher,
@@ -164,7 +159,6 @@ internal object TokensDomainModule {
     @Singleton
     fun provideFetchCurrencyStatusUseCase(
         currenciesRepository: CurrenciesRepository,
-        quotesRepository: QuotesRepository,
         stakingRepository: StakingRepository,
         singleNetworkStatusFetcher: SingleNetworkStatusFetcher,
         multiQuoteFetcher: MultiQuoteFetcher,
@@ -173,7 +167,6 @@ internal object TokensDomainModule {
     ): FetchCurrencyStatusUseCase {
         return FetchCurrencyStatusUseCase(
             currenciesRepository = currenciesRepository,
-            quotesRepository = quotesRepository,
             stakingRepository = stakingRepository,
             singleNetworkStatusFetcher = singleNetworkStatusFetcher,
             multiQuoteFetcher = multiQuoteFetcher,
@@ -186,7 +179,6 @@ internal object TokensDomainModule {
     @Singleton
     fun provideFetchCardTokenListUseCase(
         currenciesRepository: CurrenciesRepository,
-        quotesRepository: QuotesRepository,
         stakingRepository: StakingRepository,
         multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
         multiQuoteFetcher: MultiQuoteFetcher,
@@ -195,7 +187,6 @@ internal object TokensDomainModule {
     ): FetchCardTokenListUseCase {
         return FetchCardTokenListUseCase(
             currenciesRepository = currenciesRepository,
-            quotesRepository = quotesRepository,
             stakingRepository = stakingRepository,
             multiNetworkStatusFetcher = multiNetworkStatusFetcher,
             multiQuoteFetcher = multiQuoteFetcher,
@@ -355,15 +346,11 @@ internal object TokensDomainModule {
     @Singleton
     fun provideRefreshMultiCurrencyWalletQuotesUseCase(
         currenciesRepository: CurrenciesRepository,
-        quotesRepository: QuotesRepository,
         multiQuoteFetcher: MultiQuoteFetcher,
-        tokensFeatureToggles: TokensFeatureToggles,
     ): RefreshMultiCurrencyWalletQuotesUseCase {
         return RefreshMultiCurrencyWalletQuotesUseCase(
             currenciesRepository = currenciesRepository,
-            quotesRepository = quotesRepository,
             multiQuoteFetcher = multiQuoteFetcher,
-            tokensFeatureToggles = tokensFeatureToggles,
         )
     }
 
@@ -381,7 +368,6 @@ internal object TokensDomainModule {
     fun provideBaseCurrenciesStatusesOperations(
         tokensFeatureToggles: TokensFeatureToggles,
         currenciesRepository: CurrenciesRepository,
-        quotesRepository: QuotesRepository,
         quotesRepositoryV2: QuotesRepositoryV2,
         stakingRepository: StakingRepository,
         singleNetworkStatusSupplier: SingleNetworkStatusSupplier,
@@ -394,7 +380,6 @@ internal object TokensDomainModule {
     ): BaseCurrenciesStatusesOperations {
         return CachedCurrenciesStatusesOperations(
             currenciesRepository = currenciesRepository,
-            quotesRepository = quotesRepository,
             quotesRepositoryV2 = quotesRepositoryV2,
             stakingRepository = stakingRepository,
             singleNetworkStatusSupplier = singleNetworkStatusSupplier,
@@ -413,7 +398,6 @@ internal object TokensDomainModule {
     fun provideBaseCurrencyStatusOperations(
         tokensFeatureToggles: TokensFeatureToggles,
         currenciesRepository: CurrenciesRepository,
-        quotesRepository: QuotesRepository,
         quotesRepositoryV2: QuotesRepositoryV2,
         stakingRepository: StakingRepository,
         singleNetworkStatusSupplier: SingleNetworkStatusSupplier,
@@ -426,7 +410,6 @@ internal object TokensDomainModule {
     ): BaseCurrencyStatusOperations {
         return CachedCurrenciesStatusesOperations(
             currenciesRepository = currenciesRepository,
-            quotesRepository = quotesRepository,
             quotesRepositoryV2 = quotesRepositoryV2,
             stakingRepository = stakingRepository,
             singleNetworkStatusSupplier = singleNetworkStatusSupplier,

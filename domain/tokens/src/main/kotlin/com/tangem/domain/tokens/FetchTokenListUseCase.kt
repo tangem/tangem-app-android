@@ -15,7 +15,6 @@ import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.repository.CurrenciesRepository
-import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -26,14 +25,12 @@ import kotlinx.coroutines.coroutineScope
  * network statuses, and quotes for tokens associated with a user's wallet.
  *
  * @param currenciesRepository The repository for retrieving currency-related data.
- * @param quotesRepository The repository for retrieving cryptocurrency quotes.
  * @param stakingRepository The repository for retrieving staking-related data.
  */
 // [REDACTED_TODO_COMMENT]
 @Suppress("LongParameterList")
 class FetchTokenListUseCase(
     private val currenciesRepository: CurrenciesRepository,
-    private val quotesRepository: QuotesRepository,
     private val stakingRepository: StakingRepository,
     private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
     private val multiQuoteFetcher: MultiQuoteFetcher,
@@ -73,7 +70,6 @@ class FetchTokenListUseCase(
             val fetchQuotes = async {
                 fetchQuotes(
                     currenciesIds = currencies.mapTo(hashSetOf()) { it.id },
-                    refresh = mode.refreshQuotes,
                 )
             }
 
@@ -115,24 +111,15 @@ class FetchTokenListUseCase(
             .bind()
     }
 
-    private suspend fun fetchQuotes(currenciesIds: Set<CryptoCurrency.ID>, refresh: Boolean) {
-        if (tokensFeatureToggles.isQuotesLoadingRefactoringEnabled) {
-            multiQuoteFetcher(
-                params = MultiQuoteFetcher.Params(
-                    currenciesIds = currenciesIds.mapNotNull { it.rawCurrencyId }.toSet(),
-                    appCurrencyId = null,
-                ),
-            )
-        } else {
-            catch(
-                block = {
-                    val rawIds = currenciesIds.mapNotNull { it.rawCurrencyId }.toSet()
-                    quotesRepository.getQuotesSync(rawIds, refresh)
-                },
-            ) {
-                /* Ignore error */
-            }
-        }
+    private suspend fun Raise<TokenListError>.fetchQuotes(currenciesIds: Set<CryptoCurrency.ID>) {
+        multiQuoteFetcher(
+            params = MultiQuoteFetcher.Params(
+                currenciesIds = currenciesIds.mapNotNull { it.rawCurrencyId }.toSet(),
+                appCurrencyId = null,
+            ),
+        )
+            .mapLeft(TokenListError::DataError)
+            .bind()
     }
 
     private suspend fun fetchYieldBalances(

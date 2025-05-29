@@ -13,7 +13,6 @@ import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.repository.CurrenciesRepository
-import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -22,7 +21,6 @@ import kotlinx.coroutines.coroutineScope
 @Suppress("LongParameterList")
 class FetchCardTokenListUseCase(
     private val currenciesRepository: CurrenciesRepository,
-    private val quotesRepository: QuotesRepository,
     private val stakingRepository: StakingRepository,
     private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
     private val multiQuoteFetcher: MultiQuoteFetcher,
@@ -44,7 +42,6 @@ class FetchCardTokenListUseCase(
                 val fetchQuotes = async {
                     fetchQuotes(
                         currenciesIds = currencies.mapNotNullTo(destination = hashSetOf()) { it.id.rawCurrencyId },
-                        refresh = refresh,
                     )
                 }
                 val yieldBalances = async {
@@ -85,17 +82,10 @@ class FetchCardTokenListUseCase(
             .bind()
     }
 
-    private suspend fun fetchQuotes(currenciesIds: Set<CryptoCurrency.RawID>, refresh: Boolean) {
-        if (tokensFeatureToggles.isQuotesLoadingRefactoringEnabled) {
-            multiQuoteFetcher(
-                params = MultiQuoteFetcher.Params(currenciesIds = currenciesIds, appCurrencyId = null),
-            )
-        } else {
-            catch(
-                block = { quotesRepository.getQuotesSync(currenciesIds, refresh) },
-                catch = { /* Ignore error */ },
-            )
-        }
+    private suspend fun fetchQuotes(currenciesIds: Set<CryptoCurrency.RawID>) {
+        multiQuoteFetcher(
+            params = MultiQuoteFetcher.Params(currenciesIds = currenciesIds, appCurrencyId = null),
+        )
     }
 
     private suspend fun fetchYieldBalances(

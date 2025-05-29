@@ -26,7 +26,6 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.Quote
 import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations.Error
 import com.tangem.domain.tokens.repository.CurrenciesRepository
-import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.tokens.utils.CurrencyStatusProxyCreator
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.*
@@ -35,7 +34,6 @@ import kotlinx.coroutines.flow.*
  * Base operations for working with currency status
  *
  * @property currenciesRepository repository for currencies
- * @property quotesRepository     repository for quotes
  * @property stakingRepository    repository for staking
  *
 * [REDACTED_AUTHOR]
@@ -43,7 +41,6 @@ import kotlinx.coroutines.flow.*
 @Suppress("LargeClass", "LongParameterList")
 abstract class BaseCurrencyStatusOperations(
     private val currenciesRepository: CurrenciesRepository,
-    private val quotesRepository: QuotesRepository,
     private val quotesRepositoryV2: QuotesRepositoryV2,
     private val stakingRepository: StakingRepository,
     private val multiNetworkStatusSupplier: MultiNetworkStatusSupplier,
@@ -194,12 +191,8 @@ abstract class BaseCurrencyStatusOperations(
                     }
 
                     val quote = cryptoCurrencyId.rawCurrencyId?.let { rawId ->
-                        if (tokensFeatureToggles.isQuotesLoadingRefactoringEnabled) {
-                            singleQuoteSupplier(params = SingleQuoteProducer.Params(rawCurrencyId = rawId))
-                                .firstOrNull()
-                        } else {
-                            quotesRepository.getQuoteSync(rawId)
-                        }
+                        singleQuoteSupplier(params = SingleQuoteProducer.Params(rawCurrencyId = rawId))
+                            .firstOrNull()
                     }
                         ?.right()
                         ?: Error.EmptyQuotes.left()
@@ -264,11 +257,7 @@ abstract class BaseCurrencyStatusOperations(
                     val (_, currenciesIds) = getIds(nonEmptyCurrencies)
                     val rawIds = currenciesIds.mapNotNull { it.rawCurrencyId }.toSet()
 
-                    val quotes = if (tokensFeatureToggles.isQuotesLoadingRefactoringEnabled) {
-                        quotesRepositoryV2.getMultiQuoteSyncOrNull(currenciesIds = rawIds)?.right()
-                    } else {
-                        quotesRepository.getQuotesSync(rawIds, false).right()
-                    }
+                    val quotes = quotesRepositoryV2.getMultiQuoteSyncOrNull(currenciesIds = rawIds)?.right()
 
                     val networkStatuses = multiNetworkStatusSupplier(
                         params = MultiNetworkStatusProducer.Params(userWalletId = userWalletId),
@@ -297,22 +286,12 @@ abstract class BaseCurrencyStatusOperations(
             catch = { raise(Error.DataError(it)) },
         )
 
-        val quotes = if (tokensFeatureToggles.isQuotesLoadingRefactoringEnabled) {
-            currency.id.rawCurrencyId?.let {
-                singleQuoteSupplier(params = SingleQuoteProducer.Params(rawCurrencyId = it))
-                    .firstOrNull()
-            }
-                ?.right()
-                ?: Error.EmptyQuotes.left()
-        } else {
-            catch(
-                block = {
-                    currency.id.rawCurrencyId?.let { quotesRepository.getQuoteSync(it) }
-                        ?.right() ?: Error.EmptyQuotes.left()
-                },
-                catch = { Error.DataError(it).left() },
-            )
+        val quotes = currency.id.rawCurrencyId?.let {
+            singleQuoteSupplier(params = SingleQuoteProducer.Params(rawCurrencyId = it))
+                .firstOrNull()
         }
+            ?.right()
+            ?: Error.EmptyQuotes.left()
 
         val networkStatus = singleNetworkStatusSupplier(
             params = SingleNetworkStatusProducer.Params(userWalletId = userWalletId, network = currency.network),
