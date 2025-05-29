@@ -7,4 +7,6 @@ import kotlinx.collections.immutable.PersistentList
 internal data class WalletSettingsUM(
     val popBack: () -> Unit,
     val items: PersistentList<WalletSettingsItemUM>,
+    val requestPushNotificationsPermission: Boolean = false,
+    val onPushNotificationPermissionGranted: (Boolean) -> Unit,
 )
