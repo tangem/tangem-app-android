@@ -1,11 +1,11 @@
 package com.tangem.features.send.v2.subcomponents.destination.model.converters
 
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.features.send.v2.subcomponents.destination.ui.state.DestinationRecipientListUM
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.send.v2.subcomponents.destination.model.transformers.WALLET_DEFAULT_COUNT
 import com.tangem.features.send.v2.subcomponents.destination.model.transformers.WALLET_KEY_TAG
 import com.tangem.features.send.v2.subcomponents.destination.model.transformers.emptyListState
+import com.tangem.features.send.v2.subcomponents.destination.ui.state.DestinationRecipientListUM
 import com.tangem.features.send.v2.subcomponents.destination.ui.state.DestinationWalletUM
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.PersistentList

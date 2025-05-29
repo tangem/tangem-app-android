@@ -4,7 +4,9 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.feature.wallet.DefaultWalletEntryComponent
 import com.tangem.feature.wallet.child.organizetokens.model.OrganizeTokensModel
 import com.tangem.feature.wallet.child.wallet.model.WalletModel
+import com.tangem.feature.wallet.utils.DefaultUserWalletsFetcher
 import com.tangem.features.wallet.WalletEntryComponent
+import com.tangem.features.wallet.utils.UserWalletsFetcher
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -18,6 +20,9 @@ internal interface WalletFeatureModule {
 
     @Binds
     fun bindComponentFactory(impl: DefaultWalletEntryComponent.Factory): WalletEntryComponent.Factory
+
+    @Binds
+    fun bindUserWalletsFetcher(impl: DefaultUserWalletsFetcher.Factory): UserWalletsFetcher.Factory
 
     @Binds
     @IntoMap

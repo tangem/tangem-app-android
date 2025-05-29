@@ -1,7 +1,7 @@
 package com.tangem.features.send.impl.presentation.state.recipient
 
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.send.impl.presentation.domain.AvailableWallet
 import com.tangem.features.send.impl.presentation.domain.SendRecipientListContent

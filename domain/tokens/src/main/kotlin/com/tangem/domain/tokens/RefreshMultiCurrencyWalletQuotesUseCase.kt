@@ -4,9 +4,9 @@ import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.raise.catch
 import arrow.core.raise.either
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.quotes.multi.MultiQuoteFetcher
 import com.tangem.domain.tokens.error.QuotesError
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.wallets.models.UserWalletId

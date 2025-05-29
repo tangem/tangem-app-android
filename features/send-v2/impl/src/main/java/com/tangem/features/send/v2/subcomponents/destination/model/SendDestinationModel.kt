@@ -9,12 +9,12 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.models.network.CryptoCurrencyAddress
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
 import com.tangem.domain.qrscanning.usecases.ParseQrCodeUseCase
 import com.tangem.domain.tokens.GetCryptoCurrencyUseCase
 import com.tangem.domain.tokens.GetNetworkAddressesUseCase
-import com.tangem.domain.tokens.model.CryptoCurrencyAddress
 import com.tangem.domain.transaction.usecase.IsUtxoConsolidationAvailableUseCase
 import com.tangem.domain.transaction.usecase.ValidateWalletAddressUseCase
 import com.tangem.domain.transaction.usecase.ValidateWalletMemoUseCase

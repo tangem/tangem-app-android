@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.loaders.implementors
 
+import com.tangem.common.routing.RoutingFeatureToggle
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.deeplink.DeepLinksRegistry
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -7,6 +8,7 @@ import com.tangem.domain.nft.GetNFTCollectionsUseCase
 import com.tangem.domain.promo.GetStoryContentUseCase
 import com.tangem.domain.tokens.ApplyTokenListSortingUseCase
 import com.tangem.domain.tokens.RunPolkadotAccountHealthCheckUseCase
+import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsUseCase
@@ -40,6 +42,8 @@ internal class MultiWalletContentLoaderFactory @Inject constructor(
     private val nftFeatureToggles: NFTFeatureToggles,
     private val walletsRepository: WalletsRepository,
     private val getNFTCollectionsUseCase: GetNFTCollectionsUseCase,
+    private val routingFeatureToggle: RoutingFeatureToggle,
+    private val currenciesRepository: CurrenciesRepository,
 ) {
 
     fun create(userWallet: UserWallet, clickIntents: WalletClickIntents): WalletContentLoader {
@@ -62,6 +66,8 @@ internal class MultiWalletContentLoaderFactory @Inject constructor(
             nftFeatureToggles = nftFeatureToggles,
             walletsRepository = walletsRepository,
             getNFTCollectionsUseCase = getNFTCollectionsUseCase,
+            routingFeatureToggle = routingFeatureToggle,
+            currenciesRepository = currenciesRepository,
         )
     }
 }

@@ -9,10 +9,10 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.utils.toTimeFormat
-import com.tangem.domain.txhistory.models.TxHistoryItem
-import com.tangem.domain.txhistory.models.TxHistoryItem.*
-import com.tangem.feature.wallet.impl.R
+import com.tangem.domain.models.network.TxInfo
+import com.tangem.domain.models.network.TxInfo.*
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
+import com.tangem.feature.wallet.impl.R
 import com.tangem.utils.StringsSigns.MINUS
 import com.tangem.utils.StringsSigns.PLUS
 import com.tangem.utils.converter.Converter
@@ -22,14 +22,14 @@ internal class TxHistoryItemStateConverter(
     private val symbol: String,
     private val decimals: Int,
     private val clickIntents: WalletClickIntents,
-) : Converter<TxHistoryItem, TransactionState> {
+) : Converter<TxInfo, TransactionState> {
 
-    override fun convert(value: TxHistoryItem): TransactionState {
+    override fun convert(value: TxInfo): TransactionState {
         return createTransactionStateItem(item = value)
     }
 
     @Suppress("LongMethod")
-    private fun createTransactionStateItem(item: TxHistoryItem): TransactionState {
+    private fun createTransactionStateItem(item: TxInfo): TransactionState {
         return TransactionState.Content(
             txHash = item.txHash,
             amount = item.getAmount(),
@@ -44,7 +44,7 @@ internal class TxHistoryItemStateConverter(
         )
     }
 
-    private fun TxHistoryItem.extractIcon(): Int = if (status == TransactionStatus.Failed) {
+    private fun TxInfo.extractIcon(): Int = if (status == TransactionStatus.Failed) {
         R.drawable.ic_close_24
     } else {
         when (type) {
@@ -66,7 +66,7 @@ internal class TxHistoryItemStateConverter(
         }
     }
 
-    private fun TxHistoryItem.extractTitle(): TextReference = when (val type = type) {
+    private fun TxInfo.extractTitle(): TextReference = when (val type = type) {
         is TransactionType.Approve -> resourceReference(R.string.common_approval)
         is TransactionType.Operation -> stringReference(type.name)
         is TransactionType.Swap -> resourceReference(R.string.common_swap)
@@ -80,38 +80,37 @@ internal class TxHistoryItemStateConverter(
         is TransactionType.UnknownOperation -> resourceReference(R.string.transaction_history_operation)
     }
 
-    private fun TxHistoryItem.extractSubtitle(): TextReference =
-        when (val interactionAddress = interactionAddressType) {
-            is InteractionAddressType.Contract -> resourceReference(
-                id = R.string.transaction_history_contract_address,
-                formatArgs = wrappedList(interactionAddress.address.toBriefAddressFormat()),
-            )
-            is InteractionAddressType.Multiple -> resourceReference(
-                id = if (isOutgoing) {
-                    R.string.transaction_history_transaction_to_address
-                } else {
-                    R.string.transaction_history_transaction_from_address
-                },
-                formatArgs = wrappedList(resourceReference(R.string.transaction_history_multiple_addresses)),
-            )
-            is InteractionAddressType.User -> resourceReference(
-                id = if (isOutgoing) {
-                    R.string.transaction_history_transaction_to_address
-                } else {
-                    R.string.transaction_history_transaction_from_address
-                },
-                formatArgs = wrappedList(interactionAddress.address.toBriefAddressFormat()),
-            )
-            is InteractionAddressType.Validator -> resourceReference(
-                id = R.string.transaction_history_transaction_validator,
-                formatArgs = wrappedList(interactionAddress.address.toBriefAddressFormat()),
-            )
-            null -> {
-                TextReference.EMPTY
-            }
+    private fun TxInfo.extractSubtitle(): TextReference = when (val interactionAddress = interactionAddressType) {
+        is InteractionAddressType.Contract -> resourceReference(
+            id = R.string.transaction_history_contract_address,
+            formatArgs = wrappedList(interactionAddress.address.toBriefAddressFormat()),
+        )
+        is InteractionAddressType.Multiple -> resourceReference(
+            id = if (isOutgoing) {
+                R.string.transaction_history_transaction_to_address
+            } else {
+                R.string.transaction_history_transaction_from_address
+            },
+            formatArgs = wrappedList(resourceReference(R.string.transaction_history_multiple_addresses)),
+        )
+        is InteractionAddressType.User -> resourceReference(
+            id = if (isOutgoing) {
+                R.string.transaction_history_transaction_to_address
+            } else {
+                R.string.transaction_history_transaction_from_address
+            },
+            formatArgs = wrappedList(interactionAddress.address.toBriefAddressFormat()),
+        )
+        is InteractionAddressType.Validator -> resourceReference(
+            id = R.string.transaction_history_transaction_validator,
+            formatArgs = wrappedList(interactionAddress.address.toBriefAddressFormat()),
+        )
+        null -> {
+            TextReference.EMPTY
         }
+    }
 
-    private fun TxHistoryItem.extractDirection() =
+    private fun TxInfo.extractDirection() =
         if (isOutgoing) TransactionState.Content.Direction.OUTGOING else TransactionState.Content.Direction.INCOMING
 
     private fun TransactionStatus.tiUiStatus() = when (this) {
@@ -120,7 +119,7 @@ internal class TxHistoryItemStateConverter(
         TransactionStatus.Unconfirmed -> TransactionState.Content.Status.Unconfirmed
     }
 
-    private fun TxHistoryItem.getAmount(): String {
+    private fun TxInfo.getAmount(): String {
         if (type is TransactionType.Staking.Vote ||
             type == TransactionType.Staking.ClaimRewards ||
             type == TransactionType.Staking.Withdraw

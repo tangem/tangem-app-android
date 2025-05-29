@@ -1,9 +1,14 @@
 package com.tangem.features.nft.details.entity.factory
 
 import com.tangem.core.ui.components.atoms.text.TextEllipsis
+import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.fiat
+import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.nft.models.NFTAsset
 import com.tangem.domain.nft.models.NFTSalePrice
 import com.tangem.features.nft.details.entity.NFTAssetUM
@@ -12,17 +17,24 @@ import com.tangem.features.nft.impl.R
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
+@Suppress("LongParameterList")
 internal class NFTDetailsUMFactory(
+    private val appCurrency: AppCurrency,
     private val onBackClick: () -> Unit,
     private val onReadMoreClick: () -> Unit,
     private val onSeeAllTraitsClick: () -> Unit,
     private val onExploreClick: () -> Unit,
     private val onSendClick: () -> Unit,
+    private val onRefresh: () -> Unit,
     private val onInfoBlockClick: (title: TextReference, text: TextReference) -> Unit,
 ) {
 
     fun getInitialState(nftAsset: NFTAsset): NFTDetailsUM = NFTDetailsUM(
         nftAsset = nftAsset.transform(),
+        pullToRefreshConfig = PullToRefreshConfig(
+            isRefreshing = false,
+            onRefresh = { onRefresh() },
+        ),
         onBackClick = onBackClick,
         onReadMoreClick = onReadMoreClick,
         onSeeAllTraitsClick = onSeeAllTraitsClick,
@@ -52,7 +64,7 @@ internal class NFTDetailsUMFactory(
                     } else {
                         null
                     },
-                    salePrice = NFTAssetUM.SalePrice.Empty,
+                    salePrice = toSalePrice(),
                     description = description,
                     rarity = if (rarity != null) {
                         NFTAssetUM.Rarity.Content(
@@ -90,6 +102,32 @@ internal class NFTDetailsUMFactory(
     )
 
     private fun NFTAsset.hasSalePrice() = salePrice !is NFTSalePrice.Empty && salePrice !is NFTSalePrice.Error
+
+    private fun NFTAsset.toSalePrice() = when (val price = salePrice) {
+        is NFTSalePrice.Empty,
+        is NFTSalePrice.Error,
+        -> NFTAssetUM.SalePrice.Empty
+        is NFTSalePrice.Loading -> NFTAssetUM.SalePrice.Loading
+        is NFTSalePrice.Value -> NFTAssetUM.SalePrice.Content(
+            isFlickering = false,
+            cryptoPrice = stringReference(
+                price.value.format {
+                    crypto(
+                        symbol = price.symbol,
+                        decimals = price.decimals,
+                    )
+                },
+            ),
+            fiatPrice = stringReference(
+                price.fiatValue.format {
+                    fiat(
+                        fiatCurrencyCode = appCurrency.code,
+                        fiatCurrencySymbol = appCurrency.symbol,
+                    )
+                },
+            ),
+        )
+    }
 
     @Suppress("LongMethod")
     private fun NFTAsset.buildBaseInfoItems() = when (val id = id) {
