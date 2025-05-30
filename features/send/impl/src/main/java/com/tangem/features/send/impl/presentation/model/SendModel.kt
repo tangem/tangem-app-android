@@ -45,7 +45,6 @@ import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.txhistory.usecase.GetFixedTxHistoryItemsUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
-import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
@@ -66,7 +65,6 @@ import com.tangem.features.send.impl.presentation.state.amount.AmountStateFactor
 import com.tangem.features.send.impl.presentation.state.confirm.SendNotificationFactory
 import com.tangem.features.send.impl.presentation.state.fee.*
 import com.tangem.features.send.impl.presentation.state.recipient.RecipientSendFactory
-import com.tangem.features.txhistory.TxHistoryFeatureToggles
 import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.Provider
@@ -95,7 +93,6 @@ internal class SendModel @Inject constructor(
     private val getCryptoCurrencyUseCase: GetCryptoCurrencyUseCase,
     private val getNetworkAddressesUseCase: GetNetworkAddressesUseCase,
     private val getTxHistoryItemsCountUseCase: GetTxHistoryItemsCountUseCase,
-    private val getTxHistoryItemsUseCase: GetTxHistoryItemsUseCase,
     private val getFixedTxHistoryItemsUseCase: GetFixedTxHistoryItemsUseCase,
     private val sendTransactionUseCase: SendTransactionUseCase,
     private val createTransferTransactionUseCase: CreateTransferTransactionUseCase,
@@ -118,7 +115,6 @@ internal class SendModel @Inject constructor(
     private val getCardInfoUseCase: GetCardInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val shareManager: ShareManager,
-    private val txHistoryFeatureToggles: TxHistoryFeatureToggles,
     private val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter,
     private val incrementNotificationsShowCountUseCase: IncrementNotificationsShowCountUseCase,
     @DelayedWork private val coroutineScope: CoroutineScope,
@@ -1076,15 +1072,7 @@ internal class SendModel @Inject constructor(
         )
 
         txHistoryItemsCountEither.onRight {
-            if (txHistoryFeatureToggles.isFeatureEnabled) {
-                txHistoryContentUpdateEmitter.triggerUpdate()
-            } else {
-                getTxHistoryItemsUseCase(
-                    userWalletId = userWalletId,
-                    currency = cryptoCurrency,
-                    refresh = true,
-                )
-            }
+            txHistoryContentUpdateEmitter.triggerUpdate()
         }
     }
 
