@@ -33,6 +33,9 @@ internal class GetSingleWalletWarningsFactory @Inject constructor(
     private var readyForRateAppNotification = false
 
     fun create(userWallet: UserWallet, clickIntents: WalletClickIntents): Flow<ImmutableList<WalletNotification>> {
+        if (userWallet !is UserWallet.Cold) {
+            return flowOf(emptyList<WalletNotification>().toImmutableList())
+        }
         val cardTypesResolver = userWallet.scanResponse.cardTypesResolver
 
         return combine(
@@ -107,10 +110,11 @@ internal class GetSingleWalletWarningsFactory @Inject constructor(
         cardTypesResolver: CardTypesResolver,
         clickIntents: WalletClickIntents,
     ) {
-        val userHasWalletOrWallet2 = userWallets.any {
+        val userHasWalletOrWallet2 = userWallets.filterIsInstance<UserWallet.Cold>().any {
             val typesResolver = it.scanResponse.cardTypesResolver
             typesResolver.isTangemWallet() || typesResolver.isWallet2()
         }
+
         addIf(
             element = WalletNotification.NoteMigration(
                 onClick = { clickIntents.onNoteMigrationButtonClick(NOTE_MIGRATION_URL) },
@@ -125,7 +129,7 @@ internal class GetSingleWalletWarningsFactory @Inject constructor(
     }
 
     private suspend fun MutableList<WalletNotification>.addWarningNotifications(
-        userWallet: UserWallet,
+        userWallet: UserWallet.Cold,
         cardTypesResolver: CardTypesResolver,
         maybePrimaryCurrencyStatus: Either<CurrencyStatusError, CryptoCurrencyStatus>,
         isNeedToBackup: Boolean,
@@ -174,7 +178,7 @@ internal class GetSingleWalletWarningsFactory @Inject constructor(
     }
 
     private suspend fun hasSignedHashes(
-        selectedWallet: UserWallet,
+        selectedWallet: UserWallet.Cold,
         cryptoCurrencyStatus: CryptoCurrencyStatus?,
     ): Boolean {
         return cryptoCurrencyStatus?.currency?.network?.let {

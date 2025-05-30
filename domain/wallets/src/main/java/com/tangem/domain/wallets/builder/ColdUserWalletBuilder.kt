@@ -9,7 +9,7 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 
-class UserWalletBuilder @AssistedInject constructor(
+class ColdUserWalletBuilder @AssistedInject constructor(
     @Assisted private val scanResponse: ScanResponse,
     private val generateWalletNameUseCase: GenerateWalletNameUseCase,
 ) {
@@ -36,12 +36,12 @@ class UserWalletBuilder @AssistedInject constructor(
         this.hasBackupError = hasBackupError
     }
 
-    fun build(): UserWallet? {
+    fun build(): UserWallet.Cold? {
         return with(scanResponse) {
             UserWalletIdBuilder.scanResponse(scanResponse)
                 .build()
                 ?.let {
-                    UserWallet(
+                    UserWallet.Cold(
                         walletId = it,
                         name = generateWalletNameUseCase(
                             productType = productType,
@@ -60,6 +60,6 @@ class UserWalletBuilder @AssistedInject constructor(
     @AssistedFactory
     interface Factory {
 
-        fun create(scanResponse: ScanResponse): UserWalletBuilder
+        fun create(scanResponse: ScanResponse): ColdUserWalletBuilder
     }
 }
