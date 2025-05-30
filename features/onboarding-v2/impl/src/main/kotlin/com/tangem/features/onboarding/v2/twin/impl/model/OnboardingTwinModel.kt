@@ -38,7 +38,7 @@ import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
 import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.analytics.TokenReceiveAnalyticsEvent
-import com.tangem.domain.wallets.builder.UserWalletBuilder
+import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.models.UserWallet
@@ -70,7 +70,7 @@ import javax.inject.Inject
 internal class OnboardingTwinModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     paramsContainer: ParamsContainer,
-    private val userWalletBuilderFactory: UserWalletBuilder.Factory,
+    private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory,
     private val userWalletsListManager: UserWalletsListManager,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val saveTwinsOnboardingShownUseCase: SaveTwinsOnboardingShownUseCase,
@@ -319,7 +319,7 @@ internal class OnboardingTwinModel @Inject constructor(
     }
 
     private suspend fun setTopUpState(scanResponse: ScanResponse) = coroutineScope {
-        val userWallet = userWalletBuilderFactory.create(scanResponse).build() ?: run {
+        val userWallet = coldUserWalletBuilderFactory.create(scanResponse).build() ?: run {
             Timber.e("User wallet not created")
             setLoading(false)
             return@coroutineScope
@@ -442,7 +442,7 @@ internal class OnboardingTwinModel @Inject constructor(
         setLoading(true)
 
         modelScope.launch {
-            val userWallet = userWalletBuilderFactory.create(params.scanResponse).build() ?: run {
+            val userWallet = coldUserWalletBuilderFactory.create(params.scanResponse).build() ?: run {
                 Timber.e("User wallet not created")
                 setLoading(false)
                 return@launch

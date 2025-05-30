@@ -7,7 +7,7 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.domain.card.ScanCardProcessor
-import com.tangem.domain.wallets.builder.UserWalletBuilder
+import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import javax.inject.Inject
@@ -15,7 +15,7 @@ import javax.inject.Inject
 internal class ScanCardToUnlockWalletClickHandler @Inject constructor(
     private val scanCardProcessor: ScanCardProcessor,
     private val saveWalletUseCase: SaveWalletUseCase,
-    private val userWalletBuilderFactory: UserWalletBuilder.Factory,
+    private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory,
 ) {
 
     private var scanFailsCounter = 0
@@ -33,7 +33,7 @@ internal class ScanCardToUnlockWalletClickHandler @Inject constructor(
                     scanFailsCounter = 0
 
                     // If card's public key is null then user wallet will be null
-                    val scannedWallet = userWalletBuilderFactory.create(scanResponse = result.data).build()
+                    val scannedWallet = coldUserWalletBuilderFactory.create(scanResponse = result.data).build()
 
                     ensure(walletId == scannedWallet?.walletId) {
                         ScanCardToUnlockWalletError.WrongCardIsScanned
