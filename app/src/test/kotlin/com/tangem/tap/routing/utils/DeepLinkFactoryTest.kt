@@ -6,6 +6,7 @@ import com.tangem.feature.referral.api.deeplink.ReferralDeepLinkHandler
 import com.tangem.features.onramp.deeplink.BuyDeepLinkHandler
 import com.tangem.features.onramp.deeplink.OnrampDeepLinkHandler
 import com.tangem.features.send.v2.api.deeplink.SellDeepLinkHandler
+import com.tangem.features.staking.api.deeplink.StakingDeepLinkHandler
 import com.tangem.features.tokendetails.deeplink.TokenDetailsDeepLinkHandler
 import com.tangem.features.wallet.deeplink.WalletDeepLinkHandler
 import com.tangem.features.walletconnect.components.deeplink.WalletConnectDeepLinkHandler
@@ -43,10 +44,14 @@ class DeepLinkFactoryTest {
         every { create() } returns mockk()
     }
     private val tokenDetailsDeepLinkFactory = mockk<TokenDetailsDeepLinkHandler.Factory>(relaxed = true) {
+        every { create(any(), any(), any()) } returns mockk()
+    }
+    private val stakingDeepLinkFactory = mockk<StakingDeepLinkHandler.Factory>(relaxed = true) {
         every { create(any(), any()) } returns mockk()
     }
 
     private val mockedUri = mockk<Uri>(relaxed = true)
+    private val isFromOnNewIntent: Boolean = false
 
     private lateinit var testDispatcher: TestDispatcher
     private lateinit var testScope: TestScope
@@ -59,6 +64,7 @@ class DeepLinkFactoryTest {
         walletConnectDeepLinkFactory,
         walletDeepLinkFactory,
         tokenDetailsDeepLinkFactory,
+        stakingDeepLinkFactory,
     )
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -96,7 +102,7 @@ class DeepLinkFactoryTest {
         every { mockedUri.getQueryParameter("param") } returns "value"
 
         // Set permittedAppRoute to true
-        deepLinkFactory.handleDeeplink(mockedUri, testScope)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
         deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
 
         advanceUntilIdle()
@@ -115,7 +121,7 @@ class DeepLinkFactoryTest {
         every { mockedUri.queryParameterNames } returns setOf("param")
         every { mockedUri.getQueryParameter("param") } returns "value"
 
-        deepLinkFactory.handleDeeplink(mockedUri, testScope)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
         deepLinkFactory.checkRoutingReadiness(AppRoute.Initial)
 
         advanceUntilIdle()
@@ -133,7 +139,7 @@ class DeepLinkFactoryTest {
         every { mockedUri.getQueryParameter("param") } returns "value"
 
         deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
-        deepLinkFactory.handleDeeplink(mockedUri, testScope)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
 
         advanceUntilIdle()
 
@@ -148,7 +154,7 @@ class DeepLinkFactoryTest {
         every { mockedUri.host } returns ""
 
         deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
-        deepLinkFactory.handleDeeplink(mockedUri, testScope)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
 
         advanceUntilIdle()
 
@@ -162,7 +168,7 @@ class DeepLinkFactoryTest {
         every { mockedUri.scheme } returns "https"
         every { mockedUri.host } returns "example.com"
 
-        deepLinkFactory.handleDeeplink(mockedUri, testScope)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
 
         advanceUntilIdle()
 
@@ -173,7 +179,7 @@ class DeepLinkFactoryTest {
             referralDeepLinkFactory.create()
             walletConnectDeepLinkFactory.create(any())
             walletDeepLinkFactory.create()
-            tokenDetailsDeepLinkFactory.create(any(), any())
+            tokenDetailsDeepLinkFactory.create(any(), any(), any())
         }
     }
 
@@ -188,21 +194,39 @@ class DeepLinkFactoryTest {
 
         // Test Onramp
         every { mockedUri.host } returns "onramp"
-        deepLinkFactory.handleDeeplink(mockedUri, testScope)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
         advanceUntilIdle()
         verify { onrampDeepLinkFactory.create(eq(testScope), eq(mapOf("param" to "value"))) }
 
         // Test Sell
         every { mockedUri.host } returns "redirect_sell"
-        deepLinkFactory.handleDeeplink(mockedUri, testScope)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
         advanceUntilIdle()
         verify { sellDeepLinkFactory.create(eq(testScope), eq(mapOf("param" to "value"))) }
 
         // Test Token Details
         every { mockedUri.host } returns "token"
-        deepLinkFactory.handleDeeplink(mockedUri, testScope)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
         advanceUntilIdle()
-        verify { tokenDetailsDeepLinkFactory.create(eq(testScope), eq(mapOf("param" to "value"))) }
+        verify {
+            tokenDetailsDeepLinkFactory.create(
+                eq(testScope),
+                eq(mapOf("param" to "value")),
+                eq(isFromOnNewIntent),
+            )
+        }
+
+        // Test Staking
+        every { mockedUri.host } returns "staking"
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+        verify {
+            tokenDetailsDeepLinkFactory.create(
+                eq(testScope),
+                eq(mapOf("param" to "value")),
+                eq(isFromOnNewIntent),
+            )
+        }
 
         // Reset params
         every { mockedUri.queryParameterNames } returns emptySet()
@@ -210,19 +234,19 @@ class DeepLinkFactoryTest {
 
         // Test Buy
         every { mockedUri.host } returns "redirect"
-        deepLinkFactory.handleDeeplink(mockedUri, testScope)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
         advanceUntilIdle()
         verify { buyDeepLinkFactory.create(eq(testScope)) }
 
         // Test Referral
         every { mockedUri.host } returns "referral"
-        deepLinkFactory.handleDeeplink(mockedUri, testScope)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
         advanceUntilIdle()
         verify { referralDeepLinkFactory.create() }
 
         // Test Wallet
         every { mockedUri.host } returns "main"
-        deepLinkFactory.handleDeeplink(mockedUri, testScope)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
         advanceUntilIdle()
         verify { walletDeepLinkFactory.create() }
     }
@@ -233,7 +257,7 @@ class DeepLinkFactoryTest {
         every { mockedUri.host } returns "unknown"
 
         deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
-        deepLinkFactory.handleDeeplink(mockedUri, testScope)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
 
         advanceUntilIdle()
 
@@ -244,7 +268,7 @@ class DeepLinkFactoryTest {
             referralDeepLinkFactory.create()
             walletConnectDeepLinkFactory.create(any())
             walletDeepLinkFactory.create()
-            tokenDetailsDeepLinkFactory.create(any(), any())
+            tokenDetailsDeepLinkFactory.create(any(), any(), any())
         }
     }
 
@@ -259,7 +283,7 @@ class DeepLinkFactoryTest {
         every { mockedUri.getQueryParameter("quote") } returns "O'Brien"
 
         deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
-        deepLinkFactory.handleDeeplink(mockedUri, testScope)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
         advanceUntilIdle()
 
         verify { onrampDeepLinkFactory.create(eq(testScope), eq(mapOf("safe" to "ok"))) }
@@ -275,49 +299,49 @@ class DeepLinkFactoryTest {
         every { mockedUri.query } returns "safe=ok"
         every { mockedUri.queryParameterNames } returns setOf("safe")
         every { mockedUri.getQueryParameter("safe") } returns "ok"
-        deepLinkFactory.handleDeeplink(mockedUri, testScope)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
         advanceUntilIdle()
         verify { onrampDeepLinkFactory.create(eq(testScope), eq(mapOf("safe" to "ok"))) }
 
         every { mockedUri.query } returns "param123=ok"
         every { mockedUri.queryParameterNames } returns setOf("param123")
         every { mockedUri.getQueryParameter("param123") } returns "ok"
-        deepLinkFactory.handleDeeplink(mockedUri, testScope)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
         advanceUntilIdle()
         verify { onrampDeepLinkFactory.create(eq(testScope), eq(mapOf("param123" to "ok"))) }
 
         every { mockedUri.query } returns "unsafe=<script>"
         every { mockedUri.queryParameterNames } returns setOf("unsafe")
         every { mockedUri.getQueryParameter("unsafe") } returns "<script>"
-        deepLinkFactory.handleDeeplink(mockedUri, testScope)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
         advanceUntilIdle()
         verify { onrampDeepLinkFactory.create(eq(testScope), eq(emptyMap())) }
 
         every { mockedUri.query } returns "unsafe=O'Brien"
         every { mockedUri.queryParameterNames } returns setOf("unsafe")
         every { mockedUri.getQueryParameter("unsafe") } returns "O'Brien"
-        deepLinkFactory.handleDeeplink(mockedUri, testScope)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
         advanceUntilIdle()
         verify { onrampDeepLinkFactory.create(eq(testScope), eq(emptyMap())) }
 
         every { mockedUri.query } returns "unsafe=test;"
         every { mockedUri.queryParameterNames } returns setOf("unsafe")
         every { mockedUri.getQueryParameter("unsafe") } returns "test;"
-        deepLinkFactory.handleDeeplink(mockedUri, testScope)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
         advanceUntilIdle()
         verify { onrampDeepLinkFactory.create(eq(testScope), eq(emptyMap())) }
 
         every { mockedUri.query } returns "unsafe=test+attack"
         every { mockedUri.queryParameterNames } returns setOf("unsafe")
         every { mockedUri.getQueryParameter("unsafe") } returns "test+attack"
-        deepLinkFactory.handleDeeplink(mockedUri, testScope)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
         advanceUntilIdle()
         verify { onrampDeepLinkFactory.create(eq(testScope), eq(emptyMap())) }
 
         every { mockedUri.query } returns "unsafe=test\\path"
         every { mockedUri.queryParameterNames } returns setOf("unsafe")
         every { mockedUri.getQueryParameter("unsafe") } returns "test\\path"
-        deepLinkFactory.handleDeeplink(mockedUri, testScope)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
         advanceUntilIdle()
         verify { onrampDeepLinkFactory.create(eq(testScope), eq(emptyMap())) }
     }

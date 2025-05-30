@@ -27,6 +27,10 @@ sealed class DeepLinkRoute {
     data object TokenDetails : DeepLinkRoute() {
         override val host: String = "token"
     }
+
+    data object Staking : DeepLinkRoute() {
+        override val host: String = "staking"
+    }
 }
 
 enum class DeepLinkScheme(val scheme: String) {

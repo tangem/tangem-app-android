@@ -33,7 +33,9 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.di.RootAppComponentContext
 import com.tangem.core.deeplink.DEEPLINK_KEY
 import com.tangem.core.deeplink.DeepLinksRegistry
+import com.tangem.core.deeplink.WEBLINK_KEY
 import com.tangem.core.navigation.email.EmailSender
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.UiDependencies
 import com.tangem.data.balancehiding.DefaultDeviceFlipDetector
 import com.tangem.data.card.sdk.CardSdkOwner
@@ -74,6 +76,7 @@ import com.tangem.tap.routing.configurator.AppRouterConfig
 import com.tangem.tap.routing.utils.DeepLinkFactory
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.FeatureCoroutineExceptionHandler
+import com.tangem.utils.extensions.uriValidate
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -185,6 +188,9 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     @Inject
     internal lateinit var walletConnectFeatureToggles: WalletConnectFeatureToggles
 
+    @Inject
+    internal lateinit var urlOpener: UrlOpener
+
     internal val viewModel: MainViewModel by viewModels()
 
     private lateinit var appThemeModeFlow: SharedFlow<AppThemeMode>
@@ -238,7 +244,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
         if (routingFeatureToggle.isDeepLinkNavigationEnabled.not() && intent != null && savedInstanceState == null) {
             // handle intent only on start, not on recreate
-            handleDeepLink(intent)
+            handleDeepLink(intent = intent, isFromOnNewIntent = false)
         }
 
         lifecycle.addObserver(WindowObscurationObserver)
@@ -390,7 +396,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         }
 
         if (intent != null) {
-            handleDeepLink(intent)
+            handleDeepLink(intent = intent, isFromOnNewIntent = true)
         }
     }
 
@@ -472,18 +478,31 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         }
 
         if (routingFeatureToggle.isDeepLinkNavigationEnabled && intent != null) {
-            handleDeepLink(intent)
+            handleDeepLink(intent = intent, isFromOnNewIntent = false)
         }
 
         viewModel.checkForUnfinishedBackup()
     }
 
-    private fun handleDeepLink(intent: Intent) {
+    private fun handleDeepLink(intent: Intent, isFromOnNewIntent: Boolean) {
         if (routingFeatureToggle.isDeepLinkNavigationEnabled) {
             val deepLinkExtras = intent.getStringExtra(DEEPLINK_KEY)?.toUri()
-            val receivedDeepLink = intent.data ?: deepLinkExtras ?: return
+            val webLink = intent.getStringExtra(WEBLINK_KEY)
 
-            deeplinkFactory.handleDeeplink(deeplinkUri = receivedDeepLink, coroutineScope = lifecycleScope)
+            val receivedDeepLink = intent.data ?: deepLinkExtras
+
+            when {
+                receivedDeepLink != null -> {
+                    deeplinkFactory.handleDeeplink(
+                        deeplinkUri = receivedDeepLink,
+                        coroutineScope = lifecycleScope,
+                        isFromOnNewIntent = isFromOnNewIntent,
+                    )
+                }
+                webLink?.uriValidate() == true -> {
+                    urlOpener.openUrl(webLink)
+                }
+            }
         } else {
             deepLinksRegistry.launch(intent)
         }
