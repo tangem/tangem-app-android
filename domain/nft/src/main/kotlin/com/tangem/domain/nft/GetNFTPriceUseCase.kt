@@ -6,7 +6,7 @@ import com.tangem.domain.nft.models.NFTSalePrice
 import com.tangem.domain.nft.repository.NFTRepository
 import com.tangem.domain.quotes.single.SingleQuoteProducer
 import com.tangem.domain.quotes.single.SingleQuoteSupplier
-import com.tangem.domain.tokens.model.Quote
+import com.tangem.domain.tokens.model.fold
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -31,12 +31,15 @@ class GetNFTPriceUseCase(
                     assetId = nftAsset.id,
                 )
 
-                val quoteValue = quote as? Quote.Value
-
                 if (nftPrice !is NFTSalePrice.Value) {
                     nftPrice
                 } else {
-                    nftPrice.copy(fiatValue = quoteValue?.fiatRate?.multiply(nftPrice.value))
+                    nftPrice.copy(
+                        fiatValue = quote.fold(
+                            onData = { fiatRate.multiply(nftPrice.value) },
+                            onEmpty = { null },
+                        ),
+                    )
                 }
             }
         }
