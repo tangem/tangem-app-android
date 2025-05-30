@@ -19,7 +19,6 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.ui.TokenDetails
 import com.tangem.features.markets.token.block.TokenMarketBlockComponent
 import com.tangem.features.onramp.OnrampFeatureToggles
 import com.tangem.features.tokendetails.TokenDetailsComponent
-import com.tangem.features.txhistory.TxHistoryFeatureToggles
 import com.tangem.features.txhistory.component.TxHistoryComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -31,7 +30,6 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
     @Assisted params: TokenDetailsComponent.Params,
     tokenMarketBlockComponentFactory: TokenMarketBlockComponent.Factory,
     txHistoryComponentFactory: TxHistoryComponent.Factory,
-    txHistoryFeatureToggles: TxHistoryFeatureToggles,
     onrampFeatureToggles: OnrampFeatureToggles,
     routingFeatureToggle: RoutingFeatureToggle,
     deepLinksRegistry: DeepLinksRegistry,
@@ -43,9 +41,9 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
         params = TxHistoryComponent.Params(
             userWalletId = params.userWalletId,
             currency = params.currency,
-            openExplorer = { model.onExploreClick() },
+            openExplorer = model::onExploreClick,
         ),
-    ).takeIf { txHistoryFeatureToggles.isFeatureEnabled }
+    )
 
     init {
         lifecycle.subscribe(
