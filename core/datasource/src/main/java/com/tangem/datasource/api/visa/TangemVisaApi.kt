@@ -4,6 +4,7 @@ import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.visa.models.request.ActivationByCardWalletRequest
 import com.tangem.datasource.api.visa.models.request.ActivationByCustomerWalletRequest
 import com.tangem.datasource.api.visa.models.request.ActivationStatusRequest
+import com.tangem.datasource.api.visa.models.request.ExchangeAccessTokenRequest
 import com.tangem.datasource.api.visa.models.request.GenerateNoneByCardIdRequest
 import com.tangem.datasource.api.visa.models.request.GenerateNoneByCardWalletRequest
 import com.tangem.datasource.api.visa.models.request.GetAccessTokenByCardIdRequest
@@ -43,6 +44,9 @@ interface TangemVisaApi {
 
     @POST("v1/auth/token/refresh")
     suspend fun refreshCardWalletAccessToken(@Body request: RefreshTokenByCardWalletRequest): ApiResponse<JWTResponse>
+
+    @POST("v1/auth/token/exchange")
+    suspend fun exchangeAccessToken(@Body request: ExchangeAccessTokenRequest): ApiResponse<JWTResponse>
 
     // endregion
 
