@@ -21,6 +21,7 @@ import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
+import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.onramp.OnrampFeatureToggles
 import com.tangem.features.onramp.impl.R
@@ -55,7 +56,9 @@ internal class OnrampOperationModel @Inject constructor(
 
     private val _state = MutableStateFlow(value = getInitialState())
 
-    private val selectedUserWallet = getWalletsUseCase.invokeSync().first { it.walletId == params.userWalletId }
+    private val selectedUserWallet = getWalletsUseCase.invokeSync()
+        .first { it.walletId == params.userWalletId }
+        .requireColdWallet()
 
     init {
         analyticsEventHandler.send(
