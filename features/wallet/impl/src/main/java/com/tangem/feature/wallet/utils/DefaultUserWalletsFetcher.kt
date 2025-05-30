@@ -22,6 +22,7 @@ import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.TotalFiatBalance
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.domain.wallets.usecase.GetCardImageUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.wallet.utils.UserWalletsFetcher
@@ -84,6 +85,7 @@ internal class DefaultUserWalletsFetcher @AssistedInject constructor(
         return flow {
             emit(hashMapOf()) // emits right away so the transform doesn't wait for the images' loading to finish
             wallets.forEach { wallet ->
+                wallet.requireColdWallet()
                 val artwork = getCardImageUseCase(
                     cardId = wallet.cardId,
                     manufacturerName = wallet.scanResponse.card.manufacturer.name,
