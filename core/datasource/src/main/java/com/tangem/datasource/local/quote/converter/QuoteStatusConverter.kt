@@ -3,21 +3,20 @@ package com.tangem.datasource.local.quote.converter
 import com.tangem.datasource.api.tangemTech.models.QuotesResponse
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.tokens.model.Quote
+import com.tangem.domain.tokens.model.QuoteStatus
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.orZero
 
 /**
- * Converter from [QuotesResponse.Quote] to [Quote.Value]
+ * Converter from [QuotesResponse.Quote] to [QuoteStatus]
  *
  * @property source status source
  *
 * [REDACTED_AUTHOR]
  */
-class QuoteConverter(
+class QuoteStatusConverter(
     private val source: StatusSource,
-) :
-    Converter<Map.Entry<String, QuotesResponse.Quote>, Quote.Value> {
+) : Converter<Map.Entry<String, QuotesResponse.Quote>, QuoteStatus> {
 
     /**
      * Secondary constructor
@@ -28,14 +27,16 @@ class QuoteConverter(
         source = if (isCached) StatusSource.CACHE else StatusSource.ACTUAL,
     )
 
-    override fun convert(value: Map.Entry<String, QuotesResponse.Quote>): Quote.Value {
+    override fun convert(value: Map.Entry<String, QuotesResponse.Quote>): QuoteStatus {
         val (currencyId, quote) = value
 
-        return Quote.Value(
+        return QuoteStatus(
             rawCurrencyId = CryptoCurrency.RawID(currencyId),
-            fiatRate = quote.price.orZero(),
-            priceChange = quote.priceChange24h.orZero().movePointLeft(2),
-            source = source,
+            value = QuoteStatus.Data(
+                source = source,
+                fiatRate = quote.price.orZero(),
+                priceChange = quote.priceChange24h.orZero().movePointLeft(2),
+            ),
         )
     }
 }

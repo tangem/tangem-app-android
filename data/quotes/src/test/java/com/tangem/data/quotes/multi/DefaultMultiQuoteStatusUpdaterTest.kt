@@ -16,7 +16,7 @@ import org.junit.Test
 /**
 * [REDACTED_AUTHOR]
  */
-internal class DefaultMultiQuoteUpdaterTest {
+internal class DefaultMultiQuoteStatusUpdaterTest {
 
     private val appCurrencyResponseStore: AppCurrencyResponseStore = mockk()
     private val quotesStore: QuotesStoreV2 = mockk()

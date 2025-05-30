@@ -1,7 +1,7 @@
 package com.tangem.domain.quotes.single
 
 import com.tangem.domain.core.flow.FlowCachingSupplier
-import com.tangem.domain.tokens.model.Quote
+import com.tangem.domain.tokens.model.QuoteStatus
 
 /**
  * Supplier of quote [SingleQuoteProducer.Params]
@@ -14,4 +14,4 @@ import com.tangem.domain.tokens.model.Quote
 abstract class SingleQuoteSupplier(
     override val factory: SingleQuoteProducer.Factory,
     override val keyCreator: (SingleQuoteProducer.Params) -> String,
-) : FlowCachingSupplier<SingleQuoteProducer, SingleQuoteProducer.Params, Quote>()
+) : FlowCachingSupplier<SingleQuoteProducer, SingleQuoteProducer.Params, QuoteStatus>()

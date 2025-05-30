@@ -21,7 +21,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import java.math.BigDecimal
 
-internal class DefaultSingleQuoteFetcherTest {
+internal class DefaultSingleQuoteStatusFetcherTest {
 
     private val tangemTechApi = mockk<TangemTechApi>(relaxed = true)
     private val appCurrencyResponseStore = mockk<AppCurrencyResponseStore>(relaxed = true)

@@ -2,17 +2,17 @@ package com.tangem.data.quotes.store
 
 import com.tangem.datasource.api.tangemTech.models.QuotesResponse
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.tokens.model.Quote
+import com.tangem.domain.tokens.model.QuoteStatus
 import kotlinx.coroutines.flow.Flow
 
-/** Store of [Quote]'es set */
+/** Store of [QuoteStatus]'es set */
 internal interface QuotesStoreV2 {
 
     /** Get flow of quotes */
-    fun get(): Flow<Set<Quote>>
+    fun get(): Flow<Set<QuoteStatus>>
 
     /** Get all quotes synchronously or null */
-    suspend fun getAllSyncOrNull(): Set<Quote>?
+    suspend fun getAllSyncOrNull(): Set<QuoteStatus>?
 
     /** Refresh status of [currenciesIds] */
     suspend fun refresh(currenciesIds: Set<CryptoCurrency.RawID>)

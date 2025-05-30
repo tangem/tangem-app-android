@@ -23,7 +23,7 @@ import java.math.BigDecimal
 /**
 * [REDACTED_AUTHOR]
  */
-internal class DefaultMultiQuoteFetcherTest {
+internal class DefaultMultiQuoteStatusFetcherTest {
 
     private val tangemTechApi = mockk<TangemTechApi>(relaxed = true)
     private val appCurrencyResponseStore = mockk<AppCurrencyResponseStore>(relaxed = true)
