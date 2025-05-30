@@ -177,8 +177,6 @@ dependencies {
     implementation(projects.features.tokendetails.impl)
     implementation(projects.features.manageTokens.api)
     implementation(projects.features.manageTokens.impl)
-    implementation(projects.features.send.api)
-    implementation(projects.features.send.impl)
     implementation(projects.features.sendV2.api)
     implementation(projects.features.sendV2.impl)
     implementation(projects.features.qrScanning.api)
