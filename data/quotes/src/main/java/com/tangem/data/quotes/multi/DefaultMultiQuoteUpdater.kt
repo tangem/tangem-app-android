@@ -7,7 +7,7 @@ import com.tangem.datasource.appcurrency.AppCurrencyResponseStore
 import com.tangem.domain.core.utils.EitherFlow
 import com.tangem.domain.quotes.multi.MultiQuoteFetcher
 import com.tangem.domain.quotes.multi.MultiQuoteUpdater
-import com.tangem.domain.tokens.model.Quote
+import com.tangem.domain.tokens.model.QuoteStatus
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -61,7 +61,7 @@ internal class DefaultMultiQuoteUpdater @Inject constructor(
             .filterNotNull()
             .mapLatest { appCurrency ->
                 val currenciesIds = quotesStore.getAllSyncOrNull().orEmpty()
-                    .mapTo(destination = hashSetOf(), transform = Quote::rawCurrencyId)
+                    .mapTo(destination = hashSetOf(), transform = QuoteStatus::rawCurrencyId)
 
                 multiQuoteFetcher(
                     params = MultiQuoteFetcher.Params(currenciesIds = currenciesIds, appCurrencyId = appCurrency.id),
