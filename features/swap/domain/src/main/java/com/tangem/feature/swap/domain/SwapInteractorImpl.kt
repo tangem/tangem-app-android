@@ -505,8 +505,10 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             """.trimIndent(),
         )
 
-        val cardId = userWallet.scanResponse.card.cardId
-        if (isDemoCardUseCase(cardId)) return SwapTransactionState.DemoMode
+        val userWallet = userWallet
+        if (userWallet is UserWallet.Cold && isDemoCardUseCase(userWallet.scanResponse.card.cardId)) {
+            return SwapTransactionState.DemoMode
+        }
 
         return when (swapProvider.type) {
             ExchangeProviderType.CEX -> {
@@ -691,9 +693,10 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         val exchangeDataCex =
             exchangeData.transaction as? ExpressTransactionModel.CEX ?: return SwapTransactionState.Error.UnknownError
 
-        val cardId = userWallet.scanResponse.card.cardId
-
-        if (isDemoCardUseCase(cardId)) return SwapTransactionState.Error.UnknownError
+        val userWallet = userWallet
+        if (userWallet is UserWallet.Cold && isDemoCardUseCase(userWallet.scanResponse.card.cardId)) {
+            return SwapTransactionState.Error.UnknownError
+        }
 
         val txData = createTransferTransactionUseCase(
             amount = amount.value.convertToSdkAmount(currencyToSend.currency),

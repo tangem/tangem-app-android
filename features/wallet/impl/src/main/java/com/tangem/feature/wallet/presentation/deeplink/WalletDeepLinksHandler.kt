@@ -11,6 +11,7 @@ import com.tangem.domain.tokens.GetCryptoCurrencyUseCase
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.models.isMultiCurrency
 import com.tangem.features.onramp.OnrampFeatureToggles
 import com.tangem.utils.coroutines.launchOnCancellation
 import kotlinx.coroutines.CoroutineScope

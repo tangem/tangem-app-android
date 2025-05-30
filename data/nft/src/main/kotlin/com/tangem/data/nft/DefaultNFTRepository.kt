@@ -26,6 +26,7 @@ import com.tangem.domain.nft.models.NFTSalePrice
 import com.tangem.domain.nft.repository.NFTRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.features.nft.NFTFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
@@ -204,7 +205,7 @@ internal class DefaultNFTRepository @Inject constructor(
                 networkFactory.create(
                     blockchain = it,
                     extraDerivationPath = null,
-                    scanResponse = userWallet.scanResponse,
+                    scanResponse = userWallet.requireColdWallet().scanResponse, // TODO [REDACTED_TASK_KEY]
                 )
             }
     }
