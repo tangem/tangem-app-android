@@ -6,7 +6,7 @@ import arrow.core.toOption
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.quotes.single.SingleQuoteProducer
 import com.tangem.domain.quotes.single.SingleQuoteSupplier
-import com.tangem.domain.tokens.model.Quote
+import com.tangem.domain.tokens.model.QuoteStatus
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flowOf
@@ -20,13 +20,13 @@ class GetCurrencyQuotesUseCase(
         currencyID: CryptoCurrency.ID,
         interval: PriceChangeInterval,
         refresh: Boolean,
-    ): Flow<Option<Quote.Value>> {
+    ): Flow<Option<QuoteStatus.Data>> {
         val rawId = currencyID.rawCurrencyId ?: return flowOf(None)
 
         return singleQuoteSupplier(
             params = SingleQuoteProducer.Params(rawCurrencyId = rawId),
         )
-            .map { (it as? Quote.Value).toOption() }
+            .map { (it.value as? QuoteStatus.Data).toOption() }
             .catch { emit(None) }
     }
 }
