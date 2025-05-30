@@ -6,7 +6,7 @@ import com.tangem.data.quotes.store.QuotesStoreV2
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.quotes.single.SingleQuoteProducer
-import com.tangem.domain.tokens.model.Quote
+import com.tangem.domain.tokens.model.QuoteStatus
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.every
 import io.mockk.mockk
@@ -19,7 +19,7 @@ import java.math.BigDecimal
 /**
 [REDACTED_AUTHOR]
  */
-internal class DefaultSingleQuoteProducerTest {
+internal class DefaultSingleQuoteStatusProducerTest {
 
     private val params = SingleQuoteProducer.Params(
         rawCurrencyId = CryptoCurrency.RawID(value = "BTC"),
@@ -35,11 +35,11 @@ internal class DefaultSingleQuoteProducerTest {
 
     @Test
     fun `test that flow is mapped for network from params`() = runTest {
-        val status = Quote.Empty(rawCurrencyId = params.rawCurrencyId)
+        val status = QuoteStatus(rawCurrencyId = params.rawCurrencyId)
         val storeQuote = flowOf(
             setOf(
                 status,
-                Quote.Empty(rawCurrencyId = CryptoCurrency.RawID(value = "ETH")),
+                QuoteStatus(rawCurrencyId = CryptoCurrency.RawID(value = "ETH")),
             ),
         )
 
@@ -57,7 +57,7 @@ internal class DefaultSingleQuoteProducerTest {
 
     @Test
     fun `test that flow is updated if quote is updated`() = runTest {
-        val storeQuote = MutableSharedFlow<Set<Quote>>(replay = 2, extraBufferCapacity = 1)
+        val storeQuote = MutableSharedFlow<Set<QuoteStatus>>(replay = 2, extraBufferCapacity = 1)
 
         every { quotesStore.get() } returns storeQuote
 
@@ -66,7 +66,7 @@ internal class DefaultSingleQuoteProducerTest {
         verify { quotesStore.get() }
 
         // first emit
-        val status = Quote.Empty(rawCurrencyId = params.rawCurrencyId)
+        val status = QuoteStatus(rawCurrencyId = params.rawCurrencyId)
         storeQuote.emit(value = setOf(status))
 
         val values1 = getEmittedValues(flow = actual)
@@ -75,11 +75,13 @@ internal class DefaultSingleQuoteProducerTest {
         Truth.assertThat(values1).isEqualTo(listOf(status))
 
         // second emit
-        val updatedStatus = Quote.Value(
+        val updatedStatus = QuoteStatus(
             rawCurrencyId = params.rawCurrencyId,
-            fiatRate = BigDecimal.ONE,
-            priceChange = BigDecimal.ZERO,
-            source = StatusSource.ACTUAL,
+            value = QuoteStatus.Data(
+                fiatRate = BigDecimal.ONE,
+                priceChange = BigDecimal.ZERO,
+                source = StatusSource.ACTUAL,
+            ),
         )
         storeQuote.emit(value = setOf(updatedStatus))
 
@@ -91,7 +93,7 @@ internal class DefaultSingleQuoteProducerTest {
 
     @Test
     fun `test that flow is filtered the same status`() = runTest {
-        val storeQuote = MutableSharedFlow<Set<Quote>>(replay = 2, extraBufferCapacity = 1)
+        val storeQuote = MutableSharedFlow<Set<QuoteStatus>>(replay = 2, extraBufferCapacity = 1)
 
         every { quotesStore.get() } returns storeQuote
 
@@ -100,7 +102,7 @@ internal class DefaultSingleQuoteProducerTest {
         verify { quotesStore.get() }
 
         // first emit
-        val status = Quote.Empty(rawCurrencyId = params.rawCurrencyId)
+        val status = QuoteStatus(rawCurrencyId = params.rawCurrencyId)
         storeQuote.emit(value = setOf(status))
 
         val values1 = getEmittedValues(flow = actual)
@@ -120,11 +122,13 @@ internal class DefaultSingleQuoteProducerTest {
     @Test
     fun `test if flow throws exception`() = runTest {
         val exception = IllegalStateException()
-        val status = Quote.Value(
+        val status = QuoteStatus(
             rawCurrencyId = params.rawCurrencyId,
-            fiatRate = BigDecimal.ONE,
-            priceChange = BigDecimal.ZERO,
-            source = StatusSource.ACTUAL,
+            value = QuoteStatus.Data(
+                fiatRate = BigDecimal.ONE,
+                priceChange = BigDecimal.ZERO,
+                source = StatusSource.ACTUAL,
+            ),
         )
 
         val innerFlow = MutableStateFlow(value = false)
@@ -146,7 +150,7 @@ internal class DefaultSingleQuoteProducerTest {
         val values1 = getEmittedValues(flow = actual)
 
         Truth.assertThat(values1.size).isEqualTo(1)
-        val fallbackStatus = Quote.Empty(rawCurrencyId = params.rawCurrencyId)
+        val fallbackStatus = QuoteStatus(rawCurrencyId = params.rawCurrencyId)
         Truth.assertThat(values1).isEqualTo(listOf(fallbackStatus))
 
         innerFlow.emit(value = true)
@@ -160,7 +164,7 @@ internal class DefaultSingleQuoteProducerTest {
     fun `test if flow doesn't contain network from params`() = runTest {
         val storeFlow = flowOf(
             setOf(
-                Quote.Empty(rawCurrencyId = CryptoCurrency.RawID(value = "ETH")),
+                QuoteStatus(rawCurrencyId = CryptoCurrency.RawID(value = "ETH")),
             ),
         )
 
