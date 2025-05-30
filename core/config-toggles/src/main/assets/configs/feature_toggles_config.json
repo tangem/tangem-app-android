@@ -36,10 +36,6 @@
         "version": "undefined"
     },
     {
-        "name": "TX_HISTORY_REFACTORING_ENABLED",
-        "version": "5.22.0"
-    },
-    {
         "name": "NEW_ARTWORK_LOADING",
         "version": "5.25.0"
     },
