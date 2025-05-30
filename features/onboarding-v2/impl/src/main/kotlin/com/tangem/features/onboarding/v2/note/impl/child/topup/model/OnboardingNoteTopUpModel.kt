@@ -22,7 +22,7 @@ import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.analytics.TokenReceiveAnalyticsEvent
-import com.tangem.domain.wallets.builder.UserWalletBuilder
+import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.features.onboarding.v2.common.analytics.OnboardingEvent
@@ -41,7 +41,7 @@ internal class OnboardingNoteTopUpModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
     private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
-    private val userWalletBuilderFactory: UserWalletBuilder.Factory,
+    private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory,
     private val getLegacyTopUpUrlUseCase: GetLegacyTopUpUrlUseCase,
     private val urlOpener: UrlOpener,
     private val clipboardManager: ClipboardManager,
@@ -240,7 +240,7 @@ internal class OnboardingNoteTopUpModel @Inject constructor(
 
     private suspend fun createAndSaveUserWallet(scanResponse: ScanResponse): UserWallet {
         val wallet = requireNotNull(
-            value = userWalletBuilderFactory.create(scanResponse = scanResponse).build(),
+            value = coldUserWalletBuilderFactory.create(scanResponse = scanResponse).build(),
             lazyMessage = { "User wallet not created" },
         )
         saveWalletUseCase(wallet, false)
