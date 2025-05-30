@@ -23,7 +23,7 @@ import com.tangem.domain.staking.single.SingleYieldBalanceProducer
 import com.tangem.domain.staking.single.SingleYieldBalanceSupplier
 import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.model.Quote
+import com.tangem.domain.tokens.model.QuoteStatus
 import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations.Error
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.utils.CurrencyStatusProxyCreator
@@ -52,7 +52,7 @@ abstract class BaseCurrencyStatusOperations(
 
     protected val currencyStatusProxyCreator = CurrencyStatusProxyCreator(stakingRepository)
 
-    protected abstract fun getQuotes(id: CryptoCurrency.RawID): Flow<Either<Error, Set<Quote>>>
+    protected abstract fun getQuotes(id: CryptoCurrency.RawID): Flow<Either<Error, Set<QuoteStatus>>>
 
     protected abstract fun getNetworksStatuses(
         userWalletId: UserWalletId,
@@ -120,7 +120,7 @@ abstract class BaseCurrencyStatusOperations(
             combine(quoteFlow, statusFlow, yieldBalanceFlow) { maybeQuote, maybeNetworkStatus, maybeYieldBalance ->
                 currencyStatusProxyCreator.createCurrencyStatus(
                     currency = currency,
-                    maybeQuote = maybeQuote,
+                    maybeQuoteStatus = maybeQuote,
                     maybeNetworkStatus = maybeNetworkStatus,
                     maybeYieldBalance = maybeYieldBalance,
                 )
@@ -129,7 +129,7 @@ abstract class BaseCurrencyStatusOperations(
             combine(quoteFlow, statusFlow) { maybeQuote, maybeNetworkStatus ->
                 currencyStatusProxyCreator.createCurrencyStatus(
                     currency = currency,
-                    maybeQuote = maybeQuote,
+                    maybeQuoteStatus = maybeQuote,
                     maybeNetworkStatus = maybeNetworkStatus,
                     maybeYieldBalance = null,
                 )
@@ -210,7 +210,7 @@ abstract class BaseCurrencyStatusOperations(
 
                     return currencyStatusProxyCreator.createCurrencyStatus(
                         currency = currency,
-                        maybeQuote = quote,
+                        maybeQuoteStatus = quote,
                         maybeNetworkStatus = networkStatuses,
                         maybeYieldBalance = yieldBalances,
                     )
@@ -303,7 +303,7 @@ abstract class BaseCurrencyStatusOperations(
 
         return currencyStatusProxyCreator.createCurrencyStatus(
             currency = currency,
-            maybeQuote = quotes,
+            maybeQuoteStatus = quotes,
             maybeNetworkStatus = networkStatus,
             maybeYieldBalance = yieldBalances,
         )
