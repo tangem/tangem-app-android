@@ -49,6 +49,9 @@ import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.models.isLocked
+import com.tangem.domain.wallets.models.isMultiCurrency
+import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.send.api.SendComponent
@@ -272,7 +275,8 @@ internal class SendModel @Inject constructor(
                     checkIfSubtractAvailable()
                     checkIfUtxoConsolidationAvailable()
 
-                    val isSingleWalletWithToken = wallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()
+                    val isSingleWalletWithToken = wallet is UserWallet.Cold &&
+                        wallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()
                     val isMultiCurrency = wallet.isMultiCurrency
                     getCurrenciesStatusUpdates(
                         isSingleWalletWithToken = isSingleWalletWithToken,
@@ -612,6 +616,7 @@ internal class SendModel @Inject constructor(
             ),
         )
 
+        val userWallet = userWallet.requireColdWallet() // TODO [REDACTED_TASK_KEY]
         val cardInfo = getCardInfoUseCase(userWallet.scanResponse).getOrNull() ?: return
 
         modelScope.launch {
