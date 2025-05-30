@@ -166,7 +166,7 @@ internal class OnboardingVisaInProgressModel @Inject constructor(
         val authTokens = visaAuthTokenStorage.get(params.scanResponse.card.cardId)
             ?: error("Auth tokens are not found. This should not happen.")
 
-        val newTokens = visaAuthRepository.refreshAccessTokens(authTokens.refreshToken)
+        val newTokens = visaAuthRepository.exchangeAccessToken(authTokens)
             .getOrElse {
                 uiMessageSender.showErrorDialog(it)
                 return
