@@ -8,11 +8,13 @@ import com.tangem.feature.referral.api.deeplink.ReferralDeepLinkHandler
 import com.tangem.features.onramp.deeplink.BuyDeepLinkHandler
 import com.tangem.features.onramp.deeplink.OnrampDeepLinkHandler
 import com.tangem.features.send.v2.api.deeplink.SellDeepLinkHandler
+import com.tangem.features.staking.api.deeplink.StakingDeepLinkHandler
 import com.tangem.features.tokendetails.deeplink.TokenDetailsDeepLinkHandler
 import com.tangem.features.wallet.deeplink.WalletDeepLinkHandler
 import com.tangem.features.walletconnect.components.deeplink.WalletConnectDeepLinkHandler
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
+import com.tangem.utils.extensions.uriValidate
 import dagger.hilt.android.scopes.ActivityScoped
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -32,6 +34,7 @@ internal class DeepLinkFactory @Inject constructor(
     private val walletConnectDeepLink: WalletConnectDeepLinkHandler.Factory,
     private val walletDeepLink: WalletDeepLinkHandler.Factory,
     private val tokenDetailsDeepLink: TokenDetailsDeepLinkHandler.Factory,
+    private val stakingDeepLink: StakingDeepLinkHandler.Factory,
 ) {
     private val permittedAppRoute = MutableStateFlow(false)
 
@@ -39,7 +42,7 @@ internal class DeepLinkFactory @Inject constructor(
     private val deepLinkHandlerJobHolder = JobHolder()
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    fun handleDeeplink(deeplinkUri: Uri, coroutineScope: CoroutineScope) {
+    fun handleDeeplink(deeplinkUri: Uri, coroutineScope: CoroutineScope, isFromOnNewIntent: Boolean) {
         lastDeepLink = deeplinkUri
 
         Timber.i(
@@ -52,7 +55,7 @@ internal class DeepLinkFactory @Inject constructor(
             .transformLatest<Boolean, Unit> { isPermitted ->
                 if (isPermitted) {
                     lastDeepLink?.let {
-                        launchDeepLink(it, coroutineScope)
+                        launchDeepLink(it, coroutineScope, isFromOnNewIntent)
                     }
                     lastDeepLink = null
                 }
@@ -77,9 +80,9 @@ internal class DeepLinkFactory @Inject constructor(
         }
     }
 
-    private fun launchDeepLink(deeplinkUri: Uri, coroutineScope: CoroutineScope) {
+    private fun launchDeepLink(deeplinkUri: Uri, coroutineScope: CoroutineScope, isFromOnNewIntent: Boolean) {
         when (deeplinkUri.scheme) {
-            DeepLinkScheme.Tangem.scheme -> handleTangemDeepLinks(deeplinkUri, coroutineScope)
+            DeepLinkScheme.Tangem.scheme -> handleTangemDeepLinks(deeplinkUri, coroutineScope, isFromOnNewIntent)
             DeepLinkScheme.WalletConnect.scheme -> walletConnectDeepLink.create(deeplinkUri)
             else -> {
                 Timber.i(
@@ -92,7 +95,7 @@ internal class DeepLinkFactory @Inject constructor(
         }
     }
 
-    private fun handleTangemDeepLinks(deeplinkUri: Uri, coroutineScope: CoroutineScope) {
+    private fun handleTangemDeepLinks(deeplinkUri: Uri, coroutineScope: CoroutineScope, isFromOnNewIntent: Boolean) {
         val queryParams = getQueryParams(deeplinkUri)
         when (deeplinkUri.host) {
             DeepLinkRoute.Onramp.host -> onrampDeepLink.create(coroutineScope, queryParams)
@@ -100,7 +103,12 @@ internal class DeepLinkFactory @Inject constructor(
             DeepLinkRoute.Buy.host -> buyDeepLink.create(coroutineScope)
             DeepLinkRoute.Referral.host -> referralDeepLink.create()
             DeepLinkRoute.Wallet.host -> walletDeepLink.create()
-            DeepLinkRoute.TokenDetails.host -> tokenDetailsDeepLink.create(coroutineScope, queryParams)
+            DeepLinkRoute.TokenDetails.host -> tokenDetailsDeepLink.create(
+                coroutineScope = coroutineScope,
+                queryParams = queryParams,
+                isFromOnNewIntent = isFromOnNewIntent,
+            )
+            DeepLinkRoute.Staking.host -> stakingDeepLink.create(coroutineScope, queryParams)
             else -> {
                 Timber.i(
                     """
@@ -119,24 +127,11 @@ internal class DeepLinkFactory @Inject constructor(
         uri.queryParameterNames.forEach { paramName ->
             val paramValue = uri.getQueryParameter(paramName)
 
-            if (paramName.validate() && paramValue?.validate() == true) {
+            if (paramName.uriValidate() && paramValue?.uriValidate() == true) {
                 params[paramName] = paramValue
             }
         }
 
         return params
-    }
-
-    /**
-     * Check for malicious symbol in uri part
-     */
-    private fun String.validate(): Boolean {
-        val regex = DEEPLINK_VALIDATION_REGEX.toRegex()
-
-        return !regex.containsMatchIn(this)
-    }
-
-    private companion object {
-        const val DEEPLINK_VALIDATION_REGEX = "['\";<>()+\\\\]"
     }
 }
