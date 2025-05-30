@@ -8,7 +8,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.components.artwork.ArtworkUM
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.wallets.builder.UserWalletBuilder
+import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.features.onboarding.v2.common.analytics.OnboardingEvent
@@ -28,7 +28,7 @@ internal class OnboardingNoteCreateWalletModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val tangemSdkManager: TangemSdkManager,
     private val cardRepository: CardRepository,
-    private val userWalletBuilderFactory: UserWalletBuilder.Factory,
+    private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory,
     private val saveWalletUseCase: SaveWalletUseCase,
 ) : Model() {
 
@@ -87,7 +87,7 @@ internal class OnboardingNoteCreateWalletModel @Inject constructor(
 
     private suspend fun createUserWallet(scanResponse: ScanResponse): UserWallet {
         return requireNotNull(
-            value = userWalletBuilderFactory.create(scanResponse = scanResponse).build(),
+            value = coldUserWalletBuilderFactory.create(scanResponse = scanResponse).build(),
             lazyMessage = { "User wallet not created" },
         )
     }

@@ -5,6 +5,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.domain.common.util.getCardsCount
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.models.isLocked
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.feature.wallet.presentation.wallet.state.model.NOT_INITIALIZED_WALLET_INDEX
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
@@ -175,6 +176,7 @@ internal class WalletsUpdateActionResolver @Inject constructor(
     }
 
     private fun isSelectedWalletCardsCountChanged(state: WalletScreenState, selectedWallet: UserWallet): Boolean {
+        if (selectedWallet !is UserWallet.Cold) return false
         val prevSelectedWallet = state.getPrevSelectedWallet()
         return prevSelectedWallet is WalletCardState.Content &&
             prevSelectedWallet.cardCount != selectedWallet.getCardsCount()
