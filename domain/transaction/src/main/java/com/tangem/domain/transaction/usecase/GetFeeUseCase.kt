@@ -30,7 +30,9 @@ class GetFeeUseCase(
     suspend operator fun invoke(userWallet: UserWallet, network: Network, transactionData: TransactionData) = either {
         catch(
             block = {
-                val transactionSender = if (demoConfig.isDemoCardId(userWallet.scanResponse.card.cardId)) {
+                val transactionSender = if (userWallet is UserWallet.Cold &&
+                    demoConfig.isDemoCardId(userWallet.scanResponse.card.cardId)
+                ) {
                     demoTransactionSender(userWallet, network)
                 } else {
                     walletManagersFacade.getOrCreateWalletManager(
@@ -63,7 +65,9 @@ class GetFeeUseCase(
             block = {
                 val amountData = convertCryptoCurrencyToAmount(cryptoCurrency, amount)
 
-                val result = if (demoConfig.isDemoCardId(userWallet.scanResponse.card.cardId)) {
+                val result = if (userWallet is UserWallet.Cold &&
+                    demoConfig.isDemoCardId(userWallet.scanResponse.card.cardId)
+                ) {
                     demoTransactionSender(userWallet, cryptoCurrency.network).getFee(
                         amount = amountData,
                         destination = destination,
