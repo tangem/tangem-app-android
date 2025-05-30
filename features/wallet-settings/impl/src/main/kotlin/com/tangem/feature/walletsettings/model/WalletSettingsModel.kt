@@ -25,6 +25,8 @@ import com.tangem.domain.nft.EnableWalletNFTUseCase
 import com.tangem.domain.nft.GetWalletNFTEnabledUseCase
 import com.tangem.domain.notifications.toggles.NotificationsFeatureToggles
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.isMultiCurrency
+import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.domain.wallets.usecase.*
 import com.tangem.feature.walletsettings.analytics.Settings
 import com.tangem.feature.walletsettings.component.WalletSettingsComponent
@@ -114,8 +116,9 @@ internal class WalletSettingsModel @Inject constructor(
     ): PersistentList<WalletSettingsItemUM> = itemsBuilder.buildItems(
         userWalletId = userWallet.walletId,
         userWalletName = userWallet.name,
-        isReferralAvailable = userWallet.cardTypesResolver.isTangemWallet(),
-        isLinkMoreCardsAvailable = userWallet.scanResponse.card.backupStatus == CardDTO.BackupStatus.NoBackup,
+        isReferralAvailable = userWallet !is UserWallet.Cold || userWallet.cardTypesResolver.isTangemWallet(),
+        isLinkMoreCardsAvailable = userWallet is UserWallet.Cold &&
+            userWallet.scanResponse.card.backupStatus == CardDTO.BackupStatus.NoBackup,
         isManageTokensAvailable = userWallet.isMultiCurrency,
         isRenameWalletAvailable = isRenameWalletAvailable,
         renameWallet = { openRenameWalletDialog(userWallet, dialogNavigation) },
@@ -138,6 +141,7 @@ internal class WalletSettingsModel @Inject constructor(
             messageSender.send(message)
         },
         onLinkMoreCardsClick = {
+            userWallet.requireColdWallet()
             onLinkMoreCardsClick(scanResponse = userWallet.scanResponse)
         },
         onReferralClick = { onReferralClick(userWallet) },
@@ -251,7 +255,7 @@ internal class WalletSettingsModel @Inject constructor(
     }
 
     private fun onReferralClick(userWallet: UserWallet) {
-        if (isDemoCardUseCase(userWallet.cardId)) {
+        if (userWallet is UserWallet.Cold && isDemoCardUseCase(userWallet.cardId)) {
             messageSender.send(
                 DialogMessage(message = resourceReference(R.string.alert_demo_feature_disabled)),
             )
