@@ -4,6 +4,7 @@ import arrow.core.getOrElse
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.domain.notifications.models.NotificationType
+import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
 import com.tangem.domain.tokens.GetCryptoCurrenciesUseCase
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
@@ -15,12 +16,15 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
+@Suppress("LongParameterList")
 internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
     @Assisted private val scope: CoroutineScope,
     @Assisted private val queryParams: Map<String, String>,
+    @Assisted private val isFromOnNewIntent: Boolean,
     private val appRouter: AppRouter,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val getCryptoCurrenciesUseCase: GetCryptoCurrenciesUseCase,
+    private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
 ) : TokenDetailsDeepLinkHandler {
 
     init {
@@ -67,6 +71,14 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
                         currency = cryptoCurrency,
                     ),
                 )
+
+                if (isFromOnNewIntent) {
+                    fetchCurrencyStatusUseCase.invoke(
+                        userWalletId = userWalletId,
+                        id = cryptoCurrency.id,
+                        refresh = true,
+                    )
+                }
             }
         }
     }
@@ -76,6 +88,7 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
         override fun create(
             coroutineScope: CoroutineScope,
             queryParams: Map<String, String>,
+            isFromOnNewIntent: Boolean,
         ): DefaultTokenDetailsDeepLinkHandler
     }
 
