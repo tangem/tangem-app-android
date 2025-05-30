@@ -31,7 +31,7 @@ import com.tangem.domain.staking.single.SingleYieldBalanceSupplier
 import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.model.Quote
+import com.tangem.domain.tokens.model.QuoteStatus
 import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations.Error
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.utils.extractAddress
@@ -121,7 +121,7 @@ class CachedCurrenciesStatusesOperations(
             val (networks, currenciesIds) = getIds(currencies)
 
             fun createCurrenciesStatuses(
-                maybeQuotes: Either<TokenListError, Set<Quote>>?,
+                maybeQuotes: Either<TokenListError, Set<QuoteStatus>>?,
                 maybeNetworkStatuses: Either<TokenListError, Set<NetworkStatus>>?,
                 maybeYieldBalances: Either<TokenListError, YieldBalanceList>?,
                 isUpdating: Boolean,
@@ -212,7 +212,7 @@ class CachedCurrenciesStatusesOperations(
 
     private fun createCurrenciesStatuses(
         currencies: NonEmptyList<CryptoCurrency>,
-        maybeQuotes: Either<TokenListError, Set<Quote>>?,
+        maybeQuotes: Either<TokenListError, Set<QuoteStatus>>?,
         maybeNetworkStatuses: Either<TokenListError, Set<NetworkStatus>>?,
         maybeYieldBalances: Either<TokenListError, YieldBalanceList>?,
         isUpdating: Boolean,
@@ -238,7 +238,7 @@ class CachedCurrenciesStatusesOperations(
 
             val currencyStatus = currencyStatusProxyCreator.createCurrencyStatus(
                 currency = currency,
-                quote = quote,
+                quoteStatus = quote,
                 networkStatus = networkStatus,
                 yieldBalance = yieldBalance,
                 ignoreQuote = quotesRetrievingFailed,
@@ -272,7 +272,7 @@ class CachedCurrenciesStatusesOperations(
             .distinctUntilChanged()
     }
 
-    private fun getQuotes(tokensIds: NonEmptySet<CryptoCurrency.ID>): Flow<Either<TokenListError, Set<Quote>>> {
+    private fun getQuotes(tokensIds: NonEmptySet<CryptoCurrency.ID>): Flow<Either<TokenListError, Set<QuoteStatus>>> {
         return getQuotesUpdates(
             rawCurrencyIds = tokensIds.mapNotNullTo(
                 destination = hashSetOf(),
@@ -281,11 +281,11 @@ class CachedCurrenciesStatusesOperations(
         )
     }
 
-    override fun getQuotes(id: CryptoCurrency.RawID): Flow<Either<Error, Set<Quote>>> {
+    override fun getQuotes(id: CryptoCurrency.RawID): Flow<Either<Error, Set<QuoteStatus>>> {
         return singleQuoteSupplier(
             params = SingleQuoteProducer.Params(rawCurrencyId = id),
         )
-            .map<Quote, Either<Error, Set<Quote>>> { setOf(it).right() }
+            .map<QuoteStatus, Either<Error, Set<QuoteStatus>>> { setOf(it).right() }
             .distinctUntilChanged()
     }
 
@@ -353,9 +353,11 @@ class CachedCurrenciesStatusesOperations(
     }
 
     // temporary code because token list is built using networks list
-    private fun getQuotesUpdates(rawCurrencyIds: Set<CryptoCurrency.RawID>): EitherFlow<TokenListError, Set<Quote>> {
+    private fun getQuotesUpdates(
+        rawCurrencyIds: Set<CryptoCurrency.RawID>,
+    ): EitherFlow<TokenListError, Set<QuoteStatus>> {
         return channelFlow {
-            val state = MutableStateFlow(emptySet<Quote>())
+            val state = MutableStateFlow(emptySet<QuoteStatus>())
 
             rawCurrencyIds.onEach {
                 launch {
@@ -375,7 +377,7 @@ class CachedCurrenciesStatusesOperations(
                 .onEach(::send)
                 .launchIn(scope = this)
         }
-            .map<Set<Quote>, Either<TokenListError, Set<Quote>>> { it.right() }
+            .map<Set<QuoteStatus>, Either<TokenListError, Set<QuoteStatus>>> { it.right() }
             .distinctUntilChanged()
     }
 
