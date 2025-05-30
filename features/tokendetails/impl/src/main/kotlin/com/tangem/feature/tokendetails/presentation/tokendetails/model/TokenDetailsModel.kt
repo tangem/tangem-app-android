@@ -65,6 +65,7 @@ import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.tokendetails.presentation.router.InnerTokenDetailsRouter
@@ -288,7 +289,8 @@ internal class TokenDetailsModel @Inject constructor(
                 userWalletId = userWalletId,
                 currencyStatus = cryptoCurrencyStatus,
                 derivationPath = cryptoCurrency.network.derivationPath,
-                isSingleWalletWithTokens = userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
+                isSingleWalletWithTokens = userWallet is UserWallet.Cold &&
+                    userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
             )
                 .distinctUntilChanged()
                 .onEach {
@@ -306,7 +308,8 @@ internal class TokenDetailsModel @Inject constructor(
             getSingleCryptoCurrencyStatusUseCase.invokeMultiWallet(
                 userWalletId = userWalletId,
                 currencyId = cryptoCurrency.id,
-                isSingleWalletWithTokens = userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
+                isSingleWalletWithTokens = userWallet is UserWallet.Cold &&
+                    userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
             )
                 .distinctUntilChanged()
                 .onEach { maybeCurrencyStatus ->
@@ -440,7 +443,10 @@ internal class TokenDetailsModel @Inject constructor(
     private fun updateTopBarMenu() {
         modelScope.launch(dispatchers.main) {
             val hasDerivations =
-                networkHasDerivationUseCase(userWallet.scanResponse, cryptoCurrency.network).getOrElse { false }
+                networkHasDerivationUseCase(
+                    scanResponse = userWallet.requireColdWallet().scanResponse, // TODO [REDACTED_TASK_KEY]
+                    network = cryptoCurrency.network,
+                ).getOrElse { false }
 
             val isSupported = getExtendedPublicKeyForCurrencyUseCase.isSupported(userWalletId, cryptoCurrency.network)
 
@@ -720,7 +726,7 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     private fun showErrorIfDemoModeOrElse(action: () -> Unit) {
-        if (isDemoCardUseCase(cardId = userWallet.cardId)) {
+        if (userWallet is UserWallet.Cold && isDemoCardUseCase(cardId = userWallet.cardId)) {
             internalUiState.value = stateFactory.getStateWithClosedBottomSheet()
 
             uiMessageSender.send(
