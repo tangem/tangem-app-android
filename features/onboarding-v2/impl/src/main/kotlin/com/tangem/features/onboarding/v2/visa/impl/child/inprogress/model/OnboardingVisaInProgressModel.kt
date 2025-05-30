@@ -19,7 +19,7 @@ import com.tangem.domain.visa.model.VisaCardActivationStatus
 import com.tangem.domain.visa.model.VisaCardId
 import com.tangem.domain.visa.repository.VisaActivationRepository
 import com.tangem.domain.visa.repository.VisaAuthRepository
-import com.tangem.domain.wallets.builder.UserWalletBuilder
+import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.onboarding.v2.visa.impl.child.inprogress.OnboardingVisaInProgressComponent.Config
@@ -45,7 +45,7 @@ internal class OnboardingVisaInProgressModel @Inject constructor(
     private val visaAuthRepository: VisaAuthRepository,
     private val visaAuthTokenStorage: VisaAuthTokenStorage,
     private val otpStorage: VisaOTPStorage,
-    private val userWalletBuilderFactory: UserWalletBuilder.Factory,
+    private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory,
     private val userWalletsListManager: UserWalletsListManager,
     private val uiMessageSender: UiMessageSender,
     private val analyticsEventHandler: AnalyticsEventHandler,
@@ -185,7 +185,7 @@ internal class OnboardingVisaInProgressModel @Inject constructor(
             val newActivationStatus = VisaCardActivationStatus.Activated(visaAuthTokens = authTokens)
 
             requireNotNull(
-                value = userWalletBuilderFactory.create(
+                value = coldUserWalletBuilderFactory.create(
                     scanResponse = scanResponse.copy(visaCardActivationStatus = newActivationStatus),
                 ).build(),
                 lazyMessage = { "User wallet not created" },
