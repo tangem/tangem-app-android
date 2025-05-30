@@ -9,9 +9,7 @@ import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.tokens.UpdateDelayedNetworkStatusUseCase
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
-import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.features.txhistory.TxHistoryFeatureToggles
 import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
 import com.tangem.utils.coroutines.DelayedWork
 import dagger.assisted.Assisted
@@ -25,9 +23,7 @@ internal class StakingBalanceUpdater @AssistedInject constructor(
     private val updateDelayedNetworkStatusUseCase: UpdateDelayedNetworkStatusUseCase,
     private val stakingYieldBalanceUseCase: FetchStakingYieldBalanceUseCase,
     private val getTxHistoryItemsCountUseCase: GetTxHistoryItemsCountUseCase,
-    private val getTxHistoryItemsUseCase: GetTxHistoryItemsUseCase,
     private val fetchActionsUseCase: FetchActionsUseCase,
-    private val txHistoryFeatureToggles: TxHistoryFeatureToggles,
     private val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter,
     private val tokensFeatureToggles: TokensFeatureToggles,
     @DelayedWork private val coroutineScope: CoroutineScope,
@@ -103,15 +99,7 @@ internal class StakingBalanceUpdater @AssistedInject constructor(
         )
 
         txHistoryItemsCountEither.onRight {
-            if (txHistoryFeatureToggles.isFeatureEnabled) {
-                txHistoryContentUpdateEmitter.triggerUpdate()
-            } else {
-                getTxHistoryItemsUseCase(
-                    userWalletId = userWallet.walletId,
-                    currency = cryptoCurrencyStatus.currency,
-                    refresh = true,
-                )
-            }
+            txHistoryContentUpdateEmitter.triggerUpdate()
         }
     }
 
