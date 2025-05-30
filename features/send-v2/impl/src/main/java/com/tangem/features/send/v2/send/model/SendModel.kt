@@ -33,6 +33,8 @@ import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.isMultiCurrency
+import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.v2.api.SendComponent
 import com.tangem.features.send.v2.common.CommonSendRoute
@@ -217,7 +219,8 @@ internal class SendModel @Inject constructor(
                 ifRight = { wallet ->
                     userWallet = wallet
 
-                    val isSingleWalletWithToken = wallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()
+                    val isSingleWalletWithToken = wallet is UserWallet.Cold &&
+                        wallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()
                     val isMultiCurrency = wallet.isMultiCurrency
                     getCurrenciesStatusUpdates(
                         isSingleWalletWithToken = isSingleWalletWithToken,
@@ -342,7 +345,8 @@ internal class SendModel @Inject constructor(
             ),
         )
 
-        val cardInfo = getCardInfoUseCase(userWallet.scanResponse).getOrNull() ?: return
+        val cardInfo =
+            getCardInfoUseCase(userWallet.requireColdWallet().scanResponse).getOrNull() ?: return // TODO [REDACTED_TASK_KEY]
 
         modelScope.launch {
             sendFeedbackEmailUseCase(type = FeedbackEmailType.TransactionSendingProblem(cardInfo = cardInfo))

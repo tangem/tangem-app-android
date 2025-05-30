@@ -9,6 +9,7 @@ import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletconnect.model.WcPairError
 import com.tangem.domain.walletconnect.model.WcSessionProposal.ProposalNetwork
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.isMultiCurrency
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 
 internal class AssociateNetworksDelegate(
