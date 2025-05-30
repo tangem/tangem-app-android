@@ -176,12 +176,12 @@ class DefaultWalletsRepositoryTest {
         val card2PublicKey = "card2_public_key"
 
         val userWallets = listOf(
-            mockk<UserWallet> {
+            mockk<UserWallet.Cold> {
                 every { cardsInWallet } returns setOf(card1PublicKey)
                 every { walletId } returns UserWalletId(wallet1Id)
                 every { name } returns "Wallet 1"
             },
-            mockk<UserWallet> {
+            mockk<UserWallet.Cold> {
                 every { cardsInWallet } returns setOf(card2PublicKey)
                 every { walletId } returns UserWalletId(wallet2Id)
                 every { name } returns "Wallet 2"

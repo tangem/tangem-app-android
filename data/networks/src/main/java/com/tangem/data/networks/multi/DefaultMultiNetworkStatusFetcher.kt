@@ -11,6 +11,7 @@ import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.core.utils.eitherOn
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
+import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -52,7 +53,7 @@ internal class DefaultMultiNetworkStatusFetcher @Inject constructor(
             },
         )
 
-        val cardTypesResolver = userWallet.cardTypesResolver
+        val cardTypesResolver = userWallet.requireColdWallet().cardTypesResolver // TODO [REDACTED_TASK_KEY]
         val isWalletSupported = with(cardTypesResolver) {
             isMultiwalletAllowed() || isSingleWalletWithToken()
         }
