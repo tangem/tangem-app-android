@@ -30,6 +30,9 @@ import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.models.isLocked
+import com.tangem.domain.wallets.models.isMultiCurrency
+import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -222,7 +225,9 @@ internal class DefaultCurrenciesRepository(
             val userWallet = getUserWallet(userWalletId)
             ensureIsCorrectUserWallet(userWallet, isMultiCurrencyWalletExpected = false)
 
-            val currency = cardCryptoCurrencyFactory.createPrimaryCurrencyForSingleCurrencyCard(userWallet.scanResponse)
+            val currency = cardCryptoCurrencyFactory.createPrimaryCurrencyForSingleCurrencyCard(
+                userWallet.requireColdWallet().scanResponse,
+            )
             fetchExpressAssetsByNetworkIds(userWalletId, listOf(currency), refresh)
             currency
         }
@@ -233,7 +238,7 @@ internal class DefaultCurrenciesRepository(
         refresh: Boolean,
     ): List<CryptoCurrency> {
         return withContext(dispatchers.io) {
-            val scanResponse = getUserWallet(userWalletId).scanResponse
+            val scanResponse = getUserWallet(userWalletId).requireColdWallet().scanResponse
 
             val currencies = if (scanResponse.cardTypesResolver.isSingleWalletWithToken()) {
                 cardCryptoCurrencyFactory.createCurrenciesForSingleCurrencyCardWithToken(scanResponse = scanResponse)
@@ -257,7 +262,7 @@ internal class DefaultCurrenciesRepository(
             ensureIsCorrectUserWallet(userWallet, isMultiCurrencyWalletExpected = false)
 
             val currency = cardCryptoCurrencyFactory.createCurrenciesForSingleCurrencyCardWithToken(
-                scanResponse = userWallet.scanResponse,
+                scanResponse = userWallet.requireColdWallet().scanResponse,
             )
                 .find { it.id == id }
             requireNotNull(currency) { "Unable to find currency with provided ID: $id" }
@@ -297,7 +302,7 @@ internal class DefaultCurrenciesRepository(
             },
         )
 
-        responseCurrenciesFactory.createCurrencies(storedTokens, userWallet.scanResponse)
+        responseCurrenciesFactory.createCurrencies(storedTokens, userWallet.requireColdWallet().scanResponse)
     }
 
     override suspend fun getMultiCurrencyWalletCachedCurrenciesSync(userWalletId: UserWalletId) =
@@ -312,7 +317,7 @@ internal class DefaultCurrenciesRepository(
                 },
             )
 
-            responseCurrenciesFactory.createCurrencies(storedTokens, userWallet.scanResponse)
+            responseCurrenciesFactory.createCurrencies(storedTokens, userWallet.requireColdWallet().scanResponse)
         }
 
     override suspend fun getMultiCurrencyWalletCurrency(
@@ -337,7 +342,7 @@ internal class DefaultCurrenciesRepository(
             responseCurrenciesFactory.createCurrency(
                 currencyId = id,
                 response = response,
-                scanResponse = userWallet.scanResponse,
+                scanResponse = userWallet.requireColdWallet().scanResponse,
             )
         }
 
@@ -369,7 +374,7 @@ internal class DefaultCurrenciesRepository(
                         it.derivationPath == derivationPath.value
                 } ?: error("Coin in this network $networkId not found")
 
-            val coin = responseCurrenciesFactory.createCurrency(storedCoin, userWallet.scanResponse)
+            val coin = responseCurrenciesFactory.createCurrency(storedCoin, userWallet.requireColdWallet().scanResponse)
 
             coin as? CryptoCurrency.Coin ?: error("Unable to create currency")
         }
@@ -488,7 +493,7 @@ internal class DefaultCurrenciesRepository(
             token = token,
             networkId = networkId,
             extraDerivationPath = null,
-            scanResponse = userWallet.scanResponse,
+            scanResponse = userWallet.requireColdWallet().scanResponse, // TODO [REDACTED_TASK_KEY]
         ) ?: error("Unable to create token")
     }
 
@@ -510,7 +515,7 @@ internal class DefaultCurrenciesRepository(
 
                             responseCurrenciesFactory.createCurrencies(
                                 response = storedTokens.copy(tokens = filterResponse),
-                                scanResponse = userWallet.scanResponse,
+                                scanResponse = userWallet.requireColdWallet().scanResponse,
                             )
                         }
                     } else {
@@ -544,8 +549,8 @@ internal class DefaultCurrenciesRepository(
             lazyMessage = { "Saved tokens empty. Can not perform add currencies action" },
         )
         userTokensSaver.push(
-            userWalletId,
-            savedCurrencies,
+            userWalletId = userWalletId,
+            response = savedCurrencies,
             onFailSend = {
                 throw IllegalStateException("Unable to push tokens")
             },
@@ -556,7 +561,7 @@ internal class DefaultCurrenciesRepository(
         return getSavedUserTokensResponse(userWallet.walletId).map { storedTokens ->
             responseCurrenciesFactory.createCurrencies(
                 response = storedTokens,
-                scanResponse = userWallet.scanResponse,
+                scanResponse = userWallet.requireColdWallet().scanResponse,
             )
         }
     }
@@ -579,7 +584,7 @@ internal class DefaultCurrenciesRepository(
     private suspend fun fetchTokens(userWallet: UserWallet) {
         val userWalletId = userWallet.walletId
 
-        val response = if (checkIsEmptyDemoWallet(userWallet)) {
+        val response = if (userWallet is UserWallet.Cold && checkIsEmptyDemoWallet(userWallet)) {
             createDefaultUserTokensResponse(userWallet)
         } else {
             safeApiCall({ tangemTechApi.getUserTokens(userWalletId.stringValue).bind() }) {
@@ -596,7 +601,7 @@ internal class DefaultCurrenciesRepository(
         fetchExpressAssetsByNetworkIds(userWalletId, compatibleUserTokensResponse)
     }
 
-    private suspend fun checkIsEmptyDemoWallet(userWallet: UserWallet): Boolean {
+    private suspend fun checkIsEmptyDemoWallet(userWallet: UserWallet.Cold): Boolean {
         val response = getSavedUserTokensResponseSync(key = userWallet.walletId)
 
         return demoConfig.isDemoCardId(userWallet.cardId) && response == null
@@ -659,7 +664,9 @@ internal class DefaultCurrenciesRepository(
 
     private fun createDefaultUserTokensResponse(userWallet: UserWallet) =
         userTokensResponseFactory.createUserTokensResponse(
-            currencies = cardCryptoCurrencyFactory.createDefaultCoinsForMultiCurrencyCard(userWallet.scanResponse),
+            currencies = cardCryptoCurrencyFactory.createDefaultCoinsForMultiCurrencyCard(
+                userWallet.requireColdWallet().scanResponse,
+            ),
             isGroupedByNetwork = false,
             isSortedByBalance = false,
         )
