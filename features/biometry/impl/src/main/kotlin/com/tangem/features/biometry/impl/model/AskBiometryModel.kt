@@ -109,9 +109,11 @@ internal class AskBiometryModel @Inject constructor(
         walletsRepository.saveShouldSaveUserWallets(item = true)
         settingsRepository.setShouldSaveAccessCodes(value = true)
 
-        cardSdkConfigRepository.setAccessCodeRequestPolicy(
-            isBiometricsRequestPolicy = userWallet.hasAccessCode,
-        )
+        if (userWallet is UserWallet.Cold) {
+            cardSdkConfigRepository.setAccessCodeRequestPolicy(
+                isBiometricsRequestPolicy = userWallet.hasAccessCode,
+            )
+        }
 
         if (_uiState.value.bottomSheetVariant) {
             dismissBSFlow.emit(Unit)

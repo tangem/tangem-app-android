@@ -33,6 +33,7 @@ import com.tangem.domain.managetokens.repository.ManageTokensRepository
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.BatchListSource
 import com.tangem.pagination.fetcher.LimitOffsetBatchFetcher
@@ -80,7 +81,7 @@ internal class DefaultManageTokensRepository(
         subFetcher = { request, _, isFirstBatchFetching ->
             val userWallet = request.params.userWalletId?.let(userWalletsStore::getSyncStrict)
 
-            if (userWallet?.scanResponse?.card?.isTestCard == true) {
+            if (userWallet is UserWallet.Cold && userWallet.scanResponse.card.isTestCard) {
                 fetchTestnetCurrencies(userWallet, request)
             } else {
                 fetchCurrencies(
@@ -143,13 +144,13 @@ internal class DefaultManageTokensRepository(
             managedCryptoCurrencyFactory.createWithCustomTokens(
                 coinsResponse = updatedCoinsResponse,
                 tokensResponse = tokensResponse,
-                scanResponse = userWallet.scanResponse,
+                scanResponse = userWallet.requireColdWallet().scanResponse, // TODO [REDACTED_TASK_KEY]
             )
         } else {
             managedCryptoCurrencyFactory.create(
                 coinsResponse = updatedCoinsResponse,
                 tokensResponse = tokensResponse,
-                scanResponse = userWallet?.scanResponse,
+                scanResponse = userWallet?.requireColdWallet()?.scanResponse, // TODO [REDACTED_TASK_KEY]
             )
         }
 
@@ -179,7 +180,7 @@ internal class DefaultManageTokensRepository(
                 testnetTokensConfig
             },
             tokensResponse = getSavedUserTokensResponseSync(userWallet.walletId),
-            scanResponse = userWallet.scanResponse,
+            scanResponse = userWallet.requireColdWallet().scanResponse, // TODO [REDACTED_TASK_KEY]
         )
 
         return BatchFetchResult.Success(
@@ -191,14 +192,16 @@ internal class DefaultManageTokensRepository(
 
     private fun createDefaultUserTokensResponse(userWallet: UserWallet) =
         userTokensResponseFactory.createUserTokensResponse(
-            currencies = cardCryptoCurrencyFactory.createDefaultCoinsForMultiCurrencyCard(userWallet.scanResponse),
+            currencies = cardCryptoCurrencyFactory.createDefaultCoinsForMultiCurrencyCard(
+                userWallet.requireColdWallet().scanResponse, // TODO [REDACTED_TASK_KEY]
+            ),
             isGroupedByNetwork = false,
             isSortedByBalance = false,
         )
 
     private fun getSupportedBlockchains(userWallet: UserWallet?): List<Blockchain> {
-        return userWallet?.scanResponse?.let {
-            it.card.supportedBlockchains(it.cardTypesResolver, excludedBlockchains)
+        return (userWallet as? UserWallet.Cold)?.scanResponse?.let {
+            it.card.supportedBlockchains(it.cardTypesResolver, excludedBlockchains) // TODO [REDACTED_TASK_KEY]
         } ?: Blockchain.entries.filter {
             !it.isTestnet() && it !in excludedBlockchains
         }
@@ -285,6 +288,10 @@ internal class DefaultManageTokensRepository(
         userWallet: UserWallet,
         blockchain: Blockchain,
     ): CurrencyUnsupportedState? {
+        if (userWallet !is UserWallet.Cold) {
+            return null
+        }
+
         val canHandleBlockchain = userWallet.scanResponse.card.canHandleBlockchain(
             blockchain = blockchain,
             cardTypesResolver = userWallet.cardTypesResolver,
@@ -302,6 +309,10 @@ internal class DefaultManageTokensRepository(
         userWallet: UserWallet,
         blockchain: Blockchain,
     ): CurrencyUnsupportedState.Token? {
+        if (userWallet !is UserWallet.Cold) {
+            return null
+        }
+
         val cardTypesResolver = userWallet.scanResponse.cardTypesResolver
         val supportedTokens = userWallet.scanResponse.card.supportedTokens(
             cardTypesResolver,
