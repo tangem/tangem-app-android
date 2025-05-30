@@ -7,7 +7,7 @@ import com.tangem.common.test.datastore.MockStateDataStore
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.tokens.model.Quote
+import com.tangem.domain.tokens.model.QuoteStatus
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.test.runTest
@@ -19,7 +19,7 @@ import java.math.BigDecimal
  */
 internal class QuotesStoreUpdateMethodsTest {
 
-    private val runtimeStore = RuntimeSharedStore<Set<Quote>>()
+    private val runtimeStore = RuntimeSharedStore<Set<QuoteStatus>>()
     private val persistenceStore = MockStateDataStore<CurrencyIdWithQuote>(default = emptyMap())
 
     private val store = DefaultQuotesStoreV2(
@@ -37,8 +37,8 @@ internal class QuotesStoreUpdateMethodsTest {
 
         store.refresh(currenciesIds = currenciesIds)
 
-        Truth.assertThat(runtimeStore.getSyncOrNull()).isEqualTo(emptySet<Quote>())
-        Truth.assertThat(persistenceStore.data.firstOrNull()).isEqualTo(emptyMap<String, Set<Quote>>())
+        Truth.assertThat(runtimeStore.getSyncOrNull()).isEqualTo(emptySet<QuoteStatus>())
+        Truth.assertThat(persistenceStore.data.firstOrNull()).isEqualTo(emptyMap<String, Set<QuoteStatus>>())
     }
 
     @Test
@@ -50,10 +50,12 @@ internal class QuotesStoreUpdateMethodsTest {
 
         store.refresh(currenciesIds = setOf(quote.rawCurrencyId))
 
-        val runtimeExpected = setOf(quote.copySealed(source = StatusSource.CACHE))
+        val runtimeExpected = setOf(
+            quote.copy(value = quote.value.copySealed(source = StatusSource.CACHE)),
+        )
 
         Truth.assertThat(runtimeStore.getSyncOrNull()).isEqualTo(runtimeExpected)
-        Truth.assertThat(persistenceStore.data.firstOrNull()).isEqualTo(emptyMap<String, Set<Quote>>())
+        Truth.assertThat(persistenceStore.data.firstOrNull()).isEqualTo(emptyMap<String, Set<QuoteStatus>>())
     }
 
     @Test
@@ -94,10 +96,12 @@ internal class QuotesStoreUpdateMethodsTest {
 
         store.storeError(currenciesIds = currenciesIds)
 
-        val runtimeExpected = currenciesIds.map(Quote::Empty).toSet()
+        val runtimeExpected = currenciesIds
+            .map { QuoteStatus(rawCurrencyId = it, value = QuoteStatus.Empty) }
+            .toSet()
 
         Truth.assertThat(runtimeStore.getSyncOrNull()).isEqualTo(runtimeExpected)
-        Truth.assertThat(persistenceStore.data.firstOrNull()).isEqualTo(emptyMap<String, Set<Quote>>())
+        Truth.assertThat(persistenceStore.data.firstOrNull()).isEqualTo(emptyMap<String, Set<QuoteStatus>>())
     }
 
     @Test
@@ -107,7 +111,7 @@ internal class QuotesStoreUpdateMethodsTest {
         runtimeStore.store(
             value = setOf(
                 status.toDomain(rawCurrencyId = "BTC", source = StatusSource.CACHE),
-                Quote.Empty(rawCurrencyId = CryptoCurrency.RawID(value = "ETH")),
+                QuoteStatus(rawCurrencyId = CryptoCurrency.RawID(value = "ETH"), value = QuoteStatus.Empty),
             ),
         )
 
@@ -120,10 +124,10 @@ internal class QuotesStoreUpdateMethodsTest {
 
         val runtimeExpected = setOf(
             status.toDomain(rawCurrencyId = "BTC", source = StatusSource.ONLY_CACHE),
-            Quote.Empty(rawCurrencyId = CryptoCurrency.RawID(value = "ETH")),
+            QuoteStatus(rawCurrencyId = CryptoCurrency.RawID(value = "ETH"), value = QuoteStatus.Empty),
         )
 
         Truth.assertThat(runtimeStore.getSyncOrNull()).isEqualTo(runtimeExpected)
-        Truth.assertThat(persistenceStore.data.firstOrNull()).isEqualTo(emptyMap<String, Set<Quote>>())
+        Truth.assertThat(persistenceStore.data.firstOrNull()).isEqualTo(emptyMap<String, Set<QuoteStatus>>())
     }
 }
