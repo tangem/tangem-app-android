@@ -14,6 +14,8 @@ import com.tangem.domain.visa.model.VisaActivationRemoteState
 import com.tangem.domain.visa.model.VisaCardActivationStatus
 import com.tangem.domain.visa.model.VisaCardWalletDataToSignRequest
 import com.tangem.domain.visa.model.VisaCustomerWalletDataToSignRequest
+import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.isLocked
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.onboarding.v2.visa.api.OnboardingVisaComponent
 import com.tangem.features.onboarding.v2.visa.impl.OnboardingVisaInnerNavigationState
@@ -213,7 +215,7 @@ internal class OnboardingVisaModel @Inject constructor(
     private fun tryToFindExistingWalletCardId(targetAddress: String): String? {
         val wallets = getWalletsUseCase.invokeSync().filter { it.isLocked.not() }
 
-        return wallets.firstOrNull { wallet ->
+        return wallets.filterIsInstance<UserWallet.Cold>().firstOrNull { wallet -> // TODO [REDACTED_TASK_KEY]
             wallet.scanResponse.card.wallets.any {
                 val derivedKey = it.derivedKeys[VisaUtilities.visaDefaultDerivationPath] ?: return@any false
 
