@@ -1,7 +1,8 @@
-package com.tangem.data.quotes.multi
+package com.tangem.data.quotes.single
 
 import com.google.common.truth.Truth
 import com.tangem.common.test.data.quote.MockQuoteResponseFactory
+import com.tangem.data.quotes.multi.DefaultMultiQuoteFetcher
 import com.tangem.data.quotes.store.QuotesStoreV2
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.common.response.ApiResponseError
@@ -10,7 +11,7 @@ import com.tangem.datasource.api.tangemTech.models.CurrenciesResponse
 import com.tangem.datasource.api.tangemTech.models.QuotesResponse
 import com.tangem.datasource.appcurrency.AppCurrencyResponseStore
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.quotes.multi.MultiQuoteFetcher
+import com.tangem.domain.quotes.single.SingleQuoteFetcher
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -20,42 +21,38 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import java.math.BigDecimal
 
-/**
-[REDACTED_AUTHOR]
- */
-internal class DefaultMultiQuoteFetcherTest {
+internal class DefaultSingleQuoteStatusFetcherTest {
 
     private val tangemTechApi = mockk<TangemTechApi>(relaxed = true)
     private val appCurrencyResponseStore = mockk<AppCurrencyResponseStore>(relaxed = true)
     private val quotesStore = mockk<QuotesStoreV2>(relaxed = true)
 
-    private val fetcher = DefaultMultiQuoteFetcher(
+    private val multiFetcher = DefaultMultiQuoteFetcher(
         tangemTechApi = tangemTechApi,
         appCurrencyResponseStore = appCurrencyResponseStore,
         quotesStore = quotesStore,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
 
+    private val singleFetcher = DefaultSingleQuoteFetcher(multiFetcher)
+
     @Test
-    fun `fetch quotes successfully`() = runTest {
-        val params = MultiQuoteFetcher.Params(currenciesIds = currenciesIds, appCurrencyId = null)
+    fun `fetch single quote successfully`() = runTest {
+        val params = SingleQuoteFetcher.Params(rawCurrencyId = currenciesId, appCurrencyId = null)
 
         coEvery { appCurrencyResponseStore.getSyncOrNull() } returns usdAppCurrency
 
-        val coinIds = "BTC,ETH"
+        val coinIds = "BTC"
         coEvery {
             tangemTechApi.getQuotes(currencyId = "usd", coinIds = coinIds)
         } returns ApiResponse.Success(successResponse)
 
-        val actual = fetcher(params)
+        val actual = singleFetcher(params)
 
         coVerifyOrder {
-            quotesStore.refresh(currenciesIds = params.currenciesIds)
-
+            quotesStore.refresh(currenciesIds = setOf(params.rawCurrencyId))
             appCurrencyResponseStore.getSyncOrNull()
-
             tangemTechApi.getQuotes(currencyId = "usd", coinIds = coinIds)
-
             quotesStore.storeActual(values = successResponse.quotes)
         }
 
@@ -67,66 +64,36 @@ internal class DefaultMultiQuoteFetcherTest {
     }
 
     @Test
-    fun `fetch quotes successfully if currenciesIds from params is empty`() = runTest {
-        val params = MultiQuoteFetcher.Params(currenciesIds = emptySet(), appCurrencyId = null)
-
-        val actual = fetcher(params)
-
-        coVerify(inverse = true) {
-            quotesStore.refresh(currenciesIds = any())
-            appCurrencyResponseStore.getSyncOrNull()
-            tangemTechApi.getQuotes(currencyId = any(), coinIds = any())
-            quotesStore.storeActual(values = any())
-            quotesStore.storeError(currenciesIds = any())
-        }
-
-        Truth.assertThat(actual.isRight()).isTrue()
-    }
-
-    @Test
-    fun `fetch quotes successfully if appCurrencyId from params is not null`() = runTest {
+    fun `fetch single quote successfully if appCurrencyId from params is not null`() = runTest {
         val appCurrencyId = "usd"
-        val params = MultiQuoteFetcher.Params(currenciesIds = currenciesIds, appCurrencyId = appCurrencyId)
+        val params = SingleQuoteFetcher.Params(rawCurrencyId = currenciesId, appCurrencyId = appCurrencyId)
 
-        val coinIds = "BTC,ETH"
+        val coinIds = "BTC"
         coEvery {
             tangemTechApi.getQuotes(currencyId = appCurrencyId, coinIds = coinIds)
         } returns ApiResponse.Success(successResponse)
 
-        val actual = fetcher(params)
+        val actual = singleFetcher(params)
 
         coVerifyOrder {
-            quotesStore.refresh(currenciesIds = params.currenciesIds)
-
+            quotesStore.refresh(currenciesIds = setOf(currenciesId))
             tangemTechApi.getQuotes(currencyId = "usd", coinIds = coinIds)
-
             quotesStore.storeActual(values = successResponse.quotes)
-        }
-
-        coVerify(inverse = true) {
-            appCurrencyResponseStore.getSyncOrNull()
-            quotesStore.storeError(currenciesIds = any())
         }
 
         Truth.assertThat(actual.isRight()).isTrue()
     }
 
     @Test
-    fun `fetch quotes failure because appCurrencyId from params is blank`() = runTest {
+    fun `fetch single quote failure because appCurrencyId from params is blank`() = runTest {
         val appCurrencyId = ""
-        val params = MultiQuoteFetcher.Params(currenciesIds = currenciesIds, appCurrencyId = appCurrencyId)
+        val params = SingleQuoteFetcher.Params(rawCurrencyId = currenciesId, appCurrencyId = appCurrencyId)
 
-        val actual = fetcher(params)
+        val actual = singleFetcher(params)
 
         coVerifyOrder {
-            quotesStore.refresh(currenciesIds = params.currenciesIds)
-            quotesStore.storeError(currenciesIds = params.currenciesIds)
-        }
-
-        coVerify(inverse = true) {
-            appCurrencyResponseStore.getSyncOrNull()
-            tangemTechApi.getQuotes(currencyId = any(), coinIds = any())
-            quotesStore.storeActual(values = any())
+            quotesStore.refresh(currenciesIds = setOf(currenciesId))
+            quotesStore.storeError(currenciesIds = setOf(currenciesId))
         }
 
         Truth.assertThat(actual.isLeft()).isTrue()
@@ -136,27 +103,24 @@ internal class DefaultMultiQuoteFetcherTest {
     }
 
     @Test
-    fun `fetch quotes failure because api request failed`() = runTest {
-        val params = MultiQuoteFetcher.Params(currenciesIds = currenciesIds, appCurrencyId = null)
+    fun `fetch single quote failure because api request failed`() = runTest {
+        val params = SingleQuoteFetcher.Params(rawCurrencyId = currenciesId, appCurrencyId = null)
 
         coEvery { appCurrencyResponseStore.getSyncOrNull() } returns usdAppCurrency
 
-        val coinIds = "BTC,ETH"
+        val coinIds = "BTC"
 
         @Suppress("UNCHECKED_CAST")
         val errorResponse = ApiResponse.Error(ApiResponseError.NetworkException) as ApiResponse<QuotesResponse>
         coEvery { tangemTechApi.getQuotes(currencyId = "usd", coinIds = coinIds) } returns errorResponse
 
-        val actual = fetcher(params)
+        val actual = singleFetcher(params)
 
         coVerifyOrder {
-            quotesStore.refresh(currenciesIds = params.currenciesIds)
-
+            quotesStore.refresh(currenciesIds = setOf(currenciesId))
             appCurrencyResponseStore.getSyncOrNull()
-
             tangemTechApi.getQuotes(currencyId = "usd", coinIds = coinIds)
-
-            quotesStore.storeError(currenciesIds = params.currenciesIds)
+            quotesStore.storeError(currenciesIds = setOf(currenciesId))
         }
 
         coVerify(inverse = true) {
@@ -167,17 +131,17 @@ internal class DefaultMultiQuoteFetcherTest {
     }
 
     @Test
-    fun `fetch quotes failure because app currency not found`() = runTest {
-        val params = MultiQuoteFetcher.Params(currenciesIds = currenciesIds, appCurrencyId = null)
+    fun `fetch single quote failure because app currency not found`() = runTest {
+        val params = SingleQuoteFetcher.Params(rawCurrencyId = currenciesId, appCurrencyId = null)
 
         coEvery { appCurrencyResponseStore.getSyncOrNull() } returns null
 
-        val actual = fetcher(params)
+        val actual = singleFetcher(params)
 
         coVerifyOrder {
-            quotesStore.refresh(currenciesIds = params.currenciesIds)
+            quotesStore.refresh(currenciesIds = setOf(currenciesId))
             appCurrencyResponseStore.getSyncOrNull()
-            quotesStore.storeError(currenciesIds = params.currenciesIds)
+            quotesStore.storeError(currenciesIds = setOf(currenciesId))
         }
 
         coVerify(inverse = true) {
@@ -190,10 +154,7 @@ internal class DefaultMultiQuoteFetcherTest {
 
     private companion object {
 
-        val currenciesIds = setOf(
-            CryptoCurrency.RawID(value = "BTC"),
-            CryptoCurrency.RawID(value = "ETH"),
-        )
+        val currenciesId = CryptoCurrency.RawID(value = "BTC")
 
         val usdAppCurrency = CurrenciesResponse.Currency(
             id = "USD".lowercase(),
@@ -207,7 +168,6 @@ internal class DefaultMultiQuoteFetcherTest {
         val successResponse = QuotesResponse(
             quotes = mapOf(
                 "BTC" to MockQuoteResponseFactory.createSinglePrice(value = BigDecimal.ONE),
-                "ETH" to MockQuoteResponseFactory.createSinglePrice(value = BigDecimal.TEN),
             ),
         )
     }
