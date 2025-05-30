@@ -34,7 +34,7 @@ import com.tangem.domain.onboarding.WasTwinsOnboardingShownUseCase
 import com.tangem.domain.onboarding.repository.OnboardingRepository
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.builder.UserWalletBuilder
+import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
@@ -142,7 +142,7 @@ interface ApplicationEntryPoint {
 
     fun getOnlineCardVerifier(): OnlineCardVerifier
 
-    fun getUserWalletBuilderFactory(): UserWalletBuilder.Factory
+    fun getColdUserWalletBuilderFactory(): ColdUserWalletBuilder.Factory
 
     fun getApiConfigsManager(): ApiConfigsManager
 }
