@@ -5,6 +5,7 @@ import com.tangem.data.networks.store.NetworksStatusesStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.networks.multi.MultiNetworkStatusProducer
+import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -47,7 +48,7 @@ internal class DefaultMultiNetworkStatusProducer @AssistedInject constructor(
                     val network = networkFactory.create(
                         networkId = status.id,
                         derivationPath = status.id.derivationPath,
-                        scanResponse = userWallet.scanResponse,
+                        scanResponse = userWallet.requireColdWallet().scanResponse,
                     ) ?: return@mapNotNullTo null
 
                     NetworkStatus(network = network, value = status.value)
