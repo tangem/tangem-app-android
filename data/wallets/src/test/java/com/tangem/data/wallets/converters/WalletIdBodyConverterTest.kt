@@ -15,7 +15,7 @@ class WalletIdBodyConverterTest {
         // GIVEN
         val walletId = UserWalletId("1234567890abcdef")
         val walletName = "Test Wallet"
-        val userWallet = UserWallet(
+        val userWallet = UserWallet.Cold(
             walletId = walletId,
             name = walletName,
             cardsInWallet = setOf("card1", "card2"),
@@ -55,7 +55,7 @@ class WalletIdBodyConverterTest {
         // GIVEN
         val walletId = UserWalletId("1234567890abcdef")
         val walletName = "Test Wallet"
-        val userWallet = UserWallet(
+        val userWallet = UserWallet.Cold(
             walletId = walletId,
             name = walletName,
             cardsInWallet = emptySet(),
