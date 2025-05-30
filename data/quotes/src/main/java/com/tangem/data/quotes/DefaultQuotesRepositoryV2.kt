@@ -3,7 +3,7 @@ package com.tangem.data.quotes
 import com.tangem.data.quotes.store.QuotesStoreV2
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.quotes.QuotesRepositoryV2
-import com.tangem.domain.tokens.model.Quote
+import com.tangem.domain.tokens.model.QuoteStatus
 import javax.inject.Inject
 
 /**
@@ -17,9 +17,10 @@ internal class DefaultQuotesRepositoryV2 @Inject constructor(
     private val quotesStore: QuotesStoreV2,
 ) : QuotesRepositoryV2 {
 
-    override suspend fun getMultiQuoteSyncOrNull(currenciesIds: Set<CryptoCurrency.RawID>): Set<Quote>? {
+    override suspend fun getMultiQuoteSyncOrNull(currenciesIds: Set<CryptoCurrency.RawID>): Set<QuoteStatus>? {
         return quotesStore.getAllSyncOrNull()?.mapTo(hashSetOf()) {
-            it.takeIf { it.rawCurrencyId in currenciesIds } ?: Quote.Empty(it.rawCurrencyId)
+            it.takeIf { it.rawCurrencyId in currenciesIds }
+                ?: QuoteStatus(rawCurrencyId = it.rawCurrencyId)
         }
     }
 }
