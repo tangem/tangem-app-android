@@ -25,6 +25,7 @@ import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.error.parseWrappedError
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.requireColdWallet
 
 class SendTransactionUseCase(
     private val demoConfig: DemoConfig,
@@ -39,6 +40,8 @@ class SendTransactionUseCase(
         network: Network,
         sendMode: TransactionSender.MultipleTransactionSendMode,
     ): Either<SendTransactionError?, List<String>> {
+        userWallet.requireColdWallet() // TODO [REDACTED_TASK_KEY]
+
         val card = userWallet.scanResponse.card
         val isCardNotBackedUp = card.backupStatus?.isActive != true && !card.isTangemTwins
 
