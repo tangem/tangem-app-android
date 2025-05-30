@@ -20,6 +20,8 @@ import com.tangem.domain.transaction.usecase.ValidateWalletAddressUseCase
 import com.tangem.domain.transaction.usecase.ValidateWalletMemoUseCase
 import com.tangem.domain.txhistory.usecase.GetFixedTxHistoryItemsUseCase
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.isLocked
+import com.tangem.domain.wallets.models.isMultiCurrency
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.send.v2.common.PredefinedValues
 import com.tangem.features.send.v2.common.analytics.CommonSendAnalyticEvents
