@@ -13,6 +13,8 @@ import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.models.isMultiCurrency
+import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.filterNotNull
@@ -410,6 +412,7 @@ class WalletConnectInteractor(
     }
 
     private fun getCardId(userWallet: UserWallet): String? {
+        userWallet.requireColdWallet() // [REDACTED_TASK_KEY]
         return if (userWallet.scanResponse.card.backupStatus?.isActive != true) {
             userWallet.cardId
         } else { // if wallet has backup, any card from wallet can be used to sign

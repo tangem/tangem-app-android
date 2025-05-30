@@ -37,7 +37,7 @@ internal class DefaultDerivationsRepositoryTest {
     )
 
     private val defaultUserWalletId = UserWalletId("011")
-    private val defaultUserWallet = UserWallet(
+    private val defaultUserWallet = UserWallet.Cold(
         name = "",
         walletId = defaultUserWalletId,
         cardsInWallet = setOf(),

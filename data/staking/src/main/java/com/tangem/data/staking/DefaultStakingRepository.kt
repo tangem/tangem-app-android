@@ -60,6 +60,7 @@ import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.staking.toggles.StakingFeatureToggles
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.lib.crypto.BlockchainUtils.isCardano
@@ -257,6 +258,11 @@ internal class DefaultStakingRepository(
         val userWallet = getUserWalletUseCase(userWalletId).getOrElse {
             error("Failed to get user wallet")
         }
+
+        if (userWallet !is UserWallet.Cold) {
+            return false
+        }
+
         val blockchainId = cryptoCurrency.network.rawId
         return when {
             isSolana(blockchainId) -> INVALID_BATCHES_FOR_SOLANA.contains(userWallet.scanResponse.card.batchId)

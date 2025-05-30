@@ -15,6 +15,8 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.models.isMultiCurrency
+import com.tangem.domain.wallets.models.requireColdWallet
 
 /**
  * Default implementation of factory for creating list of [CryptoCurrency] for selected card
@@ -39,7 +41,7 @@ internal class DefaultCardCryptoCurrencyFactory(
         val blockchain = Blockchain.fromNetworkId(networkId = network.backendId)
 
         // multi-currency wallet
-        if (userWallet.isMultiCurrency) {
+        if (userWallet !is UserWallet.Cold || userWallet.isMultiCurrency) {
             return getMultiWalletCurrencies(userWallet = userWallet, networks = setOf(network))[network].orEmpty()
         }
 
@@ -62,7 +64,7 @@ internal class DefaultCardCryptoCurrencyFactory(
         val blockchain = networkRawId.toBlockchain()
 
         // multi-currency wallet
-        if (userWallet.isMultiCurrency) {
+        if (userWallet.isMultiCurrency || userWallet !is UserWallet.Cold) {
             return getMultiWalletCurrenciesByRawId(
                 userWallet = userWallet,
                 rawIds = setOf(networkRawId),
@@ -146,7 +148,7 @@ internal class DefaultCardCryptoCurrencyFactory(
             tokens = response.tokens.filter { token ->
                 networks.any { it.backendId == token.networkId && it.derivationPath.value == token.derivationPath }
             },
-            scanResponse = userWallet.scanResponse,
+            scanResponse = userWallet.requireColdWallet().scanResponse, // TODO [REDACTED_TASK_KEY]
         )
             .groupBy(CryptoCurrency::network)
     }
@@ -164,7 +166,7 @@ internal class DefaultCardCryptoCurrencyFactory(
 
         return responseCurrenciesFactory.createCurrencies(
             tokens = response.tokens.filter { token -> token.networkId in networkIds },
-            scanResponse = userWallet.scanResponse,
+            scanResponse = userWallet.requireColdWallet().scanResponse, // TODO [REDACTED_TASK_KEY]
         )
             .groupBy { it.network.id.rawId }
     }
