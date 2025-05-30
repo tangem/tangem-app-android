@@ -63,7 +63,7 @@ internal class DefaultMultiNetworkStatusFetcherTest {
         coEvery { networksStatusesStore.setSourceAsCache(params.userWalletId, params.networks) } returns Unit
         every { userWalletsStore.getSyncStrict(key = userWalletId) } returns userWallet
 
-        mockkStatic(UserWallet::cardTypesResolver)
+        mockkStatic(UserWallet.Cold::cardTypesResolver)
         every { userWallet.cardTypesResolver } returns cardTypesResolver
         coEvery { cardTypesResolver.isMultiwalletAllowed() } returns true
 
@@ -132,7 +132,7 @@ internal class DefaultMultiNetworkStatusFetcherTest {
         coEvery { networksStatusesStore.setSourceAsCache(params.userWalletId, params.networks) } returns Unit
         every { userWalletsStore.getSyncStrict(key = userWalletId) } returns userWallet
 
-        mockkStatic(UserWallet::cardTypesResolver)
+        mockkStatic(UserWallet.Cold::cardTypesResolver)
         every { userWallet.cardTypesResolver } returns cardTypesResolver
         coEvery { cardTypesResolver.isMultiwalletAllowed() } returns false
         coEvery { cardTypesResolver.isSingleWalletWithToken() } returns true
@@ -193,7 +193,7 @@ internal class DefaultMultiNetworkStatusFetcherTest {
         coEvery { networksStatusesStore.setSourceAsCache(params.userWalletId, params.networks) } returns Unit
         every { userWalletsStore.getSyncStrict(key = userWalletId) } returns userWallet
 
-        mockkStatic(UserWallet::cardTypesResolver)
+        mockkStatic(UserWallet.Cold::cardTypesResolver)
         every { userWallet.cardTypesResolver } returns cardTypesResolver
         coEvery { cardTypesResolver.isMultiwalletAllowed() } returns true
 
@@ -267,7 +267,7 @@ internal class DefaultMultiNetworkStatusFetcherTest {
         coEvery { networksStatusesStore.setSourceAsCache(params.userWalletId, params.networks) } returns Unit
         every { userWalletsStore.getSyncStrict(key = userWalletId) } returns userWallet
 
-        mockkStatic(UserWallet::cardTypesResolver)
+        mockkStatic(UserWallet.Cold::cardTypesResolver)
         every { userWallet.cardTypesResolver } returns cardTypesResolver
         coEvery { cardTypesResolver.isMultiwalletAllowed() } returns true
 
@@ -367,7 +367,7 @@ internal class DefaultMultiNetworkStatusFetcherTest {
         coEvery { networksStatusesStore.setSourceAsCache(params.userWalletId, params.networks) } returns Unit
         every { userWalletsStore.getSyncStrict(key = userWalletId) } returns userWallet
 
-        mockkStatic(UserWallet::cardTypesResolver)
+        mockkStatic(UserWallet.Cold::cardTypesResolver)
         every { userWallet.cardTypesResolver } returns cardTypesResolver
         coEvery { cardTypesResolver.isMultiwalletAllowed() } returns false
         coEvery { cardTypesResolver.isSingleWalletWithToken() } returns false
