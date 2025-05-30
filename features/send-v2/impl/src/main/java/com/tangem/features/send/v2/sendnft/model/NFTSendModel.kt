@@ -27,6 +27,7 @@ import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.CreateNFTTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.v2.api.NFTSendComponent
 import com.tangem.features.send.v2.common.CommonSendRoute
@@ -151,7 +152,8 @@ internal class NFTSendModel @Inject constructor(
                         ?: return@launch
 
                     getCurrenciesStatusUpdates(
-                        isSingleWalletWithToken = wallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
+                        isSingleWalletWithToken = wallet is UserWallet.Cold &&
+                            wallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
                     )
                 },
                 ifLeft = {
@@ -175,7 +177,8 @@ internal class NFTSendModel @Inject constructor(
             ),
         )
 
-        val cardInfo = getCardInfoUseCase(userWallet.scanResponse).getOrNull() ?: return
+        val cardInfo =
+            getCardInfoUseCase(userWallet.requireColdWallet().scanResponse).getOrNull() ?: return // TODO [REDACTED_TASK_KEY]
 
         modelScope.launch {
             sendFeedbackEmailUseCase(type = FeedbackEmailType.TransactionSendingProblem(cardInfo = cardInfo))
