@@ -7,16 +7,13 @@ import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.data.tokens.repository.DefaultCurrenciesRepository
 import com.tangem.data.tokens.repository.DefaultCurrencyChecksRepository
 import com.tangem.data.tokens.repository.DefaultPolkadotAccountHealthCheckRepository
-import com.tangem.data.tokens.repository.DefaultQuotesRepository
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.exchangeservice.swap.ExpressServiceLoader
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.quote.QuotesStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.tokens.repository.PolkadotAccountHealthCheckRepository
-import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -54,24 +51,6 @@ internal object TokensDataModule {
             excludedBlockchains = excludedBlockchains,
             cardCryptoCurrencyFactory = cardCryptoCurrencyFactory,
             userTokensSaver = tokensSaver,
-        )
-    }
-
-    @Provides
-    @Singleton
-    fun provideQuotesRepository(
-        tangemTechApi: TangemTechApi,
-        appPreferencesStore: AppPreferencesStore,
-        quotesStore: QuotesStore,
-        cacheRegistry: CacheRegistry,
-        dispatchers: CoroutineDispatcherProvider,
-    ): QuotesRepository {
-        return DefaultQuotesRepository(
-            tangemTechApi = tangemTechApi,
-            appPreferencesStore = appPreferencesStore,
-            quotesStore = quotesStore,
-            cacheRegistry = cacheRegistry,
-            dispatchers = dispatchers,
         )
     }
 
