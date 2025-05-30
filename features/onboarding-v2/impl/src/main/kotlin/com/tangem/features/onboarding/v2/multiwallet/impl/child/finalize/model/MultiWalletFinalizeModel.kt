@@ -16,9 +16,11 @@ import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.scan.isRing
 import com.tangem.domain.onboarding.repository.OnboardingRepository
-import com.tangem.domain.wallets.builder.UserWalletBuilder
+import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.copy
+import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.features.onboarding.v2.common.ui.CantLeaveBackupDialog
 import com.tangem.features.onboarding.v2.impl.R
@@ -48,7 +50,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
     private val tangemSdkManager: TangemSdkManager,
     private val getCardInfoUseCase: GetCardInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
-    private val userWalletBuilderFactory: UserWalletBuilder.Factory,
+    private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory,
     private val userWalletsListManager: UserWalletsListManager,
     private val cardRepository: CardRepository,
     private val onboardingRepository: OnboardingRepository,
@@ -240,13 +242,16 @@ internal class MultiWalletFinalizeModel @Inject constructor(
                 }
                 OnboardingMultiWalletComponent.Mode.AddBackup -> {
                     val userWallet = userWalletsListManager.userWallets.first()
-                        .firstOrNull { it.scanResponse.primaryCard?.cardId == scanResponse.primaryCard?.cardId }
+                        .firstOrNull {
+                            it is UserWallet.Cold &&
+                                it.scanResponse.primaryCard?.cardId == scanResponse.primaryCard?.cardId
+                        }
                         ?: userWalletCreated
 
                     userWalletsListManager.update(
                         userWalletId = userWallet.walletId,
                         update = { wallet ->
-                            wallet.copy(
+                            wallet.requireColdWallet().copy(
                                 scanResponse = scanResponse.updateScanResponseAfterBackup(),
                             )
                         },
@@ -254,7 +259,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
 
                     userWallet
                 }
-            }
+            }.requireColdWallet()
 
             if (hasRing) {
                 walletsRepository.setHasWalletsWithRing(userWallet.walletId)
@@ -279,9 +284,9 @@ internal class MultiWalletFinalizeModel @Inject constructor(
         }
     }
 
-    private suspend fun createUserWallet(scanResponse: ScanResponse): UserWallet {
+    private fun createUserWallet(scanResponse: ScanResponse): UserWallet.Cold {
         return requireNotNull(
-            value = userWalletBuilderFactory.create(scanResponse = scanResponse)
+            value = coldUserWalletBuilderFactory.create(scanResponse = scanResponse)
                 .backupCardsIds(backupCardIds.toSet())
                 .hasBackupError(walletHasBackupError)
                 .build(),

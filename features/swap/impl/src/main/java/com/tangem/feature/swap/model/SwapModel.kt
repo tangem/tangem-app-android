@@ -44,6 +44,7 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.swap.analytics.StoriesEvents
 import com.tangem.feature.swap.analytics.SwapEvents
@@ -1348,7 +1349,8 @@ internal class SwapModel @Inject constructor(
             val transaction = dataState.swapDataModel?.transaction
             val fromCurrencyStatus = dataState.fromCryptoCurrency ?: initialFromStatus
             val network = fromCurrencyStatus.currency.network
-            val cardInfo = getCardInfoUseCase(userWallet.scanResponse).getOrElse { error("CardInfo must be not null") }
+            val cardInfo = getCardInfoUseCase(userWallet.requireColdWallet().scanResponse) // TODO [REDACTED_TASK_KEY]
+                .getOrElse { error("CardInfo must be not null") }
 
             saveBlockchainErrorUseCase(
                 error = BlockchainErrorInfo(
