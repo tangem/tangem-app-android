@@ -149,7 +149,7 @@ class DefaultNotificationsRepositoryTest {
             CryptoNetworkResponse(
                 id = 1,
                 name = "Ethereum",
-                networkId = "Ethereum",
+                networkId = "ethereum",
             ),
             CryptoNetworkResponse(
                 id = 2,
