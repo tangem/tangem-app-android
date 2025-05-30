@@ -5,9 +5,7 @@ import com.tangem.domain.nft.RefreshAllNFTUseCase
 import com.tangem.domain.tokens.FetchPendingTransactionsUseCase
 import com.tangem.domain.tokens.UpdateDelayedNetworkStatusUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
-import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.features.txhistory.TxHistoryFeatureToggles
 import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
 import com.tangem.utils.coroutines.DelayedWork
 import dagger.assisted.Assisted
@@ -20,8 +18,6 @@ internal class SendBalanceUpdater @AssistedInject constructor(
     private val fetchPendingTransactionsUseCase: FetchPendingTransactionsUseCase,
     private val updateDelayedNetworkStatusUseCase: UpdateDelayedNetworkStatusUseCase,
     private val getTxHistoryItemsCountUseCase: GetTxHistoryItemsCountUseCase,
-    private val getTxHistoryItemsUseCase: GetTxHistoryItemsUseCase,
-    private val txHistoryFeatureToggles: TxHistoryFeatureToggles,
     private val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter,
     private val refreshAllNFTUseCase: RefreshAllNFTUseCase,
     @DelayedWork private val coroutineScope: CoroutineScope,
@@ -75,15 +71,7 @@ internal class SendBalanceUpdater @AssistedInject constructor(
         )
 
         txHistoryItemsCountEither.onRight {
-            if (txHistoryFeatureToggles.isFeatureEnabled) {
-                txHistoryContentUpdateEmitter.triggerUpdate()
-            } else {
-                getTxHistoryItemsUseCase(
-                    userWalletId = userWallet.walletId,
-                    currency = cryptoCurrency,
-                    refresh = true,
-                )
-            }
+            txHistoryContentUpdateEmitter.triggerUpdate()
         }
     }
 
