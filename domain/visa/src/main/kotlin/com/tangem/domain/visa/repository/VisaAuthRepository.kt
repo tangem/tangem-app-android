@@ -18,4 +18,6 @@ interface VisaAuthRepository {
     suspend fun getAccessTokens(signedChallenge: VisaAuthSignedChallenge): Either<VisaApiError, VisaAuthTokens>
 
     suspend fun refreshAccessTokens(refreshToken: VisaAuthTokens.RefreshToken): Either<VisaApiError, VisaAuthTokens>
+
+    suspend fun exchangeAccessToken(tokens: VisaAuthTokens): Either<VisaApiError, VisaAuthTokens>
 }
