@@ -1,10 +1,7 @@
 package com.tangem.tap.di.domain
 
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
-import com.tangem.domain.notifications.GetApplicationIdUseCase
-import com.tangem.domain.notifications.GetTronFeeNotificationShowCountUseCase
-import com.tangem.domain.notifications.IncrementNotificationsShowCountUseCase
-import com.tangem.domain.notifications.SendPushTokenUseCase
+import com.tangem.domain.notifications.*
 import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.notifications.toggles.NotificationsFeatureToggles
 import com.tangem.tap.domain.notifications.DefaultNotificationsFeatureToggles
@@ -63,5 +60,13 @@ internal object NotificationsDomainModule {
     @Singleton
     fun provideNotificationsFeatureToggles(featureTogglesManager: FeatureTogglesManager): NotificationsFeatureToggles {
         return DefaultNotificationsFeatureToggles(featureTogglesManager = featureTogglesManager)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetNetworksAvailableForNotifications(
+        notificationsRepository: NotificationsRepository,
+    ): GetNetworksAvailableForNotificationsUseCase {
+        return GetNetworksAvailableForNotificationsUseCase(notificationsRepository = notificationsRepository)
     }
 }
