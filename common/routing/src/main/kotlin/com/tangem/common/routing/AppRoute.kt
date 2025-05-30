@@ -183,6 +183,9 @@ sealed class AppRoute(val path: String) : Route {
     ) : AppRoute(path = "/wallet_settings/${userWalletId.stringValue}")
 
     @Serializable
+    data object Markets : AppRoute(path = "/markets")
+
+    @Serializable
     data class MarketsTokenDetails(
         val token: TokenMarketParams,
         val appCurrency: AppCurrency,
