@@ -11,6 +11,7 @@ import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.transaction.TransactionRepository
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.requireColdWallet
 
 class PrepareForSendUseCase(
     private val transactionRepository: TransactionRepository,
@@ -47,6 +48,7 @@ class PrepareForSendUseCase(
     }
 
     private fun createSigner(userWallet: UserWallet): TransactionSigner {
+        userWallet.requireColdWallet() // TODO [REDACTED_TASK_KEY]
         val card = userWallet.scanResponse.card
         val isCardNotBackedUp = card.backupStatus?.isActive != true && !card.isTangemTwins
 

@@ -8,6 +8,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.visa.model.VisaCurrency
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.lib.visa.model.VisaContractInfo
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
@@ -33,7 +34,7 @@ internal class VisaCurrencyFactory @Inject constructor(
         val currencyNetwork = networkFactory.create(
             blockchain = Blockchain.Polygon,
             extraDerivationPath = null,
-            derivationStyleProvider = userWallet.scanResponse.derivationStyleProvider,
+            derivationStyleProvider = userWallet.requireColdWallet().scanResponse.derivationStyleProvider,
             canHandleTokens = true,
         ) ?: error("Unable to create network for Visa currency")
 
