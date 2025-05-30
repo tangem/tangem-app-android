@@ -3,10 +3,10 @@ package com.tangem.data.quotes.store
 import androidx.datastore.core.DataStore
 import com.tangem.datasource.api.tangemTech.models.QuotesResponse
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
-import com.tangem.datasource.local.quote.converter.QuoteConverter
+import com.tangem.datasource.local.quote.converter.QuoteStatusConverter
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.tokens.model.Quote
+import com.tangem.domain.tokens.model.QuoteStatus
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.addOrReplace
 import kotlinx.coroutines.CoroutineScope
@@ -26,7 +26,7 @@ internal typealias CurrencyIdWithQuote = Map<String, QuotesResponse.Quote>
  * @param dispatchers             dispatchers
  */
 internal class DefaultQuotesStoreV2(
-    private val runtimeStore: RuntimeSharedStore<Set<Quote>>,
+    private val runtimeStore: RuntimeSharedStore<Set<QuoteStatus>>,
     private val persistenceDataStore: DataStore<CurrencyIdWithQuote>,
     dispatchers: CoroutineDispatcherProvider,
 ) : QuotesStoreV2 {
@@ -40,14 +40,14 @@ internal class DefaultQuotesStoreV2(
             if (cachedStatuses.isNullOrEmpty()) return@launch
 
             runtimeStore.store(
-                value = QuoteConverter(isCached = true).convertSet(input = cachedStatuses.entries),
+                value = QuoteStatusConverter(isCached = true).convertSet(input = cachedStatuses.entries),
             )
         }
     }
 
-    override fun get(): Flow<Set<Quote>> = runtimeStore.get()
+    override fun get(): Flow<Set<QuoteStatus>> = runtimeStore.get()
 
-    override suspend fun getAllSyncOrNull(): Set<Quote>? = runtimeStore.getSyncOrNull()
+    override suspend fun getAllSyncOrNull(): Set<QuoteStatus>? = runtimeStore.getSyncOrNull()
 
     override suspend fun refresh(currenciesIds: Set<CryptoCurrency.RawID>) {
         updateStatusSourceInRuntime(currenciesIds = currenciesIds, source = StatusSource.CACHE)
@@ -56,7 +56,7 @@ internal class DefaultQuotesStoreV2(
     override suspend fun storeActual(values: Map<String, QuotesResponse.Quote>) {
         coroutineScope {
             launch {
-                val quotes = QuoteConverter(isCached = false).convertSet(input = values.entries)
+                val quotes = QuoteStatusConverter(isCached = false).convertSet(input = values.entries)
                 storeInRuntimeStore(values = quotes)
             }
             launch { storeInPersistenceStore(values = values) }
@@ -66,14 +66,14 @@ internal class DefaultQuotesStoreV2(
     override suspend fun storeError(currenciesIds: Set<CryptoCurrency.RawID>) {
         updateStatusSourceInRuntime(
             currenciesIds = currenciesIds,
-            ifNotFound = Quote::Empty,
+            ifNotFound = ::QuoteStatus,
             source = StatusSource.ONLY_CACHE,
         )
     }
 
     private suspend fun updateStatusSourceInRuntime(
         currenciesIds: Set<CryptoCurrency.RawID>,
-        ifNotFound: (CryptoCurrency.RawID) -> Quote? = { null },
+        ifNotFound: (CryptoCurrency.RawID) -> QuoteStatus? = { null },
         source: StatusSource,
     ) {
         runtimeStore.update(default = emptySet()) { stored ->
@@ -82,14 +82,14 @@ internal class DefaultQuotesStoreV2(
                     ?: ifNotFound(id)
                     ?: return@mapNotNullTo null
 
-                quote.copySealed(source = source)
+                quote.copy(value = quote.value.copySealed(source = source))
             }
 
             stored.addOrReplace(items = updatedQuotes) { old, new -> old.rawCurrencyId == new.rawCurrencyId }
         }
     }
 
-    private suspend fun storeInRuntimeStore(values: Set<Quote>) {
+    private suspend fun storeInRuntimeStore(values: Set<QuoteStatus>) {
         runtimeStore.update(default = emptySet()) { saved ->
             saved.addOrReplace(items = values) { prev, new -> prev.rawCurrencyId == new.rawCurrencyId }
         }
