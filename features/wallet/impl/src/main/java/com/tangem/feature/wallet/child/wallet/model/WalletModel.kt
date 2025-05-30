@@ -22,6 +22,7 @@ import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
 import com.tangem.domain.tokens.RefreshMultiCurrencyWalletQuotesUseCase
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.models.isMultiCurrency
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
@@ -243,7 +244,7 @@ internal class WalletModel @Inject constructor(
         deepLinksRegistry.register(
             ReferralDeepLink(
                 onReceive = {
-                    if (userWallet.cardTypesResolver.isTangemWallet()) {
+                    if (userWallet !is UserWallet.Cold || userWallet.cardTypesResolver.isTangemWallet()) {
                         appRouter.push(
                             AppRoute.ReferralProgram(userWalletId = userWallet.walletId),
                         )
@@ -517,7 +518,7 @@ internal class WalletModel @Inject constructor(
     }
 
     private fun fetchIfSingleWallet(userWallet: UserWallet) {
-        if (userWallet.scanResponse.cardTypesResolver.isSingleWallet()) {
+        if (userWallet is UserWallet.Cold && userWallet.scanResponse.cardTypesResolver.isSingleWallet()) {
             modelScope.launch {
                 fetchCurrencyStatusUseCase(userWalletId = userWallet.walletId)
                     .onLeft { Timber.e(it.toString()) }
