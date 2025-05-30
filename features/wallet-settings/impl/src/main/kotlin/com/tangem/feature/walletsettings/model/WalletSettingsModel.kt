@@ -13,9 +13,7 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.settings.SettingsManager
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.message.DialogMessage
-import com.tangem.core.ui.message.EventMessageAction
-import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.core.ui.message.*
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.models.scan.CardDTO
@@ -31,6 +29,7 @@ import com.tangem.domain.wallets.usecase.*
 import com.tangem.feature.walletsettings.analytics.Settings
 import com.tangem.feature.walletsettings.component.WalletSettingsComponent
 import com.tangem.feature.walletsettings.entity.DialogConfig
+import com.tangem.feature.walletsettings.entity.NetworksAvailableForNotificationBSConfig
 import com.tangem.feature.walletsettings.entity.WalletSettingsItemUM
 import com.tangem.feature.walletsettings.entity.WalletSettingsUM
 import com.tangem.feature.walletsettings.impl.R
@@ -70,6 +69,7 @@ internal class WalletSettingsModel @Inject constructor(
 
     val params: WalletSettingsComponent.Params = paramsContainer.require()
     val dialogNavigation = SlotNavigation<DialogConfig>()
+    val bottomSheetNavigation: SlotNavigation<NetworksAvailableForNotificationBSConfig> = SlotNavigation()
 
     val state: MutableStateFlow<WalletSettingsUM> = MutableStateFlow(
         value = WalletSettingsUM(
@@ -215,7 +215,7 @@ internal class WalletSettingsModel @Inject constructor(
     }
 
     private fun onNotificationsDescriptionClick() {
-// [REDACTED_TODO_COMMENT]
+        bottomSheetNavigation.activate(NetworksAvailableForNotificationBSConfig)
     }
 
     private fun openPushSystemSettings() {

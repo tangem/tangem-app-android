@@ -73,7 +73,7 @@ internal class DefaultNotificationsRepository @Inject constructor(
     }
 
     override suspend fun getEligibleNetworks(): List<NotificationsEligibleNetwork> = withContext(dispatchers.io) {
-        tangemTechApi.getEligibleNetworksForPushNotifications().getOrThrow().map {
+        tangemTechApi.getEligibleNetworksForPushNotifications().getOrThrow().mapNotNull {
             NotificationsEligibleNetworkConverter.convert(it)
         }
     }
