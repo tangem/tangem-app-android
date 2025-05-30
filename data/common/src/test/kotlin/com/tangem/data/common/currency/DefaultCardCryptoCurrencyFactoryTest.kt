@@ -333,7 +333,7 @@ internal class DefaultCardCryptoCurrencyFactoryTest {
         )
     }
 
-    data class CreateDefaultForMultiWalletModel(val multiWallet: UserWallet, val expected: List<CryptoCurrency>)
+    data class CreateDefaultForMultiWalletModel(val multiWallet: UserWallet.Cold, val expected: List<CryptoCurrency>)
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -381,7 +381,7 @@ internal class DefaultCardCryptoCurrencyFactoryTest {
     }
 
     data class CreatePrimaryCurrencyForSingleWalletModel(
-        val singleWallet: UserWallet,
+        val singleWallet: UserWallet.Cold,
         val expected: Result<CryptoCurrency>,
     )
 
@@ -424,7 +424,7 @@ internal class DefaultCardCryptoCurrencyFactoryTest {
 
         private fun provideTestModels() = listOf(
             CreateForSingleWalletWithTokenModel(
-                singleWalletWithToken = UserWallet(
+                singleWalletWithToken = UserWallet.Cold(
                     name = "NODL",
                     walletId = UserWalletId("011"),
                     cardsInWallet = setOf(),
@@ -457,13 +457,13 @@ internal class DefaultCardCryptoCurrencyFactoryTest {
     }
 
     data class CreateForSingleWalletWithTokenModel(
-        val singleWalletWithToken: UserWallet,
+        val singleWalletWithToken: UserWallet.Cold,
         val isPrimaryTokenExpected: Boolean = false,
         val expected: Result<List<CryptoCurrency>>,
     )
 
-    private fun createMultiWallet(cardId: String? = null, batchId: String? = null): UserWallet {
-        return UserWallet(
+    private fun createMultiWallet(cardId: String? = null, batchId: String? = null): UserWallet.Cold {
+        return UserWallet.Cold(
             name = "Wallet 1",
             walletId = UserWalletId("011"),
             cardsInWallet = setOf(),
@@ -483,8 +483,8 @@ internal class DefaultCardCryptoCurrencyFactoryTest {
         )
     }
 
-    private fun createSingleWallet(batchId: String? = null, addWalletData: Boolean = false): UserWallet {
-        return UserWallet(
+    private fun createSingleWallet(batchId: String? = null, addWalletData: Boolean = false): UserWallet.Cold {
+        return UserWallet.Cold(
             name = "Note",
             walletId = UserWalletId("011"),
             cardsInWallet = setOf(),
@@ -515,8 +515,8 @@ internal class DefaultCardCryptoCurrencyFactoryTest {
         )
     }
 
-    private fun createSingleWalletWithToken(): UserWallet {
-        return UserWallet(
+    private fun createSingleWalletWithToken(): UserWallet.Cold {
+        return UserWallet.Cold(
             name = "NODL",
             walletId = UserWalletId("011"),
             cardsInWallet = setOf(),

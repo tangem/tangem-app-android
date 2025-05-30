@@ -30,7 +30,9 @@ class EstimateFeeUseCase(
         cryptoCurrency: CryptoCurrency,
     ): Either<GetFeeError, TransactionFee> {
         val amountData = convertCryptoCurrencyToAmount(cryptoCurrency, amount)
-        val result = if (demoConfig.isDemoCardId(userWallet.scanResponse.card.cardId)) {
+        val result = if (userWallet is UserWallet.Cold &&
+            demoConfig.isDemoCardId(userWallet.scanResponse.card.cardId)
+        ) {
             demoTransactionSender(userWallet, cryptoCurrency).estimateFee(
                 amount = amountData,
                 destination = "",

@@ -11,6 +11,7 @@ import com.tangem.datasource.api.tangemTech.models.StartReferralBody
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.feature.referral.converters.ReferralConverter
 import com.tangem.feature.referral.domain.ReferralRepository
 import com.tangem.feature.referral.domain.models.ReferralData
@@ -95,13 +96,13 @@ internal class ReferralRepositoryImpl @Inject constructor(
                 sdkToken = sdkToken,
                 blockchain = blockchain,
                 extraDerivationPath = null,
-                scanResponse = userWallet.scanResponse,
+                scanResponse = userWallet.requireColdWallet().scanResponse, // TODO AND-11142
             )
         } else {
             cryptoCurrencyFactory.createCoin(
                 blockchain = blockchain,
                 extraDerivationPath = null,
-                scanResponse = userWallet.scanResponse,
+                scanResponse = userWallet.requireColdWallet().scanResponse, // TODO AND-11142
             )
         }
     }

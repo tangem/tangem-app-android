@@ -48,6 +48,7 @@ import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent.Companion.AVAILABLE
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent.Companion.toReasonAnalyticsText
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
@@ -561,9 +562,9 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     }
 
     private fun showErrorIfDemoModeOrElse(action: () -> Unit) {
-        val cardId = getSelectedWalletSyncUseCase.unwrap()?.cardId ?: return
+        val selectedWallet = getSelectedWalletSyncUseCase.unwrap() ?: return
 
-        if (isDemoCardUseCase(cardId = cardId)) {
+        if (selectedWallet is UserWallet.Cold && isDemoCardUseCase(cardId = selectedWallet.cardId)) {
             stateHolder.update(CloseBottomSheetTransformer(userWalletId = stateHolder.getSelectedWalletId()))
 
             walletEventSender.send(

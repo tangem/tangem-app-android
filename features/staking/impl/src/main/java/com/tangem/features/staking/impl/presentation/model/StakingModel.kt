@@ -46,6 +46,7 @@ import com.tangem.domain.transaction.usecase.GetAllowanceUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.staking.api.StakingComponent
 import com.tangem.features.staking.impl.analytics.StakingParamsInterceptor
@@ -842,7 +843,9 @@ internal class StakingModel @Inject constructor(
         modelScope.launch {
             val network = cryptoCurrencyStatus.currency.network
 
-            val cardInfo = getCardInfoUseCase(userWallet.scanResponse).getOrElse { error("CardInfo must be not null") }
+            val cardInfo =
+                getCardInfoUseCase(userWallet.requireColdWallet().scanResponse)
+                    .getOrElse { error("CardInfo must be not null") }
             val amountState = uiState.value.amountState as? AmountState.Data
             val confirmationState = uiState.value.confirmationState as? StakingStates.ConfirmationState.Data
             val validatorState = uiState.value.validatorState as? StakingStates.ValidatorState.Data

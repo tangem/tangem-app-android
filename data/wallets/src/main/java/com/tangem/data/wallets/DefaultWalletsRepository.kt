@@ -89,6 +89,11 @@ internal class DefaultWalletsRepository(
     private suspend fun fetchSeedPhraseNotificationStatus(userWalletId: UserWalletId) {
         val userWallet = userWalletsStore.getSyncOrNull(key = userWalletId)
 
+        if (userWallet != null && userWallet !is UserWallet.Cold) {
+            updateNotificationVisibility(id = userWalletId, value = SeedPhraseNotificationsStatus.NOT_NEEDED)
+            return
+        }
+
         val status = if (userWallet?.isImported == false) {
             Status.NOT_NEEDED
         } else {
@@ -291,7 +296,7 @@ internal class DefaultWalletsRepository(
     override suspend fun associateWallets(applicationId: String, wallets: List<UserWallet>) =
         withContext(dispatchers.io) {
             val publicKeys = authProvider.getCardsPublicKeys()
-            val walletsBody = wallets.map { userWallet ->
+            val walletsBody = wallets.filterIsInstance<UserWallet.Cold>().map { userWallet ->
                 WalletIdBodyConverter.convert(
                     userWallet = userWallet,
                     publicKeys = publicKeys.filterKeys { userWallet.cardsInWallet.contains(it) },
