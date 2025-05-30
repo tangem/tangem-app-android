@@ -59,7 +59,8 @@ internal class TokenActionsHandler @AssistedInject constructor(
                 cryptoCurrencyData = cryptoCurrencyData,
             ),
         )
-        if (handleDemoMode(action, cryptoCurrencyData.userWallet)) return
+        val userWallet = cryptoCurrencyData.userWallet
+        if (userWallet is UserWallet.Cold && handleDemoMode(action, userWallet)) return
 
         when (action) {
             TokenActionsBSContentUM.Action.Buy -> onBuyClick(cryptoCurrencyData)
@@ -72,7 +73,7 @@ internal class TokenActionsHandler @AssistedInject constructor(
         }
     }
 
-    private fun handleDemoMode(action: TokenActionsBSContentUM.Action, userWallet: UserWallet): Boolean {
+    private fun handleDemoMode(action: TokenActionsBSContentUM.Action, userWallet: UserWallet.Cold): Boolean {
         val demoCard = isDemoCardUseCase.invoke(userWallet.cardId)
         val needShowDemoWarning = demoCard && disabledActionsInDemoMode.contains(action)
 

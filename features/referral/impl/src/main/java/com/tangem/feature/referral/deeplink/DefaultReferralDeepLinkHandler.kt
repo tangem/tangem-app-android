@@ -3,6 +3,7 @@ package com.tangem.feature.referral.deeplink
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.feature.referral.api.deeplink.ReferralDeepLinkHandler
 import dagger.assisted.AssistedFactory
@@ -21,7 +22,7 @@ internal class DefaultReferralDeepLinkHandler @AssistedInject constructor(
                 Timber.e("Error on getting user wallet: $it")
             },
             ifRight = { userWallet ->
-                if (userWallet.cardTypesResolver.isTangemWallet()) {
+                if (userWallet !is UserWallet.Cold || userWallet.cardTypesResolver.isTangemWallet()) {
                     appRouter.push(
                         AppRoute.ReferralProgram(userWalletId = userWallet.walletId),
                     )

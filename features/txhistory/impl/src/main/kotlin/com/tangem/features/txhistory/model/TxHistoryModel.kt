@@ -190,7 +190,8 @@ internal class TxHistoryModel @Inject constructor(
         getSingleCryptoCurrencyStatusUseCase.invokeMultiWallet(
             userWalletId = params.userWalletId,
             currencyId = params.currency.id,
-            isSingleWalletWithTokens = userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
+            isSingleWalletWithTokens = userWallet is UserWallet.Cold &&
+                userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
         )
             .distinctUntilChanged()
             .onEach(::handlePendingTxsChanges)
