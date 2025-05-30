@@ -2,7 +2,7 @@ package com.tangem.data.quotes.single
 
 import com.tangem.data.quotes.store.QuotesStoreV2
 import com.tangem.domain.quotes.single.SingleQuoteProducer
-import com.tangem.domain.tokens.model.Quote
+import com.tangem.domain.tokens.model.QuoteStatus
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -24,9 +24,9 @@ internal class DefaultSingleQuoteProducer @AssistedInject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
 ) : SingleQuoteProducer {
 
-    override val fallback: Quote = Quote.Empty(rawCurrencyId = params.rawCurrencyId)
+    override val fallback: QuoteStatus = QuoteStatus(rawCurrencyId = params.rawCurrencyId)
 
-    override fun produce(): Flow<Quote> {
+    override fun produce(): Flow<QuoteStatus> {
         return quotesStore.get()
             .mapNotNull { quotes -> quotes.firstOrNull { it.rawCurrencyId == params.rawCurrencyId } }
             .distinctUntilChanged()
