@@ -78,7 +78,6 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.e
 import com.tangem.features.onramp.OnrampFeatureToggles
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.tokendetails.impl.R
-import com.tangem.features.txhistory.TxHistoryFeatureToggles
 import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
@@ -125,7 +124,6 @@ internal class TokenDetailsModel @Inject constructor(
     private val onrampFeatureToggles: OnrampFeatureToggles,
     private val shareManager: ShareManager,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
-    private val txHistoryFeatureToggles: TxHistoryFeatureToggles,
     private val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter,
     paramsContainer: ParamsContainer,
     expressStatusFactory: ExpressStatusFactory.Factory,
@@ -379,10 +377,10 @@ internal class TokenDetailsModel @Inject constructor(
      * @param showItemsLoading - show loading items placeholder.
      */
     private fun updateTxHistory(refresh: Boolean, showItemsLoading: Boolean, initialUpdating: Boolean = false) {
-        if (txHistoryFeatureToggles.isFeatureEnabled && !initialUpdating) {
-            modelScope.launch { txHistoryContentUpdateEmitter.triggerUpdate() }
-        } else {
-            modelScope.launch(dispatchers.main) {
+        modelScope.launch {
+            if (!initialUpdating) {
+                txHistoryContentUpdateEmitter.triggerUpdate()
+            } else {
                 val txHistoryItemsCountEither = txHistoryItemsCountUseCase(
                     userWalletId = userWalletId,
                     currency = cryptoCurrency,
