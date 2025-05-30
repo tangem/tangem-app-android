@@ -6,7 +6,7 @@ import com.tangem.common.test.data.quote.toDomain
 import com.tangem.common.test.datastore.MockStateDataStore
 import com.tangem.common.test.utils.getEmittedValues
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
-import com.tangem.domain.tokens.model.Quote
+import com.tangem.domain.tokens.model.QuoteStatus
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
@@ -17,7 +17,7 @@ import java.math.BigDecimal
  */
 internal class QuotesStoreGetMethodTest {
 
-    private val runtimeStore = RuntimeSharedStore<Set<Quote>>()
+    private val runtimeStore = RuntimeSharedStore<Set<QuoteStatus>>()
     private val persistenceStore = MockStateDataStore<CurrencyIdWithQuote>(default = emptyMap())
 
     private val store = DefaultQuotesStoreV2(
@@ -32,7 +32,7 @@ internal class QuotesStoreGetMethodTest {
 
         val values = getEmittedValues(flow = actual)
 
-        Truth.assertThat(values).isEqualTo(emptyList<Set<Quote>>())
+        Truth.assertThat(values).isEqualTo(emptyList<Set<QuoteStatus>>())
     }
 
     @Test
@@ -43,7 +43,7 @@ internal class QuotesStoreGetMethodTest {
 
         val values = getEmittedValues(flow = actual)
 
-        Truth.assertThat(values).isEqualTo(listOf(emptySet<Quote>()))
+        Truth.assertThat(values).isEqualTo(listOf(emptySet<QuoteStatus>()))
     }
 
     @Test
@@ -74,7 +74,7 @@ internal class QuotesStoreGetMethodTest {
 
         val actual = store.getAllSyncOrNull()
 
-        Truth.assertThat(actual).isEqualTo(emptySet<Quote>())
+        Truth.assertThat(actual).isEqualTo(emptySet<QuoteStatus>())
     }
 
     @Test
