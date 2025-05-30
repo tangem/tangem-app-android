@@ -10,6 +10,7 @@ import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.tap.common.analytics.events.Token
 import com.tangem.tap.common.apptheme.MutableAppThemeModeHolder
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
@@ -104,7 +105,7 @@ object TradeCryptoMiddleware {
                 }
 
                 buyErc20TestnetTokens(
-                    card = action.userWallet.scanResponse.card,
+                    card = action.userWallet.requireColdWallet().scanResponse.card, // TODO [REDACTED_TASK_KEY]
                     walletManager = walletManager,
                     destinationAddress = currency.contractAddress,
                 )
