@@ -1099,6 +1099,7 @@
   <string name="unlock_wallet_description_full">Use %s or scan a card/ring to have access to your wallet</string>
   <string name="unsupported_wc_version">Connection failed: This dApp uses Wallet Connect version 1.0, which is not supported. Please ensure the dApp supports Wallet Connect version 2.0 to connect successfully.</string>
   <string name="user_push_notification_agreement_argument_one">Stay up to date with the latest features and news</string>
+  <string name="user_push_notification_agreement_argument_three">Get notified of incoming transactions</string>
   <string name="user_push_notification_agreement_argument_two">Be the first to know about new promotions</string>
   <string name="user_push_notification_agreement_header">Would you like to use\nPush-notifications?</string>
   <string name="user_wallet_list_add_button">Add new wallet</string>
