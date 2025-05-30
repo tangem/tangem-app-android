@@ -15,6 +15,7 @@ import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.legacy.UserWalletsListManager.Lockable.UnlockType
 import com.tangem.domain.wallets.legacy.unlockIfLockable
+import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.tap.backupService
 import com.tangem.tap.common.analytics.converters.ParamCardCurrencyConverter
 import com.tangem.tap.common.extensions.*
@@ -94,7 +95,7 @@ internal class WelcomeMiddleware {
             }
             .doOnSuccess { selectedUserWallet ->
                 sendSignedInAnalyticsEvent(
-                    scanResponse = selectedUserWallet.scanResponse,
+                    scanResponse = selectedUserWallet.requireColdWallet().scanResponse, // TODO [REDACTED_TASK_KEY]
                     signInType = Basic.SignedIn.SignInType.Biometric,
                 )
 
@@ -117,7 +118,7 @@ internal class WelcomeMiddleware {
         )
 
         scanCardInternal { scanResponse ->
-            val userWalletBuilder = store.inject(DaggerGraphState::userWalletBuilderFactory).create(scanResponse)
+            val userWalletBuilder = store.inject(DaggerGraphState::coldUserWalletBuilderFactory).create(scanResponse)
 
             val userWallet = userWalletBuilder.build() ?: return@scanCardInternal
 
