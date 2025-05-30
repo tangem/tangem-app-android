@@ -24,6 +24,7 @@ import com.tangem.domain.tokens.model.analytics.TokenSwapPromoAnalyticsEvent
 import com.tangem.domain.wallets.legacy.UserWalletsListManager.Lockable.UnlockType
 import com.tangem.domain.wallets.models.UnlockWalletsError
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.SeedPhraseNotificationUseCase
 import com.tangem.domain.wallets.usecase.UnlockWalletsUseCase
@@ -113,7 +114,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
 
     private fun prepareAndStartOnboardingProcess() {
         modelScope.launch(dispatchers.main) {
-            getSelectedUserWallet()?.let {
+            getSelectedUserWallet()?.requireColdWallet()?.let {
                 router.openOnboardingScreen(
                     scanResponse = it.scanResponse,
                     continueBackup = true,
@@ -126,7 +127,9 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         modelScope.launch(dispatchers.main) {
             val userWallet = getSelectedUserWallet() ?: return@launch
 
-            setCardWasScannedUseCase(cardId = userWallet.cardId)
+            if (userWallet is UserWallet.Cold) {
+                setCardWasScannedUseCase(cardId = userWallet.cardId)
+            }
         }
     }
 
@@ -234,7 +237,8 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         modelScope.launch(dispatchers.main) {
             neverToSuggestRateAppUseCase()
 
-            val scanResponse = getSelectedUserWallet()?.scanResponse ?: return@launch
+            val scanResponse =
+                getSelectedUserWallet()?.requireColdWallet()?.scanResponse ?: return@launch // TODO [REDACTED_TASK_KEY]
             val cardInfo = getCardInfoUseCase(scanResponse).getOrNull() ?: return@launch
 
             sendFeedbackEmailUseCase(type = FeedbackEmailType.RateCanBeBetter(cardInfo = cardInfo))
@@ -275,7 +279,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     }
 
     override fun onSupportClick() {
-        val scanResponse = getSelectedUserWallet()?.scanResponse ?: return
+        val scanResponse = getSelectedUserWallet()?.requireColdWallet()?.scanResponse ?: return // TODO [REDACTED_TASK_KEY]
         val cardInfo = getCardInfoUseCase(scanResponse).getOrNull() ?: return
 
         modelScope.launch {

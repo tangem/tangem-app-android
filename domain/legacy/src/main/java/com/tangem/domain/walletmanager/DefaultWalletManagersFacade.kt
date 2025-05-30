@@ -41,6 +41,7 @@ import com.tangem.domain.walletmanager.utils.*
 import com.tangem.domain.walletmanager.utils.WalletManagerFactory
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.sync.Mutex
@@ -162,7 +163,10 @@ class DefaultWalletManagersFacade(
         val blockchain = network.toBlockchain()
         val derivationPath = network.derivationPath.value
 
-        if (derivationPath != null && !userWallet.scanResponse.hasDerivation(blockchain, derivationPath)) {
+        if (derivationPath != null &&
+            userWallet is UserWallet.Cold &&
+            !userWallet.scanResponse.hasDerivation(blockchain, derivationPath)
+        ) {
             Timber.w("Derivation missed for: $blockchain")
             return UpdateWalletManagerResult.MissedDerivation
         }
@@ -286,9 +290,10 @@ class DefaultWalletManagersFacade(
         derivationPath: String?,
         extraTokens: Set<CryptoCurrency.Token>,
     ): UpdateWalletManagerResult {
-        val scanResponse = userWallet.scanResponse
-
-        if (derivationPath != null && !scanResponse.hasDerivation(blockchain, derivationPath)) {
+        if (derivationPath != null &&
+            userWallet is UserWallet.Cold &&
+            !userWallet.scanResponse.hasDerivation(blockchain, derivationPath)
+        ) {
             Timber.w("Derivation missed for: $blockchain")
             return UpdateWalletManagerResult.MissedDerivation
         }
@@ -306,7 +311,7 @@ class DefaultWalletManagersFacade(
         updateWalletManagerTokensIfNeeded(walletManager, extraTokens)
 
         return try {
-            if (demoConfig.isDemoCardId(userWallet.scanResponse.card.cardId)) {
+            if (userWallet is UserWallet.Cold && demoConfig.isDemoCardId(userWallet.scanResponse.card.cardId)) {
                 updateDemoWalletManager(walletManager)
             } else {
                 updateWalletManager(walletManager)
@@ -365,6 +370,9 @@ class DefaultWalletManagersFacade(
     ): WalletManager? {
         initMutex.withLock {
             val userWallet = getUserWallet(userWalletId)
+
+            userWallet.requireColdWallet() // TODO [REDACTED_TASK_KEY]
+
             var walletManager = walletManagersStore.getSyncOrNull(
                 userWalletId = userWalletId,
                 blockchain = blockchain,
