@@ -122,6 +122,25 @@ internal class DefaultVisaAuthRepository @Inject constructor(
         }
     }
 
+    override suspend fun exchangeAccessToken(tokens: VisaAuthTokens): Either<VisaApiError, VisaAuthTokens> {
+        return request {
+            visaAuthApi.exchangeAccessToken(
+                ExchangeAccessTokenRequest(
+                    accessToken = tokens.accessToken,
+                    refreshToken = tokens.refreshToken.value,
+                ),
+            ).getOrThrow()
+        }.map { response ->
+            VisaAuthTokens(
+                accessToken = response.result.accessToken,
+                refreshToken = VisaAuthTokens.RefreshToken(
+                    value = response.result.refreshToken,
+                    authType = VisaAuthTokens.RefreshToken.Type.CardWallet,
+                ),
+            )
+        }
+    }
+
     private suspend fun <T : Any> request(requestBlock: suspend () -> T): Either<VisaApiError, T> {
         return runCatching {
             Either.Right(requestBlock())
