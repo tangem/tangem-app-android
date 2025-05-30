@@ -99,7 +99,7 @@ internal class SetCryptoCurrencyActionsTransformer(
     }
 
     private fun List<TokenActionsState.ActionState>.filterIfS2C(): List<TokenActionsState.ActionState> {
-        return if (userWallet.scanResponse.cardTypesResolver.isStart2Coin()) {
+        return if (userWallet is UserWallet.Cold && userWallet.scanResponse.cardTypesResolver.isStart2Coin()) {
             filterNot { it is TokenActionsState.ActionState.Buy || it is TokenActionsState.ActionState.Sell }
         } else {
             this
