@@ -56,9 +56,11 @@ import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent.Compan
 import com.tangem.domain.tokens.model.analytics.TokenSwapPromoAnalyticsEvent
 import com.tangem.domain.transaction.error.AssociateAssetError
 import com.tangem.domain.transaction.error.IncompleteTransactionError
+import com.tangem.domain.transaction.error.OpenTrustlineError
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.usecase.AssociateAssetUseCase
 import com.tangem.domain.transaction.usecase.DismissIncompleteTransactionUseCase
+import com.tangem.domain.transaction.usecase.OpenTrustlineUseCase
 import com.tangem.domain.transaction.usecase.RetryIncompleteTransactionUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
@@ -116,6 +118,7 @@ internal class TokenDetailsModel @Inject constructor(
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val associateAssetUseCase: AssociateAssetUseCase,
     private val retryIncompleteTransactionUseCase: RetryIncompleteTransactionUseCase,
+    private val openTrustlineUseCase: OpenTrustlineUseCase,
     private val dismissIncompleteTransactionUseCase: DismissIncompleteTransactionUseCase,
     private val reduxStateHolder: ReduxStateHolder,
     private val analyticsEventsHandler: AnalyticsEventHandler,
@@ -889,6 +892,37 @@ internal class TokenDetailsModel @Inject constructor(
                 ifRight = {
                     internalUiState.value = stateFactory.getStateWithRemovedKaspaIncompleteTransactionNotification()
                 },
+            )
+        }
+    }
+
+    override fun onOpenTrustlineClick() {
+        analyticsEventsHandler.send(
+            TokenScreenAnalyticsEvent.Associate(
+                tokenSymbol = cryptoCurrency.symbol,
+                blockchain = cryptoCurrency.network.name,
+            ),
+        )
+        modelScope.launch(dispatchers.mainImmediate) {
+            openTrustlineUseCase(
+                userWalletId = userWalletId,
+                currency = cryptoCurrency,
+            ).fold(
+                ifLeft = { e ->
+                    Timber.e(e.message)
+                    internalUiState.value = when (e) {
+                        is OpenTrustlineError.SomeError ->
+                            stateFactory.getStateWithErrorDialog(stringReference(e.message.orEmpty()))
+                        is OpenTrustlineError.NotEnoughCoin -> {
+                            val text = resourceReference(
+                                id = R.string.warning_token_required_min_coin_reserve,
+                                formatArgs = wrappedList(e.amount),
+                            )
+                            stateFactory.getStateWithErrorDialog(text)
+                        }
+                    }
+                },
+                ifRight = { internalUiState.value = stateFactory.getStateWithRemovedRequiredTrustlineNotification() },
             )
         }
     }
