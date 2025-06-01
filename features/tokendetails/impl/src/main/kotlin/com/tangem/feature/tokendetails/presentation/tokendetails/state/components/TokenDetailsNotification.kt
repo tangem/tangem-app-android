@@ -193,6 +193,24 @@ internal sealed class TokenDetailsNotification(val config: NotificationConfig) {
         ),
     )
 
+    data class RequiredTrustlineWarning(
+        private val currency: CryptoCurrency,
+        private val amount: String,
+        private val currencySymbol: String,
+        private val onOpenClick: () -> Unit,
+    ) : Warning(
+        title = resourceReference(id = R.string.warning_token_trustline_title),
+        subtitle = resourceReference(
+            id = R.string.warning_token_trustline_subtitle,
+            formatArgs = wrappedList(amount, currencySymbol),
+        ),
+        iconResId = currency.networkIconResId,
+        buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
+            text = resourceReference(R.string.warning_token_trustline_button_title),
+            onClick = onOpenClick,
+        ),
+    )
+
     data class KaspaIncompleteTransactionWarning(
         private val currency: CryptoCurrency,
         private val amount: String,
