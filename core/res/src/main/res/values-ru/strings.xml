@@ -1263,8 +1263,8 @@
   <string name="warning_testnet_card_title">Только для целей тестирования</string>
   <string name="warning_token_balance_not_updated">Возможно, баланс устарел. Обновите страницу.</string>
   <string name="warning_token_trustline_button_title">Открыть Trustline</string>
-  <string name="warning_token_trustline_subtiile">Согласно правилам сети, чтобы пополнить этот токен, необходимо сначала открыть Trustline — это позволит вашему кошельку принимать и хранить этот актив.</string>
-  <string name="warning_token_trustline_tiile">Откройте Trustline</string>
+  <string name="warning_token_trustline_subtitle">Согласно правилам сети, чтобы пополнить этот токен, необходимо сначала открыть Trustline — это позволит вашему кошельку принимать и хранить этот актив.</string>
+  <string name="warning_token_trustline_title">Откройте Trustline</string>
   <string name="wc_alert_session_disconnected_description">Пожалуйста, вернитесь в браузер и выполните повторное подключение через WalletConnect.</string>
   <string name="wc_alert_wrong_card_description">Выбрана не верная карта или кольцо</string>
   <string name="wc_common_address">Адрес</string>
