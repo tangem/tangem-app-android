@@ -1299,8 +1299,8 @@
   <string name="warning_token_balance_not_updated">Der Kontostand ist möglicherweise veraltet. Aktualisiere bittre die Seite.</string>
   <string name="warning_token_required_min_coin_reserve">Nicht genug %1$s. Lade Dein XLM-Konto auf, um dieses Token zu verknüpfen</string>
   <string name="warning_token_trustline_button_title">Trustline aktivieren</string>
-  <string name="warning_token_trustline_subtiile">Um dieses Token zu erhalten, muss eine Trustline aktiviert sein. Das Netzwerk benötigt eine Reserve von %1$s %2$s.</string>
-  <string name="warning_token_trustline_tiile">Trustline erforderlich</string>
+  <string name="warning_token_trustline_subtitle">Um dieses Token zu erhalten, muss eine Trustline aktiviert sein. Das Netzwerk benötigt eine Reserve von %1$s %2$s.</string>
+  <string name="warning_token_trustline_title">Trustline erforderlich</string>
   <string name="wc_alert_audit_unknown_domain">Unbekannte Domäne</string>
   <string name="wc_alert_connect_anyway">Trotzdem verbinden</string>
   <string name="wc_alert_connection_timeout_description">Zeitüberschreitungsfehler. Bitte versuche es später erneut.</string>

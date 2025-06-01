@@ -57,6 +57,7 @@ internal class DefaultCustomTokensRepository(
                 -> true
                 Blockchain.Cardano,
                 Blockchain.Sui,
+                Blockchain.Stellar,
                 -> blockchain.validateContractAddress(contractAddress)
                 else -> blockchain.validateAddress(contractAddress)
             }
