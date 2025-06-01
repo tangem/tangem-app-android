@@ -6,6 +6,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 
+@Suppress("CyclomaticComplexMethod")
 fun ScenarioUnavailabilityReason.getUnavailabilityReasonText(): TextReference {
     return when (val unavailabilityReason = this) {
         is ScenarioUnavailabilityReason.StakingUnavailable -> {
@@ -45,6 +46,9 @@ fun ScenarioUnavailabilityReason.getUnavailabilityReasonText(): TextReference {
         }
         ScenarioUnavailabilityReason.UnassociatedAsset -> resourceReference(
             id = R.string.warning_receive_blocked_hedera_token_association_required_message,
+        )
+        ScenarioUnavailabilityReason.TrustlineRequired -> resourceReference(
+            id = R.string.warning_receive_blocked_token_trustline_required_message,
         )
         ScenarioUnavailabilityReason.UsedOutdatedData -> {
             resourceReference(id = R.string.token_button_unavailability_reason_out_of_date_balance)
