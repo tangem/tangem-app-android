@@ -167,6 +167,7 @@ sealed class TokenScreenAnalyticsEvent(
         private const val SINGLE_WALLET = "Single Wallet"
         private const val LOADING = "Loading"
         private const val ASSET_REQUIREMENT = "AssetRequirement"
+        private const val TRUSTLINE_REQUIREMENT = "TrustlineRequirement"
 
         @Suppress("CyclomaticComplexMethod")
         fun ScenarioUnavailabilityReason.toReasonAnalyticsText(): String {
@@ -177,6 +178,7 @@ sealed class TokenScreenAnalyticsEvent(
                 is ScenarioUnavailabilityReason.StakingUnavailable,
                 -> UNAVAILABLE
                 ScenarioUnavailabilityReason.UnassociatedAsset -> ASSET_REQUIREMENT
+                ScenarioUnavailabilityReason.TrustlineRequired -> TRUSTLINE_REQUIREMENT
                 is ScenarioUnavailabilityReason.EmptyBalance -> EMPTY
                 is ScenarioUnavailabilityReason.PendingTransaction -> PENDING
                 ScenarioUnavailabilityReason.UsedOutdatedData -> CACHING

@@ -51,6 +51,7 @@ internal class TokenDetailsNotificationsAnalyticsSender(
             is TokenDetailsNotification.RentInfo,
             is TokenDetailsNotification.NetworkShutdown,
             is TokenDetailsNotification.HederaAssociateWarning,
+            is TokenDetailsNotification.RequiredTrustlineWarning,
             is TokenDetailsNotification.KoinosMana,
             is TokenDetailsNotification.MigrationMaticToPol,
             is TokenDetailsNotification.UsedOutdatedData,

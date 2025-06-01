@@ -61,4 +61,9 @@ sealed class CryptoCurrencyWarning {
     ) : CryptoCurrencyWarning()
 
     data object UsedOutdatedDataWarning : CryptoCurrencyWarning()
+
+    data class RequiredTrustline(
+        val currency: CryptoCurrency,
+        val requiredAmount: BigDecimal,
+    ) : CryptoCurrencyWarning()
 }
