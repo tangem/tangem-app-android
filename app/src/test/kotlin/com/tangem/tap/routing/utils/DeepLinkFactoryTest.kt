@@ -3,6 +3,8 @@ package com.tangem.tap.routing.utils
 import android.net.Uri
 import com.tangem.common.routing.AppRoute
 import com.tangem.feature.referral.api.deeplink.ReferralDeepLinkHandler
+import com.tangem.features.markets.deeplink.MarketsDeepLinkHandler
+import com.tangem.features.markets.deeplink.MarketsTokenDetailDeepLinkHandler
 import com.tangem.features.onramp.deeplink.BuyDeepLinkHandler
 import com.tangem.features.onramp.deeplink.OnrampDeepLinkHandler
 import com.tangem.features.send.v2.api.deeplink.SellDeepLinkHandler
@@ -49,6 +51,12 @@ class DeepLinkFactoryTest {
     private val stakingDeepLinkFactory = mockk<StakingDeepLinkHandler.Factory>(relaxed = true) {
         every { create(any(), any()) } returns mockk()
     }
+    private val marketsDeepLinkFactory = mockk<MarketsDeepLinkHandler.Factory>(relaxed = true) {
+        every { create() } returns mockk()
+    }
+    private val marketsTokenDetailDeepLinkFactory = mockk<MarketsTokenDetailDeepLinkHandler.Factory>(relaxed = true) {
+        every { create(any(), any()) } returns mockk()
+    }
 
     private val mockedUri = mockk<Uri>(relaxed = true)
     private val isFromOnNewIntent: Boolean = false
@@ -65,6 +73,8 @@ class DeepLinkFactoryTest {
         walletDeepLinkFactory,
         tokenDetailsDeepLinkFactory,
         stakingDeepLinkFactory,
+        marketsDeepLinkFactory,
+        marketsTokenDetailDeepLinkFactory,
     )
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -220,13 +230,13 @@ class DeepLinkFactoryTest {
         every { mockedUri.host } returns "staking"
         deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
         advanceUntilIdle()
-        verify {
-            tokenDetailsDeepLinkFactory.create(
-                eq(testScope),
-                eq(mapOf("param" to "value")),
-                eq(isFromOnNewIntent),
-            )
-        }
+        verify { stakingDeepLinkFactory.create(eq(testScope), eq(mapOf("param" to "value"))) }
+
+        // Test Market Token Detail
+        every { mockedUri.host } returns "token_chart"
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+        verify { marketsTokenDetailDeepLinkFactory.create(eq(testScope), eq(mapOf("param" to "value"))) }
 
         // Reset params
         every { mockedUri.queryParameterNames } returns emptySet()
@@ -249,6 +259,12 @@ class DeepLinkFactoryTest {
         deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
         advanceUntilIdle()
         verify { walletDeepLinkFactory.create() }
+
+        // Test Markets
+        every { mockedUri.host } returns "markets"
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+        verify { marketsDeepLinkFactory.create() }
     }
 
     @Test
