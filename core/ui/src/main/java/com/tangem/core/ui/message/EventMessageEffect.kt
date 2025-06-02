@@ -1,6 +1,7 @@
 package com.tangem.core.ui.message
 
 import android.content.Context
+import android.widget.Toast
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
@@ -24,6 +25,7 @@ fun EventMessageEffect(
     onShowSnackbar: suspend (SnackbarMessage, Context) -> Unit = { message, context ->
         showSnackbar(snackbarHostState, message, context)
     },
+    onShowToast: (ToastMessage, Context) -> Unit = { message, context -> showToast(message, context) },
 ) {
     val messageEvent by messageHandler.collectAsState()
     val context = LocalContext.current
@@ -45,6 +47,9 @@ fun EventMessageEffect(
             }
             is BottomSheetMessageV2 -> {
                 bottomSheetMessageV2 = message
+            }
+            is ToastMessage -> {
+                onShowToast(message, context)
             }
         }
     }
@@ -162,4 +167,15 @@ private suspend fun showSnackbar(snackbarHostState: SnackbarHostState, message: 
         SnackbarResult.Dismissed -> message.onDismissRequest()
         SnackbarResult.ActionPerformed -> message.action?.invoke()
     }
+}
+
+private fun showToast(message: ToastMessage, context: Context) {
+    Toast.makeText(
+        /* context = */ context,
+        /* text = */ message.message.resolveReference(context.resources),
+        /* duration = */ when (message.duration) {
+            ToastMessage.Duration.Short -> Toast.LENGTH_SHORT
+            ToastMessage.Duration.Long -> Toast.LENGTH_LONG
+        },
+    ).show()
 }
