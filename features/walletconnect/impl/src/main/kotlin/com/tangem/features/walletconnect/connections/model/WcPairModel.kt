@@ -9,6 +9,9 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.message.ToastMessage
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.walletconnect.model.WcPairRequest
 import com.tangem.domain.walletconnect.model.WcSessionApprove
@@ -42,6 +45,7 @@ internal interface WcPairComponentCallback :
 @ModelScoped
 internal class WcPairModel @Inject constructor(
     private val router: Router,
+    private val messageSender: UiMessageSender,
     override val dispatchers: CoroutineDispatcherProvider,
     wcPairUseCaseFactory: WcPairUseCase.Factory,
     getWalletsUseCase: GetWalletsUseCase,
@@ -87,6 +91,10 @@ internal class WcPairModel @Inject constructor(
                         router.pop()
                     }
                     is WcPairState.Error -> {
+                        appInfoUiState.transformerUpdate(
+                            WcConnectButtonProgressTransformer(showProgress = false),
+                        )
+                        messageSender.send(ToastMessage(message = stringReference(pairState.error.message)))
                         Timber.e(pairState.error)
                     }
                     is WcPairState.Loading -> appInfoUiState.update { createLoadingState() }
