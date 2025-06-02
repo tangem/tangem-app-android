@@ -5,6 +5,8 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.DeepLinkRoute
 import com.tangem.common.routing.DeepLinkScheme
 import com.tangem.feature.referral.api.deeplink.ReferralDeepLinkHandler
+import com.tangem.features.markets.deeplink.MarketsDeepLinkHandler
+import com.tangem.features.markets.deeplink.MarketsTokenDetailDeepLinkHandler
 import com.tangem.features.onramp.deeplink.BuyDeepLinkHandler
 import com.tangem.features.onramp.deeplink.OnrampDeepLinkHandler
 import com.tangem.features.send.v2.api.deeplink.SellDeepLinkHandler
@@ -35,6 +37,8 @@ internal class DeepLinkFactory @Inject constructor(
     private val walletDeepLink: WalletDeepLinkHandler.Factory,
     private val tokenDetailsDeepLink: TokenDetailsDeepLinkHandler.Factory,
     private val stakingDeepLink: StakingDeepLinkHandler.Factory,
+    private val marketsDeepLink: MarketsDeepLinkHandler.Factory,
+    private val marketsTokenDetailDeepLink: MarketsTokenDetailDeepLinkHandler.Factory,
 ) {
     private val permittedAppRoute = MutableStateFlow(false)
 
@@ -109,6 +113,8 @@ internal class DeepLinkFactory @Inject constructor(
                 isFromOnNewIntent = isFromOnNewIntent,
             )
             DeepLinkRoute.Staking.host -> stakingDeepLink.create(coroutineScope, queryParams)
+            DeepLinkRoute.Markets.host -> marketsDeepLink.create()
+            DeepLinkRoute.MarketTokenDetail.host -> marketsTokenDetailDeepLink.create(coroutineScope, queryParams)
             else -> {
                 Timber.i(
                     """
