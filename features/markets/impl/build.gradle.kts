@@ -17,6 +17,9 @@ dependencies {
     api(projects.features.onramp.api)
     implementation(projects.core.navigation)
 
+    /* Data */
+    implementation(projects.data.common)
+
     /* Domain */
     implementation(projects.domain.appCurrency)
     implementation(projects.domain.appCurrency.models)
