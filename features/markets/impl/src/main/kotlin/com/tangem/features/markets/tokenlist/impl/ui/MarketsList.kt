@@ -3,22 +3,29 @@ package com.tangem.features.markets.tokenlist.impl.ui
 import android.content.res.Configuration
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.text.buildAnnotatedString
 import com.tangem.core.ui.components.Keyboard
 import com.tangem.core.ui.components.SpacerH12
 import com.tangem.core.ui.components.SpacerH8
@@ -62,26 +69,8 @@ internal fun MarketsList(
     bottomSheetState: BottomSheetState,
     modifier: Modifier = Modifier,
 ) {
-    Content(
-        modifier = modifier,
-        state = state,
-        onHeaderSizeChange = onHeaderSizeChange,
-    )
-    MarketsListSortByBottomSheet(config = state.sortByBottomSheet)
-    KeyboardEvents(
-        isSortByBottomSheetShown = state.sortByBottomSheet.isShown,
-        bottomSheetState = bottomSheetState,
-    )
-}
-
-@Suppress("LongMethod")
-@Composable
-private fun Content(state: MarketsListUM, onHeaderSizeChange: (Dp) -> Unit, modifier: Modifier = Modifier) {
     val density = LocalDensity.current
     val background = LocalMainBottomSheetColor.current.value
-    val strokeColor = TangemTheme.colors.stroke.primary
-    val scrolledState = remember { mutableStateOf(false) }
-
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -106,85 +95,148 @@ private fun Content(state: MarketsListUM, onHeaderSizeChange: (Dp) -> Unit, modi
                 .padding(bottom = 4.dp),
             state = state.searchBar,
         )
-        Column(Modifier.padding(horizontal = TangemTheme.dimens.size16)) {
-            AnimatedVisibility(
-                visible = scrolledState.value.not(),
-            ) {
-                Column {
-                    SpacerH8()
-                    Title(isInSearchMode = state.isInSearchMode)
-                    SpacerH12()
-                }
-            }
+        Content(state = state)
+    }
+    MarketsListSortByBottomSheet(config = state.sortByBottomSheet)
+    KeyboardEvents(
+        isSortByBottomSheetShown = state.sortByBottomSheet.isShown,
+        bottomSheetState = bottomSheetState,
+    )
+}
+
+@Composable
+internal fun MarketsListWithBack(
+    state: MarketsListUM,
+    bottomSheetState: BottomSheetState,
+    onBackClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val background = LocalMainBottomSheetColor.current.value
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .imePadding()
+            .drawBehind { drawRect(background) },
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                painter = rememberVectorPainter(
+                    ImageVector.vectorResource(R.drawable.ic_close_24),
+                ),
+                contentDescription = null,
+                tint = TangemTheme.colors.icon.primary1,
+                modifier = Modifier
+                    .padding(16.dp)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = ripple(bounded = false),
+                        onClick = onBackClick,
+                    ),
+            )
+            SearchBar(
+                modifier = Modifier
+                    .drawBehind { drawRect(background) }
+                    .padding(
+                        end = 16.dp,
+                    ),
+                state = state.searchBar,
+            )
+        }
+        Content(state = state)
+    }
+    MarketsListSortByBottomSheet(config = state.sortByBottomSheet)
+    KeyboardEvents(
+        isSortByBottomSheetShown = state.sortByBottomSheet.isShown,
+        bottomSheetState = bottomSheetState,
+    )
+}
+
+@Suppress("LongMethod")
+@Composable
+private fun ColumnScope.Content(state: MarketsListUM, modifier: Modifier = Modifier) {
+    val strokeColor = TangemTheme.colors.stroke.primary
+    val scrolledState = remember { mutableStateOf(false) }
+
+    Column(modifier.padding(horizontal = TangemTheme.dimens.size16)) {
+        AnimatedVisibility(
+            visible = scrolledState.value.not(),
+        ) {
             Column {
-                AnimatedVisibility(state.isInSearchMode.not()) {
-                    Options(
-                        modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing12),
-                        sortByTypeUM = state.selectedSortBy,
-                        trendInterval = state.selectedInterval,
-                        onIntervalClick = state.onIntervalClick,
-                        onSortByClick = state.onSortByButtonClick,
-                    )
-                }
-
-                AnimatedVisibility(
-                    state.isInSearchMode.not() &&
-                        state.stakingNotificationMaxApy != null &&
-                        state.selectedSortBy != SortByTypeUM.Staking,
-                ) {
-                    val showMore = stringResourceSafe(R.string.common_show_more)
-                    val description = stringResourceSafe(
-                        R.string.markets_staking_banner_description_placeholder,
-                        showMore,
-                    )
-
-                    val clickableDescription = buildAnnotatedString {
-                        append(description.substringBefore(showMore))
-
-                        pushStringAnnotation(SHOW_MORE_KEY, "")
-                        appendColored(showMore, TangemTheme.colors.text.accent)
-                        pop()
-                    }
-
-                    StakingInMarketsPromoNotification(
-                        config = NotificationConfig(
-                            iconResId = R.drawable.img_staking_in_market_notification,
-                            title = resourceReference(
-                                R.string.markets_staking_banner_title,
-                                wrappedList(state.stakingNotificationMaxApy.format { percent() }),
-                            ),
-                            subtitle = annotatedReference(clickableDescription),
-                            onClick = state.onStakingNotificationClick,
-                            onCloseClick = state.onStakingNotificationCloseClick,
-                        ),
-                        modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing12),
-                    )
-                }
+                SpacerH8()
+                Title(isInSearchMode = state.isInSearchMode)
+                SpacerH12()
             }
         }
-        val strokeWidth = TangemTheme.dimens.size0_5
-        Box(
-            Modifier
-                .fillMaxWidth()
-                .height(strokeWidth)
-                .drawBehind {
-                    // draw horizontal line
-                    if (scrolledState.value) {
-                        drawLine(
-                            color = strokeColor,
-                            start = Offset(0f, size.height),
-                            end = Offset(size.width, size.height),
-                            strokeWidth = strokeWidth.toPx(),
-                        )
-                    }
-                },
-        )
-        ItemsList(
-            scrolledState = scrolledState,
-            isInSearchMode = state.isInSearchMode,
-            state = state.list,
-        )
+        Column {
+            AnimatedVisibility(state.isInSearchMode.not()) {
+                Options(
+                    modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing12),
+                    sortByTypeUM = state.selectedSortBy,
+                    trendInterval = state.selectedInterval,
+                    onIntervalClick = state.onIntervalClick,
+                    onSortByClick = state.onSortByButtonClick,
+                )
+            }
+
+            AnimatedVisibility(
+                state.isInSearchMode.not() &&
+                    state.stakingNotificationMaxApy != null &&
+                    state.selectedSortBy != SortByTypeUM.Staking,
+            ) {
+                val showMore = stringResourceSafe(R.string.common_show_more)
+                val description = stringResourceSafe(
+                    R.string.markets_staking_banner_description_placeholder,
+                    showMore,
+                )
+
+                val clickableDescription = buildAnnotatedString {
+                    append(description.substringBefore(showMore))
+
+                    pushStringAnnotation(SHOW_MORE_KEY, "")
+                    appendColored(showMore, TangemTheme.colors.text.accent)
+                    pop()
+                }
+
+                StakingInMarketsPromoNotification(
+                    config = NotificationConfig(
+                        iconResId = R.drawable.img_staking_in_market_notification,
+                        title = resourceReference(
+                            R.string.markets_staking_banner_title,
+                            wrappedList(state.stakingNotificationMaxApy.format { percent() }),
+                        ),
+                        subtitle = annotatedReference(clickableDescription),
+                        onClick = state.onStakingNotificationClick,
+                        onCloseClick = state.onStakingNotificationCloseClick,
+                    ),
+                    modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing12),
+                )
+            }
+        }
     }
+    val strokeWidth = TangemTheme.dimens.size0_5
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .height(strokeWidth)
+            .drawBehind {
+                // draw horizontal line
+                if (scrolledState.value) {
+                    drawLine(
+                        color = strokeColor,
+                        start = Offset(0f, size.height),
+                        end = Offset(size.width, size.height),
+                        strokeWidth = strokeWidth.toPx(),
+                    )
+                }
+            },
+    )
+    ItemsList(
+        scrolledState = scrolledState,
+        isInSearchMode = state.isInSearchMode,
+        state = state.list,
+    )
 }
 
 @Composable
