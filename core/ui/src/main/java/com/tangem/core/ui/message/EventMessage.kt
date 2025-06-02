@@ -19,6 +19,27 @@ import com.tangem.core.ui.message.SnackbarMessage.Duration
 @Immutable
 sealed interface EventMessage : UiMessage
 
+data class ToastMessage(
+    val message: TextReference,
+    val duration: Duration = ToastMessage.Duration.Short,
+) : EventMessage {
+    /**
+     * The duration of the snackbar.
+     * */
+    enum class Duration {
+
+        /**
+         * Shows the toast for a short period of time.
+         * */
+        Short,
+
+        /**
+         * Shows the toast for a long period of time.
+         * */
+        Long,
+    }
+}
+
 /**
  * Shows a snackbar.
  *
