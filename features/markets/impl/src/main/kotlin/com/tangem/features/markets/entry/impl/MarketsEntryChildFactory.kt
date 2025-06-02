@@ -2,11 +2,9 @@ package com.tangem.features.markets.entry.impl
 
 import androidx.compose.runtime.Immutable
 import com.tangem.core.decompose.context.AppComponentContext
-import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.markets.TokenMarket
+import com.tangem.core.decompose.navigation.Route
 import com.tangem.features.markets.details.MarketsTokenDetailsComponent
-import com.tangem.features.markets.entry.impl.MarketsEntryChildFactory.Child
-import com.tangem.features.markets.tokenlist.api.MarketsTokenListComponent
+import com.tangem.features.markets.tokenlist.MarketsTokenListComponent
 import kotlinx.serialization.Serializable
 import javax.inject.Inject
 
@@ -17,7 +15,7 @@ internal class MarketsEntryChildFactory @Inject constructor(
 
     @Serializable
     @Immutable
-    sealed interface Child {
+    sealed interface Child : Route {
 
         @Serializable
         @Immutable
@@ -28,11 +26,7 @@ internal class MarketsEntryChildFactory @Inject constructor(
         data class TokenDetails(val params: MarketsTokenDetailsComponent.Params) : Child
     }
 
-    fun createChild(
-        child: Child,
-        appComponentContext: AppComponentContext,
-        onTokenSelected: (TokenMarket, AppCurrency) -> Unit,
-    ): Any {
+    fun createChild(child: Child, appComponentContext: AppComponentContext): Any {
         return when (child) {
             is Child.TokenDetails -> {
                 tokenDetailsComponentFactory.create(
@@ -43,7 +37,7 @@ internal class MarketsEntryChildFactory @Inject constructor(
             is Child.TokenList -> {
                 tokenListComponentFactory.create(
                     context = appComponentContext,
-                    onTokenSelected = onTokenSelected,
+                    params = Unit,
                 )
             }
         }
