@@ -12,6 +12,7 @@ import com.tangem.features.disclaimer.api.components.DisclaimerComponent
 import com.tangem.features.managetokens.component.ManageTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensSource
 import com.tangem.features.markets.details.MarketsTokenDetailsComponent
+import com.tangem.features.markets.tokenlist.MarketsTokenListComponent
 import com.tangem.features.nft.component.NFTComponent
 import com.tangem.features.onboarding.v2.entry.OnboardingEntryComponent
 import com.tangem.features.onramp.component.*
@@ -47,6 +48,7 @@ internal class ChildFactory @Inject constructor(
     private val disclaimerComponentFactory: DisclaimerComponent.Factory,
     private val manageTokensComponentFactory: ManageTokensComponent.Factory,
     private val marketsTokenDetailsComponentFactory: MarketsTokenDetailsComponent.Factory,
+    private val marketsTokenListComponentFactory: MarketsTokenListComponent.Factory,
     private val onrampComponentFactory: OnrampComponent.Factory,
     private val onrampSuccessComponentFactory: OnrampSuccessComponent.Factory,
     private val buyCryptoComponentFactory: BuyCryptoComponent.Factory,
@@ -387,6 +389,13 @@ internal class ChildFactory @Inject constructor(
                         nftCollectionName = route.nftCollectionName,
                     ),
                     componentFactory = nftSendComponentFactory,
+                )
+            }
+            is AppRoute.Markets -> {
+                createComponentChild(
+                    context = context,
+                    params = Unit,
+                    componentFactory = marketsTokenListComponentFactory,
                 )
             }
         }
