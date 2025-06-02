@@ -353,9 +353,7 @@ object NotificationsFactory {
                 error = validationError,
                 onReduceClick = onReduceClick,
             )
-            is BlockchainSdkError.XRP -> addXRPTransactionValidationError(
-                error = validationError,
-            )
+            is BlockchainSdkError.DestinationTagRequired -> addRequireDestinationTagErrorNotification()
             null -> minAdaValue?.let {
                 add(
                     NotificationUM.Cardano.MinAdaValueCharged(
@@ -436,12 +434,6 @@ object NotificationsFactory {
         }
     }
 
-    private fun MutableList<NotificationUM>.addXRPTransactionValidationError(error: BlockchainSdkError.XRP) {
-        when (error) {
-            is BlockchainSdkError.XRP.DestinationMemoRequired -> addRequireDestinationFlagErrorNotification()
-        }
-    }
-
     fun MutableList<NotificationUM>.addRentExemptionNotification(rentWarning: CryptoCurrencyWarning.Rent?) {
         if (rentWarning == null) return
         add(NotificationUM.Solana.RentInfo(rentWarning))
@@ -512,7 +504,7 @@ object NotificationsFactory {
         }
     }
 
-    private fun MutableList<NotificationUM>.addRequireDestinationFlagErrorNotification() {
-        add(NotificationUM.Error.DestinationMemoRequired)
+    private fun MutableList<NotificationUM>.addRequireDestinationTagErrorNotification() {
+        add(NotificationUM.Error.DestinationTagRequired)
     }
 }
