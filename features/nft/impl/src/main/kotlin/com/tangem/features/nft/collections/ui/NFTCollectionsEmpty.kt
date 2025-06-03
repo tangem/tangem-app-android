@@ -3,6 +3,8 @@ package com.tangem.features.nft.collections.ui
 import android.content.res.Configuration
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -23,6 +25,7 @@ internal fun NFTCollectionsEmpty(state: NFTCollectionsUM.Empty, modifier: Modifi
     Box(
         modifier = modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(TangemTheme.dimens.spacing16),
     ) {
         Column(
