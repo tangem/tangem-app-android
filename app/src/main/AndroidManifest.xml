@@ -43,6 +43,7 @@
         android:resizeableActivity="@bool/resizeable_activity"
         android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="true"
+        android:enableOnBackInvokedCallback="true"
         tools:ignore="GoogleAppIndexingWarning"
         tools:replace="android:allowBackup, android:fullBackupContent, android:label">
 
@@ -127,7 +128,7 @@
                 <category android:name="android.intent.category.BROWSABLE" />
 
                 <data
-                    android:host="onramp-success"
+                    android:host="*"
                     android:scheme="tangem" />
             </intent-filter>
 

@@ -7,6 +7,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.features.send.v2.common.PredefinedValues
 import com.tangem.features.send.v2.subcomponents.destination.model.SendDestinationModel
 import com.tangem.features.send.v2.subcomponents.destination.ui.DestinationBlock
 import com.tangem.features.send.v2.subcomponents.destination.ui.state.DestinationUM
@@ -38,7 +39,7 @@ internal class SendDestinationBlockComponent(
         DestinationBlock(
             destinationUM = state,
             isClickDisabled = !isClickEnabled,
-            isEditingDisabled = params.isPredefinedValues,
+            isEditingDisabled = params.predefinedValues is PredefinedValues.Content.Deeplink,
             onClick = onClick,
         )
     }
