@@ -23,6 +23,7 @@ internal object EnvironmentConfigConverter : Converter<EnvironmentConfigModel, E
             express = value.express,
             devExpress = value.devExpress,
             stakeKitApiKey = value.stakeKitApiKey,
+            blockAidApiKey = value.blockaidApiKey,
         )
     }
 }
