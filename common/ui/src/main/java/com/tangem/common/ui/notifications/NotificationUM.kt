@@ -73,6 +73,11 @@ sealed class NotificationUM(val config: NotificationConfig) {
             ),
         )
 
+        data object TonStakingExtraFeeError : Error(
+            title = resourceReference(R.string.staking_notification_ton_extra_reserve_title),
+            subtitle = resourceReference(R.string.staking_notification_ton_extra_reserve_is_required),
+        )
+
         data class TokenExceedsBalance(
             val networkIconId: Int,
             val currencyName: String,

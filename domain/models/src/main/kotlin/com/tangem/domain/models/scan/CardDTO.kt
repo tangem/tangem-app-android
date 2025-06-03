@@ -8,9 +8,9 @@ import com.tangem.common.card.EllipticCurve
 import com.tangem.common.card.EncryptionMode
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
+import com.tangem.common.card.FirmwareVersion as SdkFirmwareVersion
 import com.tangem.operations.attestation.Attestation
 import java.util.Date
-import com.tangem.common.card.FirmwareVersion as SdkFirmwareVersion
 
 // TODO: Move to :domain:card:models
 /**
@@ -189,6 +189,8 @@ data class CardDTO(
             minor != other.minor -> minor.compareTo(other.minor)
             else -> patch.compareTo(other.patch)
         }
+
+        fun toSdkFirmwareVersion() = SdkFirmwareVersion(major = major, minor = minor)
     }
 
     @JsonClass(generateAdapter = true)

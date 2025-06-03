@@ -71,12 +71,6 @@ internal class MultiWalletFinalizeModel @Inject constructor(
 
     init {
         modelScope.launch {
-            // save scan response to preferences to be able
-            // to continue finalize process after app restart
-            onboardingRepository.saveUnfinishedFinalizeOnboarding(
-                scanResponse = multiWalletState.value.currentScanResponse,
-            )
-
             // sets proper artwork state for initial step
             // (if we start from backup cards, we need to show proper artwork) ([REDACTED_TASK_KEY])
             when (getInitialStep()) {
@@ -161,7 +155,14 @@ internal class MultiWalletFinalizeModel @Inject constructor(
         backupService.proceedBackup(iconScanRes = iconScanRes) { result ->
             when (result) {
                 is CompletionResult.Success -> {
-                    modelScope.launch { onEvent.emit(MultiWalletFinalizeComponent.Event.OneBackupCardAdded) }
+                    modelScope.launch {
+                        onEvent.emit(MultiWalletFinalizeComponent.Event.OneBackupCardAdded)
+                        // save scan response to preferences to be able
+                        // to continue finalize process after app restart
+                        onboardingRepository.saveUnfinishedFinalizeOnboarding(
+                            scanResponse = multiWalletState.value.currentScanResponse,
+                        )
+                    }
                     _uiState.update { st ->
                         st.copy(
                             step = MultiWalletFinalizeUM.Step.BackupDevice1,

@@ -21,7 +21,6 @@ import com.tangem.core.ui.message.dialog.Dialogs
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectSyncOrNull
-import com.tangem.domain.common.TapWorkarounds.canSkipBackup
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.common.util.twinsIsTwinned
 import com.tangem.domain.feedback.models.FeedbackEmailType
@@ -34,9 +33,6 @@ import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.features.disclaimer.createDisclaimer
 import com.tangem.tap.features.onboarding.OnboardingHelper
-import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
-import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsStep
-import com.tangem.tap.features.onboarding.products.wallet.redux.BackupStartedSource
 import com.tangem.tap.mainScope
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
@@ -208,8 +204,6 @@ internal class LegacyScanProcessor @Inject constructor(
         crossinline onCancel: suspend () -> Unit,
         crossinline onSuccess: suspend (ScanResponse) -> Unit,
     ) {
-        store.dispatchOnMain(TwinCardsAction.IfTwinsPrepareState(scanResponse))
-
         checkCardWasUsedInApp(
             scanResponse = scanResponse,
             onCancel = {
@@ -222,38 +216,26 @@ internal class LegacyScanProcessor @Inject constructor(
             if (OnboardingHelper.isOnboardingCase(scanResponse)) {
                 Analytics.addContext(scanResponse)
                 onWalletNotCreated()
-                // must check skip backup using card canSkipBackup
-                store.dispatchOnMain(
-                    GlobalAction.Onboarding.Start(
+                navigateTo(
+                    AppRoute.Onboarding(
                         scanResponse = scanResponse,
-                        source = BackupStartedSource.Onboarding,
-                        canSkipBackup = scanResponse.card.canSkipBackup,
+                        mode = AppRoute.Onboarding.Mode.Onboarding,
                     ),
-                )
-                val appScreen = OnboardingHelper.whereToNavigate(scanResponse)
-                navigateTo(appScreen) { onProgressStateChange(it) }
+                ) { onProgressStateChange(it) }
             } else {
                 Analytics.setContext(scanResponse)
-
-                val isTwinRefactoringEnabled =
-                    store.inject(DaggerGraphState::onboardingV2FeatureToggles).isTwinRefactoringEnabled
 
                 val wasTwinsOnboardingShown =
                     store.inject(DaggerGraphState::wasTwinsOnboardingShownUseCase).invokeSync()
 
                 if (scanResponse.twinsIsTwinned() && !wasTwinsOnboardingShown) {
                     onWalletNotCreated()
-                    if (isTwinRefactoringEnabled) {
-                        navigateTo(
-                            AppRoute.Onboarding(
-                                scanResponse = scanResponse,
-                                mode = AppRoute.Onboarding.Mode.WelcomeOnlyTwin,
-                            ),
-                        ) { onProgressStateChange(it) }
-                    } else {
-                        store.dispatchOnMain(TwinCardsAction.SetStepOfScreen(TwinCardsStep.WelcomeOnly(scanResponse)))
-                        navigateTo(AppRoute.OnboardingTwins) { onProgressStateChange(it) }
-                    }
+                    navigateTo(
+                        AppRoute.Onboarding(
+                            scanResponse = scanResponse,
+                            mode = AppRoute.Onboarding.Mode.WelcomeOnlyTwin,
+                        ),
+                    ) { onProgressStateChange(it) }
                 } else {
                     delay(DELAY_SDK_DIALOG_CLOSE)
                     onSuccess(scanResponse)
