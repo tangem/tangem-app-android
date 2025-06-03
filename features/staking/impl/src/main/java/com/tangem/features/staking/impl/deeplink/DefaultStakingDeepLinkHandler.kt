@@ -46,7 +46,7 @@ internal class DefaultStakingDeepLinkHandler @AssistedInject constructor(
                 Timber.e("Error on getting crypto currency list")
                 return@launch
             }.firstOrNull {
-                it.id.rawNetworkId == networkId && it.id.rawCurrencyId?.value == tokenId
+                it.network.backendId == networkId && it.id.rawCurrencyId?.value == tokenId
             }
 
             if (cryptoCurrency == null) {

@@ -50,6 +50,7 @@ class DefaultNotificationsRepositoryTest {
         coEvery { appInfoProvider.device } returns "test-device"
         coEvery { appInfoProvider.osVersion } returns "11"
         coEvery { appInfoProvider.language } returns "en"
+        coEvery { appInfoProvider.appVersion } returns "5.21.1"
         coEvery { appInfoProvider.timezone } returns "UTC"
         coEvery { tangemTechApi.createApplicationId(any()) } returns ApiResponse.Success(
             expectedAppIdResponse,
@@ -68,6 +69,7 @@ class DefaultNotificationsRepositoryTest {
                     systemVersion = "11",
                     language = "en",
                     timezone = "UTC",
+                    version = "5.21.1",
                     pushToken = pushToken,
                 ),
             )
