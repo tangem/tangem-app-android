@@ -1,6 +1,6 @@
 package com.tangem.domain.markets
 
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import java.math.BigDecimal
 
 data class TokenMarket(

@@ -2,6 +2,7 @@ package com.tangem.data.wallets.di
 
 import com.tangem.data.wallets.DefaultWalletNamesMigrationRepository
 import com.tangem.data.wallets.DefaultWalletsRepository
+import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.datastore.RuntimeStateStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
@@ -26,6 +27,7 @@ internal object WalletsDataModule {
         tangemTechApi: TangemTechApi,
         userWalletsStore: UserWalletsStore,
         dispatchers: CoroutineDispatcherProvider,
+        authProvider: AuthProvider,
     ): WalletsRepository {
         return DefaultWalletsRepository(
             appPreferencesStore = appPreferencesStore,
@@ -33,6 +35,7 @@ internal object WalletsDataModule {
             userWalletsStore = userWalletsStore,
             seedPhraseNotificationVisibilityStore = RuntimeStateStore(defaultValue = emptyMap()),
             dispatchers = dispatchers,
+            authProvider = authProvider,
         )
     }
 

@@ -1,7 +1,7 @@
 package com.tangem.domain.managetokens.model
 
-import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.Network
 
 sealed class ManagedCryptoCurrency {
 

@@ -4,7 +4,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.demo.DemoConfig
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWallet
 import kotlinx.coroutines.flow.Flow
@@ -17,7 +17,7 @@ class HasSingleWalletSignedHashesUseCase @Inject constructor(
     private val walletManagersFacade: WalletManagersFacade,
 ) {
 
-    operator fun invoke(userWallet: UserWallet, network: Network): Flow<Boolean> {
+    operator fun invoke(userWallet: UserWallet.Cold, network: Network): Flow<Boolean> {
         return cardRepository.wasCardScanned(cardId = userWallet.cardId)
             .map { wasCardScanned ->
                 if (wasCardScanned || !userWallet.isCorrectCardType()) return@map false
@@ -42,7 +42,7 @@ class HasSingleWalletSignedHashesUseCase @Inject constructor(
             }
     }
 
-    private fun UserWallet.isCorrectCardType(): Boolean {
+    private fun UserWallet.Cold.isCorrectCardType(): Boolean {
         return with(scanResponse.cardTypesResolver) {
             !DemoConfig().isDemoCardId(cardId) && isReleaseFirmwareType() && !isMultiwalletAllowed() && !isTangemTwins()
         }

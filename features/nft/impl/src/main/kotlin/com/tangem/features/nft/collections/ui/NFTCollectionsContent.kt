@@ -25,6 +25,7 @@ import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -338,7 +339,9 @@ private fun Preview_NFTCollectionsContent() {
                                     id = "item1",
                                     name = "Nethers #0854",
                                     imageUrl = "img",
-                                    price = NFTSalePriceUM.Content("0.05 ETH"),
+                                    price = NFTSalePriceUM.Content(
+                                        price = stringReference("0.05 ETH"),
+                                    ),
                                     onItemClick = { },
                                 ),
                                 NFTCollectionAssetUM(

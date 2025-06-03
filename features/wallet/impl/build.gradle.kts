@@ -103,7 +103,6 @@ dependencies {
     implementation(projects.features.onboardingV2.api)
     implementation(projects.features.onramp.api)
     implementation(projects.features.pushNotifications.api)
-    implementation(projects.features.send.api)
     implementation(projects.features.swap.api)
     implementation(projects.features.tester.api)
     implementation(projects.features.tokendetails.api)
