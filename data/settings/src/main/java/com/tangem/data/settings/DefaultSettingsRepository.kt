@@ -96,6 +96,17 @@ internal class DefaultSettingsRepository(
         }
     }
 
+    override suspend fun getWalletFirstUsageDate(): Long {
+        return appPreferencesStore.getSyncOrDefault(
+            key = PreferencesKeys.WALLET_FIRST_USAGE_DATE_KEY,
+            default = 0L,
+        )
+    }
+
+    override suspend fun setWalletFirstUsageDate(value: Long) {
+        appPreferencesStore.store(key = PreferencesKeys.WALLET_FIRST_USAGE_DATE_KEY, value = value)
+    }
+
     override suspend fun shouldShowMarketsTooltip(): Boolean {
         return appPreferencesStore.getSyncOrDefault(
             key = PreferencesKeys.SHOULD_SHOW_MARKETS_TOOLTIP_KEY,

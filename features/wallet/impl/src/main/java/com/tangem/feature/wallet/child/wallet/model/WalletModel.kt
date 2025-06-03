@@ -15,13 +15,11 @@ import com.tangem.core.deeplink.DeepLinksRegistry
 import com.tangem.core.deeplink.global.ReferralDeepLink
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.common.util.cardTypesResolver
-import com.tangem.domain.nft.FetchNFTCollectionsUseCase
 import com.tangem.domain.settings.*
 import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
 import com.tangem.domain.tokens.RefreshMultiCurrencyWalletQuotesUseCase
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
@@ -44,16 +42,12 @@ import com.tangem.feature.wallet.presentation.wallet.state.transformers.*
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
 import com.tangem.features.biometry.AskBiometryComponent
-import com.tangem.features.biometry.BiometryFeatureToggles
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.features.pushnotifications.api.utils.getPushPermissionOrNull
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -71,6 +65,7 @@ internal class WalletModel @Inject constructor(
     private val getWalletsUseCase: GetWalletsUseCase,
     private val shouldShowSaveWalletScreenUseCase: ShouldShowSaveWalletScreenUseCase,
     private val shouldShowMarketsTooltipUseCase: ShouldShowMarketsTooltipUseCase,
+    private val setWalletFirstTimeUsageUseCase: SetWalletFirstTimeUsageUseCase,
     private val canUseBiometryUseCase: CanUseBiometryUseCase,
     private val isWalletsScrollPreviewEnabled: IsWalletsScrollPreviewEnabled,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
@@ -82,10 +77,7 @@ internal class WalletModel @Inject constructor(
     private val walletImageResolver: WalletImageResolver,
     private val tokenListStore: MultiWalletTokenListStore,
     private val onrampStatusFactory: OnrampStatusFactory,
-    private val biometryFeatureToggles: BiometryFeatureToggles,
     private val analyticsEventsHandler: AnalyticsEventHandler,
-    private val fetchNFTCollectionsUseCase: FetchNFTCollectionsUseCase,
-    private val walletsRepository: WalletsRepository,
     private val deepLinksRegistry: DeepLinksRegistry,
     private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
     private val appRouter: AppRouter,
@@ -98,8 +90,6 @@ internal class WalletModel @Inject constructor(
 
     private val walletsUpdateJobHolder = JobHolder()
     private val refreshWalletJobHolder = JobHolder()
-    private val expressStatusJobHolder = JobHolder()
-    private val walletsNFTsUpdateJobHolder = JobHolder()
     private var needToRefreshWallet = false
 
     private var expressTxStatusTaskScheduler = SingleTaskScheduler<Unit>()
@@ -111,13 +101,12 @@ internal class WalletModel @Inject constructor(
         suggestToOpenMarkets()
 
         maybeMigrateNames()
+        maybeSetWalletFirstTimeUsage()
         subscribeToUserWalletsUpdates()
         subscribeOnBalanceHiding()
         subscribeOnSelectedWalletFlow()
         subscribeToScreenBackgroundState()
         subscribeOnPushNotificationsPermission()
-        subscribeOnExpressTransactionsUpdates()
-        subscribeOnNFTUpdates()
 
         clickIntents.initialize(innerWalletRouter, modelScope)
     }
@@ -125,6 +114,12 @@ internal class WalletModel @Inject constructor(
     private fun maybeMigrateNames() {
         modelScope.launch {
             walletNameMigrationUseCase()
+        }
+    }
+
+    private fun maybeSetWalletFirstTimeUsage() {
+        modelScope.launch {
+            setWalletFirstTimeUsageUseCase()
         }
     }
 
@@ -141,13 +136,9 @@ internal class WalletModel @Inject constructor(
             withContext(dispatchers.io) { delay(timeMillis = 1_800) }
 
             if (isShowSaveWalletScreenEnabled()) {
-                if (biometryFeatureToggles.isAskForBiometryEnabled) {
-                    innerWalletRouter.dialogNavigation.activate(
-                        configuration = WalletDialogConfig.AskForBiometry,
-                    )
-                } else {
-                    innerWalletRouter.openSaveUserWalletScreen()
-                }
+                innerWalletRouter.dialogNavigation.activate(
+                    configuration = WalletDialogConfig.AskForBiometry,
+                )
             }
         }
     }
@@ -232,6 +223,7 @@ internal class WalletModel @Inject constructor(
                     // This is temporary solution, will be removed with complete deeplink navigation overhaul
                     addReferralDeepLink(selectedWallet)
                     walletDeepLinksHandler.registerForWallet(scope = modelScope, userWallet = selectedWallet)
+                    subscribeOnExpressTransactionsUpdates(selectedWallet)
                 }
                 .flowOn(dispatchers.main)
                 .launchIn(modelScope)
@@ -257,23 +249,19 @@ internal class WalletModel @Inject constructor(
     private fun subscribeToScreenBackgroundState() {
         screenLifecycleProvider.isBackgroundState
             .onEach { isBackground ->
-                expressTxStatusTaskScheduler.cancelTask()
-                expressStatusJobHolder.cancel()
                 refreshWalletJobHolder.cancel()
                 when {
                     isBackground -> needToRefreshTimer()
                     needToRefreshWallet && !isBackground -> {
                         triggerRefreshWalletQuotes()
-                        subscribeOnExpressTransactionsUpdates()
                     }
-                    !isBackground -> subscribeOnExpressTransactionsUpdates()
                 }
             }
             .launchIn(modelScope)
     }
 
-    private fun subscribeOnExpressTransactionsUpdates() {
-        modelScope.launch(dispatchers.main) {
+    private fun subscribeOnExpressTransactionsUpdates(userWallet: UserWallet) {
+        if (!userWallet.isMultiCurrency) {
             expressTxStatusTaskScheduler.cancelTask()
             expressTxStatusTaskScheduler.scheduleTask(
                 modelScope,
@@ -281,36 +269,15 @@ internal class WalletModel @Inject constructor(
                     isDelayFirst = false,
                     delay = EXPRESS_STATUS_UPDATE_DELAY,
                     task = {
-                        runCatching { onrampStatusFactory.updateOnrmapTransactionStatuses() }
+                        runCatching {
+                            onrampStatusFactory.updateOnrmapTransactionStatuses(userWallet)
+                        }
                     },
                     onSuccess = { /* no-op */ },
                     onError = { /* no-op */ },
                 ),
             )
-        }.saveIn(expressStatusJobHolder)
-    }
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    private fun subscribeOnNFTUpdates() {
-        getWalletsUseCase()
-            .conflate()
-            .distinctUntilChanged()
-            .flatMapLatest { wallets ->
-                wallets
-                    .map { wallet ->
-                        walletsRepository.nftEnabledStatus(wallet.walletId)
-                            .distinctUntilChanged()
-                            .onEach { nftEnabled ->
-                                if (nftEnabled) {
-                                    fetchNFTCollectionsUseCase.invoke(wallet.walletId)
-                                }
-                            }
-                    }
-                    .merge()
-            }
-            .flowOn(dispatchers.main)
-            .launchIn(modelScope)
-            .saveIn(walletsNFTsUpdateJobHolder)
+        }
     }
 
     private fun needToRefreshTimer() {
@@ -325,9 +292,18 @@ internal class WalletModel @Inject constructor(
         val state = stateHolder.uiState.value
         val wallet = state.wallets.getOrNull(state.selectedWalletIndex) ?: return
         modelScope.launch {
-            refreshMultiCurrencyWalletQuotesUseCase(wallet.walletCardState.id).getOrElse {
-                Timber.e("Failed to refreshMultiCurrencyWalletQuotesUseCase $it")
-            }
+            awaitAll(
+                async {
+                    refreshMultiCurrencyWalletQuotesUseCase(wallet.walletCardState.id).getOrElse {
+                        Timber.e("Failed to refreshMultiCurrencyWalletQuotesUseCase $it")
+                    }
+                },
+                async {
+                    getWalletsUseCase.invokeSync()
+                        .firstOrNull { it.walletId == wallet.walletCardState.id }
+                        ?.let(::subscribeOnExpressTransactionsUpdates)
+                },
+            )
         }.saveIn(refreshWalletJobHolder)
     }
 

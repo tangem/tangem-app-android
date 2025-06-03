@@ -10,7 +10,6 @@ import com.tangem.domain.models.scan.ScanResponse
  *
  * @property name            User wallet name
  * @property walletId        User wallet [UserWalletId]
- * @property artworkUrl      User wallet card artwork URL
  * @property cardsInWallet   List of cards IDs assigned with this user's wallet. The list will be empty if the wallet
  *                              has been backed up on another device.
  * @property isMultiCurrency Indicates whether this user wallet can work with more than one currency
@@ -22,8 +21,6 @@ data class UserWallet(
     val name: String,
     @Json(name = "walletId")
     val walletId: UserWalletId,
-    @Json(name = "artworkUrl")
-    val artworkUrl: String,
     @Json(name = "cardsInWallet")
     val cardsInWallet: Set<String>,
     @Json(name = "isMultiCurrency")
