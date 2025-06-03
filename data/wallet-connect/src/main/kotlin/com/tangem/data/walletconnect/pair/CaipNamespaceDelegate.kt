@@ -3,11 +3,11 @@ package com.tangem.data.walletconnect.pair
 import com.reown.walletkit.client.Wallet
 import com.tangem.data.walletconnect.model.CAIP10
 import com.tangem.data.walletconnect.utils.WcNamespaceConverter
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWallet
 
-internal class CaipNamespaceDelegate constructor(
+internal class CaipNamespaceDelegate(
     private val namespaceConverters: Set<WcNamespaceConverter>,
     private val walletManagersFacade: WalletManagersFacade,
 ) {
@@ -43,7 +43,7 @@ internal class CaipNamespaceDelegate constructor(
             session.methods.addAll(methods)
             session.events.addAll(events)
         }
-        return result.mapValues { (namespaceKey, session) ->
+        return result.mapValues { (_, session) ->
             Wallet.Model.Namespace.Session(
                 chains = session.chains.toList(),
                 accounts = session.accounts.toList(),

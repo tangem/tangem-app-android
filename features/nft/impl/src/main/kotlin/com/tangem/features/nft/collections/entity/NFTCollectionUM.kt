@@ -5,7 +5,7 @@ import com.tangem.core.ui.extensions.TextReference
 
 internal data class NFTCollectionUM(
     val id: String,
-    val name: String?,
+    val name: String,
     @DrawableRes val networkIconId: Int,
     val logoUrl: String?,
     val description: TextReference,
