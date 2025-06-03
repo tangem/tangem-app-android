@@ -25,9 +25,9 @@ internal fun OnboardingMultiWallet(
     ) {
         if (isSeedPhraseState.not()) {
             WalletArtworks(
-                url1 = state.artwork1Url,
-                url2 = state.artwork2Url,
-                url3 = state.artwork3Url,
+                artwork1 = state.artwork1,
+                artwork2 = state.artwork2,
+                artwork3 = state.artwork3,
                 modifier = Modifier
                     .padding(horizontal = 34.dp)
                     .padding(top = 20.dp)
@@ -53,7 +53,7 @@ internal fun OnboardingMultiWallet(
 private fun Preview() {
     TangemThemePreview {
         OnboardingMultiWallet(
-            state = OnboardingMultiWalletUM(artwork1Url = null),
+            state = OnboardingMultiWalletUM(artwork1 = null),
             artworksState = WalletArtworksState.Folded,
             isSeedPhraseState = false,
             childContent = { md ->
@@ -73,7 +73,7 @@ private fun Preview() {
 private fun Preview2() {
     TangemThemePreview {
         OnboardingMultiWallet(
-            state = OnboardingMultiWalletUM(artwork1Url = null),
+            state = OnboardingMultiWalletUM(artwork1 = null),
             artworksState = WalletArtworksState.Folded,
             isSeedPhraseState = true,
             childContent = { md ->

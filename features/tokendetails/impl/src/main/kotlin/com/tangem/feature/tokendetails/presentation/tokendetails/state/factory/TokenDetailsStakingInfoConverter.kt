@@ -20,8 +20,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.IconState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.StakingBlockUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.features.tokendetails.impl.R
-import com.tangem.lib.crypto.BlockchainUtils.isBSC
-import com.tangem.lib.crypto.BlockchainUtils.isSolana
+import com.tangem.lib.crypto.BlockchainUtils.isStakingRewardUnavailable
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.isNullOrZero
@@ -146,7 +145,7 @@ internal class TokenDetailsStakingInfoConverter(
     private fun getRewardText(status: CryptoCurrencyStatus, stakingRewardAmount: BigDecimal?): TextReference {
         val blockchainId = status.currency.network.id.value
         val rewardBlockType = when {
-            isSolana(blockchainId) || isBSC(blockchainId) -> RewardBlockType.RewardUnavailable
+            isStakingRewardUnavailable(blockchainId) -> RewardBlockType.RewardUnavailable
             stakingRewardAmount.isNullOrZero() -> RewardBlockType.NoRewards
             else -> RewardBlockType.Rewards
         }
