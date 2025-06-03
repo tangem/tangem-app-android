@@ -5,9 +5,9 @@ import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState.TxHistoryItemState
 import com.tangem.core.ui.utils.toDateFormatWithTodayYesterday
-import com.tangem.domain.txhistory.models.TxHistoryItem
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
+import com.tangem.domain.models.network.TxInfo
 import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
 import kotlinx.coroutines.CoroutineScope
@@ -20,7 +20,7 @@ internal class TokenDetailsTxHistoryItemFlowConverter(
     private val symbol: String,
     private val decimals: Int,
     private val clickIntents: TokenDetailsClickIntents,
-) : Converter<Flow<PagingData<TxHistoryItem>>, TxHistoryState> {
+) : Converter<Flow<PagingData<TxInfo>>, TxHistoryState> {
 
     private val txHistoryItemConverter by lazy {
         TokenDetailsTxHistoryTransactionStateConverter(
@@ -30,7 +30,7 @@ internal class TokenDetailsTxHistoryItemFlowConverter(
         )
     }
 
-    override fun convert(value: Flow<PagingData<TxHistoryItem>>): TxHistoryState {
+    override fun convert(value: Flow<PagingData<TxInfo>>): TxHistoryState {
         val state = currentStateProvider()
         val txHistoryContent = if (state.txHistoryState is TxHistoryState.Content) {
             state.txHistoryState
@@ -43,7 +43,7 @@ internal class TokenDetailsTxHistoryItemFlowConverter(
             .onEach { txHistoryStatePagingData ->
                 txHistoryContent.contentItems.update {
                     txHistoryStatePagingData
-                        .map<TxHistoryItem, TxHistoryItemState> { item ->
+                        .map<TxInfo, TxHistoryItemState> { item ->
                             // [createTransactionState] returns timestamp without formatting
                             TxHistoryItemState.Transaction(state = createTransactionState(item))
                         }
@@ -59,7 +59,7 @@ internal class TokenDetailsTxHistoryItemFlowConverter(
         return txHistoryContent
     }
 
-    private fun createTransactionState(item: TxHistoryItem): TransactionState {
+    private fun createTransactionState(item: TxInfo): TransactionState {
         return txHistoryItemConverter.convert(value = item)
     }
 
