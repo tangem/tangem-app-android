@@ -1,5 +1,7 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers.converter
 
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.utils.DateTimeFormatters
@@ -13,6 +15,7 @@ import java.math.BigDecimal
 
 internal class BalancesAndLimitsBottomSheetConverter(
     private val eventSender: WalletEventSender,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Converter<VisaCurrency, BalancesAndLimitsBottomSheetConfig> {
 
     override fun convert(value: VisaCurrency): BalancesAndLimitsBottomSheetConfig {
@@ -28,23 +31,25 @@ internal class BalancesAndLimitsBottomSheetConverter(
                 blockedBalance = value.balances.blocked.let(::formatAmount),
                 debit = value.balances.debt.let(::formatAmount),
                 amlVerified = value.balances.verified.let(::formatAmount),
-                onInfoClick = this::showBalanceInfo,
+                onInfoClick = this::balanceInfoOnClick,
             ),
             limit = BalancesAndLimitsBottomSheetConfig.Limit(
                 availableBy = DateTimeFormatters.formatDate(date = value.limits.expirationDate),
                 total = otpLimit,
                 other = noOtpLimit,
                 singleTransaction = value.limits.singleTransaction.let(::formatAmount),
-                onInfoClick = { showLimitInfo(otpLimit, noOtpLimit) },
+                onInfoClick = { limitInfoOnClick(otpLimit, noOtpLimit) },
             ),
         )
     }
 
-    private fun showBalanceInfo() {
+    private fun balanceInfoOnClick() {
+        analyticsEventHandler.send(MainScreenAnalyticsEvent.NoticeBalancesInfo)
         eventSender.send(WalletEvent.ShowAlert(WalletAlertState.VisaBalancesInfo))
     }
 
-    private fun showLimitInfo(totalLimit: String, otherLimit: String) {
+    private fun limitInfoOnClick(totalLimit: String, otherLimit: String) {
+        analyticsEventHandler.send(MainScreenAnalyticsEvent.NoticeLimitsInfo)
         eventSender.send(WalletEvent.ShowAlert(WalletAlertState.VisaLimitsInfo(totalLimit, otherLimit)))
     }
 }

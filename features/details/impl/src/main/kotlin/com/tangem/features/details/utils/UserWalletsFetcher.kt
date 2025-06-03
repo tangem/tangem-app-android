@@ -18,19 +18,23 @@ import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.core.lce.lce
 import com.tangem.domain.core.utils.getOrElse
 import com.tangem.domain.core.utils.toLce
+import com.tangem.domain.models.ArtworkModel
 import com.tangem.domain.tokens.GetWalletTotalBalanceUseCase
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.TotalFiatBalance
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.usecase.GetCardImageUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.details.impl.R
+import com.tangem.operations.attestation.ArtworkSize
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @ModelScoped
 internal class UserWalletsFetcher @Inject constructor(
     getWalletsUseCase: GetWalletsUseCase,
@@ -39,7 +43,10 @@ internal class UserWalletsFetcher @Inject constructor(
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val router: Router,
     private val messageSender: UiMessageSender,
+    private val getCardImageUseCase: GetCardImageUseCase,
 ) {
+
+    private var loadedArtworks: HashMap<UserWalletId, ArtworkModel> = hashMapOf()
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val userWallets: Flow<ImmutableList<UserWalletItemUM>> = getWalletsUseCase().transformLatest { wallets ->
@@ -52,12 +59,14 @@ internal class UserWalletsFetcher @Inject constructor(
             flow = getSelectedAppCurrencyUseCase().distinctUntilChanged(),
             flow2 = getBalanceHidingSettingsUseCase().distinctUntilChanged(),
             flow3 = getWalletTotalBalanceUseCase(wallets.map(UserWallet::walletId)).distinctUntilChanged(),
-        ) { maybeAppCurrency, balanceHidingSettings, maybeBalances ->
+            flow4 = loadArtworks(wallets),
+        ) { maybeAppCurrency, balanceHidingSettings, maybeBalances, artworks ->
             val models = createUiModels(
                 wallets = wallets,
                 maybeAppCurrency = maybeAppCurrency,
                 maybeBalances = maybeBalances,
                 balanceHidingSettings = balanceHidingSettings,
+                artworks = artworks,
             ).getOrElse(
                 ifLoading = { return@combine },
                 ifError = {
@@ -72,11 +81,29 @@ internal class UserWalletsFetcher @Inject constructor(
         }.collect()
     }
 
+    private fun loadArtworks(wallets: List<UserWallet>): Flow<HashMap<UserWalletId, ArtworkModel>> {
+        return flow {
+            emit(hashMapOf()) // emits right away so the transform doesn't wait for the images' loading to finish
+            wallets.forEach { wallet ->
+                val artwork = getCardImageUseCase(
+                    cardId = wallet.cardId,
+                    manufacturerName = wallet.scanResponse.card.manufacturer.name,
+                    firmwareVersion = wallet.scanResponse.card.firmwareVersion.toSdkFirmwareVersion(),
+                    cardPublicKey = wallet.scanResponse.card.cardPublicKey,
+                    size = ArtworkSize.SMALL,
+                )
+                loadedArtworks[wallet.walletId] = artwork
+                emit(loadedArtworks)
+            }
+        }
+    }
+
     private fun createUiModels(
         wallets: List<UserWallet>,
         maybeAppCurrency: Either<SelectedAppCurrencyError, AppCurrency>,
         maybeBalances: Lce<TokenListError, Map<UserWalletId, TotalFiatBalance>>,
         balanceHidingSettings: BalanceHidingSettings,
+        artworks: HashMap<UserWalletId, ArtworkModel>,
     ): Lce<Error, ImmutableList<UserWalletItemUM>> = lce {
         val balances = withError(
             transform = { Error.UnableToGetBalances },
@@ -99,6 +126,7 @@ internal class UserWalletsFetcher @Inject constructor(
                     appCurrency = appCurrency,
                     balance = balance,
                     isBalanceHidden = balanceHidingSettings.isBalanceHidden,
+                    artwork = artworks[userWallet.walletId],
                 )
                     .convert(userWallet)
             }
