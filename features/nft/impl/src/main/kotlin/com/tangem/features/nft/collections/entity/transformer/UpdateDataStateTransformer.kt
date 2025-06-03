@@ -26,42 +26,17 @@ internal class UpdateDataStateTransformer(
 ) : Transformer<NFTCollectionsStateUM> {
 
     override fun transform(prevState: NFTCollectionsStateUM): NFTCollectionsStateUM {
+        val hasQuery = !(prevState.content as? NFTCollectionsUM.Content)?.search?.query.isNullOrEmpty()
         val content = when {
-            nftCollections.allCollectionsFailed() ->
+            !hasQuery && nftCollections.allCollectionsFailed() ->
                 NFTCollectionsUM.Failed(onRetryClick, onReceiveClick)
-            nftCollections.anyCollectionFailed() && nftCollections.allLoadedCollectionsEmpty() ->
+            !hasQuery && nftCollections.anyCollectionFailed() && nftCollections.allLoadedCollectionsEmpty() ->
                 NFTCollectionsUM.Failed(onRetryClick, onReceiveClick)
-            nftCollections.allCollectionsLoaded() && nftCollections.allCollectionsEmpty() ->
+            !hasQuery && nftCollections.allCollectionsLoaded() && nftCollections.allCollectionsEmpty() ->
                 NFTCollectionsUM.Empty(onReceiveClick)
-            !nftCollections.allCollectionsLoaded() && nftCollections.allCollectionsEmpty() ->
-                NFTCollectionsUM.Loading(
-                    onReceiveClick = onReceiveClick,
-                    search = SearchBarUM(
-                        placeholderText = resourceReference(R.string.common_search),
-                        query = "",
-                        isActive = false,
-                        onQueryChange = { },
-                        onActiveChange = { },
-                    ),
-                )
-            else -> {
-                NFTCollectionsUM.Content(
-                    search = if (prevState.content is NFTCollectionsUM.Content) {
-                        prevState.content.search
-                    } else {
-                        initialSearchBarFactory()
-                    },
-                    collections = nftCollections
-                        .map { it.content }
-                        .asSequence()
-                        .filterIsInstance<NFTCollections.Content.Collections>()
-                        .map { it.collections.orEmpty().transform(prevState) }
-                        .flatten()
-                        .toPersistentList(),
-                    warnings = transformNotifications(),
-                    onReceiveClick = onReceiveClick,
-                )
-            }
+            !nftCollections.allCollectionsLoaded() && nftCollections.allCollectionsEmpty() -> prevState.createLoading()
+
+            else -> prevState.createContent()
         }
         return prevState.copy(
             content = content,
@@ -73,6 +48,34 @@ internal class UpdateDataStateTransformer(
             },
         )
     }
+
+    private fun NFTCollectionsStateUM.createLoading(): NFTCollectionsUM.Loading = NFTCollectionsUM.Loading(
+        onReceiveClick = onReceiveClick,
+        search = SearchBarUM(
+            placeholderText = resourceReference(R.string.common_search),
+            query = "",
+            isActive = false,
+            onQueryChange = { },
+            onActiveChange = { },
+        ),
+    )
+
+    private fun NFTCollectionsStateUM.createContent(): NFTCollectionsUM.Content = NFTCollectionsUM.Content(
+        search = if (content is NFTCollectionsUM.Content) {
+            content.search
+        } else {
+            initialSearchBarFactory()
+        },
+        collections = nftCollections
+            .map { it.content }
+            .asSequence()
+            .filterIsInstance<NFTCollections.Content.Collections>()
+            .map { it.collections.orEmpty().transform(this) }
+            .flatten()
+            .toPersistentList(),
+        warnings = transformNotifications(),
+        onReceiveClick = onReceiveClick,
+    )
 
     private fun List<NFTCollection>.transform(state: NFTCollectionsStateUM): ImmutableList<NFTCollectionUM> = map {
         NFTCollectionUM(
