@@ -87,8 +87,7 @@ internal class DefaultWalletSettingsComponent @AssistedInject constructor(
     ): ComposableBottomSheetComponent = networksAvailableForNotificationsComponent.create(
         context = childByContext(componentContext),
         params = NetworksAvailableForNotificationsComponent.Params(
-            onDismiss = model
-                .bottomSheetNavigation::dismiss,
+            onDismiss = model.bottomSheetNavigation::dismiss,
         ),
     )
 

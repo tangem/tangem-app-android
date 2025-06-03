@@ -21,8 +21,8 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetWithFooter
-import com.tangem.core.ui.components.items.NetworkNameAndSymbolItem
-import com.tangem.core.ui.components.items.NetworkNameAndSymbolItemShimmer
+import com.tangem.core.ui.components.items.ItemWithIconAndSubtext
+import com.tangem.core.ui.components.items.ItemWithIconAndSubtextShimmer
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -136,12 +136,12 @@ private fun Networks(
         )
         if (isLoading) {
             repeat(SHIMMERS_COUNT) {
-                NetworkNameAndSymbolItemShimmer()
+                ItemWithIconAndSubtextShimmer()
             }
         } else {
             networks.fastForEach { network ->
                 key(network.id) {
-                    NetworkNameAndSymbolItem(
+                    ItemWithIconAndSubtext(
                         icon = network.icon,
                         name = network.name,
                         symbol = network.symbol,
