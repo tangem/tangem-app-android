@@ -1,6 +1,8 @@
 package com.tangem.features.walletconnect.transaction.model
 
 import androidx.compose.runtime.Stable
+import com.arkivanov.decompose.router.stack.StackNavigation
+import com.arkivanov.decompose.router.stack.pushNew
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -11,8 +13,10 @@ import com.tangem.domain.walletconnect.usecase.method.WcAddNetworkUseCase
 import com.tangem.domain.walletconnect.usecase.method.WcMethodUseCase
 import com.tangem.features.walletconnect.transaction.components.common.WcTransactionModelParams
 import com.tangem.features.walletconnect.transaction.entity.chain.WcAddEthereumChainUM
+import com.tangem.features.walletconnect.transaction.entity.common.WcCommonTransactionModel
 import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionActionsUM
-import com.tangem.features.walletconnect.transaction.utils.toUM
+import com.tangem.features.walletconnect.transaction.routes.WcTransactionRoutes
+import com.tangem.features.walletconnect.transaction.converter.WcAddEthereumChainUMConverter
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -28,36 +32,46 @@ internal class WcAddNetworkModel @Inject constructor(
     private val router: Router,
     private val clipboardManager: ClipboardManager,
     private val useCaseFactory: WcRequestUseCaseFactory,
-) : Model() {
+    private val wcAddEthereumChainUMConverter: WcAddEthereumChainUMConverter,
+) : Model(), WcCommonTransactionModel {
 
     private val _uiState = MutableStateFlow<WcAddEthereumChainUM?>(null)
-    val uiState: StateFlow<WcAddEthereumChainUM?> = _uiState
+    override val uiState: StateFlow<WcAddEthereumChainUM?> = _uiState
+
+    val stackNavigation = StackNavigation<WcTransactionRoutes>()
 
     private val params = paramsContainer.require<WcTransactionModelParams>()
 
     init {
         modelScope.launch {
             val useCase: WcMethodUseCase = useCaseFactory.createUseCase(params.rawRequest)
-            val transactionUM = (useCase as? WcAddNetworkUseCase)?.toUM(
-                actions = WcTransactionActionsUM(
-                    onShowVerifiedAlert = ::showVerifiedAlert,
-                    onDismiss = { cancel(useCase) },
-                    onSign = { sign(useCase) },
-                    onCopy = { copyData(useCase.rawSdkRequest.request.params) },
-                ),
-            )
+            val transactionUM = (useCase as? WcAddNetworkUseCase)?.let {
+                wcAddEthereumChainUMConverter.convert(
+                    WcAddEthereumChainUMConverter.Input(
+                        useCase = useCase,
+                        actions = WcTransactionActionsUM(
+                            onShowVerifiedAlert = ::showVerifiedAlert,
+                            onDismiss = { cancel(useCase) },
+                            onSign = { sign(useCase) },
+                            onCopy = { copyData(useCase.rawSdkRequest.request.params) },
+                        ),
+                    ),
+                )
+            }
             _uiState.emit(transactionUM)
         }
     }
 
-    fun dismiss() {
+    override fun dismiss() {
         _uiState.value?.transaction?.onDismiss?.invoke() ?: router.pop()
     }
 
-    @Suppress("UnusedPrivateMember")
+    fun showTransactionRequest() {
+        stackNavigation.pushNew(WcTransactionRoutes.TransactionRequestInfo)
+    }
+
     private fun showVerifiedAlert(appName: String) {
-        // TODO(wc): Nastya [REDACTED_JIRA] // see WcPairComponent and WcPairModel
-        // router.push(WcAppInfoRoutes.Alert(elements = message.elements))
+        stackNavigation.pushNew(WcTransactionRoutes.Alert(WcTransactionRoutes.Alert.Type.Verified(appName)))
     }
 
     private fun sign(useCase: WcAddNetworkUseCase) {
