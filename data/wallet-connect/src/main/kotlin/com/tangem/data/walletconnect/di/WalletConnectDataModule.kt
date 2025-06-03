@@ -5,31 +5,32 @@ import com.squareup.moshi.Moshi
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.data.walletconnect.DefaultWalletConnectRepository
 import com.tangem.data.walletconnect.initialize.DefaultWcInitializeUseCase
-import com.tangem.data.walletconnect.model.NamespaceKey
 import com.tangem.data.walletconnect.network.ethereum.WcEthNetwork
 import com.tangem.data.walletconnect.network.solana.WcSolanaNetwork
-import com.tangem.data.walletconnect.pair.AssociateNetworksDelegate
-import com.tangem.data.walletconnect.pair.CaipNamespaceDelegate
-import com.tangem.data.walletconnect.pair.DefaultWcPairUseCase
+import com.tangem.data.walletconnect.pair.*
 import com.tangem.data.walletconnect.request.DefaultWcRequestService
-import com.tangem.data.walletconnect.request.WcMethodHandler
+import com.tangem.data.walletconnect.request.DefaultWcRequestUseCaseFactory
+import com.tangem.data.walletconnect.request.WcRequestToUseCaseConverter
 import com.tangem.data.walletconnect.respond.DefaultWcRespondService
+import com.tangem.data.walletconnect.respond.WcRespondService
 import com.tangem.data.walletconnect.sessions.DefaultWcSessionsManager
 import com.tangem.data.walletconnect.utils.WcNamespaceConverter
 import com.tangem.datasource.di.SdkMoshi
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.datasource.local.walletconnect.WalletConnectStore
 import com.tangem.domain.tokens.repository.CurrenciesRepository
-import com.tangem.domain.walletconnect.model.WcMethod
+import com.tangem.domain.walletconnect.WcPairService
+import com.tangem.domain.walletconnect.WcRequestService
+import com.tangem.domain.walletconnect.WcRequestUseCaseFactory
 import com.tangem.domain.walletconnect.model.legacy.WalletConnectSessionsRepository
 import com.tangem.domain.walletconnect.repository.WalletConnectRepository
 import com.tangem.domain.walletconnect.repository.WcSessionsManager
-import com.tangem.domain.walletconnect.request.WcRequestService
-import com.tangem.domain.walletconnect.respond.WcRespondService
+import com.tangem.domain.walletconnect.usecase.disconnect.WcDisconnectUseCase
 import com.tangem.domain.walletconnect.usecase.initialize.WcInitializeUseCase
 import com.tangem.domain.walletconnect.usecase.pair.WcPairUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
+import com.tangem.lib.crypto.UserWalletManager
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -58,29 +59,25 @@ internal object WalletConnectDataModule {
         application: Application,
         sessionsManager: DefaultWcSessionsManager,
         networkService: DefaultWcRequestService,
-        wcPairFlow: DefaultWcPairUseCase,
+        pairSdkDelegate: WcPairSdkDelegate,
     ): WcInitializeUseCase = DefaultWcInitializeUseCase(
         application = application,
         sessionsManager = sessionsManager,
         networkService = networkService,
-        wcPairFlow = wcPairFlow,
+        pairSdkDelegate = pairSdkDelegate,
     )
 
     @Provides
     @Singleton
-    fun defaultWcPairUseCase(
-        sessionsManager: WcSessionsManager,
-        associateNetworksDelegate: AssociateNetworksDelegate,
-        caipNamespaceDelegate: CaipNamespaceDelegate,
-    ): DefaultWcPairUseCase = DefaultWcPairUseCase(
-        sessionsManager = sessionsManager,
-        associateNetworksDelegate = associateNetworksDelegate,
-        caipNamespaceDelegate = caipNamespaceDelegate,
-    )
+    fun defaultWcPairUseCase(): WcPairService = DefaultWcPairService()
 
     @Provides
     @Singleton
-    fun wcPairUseCase(default: DefaultWcPairUseCase): WcPairUseCase = default
+    fun wcPairUseCaseFactory(default: DefaultWcPairUseCase.Factory): WcPairUseCase.Factory = default
+
+    @Provides
+    @Singleton
+    fun sdkDelegate(): WcPairSdkDelegate = WcPairSdkDelegate()
 
     @Provides
     @Singleton
@@ -106,24 +103,15 @@ internal object WalletConnectDataModule {
 
     @Provides
     @Singleton
-    fun defaultWcRequestService(
-        sessionsManager: WcSessionsManager,
-        respondService: WcRespondService,
-        dispatchers: CoroutineDispatcherProvider,
-        diHelperBox: DiHelperBox,
-    ): DefaultWcRequestService {
-        val scope = CoroutineScope(SupervisorJob() + dispatchers.io)
-        return DefaultWcRequestService(
-            sessionsManager = sessionsManager,
-            respondService = respondService,
-            requestAdapters = diHelperBox.handlers,
-            scope = scope,
-        )
-    }
+    fun wcRequestService(default: DefaultWcRequestService): WcRequestService = default
 
     @Provides
     @Singleton
-    fun wcRequestService(default: DefaultWcRequestService): WcRequestService = default
+    fun defaultWcRequestService(diHelperBox: DiHelperBox): DefaultWcRequestService {
+        return DefaultWcRequestService(
+            requestConverters = diHelperBox.handlers,
+        )
+    }
 
     @Provides
     @Singleton
@@ -131,14 +119,33 @@ internal object WalletConnectDataModule {
 
     @Provides
     @Singleton
-    fun wcEthNetwork(@SdkMoshi moshi: Moshi, respondService: WcRespondService): WcEthNetwork = WcEthNetwork(
+    fun wcEthNetwork(
+        @SdkMoshi moshi: Moshi,
+        excludedBlockchains: ExcludedBlockchains,
+        sessionsManager: WcSessionsManager,
+        factories: WcEthNetwork.Factories,
+    ): WcEthNetwork = WcEthNetwork(
         moshi = moshi,
-        respondService = respondService,
+        excludedBlockchains = excludedBlockchains,
+        sessionsManager = sessionsManager,
+        factories = factories,
     )
 
     @Provides
     @Singleton
-    fun wcSolanaNetwork(): WcSolanaNetwork = WcSolanaNetwork()
+    fun wcSolanaNetwork(
+        @SdkMoshi moshi: Moshi,
+        excludedBlockchains: ExcludedBlockchains,
+        sessionsManager: WcSessionsManager,
+        factories: WcSolanaNetwork.Factories,
+        walletManager: UserWalletManager,
+    ): WcSolanaNetwork = WcSolanaNetwork(
+        moshi = moshi,
+        sessionsManager = sessionsManager,
+        factories = factories,
+        excludedBlockchains = excludedBlockchains,
+        walletManager = walletManager,
+    )
 
     @Provides
     @Singleton
@@ -156,12 +163,10 @@ internal object WalletConnectDataModule {
         diHelperBox: DiHelperBox,
         getWallets: GetWalletsUseCase,
         currenciesRepository: CurrenciesRepository,
-        excludedBlockchains: ExcludedBlockchains,
     ): AssociateNetworksDelegate = AssociateNetworksDelegate(
         namespaceConverters = diHelperBox.converters,
         getWallets = getWallets,
         currenciesRepository = currenciesRepository,
-        excludedBlockchains = excludedBlockchains,
     )
 
     @Provides
@@ -169,15 +174,28 @@ internal object WalletConnectDataModule {
     fun diHelperBox(ethNetwork: WcEthNetwork, solanaNetwork: WcSolanaNetwork) = DiHelperBox(
         handlers = setOf(
             ethNetwork,
+            solanaNetwork,
         ),
-        converters = buildMap {
-            ethNetwork.namespaceKey to ethNetwork
-            solanaNetwork.namespaceKey to solanaNetwork
-        },
+        converters = setOf(
+            ethNetwork,
+            solanaNetwork,
+        ),
     )
 
+    @Provides
+    @Singleton
+    fun wcRequestUseCaseFactory(diHelperBox: DiHelperBox): WcRequestUseCaseFactory {
+        return DefaultWcRequestUseCaseFactory(diHelperBox.handlers)
+    }
+
+    @Provides
+    @Singleton
+    fun providesWcDisconnectUseCase(sessionsManager: WcSessionsManager): WcDisconnectUseCase {
+        return WcDisconnectUseCase(sessionsManager)
+    }
+
     internal class DiHelperBox(
-        val converters: Map<NamespaceKey, WcNamespaceConverter>,
-        val handlers: Set<WcMethodHandler<WcMethod>>,
+        val converters: Set<WcNamespaceConverter>,
+        val handlers: Set<WcRequestToUseCaseConverter>,
     )
 }

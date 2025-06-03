@@ -15,6 +15,10 @@ interface PromoRepository {
     suspend fun setNeverToShowWalletPromo(promoId: PromoId)
 
     suspend fun setNeverToShowTokenPromo(promoId: PromoId)
+
+    suspend fun isMarketsStakingNotificationHideClicked(): Flow<Boolean>
+
+    suspend fun setMarketsStakingNotificationHideClicked()
     // endregion
 
     // region Stories
