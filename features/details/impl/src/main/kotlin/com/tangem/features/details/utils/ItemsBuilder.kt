@@ -6,6 +6,7 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.components.block.model.BlockUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.details.entity.DetailsItemUM
 import com.tangem.features.details.impl.BuildConfig
 import com.tangem.features.details.impl.R
@@ -19,20 +20,21 @@ internal class ItemsBuilder @Inject constructor(private val router: Router) {
 
     fun buildAll(
         isWalletConnectAvailable: Boolean,
+        userWalletId: UserWalletId,
         onSupportClick: () -> Unit,
         onBuyClick: () -> Unit,
     ): ImmutableList<DetailsItemUM> = buildList {
-        buildWalletConnectBlock(isWalletConnectAvailable)?.let(::add)
+        buildWalletConnectBlock(isWalletConnectAvailable, userWalletId)?.let(::add)
         buildUserWalletListBlock().let(::add)
         buildShopBlock(onBuyClick).let(::add)
         buildSettingsBlock().let(::add)
         buildSupportBlock(onSupportClick).let(::add)
     }.toImmutableList()
 
-    private fun buildWalletConnectBlock(isWalletConnectAvailable: Boolean): DetailsItemUM? {
+    private fun buildWalletConnectBlock(isWalletConnectAvailable: Boolean, userWalletId: UserWalletId): DetailsItemUM? {
         return if (isWalletConnectAvailable) {
             DetailsItemUM.WalletConnect(
-                onClick = { router.push(AppRoute.WalletConnectSessions) },
+                onClick = { router.push(AppRoute.WalletConnectSessions(userWalletId)) },
             )
         } else {
             null
