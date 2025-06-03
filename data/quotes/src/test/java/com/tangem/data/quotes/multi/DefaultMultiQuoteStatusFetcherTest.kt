@@ -2,7 +2,9 @@ package com.tangem.data.quotes.multi
 
 import com.google.common.truth.Truth
 import com.tangem.common.test.data.quote.MockQuoteResponseFactory
-import com.tangem.data.quotes.store.QuotesStoreV2
+import com.tangem.data.quotes.store.QuotesStatusesStore
+import com.tangem.data.quotes.store.setSourceAsCache
+import com.tangem.data.quotes.store.setSourceAsOnlyCache
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.tangemTech.TangemTechApi
@@ -27,7 +29,7 @@ internal class DefaultMultiQuoteStatusFetcherTest {
 
     private val tangemTechApi = mockk<TangemTechApi>(relaxed = true)
     private val appCurrencyResponseStore = mockk<AppCurrencyResponseStore>(relaxed = true)
-    private val quotesStore = mockk<QuotesStoreV2>(relaxed = true)
+    private val quotesStore = mockk<QuotesStatusesStore>(relaxed = true)
 
     private val fetcher = DefaultMultiQuoteFetcher(
         tangemTechApi = tangemTechApi,
@@ -50,17 +52,17 @@ internal class DefaultMultiQuoteStatusFetcherTest {
         val actual = fetcher(params)
 
         coVerifyOrder {
-            quotesStore.refresh(currenciesIds = params.currenciesIds)
+            quotesStore.setSourceAsCache(currenciesIds = params.currenciesIds)
 
             appCurrencyResponseStore.getSyncOrNull()
 
             tangemTechApi.getQuotes(currencyId = "usd", coinIds = coinIds)
 
-            quotesStore.storeActual(values = successResponse.quotes)
+            quotesStore.store(values = successResponse.quotes)
         }
 
         coVerify(inverse = true) {
-            quotesStore.storeError(currenciesIds = any())
+            quotesStore.setSourceAsOnlyCache(currenciesIds = any())
         }
 
         Truth.assertThat(actual.isRight()).isTrue()
@@ -73,11 +75,11 @@ internal class DefaultMultiQuoteStatusFetcherTest {
         val actual = fetcher(params)
 
         coVerify(inverse = true) {
-            quotesStore.refresh(currenciesIds = any())
+            quotesStore.setSourceAsCache(currenciesIds = any())
             appCurrencyResponseStore.getSyncOrNull()
             tangemTechApi.getQuotes(currencyId = any(), coinIds = any())
-            quotesStore.storeActual(values = any())
-            quotesStore.storeError(currenciesIds = any())
+            quotesStore.store(values = any())
+            quotesStore.setSourceAsOnlyCache(currenciesIds = any())
         }
 
         Truth.assertThat(actual.isRight()).isTrue()
@@ -96,16 +98,16 @@ internal class DefaultMultiQuoteStatusFetcherTest {
         val actual = fetcher(params)
 
         coVerifyOrder {
-            quotesStore.refresh(currenciesIds = params.currenciesIds)
+            quotesStore.setSourceAsCache(currenciesIds = params.currenciesIds)
 
             tangemTechApi.getQuotes(currencyId = "usd", coinIds = coinIds)
 
-            quotesStore.storeActual(values = successResponse.quotes)
+            quotesStore.store(values = successResponse.quotes)
         }
 
         coVerify(inverse = true) {
             appCurrencyResponseStore.getSyncOrNull()
-            quotesStore.storeError(currenciesIds = any())
+            quotesStore.setSourceAsOnlyCache(currenciesIds = any())
         }
 
         Truth.assertThat(actual.isRight()).isTrue()
@@ -119,14 +121,14 @@ internal class DefaultMultiQuoteStatusFetcherTest {
         val actual = fetcher(params)
 
         coVerifyOrder {
-            quotesStore.refresh(currenciesIds = params.currenciesIds)
-            quotesStore.storeError(currenciesIds = params.currenciesIds)
+            quotesStore.setSourceAsCache(currenciesIds = params.currenciesIds)
+            quotesStore.setSourceAsOnlyCache(currenciesIds = params.currenciesIds)
         }
 
         coVerify(inverse = true) {
             appCurrencyResponseStore.getSyncOrNull()
             tangemTechApi.getQuotes(currencyId = any(), coinIds = any())
-            quotesStore.storeActual(values = any())
+            quotesStore.store(values = any())
         }
 
         Truth.assertThat(actual.isLeft()).isTrue()
@@ -150,17 +152,17 @@ internal class DefaultMultiQuoteStatusFetcherTest {
         val actual = fetcher(params)
 
         coVerifyOrder {
-            quotesStore.refresh(currenciesIds = params.currenciesIds)
+            quotesStore.setSourceAsCache(currenciesIds = params.currenciesIds)
 
             appCurrencyResponseStore.getSyncOrNull()
 
             tangemTechApi.getQuotes(currencyId = "usd", coinIds = coinIds)
 
-            quotesStore.storeError(currenciesIds = params.currenciesIds)
+            quotesStore.setSourceAsOnlyCache(currenciesIds = params.currenciesIds)
         }
 
         coVerify(inverse = true) {
-            quotesStore.storeActual(values = any())
+            quotesStore.store(values = any())
         }
 
         Truth.assertThat(actual.isLeft()).isTrue()
@@ -175,14 +177,14 @@ internal class DefaultMultiQuoteStatusFetcherTest {
         val actual = fetcher(params)
 
         coVerifyOrder {
-            quotesStore.refresh(currenciesIds = params.currenciesIds)
+            quotesStore.setSourceAsCache(currenciesIds = params.currenciesIds)
             appCurrencyResponseStore.getSyncOrNull()
-            quotesStore.storeError(currenciesIds = params.currenciesIds)
+            quotesStore.setSourceAsOnlyCache(currenciesIds = params.currenciesIds)
         }
 
         coVerify(inverse = true) {
             tangemTechApi.getQuotes(currencyId = any(), coinIds = any())
-            quotesStore.storeActual(values = any())
+            quotesStore.store(values = any())
         }
 
         Truth.assertThat(actual.isLeft()).isTrue()
