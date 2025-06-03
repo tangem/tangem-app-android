@@ -87,6 +87,6 @@ internal class SingleWalletExpressStatusesSubscriber(
 
     private suspend fun List<OnrampTransaction>.clearHiddenTerminal() {
         this.filter { it.status.isHidden && it.status.isTerminal }
-            .forEach { onrampRemoveTransactionUseCase(externalTxId = it.externalTxId) }
+            .forEach { onrampRemoveTransactionUseCase(txId = it.txId) }
     }
 }
