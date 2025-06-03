@@ -280,6 +280,51 @@ internal class NetworkStatusesStoreUpdateMethodsTest {
         Truth.assertThat(persistenceStore.data.firstOrNull()).isEqualTo(emptyMap<String, Set<NetworkStatusDM>>())
     }
 
+    @Test
+    fun `store error for networks if runtime store is empty`() = runTest {
+        store.storeError(userWalletId = userWalletId, networks = networks)
+
+        val runtimeExpected = mapOf(
+            userWalletId.stringValue to setOf(
+                SimpleNetworkStatus(
+                    id = SimpleNetworkStatus.Id(networks.first()),
+                    value = NetworkStatus.Unreachable(address = null),
+                ),
+                SimpleNetworkStatus(
+                    id = SimpleNetworkStatus.Id(networks.last()),
+                    value = NetworkStatus.Unreachable(address = null),
+                ),
+            ),
+        )
+
+        Truth.assertThat(runtimeStore.getSyncOrNull()).isEqualTo(runtimeExpected)
+        Truth.assertThat(persistenceStore.data.firstOrNull()).isEqualTo(emptyMap<String, Set<NetworkStatusDM>>())
+    }
+
+    @Test
+    fun `store error for networks if runtime store contains status with this network`() = runTest {
+        val status = MockNetworkStatusFactory.createVerified(networks.first()).toSimple()
+
+        runtimeStore.store(
+            value = mapOf(userWalletId.stringValue to setOf(status)),
+        )
+
+        store.storeError(userWalletId = userWalletId, networks = networks)
+
+        val runtimeExpected = mapOf(
+            userWalletId.stringValue to setOf(
+                status.copy(value = status.value.copySealed(source = StatusSource.ONLY_CACHE)),
+                SimpleNetworkStatus(
+                    id = SimpleNetworkStatus.Id(networks.last()),
+                    value = NetworkStatus.Unreachable(address = null),
+                ),
+            ),
+        )
+
+        Truth.assertThat(runtimeStore.getSyncOrNull()).isEqualTo(runtimeExpected)
+        Truth.assertThat(persistenceStore.data.firstOrNull()).isEqualTo(emptyMap<String, Set<NetworkStatusDM>>())
+    }
+
     private companion object {
 
         val userWalletId = UserWalletId(stringValue = "011")

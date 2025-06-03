@@ -1,6 +1,5 @@
 package com.tangem.tap.features.details.ui.common
 
-import androidx.activity.compose.BackHandler
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectable
@@ -28,8 +27,6 @@ internal fun SettingsScreensScaffold(
     fab: @Composable () -> Unit = {},
 ) {
     val backgroundColor = TangemTheme.colors.background.secondary
-
-    BackHandler(onBack = onBackClick)
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
