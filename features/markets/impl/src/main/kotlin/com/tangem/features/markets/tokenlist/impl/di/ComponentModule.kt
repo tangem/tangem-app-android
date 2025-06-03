@@ -1,6 +1,6 @@
 package com.tangem.features.markets.tokenlist.impl.di
 
-import com.tangem.features.markets.tokenlist.api.MarketsTokenListComponent
+import com.tangem.features.markets.tokenlist.MarketsTokenListComponent
 import com.tangem.features.markets.tokenlist.impl.DefaultMarketsTokenListComponent
 import dagger.Binds
 import dagger.Module
