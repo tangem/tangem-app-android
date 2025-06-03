@@ -55,11 +55,11 @@ interface TangemTechApi {
 
     /** Returns referral status by [walletId] */
     @GET("referral/{walletId}")
-    suspend fun getReferralStatus(@Path("walletId") walletId: String): ReferralResponse
+    suspend fun getReferralStatus(@Path("walletId") walletId: String): ApiResponse<ReferralResponse>
 
     /** Make user referral, requires [StartReferralBody] */
     @POST("referral")
-    suspend fun startReferral(@Body startReferralBody: StartReferralBody): ReferralResponse
+    suspend fun startReferral(@Body startReferralBody: StartReferralBody): ApiResponse<ReferralResponse>
 
     @GET("quotes")
     suspend fun getQuotes(
@@ -139,6 +139,40 @@ interface TangemTechApi {
 
     @GET("stories/{story_id}")
     suspend fun getStoryById(@Path("story_id") storyId: String): ApiResponse<StoryContentResponse>
+
+    // region push notifications
+    @GET("notification/push_notifications_eligible_networks")
+    suspend fun getEligibleNetworksForPushNotifications(): ApiResponse<List<CryptoNetworkResponse>>
+
+    @POST("user-wallets/applications/")
+    suspend fun createApplicationId(
+        @Body
+        body: NotificationApplicationCreateBody,
+    ): ApiResponse<NotificationApplicationIdResponse>
+
+    @PATCH("user-wallets/applications/{application_id}")
+    suspend fun updatePushTokenForApplicationId(
+        @Path("application_id") applicationId: String,
+        @Body body: NotificationApplicationCreateBody,
+    ): ApiResponse<String>
+
+    @PATCH("user-wallets/wallets/{wallet_id}/notify")
+    suspend fun setNotificationsEnabled(@Path("wallet_id") walletId: String, @Body body: WalletBody): ApiResponse<Unit>
+    // endregion
+
+    // region wallets
+    @PATCH("user-wallets/wallets/{wallet_id}")
+    suspend fun updateWallet(@Path("wallet_id") walletId: String, @Body body: WalletBody): ApiResponse<Unit>
+
+    @POST("user-wallets/wallets/create-and-connect-by-appuid/{application_id}")
+    suspend fun associateApplicationIdWithWallets(
+        @Path("application_id") applicationId: String,
+        @Body body: List<WalletIdBody>,
+    ): ApiResponse<Unit>
+
+    @GET("user-wallets/wallets/{wallet_id}")
+    suspend fun getWalletById(@Path("wallet_id") walletId: String): ApiResponse<WalletResponse>
+    // endregion
 
     companion object {
         val marketsQuoteFields = listOf(
