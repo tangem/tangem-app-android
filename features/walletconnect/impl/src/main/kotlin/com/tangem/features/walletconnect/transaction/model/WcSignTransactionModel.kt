@@ -1,6 +1,8 @@
 package com.tangem.features.walletconnect.transaction.model
 
 import androidx.compose.runtime.Stable
+import com.arkivanov.decompose.router.stack.StackNavigation
+import com.arkivanov.decompose.router.stack.pushNew
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -11,9 +13,11 @@ import com.tangem.domain.walletconnect.usecase.method.WcSignState
 import com.tangem.domain.walletconnect.usecase.method.WcSignStep
 import com.tangem.domain.walletconnect.usecase.method.WcSignUseCase
 import com.tangem.features.walletconnect.transaction.components.common.WcTransactionModelParams
+import com.tangem.features.walletconnect.transaction.entity.common.WcCommonTransactionModel
 import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionActionsUM
 import com.tangem.features.walletconnect.transaction.entity.sign.WcSignTransactionUM
-import com.tangem.features.walletconnect.transaction.utils.toUM
+import com.tangem.features.walletconnect.transaction.routes.WcTransactionRoutes
+import com.tangem.features.walletconnect.transaction.converter.WcCommonTransactionUMConverter
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -30,12 +34,15 @@ internal class WcSignTransactionModel @Inject constructor(
     private val router: Router,
     private val clipboardManager: ClipboardManager,
     private val useCaseFactory: WcRequestUseCaseFactory,
-) : Model() {
-
-    private val _uiState = MutableStateFlow<WcSignTransactionUM?>(null)
-    val uiState: StateFlow<WcSignTransactionUM?> = _uiState
+    private val converter: WcCommonTransactionUMConverter,
+) : Model(), WcCommonTransactionModel {
 
     private val params = paramsContainer.require<WcTransactionModelParams>()
+
+    private val _uiState = MutableStateFlow<WcSignTransactionUM?>(null)
+    override val uiState: StateFlow<WcSignTransactionUM?> = _uiState
+
+    val stackNavigation = StackNavigation<WcTransactionRoutes>()
 
     init {
         modelScope.launch {
@@ -43,29 +50,34 @@ internal class WcSignTransactionModel @Inject constructor(
             useCase.invoke()
                 .onEach { signState ->
                     if (signingIsDone(signState)) return@onEach
-                    val signTransactionUM = useCase.toUM(
-                        signState = signState,
-                        actions = WcTransactionActionsUM(
-                            onShowVerifiedAlert = ::showVerifiedAlert,
-                            onDismiss = { cancel(useCase) },
-                            onSign = useCase::sign,
-                            onCopy = { copyData(useCase.rawSdkRequest.request.params) },
+                    val signTransactionUM = converter.convert(
+                        WcCommonTransactionUMConverter.Input(
+                            useCase = useCase,
+                            signState = signState,
+                            actions = WcTransactionActionsUM(
+                                onShowVerifiedAlert = ::showVerifiedAlert,
+                                onDismiss = { cancel(useCase) },
+                                onSign = useCase::sign,
+                                onCopy = { copyData(useCase.rawSdkRequest.request.params) },
+                            ),
                         ),
-                    )
+                    ) as? WcSignTransactionUM
                     _uiState.emit(signTransactionUM)
                 }
                 .launchIn(this)
         }
     }
 
-    fun dismiss() {
+    override fun dismiss() {
         _uiState.value?.transaction?.onDismiss?.invoke() ?: router.pop()
     }
 
-    @Suppress("UnusedPrivateMember")
+    fun showTransactionRequest() {
+        stackNavigation.pushNew(WcTransactionRoutes.TransactionRequestInfo)
+    }
+
     private fun showVerifiedAlert(appName: String) {
-        // TODO(wc): Nastya [REDACTED_JIRA] // see WcPairComponent and WcPairModel
-        // router.push(WcAppInfoRoutes.Alert(elements = message.elements))
+        stackNavigation.pushNew(WcTransactionRoutes.Alert(WcTransactionRoutes.Alert.Type.Verified(appName)))
     }
 
     private fun signingIsDone(signState: WcSignState<*>): Boolean {
