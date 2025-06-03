@@ -25,11 +25,12 @@ internal class DefaultNotificationsRepository @Inject constructor(
     override suspend fun createApplicationId(pushToken: String?): ApplicationId = withContext(dispatchers.io) {
         tangemTechApi.createApplicationId(
             NotificationApplicationCreateBody(
-                platform = appInfoProvider.platform,
+                platform = appInfoProvider.platform.lowercase(),
                 device = appInfoProvider.device,
                 systemVersion = appInfoProvider.osVersion,
                 language = appInfoProvider.language,
                 timezone = appInfoProvider.timezone,
+                version = appInfoProvider.appVersion,
                 pushToken = pushToken,
             ),
         ).getOrThrow().appId.let(::ApplicationId)
