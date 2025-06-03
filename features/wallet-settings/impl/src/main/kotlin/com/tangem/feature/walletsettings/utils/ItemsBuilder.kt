@@ -34,6 +34,10 @@ internal class ItemsBuilder @Inject constructor(
         isNFTFeatureEnabled: Boolean,
         isNFTEnabled: Boolean,
         onCheckedNFTChange: (Boolean) -> Unit,
+        isNotificationsFeatureEnabled: Boolean,
+        isNotificationsEnabled: Boolean,
+        onCheckedNotificationsChanged: (Boolean) -> Unit,
+        onNotificationsDescriptionClick: () -> Unit,
         forgetWallet: () -> Unit,
         renameWallet: () -> Unit,
         onLinkMoreCardsClick: () -> Unit,
@@ -57,6 +61,22 @@ internal class ItemsBuilder @Inject constructor(
                 onReferralClick = onReferralClick,
             ),
         )
+        .run {
+            if (isNotificationsFeatureEnabled) {
+                add(
+                    buildNotificationsSwitchItem(
+                        isNotificationsEnabled,
+                        onCheckedNotificationsChanged,
+                    ),
+                ).add(
+                    buildNotificationsDescriptionItem(
+                        onDescriptionClick = onNotificationsDescriptionClick,
+                    ),
+                )
+            } else {
+                this
+            }
+        }
         .add(buildForgetItem(forgetWallet))
 
     private fun buildNameItem(walletName: String, isRenameWalletAvailable: Boolean, renameWallet: () -> Unit) =
@@ -74,6 +94,22 @@ internal class ItemsBuilder @Inject constructor(
             title = resourceReference(id = R.string.details_nft_title),
             isChecked = isNFTEnabled,
             onCheckedChange = onCheckedNFTChange,
+        )
+
+    private fun buildNotificationsSwitchItem(isNFTEnabled: Boolean, onCheckedNFTChange: (Boolean) -> Unit) =
+        WalletSettingsItemUM.WithSwitch(
+            id = "notifications",
+            title = resourceReference(id = R.string.wallet_settings_push_notifications_title),
+            isChecked = isNFTEnabled,
+            onCheckedChange = onCheckedNFTChange,
+        )
+
+    private fun buildNotificationsDescriptionItem(onDescriptionClick: () -> Unit) =
+        WalletSettingsItemUM.DescriptionWithMore(
+            id = "notifications_description",
+            text = resourceReference(id = R.string.wallet_settings_push_notifications_description),
+            more = resourceReference(id = R.string.push_notifications_more_info),
+            onClick = onDescriptionClick,
         )
 
     @Suppress("LongParameterList")
