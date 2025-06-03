@@ -1,25 +1,30 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers
 
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.domain.common.util.cardTypesResolver
-import com.tangem.domain.txhistory.models.TxHistoryItem
+import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.TxHistoryItemStateConverter
-import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import kotlinx.collections.immutable.toImmutableList
 import timber.log.Timber
 
 internal class SetTxHistoryCountErrorTransformer(
     private val userWallet: UserWallet,
     private val error: TxHistoryStateError,
-    private val pendingTransactions: Set<TxHistoryItem>,
+    private val pendingTransactions: Set<TxInfo>,
     private val clickIntents: WalletClickIntents,
 ) : WalletStateTransformer(userWallet.walletId) {
 
     private val txHistoryItemConverter by lazy {
-        val blockchain = userWallet.scanResponse.cardTypesResolver.getBlockchain()
+        val blockchain = when (userWallet) {
+            is UserWallet.Cold -> userWallet.scanResponse.cardTypesResolver.getBlockchain()
+            is UserWallet.Hot -> Blockchain.Unknown
+        }
+
         TxHistoryItemStateConverter(
             symbol = blockchain.currency,
             decimals = blockchain.decimals(),

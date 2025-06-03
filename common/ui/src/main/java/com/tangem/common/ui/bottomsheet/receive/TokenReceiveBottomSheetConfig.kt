@@ -6,8 +6,8 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.domain.tokens.model.Network
-import com.tangem.domain.tokens.model.NetworkAddress
+import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.network.NetworkAddress
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
@@ -41,9 +41,11 @@ data class TokenReceiveBottomSheetConfig(
     @Immutable
     sealed class Asset {
         abstract val displaySymbol: TextReference
+
         data class Currency(val name: String, val symbol: String) : Asset() {
             override val displaySymbol = stringReference(symbol)
         }
+
         data object NFT : Asset() {
             override val displaySymbol = resourceReference(R.string.common_nft)
         }
