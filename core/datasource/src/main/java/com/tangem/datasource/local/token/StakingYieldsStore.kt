@@ -9,5 +9,7 @@ interface StakingYieldsStore {
 
     suspend fun getSync(): List<YieldDTO>
 
+    suspend fun getSyncWithTimeout(): List<YieldDTO>?
+
     suspend fun store(items: List<YieldDTO>)
 }

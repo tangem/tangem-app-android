@@ -10,5 +10,6 @@ dependencies {
     ksp(deps.moshi.kotlin.codegen)
     implementation(deps.moshi.adapters)
     implementation(deps.kotlin.serialization)
+    implementation(deps.jodatime)
     implementation(projects.core.error)
 }

@@ -18,14 +18,18 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.card.HasMissedDerivationsUseCase
 import com.tangem.domain.managetokens.CheckCurrencyUnsupportedUseCase
 import com.tangem.domain.managetokens.model.CurrencyUnsupportedState
-import com.tangem.domain.markets.FilterAvailableNetworksForWalletUseCase
 import com.tangem.domain.markets.SaveMarketTokensUseCase
 import com.tangem.domain.markets.TokenMarketInfo
+import com.tangem.domain.models.ArtworkModel
+import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.usecase.GetCardImageUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.features.markets.impl.R
 import com.tangem.features.markets.portfolio.api.MarketsPortfolioComponent
 import com.tangem.features.markets.portfolio.impl.analytics.PortfolioAnalyticsEvent
+import com.tangem.features.markets.portfolio.impl.loader.PortfolioData
 import com.tangem.features.markets.portfolio.impl.loader.PortfolioDataLoader
 import com.tangem.features.markets.portfolio.impl.ui.state.MyPortfolioUM
 import com.tangem.lib.crypto.BlockchainUtils
@@ -33,6 +37,8 @@ import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -50,13 +56,17 @@ internal class MarketsPortfolioModel @Inject constructor(
     private val portfolioDataLoader: PortfolioDataLoader,
     private val hasMissedDerivationsUseCase: HasMissedDerivationsUseCase,
     private val saveMarketTokensUseCase: SaveMarketTokensUseCase,
-    private val filterAvailableNetworks: FilterAvailableNetworksForWalletUseCase,
+    private val getCardImageUseCase: GetCardImageUseCase,
     private val addToPortfolioManager: AddToPortfolioManager,
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
     val state: StateFlow<MyPortfolioUM> get() = _state
     private val _state: MutableStateFlow<MyPortfolioUM> = MutableStateFlow(value = MyPortfolioUM.Loading)
+
+    private val loadedArtworks: HashMap<UserWalletId, ArtworkModel> = hashMapOf()
+    private val artworksState: MutableStateFlow<HashMap<UserWalletId, ArtworkModel>> = MutableStateFlow(hashMapOf())
+    private val loadArtworksMutex = Mutex()
 
     private val params = paramsContainer.require<MarketsPortfolioComponent.Params>()
     private val analyticsEventBuilder = PortfolioAnalyticsEvent.EventBuilder(
@@ -163,12 +173,41 @@ internal class MarketsPortfolioModel @Inject constructor(
 
     private fun subscribeOnStateUpdates() {
         combine(
-            flow = portfolioDataLoader.load(params.token.id),
+            flow = loadPortfolioData(params.token.id, addToPortfolioManager.availableNetworks),
             flow2 = getPortfolioUIDataFlow(),
+            flow3 = artworksState,
             transform = factory::create,
         )
             .onEach { _state.value = it }
             .launchIn(modelScope)
+    }
+
+    private fun loadPortfolioData(
+        currencyRawId: CryptoCurrency.RawID,
+        availableNetworksFlow: Flow<Set<TokenMarketInfo.Network>?>,
+    ): Flow<PortfolioData> {
+        portfolioDataLoader.load(currencyRawId, availableNetworksFlow).onEach {
+            loadArtworks(it.walletsWithCurrencies.keys.toList())
+        }.also { return it }
+    }
+
+    private fun loadArtworks(wallets: List<UserWallet>) {
+        modelScope.launch {
+            loadArtworksMutex.withLock {
+                wallets.forEach { wallet ->
+                    if (!loadedArtworks.containsKey(wallet.walletId)) {
+                        val artwork = getCardImageUseCase(
+                            cardId = wallet.cardId,
+                            manufacturerName = wallet.scanResponse.card.manufacturer.name,
+                            firmwareVersion = wallet.scanResponse.card.firmwareVersion.toSdkFirmwareVersion(),
+                            cardPublicKey = wallet.scanResponse.card.cardPublicKey,
+                        )
+                        loadedArtworks[wallet.walletId] = artwork
+                        artworksState.emit(loadedArtworks)
+                    }
+                }
+            }
+        }
     }
 
     private fun getPortfolioUIDataFlow(): Flow<PortfolioUIData> {
@@ -177,16 +216,10 @@ internal class MarketsPortfolioModel @Inject constructor(
             flow2 = selectedMultiWalletIdFlow,
             flow3 = addToPortfolioManager.getAddToPortfolioData(),
             transform = { portfolioBSVisibilityModel, selectedWalletId, addToPortfolioData ->
-                val filteredNetworks = selectedWalletId?.let {
-                    filterAvailableNetworks(selectedWalletId, addToPortfolioData.availableNetworks ?: emptySet())
-                } ?: emptySet()
-
                 PortfolioUIData(
                     portfolioBSVisibilityModel = portfolioBSVisibilityModel,
                     selectedWalletId = selectedWalletId,
-                    addToPortfolioData = addToPortfolioData.copy(
-                        availableNetworks = filteredNetworks,
-                    ),
+                    addToPortfolioData = addToPortfolioData,
                     hasMissedDerivations = hasMissedDerivations(selectedWalletId, addToPortfolioData),
                 )
             },

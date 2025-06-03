@@ -1,8 +1,10 @@
 package com.tangem.features.send.v2.subcomponents.destination
 
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.features.send.v2.send.SendRoute
+import com.tangem.features.send.v2.common.CommonSendRoute
+import com.tangem.features.send.v2.common.PredefinedValues
 import com.tangem.features.send.v2.subcomponents.destination.SendDestinationComponent.ModelCallback
 import com.tangem.features.send.v2.subcomponents.destination.ui.state.DestinationUM
 import kotlinx.coroutines.flow.Flow
@@ -20,10 +22,12 @@ internal sealed class SendDestinationComponentParams {
         override val analyticsCategoryName: String,
         override val cryptoCurrency: CryptoCurrency,
         override val userWalletId: UserWalletId,
+        val title: TextReference,
         val isBalanceHidingFlow: StateFlow<Boolean>,
-        val currentRoute: Flow<SendRoute.Destination>,
+        val currentRoute: Flow<CommonSendRoute.Destination>,
         val callback: ModelCallback,
-        val isEditMode: Boolean,
+        val onBackClick: () -> Unit,
+        val onNextClick: () -> Unit,
     ) : SendDestinationComponentParams()
 
     data class DestinationBlockParams(
@@ -32,8 +36,6 @@ internal sealed class SendDestinationComponentParams {
         override val userWalletId: UserWalletId,
         override val cryptoCurrency: CryptoCurrency,
         val blockClickEnableFlow: StateFlow<Boolean>,
-        val predefinedAddressValue: String?,
-        val predefinedMemoValue: String?,
-        val isPredefinedValues: Boolean,
+        val predefinedValues: PredefinedValues,
     ) : SendDestinationComponentParams()
 }

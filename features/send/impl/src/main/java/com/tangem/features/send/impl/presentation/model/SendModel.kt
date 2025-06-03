@@ -27,6 +27,8 @@ import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.notifications.GetTronFeeNotificationShowCountUseCase
+import com.tangem.domain.notifications.IncrementNotificationsShowCountUseCase
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
 import com.tangem.domain.qrscanning.usecases.ParseQrCodeUseCase
@@ -92,9 +94,9 @@ internal class SendModel @Inject constructor(
     private val getTxHistoryItemsCountUseCase: GetTxHistoryItemsCountUseCase,
     private val getTxHistoryItemsUseCase: GetTxHistoryItemsUseCase,
     private val getFixedTxHistoryItemsUseCase: GetFixedTxHistoryItemsUseCase,
-    private val getFeeUseCase: GetFeeUseCase,
     private val sendTransactionUseCase: SendTransactionUseCase,
-    private val createTransactionUseCase: CreateTransactionUseCase,
+    private val createTransferTransactionUseCase: CreateTransferTransactionUseCase,
+    private val getFeeUseCase: GetFeeUseCase,
     private val validateWalletAddressUseCase: ValidateWalletAddressUseCase,
     private val isAmountSubtractAvailableUseCase: IsAmountSubtractAvailableUseCase,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
@@ -115,6 +117,7 @@ internal class SendModel @Inject constructor(
     private val shareManager: ShareManager,
     private val txHistoryFeatureToggles: TxHistoryFeatureToggles,
     private val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter,
+    private val incrementNotificationsShowCountUseCase: IncrementNotificationsShowCountUseCase,
     @DelayedWork private val coroutineScope: CoroutineScope,
     private val innerRouter: InnerSendRouter,
     appRouter: AppRouter,
@@ -123,6 +126,7 @@ internal class SendModel @Inject constructor(
     getCurrencyCheckUseCase: GetCurrencyCheckUseCase,
     isFeeApproximateUseCase: IsFeeApproximateUseCase,
     getBalanceNotEnoughForFeeWarningUseCase: GetBalanceNotEnoughForFeeWarningUseCase,
+    getTronFeeNotificationShowCountUseCase: GetTronFeeNotificationShowCountUseCase,
 ) : Model(), SendClickIntents {
 
     private val params = paramsContainer.require<SendComponent.Params>()
@@ -195,6 +199,7 @@ internal class SendModel @Inject constructor(
         validateTransactionUseCase = validateTransactionUseCase,
         getCurrencyCheckUseCase = getCurrencyCheckUseCase,
         getBalanceNotEnoughForFeeWarningUseCase = getBalanceNotEnoughForFeeWarningUseCase,
+        getTronFeeNotificationShowCountUseCase = getTronFeeNotificationShowCountUseCase,
         cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
         feeCryptoCurrencyStatusProvider = Provider { feeCryptoCurrencyStatus },
         currentStateProvider = Provider { uiState.value },
@@ -528,16 +533,29 @@ internal class SendModel @Inject constructor(
 
         uiState.value = stateFactory.syncEditStates(isFromEdit = isFromEdit)
         sendScreenAnalyticSender.send(currentState.type, uiState.value)
-        when (currentState.type) {
+        prepareNextState(currentState.type, isFromEdit)
+        stateRouter.onNextClick()
+    }
+
+    private fun prepareNextState(currentStateType: SendUiStateType, isFromEdit: Boolean) {
+        when (currentStateType) {
             SendUiStateType.Fee,
             SendUiStateType.EditFee,
             -> if (onFeeNextIntercept(isFromEdit)) return
-            SendUiStateType.Amount,
+            SendUiStateType.Amount -> {
+                loadFee()
+                incrementNotificationsShowCounter()
+            }
             SendUiStateType.EditAmount,
             -> loadFee()
             else -> Unit
         }
-        stateRouter.onNextClick()
+    }
+
+    private fun incrementNotificationsShowCounter() {
+        modelScope.launch {
+            incrementNotificationsShowCountUseCase(cryptoCurrency)
+        }
     }
 
     override fun onAmountNext() = onNextClick(stateRouter.isEditState)
@@ -825,12 +843,23 @@ internal class SendModel @Inject constructor(
         val amountState = uiState.value.getAmountState(isFromConfirmation) as? AmountState.Data ?: return null
         val recipientState = uiState.value.getRecipientState(isFromConfirmation) ?: return null
         val amount = amountState.amountTextField.cryptoAmount.value ?: return null
+        val destinationAddress = recipientState.addressTextField.value
+        val memo = recipientState.memoTextField?.value
 
-        return getFeeUseCase.invoke(
-            amount = amount,
-            destination = recipientState.addressTextField.value,
+        val transferTransaction = createTransferTransactionUseCase(
+            amount = amount.convertToSdkAmount(cryptoCurrency),
+            memo = memo,
+            destination = destinationAddress,
+            userWalletId = userWallet.walletId,
+            network = cryptoCurrency.network,
+        ).getOrElse {
+            return GetFeeError.DataError(it).left()
+        }
+
+        return getFeeUseCase(
+            transactionData = transferTransaction,
             userWallet = userWallet,
-            cryptoCurrency = cryptoCurrencyStatus.currency,
+            network = params.currency.network,
         )
     }
 // endregion
@@ -929,7 +958,7 @@ internal class SendModel @Inject constructor(
         )
 
         modelScope.launch {
-            createTransactionUseCase(
+            createTransferTransactionUseCase(
                 amount = receivingAmount.convertToSdkAmount(cryptoCurrency),
                 fee = fee,
                 memo = memo,
