@@ -23,7 +23,6 @@ object MockUserWalletFactory {
         return UserWallet(
             walletId = userWalletId,
             name = "Wallet 1",
-            artworkUrl = "",
             cardsInWallet = emptySet(),
             scanResponse = scanResponse,
             isMultiCurrency = scanResponse.cardTypesResolver.isMultiwalletAllowed(),

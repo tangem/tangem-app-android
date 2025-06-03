@@ -30,6 +30,7 @@ import com.tangem.features.nft.impl.R
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
+@Suppress("LongMethod")
 @Composable
 internal fun NFTDetailsBlocksGroup(
     title: TextReference,
@@ -68,11 +69,17 @@ internal fun NFTDetailsBlocksGroup(
                             NFTDetailsGroupBlock(
                                 modifier = Modifier
                                     .weight(1f)
-                                    .padding(paddingValues),
+                                    .padding(paddingValues)
+                                    .clickable(
+                                        interactionSource = remember { MutableInteractionSource() },
+                                        indication = null,
+                                        onClick = item1.onClick,
+                                    ),
                                 title = item1.title,
                                 value = stringReference(item1.value),
                                 titleEllipsis = item1.titleTextEllipsis,
                                 valueEllipsis = item1.valueTextEllipsis,
+                                showInfoButton = item1.showInfoButton,
                             )
                             if (item2 == null) {
                                 Box(
@@ -84,11 +91,17 @@ internal fun NFTDetailsBlocksGroup(
                                 NFTDetailsGroupBlock(
                                     modifier = Modifier
                                         .weight(1f)
-                                        .padding(paddingValues),
+                                        .padding(paddingValues)
+                                        .clickable(
+                                            interactionSource = remember { MutableInteractionSource() },
+                                            indication = null,
+                                            onClick = item2.onClick,
+                                        ),
                                     title = item2.title,
                                     value = stringReference(item2.value),
                                     titleEllipsis = item2.titleTextEllipsis,
                                     valueEllipsis = item2.valueTextEllipsis,
+                                    showInfoButton = item2.showInfoButton,
                                 )
                             }
                         }
@@ -113,6 +126,7 @@ internal fun NFTDetailsGroupTitle(text: TextReference, modifier: Modifier = Modi
 internal fun NFTDetailsGroupBlock(
     title: TextReference,
     value: TextReference,
+    showInfoButton: Boolean,
     modifier: Modifier = Modifier,
     titleEllipsis: TextEllipsis = TextEllipsis.End,
     valueEllipsis: TextEllipsis = TextEllipsis.End,
@@ -120,12 +134,29 @@ internal fun NFTDetailsGroupBlock(
     Column(
         modifier = modifier,
     ) {
-        EllipsisText(
-            text = title.resolveReference(),
-            style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.tertiary,
-            ellipsis = titleEllipsis,
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(),
+        ) {
+            EllipsisText(
+                modifier = Modifier
+                    .weight(1f, fill = false),
+                text = title.resolveReference(),
+                style = TangemTheme.typography.caption2,
+                color = TangemTheme.colors.text.tertiary,
+                ellipsis = titleEllipsis,
+            )
+            if (showInfoButton) {
+                Icon(
+                    modifier = Modifier
+                        .padding(start = TangemTheme.dimens.spacing4)
+                        .size(TangemTheme.dimens.size16),
+                    painter = painterResource(R.drawable.ic_information_24),
+                    contentDescription = null,
+                    tint = TangemTheme.colors.icon.informative,
+                )
+            }
+        }
         EllipsisText(
             modifier = Modifier
                 .padding(top = TangemTheme.dimens.spacing4),
@@ -224,22 +255,27 @@ private class NFTAssetBlocksProvider : CollectionPreviewParameterProvider<Immuta
             NFTAssetUM.BlockItem(
                 title = stringReference("Tier"),
                 value = "Infinite",
+                showInfoButton = false,
             ),
             NFTAssetUM.BlockItem(
                 title = stringReference("Phygital Toy"),
                 value = "None",
+                showInfoButton = false,
             ),
             NFTAssetUM.BlockItem(
                 title = stringReference("Class"),
                 value = "CYBER",
+                showInfoButton = false,
             ),
             NFTAssetUM.BlockItem(
                 title = stringReference("Accessory"),
                 value = "No accessory",
+                showInfoButton = false,
             ),
             NFTAssetUM.BlockItem(
                 title = stringReference("Sneakers"),
                 value = "Boots",
+                showInfoButton = false,
             ),
         ),
     ),
