@@ -1,6 +1,7 @@
 package com.tangem.tap.domain.tasks.visa
 
 import arrow.core.getOrElse
+import com.tangem.blockchain.common.UnmarshalHelper
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.Card
 import com.tangem.common.card.CardWallet
@@ -10,6 +11,7 @@ import com.tangem.common.core.CardSessionRunnable
 import com.tangem.common.core.CompletionCallback
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.hexToBytes
+import com.tangem.common.extensions.toDecompressedPublicKey
 import com.tangem.common.extensions.toHexString
 import com.tangem.core.error.ext.tangemError
 import com.tangem.crypto.hdWallet.DerivationPath
@@ -129,6 +131,7 @@ class VisaCustomerWalletApproveTask(
             targetWalletPublicKey = wallet.publicKey,
             derivationPath = derivationPath,
             session = session,
+            extendedPublicKey = extendedPublicKey,
             callback = callback,
         )
     }
@@ -149,6 +152,7 @@ class VisaCustomerWalletApproveTask(
         signApproveData(
             targetWalletPublicKey = publicKey,
             derivationPath = null,
+            extendedPublicKey = null,
             session = session,
             callback = callback,
         )
@@ -157,11 +161,14 @@ class VisaCustomerWalletApproveTask(
     private fun signApproveData(
         targetWalletPublicKey: ByteArray,
         derivationPath: DerivationPath?,
+        extendedPublicKey: ExtendedPublicKey?,
         session: CardSession,
         callback: CompletionCallback<VisaSignedDataByCustomerWallet>,
     ) {
+        val hashToSign = visaDataForApprove.dataToSign.hashToSign.hexToBytes()
+
         val signTask = SignHashCommand(
-            hash = visaDataForApprove.dataToSign.hashToSign.hexToBytes(),
+            hash = hashToSign,
             walletPublicKey = targetWalletPublicKey,
             derivationPath = derivationPath,
         )
@@ -169,11 +176,18 @@ class VisaCustomerWalletApproveTask(
         signTask.run(session) { result ->
             when (result) {
                 is CompletionResult.Success -> {
+                    val rsvSignature = UnmarshalHelper.unmarshalSignatureExtended(
+                        signature = result.data.signature,
+                        hash = hashToSign,
+                        publicKey = extendedPublicKey?.publicKey?.toDecompressedPublicKey()
+                            ?: targetWalletPublicKey.toDecompressedPublicKey(),
+                    ).asRSVLegacyEVM().toHexString().lowercase()
+
                     scanCard(
                         session = session,
                         callback = callback,
                         signedData = visaDataForApprove.dataToSign.sign(
-                            signature = result.data.signature.toHexString(),
+                            signature = rsvSignature,
                             customerWalletAddress = visaDataForApprove.targetAddress,
                         ),
                     )
