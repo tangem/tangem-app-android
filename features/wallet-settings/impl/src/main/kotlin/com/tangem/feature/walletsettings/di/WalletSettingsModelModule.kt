@@ -2,6 +2,7 @@ package com.tangem.feature.walletsettings.di
 
 import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
+import com.tangem.feature.walletsettings.component.impl.model.NetworksAvailableForNotificationsModel
 import com.tangem.feature.walletsettings.component.impl.model.RenameWalletModel
 import com.tangem.feature.walletsettings.model.WalletSettingsModel
 import dagger.Binds
@@ -23,4 +24,9 @@ internal interface WalletSettingsModelModule {
     @IntoMap
     @ClassKey(RenameWalletModel::class)
     fun bindRenameWalletModel(model: RenameWalletModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(NetworksAvailableForNotificationsModel::class)
+    fun bindNetworksAvailableForNotificationsModel(model: NetworksAvailableForNotificationsModel): Model
 }
