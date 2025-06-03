@@ -52,7 +52,7 @@ class UpdateDelayedNetworkStatusUseCase(
     ) {
         if (tokensFeatureToggles.isNetworksLoadingRefactoringEnabled) {
             singleNetworkStatusFetcher(
-                params = SingleNetworkStatusFetcher.Params(userWalletId = userWalletId, network = network),
+                params = SingleNetworkStatusFetcher.Params.Simple(userWalletId = userWalletId, network = network),
             )
                 .mapLeft { CurrencyStatusError.DataError(it) }
         } else {
