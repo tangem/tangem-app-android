@@ -2,7 +2,7 @@ package com.tangem.data.quotes.single
 
 import com.google.common.truth.Truth
 import com.tangem.common.test.utils.getEmittedValues
-import com.tangem.data.quotes.store.QuotesStoreV2
+import com.tangem.data.quotes.store.QuotesStatusesStore
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.quotes.single.SingleQuoteProducer
@@ -25,7 +25,7 @@ internal class DefaultSingleQuoteStatusProducerTest {
         rawCurrencyId = CryptoCurrency.RawID(value = "BTC"),
     )
 
-    private val quotesStore = mockk<QuotesStoreV2>()
+    private val quotesStore = mockk<QuotesStatusesStore>()
 
     private val producer = DefaultSingleQuoteProducer(
         params = params,
