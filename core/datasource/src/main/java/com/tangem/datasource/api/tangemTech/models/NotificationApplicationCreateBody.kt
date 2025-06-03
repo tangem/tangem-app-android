@@ -9,6 +9,7 @@ data class NotificationApplicationCreateBody(
     @Json(name = "platform") val platform: String? = null,
     @Json(name = "device") val device: String? = null,
     @Json(name = "systemVersion") val systemVersion: String? = null,
+    @Json(name = "version") val version: String? = null,
     @Json(name = "language") val language: String? = null,
     @Json(name = "timezone") val timezone: String? = null,
 )

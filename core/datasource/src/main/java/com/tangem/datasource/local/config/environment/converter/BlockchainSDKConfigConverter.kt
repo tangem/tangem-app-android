@@ -43,6 +43,7 @@ internal object BlockchainSDKConfigConverter : Converter<EnvironmentConfigModel,
             bittensorOnfinalityApiKey = value.bittensorOnfinalityKey,
             koinosProApiKey = value.koinosProApiKey,
             alephiumApiKey = value.alephiumTangemApiKey,
+            moralisApiKey = value.moralisApiKey,
         )
     }
 

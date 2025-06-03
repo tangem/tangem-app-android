@@ -1,6 +1,6 @@
 package com.tangem.features.managetokens.entity.item
 
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.network.Network
 
 internal data class CurrencyNetworkUM(
     val network: Network,
@@ -13,5 +13,5 @@ internal data class CurrencyNetworkUM(
     override val onSelectedStateChange: (Boolean) -> Unit,
 ) : SelectableItemUM {
 
-    override val id: String = network.id.value
+    override val id: String = network.rawId
 }
