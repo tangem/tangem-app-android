@@ -2,6 +2,7 @@ package com.tangem.features.markets.tokenlist.impl.ui.components
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
@@ -22,6 +23,8 @@ import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.currency.icon.CoinIcon
 import com.tangem.core.ui.components.marketprice.PriceChangeInPercent
 import com.tangem.core.ui.components.marketprice.PriceChangeType
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.LocalWindowSize
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -95,6 +98,7 @@ private fun MarketsListItemContent(model: MarketsListItemUM, modifier: Modifier 
                         .alignByBaseline(),
                     ratingPosition = model.ratingPosition,
                     marketCap = model.marketCap,
+                    stakingRate = model.stakingRate,
                 )
                 PriceChangeInPercent(
                     modifier = Modifier.alignByBaseline(),
@@ -110,7 +114,7 @@ private fun MarketsListItemContent(model: MarketsListItemUM, modifier: Modifier 
 
             Chart(
                 chartType = model.chartType,
-                chartRawData = model.chardData,
+                chartRawData = model.chartData,
             )
         }
     }
@@ -142,14 +146,28 @@ private fun TokenTitle(name: String, currencySymbol: String, modifier: Modifier 
 }
 
 @Composable
-private fun TokenSubtitle(ratingPosition: String?, marketCap: String?, modifier: Modifier = Modifier) {
+private fun TokenSubtitle(
+    ratingPosition: String?,
+    marketCap: String?,
+    stakingRate: TextReference?,
+    modifier: Modifier = Modifier,
+) {
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
     ) {
         TokenRatingPlace(ratingPosition = ratingPosition)
-        SpacerW4()
-        TokenMarketCapText(text = marketCap ?: "")
+        if (marketCap != null) {
+            SpacerW4()
+            TokenMarketCapText(
+                modifier = Modifier.weight(1f, fill = false),
+                text = marketCap,
+            )
+        }
+        if (stakingRate != null) {
+            SpacerW4()
+            StakingRate(stakingRate = stakingRate.resolveReference())
+        }
     }
 }
 
@@ -175,9 +193,31 @@ private fun RowScope.TokenRatingPlace(ratingPosition: String?) {
 }
 
 @Composable
-private fun RowScope.TokenMarketCapText(text: String) {
+private fun RowScope.StakingRate(stakingRate: String) {
+    Box(
+        modifier = Modifier
+            .alignByBaseline()
+            .heightIn(min = TangemTheme.dimens.size16)
+            .border(
+                width = TangemTheme.dimens.size1,
+                color = TangemTheme.colors.field.primary,
+                shape = TangemTheme.shapes.roundedCornersSmall2,
+            )
+            .padding(horizontal = TangemTheme.dimens.spacing5),
+    ) {
+        Text(
+            text = stakingRate,
+            color = TangemTheme.colors.text.tertiary,
+            style = TangemTheme.typography.caption1,
+            maxLines = 1,
+        )
+    }
+}
+
+@Composable
+private fun RowScope.TokenMarketCapText(text: String, modifier: Modifier = Modifier) {
     Text(
-        modifier = Modifier.alignByBaseline(),
+        modifier = modifier.alignByBaseline(),
         text = text,
         color = TangemTheme.colors.text.tertiary,
         style = TangemTheme.typography.caption2,
@@ -214,7 +254,7 @@ private fun Chart(chartType: MarketChartLook.Type, chartRawData: MarketChartRawD
 // region preview
 @Preview(showBackground = true, widthDp = 360, name = "normal")
 @Preview(showBackground = true, widthDp = 360, name = "normal night", uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Preview(showBackground = true, widthDp = 320, name = "small width")
+@Preview(showBackground = true, widthDp = 260, name = "small width")
 @Composable
 private fun Preview(@PreviewParameter(MarketChartListItemPreviewDataProvider::class) state: MarketsListItemUM) {
     TangemThemePreview {
