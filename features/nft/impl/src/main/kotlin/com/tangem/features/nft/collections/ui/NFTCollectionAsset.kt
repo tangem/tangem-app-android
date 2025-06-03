@@ -78,7 +78,7 @@ private fun Placeholder(modifier: Modifier = Modifier) {
     ) {
         Image(
             modifier = Modifier.size(TangemTheme.dimens.size52),
-            painter = painterResource(R.drawable.ic_nft_placeholder_76),
+            painter = painterResource(R.drawable.ic_nft_placeholder_120),
             contentDescription = null,
         )
     }

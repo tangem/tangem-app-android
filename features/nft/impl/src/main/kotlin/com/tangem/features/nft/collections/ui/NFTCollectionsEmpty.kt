@@ -34,7 +34,7 @@ internal fun NFTCollectionsEmpty(state: NFTCollectionsUM.Empty, modifier: Modifi
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Image(
-                painter = painterResource(R.drawable.ic_nft_placeholder_76),
+                painter = painterResource(R.drawable.ic_nft_placeholder_add_76),
                 contentDescription = null,
             )
             Text(
