@@ -11,12 +11,10 @@ import com.tangem.features.walletconnect.transaction.ui.send.WcSendTransactionMo
 internal class WcSendTransactionComponent(
     private val appComponentContext: AppComponentContext,
     private val model: WcSendTransactionModel,
-    private val transactionInfoOnClick: () -> Unit,
-    private val onDismiss: () -> Unit,
 ) : AppComponentContext by appComponentContext, ComposableBottomSheetComponent {
 
     override fun dismiss() {
-        onDismiss()
+        model.dismiss()
     }
 
     @Composable
@@ -26,7 +24,7 @@ internal class WcSendTransactionComponent(
         if (content != null) {
             WcSendTransactionModalBottomSheet(
                 state = content!!.transaction,
-                onClickTransactionRequest = transactionInfoOnClick,
+                onClickTransactionRequest = model::showTransactionRequest,
                 onBack = router::pop,
                 onDismiss = ::dismiss,
             )
