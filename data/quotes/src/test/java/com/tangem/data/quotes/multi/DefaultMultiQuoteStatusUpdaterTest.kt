@@ -3,7 +3,7 @@ package com.tangem.data.quotes.multi
 import arrow.core.right
 import com.google.common.truth.Truth
 import com.tangem.common.test.utils.getEmittedValues
-import com.tangem.data.quotes.store.QuotesStoreV2
+import com.tangem.data.quotes.store.QuotesStatusesStore
 import com.tangem.datasource.api.tangemTech.models.CurrenciesResponse
 import com.tangem.datasource.appcurrency.AppCurrencyResponseStore
 import com.tangem.domain.quotes.multi.MultiQuoteFetcher
@@ -19,7 +19,7 @@ import org.junit.Test
 internal class DefaultMultiQuoteStatusUpdaterTest {
 
     private val appCurrencyResponseStore: AppCurrencyResponseStore = mockk()
-    private val quotesStore: QuotesStoreV2 = mockk()
+    private val quotesStore: QuotesStatusesStore = mockk()
     private val multiQuoteFetcher: MultiQuoteFetcher = mockk()
 
     private val multiQuoteUpdater = DefaultMultiQuoteUpdater(
