@@ -1,9 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers.converter
 
-import com.tangem.common.ui.expressStatus.state.ExpressLinkUM
-import com.tangem.common.ui.expressStatus.state.ExpressStatusItemState
-import com.tangem.common.ui.expressStatus.state.ExpressStatusItemUM
-import com.tangem.common.ui.expressStatus.state.ExpressStatusUM
+import com.tangem.common.ui.expressStatus.state.*
 import com.tangem.common.ui.notifications.ExpressNotificationsUM
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -22,11 +19,8 @@ import com.tangem.domain.onramp.model.OnrampStatus
 import com.tangem.domain.onramp.model.cache.OnrampTransaction
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.analytics.TokenOnrampAnalyticsEvent
-import com.tangem.feature.wallet.impl.R
-import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateIconUM
-import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateInfoUM
-import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateUM
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
+import com.tangem.feature.wallet.impl.R
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.persistentListOf
 
@@ -142,8 +136,12 @@ internal class SingleWalletOnrampTransactionConverter(
 
     private fun getIconState(status: OnrampStatus.Status): ExpressTransactionStateIconUM {
         return when (status) {
-            OnrampStatus.Status.Verifying -> ExpressTransactionStateIconUM.Warning
-            OnrampStatus.Status.Failed -> ExpressTransactionStateIconUM.Error
+            OnrampStatus.Status.Verifying,
+            OnrampStatus.Status.RefundInProgress,
+            -> ExpressTransactionStateIconUM.Warning
+            OnrampStatus.Status.Refunded,
+            OnrampStatus.Status.Failed,
+            -> ExpressTransactionStateIconUM.Error
             else -> ExpressTransactionStateIconUM.None
         }
     }
@@ -160,7 +158,7 @@ internal class SingleWalletOnrampTransactionConverter(
 
         return ExpressStatusUM(
             title = resourceReference(R.string.common_transaction_status),
-            link = getStatusLink(status, externalTxUrl),
+            link = getStatusLink(externalTxUrl),
             statuses = statuses,
         )
     }
@@ -226,11 +224,19 @@ internal class SingleWalletOnrampTransactionConverter(
                     wrappedList(currency.name),
                 )
             }
+            this == OnrampStatus.Status.RefundInProgress ||
+                this == OnrampStatus.Status.Refunded -> {
+                resourceReference(R.string.express_exchange_status_failed)
+            }
             else -> {
                 resourceReference(R.string.express_status_bought, wrappedList(currency.name))
             }
         },
-        state = getStatusState(OnrampStatus.Status.Paid),
+        state = when {
+            this == OnrampStatus.Status.RefundInProgress ||
+                this == OnrampStatus.Status.Refunded -> ExpressStatusItemState.Error
+            else -> getStatusState(OnrampStatus.Status.Paid)
+        },
     )
 
     private fun OnrampStatus.Status.getSendingItem() = ExpressStatusItemUM(
@@ -247,6 +253,12 @@ internal class SingleWalletOnrampTransactionConverter(
                     wrappedList(currency.name),
                 )
             }
+            this == OnrampStatus.Status.RefundInProgress -> {
+                resourceReference(R.string.express_exchange_status_refunding)
+            }
+            this == OnrampStatus.Status.Refunded -> {
+                resourceReference(R.string.express_exchange_status_refunded)
+            }
             else -> {
                 resourceReference(
                     R.string.express_exchange_status_sent,
@@ -254,25 +266,22 @@ internal class SingleWalletOnrampTransactionConverter(
                 )
             }
         },
-        state = getStatusState(OnrampStatus.Status.Sending),
+        state = when {
+            this == OnrampStatus.Status.RefundInProgress -> ExpressStatusItemState.Active
+            this == OnrampStatus.Status.Refunded -> ExpressStatusItemState.Done
+            else -> getStatusState(OnrampStatus.Status.Sending)
+        },
     )
 
-    private fun getStatusLink(status: OnrampStatus.Status, externalTxUrl: String?): ExpressLinkUM {
+    private fun getStatusLink(externalTxUrl: String?): ExpressLinkUM {
         if (externalTxUrl == null) return ExpressLinkUM.Empty
-        return when (status) {
-            OnrampStatus.Status.Verifying,
-            OnrampStatus.Status.Failed,
-            -> {
-                ExpressLinkUM.Content(
-                    icon = R.drawable.ic_arrow_top_right_24,
-                    text = resourceReference(R.string.common_go_to_provider),
-                    onClick = {
-                        clickIntents.onGoToProviderClick(externalTxUrl)
-                    },
-                )
-            }
-            else -> ExpressLinkUM.Empty
-        }
+        return ExpressLinkUM.Content(
+            icon = R.drawable.ic_arrow_top_right_24,
+            text = resourceReference(R.string.common_go_to_provider),
+            onClick = {
+                clickIntents.onGoToProviderClick(externalTxUrl)
+            },
+        )
     }
 
     private fun OnrampStatus.Status.getStatusState(targetState: OnrampStatus.Status) = when {

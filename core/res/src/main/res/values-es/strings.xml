@@ -191,6 +191,7 @@
   <string name="common_server_unavailable">El servidor no está disponible, por favor inténtelo de nuevo más tarde</string>
   <string name="common_share">Compartir</string>
   <string name="common_share_link">Compartir enlace</string>
+  <string name="common_show_more">Mostrar más</string>
   <string name="common_sign">Firme</string>
   <string name="common_sign_and_send">Firme y envíe</string>
   <string name="common_stake">Stake</string>
@@ -443,6 +444,8 @@
   <string name="markets_sort_by_top_gainers_title">Top Ganadores</string>
   <string name="markets_sort_by_top_losers_title">Top Perdedores</string>
   <string name="markets_sort_by_trending_title">Tendencias</string>
+  <string name="markets_staking_banner_description_placeholder">Staking es la forma más fácil de recibir recompensas por tus criptomonedas. %s</string>
+  <string name="markets_staking_banner_title">Gana hasta %s APY</string>
   <string name="markets_token_details_about_token_title">Acerca de %s</string>
   <plurals name="markets_token_details_amount_exchanges">
     <item quantity="one">%d intercambio</item>
@@ -514,6 +517,9 @@
   <string name="no_account_polkadot">La cuenta de destino no está activa. Envíe %s o más para activar la cuenta.</string>
   <string name="no_account_send_to_create">Para crear una cuenta, envíe fondos a esta dirección</string>
   <string name="no_trustline_xlm_asset">La cuenta de destino no tiene una Trustline para el activo que se envía.</string>
+  <string name="notification_referral_promo_button">Únete ahora</string>
+  <string name="notification_referral_promo_text">Comparte tu código y gana 5 USDT por venta. Tu amigo obtiene un 10% de descuento.</string>
+  <string name="notification_referral_promo_title">¡Obtén RECOMPENSAS por cada amigo!</string>
   <string name="onboarding_access_code_feature_1_description">Deba configurar un único código de acceso para proteger todss sus dispositivos.</string>
   <string name="onboarding_access_code_feature_1_title">Proteger</string>
   <string name="onboarding_access_code_feature_2_description">Puede configurar un código de acceso individual en cada tarjeta más adelante</string>
@@ -861,6 +867,11 @@
   <string name="staking_notification_restake_text">La opción de volver a staking le permite mover sus fondos de un validador a otro sin necesidad de retirarlos.</string>
   <string name="staking_notification_stake_entire_balance_text">Está a punto de hacer staking con todo su saldo. Recomendamos dejar una cantidad para cubrir las tarifas de la red por unstaking o reclamo de recompensas.</string>
   <string name="staking_notification_ton_activate_account">Para empezar a hacer staking en TON, realice primero una transacción de salida de cualquier importe - esto activará su billetera.</string>
+  <string name="staking_notification_ton_extra_reserve_info">Es posible que se requieran hasta 0.2 TON además de la tarifa de red para completar la transacción. Cualquier cantidad no utilizada será reembolsada.</string>
+  <string name="staking_notification_ton_extra_reserve_is_required">Se requieren 0.2 TON para realizar esta operación, además de la tarifa de red. Por favor, recargue su saldo.</string>
+  <string name="staking_notification_ton_extra_reserve_title">0.2 Ton Reservado</string>
+  <string name="staking_notification_ton_have_to_unstake_all_text">Esta acción cerrará otras posiciones o las cambiará al estado de retiro, de acuerdo con las reglas de la red.</string>
+  <string name="staking_notification_ton_have_to_unstake_all_title">Estado de las posiciones</string>
   <string name="staking_notification_unlock_text">Desbloquee su dinero para retirarlo del proceso de staking. El desbloqueo demora %s minuto.</string>
   <string name="staking_notification_unstake_cosmos_text">Sus fondos estarán disponibles para su uso después del período de desvinculación de 21 días. La recompensa se retirará junto con los fondos de desvinculación.</string>
   <string name="staking_notification_unstake_text">Sus fondos estarán disponibles para su uso después del período de desvinculación de %s.</string>
