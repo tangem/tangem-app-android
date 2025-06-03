@@ -9,6 +9,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.event.TechAnalyticsEvent
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.deeplink.DeepLinksRegistry
 import com.tangem.core.ui.R
 import com.tangem.core.ui.coil.ImagePreloader
 import com.tangem.core.ui.extensions.resourceReference
@@ -21,6 +22,7 @@ import com.tangem.domain.balancehiding.BalanceHidingSettings
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.balancehiding.ListenToFlipsUseCase
 import com.tangem.domain.balancehiding.UpdateBalanceHidingSettingsUseCase
+import com.tangem.domain.onboarding.repository.OnboardingRepository
 import com.tangem.domain.onramp.FetchHotCryptoUseCase
 import com.tangem.domain.promo.GetStoryContentUseCase
 import com.tangem.domain.promo.models.StoryContentIds
@@ -30,7 +32,11 @@ import com.tangem.domain.settings.usercountry.FetchUserCountryUseCase
 import com.tangem.domain.staking.FetchStakingTokensUseCase
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.feature.swap.analytics.StoriesEvents
+import com.tangem.features.onramp.deeplink.OnrampDeepLink
 import com.tangem.tap.common.extensions.setContext
+import com.tangem.tap.common.redux.global.GlobalAction
+import com.tangem.tap.features.onboarding.products.wallet.redux.BackupDialog
+import com.tangem.tap.store
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -58,6 +64,9 @@ internal class MainViewModel @Inject constructor(
     private val getStoryContentUseCase: GetStoryContentUseCase,
     private val imagePreloader: ImagePreloader,
     private val fetchHotCryptoUseCase: FetchHotCryptoUseCase,
+    private val onboardingRepository: OnboardingRepository,
+    private val deepLinksRegistry: DeepLinksRegistry,
+    private val onrampDeepLinkFactory: OnrampDeepLink.Factory,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
 ) : ViewModel() {
 
@@ -92,6 +101,15 @@ internal class MainViewModel @Inject constructor(
         sendKeyboardIdentifierEvent()
 
         preloadImages()
+
+        initializeDeepLinks()
+    }
+
+    fun checkForUnfinishedBackup() {
+        viewModelScope.launch(dispatchers.main) {
+            val onboardingScanResponse = onboardingRepository.getUnfinishedFinalizeOnboarding() ?: return@launch
+            store.dispatch(GlobalAction.ShowDialog(BackupDialog.UnfinishedBackupFound(onboardingScanResponse)))
+        }
     }
 
     /** Loading the resources needed to run the application */
@@ -320,5 +338,9 @@ internal class MainViewModel @Inject constructor(
                 ),
             )
         }
+    }
+
+    private fun initializeDeepLinks() {
+        deepLinksRegistry.register(onrampDeepLinkFactory.create(viewModelScope))
     }
 }
