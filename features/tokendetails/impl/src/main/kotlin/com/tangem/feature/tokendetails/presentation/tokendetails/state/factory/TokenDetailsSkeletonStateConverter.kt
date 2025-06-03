@@ -10,10 +10,11 @@ import com.tangem.core.ui.extensions.networkIconResId
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.card.NetworkHasDerivationUseCase
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.staking.GetStakingIntegrationIdUseCase
-import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.*
@@ -98,9 +99,9 @@ internal class TokenDetailsSkeletonStateConverter(
     private fun MutableList<TangemDropdownMenuItem>.addGenerateXPubMenuItem(cryptoCurrency: CryptoCurrency) {
         val userWallet = getUserWalletUseCase(userWalletId).getOrNull() ?: return
 
-        val isBitcoin = isBitcoin(cryptoCurrency.network.id.value)
+        val isBitcoin = isBitcoin(cryptoCurrency.network.rawId)
         val hasDerivations = networkHasDerivationUseCase(
-            scanResponse = userWallet.scanResponse,
+            scanResponse = userWallet.requireColdWallet().scanResponse, // TODO [REDACTED_TASK_KEY]
             network = cryptoCurrency.network,
         ).getOrElse { false }
 
