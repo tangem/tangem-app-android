@@ -80,6 +80,7 @@ dependencies {
     implementation(projects.domain.qrScanning)
     implementation(projects.domain.qrScanning.models)
     implementation(projects.domain.settings)
+    implementation(projects.domain.notifications)
 
     /** Feature modules */
     implementation(projects.features.send.api)

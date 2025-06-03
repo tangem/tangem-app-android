@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import com.tangem.core.ui.res.TangemTheme
@@ -19,12 +20,13 @@ fun CurrencyIconTopBadge(
     alpha: Float,
     colorFilter: ColorFilter?,
     modifier: Modifier = Modifier,
+    background: Color = TangemTheme.colors.background.primary,
 ) {
     Box(
         modifier = modifier
             .size(TangemTheme.dimens.size18)
             .background(
-                color = TangemTheme.colors.background.primary,
+                color = background,
                 shape = CircleShape,
             ),
     ) {

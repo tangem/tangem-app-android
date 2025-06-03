@@ -1,7 +1,6 @@
 package com.tangem.features.nft.receive.ui
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -13,6 +12,7 @@ import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.fields.SearchBar
 import com.tangem.core.ui.components.fields.TangemSearchBarDefaults
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.nft.impl.R
@@ -33,6 +33,7 @@ internal fun NFTReceive(state: NFTReceiveUM, modifier: Modifier = Modifier) {
                     onIconClicked = state.onBackClick,
                 ),
                 title = stringResourceSafe(id = R.string.nft_receive_title),
+                subtitle = state.appBarSubtitle.resolveReference(),
             )
         },
         content = { innerPadding ->
@@ -49,18 +50,9 @@ internal fun NFTReceive(state: NFTReceiveUM, modifier: Modifier = Modifier) {
                     colors = TangemSearchBarDefaults.secondaryTextFieldColors,
                 )
 
-                val contentModifier = Modifier
-                    .padding(TangemTheme.dimens.spacing16)
-
-                AnimatedContent(
-                    targetState = state.networks,
-                    contentKey = { it::class },
-                    label = "NFT Receive",
-                ) {
-                    when (val networks = it) {
-                        is NFTReceiveUM.Networks.Content -> NFTReceiveNetworksContent(networks, contentModifier)
-                        is NFTReceiveUM.Networks.Empty -> NFTReceiveNetworksEmpty(contentModifier)
-                    }
+                when (val networks = state.networks) {
+                    is NFTReceiveUM.Networks.Content -> NFTReceiveNetworksContent(networks)
+                    is NFTReceiveUM.Networks.Empty -> NFTReceiveNetworksEmpty()
                 }
             }
         },

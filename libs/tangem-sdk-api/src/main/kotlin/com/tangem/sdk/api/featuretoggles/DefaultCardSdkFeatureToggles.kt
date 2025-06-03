@@ -9,4 +9,7 @@ internal class DefaultCardSdkFeatureToggles @Inject constructor(
 
     override val isNewAttestationEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(name = "NEW_ATTESTATION_ENABLED")
+
+    override val isNewArtworkLoadingEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(name = "NEW_ARTWORK_LOADING")
 }
