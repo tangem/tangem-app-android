@@ -37,4 +37,10 @@ internal sealed class WalletSettingsItemUM {
         val more: TextReference,
         val onClick: () -> Unit,
     ) : WalletSettingsItemUM()
+
+    data class NotificationPermission(
+        override val id: String,
+        val title: TextReference,
+        val description: TextReference,
+    ) : WalletSettingsItemUM()
 }
