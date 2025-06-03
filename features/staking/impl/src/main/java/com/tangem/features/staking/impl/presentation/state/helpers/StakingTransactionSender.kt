@@ -120,8 +120,8 @@ internal class StakingTransactionSender @AssistedInject constructor(
         onConstructError: (StakingError) -> Unit,
     ) = coroutineScope {
         val isComposePendingActions = isCompositePendingActions(
-            cryptoCurrencyStatus.currency.network.id.value,
-            confirmationState.pendingActions,
+            networkId = cryptoCurrencyStatus.currency.network.rawId,
+            pendingActions = confirmationState.pendingActions,
         )
         if (isComposePendingActions) {
             confirmationState.pendingActions?.map { action ->
@@ -156,7 +156,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
             ?.map { transaction ->
                 async {
                     getConstructedStakingTransactionUseCase(
-                        networkId = cryptoCurrencyStatus.currency.network.id.value,
+                        networkId = cryptoCurrencyStatus.currency.network.rawId,
                         fee = fee,
                         amount = amount.convertToSdkAmount(cryptoCurrencyStatus.currency),
                         transactionId = transaction.id,

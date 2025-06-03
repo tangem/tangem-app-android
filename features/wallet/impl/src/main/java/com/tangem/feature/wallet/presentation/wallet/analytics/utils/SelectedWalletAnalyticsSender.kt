@@ -3,6 +3,7 @@ package com.tangem.feature.wallet.presentation.wallet.analytics.utils
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.isLocked
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import javax.inject.Inject
 
