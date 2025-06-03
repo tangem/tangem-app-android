@@ -1,14 +1,14 @@
 package com.tangem.data.visa.utils
 
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.data.common.currency.CryptoCurrencyFactory
-import com.tangem.data.common.currency.getNetwork
+import com.tangem.data.common.network.NetworkFactory
 import com.tangem.domain.common.util.derivationStyleProvider
-import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.NetworkAddress
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.visa.model.VisaCurrency
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.lib.visa.model.VisaContractInfo
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
@@ -19,7 +19,7 @@ import javax.inject.Inject
 
 internal class VisaCurrencyFactory @Inject constructor(
     private val cryptoCurrencyFactory: CryptoCurrencyFactory,
-    private val excludedBlockchains: ExcludedBlockchains,
+    private val networkFactory: NetworkFactory,
 ) {
 
     fun create(userWallet: UserWallet, contractInfo: VisaContractInfo, fiatRate: BigDecimal): VisaCurrency {
@@ -31,11 +31,10 @@ internal class VisaCurrencyFactory @Inject constructor(
         }
         val remainingOtpLimit = getRemainingOtp(currentLimit, now)
 
-        val currencyNetwork = getNetwork(
+        val currencyNetwork = networkFactory.create(
             blockchain = Blockchain.Polygon,
             extraDerivationPath = null,
-            derivationStyleProvider = userWallet.scanResponse.derivationStyleProvider,
-            excludedBlockchains = excludedBlockchains,
+            derivationStyleProvider = userWallet.requireColdWallet().scanResponse.derivationStyleProvider,
             canHandleTokens = true,
         ) ?: error("Unable to create network for Visa currency")
 
