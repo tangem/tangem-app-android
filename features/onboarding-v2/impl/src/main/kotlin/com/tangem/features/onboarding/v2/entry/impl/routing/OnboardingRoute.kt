@@ -24,7 +24,7 @@ sealed class OnboardingRoute : Route {
         val scanResponse: ScanResponse,
         val withSeedPhraseFlow: Boolean,
         val mode: OnboardingMultiWalletComponent.Mode,
-        val onDone: (UserWallet) -> Unit,
+        val onDone: (UserWallet.Cold) -> Unit,
     ) : OnboardingRoute()
 
     data class Visa(
