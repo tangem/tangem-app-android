@@ -230,11 +230,6 @@ internal sealed class TokenDetailsNotification(val config: NotificationConfig) {
         subtitle = resourceReference(id = R.string.warning_matic_migration_message),
     )
 
-    data object TokensInBeta : Warning(
-        title = resourceReference(id = R.string.beta_mode_warning_title),
-        subtitle = resourceReference(id = R.string.beta_mode_warning_message),
-    )
-
     data object UsedOutdatedData : TokenDetailsNotification(
         config = NotificationConfig(
             subtitle = resourceReference(R.string.warning_some_token_balances_not_updated),
