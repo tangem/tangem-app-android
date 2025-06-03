@@ -2,24 +2,21 @@ package com.tangem.features.walletconnect.connections.components
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.ui.Modifier
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
-import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
+import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.walletconnect.connections.ui.AlertsModalBottomSheet
 import kotlinx.serialization.Serializable
 
 internal class AlertsComponent(
     appComponentContext: AppComponentContext,
     private val params: Params,
-) : AppComponentContext by appComponentContext, ComposableBottomSheetComponent {
-
-    override fun dismiss() {
-        params.alertType.onDismiss()
-    }
+) : AppComponentContext by appComponentContext, ComposableContentComponent {
 
     @Composable
-    override fun BottomSheet() {
+    override fun Content(modifier: Modifier) {
         AlertsModalBottomSheet(
             config = TangemBottomSheetConfig(
                 isShown = true,
@@ -47,6 +44,9 @@ internal class AlertsComponent(
 
         @Serializable
         data class UnsupportedNetworks(val appName: String, override val onDismiss: () -> Unit) : AlertType()
+
+        @Serializable
+        data class UnsupportedMethod(override val onDismiss: () -> Unit) : AlertType()
 
         @Serializable
         data class WcDisconnected(override val onDismiss: () -> Unit) : AlertType()
