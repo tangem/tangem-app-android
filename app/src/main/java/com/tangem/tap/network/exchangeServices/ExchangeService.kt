@@ -2,8 +2,8 @@ package com.tangem.tap.network.exchangeServices
 
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.core.utils.lceLoading
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.tap.domain.model.Currency
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
