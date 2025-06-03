@@ -1,12 +1,6 @@
 package com.tangem.feature.tester.presentation.testpush.ui
 
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
-import android.content.Context.NOTIFICATION_SERVICE
-import android.content.Intent
 import android.content.res.Configuration
-import android.os.Build
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -24,7 +18,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.input.TextFieldValue
@@ -32,8 +25,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
-import androidx.core.app.NotificationCompat
-import androidx.core.content.ContextCompat
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.OutlineTextField
 import com.tangem.core.ui.components.PrimaryButton
@@ -53,18 +44,27 @@ internal fun TestPushScreen(testPushUM: TestPushUM, testPushClickIntents: TestPu
             AppBarWithBackButton(onBackClick = testPushClickIntents::onBackClick)
         },
         bottomBar = {
-            SendLocalPushButton(testPushUM)
+            PrimaryButton(
+                text = "Send test push",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                onClick = testPushClickIntents::onSendPush,
+            )
         },
         containerColor = TangemTheme.colors.background.secondary,
     ) {
-        LazyColumn(
-            modifier = Modifier
-                .padding(it)
-                .fillMaxSize(),
-        ) {
-            tokenData(fcmToken = testPushUM.fcmToken)
-            contentData(testPushUM = testPushUM, testPushClickIntents = testPushClickIntents)
-            extraData(testPushUM = testPushUM, testPushClickIntents = testPushClickIntents)
+        Column {
+            LazyColumn(
+                modifier = Modifier
+                    .padding(it)
+                    .fillMaxSize(),
+            ) {
+                tokenData(fcmToken = testPushUM.fcmToken)
+                contentData(testPushUM = testPushUM, testPushClickIntents = testPushClickIntents)
+                extraData(testPushUM = testPushUM, testPushClickIntents = testPushClickIntents)
+            }
+            TestPushDeeplinkBottomSheet(testPushUM.bottomSheetConfig)
         }
     }
 }
@@ -192,12 +192,23 @@ private fun LazyListScope.extraData(testPushUM: TestPushUM, testPushClickIntents
                 .padding(top = 8.dp, bottom = 16.dp, start = 16.dp, end = 16.dp)
                 .animateItem(),
         ) {
-            PrimaryButton(
-                text = "Add param",
-                onClick = testPushClickIntents::onDataAdd,
-                size = TangemButtonSize.Action,
+            Row(
                 modifier = Modifier.align(Alignment.CenterEnd),
-            )
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                PrimaryButton(
+                    text = "Get deeplink param",
+                    onClick = testPushClickIntents::onDeeplinkParamMenu,
+                    size = TangemButtonSize.Action,
+                    modifier = Modifier.weight(1f),
+                )
+                PrimaryButton(
+                    text = "Add param",
+                    onClick = testPushClickIntents::onDataAdd,
+                    size = TangemButtonSize.Action,
+                    modifier = Modifier.weight(1f),
+                )
+            }
         }
     }
 }
@@ -275,65 +286,6 @@ private fun EnterPushData(
     }
 }
 
-@Composable
-private fun SendLocalPushButton(testPushUM: TestPushUM) {
-    val context = LocalContext.current
-
-    PrimaryButton(
-        text = "Send test push",
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        onClick = {
-            val channelId = "Test Tangem Channel"
-
-            val intent = Intent(context, Class.forName("com.tangem.tap.MainActivity")).apply {
-                testPushUM.data.forEach { (key, value) ->
-                    putExtra(key.text, value.text)
-                }
-                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-            }
-            val pendingIntent = PendingIntent.getActivity(
-                /* context = */ context,
-                /* requestCode = */ 1,
-                /* intent = */ intent,
-                /* flags = */ PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE,
-            )
-
-            val notificationBuilder =
-                NotificationCompat.Builder(context.applicationContext, channelId)
-                    .setSmallIcon(com.tangem.feature.tester.impl.R.drawable.ic_tangem_24)
-                    .setContentTitle(testPushUM.title.text)
-                    .setContentText(testPushUM.message.text)
-                    .setAutoCancel(true)
-                    .setContentIntent(pendingIntent)
-
-            val notificationManager =
-                context.applicationContext.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                val notificationChannel = NotificationChannel(
-                    channelId,
-                    ContextCompat.getString(
-                        context.applicationContext,
-                        R.string.common_tangem_wallet,
-                    ),
-                    NotificationManager.IMPORTANCE_HIGH,
-                )
-                notificationManager.createNotificationChannel(notificationChannel)
-            }
-
-            // Generating unique notification id
-            val uniqueId = (System.currentTimeMillis() % Integer.MAX_VALUE).toInt()
-
-            notificationManager.notify(
-                /* id = */ uniqueId,
-                /* notification = */ notificationBuilder.build(),
-            )
-        },
-    )
-}
-
 // region Preview
 @Composable
 @Preview(showBackground = true, widthDp = 360)
@@ -349,7 +301,9 @@ private fun TestPushScreen_Preview(@PreviewParameter(TestPushScreenPreviewProvid
                 override fun onDataValueChange(index: Int, value: TextFieldValue) {}
                 override fun onDataAdd() {}
                 override fun onDataRemove(index: Int) {}
+                override fun onDeeplinkParamMenu() {}
                 override fun onBackClick() {}
+                override fun onSendPush() {}
             },
         )
     }
@@ -366,6 +320,7 @@ private class TestPushScreenPreviewProvider : PreviewParameterProvider<TestPushU
                     TextFieldValue("deeplink") to TextFieldValue("tangem://main"),
                     TextFieldValue("") to TextFieldValue(""),
                 ),
+                bottomSheetConfig = null,
             ),
         )
 }
