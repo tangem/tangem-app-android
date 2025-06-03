@@ -41,8 +41,6 @@ interface OnrampRepository {
     suspend fun getDefaultCountrySync(): OnrampCountry?
     fun getDefaultCountry(): Flow<OnrampCountry?>
     suspend fun getAvailablePaymentMethods(): Set<OnrampPaymentMethod>
-    suspend fun saveSelectedPaymentMethod(paymentMethod: OnrampPaymentMethod)
-    fun getSelectedPaymentMethod(): Flow<OnrampPaymentMethod>
     fun getQuotes(): Flow<List<OnrampQuote>>
     suspend fun getQuotesSync(): List<OnrampQuote>?
     suspend fun clearCache()
