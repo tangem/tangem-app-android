@@ -1,7 +1,7 @@
 package com.tangem.domain.nft
 
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.nft.models.NFTNetworks
-import com.tangem.domain.tokens.model.Network
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 
