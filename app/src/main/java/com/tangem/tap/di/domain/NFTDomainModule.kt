@@ -1,9 +1,12 @@
 package com.tangem.tap.di.domain
 
+import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
 import com.tangem.domain.nft.*
 import com.tangem.domain.nft.repository.NFTRepository
+import com.tangem.domain.quotes.single.SingleQuoteFetcher
+import com.tangem.domain.quotes.single.SingleQuoteSupplier
 import com.tangem.domain.tokens.repository.CurrenciesRepository
-import com.tangem.domain.tokens.repository.NetworksRepository
+import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -72,10 +75,11 @@ internal object NFTDomainModule {
 
     @Provides
     @Singleton
-    fun providesGetNFTNetworkStatusUseCase(networksRepository: NetworksRepository): GetNFTNetworkStatusUseCase =
-        GetNFTNetworkStatusUseCase(
-            networksRepository = networksRepository,
-        )
+    fun providesGetNFTNetworkStatusUseCase(
+        singleNetworkStatusSupplier: SingleNetworkStatusSupplier,
+    ): GetNFTNetworkStatusUseCase {
+        return GetNFTNetworkStatusUseCase(singleNetworkStatusSupplier = singleNetworkStatusSupplier)
+    }
 
     @Provides
     @Singleton
@@ -83,4 +87,53 @@ internal object NFTDomainModule {
         GetNFTExploreUrlUseCase(
             nftRepository = nftRepository,
         )
+
+    @Provides
+    @Singleton
+    fun provideGetNFTPriceUseCase(
+        nftRepository: NFTRepository,
+        singleQuoteSupplier: SingleQuoteSupplier,
+    ): GetNFTPriceUseCase {
+        return GetNFTPriceUseCase(nftRepository, singleQuoteSupplier)
+    }
+
+    @Provides
+    @Singleton
+    fun provideFetchNFTPriceUseCase(
+        nftRepository: NFTRepository,
+        singleQuoteFetcher: SingleQuoteFetcher,
+    ): FetchNFTPriceUseCase {
+        return FetchNFTPriceUseCase(nftRepository, singleQuoteFetcher)
+    }
+
+    @Provides
+    @Singleton
+    fun provideEnableWalletNFTUseCase(walletsRepository: WalletsRepository): EnableWalletNFTUseCase {
+        return EnableWalletNFTUseCase(walletsRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideDisableWalletNFTUseCase(
+        walletsRepository: WalletsRepository,
+        nftRepository: NFTRepository,
+        currenciesRepository: CurrenciesRepository,
+    ): DisableWalletNFTUseCase {
+        return DisableWalletNFTUseCase(walletsRepository, nftRepository, currenciesRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetWalletNFTEnabledUseCase(walletsRepository: WalletsRepository): GetWalletNFTEnabledUseCase {
+        return GetWalletNFTEnabledUseCase(walletsRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideClearNFTCacheUseCase(
+        nftRepository: NFTRepository,
+        currenciesRepository: CurrenciesRepository,
+    ): ObserveAndClearNFTCacheIfNeedUseCase {
+        return ObserveAndClearNFTCacheIfNeedUseCase(nftRepository, currenciesRepository)
+    }
 }
