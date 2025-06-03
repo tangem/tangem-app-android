@@ -6,7 +6,7 @@ import arrow.core.raise.*
 import com.tangem.domain.managetokens.model.AddCustomTokenForm
 import com.tangem.domain.managetokens.model.exceptoin.CustomTokenFormValidationException
 import com.tangem.domain.managetokens.repository.CustomTokensRepository
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.network.Network
 
 class ValidateTokenFormUseCase(
     private val repository: CustomTokensRepository,
