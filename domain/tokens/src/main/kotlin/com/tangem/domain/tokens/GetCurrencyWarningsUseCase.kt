@@ -93,7 +93,6 @@ class GetCurrencyWarningsUseCase(
                 tokenStatus != null && coinStatus != null -> {
                     buildList {
                         getUsedOutdatedDataWarning(tokenStatus)?.let(::add)
-                        getIsBetaTokensWarning(tokenStatus.currency)?.let(::add)
                         getFeeWarning(
                             userWalletId = userWalletId,
                             coinStatus = coinStatus,
@@ -143,15 +142,6 @@ class GetCurrencyWarningsUseCase(
     private fun getUsedOutdatedDataWarning(status: CryptoCurrencyStatus): CryptoCurrencyWarning? {
         return CryptoCurrencyWarning.UsedOutdatedDataWarning.takeIf {
             status.value.sources.total == StatusSource.ONLY_CACHE
-        }
-    }
-
-    private fun getIsBetaTokensWarning(currency: CryptoCurrency): CryptoCurrencyWarning? {
-        val isTokenBetaFunctionality = BlockchainUtils.isTokenBetaFunctionality(currency.network.rawId)
-        return if (currency is CryptoCurrency.Token && isTokenBetaFunctionality) {
-            CryptoCurrencyWarning.TokensInBetaWarning
-        } else {
-            null
         }
     }
 
