@@ -1,6 +1,6 @@
 package com.tangem.domain.managetokens.model
 
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.network.Network
 
 sealed class ManageTokensUpdateAction {
 

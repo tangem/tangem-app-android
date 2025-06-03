@@ -18,15 +18,16 @@ import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.tokens.GetCryptoCurrenciesUseCase
-import com.tangem.domain.tokens.GetCurrencyStatusUpdatesUseCase
 import com.tangem.domain.tokens.GetFeePaidCryptoCurrencyStatusSyncUseCase
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.CreateNFTTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.v2.api.NFTSendComponent
 import com.tangem.features.send.v2.common.CommonSendRoute
@@ -60,7 +61,7 @@ internal class NFTSendModel @Inject constructor(
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val getCryptoCurrenciesUseCase: GetCryptoCurrenciesUseCase,
-    private val getCurrencyStatusUpdatesUseCase: GetCurrencyStatusUpdatesUseCase,
+    private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
     private val createNFTTransferTransactionUseCase: CreateNFTTransferTransactionUseCase,
     private val getFeeUseCase: GetFeeUseCase,
@@ -151,7 +152,8 @@ internal class NFTSendModel @Inject constructor(
                         ?: return@launch
 
                     getCurrenciesStatusUpdates(
-                        isSingleWalletWithToken = wallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
+                        isSingleWalletWithToken = wallet is UserWallet.Cold &&
+                            wallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
                     )
                 },
                 ifLeft = {
@@ -166,7 +168,7 @@ internal class NFTSendModel @Inject constructor(
         saveBlockchainErrorUseCase(
             error = BlockchainErrorInfo(
                 errorMessage = errorMessage.orEmpty(),
-                blockchainId = cryptoCurrency.network.id.value,
+                blockchainId = cryptoCurrency.network.rawId,
                 derivationPath = cryptoCurrency.network.derivationPath.value,
                 destinationAddress = "",
                 tokenSymbol = null,
@@ -175,7 +177,8 @@ internal class NFTSendModel @Inject constructor(
             ),
         )
 
-        val cardInfo = getCardInfoUseCase(userWallet.scanResponse).getOrNull() ?: return
+        val cardInfo =
+            getCardInfoUseCase(userWallet.requireColdWallet().scanResponse).getOrNull() ?: return // TODO [REDACTED_TASK_KEY]
 
         modelScope.launch {
             sendFeedbackEmailUseCase(type = FeedbackEmailType.TransactionSendingProblem(cardInfo = cardInfo))
@@ -183,7 +186,7 @@ internal class NFTSendModel @Inject constructor(
     }
 
     private fun getCurrenciesStatusUpdates(isSingleWalletWithToken: Boolean) {
-        getCurrencyStatusUpdatesUseCase(
+        getSingleCryptoCurrencyStatusUseCase.invokeMultiWallet(
             userWalletId = userWalletId,
             currencyId = cryptoCurrency.id,
             isSingleWalletWithTokens = isSingleWalletWithToken,

@@ -4,7 +4,7 @@ import com.tangem.core.ui.format.bigdecimal.BigDecimalFormatConstants.CAN_BE_LOW
 import com.tangem.core.ui.format.bigdecimal.BigDecimalFormatConstants.CRYPTO_FEE_FORMAT_THRESHOLD
 import com.tangem.core.ui.format.bigdecimal.BigDecimalFormatConstants.CURRENCY_SPACE
 import com.tangem.core.ui.format.bigdecimal.BigDecimalFormatConstants.FORMAT_THRESHOLD
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.utils.StringsSigns.NON_BREAKING_SPACE
 import com.tangem.utils.extensions.isNotWhitespace
 import java.math.BigDecimal

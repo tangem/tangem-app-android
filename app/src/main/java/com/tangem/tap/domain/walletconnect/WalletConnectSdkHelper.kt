@@ -17,6 +17,7 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.models.Basic
 import com.tangem.core.analytics.models.Basic.TransactionSent.MemoType
 import com.tangem.data.walletconnect.network.ethereum.LegacySdkHelper
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.operations.sign.SignHashCommand
 import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.extensions.safeUpdate
@@ -133,7 +134,7 @@ class WalletConnectSdkHelper {
 
     fun isDemoCard(): Boolean {
         val userWallet = userWalletsListManager.selectedUserWalletSync ?: return false
-        return userWallet.scanResponse.isDemoCard()
+        return userWallet is UserWallet.Cold && userWallet.scanResponse.isDemoCard()
     }
 
     private suspend fun getWalletManager(blockchain: Blockchain, derivationPath: String?): WalletManager? {

@@ -18,7 +18,6 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.nft.collections.entity.NFTCollectionAssetsListUM
@@ -90,7 +89,7 @@ private fun RowScope.Text(state: NFTCollectionUM) {
     ) {
         Text(
             modifier = Modifier,
-            text = state.name.takeUnless { it.isNullOrEmpty() } ?: stringResourceSafe(R.string.nft_no_collection),
+            text = state.name,
             style = TangemTheme.typography.subtitle2,
             color = TangemTheme.colors.text.primary1,
             maxLines = 1,
