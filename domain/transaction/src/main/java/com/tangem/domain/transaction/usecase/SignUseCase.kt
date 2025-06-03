@@ -8,9 +8,10 @@ import com.tangem.common.core.TangemError
 import com.tangem.domain.card.models.TwinKey
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.requireColdWallet
 
 class SignUseCase(
     private val cardSdkConfigRepository: CardSdkConfigRepository,
@@ -21,6 +22,7 @@ class SignUseCase(
         userWallet: UserWallet,
         network: Network,
     ): Either<TangemError, ByteArray> {
+        userWallet.requireColdWallet() // TODO [REDACTED_TASK_KEY]
         val card = userWallet.scanResponse.card
         val isCardNotBackedUp = card.backupStatus?.isActive != true && !card.isTangemTwins
 
