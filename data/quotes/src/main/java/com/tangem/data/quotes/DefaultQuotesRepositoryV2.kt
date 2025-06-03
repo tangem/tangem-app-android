@@ -1,6 +1,6 @@
 package com.tangem.data.quotes
 
-import com.tangem.data.quotes.store.QuotesStoreV2
+import com.tangem.data.quotes.store.QuotesStatusesStore
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.quotes.QuotesRepositoryV2
 import com.tangem.domain.tokens.model.QuoteStatus
@@ -14,7 +14,7 @@ import javax.inject.Inject
 [REDACTED_AUTHOR]
  */
 internal class DefaultQuotesRepositoryV2 @Inject constructor(
-    private val quotesStore: QuotesStoreV2,
+    private val quotesStore: QuotesStatusesStore,
 ) : QuotesRepositoryV2 {
 
     override suspend fun getMultiQuoteSyncOrNull(currenciesIds: Set<CryptoCurrency.RawID>): Set<QuoteStatus>? {
