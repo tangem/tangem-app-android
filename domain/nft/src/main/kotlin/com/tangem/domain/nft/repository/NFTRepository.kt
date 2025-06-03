@@ -27,7 +27,7 @@ interface NFTRepository {
 
     suspend fun refreshAll(userWalletId: UserWalletId, networks: List<Network>)
 
-    suspend fun isNFTSupported(network: Network): Boolean
+    suspend fun isNFTSupported(userWalletId: UserWalletId, network: Network): Boolean
 
     suspend fun getNFTSupportedNetworks(userWalletId: UserWalletId): List<Network>
 
