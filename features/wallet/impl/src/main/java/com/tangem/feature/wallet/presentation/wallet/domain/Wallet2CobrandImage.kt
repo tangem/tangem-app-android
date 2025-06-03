@@ -224,6 +224,12 @@ internal enum class Wallet2CobrandImage(
         batchIds = setOf("AF43", "AF44", "AF45", "AF78", "AF79", "AF80"),
     ),
 
+    Pepecoin(
+        cards2ResId = R.drawable.ill_pepecoin_card2_120_106,
+        cards3ResId = R.drawable.ill_pepecoin_card3_120_106,
+        batchIds = setOf("BB000015"),
+    ),
+
     RamenCat(
         cards2ResId = R.drawable.ill_ramen_cat_cards2_120_106,
         cards3ResId = R.drawable.ill_ramen_cat_cards3_120_106,
@@ -288,6 +294,12 @@ internal enum class Wallet2CobrandImage(
         cards2ResId = R.drawable.ill_tron_card2_120_106,
         cards3ResId = R.drawable.ill_tron_card3_120_106,
         batchIds = setOf("AF07"),
+    ),
+
+    Upbit(
+        cards2ResId = R.drawable.ill_upbit_card2_120_106,
+        cards3ResId = R.drawable.ill_upbit_card3_120_106,
+        batchIds = setOf("BB000019"),
     ),
 
     USA(
