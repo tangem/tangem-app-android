@@ -6,6 +6,7 @@ import com.tangem.datasource.BuildConfig
 import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.api.common.config.*
 import com.tangem.datasource.api.common.config.ApiConfig.Companion.DEBUG_BUILD_TYPE
+import com.tangem.datasource.api.common.config.ApiConfig.Companion.EXTERNAL_BUILD_TYPE
 import com.tangem.datasource.api.common.config.ApiConfig.Companion.INTERNAL_BUILD_TYPE
 import com.tangem.datasource.api.common.config.ApiConfig.Companion.MOCKED_BUILD_TYPE
 import com.tangem.datasource.api.common.config.ApiConfig.Companion.RELEASE_BUILD_TYPE
@@ -34,7 +35,6 @@ private val API_CONFIGS = setOf(
     Express(configManager, expressAuthProvider, appVersionProvider),
     TangemTech(appVersionProvider, appAuthProvider),
     StakeKit(stakeKitAuthProvider),
-    TangemVisaAuth(appVersionProvider),
     TangemVisa(appVersionProvider),
 )
 
@@ -49,9 +49,7 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
     @Before
     fun setup() {
         every { appVersionProvider.versionName } returns VERSION_NAME
-        every { expressAuthProvider.getUserId() } returns EXPRESS_USER_ID
         every { expressAuthProvider.getSessionId() } returns EXPRESS_SESSION_ID
-        every { expressAuthProvider.getRefCode() } returns EXPRESS_REF_CODE
         every { stakeKitAuthProvider.getApiKey() } returns STAKE_KIT_API_KEY
         every { appAuthProvider.getCardId() } returns APP_CARD_ID
         every { appAuthProvider.getCardPublicKey() } returns APP_CARD_PUBLIC_KEY
@@ -87,9 +85,9 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
                 is Express -> createExpressModel()
                 is TangemTech -> createTangemTechModel()
                 is StakeKit -> createStakeKitModel()
-                is TangemVisaAuth -> createVisaAuthModel()
                 is TangemVisa -> createVisaModel()
-                is TangemCardSdk -> createTangemCardSdkModel()
+                is Attestation -> createAttestationModel()
+                is BlockAid -> createBlockAidSdkModel()
             }
         }
 
@@ -100,6 +98,7 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
                 INTERNAL_BUILD_TYPE,
                 MOCKED_BUILD_TYPE,
                 -> ApiEnvironment.STAGE
+                EXTERNAL_BUILD_TYPE,
                 RELEASE_BUILD_TYPE,
                 -> ApiEnvironment.PROD
                 else -> error("Unknown build type [${BuildConfig.BUILD_TYPE}]")
@@ -115,6 +114,7 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
                         INTERNAL_BUILD_TYPE,
                         MOCKED_BUILD_TYPE,
                         -> "[REDACTED_ENV_URL]"
+                        EXTERNAL_BUILD_TYPE,
                         RELEASE_BUILD_TYPE,
                         -> "[REDACTED_ENV_URL]"
                         else -> error("Unknown build type [${BuildConfig.BUILD_TYPE}]")
@@ -127,9 +127,7 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
                                 MockEnvironmentConfigStorage.EXPRESS_DEV_API_KEY
                             }
                         },
-                        "user-id" to ProviderSuspend { EXPRESS_USER_ID },
                         "session-id" to ProviderSuspend { EXPRESS_SESSION_ID },
-                        "refcode" to ProviderSuspend { EXPRESS_REF_CODE },
                         "version" to ProviderSuspend { VERSION_NAME },
                         "platform" to ProviderSuspend { "android" },
                         "language" to ProviderSuspend { Locale.getDefault().language.checkHeaderValueOrEmpty() },
@@ -177,26 +175,12 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
             )
         }
 
-        private fun createVisaAuthModel(): Model {
-            return Model(
-                id = ApiConfig.ID.TangemVisaAuth,
-                expected = ApiEnvironmentConfig(
-                    environment = ApiEnvironment.STAGE,
-                    baseUrl = "https://api-s.tangem.org/",
-                    headers = mapOf(
-                        "version" to ProviderSuspend { VERSION_NAME },
-                        "platform" to ProviderSuspend { "Android" },
-                    ),
-                ),
-            )
-        }
-
         private fun createVisaModel(): Model {
             return Model(
                 id = ApiConfig.ID.TangemVisa,
                 expected = ApiEnvironmentConfig(
-                    environment = ApiEnvironment.PROD,
-                    baseUrl = "https://bff.tangem.com/",
+                    environment = ApiEnvironment.DEV,
+                    baseUrl = "[REDACTED_ENV_URL]",
                     headers = mapOf(
                         "version" to ProviderSuspend { VERSION_NAME },
                         "platform" to ProviderSuspend { "Android" },
@@ -205,12 +189,22 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
             )
         }
 
-        private fun createTangemCardSdkModel(): Model {
+        private fun createAttestationModel(): Model {
             return Model(
-                id = ApiConfig.ID.TangemCardSdk,
+                id = ApiConfig.ID.Attestation,
                 expected = ApiEnvironmentConfig(
                     environment = ApiEnvironment.PROD,
                     baseUrl = "https://api.tangem-tech.com/",
+                ),
+            )
+        }
+
+        private fun createBlockAidSdkModel(): Model {
+            return Model(
+                id = ApiConfig.ID.BlockAid,
+                expected = ApiEnvironmentConfig(
+                    environment = ApiEnvironment.PROD,
+                    baseUrl = "https://api.blockaid.io/v0/",
                 ),
             )
         }
