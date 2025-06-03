@@ -239,7 +239,10 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
     override fun onNFTClick(userWallet: UserWallet) {
         val selectedWallet = stateHolder.getSelectedWallet() as? WalletState.MultiCurrency.Content ?: return
         val analyticsState = when (val nftState = selectedWallet.nftState) {
-            is WalletNFTItemUM.Content -> NFTAnalyticsEvent.NFTListScreenOpened.State.Full(nftState.assetsCount)
+            is WalletNFTItemUM.Content -> NFTAnalyticsEvent.NFTListScreenOpened.State.Full(
+                assetsCount = nftState.assetsCount,
+                collectionsCount = nftState.collectionsCount,
+            )
             is WalletNFTItemUM.Empty -> NFTAnalyticsEvent.NFTListScreenOpened.State.Empty
             is WalletNFTItemUM.Failed,
             is WalletNFTItemUM.Hidden,
