@@ -5,6 +5,8 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.core.lce.Lce
+import com.tangem.domain.markets.FilterAvailableNetworksForWalletUseCase
+import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.tokens.GetAllWalletsCryptoCurrencyStatusesUseCase
 import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
 import com.tangem.domain.tokens.GetWalletTotalBalanceUseCase
@@ -29,6 +31,7 @@ import javax.inject.Inject
 [REDACTED_AUTHOR]
  */
 internal class PortfolioDataLoader @Inject constructor(
+    private val filterAvailableNetworksForWalletUseCase: FilterAvailableNetworksForWalletUseCase,
     private val getAllWalletsCryptoCurrencyStatusesUseCase: GetAllWalletsCryptoCurrencyStatusesUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
@@ -38,14 +41,18 @@ internal class PortfolioDataLoader @Inject constructor(
 
     /** Load data by [currencyRawId] */
     @OptIn(ExperimentalCoroutinesApi::class)
-    fun load(currencyRawId: CryptoCurrency.RawID): Flow<PortfolioData> {
+    fun load(
+        currencyRawId: CryptoCurrency.RawID,
+        availableNetworksFlow: Flow<Set<TokenMarketInfo.Network>?>,
+    ): Flow<PortfolioData> {
         return combine(
             flow = getAllWalletsCryptoCurrenciesData(currencyRawId = currencyRawId),
             flow2 = getSelectedAppCurrencyFlow(),
             flow3 = getBalanceHidingSettingsFlow(),
-        ) { walletsWithCurrencies, appCurrency, isBalanceHidden ->
+            flow4 = availableNetworksFlow.filterNotNull().distinctUntilChanged(),
+        ) { walletsWithCurrencies, appCurrency, isBalanceHidden, availableNetworks ->
             PortfolioData(
-                walletsWithCurrencies = walletsWithCurrencies,
+                walletsWithCurrencies = walletsWithCurrencies.filterWalletsByAvailableNetworks(availableNetworks),
                 appCurrency = appCurrency,
                 isBalanceHidden = isBalanceHidden,
                 walletsWithBalance = emptyMap(),
@@ -65,7 +72,7 @@ internal class PortfolioDataLoader @Inject constructor(
     private fun getAllWalletsCryptoCurrenciesData(
         currencyRawId: CryptoCurrency.RawID,
     ): Flow<Map<UserWallet, List<PortfolioData.CryptoCurrencyData>>> {
-        return getAllWalletsCryptoCurrencyStatusesUseCase(currencyRawId, true)
+        return getAllWalletsCryptoCurrencyStatusesUseCase(currencyRawId)
             .distinctUntilChanged()
             .map { walletsWithMaybeStatuses ->
                 walletsWithMaybeStatuses.mapValues { entry ->
@@ -144,5 +151,14 @@ internal class PortfolioDataLoader @Inject constructor(
         )
             .distinctUntilChanged()
             .onEmpty { ids.associateWith { Lce.Loading<TotalFiatBalance>(partialContent = null) } }
+    }
+
+    private fun Map<UserWallet, List<PortfolioData.CryptoCurrencyData>>.filterWalletsByAvailableNetworks(
+        availableNetworks: Set<TokenMarketInfo.Network>,
+    ): Map<UserWallet, List<PortfolioData.CryptoCurrencyData>> {
+        return filter {
+            val networksSupportedByWallet = filterAvailableNetworksForWalletUseCase(it.key.walletId, availableNetworks)
+            networksSupportedByWallet.isNotEmpty()
+        }
     }
 }
