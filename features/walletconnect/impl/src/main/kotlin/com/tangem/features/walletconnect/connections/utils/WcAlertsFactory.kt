@@ -4,10 +4,17 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.components.bottomsheets.message.*
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.features.walletconnect.transaction.routes.WcTransactionRoutes
 
 internal object WcAlertsFactory {
 
-    fun createUnknownDomainAlert(onClick: () -> Unit): MessageBottomSheetUMV2 {
+    internal fun createCommonTransactionAppInfoAlertUM(alertType: WcTransactionRoutes.Alert.Type) = when (alertType) {
+        is WcTransactionRoutes.Alert.Type.Verified -> createVerifiedDomainAlert(alertType.appName)
+        is WcTransactionRoutes.Alert.Type.UnknownDomain -> createUnknownDomainAlert()
+        is WcTransactionRoutes.Alert.Type.UnsafeDomain -> createUnsafeDomainAlert()
+    }
+
+    fun createUnknownDomainAlert(activeButtonOnClick: (() -> Unit)? = null): MessageBottomSheetUMV2 {
         return messageBottomSheetUM {
             infoBlock {
                 icon(R.drawable.img_knight_shield_32) {
@@ -24,14 +31,16 @@ internal object WcAlertsFactory {
                 text = resourceReference(R.string.common_cancel)
                 onClick { closeBs() }
             }
-            secondaryButton {
-                text = resourceReference(R.string.wc_alert_connect_anyway)
-                onClick { onClick() }
+            if (activeButtonOnClick != null) {
+                secondaryButton {
+                    text = resourceReference(R.string.wc_alert_connect_anyway)
+                    onClick { activeButtonOnClick() }
+                }
             }
         }
     }
 
-    fun createUnsafeDomainAlert(onClick: () -> Unit): MessageBottomSheetUMV2 {
+    fun createUnsafeDomainAlert(activeButtonOnClick: (() -> Unit)? = null): MessageBottomSheetUMV2 {
         return messageBottomSheetUM {
             infoBlock {
                 icon(R.drawable.img_knight_shield_32) {
@@ -48,9 +57,11 @@ internal object WcAlertsFactory {
                 text = resourceReference(R.string.common_cancel)
                 onClick { closeBs() }
             }
-            secondaryButton {
-                text = resourceReference(R.string.wc_alert_connect_anyway)
-                onClick { onClick() }
+            if (activeButtonOnClick != null) {
+                secondaryButton {
+                    text = resourceReference(R.string.wc_alert_connect_anyway)
+                    onClick { activeButtonOnClick() }
+                }
             }
         }
     }
