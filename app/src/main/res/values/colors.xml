@@ -1,66 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <color name="colorPrimary">#0029FF</color>
     <color name="accent">#0099FF</color>
 
     <color name="menu_accent_color">@color/accent</color>
 
-    <color name="tapButtonColorBlack">@color/darkGray6</color>
-
-    <color name="warning">#FFB71B</color>
-
     <color name="toolbarColor">@color/background_secondary</color>
 
     <color name="white">#FFFFFF</color>
-    <color name="lightGray0">#F3F3F3</color>
-    <color name="darkGray2">#666668</color>
-
-    <color name="darkGray4">#3A3A3C</color>
-    <color name="darkGray6">#1C1C1E</color>
-
-    <color name="textBlack">#060606</color>
-    <color name="iconGray">#686868</color>
-    <color name="backgroundGray">#F2F2F2</color>
-    <color name="chipBlack">#090E13</color>
-
-    <color name="separatorGrey2">#14212121</color>
-
-    <color name="onboarding_card_background">#F3F3F3</color>
-    <color name="onboarding_twin_wave_1">#DDDEE0</color>
-    <color name="onboarding_twin_wave_2">#DCDCDC</color>
-    <color name="onboarding_twin_wave_3">#D9D9D9</color>
 
 
-    <color name="warning_info">#1C1C1E</color>
-    <color name="warning_warning">#FFB71B</color>
     <color name="warning_critical">#CA0F03</color>
 
     <color name="background_primary">#FFFFFF</color>
     <color name="background_secondary">#F5F5F5</color>
 
 
-    <color name="button_disabled">#EBEBEB</color>
-    <color name="button_primary">#1E1E1E</color>
     <color name="button_secondary">#EBEBEB</color>
 
 
-    <color name="icon_informative">#B0B0B0</color>
     <color name="icon_primary_1">#1E1E1E</color>
-    <color name="icon_primary_2">#FFFFFF</color>
     <color name="icon_warning">#FF3333</color>
 
 
-    <color name="text_disabled">#C9C9C9</color>
     <color name="text_primary_1">#1E1E1E</color>
-    <color name="text_primary_2">#FFFFFF</color>
     <color name="text_secondary">#656565</color>
-    <color name="text_tertiary">#919191</color>
 
     <color name="background_splash">#000000</color>
-    <color name="transparent">#00000000</color>
 
-    <color name="gradient_start_color">#FFFFFF</color>
-    <color name="gradient_center_color">#F0FFFF</color>
-    <color name="gradient_end_color">#19FFFFFF</color>
 </resources>

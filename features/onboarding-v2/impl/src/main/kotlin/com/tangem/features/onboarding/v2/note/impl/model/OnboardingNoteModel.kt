@@ -6,6 +6,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.components.artwork.ArtworkUM
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GetCardImageUseCase
 import com.tangem.features.onboarding.v2.common.ui.exitOnboardingDialog
@@ -13,6 +14,7 @@ import com.tangem.features.onboarding.v2.note.api.OnboardingNoteComponent
 import com.tangem.features.onboarding.v2.note.impl.OnboardingNoteInnerNavigationState
 import com.tangem.features.onboarding.v2.note.impl.route.OnboardingNoteRoute
 import com.tangem.features.onboarding.v2.note.impl.route.stepNum
+import com.tangem.operations.attestation.ArtworkSize
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -50,7 +52,7 @@ internal class OnboardingNoteModel @Inject constructor(
     val commonUiState: MutableStateFlow<OnboardingNoteCommonState> = _uiState
 
     init {
-        loadArtworkUrl()
+        loadArtwork()
     }
 
     fun updateStepForNewRoute(route: OnboardingNoteRoute) {
@@ -85,15 +87,18 @@ internal class OnboardingNoteModel @Inject constructor(
         }
     }
 
-    private fun loadArtworkUrl() {
+    private fun loadArtwork() {
         modelScope.launch {
             val cardInfo = params.scanResponse.card
-            val url = getCardImageUseCase(
+            val artwork = getCardImageUseCase.invoke(
                 cardId = cardInfo.cardId,
                 cardPublicKey = cardInfo.cardPublicKey,
+                size = ArtworkSize.LARGE,
+                manufacturerName = cardInfo.manufacturer.name,
+                firmwareVersion = cardInfo.firmwareVersion.toSdkFirmwareVersion(),
             )
             _uiState.update {
-                it.copy(cardArtworkUrl = url)
+                it.copy(cardArtwork = ArtworkUM(artwork.verifiedArtwork, artwork.defaultUrl))
             }
         }
     }

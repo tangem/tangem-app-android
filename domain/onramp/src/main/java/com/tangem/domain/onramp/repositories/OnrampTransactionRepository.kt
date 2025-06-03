@@ -10,11 +10,16 @@ interface OnrampTransactionRepository {
 
     suspend fun storeTransaction(transaction: OnrampTransaction)
 
-    suspend fun getTransactionById(externalTxId: String): OnrampTransaction?
+    suspend fun getTransactionById(txId: String): OnrampTransaction?
 
     fun getTransactions(userWalletId: UserWalletId, cryptoCurrencyId: CryptoCurrency.ID): Flow<List<OnrampTransaction>>
 
-    suspend fun updateTransactionStatus(externalTxId: String, externalTxUrl: String, status: OnrampStatus.Status)
+    suspend fun updateTransactionStatus(
+        txId: String,
+        externalTxId: String,
+        externalTxUrl: String,
+        status: OnrampStatus.Status,
+    )
 
-    suspend fun removeTransaction(externalTxId: String)
+    suspend fun removeTransaction(txId: String)
 }

@@ -1,6 +1,7 @@
 package com.tangem.domain.demo
 
 import com.tangem.blockchain.common.*
+import com.tangem.blockchain.common.smartcontract.SmartContractCallData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.common.transaction.TransactionSendResult
@@ -24,8 +25,12 @@ class DemoTransactionSender(private val walletManager: WalletManager) : Transact
         )
     }
 
-    override suspend fun estimateFee(amount: Amount, destination: String): Result<TransactionFee> {
-        return getFee(amount, walletManager.wallet.address)
+    override suspend fun estimateFee(
+        amount: Amount,
+        destination: String,
+        callData: SmartContractCallData?,
+    ): Result<TransactionFee> {
+        return getFee(amount, walletManager.wallet.address, callData)
     }
 
     override suspend fun send(

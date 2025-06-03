@@ -10,12 +10,17 @@ class OnrampUpdateTransactionStatusUseCase(
     private val errorResolver: OnrampErrorResolver,
 ) {
 
-    suspend operator fun invoke(externalTxId: String, externalTxUrl: String, status: OnrampStatus.Status) =
-        Either.catch {
-            onrampTransactionRepository.updateTransactionStatus(
-                externalTxId = externalTxId,
-                externalTxUrl = externalTxUrl,
-                status = status,
-            )
-        }.mapLeft(errorResolver::resolve)
+    suspend operator fun invoke(
+        txId: String,
+        externalTxId: String,
+        externalTxUrl: String,
+        status: OnrampStatus.Status,
+    ) = Either.catch {
+        onrampTransactionRepository.updateTransactionStatus(
+            txId = txId,
+            externalTxId = externalTxId,
+            externalTxUrl = externalTxUrl,
+            status = status,
+        )
+    }.mapLeft(errorResolver::resolve)
 }

@@ -170,29 +170,11 @@ internal object OnrampDomainModule {
 
     @Provides
     @Singleton
-    fun provideGetOnrampSelectedPaymentMethodUseCase(
-        onrampRepository: OnrampRepository,
-        onrampErrorResolver: OnrampErrorResolver,
-    ): GetOnrampSelectedPaymentMethodUseCase {
-        return GetOnrampSelectedPaymentMethodUseCase(onrampRepository, onrampErrorResolver)
-    }
-
-    @Provides
-    @Singleton
     fun provideGetOnrampProviderWithQuoteUseCase(
         onrampRepository: OnrampRepository,
         onrampErrorResolver: OnrampErrorResolver,
     ): GetOnrampProviderWithQuoteUseCase {
         return GetOnrampProviderWithQuoteUseCase(onrampRepository, onrampErrorResolver)
-    }
-
-    @Provides
-    @Singleton
-    fun provideOnrampSaveSelectedPaymentMethod(
-        onrampRepository: OnrampRepository,
-        onrampErrorResolver: OnrampErrorResolver,
-    ): OnrampSaveSelectedPaymentMethod {
-        return OnrampSaveSelectedPaymentMethod(onrampRepository, onrampErrorResolver)
     }
 
     @Provides
