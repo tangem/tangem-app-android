@@ -84,6 +84,25 @@ internal class MarketsListBatchFlowManager(
             }
         }
 
+    val onFirstBatchLoadedSuccess = batchFlow.state
+        .distinctUntilChanged { old, new -> old.status == new.status && old.data.size == new.data.size }
+        .mapNotNull {
+            when (val status = it.status) {
+                is PaginationStatus.Paginating -> {
+                    if (status.lastResult is BatchFetchResult.Success) {
+                        it.data.size == 1
+                    } else {
+                        null
+                    }
+                }
+                is PaginationStatus.EndOfPagination -> {
+                    it.data.size == 1
+                }
+                else -> null
+            }
+        }
+        .filter { it }
+
     val isInInitialLoadingErrorState = batchFlow.state
         .map { it.status is PaginationStatus.InitialLoadingError }
         .distinctUntilChanged()
@@ -323,6 +342,7 @@ internal class MarketsListBatchFlowManager(
             SortByTypeUM.ExperiencedBuyers -> TokenMarketListConfig.Order.Buyers
             SortByTypeUM.TopGainers -> TokenMarketListConfig.Order.TopGainers
             SortByTypeUM.TopLosers -> TokenMarketListConfig.Order.TopLosers
+            SortByTypeUM.Staking -> TokenMarketListConfig.Order.Staking
         }
     }
 

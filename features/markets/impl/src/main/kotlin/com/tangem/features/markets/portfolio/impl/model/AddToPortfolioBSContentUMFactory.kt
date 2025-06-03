@@ -7,6 +7,8 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.rows.model.BlockchainRowUM
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.markets.TokenMarketParams
+import com.tangem.domain.models.ArtworkModel
+import com.tangem.domain.tokens.model.TotalFiatBalance
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.markets.portfolio.impl.loader.PortfolioData
@@ -44,19 +46,25 @@ internal class AddToPortfolioBSContentUMFactory(
      * @param selectedWallet       selected wallet
      * @param alreadyAddedNetworks already added networks
      */
+    @Suppress("LongParameterList")
     fun create(
         currentState: TangemBottomSheetConfig?,
         portfolioData: PortfolioData,
         portfolioUIData: PortfolioUIData,
         selectedWallet: UserWallet?,
         alreadyAddedNetworks: Set<String>?,
+        artworks: HashMap<UserWalletId, ArtworkModel>,
     ): TangemBottomSheetConfig {
         return (currentState ?: TangemBottomSheetConfig.Empty).copy(
             isShown = portfolioUIData.portfolioBSVisibilityModel.addToPortfolioBSVisibility,
             onDismissRequest = { onAddToPortfolioVisibilityChange(false) },
             content = if (selectedWallet != null && alreadyAddedNetworks != null) {
                 AddToPortfolioBSContentUM(
-                    selectedWallet = selectedWallet.toSelectedUserWalletItemUM(),
+                    selectedWallet = selectedWallet.toSelectedUserWalletItemUM(
+                        portfolioData = portfolioData,
+                        balance = portfolioData.walletsWithBalance[selectedWallet.walletId]?.getOrNull(),
+                        artwork = artworks[selectedWallet.walletId],
+                    ),
                     selectNetworkUM = SelectNetworkUMConverter(
                         networksWithToggle = portfolioUIData.addToPortfolioData.associateWithToggle(
                             userWalletId = selectedWallet.walletId,
@@ -86,6 +94,7 @@ internal class AddToPortfolioBSContentUMFactory(
                         isShow = portfolioUIData.portfolioBSVisibilityModel.walletSelectorBSVisibility,
                         portfolioData = portfolioData,
                         selectedWalletId = selectedWallet.walletId,
+                        artworks = artworks,
                     ),
                     isWalletBlockVisible = portfolioData.walletsWithCurrencies
                         .filterKeys(UserWallet::isMultiCurrency).size > 1,
@@ -96,10 +105,18 @@ internal class AddToPortfolioBSContentUMFactory(
         )
     }
 
-    private fun UserWallet.toSelectedUserWalletItemUM(): UserWalletItemUM {
+    private fun UserWallet.toSelectedUserWalletItemUM(
+        artwork: ArtworkModel? = null,
+        portfolioData: PortfolioData,
+        balance: TotalFiatBalance?,
+    ): UserWalletItemUM {
         return UserWalletItemUMConverter(
             onClick = { onWalletSelectorVisibilityChange(true) },
             endIcon = UserWalletItemUM.EndIcon.Arrow,
+            balance = balance,
+            artwork = artwork,
+            appCurrency = portfolioData.appCurrency,
+            isBalanceHidden = portfolioData.isBalanceHidden,
         ).convert(value = this)
     }
 
@@ -107,6 +124,7 @@ internal class AddToPortfolioBSContentUMFactory(
         isShow: Boolean,
         portfolioData: PortfolioData,
         selectedWalletId: UserWalletId,
+        artworks: HashMap<UserWalletId, ArtworkModel>,
     ): TangemBottomSheetConfig {
         return TangemBottomSheetConfig(
             isShown = isShow,
@@ -133,6 +151,7 @@ internal class AddToPortfolioBSContentUMFactory(
                             } else {
                                 UserWalletItemUM.EndIcon.None
                             },
+                            artwork = artworks[userWallet.walletId],
                         ).convert(userWallet)
                     }
                     .toImmutableList(),

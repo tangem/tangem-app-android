@@ -16,6 +16,7 @@ import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsModel
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.TokenDetailsScreen
 import com.tangem.features.markets.token.block.TokenMarketBlockComponent
+import com.tangem.features.onramp.OnrampFeatureToggles
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.txhistory.TxHistoryFeatureToggles
 import com.tangem.features.txhistory.component.TxHistoryComponent
@@ -23,12 +24,14 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 
+@Suppress("LongParameterList")
 internal class DefaultTokenDetailsComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted params: TokenDetailsComponent.Params,
     tokenMarketBlockComponentFactory: TokenMarketBlockComponent.Factory,
     txHistoryComponentFactory: TxHistoryComponent.Factory,
     txHistoryFeatureToggles: TxHistoryFeatureToggles,
+    onrampFeatureToggles: OnrampFeatureToggles,
     deepLinksRegistry: DeepLinksRegistry,
 ) : TokenDetailsComponent, AppComponentContext by appComponentContext {
 
@@ -48,11 +51,19 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
             onResume = model::onResume,
         )
 
+        val deeplinks = buildList {
+            if (!onrampFeatureToggles.isFeatureEnabled) {
+                add(
+                    BuyCurrencyDeepLink(
+                        onReceive = model::onBuyCurrencyDeepLink,
+                    ),
+                )
+            }
+        }
+
         registerDeepLinks(
             registry = deepLinksRegistry,
-            BuyCurrencyDeepLink(
-                onReceive = model::onBuyCurrencyDeepLink,
-            ),
+            deeplinks,
         )
     }
 

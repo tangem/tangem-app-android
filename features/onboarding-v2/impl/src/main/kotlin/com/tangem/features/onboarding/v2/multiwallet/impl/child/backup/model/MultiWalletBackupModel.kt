@@ -206,6 +206,8 @@ class MultiWalletBackupModel @Inject constructor(
                     val backupCardInfo = MultiWalletChildParams.Backup.BackupCardInfo(
                         cardId = result.data.cardId,
                         cardPublicKey = result.data.cardPublicKey,
+                        manufacturer = result.data.manufacturer,
+                        firmwareVersion = result.data.firmwareVersion,
                     )
                     params.backups.update {
                         it.copy(
