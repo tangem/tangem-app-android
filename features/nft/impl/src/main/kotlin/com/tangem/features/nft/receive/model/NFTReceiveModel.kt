@@ -12,12 +12,12 @@ import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.DialogMessage
+import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.nft.FilterNFTAvailableNetworksUseCase
-import com.tangem.domain.nft.GetNFTNetworksUseCase
 import com.tangem.domain.nft.GetNFTNetworkStatusUseCase
+import com.tangem.domain.nft.GetNFTNetworksUseCase
 import com.tangem.domain.nft.analytics.NFTAnalyticsEvent
-import com.tangem.domain.tokens.model.Network
-import com.tangem.domain.tokens.model.NetworkStatus
 import com.tangem.features.nft.impl.R
 import com.tangem.features.nft.receive.NFTReceiveComponent
 import com.tangem.features.nft.receive.entity.NFTReceiveUM
