@@ -1,5 +1,6 @@
 package com.tangem.feature.walletsettings.model
 
+import android.os.Build
 import arrow.core.getOrElse
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
@@ -22,6 +23,7 @@ import com.tangem.domain.nft.DisableWalletNFTUseCase
 import com.tangem.domain.nft.EnableWalletNFTUseCase
 import com.tangem.domain.nft.GetWalletNFTEnabledUseCase
 import com.tangem.domain.notifications.toggles.NotificationsFeatureToggles
+import com.tangem.domain.settings.repositories.PermissionRepository
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.isMultiCurrency
 import com.tangem.domain.wallets.models.requireColdWallet
@@ -65,6 +67,7 @@ internal class WalletSettingsModel @Inject constructor(
     private val getWalletNotificationsEnabledUseCase: GetWalletNotificationsEnabledUseCase,
     private val setNotificationsEnabledUseCase: SetNotificationsEnabledUseCase,
     private val settingsManager: SettingsManager,
+    private val permissionsRepository: PermissionRepository,
 ) : Model() {
 
     val params: WalletSettingsComponent.Params = paramsContainer.require()
@@ -98,11 +101,22 @@ internal class WalletSettingsModel @Inject constructor(
                         isNFTEnabled = nftEnabled,
                         isNotificationsEnabled = notificationsEnabled,
                         isNotificationsFeatureEnabled = notificationsToggles.isNotificationsEnabled,
+                        isNotificationsPermissionGranted = isNotificationsPermissionGranted(),
                     ),
                 )
             }
         }
             .launchIn(modelScope)
+    }
+
+    private fun isNotificationsPermissionGranted(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            permissionsRepository.hasRuntimePermission(
+                android.Manifest.permission.POST_NOTIFICATIONS,
+            )
+        } else {
+            true
+        }
     }
 
     private fun buildItems(
@@ -113,6 +127,7 @@ internal class WalletSettingsModel @Inject constructor(
         isNFTEnabled: Boolean,
         isNotificationsFeatureEnabled: Boolean,
         isNotificationsEnabled: Boolean,
+        isNotificationsPermissionGranted: Boolean,
     ): PersistentList<WalletSettingsItemUM> = itemsBuilder.buildItems(
         userWalletId = userWallet.walletId,
         userWalletName = userWallet.name,
@@ -147,6 +162,7 @@ internal class WalletSettingsModel @Inject constructor(
         onReferralClick = { onReferralClick(userWallet) },
         isNotificationsEnabled = isNotificationsEnabled,
         isNotificationsFeatureEnabled = isNotificationsFeatureEnabled,
+        isNotificationsPermissionGranted = isNotificationsPermissionGranted,
         onCheckedNotificationsChanged = ::onCheckedNotificationsChange,
         onNotificationsDescriptionClick = ::onNotificationsDescriptionClick,
     )
