@@ -1,6 +1,7 @@
 package com.tangem.domain.staking.model.stakekit
 
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.staking.model.StakingID
 import com.tangem.domain.staking.model.stakekit.action.StakingActionType
 import org.joda.time.DateTime
 import java.math.BigDecimal
@@ -9,21 +10,41 @@ sealed class YieldBalance {
 
     abstract val integrationId: String?
     abstract val address: String?
+    abstract val source: StatusSource
+
+    fun copySealed(source: StatusSource): YieldBalance {
+        return when (this) {
+            is Data -> copy(source = source)
+            is Empty -> copy(source = source)
+            is Error -> this
+        }
+    }
+
+    fun getStakingId(): StakingID? {
+        val integrationId = integrationId
+        val address = address
+
+        if (integrationId == null || address == null) return null
+
+        return StakingID(integrationId = integrationId, address = address)
+    }
 
     data class Data(
         override val integrationId: String?,
         override val address: String,
+        override val source: StatusSource,
         val balance: YieldBalanceItem,
-        val source: StatusSource,
     ) : YieldBalance()
 
     data class Empty(
         override val integrationId: String?,
         override val address: String,
-        val source: StatusSource,
+        override val source: StatusSource,
     ) : YieldBalance()
 
-    data class Error(override val integrationId: String?, override val address: String?) : YieldBalance()
+    data class Error(override val integrationId: String?, override val address: String?) : YieldBalance() {
+        override val source: StatusSource = StatusSource.ACTUAL
+    }
 }
 
 data class YieldBalanceItem(

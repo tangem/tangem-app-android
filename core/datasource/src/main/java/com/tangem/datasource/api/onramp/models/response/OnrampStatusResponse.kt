@@ -21,7 +21,7 @@ data class OnrampStatusResponse(
     val failReason: String?,
 
     @Json(name = "externalTxId")
-    val externalTxId: String,
+    val externalTxId: String?,
 
     @Json(name = "externalTxUrl")
     val externalTxUrl: String?,
@@ -91,4 +91,10 @@ enum class Status {
 
     @Json(name = "paused")
     Paused,
+
+    @Json(name = "refund-in-progress")
+    RefundInProgress,
+
+    @Json(name = "refunded")
+    Refunded,
 }

@@ -3,12 +3,15 @@ package com.tangem.features.send.v2.send.model
 import androidx.compose.runtime.Stable
 import arrow.core.Either
 import arrow.core.getOrElse
+import arrow.core.left
+import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.utils.parseBigDecimal
+import com.tangem.core.ui.utils.parseBigDecimalOrNull
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
@@ -26,14 +29,19 @@ import com.tangem.domain.tokens.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.tokens.GetPrimaryCurrencyStatusUpdatesUseCase
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
+import com.tangem.domain.transaction.usecase.GetFeeUseCase
+import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.v2.api.SendComponent
-import com.tangem.features.send.v2.common.NavigationUM
-import com.tangem.features.send.v2.send.SendRoute
+import com.tangem.features.send.v2.common.CommonSendRoute
+import com.tangem.features.send.v2.common.PredefinedValues
+import com.tangem.features.send.v2.common.SendConfirmAlertFactory
+import com.tangem.features.send.v2.common.ui.state.ConfirmUM
+import com.tangem.features.send.v2.common.ui.state.NavigationUM
 import com.tangem.features.send.v2.send.confirm.SendConfirmComponent
-import com.tangem.features.send.v2.send.confirm.model.SendConfirmAlertFactory
-import com.tangem.features.send.v2.send.confirm.ui.state.ConfirmUM
 import com.tangem.features.send.v2.send.ui.state.SendUM
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponent
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountUpdateQRTrigger
@@ -76,6 +84,8 @@ internal class SendModel @Inject constructor(
     private val getCardInfoUseCase: GetCardInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
+    private val createTransferTransactionUseCase: CreateTransferTransactionUseCase,
+    private val getFeeUseCase: GetFeeUseCase,
     private val sendAmountUpdateQRTrigger: SendAmountUpdateQRTrigger,
 ) : Model(), SendComponentCallback {
 
@@ -93,7 +103,7 @@ internal class SendModel @Inject constructor(
     var cryptoCurrencyStatus: CryptoCurrencyStatus? = null
     var feeCryptoCurrencyStatus: CryptoCurrencyStatus? = null
     var appCurrency: AppCurrency = AppCurrency.Default
-    var predefinedAmountValue: String? = null
+    var predefinedValues: PredefinedValues = PredefinedValues.Empty
 
     private var balanceHidingJobHolder = JobHolder()
 
@@ -102,6 +112,7 @@ internal class SendModel @Inject constructor(
         subscribeOnQRScannerResult()
         subscribeOnCurrencyStatusUpdates()
         initAppCurrency()
+        initPredefinedValues()
     }
 
     override fun onNavigationResult(navigationUM: NavigationUM) {
@@ -112,8 +123,8 @@ internal class SendModel @Inject constructor(
         _uiState.update { it.copy(destinationUM = destinationUM) }
     }
 
-    override fun onAmountResult(amountUM: AmountState) {
-        predefinedAmountValue = null // reset predefined amount
+    override fun onAmountResult(amountUM: AmountState, isResetPredefined: Boolean) {
+        if (isResetPredefined) resetPredefinedAmount()
         _uiState.update { it.copy(amountUM = amountUM) }
     }
 
@@ -122,8 +133,43 @@ internal class SendModel @Inject constructor(
     }
 
     override fun onResult(sendUM: SendUM) {
-        predefinedAmountValue = null // reset predefined amount
         _uiState.update { sendUM }
+    }
+
+    suspend fun loadFee(): Either<GetFeeError, TransactionFee> {
+        val predefinedValues = predefinedValues
+        val transferTransaction = if (predefinedValues is PredefinedValues.Content.Deeplink) {
+            val predefinedAmount = predefinedValues.amount.parseBigDecimalOrNull()?.convertToSdkAmount(cryptoCurrency)
+            createTransferTransactionUseCase(
+                amount = predefinedAmount ?: error("Invalid amount"),
+                memo = predefinedValues.memo,
+                destination = predefinedValues.address,
+                userWalletId = userWallet.walletId,
+                network = cryptoCurrency.network,
+            )
+        } else {
+            val destinationUM = uiState.value.destinationUM as? DestinationUM.Content ?: error("Invalid destination")
+            val amountUM = uiState.value.amountUM as? AmountState.Data ?: error("Invalid amount")
+            val enteredDestinationAddress = destinationUM.addressTextField.value
+            val enteredMemo = destinationUM.memoTextField?.value
+            val enteredAmount = amountUM.amountTextField.cryptoAmount.value ?: error("Invalid amount")
+
+            createTransferTransactionUseCase(
+                amount = enteredAmount.convertToSdkAmount(cryptoCurrency),
+                memo = enteredMemo,
+                destination = enteredDestinationAddress,
+                userWalletId = userWallet.walletId,
+                network = cryptoCurrency.network,
+            )
+        }.getOrElse {
+            return GetFeeError.DataError(it).left()
+        }
+
+        return getFeeUseCase(
+            transactionData = transferTransaction,
+            userWallet = userWallet,
+            network = params.currency.network,
+        )
     }
 
     fun showAlertError() {
@@ -136,6 +182,34 @@ internal class SendModel @Inject constructor(
     private fun initAppCurrency() {
         modelScope.launch {
             appCurrency = getSelectedAppCurrencyUseCase.invokeSync().getOrElse { AppCurrency.Default }
+        }
+    }
+
+    private fun initPredefinedValues() {
+        val predefinedAmount = params.amount
+        val predefinedTxId = params.transactionId
+        val predefinedAddress = params.destinationAddress
+
+        predefinedValues = if (predefinedAmount != null && predefinedTxId != null && predefinedAddress != null) {
+            PredefinedValues.Content.Deeplink(
+                amount = predefinedAmount,
+                address = predefinedAddress,
+                memo = params.tag,
+                transactionId = predefinedTxId,
+            )
+        } else {
+            PredefinedValues.Empty
+        }
+    }
+
+    private fun resetPredefinedAmount() {
+        // reset predefined amount
+        val internalPredefinedValues = predefinedValues
+        predefinedValues = when (internalPredefinedValues) {
+            is PredefinedValues.Content.QrCode -> internalPredefinedValues.copy(amount = null)
+            is PredefinedValues.Content.Deeplink,
+            PredefinedValues.Empty,
+            -> internalPredefinedValues
         }
     }
 
@@ -230,7 +304,7 @@ internal class SendModel @Inject constructor(
         feeCryptoCurrencyStatus = feeCurrencyStatus
 
         if (params.amount != null) {
-            router.replaceAll(SendRoute.Confirm)
+            router.replaceAll(CommonSendRoute.Confirm)
         }
     }
 
@@ -245,10 +319,15 @@ internal class SendModel @Inject constructor(
         val parsedQrCode = parseQrCodeUseCase(address, cryptoCurrency).getOrNull()
         // Decompose component can be active or inactive depending on its state and navigation stack
         // If it is in inactive state use parameter to pass value to amount component
-        predefinedAmountValue = parsedQrCode?.amount?.parseBigDecimal(cryptoCurrency.decimals)
+        val amount = parsedQrCode?.amount?.parseBigDecimal(cryptoCurrency.decimals)
+        predefinedValues = PredefinedValues.Content.QrCode(
+            amount = amount.orEmpty(),
+            address = parsedQrCode?.address.orEmpty(),
+            memo = parsedQrCode?.memo,
+        )
         // If it is in active state use flow to update value in amount component
         modelScope.launch {
-            predefinedAmountValue?.let { sendAmountUpdateQRTrigger.triggerUpdateAmount(it) }
+            amount?.let { sendAmountUpdateQRTrigger.triggerUpdateAmount(it) }
         }
     }
 

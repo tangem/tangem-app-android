@@ -5,7 +5,6 @@ import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.TransactionData
-import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -25,29 +24,26 @@ import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.settings.IsSendTapHelpEnabledUseCase
 import com.tangem.domain.settings.NeverShowTapHelpUseCase
 import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
-import com.tangem.domain.tokens.FetchPendingTransactionsUseCase
 import com.tangem.domain.tokens.IsAmountSubtractAvailableUseCase
-import com.tangem.domain.tokens.UpdateDelayedNetworkStatusUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.transaction.error.GetFeeError
-import com.tangem.domain.transaction.usecase.CreateTransactionUseCase
+import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
-import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
-import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
 import com.tangem.domain.utils.convertToSdkAmount
-import com.tangem.features.send.v2.common.NavigationUM
+import com.tangem.features.send.v2.common.CommonSendRoute
+import com.tangem.features.send.v2.common.SendBalanceUpdater
+import com.tangem.features.send.v2.common.SendConfirmAlertFactory
+import com.tangem.features.send.v2.common.analytics.CommonSendAnalyticEvents
+import com.tangem.features.send.v2.common.analytics.CommonSendAnalyticEvents.SendScreenSource
+import com.tangem.features.send.v2.common.ui.state.ConfirmUM
+import com.tangem.features.send.v2.common.ui.state.NavigationUM
 import com.tangem.features.send.v2.impl.R
-import com.tangem.features.send.v2.send.SendRoute
-import com.tangem.features.send.v2.send.analytics.SendAnalyticEvents
-import com.tangem.features.send.v2.send.analytics.SendAnalyticEvents.SendScreenSource
 import com.tangem.features.send.v2.send.analytics.SendAnalyticHelper
 import com.tangem.features.send.v2.send.confirm.SendConfirmComponent
 import com.tangem.features.send.v2.send.confirm.model.transformers.SendConfirmInitialStateTransformer
 import com.tangem.features.send.v2.send.confirm.model.transformers.SendConfirmSendingStateTransformer
 import com.tangem.features.send.v2.send.confirm.model.transformers.SendConfirmSentStateTransformer
 import com.tangem.features.send.v2.send.confirm.model.transformers.SendConfirmationNotificationsTransformer
-import com.tangem.features.send.v2.send.confirm.ui.state.ConfirmUM
 import com.tangem.features.send.v2.send.ui.state.ButtonsUM
 import com.tangem.features.send.v2.send.ui.state.SendUM
 import com.tangem.features.send.v2.subcomponents.destination.ui.state.DestinationUM
@@ -58,17 +54,13 @@ import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeSelectorUM
 import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeUM
 import com.tangem.features.send.v2.subcomponents.notifications.NotificationsUpdateTrigger
 import com.tangem.features.send.v2.subcomponents.notifications.model.NotificationData
-import com.tangem.features.txhistory.TxHistoryFeatureToggles
-import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.coroutines.DelayedWork
 import com.tangem.utils.extensions.orZero
 import com.tangem.utils.extensions.stripZeroPlainString
 import com.tangem.utils.transformer.update
-import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import timber.log.Timber
-import java.math.BigDecimal
 import javax.inject.Inject
 
 @Suppress("LongParameterList", "LargeClass")
@@ -82,36 +74,33 @@ internal class SendConfirmModel @Inject constructor(
     private val router: Router,
     private val isSendTapHelpEnabledUseCase: IsSendTapHelpEnabledUseCase,
     private val neverShowTapHelpUseCase: NeverShowTapHelpUseCase,
-    private val createTransactionUseCase: CreateTransactionUseCase,
+    private val createTransferTransactionUseCase: CreateTransferTransactionUseCase,
     private val sendTransactionUseCase: SendTransactionUseCase,
     private val saveBlockchainErrorUseCase: SaveBlockchainErrorUseCase,
     private val getCardInfoUseCase: GetCardInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val addCryptoCurrenciesUseCase: AddCryptoCurrenciesUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
-    private val fetchPendingTransactionsUseCase: FetchPendingTransactionsUseCase,
-    private val updateDelayedCurrencyStatusUseCase: UpdateDelayedNetworkStatusUseCase,
-    private val getTxHistoryItemsCountUseCase: GetTxHistoryItemsCountUseCase,
     private val isAmountSubtractAvailableUseCase: IsAmountSubtractAvailableUseCase,
-    private val getTxHistoryItemsUseCase: GetTxHistoryItemsUseCase,
     private val sendFeeCheckReloadTrigger: SendFeeCheckReloadTrigger,
     private val sendFeeCheckReloadListener: SendFeeCheckReloadListener,
-    private val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter,
     private val notificationsUpdateTrigger: NotificationsUpdateTrigger,
     private val alertFactory: SendConfirmAlertFactory,
     private val sendAnalyticHelper: SendAnalyticHelper,
-    private val txHistoryFeatureToggles: TxHistoryFeatureToggles,
-    @DelayedWork private val coroutineScope: CoroutineScope,
     private val urlOpener: UrlOpener,
     private val shareManager: ShareManager,
+    sendBalanceUpdaterFactory: SendBalanceUpdater.Factory,
 ) : Model(), SendConfirmClickIntents {
 
     private val params: SendConfirmComponent.Params = paramsContainer.require()
 
+    private val analyticsCategoryName = params.analyticsCategoryName
     private val userWallet = params.userWallet
     private val appCurrency = params.appCurrency
     private val cryptoCurrencyStatus = params.cryptoCurrencyStatus
     private val cryptoCurrency = cryptoCurrencyStatus.currency
+
+    private val sendBalanceUpdater = sendBalanceUpdaterFactory.create(cryptoCurrency, userWallet)
 
     private val _uiState = MutableStateFlow(params.state)
     val uiState = _uiState.asStateFlow()
@@ -125,20 +114,16 @@ internal class SendConfirmModel @Inject constructor(
     private val feeSelectorUM
         get() = feeUM?.feeSelectorUM as? FeeSelectorUM.Content
 
-    val enteredAmount: BigDecimal?
-        get() = amountState?.amountTextField?.cryptoAmount?.value
-    val reduceAmountBy: BigDecimal
-        get() = amountState?.reduceAmountBy.orZero()
-    val isIgnoreReduce: Boolean
-        get() = amountState?.isIgnoreReduce == true
-    val enteredDestination: String?
-        get() = destinationUM?.addressTextField?.value
-    val enteredMemo: String?
-        get() = destinationUM?.memoTextField?.value
-    val fee: Fee?
-        get() = feeSelectorUM?.selectedFee
-    val feeError: GetFeeError?
-        get() = (feeUM?.feeSelectorUM as? FeeSelectorUM.Error)?.error
+    val confirmData: ConfirmData
+        get() = ConfirmData(
+            enteredAmount = amountState?.amountTextField?.cryptoAmount?.value,
+            enteredMemo = destinationUM?.memoTextField?.value,
+            reduceAmountBy = amountState?.reduceAmountBy.orZero(),
+            isIgnoreReduce = amountState?.isIgnoreReduce == true,
+            enteredDestination = destinationUM?.addressTextField?.value,
+            fee = feeSelectorUM?.selectedFee,
+            feeError = (feeUM?.feeSelectorUM as? FeeSelectorUM.Error)?.error,
+        )
 
     private var sendIdleTimer: Long = 0L
     private var isAmountSubtractAvailable = false
@@ -182,8 +167,13 @@ internal class SendConfirmModel @Inject constructor(
                 val confirmUM = it.confirmUM as? ConfirmUM.Content
                 it.copy(confirmUM = confirmUM?.copy(showTapHelp = false) ?: it.confirmUM)
             }
-            analyticsEventHandler.send(SendAnalyticEvents.ScreenReopened(SendScreenSource.Address))
-            router.push(SendRoute.Destination(isEditMode = true))
+            analyticsEventHandler.send(
+                CommonSendAnalyticEvents.ScreenReopened(
+                    categoryName = analyticsCategoryName,
+                    source = SendScreenSource.Address,
+                ),
+            )
+            router.push(CommonSendRoute.Destination(isEditMode = true))
         }
     }
 
@@ -194,8 +184,13 @@ internal class SendConfirmModel @Inject constructor(
                 val confirmUM = it.confirmUM as? ConfirmUM.Content
                 it.copy(confirmUM = confirmUM?.copy(showTapHelp = false) ?: it.confirmUM)
             }
-            analyticsEventHandler.send(SendAnalyticEvents.ScreenReopened(SendScreenSource.Amount))
-            router.push(SendRoute.Amount(isEditMode = true))
+            analyticsEventHandler.send(
+                CommonSendAnalyticEvents.ScreenReopened(
+                    categoryName = analyticsCategoryName,
+                    source = SendScreenSource.Amount,
+                ),
+            )
+            router.push(CommonSendRoute.Amount(isEditMode = true))
         }
     }
 
@@ -206,8 +201,13 @@ internal class SendConfirmModel @Inject constructor(
                 val confirmUM = it.confirmUM as? ConfirmUM.Content
                 it.copy(confirmUM = confirmUM?.copy(showTapHelp = false) ?: it.confirmUM)
             }
-            analyticsEventHandler.send(SendAnalyticEvents.ScreenReopened(SendScreenSource.Fee))
-            router.push(SendRoute.Fee())
+            analyticsEventHandler.send(
+                CommonSendAnalyticEvents.ScreenReopened(
+                    categoryName = analyticsCategoryName,
+                    source = SendScreenSource.Fee,
+                ),
+            )
+            router.push(CommonSendRoute.Fee)
         }
     }
 
@@ -224,27 +224,27 @@ internal class SendConfirmModel @Inject constructor(
 
     override fun onExploreClick() {
         val confirmUM = uiState.value.confirmUM as? ConfirmUM.Success ?: return
-        analyticsEventHandler.send(SendAnalyticEvents.ExploreButtonClicked)
+        analyticsEventHandler.send(CommonSendAnalyticEvents.ExploreButtonClicked(analyticsCategoryName))
         urlOpener.openUrl(confirmUM.txUrl)
     }
 
     override fun onShareClick() {
         val confirmUM = uiState.value.confirmUM as? ConfirmUM.Success ?: return
-        analyticsEventHandler.send(SendAnalyticEvents.ShareButtonClicked)
+        analyticsEventHandler.send(CommonSendAnalyticEvents.ShareButtonClicked(analyticsCategoryName))
         shareManager.shareText(confirmUM.txUrl)
     }
 
     override fun onFailedTxEmailClick(errorMessage: String) {
         val amountValue = amountState?.amountTextField?.cryptoAmount?.value
-        val feeValue = fee?.amount?.value
+        val feeValue = confirmData.fee?.amount?.value
 
         val receivingAmount = if (amountValue != null && feeValue != null) {
             checkAndCalculateSubtractedAmount(
                 isAmountSubtractAvailable = isAmountSubtractAvailable,
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
-                amountValue = enteredAmount.orZero(),
+                amountValue = confirmData.enteredAmount.orZero(),
                 feeValue = feeValue,
-                reduceAmountBy = reduceAmountBy,
+                reduceAmountBy = confirmData.reduceAmountBy,
             )
         } else {
             null
@@ -257,7 +257,7 @@ internal class SendConfirmModel @Inject constructor(
                 errorMessage = errorMessage,
                 blockchainId = cryptoCurrency.network.id.value,
                 derivationPath = cryptoCurrency.network.derivationPath.value,
-                destinationAddress = enteredDestination.orEmpty(),
+                destinationAddress = confirmData.enteredDestination.orEmpty(),
                 tokenSymbol = if (amount?.type is AmountType.Token) {
                     amount.currencySymbol
                 } else {
@@ -322,11 +322,11 @@ internal class SendConfirmModel @Inject constructor(
             cryptoCurrencyStatus = cryptoCurrencyStatus,
             amountValue = amountValue,
             feeValue = feeValue,
-            reduceAmountBy = reduceAmountBy.orZero(),
+            reduceAmountBy = confirmData.reduceAmountBy.orZero(),
         )
 
         modelScope.launch {
-            createTransactionUseCase(
+            createTransferTransactionUseCase(
                 amount = receivingAmount.convertToSdkAmount(cryptoCurrency),
                 fee = fee,
                 memo = memo,
@@ -366,12 +366,17 @@ internal class SendConfirmModel @Inject constructor(
                     popBack = appRouter::pop,
                     onFailedTxEmailClick = ::onFailedTxEmailClick,
                 )
-                analyticsEventHandler.send(SendAnalyticEvents.TransactionError(cryptoCurrency.symbol))
+                analyticsEventHandler.send(
+                    CommonSendAnalyticEvents.TransactionError(
+                        categoryName = analyticsCategoryName,
+                        token = cryptoCurrency.symbol,
+                    ),
+                )
             },
             ifRight = {
                 updateTransactionStatus(txData)
                 addTokenToWalletIfNeeded()
-                scheduleUpdates()
+                sendBalanceUpdater.scheduleUpdates()
                 sendAnalyticHelper.sendSuccessAnalytics(cryptoCurrency, uiState.value)
             },
         )
@@ -382,7 +387,7 @@ internal class SendConfirmModel @Inject constructor(
         val wallets = destinationUM?.wallets ?: return
 
         val receivingUserWallet = wallets
-            .firstOrNull { it.address == enteredDestination }
+            .firstOrNull { it.address == confirmData.enteredDestination }
             ?: return
 
         val userWalletId = receivingUserWallet.userWalletId ?: return
@@ -405,49 +410,6 @@ internal class SendConfirmModel @Inject constructor(
         _uiState.update(SendConfirmSentStateTransformer(txData, txUrl))
     }
 
-    private fun scheduleUpdates() {
-        coroutineScope.launch {
-            listOf(
-                // we should update network to find pending tx after 1 sec
-                async {
-                    fetchPendingTransactionsUseCase(userWallet.walletId, setOf(cryptoCurrency.network))
-                },
-                // we should update tx history and network for new balance
-                async {
-                    updateTxHistory()
-                },
-                async {
-                    updateDelayedCurrencyStatusUseCase(
-                        userWalletId = userWallet.walletId,
-                        network = cryptoCurrency.network,
-                        delayMillis = BALANCE_UPDATE_DELAY,
-                        refresh = true,
-                    )
-                },
-            ).awaitAll()
-        }
-    }
-
-    private suspend fun updateTxHistory() {
-        delay(BALANCE_UPDATE_DELAY)
-        val txHistoryItemsCountEither = getTxHistoryItemsCountUseCase(
-            userWalletId = userWallet.walletId,
-            currency = cryptoCurrency,
-        )
-
-        txHistoryItemsCountEither.onRight {
-            if (txHistoryFeatureToggles.isFeatureEnabled) {
-                txHistoryContentUpdateEmitter.triggerUpdate()
-            } else {
-                getTxHistoryItemsUseCase(
-                    userWalletId = userWallet.walletId,
-                    currency = cryptoCurrency,
-                    refresh = true,
-                )
-            }
-        }
-    }
-
     private fun subscribeOnCheckFeeResultUpdates() {
         sendFeeCheckReloadListener.checkReloadResultFlow.onEach { isFeeResultSuccess ->
             if (isFeeResultSuccess) {
@@ -464,13 +426,13 @@ internal class SendConfirmModel @Inject constructor(
         modelScope.launch {
             notificationsUpdateTrigger.triggerUpdate(
                 data = NotificationData(
-                    destinationAddress = enteredDestination.orEmpty(),
-                    memo = enteredMemo,
-                    amountValue = enteredAmount.orZero(),
-                    reduceAmountBy = reduceAmountBy.orZero(),
-                    isIgnoreReduce = isIgnoreReduce,
-                    fee = fee,
-                    feeError = feeError,
+                    destinationAddress = confirmData.enteredDestination.orEmpty(),
+                    memo = confirmData.enteredMemo,
+                    amountValue = confirmData.enteredAmount.orZero(),
+                    reduceAmountBy = confirmData.reduceAmountBy.orZero(),
+                    isIgnoreReduce = confirmData.isIgnoreReduce,
+                    fee = confirmData.fee,
+                    feeError = confirmData.feeError,
                 ),
             )
             _uiState.update {
@@ -481,6 +443,7 @@ internal class SendConfirmModel @Inject constructor(
                         analyticsEventHandler = analyticsEventHandler,
                         cryptoCurrency = cryptoCurrencyStatus.currency,
                         appCurrency = appCurrency,
+                        analyticsCategoryName = params.analyticsCategoryName,
                     ).transform(uiState.value.confirmUM),
                 )
             }
@@ -492,9 +455,10 @@ internal class SendConfirmModel @Inject constructor(
             flow = uiState,
             flow2 = params.currentRoute,
             transform = { state, route -> state to route },
-        ).filter { it.second is SendRoute.Confirm }.onEach { (state, _) ->
+        ).filter { it.second is CommonSendRoute.Confirm }.onEach { (state, _) ->
             val amountUM = state.amountUM as? AmountState.Data
             val confirmUM = state.confirmUM
+            val isReadyToSend = confirmUM is ConfirmUM.Content && !confirmUM.isSending
             params.callback.onResult(
                 state.copy(
                     navigationUM = NavigationUM.Content(
@@ -506,7 +470,8 @@ internal class SendConfirmModel @Inject constructor(
                         backIconRes = R.drawable.ic_close_24,
                         backIconClick = {
                             analyticsEventHandler.send(
-                                SendAnalyticEvents.CloseButtonClicked(
+                                CommonSendAnalyticEvents.CloseButtonClicked(
+                                    categoryName = analyticsCategoryName,
                                     source = SendScreenSource.Confirm,
                                     isFromSummary = true,
                                     isValid = confirmUM.isPrimaryButtonEnabled,
@@ -524,9 +489,9 @@ internal class SendConfirmModel @Inject constructor(
                                 }
                                 else -> resourceReference(R.string.common_send)
                             },
-                            iconResId = R.drawable.ic_tangem_24.takeIf { confirmUM is ConfirmUM.Content },
+                            iconResId = R.drawable.ic_tangem_24.takeIf { isReadyToSend },
                             isEnabled = confirmUM.isPrimaryButtonEnabled,
-                            isHapticClick = confirmUM is ConfirmUM.Content && !confirmUM.isSending,
+                            isHapticClick = isReadyToSend,
                             onClick = {
                                 when (confirmUM) {
                                     is ConfirmUM.Success -> appRouter.pop()
@@ -556,6 +521,5 @@ internal class SendConfirmModel @Inject constructor(
 
     private companion object {
         const val CHECK_FEE_UPDATE_DELAY = 10_000L
-        const val BALANCE_UPDATE_DELAY = 11_000L
     }
 }

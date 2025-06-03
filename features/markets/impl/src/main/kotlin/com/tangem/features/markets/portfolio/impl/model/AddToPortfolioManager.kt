@@ -18,7 +18,7 @@ internal typealias WalletsWithNetworks = Map<UserWalletId, Set<TokenMarketInfo.N
  */
 internal class AddToPortfolioManager @Inject constructor() {
 
-    private val availableNetworks = MutableStateFlow<Set<TokenMarketInfo.Network>?>(value = null)
+    val availableNetworks = MutableStateFlow<Set<TokenMarketInfo.Network>?>(value = null)
     private val addedNetworks = MutableStateFlow<WalletsWithNetworks>(value = emptyMap())
     private val removedNetworks = MutableStateFlow<WalletsWithNetworks>(value = emptyMap())
 
