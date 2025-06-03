@@ -15,6 +15,7 @@ internal fun TokenMarketListConfig.Order.toRequestParam(): String = when (this) 
     TokenMarketListConfig.Order.Buyers -> "buyers"
     TokenMarketListConfig.Order.TopGainers -> "gainers"
     TokenMarketListConfig.Order.TopLosers -> "losers"
+    TokenMarketListConfig.Order.Staking -> "staking"
 }
 
 internal fun PriceChangeInterval.toRequestParam(): String = when (this) {

@@ -145,7 +145,7 @@ internal class StakingModel @Inject constructor(
     }
 
     private var cryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
-    private var processingActions: List<StakingAction> = emptyList()
+    private var stakingActions: List<StakingAction> = emptyList()
     private var feeCryptoCurrencyStatus: CryptoCurrencyStatus? = null
     private var minimumTransactionAmount: EnterAmountBoundary? = null
 
@@ -157,7 +157,7 @@ internal class StakingModel @Inject constructor(
             val yieldBalance = cryptoCurrencyStatus.value.yieldBalance as? YieldBalance.Data
             return invalidatePendingTransactionsUseCase(
                 balanceItems = yieldBalance?.balance?.items ?: emptyList(),
-                processingActions = processingActions,
+                stakingActions = stakingActions,
                 token = yield.token,
             ).getOrElse { emptyList() }
         }
@@ -302,12 +302,13 @@ internal class StakingModel @Inject constructor(
         )
         modelScope.launch {
             feeLoader.getFee(
-                onStakingFee = { gasEstimate ->
+                onStakingFee = { gasEstimate, isFeeApproximate ->
                     stateController.update(
                         SetConfirmationStateAssentTransformer(
                             appCurrencyProvider = Provider { appCurrency },
                             feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
                             fee = gasEstimate,
+                            isFeeApproximate = isFeeApproximate,
                             cryptoCurrencyStatus = cryptoCurrencyStatus,
                         ),
                     )
@@ -363,13 +364,14 @@ internal class StakingModel @Inject constructor(
                         stakingEventFactory.createSendTransactionErrorAlert(error)
                         stateController.update(SetConfirmationStateResetAssentTransformer(cryptoCurrencyStatus))
                     },
-                    onFeeIncreased = { increasedFee ->
+                    onFeeIncreased = { increasedFee, isFeeApproximate ->
                         stateController.updateAll(
                             SetConfirmationStateResetAssentTransformer(cryptoCurrencyStatus),
                             SetConfirmationStateAssentTransformer(
                                 appCurrencyProvider = Provider { appCurrency },
                                 feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
                                 fee = increasedFee,
+                                isFeeApproximate = isFeeApproximate,
                                 cryptoCurrencyStatus = cryptoCurrencyStatus,
                             ),
                         )
@@ -1026,7 +1028,7 @@ internal class StakingModel @Inject constructor(
             .distinctUntilChanged()
             .onEach { result ->
                 result.getOrNull()?.let { actions ->
-                    processingActions = actions
+                    stakingActions = actions
                     if (isInitState()) {
                         updateInitialData(status)
                     }

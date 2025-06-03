@@ -1,12 +1,13 @@
 package com.tangem.domain.transaction
 
 import com.tangem.blockchain.common.*
+import com.tangem.blockchain.common.smartcontract.SmartContractCallData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionSendResult
 import com.tangem.blockchain.common.transaction.TransactionsSendResult
+import com.tangem.blockchain.nft.models.NFTAsset
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
-import com.tangem.domain.transaction.models.TransactionType
 import com.tangem.domain.wallets.models.UserWalletId
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -16,25 +17,44 @@ interface TransactionRepository {
     @Suppress("LongParameterList")
     suspend fun createTransaction(
         amount: Amount,
-        fee: Fee,
+        fee: Fee?,
         memo: String?,
         destination: String,
         userWalletId: UserWalletId,
         network: Network,
         txExtras: TransactionExtras?,
-        hash: String?,
+    ): TransactionData.Uncompiled
+
+    @Suppress("LongParameterList")
+    suspend fun createTransferTransaction(
+        amount: Amount,
+        fee: Fee?,
+        memo: String?,
+        destination: String,
+        userWalletId: UserWalletId,
+        network: Network,
+    ): TransactionData.Uncompiled
+
+    @Suppress("LongParameterList")
+    suspend fun createNFTTransferTransaction(
+        ownerAddress: String,
+        nftAsset: NFTAsset,
+        fee: Fee?,
+        memo: String?,
+        destinationAddress: String,
+        userWalletId: UserWalletId,
+        network: Network,
     ): TransactionData.Uncompiled
 
     @Suppress("LongParameterList")
     suspend fun createApprovalTransaction(
         amount: Amount,
         approvalAmount: Amount?,
-        fee: Fee,
+        fee: Fee?,
         contractAddress: String,
         spenderAddress: String,
         userWalletId: UserWalletId,
         network: Network,
-        hash: String?,
     ): TransactionData.Uncompiled
 
     @Suppress("LongParameterList")
@@ -45,9 +65,6 @@ interface TransactionRepository {
         destination: String,
         userWalletId: UserWalletId,
         network: Network,
-        isSwap: Boolean = false,
-        txExtras: TransactionExtras?,
-        hash: String? = null,
     ): Result<Unit>
 
     suspend fun sendTransaction(
@@ -66,9 +83,8 @@ interface TransactionRepository {
     ): com.tangem.blockchain.extensions.Result<TransactionsSendResult>
 
     fun createTransactionDataExtras(
-        data: String,
+        callData: SmartContractCallData,
         network: Network,
-        transactionType: TransactionType,
         nonce: BigInteger?,
         gasLimit: BigInteger?,
     ): TransactionExtras
@@ -78,4 +94,18 @@ interface TransactionRepository {
         cryptoCurrency: CryptoCurrency.Token,
         spenderAddress: String,
     ): BigDecimal
+
+    suspend fun prepareForSend(
+        transactionData: TransactionData,
+        signer: TransactionSigner,
+        userWalletId: UserWalletId,
+        network: Network,
+    ): Result<ByteArray>
+
+    suspend fun prepareForSendMultiple(
+        transactionData: List<TransactionData>,
+        signer: TransactionSigner,
+        userWalletId: UserWalletId,
+        network: Network,
+    ): Result<List<ByteArray>>
 }

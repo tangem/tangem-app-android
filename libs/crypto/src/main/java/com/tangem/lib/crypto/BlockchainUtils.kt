@@ -72,6 +72,11 @@ object BlockchainUtils {
         return blockchain == Blockchain.Tron || blockchain == Blockchain.TronTestnet
     }
 
+    fun isTon(blockchainId: String): Boolean {
+        val blockchain = Blockchain.fromId(blockchainId)
+        return blockchain == Blockchain.TON || blockchain == Blockchain.TONTestnet
+    }
+
     fun isSupportedNetworkId(blockchainId: String, excludedBlockchains: ExcludedBlockchains): Boolean {
         val blockchain = Blockchain.fromNetworkId(blockchainId)
 
@@ -141,6 +146,10 @@ object BlockchainUtils {
         val blockchain = Blockchain.fromId(blockchainId)
 
         return blockchain != Blockchain.Cardano
+    }
+
+    fun isStakingRewardUnavailable(blockchainId: String): Boolean {
+        return isSolana(blockchainId) || isBSC(blockchainId) || isTon(blockchainId)
     }
 
     private fun getNetworkStandardName(blockchain: Blockchain): String {
