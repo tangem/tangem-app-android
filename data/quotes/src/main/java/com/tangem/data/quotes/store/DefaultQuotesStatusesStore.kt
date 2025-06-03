@@ -15,21 +15,22 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 internal typealias CurrencyIdWithQuote = Map<String, QuotesResponse.Quote>
 
 /**
- * Default implementation of [QuotesStoreV2]
+ * Default implementation of [QuotesStatusesStore]
  *
  * @property runtimeStore         runtime store
  * @property persistenceDataStore persistence store
  * @param dispatchers             dispatchers
  */
-internal class DefaultQuotesStoreV2(
+internal class DefaultQuotesStatusesStore(
     private val runtimeStore: RuntimeSharedStore<Set<QuoteStatus>>,
     private val persistenceDataStore: DataStore<CurrencyIdWithQuote>,
     dispatchers: CoroutineDispatcherProvider,
-) : QuotesStoreV2 {
+) : QuotesStatusesStore {
 
     private val scope = CoroutineScope(context = SupervisorJob() + dispatchers.io)
 
@@ -49,33 +50,28 @@ internal class DefaultQuotesStoreV2(
 
     override suspend fun getAllSyncOrNull(): Set<QuoteStatus>? = runtimeStore.getSyncOrNull()
 
-    override suspend fun refresh(currenciesIds: Set<CryptoCurrency.RawID>) {
-        updateStatusSourceInRuntime(currenciesIds = currenciesIds, source = StatusSource.CACHE)
-    }
-
-    override suspend fun storeActual(values: Map<String, QuotesResponse.Quote>) {
-        coroutineScope {
-            launch {
-                val quotes = QuoteStatusConverter(isCached = false).convertSet(input = values.entries)
-                storeInRuntimeStore(values = quotes)
-            }
-            launch { storeInPersistenceStore(values = values) }
-        }
-    }
-
-    override suspend fun storeError(currenciesIds: Set<CryptoCurrency.RawID>) {
-        updateStatusSourceInRuntime(
-            currenciesIds = currenciesIds,
-            ifNotFound = ::QuoteStatus,
-            source = StatusSource.ONLY_CACHE,
+    override suspend fun updateStatusSource(
+        currencyId: CryptoCurrency.RawID,
+        source: StatusSource,
+        ifNotFound: (CryptoCurrency.RawID) -> QuoteStatus?,
+    ) {
+        updateStatusSource(
+            currenciesIds = setOf(currencyId),
+            source = source,
+            ifNotFound = ifNotFound,
         )
     }
 
-    private suspend fun updateStatusSourceInRuntime(
+    override suspend fun updateStatusSource(
         currenciesIds: Set<CryptoCurrency.RawID>,
-        ifNotFound: (CryptoCurrency.RawID) -> QuoteStatus? = { null },
         source: StatusSource,
+        ifNotFound: (CryptoCurrency.RawID) -> QuoteStatus?,
     ) {
+        if (currenciesIds.isEmpty()) {
+            Timber.d("Nothing to update: currencies ids are empty")
+            return
+        }
+
         runtimeStore.update(default = emptySet()) { stored ->
             val updatedQuotes = currenciesIds.mapNotNullTo(hashSetOf()) { id ->
                 val quote = stored.firstOrNull { it.rawCurrencyId == id }
@@ -89,13 +85,24 @@ internal class DefaultQuotesStoreV2(
         }
     }
 
-    private suspend fun storeInRuntimeStore(values: Set<QuoteStatus>) {
-        runtimeStore.update(default = emptySet()) { saved ->
-            saved.addOrReplace(items = values) { prev, new -> prev.rawCurrencyId == new.rawCurrencyId }
+    override suspend fun store(values: CurrencyIdWithQuote) {
+        if (values.isEmpty()) return
+
+        coroutineScope {
+            launch { storeInRuntime(values = values) }
+            launch { storeInPersistence(values = values) }
         }
     }
 
-    private suspend fun storeInPersistenceStore(values: Map<String, QuotesResponse.Quote>) {
+    private suspend fun storeInRuntime(values: CurrencyIdWithQuote) {
+        val quotes = QuoteStatusConverter(isCached = false).convertSet(input = values.entries)
+
+        runtimeStore.update(default = emptySet()) { saved ->
+            saved.addOrReplace(items = quotes) { prev, new -> prev.rawCurrencyId == new.rawCurrencyId }
+        }
+    }
+
+    private suspend fun storeInPersistence(values: CurrencyIdWithQuote) {
         persistenceDataStore.updateData { storedQuotes -> storedQuotes + values }
     }
 }
