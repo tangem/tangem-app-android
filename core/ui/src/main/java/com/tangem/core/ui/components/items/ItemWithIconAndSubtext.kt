@@ -17,7 +17,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 
 @Composable
-fun NetworkNameAndSymbolItem(icon: Int, name: String, symbol: String, modifier: Modifier = Modifier) {
+fun ItemWithIconAndSubtext(icon: Int, name: String, symbol: String, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier.padding(14.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -43,7 +43,7 @@ fun NetworkNameAndSymbolItem(icon: Int, name: String, symbol: String, modifier: 
 }
 
 @Composable
-fun NetworkNameAndSymbolItemShimmer(modifier: Modifier = Modifier) {
+fun ItemWithIconAndSubtextShimmer(modifier: Modifier = Modifier) {
     Row(
         modifier = modifier.padding(12.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -66,8 +66,8 @@ fun NetworkNameAndSymbolItemShimmer(modifier: Modifier = Modifier) {
 private fun ContentPreview() {
     TangemThemePreview {
         Column {
-            NetworkNameAndSymbolItemShimmer()
-            NetworkNameAndSymbolItem(
+            ItemWithIconAndSubtextShimmer()
+            ItemWithIconAndSubtext(
                 icon = R.drawable.ic_solana_16,
                 name = "Solana",
                 symbol = "SOL",
