@@ -10,6 +10,9 @@ android {
 }
 
 dependencies {
+    // region sdk
+    implementation(tangemDeps.blockchain)
+    // endregion
 
     // region AndroidX libraries
     implementation(deps.androidx.datastore)
@@ -28,6 +31,8 @@ dependencies {
     // region Core modules
     implementation(projects.core.datasource)
     implementation(projects.core.utils)
+    implementation(projects.core.ui)
+    implementation(projects.libs.blockchainSdk)
     // endregion
 
     // region Domain modules

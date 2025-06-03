@@ -24,6 +24,7 @@ import com.tangem.domain.visa.model.VisaTxHistoryItem
 import com.tangem.domain.visa.repository.VisaRepository
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -142,7 +143,7 @@ internal class DefaultVisaRepository @Inject constructor(
 
             txDetailsFactory.create(
                 transaction = transaction,
-                walletBlockchain = userWallet.scanResponse.cardTypesResolver.getBlockchain(),
+                walletBlockchain = userWallet.requireColdWallet().scanResponse.cardTypesResolver.getBlockchain(),
             )
         }
     }
@@ -153,7 +154,7 @@ internal class DefaultVisaRepository @Inject constructor(
         val customerInfo = visaApiRequestMaker.request(userWalletId) { authHeader, _ ->
             visaApi.getCustomerInfo(
                 authHeader = authHeader,
-                cardId = userWallet.scanResponse.card.cardId,
+                cardId = userWallet.requireColdWallet().scanResponse.card.cardId,
             )
         }
 
@@ -198,7 +199,7 @@ internal class DefaultVisaRepository @Inject constructor(
     }
 
     private fun makeWalletAddresses(userWallet: UserWallet): Set<Address> {
-        val walletBlockchain = userWallet.scanResponse.cardTypesResolver.getBlockchain()
+        val walletBlockchain = userWallet.requireColdWallet().scanResponse.cardTypesResolver.getBlockchain()
 
         return walletBlockchain.makeAddresses(getCardPubKey(userWallet).hexToBytes())
     }
@@ -206,7 +207,7 @@ internal class DefaultVisaRepository @Inject constructor(
     private fun getCardPubKey(userWallet: UserWallet): String {
         if (VisaConstants.IS_DEMO_MODE_ENABLED) return getDemoPublicKey()
 
-        val cardWallet = userWallet.scanResponse.card.wallets.firstOrNull {
+        val cardWallet = userWallet.requireColdWallet().scanResponse.card.wallets.firstOrNull {
             it.curve == EllipticCurve.Secp256k1
         }
         requireNotNull(cardWallet) { "Visa card wallet not found" }
@@ -218,7 +219,7 @@ internal class DefaultVisaRepository @Inject constructor(
         val userWallet = requireNotNull(userWalletsStore.getSyncOrNull(userWalletId)) {
             "No user wallet found: $userWalletId"
         }
-        if (!userWallet.scanResponse.cardTypesResolver.isVisaWallet()) {
+        if (!userWallet.requireColdWallet().scanResponse.cardTypesResolver.isVisaWallet()) {
             error("VISA wallet required: $userWalletId")
         }
 
