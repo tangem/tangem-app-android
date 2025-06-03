@@ -13,6 +13,7 @@ import com.tangem.domain.onramp.GetOnrampCountryUseCase
 import com.tangem.domain.onramp.OnrampSaveDefaultCountryUseCase
 import com.tangem.domain.onramp.analytics.OnrampAnalyticsEvent
 import com.tangem.domain.onramp.model.OnrampCountry
+import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.selectcountry.SelectCountryComponent
 import com.tangem.features.onramp.selectcountry.entity.CountryItemState
@@ -44,11 +45,15 @@ internal class OnrampSelectCountryModel @Inject constructor(
     private val saveDefaultCountryUseCase: OnrampSaveDefaultCountryUseCase,
     private val getOnrampCountryUseCase: GetOnrampCountryUseCase,
     private val fetchOnrampCountriesUseCase: FetchOnrampCountriesUseCase,
+    getWalletsUseCase: GetWalletsUseCase,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
-    val state: StateFlow<CountryListUM> get() = controller.state
     private val params: SelectCountryComponent.Params = paramsContainer.require()
+    private val userWallet = getWalletsUseCase.invokeSync().first { it.walletId == params.userWalletId }
+
+    val state: StateFlow<CountryListUM> get() = controller.state
+
     private val controller = CountryListUMController(
         searchBarUM = createSearchBarUM(),
         loadingItems = loadingItems,
@@ -103,7 +108,7 @@ internal class OnrampSelectCountryModel @Inject constructor(
 
     private fun updateCountriesList() {
         modelScope.launch {
-            fetchOnrampCountriesUseCase().onLeft {
+            fetchOnrampCountriesUseCase(userWallet).onLeft {
                 controller.update(UpdateCountryItemsErrorTransformer(onRetry = ::onRetry))
             }
         }
