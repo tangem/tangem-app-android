@@ -21,9 +21,11 @@ internal class UpdateDataStateTransformer(
             -> NFTReceiveUM.Networks.Empty
             else -> NFTReceiveUM.Networks.Content(
                 availableItems = networks.availableNetworks
+                    .distinctBy { it.id }
                     .map { it.transform(true) }
                     .toPersistentList(),
                 unavailableItems = networks.unavailableNetworks
+                    .distinctBy { it.id }
                     .map { it.transform(false) }
                     .toPersistentList(),
             )
@@ -33,7 +35,7 @@ internal class UpdateDataStateTransformer(
     private fun Network.transform(enabled: Boolean): NFTNetworkUM {
         val custom = derivationPath is Network.DerivationPath.Custom
         return NFTNetworkUM(
-            id = rawId + derivationPath.value,
+            id = id.toString(),
             chainRowUM = ChainRowUM(
                 name = name,
                 type = "",
