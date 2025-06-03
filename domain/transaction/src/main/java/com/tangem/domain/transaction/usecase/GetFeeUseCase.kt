@@ -2,12 +2,15 @@ package com.tangem.domain.transaction.usecase
 
 import arrow.core.raise.catch
 import arrow.core.raise.either
-import com.tangem.blockchain.common.*
+import com.tangem.blockchain.common.Amount
+import com.tangem.blockchain.common.AmountType
+import com.tangem.blockchain.common.Token
+import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.extensions.Result
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.demo.DemoTransactionSender
-import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.mapToFeeError
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -27,7 +30,9 @@ class GetFeeUseCase(
     suspend operator fun invoke(userWallet: UserWallet, network: Network, transactionData: TransactionData) = either {
         catch(
             block = {
-                val transactionSender = if (demoConfig.isDemoCardId(userWallet.scanResponse.card.cardId)) {
+                val transactionSender = if (userWallet is UserWallet.Cold &&
+                    demoConfig.isDemoCardId(userWallet.scanResponse.card.cardId)
+                ) {
                     demoTransactionSender(userWallet, network)
                 } else {
                     walletManagersFacade.getOrCreateWalletManager(
@@ -60,7 +65,9 @@ class GetFeeUseCase(
             block = {
                 val amountData = convertCryptoCurrencyToAmount(cryptoCurrency, amount)
 
-                val result = if (demoConfig.isDemoCardId(userWallet.scanResponse.card.cardId)) {
+                val result = if (userWallet is UserWallet.Cold &&
+                    demoConfig.isDemoCardId(userWallet.scanResponse.card.cardId)
+                ) {
                     demoTransactionSender(userWallet, cryptoCurrency.network).getFee(
                         amount = amountData,
                         destination = destination,

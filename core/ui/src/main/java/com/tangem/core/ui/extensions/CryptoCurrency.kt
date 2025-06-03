@@ -5,8 +5,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.core.graphics.toColorInt
 import com.tangem.core.ui.res.TangemColorPalette
-import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.Network
 
 private const val LIGHT_LUMINANCE = 0.5f
 private const val COLOR_HEX_START_INDEX = 2
@@ -27,7 +27,7 @@ val CryptoCurrency.networkIconResId: Int
  * @return Drawable resource ID for the network.
  */
 val Network.iconResId: Int
-    get() = getActiveIconRes(id.value)
+    get() = getActiveIconRes(rawId)
 
 /**
  * Tries to extract a background color from the contract address of a token.
