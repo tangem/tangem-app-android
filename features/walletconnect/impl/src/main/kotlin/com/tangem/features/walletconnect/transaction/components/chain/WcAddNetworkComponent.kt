@@ -11,12 +11,10 @@ import com.tangem.features.walletconnect.transaction.ui.chain.WcAddEthereumChain
 internal class WcAddNetworkComponent(
     private val appComponentContext: AppComponentContext,
     private val model: WcAddNetworkModel,
-    private val transactionInfoOnClick: () -> Unit,
-    private val onDismiss: () -> Unit,
 ) : AppComponentContext by appComponentContext, ComposableBottomSheetComponent {
 
     override fun dismiss() {
-        onDismiss()
+        model.dismiss()
     }
 
     @Composable
@@ -26,7 +24,7 @@ internal class WcAddNetworkComponent(
         if (content != null) {
             WcAddEthereumChainModalBottomSheetContent(
                 state = content!!.transaction,
-                onClickTransactionRequest = transactionInfoOnClick,
+                onClickTransactionRequest = model::showTransactionRequest,
                 onBack = router::pop,
                 onDismiss = ::dismiss,
             )
