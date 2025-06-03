@@ -560,6 +560,9 @@
   <string name="nft_traits_title">特徴</string>
   <string name="nft_untitled_collection">無題のコレクション</string>
   <string name="nft_wallet_count">%2$dコレクションの%1$dNFT</string>
+  <plurals name="nft_wallet_count_android">
+    <item quantity="other">%2$dコレクションの%1$dNFT</item>
+  </plurals>
   <string name="nft_wallet_receive_nft">ここをタップして最初のNFTを受け取ります</string>
   <string name="nft_wallet_title">NFTコレクション</string>
   <string name="nft_wallet_unable_to_load">データを読み込めません</string>
@@ -1085,6 +1088,7 @@
   <string name="unlock_wallet_description_full">%sを使用するか、カード / リングをスキャンしてウォレットにアクセスしてください</string>
   <string name="unsupported_wc_version">接続に失敗しました：このdAppは、サポートされていないWallet Connectバージョン1.0を使用しています。正常に接続するには、dAppがWallet Connectバージョン2.0をサポートしていることを確認してください。</string>
   <string name="user_push_notification_agreement_argument_one">最新の機能とニュースをお届けします</string>
+  <string name="user_push_notification_agreement_argument_three">受信取引の通知を受け取る</string>
   <string name="user_push_notification_agreement_argument_two">新しいプロモーション情報をいち早く入手しましょう</string>
   <string name="user_push_notification_agreement_header">プッシュ通知を使用しますか?</string>
   <string name="user_wallet_list_add_button">新しいウォレットを追加</string>
