@@ -1,6 +1,5 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers
 
-import com.tangem.domain.models.StatusSource
 import com.tangem.domain.nft.models.*
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNFTItemUM
@@ -16,14 +15,8 @@ internal class SetNFTCollectionsTransformer(
     override fun transform(prevState: WalletState): WalletState = when (prevState) {
         is WalletState.MultiCurrency.Content -> prevState.copy(
             nftState = when {
-                nftCollections.allCollectionsFailed() ->
-                    WalletNFTItemUM.Failed
-                nftCollections.anyCollectionFailed() && nftCollections.allLoadedCollectionsEmpty() ->
-                    WalletNFTItemUM.Failed
-                nftCollections.allCollectionsLoaded() && nftCollections.allCollectionsEmpty() ->
+                nftCollections.allLoadedCollectionsEmpty() ->
                     WalletNFTItemUM.Empty(onItemClick)
-                !nftCollections.allCollectionsLoaded() && nftCollections.allCollectionsEmpty() ->
-                    WalletNFTItemUM.Loading
                 else -> createContentNFTItemUM(onItemClick)
             },
         )
@@ -40,10 +33,6 @@ internal class SetNFTCollectionsTransformer(
         val collectionsContent = nftCollections
             .map { it.content }
             .filterIsInstance<NFTCollections.Content.Collections>()
-
-        val isFlickering = collectionsContent
-            .map { it.source }
-            .any { it == StatusSource.CACHE }
 
         val collections = collectionsContent
             .mapNotNull { it.collections }
@@ -65,7 +54,7 @@ internal class SetNFTCollectionsTransformer(
             collectionsCount = collections.size,
             assetsCount = collections
                 .sumOf { it.count },
-            isFlickering = isFlickering,
+            isFlickering = false,
             onItemClick = onItemClick,
         )
     }

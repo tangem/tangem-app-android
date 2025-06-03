@@ -1,6 +1,6 @@
 package com.tangem.features.send.v2.send.confirm.model.transformers
 
-import com.tangem.features.send.v2.send.confirm.ui.state.ConfirmUM
+import com.tangem.features.send.v2.common.ui.state.ConfirmUM
 import com.tangem.features.send.v2.send.ui.state.SendUM
 import com.tangem.utils.transformer.Transformer
 

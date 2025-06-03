@@ -2,6 +2,7 @@ package com.tangem.feature.swap.domain.api
 
 import arrow.core.Either
 import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.domain.*
@@ -9,16 +10,24 @@ import java.math.BigDecimal
 
 interface SwapRepository {
 
-    suspend fun getPairs(initialCurrency: LeastTokenInfo, currencyList: List<CryptoCurrency>): PairsWithProviders
+    suspend fun getPairs(
+        userWallet: UserWallet,
+        initialCurrency: LeastTokenInfo,
+        currencyList: List<CryptoCurrency>,
+    ): PairsWithProviders
 
     /** Express getPairs request variant without providers request */
-    suspend fun getPairsOnly(initialCurrency: LeastTokenInfo, currencyList: List<CryptoCurrency>): PairsWithProviders
+    suspend fun getPairsOnly(
+        userWallet: UserWallet,
+        initialCurrency: LeastTokenInfo,
+        currencyList: List<CryptoCurrency>,
+    ): PairsWithProviders
 
-    suspend fun getExchangeStatus(txId: String): Either<UnknownError, ExchangeStatusModel>
+    suspend fun getExchangeStatus(userWallet: UserWallet, txId: String): Either<UnknownError, ExchangeStatusModel>
 
     @Suppress("LongParameterList")
     suspend fun findBestQuote(
-        userWalletId: UserWalletId,
+        userWallet: UserWallet,
         fromContractAddress: String,
         fromNetwork: String,
         toContractAddress: String,
@@ -42,18 +51,8 @@ interface SwapRepository {
     ): BigDecimal
 
     @Suppress("LongParameterList")
-    @Throws(IllegalStateException::class)
-    suspend fun getApproveData(
-        userWalletId: UserWalletId,
-        networkId: String,
-        derivationPath: String?,
-        currency: CryptoCurrency,
-        amount: BigDecimal?,
-        spenderAddress: String,
-    ): String
-
-    @Suppress("LongParameterList")
     suspend fun getExchangeData(
+        userWallet: UserWallet,
         fromContractAddress: String,
         fromNetwork: String,
         toContractAddress: String,
@@ -72,6 +71,7 @@ interface SwapRepository {
     // TODO: Add target error handling, remove either ([REDACTED_JIRA])
     @Suppress("LongParameterList")
     suspend fun exchangeSent(
+        userWallet: UserWallet,
         txId: String,
         fromNetwork: String,
         fromAddress: String,

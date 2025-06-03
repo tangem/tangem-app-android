@@ -52,6 +52,11 @@ interface StakingRepository {
 
     fun getSingleYieldBalanceFlow(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): Flow<YieldBalance>
 
+    suspend fun getSingleYieldBalanceSyncLegacy(
+        userWalletId: UserWalletId,
+        cryptoCurrency: CryptoCurrency,
+    ): YieldBalance
+
     suspend fun getSingleYieldBalanceSync(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): YieldBalance
 
     suspend fun fetchMultiYieldBalance(
@@ -65,10 +70,10 @@ interface StakingRepository {
         cryptoCurrencies: List<CryptoCurrency>,
     ): Flow<YieldBalanceList>
 
-    fun getMultiYieldBalanceUpdatesLegacy(
+    suspend fun getMultiYieldBalanceSyncLegacy(
         userWalletId: UserWalletId,
         cryptoCurrencies: List<CryptoCurrency>,
-    ): Flow<YieldBalanceList>
+    ): YieldBalanceList
 
     suspend fun getMultiYieldBalanceSync(
         userWalletId: UserWalletId,
