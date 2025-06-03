@@ -13,6 +13,7 @@ internal class SetConfirmationStateAssentTransformer(
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val feeCryptoCurrencyStatus: CryptoCurrencyStatus?,
     private val fee: Fee,
+    private val isFeeApproximate: Boolean,
     private val cryptoCurrencyStatus: CryptoCurrencyStatus,
 ) : Transformer<StakingUiState> {
 
@@ -31,7 +32,7 @@ internal class SetConfirmationStateAssentTransformer(
                     rate = feeCryptoCurrencyStatus?.value?.fiatRate,
                     isFeeConvertibleToFiat = isFeeConvertibleToFiat,
                     appCurrency = appCurrencyProvider(),
-                    isFeeApproximate = false,
+                    isFeeApproximate = isFeeApproximate,
                 ),
                 isPrimaryButtonEnabled = with(cryptoCurrencyStatus.value) {
                     sources.yieldBalanceSource.isActual() && sources.networkSource.isActual()

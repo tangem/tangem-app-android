@@ -2,6 +2,7 @@ package com.tangem.features.send.impl.presentation.state.confirm
 
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.common.ui.R
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.notifications.NotificationsFactory.addDustWarningNotification
@@ -16,10 +17,13 @@ import com.tangem.common.ui.notifications.NotificationsFactory.addReserveAmountE
 import com.tangem.common.ui.notifications.NotificationsFactory.addTransactionLimitErrorNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addValidateTransactionNotifications
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.notifications.GetTronFeeNotificationShowCountUseCase
 import com.tangem.domain.tokens.GetBalanceNotEnoughForFeeWarningUseCase
 import com.tangem.domain.tokens.GetCurrencyCheckUseCase
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
 import com.tangem.domain.transaction.error.GetFeeError
@@ -36,6 +40,7 @@ import com.tangem.features.send.impl.presentation.state.fee.*
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.lib.crypto.BlockchainUtils.getTezosThreshold
 import com.tangem.lib.crypto.BlockchainUtils.isTezos
+import com.tangem.lib.crypto.BlockchainUtils.isTron
 import com.tangem.utils.Provider
 import com.tangem.utils.extensions.orZero
 import kotlinx.collections.immutable.ImmutableList
@@ -52,6 +57,7 @@ internal class SendNotificationFactory(
     private val validateTransactionUseCase: ValidateTransactionUseCase,
     private val getCurrencyCheckUseCase: GetCurrencyCheckUseCase,
     private val getBalanceNotEnoughForFeeWarningUseCase: GetBalanceNotEnoughForFeeWarningUseCase,
+    private val getTronFeeNotificationShowCountUseCase: GetTronFeeNotificationShowCountUseCase,
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     private val feeCryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus?>,
     private val currentStateProvider: Provider<SendUiState>,
@@ -125,8 +131,13 @@ internal class SendNotificationFactory(
                     isFeeCoverage = isFeeCoverage,
                     currencyCheck = currencyCheck,
                 )
+                addInfoNotifications()
             }.toImmutableList()
         }
+
+    private suspend fun MutableList<NotificationUM>.addInfoNotifications() {
+        addTronNetworkFeesNotification()
+    }
 
     fun dismissNotificationState(clazz: Class<out NotificationUM>, isIgnored: Boolean = false): SendUiState {
         val state = currentStateProvider()
@@ -340,5 +351,24 @@ internal class SendNotificationFactory(
         checkIfFeeTooHigh(feeSelectorState) { diff ->
             add(NotificationUM.Warning.TooHigh(diff))
         }
+    }
+
+    private suspend fun MutableList<NotificationUM>.addTronNetworkFeesNotification() {
+        val cryptoCurrency = cryptoCurrencyStatusProvider().currency
+        val isTronToken = cryptoCurrency is CryptoCurrency.Token &&
+            isTron(cryptoCurrency.network.id.value)
+
+        if (isTronToken && getTronFeeNotificationShowCountUseCase() <= TRON_FEE_NOTIFICATION_MAX_SHOW_COUNT) {
+            add(
+                NotificationUM.Info(
+                    title = resourceReference(R.string.tron_will_be_send_token_fee_title),
+                    subtitle = resourceReference(R.string.tron_will_be_send_token_fee_description),
+                ),
+            )
+        }
+    }
+
+    companion object {
+        const val TRON_FEE_NOTIFICATION_MAX_SHOW_COUNT = 3
     }
 }
