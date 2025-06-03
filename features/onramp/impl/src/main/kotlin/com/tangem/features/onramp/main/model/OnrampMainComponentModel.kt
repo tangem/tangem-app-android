@@ -20,6 +20,9 @@ import com.tangem.domain.onramp.model.OnrampAvailability
 import com.tangem.domain.onramp.model.OnrampProviderWithQuote
 import com.tangem.domain.onramp.model.OnrampQuote
 import com.tangem.domain.onramp.model.error.OnrampError
+import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
+import com.tangem.domain.settings.usercountry.models.UserCountry
+import com.tangem.domain.settings.usercountry.models.needApplyFCARestrictions
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.onramp.main.OnrampMainComponent
 import com.tangem.features.onramp.main.entity.*
@@ -35,6 +38,7 @@ import com.tangem.utils.isNullOrZero
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.util.Locale
 import javax.inject.Inject
 
 @Suppress("LongParameterList", "LargeClass")
@@ -53,10 +57,14 @@ internal class OnrampMainComponentModel @Inject constructor(
     private val messageSender: UiMessageSender,
     private val urlOpener: UrlOpener,
     getWalletsUseCase: GetWalletsUseCase,
+    getUserCountryUseCase: GetUserCountryUseCase,
     paramsContainer: ParamsContainer,
 ) : Model(), OnrampIntents {
 
     private val params: OnrampMainComponent.Params = paramsContainer.require()
+
+    val userWallet = getWalletsUseCase.invokeSync().first { it.walletId == params.userWalletId }
+
     private val stateFactory = OnrampStateFactory(
         currentStateProvider = Provider { _state.value },
         cryptoCurrency = params.cryptoCurrency,
@@ -67,8 +75,8 @@ internal class OnrampMainComponentModel @Inject constructor(
         analyticsEventHandler = analyticsEventHandler,
         onrampIntents = this,
         cryptoCurrency = params.cryptoCurrency,
+        needApplyFCARestrictions = Provider { userCountry.needApplyFCARestrictions() },
     )
-    private val selectedUserWallet = getWalletsUseCase.invokeSync().first { it.walletId == params.userWalletId }
     private val _state: MutableStateFlow<OnrampMainComponentUM> = MutableStateFlow(
         value = stateFactory.getInitialState(
             currency = params.cryptoCurrency.name,
@@ -80,8 +88,16 @@ internal class OnrampMainComponentModel @Inject constructor(
     val bottomSheetNavigation: SlotNavigation<OnrampMainBottomSheetConfig> = SlotNavigation()
 
     private val lastUpdateState = mutableStateOf<OnrampLastUpdate?>(null)
+    private var userCountry: UserCountry? = null
 
     init {
+        userCountry = getUserCountryUseCase.invokeSync().getOrNull()
+            ?: UserCountry.Other(Locale.getDefault().country)
+
+        modelScope.launch {
+            clearOnrampCacheUseCase()
+        }
+
         sendScreenOpenAnalytics()
         checkResidenceCountry()
         subscribeToAmountChanges()
@@ -107,7 +123,7 @@ internal class OnrampMainComponentModel @Inject constructor(
 
     private fun checkResidenceCountry() {
         modelScope.launch {
-            checkOnrampAvailabilityUseCase()
+            checkOnrampAvailabilityUseCase(userWallet)
                 .onRight(::handleOnrampAvailability)
                 .onLeft(::handleOnrampError)
         }
@@ -158,7 +174,7 @@ internal class OnrampMainComponentModel @Inject constructor(
         if (!state?.amountBlockState?.amountFieldModel?.fiatValue.isNullOrEmpty()) {
             _state.update { amountStateFactory.getAmountSecondaryLoadingState() }
         }
-        fetchPairsUseCase.invoke(params.cryptoCurrency).fold(
+        fetchPairsUseCase.invoke(userWallet, params.cryptoCurrency).fold(
             ifLeft = ::handleOnrampError,
             ifRight = { _state.update { amountStateFactory.getAmountSecondaryResetState() } },
         )
@@ -184,6 +200,7 @@ internal class OnrampMainComponentModel @Inject constructor(
                     val content = state.value as? OnrampMainComponentUM.Content ?: return@runCatching
                     if (content.amountBlockState.amountFieldModel.fiatAmount.value.isNullOrZero()) return@runCatching
                     fetchQuotesUseCase.invoke(
+                        userWallet = userWallet,
                         amount = content.amountBlockState.amountFieldModel.fiatAmount,
                         cryptoCurrency = params.cryptoCurrency,
                     ).onLeft(::handleOnrampError)
@@ -216,7 +233,7 @@ internal class OnrampMainComponentModel @Inject constructor(
     }
 
     override fun onBuyClick(quote: OnrampProviderWithQuote.Data) {
-        if (isDemoCardUseCase.invoke(selectedUserWallet.cardId)) {
+        if (isDemoCardUseCase.invoke(userWallet.cardId)) {
             showDemoWarning()
         } else {
             val currentContentState = state.value as? OnrampMainComponentUM.Content ?: return
@@ -284,17 +301,6 @@ internal class OnrampMainComponentModel @Inject constructor(
             lastUpdateState.value = null
             return
         }
-
-        if (checkLastInputState(quote)) {
-            lastUpdateState.value = OnrampLastUpdate(
-                quote.fromAmount,
-                quote.countryCode,
-            )
-
-            _state.update {
-                amountStateFactory.getUpdatedProviderState(selectedQuote = quote, quotes = quotes)
-            }
-        }
         _state.update { amountStateFactory.getAmountSecondaryUpdatedState(quote = quote) }
     }
 
@@ -309,7 +315,7 @@ internal class OnrampMainComponentModel @Inject constructor(
         val quoteToCheck = quotes.firstOrNull { it !is OnrampQuote.Error }
 
         // Check if amount, country or currency has changed
-        return if (checkLastInputState(quoteToCheck)) {
+        val newQuote = if (checkLastInputState(quoteToCheck)) {
             quoteToCheck
         } else {
             val state = state.value as? OnrampMainComponentUM.Content
@@ -327,6 +333,20 @@ internal class OnrampMainComponentModel @Inject constructor(
             } else {
                 lastSelectedQuote
             }
+        }
+        newQuote?.let { updateProvider(newQuote, quotes) }
+
+        return newQuote
+    }
+
+    private fun updateProvider(quote: OnrampQuote, quotes: List<OnrampQuote>) {
+        lastUpdateState.value = OnrampLastUpdate(
+            quote.fromAmount,
+            quote.countryCode,
+        )
+
+        _state.update {
+            amountStateFactory.getUpdatedProviderState(selectedQuote = quote, quotes = quotes)
         }
     }
 
@@ -384,7 +404,8 @@ internal class OnrampMainComponentModel @Inject constructor(
                     providerName = errorState.provider.info.name,
                     paymentMethod = errorState.paymentMethod.name,
                 )
-                else -> { /* no-op */ }
+                else -> { /* no-op */
+                }
             }
         }
     }

@@ -1,7 +1,6 @@
 package com.tangem.features.send.v2.subcomponents.amount.model
 
 import androidx.compose.runtime.Stable
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.amountScreen.AmountScreenClickIntents
 import com.tangem.common.ui.amountScreen.converters.*
 import com.tangem.common.ui.amountScreen.converters.field.AmountFieldChangeTransformer
@@ -13,17 +12,14 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.tokens.GetMinimumTransactionAmountSyncUseCase
-import com.tangem.features.send.v2.common.NavigationUM
+import com.tangem.features.send.v2.common.PredefinedValues
+import com.tangem.features.send.v2.common.ui.state.NavigationUM
 import com.tangem.features.send.v2.impl.R
-import com.tangem.features.send.v2.send.SendRoute
-import com.tangem.features.send.v2.send.analytics.SendAnalyticEvents
-import com.tangem.features.send.v2.send.analytics.SendAnalyticEvents.SendScreenSource
 import com.tangem.features.send.v2.send.ui.state.ButtonsUM
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponentParams
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountReduceListener
@@ -46,8 +42,6 @@ import javax.inject.Inject
 internal class SendAmountModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
-    private val router: Router,
-    private val appRouter: AppRouter,
     private val getMinimumTransactionAmountSyncUseCase: GetMinimumTransactionAmountSyncUseCase,
     private val sendAmountReduceListener: SendAmountReduceListener,
     private val feeReloadTrigger: SendFeeReloadTrigger,
@@ -109,7 +103,10 @@ internal class SendAmountModel @Inject constructor(
                 )
             }
         }
-        params.predefinedAmountValue?.let(::onAmountValueChange)
+        val predefinedAmount = (params.predefinedValues as? PredefinedValues.Content)?.amount
+        if (predefinedAmount != null) {
+            onAmountValueChange(predefinedAmount)
+        }
     }
 
     fun updateState(amountUM: AmountState) {
@@ -167,11 +164,6 @@ internal class SendAmountModel @Inject constructor(
             )
         }
         saveResult()
-        if ((params as? SendAmountComponentParams.AmountParams)?.isEditMode == true) {
-            router.pop()
-        } else {
-            router.push(SendRoute.Confirm)
-        }
     }
 
     private fun subscribeOnAmountReduceToTriggerUpdates() {
@@ -228,7 +220,12 @@ internal class SendAmountModel @Inject constructor(
 
     private fun saveResult() {
         val params = params as? SendAmountComponentParams.AmountParams ?: return
-        params.callback.onAmountResult(uiState.value)
+        val predefinedAmount = (params.predefinedValues as? PredefinedValues.Content.QrCode)?.amount
+        val enteredAmount = (uiState.value as? AmountState.Data)?.amountTextField?.value
+        params.callback.onAmountResult(
+            amountUM = uiState.value,
+            isResetPredefined = predefinedAmount != enteredAmount,
+        )
     }
 
     private fun configAmountNavigation() {
@@ -247,20 +244,7 @@ internal class SendAmountModel @Inject constructor(
                     } else {
                         R.drawable.ic_close_24
                     },
-                    backIconClick = {
-                        if (route.isEditMode) {
-                            router.pop()
-                        } else {
-                            analyticsEventHandler.send(
-                                SendAnalyticEvents.CloseButtonClicked(
-                                    source = SendScreenSource.Amount,
-                                    isFromSummary = false,
-                                    isValid = state.isPrimaryButtonEnabled,
-                                ),
-                            )
-                            appRouter.pop()
-                        }
-                    },
+                    backIconClick = { params.onBackClick() },
                     primaryButton = ButtonsUM.PrimaryButtonUM(
                         text = if (route.isEditMode) {
                             resourceReference(R.string.common_continue)
@@ -268,7 +252,10 @@ internal class SendAmountModel @Inject constructor(
                             resourceReference(R.string.common_next)
                         },
                         isEnabled = state.isPrimaryButtonEnabled,
-                        onClick = ::onAmountNext,
+                        onClick = {
+                            onAmountNext()
+                            params.onNextClick()
+                        },
                     ),
                     prevButton = ButtonsUM.PrimaryButtonUM(
                         text = TextReference.EMPTY,
@@ -276,7 +263,7 @@ internal class SendAmountModel @Inject constructor(
                         isEnabled = true,
                         onClick = {
                             saveResult()
-                            router.pop()
+                            params.onBackClick()
                         },
                     ).takeIf { route.isEditMode.not() },
                     secondaryPairButtonsUM = null,
