@@ -14,9 +14,9 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.features.send.v2.common.analytics.CommonSendAnalyticEvents
+import com.tangem.features.send.v2.common.ui.state.ConfirmUM
 import com.tangem.features.send.v2.impl.R
-import com.tangem.features.send.v2.send.analytics.SendAnalyticEvents
-import com.tangem.features.send.v2.send.confirm.ui.state.ConfirmUM
 import com.tangem.features.send.v2.subcomponents.fee.model.checkIfFeeTooHigh
 import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeSelectorUM
 import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeType
@@ -30,6 +30,7 @@ internal class SendConfirmationNotificationsTransformer(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val cryptoCurrency: CryptoCurrency,
     private val appCurrency: AppCurrency,
+    private val analyticsCategoryName: String,
 ) : Transformer<ConfirmUM> {
     override fun transform(prevState: ConfirmUM): ConfirmUM {
         val state = prevState as? ConfirmUM.Content ?: return prevState
@@ -52,7 +53,10 @@ internal class SendConfirmationNotificationsTransformer(
         if (feeSelectorUM.selectedType == FeeType.Custom && minimumValue > customValue) {
             add(NotificationUM.Warning.FeeTooLow)
             analyticsEventHandler.send(
-                SendAnalyticEvents.NoticeTransactionDelays(cryptoCurrency.symbol),
+                CommonSendAnalyticEvents.NoticeTransactionDelays(
+                    categoryName = analyticsCategoryName,
+                    token = cryptoCurrency.symbol,
+                ),
             )
         }
     }
@@ -89,7 +93,7 @@ internal class SendConfirmationNotificationsTransformer(
             )
         }
         val fiatFee = formatFiatFee(
-            amount = fee.amount,
+            amount = fee.amount.copy(value = fiatFeeValue),
             isFeeConvertibleToFiat = feeUM.isFeeConvertibleToFiat,
             isFeeApproximate = feeUM.isFeeApproximate,
         )

@@ -7,4 +7,10 @@ internal class DefaultNFTFeatureToggles(
 ) : NFTFeatureToggles {
     override val isNFTEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(name = "NFT_ENABLED")
+
+    override val isNFTEVMEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(name = "NFT_EVM_ENABLED")
+
+    override val isNFTSolanaEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(name = "NFT_SOLANA_ENABLED")
 }

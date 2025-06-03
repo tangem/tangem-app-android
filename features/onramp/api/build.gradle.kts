@@ -13,6 +13,7 @@ dependencies {
     /* Project - Core */
     implementation(projects.core.decompose)
     implementation(projects.core.ui)
+    implementation(projects.core.deepLinks)
 
     /* Project - Domain */
     implementation(projects.domain.onramp.models)
