@@ -32,7 +32,7 @@ internal class DevFeatureTogglesManager(
 
         val savedFeatureToggles = appPreferencesStore.getObjectSyncOrNull<Map<String, Boolean>>(
             key = PreferencesKeys.FEATURE_TOGGLES_KEY,
-        ) ?: emptyMap()
+        ) ?: emptyMap<String, Boolean>()
 
         val localFeatureToggles = localTogglesStorage.toggles
             .associateToggles(currentVersion = versionProvider.get().orEmpty())

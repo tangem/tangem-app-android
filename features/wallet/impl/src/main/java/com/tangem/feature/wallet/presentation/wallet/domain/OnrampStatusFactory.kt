@@ -11,6 +11,7 @@ import com.tangem.domain.onramp.OnrampUpdateTransactionStatusUseCase
 import com.tangem.domain.onramp.model.OnrampStatus
 import com.tangem.domain.onramp.model.OnrampStatus.Status.*
 import com.tangem.domain.tokens.model.analytics.TokenOnrampAnalyticsEvent
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -36,31 +37,31 @@ internal class OnrampStatusFactory @Inject constructor(
         val selectedTx = bottomSheetConfig.value as? ExpressTransactionStateUM.OnrampUM ?: return
 
         if (selectedTx.activeStatus.isAutoDisposable || forceDispose) {
-            onrampRemoveTransactionUseCase(externalTxId = selectedTx.info.txExternalId)
+            onrampRemoveTransactionUseCase(txId = selectedTx.info.txId)
         }
     }
 
-    suspend fun updateOnrmapTransactionStatuses() = withContext(dispatchers.io) {
+    suspend fun updateOnrmapTransactionStatuses(userWallet: UserWallet) = withContext(dispatchers.io) {
         val singleWalletState = stateHolder.getSelectedWallet() as? WalletState.SingleCurrency.Content
             ?: return@withContext
 
         singleWalletState.expressTxs.map { tx ->
             async {
                 if (tx is ExpressTransactionStateUM.OnrampUM) {
-                    updateOnrampTxStatus(tx)
+                    updateOnrampTxStatus(userWallet, tx)
                 }
             }
         }.awaitAll()
     }
 
-    private suspend fun updateOnrampTxStatus(onrampTx: ExpressTransactionStateUM.OnrampUM) {
+    private suspend fun updateOnrampTxStatus(userWallet: UserWallet, onrampTx: ExpressTransactionStateUM.OnrampUM) {
         if (!onrampTx.activeStatus.isTerminal) {
-            getOnrampStatusUseCase(onrampTx.info.txId).fold(
+            getOnrampStatusUseCase(userWallet = userWallet, onrampTx.info.txId).fold(
                 ifLeft = {
                     Timber.e("Couldn't update onramp status. $it")
                 },
                 ifRight = { statusModel ->
-                    val externalTxId = statusModel.externalTxId
+                    val txId = statusModel.txId
                     val status = toAnalyticStatus(statusModel.status) ?: return
 
                     if (statusModel.status != onrampTx.activeStatus) {
@@ -73,8 +74,9 @@ internal class OnrampStatusFactory @Inject constructor(
                             ),
                         )
                         onrampUpdateTransactionStatusUseCase(
-                            externalTxId = externalTxId,
+                            txId = txId,
                             externalTxUrl = statusModel.externalTxUrl.orEmpty(),
+                            externalTxId = statusModel.externalTxId.orEmpty(),
                             status = statusModel.status,
                         )
                     }
@@ -93,10 +95,12 @@ internal class OnrampStatusFactory @Inject constructor(
             PaymentProcessing,
             Paid,
             Sending,
+            RefundInProgress,
             -> ExpressAnalyticsStatus.InProgress
             Verifying -> ExpressAnalyticsStatus.KYC
             Failed -> ExpressAnalyticsStatus.Fail
             Finished -> ExpressAnalyticsStatus.Done
+            Refunded -> ExpressAnalyticsStatus.Refunded
             null -> null
         }
     }

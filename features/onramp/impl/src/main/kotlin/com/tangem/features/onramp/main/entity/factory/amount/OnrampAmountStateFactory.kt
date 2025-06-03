@@ -26,6 +26,7 @@ internal class OnrampAmountStateFactory(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val onrampIntents: OnrampIntents,
     private val cryptoCurrency: CryptoCurrency,
+    private val needApplyFCARestrictions: Provider<Boolean>,
 ) {
 
     private val onrampAmountFieldChangeConverter = OnrampAmountFieldChangeConverter(
@@ -115,14 +116,17 @@ internal class OnrampAmountStateFactory(
             ),
         )
 
-        val bestProvider = selectedQuote as? OnrampQuote.Data
+        val bestProvider = quotes.firstOrNull()
         val isMultipleQuotes = !quotes.isSingleItem()
         val isOtherQuotesHasData = quotes
             .filter { it.paymentMethod == selectedQuote.paymentMethod }
             .filterNot { it == bestProvider }
             .any { it is OnrampQuote.Data }
 
-        val isBestProvider = selectedQuote == bestProvider && isMultipleQuotes && isOtherQuotesHasData
+        val isBestProvider = selectedQuote == bestProvider &&
+            isMultipleQuotes &&
+            isOtherQuotesHasData &&
+            !needApplyFCARestrictions()
 
         return currentState.copy(
             providerBlockState = selectedQuote.toProviderBlockState(isBestProvider),
@@ -154,7 +158,7 @@ internal class OnrampAmountStateFactory(
                 paymentMethod = providerResult.paymentMethod,
                 providerId = providerResult.provider.id,
                 providerName = providerResult.provider.info.name,
-                isBestRate = isBestRate,
+                isBestRate = isBestRate && !needApplyFCARestrictions(),
                 onClick = onrampIntents::openProviders,
                 termsOfUseLink = providerResult.provider.info.termsOfUseLink,
                 privacyPolicyLink = providerResult.provider.info.privacyPolicyLink,

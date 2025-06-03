@@ -191,6 +191,7 @@
   <string name="common_server_unavailable">Le serveur n\'est pas disponible, veuillez réessayer plus tard</string>
   <string name="common_share">Partager</string>
   <string name="common_share_link">Partager le lien</string>
+  <string name="common_show_more">Afficher plus</string>
   <string name="common_sign">Signez</string>
   <string name="common_sign_and_send">Signez et envoyez</string>
   <string name="common_stake">Stake</string>
@@ -443,6 +444,8 @@
   <string name="markets_sort_by_top_gainers_title">Meilleurs Gagnants</string>
   <string name="markets_sort_by_top_losers_title">Top Perdants</string>
   <string name="markets_sort_by_trending_title">Tendances</string>
+  <string name="markets_staking_banner_description_placeholder">Le staking est le moyen le plus simple de recevoir des récompenses sur votre crypto. %s</string>
+  <string name="markets_staking_banner_title">Gagnez jusqu\'à %s APY</string>
   <string name="markets_token_details_about_token_title">À propos de %s</string>
   <plurals name="markets_token_details_amount_exchanges">
     <item quantity="one">%d échange</item>
@@ -874,6 +877,11 @@
   <string name="staking_notification_restake_text">L\'option de restaker vous permet de déplacer vos fonds d\'un validateur à un autre sans avoir besoin de les déstaker.</string>
   <string name="staking_notification_stake_entire_balance_text">Vous êtes sur le point de staker l\'intégralité de votre solde. Nous vous recommandons de laisser un petit montant pour couvrir les frais de réseau pour unstaking ou la réclamation des récompenses.</string>
   <string name="staking_notification_ton_activate_account">Pour commencer à staker TON, effectuez d\'abord une transaction sortante de n\'importe quel montant — cela activera votre portefeuille.</string>
+  <string name="staking_notification_ton_extra_reserve_info">Jusqu\'à 0,2 TON peuvent être requis en plus des frais de réseau pour terminer la transaction. Tout montant non utilisé sera remboursé.</string>
+  <string name="staking_notification_ton_extra_reserve_is_required">0,2 TON requis pour effectuer cette opération, en plus des frais de réseau. Veuillez recharger votre solde.</string>
+  <string name="staking_notification_ton_extra_reserve_title">0,2 Ton réservés</string>
+  <string name="staking_notification_ton_have_to_unstake_all_text">Cette action fermera d\'autres positions ou les fera passer au statut de retrait, conformément aux règles du réseau.</string>
+  <string name="staking_notification_ton_have_to_unstake_all_title">Statut des positions</string>
   <string name="staking_notification_unlock_text">Débloquez votre argent pour le retirer du processus de staking. Le déverrouillage prend %s.</string>
   <string name="staking_notification_unstake_cosmos_text">Vos fonds seront disponibles à l\'utilisation après la période de déblocage de 21 jours. La récompense sera retirée en même temps que vos fonds de déblocage.</string>
   <string name="staking_notification_unstake_text">Vos fonds seront disponibles pour utilisation après la période de désengagement %s.</string>

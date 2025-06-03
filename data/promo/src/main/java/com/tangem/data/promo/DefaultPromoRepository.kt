@@ -67,6 +67,20 @@ internal class DefaultPromoRepository(
         appPreferencesStore.store(PreferencesKeys.getShouldShowPromoKey(promoId = promoId.name), false)
     }
 
+    override suspend fun isMarketsStakingNotificationHideClicked(): Flow<Boolean> {
+        return appPreferencesStore.get(
+            key = PreferencesKeys.MARKETS_STAKING_NOTIFICATION_HIDE_CLICKED_KEY,
+            default = false,
+        )
+    }
+
+    override suspend fun setMarketsStakingNotificationHideClicked() {
+        appPreferencesStore.store(
+            key = PreferencesKeys.MARKETS_STAKING_NOTIFICATION_HIDE_CLICKED_KEY,
+            value = true,
+        )
+    }
+
     override fun getStoryById(id: String): Flow<StoryContent?> = isReadyToShowStories(id).mapLatest {
         getStoryByIdSync(id = id, refresh = false)
     }

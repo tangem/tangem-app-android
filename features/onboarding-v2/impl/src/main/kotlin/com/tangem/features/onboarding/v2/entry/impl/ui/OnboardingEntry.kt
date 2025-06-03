@@ -21,8 +21,8 @@ internal inline fun OnboardingEntry(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .statusBarsPadding()
-            .background(TangemTheme.colors.background.primary),
+            .background(TangemTheme.colors.background.primary)
+            .statusBarsPadding(),
     ) {
         stepperContent(Modifier.fillMaxWidth())
 

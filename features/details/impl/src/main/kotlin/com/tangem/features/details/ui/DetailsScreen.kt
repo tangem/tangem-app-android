@@ -1,7 +1,6 @@
 package com.tangem.features.details.ui
 
 import android.content.res.Configuration
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
@@ -41,8 +40,6 @@ internal fun DetailsScreen(
 ) {
     val backgroundColor = TangemTheme.colors.background.secondary
 
-    BackHandler(onBack = state.popBack)
-
     Scaffold(
         modifier = modifier,
         containerColor = backgroundColor,
@@ -59,6 +56,8 @@ internal fun DetailsScreen(
             userWalletListBlockContent = userWalletListBlockContent,
         )
     }
+
+    SelectFeedbackEmailTypeBottomSheet(state.selectFeedbackEmailTypeBSConfig)
 }
 
 @Composable

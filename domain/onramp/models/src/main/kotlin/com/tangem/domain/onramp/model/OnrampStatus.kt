@@ -6,7 +6,7 @@ data class OnrampStatus(
     val payoutAddress: String,
     val status: Status,
     val failReason: String?,
-    val externalTxId: String,
+    val externalTxId: String?,
     val externalTxUrl: String?,
     val payoutHash: String?,
     val createdAt: String,
@@ -31,6 +31,8 @@ data class OnrampStatus(
         Paid(order = 8),
         Sending(order = 9),
         Finished(order = 10),
+        RefundInProgress(order = 11),
+        Refunded(order = 12),
         ;
 
         val isTerminal: Boolean
@@ -39,6 +41,7 @@ data class OnrampStatus(
                 Failed,
                 Paused,
                 Finished,
+                Refunded,
                 -> true
                 Created,
                 WaitingForPayment,
@@ -46,6 +49,7 @@ data class OnrampStatus(
                 Verifying,
                 Paid,
                 Sending,
+                RefundInProgress,
                 -> false
             }
 
@@ -62,6 +66,8 @@ data class OnrampStatus(
                 Verifying,
                 Paid,
                 Sending,
+                RefundInProgress,
+                Refunded,
                 -> false
             }
 
@@ -78,6 +84,8 @@ data class OnrampStatus(
                 Paid,
                 Sending,
                 Finished,
+                RefundInProgress,
+                Refunded,
                 -> false
             }
     }

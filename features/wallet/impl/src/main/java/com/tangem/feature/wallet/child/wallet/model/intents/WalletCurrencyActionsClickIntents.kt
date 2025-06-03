@@ -15,6 +15,7 @@ import com.tangem.common.ui.bottomsheet.chooseaddress.ChooseAddressBottomSheetCo
 import com.tangem.common.ui.bottomsheet.receive.AddressModel
 import com.tangem.common.ui.bottomsheet.receive.TokenReceiveBottomSheetConfig
 import com.tangem.common.ui.bottomsheet.receive.mapToAddressModels
+import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.WrappedList
@@ -78,7 +79,7 @@ interface WalletCurrencyActionsClickIntents {
         unavailabilityReason: ScenarioUnavailabilityReason,
     )
 
-    fun onReceiveClick(cryptoCurrencyStatus: CryptoCurrencyStatus)
+    fun onReceiveClick(cryptoCurrencyStatus: CryptoCurrencyStatus, event: AnalyticsEvent? = null)
 
     fun onStakeClick(cryptoCurrencyStatus: CryptoCurrencyStatus, yield: Yield?)
 
@@ -94,7 +95,7 @@ interface WalletCurrencyActionsClickIntents {
 
     fun onAnalyticsClick(cryptoCurrencyStatus: CryptoCurrencyStatus)
 
-    fun onMultiWalletBuyClick(userWalletId: UserWalletId)
+    fun onMultiWalletBuyClick(userWalletId: UserWalletId, screenType: String)
 
     fun onMultiWalletSellClick(userWalletId: UserWalletId)
 
@@ -151,7 +152,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         appRouter.push(route)
     }
 
-    override fun onReceiveClick(cryptoCurrencyStatus: CryptoCurrencyStatus) {
+    override fun onReceiveClick(cryptoCurrencyStatus: CryptoCurrencyStatus, event: AnalyticsEvent?) {
         val userWalletId = stateHolder.getSelectedWalletId()
 
         analyticsEventHandler.send(
@@ -165,6 +166,8 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         analyticsEventHandler.send(
             event = TokenReceiveAnalyticsEvent.ReceiveScreenOpened(cryptoCurrencyStatus.currency.symbol),
         )
+
+        event?.let { analyticsEventHandler.send(it) }
 
         stateHolder.showBottomSheet(
             createReceiveBottomSheetContent(
@@ -416,6 +419,8 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
                     ),
                 ),
             )
+
+            stateHolder.update(CloseBottomSheetTransformer(userWalletId = stateHolder.getSelectedWalletId()))
         }
     }
 
@@ -470,7 +475,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         }
     }
 
-    override fun onMultiWalletBuyClick(userWalletId: UserWalletId) {
+    override fun onMultiWalletBuyClick(userWalletId: UserWalletId, screenType: String) {
         onMultiWalletActionClick(
             statusFlow = if (onrampFeatureToggles.isFeatureEnabled) {
                 rampStateManager.getExpressInitializationStatus(userWalletId)
@@ -478,7 +483,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
                 rampStateManager.getBuyInitializationStatus()
             },
             route = AppRoute.BuyCrypto(userWalletId = userWalletId),
-            eventCreator = MainScreenAnalyticsEvent::ButtonBuy,
+            eventCreator = { MainScreenAnalyticsEvent.ButtonBuy(status = it, screenType = screenType) },
         )
     }
 

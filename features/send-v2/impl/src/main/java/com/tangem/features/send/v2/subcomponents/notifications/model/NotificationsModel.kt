@@ -5,6 +5,7 @@ import arrow.core.getOrElse
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.ui.R
 import com.tangem.common.ui.amountScreen.converters.AmountReduceByTransformer.ReduceByData
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.notifications.NotificationsFactory.addDustWarningNotification
@@ -23,6 +24,9 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.notifications.GetTronFeeNotificationShowCountUseCase
+import com.tangem.domain.notifications.IncrementNotificationsShowCountUseCase
 import com.tangem.domain.tokens.GetBalanceNotEnoughForFeeWarningUseCase
 import com.tangem.domain.tokens.GetCurrencyCheckUseCase
 import com.tangem.domain.tokens.IsAmountSubtractAvailableUseCase
@@ -40,6 +44,7 @@ import com.tangem.features.send.v2.subcomponents.notifications.NotificationsComp
 import com.tangem.features.send.v2.subcomponents.notifications.NotificationsUpdateTrigger
 import com.tangem.features.send.v2.subcomponents.notifications.analytics.NotificationsAnalyticEvents
 import com.tangem.lib.crypto.BlockchainUtils
+import com.tangem.lib.crypto.BlockchainUtils.isTron
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.orZero
 import kotlinx.collections.immutable.ImmutableList
@@ -64,6 +69,8 @@ internal class NotificationsModel @Inject constructor(
     private val getCurrencyCheckUseCase: GetCurrencyCheckUseCase,
     private val getBalanceNotEnoughForFeeWarningUseCase: GetBalanceNotEnoughForFeeWarningUseCase,
     private val validateTransactionUseCase: ValidateTransactionUseCase,
+    private val getTronFeeNotificationShowCountUseCase: GetTronFeeNotificationShowCountUseCase,
+    private val incrementNotificationsShowCountUseCase: IncrementNotificationsShowCountUseCase,
     private val sendFeeReloadTrigger: SendFeeReloadTrigger,
     private val sendAmountReduceTrigger: SendAmountReduceTrigger,
     private val notificationsUpdateTrigger: NotificationsUpdateTrigger,
@@ -79,13 +86,7 @@ internal class NotificationsModel @Inject constructor(
     private val currency = cryptoCurrencyStatus.currency
     private val appCurrency = params.appCurrency
 
-    private var destinationAddress = params.destinationAddress
-    private var memo = params.memo
-    private var amountValue = params.amountValue
-    private var reduceAmountBy = params.reduceAmountBy
-    private var isIgnoreReduce = params.isIgnoreReduce
-    private var fee = params.fee
-    private var feeError = params.feeError
+    private var notificationData = params.notificationData
 
     private val _uiState = MutableStateFlow<ImmutableList<NotificationUM>>(persistentListOf())
     val uiState = _uiState.asStateFlow()
@@ -95,6 +96,7 @@ internal class NotificationsModel @Inject constructor(
     init {
         subscribeToNotificationUpdateTrigger()
         checkIfSubtractAvailable()
+        incrementNotificationsShowCount()
     }
 
     private fun subscribeToNotificationUpdateTrigger() {
@@ -110,15 +112,14 @@ internal class NotificationsModel @Inject constructor(
         }
     }
 
-    private suspend fun updateState(data: NotificationData) {
-        destinationAddress = data.destinationAddress
-        memo = data.memo
-        amountValue = data.amountValue
-        reduceAmountBy = data.reduceAmountBy
-        isIgnoreReduce = data.isIgnoreReduce
-        fee = data.fee
-        feeError = data.feeError
+    private fun incrementNotificationsShowCount() {
+        modelScope.launch {
+            incrementNotificationsShowCountUseCase(cryptoCurrencyStatus.currency)
+        }
+    }
 
+    private suspend fun updateState(data: NotificationData) {
+        notificationData = data
         buildNotifications()
     }
 
@@ -127,26 +128,20 @@ internal class NotificationsModel @Inject constructor(
             addFeeUnreachableNotification(
                 tokenStatus = cryptoCurrencyStatus,
                 coinStatus = feeCryptoCurrencyStatus,
-                feeError = feeError,
+                feeError = notificationData.feeError,
                 onReload = {
                     modelScope.launch {
                         sendFeeReloadTrigger.triggerUpdate(
                             feeData = SendFeeData(
-                                amount = amountValue,
-                                destinationAddress = destinationAddress,
+                                amount = notificationData.amountValue,
+                                destinationAddress = notificationData.destinationAddress,
                             ),
                         )
                     }
                 },
                 onClick = ::showTokenDetails,
             )
-            addDomainNotifications(
-                destinationAddress = destinationAddress,
-                memo = memo,
-                amountValue = amountValue,
-                reduceAmountBy = reduceAmountBy,
-                fee = fee,
-            )
+            addDomainNotifications()
         }
 
         notificationsUpdateTrigger.callbackHasError(notifications.any { it is NotificationUM.Error })
@@ -167,13 +162,7 @@ internal class NotificationsModel @Inject constructor(
         }
     }
 
-    private suspend fun MutableList<NotificationUM>.addDomainNotifications(
-        destinationAddress: String,
-        memo: String?,
-        amountValue: BigDecimal,
-        reduceAmountBy: BigDecimal,
-        fee: Fee?,
-    ) {
+    private suspend fun MutableList<NotificationUM>.addDomainNotifications() = with(notificationData) {
         val balance = cryptoCurrencyStatus.value.amount ?: return
         val feeValue = fee?.amount?.value ?: return
         val isFeeCoverage = checkFeeCoverage(
@@ -218,6 +207,7 @@ internal class NotificationsModel @Inject constructor(
             isFeeCoverage = isFeeCoverage,
             currencyCheck = currencyCheck,
         )
+        addInfoNotifications()
     }
 
     private fun getFeeCurrencyBalanceAfterTx(sendingAmount: BigDecimal, feeValue: BigDecimal): BigDecimal? {
@@ -311,7 +301,7 @@ internal class NotificationsModel @Inject constructor(
     ) {
         val validationError = validateTransactionUseCase(
             userWalletId = userWalletId,
-            amount = amountValue.convertToSdkAmount(cryptoCurrencyStatus.currency),
+            amount = enteredAmount.convertToSdkAmount(currency),
             fee = fee,
             memo = memo,
             destination = destinationAddress,
@@ -359,7 +349,7 @@ internal class NotificationsModel @Inject constructor(
         addHighFeeWarningNotification(
             enteredAmountValue = enteredAmount,
             cryptoCurrencyStatus = cryptoCurrencyStatus,
-            ignoreAmountReduce = isIgnoreReduce,
+            ignoreAmountReduce = notificationData.isIgnoreReduce,
             onReduceClick = { reduceBy, reduceByDiff, _ ->
                 modelScope.launch {
                     sendAmountReduceTrigger.triggerReduceBy(
@@ -376,5 +366,28 @@ internal class NotificationsModel @Inject constructor(
                 }
             },
         )
+    }
+
+    private suspend fun MutableList<NotificationUM>.addInfoNotifications() {
+        addTronNetworkFeesNotification()
+    }
+
+    private suspend fun MutableList<NotificationUM>.addTronNetworkFeesNotification() {
+        val cryptoCurrency = cryptoCurrencyStatus.currency
+        val isTronToken = cryptoCurrency is CryptoCurrency.Token &&
+            isTron(cryptoCurrency.network.id.value)
+
+        if (isTronToken && getTronFeeNotificationShowCountUseCase() <= TRON_FEE_NOTIFICATION_MAX_SHOW_COUNT) {
+            add(
+                NotificationUM.Info(
+                    title = resourceReference(R.string.tron_will_be_send_token_fee_title),
+                    subtitle = resourceReference(R.string.tron_will_be_send_token_fee_description),
+                ),
+            )
+        }
+    }
+
+    companion object {
+        const val TRON_FEE_NOTIFICATION_MAX_SHOW_COUNT = 3
     }
 }

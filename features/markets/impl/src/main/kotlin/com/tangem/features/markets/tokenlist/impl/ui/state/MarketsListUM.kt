@@ -9,6 +9,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.features.markets.impl.R
 import kotlinx.collections.immutable.ImmutableList
+import java.math.BigDecimal
 
 internal data class MarketsListUM(
     val list: ListUM,
@@ -18,6 +19,9 @@ internal data class MarketsListUM(
     val selectedInterval: TrendInterval,
     val onIntervalClick: (TrendInterval) -> Unit,
     val onSortByButtonClick: () -> Unit,
+    val stakingNotificationMaxApy: BigDecimal?,
+    val onStakingNotificationClick: () -> Unit,
+    val onStakingNotificationCloseClick: () -> Unit,
 ) {
     val isInSearchMode
         get() = searchBar.isActive
@@ -35,6 +39,7 @@ enum class SortByTypeUM(val text: TextReference) {
     ExperiencedBuyers(resourceReference(R.string.markets_sort_by_experienced_buyers_title)),
     TopGainers(resourceReference(R.string.markets_sort_by_top_gainers_title)),
     TopLosers(resourceReference(R.string.markets_sort_by_top_losers_title)),
+    Staking(resourceReference(R.string.common_staking)),
 }
 
 @Immutable

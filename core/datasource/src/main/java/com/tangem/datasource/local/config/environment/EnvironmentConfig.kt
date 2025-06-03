@@ -14,4 +14,5 @@ data class EnvironmentConfig(
     val express: ExpressModel? = null,
     val devExpress: ExpressModel? = null,
     val stakeKitApiKey: String? = null,
+    val blockAidApiKey: String? = null,
 )

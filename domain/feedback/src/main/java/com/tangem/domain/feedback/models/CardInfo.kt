@@ -11,6 +11,7 @@ data class CardInfo(
     val signedHashesList: List<SignedHashes>,
     val isImported: Boolean,
     val isStart2Coin: Boolean,
+    val isVisa: Boolean,
 ) {
 
     data class SignedHashes(val curve: String, val total: String?)

@@ -29,13 +29,13 @@ import com.tangem.feature.swap.domain.models.domain.IncludeFeeInAmount
 import com.tangem.feature.swap.domain.models.domain.NetworkInfo
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
 import com.tangem.feature.swap.domain.models.ui.*
+import com.tangem.feature.swap.model.SwapNotificationsFactory
+import com.tangem.feature.swap.model.SwapProcessDataState
 import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.models.states.*
 import com.tangem.feature.swap.models.states.events.SwapEvent
 import com.tangem.feature.swap.presentation.R
-import com.tangem.feature.swap.model.SwapNotificationsFactory
 import com.tangem.feature.swap.utils.formatToUIRepresentation
-import com.tangem.feature.swap.model.SwapProcessDataState
 import com.tangem.utils.Provider
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import com.tangem.utils.StringsSigns.PERCENT
@@ -750,6 +750,9 @@ internal class StateBuilder(
 
     fun loadingPermissionState(uiState: SwapStateHolder): SwapStateHolder {
         return uiState.copy(
+            swapButton = uiState.swapButton.copy(
+                enabled = false,
+            ),
             permissionState = GiveTxPermissionState.InProgress,
             notifications = notificationsFactory.getApprovalInProgressStateNotification(uiState.notifications),
         )

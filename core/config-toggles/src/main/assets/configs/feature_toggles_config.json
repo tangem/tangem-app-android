@@ -8,14 +8,6 @@
         "version": "undefined"
     },
     {
-        "name": "ONBOARDING_CODE_REFACTORING_ENABLED",
-        "version": "5.22.0"
-    },
-    {
-        "name": "NAVIGATION_REFACTORING",
-        "version": "5.23.0"
-    },
-    {
         "name": "VISA_ONBOARDING_ENABLED",
         "version": "undefined"
     },
@@ -28,6 +20,14 @@
         "version": "undefined"
     },
     {
+        "name": "NFT_EVM_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "NFT_SOLANA_ENABLED",
+        "version": "undefined"
+    },
+    {
         "name": "STAKING_CARDANO_ENABLED",
         "version": "undefined"
     },
@@ -36,20 +36,12 @@
         "version": "5.22.0"
     },
     {
-        "name": "ASK_BIOMETRY_REFACTORING_ENABLED",
-        "version": "5.22.0"
-    },
-    {
-        "name": "NOTE_REFACTORING_ENABLED",
-        "version": "5.23.0"
+        "name": "NEW_ARTWORK_LOADING",
+        "version": "5.25.0"
     },
     {
         "name": "NEW_ATTESTATION_ENABLED",
-        "version": "undefined"
-    },
-    {
-        "name": "TWIN_REFACTORING_ENABLED",
-        "version": "5.23.0"
+        "version": "5.24.0"
     },
     {
         "name": "SEND_V2_ENABLED",
@@ -62,5 +54,13 @@
     {
         "name": "NETWORKS_LOADING_REFACTORING_ENABLED",
         "version": "5.23.0"
+    },
+    {
+        "name": "QUOTES_LOADING_REFACTORING_ENABLED",
+        "version": "5.24.0"
+    },
+    {
+        "name": "STAKING_LOADING_REFACTORING_ENABLED",
+        "version": "5.25.0"
     }
 ]

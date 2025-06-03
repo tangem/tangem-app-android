@@ -2,22 +2,29 @@ package com.tangem.data.markets.converters
 
 import com.tangem.datasource.api.markets.models.response.TokenMarketListResponse
 import com.tangem.domain.markets.TokenMarket
+import com.tangem.domain.markets.TokenMarketListWithMaxApy
 import com.tangem.domain.markets.TokenQuotesShort
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.utils.converter.Converter
+import com.tangem.utils.extensions.isPositive
 
-internal object TokenMarketListConverter : Converter<TokenMarketListResponse, List<TokenMarket>> {
+internal object TokenMarketListConverter : Converter<TokenMarketListResponse, TokenMarketListWithMaxApy> {
 
-    override fun convert(value: TokenMarketListResponse): List<TokenMarket> {
+    override fun convert(value: TokenMarketListResponse): TokenMarketListWithMaxApy {
         val imageHost = value.imageHost ?: run {
             if (value.tokens.isEmpty()) {
-                return emptyList()
+                return TokenMarketListWithMaxApy(emptyList(), null)
             } else {
                 error("imageHost cannot be null")
             }
         }
 
-        return value.tokens.map { token ->
+        val tokens = value.tokens.map { token ->
+            val stakingRate = token.stakingOpportunities
+                ?.mapNotNull { it.apy }
+                ?.max()
+                .takeIf { it?.isPositive() == true }
+
             TokenMarket(
                 id = CryptoCurrency.RawID(token.id),
                 name = token.name,
@@ -33,7 +40,9 @@ internal object TokenMarketListConverter : Converter<TokenMarketListResponse, Li
                     monthChangePercent = token.priceChangePercentage?.day30?.movePointLeft(2),
                 ),
                 tokenCharts = TokenMarket.Charts(h24 = null, week = null, month = null),
+                stakingRate = stakingRate,
             )
         }
+        return TokenMarketListWithMaxApy(tokens, value.summary?.maxApy)
     }
 }

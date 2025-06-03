@@ -32,6 +32,12 @@ internal object TransactionDomainModule {
 
     @Provides
     @Singleton
+    fun provideGetEthSpecificFeeUseCase(walletManagersFacade: WalletManagersFacade): GetEthSpecificFeeUseCase {
+        return GetEthSpecificFeeUseCase(walletManagersFacade = walletManagersFacade)
+    }
+
+    @Provides
+    @Singleton
     fun provideSendTransactionUseCase(
         cardSdkConfigRepository: CardSdkConfigRepository,
         transactionRepository: TransactionRepository,
@@ -146,5 +152,39 @@ internal object TransactionDomainModule {
     @Singleton
     fun provideGetAllowanceUseCase(transactionRepository: TransactionRepository): GetAllowanceUseCase {
         return GetAllowanceUseCase(transactionRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideCreateTransferTransactionUseCase(
+        transactionRepository: TransactionRepository,
+    ): CreateTransferTransactionUseCase {
+        return CreateTransferTransactionUseCase(transactionRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun providePrepareForSendUseCase(
+        transactionRepository: TransactionRepository,
+        cardSdkConfigRepository: CardSdkConfigRepository,
+    ): PrepareForSendUseCase {
+        return PrepareForSendUseCase(transactionRepository, cardSdkConfigRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideSignUseCase(
+        walletManagersFacade: WalletManagersFacade,
+        cardSdkConfigRepository: CardSdkConfigRepository,
+    ): SignUseCase {
+        return SignUseCase(cardSdkConfigRepository, walletManagersFacade)
+    }
+
+    @Provides
+    @Singleton
+    fun provideCreateNFTTransferTransactionUseCase(
+        transactionRepository: TransactionRepository,
+    ): CreateNFTTransferTransactionUseCase {
+        return CreateNFTTransferTransactionUseCase(transactionRepository)
     }
 }

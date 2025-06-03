@@ -32,7 +32,7 @@ internal class DefaultOnrampTransactionRepository(
                 )?.map(transactionConverter::convert) ?: mutableSetOf()
 
                 val updated = stored.toMutableSet()
-                    .addOrReplace(transaction) { it.externalTxId == transaction.externalTxId }
+                    .addOrReplace(transaction) { it.txId == transaction.txId }
                     .map(transactionConverter::convertBack)
                     .toSet()
 
@@ -44,12 +44,12 @@ internal class DefaultOnrampTransactionRepository(
         }
     }
 
-    override suspend fun getTransactionById(externalTxId: String): OnrampTransaction? = withContext(dispatchers.io) {
+    override suspend fun getTransactionById(txId: String): OnrampTransaction? = withContext(dispatchers.io) {
         val stored = appPreferencesStore.getObjectSetSync<OnrampTransactionDTO>(
             PreferencesKeys.ONRAMP_TRANSACTIONS_STATUSES_KEY,
         ).map(transactionConverter::convert)
 
-        stored.firstOrNull { it.externalTxId == externalTxId }
+        stored.firstOrNull { it.txId == txId }
     }
 
     override fun getTransactions(
@@ -64,18 +64,20 @@ internal class DefaultOnrampTransactionRepository(
         }
 
     override suspend fun updateTransactionStatus(
+        txId: String,
         externalTxId: String,
         externalTxUrl: String,
         status: OnrampStatus.Status,
     ) = withContext(dispatchers.io) {
-        val updatedTx = getTransactionById(externalTxId)?.copy(
+        val updatedTx = getTransactionById(txId)?.copy(
             externalTxUrl = externalTxUrl,
+            externalTxId = externalTxId,
             status = status,
         ) ?: return@withContext
         storeTransaction(updatedTx)
     }
 
-    override suspend fun removeTransaction(externalTxId: String) {
+    override suspend fun removeTransaction(txId: String) {
         withContext(dispatchers.io) {
             appPreferencesStore.editData { mutablePreferences ->
                 runCatching {
@@ -83,7 +85,7 @@ internal class DefaultOnrampTransactionRepository(
                         PreferencesKeys.ONRAMP_TRANSACTIONS_STATUSES_KEY,
                     )?.toMutableSet()
 
-                    stored?.removeIf { it.externalTxId == externalTxId }
+                    stored?.removeIf { it.txId == txId }
 
                     mutablePreferences.setObjectSet<OnrampTransactionDTO>(
                         key = PreferencesKeys.ONRAMP_TRANSACTIONS_STATUSES_KEY,

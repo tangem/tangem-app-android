@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.state.utils
 
+import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent.Companion.WALLET_TYPE
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
@@ -103,7 +104,7 @@ internal class WalletLoadingStateFactory(
             WalletManageButton.Buy(
                 enabled = true,
                 dimContent = false,
-                onClick = { clickIntents.onMultiWalletBuyClick(userWalletId = userWallet.walletId) },
+                onClick = { clickIntents.onMultiWalletBuyClick(userWalletId = userWallet.walletId, WALLET_TYPE) },
             ),
             WalletManageButton.Swap(
                 enabled = true,

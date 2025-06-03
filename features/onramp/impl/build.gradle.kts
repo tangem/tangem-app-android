@@ -22,6 +22,7 @@ dependencies {
     implementation(projects.core.analytics)
     implementation(projects.core.configToggles)
     implementation(projects.core.decompose)
+    implementation(projects.core.deepLinks)
     implementation(projects.core.navigation)
     implementation(projects.core.ui)
     implementation(projects.core.utils)

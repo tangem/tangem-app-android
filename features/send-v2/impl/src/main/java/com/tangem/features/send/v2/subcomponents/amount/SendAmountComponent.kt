@@ -38,6 +38,6 @@ internal class SendAmountComponent(
     }
 
     interface ModelCallback : SendNavigationModelCallback {
-        fun onAmountResult(amountUM: AmountState)
+        fun onAmountResult(amountUM: AmountState, isResetPredefined: Boolean)
     }
 }

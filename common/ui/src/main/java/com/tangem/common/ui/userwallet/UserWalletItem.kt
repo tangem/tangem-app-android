@@ -7,10 +7,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -24,7 +25,6 @@ import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.tangem.common.ui.R
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
-import com.tangem.core.ui.coil.RotationTransformation
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.block.BlockCard
@@ -61,7 +61,7 @@ fun UserWalletItem(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
         ) {
-            CardImage(imageUrl = state.imageUrl)
+            CardImage(state.imageState)
             NameAndInfo(
                 modifier = Modifier.weight(1f),
                 name = state.name,
@@ -146,40 +146,50 @@ private fun NameAndInfo(
     }
 }
 
+@Suppress("MagicNumber")
 @Composable
-private fun CardImage(imageUrl: String, modifier: Modifier = Modifier) {
+private fun CardImage(imageState: UserWalletItemUM.ImageState, modifier: Modifier = Modifier) {
     val imageModifier = modifier
-        .width(TangemTheme.dimens.size24)
-        .height(TangemTheme.dimens.size36)
+        .width(TangemTheme.dimens.size36)
+        .height(TangemTheme.dimens.size24)
         .clip(TangemTheme.shapes.roundedCornersSmall)
 
-    SubcomposeAsyncImage(
-        modifier = imageModifier,
-        model = ImageRequest.Builder(LocalContext.current)
-            .transformations(RotationTransformation(angle = 90f))
-            .size(
-                width = with(LocalDensity.current) { TangemTheme.dimens.size36.roundToPx() },
-                height = with(LocalDensity.current) { TangemTheme.dimens.size24.roundToPx() },
-            )
-            .data(imageUrl)
-            .crossfade(enable = true)
-            .allowHardware(enable = false)
-            .build(),
-        loading = {
+    when (imageState) {
+        is UserWalletItemUM.ImageState.Loading -> {
             RectangleShimmer(
                 modifier = imageModifier,
                 radius = TangemTheme.dimens.size2,
             )
-        },
-        error = {
-            Image(
+        }
+        is UserWalletItemUM.ImageState.Image -> {
+            SubcomposeAsyncImage(
                 modifier = imageModifier,
-                imageVector = ImageVector.vectorResource(R.drawable.img_card_wallet_2_gray_22_36),
+                model = ImageRequest.Builder(LocalContext.current)
+                    .size(
+                        width = with(LocalDensity.current) { TangemTheme.dimens.size36.roundToPx() },
+                        height = with(LocalDensity.current) { TangemTheme.dimens.size24.roundToPx() },
+                    )
+                    .data(imageState.artwork.verifiedArtwork?.toByteArray() ?: imageState.artwork.defaultUrl)
+                    .crossfade(enable = true)
+                    .allowHardware(enable = false)
+                    .build(),
+                loading = {
+                    RectangleShimmer(
+                        modifier = imageModifier,
+                        radius = TangemTheme.dimens.size2,
+                    )
+                },
+                error = {
+                    Image(
+                        modifier = imageModifier.then(Modifier.rotate(90F)),
+                        imageVector = ImageVector.vectorResource(R.drawable.img_card_wallet_2_gray_22_36),
+                        contentDescription = null,
+                    )
+                },
                 contentDescription = null,
             )
-        },
-        contentDescription = null,
-    )
+        }
+    }
 }
 
 @Composable
@@ -215,7 +225,6 @@ private class UserWalletItemUMPreviewProvider : PreviewParameterProvider<UserWal
                 name = stringReference("My Wallet"),
                 information = getInformation(cardCount = 1),
                 balance = UserWalletItemUM.Balance.Locked,
-                imageUrl = "",
                 isEnabled = true,
                 onClick = {},
             ),
@@ -224,7 +233,6 @@ private class UserWalletItemUMPreviewProvider : PreviewParameterProvider<UserWal
                 name = stringReference("Old wallet"),
                 information = getInformation(cardCount = 2),
                 balance = UserWalletItemUM.Balance.Hidden,
-                imageUrl = "",
                 isEnabled = true,
                 onClick = {},
                 endIcon = UserWalletItemUM.EndIcon.Arrow,
@@ -234,7 +242,6 @@ private class UserWalletItemUMPreviewProvider : PreviewParameterProvider<UserWal
                 name = stringReference("Multi Card"),
                 information = getInformation(cardCount = 3),
                 balance = UserWalletItemUM.Balance.Failed,
-                imageUrl = "",
                 isEnabled = false,
                 endIcon = UserWalletItemUM.EndIcon.Checkmark,
                 onClick = {},
@@ -244,7 +251,6 @@ private class UserWalletItemUMPreviewProvider : PreviewParameterProvider<UserWal
                 name = stringReference("Multi Card"),
                 information = getInformation(cardCount = 3),
                 balance = UserWalletItemUM.Balance.Loading,
-                imageUrl = "",
                 isEnabled = false,
                 endIcon = UserWalletItemUM.EndIcon.Checkmark,
                 onClick = {},
@@ -257,7 +263,6 @@ private class UserWalletItemUMPreviewProvider : PreviewParameterProvider<UserWal
                     value = "1.2345 BTC",
                     isFlickering = false,
                 ),
-                imageUrl = "",
                 isEnabled = false,
                 endIcon = UserWalletItemUM.EndIcon.Checkmark,
                 onClick = {},
@@ -270,7 +275,6 @@ private class UserWalletItemUMPreviewProvider : PreviewParameterProvider<UserWal
                     value = "1.2345 BTC",
                     isFlickering = true,
                 ),
-                imageUrl = "",
                 isEnabled = false,
                 endIcon = UserWalletItemUM.EndIcon.Checkmark,
                 onClick = {},

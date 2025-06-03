@@ -29,6 +29,7 @@ import com.tangem.features.staking.impl.presentation.state.StakingUiState
 import com.tangem.features.staking.impl.presentation.state.utils.checkAndCalculateSubtractedAmount
 import com.tangem.features.staking.impl.presentation.state.utils.checkFeeCoverage
 import com.tangem.lib.crypto.BlockchainUtils
+import com.tangem.lib.crypto.BlockchainUtils.isTon
 import com.tangem.utils.Provider
 import com.tangem.utils.extensions.orZero
 import com.tangem.utils.transformer.Transformer
@@ -114,6 +115,7 @@ internal class AddStakingNotificationsTransformer(
                 sendingAmount = sendingAmount,
                 actionAmount = amountValue,
                 feeValue = feeValue,
+                tonBalanceExtraFeeThreshold = TON_BALANCE_EXTRA_FEE_THRESHOLD,
             )
         }.toImmutableList()
 
@@ -175,6 +177,7 @@ internal class AddStakingNotificationsTransformer(
             cryptoCurrencyStatus = cryptoCurrencyStatus,
             onClick = prevState.clickIntents::openTokenDetails,
         )
+        addTonExtraFeeErrorNotification()
         addExceedsBalanceNotification(
             cryptoCurrencyWarning = currencyWarning,
             cryptoCurrencyStatus = cryptoCurrencyStatus,
@@ -246,7 +249,7 @@ internal class AddStakingNotificationsTransformer(
         cryptoCurrencyStatus: CryptoCurrencyStatus,
         onClick: (CryptoCurrency) -> Unit,
     ) {
-        val balance = cryptoCurrencyStatus.value.amount ?: BigDecimal.ZERO
+        val balance = cryptoCurrencyStatus.value.amount.orZero()
         if (!isSubtractionAvailable) return
 
         val showNotification = sendingAmount + feeAmount > balance
@@ -268,5 +271,18 @@ internal class AddStakingNotificationsTransformer(
             }
             add(notification)
         }
+    }
+
+    private fun MutableList<NotificationUM>.addTonExtraFeeErrorNotification() {
+        val amount = cryptoCurrencyStatusProvider().value.amount.orZero()
+        val cryptoCurrencyNetworkIdValue = cryptoCurrencyStatusProvider().currency.network.id.value
+
+        if (isTon(cryptoCurrencyNetworkIdValue) && amount < TON_BALANCE_EXTRA_FEE_THRESHOLD) {
+            add(NotificationUM.Error.TonStakingExtraFeeError)
+        }
+    }
+
+    private companion object {
+        val TON_BALANCE_EXTRA_FEE_THRESHOLD = BigDecimal(0.2)
     }
 }

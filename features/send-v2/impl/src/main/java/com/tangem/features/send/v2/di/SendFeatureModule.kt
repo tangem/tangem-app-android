@@ -2,9 +2,11 @@ package com.tangem.features.send.v2.di
 
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.features.send.v2.DefaultSendFeatureToggles
+import com.tangem.features.send.v2.api.NFTSendComponent
 import com.tangem.features.send.v2.api.SendComponent
 import com.tangem.features.send.v2.api.SendFeatureToggles
 import com.tangem.features.send.v2.send.DefaultSendComponent
+import com.tangem.features.send.v2.sendnft.DefaultNFTSendComponent
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -29,4 +31,8 @@ internal interface SendFeatureModuleBinds {
     @Binds
     @Singleton
     fun provideSendComponentFactory(impl: DefaultSendComponent.Factory): SendComponent.Factory
+
+    @Binds
+    @Singleton
+    fun provideNFTSendComponentFactory(impl: DefaultNFTSendComponent.Factory): NFTSendComponent.Factory
 }
