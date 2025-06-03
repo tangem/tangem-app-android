@@ -6,6 +6,7 @@ import com.arkivanov.decompose.router.slot.activate
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
+import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
@@ -16,11 +17,12 @@ import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
-import com.tangem.domain.walletconnect.model.WcSession
 import com.tangem.domain.walletconnect.WcPairService
 import com.tangem.domain.walletconnect.model.WcPairRequest
+import com.tangem.domain.walletconnect.model.WcSession
 import com.tangem.domain.walletconnect.usecase.WcSessionsUseCase
 import com.tangem.domain.walletconnect.usecase.disconnect.WcDisconnectUseCase
+import com.tangem.features.walletconnect.connections.components.ConnectionsComponent
 import com.tangem.features.walletconnect.connections.entity.WcConnectionsState
 import com.tangem.features.walletconnect.connections.entity.WcConnectionsTopAppBarConfig
 import com.tangem.features.walletconnect.connections.model.transformers.WcSessionsTransformer
@@ -31,7 +33,6 @@ import com.tangem.utils.transformer.update
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -44,8 +45,10 @@ internal class WcConnectionsModel @Inject constructor(
     private val wcDisconnectUseCase: WcDisconnectUseCase,
     private val wcPairService: WcPairService,
     override val dispatchers: CoroutineDispatcherProvider,
+    paramsContainer: ParamsContainer,
 ) : Model() {
 
+    private val params = paramsContainer.require<ConnectionsComponent.Params>()
     val uiState: StateFlow<WcConnectionsState>
     field = MutableStateFlow<WcConnectionsState>(getInitialState())
     val bottomSheetNavigation: SlotNavigation<WcConnectionsBottomSheetConfig> = SlotNavigation()
@@ -58,17 +61,23 @@ internal class WcConnectionsModel @Inject constructor(
     private fun listenQrUpdates() {
         listenToQrScanningUseCase(SourceType.WALLET_CONNECT)
             .getOrElse { emptyFlow() }
-            .onEach { wcUrl -> wcPairService.pair(WcPairRequest(wcUrl, WcPairRequest.Source.QR)) }
+            .onEach { wcUrl ->
+                wcPairService.pair(
+                    WcPairRequest(
+                        userWalletId = params.userWalletId,
+                        uri = wcUrl,
+                        source = WcPairRequest.Source.QR,
+                    ),
+                )
+            }
             .launchIn(modelScope)
     }
 
     private fun listenWcSessions() {
         wcSessionsUseCase.invoke()
             .conflate()
-            .onEach { Timber.tag("ddk9499").d("listenWcSessions before: ${it.size}") }
             .distinctUntilChanged()
             .onEach { sessionsMap ->
-                Timber.tag("ddk9499").d("listenWcSessions after: ${sessionsMap.size}")
                 uiState.update(
                     WcSessionsTransformer(
                         sessionsMap = sessionsMap,
