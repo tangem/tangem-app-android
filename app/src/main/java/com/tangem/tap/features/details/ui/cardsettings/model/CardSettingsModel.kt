@@ -20,7 +20,6 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
-import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Settings
@@ -33,8 +32,6 @@ import com.tangem.tap.features.details.ui.cardsettings.CardSettingsScreenState
 import com.tangem.tap.features.details.ui.cardsettings.api.CardSettingsComponent
 import com.tangem.tap.features.details.ui.cardsettings.domain.CardSettingsInteractor
 import com.tangem.tap.features.details.ui.common.utils.*
-import com.tangem.tap.features.onboarding.products.twins.redux.CreateTwinWalletMode
-import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
 import com.tangem.tap.store
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.wallet.R
@@ -56,7 +53,6 @@ internal class CardSettingsModel @Inject constructor(
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val cardSdkConfigRepository: CardSdkConfigRepository,
     private val settingsRepository: SettingsRepository,
-    private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
 ) : Model() {
 
     private val params = paramsContainer.require<CardSettingsComponent.Params>()
@@ -200,23 +196,13 @@ internal class CardSettingsModel @Inject constructor(
         }
 
         if (scanResponse.cardTypesResolver.isTangemTwins()) {
-            if (onboardingV2FeatureToggles.isTwinRefactoringEnabled) {
-                store.dispatchNavigationAction {
-                    push(
-                        AppRoute.Onboarding(
-                            scanResponse = scanResponse,
-                            mode = AppRoute.Onboarding.Mode.RecreateWalletTwin,
-                        ),
-                    )
-                }
-            } else {
-                // needs to prepare twin state if it's twin cards (depends on onboarding refactoring)
-                store.dispatch(TwinCardsAction.IfTwinsPrepareState(scanResponse))
-                store.dispatch(TwinCardsAction.SetMode(CreateTwinWalletMode.RecreateWallet(scanResponse)))
-
-                cardSettingsInteractor.clear()
-
-                store.dispatchNavigationAction { push(AppRoute.OnboardingTwins) }
+            store.dispatchNavigationAction {
+                push(
+                    AppRoute.Onboarding(
+                        scanResponse = scanResponse,
+                        mode = AppRoute.Onboarding.Mode.RecreateWalletTwin,
+                    ),
+                )
             }
         } else {
             val card = scanResponse.card

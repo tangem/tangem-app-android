@@ -23,6 +23,7 @@ internal sealed class MarketsListAnalyticsEvent(
                 SortByTypeUM.ExperiencedBuyers -> "Buyers"
                 SortByTypeUM.TopGainers -> "Gainers"
                 SortByTypeUM.TopLosers -> "Losers"
+                SortByTypeUM.Staking -> "Staking"
             },
             "Period" to when (interval) {
                 MarketsListUM.TrendInterval.H24 -> "24h"
@@ -31,4 +32,19 @@ internal sealed class MarketsListAnalyticsEvent(
             },
         ),
     )
+
+    data object StakingPromoShown : MarketsListAnalyticsEvent(event = "Notice - Staking Promo")
+
+    data object StakingPromoClosed : MarketsListAnalyticsEvent(event = "Staking Promo Closed")
+
+    data object StakingMoreInfoClicked : MarketsListAnalyticsEvent(event = "Staking More Info")
+
+    data class TokenSearched(val tokenFound: Boolean) : MarketsListAnalyticsEvent(
+        event = "Token Searched",
+        params = mapOf(
+            "Result" to if (tokenFound) "Yes" else "No",
+        ),
+    )
+
+    data object ShowTokens : MarketsListAnalyticsEvent(event = "Button - Show Tokens")
 }
