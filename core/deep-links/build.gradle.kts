@@ -10,6 +10,9 @@ android {
 }
 
 dependencies {
+    /* Common */
+    implementation(projects.common.routing)
+
     /* Core */
     implementation(projects.core.decompose)
 
@@ -22,4 +25,10 @@ dependencies {
     /* DI */
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
+
+    /* Tests */
+    testImplementation(deps.test.junit)
+    testImplementation(deps.test.coroutine)
+    testImplementation(deps.test.truth)
+    testImplementation(deps.test.mockk)
 }
