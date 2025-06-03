@@ -86,6 +86,12 @@ object PreferencesKeys {
 
     val SHOULD_SHOW_MARKETS_TOOLTIP_KEY by lazy { booleanPreferencesKey(name = "shouldShowMarketsTooltip") }
 
+    val MARKETS_STAKING_NOTIFICATION_HIDE_CLICKED_KEY by lazy {
+        booleanPreferencesKey(name = "marketsStakingNotificationHideClicked")
+    }
+
+    val WALLET_FIRST_USAGE_DATE_KEY by lazy { longPreferencesKey(name = "walletFirstUsageDate") }
+
     val IS_WALLET_NAMES_MIGRATION_DONE_KEY by lazy { booleanPreferencesKey(name = "isWalletNamesMigrationDone") }
 
     val UNSUBMITTED_TRANSACTIONS_KEY by lazy { stringPreferencesKey(name = "unsubmittedTransactions") }
@@ -122,6 +128,16 @@ object PreferencesKeys {
     val SEED_FIRST_NOTIFICATION_SHOW_TIME by lazy { longPreferencesKey("seedFirstNotificationTime") }
 
     val WALLETS_NFT_ENABLED_STATES_KEY by lazy { stringPreferencesKey(name = "walletsNftEnabledStates") }
+
+    // region Notifications
+    val NOTIFICATIONS_APPLICATION_ID_KEY by lazy { stringPreferencesKey(name = "notificationsApplicationId") }
+
+    val NOTIFICATIONS_ENABLED_STATES_KEY by lazy { stringPreferencesKey(name = "notificationsEnabledStates") }
+
+    val TRON_NETWORK_FEE_NOTIFICATION_SHOW_COUNT_KEY by lazy {
+        intPreferencesKey(name = "tronNetworkFeeNotificationShowCount")
+    }
+    // endregion
 
     // region Promo
     fun getShouldShowStoriesKey(storyId: String) = booleanPreferencesKey("shouldShowStories_$storyId")

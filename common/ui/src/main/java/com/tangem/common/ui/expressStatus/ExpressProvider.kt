@@ -39,6 +39,7 @@ fun ExpressProvider(
     val hapticFeedback = LocalHapticFeedback.current
     val context = LocalContext.current
     Column(
+        verticalArrangement = Arrangement.spacedBy(2.dp),
         modifier = Modifier
             .clip(TangemTheme.shapes.roundedCornersXMedium)
             .background(TangemTheme.colors.background.action),
