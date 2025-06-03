@@ -16,10 +16,11 @@ data class Asset(
     @Json(name = "chain_id") val chainId: Int? = null,
     @Json(name = "logo_url") val logoUrl: String? = null,
     @Json(name = "symbol") val symbol: String,
+    @Json(name = "decimals") val decimals: Int,
 )
 
 @JsonClass(generateAdapter = true)
 data class Transfer(
-    @Json(name = "value") val value: String,
-    @Json(name = "raw_value") val rawValue: String,
+    @Json(name = "value") val value: String?,
+    @Json(name = "raw_value") val rawValue: String?,
 )

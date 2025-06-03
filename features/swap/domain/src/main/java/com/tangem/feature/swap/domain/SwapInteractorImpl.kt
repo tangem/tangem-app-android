@@ -10,22 +10,25 @@ import com.tangem.blockchain.common.smartcontract.SmartContractCallDataProviderF
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchainsdk.utils.fromNetworkId
+import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.extenstions.unwrap
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.domain.demo.IsDemoCardUseCase
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.quotes.QuotesRepositoryV2
 import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
-import com.tangem.domain.tokens.GetCryptoCurrencyStatusesSyncUseCase
 import com.tangem.domain.tokens.GetCurrencyCheckUseCase
-import com.tangem.domain.tokens.TokensFeatureToggles
-import com.tangem.domain.tokens.model.*
+import com.tangem.domain.tokens.GetMultiCryptoCurrencyStatusUseCase
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.model.FeePaidCurrency
+import com.tangem.domain.tokens.model.Quote
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
-import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.utils.convertToSdkAmount
@@ -54,7 +57,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     private val userWalletManager: UserWalletManager,
     private val repository: SwapRepository,
     private val allowPermissionsHandler: AllowPermissionsHandler,
-    private val getMultiCryptoCurrencyStatusUseCase: GetCryptoCurrencyStatusesSyncUseCase,
+    private val getMultiCryptoCurrencyStatusUseCase: GetMultiCryptoCurrencyStatusUseCase,
     private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
     private val sendTransactionUseCase: SendTransactionUseCase,
     private val createTransactionUseCase: CreateTransactionUseCase,
@@ -62,9 +65,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     private val createTransactionExtrasUseCase: CreateTransactionDataExtrasUseCase,
     private val createApprovalTransactionUseCase: CreateApprovalTransactionUseCase,
     private val isDemoCardUseCase: IsDemoCardUseCase,
-    private val quotesRepository: QuotesRepository,
     private val quotesRepositoryV2: QuotesRepositoryV2,
-    private val tokensFeatureToggles: TokensFeatureToggles,
     private val swapTransactionRepository: SwapTransactionRepository,
     private val currencyChecksRepository: CurrencyChecksRepository,
     private val appCurrencyRepository: AppCurrencyRepository,
@@ -92,7 +93,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         }
 
     override suspend fun getTokensDataState(currency: CryptoCurrency): TokensDataStateExpress {
-        val walletCurrencyStatuses = getMultiCryptoCurrencyStatusUseCase(userWalletId)
+        val walletCurrencyStatuses = getMultiCryptoCurrencyStatusUseCase.invokeMultiWalletSync(userWalletId)
             .getOrElse { emptyList() }
 
         val walletCurrencyStatusesExceptInitial = walletCurrencyStatuses
@@ -462,7 +463,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                     is TxFeeState.MultipleFeeState -> feeState.normalFee.feeValue
                     is TxFeeState.SingleFeeState -> feeState.fee.feeValue
                 },
-                blockchain = Blockchain.fromId(currency.network.id.value),
+                blockchain = currency.network.toBlockchain(),
             ),
         )
 
@@ -500,8 +501,10 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             """.trimIndent(),
         )
 
-        val cardId = userWallet.scanResponse.card.cardId
-        if (isDemoCardUseCase(cardId)) return SwapTransactionState.DemoMode
+        val userWallet = userWallet
+        if (userWallet is UserWallet.Cold && isDemoCardUseCase(userWallet.scanResponse.card.cardId)) {
+            return SwapTransactionState.DemoMode
+        }
 
         return when (swapProvider.type) {
             ExchangeProviderType.CEX -> {
@@ -686,9 +689,10 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         val exchangeDataCex =
             exchangeData.transaction as? ExpressTransactionModel.CEX ?: return SwapTransactionState.Error.UnknownError
 
-        val cardId = userWallet.scanResponse.card.cardId
-
-        if (isDemoCardUseCase(cardId)) return SwapTransactionState.Error.UnknownError
+        val userWallet = userWallet
+        if (userWallet is UserWallet.Cold && isDemoCardUseCase(userWallet.scanResponse.card.cardId)) {
+            return SwapTransactionState.Error.UnknownError
+        }
 
         val txData = createTransferTransactionUseCase(
             amount = amount.value.convertToSdkAmount(currencyToSend.currency),
@@ -1383,7 +1387,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         val callData = SmartContractCallDataProviderFactory.getApprovalCallData(
             spenderAddress = requireNotNull(spenderAddress) { "Spender address is null" },
             amount = swapAmount.value.convertToSdkAmount(fromToken),
-            blockchain = Blockchain.fromId(fromToken.network.id.value),
+            blockchain = fromToken.network.toBlockchain(),
         )
         val feeData = try {
             val extras = createTransactionExtrasUseCase(
@@ -1794,7 +1798,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     private suspend fun getQuotes(vararg ids: CryptoCurrency.ID): Map<CryptoCurrency.ID, Quote.Value> {
         val set = ids.mapNotNull { it.rawCurrencyId }
             .toSet()
-            .getQuotesOrEmpty(false)
+            .getQuotesOrEmpty()
             .filterIsInstance<Quote.Value>()
 
         return ids
@@ -1802,16 +1806,10 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             .toMap()
     }
 
-    private suspend fun Set<CryptoCurrency.RawID>.getQuotesOrEmpty(refresh: Boolean): Set<Quote> {
-        return try {
-            if (tokensFeatureToggles.isQuotesLoadingRefactoringEnabled) {
-                quotesRepositoryV2.getMultiQuoteSyncOrNull(currenciesIds = this).orEmpty()
-            } else {
-                quotesRepository.getQuotesSync(this, refresh)
-            }
-        } catch (t: Throwable) {
-            emptySet()
-        }
+    private suspend fun Set<CryptoCurrency.RawID>.getQuotesOrEmpty(): Set<Quote> {
+        return runCatching { quotesRepositoryV2.getMultiQuoteSyncOrNull(currenciesIds = this) }
+            .getOrNull()
+            .orEmpty()
     }
 
     companion object {
