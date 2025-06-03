@@ -194,7 +194,6 @@ internal class BiometricUserWalletsListManagerTest(private val model: Model) {
             return UserWallet(
                 name = "Wallet $id",
                 walletId = UserWalletId(stringValue = id),
-                artworkUrl = "",
                 cardsInWallet = emptySet(),
                 isMultiCurrency = true,
                 hasBackupError = false,

@@ -1,7 +1,11 @@
 package com.tangem.tap.di.domain
 
 import com.tangem.domain.staking.*
-import com.tangem.domain.staking.repositories.*
+import com.tangem.domain.staking.repositories.StakingActionRepository
+import com.tangem.domain.staking.repositories.StakingErrorResolver
+import com.tangem.domain.staking.repositories.StakingRepository
+import com.tangem.domain.staking.repositories.StakingTransactionHashRepository
+import com.tangem.domain.staking.single.SingleYieldBalanceFetcher
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import dagger.Module
 import dagger.Provides
@@ -92,10 +96,12 @@ internal object StakingDomainModule {
     fun provideFetchStakingYieldBalanceUseCase(
         stakingRepository: StakingRepository,
         stakingErrorResolver: StakingErrorResolver,
+        singleYieldBalanceFetcher: SingleYieldBalanceFetcher,
     ): FetchStakingYieldBalanceUseCase {
         return FetchStakingYieldBalanceUseCase(
             stakingRepository = stakingRepository,
             stakingErrorResolver = stakingErrorResolver,
+            singleYieldBalanceFetcher = singleYieldBalanceFetcher,
         )
     }
 

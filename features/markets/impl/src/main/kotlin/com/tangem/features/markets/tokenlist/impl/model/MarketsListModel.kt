@@ -1,6 +1,7 @@
 package com.tangem.features.markets.tokenlist.impl.model
 
 import androidx.compose.runtime.Stable
+import arrow.core.Either
 import arrow.core.getOrElse
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
@@ -8,7 +9,13 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.GetMarketsTokenListFlowUseCase
+import com.tangem.domain.markets.GetStakingNotificationMaxApyUseCase
 import com.tangem.domain.markets.TokenMarket
+import com.tangem.domain.promo.PromoRepository
+import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
+import com.tangem.domain.settings.usercountry.models.UserCountry
+import com.tangem.domain.settings.usercountry.models.UserCountryError
+import com.tangem.domain.settings.usercountry.models.needApplyFCARestrictions
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.features.markets.entry.BottomSheetState
 import com.tangem.features.markets.tokenlist.impl.analytics.MarketsListAnalyticsEvent
@@ -21,8 +28,10 @@ import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
+import java.math.BigDecimal
 import javax.inject.Inject
 
 private const val UPDATE_QUOTES_TIMER_MILLIS = 60000L
@@ -31,23 +40,26 @@ private const val SEARCH_QUERY_DEBOUNCE_MILLIS = 800L
 @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
 @ModelScoped
 @Stable
+@Suppress("LongParameterList")
 internal class MarketsListModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     getMarketsTokenListFlowUseCase: GetMarketsTokenListFlowUseCase,
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
+    getStakingNotificationMaxApyUseCase: GetStakingNotificationMaxApyUseCase,
+    private val promoRepository: PromoRepository,
+    private val getUserCountryUseCase: GetUserCountryUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
     private var updateQuotesJob = JobHolder()
 
-    private val currentAppCurrency = getSelectedAppCurrencyUseCase()
-        .map { maybeAppCurrency ->
-            maybeAppCurrency.getOrElse { AppCurrency.Default }
-        }.stateIn(
-            scope = modelScope,
-            started = SharingStarted.Eagerly,
-            initialValue = AppCurrency.Default,
-        )
+    private val currentAppCurrency = getSelectedAppCurrencyUseCase().map { maybeAppCurrency ->
+        maybeAppCurrency.getOrElse { AppCurrency.Default }
+    }.stateIn(
+        scope = modelScope,
+        started = SharingStarted.Eagerly,
+        initialValue = AppCurrency.Default,
+    )
 
     private val visibleItemIds = MutableStateFlow<List<CryptoCurrency.RawID>>(emptyList())
 
@@ -57,7 +69,11 @@ internal class MarketsListModel @Inject constructor(
         visibleItemsChanged = { visibleItemIds.value = it },
         onRetryButtonClicked = { activeListManager.reload() },
         onTokenClick = { onTokenUIClicked(it) },
+        onStakingNotificationClick = { analyticsEventHandler.send(MarketsListAnalyticsEvent.StakingMoreInfoClicked) },
+        onStakingNotificationCloseClick = { onStakingNotificationCloseClick() },
+        onShowTokensUnder100kClicked = { analyticsEventHandler.send(MarketsListAnalyticsEvent.ShowTokens) },
     )
+
     private val mainMarketsListManager = MarketsListBatchFlowManager(
         getMarketsTokenListFlowUseCase = getMarketsTokenListFlowUseCase,
         batchFlowType = GetMarketsTokenListFlowUseCase.BatchFlowType.Main,
@@ -92,31 +108,60 @@ internal class MarketsListModel @Inject constructor(
     val state = marketsListUMStateManager.state.asStateFlow()
 
     init {
-        @Suppress("UnnecessaryParentheses")
-        modelScope.launch {
-            marketsListUMStateManager.isInSearchStateFlow
-                .flatMapLatest { isInSearchMode ->
-                    if (isInSearchMode) {
-                        combine(
-                            searchMarketsListManager.uiItems,
-                            searchMarketsListManager.isInInitialLoadingErrorState,
-                            searchMarketsListManager.isSearchNotFoundState,
-                        ) { items, isError, notFound ->
-                            (items to isError) to notFound
-                        }
-                    } else {
-                        combine(
-                            mainMarketsListManager.uiItems,
-                            mainMarketsListManager.isInInitialLoadingErrorState,
-                        ) { items, isError -> (items to isError) to false }
+        @Suppress("UnnecessaryParentheses") modelScope.launch {
+            marketsListUMStateManager.isInSearchStateFlow.flatMapLatest { isInSearchMode ->
+                if (isInSearchMode) {
+                    combine(
+                        searchMarketsListManager.uiItems,
+                        searchMarketsListManager.isInInitialLoadingErrorState,
+                        searchMarketsListManager.isSearchNotFoundState,
+                        getStakingNotificationMaxApyUseCase(),
+                        getUserCountryUseCase.invoke(),
+                    ) { uiItems, isInInitialLoadingErrorState, isSearchNotFoundState, stakingMaxApy, userCountry ->
+                        MarketsItemsData(
+                            items = uiItems,
+                            isInErrorState = isInInitialLoadingErrorState,
+                            isSearchNotFound = isSearchNotFoundState,
+                            stakingNotificationMaxApy = stakingMaxApy,
+                            userCountry = userCountry,
+                        )
                     }
-                }.collect {
-                    marketsListUMStateManager.onUiItemsChanged(
-                        uiItems = it.first.first,
-                        isInErrorState = it.first.second,
-                        isSearchNotFound = it.second,
-                    )
+                } else {
+                    combine(
+                        mainMarketsListManager.uiItems,
+                        mainMarketsListManager.isInInitialLoadingErrorState,
+                        getStakingNotificationMaxApyUseCase(),
+                        getUserCountryUseCase.invoke(),
+                    ) { uiItems, isInInitialLoadingErrorState, stakingNotificationMaxApy, userCountry ->
+                        MarketsItemsData(
+                            items = uiItems,
+                            isInErrorState = isInInitialLoadingErrorState,
+                            isSearchNotFound = false,
+                            stakingNotificationMaxApy = stakingNotificationMaxApy,
+                            userCountry = userCountry,
+                        )
+                    }
                 }
+            }.collect { marketsItemsData ->
+                val stakingNotificationMaxApy = marketsItemsData.stakingNotificationMaxApy?.takeUnless {
+                    marketsItemsData.userCountry.getOrNull().needApplyFCARestrictions()
+                }
+
+                if (marketsListUMStateManager.state.value.stakingNotificationMaxApy == null &&
+                    stakingNotificationMaxApy != null
+                ) {
+                    analyticsEventHandler.send(MarketsListAnalyticsEvent.StakingPromoShown)
+                }
+
+                marketsListUMStateManager.onUiItemsChanged(
+                    uiItems = marketsItemsData.items,
+                    isInErrorState = marketsItemsData.isInErrorState,
+                    isSearchNotFound = marketsItemsData.isSearchNotFound,
+                    stakingNotificationMaxApy = marketsItemsData.stakingNotificationMaxApy?.takeUnless {
+                        marketsItemsData.userCountry.getOrNull().needApplyFCARestrictions()
+                    },
+                )
+            }
         }
 
         state.onEach {
@@ -126,29 +171,22 @@ internal class MarketsListModel @Inject constructor(
         }.launchIn(modelScope)
 
         // update all lists when user's currency has changed
-        currentAppCurrency
-            .drop(1)
-            .onEach {
-                mainMarketsListManager.reload()
-                if (marketsListUMStateManager.isInSearchState) {
-                    searchMarketsListManager.reload()
-                }
-            }.launchIn(modelScope)
+        currentAppCurrency.drop(1).onEach {
+            mainMarketsListManager.reload()
+            if (marketsListUMStateManager.isInSearchState) {
+                searchMarketsListManager.reload()
+            }
+        }.launchIn(modelScope)
 
         // load charts when new batch is being loaded
-        mainMarketsListManager.onLastBatchLoadedSuccess
-            .onEach {
-                mainMarketsListManager.loadCharts(setOf(it), marketsListUMStateManager.selectedInterval)
-                modelScope.loadQuotesWithTimer(timeMillis = UPDATE_QUOTES_TIMER_MILLIS)
-            }
-            .launchIn(modelScope)
+        mainMarketsListManager.onLastBatchLoadedSuccess.onEach {
+            mainMarketsListManager.loadCharts(setOf(it), marketsListUMStateManager.selectedInterval)
+            modelScope.loadQuotesWithTimer(timeMillis = UPDATE_QUOTES_TIMER_MILLIS)
+        }.launchIn(modelScope)
 
         // listen currently selected interval, update charts if sorting=rating, or reload all list
         modelScope.launch(dispatchers.default) {
-            marketsListUMStateManager.state
-                .map { it.selectedInterval }
-                .distinctUntilChanged()
-                .drop(1)
+            marketsListUMStateManager.state.map { it.selectedInterval }.distinctUntilChanged().drop(1)
                 .collectLatest { interval ->
                     when (marketsListUMStateManager.selectedSortByType) {
                         SortByTypeUM.Rating -> {
@@ -163,67 +201,63 @@ internal class MarketsListModel @Inject constructor(
 
         // reload list when sorting type has changed
         modelScope.launch {
-            marketsListUMStateManager.state
-                .map { it.selectedSortBy }
-                .distinctUntilChanged()
-                .drop(1)
-                .collectLatest {
-                    mainMarketsListManager.reload()
-                }
+            marketsListUMStateManager.state.map { it.selectedSortBy }.distinctUntilChanged().drop(1).collectLatest {
+                mainMarketsListManager.reload()
+            }
         }
 
         // listen current visible batch and update charts
         modelScope.launch {
-            visibleItemIds
-                .mapNotNull {
-                    if (it.isNotEmpty()) {
-                        activeListManager.getBatchKeysByItemIds(visibleItemIds.value)
-                    } else {
-                        null
-                    }
+            visibleItemIds.mapNotNull {
+                if (it.isNotEmpty()) {
+                    activeListManager.getBatchKeysByItemIds(visibleItemIds.value)
+                } else {
+                    null
                 }
-                .distinctUntilChanged()
-                .collectLatest { visibleBatchKeys ->
-                    // TODO load batch on scroll heat area
-                    activeListManager.loadCharts(visibleBatchKeys, marketsListUMStateManager.selectedInterval)
-                }
+            }.distinctUntilChanged().collectLatest { visibleBatchKeys ->
+                // TODO load batch on scroll heat area
+                activeListManager.loadCharts(visibleBatchKeys, marketsListUMStateManager.selectedInterval)
+            }
         }
 
         // ===Search===
 
         modelScope.launch {
-            marketsListUMStateManager.isInSearchStateFlow
-                .collectLatest { isInSearchMode ->
-                    activeListManager = if (isInSearchMode) {
-                        searchMarketsListManager
-                    } else {
-                        searchMarketsListManager.clearStateAndStopAllActions()
-                        mainMarketsListManager
-                    }
+            marketsListUMStateManager.isInSearchStateFlow.collectLatest { isInSearchMode ->
+                activeListManager = if (isInSearchMode) {
+                    searchMarketsListManager
+                } else {
+                    searchMarketsListManager.clearStateAndStopAllActions()
+                    mainMarketsListManager
                 }
+            }
         }
 
         modelScope.launch {
-            marketsListUMStateManager.searchQueryFlow
-                .debounce(timeoutMillis = SEARCH_QUERY_DEBOUNCE_MILLIS)
-                .distinctUntilChanged()
-                .onEach {
+            marketsListUMStateManager.searchQueryFlow.debounce(timeoutMillis = SEARCH_QUERY_DEBOUNCE_MILLIS)
+                .distinctUntilChanged().onEach {
                     if (it.isEmpty()) searchMarketsListManager.clearStateAndStopAllActions()
-                }
-                .filter { it.isNotEmpty() && activeListManager == searchMarketsListManager }
-                .collectLatest {
+                }.filter { it.isNotEmpty() && activeListManager == searchMarketsListManager }.collectLatest {
                     searchMarketsListManager.reload(searchText = it)
                 }
         }
 
         modelScope.launch {
-            searchMarketsListManager
-                .onLastBatchLoadedSuccess
-                .collectLatest {
-                    searchMarketsListManager.loadCharts(setOf(it), marketsListUMStateManager.selectedInterval)
-                    modelScope.loadQuotesWithTimer(timeMillis = UPDATE_QUOTES_TIMER_MILLIS)
-                }
+            searchMarketsListManager.onLastBatchLoadedSuccess.collectLatest {
+                searchMarketsListManager.loadCharts(setOf(it), marketsListUMStateManager.selectedInterval)
+                modelScope.loadQuotesWithTimer(timeMillis = UPDATE_QUOTES_TIMER_MILLIS)
+            }
         }
+
+        searchMarketsListManager.isSearchNotFoundState.onEach {
+            if (it) {
+                analyticsEventHandler.send(MarketsListAnalyticsEvent.TokenSearched(tokenFound = false))
+            }
+        }.launchIn(modelScope)
+
+        searchMarketsListManager.onFirstBatchLoadedSuccess.onEach {
+            analyticsEventHandler.send(MarketsListAnalyticsEvent.TokenSearched(tokenFound = true))
+        }.launchIn(modelScope)
 
         // analytics
         initAnalytics()
@@ -233,17 +267,14 @@ internal class MarketsListModel @Inject constructor(
     }
 
     private fun initAnalytics() {
-        containerBottomSheetState
-            .onEach {
-                if (it == BottomSheetState.EXPANDED) {
-                    analyticsEventHandler.send(MarketsListAnalyticsEvent.BottomSheetOpened)
-                }
-            }.launchIn(modelScope)
+        containerBottomSheetState.onEach {
+            if (it == BottomSheetState.EXPANDED) {
+                analyticsEventHandler.send(MarketsListAnalyticsEvent.BottomSheetOpened)
+            }
+        }.launchIn(modelScope)
 
-        state
-            .filter { it.isInSearchMode.not() }
-            .map { MarketsListAnalyticsEvent.SortBy(it.selectedSortBy, it.selectedInterval) }
-            .distinctUntilChanged()
+        state.filter { it.isInSearchMode.not() }
+            .map { MarketsListAnalyticsEvent.SortBy(it.selectedSortBy, it.selectedInterval) }.distinctUntilChanged()
             .onEach {
                 analyticsEventHandler.send(it)
             }.launchIn(modelScope)
@@ -270,4 +301,19 @@ internal class MarketsListModel @Inject constructor(
             }
         }.saveIn(updateQuotesJob)
     }
+
+    private fun onStakingNotificationCloseClick() {
+        analyticsEventHandler.send(MarketsListAnalyticsEvent.StakingPromoClosed)
+        modelScope.launch {
+            promoRepository.setMarketsStakingNotificationHideClicked()
+        }
+    }
+
+    private class MarketsItemsData(
+        val items: ImmutableList<MarketsListItemUM>,
+        val isInErrorState: Boolean,
+        val isSearchNotFound: Boolean,
+        val stakingNotificationMaxApy: BigDecimal?,
+        val userCountry: Either<UserCountryError, UserCountry>,
+    )
 }

@@ -3,13 +3,16 @@ package com.tangem.features.nft.details.entity
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.atoms.text.TextEllipsis
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.domain.appcurrency.model.AppCurrency
 import kotlinx.collections.immutable.ImmutableList
+import java.math.BigDecimal
 
 data class NFTAssetUM(
     val name: String,
     val media: Media,
     val topInfo: TopInfo,
     val traits: ImmutableList<BlockItem>,
+    val showAllTraitsButton: Boolean,
     val baseInfoItems: ImmutableList<BlockItem>,
 ) {
 
@@ -37,7 +40,13 @@ data class NFTAssetUM(
     sealed class SalePrice {
         data object Loading : SalePrice()
         data object Empty : SalePrice()
-        data class Content(val value: String, val fiatValue: String) : SalePrice()
+        data class Content(
+            val value: BigDecimal,
+            val symbol: String,
+            val decimals: Int,
+            val rate: BigDecimal?,
+            val appCurrency: AppCurrency,
+        ) : SalePrice()
     }
 
     @Immutable
@@ -47,6 +56,8 @@ data class NFTAssetUM(
             val rank: String,
             val label: String,
             val showDivider: Boolean,
+            val onRankClick: () -> Unit,
+            val onLabelClick: () -> Unit,
         ) : Rarity()
     }
 
@@ -55,5 +66,7 @@ data class NFTAssetUM(
         val titleTextEllipsis: TextEllipsis = TextEllipsis.End,
         val value: String,
         val valueTextEllipsis: TextEllipsis = TextEllipsis.End,
+        val showInfoButton: Boolean,
+        val onClick: () -> Unit = { },
     )
 }
