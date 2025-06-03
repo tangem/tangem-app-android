@@ -3,6 +3,10 @@ package com.tangem.feature.tokendetails.deeplink
 import arrow.core.getOrElse
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.core.deeplink.DeeplinkConst.NETWORK_ID_KEY
+import com.tangem.core.deeplink.DeeplinkConst.TOKEN_ID_KEY
+import com.tangem.core.deeplink.DeeplinkConst.TYPE_KEY
+import com.tangem.core.deeplink.DeeplinkConst.WALLET_ID_KEY
 import com.tangem.domain.notifications.models.NotificationType
 import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
 import com.tangem.domain.tokens.GetCryptoCurrenciesUseCase
@@ -45,13 +49,14 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
         val tokenId = queryParams[TOKEN_ID_KEY]
         val type = NotificationType.getType(queryParams[TYPE_KEY])
 
-        if (type == NotificationType.Promo) {
+        if (type != NotificationType.Unknown) {
             scope.launch {
                 val cryptoCurrency = getCryptoCurrenciesUseCase(userWalletId = userWalletId).getOrElse {
                     Timber.e("Error on getting crypto currency list")
                     return@launch
                 }.firstOrNull {
-                    it.id.rawNetworkId == networkId && it.id.rawCurrencyId?.value == tokenId
+                    it.network.backendId == networkId &&
+                        it.id.rawCurrencyId?.value == tokenId
                 }
 
                 if (cryptoCurrency == null) {
@@ -90,12 +95,5 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
             queryParams: Map<String, String>,
             isFromOnNewIntent: Boolean,
         ): DefaultTokenDetailsDeepLinkHandler
-    }
-
-    private companion object {
-        const val WALLET_ID_KEY = "walletId"
-        const val NETWORK_ID_KEY = "network_id"
-        const val TYPE_KEY = "type"
-        const val TOKEN_ID_KEY = "token_id"
     }
 }
