@@ -15,6 +15,7 @@ dependencies {
     /** Api */
     implementation(projects.features.sendV2.api)
     implementation(projects.features.txhistory.api)
+    implementation(projects.features.nft.api)
 
     /** Libs */
     implementation(projects.libs.crypto)
@@ -25,6 +26,7 @@ dependencies {
     implementation(projects.core.analytics)
     implementation(projects.core.configToggles)
     implementation(projects.core.navigation)
+    implementation(projects.core.datasource)
     api(projects.core.pagination)
 
     /** Tangem SDK */
@@ -54,6 +56,9 @@ dependencies {
     implementation(projects.domain.txhistory)
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.balanceHiding)
+    implementation(projects.domain.nft.models)
+    implementation(projects.domain.notifications)
+
 
     /** Compose libraries */
     implementation(deps.compose.foundation)
