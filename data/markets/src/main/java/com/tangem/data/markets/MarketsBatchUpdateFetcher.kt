@@ -7,6 +7,7 @@ import com.tangem.data.markets.converters.TokenMarketChartsConverter
 import com.tangem.data.markets.converters.TokenQuotesShortConverter
 import com.tangem.data.markets.converters.toRequestParam
 import com.tangem.datasource.api.common.response.ApiResponseError
+import com.tangem.datasource.api.common.response.catchApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.markets.TangemTechMarketsApi
 import com.tangem.datasource.api.markets.models.response.TokenMarketChartListResponse
@@ -25,7 +26,7 @@ internal class MarketsBatchUpdateFetcher(
     private val marketsApi: TangemTechMarketsApi,
     private val tangemTechApi: TangemTechApi,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val onApiError: (ApiResponseError) -> Unit,
+    private val onApiResponseError: (ApiResponseError) -> Unit,
 ) : BatchUpdateFetcher<Int, List<TokenMarket>, TokenMarketUpdateRequest> {
 
     override suspend fun BatchUpdateFetcher.UpdateContext<Int, List<TokenMarket>>.fetchUpdateAsync(
@@ -41,7 +42,7 @@ internal class MarketsBatchUpdateFetcher(
                 val updateTasks = idsToUpdate.map { batchIds ->
                     async {
                         retryOnError {
-                            catchApiError(onApiError) {
+                            catchApiResponseError(onApiResponseError) {
                                 marketsApi.getCoinsListCharts(
                                     coinIds = batchIds.second.joinToString(separator = ","),
                                     interval = updateRequest.interval.toRequestParam(),
@@ -71,7 +72,7 @@ internal class MarketsBatchUpdateFetcher(
             }
             is TokenMarketUpdateRequest.UpdateQuotes -> {
                 val quotesRes = retryOnError {
-                    catchApiError(onApiError) {
+                    catchApiResponseError(onApiResponseError) {
                         tangemTechApi.getQuotes(
                             currencyId = updateRequest.currencyId,
                             coinIds = idsToUpdate.map { it.second }.flatten().joinToString(separator = ","),
@@ -131,15 +132,6 @@ internal class MarketsBatchUpdateFetcher(
                     return
                 }
             }
-        }
-    }
-
-    private inline fun <T> catchApiError(onError: (ApiResponseError) -> Unit, block: () -> T): T {
-        return try {
-            block()
-        } catch (e: ApiResponseError) {
-            onError(e)
-            throw e
         }
     }
 }

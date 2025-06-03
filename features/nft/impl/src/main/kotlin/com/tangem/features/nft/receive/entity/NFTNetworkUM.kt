@@ -1,10 +1,9 @@
 package com.tangem.features.nft.receive.entity
 
-import androidx.annotation.DrawableRes
+import com.tangem.core.ui.components.rows.model.ChainRowUM
 
 internal data class NFTNetworkUM(
     val id: String,
-    @DrawableRes val iconRes: Int,
-    val name: String,
+    val chainRowUM: ChainRowUM,
     val onItemClick: () -> Unit,
 )
