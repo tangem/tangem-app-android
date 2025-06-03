@@ -1,6 +1,5 @@
 package com.tangem.features.disclaimer.impl.component.impl
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -24,8 +23,6 @@ internal class DefaultDisclaimerComponent @AssistedInject constructor(
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.state.collectAsStateWithLifecycle()
-
-        BackHandler(onBack = state.popBack)
         DisclaimerScreen(state = state)
     }
 

@@ -1,6 +1,9 @@
 package com.tangem.tap
 
 import android.app.Application
+import android.os.StrictMode
+import android.os.StrictMode.ThreadPolicy
+import android.os.StrictMode.VmPolicy
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import coil.ImageLoader
@@ -34,6 +37,7 @@ import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
 import com.tangem.datasource.local.config.issuers.IssuersConfigStorage
 import com.tangem.datasource.local.logs.AppLogsStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.datasource.utils.NetworkLogsSaveInterceptor
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.domain.apptheme.GetAppThemeModeUseCase
 import com.tangem.domain.apptheme.repository.AppThemeModeRepository
@@ -71,9 +75,7 @@ import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.wallet.BuildConfig
 import dagger.hilt.EntryPoints
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import org.rekotlin.Store
 import kotlin.collections.set
 import com.tangem.tap.domain.walletconnect2.domain.LegacyWalletConnectRepository as WalletConnect2Repository
@@ -228,12 +230,32 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
 
     // endregion
 
+    private val appScope = MainScope()
+
     override fun onCreate() {
+        enableStrictModeInDebug()
         super.onCreate()
-
         init()
+    }
 
-        updateLogFiles()
+    private fun enableStrictModeInDebug() {
+        if (BuildConfig.DEBUG) {
+            StrictMode.setThreadPolicy(
+                ThreadPolicy.Builder()
+                    .detectDiskReads()
+                    .detectDiskWrites()
+                    .detectAll()
+                    .penaltyLog()
+                    .build(),
+            )
+            StrictMode.setVmPolicy(
+                VmPolicy.Builder()
+                    .detectLeakedSqlLiteObjects()
+                    .detectLeakedClosableObjects()
+                    .penaltyLog()
+                    .build(),
+            )
+        }
     }
 
     private fun updateLogFiles() {
@@ -260,18 +282,28 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
         foregroundActivityObserver = ForegroundActivityObserver()
         registerActivityLifecycleCallbacks(foregroundActivityObserver.callbacks)
 
-        // TODO: Try to performance and user experience.
-        //  [REDACTED_JIRA]
+        // We need to initialize the toggles and excludedBlockchainsManager before the MainActivity starts using them.
         runBlocking {
             awaitAll(
-                async { featureTogglesManager.init() },
-                async { excludedBlockchainsManager.init() },
-                async { initWithConfigDependency(environmentConfig = environmentConfigStorage.initialize()) },
+                async {
+                    featureTogglesManager.init()
+                },
+                async {
+                    excludedBlockchainsManager.init()
+                },
             )
+            initWithConfigDependency(environmentConfig = environmentConfigStorage.initialize())
         }
 
-        loadNativeLibraries()
+        appScope.launch {
+            launch(Dispatchers.IO) {
+                loadNativeLibraries()
+                updateLogFiles()
+            }
+        }
+
         ExceptionHandler.append(blockchainExceptionHandler)
+
         if (LogConfig.network.blockchainSdkNetwork) {
             BlockchainSdkRetrofitBuilder.interceptors = listOf(
                 createNetworkLoggingInterceptor(),
@@ -280,6 +312,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
             TangemApiServiceLogging.addInterceptors(
                 createNetworkLoggingInterceptor(),
                 ChuckerInterceptor(this),
+                NetworkLogsSaveInterceptor(appLogsStore),
             )
         }
 
@@ -287,9 +320,11 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
             appPreferencesStore = appPreferencesStore,
             dispatchers = dispatchers,
         )
-        appStateHolder.mainStore = store
 
-        walletConnect2Repository.init(projectId = environmentConfigStorage.getConfigSync().walletConnectProjectId)
+        appStateHolder.mainStore = store
+        walletConnect2Repository.init(
+            projectId = environmentConfigStorage.getConfigSync().walletConnectProjectId,
+        )
     }
 
     private fun createReduxStore(): Store<AppState> {

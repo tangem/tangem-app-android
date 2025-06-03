@@ -6,6 +6,7 @@ import com.tangem.common.ui.expressStatus.state.ExpressStatusItemUM
 import com.tangem.common.ui.expressStatus.state.ExpressStatusUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.domain.onramp.model.OnrampStatus
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.success.entity.OnrampSuccessComponentUM
 import kotlinx.collections.immutable.persistentListOf
@@ -24,6 +25,7 @@ internal data object OnrampSuccessComponentUMPreviewData {
         toAmount = stringReference("99.99 $"),
         currencyImageUrl = "",
         notification = null,
+        activeStatus = OnrampStatus.Status.Verifying,
         statusBlock = ExpressStatusUM(
             title = resourceReference(R.string.express_exchange_status_title),
             link = ExpressLinkUM.Empty,

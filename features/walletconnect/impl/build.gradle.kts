@@ -21,8 +21,10 @@ dependencies {
     implementation(projects.core.decompose)
     implementation(projects.core.ui)
     implementation(projects.common.routing)
+    implementation(projects.common.ui)
 
     /** Domain models */
+    implementation(projects.domain.blockaid.models)
     implementation(projects.domain.qrScanning.models)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets.models)
@@ -45,9 +47,13 @@ dependencies {
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
 
+    /** Data */
+    implementation(projects.data.card)
+
     /** Other */
     implementation(deps.arrow.core)
     implementation(deps.decompose.ext.compose)
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.timber)
+    implementation(tangemDeps.card.core)
 }

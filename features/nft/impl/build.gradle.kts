@@ -27,6 +27,8 @@ dependencies {
     implementation(projects.core.datasource)
 
     /** Domain modules */
+    implementation(projects.domain.appCurrency.models)
+    implementation(projects.domain.models)
     implementation(projects.domain.nft)
     implementation(projects.domain.nft.models)
     implementation(projects.domain.tokens.models)
@@ -61,6 +63,7 @@ dependencies {
     implementation(deps.androidx.datastore)
 
     /** Other libraries */
+    implementation(deps.arrow.core)
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.kotlin.serialization)
     implementation(deps.timber)
