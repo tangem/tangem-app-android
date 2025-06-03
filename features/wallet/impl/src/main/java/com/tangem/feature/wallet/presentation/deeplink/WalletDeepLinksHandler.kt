@@ -11,7 +11,6 @@ import com.tangem.domain.tokens.GetCryptoCurrencyUseCase
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.features.onramp.OnrampFeatureToggles
 import com.tangem.utils.coroutines.launchOnCancellation
 import kotlinx.coroutines.CoroutineScope
@@ -24,7 +23,6 @@ internal class WalletDeepLinksHandler @Inject constructor(
     private val deepLinksRegistry: DeepLinksRegistry,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val getCryptoCurrencyUseCase: GetCryptoCurrencyUseCase,
-    private val clickIntents: WalletClickIntents,
     private val onrampFeatureToggles: OnrampFeatureToggles,
     private val router: AppRouter,
 ) {
@@ -56,11 +54,11 @@ internal class WalletDeepLinksHandler @Inject constructor(
 
         return buildList {
             add(sellCurrencyDeepLink)
-            if (onrampFeatureToggles.isFeatureEnabled || !userWallet.isMultiCurrency) {
+            if (!onrampFeatureToggles.isFeatureEnabled && !userWallet.isMultiCurrency) {
                 add(
                     BuyCurrencyDeepLink(
-                        onReceive = { externalTxId ->
-                            scope.launch { onBuyCurrencyDeepLink(externalTxId, userWallet) }
+                        onReceive = {
+                            scope.launch { onBuyCurrencyDeepLink(userWallet) }
                         },
                     ),
                 )
@@ -88,12 +86,8 @@ internal class WalletDeepLinksHandler @Inject constructor(
         router.push(route)
     }
 
-    private suspend fun onBuyCurrencyDeepLink(externalTxId: String, userWallet: UserWallet) {
-        if (onrampFeatureToggles.isFeatureEnabled) {
-            clickIntents.onOnrampSuccessClick(externalTxId)
-        } else {
-            val cryptoCurrency = getCryptoCurrencyUseCase(userWallet.walletId).getOrNull() ?: return
-            analyticsEventHandler.send(TokenScreenAnalyticsEvent.Bought(cryptoCurrency.symbol))
-        }
+    private suspend fun onBuyCurrencyDeepLink(userWallet: UserWallet) {
+        val cryptoCurrency = getCryptoCurrencyUseCase(userWallet.walletId).getOrNull() ?: return
+        analyticsEventHandler.send(TokenScreenAnalyticsEvent.Bought(cryptoCurrency.symbol))
     }
 }
