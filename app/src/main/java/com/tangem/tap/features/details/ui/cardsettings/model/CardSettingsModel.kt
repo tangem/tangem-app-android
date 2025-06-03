@@ -19,6 +19,7 @@ import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
+import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.common.analytics.events.AnalyticsParam
@@ -86,7 +87,8 @@ internal class CardSettingsModel @Inject constructor(
             val userWallet = getUserWalletUseCase(userWalletId)
                 .getOrElse { error("User wallet $userWalletId not found") }
 
-            cardSdkConfigRepository.isBiometricsRequestPolicy = userWallet.scanResponse.card.isAccessCodeSet &&
+            cardSdkConfigRepository.isBiometricsRequestPolicy =
+                userWallet.requireColdWallet().scanResponse.card.isAccessCodeSet && // TODO [REDACTED_TASK_KEY]
                 settingsRepository.shouldSaveAccessCodes()
         }
     }
