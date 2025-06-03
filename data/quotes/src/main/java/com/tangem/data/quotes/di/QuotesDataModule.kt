@@ -5,8 +5,8 @@ import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
 import com.tangem.data.quotes.DefaultQuotesRepositoryV2
-import com.tangem.data.quotes.store.DefaultQuotesStoreV2
-import com.tangem.data.quotes.store.QuotesStoreV2
+import com.tangem.data.quotes.store.DefaultQuotesStatusesStore
+import com.tangem.data.quotes.store.QuotesStatusesStore
 import com.tangem.datasource.api.tangemTech.models.QuotesResponse
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
@@ -33,8 +33,8 @@ internal object QuotesDataModule {
         @NetworkMoshi moshi: Moshi,
         @ApplicationContext context: Context,
         dispatchers: CoroutineDispatcherProvider,
-    ): QuotesStoreV2 {
-        return DefaultQuotesStoreV2(
+    ): QuotesStatusesStore {
+        return DefaultQuotesStatusesStore(
             runtimeStore = RuntimeSharedStore(),
             persistenceDataStore = DataStoreFactory.create(
                 serializer = MoshiDataStoreSerializer(
