@@ -2,7 +2,8 @@ package com.tangem.domain.nft.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam.Key.BLOCKCHAIN
-import com.tangem.core.analytics.models.AnalyticsParam.Key.COUNT
+import com.tangem.core.analytics.models.AnalyticsParam.Key.COLLECTIONS
+import com.tangem.core.analytics.models.AnalyticsParam.Key.NFT
 import com.tangem.core.analytics.models.AnalyticsParam.Key.STATE
 
 sealed class NFTAnalyticsEvent(
@@ -21,13 +22,14 @@ sealed class NFTAnalyticsEvent(
         params = buildMap {
             put(STATE, state.value)
             if (state is State.Full) {
-                put(COUNT, state.count.toString())
+                put(COLLECTIONS, state.collectionsCount.toString())
+                put(NFT, state.assetsCount.toString())
             }
         },
     ) {
         sealed class State(val value: String) {
             data object Empty : State("Empty")
-            data class Full(val count: Int) : State("Full")
+            data class Full(val assetsCount: Int, val collectionsCount: Int) : State("Full")
         }
     }
 
