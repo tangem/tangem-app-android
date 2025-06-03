@@ -21,6 +21,8 @@ import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.block.BlockCard
 import com.tangem.core.ui.components.block.BlockItem
 import com.tangem.core.ui.components.items.DescriptionItem
+import com.tangem.core.ui.components.notifications.Notification
+import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
@@ -108,6 +110,10 @@ private fun Content(state: WalletSettingsUM, modifier: Modifier = Modifier) {
                     model = item,
                     yOffset = DESCRIPTION_OFFSET,
                     onDescriptionClick = item.onClick,
+                )
+                is WalletSettingsItemUM.NotificationPermission -> NotificationAlertBlock(
+                    modifier = itemModifier,
+                    model = item,
                 )
             }
         }
@@ -214,6 +220,18 @@ private fun SwitchBlock(model: WalletSettingsItemUM.WithSwitch, modifier: Modifi
             )
         }
     }
+}
+
+@Composable
+private fun NotificationAlertBlock(model: WalletSettingsItemUM.NotificationPermission, modifier: Modifier = Modifier) {
+    Notification(
+        config = NotificationConfig(
+            title = model.title,
+            subtitle = model.description,
+            iconResId = R.drawable.ic_alert_triangle_20,
+        ),
+        modifier = modifier,
+    )
 }
 
 @Composable
