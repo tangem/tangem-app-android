@@ -12,6 +12,9 @@ internal interface NetworksStatusesStoreV2 {
     /** Get statuses by [userWalletId] */
     fun get(userWalletId: UserWalletId): Flow<Set<SimpleNetworkStatus>>
 
+    /** Get status of [network] by [userWalletId] synchronously or null */
+    suspend fun getSyncOrNull(userWalletId: UserWalletId, network: Network): SimpleNetworkStatus?
+
     /** Refresh status of [network] by [userWalletId] */
     suspend fun refresh(userWalletId: UserWalletId, network: Network)
 
@@ -27,4 +30,10 @@ internal interface NetworksStatusesStoreV2 {
      * If [value] is null, default unreachable status will be stored.
      */
     suspend fun storeError(userWalletId: UserWalletId, network: Network, value: NetworkStatus.Unreachable? = null)
+
+    /** Store unreachable [value] by [userWalletId] */
+    suspend fun storeUnreachableStatus(userWalletId: UserWalletId, value: NetworkStatus)
+
+    /** Store error for [networks] by [userWalletId] */
+    suspend fun storeError(userWalletId: UserWalletId, networks: Set<Network>)
 }

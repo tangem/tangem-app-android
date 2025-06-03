@@ -7,6 +7,9 @@ import com.tangem.common.*
 import com.tangem.common.authentication.storage.AuthenticatedStorage
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.services.secure.SecureStorage
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.Basic
 import com.tangem.domain.wallets.legacy.UserWalletsListError
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.tap.domain.userWalletList.model.UserWalletEncryptionKey
@@ -19,6 +22,7 @@ internal class BiometricUserWalletsKeysRepository(
     moshi: Moshi,
     private val authenticatedStorage: AuthenticatedStorage,
     private val secureStorage: SecureStorage,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : UserWalletsKeysRepository {
 
     private val encryptionKeyAdapter: JsonAdapter<UserWalletEncryptionKey> = moshi.adapter(
@@ -32,7 +36,7 @@ internal class BiometricUserWalletsKeysRepository(
         return withContext(Dispatchers.IO) {
             getAllInternal()
                 .mapFailure { error ->
-                    when (error) {
+                    val mappedError = when (error) {
                         is TangemSdkError.AuthenticationLockout ->
                             UserWalletsListError.BiometricsAuthenticationLockout(isPermanent = false)
                         is TangemSdkError.AuthenticationPermanentLockout ->
@@ -43,6 +47,13 @@ internal class BiometricUserWalletsKeysRepository(
                             UserWalletsListError.BiometricsAuthenticationDisabled
                         else -> error
                     }
+                    analyticsEventHandler.send(
+                        Basic.BiometryFailed(
+                            source = AnalyticsParam.ScreensSources.SignIn,
+                            reason = BiometricFailReasonConverter.convert(mappedError),
+                        ),
+                    )
+                    mappedError
                 }
         }
     }
