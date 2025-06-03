@@ -409,17 +409,6 @@ internal class DefaultOnrampRepository(
         return quotes.mapTo(hashSetOf(), OnrampQuote::paymentMethod)
     }
 
-    override suspend fun saveSelectedPaymentMethod(paymentMethod: OnrampPaymentMethod) {
-        val dto = paymentMethodsConverter.convertBack(paymentMethod)
-        paymentMethodsStore.store(SELECTED_PAYMENT_METHOD_KEY, listOf(dto))
-    }
-
-    override fun getSelectedPaymentMethod(): Flow<OnrampPaymentMethod> {
-        return paymentMethodsStore
-            .get(SELECTED_PAYMENT_METHOD_KEY)
-            .mapNotNull { paymentMethods -> paymentMethods.firstOrNull()?.let(paymentMethodsConverter::convert) }
-    }
-
     override suspend fun clearCache() = withContext(NonCancellable) {
         paymentMethodsStore.clear()
         pairsStore.clear()
