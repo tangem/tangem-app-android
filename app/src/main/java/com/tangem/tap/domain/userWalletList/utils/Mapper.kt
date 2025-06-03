@@ -15,7 +15,6 @@ internal val UserWallet.publicInformation: UserWalletPublicInformation
     get() = UserWalletPublicInformation(
         name = name,
         walletId = walletId,
-        artworkUrl = artworkUrl,
         cardsInWallet = cardsInWallet,
         isMultiCurrency = isMultiCurrency,
         scanResponse = scanResponse.copy(
@@ -31,7 +30,6 @@ internal fun UserWalletPublicInformation.toUserWallet(): UserWallet {
     return UserWallet(
         name = name,
         walletId = walletId,
-        artworkUrl = artworkUrl,
         cardsInWallet = cardsInWallet,
         scanResponse = scanResponse,
         isMultiCurrency = isMultiCurrency,
