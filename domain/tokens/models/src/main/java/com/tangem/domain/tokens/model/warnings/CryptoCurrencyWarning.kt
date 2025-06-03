@@ -60,7 +60,5 @@ sealed class CryptoCurrencyWarning {
         val maxAmount: BigDecimal?,
     ) : CryptoCurrencyWarning()
 
-    data object TokensInBetaWarning : CryptoCurrencyWarning()
-
     data object UsedOutdatedDataWarning : CryptoCurrencyWarning()
 }
