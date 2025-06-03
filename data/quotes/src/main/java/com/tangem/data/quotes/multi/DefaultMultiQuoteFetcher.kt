@@ -2,7 +2,9 @@ package com.tangem.data.quotes.multi
 
 import arrow.core.Either
 import com.tangem.data.common.api.safeApiCallWithTimeout
-import com.tangem.data.quotes.store.QuotesStoreV2
+import com.tangem.data.quotes.store.QuotesStatusesStore
+import com.tangem.data.quotes.store.setSourceAsCache
+import com.tangem.data.quotes.store.setSourceAsOnlyCache
 import com.tangem.data.tokens.utils.QuotesUnsupportedCurrenciesIdAdapter
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.appcurrency.AppCurrencyResponseStore
@@ -29,7 +31,7 @@ import javax.inject.Singleton
 internal class DefaultMultiQuoteFetcher @Inject constructor(
     private val tangemTechApi: TangemTechApi,
     private val appCurrencyResponseStore: AppCurrencyResponseStore,
-    private val quotesStore: QuotesStoreV2,
+    private val quotesStore: QuotesStatusesStore,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : MultiQuoteFetcher {
 
@@ -41,7 +43,7 @@ internal class DefaultMultiQuoteFetcher @Inject constructor(
             return@catchOn
         }
 
-        quotesStore.refresh(currenciesIds = params.currenciesIds)
+        quotesStore.setSourceAsCache(currenciesIds = params.currenciesIds)
 
         val replacementIdsResult = quotesUnsupportedCurrenciesAdapter.replaceUnsupportedCurrencies(
             currenciesIds = params.currenciesIds.mapTo(
@@ -67,11 +69,11 @@ internal class DefaultMultiQuoteFetcher @Inject constructor(
             filteredIds = replacementIdsResult.idsFiltered,
         )
 
-        quotesStore.storeActual(values = updatedResponse.quotes)
+        quotesStore.store(values = updatedResponse.quotes)
     }
         .onLeft {
             Timber.e(it)
-            quotesStore.storeError(currenciesIds = params.currenciesIds)
+            quotesStore.setSourceAsOnlyCache(currenciesIds = params.currenciesIds)
         }
 
     private suspend fun getAppCurrencyId(params: MultiQuoteFetcher.Params): String {

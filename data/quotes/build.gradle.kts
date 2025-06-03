@@ -9,6 +9,10 @@ android {
     namespace = "com.tangem.data.quotes"
 }
 
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+}
+
 dependencies {
     implementation(projects.core.datasource)
     implementation(projects.core.utils)
@@ -30,7 +34,8 @@ dependencies {
     kapt(deps.hilt.kapt)
 
     testImplementation(deps.test.coroutine)
-    testImplementation(deps.test.junit)
+    testImplementation(deps.test.junit5)
+    testRuntimeOnly(deps.test.junit5.engine)
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)
     testImplementation(projects.common.test)

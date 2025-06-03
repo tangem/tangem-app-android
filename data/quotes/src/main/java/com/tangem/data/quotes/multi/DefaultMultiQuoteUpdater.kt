@@ -2,7 +2,7 @@ package com.tangem.data.quotes.multi
 
 import androidx.annotation.VisibleForTesting
 import arrow.core.left
-import com.tangem.data.quotes.store.QuotesStoreV2
+import com.tangem.data.quotes.store.QuotesStatusesStore
 import com.tangem.datasource.appcurrency.AppCurrencyResponseStore
 import com.tangem.domain.core.utils.EitherFlow
 import com.tangem.domain.quotes.multi.MultiQuoteFetcher
@@ -33,7 +33,7 @@ import javax.inject.Singleton
 @Singleton
 internal class DefaultMultiQuoteUpdater @Inject constructor(
     private val appCurrencyResponseStore: AppCurrencyResponseStore,
-    private val quotesStore: QuotesStoreV2,
+    private val quotesStore: QuotesStatusesStore,
     private val multiQuoteFetcher: MultiQuoteFetcher,
     dispatchers: CoroutineDispatcherProvider,
 ) : MultiQuoteUpdater {
