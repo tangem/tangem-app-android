@@ -1,5 +1,3 @@
-import com.tangem.plugin.configuration.configurations.extension.kaptForObfuscatingVariants
-
 plugins {
     alias(deps.plugins.android.library)
     alias(deps.plugins.kotlin.android)
@@ -23,22 +21,24 @@ dependencies {
 
     /** Domain */
     implementation(projects.domain.appCurrency)
+    implementation(projects.domain.appCurrency.models)
+    implementation(projects.domain.card)
+    implementation(projects.domain.demo)
+    implementation(projects.domain.legacy)
     implementation(projects.domain.models)
+    implementation(projects.domain.quotes)
+    implementation(projects.domain.staking)
     implementation(projects.domain.tokens)
     implementation(projects.domain.tokens.models)
+    implementation(projects.domain.transaction)
+    implementation(projects.domain.transaction.models)
+    implementation(projects.domain.txhistory.models)
     implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
-    implementation(projects.domain.transaction)
-    implementation(projects.domain.legacy)
-    implementation(projects.libs.blockchainSdk)
-    implementation(projects.domain.demo)
-    implementation(projects.domain.card)
-    implementation(projects.domain.appCurrency.models)
-    implementation(projects.domain.txhistory.models)
-    implementation(projects.domain.transaction.models)
+
     implementation(projects.features.swap.domain.api)
     implementation(projects.features.swap.domain.models)
-    implementation(projects.domain.staking)
+    implementation(projects.libs.blockchainSdk)
 
     /** Core modules */
     implementation(projects.core.utils)

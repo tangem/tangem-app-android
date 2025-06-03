@@ -4,14 +4,12 @@ import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.raise.catch
 import arrow.core.raise.either
+import com.tangem.blockchain.common.UnmarshalHelper
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.EllipticCurve
-import com.tangem.common.core.CardSession
-import com.tangem.common.core.CardSessionRunnable
-import com.tangem.common.core.CompletionCallback
-import com.tangem.common.core.TangemError
-import com.tangem.common.core.TangemSdkError
+import com.tangem.common.core.*
 import com.tangem.common.extensions.hexToBytes
+import com.tangem.common.extensions.toDecompressedPublicKey
 import com.tangem.common.extensions.toHexString
 import com.tangem.common.map
 import com.tangem.common.timemeasure.RealtimeMonotonicTimeSource
@@ -46,7 +44,7 @@ import timber.log.Timber
 import kotlin.coroutines.resume
 import kotlin.time.measureTimedValue
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 class VisaCardActivationTask @AssistedInject constructor(
     @Assisted private val mode: VisaCardActivationTaskMode,
     @Assisted private val activationInput: VisaActivationInput,
@@ -97,7 +95,23 @@ class VisaCardActivationTask @AssistedInject constructor(
                     context.signAuthorizationChallenge(mode.authorizationChallenge)
                 }
                 is VisaCardActivationTaskMode.SignOnly -> {
-                    context.signData(mode.dataToSignByCardWallet)
+                    val wallet =
+                        card.wallets.firstOrNull { it.curve == EllipticCurve.Secp256k1 }
+                            ?: return CompletionResult.Failure(TangemSdkError.MissingPreflightRead())
+
+                    val derivedPublicKey = when (val deriveKeyResult = context.deriveKey(wallet.publicKey)) {
+                        is CompletionResult.Failure -> {
+                            return CompletionResult.Failure(deriveKeyResult.error)
+                        }
+                        is CompletionResult.Success -> {
+                            deriveKeyResult.data
+                        }
+                    }
+
+                    context.signData(
+                        mode.dataToSignByCardWallet,
+                        derivedPublicKey,
+                    )
                 }
             }
         }
@@ -138,9 +152,35 @@ class VisaCardActivationTask @AssistedInject constructor(
     private suspend fun SessionContext.processSignedAuthorizationChallenge(
         signedChallenge: VisaAuthSignedChallenge,
     ): CompletionResult<VisaCardActivationResponse> {
+        when (val createWalletResult = createWallet()) {
+            is CompletionResult.Failure -> return CompletionResult.Failure(createWalletResult.error)
+            is CompletionResult.Success -> {}
+        }
+
+        val card =
+            session.environment.card ?: return CompletionResult.Failure(TangemSdkError.MissingPreflightRead())
+
+        val wallet =
+            card.wallets.firstOrNull { it.curve == EllipticCurve.Secp256k1 }
+                ?: return CompletionResult.Failure(TangemSdkError.MissingPreflightRead())
+
+        val derivedPublicKey = when (val deriveKeyResult = deriveKey(wallet.publicKey)) {
+            is CompletionResult.Failure -> {
+                return CompletionResult.Failure(deriveKeyResult.error)
+            }
+            is CompletionResult.Success -> {
+                deriveKeyResult.data
+            }
+        }
+
+        val walletAddress = VisaWalletPublicKeyUtility.generateAddressOnSecp256k1(derivedPublicKey.publicKey)
+            .getOrElse { return CompletionResult.Failure(it.tangemError) }
+            .value
+
         return coroutineScope {
-            val dataToSignDeferred = async { getDataToSign(signedChallenge) }
-            val otpTaskDeferred = async { createWallet() }
+            val dataToSignDeferred =
+                async { getDataToSign(signedChallenge = signedChallenge, cardWalletAddress = walletAddress) }
+            val otpTaskDeferred = async { createOTP() }
 
             val dataToSign = dataToSignDeferred.await()
                 .getOrElse {
@@ -150,12 +190,16 @@ class VisaCardActivationTask @AssistedInject constructor(
 
             otpTaskDeferred.await()
 
-            signData(dataToSign)
+            signData(
+                dataToSign = dataToSign,
+                derivedPublicKey = derivedPublicKey,
+            )
         }
     }
 
     private suspend fun SessionContext.getDataToSign(
         signedChallenge: VisaAuthSignedChallenge,
+        cardWalletAddress: String,
     ): Either<TangemError, VisaDataToSignByCardWallet> = either {
         catch(
             block = {
@@ -168,7 +212,12 @@ class VisaCardActivationTask @AssistedInject constructor(
                     raise(VisaActivationError.WrongRemoteState.tangemError)
                 }
 
-                visaActivationRepository.getCardWalletAcceptanceData(remoteState.request)
+                visaActivationRepository.getCardWalletAcceptanceData(
+                    VisaCardWalletDataToSignRequest(
+                        activationOrderInfo = remoteState.activationOrderInfo,
+                        cardWalletAddress = cardWalletAddress,
+                    ),
+                )
             },
             catch = {
                 raise(VisaAuthorizationAPIError.tangemError)
@@ -182,7 +231,7 @@ class VisaCardActivationTask @AssistedInject constructor(
         val card = session.environment.card ?: return CompletionResult.Failure(TangemSdkError.MissingPreflightRead())
 
         return if (card.wallets.any { it.curve == EllipticCurve.Secp256k1 }) {
-            createOTP()
+            CompletionResult.Success(Unit)
         } else {
             val createWalletTask = CreateWalletTask(EllipticCurve.Secp256k1)
 
@@ -199,7 +248,7 @@ class VisaCardActivationTask @AssistedInject constructor(
             when (val result = timedResult.value) {
                 is CompletionResult.Success -> {
                     Timber.i("CreateWalletTask success")
-                    createOTP()
+                    CompletionResult.Success(Unit)
                 }
                 is CompletionResult.Failure -> {
                     Timber.e("CreateWalletTask failure ${result.error}")
@@ -245,25 +294,14 @@ class VisaCardActivationTask @AssistedInject constructor(
 
     private suspend fun SessionContext.signData(
         dataToSign: VisaDataToSignByCardWallet,
+        derivedPublicKey: ExtendedPublicKey,
     ): CompletionResult<VisaCardActivationResponse> {
         val card =
             session.environment.card ?: return CompletionResult.Failure(TangemSdkError.MissingPreflightRead())
+
         val wallet =
             card.wallets.firstOrNull { it.curve == EllipticCurve.Secp256k1 }
                 ?: return CompletionResult.Failure(TangemSdkError.MissingPreflightRead())
-
-        val derivedPublicKey = when (val deriveKeyResult = deriveKey(wallet.publicKey)) {
-            is CompletionResult.Failure -> {
-                return CompletionResult.Failure(deriveKeyResult.error)
-            }
-            is CompletionResult.Success -> {
-                deriveKeyResult.data
-            }
-        }
-
-        val walletAddress = VisaWalletPublicKeyUtility.generateAddressOnSecp256k1(derivedPublicKey.publicKey)
-            .getOrElse { return CompletionResult.Failure(it.tangemError) }
-            .value
 
         val task = SignHashCommand(
             hash = dataToSign.hashToSign.hexToBytes(),
@@ -286,8 +324,8 @@ class VisaCardActivationTask @AssistedInject constructor(
                 Timber.i("SignHashCommand success")
                 handleSignedData(
                     dataToSign = dataToSign,
-                    walletAddress = walletAddress,
                     response = result.data,
+                    derivedPublicKey = derivedPublicKey,
                 )
             }
             is CompletionResult.Failure -> {
@@ -313,7 +351,7 @@ class VisaCardActivationTask @AssistedInject constructor(
 
     private suspend fun SessionContext.handleSignedData(
         dataToSign: VisaDataToSignByCardWallet,
-        walletAddress: String,
+        derivedPublicKey: ExtendedPublicKey,
         response: SignHashResponse,
     ): CompletionResult<VisaCardActivationResponse> {
         val otp = otpStorage.getOTP(cardId) ?: run {
@@ -321,11 +359,16 @@ class VisaCardActivationTask @AssistedInject constructor(
             otpStorage.getOTP(cardId) ?: return CompletionResult.Failure(VisaActivationError.MissingRootOTP.tangemError)
         }
 
+        val rsvSignature = UnmarshalHelper.unmarshalSignatureExtended(
+            signature = response.signature,
+            hash = dataToSign.hashToSign.hexToBytes(),
+            publicKey = derivedPublicKey.publicKey.toDecompressedPublicKey(),
+        ).asRSVLegacyEVM().toHexString().lowercase()
+
         val signedActivationData = dataToSign.sign(
-            cardWalletAddress = walletAddress,
             rootOTP = otp.rootOTP.toHexString(),
             otpCounter = otp.counter,
-            signature = response.signature.toHexString(),
+            signature = rsvSignature,
         )
 
         return setupAccessCode().map {
