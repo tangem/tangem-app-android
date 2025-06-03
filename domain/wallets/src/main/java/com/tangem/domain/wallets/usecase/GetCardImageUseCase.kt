@@ -36,7 +36,7 @@ class GetCardImageUseCase(
         cardPublicKey: ByteArray,
         manufacturerName: String,
         firmwareVersion: FirmwareVersion,
-        size: ArtworkSize,
+        size: ArtworkSize = ArtworkSize.SMALL,
     ): ArtworkModel {
         return if (cardSdkFeatureToggles.isNewArtworkLoadingEnabled) {
             val result = cardArtworksProvider.getArtwork(
