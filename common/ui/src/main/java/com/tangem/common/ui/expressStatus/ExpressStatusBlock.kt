@@ -19,16 +19,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.R
 import com.tangem.common.ui.expressStatus.state.ExpressLinkUM
 import com.tangem.common.ui.expressStatus.state.ExpressStatusItemState
 import com.tangem.common.ui.expressStatus.state.ExpressStatusItemUM
 import com.tangem.common.ui.expressStatus.state.ExpressStatusUM
 import com.tangem.core.ui.components.SpacerWMax
-import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import kotlinx.collections.immutable.persistentListOf
@@ -53,6 +53,7 @@ fun ExpressStatusBlock(state: ExpressStatusUM, modifier: Modifier = Modifier) {
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier
                 .padding(bottom = TangemTheme.dimens.spacing16),
         ) {
@@ -77,8 +78,11 @@ fun ExpressStatusBlock(state: ExpressStatusUM, modifier: Modifier = Modifier) {
                             .padding(end = TangemTheme.dimens.spacing2),
                     )
                     Text(
+                        modifier = Modifier.align(Alignment.CenterVertically),
                         text = link.text.resolveReference(),
-                        style = TangemTheme.typography.body2,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        style = TangemTheme.typography.subtitle2,
                         color = TangemTheme.colors.text.tertiary,
                     )
                 }
