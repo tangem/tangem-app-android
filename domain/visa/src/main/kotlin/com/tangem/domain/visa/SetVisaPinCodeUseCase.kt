@@ -4,6 +4,8 @@ package com.tangem.domain.visa
 
 import android.util.Base64
 import arrow.core.Either
+import com.tangem.core.error.UniversalError
+import com.tangem.domain.visa.error.VisaActivationError
 import com.tangem.domain.visa.model.VisaCardId
 import com.tangem.domain.visa.model.VisaEncryptedPinCode
 import com.tangem.domain.visa.repository.VisaActivationRepository
@@ -25,7 +27,7 @@ class SetVisaPinCodeUseCase(private val visaActivationRepositoryFactory: VisaAct
         visaCardId: VisaCardId,
         activationOrderId: String,
         pinCode: String,
-    ): Either<Throwable, Unit> = Either.catch {
+    ): Either<UniversalError, Unit> = runCatching {
         val visaActivationRepository = visaActivationRepositoryFactory.create(visaCardId)
         val rsaPublicKey = visaActivationRepository.getPinCodeRsaEncryptionPublicKey()
         val formattedPin = "24$pinCode${"f".repeat(n = 8)}FF"
@@ -48,7 +50,7 @@ class SetVisaPinCodeUseCase(private val visaActivationRepositoryFactory: VisaAct
                 encryptedPin = encryptedPin,
             ),
         )
-    }
+    }.getOrElse { Either.Left(VisaActivationError.FailedToSetPinCode) }
 
     private fun generateSessionKey(): Key {
         val generator = KeyGenerator.getInstance("AES")

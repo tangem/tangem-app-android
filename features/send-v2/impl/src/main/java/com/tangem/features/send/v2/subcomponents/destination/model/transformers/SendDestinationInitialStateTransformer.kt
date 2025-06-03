@@ -4,8 +4,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.Network
 import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.subcomponents.destination.ui.state.DestinationTextFieldUM
 import com.tangem.features.send.v2.subcomponents.destination.ui.state.DestinationUM
