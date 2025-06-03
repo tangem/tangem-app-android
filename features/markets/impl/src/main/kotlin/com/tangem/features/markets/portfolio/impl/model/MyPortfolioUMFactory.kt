@@ -2,8 +2,10 @@ package com.tangem.features.markets.portfolio.impl.model
 
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.domain.markets.TokenMarketInfo
+import com.tangem.domain.models.ArtworkModel
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.models.isMultiCurrency
 import com.tangem.features.markets.portfolio.impl.loader.PortfolioData
 import com.tangem.features.markets.portfolio.impl.ui.state.MyPortfolioUM
@@ -31,7 +33,11 @@ internal class MyPortfolioUMFactory(
     private val updateTokens: ((ImmutableList<PortfolioTokenUM>) -> ImmutableList<PortfolioTokenUM>) -> Unit,
 ) {
 
-    fun create(portfolioData: PortfolioData, portfolioUIData: PortfolioUIData): MyPortfolioUM {
+    fun create(
+        portfolioData: PortfolioData,
+        portfolioUIData: PortfolioUIData,
+        artworks: HashMap<UserWalletId, ArtworkModel>,
+    ): MyPortfolioUM {
         val addToPortfolioData = portfolioUIData.addToPortfolioData
 
         val isOnlyUnavailableNetworks = addToPortfolioData.availableNetworks?.isEmpty() == true
@@ -52,6 +58,7 @@ internal class MyPortfolioUMFactory(
                     addToPortfolioBSConfig = createAddToPortfolioBSConfig(
                         portfolioData = portfolioData,
                         portfolioUIData = portfolioUIData,
+                        artworks = artworks,
                     ),
                     onAddClick = onAddClick,
                 )
@@ -66,7 +73,11 @@ internal class MyPortfolioUMFactory(
             addButtonState = walletsWithCurrencies.getAddButtonState(
                 availableNetworks = addToPortfolioData.availableNetworks,
             ),
-            bsConfig = createAddToPortfolioBSConfig(portfolioData = portfolioData, portfolioUIData = portfolioUIData),
+            bsConfig = createAddToPortfolioBSConfig(
+                portfolioData = portfolioData,
+                portfolioUIData = portfolioUIData,
+                artworks = artworks,
+            ),
             onAddClick = onAddClick,
             quickActionsIntents = tokenActionsHandler,
             currentState = currentState,
@@ -78,6 +89,7 @@ internal class MyPortfolioUMFactory(
     private fun createAddToPortfolioBSConfig(
         portfolioData: PortfolioData,
         portfolioUIData: PortfolioUIData,
+        artworks: HashMap<UserWalletId, ArtworkModel>,
     ): TangemBottomSheetConfig {
         val selectedWallet = portfolioData.walletsWithCurrencies.keys
             .firstOrNull { it.walletId == portfolioUIData.selectedWalletId }
@@ -96,6 +108,7 @@ internal class MyPortfolioUMFactory(
             portfolioUIData = portfolioUIData,
             selectedWallet = selectedWallet,
             alreadyAddedNetworks = alreadyAddedNetworks,
+            artworks = artworks,
         )
     }
 
