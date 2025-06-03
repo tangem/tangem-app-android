@@ -12,6 +12,7 @@ internal sealed class NFTCollectionsUM {
     ) : NFTCollectionsUM()
 
     data class Loading(
+        val search: SearchBarUM,
         val onReceiveClick: () -> Unit,
     ) : NFTCollectionsUM()
 
