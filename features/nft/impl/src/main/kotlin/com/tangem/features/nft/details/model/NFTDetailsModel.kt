@@ -62,7 +62,10 @@ internal class NFTDetailsModel @Inject constructor(
         appCurrency = appCurrency,
         onBackClick = { params.onBackClick() },
         onReadMoreClick = ::onReadMoreClick,
-        onSeeAllTraitsClick = { params.onAllTraitsClick() },
+        onSeeAllTraitsClick = {
+            analyticsEventHandler.send(NFTAnalyticsEvent.Details.ButtonSeeAll)
+            params.onAllTraitsClick()
+        },
         onExploreClick = ::onExploreClick,
         onSendClick = ::onSendClick,
         onInfoBlockClick = ::onInfoBlockClick,
