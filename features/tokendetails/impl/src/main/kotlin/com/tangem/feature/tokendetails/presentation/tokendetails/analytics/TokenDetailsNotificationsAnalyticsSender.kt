@@ -53,7 +53,6 @@ internal class TokenDetailsNotificationsAnalyticsSender(
             is TokenDetailsNotification.HederaAssociateWarning,
             is TokenDetailsNotification.KoinosMana,
             is TokenDetailsNotification.MigrationMaticToPol,
-            is TokenDetailsNotification.TokensInBeta,
             is TokenDetailsNotification.UsedOutdatedData,
             -> null
         }
