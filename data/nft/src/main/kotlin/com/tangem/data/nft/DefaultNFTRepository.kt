@@ -16,6 +16,8 @@ import com.tangem.datasource.local.nft.converter.NFTSdkAssetSalePriceConverter
 import com.tangem.datasource.local.nft.converter.NFTSdkCollectionConverter
 import com.tangem.datasource.local.nft.converter.NFTSdkCollectionIdentifierConverter
 import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.common.extensions.canHandleToken
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
@@ -50,7 +52,7 @@ internal class DefaultNFTRepository @Inject constructor(
     private val userWalletsStore: UserWalletsStore,
     private val nftFeatureToggles: NFTFeatureToggles,
     private val networkFactory: NetworkFactory,
-    excludedBlockchains: ExcludedBlockchains,
+    private val excludedBlockchains: ExcludedBlockchains,
     resources: Resources,
 ) : NFTRepository {
 
@@ -123,7 +125,7 @@ internal class DefaultNFTRepository @Inject constructor(
     private suspend fun observeCollectionsInternal(
         userWalletId: UserWalletId,
         network: Network,
-    ): Flow<NFTCollections> = if (network.canHandleNFTs()) {
+    ): Flow<NFTCollections> = if (network.canHandleNFTs(userWalletId)) {
         getNFTRuntimeStore(userWalletId, network).getCollections()
     } else {
         flowOf(NFTCollections.empty(network))
@@ -194,13 +196,14 @@ internal class DefaultNFTRepository @Inject constructor(
         }.saveIn(getCollectionJobHolder(collectionId)).join()
     }
 
-    override suspend fun isNFTSupported(network: Network): Boolean = network.canHandleNFTs()
+    override suspend fun isNFTSupported(userWalletId: UserWalletId, network: Network): Boolean =
+        network.canHandleNFTs(userWalletId)
 
     override suspend fun getNFTSupportedNetworks(userWalletId: UserWalletId): List<Network> {
         val userWallet = userWalletsStore.getSyncStrict(userWalletId)
         return Blockchain
             .entries
-            .filter { it.canHandleNFTs() && !it.isTestnet() }
+            .filter { !it.isTestnet() }
             .mapNotNull {
                 networkFactory.create(
                     blockchain = it,
@@ -208,6 +211,7 @@ internal class DefaultNFTRepository @Inject constructor(
                     scanResponse = userWallet.requireColdWallet().scanResponse, // TODO [REDACTED_TASK_KEY]
                 )
             }
+            .filter { it.canHandleNFTs(userWalletId) }
     }
 
     override suspend fun getNFTExploreUrl(network: Network, assetIdentifier: NFTAsset.Identifier): String? =
@@ -229,7 +233,7 @@ internal class DefaultNFTRepository @Inject constructor(
         refreshAssets: Boolean,
     ) = coroutineScope {
         networks.mapNotNull { network ->
-            if (network.canHandleNFTs()) {
+            if (network.canHandleNFTs(userWalletId)) {
                 launch(dispatchers.io) {
                     Either.catch {
                         expireCollections(userWalletId, network)
@@ -537,14 +541,15 @@ internal class DefaultNFTRepository @Inject constructor(
         return walletId.stringValue + "_" + network.rawId + "_" + network.derivationPath.value
     }
 
-    private fun Network.canHandleNFTs(): Boolean {
+    private fun Network.canHandleNFTs(userWalletId: UserWalletId): Boolean {
+        val scanResponse = userWalletsStore.getSyncStrict(userWalletId).requireColdWallet().scanResponse
         val blockchain = Blockchain.fromNetworkId(backendId)
         return when {
             blockchain == null -> false
             blockchain.isEvm() && !nftFeatureToggles.isNFTEVMEnabled -> false
-            (blockchain == Blockchain.Solana || blockchain == Blockchain.SolanaTestnet) &&
-                !nftFeatureToggles.isNFTSolanaEnabled -> false
-            else -> blockchain.canHandleNFTs()
+            blockchain == Blockchain.Solana && !nftFeatureToggles.isNFTSolanaEnabled -> false
+            else -> blockchain.canHandleNFTs() &&
+                scanResponse.card.canHandleToken(blockchain, scanResponse.cardTypesResolver, excludedBlockchains)
         }
     }
 }
