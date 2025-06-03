@@ -10,6 +10,7 @@ import com.tangem.domain.common.LogConfig
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.redux.StateDialog
+import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.network.exchangeServices.CardExchangeRules
@@ -59,7 +60,7 @@ private fun handleAction(action: Action, appState: () -> AppState?) {
             scope.launch {
                 val scanResponseProvider: () -> ScanResponse? = {
                     val userWalletsListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
-                    userWalletsListManager.selectedUserWalletSync?.scanResponse
+                    userWalletsListManager.selectedUserWalletSync?.requireColdWallet()?.scanResponse // TODO [REDACTED_TASK_KEY]
                 }
                 val cardProvider: () -> CardDTO? = { scanResponseProvider.invoke()?.card }
 
