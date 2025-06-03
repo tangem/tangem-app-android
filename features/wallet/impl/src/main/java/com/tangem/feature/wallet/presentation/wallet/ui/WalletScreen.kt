@@ -8,6 +8,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideIn
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
@@ -24,7 +25,6 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.*
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -40,7 +40,6 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.paging.compose.collectAsLazyPagingItems
-import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheet
 import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheetConfig
 import com.tangem.common.ui.expressStatus.expressTransactionsItems
@@ -59,7 +58,6 @@ import com.tangem.core.ui.components.snackbar.TangemSnackbar
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.stringResourceSafe
-import com.tangem.core.ui.res.LocalIsNavigationRefactoringEnabled
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.LocalWindowSize
 import com.tangem.core.ui.res.TangemTheme
@@ -336,108 +334,121 @@ private inline fun BaseScaffoldWithMarkets(
     ) {
         val backgroundColor = LocalMainBottomSheetColor.current
         var isSearchFieldFocused by remember { mutableStateOf(false) }
+        val isNavBarVisible = remember { mutableStateOf(true) }
 
         BottomSheetStateEffects(
             bottomSheetState = bottomSheetState,
             alertConfig = alertConfig,
             onBottomSheetStateChange = onBottomSheetStateChange,
+            navigationBarVisible = isNavBarVisible,
             isSearchFieldFocused = isSearchFieldFocused,
         )
 
-        TangemBottomSheetScaffold(
-            snackbarHost = {
-                WalletSnackbarHost(
-                    snackbarHostState = it,
-                    event = state.event,
-                    modifier = Modifier
-                        .padding(bottom = TangemTheme.dimens.spacing4)
-                        .navigationBarsPadding(),
-                )
-            },
-            containerColor = TangemTheme.colors.background.secondary,
-            sheetContainerColor = backgroundColor.value,
-            scaffoldState = scaffoldState,
-            sheetPeekHeight = peekHeight,
-            sheetShape = TangemTheme.shapes.bottomSheetLarge,
-            sheetContent = {
-                // hide bottom sheet when back pressed
-                BackHandler(
-                    isKeyboardVisible.not() &&
-                        bottomSheetState.currentValue == TangemSheetValue.Expanded,
-                ) {
-                    coroutineScope.launch { bottomSheetState.partialExpand() }
-                }
-
-                Column(
-                    modifier = Modifier.sizeIn(maxHeight = maxHeight - statusBarHeight),
-                ) {
-                    Hand(Modifier.drawBehind { drawRect(backgroundColor.value) })
-
-                    Box(
+        Box {
+            TangemBottomSheetScaffold(
+                snackbarHost = {
+                    WalletSnackbarHost(
+                        snackbarHostState = it,
+                        event = state.event,
                         modifier = Modifier
-                            // expand bottom sheet when clicked on the header
-                            .clickable(
-                                enabled = bottomSheetState.currentValue == TangemSheetValue.PartiallyExpanded,
-                                indication = null,
-                                interactionSource = null,
-                            ) {
-                                coroutineScope.launch { bottomSheetState.expand() }
-                            }
-                            .onFocusChanged {
-                                isSearchFieldFocused = it.isFocused
-                            },
-                    ) {
-                        bottomSheetContent()
-                    }
-                }
-            },
-            content = { paddingValues ->
-                Box {
-                    MarketsHint(
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .padding(bottom = peekHeight + 12.dp)
-                            .fillMaxWidth(fraction = .4f),
-                        isVisible = showMarketsHint,
+                            .padding(bottom = TangemTheme.dimens.spacing4)
+                            .navigationBarsPadding(),
                     )
+                },
+                containerColor = TangemTheme.colors.background.secondary,
+                sheetContainerColor = backgroundColor.value,
+                scaffoldState = scaffoldState,
+                sheetPeekHeight = peekHeight,
+                sheetShape = TangemTheme.shapes.bottomSheetLarge,
+                sheetContent = {
+                    // hide bottom sheet when back pressed
+                    BackHandler(
+                        isKeyboardVisible.not() &&
+                            bottomSheetState.currentValue == TangemSheetValue.Expanded,
+                    ) {
+                        coroutineScope.launch { bottomSheetState.partialExpand() }
+                    }
 
-                    Column {
-                        WalletTopBar(config = state.topBarConfig)
-                        TangemPullToRefreshContainer(config = selectedWallet.pullToRefreshConfig) {
-                            content(paddingValues)
+                    Column(
+                        modifier = Modifier.sizeIn(maxHeight = maxHeight - statusBarHeight),
+                    ) {
+                        Hand(Modifier.drawBehind { drawRect(backgroundColor.value) })
+
+                        Box(
+                            modifier = Modifier
+                                // expand bottom sheet when clicked on the header
+                                .clickable(
+                                    enabled = bottomSheetState.currentValue == TangemSheetValue.PartiallyExpanded,
+                                    indication = null,
+                                    interactionSource = null,
+                                ) {
+                                    coroutineScope.launch { bottomSheetState.expand() }
+                                }
+                                .onFocusChanged {
+                                    isSearchFieldFocused = it.isFocused
+                                },
+                        ) {
+                            bottomSheetContent()
                         }
                     }
+                },
+                content = { paddingValues ->
+                    Box {
+                        MarketsHint(
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .padding(bottom = peekHeight + 12.dp)
+                                .fillMaxWidth(fraction = .4f),
+                            isVisible = showMarketsHint,
+                        )
 
-                    BottomSheetScrim(
-                        color = if (state.showMarketsOnboarding) {
-                            Color.Black.copy(alpha = .65f)
-                        } else {
-                            BottomSheetDefaults.ScrimColor
-                        },
-                        visible = bottomSheetState.targetValue == TangemSheetValue.Expanded ||
-                            state.showMarketsOnboarding,
-                        onDismissRequest = {
-                            coroutineScope.launch { bottomSheetState.partialExpand() }
-                            state.onDismissMarketsOnboarding()
-                        },
-                    )
+                        Column {
+                            WalletTopBar(config = state.topBarConfig)
+                            TangemPullToRefreshContainer(config = selectedWallet.pullToRefreshConfig) {
+                                content(paddingValues)
+                            }
+                        }
 
-                    MarketsTooltip(
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .padding(bottom = 24.dp)
-                            .fillMaxWidth(fraction = 0.7f),
-                        isVisible = state.showMarketsOnboarding,
-                        availableHeight = if (LocalIsNavigationRefactoringEnabled.current) {
-                            maxHeight
-                        } else {
-                            maxHeight - statusBarHeight - bottomBarHeight
-                        },
-                        bottomSheetState = bottomSheetState,
-                    )
-                }
-            },
-        )
+                        BottomSheetScrim(
+                            color = if (state.showMarketsOnboarding) {
+                                Color.Black.copy(alpha = .65f)
+                            } else {
+                                BottomSheetDefaults.ScrimColor
+                            },
+                            visible = bottomSheetState.targetValue == TangemSheetValue.Expanded ||
+                                state.showMarketsOnboarding,
+                            onDismissRequest = {
+                                coroutineScope.launch { bottomSheetState.partialExpand() }
+                                state.onDismissMarketsOnboarding()
+                            },
+                        )
+
+                        MarketsTooltip(
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .padding(bottom = 24.dp)
+                                .fillMaxWidth(fraction = 0.7f),
+                            isVisible = state.showMarketsOnboarding,
+                            availableHeight = maxHeight,
+                            bottomSheetState = bottomSheetState,
+                        )
+                    }
+                },
+            )
+
+            AnimatedVisibility(
+                modifier = Modifier.align(Alignment.BottomCenter),
+                visible = isNavBarVisible.value,
+            ) {
+                Box(
+                    Modifier
+                        .align(Alignment.BottomCenter)
+                        .background(backgroundColor.value)
+                        .height(bottomBarHeight)
+                        .fillMaxWidth(),
+                )
+            }
+        }
 
         LaunchedEffect(state.showMarketsOnboarding, bottomSheetState.targetValue) {
             if (state.showMarketsOnboarding && bottomSheetState.targetValue == TangemSheetValue.Expanded) {
@@ -599,49 +610,17 @@ private fun BottomSheetScrim(color: Color, visible: Boolean, onDismissRequest: (
 private fun BottomSheetStateEffects(
     bottomSheetState: TangemSheetState,
     alertConfig: WalletAlertState?,
+    navigationBarVisible: MutableState<Boolean>,
     onBottomSheetStateChange: (BottomSheetState) -> Unit,
     isSearchFieldFocused: Boolean,
 ) {
-    val systemUiController = rememberSystemUiController()
-    val navigationBarColor = TangemTheme.colors.background.primary
-
-    LaunchedEffect(navigationBarColor) {
-        delay(timeMillis = 100)
-        when (bottomSheetState.currentValue) {
-            TangemSheetValue.Hidden,
-            TangemSheetValue.Expanded,
-            -> systemUiController.setNavigationBarColor(
-                color = Color.Transparent,
-                darkIcons = navigationBarColor.luminance() > 0.5f,
-                navigationBarContrastEnforced = true,
-            )
-            TangemSheetValue.PartiallyExpanded,
-            -> systemUiController.setNavigationBarColor(navigationBarColor)
-        }
-    }
-
-    LaunchedEffect(bottomSheetState.targetValue, navigationBarColor) {
+    LaunchedEffect(bottomSheetState.targetValue) {
         when (bottomSheetState.targetValue) {
             TangemSheetValue.Hidden,
             TangemSheetValue.Expanded,
-            -> systemUiController.setNavigationBarColor(
-                color = Color.Transparent,
-                darkIcons = navigationBarColor.luminance() > 0.5f,
-                navigationBarContrastEnforced = true,
-            )
+            -> navigationBarVisible.value = false
             TangemSheetValue.PartiallyExpanded,
-            -> systemUiController.setNavigationBarColor(navigationBarColor)
-        }
-    }
-
-    // make navigation bar transparent when leaving the screen
-    DisposableEffect(Unit) {
-        onDispose {
-            systemUiController.setNavigationBarColor(
-                color = Color.Transparent,
-                darkIcons = navigationBarColor.luminance() > 0.5f,
-                navigationBarContrastEnforced = false,
-            )
+            -> navigationBarVisible.value = true
         }
     }
 

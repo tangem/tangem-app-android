@@ -15,8 +15,6 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.domain.onramp.GetOnrampPaymentMethodsUseCase
 import com.tangem.domain.onramp.GetOnrampProviderWithQuoteUseCase
-import com.tangem.domain.onramp.GetOnrampSelectedPaymentMethodUseCase
-import com.tangem.domain.onramp.OnrampSaveSelectedPaymentMethod
 import com.tangem.domain.onramp.analytics.OnrampAnalyticsEvent
 import com.tangem.domain.onramp.model.OnrampPaymentMethod
 import com.tangem.domain.onramp.model.OnrampProviderWithQuote
@@ -36,7 +34,10 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toPersistentList
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.math.BigDecimal
@@ -49,10 +50,8 @@ internal class SelectProviderModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val getOnrampPaymentMethodsUseCase: GetOnrampPaymentMethodsUseCase,
-    private val getOnrampSelectedPaymentMethodUseCase: GetOnrampSelectedPaymentMethodUseCase,
     private val getOnrampProviderWithQuoteUseCase: GetOnrampProviderWithQuoteUseCase,
-    private val saveSelectedPaymentMethod: OnrampSaveSelectedPaymentMethod,
-    private val getUserCountryUseCase: GetUserCountryUseCase,
+    getUserCountryUseCase: GetUserCountryUseCase,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
@@ -70,7 +69,6 @@ internal class SelectProviderModel @Inject constructor(
         analyticsEventHandler.send(OnrampAnalyticsEvent.ProvidersScreenOpened)
         getPaymentMethods()
         getProviders(params.selectedPaymentMethod)
-        subscribeToPaymentMethodUpdates()
     }
 
     private fun getPaymentMethods() {
@@ -102,17 +100,6 @@ internal class SelectProviderModel @Inject constructor(
                 isPaymentMethodClickEnabled = filteredEmptyMethods.isNotEmpty(),
             )
         }
-    }
-
-    private fun subscribeToPaymentMethodUpdates() {
-        getOnrampSelectedPaymentMethodUseCase.invoke()
-            .onEach { maybePaymentMethod ->
-                maybePaymentMethod.fold(
-                    ifLeft = ::sendOnrampErrorEvent,
-                    ifRight = ::getProviders,
-                )
-            }
-            .launchIn(modelScope)
     }
 
     private fun getProviders(paymentMethod: OnrampPaymentMethod) {
@@ -176,7 +163,6 @@ internal class SelectProviderModel @Inject constructor(
         val firstProvider = methodContainer.providers.firstOrNull()
         analyticsEventHandler.send(OnrampAnalyticsEvent.OnPaymentMethodChosen(paymentMethod = paymentMethod.name))
         modelScope.launch {
-            saveSelectedPaymentMethod.invoke(paymentMethod)
             _state.update { state ->
                 state.copy(
                     selectedPaymentMethod = state.selectedPaymentMethod.copy(
@@ -184,6 +170,7 @@ internal class SelectProviderModel @Inject constructor(
                     ),
                 )
             }
+            getProviders(paymentMethod)
             if (firstProvider is ProviderListItemUM.Available) {
                 onProviderSelected(firstProvider.providerResult, firstProvider.isBestRate)
             }
