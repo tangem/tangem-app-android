@@ -1,6 +1,6 @@
 package com.tangem.data.quotes.single
 
-import com.tangem.data.quotes.store.QuotesStoreV2
+import com.tangem.data.quotes.store.QuotesStatusesStore
 import com.tangem.domain.quotes.single.SingleQuoteProducer
 import com.tangem.domain.tokens.model.QuoteStatus
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -20,7 +20,7 @@ import kotlinx.coroutines.flow.mapNotNull
  */
 internal class DefaultSingleQuoteProducer @AssistedInject constructor(
     @Assisted val params: SingleQuoteProducer.Params,
-    private val quotesStore: QuotesStoreV2,
+    private val quotesStore: QuotesStatusesStore,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : SingleQuoteProducer {
 
