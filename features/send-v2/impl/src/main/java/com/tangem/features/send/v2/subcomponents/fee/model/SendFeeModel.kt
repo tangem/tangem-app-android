@@ -6,12 +6,10 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
-import com.tangem.features.send.v2.common.NavigationUM
+import com.tangem.features.send.v2.common.ui.state.NavigationUM
 import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.send.ui.state.ButtonsUM
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeCheckReloadListener
@@ -30,7 +28,6 @@ import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.transformer.update
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import java.math.BigDecimal
 import java.util.Locale
 import javax.inject.Inject
 
@@ -40,9 +37,7 @@ import javax.inject.Inject
 internal class SendFeeModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
-    private val router: Router,
     private val isFeeApproximateUseCase: IsFeeApproximateUseCase,
-    private val getFeeUseCase: GetFeeUseCase,
     private val urlOpener: UrlOpener,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val sendFeeAlertFactory: SendFeeAlertFactory,
@@ -76,10 +71,32 @@ internal class SendFeeModel @Inject constructor(
     }
 
     override fun feeReload() {
-        loadFee(
-            amountValue = params.sendAmount,
-            destinationAddress = params.destinationAddress,
-        )
+        modelScope.launch {
+            val isShowLoading = (uiState.value as? FeeUM.Content)?.feeSelectorUM !is FeeSelectorUM.Content
+            if (isShowLoading) {
+                _uiState.update(SendFeeLoadingTransformer)
+            }
+            params.onLoadFee().fold(
+                ifRight = {
+                    _uiState.update(
+                        SendFeeLoadedTransformer(
+                            fees = it,
+                            clickIntents = this@SendFeeModel,
+                            appCurrency = appCurrency,
+                            feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
+                            isFeeApproximate = isFeeApproximate(it.normal.amount.type),
+                        ),
+                    )
+                    updateFeeNotifications()
+                },
+                ifLeft = { feeError ->
+                    if (isShowLoading) {
+                        _uiState.update(SendFeeFailedTransformer(feeError))
+                    }
+                    updateFeeNotifications()
+                },
+            )
+        }.saveIn(feeJobHolder)
     }
 
     override fun onFeeSelectorClick(feeType: FeeType) {
@@ -140,10 +157,8 @@ internal class SendFeeModel @Inject constructor(
                     ),
                 )
 
-                navigate()
+                saveResult()
             }
-        } else {
-            navigate()
         }
     }
 
@@ -161,12 +176,7 @@ internal class SendFeeModel @Inject constructor(
 
     private fun subscribeOnFeeReloadTriggerUpdates() {
         feeReloadListener.reloadTriggerFlow
-            .onEach { (amount, destination) ->
-                loadFee(
-                    amountValue = amount ?: params.sendAmount,
-                    destinationAddress = destination ?: params.destinationAddress,
-                )
-            }
+            .onEach { feeReload() }
             .launchIn(modelScope)
     }
 
@@ -186,50 +196,12 @@ internal class SendFeeModel @Inject constructor(
         )
         val params = params as? SendFeeComponentParams.FeeParams ?: return
         params.callback.onFeeResult(uiState.value)
-    }
-
-    private fun loadFee(amountValue: BigDecimal, destinationAddress: String) {
-        modelScope.launch {
-            val isShowLoading = (uiState.value as? FeeUM.Content)?.feeSelectorUM !is FeeSelectorUM.Content
-            if (isShowLoading) {
-                _uiState.update(SendFeeLoadingTransformer)
-            }
-            getFeeUseCase.invoke(
-                amount = amountValue,
-                destination = destinationAddress,
-                userWallet = params.userWallet,
-                cryptoCurrency = cryptoCurrencyStatus.currency,
-            ).fold(
-                ifRight = {
-                    _uiState.update(
-                        SendFeeLoadedTransformer(
-                            fees = it,
-                            clickIntents = this@SendFeeModel,
-                            appCurrency = appCurrency,
-                            feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
-                            isFeeApproximate = isFeeApproximate(it.normal.amount.type),
-                        ),
-                    )
-                    updateFeeNotifications()
-                },
-                ifLeft = { feeError ->
-                    if (isShowLoading) {
-                        _uiState.update(SendFeeFailedTransformer(feeError))
-                    }
-                    updateFeeNotifications()
-                },
-            )
-        }.saveIn(feeJobHolder)
+        params.onNextClick()
     }
 
     private fun checkLoadFee() {
         modelScope.launch {
-            getFeeUseCase.invoke(
-                amount = params.sendAmount,
-                destination = params.destinationAddress,
-                userWallet = params.userWallet,
-                cryptoCurrency = cryptoCurrencyStatus.currency,
-            ).fold(
+            params.onLoadFee().fold(
                 ifRight = {
                     sendFeeAlertFactory.getFeeUpdatedAlert(
                         newFee = it,
@@ -283,11 +255,6 @@ internal class SendFeeModel @Inject constructor(
         )
     }
 
-    private fun navigate() {
-        saveResult()
-        router.pop()
-    }
-
     private fun configFeeNavigation() {
         val params = params as? SendFeeComponentParams.FeeParams ?: return
         combine(
@@ -300,7 +267,7 @@ internal class SendFeeModel @Inject constructor(
                     title = resourceReference(R.string.common_fee_selector_title),
                     subtitle = null,
                     backIconRes = R.drawable.ic_back_24,
-                    backIconClick = router::pop,
+                    backIconClick = params.onNextClick,
                     primaryButton = ButtonsUM.PrimaryButtonUM(
                         text = resourceReference(R.string.common_continue),
                         isEnabled = state.isPrimaryButtonEnabled,

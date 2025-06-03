@@ -14,7 +14,7 @@ import com.tangem.domain.onramp.model.OnrampStatus.Status.*
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.analytics.TokenOnrampAnalyticsEvent
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsOnrampTransactionStateConverter
@@ -39,7 +39,7 @@ internal class OnrampStatusFactory @AssistedInject constructor(
     @Assisted private val appCurrencyProvider: Provider<AppCurrency>,
     @Assisted private val clickIntents: TokenDetailsClickIntents,
     @Assisted private val cryptoCurrency: CryptoCurrency,
-    @Assisted private val userWalletId: UserWalletId,
+    @Assisted private val userWallet: UserWallet,
 ) {
 
     private val onrampTransactionStateConverter by lazy(LazyThreadSafetyMode.NONE) {
@@ -54,7 +54,7 @@ internal class OnrampStatusFactory @AssistedInject constructor(
 
     operator fun invoke(): Flow<List<ExpressTransactionStateUM.OnrampUM>> {
         return getOnrampTransactionsUseCase(
-            userWalletId = userWalletId,
+            userWalletId = userWallet.walletId,
             cryptoCurrencyId = cryptoCurrency.id,
         ).map { maybeTransaction ->
             maybeTransaction.fold(
@@ -74,7 +74,7 @@ internal class OnrampStatusFactory @AssistedInject constructor(
         val selectedTx = bottomSheetConfig.value as? ExpressTransactionStateUM.OnrampUM ?: return
 
         if (selectedTx.activeStatus.isAutoDisposable || isForceDispose) {
-            onrampRemoveTransactionUseCase(externalTxId = selectedTx.info.txExternalId)
+            onrampRemoveTransactionUseCase(txId = selectedTx.info.txId)
         }
     }
 
@@ -82,14 +82,20 @@ internal class OnrampStatusFactory @AssistedInject constructor(
         return if (onrampTx.activeStatus.isTerminal) {
             onrampTx
         } else {
-            getOnrampStatusUseCase(onrampTx.info.txId).fold(
+            getOnrampStatusUseCase(userWallet = userWallet, onrampTx.info.txId).fold(
                 ifLeft = {
                     Timber.e("Couldn't update onramp status. $it")
                     onrampTx
                 },
                 ifRight = { statusModel ->
                     sendStatusUpdateAnalytics(onrampTx, statusModel)
-                    onrampTx.copy(activeStatus = statusModel.status)
+                    onrampTx.copy(
+                        activeStatus = statusModel.status,
+                        info = onrampTx.info.copy(
+                            txExternalId = statusModel.externalTxId,
+                            txExternalUrl = statusModel.externalTxUrl,
+                        ),
+                    )
                 },
             )
         }
@@ -97,14 +103,14 @@ internal class OnrampStatusFactory @AssistedInject constructor(
 
     private suspend fun List<ExpressTransactionStateUM.OnrampUM>.clearHiddenTerminal() {
         this.filter { it.activeStatus.isHidden && it.activeStatus.isTerminal }
-            .forEach { onrampRemoveTransactionUseCase(externalTxId = it.info.txExternalId) }
+            .forEach { onrampRemoveTransactionUseCase(txId = it.info.txId) }
     }
 
     private suspend fun sendStatusUpdateAnalytics(
         onrampTx: ExpressTransactionStateUM.OnrampUM,
         statusModel: OnrampStatus,
     ) {
-        val externalTxId = statusModel.externalTxId
+        val txId = statusModel.txId
         val status = toAnalyticStatus(statusModel.status) ?: return
 
         if (statusModel.status != onrampTx.activeStatus) {
@@ -117,8 +123,9 @@ internal class OnrampStatusFactory @AssistedInject constructor(
                 ),
             )
             onrampUpdateTransactionStatusUseCase(
-                externalTxId = externalTxId,
+                txId = txId,
                 externalTxUrl = statusModel.externalTxUrl.orEmpty(),
+                externalTxId = statusModel.externalTxId.orEmpty(),
                 status = statusModel.status,
             )
         }
@@ -134,10 +141,12 @@ internal class OnrampStatusFactory @AssistedInject constructor(
             PaymentProcessing,
             Paid,
             Sending,
+            RefundInProgress,
             -> ExpressAnalyticsStatus.InProgress
             Verifying -> ExpressAnalyticsStatus.KYC
             Failed -> ExpressAnalyticsStatus.Fail
             Finished -> ExpressAnalyticsStatus.Done
+            Refunded -> ExpressAnalyticsStatus.Refunded
             null -> null
         }
     }
@@ -150,7 +159,7 @@ internal class OnrampStatusFactory @AssistedInject constructor(
             appCurrencyProvider: Provider<AppCurrency>,
             clickIntents: TokenDetailsClickIntents,
             cryptoCurrency: CryptoCurrency,
-            userWalletId: UserWalletId,
+            userWallet: UserWallet,
         ): OnrampStatusFactory
     }
 }

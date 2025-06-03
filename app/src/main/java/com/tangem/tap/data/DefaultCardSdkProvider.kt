@@ -32,6 +32,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.wallet.BuildConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -64,7 +65,7 @@ internal class DefaultCardSdkProvider @Inject constructor(
         if (BuildConfig.TESTER_MENU_ENABLED) {
             appPreferencesStore.getObjectMap<ApiEnvironment>(PreferencesKeys.apiConfigsEnvironmentKey)
                 .map {
-                    when (it[ApiConfig.ID.TangemCardSdk.name]) {
+                    when (it[ApiConfig.ID.Attestation.name]) {
                         ApiEnvironment.DEV,
                         ApiEnvironment.STAGE,
                         -> false
@@ -73,6 +74,7 @@ internal class DefaultCardSdkProvider @Inject constructor(
                         -> true
                     }
                 }
+                .distinctUntilChanged()
                 .onEach { isProd ->
                     holder?.let {
                         it.sdk.config.isTangemAttestationProdEnv = isProd
@@ -170,7 +172,7 @@ internal class DefaultCardSdkProvider @Inject constructor(
             config = config.apply {
                 isNewOnlineAttestationEnabled = cardSdkFeatureToggles.isNewAttestationEnabled
 
-                val apiConfig = apiConfigsManager.getEnvironmentConfig(id = ApiConfig.ID.TangemCardSdk)
+                val apiConfig = apiConfigsManager.getEnvironmentConfig(id = ApiConfig.ID.Attestation)
                 isTangemAttestationProdEnv = apiConfig.environment == ApiEnvironment.PROD
             },
         )
