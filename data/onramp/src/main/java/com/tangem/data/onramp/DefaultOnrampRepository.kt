@@ -1,8 +1,8 @@
 package com.tangem.data.onramp
 
+import android.net.Uri
 import com.squareup.moshi.Moshi
 import com.tangem.blockchain.extensions.toBigDecimalOrDefault
-import com.tangem.core.deeplink.global.BuyCurrencyDeepLink
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.onramp.converters.CountryConverter
 import com.tangem.data.onramp.converters.CurrencyConverter
@@ -24,6 +24,7 @@ import com.tangem.datasource.api.onramp.models.response.model.OnrampCountryDTO
 import com.tangem.datasource.api.onramp.models.response.model.OnrampPairDTO
 import com.tangem.datasource.api.onramp.models.response.model.PaymentMethodDTO
 import com.tangem.datasource.crypto.DataSignatureVerifier
+import com.tangem.datasource.exchangeservice.swap.ExpressUtils
 import com.tangem.datasource.local.onramp.countries.OnrampCountriesStore
 import com.tangem.datasource.local.onramp.currencies.OnrampCurrenciesStore
 import com.tangem.datasource.local.onramp.pairs.OnrampPairsStore
@@ -43,6 +44,7 @@ import com.tangem.domain.onramp.repositories.OnrampRepository
 import com.tangem.domain.tokens.model.Amount
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.NonCancellable
@@ -82,10 +84,16 @@ internal class DefaultOnrampRepository(
 
     override fun getCurrencies(): Flow<List<OnrampCurrency>> = currenciesStore.get(CURRENCIES_KEY)
 
-    override suspend fun fetchCurrencies() = withContext(dispatchers.io) {
+    override suspend fun fetchCurrencies(userWallet: UserWallet) = withContext(dispatchers.io) {
         if (!currenciesStore.getSyncOrNull(CURRENCIES_KEY).isNullOrEmpty()) return@withContext
 
-        val result = onrampApi.getCurrencies()
+        val result = onrampApi.getCurrencies(
+            userWalletId = userWallet.walletId.stringValue,
+            refCode = ExpressUtils.getRefCode(
+                userWallet = userWallet,
+                appPreferencesStore = appPreferencesStore,
+            ),
+        )
             .getOrThrow()
             .map(currencyConverter::convert)
 
@@ -98,10 +106,16 @@ internal class DefaultOnrampRepository(
         return countriesStore.getSyncOrNull(COUNTRIES_KEY)
     }
 
-    override suspend fun fetchCountries(): List<OnrampCountry> = withContext(dispatchers.io) {
+    override suspend fun fetchCountries(userWallet: UserWallet): List<OnrampCountry> = withContext(dispatchers.io) {
         if (!countriesStore.getSyncOrNull(COUNTRIES_KEY).isNullOrEmpty()) return@withContext emptyList()
 
-        val result = onrampApi.getCountries()
+        val result = onrampApi.getCountries(
+            userWalletId = userWallet.walletId.stringValue,
+            refCode = ExpressUtils.getRefCode(
+                userWallet = userWallet,
+                appPreferencesStore = appPreferencesStore,
+            ),
+        )
             .getOrThrow()
             .map(countryConverter::convert)
 
@@ -110,14 +124,27 @@ internal class DefaultOnrampRepository(
         result
     }
 
-    override suspend fun getCountryByIp(): OnrampCountry = withContext(dispatchers.io) {
-        onrampApi.getCountryByIp()
+    override suspend fun getCountryByIp(userWallet: UserWallet): OnrampCountry = withContext(dispatchers.io) {
+        onrampApi.getCountryByIp(
+            userWalletId = userWallet.walletId.stringValue,
+            refCode = ExpressUtils.getRefCode(
+                userWallet = userWallet,
+                appPreferencesStore = appPreferencesStore,
+            ),
+        )
             .getOrThrow()
             .let(countryConverter::convert)
     }
 
-    override suspend fun getStatus(txId: String): OnrampStatus = withContext(dispatchers.io) {
-        onrampApi.getStatus(txId)
+    override suspend fun getStatus(userWallet: UserWallet, txId: String): OnrampStatus = withContext(dispatchers.io) {
+        onrampApi.getStatus(
+            userWalletId = userWallet.walletId.stringValue,
+            refCode = ExpressUtils.getRefCode(
+                userWallet = userWallet,
+                appPreferencesStore = appPreferencesStore,
+            ),
+            txId = txId,
+        )
             .getOrThrow()
             .let(statusConverter::convert)
     }
@@ -161,11 +188,19 @@ internal class DefaultOnrampRepository(
             .map { it?.let(countryConverter::convert) }
     }
 
-    override suspend fun fetchPaymentMethodsIfAbsent() = withContext(dispatchers.io) {
+    override suspend fun fetchPaymentMethodsIfAbsent(userWallet: UserWallet) = withContext(dispatchers.io) {
         if (paymentMethodsStore.contains(PAYMENT_METHODS_KEY)) return@withContext
 
         val response = safeApiCall(
-            call = { onrampApi.getPaymentMethods().bind() },
+            call = {
+                onrampApi.getPaymentMethods(
+                    userWalletId = userWallet.walletId.stringValue,
+                    refCode = ExpressUtils.getRefCode(
+                        userWallet = userWallet,
+                        appPreferencesStore = appPreferencesStore,
+                    ),
+                ).bind()
+            },
             onError = {
                 Timber.w(it, "Unable to fetch onramp payment methods")
                 throw it
@@ -174,100 +209,123 @@ internal class DefaultOnrampRepository(
         paymentMethodsStore.store(PAYMENT_METHODS_KEY, response.removeApplePay())
     }
 
-    override suspend fun fetchPairs(currency: OnrampCurrency, country: OnrampCountry, cryptoCurrency: CryptoCurrency) =
-        withContext(dispatchers.io) {
-            val onrampPairs = async {
-                safeApiCall(
-                    call = {
-                        onrampApi.getPairs(
-                            body = OnrampPairsRequest(
-                                fromCurrencyCode = currency.code,
-                                countryCode = country.code,
-                                to = listOf(
-                                    OnrampDestinationDTO(
-                                        contractAddress = cryptoCurrency.getContractAddress(),
-                                        network = cryptoCurrency.network.backendId,
-                                    ),
+    override suspend fun fetchPairs(
+        userWallet: UserWallet,
+        currency: OnrampCurrency,
+        country: OnrampCountry,
+        cryptoCurrency: CryptoCurrency,
+    ) = withContext(dispatchers.io) {
+        val onrampPairs = async {
+            safeApiCall(
+                call = {
+                    onrampApi.getPairs(
+                        userWalletId = userWallet.walletId.stringValue,
+                        refCode = ExpressUtils.getRefCode(
+                            userWallet = userWallet,
+                            appPreferencesStore = appPreferencesStore,
+                        ),
+                        body = OnrampPairsRequest(
+                            fromCurrencyCode = currency.code,
+                            countryCode = country.code,
+                            to = listOf(
+                                OnrampDestinationDTO(
+                                    contractAddress = cryptoCurrency.getContractAddress(),
+                                    network = cryptoCurrency.network.backendId,
                                 ),
                             ),
-                        ).bind()
-                    },
-                    onError = {
-                        Timber.w(it, "Unable to fetch onramp pairs")
-                        throw it
-                    },
-                )
-            }
-            val providers = async {
-                safeApiCall(
-                    call = { expressApi.getProviders().bind() },
-                    onError = {
-                        Timber.w(it, "Unable to fetch express providers")
-                        throw it
-                    },
-                )
-            }
-            storeOnrampPairs(pairs = onrampPairs.await(), providers = providers.await())
+                        ),
+                    ).bind()
+                },
+                onError = {
+                    Timber.w(it, "Unable to fetch onramp pairs")
+                    throw it
+                },
+            )
         }
+        val providers = async {
+            safeApiCall(
+                call = {
+                    expressApi.getProviders(
+                        userWalletId = userWallet.walletId.stringValue,
+                        refCode = ExpressUtils.getRefCode(
+                            userWallet = userWallet,
+                            appPreferencesStore = appPreferencesStore,
+                        ),
+                    ).bind()
+                },
+                onError = {
+                    Timber.w(it, "Unable to fetch express providers")
+                    throw it
+                },
+            )
+        }
+        storeOnrampPairs(pairs = onrampPairs.await(), providers = providers.await())
+    }
 
-    override suspend fun fetchQuotes(cryptoCurrency: CryptoCurrency, amount: Amount) = withContext(dispatchers.io) {
-        val pairs = requireNotNull(pairsStore.getSyncOrNull(PAIRS_KEY)) {
-            "Unable to get pairs. At this point they must not be null."
-        }
-        val amountValue = requireNotNull(amount.value) { "Amount value must not be null" }
-        val fromAmount = amountValue.movePointRight(amount.decimals).toString()
-        val currency = requireNotNull(getDefaultCurrencySync()) { "Default currency must not be null" }
-        val country = requireNotNull(getDefaultCountrySync()) { "Default country must not be null" }
-        val fromOnrampAmount = OnrampAmount(
-            value = fromAmount
-                .toBigDecimalOrDefault()
-                .movePointLeft(currency.precision),
-            decimals = currency.precision,
-            symbol = amount.currencySymbol,
-        )
-        val quotes: List<OnrampQuote> = pairs.flatMap { pair ->
-            pair.providers.flatMap { provider ->
-                provider.paymentMethods.map { paymentMethod ->
-                    async {
-                        safeApiCall(
-                            call = {
-                                val response = onrampApi.getQuote(
-                                    fromCurrencyCode = currency.code,
-                                    fromPrecision = currency.precision,
-                                    toContractAddress = cryptoCurrency.getContractAddress(),
-                                    toNetwork = cryptoCurrency.network.backendId,
-                                    paymentMethod = paymentMethod.id,
-                                    countryCode = country.code,
-                                    fromAmount = fromAmount,
-                                    toDecimals = cryptoCurrency.decimals,
-                                    providerId = provider.id,
-                                ).bind()
-                                OnrampQuote.Data(
-                                    fromAmount = fromOnrampAmount,
-                                    toAmount = convertToAmount(response.toAmount, cryptoCurrency),
-                                    minFromAmount = convertToAmount(response.minFromAmount, cryptoCurrency),
-                                    maxFromAmount = convertToAmount(response.maxFromAmount, cryptoCurrency),
-                                    paymentMethod = paymentMethod,
-                                    provider = provider,
-                                    countryCode = response.countryCode,
-                                )
-                            },
-                            onError = { error ->
-                                convertQuoteError(
-                                    error = error,
-                                    paymentMethod = paymentMethod,
-                                    provider = provider,
-                                    fromOnrampAmount = fromOnrampAmount,
-                                    countryCode = country.code,
-                                )
-                            },
-                        )
+    override suspend fun fetchQuotes(userWallet: UserWallet, cryptoCurrency: CryptoCurrency, amount: Amount) =
+        withContext(dispatchers.io) {
+            val pairs = requireNotNull(pairsStore.getSyncOrNull(PAIRS_KEY)) {
+                "Unable to get pairs. At this point they must not be null."
+            }
+            val amountValue = requireNotNull(amount.value) { "Amount value must not be null" }
+            val fromAmount = amountValue.movePointRight(amount.decimals).toString()
+            val currency = requireNotNull(getDefaultCurrencySync()) { "Default currency must not be null" }
+            val country = requireNotNull(getDefaultCountrySync()) { "Default country must not be null" }
+            val fromOnrampAmount = OnrampAmount(
+                value = fromAmount
+                    .toBigDecimalOrDefault()
+                    .movePointLeft(currency.precision),
+                decimals = currency.precision,
+                symbol = amount.currencySymbol,
+            )
+            val quotes: List<OnrampQuote> = pairs.flatMap { pair ->
+                pair.providers.flatMap { provider ->
+                    provider.paymentMethods.map { paymentMethod ->
+                        async {
+                            safeApiCall(
+                                call = {
+                                    val response = onrampApi.getQuote(
+                                        fromCurrencyCode = currency.code,
+                                        fromPrecision = currency.precision,
+                                        toContractAddress = cryptoCurrency.getContractAddress(),
+                                        toNetwork = cryptoCurrency.network.backendId,
+                                        paymentMethod = paymentMethod.id,
+                                        countryCode = country.code,
+                                        fromAmount = fromAmount,
+                                        toDecimals = cryptoCurrency.decimals,
+                                        providerId = provider.id,
+                                        userWalletId = userWallet.walletId.stringValue,
+                                        refCode = ExpressUtils.getRefCode(
+                                            userWallet = userWallet,
+                                            appPreferencesStore = appPreferencesStore,
+                                        ),
+                                    ).bind()
+                                    OnrampQuote.Data(
+                                        fromAmount = fromOnrampAmount,
+                                        toAmount = convertToAmount(response.toAmount, cryptoCurrency),
+                                        minFromAmount = convertToAmount(response.minFromAmount, cryptoCurrency),
+                                        maxFromAmount = convertToAmount(response.maxFromAmount, cryptoCurrency),
+                                        paymentMethod = paymentMethod,
+                                        provider = provider,
+                                        countryCode = response.countryCode,
+                                    )
+                                },
+                                onError = { error ->
+                                    convertQuoteError(
+                                        error = error,
+                                        paymentMethod = paymentMethod,
+                                        provider = provider,
+                                        fromOnrampAmount = fromOnrampAmount,
+                                        countryCode = country.code,
+                                    )
+                                },
+                            )
+                        }
                     }
                 }
-            }
-        }.awaitAll().filterNotNull()
-        quotesStore.store(QUOTES_KEY, quotes)
-    }
+            }.awaitAll().filterNotNull()
+            quotesStore.store(QUOTES_KEY, quotes)
+        }
 
     override fun getQuotes(): Flow<List<OnrampQuote>> {
         return quotesStore.get(QUOTES_KEY)
@@ -278,20 +336,21 @@ internal class DefaultOnrampRepository(
     }
 
     override suspend fun getOnrampData(
-        userWalletId: UserWalletId,
+        userWallet: UserWallet,
         cryptoCurrency: CryptoCurrency,
         quote: OnrampProviderWithQuote.Data,
         isDarkTheme: Boolean,
     ): OnrampTransaction = withContext(dispatchers.io) {
         try {
             val address = requireNotNull(
-                value = walletManagersFacade.getDefaultAddress(userWalletId, cryptoCurrency.network),
+                value = walletManagersFacade.getDefaultAddress(userWallet.walletId, cryptoCurrency.network),
                 lazyMessage = { "Address must not be null" },
             )
             val fromAmountString = quote.fromAmount.value.movePointRight(quote.fromAmount.decimals).toString()
             val currency = requireNotNull(getDefaultCurrencySync()) { "Default currency must not be null" }
             val country = requireNotNull(getDefaultCountrySync()) { "Default country must not be null" }
             val requestId = UUID.randomUUID().toString()
+            val redirectUrl = quote.provider.toRedirectUrl() ?: error("Invalid onramp redirect url")
             val data = safeApiCall(
                 call = {
                     onrampApi.getData(
@@ -305,10 +364,15 @@ internal class DefaultOnrampRepository(
                         toDecimals = cryptoCurrency.decimals,
                         providerId = quote.provider.id,
                         toAddress = address,
-                        redirectUrl = BuyCurrencyDeepLink.ONRAMP_REDIRECT_DEEPLINK,
+                        redirectUrl = redirectUrl,
                         language = null,
                         theme = getTheme(isDarkTheme),
                         requestId = requestId,
+                        userWalletId = userWallet.walletId.stringValue,
+                        refCode = ExpressUtils.getRefCode(
+                            userWallet = userWallet,
+                            appPreferencesStore = appPreferencesStore,
+                        ),
                     ).bind()
                 },
                 onError = { e ->
@@ -326,7 +390,7 @@ internal class DefaultOnrampRepository(
                     txId = data.txId,
                     quote = quote,
                     onrampDataJson = dataJson,
-                    userWalletId = userWalletId,
+                    userWalletId = userWallet.walletId,
                     currency = currency,
                     cryptoCurrency = cryptoCurrency,
                     residency = country.name,
@@ -343,17 +407,6 @@ internal class DefaultOnrampRepository(
     override suspend fun getAvailablePaymentMethods(): Set<OnrampPaymentMethod> {
         val quotes = requireNotNull(quotesStore.getSyncOrNull(QUOTES_KEY)) { "Quotes must not be null" }
         return quotes.mapTo(hashSetOf(), OnrampQuote::paymentMethod)
-    }
-
-    override suspend fun saveSelectedPaymentMethod(paymentMethod: OnrampPaymentMethod) {
-        val dto = paymentMethodsConverter.convertBack(paymentMethod)
-        paymentMethodsStore.store(SELECTED_PAYMENT_METHOD_KEY, listOf(dto))
-    }
-
-    override fun getSelectedPaymentMethod(): Flow<OnrampPaymentMethod> {
-        return paymentMethodsStore
-            .get(SELECTED_PAYMENT_METHOD_KEY)
-            .mapNotNull { paymentMethods -> paymentMethods.firstOrNull()?.let(paymentMethodsConverter::convert) }
     }
 
     override suspend fun clearCache() = withContext(NonCancellable) {
@@ -482,6 +535,11 @@ internal class DefaultOnrampRepository(
         null
     }
 
+    private fun OnrampProvider.toRedirectUrl() = Uri.Builder()
+        .path(REDIRECT_URL)
+        .appendPath(id)
+        .build().path
+
     private companion object {
         const val PAYMENT_METHODS_KEY = "onramp_payment_methods"
         const val SELECTED_PAYMENT_METHOD_KEY = "onramp_selected_payment_method"
@@ -491,5 +549,7 @@ internal class DefaultOnrampRepository(
         const val CURRENCIES_KEY = "onramp_currencies"
         const val PROVIDER_THEME_DARK = "dark"
         const val PROVIDER_THEME_LIGHT = "light"
+
+        const val REDIRECT_URL = "https://tangem.com/onramp"
     }
 }

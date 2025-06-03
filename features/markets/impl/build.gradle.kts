@@ -78,4 +78,7 @@ dependencies {
     /* Libs */
     implementation(projects.libs.crypto)
     implementation(projects.libs.blockchainSdk)
+
+    /** Tangem libraries */
+    implementation(tangemDeps.card.core)
 }

@@ -6,10 +6,7 @@ import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.tangem.blockchain.nft.models.NFTAsset
 import com.tangem.blockchain.nft.models.NFTCollection
 import com.tangem.common.json.MoshiJsonConverter
-import com.tangem.datasource.api.common.adapter.BigDecimalAdapter
-import com.tangem.datasource.api.common.adapter.DateTimeAdapter
-import com.tangem.datasource.api.common.adapter.LocalDateAdapter
-import com.tangem.datasource.api.common.adapter.addStakeKitEnumFallbackAdapters
+import com.tangem.datasource.api.common.adapter.*
 import com.tangem.datasource.local.config.providers.models.ProviderModel
 import com.tangem.datasource.local.network.entity.NetworkStatusDM
 import com.tangem.domain.models.scan.serialization.*
@@ -38,6 +35,7 @@ class MoshiModule {
                     .withDefaultValue(ProviderModel.UnsupportedType),
             )
             .add(BigDecimalAdapter())
+            .add(BigIntegerAdapter())
             .add(LocalDateAdapter())
             .add(DateTimeAdapter())
             .add(VisaActivationRemoteState.jsonAdapter)
@@ -51,12 +49,14 @@ class MoshiModule {
                 PolymorphicJsonAdapterFactory.of(NFTCollection.Identifier::class.java, "bc")
                     .withSubtype(NFTCollection.Identifier.EVM::class.java, "evm")
                     .withSubtype(NFTCollection.Identifier.TON::class.java, "ton")
+                    .withSubtype(NFTCollection.Identifier.Solana::class.java, "sol")
                     .withDefaultValue(NFTCollection.Identifier.Unknown),
             )
             .add(
                 PolymorphicJsonAdapterFactory.of(NFTAsset.Identifier::class.java, "bc")
                     .withSubtype(NFTAsset.Identifier.EVM::class.java, "evm")
                     .withSubtype(NFTAsset.Identifier.TON::class.java, "ton")
+                    .withSubtype(NFTAsset.Identifier.Solana::class.java, "sol")
                     .withDefaultValue(NFTAsset.Identifier.Unknown),
             )
             .addLast(KotlinJsonAdapterFactory())
@@ -71,6 +71,7 @@ class MoshiModule {
         val adapters = MoshiJsonConverter.getTangemSdkAdapters() +
             listOf(
                 BigDecimalAdapter(),
+                BigIntegerAdapter(),
                 WalletDerivedKeysMapAdapter(),
                 ScanResponseDerivedKeysMapAdapter(),
                 ByteArrayKeyAdapter(),
@@ -98,6 +99,7 @@ class MoshiModule {
             adapters = MoshiJsonConverter.getTangemSdkAdapters() +
                 listOf(
                     BigDecimalAdapter(),
+                    BigIntegerAdapter(),
                     WalletDerivedKeysMapAdapter(),
                     ScanResponseDerivedKeysMapAdapter(),
                     ByteArrayKeyAdapter(),
