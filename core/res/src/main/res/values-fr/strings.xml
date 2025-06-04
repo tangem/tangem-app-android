@@ -110,6 +110,7 @@
   <string name="common_cancel">Annuler</string>
   <string name="common_change">Changez</string>
   <string name="common_choose_action">Choisissez une action</string>
+  <string name="common_choose_token">Choisir le jeton</string>
   <string name="common_claim">Réclamer</string>
   <string name="common_claim_rewards">Réclamez des récompenses</string>
   <string name="common_close">Fermer</string>
