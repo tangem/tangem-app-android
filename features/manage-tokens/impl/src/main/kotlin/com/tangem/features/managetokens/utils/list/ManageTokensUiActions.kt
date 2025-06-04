@@ -7,6 +7,8 @@ import com.tangem.domain.wallets.models.UserWalletId
 
 internal interface ManageTokensUiActions {
 
+    fun onTokenClick(currency: ManagedCryptoCurrency.Token)
+
     fun addCurrency(batchKey: Int, currency: ManagedCryptoCurrency.Token, network: Network)
 
     fun removeCurrency(batchKey: Int, currency: ManagedCryptoCurrency.Token, network: Network)

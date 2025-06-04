@@ -112,6 +112,7 @@
   <string name="common_cancel">キャンセル</string>
   <string name="common_change">変更</string>
   <string name="common_choose_action">アクションを選択</string>
+  <string name="common_choose_token">トークンを選択</string>
   <string name="common_claim">請求</string>
   <string name="common_claim_rewards">報酬を受け取る</string>
   <string name="common_close">閉じる</string>
