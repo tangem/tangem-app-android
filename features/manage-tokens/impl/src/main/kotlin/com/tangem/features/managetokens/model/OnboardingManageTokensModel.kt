@@ -40,16 +40,18 @@ import javax.inject.Inject
 @ModelScoped
 internal class OnboardingManageTokensModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
-    private val manageTokensListManager: ManageTokensListManager,
     private val messageSender: UiMessageSender,
     private val reduxStateHolder: ReduxStateHolder,
     private val saveManagedTokensUseCase: SaveManagedTokensUseCase,
     private val hasMissedDerivationsUseCase: HasMissedDerivationsUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    manageTokensListManagerFactory: ManageTokensListManager.Factory,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
     private val params: OnboardingManageTokensComponent.Params = paramsContainer.require()
+    private val manageTokensListManager = manageTokensListManagerFactory.create()
+
     val state: MutableStateFlow<OnboardingManageTokensUM> = MutableStateFlow(getInitialState())
     val returnToParentComponentFlow = MutableSharedFlow<Unit>()
 
