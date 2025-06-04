@@ -112,6 +112,7 @@
   <string name="common_cancel">Отмена</string>
   <string name="common_change">Изменить</string>
   <string name="common_choose_action">Выберите действие</string>
+  <string name="common_choose_token">Выберите токен</string>
   <string name="common_claim">Получить</string>
   <string name="common_claim_rewards">Вывести награду</string>
   <string name="common_close">Закрыть</string>
