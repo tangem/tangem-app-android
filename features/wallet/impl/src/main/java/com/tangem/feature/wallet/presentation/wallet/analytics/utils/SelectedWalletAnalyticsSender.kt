@@ -5,13 +5,17 @@ import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.isLocked
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
+import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
 import javax.inject.Inject
 
 internal class SelectedWalletAnalyticsSender @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val screenLifecycleProvider: ScreenLifecycleProvider,
 ) {
 
     fun send(userWallet: UserWallet) {
+        if (screenLifecycleProvider.isBackgroundState.value) return
+
         val event = getEvent(userWallet)
 
         if (event != null) {
