@@ -115,6 +115,7 @@
   <string name="common_cancel">Cancel</string>
   <string name="common_change">Change</string>
   <string name="common_choose_action">Choose action</string>
+  <string name="common_choose_token">Choose token</string>
   <string name="common_claim">Claim</string>
   <string name="common_claim_rewards">Claim rewards</string>
   <string name="common_close">Close</string>
@@ -871,6 +872,8 @@
   <string name="send_validation_invalid_amount">Invalid amount</string>
   <string name="send_validation_invalid_fee">Fee exceeds balance</string>
   <string name="send_validation_invalid_total">Total amount exceeds balance</string>
+  <string name="send_with_swap_notification_text">Send any token, and we’ll convert it on the way. Your recipient gets exactly what they need—seamlessly.</string>
+  <string name="send_with_swap_title">Send with swap</string>
   <string name="sent_transaction_sent_title">Transaction sent</string>
   <string name="settings_card_settings_footer">Prepare to scan card or ring you want to set up.</string>
   <string name="settings_forget_wallet">Forget wallet</string>
