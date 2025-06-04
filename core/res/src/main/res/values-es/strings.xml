@@ -110,6 +110,7 @@
   <string name="common_cancel">Cancelar</string>
   <string name="common_change">Cambie</string>
   <string name="common_choose_action">Elige una acción</string>
+  <string name="common_choose_token">Elige token</string>
   <string name="common_claim">Reclamar</string>
   <string name="common_claim_rewards">Reclame recompensas</string>
   <string name="common_close">Cerrar</string>
