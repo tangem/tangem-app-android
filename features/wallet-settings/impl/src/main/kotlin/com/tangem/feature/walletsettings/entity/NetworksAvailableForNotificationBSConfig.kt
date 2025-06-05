@@ -1,0 +1,6 @@
+package com.tangem.feature.walletsettings.entity
+
+import kotlinx.serialization.Serializable
+
+@Serializable
+internal object NetworksAvailableForNotificationBSConfig
