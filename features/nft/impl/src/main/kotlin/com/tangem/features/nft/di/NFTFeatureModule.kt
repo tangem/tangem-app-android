@@ -11,6 +11,9 @@ import com.tangem.features.nft.details.block.DefaultNFTDetailsBlockComponent
 import com.tangem.features.nft.details.info.DefaultNFTDetailsInfoComponent
 import com.tangem.features.nft.details.info.NFTDetailsInfoComponent
 import com.tangem.features.nft.details.model.NFTDetailsModel
+import com.tangem.features.nft.entity.DefaultNFTSendSuccessTrigger
+import com.tangem.features.nft.entity.NFTSendSuccessListener
+import com.tangem.features.nft.entity.NFTSendSuccessTrigger
 import com.tangem.features.nft.receive.model.NFTReceiveModel
 import com.tangem.features.nft.traits.model.NFTAssetTraitsModel
 import dagger.Binds
@@ -71,4 +74,12 @@ internal interface NFTFeatureModuleBinds {
     @IntoMap
     @ClassKey(NFTAssetTraitsModel::class)
     fun bindNFTTraitsModel(model: NFTAssetTraitsModel): Model
+
+    @Binds
+    @Singleton
+    fun bindNFTSendSuccessTrigger(impl: DefaultNFTSendSuccessTrigger): NFTSendSuccessTrigger
+
+    @Binds
+    @Singleton
+    fun bindNFTSendSuccessListener(impl: DefaultNFTSendSuccessTrigger): NFTSendSuccessListener
 }

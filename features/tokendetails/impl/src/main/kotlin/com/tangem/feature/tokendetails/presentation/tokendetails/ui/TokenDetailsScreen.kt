@@ -15,12 +15,12 @@ import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameter
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
-import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheetConfig
-import com.tangem.common.ui.expressStatus.expressTransactionsItems
 import com.tangem.common.ui.bottomsheet.chooseaddress.ChooseAddressBottomSheet
 import com.tangem.common.ui.bottomsheet.chooseaddress.ChooseAddressBottomSheetConfig
 import com.tangem.common.ui.bottomsheet.receive.TokenReceiveBottomSheet
 import com.tangem.common.ui.bottomsheet.receive.TokenReceiveBottomSheetConfig
+import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheetConfig
+import com.tangem.common.ui.expressStatus.expressTransactionsItems
 import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshContainer
 import com.tangem.core.ui.components.marketprice.MarketPriceBlock
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
@@ -42,6 +42,8 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.s
 import com.tangem.features.markets.token.block.TokenMarketBlockComponent
 import com.tangem.features.txhistory.component.TxHistoryComponent
 import com.tangem.features.txhistory.entity.TxHistoryUM
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlin.reflect.KProperty
 
 // TODO: Split to blocks [REDACTED_JIRA]
@@ -50,7 +52,7 @@ import kotlin.reflect.KProperty
 internal fun TokenDetailsScreen(
     state: TokenDetailsState,
     tokenMarketBlockComponent: TokenMarketBlockComponent?,
-    txHistoryComponent: TxHistoryComponent?,
+    txHistoryComponent: TxHistoryComponent,
 ) {
     val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
 
@@ -65,7 +67,7 @@ internal fun TokenDetailsScreen(
             null
         }
         val listState = rememberLazyListState()
-        val txHistoryComponentState by txHistoryComponent?.txHistoryState?.collectAsStateWithLifecycle()
+        val txHistoryComponentState by txHistoryComponent.txHistoryState.collectAsStateWithLifecycle()
         val betweenItemsPadding = TangemTheme.dimens.spacing12
         val horizontalPadding = TangemTheme.dimens.spacing16
         val itemModifier = Modifier
@@ -186,13 +188,13 @@ internal fun TokenDetailsScreen(
 @Suppress("LongParameterList")
 private fun LazyListScope.txHistoryItems(
     listState: LazyListState,
-    txHistoryComponent: TxHistoryComponent?,
+    txHistoryComponent: TxHistoryComponent,
     txHistoryComponentState: TxHistoryUM?,
     txHistoryState: TxHistoryState,
     txHistoryItems: LazyPagingItems<TxHistoryState.TxHistoryItemState>?,
     isBalanceHidden: Boolean,
 ) {
-    if (txHistoryComponent != null && txHistoryComponentState != null) {
+    if (txHistoryComponentState != null) {
         with(txHistoryComponent) { txHistoryContent(listState = listState, state = txHistoryComponentState) }
     } else {
         txHistoryItems(
@@ -216,7 +218,13 @@ private fun TokenDetailsScreenPreview(
         TokenDetailsScreen(
             state = state,
             tokenMarketBlockComponent = null,
-            txHistoryComponent = null,
+            txHistoryComponent = object : TxHistoryComponent {
+                override val txHistoryState: StateFlow<TxHistoryUM> = MutableStateFlow(
+                    value = TxHistoryUM.Empty(isBalanceHidden = false, onExploreClick = {}),
+                )
+
+                override fun LazyListScope.txHistoryContent(listState: LazyListState, state: TxHistoryUM) = Unit
+            },
         )
     }
 }
