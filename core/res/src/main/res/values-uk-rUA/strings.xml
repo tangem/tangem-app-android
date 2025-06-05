@@ -112,6 +112,7 @@
   <string name="common_cancel">Скасувати</string>
   <string name="common_change">Змінити</string>
   <string name="common_choose_action">Виберіть дію</string>
+  <string name="common_choose_token">Оберіть токен</string>
   <string name="common_claim">Отримати</string>
   <string name="common_claim_rewards">Отримати винагороди</string>
   <string name="common_close">Закрити</string>
