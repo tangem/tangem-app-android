@@ -2,10 +2,12 @@ package com.tangem.features.managetokens.utils.list
 
 import com.tangem.domain.managetokens.model.CurrencyUnsupportedState
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.wallets.models.UserWalletId
 
 internal interface ManageTokensUiActions {
+
+    fun onTokenClick(currency: ManagedCryptoCurrency.Token)
 
     fun addCurrency(batchKey: Int, currency: ManagedCryptoCurrency.Token, network: Network)
 

@@ -1,5 +1,6 @@
 package com.tangem.features.nft.details.model
 
+import arrow.core.getOrElse
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.tangem.common.routing.AppRoute
@@ -12,20 +13,31 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
+import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.nft.FetchNFTCollectionAssetsUseCase
+import com.tangem.domain.nft.FetchNFTPriceUseCase
 import com.tangem.domain.nft.GetNFTExploreUrlUseCase
+import com.tangem.domain.nft.GetNFTPriceUseCase
 import com.tangem.domain.nft.analytics.NFTAnalyticsEvent
 import com.tangem.features.nft.details.NFTDetailsComponent
 import com.tangem.features.nft.details.entity.NFTAssetUM
 import com.tangem.features.nft.details.entity.NFTDetailsBottomSheetConfig
 import com.tangem.features.nft.details.entity.NFTDetailsUM
 import com.tangem.features.nft.details.entity.factory.NFTDetailsUMFactory
+import com.tangem.features.nft.details.entity.transformer.NFTPriceChangeTransformer
+import com.tangem.features.nft.details.entity.transformer.NFTPriceUpdatingTransformer
 import com.tangem.features.nft.impl.R
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import com.tangem.utils.transformer.update
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @ModelScoped
 internal class NFTDetailsModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
@@ -33,6 +45,10 @@ internal class NFTDetailsModel @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val urlOpener: UrlOpener,
     private val getNFTExploreUrlUseCase: GetNFTExploreUrlUseCase,
+    private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
+    private val getNFTPriceUseCase: GetNFTPriceUseCase,
+    private val fetchNFTCollectionAssetsUseCase: FetchNFTCollectionAssetsUseCase,
+    private val fetchNFTPriceUseCase: FetchNFTPriceUseCase,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
@@ -40,23 +56,91 @@ internal class NFTDetailsModel @Inject constructor(
 
     val state: StateFlow<NFTDetailsUM> get() = _state
 
+    private var appCurrency: AppCurrency = AppCurrency.Default
+
     private val stateFactory: NFTDetailsUMFactory = NFTDetailsUMFactory(
+        appCurrency = appCurrency,
         onBackClick = { params.onBackClick() },
         onReadMoreClick = ::onReadMoreClick,
-        onSeeAllTraitsClick = { params.onAllTraitsClick() },
+        onSeeAllTraitsClick = {
+            analyticsEventHandler.send(NFTAnalyticsEvent.Details.ButtonSeeAll)
+            params.onAllTraitsClick()
+        },
         onExploreClick = ::onExploreClick,
         onSendClick = ::onSendClick,
         onInfoBlockClick = ::onInfoBlockClick,
+        onRefresh = ::onRefresh,
     )
 
-    private val _state = MutableStateFlow(
-        value = stateFactory.getInitialState(params.nftAsset),
-    )
+    private val _state by lazy {
+        MutableStateFlow(
+            value = stateFactory.getInitialState(params.nftAsset),
+        )
+    }
 
     val bottomSheetNavigation: SlotNavigation<NFTDetailsBottomSheetConfig> = SlotNavigation()
 
     init {
         analyticsEventHandler.send(NFTAnalyticsEvent.Details.ScreenOpened(params.nftAsset.network.name))
+        initAppCurrency()
+        subscribeToPriceChanges()
+    }
+
+    private fun initAppCurrency() {
+        modelScope.launch {
+            appCurrency = getSelectedAppCurrencyUseCase.invokeSync().getOrElse { AppCurrency.Default }
+        }
+    }
+
+    private fun subscribeToPriceChanges() {
+        _state.update(NFTPriceUpdatingTransformer)
+        modelScope.launch {
+            getNFTPriceUseCase(params.userWalletId, params.nftAsset)
+                .fold(
+                    ifLeft = {
+                        Timber.w(it)
+                    },
+                    ifRight = { quoteFlow ->
+                        quoteFlow
+                            .distinctUntilChanged()
+                            .onEach { salePrice ->
+                                _state.update(
+                                    NFTPriceChangeTransformer(
+                                        appCurrency = appCurrency,
+                                        nftSalePrice = salePrice,
+                                    ),
+                                )
+                            }.launchIn(modelScope)
+                    },
+                )
+        }
+    }
+
+    private fun onRefresh() {
+        _state.update {
+            it.copy(pullToRefreshConfig = it.pullToRefreshConfig.copy(isRefreshing = true))
+        }
+        _state.update(NFTPriceUpdatingTransformer)
+        modelScope.launch {
+            awaitAll(
+                async {
+                    fetchNFTCollectionAssetsUseCase(
+                        userWalletId = params.userWalletId,
+                        network = params.nftAsset.network,
+                        collectionId = params.nftAsset.collectionId,
+                    )
+                },
+                async {
+                    fetchNFTPriceUseCase(
+                        network = params.nftAsset.network,
+                        appCurrencyId = null,
+                    )
+                },
+            )
+            _state.update {
+                it.copy(pullToRefreshConfig = it.pullToRefreshConfig.copy(isRefreshing = false))
+            }
+        }
     }
 
     private fun onInfoBlockClick(title: TextReference, text: TextReference) {
