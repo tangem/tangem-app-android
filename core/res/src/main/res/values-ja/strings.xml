@@ -112,6 +112,7 @@
   <string name="common_cancel">キャンセル</string>
   <string name="common_change">変更</string>
   <string name="common_choose_action">アクションを選択</string>
+  <string name="common_choose_token">トークンを選択</string>
   <string name="common_claim">請求</string>
   <string name="common_claim_rewards">報酬を受け取る</string>
   <string name="common_close">閉じる</string>
@@ -151,6 +152,7 @@
   <string name="common_generate_addresses">アドレスを同期する</string>
   <string name="common_go_to_provider">プロバイダーへ移動</string>
   <string name="common_go_to_token">トークンへ移動</string>
+  <string name="common_got_it">わかりました</string>
   <string name="common_hide">非表示</string>
   <string name="common_hour">時間</string>
   <string name="common_import">インポート</string>
@@ -205,6 +207,7 @@
   <string name="common_submit">送信</string>
   <string name="common_success">成功</string>
   <string name="common_support">サポート</string>
+  <string name="common_supported_networks">対応ネットワーク</string>
   <string name="common_swap">スワップ</string>
   <string name="common_terms_and_conditions">利用規約</string>
   <string name="common_terms_of_use">利用規約</string>
@@ -558,6 +561,9 @@
   <string name="nft_traits_title">特徴</string>
   <string name="nft_untitled_collection">無題のコレクション</string>
   <string name="nft_wallet_count">%2$dコレクションの%1$dNFT</string>
+  <plurals name="nft_wallet_count_android">
+    <item quantity="other">%2$dコレクションの%1$dNFT</item>
+  </plurals>
   <string name="nft_wallet_receive_nft">ここをタップして最初のNFTを受け取ります</string>
   <string name="nft_wallet_title">NFTコレクション</string>
   <string name="nft_wallet_unable_to_load">データを読み込めません</string>
@@ -1078,10 +1084,12 @@
   <string name="twins_recreate_toolbar">Tangemツイン</string>
   <string name="twins_recreate_warning">この操作は元に戻せません。古いウォレットにはアクセスできなくなります。</string>
   <string name="twins_scan_twin_with_number">番号%sのツインカードをタップし、操作が終了するまで取り外さないでください。</string>
+  <string name="unexpected_error_title">問題が発生しました。</string>
   <string name="universal_error">エラーが発生しました。エラー コード：%s。サポートにお問い合わせください。</string>
   <string name="unlock_wallet_description_full">%sを使用するか、カード / リングをスキャンしてウォレットにアクセスしてください</string>
   <string name="unsupported_wc_version">接続に失敗しました：このdAppは、サポートされていないWallet Connectバージョン1.0を使用しています。正常に接続するには、dAppがWallet Connectバージョン2.0をサポートしていることを確認してください。</string>
   <string name="user_push_notification_agreement_argument_one">最新の機能とニュースをお届けします</string>
+  <string name="user_push_notification_agreement_argument_three">受信取引の通知を受け取る</string>
   <string name="user_push_notification_agreement_argument_two">新しいプロモーション情報をいち早く入手しましょう</string>
   <string name="user_push_notification_agreement_header">プッシュ通知を使用しますか?</string>
   <string name="user_wallet_list_add_button">新しいウォレットを追加</string>
