@@ -145,6 +145,7 @@ private fun ProviderContentState(
                     }
                     val badgeModifier = Modifier.padding(start = TangemTheme.dimens.spacing4)
                     when (state.additionalBadge) {
+                        ProviderState.AdditionalBadge.FCAWarningList -> FCABadgeItem(badgeModifier)
                         ProviderState.AdditionalBadge.BestTrade -> BestTradeItem(badgeModifier)
                         ProviderState.AdditionalBadge.PermissionRequired -> PermissionBadgeItem(badgeModifier)
                         ProviderState.AdditionalBadge.Recommended -> RecommendedItem(badgeModifier)
@@ -361,6 +362,7 @@ private fun BestTradeItem(modifier: Modifier = Modifier) {
             style = TangemTheme.typography.caption1,
             color = TangemTheme.colors.icon.accent,
             modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing6),
+            maxLines = 1,
         )
     }
 }
@@ -378,6 +380,25 @@ private fun PermissionBadgeItem(modifier: Modifier = Modifier) {
             style = TangemTheme.typography.caption1,
             color = TangemTheme.colors.text.tertiary,
             modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing6),
+            maxLines = 1,
+        )
+    }
+}
+
+@Composable
+private fun FCABadgeItem(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier.background(
+            color = TangemTheme.colors.background.secondary,
+            shape = TangemTheme.shapes.roundedCornersLarge,
+        ),
+    ) {
+        Text(
+            text = stringResourceSafe(id = R.string.express_provider_fca_warning_list),
+            style = TangemTheme.typography.caption1,
+            color = TangemTheme.colors.text.tertiary,
+            modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing6),
+            maxLines = 1,
         )
     }
 }
@@ -395,6 +416,7 @@ private fun RecommendedItem(modifier: Modifier = Modifier) {
             style = TangemTheme.typography.caption1,
             color = TangemTheme.colors.icon.accent,
             modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing6),
+            maxLines = 1,
         )
     }
 }
