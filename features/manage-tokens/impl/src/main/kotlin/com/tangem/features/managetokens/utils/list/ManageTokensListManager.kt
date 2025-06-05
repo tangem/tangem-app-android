@@ -2,20 +2,24 @@ package com.tangem.features.managetokens.utils.list
 
 import arrow.core.getOrElse
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.clipboard.ClipboardManager
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.managetokens.*
 import com.tangem.domain.managetokens.model.*
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.managetokens.analytics.ManageTokensAnalyticEvent
 import com.tangem.features.managetokens.component.ManageTokensSource
 import com.tangem.features.managetokens.entity.item.CurrencyItemUM
 import com.tangem.features.managetokens.impl.R
+import com.tangem.features.managetokens.utils.ui.toggleExpanded
 import com.tangem.pagination.Batch
 import com.tangem.pagination.BatchAction
 import com.tangem.pagination.BatchListState
@@ -24,6 +28,9 @@ import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -32,11 +39,9 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import javax.inject.Inject
 
-@Suppress("LongParameterList")
-@ModelScoped
-internal class ManageTokensListManager @Inject constructor(
+@Suppress("LongParameterList", "LargeClass")
+internal class ManageTokensListManager @AssistedInject constructor(
     private val getManagedTokensUseCase: GetManagedTokensUseCase,
     private val getDistinctManagedTokensUseCase: GetDistinctManagedCurrenciesUseCase,
     private val checkHasLinkedTokensUseCase: CheckHasLinkedTokensUseCase,
@@ -45,7 +50,8 @@ internal class ManageTokensListManager @Inject constructor(
     private val messageSender: UiMessageSender,
     private val dispatchers: CoroutineDispatcherProvider,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    clipboardManager: ClipboardManager,
+    private val clipboardManager: ClipboardManager,
+    @Assisted private val onCurrencySelect: (ManagedCryptoCurrency.Token) -> Unit = {},
 ) : ManageTokensUiActions {
 
     private lateinit var scope: CoroutineScope
@@ -67,7 +73,6 @@ internal class ManageTokensListManager @Inject constructor(
         actions = this,
         scopeProvider = Provider { scope },
         sourceProvider = Provider { source },
-        clipboardManager = clipboardManager,
     )
 
     val currenciesToAdd: StateFlow<ChangedCurrencies> = changedCurrenciesManager.currenciesToAdd.asStateFlow()
@@ -186,6 +191,14 @@ internal class ManageTokensListManager @Inject constructor(
         }
     }
 
+    override fun onTokenClick(currency: ManagedCryptoCurrency.Token) {
+        if (source == ManageTokensSource.SEND_VIA_SWAP) {
+            onCurrencySelect(currency)
+        } else {
+            toggleCurrencyNetworksVisibility(currency)
+        }
+    }
+
     override fun addCurrency(batchKey: Int, currency: ManagedCryptoCurrency.Token, network: Network) {
         changedCurrenciesManager.addCurrency(currency, network)
 
@@ -297,5 +310,169 @@ internal class ManageTokensListManager @Inject constructor(
 
             null
         }
+    }
+
+    private fun toggleCurrencyNetworksVisibility(currency: ManagedCryptoCurrency.Token) = scope.launch(
+        dispatchers.default,
+    ) {
+        state.update { batches ->
+            val batchIndex = batches.batchIndexByCurrencyId(currency.id)
+            val currencyBatch = batches.currencyBatches[batchIndex]
+            val currencyIndex = currencyBatch.currencyIndexById(currency.id)
+
+            val uiBatch = batches.uiBatches[batchIndex]
+            val updatedUiItem = uiBatch.data[currencyIndex].toggleExpanded(
+                currency = currencyBatch.data[currencyIndex],
+                isEditable = batches.canEditItems,
+                onSelectCurrencyNetwork = { networkId, isSelected ->
+                    selectNetwork(currencyBatch.key, currency, networkId, isSelected)
+                },
+                onLongTap = ::copyContractAddress,
+            )
+
+            batches.updateUiBatchesItem(
+                indexToBatch = batchIndex to uiBatch,
+                indexToItem = currencyIndex to updatedUiItem,
+            )
+        }
+    }
+
+    private fun copyContractAddress(source: ManagedCryptoCurrency.SourceNetwork) {
+        if (source is ManagedCryptoCurrency.SourceNetwork.Default) {
+            clipboardManager.setText(text = source.contractAddress, isSensitive = false)
+            showSnackbarMessage(resourceReference(R.string.contract_address_copied_message))
+        }
+    }
+
+    private fun showSnackbarMessage(messageText: TextReference) {
+        val message = SnackbarMessage(message = messageText)
+        messageSender.send(message)
+    }
+
+    private fun selectNetwork(
+        batchKey: Int,
+        currency: ManagedCryptoCurrency,
+        source: ManagedCryptoCurrency.SourceNetwork,
+        isSelected: Boolean,
+    ) = scope.launch(dispatchers.default) {
+        if (currency !is ManagedCryptoCurrency.Token) return@launch
+
+        if (isSelected) {
+            val userWalletId = state.value.userWalletId
+            val unsupportedState = userWalletId?.let { checkCurrencyUnsupportedState(it, source) }
+            if (unsupportedState != null) {
+                showUnsupportedWarning(unsupportedState)
+            } else {
+                addCurrency(batchKey, currency, source.network)
+            }
+        } else {
+            if (checkNeedToShowRemoveNetworkWarning(currency, source.network)) {
+                showRemoveNetworkWarning(
+                    currency = currency,
+                    network = source.network,
+                    isCoin = source is ManagedCryptoCurrency.SourceNetwork.Main,
+                    onConfirm = {
+                        removeCurrency(batchKey, currency, source.network)
+                    },
+                )
+            } else {
+                removeCurrency(batchKey, currency, source.network)
+            }
+        }
+    }
+
+    private fun showUnsupportedWarning(unsupportedState: CurrencyUnsupportedState) {
+        val message = DialogMessage(
+            title = resourceReference(R.string.common_warning),
+            message = when (unsupportedState) {
+                is CurrencyUnsupportedState.Token.NetworkTokensUnsupported -> resourceReference(
+                    id = R.string.alert_manage_tokens_unsupported_message,
+                    formatArgs = wrappedList(unsupportedState.networkName),
+                )
+                is CurrencyUnsupportedState.Token.UnsupportedCurve -> resourceReference(
+                    id = R.string.alert_manage_tokens_unsupported_curve_message,
+                    formatArgs = wrappedList(unsupportedState.networkName),
+                )
+                is CurrencyUnsupportedState.UnsupportedNetwork -> resourceReference(
+                    id = R.string.alert_manage_tokens_unsupported_curve_message,
+                    formatArgs = wrappedList(unsupportedState.networkName),
+                )
+            },
+        )
+
+        messageSender.send(message)
+    }
+
+    private suspend fun showRemoveNetworkWarning(
+        currency: ManagedCryptoCurrency,
+        network: Network,
+        isCoin: Boolean,
+        onConfirm: () -> Unit,
+    ) {
+        val userWalletId = state.value.userWalletId
+        val hasLinkedTokens = if (userWalletId == null || !isCoin) {
+            false
+        } else {
+            checkHasLinkedTokens(userWalletId, network)
+        }
+        val canHideWithoutConfirming = source == ManageTokensSource.ONBOARDING
+
+        if (hasLinkedTokens) {
+            showLinkedTokensWarning(currency, network)
+        } else if (canHideWithoutConfirming) {
+            onConfirm()
+        } else {
+            showHideTokenWarning(currency, onConfirm)
+        }
+    }
+
+    private fun showLinkedTokensWarning(currency: ManagedCryptoCurrency, network: Network) {
+        val message = DialogMessage(
+            title = resourceReference(
+                id = R.string.token_details_unable_hide_alert_title,
+                formatArgs = wrappedList(currency.name),
+            ),
+            message = resourceReference(
+                id = R.string.token_details_unable_hide_alert_message,
+                formatArgs = wrappedList(
+                    currency.name,
+                    currency.symbol,
+                    network.name,
+                ),
+            ),
+        )
+        messageSender.send(message)
+    }
+
+    private fun showHideTokenWarning(currency: ManagedCryptoCurrency, onConfirm: () -> Unit) {
+        val message = DialogMessage(
+            title = resourceReference(
+                id = R.string.token_details_hide_alert_title,
+                formatArgs = wrappedList(currency.name),
+            ),
+            message = resourceReference(R.string.token_details_hide_alert_message),
+            firstActionBuilder = {
+                EventMessageAction(
+                    title = resourceReference(R.string.token_details_hide_alert_hide),
+                    warning = true,
+                    onClick = onConfirm,
+                )
+            },
+            secondActionBuilder = { cancelAction() },
+        )
+
+        messageSender.send(message)
+    }
+
+    private fun Batch<Int, List<ManagedCryptoCurrency>>.currencyIndexById(id: ManagedCryptoCurrency.ID): Int {
+        return data
+            .indexOfFirst { it.id == id }
+            .takeIf { it != -1 }
+            ?: error("Currency with currency '$id' not found in batch #$key")
+    }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(onCurrencySelect: (ManagedCryptoCurrency.Token) -> Unit = {}): ManageTokensListManager
     }
 }

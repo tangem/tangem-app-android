@@ -10,7 +10,9 @@ android {
 
 dependencies {
     /* Project - Domain */
+    implementation(projects.domain.models)
     implementation(projects.domain.wallets.models)
+    implementation(projects.domain.manageTokens.models)
 
     /* Project - Core */
     implementation(projects.core.ui)
