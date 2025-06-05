@@ -5,6 +5,7 @@ import com.tangem.domain.walletconnect.model.WcSolanaMethod
 import com.tangem.domain.walletconnect.usecase.method.WcMessageSignUseCase
 import com.tangem.domain.walletconnect.usecase.method.WcSignState
 import com.tangem.domain.walletconnect.usecase.method.WcSignUseCase
+import com.tangem.domain.walletconnect.usecase.method.WcTransactionUseCase
 import com.tangem.features.walletconnect.transaction.entity.common.WcCommonTransactionUM
 import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionActionsUM
 import com.tangem.utils.converter.Converter
@@ -13,6 +14,7 @@ import javax.inject.Inject
 internal class WcCommonTransactionUMConverter @Inject constructor(
     private val signTypedDataUMConverter: WcSignTypedDataUMConverter,
     private val signTransactionUMConverter: WcSignTransactionUMConverter,
+    private val sendTransactionUMConverter: WcSendTransactionUMConverter,
 ) : Converter<WcCommonTransactionUMConverter.Input, WcCommonTransactionUM?> {
 
     override fun convert(value: Input): WcCommonTransactionUM? {
@@ -38,7 +40,14 @@ internal class WcCommonTransactionUMConverter @Inject constructor(
                     else -> null
                 }
             }
-            else -> TODO("[REDACTED_JIRA]")
+            is WcTransactionUseCase -> sendTransactionUMConverter.convert(
+                WcSendTransactionUMConverter.Input(
+                    useCase = value.useCase,
+                    signState = value.signState,
+                    actions = value.actions,
+                ),
+            )
+            else -> null
         }
     }
 
