@@ -57,6 +57,7 @@ dependencies {
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.balanceHiding)
     implementation(projects.domain.nft.models)
+    implementation(projects.domain.nft)
     implementation(projects.domain.notifications)
 
 
