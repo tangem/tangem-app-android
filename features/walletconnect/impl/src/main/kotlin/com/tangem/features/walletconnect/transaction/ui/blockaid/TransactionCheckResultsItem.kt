@@ -27,15 +27,20 @@ internal fun TransactionCheckResultsItem(item: WcSendReceiveTransactionCheckResu
 
     Column(
         modifier = modifier
-            .padding(12.dp)
             .fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        item.notificationText?.let {
-            WcTransactionCheckErrorItem(it.resolveReference())
-        }
-        item.estimatedWalletChanges?.let {
-            WcEstimatedWalletChangesItem(it)
+        if (item.isLoading) {
+            WcEstimatedWalletChangesLoadingItem()
+        } else {
+            if (item.notificationText != null) {
+                WcTransactionCheckErrorItem(item.notificationText.resolveReference())
+            }
+            if (item.estimatedWalletChanges != null) {
+                WcEstimatedWalletChangesItem(item.estimatedWalletChanges)
+            } else {
+                WcEstimatedWalletChangesNotLoadedItem()
+            }
         }
     }
 }
@@ -59,6 +64,7 @@ private fun TransactionCheckResultsItemPreview(
 private class TransactionCheckResultsItemProvider : PreviewParameterProvider<WcSendReceiveTransactionCheckResultsUM> {
     override val values = sequenceOf(
         WcSendReceiveTransactionCheckResultsUM(
+            isLoading = false,
             notificationText = TextReference.Str("The transaction approves erc20 tokens to a known malicious address"),
             estimatedWalletChanges = WcEstimatedWalletChangesUM(
                 items = persistentListOf(

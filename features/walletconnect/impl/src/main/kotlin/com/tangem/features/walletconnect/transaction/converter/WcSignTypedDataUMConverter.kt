@@ -72,9 +72,6 @@ internal class WcSignTypedDataUMConverter @Inject constructor(
         ),
     )
 
-    private fun String.toShortAddressText() =
-        "${take(ADDRESS_FIRST_PART_LENGTH)}...${takeLast(ADDRESS_SECOND_PART_LENGTH)}"
-
     data class Input(
         val useCase: WcMessageSignUseCase,
         val signState: WcSignState<*>,
@@ -82,3 +79,6 @@ internal class WcSignTypedDataUMConverter @Inject constructor(
         val actions: WcTransactionActionsUM,
     )
 }
+
+internal fun String.toShortAddressText() =
+    "${take(ADDRESS_FIRST_PART_LENGTH)}...${takeLast(ADDRESS_SECOND_PART_LENGTH)}"
