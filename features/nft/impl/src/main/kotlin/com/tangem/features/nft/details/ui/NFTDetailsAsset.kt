@@ -120,7 +120,6 @@ private class NFTAssetProvider : CollectionPreviewParameterProvider<NFTAssetUM>(
             name = "Nethers #9744",
             media = NFTAssetUM.Media.Content(
                 url = "img1",
-                mimetype = "image/jpeg",
             ),
             topInfo = NFTAssetUM.TopInfo.Content(
                 title = resourceReference(R.string.nft_details_last_sale_price),
