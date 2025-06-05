@@ -29,7 +29,6 @@ data class NFTAssetUM(
     sealed class Media {
         data object Empty : Media()
         data class Content(
-            val mimetype: String?,
             val url: String,
         ) : Media()
     }
