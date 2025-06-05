@@ -25,8 +25,8 @@ data class NFTAsset(
 
     @Serializable
     data class Media(
-        val mimetype: String?,
-        val url: String,
+        val animationUrl: String?,
+        val imageUrl: String?,
     )
 
     @Serializable
