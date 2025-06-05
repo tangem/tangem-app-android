@@ -111,6 +111,8 @@ dependencies {
     implementation(projects.domain.networks)
     implementation(projects.domain.quotes)
     implementation(projects.domain.notifications)
+    implementation(projects.domain.notifications.models)
+    implementation(projects.domain.notifications.toggles)
 
     implementation(projects.common)
     implementation(projects.common.routing)
@@ -175,8 +177,6 @@ dependencies {
     implementation(projects.features.tokendetails.impl)
     implementation(projects.features.manageTokens.api)
     implementation(projects.features.manageTokens.impl)
-    implementation(projects.features.send.api)
-    implementation(projects.features.send.impl)
     implementation(projects.features.sendV2.api)
     implementation(projects.features.sendV2.impl)
     implementation(projects.features.qrScanning.api)
