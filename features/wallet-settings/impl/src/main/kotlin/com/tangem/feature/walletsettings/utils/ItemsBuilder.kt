@@ -34,6 +34,11 @@ internal class ItemsBuilder @Inject constructor(
         isNFTFeatureEnabled: Boolean,
         isNFTEnabled: Boolean,
         onCheckedNFTChange: (Boolean) -> Unit,
+        isNotificationsFeatureEnabled: Boolean,
+        isNotificationsEnabled: Boolean,
+        isNotificationsPermissionGranted: Boolean,
+        onCheckedNotificationsChanged: (Boolean) -> Unit,
+        onNotificationsDescriptionClick: () -> Unit,
         forgetWallet: () -> Unit,
         renameWallet: () -> Unit,
         onLinkMoreCardsClick: () -> Unit,
@@ -57,7 +62,33 @@ internal class ItemsBuilder @Inject constructor(
                 onReferralClick = onReferralClick,
             ),
         )
+        .addAll(
+            buildNotificationItems(
+                isNotificationsFeatureEnabled = isNotificationsFeatureEnabled,
+                isNotificationsPermissionGranted = isNotificationsPermissionGranted,
+                isNotificationsEnabled = isNotificationsEnabled,
+                onCheckedNotificationsChanged = onCheckedNotificationsChanged,
+                onNotificationsDescriptionClick = onNotificationsDescriptionClick,
+            ),
+        )
         .add(buildForgetItem(forgetWallet))
+
+    private fun buildNotificationItems(
+        isNotificationsFeatureEnabled: Boolean,
+        isNotificationsPermissionGranted: Boolean,
+        isNotificationsEnabled: Boolean,
+        onCheckedNotificationsChanged: (Boolean) -> Unit,
+        onNotificationsDescriptionClick: () -> Unit,
+    ): List<WalletSettingsItemUM> {
+        if (!isNotificationsFeatureEnabled) return emptyList()
+        return buildList {
+            if (!isNotificationsPermissionGranted) {
+                add(buildNotificationsPermissionItem())
+            }
+            add(buildNotificationsSwitchItem(isNotificationsEnabled, onCheckedNotificationsChanged))
+            add(buildNotificationsDescriptionItem(onNotificationsDescriptionClick))
+        }
+    }
 
     private fun buildNameItem(walletName: String, isRenameWalletAvailable: Boolean, renameWallet: () -> Unit) =
         WalletSettingsItemUM.WithText(
@@ -74,6 +105,28 @@ internal class ItemsBuilder @Inject constructor(
             title = resourceReference(id = R.string.details_nft_title),
             isChecked = isNFTEnabled,
             onCheckedChange = onCheckedNFTChange,
+        )
+
+    private fun buildNotificationsPermissionItem() = WalletSettingsItemUM.NotificationPermission(
+        id = "notifications_permission",
+        title = resourceReference(id = R.string.transaction_notifications_warning_title),
+        description = resourceReference(id = R.string.transaction_notifications_warning_description),
+    )
+
+    private fun buildNotificationsSwitchItem(isNFTEnabled: Boolean, onCheckedNFTChange: (Boolean) -> Unit) =
+        WalletSettingsItemUM.WithSwitch(
+            id = "notifications",
+            title = resourceReference(id = R.string.wallet_settings_push_notifications_title),
+            isChecked = isNFTEnabled,
+            onCheckedChange = onCheckedNFTChange,
+        )
+
+    private fun buildNotificationsDescriptionItem(onDescriptionClick: () -> Unit) =
+        WalletSettingsItemUM.DescriptionWithMore(
+            id = "notifications_description",
+            text = resourceReference(id = R.string.wallet_settings_push_notifications_description),
+            more = resourceReference(id = R.string.push_notifications_more_info),
+            onClick = onDescriptionClick,
         )
 
     @Suppress("LongParameterList")

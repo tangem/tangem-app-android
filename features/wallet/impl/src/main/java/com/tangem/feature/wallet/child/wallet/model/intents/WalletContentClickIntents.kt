@@ -8,12 +8,13 @@ import com.tangem.domain.nft.analytics.NFTAnalyticsEvent
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.settings.ShouldShowMarketsTooltipUseCase
 import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
-import com.tangem.domain.tokens.GetPrimaryCurrencyStatusUpdatesUseCase
+import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.TokensAction
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.isLocked
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.wallet.presentation.wallet.domain.OnrampStatusFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.unwrap
@@ -67,7 +68,7 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
     private val walletWarningsClickIntents: WalletWarningsClickIntentsImplementor,
     private val onrampStatusFactory: OnrampStatusFactory,
     private val getUserWalletUseCase: GetUserWalletUseCase,
-    private val getPrimaryCurrencyStatusUpdatesUseCase: GetPrimaryCurrencyStatusUpdatesUseCase,
+    private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
     private val getCryptoCurrencyActionsUseCase: GetCryptoCurrencyActionsUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val shouldShowMarketsTooltipUseCase: ShouldShowMarketsTooltipUseCase,
@@ -162,7 +163,7 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
 
     override fun onTransactionClick(txHash: String) {
         modelScope.launch(dispatchers.main) {
-            val currency = getPrimaryCurrencyStatusUpdatesUseCase.unwrap(
+            val currency = getSingleCryptoCurrencyStatusUseCase.unwrap(
                 userWalletId = stateHolder.getSelectedWalletId(),
             )
                 ?.currency
@@ -238,7 +239,10 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
     override fun onNFTClick(userWallet: UserWallet) {
         val selectedWallet = stateHolder.getSelectedWallet() as? WalletState.MultiCurrency.Content ?: return
         val analyticsState = when (val nftState = selectedWallet.nftState) {
-            is WalletNFTItemUM.Content -> NFTAnalyticsEvent.NFTListScreenOpened.State.Full(nftState.assetsCount)
+            is WalletNFTItemUM.Content -> NFTAnalyticsEvent.NFTListScreenOpened.State.Full(
+                assetsCount = nftState.assetsCount,
+                collectionsCount = nftState.collectionsCount,
+            )
             is WalletNFTItemUM.Empty -> NFTAnalyticsEvent.NFTListScreenOpened.State.Empty
             is WalletNFTItemUM.Failed,
             is WalletNFTItemUM.Hidden,
