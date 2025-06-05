@@ -8,11 +8,11 @@ import com.tangem.common.ui.amountScreen.models.AmountFieldModel
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.onramp.model.OnrampCurrency
 import com.tangem.domain.onramp.model.error.OnrampError
 import com.tangem.domain.tokens.model.Amount
 import com.tangem.domain.tokens.model.AmountType
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.convertToAmount
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.main.entity.*

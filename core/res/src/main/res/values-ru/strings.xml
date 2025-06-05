@@ -112,6 +112,7 @@
   <string name="common_cancel">Отмена</string>
   <string name="common_change">Изменить</string>
   <string name="common_choose_action">Выберите действие</string>
+  <string name="common_choose_token">Выберите токен</string>
   <string name="common_claim">Получить</string>
   <string name="common_claim_rewards">Вывести награду</string>
   <string name="common_close">Закрыть</string>
@@ -569,6 +570,12 @@
   <string name="nft_send">Отправить NFT</string>
   <string name="nft_traits_title">Черты</string>
   <string name="nft_wallet_count">%1$d NFTs в %2$d коллекциях</string>
+  <plurals name="nft_wallet_count_android">
+    <item quantity="one"></item>
+    <item quantity="few"></item>
+    <item quantity="many"></item>
+    <item quantity="other">%1$d NFTs в %2$d коллекциях</item>
+  </plurals>
   <string name="nft_wallet_receive_nft">Нажмите здесь, чтобы получить первую NFT</string>
   <string name="nft_wallet_title">NFT коллекции</string>
   <string name="nft_wallet_unable_to_load">Невозможно загрузить данные</string>
