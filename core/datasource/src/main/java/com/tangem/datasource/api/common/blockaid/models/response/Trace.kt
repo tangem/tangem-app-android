@@ -11,7 +11,7 @@ data class Trace(
 
 @JsonClass(generateAdapter = true)
 data class Exposed(
-    @Json(name = "token_id") val tokenId: String,
+    @Json(name = "token_id") val tokenId: String?,
     @Json(name = "logo_url") val logoUrl: String?,
 )
 
