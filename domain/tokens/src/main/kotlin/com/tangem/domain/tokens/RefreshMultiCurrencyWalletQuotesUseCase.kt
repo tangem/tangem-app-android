@@ -4,21 +4,18 @@ import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.raise.catch
 import arrow.core.raise.either
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.quotes.multi.MultiQuoteFetcher
 import com.tangem.domain.tokens.error.QuotesError
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.repository.CurrenciesRepository
-import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 
 class RefreshMultiCurrencyWalletQuotesUseCase(
-    private val quotesRepository: QuotesRepository,
     private val currenciesRepository: CurrenciesRepository,
     private val multiQuoteFetcher: MultiQuoteFetcher,
-    private val tokensFeatureToggles: TokensFeatureToggles,
 ) {
 
     suspend operator fun invoke(userWalletId: UserWalletId): Either<QuotesError, Unit> {
@@ -48,23 +45,11 @@ class RefreshMultiCurrencyWalletQuotesUseCase(
     }
 
     private suspend fun fetchQuotes(currenciesIds: Set<CryptoCurrency.ID>) {
-        if (tokensFeatureToggles.isQuotesLoadingRefactoringEnabled) {
-            multiQuoteFetcher(
-                params = MultiQuoteFetcher.Params(
-                    currenciesIds = currenciesIds.mapNotNullTo(hashSetOf(), CryptoCurrency.ID::rawCurrencyId),
-                    appCurrencyId = null,
-                ),
-            )
-        } else {
-            catch(
-                block = {
-                    quotesRepository.fetchQuotes(
-                        currenciesIds = currenciesIds.mapNotNullTo(hashSetOf(), CryptoCurrency.ID::rawCurrencyId),
-                        refresh = true,
-                    )
-                },
-                catch = { /* Ignore error */ },
-            )
-        }
+        multiQuoteFetcher(
+            params = MultiQuoteFetcher.Params(
+                currenciesIds = currenciesIds.mapNotNullTo(hashSetOf(), CryptoCurrency.ID::rawCurrencyId),
+                appCurrencyId = null,
+            ),
+        )
     }
 }

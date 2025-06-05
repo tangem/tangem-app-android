@@ -10,7 +10,7 @@ import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.extensions.Result
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.demo.DemoTransactionSender
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.mapToFeeError
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -30,7 +30,9 @@ class EstimateFeeUseCase(
         cryptoCurrency: CryptoCurrency,
     ): Either<GetFeeError, TransactionFee> {
         val amountData = convertCryptoCurrencyToAmount(cryptoCurrency, amount)
-        val result = if (demoConfig.isDemoCardId(userWallet.scanResponse.card.cardId)) {
+        val result = if (userWallet is UserWallet.Cold &&
+            demoConfig.isDemoCardId(userWallet.scanResponse.card.cardId)
+        ) {
             demoTransactionSender(userWallet, cryptoCurrency).estimateFee(
                 amount = amountData,
                 destination = "",
