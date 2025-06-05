@@ -23,4 +23,6 @@ interface NFTRuntimeStore {
     suspend fun saveCollections(collections: NFTCollections)
 
     suspend fun saveSalePrice(salePrice: NFTSalePrice)
+
+    suspend fun clear()
 }

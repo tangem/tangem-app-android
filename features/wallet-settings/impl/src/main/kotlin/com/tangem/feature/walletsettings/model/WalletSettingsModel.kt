@@ -1,5 +1,6 @@
 package com.tangem.feature.walletsettings.model
 
+import android.os.Build
 import arrow.core.getOrElse
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
@@ -11,22 +12,26 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.navigation.settings.SettingsManager
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.message.DialogMessage
-import com.tangem.core.ui.message.EventMessageAction
-import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.core.ui.message.*
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.nft.DisableWalletNFTUseCase
+import com.tangem.domain.nft.EnableWalletNFTUseCase
+import com.tangem.domain.nft.GetWalletNFTEnabledUseCase
+import com.tangem.domain.notifications.toggles.NotificationsFeatureToggles
+import com.tangem.domain.settings.repositories.PermissionRepository
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.repository.WalletsRepository
-import com.tangem.domain.wallets.usecase.DeleteWalletUseCase
-import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
-import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsSyncUseCase
+import com.tangem.domain.wallets.models.isMultiCurrency
+import com.tangem.domain.wallets.models.requireColdWallet
+import com.tangem.domain.wallets.usecase.*
 import com.tangem.feature.walletsettings.analytics.Settings
 import com.tangem.feature.walletsettings.component.WalletSettingsComponent
 import com.tangem.feature.walletsettings.entity.DialogConfig
+import com.tangem.feature.walletsettings.entity.NetworksAvailableForNotificationBSConfig
 import com.tangem.feature.walletsettings.entity.WalletSettingsItemUM
 import com.tangem.feature.walletsettings.entity.WalletSettingsUM
 import com.tangem.feature.walletsettings.impl.R
@@ -54,39 +59,64 @@ internal class WalletSettingsModel @Inject constructor(
     private val analyticsContextProxy: AnalyticsContextProxy,
     private val getShouldSaveUserWalletsSyncUseCase: ShouldSaveUserWalletsSyncUseCase,
     private val isDemoCardUseCase: IsDemoCardUseCase,
-    private val walletsRepository: WalletsRepository,
     private val nftFeatureToggles: NFTFeatureToggles,
+    private val getWalletNFTEnabledUseCase: GetWalletNFTEnabledUseCase,
+    private val enableWalletNFTUseCase: EnableWalletNFTUseCase,
+    private val disableWalletNFTUseCase: DisableWalletNFTUseCase,
+    private val notificationsToggles: NotificationsFeatureToggles,
+    private val getWalletNotificationsEnabledUseCase: GetWalletNotificationsEnabledUseCase,
+    private val setNotificationsEnabledUseCase: SetNotificationsEnabledUseCase,
+    private val settingsManager: SettingsManager,
+    private val permissionsRepository: PermissionRepository,
 ) : Model() {
 
     val params: WalletSettingsComponent.Params = paramsContainer.require()
     val dialogNavigation = SlotNavigation<DialogConfig>()
+    val bottomSheetNavigation: SlotNavigation<NetworksAvailableForNotificationBSConfig> = SlotNavigation()
 
     val state: MutableStateFlow<WalletSettingsUM> = MutableStateFlow(
         value = WalletSettingsUM(
             popBack = router::pop,
             items = persistentListOf(),
+            requestPushNotificationsPermission = false,
+            onPushNotificationPermissionGranted = ::onPushNotificationPermissionGranted,
         ),
     )
 
     init {
-        getWalletUseCase.invokeFlow(params.userWalletId)
-            .distinctUntilChanged()
-            .combine(walletsRepository.nftEnabledStatus(params.userWalletId)) { maybeWallet, nftEnabled ->
-                val wallet = maybeWallet.getOrNull() ?: return@combine
-                val isRenameWalletAvailable = getShouldSaveUserWalletsSyncUseCase()
-                state.update { value ->
-                    value.copy(
-                        items = buildItems(
-                            userWallet = wallet,
-                            dialogNavigation = dialogNavigation,
-                            isRenameWalletAvailable = isRenameWalletAvailable,
-                            isNFTFeatureEnabled = nftFeatureToggles.isNFTEnabled,
-                            isNFTEnabled = nftEnabled,
-                        ),
-                    )
-                }
+        combine(
+            getWalletUseCase.invokeFlow(params.userWalletId).distinctUntilChanged(),
+            getWalletNFTEnabledUseCase.invoke(params.userWalletId),
+            getWalletNotificationsEnabledUseCase(params.userWalletId),
+        ) { maybeWallet, nftEnabled, notificationsEnabled ->
+            val wallet = maybeWallet.getOrNull() ?: return@combine
+            val isRenameWalletAvailable = getShouldSaveUserWalletsSyncUseCase()
+            state.update { value ->
+                value.copy(
+                    items = buildItems(
+                        userWallet = wallet,
+                        dialogNavigation = dialogNavigation,
+                        isRenameWalletAvailable = isRenameWalletAvailable,
+                        isNFTFeatureEnabled = nftFeatureToggles.isNFTEnabled,
+                        isNFTEnabled = nftEnabled,
+                        isNotificationsEnabled = notificationsEnabled,
+                        isNotificationsFeatureEnabled = notificationsToggles.isNotificationsEnabled,
+                        isNotificationsPermissionGranted = isNotificationsPermissionGranted(),
+                    ),
+                )
             }
+        }
             .launchIn(modelScope)
+    }
+
+    private fun isNotificationsPermissionGranted(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            permissionsRepository.hasRuntimePermission(
+                android.Manifest.permission.POST_NOTIFICATIONS,
+            )
+        } else {
+            true
+        }
     }
 
     private fun buildItems(
@@ -95,15 +125,19 @@ internal class WalletSettingsModel @Inject constructor(
         isRenameWalletAvailable: Boolean,
         isNFTFeatureEnabled: Boolean,
         isNFTEnabled: Boolean,
+        isNotificationsFeatureEnabled: Boolean,
+        isNotificationsEnabled: Boolean,
+        isNotificationsPermissionGranted: Boolean,
     ): PersistentList<WalletSettingsItemUM> = itemsBuilder.buildItems(
         userWalletId = userWallet.walletId,
         userWalletName = userWallet.name,
-        isReferralAvailable = userWallet.cardTypesResolver.isTangemWallet(),
-        isLinkMoreCardsAvailable = userWallet.scanResponse.card.backupStatus == CardDTO.BackupStatus.NoBackup,
+        isReferralAvailable = userWallet !is UserWallet.Cold || userWallet.cardTypesResolver.isTangemWallet(),
+        isLinkMoreCardsAvailable = userWallet is UserWallet.Cold &&
+            userWallet.scanResponse.card.backupStatus == CardDTO.BackupStatus.NoBackup,
         isManageTokensAvailable = userWallet.isMultiCurrency,
         isRenameWalletAvailable = isRenameWalletAvailable,
         renameWallet = { openRenameWalletDialog(userWallet, dialogNavigation) },
-        isNFTFeatureEnabled = isNFTFeatureEnabled,
+        isNFTFeatureEnabled = isNFTFeatureEnabled && userWallet.isMultiCurrency,
         isNFTEnabled = isNFTEnabled,
         onCheckedNFTChange = ::onCheckedNFTChange,
         forgetWallet = {
@@ -122,9 +156,15 @@ internal class WalletSettingsModel @Inject constructor(
             messageSender.send(message)
         },
         onLinkMoreCardsClick = {
+            userWallet.requireColdWallet()
             onLinkMoreCardsClick(scanResponse = userWallet.scanResponse)
         },
         onReferralClick = { onReferralClick(userWallet) },
+        isNotificationsEnabled = isNotificationsEnabled,
+        isNotificationsFeatureEnabled = isNotificationsFeatureEnabled,
+        isNotificationsPermissionGranted = isNotificationsPermissionGranted,
+        onCheckedNotificationsChanged = ::onCheckedNotificationsChange,
+        onNotificationsDescriptionClick = ::onNotificationsDescriptionClick,
     )
 
     private fun openRenameWalletDialog(userWallet: UserWallet, dialogNavigation: SlotNavigation<DialogConfig>) {
@@ -169,15 +209,69 @@ internal class WalletSettingsModel @Inject constructor(
     private fun onCheckedNFTChange(isChecked: Boolean) {
         modelScope.launch {
             if (isChecked) {
-                walletsRepository.enableNFT(params.userWalletId)
+                enableWalletNFTUseCase.invoke(params.userWalletId)
             } else {
-                walletsRepository.disableNFT(params.userWalletId)
+                disableWalletNFTUseCase.invoke(params.userWalletId)
             }
         }
     }
 
+    private fun onCheckedNotificationsChange(isChecked: Boolean) {
+        modelScope.launch {
+            if (isChecked) {
+                state.update { value ->
+                    value.copy(
+                        requestPushNotificationsPermission = true,
+                    )
+                }
+            } else {
+                setNotificationsEnabledUseCase(params.userWalletId, false)
+            }
+        }
+    }
+
+    private fun onNotificationsDescriptionClick() {
+        bottomSheetNavigation.activate(NetworksAvailableForNotificationBSConfig)
+    }
+
+    private fun openPushSystemSettings() {
+        settingsManager.openAppSettings()
+    }
+
+    private fun onPushNotificationPermissionGranted(isGranted: Boolean) {
+        state.update { value ->
+            value.copy(
+                requestPushNotificationsPermission = false,
+            )
+        }
+        if (isGranted) {
+            modelScope.launch {
+                setNotificationsEnabledUseCase(params.userWalletId, true)
+            }
+        } else {
+            val message = DialogMessage(
+                title = resourceReference(R.string.push_notifications_permission_alert_title),
+                message = resourceReference(R.string.push_notifications_permission_alert_description),
+                firstActionBuilder = {
+                    EventMessageAction(
+                        title = resourceReference(R.string.push_notifications_permission_alert_positive_button),
+                        onClick = ::openPushSystemSettings,
+                    )
+                },
+                secondActionBuilder = {
+                    EventMessageAction(
+                        title = resourceReference(R.string.push_notifications_permission_alert_negative_button),
+                        onClick = { cancelAction() },
+                    )
+                },
+            )
+
+            messageSender.send(message)
+        }
+    }
+
     private fun onReferralClick(userWallet: UserWallet) {
-        if (isDemoCardUseCase(userWallet.cardId)) {
+        if (userWallet is UserWallet.Cold && isDemoCardUseCase(userWallet.cardId)) {
             messageSender.send(
                 DialogMessage(message = resourceReference(R.string.alert_demo_feature_disabled)),
             )

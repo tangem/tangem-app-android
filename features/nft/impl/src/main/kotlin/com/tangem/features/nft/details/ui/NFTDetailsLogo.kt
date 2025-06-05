@@ -65,7 +65,7 @@ private fun Placeholder(modifier: Modifier = Modifier) {
     ) {
         Image(
             modifier = Modifier.size(TangemTheme.dimens.size120),
-            painter = painterResource(R.drawable.ic_nft_placeholder_76),
+            painter = painterResource(R.drawable.ic_nft_placeholder_120),
             contentDescription = null,
         )
     }
@@ -88,7 +88,6 @@ private class NFTAssetMediaProvider : CollectionPreviewParameterProvider<NFTAsse
     collection = listOf(
         NFTAssetUM.Media.Empty,
         NFTAssetUM.Media.Content(
-            mimetype = "image/jpeg",
             url = "img1",
         ),
     ),

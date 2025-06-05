@@ -88,7 +88,7 @@ internal class TokenDetailsLoadedBalanceConverter(
     ): TokenDetailsBalanceBlockState {
         val stakingCryptoAmount =
             (status.value.yieldBalance as? YieldBalance.Data)?.getTotalWithRewardsStakingBalance(
-                status.currency.network.id.value,
+                status.currency.network.rawId,
             )
         val stakingFiatAmount = stakingCryptoAmount?.let { status.value.fiatRate?.multiply(it) }
         val isBalanceSelectorEnabled = !stakingCryptoAmount.isNullOrZero()

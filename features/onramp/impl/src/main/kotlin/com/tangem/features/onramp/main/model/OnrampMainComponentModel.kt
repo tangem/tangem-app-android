@@ -23,6 +23,7 @@ import com.tangem.domain.onramp.model.error.OnrampError
 import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.domain.settings.usercountry.models.needApplyFCARestrictions
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.onramp.main.OnrampMainComponent
 import com.tangem.features.onramp.main.entity.*
@@ -233,7 +234,7 @@ internal class OnrampMainComponentModel @Inject constructor(
     }
 
     override fun onBuyClick(quote: OnrampProviderWithQuote.Data) {
-        if (isDemoCardUseCase.invoke(userWallet.cardId)) {
+        if (userWallet is UserWallet.Cold && isDemoCardUseCase.invoke(userWallet.cardId)) {
             showDemoWarning()
         } else {
             val currentContentState = state.value as? OnrampMainComponentUM.Content ?: return

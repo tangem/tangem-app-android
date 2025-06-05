@@ -24,6 +24,7 @@ import coil.request.ImageRequest
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.SpacerH12
 import com.tangem.core.ui.components.SpacerH2
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.nft.collections.entity.NFTCollectionAssetUM
@@ -77,7 +78,7 @@ private fun Placeholder(modifier: Modifier = Modifier) {
     ) {
         Image(
             modifier = Modifier.size(TangemTheme.dimens.size52),
-            painter = painterResource(R.drawable.ic_nft_placeholder_76),
+            painter = painterResource(R.drawable.ic_nft_placeholder_120),
             contentDescription = null,
         )
     }
@@ -116,7 +117,9 @@ private class NFTCollectionAssetProvider : CollectionPreviewParameterProvider<NF
             id = "item3",
             name = "Nethers #0855",
             imageUrl = "img",
-            price = NFTSalePriceUM.Content("0.05 ETH"),
+            price = NFTSalePriceUM.Content(
+                price = stringReference("0.05 ETH"),
+            ),
             onItemClick = { },
         ),
     ),

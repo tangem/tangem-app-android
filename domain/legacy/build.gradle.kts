@@ -9,6 +9,10 @@ android {
     namespace = "com.tangem.domain.features"
 }
 
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+}
+
 dependencies {
     implementation(projects.core.datasource)
     implementation(projects.core.utils)
@@ -43,8 +47,11 @@ dependencies {
     ksp(deps.moshi.kotlin.codegen)
 
     /** Testing libraries */
-    testImplementation(deps.test.junit)
+    testImplementation(deps.test.junit5)
+    testRuntimeOnly(deps.test.junit5.engine)
+    testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)
+    testImplementation(projects.common.test)
     androidTestImplementation(deps.test.junit.android)
     androidTestImplementation(deps.test.espresso)
 }
