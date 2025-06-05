@@ -127,7 +127,7 @@ internal class UpdateDataStateTransformer(
         return NFTCollectionAssetUM(
             id = id.toString(),
             name = name ?: DASH_SIGN,
-            imageUrl = media?.url,
+            imageUrl = media?.imageUrl,
             price = when (val salePrice = salePrice) {
                 is NFTSalePrice.Empty -> NFTSalePriceUM.Failed
                 is NFTSalePrice.Loading -> NFTSalePriceUM.Loading
