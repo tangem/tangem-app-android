@@ -112,6 +112,7 @@
   <string name="common_cancel">Скасувати</string>
   <string name="common_change">Змінити</string>
   <string name="common_choose_action">Виберіть дію</string>
+  <string name="common_choose_token">Оберіть токен</string>
   <string name="common_claim">Отримати</string>
   <string name="common_claim_rewards">Отримати винагороди</string>
   <string name="common_close">Закрити</string>
@@ -328,6 +329,7 @@
   <string name="express_more_providers_soon">Незабаром з\'являться нові провайдери.\nСлідкуйте за новинами!</string>
   <string name="express_provider">Провайдер</string>
   <string name="express_provider_best_rate">Найкращий курс</string>
+  <string name="express_provider_fca_warning_list">Список попереджень FCA</string>
   <string name="express_provider_max_amount">Доступно до %s</string>
   <string name="express_provider_min_amount">Доступно від %s</string>
   <string name="express_provider_not_available">Недоступно для цієї пари</string>
@@ -1139,6 +1141,8 @@
   <string name="warning_express_notification_invalid_reserve_amount_title">Сума отримання не може бути меншою за %s</string>
   <string name="warning_express_pair_unavailable_message">Це може статися тому, що провайдер наразі не може обміняти обрану пару. Будь ласка, зачекайте трохи та спробуйте ще раз. (Код %s)</string>
   <string name="warning_express_pair_unavailable_title">Обрана пара тимчасово недоступна</string>
+  <string name="warning_express_providers_fca_warning_description">Деякі провайдери не мають авторизації від Британського фінансового регулятора (FCA). Рекомендуємо уникати взаємодії з ними.</string>
+  <string name="warning_express_providers_fca_warning_title">Список попереджень FCA</string>
   <string name="warning_express_refresh_required_title">Сервіс тимчасово недоступний</string>
   <string name="warning_express_too_maximum_amount_title">Сума до обміну не повинна перевищувати %s</string>
   <string name="warning_express_too_minimal_amount_title">Сума для обміну має бути не менше %s</string>
