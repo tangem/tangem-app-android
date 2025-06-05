@@ -16,13 +16,15 @@ import com.tangem.features.walletconnect.transaction.entity.blockaid.WcEstimated
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
+import javax.inject.Inject
 
 private const val DECIMALS_AMOUNT = 2
 
-internal class WcSendAndReceiveBlockAidUiConverter :
+internal class WcSendAndReceiveBlockAidUiConverter @Inject constructor() :
     Converter<CheckTransactionResult, WcSendReceiveTransactionCheckResultsUM> {
     override fun convert(value: CheckTransactionResult): WcSendReceiveTransactionCheckResultsUM {
         return WcSendReceiveTransactionCheckResultsUM(
+            isLoading = false,
             notificationText = when (value.validation) {
                 ValidationResult.SAFE, ValidationResult.FAILED_TO_VALIDATE -> null
                 ValidationResult.UNSAFE -> TextReference.Str("") // TODO("Add text after approve with designer")
