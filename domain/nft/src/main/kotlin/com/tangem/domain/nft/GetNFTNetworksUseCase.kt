@@ -16,7 +16,7 @@ class GetNFTNetworksUseCase(
         .map { cryptoCurrencies ->
             val availableNetworks = cryptoCurrencies
                 .map { cryptoCurrency -> cryptoCurrency.network }
-                .filter { nftRepository.isNFTSupported(it) }
+                .filter { nftRepository.isNFTSupported(userWalletId, it) }
                 .sortedBy { it.name }
 
             val unavailableNetworks = nftRepository

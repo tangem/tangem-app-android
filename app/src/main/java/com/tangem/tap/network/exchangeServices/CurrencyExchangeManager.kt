@@ -4,15 +4,15 @@ import com.tangem.Message
 import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.extensions.Result
+import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.core.utils.lceContent
 import com.tangem.domain.core.utils.lceLoading
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -68,7 +68,7 @@ class CurrencyExchangeManager(
         walletAddress: String,
         isDarkTheme: Boolean,
     ): String? {
-        val blockchain = Blockchain.fromId(cryptoCurrency.network.id.value)
+        val blockchain = cryptoCurrency.network.toBlockchain()
         if (blockchain.isTestnet()) return blockchain.getTestnetTopUpUrl()
 
         val urlBuilder = getExchangeUrlBuilder(action)
