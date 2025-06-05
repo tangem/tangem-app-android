@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
-  <string name="_warning_stelar_token_required_min_coin_reserve">Erforderliche Mindest-XLM-Reserve %1$s</string>
   <string name="action_buttons_buy_empty_search_message">Du kannst Deinen Token nicht finden? Gehe zum Bereich „Markt“ auf der Hauptseite und fügen diesen zum kaufen im Portfolio hinzu.</string>
   <string name="action_buttons_sell_empty_search_message">Du kannst Deinen Token nicht finden? Gehe zum Bereich „Markt“ auf der Hauptseite und fügen diesen zum verkaufen im Portfolio hinzu.</string>
   <string name="action_buttons_sell_navigation_bar_title">Verkaufen</string>
@@ -337,6 +336,7 @@
   <string name="express_more_providers_soon">Weitere Anbieter folgen in Kürze</string>
   <string name="express_provider">Anbieter</string>
   <string name="express_provider_best_rate">Bester Preis</string>
+  <string name="express_provider_fca_warning_list">Warnliste der FCA</string>
   <string name="express_provider_max_amount">Verfügbar bis zu %s</string>
   <string name="express_provider_min_amount">Erhältlich bei %s</string>
   <string name="express_provider_not_available">Für dieses Paar nicht verfügbar</string>
@@ -1222,6 +1222,8 @@
   <string name="warning_express_notification_invalid_reserve_amount_title">Der zu erhaltende Betrag muss mindestens %s betragen</string>
   <string name="warning_express_pair_unavailable_message">Dies kann passieren, weil der Anbieter derzeit nicht in der Lage ist, dein ausgewähltes Paar zu swappen. Bitte warte einen Moment und versuche es später erneut. (Code %s)</string>
   <string name="warning_express_pair_unavailable_title">Ausgewähltes Paar vorübergehend nicht verfügbar</string>
+  <string name="warning_express_providers_fca_warning_description">Einige Anbieter sind nicht von der britischen Finanzaufsichtsbehörde (FCA) zugelassen. Sie sollten den Umgang mit ihnen vermeiden.</string>
+  <string name="warning_express_providers_fca_warning_title">Warnliste der FCA</string>
   <string name="warning_express_refresh_required_title">Service vorübergehend nicht verfügbar</string>
   <string name="warning_express_too_maximum_amount_title">Die Menge der zu tauschenden Token darf folgende Werte nicht überschreiten %s</string>
   <string name="warning_express_too_minimal_amount_title">Der zu tauschende Betrag muss mindestens %s betragen</string>
@@ -1273,6 +1275,7 @@
   <string name="warning_some_networks_unreachable_message">Wischen Sie nach unten, um zu aktualisieren, oder versuchen Sie es später erneut.</string>
   <string name="warning_some_networks_unreachable_title">Einige Netzwerke sind nicht erreichbar</string>
   <string name="warning_some_token_balances_not_updated">Einige Token-Guthaben konnten nicht aktualisiert werden</string>
+  <string name="warning_stelar_token_required_min_coin_reserve">Erforderliche Mindest-XLM-Reserve %1$s</string>
   <string name="warning_stellar_token_trustline_button_title">Trustline öffnen</string>
   <string name="warning_stellar_token_trustline_subtiile">Trustline-Untermenü öffnen</string>
   <string name="warning_stellar_token_trustline_tiile">Trustline-Titel öffnen</string>
