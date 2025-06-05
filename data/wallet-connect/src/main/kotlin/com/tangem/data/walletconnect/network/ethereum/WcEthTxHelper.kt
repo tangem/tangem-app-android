@@ -1,6 +1,11 @@
 package com.tangem.data.walletconnect.network.ethereum
 
+import com.domain.blockaid.models.transaction.CheckTransactionResult
+import com.domain.blockaid.models.transaction.SimulationResult
+import com.domain.blockaid.models.transaction.simultation.ApprovedAmount
+import com.domain.blockaid.models.transaction.simultation.SimulationData
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
+import com.tangem.blockchain.blockchains.ethereum.tokenmethods.ApprovalERC20TokenCallData
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.HEX_PREFIX
@@ -8,8 +13,9 @@ import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.smartcontract.CompiledSmartContractCallData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.extensions.hexToBigDecimal
+import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.common.extensions.hexToBytes
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.walletconnect.model.WcEthTransactionParams
 import java.math.BigDecimal
 
@@ -20,7 +26,7 @@ internal object WcEthTxHelper {
         val gasLimit = txParams.gas?.hexToBigDecimal() ?: return null
         val gasPrice = txParams.gasPrice?.hexToBigDecimal() ?: return null
 
-        val blockchain = Blockchain.fromId(network.id.value)
+        val blockchain = network.toBlockchain()
 
         var feeDecimal = (gasLimit * gasPrice)
             .movePointLeft(blockchain.decimals())
@@ -38,7 +44,7 @@ internal object WcEthTxHelper {
         txParams: WcEthTransactionParams,
     ): TransactionData.Uncompiled? {
         val destinationAddress = txParams.to ?: return null
-        val blockchain = Blockchain.fromId(network.id.value)
+        val blockchain = network.toBlockchain()
         val value = (txParams.value ?: "0")
             .hexToBigDecimal()
             .movePointLeft(blockchain.decimals())
@@ -55,4 +61,23 @@ internal object WcEthTxHelper {
             ),
         )
     }
+
+    fun getApprovedAmount(txData: String, result: CheckTransactionResult): ApprovedAmount? {
+        val approvalMethodId = ApprovalERC20TokenCallData("", null).methodId
+        val isApprovalWcMethod = txData.startsWith(approvalMethodId)
+        if (!isApprovalWcMethod) return null
+        val simulation = result.simulation as? SimulationResult.Success
+            ?: return null
+        val approves = (simulation.data as? SimulationData.Approve)?.approvedAmounts
+            ?: return null
+        if (approves.size != 1) return null
+        val amount = approves.first()
+        return amount
+    }
+}
+
+sealed interface WcEthTxAction {
+
+    data class UpdateFee(val fee: Fee) : WcEthTxAction
+    data class UpdateApprovalAmount(val amount: Amount?) : WcEthTxAction
 }
