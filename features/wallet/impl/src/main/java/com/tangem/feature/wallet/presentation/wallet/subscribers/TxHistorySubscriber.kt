@@ -5,14 +5,15 @@ import androidx.paging.cachedIn
 import androidx.paging.map
 import arrow.core.Either
 import com.tangem.domain.common.util.cardTypesResolver
-import com.tangem.domain.tokens.GetPrimaryCurrencyStatusUpdatesUseCase
+import com.tangem.domain.models.network.TxInfo
+import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryListError
 import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.domain.collectLatest
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
@@ -27,7 +28,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 
 typealias MaybeTxHistoryCount = Either<TxHistoryStateError, Int>
-typealias MaybeTxHistoryItems = Either<TxHistoryListError, Flow<PagingData<TxHistoryItem>>>
+typealias MaybeTxHistoryItems = Either<TxHistoryListError, Flow<PagingData<TxInfo>>>
 
 @Suppress("LongParameterList")
 internal class TxHistorySubscriber(
@@ -35,14 +36,14 @@ internal class TxHistorySubscriber(
     private val isRefresh: Boolean,
     private val stateHolder: WalletStateController,
     private val clickIntents: WalletClickIntents,
-    private val getPrimaryCurrencyStatusUpdatesUseCase: GetPrimaryCurrencyStatusUpdatesUseCase,
+    private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
     private val txHistoryItemsCountUseCase: GetTxHistoryItemsCountUseCase,
     private val txHistoryItemsUseCase: GetTxHistoryItemsUseCase,
 ) : WalletSubscriber() {
 
-    override fun create(coroutineScope: CoroutineScope): Flow<PagingData<TxHistoryItem>> {
+    override fun create(coroutineScope: CoroutineScope): Flow<PagingData<TxInfo>> {
         return flow {
-            getPrimaryCurrencyStatusUpdatesUseCase.collectLatest(userWalletId = userWallet.walletId) { status ->
+            getSingleCryptoCurrencyStatusUseCase.collectLatest(userWalletId = userWallet.walletId) { status ->
                 val maybeTxHistoryItemCount = txHistoryItemsCountUseCase(
                     userWalletId = userWallet.walletId,
                     currency = status.currency,
@@ -96,7 +97,7 @@ internal class TxHistorySubscriber(
                     )
                 },
                 ifRight = { itemsFlow ->
-                    val blockchain = userWallet.scanResponse.cardTypesResolver.getBlockchain()
+                    val blockchain = userWallet.requireColdWallet().scanResponse.cardTypesResolver.getBlockchain()
                     val itemConverter = TxHistoryItemStateConverter(
                         symbol = blockchain.currency,
                         decimals = blockchain.decimals(),

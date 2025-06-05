@@ -1,7 +1,7 @@
 package com.tangem.domain.quotes.multi
 
 import com.tangem.domain.core.flow.FlowFetcher
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 
 /**
  * Fetcher of quotes
