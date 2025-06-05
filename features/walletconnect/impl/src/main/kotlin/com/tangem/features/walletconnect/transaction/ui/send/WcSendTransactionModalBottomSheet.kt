@@ -20,6 +20,7 @@ import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetWithFooter
 import com.tangem.core.ui.components.divider.DividerWithPadding
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -28,10 +29,11 @@ import com.tangem.features.walletconnect.connections.ui.WcAppInfoItem
 import com.tangem.features.walletconnect.impl.R
 import com.tangem.features.walletconnect.transaction.entity.blockaid.WcEstimatedWalletChangeUM
 import com.tangem.features.walletconnect.transaction.entity.blockaid.WcEstimatedWalletChangesUM
+import com.tangem.features.walletconnect.transaction.entity.blockaid.WcSendReceiveTransactionCheckResultsUM
 import com.tangem.features.walletconnect.transaction.entity.common.WcNetworkInfoUM
 import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionAppInfoContentUM
 import com.tangem.features.walletconnect.transaction.entity.send.WcSendTransactionItemUM
-import com.tangem.features.walletconnect.transaction.ui.blockaid.WcEstimatedWalletChangesItem
+import com.tangem.features.walletconnect.transaction.ui.blockaid.TransactionCheckResultsItem
 import com.tangem.features.walletconnect.transaction.ui.common.WcSendTransactionItems
 import com.tangem.features.walletconnect.transaction.ui.common.WcSmallTitleItem
 import com.tangem.features.walletconnect.transaction.ui.common.WcTransactionRequestButtons
@@ -89,7 +91,9 @@ internal fun WcSendTransactionModalBottomSheet(
                     )
                 }
                 Column(modifier = Modifier.padding(top = 16.dp)) {
-                    WcEstimatedWalletChangesItem(state.estimatedWalletChanges)
+                    if (state.estimatedWalletChanges != null) {
+                        TransactionCheckResultsItem(state.estimatedWalletChanges)
+                    }
                     Spacer(Modifier.height(16.dp))
                     WcSendTransactionItems(
                         walletName = state.walletName,
@@ -153,19 +157,24 @@ private class WcSendTransactionStateProvider : CollectionPreviewParameterProvide
                 verifiedState = VerifiedDAppState.Verified {},
                 appSubtitle = "react-app.walletconnect.com",
             ),
-            estimatedWalletChanges = WcEstimatedWalletChangesUM(
-                items = persistentListOf(
-                    WcEstimatedWalletChangeUM(
-                        iconRes = R.drawable.ic_send_new_24,
-                        title = resourceReference(R.string.common_send),
-                        description = "- 42 USDT",
-                        tokenIconUrl = "https://tangem.com",
-                    ),
-                    WcEstimatedWalletChangeUM(
-                        iconRes = R.drawable.ic_receive_new_24,
-                        title = resourceReference(R.string.common_receive),
-                        description = "+ 1,131.46 MATIC",
-                        tokenIconUrl = "https://tangem.com",
+            estimatedWalletChanges = WcSendReceiveTransactionCheckResultsUM(
+                notificationText = TextReference.Str(
+                    "The transaction approves erc20 tokens to a known malicious address",
+                ),
+                estimatedWalletChanges = WcEstimatedWalletChangesUM(
+                    items = persistentListOf(
+                        WcEstimatedWalletChangeUM(
+                            iconRes = R.drawable.ic_send_new_24,
+                            title = resourceReference(R.string.common_send),
+                            description = "- 42 USDT",
+                            tokenIconUrl = "https://tangem.com",
+                        ),
+                        WcEstimatedWalletChangeUM(
+                            iconRes = R.drawable.ic_receive_new_24,
+                            title = resourceReference(R.string.common_receive),
+                            description = "+ 1,131.46 MATIC",
+                            tokenIconUrl = "https://tangem.com",
+                        ),
                     ),
                 ),
             ),
