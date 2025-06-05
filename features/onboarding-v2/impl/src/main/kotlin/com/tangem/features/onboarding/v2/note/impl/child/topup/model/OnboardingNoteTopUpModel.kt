@@ -13,16 +13,16 @@ import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.exchange.RampStateManager
+import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.onramp.GetLegacyTopUpUrlUseCase
 import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
-import com.tangem.domain.tokens.GetPrimaryCurrencyStatusUpdatesUseCase
+import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.model.Network
-import com.tangem.domain.tokens.model.NetworkAddress
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.analytics.TokenReceiveAnalyticsEvent
-import com.tangem.domain.wallets.builder.UserWalletBuilder
+import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.features.onboarding.v2.common.analytics.OnboardingEvent
@@ -39,9 +39,9 @@ import javax.inject.Inject
 internal class OnboardingNoteTopUpModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
-    private val getPrimaryCurrencyStatusUpdatesUseCase: GetPrimaryCurrencyStatusUpdatesUseCase,
+    private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
     private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
-    private val userWalletBuilderFactory: UserWalletBuilder.Factory,
+    private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory,
     private val getLegacyTopUpUrlUseCase: GetLegacyTopUpUrlUseCase,
     private val urlOpener: UrlOpener,
     private val clipboardManager: ClipboardManager,
@@ -137,8 +137,11 @@ internal class OnboardingNoteTopUpModel @Inject constructor(
 
     private fun observeCryptoCurrencyStatus() {
         val userWalletId = userWallet?.walletId ?: return
-        getPrimaryCurrencyStatusUpdatesUseCase(userWalletId = userWalletId).map { it.getOrNull() }.filterNotNull()
-            .onEach(::applyCryptoCurrencyStatusToState).launchIn(modelScope)
+        getSingleCryptoCurrencyStatusUseCase.invokeSingleWallet(userWalletId = userWalletId)
+            .map { it.getOrNull() }
+            .filterNotNull()
+            .onEach(::applyCryptoCurrencyStatusToState)
+            .launchIn(modelScope)
     }
 
     private fun applyCryptoCurrencyStatusToState(status: CryptoCurrencyStatus) {
@@ -237,7 +240,7 @@ internal class OnboardingNoteTopUpModel @Inject constructor(
 
     private suspend fun createAndSaveUserWallet(scanResponse: ScanResponse): UserWallet {
         val wallet = requireNotNull(
-            value = userWalletBuilderFactory.create(scanResponse = scanResponse).build(),
+            value = coldUserWalletBuilderFactory.create(scanResponse = scanResponse).build(),
             lazyMessage = { "User wallet not created" },
         )
         saveWalletUseCase(wallet, false)
