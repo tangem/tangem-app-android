@@ -31,7 +31,14 @@ internal class PreviewWalletSettingsComponent : WalletSettingsComponent {
             onLinkMoreCardsClick = {},
             onReferralClick = {},
             isManageTokensAvailable = true,
+            isNotificationsEnabled = true,
+            isNotificationsFeatureEnabled = true,
+            onCheckedNotificationsChanged = {},
+            onNotificationsDescriptionClick = {},
+            isNotificationsPermissionGranted = false,
         ),
+        requestPushNotificationsPermission = false,
+        onPushNotificationPermissionGranted = {},
     )
 
     @Composable

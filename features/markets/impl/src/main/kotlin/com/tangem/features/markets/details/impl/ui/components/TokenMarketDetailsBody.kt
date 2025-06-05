@@ -10,6 +10,8 @@ import androidx.compose.ui.Modifier
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.markets.details.impl.ui.state.MarketsTokenDetailsUM
 import com.tangem.core.ui.components.UnableToLoadData
+import com.tangem.core.ui.components.items.DescriptionItem
+import com.tangem.core.ui.components.items.DescriptionPlaceholder
 
 internal fun LazyListScope.tokenMarketDetailsBody(
     state: MarketsTokenDetailsUM.Body,
@@ -69,7 +71,7 @@ private fun LazyListScope.error(state: MarketsTokenDetailsUM.Body.Error) {
 
 private fun LazyListScope.description(description: MarketsTokenDetailsUM.Description) {
     item("description") {
-        Description(
+        DescriptionItem(
             modifier = Modifier.blockPaddings(),
             description = description.shortDescription,
             hasFullDescription = description.fullDescription != null,

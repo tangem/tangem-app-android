@@ -5,7 +5,7 @@ import arrow.core.raise.either
 import com.tangem.blockchain.common.smartcontract.CompiledSmartContractCallData
 import com.tangem.blockchain.common.smartcontract.SmartContractCallData
 import com.tangem.common.extensions.hexToBytes
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.transaction.TransactionRepository
 import java.math.BigInteger
 

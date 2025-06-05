@@ -12,15 +12,20 @@ object ExpressUtils {
     private const val BATCH_ID_PARTNER = "AF990015"
 
     fun getRefCode(userWallet: UserWallet, appPreferencesStore: AppPreferencesStore): String? {
-        return when {
-            isRing(userWallet, appPreferencesStore) -> "ring"
-            isChangeNow(userWallet) -> "ChangeNow"
-            isPartner(userWallet) -> "partner"
+        return when (userWallet) {
+            is UserWallet.Cold -> {
+                when {
+                    isRing(userWallet, appPreferencesStore) -> "ring"
+                    isChangeNow(userWallet) -> "ChangeNow"
+                    isPartner(userWallet) -> "partner"
+                    else -> null
+                }
+            }
             else -> null
         }
     }
 
-    private fun isRing(selectedUserWallet: UserWallet, appPreferencesStore: AppPreferencesStore): Boolean {
+    private fun isRing(selectedUserWallet: UserWallet.Cold, appPreferencesStore: AppPreferencesStore): Boolean {
         val addedWalletsWithRings = runBlocking {
             appPreferencesStore.getSyncOrDefault(
                 key = PreferencesKeys.ADDED_WALLETS_WITH_RING_KEY,
@@ -31,7 +36,7 @@ object ExpressUtils {
         return addedWalletsWithRings.contains(selectedUserWallet.walletId.stringValue)
     }
 
-    private fun isChangeNow(selectedUserWallet: UserWallet): Boolean {
+    private fun isChangeNow(selectedUserWallet: UserWallet.Cold): Boolean {
         val changeNowRange = CardIdRangeDec(
             start = "AF99001800554008",
             end = "AF99001800559994",
@@ -40,7 +45,7 @@ object ExpressUtils {
         return card.batchId == BATCH_ID_CHANGENOW || changeNowRange?.contains(card.cardId) == true
     }
 
-    private fun isPartner(selectedUserWallet: UserWallet): Boolean {
+    private fun isPartner(selectedUserWallet: UserWallet.Cold): Boolean {
         return selectedUserWallet.scanResponse.card.batchId == BATCH_ID_PARTNER
     }
 }

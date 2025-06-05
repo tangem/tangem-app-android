@@ -6,8 +6,10 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.utils.showErrorDialog
 import com.tangem.domain.visa.model.VisaActivationOrderInfo
 import com.tangem.domain.visa.model.VisaActivationRemoteState
 import com.tangem.domain.visa.model.VisaCardId
@@ -15,6 +17,7 @@ import com.tangem.domain.visa.repository.VisaActivationRepository
 import com.tangem.features.onboarding.v2.visa.impl.child.otherwallet.OnboardingVisaOtherWalletComponent
 import com.tangem.features.onboarding.v2.visa.impl.child.otherwallet.ui.state.OnboardingVisaOtherWalletUM
 import com.tangem.features.onboarding.v2.visa.impl.child.welcome.model.analytics.OnboardingVisaAnalyticsEvent
+import com.tangem.features.onboarding.v2.visa.impl.child.welcome.model.analytics.VisaAnalyticsEvent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -25,6 +28,7 @@ import javax.inject.Inject
 
 @Stable
 @ModelScoped
+@Suppress("LongParameterList")
 internal class OnboardingVisaOtherWalletModel @Inject constructor(
     paramsContainer: ParamsContainer,
     visaActivationRepositoryFactory: VisaActivationRepository.Factory,
@@ -32,6 +36,7 @@ internal class OnboardingVisaOtherWalletModel @Inject constructor(
     private val urlOpener: UrlOpener,
     private val shareManager: ShareManager,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val uiMessageSender: UiMessageSender,
 ) : Model() {
 
     private val config = paramsContainer.require<OnboardingVisaOtherWalletComponent.Config>()
@@ -50,14 +55,18 @@ internal class OnboardingVisaOtherWalletModel @Inject constructor(
         analyticsEventHandler.send(OnboardingVisaAnalyticsEvent.GoToWebsiteOpened)
         modelScope.launch {
             while (true) {
-                val result = runCatching {
-                    visaActivationRepository.getActivationRemoteState()
-                }.getOrNull()
-
-                if (result is VisaActivationRemoteState.AwaitingPinCode) {
-                    onDone.emit(result.activationOrderInfo)
-                    break
-                }
+                visaActivationRepository.getActivationRemoteState()
+                    .onLeft {
+                        uiMessageSender.showErrorDialog(it)
+                        analyticsEventHandler.send(VisaAnalyticsEvent.ErrorOnboarding(it))
+                        delay(timeMillis = 60_000)
+                    }
+                    .onRight {
+                        if (it is VisaActivationRemoteState.AwaitingPinCode) {
+                            onDone.emit(it.activationOrderInfo)
+                            return@launch
+                        }
+                    }
 
                 delay(timeMillis = 2000)
             }

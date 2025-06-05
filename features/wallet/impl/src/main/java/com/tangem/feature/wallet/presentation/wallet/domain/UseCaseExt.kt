@@ -1,7 +1,7 @@
 package com.tangem.feature.wallet.presentation.wallet.domain
 
 import arrow.core.Either
-import com.tangem.domain.tokens.GetPrimaryCurrencyStatusUpdatesUseCase
+import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
@@ -20,8 +20,8 @@ internal fun GetSelectedWalletSyncUseCase.unwrap(): UserWallet? {
     )
 }
 
-internal suspend fun GetPrimaryCurrencyStatusUpdatesUseCase.unwrap(userWalletId: UserWalletId): CryptoCurrencyStatus? {
-    return this(userWalletId)
+internal suspend fun GetSingleCryptoCurrencyStatusUseCase.unwrap(userWalletId: UserWalletId): CryptoCurrencyStatus? {
+    return invokeSingleWallet(userWalletId)
         .conflate()
         .distinctUntilChanged()
         .filter(Either<CurrencyStatusError, CryptoCurrencyStatus>::isRight)
@@ -35,11 +35,11 @@ internal suspend fun GetPrimaryCurrencyStatusUpdatesUseCase.unwrap(userWalletId:
         )
 }
 
-internal suspend fun GetPrimaryCurrencyStatusUpdatesUseCase.collectLatest(
+internal suspend fun GetSingleCryptoCurrencyStatusUseCase.collectLatest(
     userWalletId: UserWalletId,
     onRight: suspend (CryptoCurrencyStatus) -> Unit,
 ) {
-    this(userWalletId = userWalletId)
+    invokeSingleWallet(userWalletId = userWalletId)
         .conflate()
         .distinctUntilChanged()
         .collectLatest { maybeStatus ->

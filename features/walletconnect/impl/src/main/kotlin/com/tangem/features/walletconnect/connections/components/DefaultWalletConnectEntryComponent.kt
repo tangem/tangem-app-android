@@ -22,7 +22,7 @@ import dagger.assisted.AssistedInject
 @Suppress("UnusedPrivateMember")
 internal class DefaultWalletConnectEntryComponent @AssistedInject constructor(
     @Assisted private val appComponentContext: AppComponentContext,
-    @Assisted params: Unit,
+    @Assisted private val params: WalletConnectEntryComponent.Params,
 ) : AppComponentContext by appComponentContext, WalletConnectEntryComponent {
 
     private val contentNavigation = StackNavigation<ConnectionsInnerRoute>()
@@ -47,12 +47,18 @@ internal class DefaultWalletConnectEntryComponent @AssistedInject constructor(
         config: ConnectionsInnerRoute,
         componentContext: ComponentContext,
     ): ComposableContentComponent = when (config) {
-        ConnectionsInnerRoute.Connections -> ConnectionsComponent(childByContext(componentContext))
+        ConnectionsInnerRoute.Connections -> ConnectionsComponent(
+            appComponentContext = childByContext(componentContext),
+            params = ConnectionsComponent.Params(params.userWalletId),
+        )
         ConnectionsInnerRoute.QrScan -> TODO("[REDACTED_JIRA]")
     }
 
     @AssistedFactory
     interface Factory : WalletConnectEntryComponent.Factory {
-        override fun create(context: AppComponentContext, params: Unit): DefaultWalletConnectEntryComponent
+        override fun create(
+            context: AppComponentContext,
+            params: WalletConnectEntryComponent.Params,
+        ): DefaultWalletConnectEntryComponent
     }
 }

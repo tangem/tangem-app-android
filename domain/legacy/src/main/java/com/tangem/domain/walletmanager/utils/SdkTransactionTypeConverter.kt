@@ -1,15 +1,15 @@
 package com.tangem.domain.walletmanager.utils
 
 import com.tangem.blockchain.transactionhistory.models.TransactionHistoryItem.TransactionType
-import com.tangem.domain.txhistory.models.TxHistoryItem
+import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.walletmanager.model.SmartContractMethod
 import com.tangem.utils.converter.Converter
 
 internal class SdkTransactionTypeConverter(
     private val smartContractMethods: Map<String, SmartContractMethod>,
-) : Converter<TransactionType, TxHistoryItem.TransactionType> {
+) : Converter<TransactionType, TxInfo.TransactionType> {
 
-    override fun convert(value: TransactionType): TxHistoryItem.TransactionType {
+    override fun convert(value: TransactionType): TxInfo.TransactionType {
         return when (value) {
             is TransactionType.ContractMethod -> {
                 getTransactionType(methodName = smartContractMethods[value.id]?.name)
@@ -18,49 +18,49 @@ internal class SdkTransactionTypeConverter(
                 getTransactionType(methodName = value.name)
             }
             is TransactionType.Transfer -> {
-                TxHistoryItem.TransactionType.Transfer
+                TxInfo.TransactionType.Transfer
             }
             is TransactionType.TronStakingTransactionType.FreezeBalanceV2Contract -> {
-                TxHistoryItem.TransactionType.Staking.Stake
+                TxInfo.TransactionType.Staking.Stake
             }
             is TransactionType.TronStakingTransactionType.UnfreezeBalanceV2Contract -> {
-                TxHistoryItem.TransactionType.Staking.Unstake
+                TxInfo.TransactionType.Staking.Unstake
             }
             is TransactionType.TronStakingTransactionType.VoteWitnessContract -> {
-                TxHistoryItem.TransactionType.Staking.Vote(value.validatorAddress)
+                TxInfo.TransactionType.Staking.Vote(value.validatorAddress)
             }
             is TransactionType.TronStakingTransactionType.WithdrawBalanceContract -> {
-                TxHistoryItem.TransactionType.Staking.ClaimRewards
+                TxInfo.TransactionType.Staking.ClaimRewards
             }
             is TransactionType.TronStakingTransactionType.WithdrawExpireUnfreezeContract -> {
-                TxHistoryItem.TransactionType.Staking.Withdraw
+                TxInfo.TransactionType.Staking.Withdraw
             }
         }
     }
 
-    private fun getTransactionType(methodName: String?): TxHistoryItem.TransactionType {
+    private fun getTransactionType(methodName: String?): TxInfo.TransactionType {
         return when (methodName) {
-            "transfer" -> TxHistoryItem.TransactionType.Transfer
-            "approve" -> TxHistoryItem.TransactionType.Approve
-            "swap" -> TxHistoryItem.TransactionType.Swap
+            "transfer" -> TxInfo.TransactionType.Transfer
+            "approve" -> TxInfo.TransactionType.Approve
+            "swap" -> TxInfo.TransactionType.Swap
             "buyVoucher",
             "buyVoucherPOL",
             "delegate",
-            -> TxHistoryItem.TransactionType.Staking.Stake
+            -> TxInfo.TransactionType.Staking.Stake
             "sellVoucher_new",
             "sellVoucher_newPOL",
             "undelegate",
-            -> TxHistoryItem.TransactionType.Staking.Unstake
+            -> TxInfo.TransactionType.Staking.Unstake
             "unstakeClaimTokens_new",
             "unstakeClaimTokens_newPOL",
             "claim",
-            -> TxHistoryItem.TransactionType.Staking.Withdraw
+            -> TxInfo.TransactionType.Staking.Withdraw
             "withdrawRewards",
             "withdrawRewardsPOL",
-            -> TxHistoryItem.TransactionType.Staking.ClaimRewards
-            "redelegate" -> TxHistoryItem.TransactionType.Staking.Restake
-            null -> TxHistoryItem.TransactionType.UnknownOperation
-            else -> TxHistoryItem.TransactionType.Operation(name = methodName.replaceFirstChar { it.titlecase() })
+            -> TxInfo.TransactionType.Staking.ClaimRewards
+            "redelegate" -> TxInfo.TransactionType.Staking.Restake
+            null -> TxInfo.TransactionType.UnknownOperation
+            else -> TxInfo.TransactionType.Operation(name = methodName.replaceFirstChar { it.titlecase() })
         }
     }
 }

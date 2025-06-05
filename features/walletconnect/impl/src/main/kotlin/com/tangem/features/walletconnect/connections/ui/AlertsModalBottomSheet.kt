@@ -146,6 +146,7 @@ private fun ButtonsContainer(alert: AlertsComponent.AlertType, modifier: Modifie
             }
             is AlertsComponent.AlertType.WrongCardSelected,
             is AlertsComponent.AlertType.UnknownError,
+            is AlertsComponent.AlertType.UnsupportedMethod,
             -> SecondaryButton(
                 modifier = buttonsModifier,
                 onClick = alert.onDismiss,
@@ -173,6 +174,7 @@ private fun AlertIcon(alert: AlertsComponent.AlertType, modifier: Modifier = Mod
         is AlertsComponent.AlertType.WrongCardSelected,
         is AlertsComponent.AlertType.UnknownDomain,
         is AlertsComponent.AlertType.UnknownError,
+        is AlertsComponent.AlertType.UnsupportedMethod,
         -> TangemTheme.colors.icon.attention
         is AlertsComponent.AlertType.MaliciousTransaction,
         is AlertsComponent.AlertType.UnsafeDomain,
@@ -190,6 +192,7 @@ private fun AlertIcon(alert: AlertsComponent.AlertType, modifier: Modifier = Mod
         is AlertsComponent.AlertType.UnsupportedNetworks -> R.drawable.ic_network_new_24
         is AlertsComponent.AlertType.WrongCardSelected,
         is AlertsComponent.AlertType.UnknownError,
+        is AlertsComponent.AlertType.UnsupportedMethod,
         -> R.drawable.img_attention_20
         is AlertsComponent.AlertType.VerifiedDomain -> R.drawable.img_approvale2_20
     }
@@ -204,6 +207,7 @@ private fun AlertIcon(alert: AlertsComponent.AlertType, modifier: Modifier = Mod
         is AlertsComponent.AlertType.VerifiedDomain,
         is AlertsComponent.AlertType.UnknownError,
         is AlertsComponent.AlertType.WrongCardSelected,
+        is AlertsComponent.AlertType.UnsupportedMethod,
         -> Color.Unspecified
     }
     Box(
@@ -236,6 +240,7 @@ private fun AlertContentTitle(alert: AlertsComponent.AlertType, modifier: Modifi
         is AlertsComponent.AlertType.VerifiedDomain -> R.string.wc_alert_verified_domain_title
         is AlertsComponent.AlertType.WcDisconnected -> R.string.wc_alert_session_disconnected_title
         is AlertsComponent.AlertType.WrongCardSelected -> R.string.wc_alert_wrong_card_title
+        is AlertsComponent.AlertType.UnsupportedMethod -> R.string.wc_alert_unsupported_method_title
     }
     Text(
         modifier = modifier,
@@ -272,6 +277,9 @@ private fun AlertContentDescription(alert: AlertsComponent.AlertType, modifier: 
             R.string.wc_alert_session_disconnected_description,
         )
         is AlertsComponent.AlertType.WrongCardSelected -> stringResourceSafe(R.string.wc_alert_wrong_card_description)
+        is AlertsComponent.AlertType.UnsupportedMethod -> stringResourceSafe(
+            R.string.wc_alert_unsupported_method_description,
+        )
     }
     Text(
         modifier = modifier,
@@ -315,6 +323,7 @@ private fun AlertAudit(alert: AlertsComponent.AlertType, modifier: Modifier = Mo
         is AlertsComponent.AlertType.VerifiedDomain,
         is AlertsComponent.AlertType.WcDisconnected,
         is AlertsComponent.AlertType.WrongCardSelected,
+        is AlertsComponent.AlertType.UnsupportedMethod,
         -> Unit
     }
 }
@@ -351,5 +360,6 @@ private class AlertTypesProvider : CollectionPreviewParameterProvider<AlertsComp
         AlertsComponent.AlertType.UnknownError(errorCode = 8005, onDismiss = {}),
         AlertsComponent.AlertType.WrongCardSelected(onDismiss = {}),
         AlertsComponent.AlertType.ConnectionTimeout(onTryAgain = {}, onDismiss = {}),
+        AlertsComponent.AlertType.UnsupportedMethod(onDismiss = {}),
     ),
 )

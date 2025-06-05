@@ -30,6 +30,7 @@ import com.tangem.core.navigation.settings.SettingsManager
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.data.card.TransactionSignerFactory
 import com.tangem.datasource.api.common.MoshiConverter
+import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.api.common.createNetworkLoggingInterceptor
 import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
@@ -52,7 +53,7 @@ import com.tangem.domain.onboarding.WasTwinsOnboardingShownUseCase
 import com.tangem.domain.onboarding.repository.OnboardingRepository
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.builder.UserWalletBuilder
+import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
@@ -225,8 +226,11 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
     private val onlineCardVerifier: OnlineCardVerifier
         get() = entryPoint.getOnlineCardVerifier()
 
-    private val userWalletBuilderFactory: UserWalletBuilder.Factory
-        get() = entryPoint.getUserWalletBuilderFactory()
+    private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory
+        get() = entryPoint.getColdUserWalletBuilderFactory()
+
+    private val apiConfigsManager: ApiConfigsManager
+        get() = entryPoint.getApiConfigsManager()
 
     // endregion
 
@@ -275,6 +279,8 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
     }
 
     fun init() {
+        apiConfigsManager.initialize()
+
         store = createReduxStore()
 
         tangemAppLoggerInitializer.initialize()
@@ -285,12 +291,8 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
         // We need to initialize the toggles and excludedBlockchainsManager before the MainActivity starts using them.
         runBlocking {
             awaitAll(
-                async {
-                    featureTogglesManager.init()
-                },
-                async {
-                    excludedBlockchainsManager.init()
-                },
+                async { featureTogglesManager.init() },
+                async { excludedBlockchainsManager.init() },
             )
             initWithConfigDependency(environmentConfig = environmentConfigStorage.initialize())
         }
@@ -366,7 +368,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
                     settingsManager = settingsManager,
                     uiMessageSender = uiMessageSender,
                     onlineCardVerifier = onlineCardVerifier,
-                    userWalletBuilderFactory = userWalletBuilderFactory,
+                    coldUserWalletBuilderFactory = coldUserWalletBuilderFactory,
                 ),
             ),
         )

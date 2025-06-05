@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
+  <string name="_warning_stelar_token_required_min_coin_reserve">Erforderliche Mindest-XLM-Reserve %1$s</string>
   <string name="action_buttons_buy_empty_search_message">Du kannst Deinen Token nicht finden? Gehe zum Bereich „Markt“ auf der Hauptseite und fügen diesen zum kaufen im Portfolio hinzu.</string>
   <string name="action_buttons_sell_empty_search_message">Du kannst Deinen Token nicht finden? Gehe zum Bereich „Markt“ auf der Hauptseite und fügen diesen zum verkaufen im Portfolio hinzu.</string>
   <string name="action_buttons_sell_navigation_bar_title">Verkaufen</string>
@@ -65,6 +66,10 @@
     <item quantity="one">%d Gerät</item>
     <item quantity="other">%d Geräte</item>
   </plurals>
+  <plurals name="card_label_token_count">
+    <item quantity="one">Token</item>
+    <item quantity="other">Tokens</item>
+  </plurals>
   <string name="card_settings_access_code_recovery_disabled_description">Deaktiviere diese Option, wenn du nicht möchtest, dass diese Karte oder Ring zum Zurücksetzen von Zugangscodes auf anderen Karten oder Ringe in dieser Wallets verwendet wird. Bitte beachte, dass du dann auch den Zugangscode auf dieser Karte oder Ring nicht zurücksetzen kannst.</string>
   <string name="card_settings_access_code_recovery_enabled_description">Ermöglicht die Verwendung dieser Karte oder Ring zum Zurücksetzen des Zugangscodes auf anderen Karten oder Ringe in dieser Brieftasche</string>
   <string name="card_settings_access_code_recovery_title">Zugangspin resetten</string>
@@ -110,6 +115,7 @@
   <string name="common_cancel">Abbrechen</string>
   <string name="common_change">Ändern</string>
   <string name="common_choose_action">Aktion wählen</string>
+  <string name="common_choose_token">Token auswählen</string>
   <string name="common_claim">Beanspruchen</string>
   <string name="common_claim_rewards">Stakingbelohnungen beanspruchen</string>
   <string name="common_close">Schließen</string>
@@ -151,6 +157,7 @@
   <string name="common_generate_addresses">Adressen synchronisieren</string>
   <string name="common_go_to_provider">Zum Anbieter gehen</string>
   <string name="common_go_to_token">Zum Token</string>
+  <string name="common_got_it">Verstanden</string>
   <string name="common_hide">Ausblenden</string>
   <string name="common_hour">stunde</string>
   <string name="common_import">Importieren</string>
@@ -205,6 +212,7 @@
   <string name="common_submit">Einreichen</string>
   <string name="common_success">Erfolgt</string>
   <string name="common_support">Unterstützung</string>
+  <string name="common_supported_networks">Unterstützte Netzwerke</string>
   <string name="common_swap">Tauschen</string>
   <string name="common_terms_and_conditions">Allgemeine Geschäftsbedingungen</string>
   <string name="common_terms_of_use">Nutzungsbedingungen</string>
@@ -264,6 +272,7 @@
   <string name="details_row_subtitle_signed_hashes_format">%s Hasch</string>
   <string name="details_row_title_cid">Geräte-ID</string>
   <string name="details_row_title_contact_to_support">Kontakt zum Support</string>
+  <string name="details_row_title_contact_to_support_chat">Support-Chat öffnen</string>
   <string name="details_row_title_create_backup">Weitere Karten oder Ringe verknüpfen</string>
   <string name="details_row_title_currency">App Währung</string>
   <string name="details_row_title_flip_to_hide">Flipp um Guthaben auszublenden</string>
@@ -562,6 +571,10 @@
   <string name="nft_traits_title">Eigenschaften</string>
   <string name="nft_untitled_collection">Unbetitelte Sammlung</string>
   <string name="nft_wallet_count">%1$d NFTs in der %2$d Sammlung</string>
+  <plurals name="nft_wallet_count_android">
+    <item quantity="one"></item>
+    <item quantity="other">%1$d NFTs in der %2$d Sammlung</item>
+  </plurals>
   <string name="nft_wallet_receive_nft">Tippe hier, um das erste NFT zu erhalten</string>
   <string name="nft_wallet_title">NFT-Sammlungen</string>
   <string name="nft_wallet_unable_to_load">Die Daten konnten nicht geladen werden</string>
@@ -697,10 +710,13 @@
   <string name="organize_tokens_sort_by_balance">Nach Guthaben</string>
   <string name="organize_tokens_title">Token organisieren</string>
   <string name="organize_tokens_ungroup">Gruppe löschen</string>
+  <string name="push_notifications_more_info">Mehr Infos</string>
   <string name="push_notifications_permission_alert_description">Du kannst Benachrichtigungen für Tangem in den Einstellungen aktivieren.</string>
   <string name="push_notifications_permission_alert_negative_button">Später aktivieren</string>
   <string name="push_notifications_permission_alert_positive_button">Einstellungen</string>
   <string name="push_notifications_permission_alert_title">Benachrichtigungen aktivieren</string>
+  <string name="push_transactions_notifications_description">Erhalte Benachrichtigungen über eingehende Transaktionen der unterstützten Netzwerke</string>
+  <string name="push_transactions_notifications_title">Transaktionsbenachrichtigungen</string>
   <string name="qr_scanner_camera_denied_gallery_button">Wählen aus der Galerie aus</string>
   <string name="qr_scanner_camera_denied_settings_button">Einstellungen</string>
   <string name="qr_scanner_camera_denied_text">Du hast keinen Zugriff auf deine Kamera gewährt</string>
@@ -924,7 +940,7 @@
   <string name="staking_notification_restake_text">Mit Restake kannst Du Dein Guthaben von einem Validator zu einem anderen verschieben, ohne dass Du den Stake aufheben musst.</string>
   <string name="staking_notification_stake_entire_balance_text">Du bist dabei, Dein gesamtes Guthaben zu staken. Wir empfehlen, einen kleinen Betrag übrig zu lassen, um die Netzwerkgebühren für die Aufhebung des Stakes oder das Einfordern von Prämien abzudecken.</string>
   <string name="staking_notification_ton_activate_account">Um mit dem Staking bei TON zu beginnen, führe zunächst eine ausgehende Transaktion in beliebiger Höhe durch – dadurch wird Deine Wallet aktiviert.</string>
-  <string name="staking_notification_ton_extra_reserve_info">Zusätzlich zur Netzwerkgebühr werden bis zu 0,2 TON benötigt, um alle Schritte der Transaktion abzuschließen. Nicht genutzte Beträge werden nach Abschluss der Transaktion zurückerstattet.</string>
+  <string name="staking_notification_ton_extra_reserve_info">Für den Abschluss der Transaktion können zusätzlich zur Netzwerkgebühr bis zu 0,2 TON erforderlich sein. Nicht genutzte Beträge werden zurückerstattet.</string>
   <string name="staking_notification_ton_extra_reserve_is_required">Für diesen Vorgang sind zusätzlich zur Netzwerkgebühr 0,2 TON erforderlich. Bitte lade Dein Guthaben auf.</string>
   <string name="staking_notification_ton_extra_reserve_title">0,2 Ton reserviert</string>
   <string name="staking_notification_ton_have_to_unstake_all_text">Durch diese Aktion werden andere Positionen geschlossen oder gemäß den Netzwerkregeln in den Auszahlungsstatus versetzt.</string>
@@ -1067,6 +1083,8 @@
   <string name="transaction_history_transaction_from_address">von: %s</string>
   <string name="transaction_history_transaction_to_address">zu: %s</string>
   <string name="transaction_history_transaction_validator">Validierer: %s</string>
+  <string name="transaction_notifications_warning_description">Benachrichtigungen sind aktiviert, funktionieren aber erst, wenn Du Benachrichtigungen in Deinen Geräteeinstellungen zulässt.</string>
+  <string name="transaction_notifications_warning_title">Transaktionsbenachrichtigungen</string>
   <string name="transfer_min_amount_error">Minimum %s</string>
   <string name="transfer_notification_invalid_minimum_transaction_amount_text">Der Mindesttransaktionsbetrag beträgt %1$s.</string>
   <string name="tron_will_be_send_token_fee_description">Die Netzwerkgebühren für beliebte Token im Tron-Netzwerk können höher sein. Das Staking von TRX kann helfen, die Transaktionskosten zu senken.</string>
@@ -1083,10 +1101,13 @@
   <string name="twins_recreate_toolbar">Tangem Twin</string>
   <string name="twins_recreate_warning">Diese Aktion ist unumkehrbar. Du hast keinen Zugriff mehr auf die alte Wallet.</string>
   <string name="twins_scan_twin_with_number">Tippe auf die Doppelkarte oder Ring mit der Nummer %s und entferne sie erst am Ende des Vorgangs.</string>
+  <string name="unexpected_error_description">Bitte versuche es später noch einmal. Sollte das Problem weiterhin bestehen, wende Dich bitte an den Support.</string>
+  <string name="unexpected_error_title">Etwas ist schiefgelaufen!</string>
   <string name="universal_error">Es ist ein Fehler aufgetreten. Fehlercode: %s. Bitte kontaktiere unseren Support.</string>
   <string name="unlock_wallet_description_full">Verwende %s oder scanne eine Karte oder Ring, um Zugriff auf deine Wallet zu erhalten.</string>
   <string name="unsupported_wc_version">Verbindung fehlgeschlagen: Diese dApp verwendet Wallet Connect Version 1.0, die nicht unterstützt wird. Bitte stelle sicher, dass die dApp Wallet Connect Version 2.0 unterstützt, um eine erfolgreiche Verbindung herzustellen.</string>
   <string name="user_push_notification_agreement_argument_one">Bleib auf dem Laufenden mit den neuesten Funktionen und Neuigkeiten</string>
+  <string name="user_push_notification_agreement_argument_three">Genehmigung für Transaktionen anfordern</string>
   <string name="user_push_notification_agreement_argument_two">Sei der Erste, der von neuen Aktionen erfährt</string>
   <string name="user_push_notification_agreement_header">Möchtest du Push-Benachrichtigungen verwenden?</string>
   <string name="user_wallet_list_add_button">Neues Wallet hinzufügen</string>
@@ -1166,7 +1187,7 @@
   <string name="wallet_promo_banner_description">Greife auf 13.000+ Kryptowährungen zu. Kaufe, verkaufe, tausche und stake Sie mit einem einzigen Fingertipp.\nVerbinde bis zu drei Karten für ein Backup.</string>
   <string name="wallet_promo_banner_title">Entdecke die Tangem Wallet</string>
   <string name="wallet_settings_push_notifications_description">Bleib stets über eingehende Wallet-Transaktionen und Tangem-Updates auf dem Laufenden.</string>
-  <string name="wallet_settings_push_notifications_title">Push-Benachrichtigungen</string>
+  <string name="wallet_settings_push_notifications_title">Transaktionsbenachrichtigungen</string>
   <string name="wallet_settings_title">Wallet-Einstellungen</string>
   <string name="wallet_title">Tangem</string>
   <string name="warning_access_denied_message">Verwende %s oder scanne eine Karte oder Ring, um den Zugriff auf deine Wallet freizuschalten.</string>
@@ -1236,6 +1257,7 @@
   <string name="warning_rate_app_message">Deine Bewertung motiviert uns, die Tangem Wallet noch besser zu machen.</string>
   <string name="warning_rate_app_title">Gefällt dir Tangem?</string>
   <string name="warning_receive_blocked_hedera_token_association_required_message">Du musst deinen Token zuordnen, bevor du Token erhalten kannst</string>
+  <string name="warning_receive_blocked_stelar_token_trustline_required_message">Du musst die trustline öffnen, bevor Du Token erhältst</string>
   <string name="warning_rent_fee_title">Netzmietgebühr erforderlich</string>
   <string name="warning_seedphrase_action_required_title">Handlungsbedarf</string>
   <string name="warning_seedphrase_contacted_support">Hast Du innerhalb von 7 Tagen nach der Erstellung Ihres Wallets über die App Kontakt zum Support aufgenommen? Wenn ja oder wenn Du Dir nicht sicher bist, klicke auf „Ja“ und folge den Anweisungen.</string>
@@ -1251,6 +1273,9 @@
   <string name="warning_some_networks_unreachable_message">Wischen Sie nach unten, um zu aktualisieren, oder versuchen Sie es später erneut.</string>
   <string name="warning_some_networks_unreachable_title">Einige Netzwerke sind nicht erreichbar</string>
   <string name="warning_some_token_balances_not_updated">Einige Token-Guthaben konnten nicht aktualisiert werden</string>
+  <string name="warning_stellar_token_trustline_button_title">Trustline öffnen</string>
+  <string name="warning_stellar_token_trustline_subtiile">Trustline-Untermenü öffnen</string>
+  <string name="warning_stellar_token_trustline_tiile">Trustline-Titel öffnen</string>
   <string name="warning_testnet_card_message">Dies ist eine Testnet-Karte. Sie kann keine Transaktionen verarbeiten und sollte nur zu Test- und Entwicklungszwecken verwendet werden.</string>
   <string name="warning_testnet_card_title">Nur für Testzwecke</string>
   <string name="warning_token_balance_not_updated">Der Kontostand ist möglicherweise veraltet. Aktualisiere bittre die Seite.</string>

@@ -25,7 +25,7 @@ internal fun WcWalletItem(walletName: String, modifier: Modifier = Modifier) {
         )
         Text(
             modifier = Modifier
-                .padding(start = TangemTheme.dimens.spacing4)
+                .padding(start = TangemTheme.dimens.spacing8)
                 .weight(1f),
             text = stringResourceSafe(R.string.manage_tokens_network_selector_wallet),
             style = TangemTheme.typography.body1,

@@ -26,6 +26,8 @@ sealed class NFTSalePrice {
     data class Value(
         override val assetId: NFTAsset.Identifier,
         val value: SerializedBigDecimal,
+        val fiatValue: SerializedBigDecimal?,
         val symbol: String,
+        val decimals: Int,
     ) : NFTSalePrice()
 }

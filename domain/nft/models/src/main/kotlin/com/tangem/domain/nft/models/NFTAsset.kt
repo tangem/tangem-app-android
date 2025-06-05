@@ -2,7 +2,7 @@ package com.tangem.domain.nft.models
 
 import com.tangem.domain.core.serialization.SerializedBigInteger
 import com.tangem.domain.models.StatusSource
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.network.Network
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -25,8 +25,8 @@ data class NFTAsset(
 
     @Serializable
     data class Media(
-        val mimetype: String?,
-        val url: String,
+        val animationUrl: String?,
+        val imageUrl: String?,
     )
 
     @Serializable
