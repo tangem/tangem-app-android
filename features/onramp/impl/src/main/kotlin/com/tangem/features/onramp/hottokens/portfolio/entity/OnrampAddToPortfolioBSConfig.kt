@@ -1,7 +1,7 @@
 package com.tangem.features.onramp.hottokens.portfolio.entity
 
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 
 internal sealed class OnrampAddToPortfolioBSConfig {
 
