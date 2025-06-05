@@ -1,14 +1,14 @@
 package com.tangem.domain.walletmanager.utils
 
 import com.tangem.blockchain.common.*
-import com.tangem.domain.txhistory.models.TxHistoryItem
-import com.tangem.domain.walletmanager.model.Address
+import com.tangem.blockchainsdk.models.UpdateWalletManagerResult.Address
+import com.tangem.domain.models.network.TxInfo
 import com.tangem.utils.converter.Converter
 import timber.log.Timber
 import java.math.BigDecimal
 
 /**
- * Convert [TransactionData] to [TxHistoryItem]
+ * Convert [TransactionData] to [TxInfo]
  *
  * @property walletAddresses wallet addresses
  *
@@ -17,30 +17,30 @@ import java.math.BigDecimal
 internal class TransactionDataToTxHistoryItemConverter(
     private val walletAddresses: Set<Address>,
     private val feePaidCurrency: FeePaidCurrency,
-) : Converter<TransactionData.Uncompiled, TxHistoryItem?> {
+) : Converter<TransactionData.Uncompiled, TxInfo?> {
 
-    override fun convert(value: TransactionData.Uncompiled): TxHistoryItem? {
+    override fun convert(value: TransactionData.Uncompiled): TxInfo? {
         val hash = value.hash ?: return null
         val millis = value.date?.timeInMillis ?: return null
         val amount = getTransactionAmountValue(value.amount, value.fee?.amount) ?: return null
         val isOutgoing = value.sourceAddress in walletAddresses.map(Address::value)
 
-        return TxHistoryItem(
+        return TxInfo(
             txHash = hash,
             timestampInMillis = millis,
             isOutgoing = isOutgoing,
-            destinationType = TxHistoryItem.DestinationType.Single(
-                addressType = TxHistoryItem.AddressType.User(value.destinationAddress),
+            destinationType = TxInfo.DestinationType.Single(
+                addressType = TxInfo.AddressType.User(value.destinationAddress),
             ),
-            sourceType = TxHistoryItem.SourceType.Single(value.sourceAddress),
-            interactionAddressType = TxHistoryItem.InteractionAddressType.User(
+            sourceType = TxInfo.SourceType.Single(value.sourceAddress),
+            interactionAddressType = TxInfo.InteractionAddressType.User(
                 address = if (isOutgoing) value.destinationAddress else value.sourceAddress,
             ),
             status = when (value.status) {
-                TransactionStatus.Confirmed -> TxHistoryItem.TransactionStatus.Confirmed
-                TransactionStatus.Unconfirmed -> TxHistoryItem.TransactionStatus.Unconfirmed
+                TransactionStatus.Confirmed -> TxInfo.TransactionStatus.Confirmed
+                TransactionStatus.Unconfirmed -> TxInfo.TransactionStatus.Unconfirmed
             },
-            type = TxHistoryItem.TransactionType.Transfer,
+            type = TxInfo.TransactionType.Transfer,
             amount = amount,
         )
     }
