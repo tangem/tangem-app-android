@@ -50,6 +50,7 @@
   <string name="common_buy">購買</string>
   <string name="common_camera_denied_alert_message">您尚未授予相機訪問權限，請更改您的隱私設置</string>
   <string name="common_cancel">删除</string>
+  <string name="common_choose_token">選擇代幣</string>
   <string name="common_close">關閉</string>
   <string name="common_continue">繼續</string>
   <string name="common_copy">複製</string>
