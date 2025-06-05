@@ -44,10 +44,9 @@ internal class NFTDetailsUMFactory(
 
     private fun NFTAsset.transform(): NFTAssetUM = NFTAssetUM(
         name = name.orEmpty(),
-        media = media?.let {
+        media = media?.imageUrl?.let {
             NFTAssetUM.Media.Content(
-                mimetype = it.mimetype,
-                url = it.url,
+                url = it,
             )
         } ?: NFTAssetUM.Media.Empty,
         topInfo = when {
