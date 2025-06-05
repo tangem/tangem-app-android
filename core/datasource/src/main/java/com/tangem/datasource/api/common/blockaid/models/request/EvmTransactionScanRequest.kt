@@ -18,5 +18,5 @@ data class EvmTransactionScanRequest(
 data class RpcData(
     @Json(name = "jsonrpc") val jsonrpc: String = "2.0",
     @Json(name = "method") val method: String,
-    @Json(name = "params") val params: String,
+    @Json(name = "params") val params: List<Map<String, String>>,
 )
