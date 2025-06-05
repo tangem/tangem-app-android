@@ -184,10 +184,10 @@ internal class DefaultSingleYieldBalanceProducerTest {
     fun `test if flow doesn't contain network from params`() = runTest {
         val balance = MockYieldBalanceWrapperDTOFactory.createWithBalance(solanaId).toDomain()
 
-        val expected = flowOf(setOf(balance))
+        val yieldBalancesFlow = flowOf(setOf(balance))
 
         val multiParams = MultiYieldBalanceProducer.Params(userWalletId = params.userWalletId)
-        every { multiNetworkStatusSupplier(multiParams) } returns expected
+        every { multiNetworkStatusSupplier(multiParams) } returns yieldBalancesFlow
         coEvery { stakingIdFactory.create(params.userWalletId, params.currencyId, params.network) } returns stakingIds
 
         val actual = producer.produce()
@@ -198,17 +198,18 @@ internal class DefaultSingleYieldBalanceProducerTest {
 
         coVerify { stakingIdFactory.create(params.userWalletId, params.currencyId, params.network) }
 
-        Truth.assertThat(values.size).isEqualTo(0)
+        val expected = YieldBalance.Unsupported
+        Truth.assertThat(values.first()).isEqualTo(expected)
     }
 
     @Test
     fun `test if wallet manager facade returns empty set`() = runTest {
         val balance = MockYieldBalanceWrapperDTOFactory.createWithBalance(tonId).toDomain()
 
-        val expected = flowOf(setOf(balance))
+        val yieldBalancesFlow = flowOf(setOf(balance))
 
         val multiParams = MultiYieldBalanceProducer.Params(userWalletId = params.userWalletId)
-        every { multiNetworkStatusSupplier(multiParams) } returns expected
+        every { multiNetworkStatusSupplier(multiParams) } returns yieldBalancesFlow
         coEvery { stakingIdFactory.create(params.userWalletId, params.currencyId, params.network) } returns emptySet()
 
         val actual = producer.produce()
@@ -219,7 +220,8 @@ internal class DefaultSingleYieldBalanceProducerTest {
 
         coVerify { stakingIdFactory.create(params.userWalletId, params.currencyId, params.network) }
 
-        Truth.assertThat(values.size).isEqualTo(0)
+        val expected = YieldBalance.Unsupported
+        Truth.assertThat(values.first()).isEqualTo(expected)
     }
 
     private companion object {
