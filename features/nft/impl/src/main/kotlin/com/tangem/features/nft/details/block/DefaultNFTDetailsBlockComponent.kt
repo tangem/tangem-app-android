@@ -21,7 +21,7 @@ class DefaultNFTDetailsBlockComponent @AssistedInject constructor(
         NFTDetailsBlock(
             assetName = stringReference(params.nftAsset.name.orEmpty()),
             collectionName = stringReference(params.nftCollectionName),
-            assetImage = params.nftAsset.media?.url,
+            assetImage = params.nftAsset.media?.imageUrl,
             networkIconRes = getActiveIconRes(params.nftAsset.network.rawId),
         )
     }
