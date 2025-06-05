@@ -40,9 +40,6 @@ class CardContextInterceptor(
         params[AnalyticsParam.BATCH] = card.batchId
         params[AnalyticsParam.PRODUCT_TYPE] = getProductType()
         params[AnalyticsParam.FIRMWARE] = card.firmwareVersion.stringValue
-        if (userWalletId != null) {
-            params[AnalyticsParam.USER_WALLET_ID] = userWalletId.stringValue
-        }
 
         ParamCardCurrencyConverter().convert(scanResponse.cardTypesResolver)?.let {
             params[AnalyticsParam.CURRENCY] = it.value
