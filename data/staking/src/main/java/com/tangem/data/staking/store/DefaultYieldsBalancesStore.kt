@@ -15,7 +15,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 internal typealias WalletIdWithWrappers = Map<String, Set<YieldBalanceWrapperDTO>>
@@ -55,7 +55,7 @@ internal class DefaultYieldsBalancesStore(
     }
 
     override fun get(userWalletId: UserWalletId): Flow<Set<YieldBalance>> {
-        return runtimeStore.get().mapNotNull { it[userWalletId] }
+        return runtimeStore.get().map { it[userWalletId].orEmpty() }
     }
 
     override suspend fun getSyncOrNull(userWalletId: UserWalletId, stakingId: StakingID): YieldBalance? {
