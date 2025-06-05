@@ -4,13 +4,13 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.data.common.currency.CryptoCurrencyFactory
-import com.tangem.data.common.currency.getNetwork
+import com.tangem.data.common.network.NetworkFactory
 import com.tangem.datasource.api.tangemTech.models.HotCryptoResponse
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.onramp.model.HotCryptoCurrency
-import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.Quote
 import com.tangem.utils.converter.Converter
 import java.math.BigDecimal
@@ -20,17 +20,18 @@ import java.math.BigDecimal
  *
  * @property scanResponse        scan response
  * @property imageHost           image host
- * @property excludedBlockchains excluded blockchains
+ * @param excludedBlockchains    excluded blockchains
  *
 [REDACTED_AUTHOR]
  */
 internal class HotCryptoCurrencyConverter(
     private val scanResponse: ScanResponse,
     private val imageHost: String?,
-    private val excludedBlockchains: ExcludedBlockchains,
+    excludedBlockchains: ExcludedBlockchains,
 ) : Converter<HotCryptoResponse.Token, HotCryptoCurrency?> {
 
-    private val cryptoCurrencyFactory by lazy { CryptoCurrencyFactory(excludedBlockchains) }
+    private val cryptoCurrencyFactory by lazy(LazyThreadSafetyMode.NONE) { CryptoCurrencyFactory(excludedBlockchains) }
+    private val networkFactory by lazy(LazyThreadSafetyMode.NONE) { NetworkFactory(excludedBlockchains) }
 
     override fun convert(value: HotCryptoResponse.Token): HotCryptoCurrency? {
         val rawId = value.id?.let(CryptoCurrency::RawID) ?: return null
@@ -77,11 +78,10 @@ internal class HotCryptoCurrencyConverter(
     private fun createNetwork(networkId: String): Network? {
         val blockchain = Blockchain.fromNetworkId(networkId) ?: return null
 
-        return getNetwork(
+        return networkFactory.create(
             blockchain = blockchain,
             extraDerivationPath = null,
             scanResponse = scanResponse,
-            excludedBlockchains = excludedBlockchains,
         )
     }
 
