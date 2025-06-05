@@ -34,8 +34,8 @@ object NFTSdkAssetConverter : TwoWayConverter<Pair<Network, SdkNFTAsset>, NFTAss
             },
             media = asset.media?.let {
                 NFTAsset.Media(
-                    url = it.url,
-                    mimetype = it.mimetype,
+                    animationUrl = it.animationUrl,
+                    imageUrl = it.imageUrl,
                 )
             },
             traits = asset.traits.map {
@@ -73,8 +73,8 @@ object NFTSdkAssetConverter : TwoWayConverter<Pair<Network, SdkNFTAsset>, NFTAss
             },
             media = value.media?.let {
                 SdkNFTAsset.Media(
-                    url = it.url,
-                    mimetype = it.mimetype,
+                    animationUrl = it.animationUrl,
+                    imageUrl = it.imageUrl,
                 )
             },
             traits = value.traits.map {
