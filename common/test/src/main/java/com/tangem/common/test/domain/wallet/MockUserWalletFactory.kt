@@ -17,10 +17,10 @@ object MockUserWalletFactory {
         derivedKeys = emptyMap(),
     )
 
-    fun create(scanResponse: ScanResponse = defaultScanResponse): UserWallet {
+    fun create(scanResponse: ScanResponse = defaultScanResponse): UserWallet.Cold {
         val userWalletId = UserWalletIdBuilder.scanResponse(scanResponse).build()!!
 
-        return UserWallet(
+        return UserWallet.Cold(
             walletId = userWalletId,
             name = "Wallet 1",
             cardsInWallet = emptySet(),
