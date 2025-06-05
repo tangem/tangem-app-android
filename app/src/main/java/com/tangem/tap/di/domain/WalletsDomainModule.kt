@@ -1,11 +1,14 @@
 package com.tangem.tap.di.domain
 
 import com.tangem.domain.redux.ReduxStateHolder
+import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.transaction.WalletAddressServiceRepository
 import com.tangem.domain.transaction.usecase.ParseSharedAddressUseCase
 import com.tangem.domain.transaction.usecase.ValidateWalletAddressUseCase
 import com.tangem.domain.transaction.usecase.ValidateWalletMemoUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.wallets.delegate.DefaultUserWalletsSyncDelegate
+import com.tangem.domain.wallets.delegate.UserWalletsSyncDelegate
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.repository.WalletNamesMigrationRepository
 import com.tangem.domain.wallets.repository.WalletsRepository
@@ -27,6 +30,17 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 internal object WalletsDomainModule {
+
+    @Provides
+    fun providesUserWalletsSyncDelegate(
+        userWalletsListManager: UserWalletsListManager,
+        dispatchers: CoroutineDispatcherProvider,
+    ): UserWalletsSyncDelegate {
+        return DefaultUserWalletsSyncDelegate(
+            userWalletsListManager = userWalletsListManager,
+            dispatchers = dispatchers,
+        )
+    }
 
     @Provides
     @Singleton
@@ -102,10 +116,13 @@ internal object WalletsDomainModule {
     @Provides
     @Singleton
     fun providesRenameWalletUseCase(
-        userWalletsListManager: UserWalletsListManager,
-        dispatchers: CoroutineDispatcherProvider,
+        walletsRepository: WalletsRepository,
+        userWalletsSyncDelegate: UserWalletsSyncDelegate,
     ): RenameWalletUseCase {
-        return RenameWalletUseCase(userWalletsListManager = userWalletsListManager, dispatchers = dispatchers)
+        return RenameWalletUseCase(
+            walletsRepository = walletsRepository,
+            userWalletsSyncDelegate = userWalletsSyncDelegate,
+        )
     }
 
     @Provides
@@ -195,6 +212,70 @@ internal object WalletsDomainModule {
         return IsWalletNFTEnabledSyncUseCase(
             walletsRepository = walletsRepository,
             nftFeatureToggles = nftFeatureToggles,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providesUpdateRemoteWalletsInfoUseCase(
+        walletsRepository: WalletsRepository,
+        userWalletsSyncDelegate: UserWalletsSyncDelegate,
+    ): UpdateRemoteWalletsInfoUseCase {
+        return UpdateRemoteWalletsInfoUseCase(
+            walletsRepository = walletsRepository,
+            userWalletsSyncDelegate = userWalletsSyncDelegate,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providesGetSavedWalletChangesIdUseCase(
+        userWalletsListManager: UserWalletsListManager,
+    ): GetSavedWalletChangesUseCase {
+        return GetSavedWalletChangesUseCase(
+            userWalletsListManager = userWalletsListManager,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providesAssociateWalletsWithApplicationIdUseCase(
+        walletsRepository: WalletsRepository,
+    ): AssociateWalletsWithApplicationIdUseCase {
+        return AssociateWalletsWithApplicationIdUseCase(
+            walletsRepository = walletsRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providesSetNotificationsEnabledUseCase(
+        walletsRepository: WalletsRepository,
+        currenciesRepository: CurrenciesRepository,
+    ): SetNotificationsEnabledUseCase {
+        return SetNotificationsEnabledUseCase(
+            walletsRepository = walletsRepository,
+            currenciesRepository = currenciesRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providesGetWalletNotificationsEnabledUseCase(
+        walletsRepository: WalletsRepository,
+    ): GetWalletNotificationsEnabledUseCase {
+        return GetWalletNotificationsEnabledUseCase(
+            walletsRepository = walletsRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providesGetIsNotificationsEnabledUseCase(
+        walletsRepository: WalletsRepository,
+    ): GetIsNotificationsEnabledUseCase {
+        return GetIsNotificationsEnabledUseCase(
+            walletsRepository = walletsRepository,
         )
     }
 }

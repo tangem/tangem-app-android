@@ -13,6 +13,7 @@ data class Exposure(
 data class SpenderDetails(
     @Json(name = "exposure") val exposure: List<ExposureDetail>,
     @Json(name = "is_approved_for_all") val isApprovedForAll: Boolean? = null,
+    @Json(name = "approval") val approval: String? = null,
 )
 
 @JsonClass(generateAdapter = true)

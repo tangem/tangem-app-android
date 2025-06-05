@@ -1,7 +1,7 @@
 package com.tangem.feature.swap.converters
 
 import com.tangem.datasource.api.express.models.request.LeastTokenInfo
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.utils.converter.Converter
 
 class LeastTokenInfoConverter : Converter<CryptoCurrency, LeastTokenInfo> {
