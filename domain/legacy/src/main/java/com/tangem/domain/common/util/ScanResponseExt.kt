@@ -29,7 +29,7 @@ val ScanResponse.derivationStyleProvider: DerivationStyleProvider
 val CardDTO.derivationStyleProvider: DerivationStyleProvider
     get() = TangemDerivationStyleProvider(this)
 
-val UserWallet.cardTypesResolver: CardTypesResolver
+val UserWallet.Cold.cardTypesResolver: CardTypesResolver
     get() = scanResponse.cardTypesResolver
 
 fun ScanResponse.twinsIsTwinned(): Boolean = card.isTangemTwins && walletData != null && secondTwinPublicKey != null

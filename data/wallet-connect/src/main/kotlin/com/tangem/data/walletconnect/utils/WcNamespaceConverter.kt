@@ -2,11 +2,12 @@ package com.tangem.data.walletconnect.utils
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
-import com.tangem.data.common.currency.getNetwork
+import com.tangem.data.common.network.NetworkFactory
 import com.tangem.data.walletconnect.model.CAIP2
 import com.tangem.data.walletconnect.model.NamespaceKey
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.requireColdWallet
 
 internal interface WcNamespaceConverter {
 
@@ -21,11 +22,11 @@ internal interface WcNamespaceConverter {
     fun toNetwork(chainId: String, wallet: UserWallet): Network?
     fun toNetwork(chainId: String, wallet: UserWallet, excludedBlockchains: ExcludedBlockchains): Network? {
         val blockchain = toBlockchain(chainId) ?: return null
-        return getNetwork(
+
+        return NetworkFactory(excludedBlockchains).create(
             blockchain = blockchain,
             extraDerivationPath = null,
-            scanResponse = wallet.scanResponse,
-            excludedBlockchains = excludedBlockchains,
+            scanResponse = wallet.requireColdWallet().scanResponse, // TODO [REDACTED_TASK_KEY]
         )
     }
 }
