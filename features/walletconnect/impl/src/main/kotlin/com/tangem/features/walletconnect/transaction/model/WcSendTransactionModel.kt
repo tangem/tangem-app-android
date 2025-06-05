@@ -9,6 +9,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.clipboard.ClipboardManager
+import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.walletconnect.WcRequestUseCaseFactory
 import com.tangem.domain.walletconnect.usecase.method.*
 import com.tangem.features.walletconnect.transaction.components.common.WcTransactionModelParams
@@ -17,14 +18,15 @@ import com.tangem.features.walletconnect.transaction.entity.common.WcTransaction
 import com.tangem.features.walletconnect.transaction.entity.send.WcSendTransactionUM
 import com.tangem.features.walletconnect.transaction.routes.WcTransactionRoutes
 import com.tangem.features.walletconnect.transaction.converter.WcCommonTransactionUMConverter
+import com.tangem.features.walletconnect.transaction.entity.blockaid.WcSendReceiveTransactionCheckResultsUM
+import com.tangem.features.walletconnect.transaction.ui.blockaid.WcSendAndReceiveBlockAidUiConverter
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @Stable
 @ModelScoped
 internal class WcSendTransactionModel @Inject constructor(
@@ -34,6 +36,7 @@ internal class WcSendTransactionModel @Inject constructor(
     private val clipboardManager: ClipboardManager,
     private val useCaseFactory: WcRequestUseCaseFactory,
     private val converter: WcCommonTransactionUMConverter,
+    private val blockAidUiConverter: WcSendAndReceiveBlockAidUiConverter,
 ) : Model(), WcCommonTransactionModel {
 
     private val params = paramsContainer.require<WcTransactionModelParams>()
@@ -49,26 +52,47 @@ internal class WcSendTransactionModel @Inject constructor(
                 is WcTransactionUseCase,
                 is WcListTransactionUseCase,
                 -> {
-                    useCase.invoke().onEach { signState ->
-                        if (signingIsDone(signState)) return@onEach
-                        val transactionUM = converter.convert(
-                            WcCommonTransactionUMConverter.Input(
-                                useCase = useCase,
-                                signState = signState,
-                                actions = WcTransactionActionsUM(
-                                    onShowVerifiedAlert = ::showVerifiedAlert,
-                                    onDismiss = { cancel(useCase) },
-                                    onSign = useCase::sign,
-                                    onCopy = { copyData(useCase.rawSdkRequest.request.params) },
-                                ),
-                            ),
-                        ) as? WcSendTransactionUM
-                        _uiState.emit(transactionUM)
-                    }
-                        .launchIn(this)
+                    observeTransactionData(useCase)
                 }
             }
         }
+    }
+
+    private suspend fun observeSecurityData(useCase: WcSignUseCase<TransactionData>) {
+        (useCase as? BlockAidTransactionCheck)?.let {
+            useCase.securityStatus.collectLatest {
+                val blockAidState = when (it) {
+                    is Lce.Content -> blockAidUiConverter.convert(it.content.result)
+                    is Lce.Error -> WcSendReceiveTransactionCheckResultsUM(isLoading = false)
+                    is Lce.Loading -> WcSendReceiveTransactionCheckResultsUM(isLoading = true)
+                }
+                val current = _uiState.value
+                _uiState.emit(
+                    current?.copy(transaction = current.transaction.copy(estimatedWalletChanges = blockAidState)),
+                )
+            }
+        }
+    }
+
+    private fun CoroutineScope.observeTransactionData(useCase: WcSignUseCase<TransactionData>) {
+        useCase.invoke().onEach { signState ->
+            if (signingIsDone(signState)) return@onEach
+            val transactionUM = converter.convert(
+                WcCommonTransactionUMConverter.Input(
+                    useCase = useCase,
+                    signState = signState,
+                    actions = WcTransactionActionsUM(
+                        onShowVerifiedAlert = ::showVerifiedAlert,
+                        onDismiss = { cancel(useCase) },
+                        onSign = useCase::sign,
+                        onCopy = { copyData(useCase.rawSdkRequest.request.params) },
+                    ),
+                ),
+            ) as? WcSendTransactionUM
+            _uiState.emit(transactionUM)
+            observeSecurityData(useCase)
+        }
+            .launchIn(this)
     }
 
     override fun dismiss() {

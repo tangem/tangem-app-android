@@ -78,7 +78,7 @@ internal fun WcSpendAllowanceItem(spendAllowance: WcSpendAllowanceUM, modifier: 
                 Spacer(modifier = Modifier.width(TangemTheme.dimens.spacing8))
 
                 Icon(
-                    painter = painterResource(id = R.drawable.ic_edit_new_24),
+                    painter = painterResource(id = R.drawable.ic_edit_new_12),
                     contentDescription = null,
                     tint = TangemTheme.colors.icon.informative,
                 )

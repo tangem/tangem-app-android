@@ -11,6 +11,7 @@ import com.tangem.datasource.api.common.blockaid.models.request.EvmTransactionSc
 import com.tangem.datasource.api.common.blockaid.models.request.RpcData
 import com.tangem.datasource.api.common.blockaid.models.request.SolanaTransactionScanRequest
 import com.tangem.datasource.api.common.blockaid.models.response.*
+import org.json.JSONArray
 
 private const val SUCCESS_STATUS = "Success"
 private const val DOMAIN_CHECKED_STATUS = "hit"
@@ -43,20 +44,28 @@ internal object BlockAidMapper {
 
     fun mapToEvmRequest(from: TransactionData): EvmTransactionScanRequest {
         return EvmTransactionScanRequest(
-            chain = from.chain,
+            chain = from.chain.lowercase(),
             accountAddress = from.accountAddress,
             method = from.method,
             data = RpcData(
                 method = from.method,
-                params = (from.params as TransactionParams.Evm).params,
+                params = parseParams((from.params as TransactionParams.Evm).params),
             ),
             metadata = TransactionMetadata(from.domainUrl),
         )
     }
 
+    private fun parseParams(rawParams: String): List<Map<String, String>> {
+        val jsonArray = JSONArray(rawParams)
+        return (0 until jsonArray.length()).map { index ->
+            val jsonObject = jsonArray.getJSONObject(index)
+            jsonObject.keys().asSequence().associateWith { key -> jsonObject.getString(key) }
+        }
+    }
+
     fun mapToSolanaRequest(from: TransactionData): SolanaTransactionScanRequest {
         return SolanaTransactionScanRequest(
-            chain = from.chain,
+            chain = from.chain.lowercase(),
             accountAddress = from.accountAddress,
             metadata = TransactionMetadata(from.domainUrl),
             method = from.method,
@@ -66,15 +75,19 @@ internal object BlockAidMapper {
 
     private fun mapSimulationSuccessResult(from: AccountSummaryResponse): SimulationResult {
         return when {
-            from.assetsDiffs.isEmpty() && from.exposures.isNotEmpty() -> mapApproveTransaction(from.exposures)
-            from.assetsDiffs.isNotEmpty() && from.exposures.isEmpty() -> mapSendReceiveTransaction(from.assetsDiffs)
+            !from.assetsDiffs.isNullOrEmpty() -> mapSendReceiveTransaction(
+                from.assetsDiffs,
+            )
+            !from.exposures.isNullOrEmpty() -> mapApproveTransaction(
+                from.exposures,
+            )
             !from.traces.isNullOrEmpty() -> mapNftSendReceiveTransaction(from.traces)
             else -> SimulationResult.FailedToSimulate
         }
     }
 
-    private fun mapApproveTransaction(exposures: List<Exposure>): SimulationResult {
-        val amounts = exposures.flatMap { exposure ->
+    private fun mapApproveTransaction(exposures: List<Exposure>?): SimulationResult {
+        val amounts = exposures?.flatMap { exposure ->
             val tokenInfo = TokenInfo(
                 chainId = exposure.asset.chainId,
                 logoUrl = exposure.asset.logoUrl,
@@ -86,25 +99,25 @@ internal object BlockAidMapper {
                 val approval = spender.approval?.hexToBigDecimal()
                 spender.exposure.mapNotNull { detail ->
                     ApprovedAmount(
-                        approvedAmount = approval ?: detail.value.toBigDecimalOrNull() ?: return@mapNotNull null,
+                        approvedAmount = detail.value.toBigDecimalOrNull() ?: approval ?: return@mapNotNull null,
                         isUnlimited = isUnlimited,
                         tokenInfo = tokenInfo,
                     )
                 }
             }
         }
-        return if (amounts.isNotEmpty()) {
+        return if (!amounts.isNullOrEmpty()) {
             SimulationResult.Success(SimulationData.Approve(amounts))
         } else {
             SimulationResult.FailedToSimulate
         }
     }
 
-    private fun mapSendReceiveTransaction(assetDiffs: List<AssetDiff>): SimulationResult {
+    private fun mapSendReceiveTransaction(assetDiffs: List<AssetDiff>?): SimulationResult {
         val sendInfo = arrayListOf<AmountInfo>()
         val receiveInfo = arrayListOf<AmountInfo>()
 
-        assetDiffs.forEach { diff ->
+        assetDiffs?.forEach { diff ->
             val token = TokenInfo(
                 chainId = diff.asset.chainId,
                 logoUrl = diff.asset.logoUrl,
@@ -131,8 +144,10 @@ internal object BlockAidMapper {
     }
 
     private fun mapNftSendReceiveTransaction(traces: List<Trace>?): SimulationResult {
-        val sendInfo = traces?.map {
-            AmountInfo.NonFungibleTokens(name = "${it.asset.name} #${it.exposed.tokenId}", logoUrl = it.exposed.logoUrl)
+        val sendInfo = traces?.mapNotNull {
+            it.exposed?.let { exposed ->
+                AmountInfo.NonFungibleTokens(name = "${it.asset.name} #${exposed.tokenId}", logoUrl = exposed.logoUrl)
+            }
         }
 
         return if (!sendInfo.isNullOrEmpty()) {
