@@ -39,7 +39,7 @@ internal object YieldBalanceSupplierModule {
         return object : SingleYieldBalanceSupplier(
             factory = factory,
             keyCreator = {
-                "single_yield_balance_${it.userWalletId.stringValue}_${it.network.id.value}_" +
+                "single_yield_balance_${it.userWalletId.stringValue}_${it.network.rawId}_" +
                     it.network.derivationPath.value
             },
         ) {}

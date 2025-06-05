@@ -118,7 +118,7 @@ internal class OnboardingEntryModel @Inject constructor(
         }
     }
 
-    private fun onMultiWalletOnboardingDone(userWallet: UserWallet) {
+    private fun onMultiWalletOnboardingDone(userWallet: UserWallet.Cold) {
         when {
             params.mode == Mode.AddBackupWallet1 -> {
                 stackNavigation.replaceAll(

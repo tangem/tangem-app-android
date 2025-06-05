@@ -3,7 +3,7 @@ package com.tangem.domain.tokens
 import arrow.core.Either
 import arrow.core.raise.catch
 import arrow.core.raise.either
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.tokens.model.remove.RemoveCurrencyError
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
