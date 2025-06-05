@@ -134,6 +134,7 @@ dependencyResolutionManagement {
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 include(":app")
+include(":plugins:detekt-rules")
 
 // region Core modules
 include(":core:analytics")
@@ -194,8 +195,6 @@ include(":features:wallet:impl")
 include(":features:tokendetails:api")
 include(":features:tokendetails:impl")
 
-include(":features:send:api")
-include(":features:send:impl")
 include(":features:send-v2:api")
 include(":features:send-v2:impl")
 
@@ -292,6 +291,7 @@ include(":domain:blockaid")
 include(":domain:blockaid:models")
 include(":domain:notifications")
 include(":domain:notifications:models")
+include(":domain:notifications:toggles")
 // endregion Domain modules
 
 // region Data modules
