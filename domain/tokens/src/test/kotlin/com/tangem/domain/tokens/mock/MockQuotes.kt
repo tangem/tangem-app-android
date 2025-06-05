@@ -2,7 +2,7 @@ package com.tangem.domain.tokens.mock
 
 import arrow.core.nonEmptySetOf
 import com.tangem.domain.models.StatusSource
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.tokens.model.Quote
 import java.math.BigDecimal
 

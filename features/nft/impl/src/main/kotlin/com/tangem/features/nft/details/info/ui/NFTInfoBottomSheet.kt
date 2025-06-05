@@ -39,7 +39,7 @@ internal fun NFTInfoBottomSheetContent(text: TextReference, modifier: Modifier =
     ) {
         Text(
             text = text.resolveReference(),
-            color = TangemTheme.colors.text.secondary,
+            color = TangemTheme.colors.text.primary1,
             style = TangemTheme.typography.body2,
             modifier = Modifier.padding(
                 start = TangemTheme.dimens.spacing16,
@@ -52,7 +52,7 @@ internal fun NFTInfoBottomSheetContent(text: TextReference, modifier: Modifier =
 
 @Composable
 @Preview(showBackground = true)
-@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Preview(showBackground = false, uiMode = Configuration.UI_MODE_NIGHT_YES)
 private fun Preview_NFTInfoBottomSheetContent() {
     TangemThemePreview {
         NFTInfoBottomSheetContent(

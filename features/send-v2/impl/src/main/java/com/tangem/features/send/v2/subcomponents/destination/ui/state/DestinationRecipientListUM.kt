@@ -3,7 +3,7 @@ package com.tangem.features.send.v2.subcomponents.destination.ui.state
 import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.wallets.models.UserWalletId
 
 @Immutable

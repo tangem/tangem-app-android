@@ -3,7 +3,7 @@ package com.tangem.feature.swap.domain.models.domain
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import org.joda.time.DateTime
 
 @JsonClass(generateAdapter = true)

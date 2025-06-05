@@ -6,7 +6,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.networkIconResId
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.features.tokendetails.impl.R
 import org.joda.time.DateTime
@@ -228,11 +228,6 @@ internal sealed class TokenDetailsNotification(val config: NotificationConfig) {
     data object MigrationMaticToPol : Warning(
         title = resourceReference(id = R.string.warning_matic_migration_title),
         subtitle = resourceReference(id = R.string.warning_matic_migration_message),
-    )
-
-    data object TokensInBeta : Warning(
-        title = resourceReference(id = R.string.beta_mode_warning_title),
-        subtitle = resourceReference(id = R.string.beta_mode_warning_message),
     )
 
     data object UsedOutdatedData : TokenDetailsNotification(
