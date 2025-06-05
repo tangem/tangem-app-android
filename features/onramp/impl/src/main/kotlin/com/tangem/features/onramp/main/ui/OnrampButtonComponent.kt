@@ -8,12 +8,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.extensions.appendColored
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.main.entity.OnrampMainComponentUM
@@ -35,7 +35,7 @@ internal fun OnrampButtonComponent(state: OnrampMainComponentUM) {
         OnrampTosText(providerState)
         PrimaryButton(
             modifier = Modifier.fillMaxWidth(),
-            text = stringResource(id = R.string.common_buy),
+            text = stringResourceSafe(id = R.string.common_buy),
             onClick = state.buyButtonConfig.onClick,
             enabled = state.buyButtonConfig.enabled,
         )
@@ -44,9 +44,9 @@ internal fun OnrampButtonComponent(state: OnrampMainComponentUM) {
 
 @Composable
 private fun OnrampTosText(provider: OnrampProviderBlockUM.Content?) {
-    val termsOfUse = stringResource(R.string.common_terms_of_use)
-    val privacyPolicy = stringResource(R.string.common_privacy_policy)
-    val tosText = stringResource(R.string.onramp_legal, termsOfUse, privacyPolicy)
+    val termsOfUse = stringResourceSafe(R.string.common_terms_of_use)
+    val privacyPolicy = stringResourceSafe(R.string.common_privacy_policy)
+    val tosText = stringResourceSafe(R.string.onramp_legal, termsOfUse, privacyPolicy)
 
     val clickableAnnotation = buildAnnotatedString {
         append(tosText.substringBefore(termsOfUse))
