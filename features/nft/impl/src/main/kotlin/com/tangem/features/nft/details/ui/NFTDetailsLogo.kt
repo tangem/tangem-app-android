@@ -88,7 +88,6 @@ private class NFTAssetMediaProvider : CollectionPreviewParameterProvider<NFTAsse
     collection = listOf(
         NFTAssetUM.Media.Empty,
         NFTAssetUM.Media.Content(
-            mimetype = "image/jpeg",
             url = "img1",
         ),
     ),
