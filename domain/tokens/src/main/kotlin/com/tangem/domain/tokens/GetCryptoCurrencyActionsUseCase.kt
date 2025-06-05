@@ -3,16 +3,21 @@ package com.tangem.domain.tokens
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.promo.PromoRepository
 import com.tangem.domain.promo.models.StoryContentIds
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.repositories.StakingRepository
-import com.tangem.domain.tokens.model.*
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
+import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.tokens.operations.BaseCurrencyStatusOperations
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.isNullOrZero
 import kotlinx.coroutines.flow.*
@@ -36,6 +41,20 @@ class GetCryptoCurrencyActionsUseCase(
 
     suspend operator fun invoke(
         userWallet: UserWallet,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+    ): Flow<TokenActionsState> {
+        return when (userWallet) {
+            is UserWallet.Cold -> {
+                coldFlow(userWallet, cryptoCurrencyStatus)
+            }
+            is UserWallet.Hot -> {
+                TODO("[REDACTED_TASK_KEY]")
+            }
+        }
+    }
+
+    private suspend fun coldFlow(
+        userWallet: UserWallet.Cold,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
     ): Flow<TokenActionsState> {
         val networkId = cryptoCurrencyStatus.currency.network.id
@@ -394,7 +413,10 @@ class GetCryptoCurrencyActionsUseCase(
         shouldShowSwapStories: Boolean,
     ): TokenActionsState.ActionState {
         val cryptoCurrency = cryptoCurrencyStatus.currency
-        return if (userWallet.isMultiCurrency) {
+        val isMultiCurrency =
+            userWallet is UserWallet.Hot || userWallet is UserWallet.Cold && userWallet.isMultiCurrency
+
+        return if (isMultiCurrency) {
             if (cryptoCurrency.isCustom) {
                 return TokenActionsState.ActionState.Swap(
                     unavailabilityReason = ScenarioUnavailabilityReason.CustomToken(cryptoCurrency.name),
@@ -425,6 +447,8 @@ class GetCryptoCurrencyActionsUseCase(
         userWallet: UserWallet,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
     ): TokenActionsState.ActionState {
+        userWallet.requireColdWallet() // TODO [REDACTED_TASK_KEY]
+
         val cryptoCurrency = cryptoCurrencyStatus.currency
         val reason = rampManager.availableForBuy(userWallet.scanResponse, userWallet.walletId, cryptoCurrency)
         return TokenActionsState.ActionState.Buy(unavailabilityReason = reason)

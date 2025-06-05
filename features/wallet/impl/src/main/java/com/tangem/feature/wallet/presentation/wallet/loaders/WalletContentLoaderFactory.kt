@@ -3,6 +3,7 @@ package com.tangem.feature.wallet.presentation.wallet.loaders
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.isMultiCurrency
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.loaders.implementors.*
 import javax.inject.Inject
@@ -24,10 +25,10 @@ internal class WalletContentLoaderFactory @Inject constructor(
             userWallet.isMultiCurrency -> {
                 multiWalletContentLoaderFactory.create(userWallet, clickIntents)
             }
-            userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken() -> {
+            userWallet is UserWallet.Cold && userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken() -> {
                 singleWalletWithTokenContentLoaderFactory.create(userWallet, clickIntents)
             }
-            userWallet.scanResponse.cardTypesResolver.isVisaWallet() -> {
+            userWallet is UserWallet.Cold && userWallet.scanResponse.cardTypesResolver.isVisaWallet() -> {
                 visaWalletContentLoaderFactory.create(userWallet, clickIntents, isRefresh)
             }
             !userWallet.isMultiCurrency -> {

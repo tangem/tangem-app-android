@@ -7,11 +7,15 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
+import com.tangem.domain.notifications.toggles.NotificationsFeatureToggles
 import com.tangem.domain.settings.NeverRequestPermissionUseCase
 import com.tangem.domain.settings.NeverToInitiallyAskPermissionUseCase
 import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
+import com.tangem.features.pushnotifications.impl.presentation.state.PushNotificationsUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -23,7 +27,16 @@ internal class PushNotificationsModel @Inject constructor(
     private val neverToInitiallyAskPermissionUseCase: NeverToInitiallyAskPermissionUseCase,
     private val appRouter: AppRouter,
     private val analyticHandler: AnalyticsEventHandler,
+    private val notificationsFeatureToggles: NotificationsFeatureToggles,
 ) : Model(), PushNotificationsClickIntents {
+
+    private val _state = MutableStateFlow(
+        PushNotificationsUM(
+            showInfoAboutNotifications = notificationsFeatureToggles.isNotificationsEnabled,
+        ),
+    )
+
+    val state = _state.asStateFlow()
 
     override fun onRequest() {
         analyticHandler.send(
