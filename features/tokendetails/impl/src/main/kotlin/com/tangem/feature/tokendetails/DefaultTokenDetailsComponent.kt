@@ -5,6 +5,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.essenty.lifecycle.subscribe
+import com.tangem.common.routing.RoutingFeatureToggle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -12,13 +13,12 @@ import com.tangem.core.deeplink.DeepLinksRegistry
 import com.tangem.core.deeplink.global.BuyCurrencyDeepLink
 import com.tangem.core.deeplink.utils.registerDeepLinks
 import com.tangem.core.ui.components.NavigationBar3ButtonsScrim
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsModel
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.TokenDetailsScreen
 import com.tangem.features.markets.token.block.TokenMarketBlockComponent
 import com.tangem.features.onramp.OnrampFeatureToggles
 import com.tangem.features.tokendetails.TokenDetailsComponent
-import com.tangem.features.txhistory.TxHistoryFeatureToggles
 import com.tangem.features.txhistory.component.TxHistoryComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -30,8 +30,8 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
     @Assisted params: TokenDetailsComponent.Params,
     tokenMarketBlockComponentFactory: TokenMarketBlockComponent.Factory,
     txHistoryComponentFactory: TxHistoryComponent.Factory,
-    txHistoryFeatureToggles: TxHistoryFeatureToggles,
     onrampFeatureToggles: OnrampFeatureToggles,
+    routingFeatureToggle: RoutingFeatureToggle,
     deepLinksRegistry: DeepLinksRegistry,
 ) : TokenDetailsComponent, AppComponentContext by appComponentContext {
 
@@ -41,9 +41,9 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
         params = TxHistoryComponent.Params(
             userWalletId = params.userWalletId,
             currency = params.currency,
-            openExplorer = { model.onExploreClick() },
+            openExplorer = model::onExploreClick,
         ),
-    ).takeIf { txHistoryFeatureToggles.isFeatureEnabled }
+    )
 
     init {
         lifecycle.subscribe(
@@ -51,20 +51,22 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
             onResume = model::onResume,
         )
 
-        val deeplinks = buildList {
-            if (!onrampFeatureToggles.isFeatureEnabled) {
-                add(
-                    BuyCurrencyDeepLink(
-                        onReceive = model::onBuyCurrencyDeepLink,
-                    ),
-                )
+        if (!routingFeatureToggle.isDeepLinkNavigationEnabled) {
+            val deeplinks = buildList {
+                if (!onrampFeatureToggles.isFeatureEnabled) {
+                    add(
+                        BuyCurrencyDeepLink(
+                            onReceive = model::onBuyCurrencyDeepLink,
+                        ),
+                    )
+                }
             }
-        }
 
-        registerDeepLinks(
-            registry = deepLinksRegistry,
-            deeplinks,
-        )
+            registerDeepLinks(
+                registry = deepLinksRegistry,
+                deepLinks = deeplinks,
+            )
+        }
     }
 
     private val tokenMarketBlockComponent = params.currency.toTokenMarketParam()?.let { tokenMarketParams ->
