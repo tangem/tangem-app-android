@@ -110,6 +110,7 @@
   <string name="common_cancel">Annuler</string>
   <string name="common_change">Changez</string>
   <string name="common_choose_action">Choisissez une action</string>
+  <string name="common_choose_token">Choisir le jeton</string>
   <string name="common_claim">Réclamer</string>
   <string name="common_claim_rewards">Réclamez des récompenses</string>
   <string name="common_close">Fermer</string>
@@ -322,6 +323,7 @@
   <string name="express_more_providers_soon">D\'autres fournisseurs arriveront bientôt.\nRestez branchés !</string>
   <string name="express_provider">Fournisseur</string>
   <string name="express_provider_best_rate">Meilleur taux</string>
+  <string name="express_provider_fca_warning_list">Liste d’avertissement de la FCA</string>
   <string name="express_provider_max_amount">Disponible jusqu\'à %s</string>
   <string name="express_provider_min_amount">Disponible à partir de %s</string>
   <string name="express_provider_not_available">Indisponible pour cette paire</string>
@@ -520,6 +522,10 @@
   <string name="nft_collections_warning_subtitle">Certaines données peuvent ne pas se charger</string>
   <string name="nft_collections_warning_title">Problèmes de chargement temporaires</string>
   <string name="nft_wallet_count">%1$d NFT dans la collection %2$d</string>
+  <plurals name="nft_wallet_count_android">
+    <item quantity="one"></item>
+    <item quantity="other">%1$d NFT dans la collection %2$d</item>
+  </plurals>
   <string name="nft_wallet_receive_nft">Appuyez ici pour recevoir le premier NFT</string>
   <string name="nft_wallet_title">Collections NFT</string>
   <string name="nft_wallet_unable_to_load">Impossible de charger les données</string>
@@ -1143,6 +1149,8 @@
   <string name="warning_express_notification_invalid_reserve_amount_title">Le montant à recevoir doit être d\'au moins %s</string>
   <string name="warning_express_pair_unavailable_message">Cela peut se produire car le fournisseur n\'est actuellement pas en mesure d\'échanger la paire que vous avez sélectionnée. Veuillez patienter un instant et réessayer. (Code %s)</string>
   <string name="warning_express_pair_unavailable_title">La paire sélectionnée est temporairement indisponible</string>
+  <string name="warning_express_providers_fca_warning_description">Certains fournisseurs ne sont pas autorisés par la Financial Conduct Authority (FCA) du Royaume-Uni. Vous devriez éviter de traiter avec eux.</string>
+  <string name="warning_express_providers_fca_warning_title">Liste d’avertissement de la FCA</string>
   <string name="warning_express_refresh_required_title">Service temporairement indisponible</string>
   <string name="warning_express_too_maximum_amount_title">Le nombre de jetons à échanger ne doit pas dépasser %s</string>
   <string name="warning_express_too_minimal_amount_title">Le montant à échanger doit être d\'au moins %s</string>
