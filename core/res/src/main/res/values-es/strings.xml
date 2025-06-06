@@ -110,6 +110,7 @@
   <string name="common_cancel">Cancelar</string>
   <string name="common_change">Cambie</string>
   <string name="common_choose_action">Elige una acción</string>
+  <string name="common_choose_token">Elige token</string>
   <string name="common_claim">Reclamar</string>
   <string name="common_claim_rewards">Reclame recompensas</string>
   <string name="common_close">Cerrar</string>
@@ -1116,6 +1117,7 @@
   <string name="warning_express_notification_invalid_reserve_amount_title">El monto a recibir debe ser de al menos %s</string>
   <string name="warning_express_pair_unavailable_message">Esto puede suceder porque el proveedor actualmente no puede operar con el par que usted seleccionó. Espere un momento e inténtelo de nuevo. (Código %s)</string>
   <string name="warning_express_pair_unavailable_title">El par seleccionado no está disponible temporalmente</string>
+  <string name="warning_express_providers_fca_warning_description">Algunos proveedores no están autorizados por la Autoridad de Conducta Financiera (FCA) del Reino Unido. Deberías evitar tratar con ellos.</string>
   <string name="warning_express_refresh_required_title">Servicio no disponible temporalmente</string>
   <string name="warning_express_too_maximum_amount_title">La cantidad de tokens a intercambiar no debe exceder %s</string>
   <string name="warning_express_too_minimal_amount_title">El monto a cambiar debe ser de al menos %s</string>
