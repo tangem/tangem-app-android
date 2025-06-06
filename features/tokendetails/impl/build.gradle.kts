@@ -99,6 +99,7 @@ dependencies {
     implementation(projects.features.staking.api)
     implementation(projects.features.markets.api)
     implementation(projects.features.onramp.api)
+    implementation(projects.features.pushNotifications.api)
     implementation(projects.features.swap.api)
     implementation(projects.features.txhistory.api)
 

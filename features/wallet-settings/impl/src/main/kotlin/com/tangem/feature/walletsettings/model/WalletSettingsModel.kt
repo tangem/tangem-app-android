@@ -37,6 +37,7 @@ import com.tangem.feature.walletsettings.entity.WalletSettingsUM
 import com.tangem.feature.walletsettings.impl.R
 import com.tangem.feature.walletsettings.utils.ItemsBuilder
 import com.tangem.features.nft.NFTFeatureToggles
+import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
@@ -226,6 +227,7 @@ internal class WalletSettingsModel @Inject constructor(
                 }
             } else {
                 setNotificationsEnabledUseCase(params.userWalletId, false)
+                analyticsEventHandler.send(PushNotificationAnalyticEvents.NotificationsEnabled(false))
             }
         }
     }
@@ -239,6 +241,7 @@ internal class WalletSettingsModel @Inject constructor(
     }
 
     private fun onPushNotificationPermissionGranted(isGranted: Boolean) {
+        analyticsEventHandler.send(PushNotificationAnalyticEvents.PermissionStatus(isGranted))
         state.update { value ->
             value.copy(
                 requestPushNotificationsPermission = false,
@@ -246,7 +249,9 @@ internal class WalletSettingsModel @Inject constructor(
         }
         if (isGranted) {
             modelScope.launch {
-                setNotificationsEnabledUseCase(params.userWalletId, true)
+                setNotificationsEnabledUseCase(params.userWalletId, true).onRight {
+                    analyticsEventHandler.send(PushNotificationAnalyticEvents.NotificationsEnabled(true))
+                }
             }
         } else {
             val message = DialogMessage(
