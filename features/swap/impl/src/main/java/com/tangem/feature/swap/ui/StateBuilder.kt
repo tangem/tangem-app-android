@@ -1316,6 +1316,7 @@ internal class StateBuilder(
         private val FCA_RESTRICTED_PROVIDER_IDS = setOf(
             "changelly",
             "changenow",
+            "okx-cross-chain",
             "okx-on-chain",
             "simpleswap",
         )
