@@ -3,6 +3,7 @@ package com.tangem.feature.tokendetails.deeplink
 import arrow.core.getOrElse
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.deeplink.DeeplinkConst.NETWORK_ID_KEY
 import com.tangem.core.deeplink.DeeplinkConst.TOKEN_ID_KEY
 import com.tangem.core.deeplink.DeeplinkConst.TYPE_KEY
@@ -12,6 +13,7 @@ import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
 import com.tangem.domain.tokens.GetCryptoCurrenciesUseCase
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
+import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
 import com.tangem.features.tokendetails.deeplink.TokenDetailsDeepLinkHandler
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -29,6 +31,7 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val getCryptoCurrenciesUseCase: GetCryptoCurrenciesUseCase,
     private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : TokenDetailsDeepLinkHandler {
 
     init {
@@ -69,6 +72,8 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
                     )
                     return@launch
                 }
+
+                analyticsEventHandler.send(PushNotificationAnalyticEvents.NotificationOpened(type.name))
 
                 appRouter.push(
                     AppRoute.CurrencyDetails(
