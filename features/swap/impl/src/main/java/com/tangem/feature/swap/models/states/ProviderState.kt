@@ -44,6 +44,7 @@ sealed class ProviderState {
 
     @Immutable
     sealed class AdditionalBadge {
+        data object FCAWarningList : AdditionalBadge()
         data object BestTrade : AdditionalBadge()
         data object Empty : AdditionalBadge()
         data object PermissionRequired : AdditionalBadge()

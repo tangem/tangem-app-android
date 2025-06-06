@@ -114,6 +114,8 @@
   <string name="common_cancel">Cancel</string>
   <string name="common_change">Change</string>
   <string name="common_choose_action">Choose action</string>
+  <string name="common_choose_network">Choose network</string>
+  <string name="common_choose_token">Choose token</string>
   <string name="common_claim">Claim</string>
   <string name="common_claim_rewards">Claim rewards</string>
   <string name="common_close">Close</string>
@@ -271,6 +273,7 @@
   <string name="details_row_subtitle_signed_hashes_format">%s hashes</string>
   <string name="details_row_title_cid">Device ID</string>
   <string name="details_row_title_contact_to_support">Contact support</string>
+  <string name="details_row_title_contact_to_support_chat">Open support chat</string>
   <string name="details_row_title_create_backup">Link More Cards</string>
   <string name="details_row_title_currency">App Currency</string>
   <string name="details_row_title_flip_to_hide">Flip-to-Hide Balances</string>
@@ -335,6 +338,7 @@
   <string name="express_more_providers_soon">More providers will be available soon</string>
   <string name="express_provider">Provider</string>
   <string name="express_provider_best_rate">Best rate</string>
+  <string name="express_provider_fca_warning_list">FCA Warning List</string>
   <string name="express_provider_max_amount">Available up to %s</string>
   <string name="express_provider_min_amount">Available from %s</string>
   <string name="express_provider_not_available">Unavailable for this pair</string>
@@ -346,6 +350,8 @@
   <string name="express_status_hide_button_text">Hide this transaction</string>
   <string name="express_status_hide_dialog_text">Once hidden, the transaction status cannot be viewed again. You can simply swipe to dismiss instead.</string>
   <string name="express_status_hide_dialog_title">Hide Transaction Status?</string>
+  <string name="express_swap_not_supported_text">This token is not supported. Please choose a different token to swap.</string>
+  <string name="express_swap_not_supported_title">%s is not supported</string>
   <string name="express_swap_with">Swap with</string>
   <string name="express_token_list_empty_search">No tokens found. Please try another request</string>
   <string name="express_transaction_id">ID: %s</string>
@@ -569,6 +575,10 @@
   <string name="nft_traits_title">Traits</string>
   <string name="nft_untitled_collection">Untitled collection</string>
   <string name="nft_wallet_count">%1$d NFTs in %2$d collections</string>
+  <plurals name="nft_wallet_count_android">
+    <item quantity="one"></item>
+    <item quantity="other">%1$d NFTs in %2$d collections</item>
+  </plurals>
   <string name="nft_wallet_receive_nft">Tap here to receive first NFT</string>
   <string name="nft_wallet_title">NFT collections</string>
   <string name="nft_wallet_unable_to_load">Unable to load the data</string>
@@ -865,11 +875,14 @@
   <string name="send_validation_invalid_amount">Invalid amount</string>
   <string name="send_validation_invalid_fee">Fee exceeds balance</string>
   <string name="send_validation_invalid_total">Total amount exceeds balance</string>
+  <string name="send_with_swap_notification_text">Send any token, and we’ll convert it on the way. Your recipient gets exactly what they need—seamlessly.</string>
+  <string name="send_with_swap_title">Send with swap</string>
   <string name="sent_transaction_sent_title">Transaction sent</string>
   <string name="settings_card_settings_footer">Prepare to scan card or ring you want to set up.</string>
   <string name="settings_forget_wallet">Forget wallet</string>
   <string name="settings_forget_wallet_footer">This will remove the wallet from the application. The wallet itself can be added again.</string>
   <string name="settings_wallet_name_title">Name</string>
+  <string name="stake_token_description">Join staking with this token</string>
   <string name="staking_amount_requirement_error">The amount to stake must be at least %s</string>
   <string name="staking_amount_tron_integer_error">Staking amount will be rounded to %1$s TRX due to network rules.</string>
   <string name="staking_amount_tron_integer_error_unstaking">Unstaking amount will be rounded to %1$s TRX due to network rules.</string>
@@ -1004,6 +1017,7 @@
   <string name="story_web3_title">Web 3.0 Compatible</string>
   <string name="sui_not_enough_coin_for_fee_description">An incoming transaction of at least %1$s is required to proceed</string>
   <string name="sui_not_enough_coin_for_fee_title">Insufficient funds</string>
+  <string name="swap_fixed_rate">Fixed Rate</string>
   <string name="swap_give_permission_fee_footer">The network will charge a token approval fee to verify that you are authorizing the use of your token for the swap.</string>
   <string name="swap_promo_text">Exchange more tokens at better rates directly in your wallet.</string>
   <string name="swap_promo_title">New Swap Provider Available!</string>
@@ -1077,6 +1091,8 @@
   <string name="transaction_history_transaction_from_address">from: %s</string>
   <string name="transaction_history_transaction_to_address">to: %s</string>
   <string name="transaction_history_transaction_validator">validator: %s</string>
+  <string name="transaction_notifications_warning_description">Notifications are enabled but won\'t work until you allow notifications in your device settings.</string>
+  <string name="transaction_notifications_warning_title">Transaction Notifications</string>
   <string name="transfer_min_amount_error">Minimum %s</string>
   <string name="transfer_notification_invalid_minimum_transaction_amount_text">The minimum transaction amount is %1$s.</string>
   <string name="tron_will_be_send_token_fee_description">Tron network fees for popular tokens can be higher. Staking TRX may help reduce transaction costs.</string>
@@ -1093,10 +1109,13 @@
   <string name="twins_recreate_toolbar">Tangem Twin</string>
   <string name="twins_recreate_warning">This action is irreversible. You will not have access to the old wallet.</string>
   <string name="twins_scan_twin_with_number">Tap the twin card with number %s and do not remove until the end of the operation</string>
+  <string name="unexpected_error_description">Please try again later. If the issue persists, please contact support.</string>
+  <string name="unexpected_error_title">Something went wrong!</string>
   <string name="universal_error">We\'ve encountered an error. Error code: %s. Please contact our support.</string>
   <string name="unlock_wallet_description_full">Use %s or scan a card/ring to have access to your wallet</string>
   <string name="unsupported_wc_version">Connection failed: This dApp uses Wallet Connect version 1.0, which is not supported. Please ensure the dApp supports Wallet Connect version 2.0 to connect successfully.</string>
   <string name="user_push_notification_agreement_argument_one">Stay up to date with the latest features and news</string>
+  <string name="user_push_notification_agreement_argument_three">Get notified of incoming transactions</string>
   <string name="user_push_notification_agreement_argument_two">Be the first to know about new promotions</string>
   <string name="user_push_notification_agreement_header">Would you like to use\nPush-notifications?</string>
   <string name="user_wallet_list_add_button">Add new wallet</string>
@@ -1255,6 +1274,8 @@
   <string name="warning_express_notification_invalid_reserve_amount_title">The amount to receive must be at least %s</string>
   <string name="warning_express_pair_unavailable_message">This may occur because the provider is currently unable to exchange your selected pair. Please wait a moment and try again. (Code %s)</string>
   <string name="warning_express_pair_unavailable_title">Selected pair temporarily unavailable</string>
+  <string name="warning_express_providers_fca_warning_description">Some providers are not authorized by the UK Financial Conduct Authority. You should avoid dealing with them.</string>
+  <string name="warning_express_providers_fca_warning_title">FCA Warning List</string>
   <string name="warning_express_refresh_required_title">Service temporarily unavailable</string>
   <string name="warning_express_too_maximum_amount_title">The amount of tokens to be swapped must not exceed %s</string>
   <string name="warning_express_too_minimal_amount_title">The amount to swap must be at least %s</string>
@@ -1290,6 +1311,7 @@
   <string name="warning_rate_app_message">Your review keeps us motivated to make Tangem Wallet even better</string>
   <string name="warning_rate_app_title">Enjoying Tangem?</string>
   <string name="warning_receive_blocked_hedera_token_association_required_message">You must associate your token before receiving tokens</string>
+  <string name="warning_receive_blocked_stelar_token_trustline_required_message">You must open trustline for your token before receiving it</string>
   <string name="warning_rent_fee_title">Network rent fee required</string>
   <string name="warning_seedphrase_action_required_title">Action required</string>
   <string name="warning_seedphrase_contacted_support">Did you contact support via the app within 7 days of creating your wallet? If yes, or if you\'re unsure, click \'Yes\' and follow the instructions.</string>
@@ -1305,6 +1327,10 @@
   <string name="warning_some_networks_unreachable_message">Swipe down to refresh or try again later.</string>
   <string name="warning_some_networks_unreachable_title">Some networks are unreachable</string>
   <string name="warning_some_token_balances_not_updated">Some token balances could not be updated</string>
+  <string name="warning_stelar_token_required_min_coin_reserve">Not enough %1$s. Top up your XLM account to associate this token</string>
+  <string name="warning_stellar_token_trustline_button_title">Enable Trustline</string>
+  <string name="warning_stellar_token_trustline_subtiile">According to network rules, you need to open a Trustline before depositing this token. It allows your wallet to accept and hold the asset.</string>
+  <string name="warning_stellar_token_trustline_tiile">Enable Trustline for this token</string>
   <string name="warning_testnet_card_message">This is a Testnet card. It cannot process transactions and should only be used for testing and development purposes.</string>
   <string name="warning_testnet_card_title">For testing purposes only</string>
   <string name="warning_token_balance_not_updated">Balance may be outdated. Refresh the page.</string>
@@ -1328,8 +1354,10 @@
   <string name="wc_allow_to_spend">Allow to spend</string>
   <string name="wc_common_address">Address</string>
   <string name="wc_common_connect">Connect</string>
+  <string name="wc_common_loading">Loading</string>
   <string name="wc_common_network">Network</string>
   <string name="wc_common_networks">Networks</string>
+  <string name="wc_common_unlimited">Unlimited</string>
   <string name="wc_common_wallet">Wallet</string>
   <string name="wc_connected_networks">Connected networks</string>
   <string name="wc_connection_reqeust_can_view_balance">View your wallet balance and activity</string>
@@ -1346,6 +1374,7 @@
   <string name="wc_disconnect_all_alert_desc">Text about discnected all dApps</string>
   <string name="wc_disconnect_all_alert_title">Disconect All dApps</string>
   <string name="wc_estimated_wallet_changes">Estimated wallet changes</string>
+  <string name="wc_estimated_wallet_changes_not_simulated">The transaction couldn\'t be simulated. Please proceed with caution.</string>
   <string name="wc_malicious_transaction">Malicious transaction</string>
   <string name="wc_missing_required_network_description">Add the %s network to your profile for this wallet</string>
   <string name="wc_missing_required_network_title">The wallet has no required networks</string>
