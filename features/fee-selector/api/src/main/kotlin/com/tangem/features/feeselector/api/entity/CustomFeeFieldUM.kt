@@ -1,4 +1,4 @@
-package com.tangem.features.send.v2.subcomponents.fee.ui.state
+package com.tangem.features.feeselector.api.entity
 
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -6,7 +6,7 @@ import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.extensions.TextReference
 
 @Immutable
-internal data class CustomFeeFieldUM(
+data class CustomFeeFieldUM(
     val value: String,
     val onValueChange: (String) -> Unit,
     val keyboardOptions: KeyboardOptions,
