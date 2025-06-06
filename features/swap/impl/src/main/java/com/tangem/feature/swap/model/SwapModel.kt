@@ -478,6 +478,7 @@ internal class SwapModel @Inject constructor(
                     expressDataError = state.error,
                     includeFeeInAmount = state.includeFeeInAmount,
                     isReverseSwapPossible = isReverseSwapPossible(),
+                    needApplyFCARestrictions = userCountry.needApplyFCARestrictions(),
                 )
                 sendErrorAnalyticsEvent(state.error, provider)
             }
@@ -1095,6 +1096,7 @@ internal class SwapModel @Inject constructor(
                     selectedProviderId = providerId,
                     pricesLowerBest = pricesLowerBest,
                     providersStates = dataState.lastLoadedSwapStates,
+                    needApplyFCARestrictions = userCountry.needApplyFCARestrictions(),
                 ) { uiState = stateBuilder.dismissBottomSheet(uiState) }
             },
             onProviderSelect = {
