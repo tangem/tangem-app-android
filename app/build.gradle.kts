@@ -207,6 +207,8 @@ dependencies {
     implementation(projects.features.nft.impl)
     implementation(projects.features.walletconnect.api)
     implementation(projects.features.walletconnect.impl)
+    implementation(projects.features.feeSelector.api)
+    implementation(projects.features.feeSelector.impl)
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)
