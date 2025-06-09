@@ -2,10 +2,7 @@ package com.tangem.feature.tester.presentation.testpush.ui
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Text
@@ -65,6 +62,7 @@ private fun TestPushMarketsTokenBottomSheetContent(config: TangemBottomSheetConf
     TangemBottomSheet<TestPushMarketsTokenConfigUM>(config = config, addBottomInsets = false) { content ->
         LazyColumn(
             modifier = Modifier
+                .fillMaxSize()
                 .navigationBarsPadding()
                 .imePadding(),
         ) {
