@@ -347,13 +347,13 @@ internal class StateBuilder(
                 ChangeCardsButtonState.DISABLED
             },
             providerState = swapProvider.convertToContentClickableProviderState(
-                needApplyFCARestrictions = needApplyFCARestrictions,
                 isBestRate = bestRatedProviderId == swapProvider.providerId,
                 fromTokenInfo = quoteModel.fromTokenInfo,
                 toTokenInfo = quoteModel.toTokenInfo,
                 isNeedBestRateBadge = isNeedBestRateBadge,
                 selectionType = ProviderState.SelectionType.CLICK,
                 onProviderClick = actions.onProviderClick,
+                needApplyFCARestrictions = needApplyFCARestrictions,
             ),
             priceImpact = if (quoteModel.priceImpact.value > PRICE_IMPACT_THRESHOLD) {
                 quoteModel.priceImpact
@@ -411,6 +411,7 @@ internal class StateBuilder(
         includeFeeInAmount: IncludeFeeInAmount,
         expressDataError: ExpressDataError,
         isReverseSwapPossible: Boolean,
+        needApplyFCARestrictions: Boolean,
     ): SwapStateHolder {
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
         if (uiStateHolder.receiveCardData !is SwapCardState.SwapCardData) return uiStateHolder
@@ -427,6 +428,7 @@ internal class StateBuilder(
             expressDataError = expressDataError,
             onProviderClick = actions.onProviderClick,
             selectionType = ProviderState.SelectionType.CLICK,
+            needApplyFCARestrictions = needApplyFCARestrictions,
         )
         val receiveCardData = toToken?.let {
             SwapCardState.SwapCardData(
@@ -477,12 +479,14 @@ internal class StateBuilder(
         )
     }
 
+    @Suppress("LongParameterList")
     private fun getProviderStateForError(
         swapProvider: SwapProvider,
         fromToken: CryptoCurrency,
         expressDataError: ExpressDataError,
         onProviderClick: (String) -> Unit,
         selectionType: ProviderState.SelectionType,
+        needApplyFCARestrictions: Boolean,
     ): ProviderState {
         return when (expressDataError) {
             is ExpressDataError.ExchangeTooSmallAmountError -> {
@@ -494,6 +498,7 @@ internal class StateBuilder(
                     ),
                     selectionType = selectionType,
                     onProviderClick = onProviderClick,
+                    needApplyFCARestrictions = needApplyFCARestrictions,
                 )
             }
             is ExpressDataError.ExchangeTooBigAmountError -> {
@@ -505,6 +510,7 @@ internal class StateBuilder(
                     ),
                     selectionType = selectionType,
                     onProviderClick = onProviderClick,
+                    needApplyFCARestrictions = needApplyFCARestrictions,
                 )
             }
             else -> {
@@ -991,17 +997,27 @@ internal class StateBuilder(
         selectedProviderId: String,
         pricesLowerBest: Map<String, Float>,
         providersStates: Map<SwapProvider, SwapState>,
+        needApplyFCARestrictions: Boolean,
         onDismiss: () -> Unit,
     ): SwapStateHolder {
         val availableProvidersStates = providersStates.entries
             .mapNotNull {
-                it.convertToProviderBottomSheetState(pricesLowerBest, actions.onProviderSelect)
+                it.convertToProviderBottomSheetState(
+                    pricesLowerBest = pricesLowerBest,
+                    onProviderSelect = actions.onProviderSelect,
+                    needApplyFCARestrictions = needApplyFCARestrictions,
+                )
             }
             .sortedWith(ProviderPercentDiffComparator)
             .toImmutableList()
+
+        val isAnyFCABadge = availableProvidersStates.any {
+            (it as? ProviderState.Content)?.additionalBadge == ProviderState.AdditionalBadge.FCAWarningList
+        }
         val config = ChooseProviderBottomSheetConfig(
             selectedProviderId = selectedProviderId,
             providers = availableProvidersStates,
+            notification = SwapNotificationUM.Error.FCAWarningList.takeIf { isAnyFCABadge },
         )
         return uiState.copy(
             bottomSheetConfig = TangemBottomSheetConfig(
@@ -1109,6 +1125,7 @@ internal class StateBuilder(
     private fun Map.Entry<SwapProvider, SwapState>.convertToProviderBottomSheetState(
         pricesLowerBest: Map<String, Float>,
         onProviderSelect: (String) -> Unit,
+        needApplyFCARestrictions: Boolean,
     ): ProviderState? {
         val provider = this.key
         return when (val state = this.value) {
@@ -1119,6 +1136,7 @@ internal class StateBuilder(
                     onProviderClick = onProviderSelect,
                     pricesLowerBest = pricesLowerBest,
                     selectionType = ProviderState.SelectionType.SELECT,
+                    needApplyFCARestrictions = needApplyFCARestrictions,
                 )
             }
             is SwapState.SwapError -> getProviderStateForError(
@@ -1127,6 +1145,7 @@ internal class StateBuilder(
                 expressDataError = state.error,
                 onProviderClick = onProviderSelect,
                 selectionType = ProviderState.SelectionType.SELECT,
+                needApplyFCARestrictions = needApplyFCARestrictions,
             )
         }
     }
@@ -1143,13 +1162,13 @@ internal class StateBuilder(
 
     @Suppress("LongParameterList")
     private fun SwapProvider.convertToContentClickableProviderState(
-        needApplyFCARestrictions: Boolean,
         isBestRate: Boolean,
         fromTokenInfo: TokenSwapInfo,
         toTokenInfo: TokenSwapInfo,
         selectionType: ProviderState.SelectionType,
         isNeedBestRateBadge: Boolean,
         onProviderClick: (String) -> Unit,
+        needApplyFCARestrictions: Boolean,
     ): ProviderState {
         val rate = toTokenInfo.tokenAmount.value.calculateRate(
             fromTokenInfo.tokenAmount.value,
@@ -1161,21 +1180,21 @@ internal class StateBuilder(
             append(" ≈ ")
             append(rate.format { crypto(toTokenInfo.cryptoCurrencyStatus.currency) })
         }
-        // val rateString = "1 $fromCurrencySymbol ≈ $rate $toCurrencySymbol"
-        val badge = if (isRecommended) {
-            ProviderState.AdditionalBadge.Recommended
-        } else if (isNeedBestRateBadge && isBestRate && !needApplyFCARestrictions) {
-            ProviderState.AdditionalBadge.BestTrade
-        } else {
-            ProviderState.AdditionalBadge.Empty
+
+        val additionalBadge = when {
+            needApplyFCARestrictions && isFCARestrictedProvider() -> ProviderState.AdditionalBadge.FCAWarningList
+            isRecommended -> ProviderState.AdditionalBadge.Recommended
+            isNeedBestRateBadge && isBestRate && !needApplyFCARestrictions -> ProviderState.AdditionalBadge.BestTrade
+            else -> ProviderState.AdditionalBadge.Empty
         }
+
         return ProviderState.Content(
             id = this.providerId,
             name = this.name,
             iconUrl = this.imageLarge,
             type = this.type.providerName,
             subtitle = stringReference(rateString),
-            additionalBadge = badge,
+            additionalBadge = additionalBadge,
             selectionType = selectionType,
             percentLowerThenBest = PercentDifference.Empty,
             namePrefix = ProviderState.PrefixType.NONE,
@@ -1188,16 +1207,20 @@ internal class StateBuilder(
         selectionType: ProviderState.SelectionType,
         pricesLowerBest: Map<String, Float>,
         onProviderClick: (String) -> Unit,
+        needApplyFCARestrictions: Boolean,
     ): ProviderState {
         val toTokenInfo = state.toTokenInfo
         val rateString = toTokenInfo.tokenAmount.getFormattedCryptoAmount(toTokenInfo.cryptoCurrencyStatus.currency)
-        val additionalBadge = if (state.permissionState is PermissionDataState.PermissionReadyForRequest) {
-            ProviderState.AdditionalBadge.PermissionRequired
-        } else if (isRecommended) {
-            ProviderState.AdditionalBadge.Recommended
-        } else {
-            ProviderState.AdditionalBadge.Empty
+
+        val additionalBadge = when {
+            needApplyFCARestrictions && isFCARestrictedProvider() -> ProviderState.AdditionalBadge.FCAWarningList
+            state.permissionState is PermissionDataState.PermissionReadyForRequest -> {
+                ProviderState.AdditionalBadge.PermissionRequired
+            }
+            isRecommended -> ProviderState.AdditionalBadge.Recommended
+            else -> ProviderState.AdditionalBadge.Empty
         }
+
         return ProviderState.Content(
             id = this.providerId,
             name = this.name,
@@ -1219,12 +1242,14 @@ internal class StateBuilder(
         alertText: TextReference,
         selectionType: ProviderState.SelectionType,
         onProviderClick: (String) -> Unit,
+        needApplyFCARestrictions: Boolean,
     ): ProviderState {
-        val additionalBadge = if (swapProvider.isRecommended) {
-            ProviderState.AdditionalBadge.Recommended
-        } else {
-            ProviderState.AdditionalBadge.Empty
+        val additionalBadge = when {
+            needApplyFCARestrictions && isFCARestrictedProvider() -> ProviderState.AdditionalBadge.FCAWarningList
+            swapProvider.isRecommended -> ProviderState.AdditionalBadge.Recommended
+            else -> ProviderState.AdditionalBadge.Empty
         }
+
         return ProviderState.Content(
             id = this.providerId,
             name = this.name,
@@ -1272,6 +1297,10 @@ internal class StateBuilder(
         return "$TILDE_SIGN $this"
     }
 
+    private fun SwapProvider.isFCARestrictedProvider(): Boolean {
+        return FCA_RESTRICTED_PROVIDER_IDS.contains(providerId)
+    }
+
     private companion object {
         private const val RU_LOCALE = "ru"
         private const val EN_LOCALE = "en"
@@ -1282,7 +1311,14 @@ internal class StateBuilder(
         private const val MAX_DECIMALS_TO_SHOW = 8
         private const val IF_ZERO_DECIMALS_TO_SHOW = 2
         private const val FEE_READ_MORE_URL_FIRST_PART = "https://tangem.com/"
-        private const val FEE_READ_MORE_URL_SECOND_PART =
-            "/blog/post/what-is-a-transaction-fee-and-why-do-we-need-it/"
+        private const val FEE_READ_MORE_URL_SECOND_PART = "/blog/post/what-is-a-transaction-fee-and-why-do-we-need-it/"
+
+        private val FCA_RESTRICTED_PROVIDER_IDS = setOf(
+            "changelly",
+            "changenow",
+            "okx-cross-chain",
+            "okx-on-chain",
+            "simpleswap",
+        )
     }
 }
