@@ -114,6 +114,7 @@
   <string name="common_cancel">Abbrechen</string>
   <string name="common_change">Ändern</string>
   <string name="common_choose_action">Aktion wählen</string>
+  <string name="common_choose_network">Netzwerk auswählen</string>
   <string name="common_choose_token">Token auswählen</string>
   <string name="common_claim">Beanspruchen</string>
   <string name="common_claim_rewards">Stakingbelohnungen beanspruchen</string>
