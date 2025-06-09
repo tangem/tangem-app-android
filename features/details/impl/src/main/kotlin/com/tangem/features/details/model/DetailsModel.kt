@@ -2,6 +2,7 @@ package com.tangem.features.details.model
 
 import android.content.res.Resources
 import arrow.core.getOrElse
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.AppInstanceIdProvider
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -14,6 +15,7 @@ import com.tangem.domain.feedback.GetCardInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.CardInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.feedback.repository.FeedbackFeatureToggles
 import com.tangem.domain.redux.LegacyAction
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.walletconnect.CheckIsWalletConnectAvailableUseCase
@@ -57,6 +59,7 @@ internal class DetailsModel @Inject constructor(
     private val getCardInfoUseCase: GetCardInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val getWalletsUseCase: GetWalletsUseCase,
+    private val feedbackFeatureToggles: FeedbackFeatureToggles,
     override val dispatchers: CoroutineDispatcherProvider,
 ) : Model() {
 
@@ -82,8 +85,10 @@ internal class DetailsModel @Inject constructor(
         items = MutableStateFlow(
             itemsBuilder.buildAll(
                 isWalletConnectAvailable = isWalletConnectAvailable,
+                isSupportChatAvailable = feedbackFeatureToggles.isUsedeskEnabled,
                 userWalletId = params.userWalletId,
-                onSupportClick = ::sendFeedback,
+                onSupportEmailClick = ::sendFeedback,
+                onSupportChatClick = ::openUseDesk,
                 onBuyClick = ::onBuyClick,
             ),
         )
@@ -132,6 +137,16 @@ internal class DetailsModel @Inject constructor(
 
             sendFeedbackEmailUseCase(feedbackType)
         }
+    }
+
+    private fun openUseDesk() {
+        val scanResponse =
+            getSelectedWalletSyncUseCase().getOrNull()?.requireColdWallet()?.scanResponse // TODO [REDACTED_TASK_KEY]
+                ?: error("Selected wallet is null")
+
+        val cardInfo = getCardInfoUseCase(scanResponse).getOrNull() ?: return
+
+        router.push(AppRoute.Usedesk(cardInfo))
     }
 
     private fun showFeedbackEmailTypeOptionBS(selectedCardInfo: CardInfo) {
