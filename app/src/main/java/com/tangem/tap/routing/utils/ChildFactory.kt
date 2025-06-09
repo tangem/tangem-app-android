@@ -3,6 +3,7 @@ package com.tangem.tap.routing.utils
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.domain.qrscanning.models.SourceType
+import com.tangem.feature.usedesk.api.UsedeskComponent
 import com.tangem.feature.qrscanning.QrScanningComponent
 import com.tangem.feature.referral.api.ReferralComponent
 import com.tangem.feature.stories.api.StoriesComponent
@@ -76,6 +77,7 @@ internal class ChildFactory @Inject constructor(
     private val redesignedWalletConnectComponentFactory: WalletConnectEntryComponent.Factory,
     private val nftComponentFactory: NFTComponent.Factory,
     private val nftSendComponentFactory: NFTSendComponent.Factory,
+    private val usedeskComponentFactory: UsedeskComponent.Factory,
     private val testerRouter: TesterRouter,
     private val walletConnectFeatureToggles: WalletConnectFeatureToggles,
 ) {
@@ -396,6 +398,13 @@ internal class ChildFactory @Inject constructor(
                     context = context,
                     params = Unit,
                     componentFactory = marketsTokenListComponentFactory,
+                )
+            }
+            is AppRoute.Usedesk -> { // TODO [REDACTED_TASK_KEY] pass params
+                createComponentChild(
+                    context = context,
+                    params = UsedeskComponent.Params(),
+                    componentFactory = usedeskComponentFactory,
                 )
             }
         }
