@@ -87,7 +87,6 @@ internal object NetworkModule {
         @ApplicationContext context: Context,
         apiConfigsManager: ApiConfigsManager,
         analyticsErrorHandler: AnalyticsErrorHandler,
-        appLogsStore: AppLogsStore,
     ): StakeKitApi {
         return createApi(
             id = ApiConfig.ID.StakeKit,
@@ -101,11 +100,6 @@ internal object NetworkModule {
                 readTimeoutSeconds = STAKE_KIT_API_TIMEOUT_SECONDS,
                 writeTimeoutSeconds = STAKE_KIT_API_TIMEOUT_SECONDS,
             ),
-            clientBuilder = {
-                addInterceptor(
-                    NetworkLogsSaveInterceptor(appLogsStore),
-                )
-            },
         )
     }
 
