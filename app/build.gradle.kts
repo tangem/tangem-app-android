@@ -96,6 +96,7 @@ dependencies {
     implementation(projects.domain.visa)
     implementation(projects.domain.onboarding)
     implementation(projects.domain.feedback)
+    implementation(projects.domain.feedback.models)
     implementation(projects.domain.qrScanning)
     implementation(projects.domain.qrScanning.models)
     implementation(projects.domain.staking)
@@ -207,6 +208,8 @@ dependencies {
     implementation(projects.features.nft.impl)
     implementation(projects.features.walletconnect.api)
     implementation(projects.features.walletconnect.impl)
+    implementation(projects.features.usedesk.api)
+    implementation(projects.features.usedesk.impl)
     implementation(projects.features.feeSelector.api)
     implementation(projects.features.feeSelector.impl)
 
