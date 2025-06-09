@@ -99,6 +99,12 @@ internal object SwapNotificationUM {
             subtitle = resourceReference(R.string.warning_express_wrong_amount_description),
             iconResId = R.drawable.ic_alert_circle_24,
         )
+
+        data object FCAWarningList : Error(
+            title = resourceReference(R.string.warning_express_providers_fca_warning_title),
+            subtitle = resourceReference(R.string.warning_express_providers_fca_warning_description),
+            iconResId = R.drawable.ic_alert_circle_24,
+        )
     }
 
     sealed class Warning(
