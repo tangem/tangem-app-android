@@ -23,7 +23,7 @@ interface WcMethodContext {
  * Wc Methods that must be signed by Tangem card
  * [WcSignState] represents signing state
  */
-interface WcSignUseCase<SignModel> : WcMethodContext {
+interface WcSignUseCase<SignModel> : WcMethodContext, WcMethodUseCase {
 
     operator fun invoke(): Flow<WcSignState<SignModel>>
     fun cancel()
