@@ -89,6 +89,7 @@ decompose = "3.3.0"
 room = "2.6.1"
 markdown = "0.7.2"
 markdownComposeView = "0.5.4"
+usedesk = "4.4.0"
 # endregion Other libraries
 
 # region Tools
@@ -274,4 +275,6 @@ room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
 markdown = { module = "org.jetbrains:markdown", version.ref = "markdown" }
 markdown-composeview = { module = "com.github.jeziellago:compose-markdown", version.ref = "markdownComposeView" }
+usedesk-chat-sdk = { module = "com.github.Usedesk.Android_SDK:chat-sdk", version.ref = "usedesk" }
+usedesk-chat-gui = { module = "com.github.Usedesk.Android_SDK:chat-gui", version.ref = "usedesk" }
 # endregion Other
