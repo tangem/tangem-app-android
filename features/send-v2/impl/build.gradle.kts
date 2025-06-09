@@ -54,6 +54,7 @@ dependencies {
     implementation(projects.domain.qrScanning)
     implementation(projects.domain.settings)
     implementation(projects.domain.feedback)
+    implementation(projects.domain.feedback.models)
     implementation(projects.domain.txhistory)
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.balanceHiding)
