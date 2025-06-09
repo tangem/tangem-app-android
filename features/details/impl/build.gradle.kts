@@ -32,6 +32,7 @@ dependencies {
     /* Project - Domain */
     implementation(projects.domain.models)
     implementation(projects.domain.feedback)
+    implementation(projects.domain.feedback.models)
     implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.card)
@@ -52,6 +53,7 @@ dependencies {
 
     /* AndroidX */
     implementation(deps.androidx.activity.compose)
+    implementation(deps.androidx.appCompat)
     implementation(deps.lifecycle.compose)
 
     /* Compose */
