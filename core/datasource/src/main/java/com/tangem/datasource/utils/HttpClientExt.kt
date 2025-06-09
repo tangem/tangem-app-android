@@ -19,15 +19,7 @@ import retrofit2.Invocation
 /** Extension for adding headers [requestHeaders] to every [OkHttpClient] request */
 internal fun OkHttpClient.Builder.addHeaders(vararg requestHeaders: RequestHeader): OkHttpClient.Builder {
     return addInterceptor(
-        Interceptor { chain ->
-            val request = chain.request().newBuilder().apply {
-                requestHeaders
-                    .flatMap { it.values.toList() }
-                    .forEach { addHeader(it.first, runBlocking { it.second.invoke() }) }
-            }.build()
-
-            chain.proceed(request)
-        },
+        interceptor = AddHeadersInterceptor(requestHeaders = requestHeaders.toSet()),
     )
 }
 
