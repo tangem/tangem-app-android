@@ -12,12 +12,14 @@ import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
 import com.tangem.data.walletconnect.utils.BlockAidVerificationDelegate
 import com.tangem.domain.transaction.usecase.PrepareForSendUseCase
 import com.tangem.domain.walletconnect.model.WcSolanaMethod
+import com.tangem.domain.walletconnect.usecase.method.BlockAidTransactionCheck
 import com.tangem.domain.walletconnect.usecase.method.WcListTransactionUseCase
 import com.tangem.domain.walletconnect.usecase.method.WcSignState
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import okio.ByteString.Companion.decodeBase64
 import org.json.JSONArray
 import org.json.JSONObject
@@ -38,7 +40,7 @@ internal class WcSolanaSignAllTransactionUseCase @AssistedInject constructor(
         rawSdkRequest = rawSdkRequest,
         session = session,
         accountAddress = context.accountAddress,
-    )
+    ).map { lce -> lce.map { result -> BlockAidTransactionCheck.Result.Plain(result) } }
 
     override suspend fun SignCollector<List<TransactionData>>.onSign(state: WcSignState<List<TransactionData>>) {
         val hash = prepareForSend.invoke(transactionData = state.signModel, userWallet = wallet, network = network)
