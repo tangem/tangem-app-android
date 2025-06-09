@@ -15,8 +15,8 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.walletconnect.components.WcRoutingComponent
-import com.tangem.features.walletconnect.connections.components.WcPairComponent
 import com.tangem.features.walletconnect.connections.components.AlertsComponent
+import com.tangem.features.walletconnect.connections.components.WcPairComponent
 import com.tangem.features.walletconnect.transaction.components.chain.WcAddNetworkContainerComponent
 import com.tangem.features.walletconnect.transaction.components.common.WcTransactionModelParams
 import com.tangem.features.walletconnect.transaction.components.send.WcSendTransactionContainerComponent
@@ -79,10 +79,10 @@ internal class DefaultWcRoutingComponent @AssistedInject constructor(
                     source = config.request.source,
                 ),
             )
-            is WcInnerRoute.Alert -> AlertsComponent(
+            is WcInnerRoute.UnsupportedMethodAlert -> AlertsComponent(
                 childContext,
                 AlertsComponent.Params(
-                    alertType = config.alertType,
+                    alertType = AlertsComponent.AlertType.UnsupportedMethod { model.innerRouter.pop() },
                 ),
             )
         }
