@@ -29,8 +29,7 @@ class SendFeedbackEmailUseCase(
             address = getAddress(type),
             subject = emailSubjectResolver.resolve(type),
             message = createMessage(type),
-            // Temporally user data is not sent
-            file = null, // feedbackRepository.getZipLogFile(),
+            file = feedbackRepository.getZipLogFile(),
         )
 
         feedbackRepository.sendEmail(email)
