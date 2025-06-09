@@ -3,7 +3,7 @@ package com.tangem.features.onramp.hottokens.portfolio
 import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
 
 /**

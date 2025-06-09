@@ -5,9 +5,9 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.Network
-import com.tangem.domain.tokens.model.NetworkAddress
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.network.NetworkAddress
 
 private const val DSC_ADDRESS_NAME = "DSC"
 private const val DEL_ADDRESS_NAME = "Main"
@@ -59,7 +59,7 @@ private fun Set<NetworkAddress.Address>.mapToAddressModels(name: TextReference, 
         }
 
 private fun Network.getAddressDisplayName(addressType: NetworkAddress.Address.Type): TextReference {
-    return when (id.value) {
+    return when (rawId) {
         "decimal", "decimal/test" -> {
             when (addressType) {
                 NetworkAddress.Address.Type.Primary -> stringReference(value = DEL_ADDRESS_NAME)

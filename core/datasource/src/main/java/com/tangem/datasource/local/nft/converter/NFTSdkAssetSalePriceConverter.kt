@@ -5,14 +5,16 @@ import com.tangem.domain.nft.models.NFTSalePrice
 import com.tangem.utils.converter.TwoWayConverter
 import com.tangem.blockchain.nft.models.NFTAsset.SalePrice as SDKSalePrice
 
-internal class NFTSdkAssetSalePriceConverter(
+class NFTSdkAssetSalePriceConverter(
     private val assetId: NFTAsset.Identifier,
 ) : TwoWayConverter<SDKSalePrice, NFTSalePrice.Value> {
     override fun convert(value: SDKSalePrice): NFTSalePrice.Value {
         return NFTSalePrice.Value(
             assetId = assetId,
+            fiatValue = null,
             value = value.value,
-            symbol = value.symbol,
+            symbol = value.symbol.orEmpty(),
+            decimals = value.decimals ?: 0,
         )
     }
 
@@ -20,6 +22,7 @@ internal class NFTSdkAssetSalePriceConverter(
         return SDKSalePrice(
             symbol = value.symbol,
             value = value.value,
+            decimals = value.decimals,
         )
     }
 }

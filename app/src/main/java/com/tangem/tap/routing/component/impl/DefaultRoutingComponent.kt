@@ -22,6 +22,7 @@ import com.tangem.tap.routing.component.RoutingComponent
 import com.tangem.tap.routing.component.RoutingComponent.Child
 import com.tangem.tap.routing.configurator.AppRouterConfig
 import com.tangem.tap.routing.utils.ChildFactory
+import com.tangem.tap.routing.utils.DeepLinkFactory
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -34,6 +35,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     private val appRouterConfig: AppRouterConfig,
     private val uiDependencies: UiDependencies,
     private val wcRoutingComponentFactory: WcRoutingComponent.Factory,
+    private val deeplinkFactory: DeepLinkFactory,
 ) : RoutingComponent,
     AppComponentContext by context,
     SnackbarHandler {
@@ -60,7 +62,10 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
 
         stack.subscribe(lifecycle) { stack ->
             val stackItems = stack.items.map { it.configuration }
+
             wcRoutingComponent.onAppRouteChange(stack.active.configuration)
+            deeplinkFactory.checkRoutingReadiness(stack.active.configuration)
+
             if (appRouterConfig.stack != stackItems) {
                 appRouterConfig.stack = stackItems
             }

@@ -1,13 +1,14 @@
 package com.tangem.domain.tokens.repository
 
 import com.tangem.domain.core.error.DataError
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.FeePaidCurrency
-import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
+import kotlin.jvm.Throws
 
 /**
  * Repository for everything related to the tokens of user wallet
@@ -251,4 +252,15 @@ interface CurrenciesRepository {
     fun getAllWalletsCryptoCurrencies(currencyRawId: CryptoCurrency.RawID): Flow<Map<UserWallet, List<CryptoCurrency>>>
 
     fun isNetworkFeeZero(userWalletId: UserWalletId, network: Network): Boolean
+
+    /**
+     * Synchronizes local tokens with remote data for a specific user wallet.
+     * This method ensures that the local token list matches the remote state by fetching
+     * the token data from the local cache and push it to backend.
+     *
+     * @param userWalletId The unique identifier of the user wallet to sync tokens for.
+     * @throws Exception if the sync request to the backend fails
+     */
+    @Throws
+    suspend fun syncTokens(userWalletId: UserWalletId)
 }

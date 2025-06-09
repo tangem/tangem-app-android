@@ -45,12 +45,13 @@ internal class DefaultSingleYieldBalanceProducer @AssistedInject constructor(
         return multiYieldBalanceSupplier(
             params = MultiYieldBalanceProducer.Params(userWalletId = params.userWalletId),
         )
-            .mapNotNull {
-                val currentStakingIds = getStakingIds()
-
-                it.firstOrNull { balance ->
-                    currentStakingIds.contains(balance.getStakingId())
+            .mapNotNull { balances ->
+                val currentStakingIds = getStakingIds().ifEmpty {
+                    return@mapNotNull YieldBalance.Unsupported
                 }
+
+                balances.firstOrNull { currentStakingIds.contains(it.getStakingId()) }
+                    ?: YieldBalance.Unsupported
             }
             .distinctUntilChanged()
             .flowOn(dispatchers.default)

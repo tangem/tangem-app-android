@@ -191,7 +191,7 @@ internal class BiometricUserWalletsListManagerTest(private val model: Model) {
         )
 
         fun createUserWallet(id: String, isLocked: Boolean): UserWallet {
-            return UserWallet(
+            return UserWallet.Cold(
                 name = "Wallet $id",
                 walletId = UserWalletId(stringValue = id),
                 cardsInWallet = emptySet(),

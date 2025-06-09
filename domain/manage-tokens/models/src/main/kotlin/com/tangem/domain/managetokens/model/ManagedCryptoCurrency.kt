@@ -1,8 +1,10 @@
 package com.tangem.domain.managetokens.model
 
-import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.Network
+import kotlinx.serialization.Serializable
 
+@Serializable
 sealed class ManagedCryptoCurrency {
 
     abstract val id: ID
@@ -10,6 +12,7 @@ sealed class ManagedCryptoCurrency {
     abstract val symbol: String
     abstract val iconUrl: String?
 
+    @Serializable
     sealed class Custom : ManagedCryptoCurrency() {
 
         abstract val currencyId: CryptoCurrency.ID
@@ -18,6 +21,7 @@ sealed class ManagedCryptoCurrency {
         override val id: ID
             get() = ID(currencyId.value)
 
+        @Serializable
         data class Token(
             override val currencyId: CryptoCurrency.ID,
             override val name: String,
@@ -28,6 +32,7 @@ sealed class ManagedCryptoCurrency {
             val decimals: Int,
         ) : Custom()
 
+        @Serializable
         data class Coin(
             override val currencyId: CryptoCurrency.ID,
             override val name: String,
@@ -37,6 +42,7 @@ sealed class ManagedCryptoCurrency {
         ) : Custom()
     }
 
+    @Serializable
     data class Token(
         override val id: ID,
         override val name: String,
@@ -50,8 +56,10 @@ sealed class ManagedCryptoCurrency {
     }
 
     @JvmInline
+    @Serializable
     value class ID(val value: String)
 
+    @Serializable
     sealed class SourceNetwork {
 
         abstract val network: Network
@@ -77,12 +85,14 @@ sealed class ManagedCryptoCurrency {
                 }
             }
 
+        @Serializable
         data class Main(
             override val network: Network,
             override val decimals: Int,
             val isL2Network: Boolean,
         ) : SourceNetwork()
 
+        @Serializable
         data class Default(
             override val network: Network,
             override val decimals: Int,

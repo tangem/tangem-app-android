@@ -22,7 +22,7 @@ internal class TokenListFiatBalanceOperations(
         if (isAnyTokenLoading) return fiatBalance
 
         for (token in currencies) {
-            val blockchainId = token.currency.network.id.value
+            val blockchainId = token.currency.network.rawId
             when (val status = token.value) {
                 is CryptoCurrencyStatus.Loading -> {
                     fiatBalance = TotalFiatBalance.Loading

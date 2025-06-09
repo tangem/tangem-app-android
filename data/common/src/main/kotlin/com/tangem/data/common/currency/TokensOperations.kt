@@ -2,17 +2,18 @@ package com.tangem.data.common.currency
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.IconsUtil
+import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.blockchainsdk.utils.toCoinId
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
-import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.CryptoCurrency.ID
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency.ID
+import com.tangem.domain.models.network.Network
 import com.tangem.blockchain.common.Token as SdkToken
-import com.tangem.domain.tokens.model.CryptoCurrency.ID.Body as CurrencyIdBody
-import com.tangem.domain.tokens.model.CryptoCurrency.ID.Prefix.COIN_PREFIX as COIN_ID_PREFIX
-import com.tangem.domain.tokens.model.CryptoCurrency.ID.Prefix.TOKEN_PREFIX as TOKEN_ID_PREFIX
-import com.tangem.domain.tokens.model.CryptoCurrency.ID.Suffix.ContractAddress as CustomCurrencyIdSuffix
-import com.tangem.domain.tokens.model.CryptoCurrency.ID.Suffix.RawID as CurrencyIdSuffix
+import com.tangem.domain.models.currency.CryptoCurrency.ID.Body as CurrencyIdBody
+import com.tangem.domain.models.currency.CryptoCurrency.ID.Prefix.COIN_PREFIX as COIN_ID_PREFIX
+import com.tangem.domain.models.currency.CryptoCurrency.ID.Prefix.TOKEN_PREFIX as TOKEN_ID_PREFIX
+import com.tangem.domain.models.currency.CryptoCurrency.ID.Suffix.ContractAddress as CustomCurrencyIdSuffix
+import com.tangem.domain.models.currency.CryptoCurrency.ID.Suffix.RawID as CurrencyIdSuffix
 
 private const val DEFAULT_TOKENS_ICONS_HOST = "https://s3.eu-central-1.amazonaws.com/tangem.api/coins"
 private const val TOKEN_ICON_SIZE = "large"
@@ -68,22 +69,21 @@ fun getCoinIconUrl(blockchain: Blockchain): String? {
 }
 
 fun List<UserTokensResponse.Token>.hasCoinForToken(network: Network): Boolean {
-    return any {
-        val blockchain = getBlockchain(networkId = network.id)
-        val tokenDerivation = network.derivationPath.value
-        it.id == blockchain.toCoinId() && it.derivationPath == tokenDerivation
-    }
+    val coinId = network.toBlockchain().toCoinId()
+    val tokenDerivation = network.derivationPath.value
+
+    return any { it.id == coinId && it.derivationPath == tokenDerivation }
 }
 
 private fun getCurrencyIdBody(network: Network): CurrencyIdBody {
     return when (val path = network.derivationPath) {
         is Network.DerivationPath.Custom -> CurrencyIdBody.NetworkIdWithDerivationPath(
-            rawId = network.id.value,
+            rawId = network.rawId,
             derivationPath = path.value,
         )
         is Network.DerivationPath.Card,
         is Network.DerivationPath.None,
-        -> CurrencyIdBody.NetworkId(network.id.value)
+        -> CurrencyIdBody.NetworkId(network.rawId)
     }
 }
 

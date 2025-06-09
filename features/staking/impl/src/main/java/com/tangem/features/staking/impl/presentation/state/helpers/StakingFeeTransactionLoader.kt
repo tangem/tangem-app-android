@@ -7,6 +7,7 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.extensions.isZero
 import com.tangem.common.ui.amountScreen.models.AmountState
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.staking.EstimateGasUseCase
 import com.tangem.domain.staking.model.stakekit.PendingAction
 import com.tangem.domain.staking.model.stakekit.StakingError
@@ -14,7 +15,6 @@ import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.staking.model.stakekit.transaction.ActionParams
 import com.tangem.domain.staking.model.stakekit.transaction.StakingGasEstimate
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.staking.getCurrentToken
 import com.tangem.domain.transaction.error.GetFeeError
@@ -102,7 +102,7 @@ internal class StakingFeeTransactionLoader @AssistedInject constructor(
             ?: error("No available address")
 
         val gasEstimate = if (isCompositePendingActions(
-                networkId = cryptoCurrencyStatus.currency.network.id.value,
+                networkId = cryptoCurrencyStatus.currency.network.rawId,
                 pendingActions = pendingActions,
             )
         ) {

@@ -19,18 +19,22 @@ import com.tangem.features.nft.common.ui.NFTContent
 import com.tangem.features.nft.component.NFTComponent
 import com.tangem.features.nft.details.NFTDetailsComponent
 import com.tangem.features.nft.details.info.NFTDetailsInfoComponent
+import com.tangem.features.nft.entity.NFTSendSuccessListener
 import com.tangem.features.nft.receive.NFTReceiveComponent
 import com.tangem.features.nft.traits.NFTAssetTraitsComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 internal class DefaultNFTComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted private val params: NFTComponent.Params,
     private val nftDetailsInfoComponentFactory: NFTDetailsInfoComponent.Factory,
+    nftSendSuccessListener: NFTSendSuccessListener,
 ) : NFTComponent, AppComponentContext by appComponentContext {
 
     private val stackNavigation = StackNavigation<NFTRoute>()
@@ -69,6 +73,11 @@ internal class DefaultNFTComponent @AssistedInject constructor(
                 currentRoute.emit(stack.active.configuration)
             }
         }
+        nftSendSuccessListener.nftSendSuccessFlow
+            .onEach {
+                innerRouter.popTo(NFTRoute.Collections(userWalletId = params.userWalletId))
+            }
+            .launchIn(componentScope)
     }
 
     @Composable

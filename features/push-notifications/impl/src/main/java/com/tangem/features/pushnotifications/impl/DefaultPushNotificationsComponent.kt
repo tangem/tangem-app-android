@@ -2,6 +2,8 @@ package com.tangem.features.pushnotifications.impl
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.tangem.core.decompose.context.AppComponentContext
@@ -25,6 +27,7 @@ internal class DefaultPushNotificationsComponent @AssistedInject constructor(
     @Composable
     override fun Content(modifier: Modifier) {
         val activity = LocalContext.current.findActivity()
+        val state by model.state.collectAsState()
         BackHandler(onBack = { activity.finish() })
         NavigationBar3ButtonsScrim()
         PushNotificationsScreen(
@@ -32,6 +35,7 @@ internal class DefaultPushNotificationsComponent @AssistedInject constructor(
             onNeverRequest = model::onNeverRequest,
             onAllowPermission = model::onAllowPermission,
             onDenyPermission = model::onDenyPermission,
+            showNotificationsInfo = state.showInfoAboutNotifications,
         )
     }
 

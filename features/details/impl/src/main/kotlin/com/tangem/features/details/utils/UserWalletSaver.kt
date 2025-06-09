@@ -20,7 +20,7 @@ import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.redux.ReduxStateHolder
-import com.tangem.domain.wallets.builder.UserWalletBuilder
+import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.models.SaveWalletError
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
@@ -37,7 +37,7 @@ import kotlin.coroutines.resume
 internal class UserWalletSaver @Inject constructor(
     private val scanCardProcessor: ScanCardProcessor,
     private val saveWalletUseCase: SaveWalletUseCase,
-    private val userWalletBuilderFactory: UserWalletBuilder.Factory,
+    private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory,
     private val shouldSaveUserWalletsSyncUseCase: ShouldSaveUserWalletsSyncUseCase,
     private val reduxStateHolder: ReduxStateHolder,
     private val messageSender: UiMessageSender,
@@ -112,7 +112,7 @@ internal class UserWalletSaver @Inject constructor(
     }
 
     private suspend fun Raise<Error>.createUserWallet(response: ScanResponse): UserWallet {
-        val userWallet = userWalletBuilderFactory.create(scanResponse = response).build()
+        val userWallet = coldUserWalletBuilderFactory.create(scanResponse = response).build()
 
         return ensureNotNull(userWallet) { Error.Unknown }
     }

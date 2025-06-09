@@ -1,6 +1,6 @@
 package com.tangem.feature.tokendetails.presentation.router
 
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
 
 internal interface InnerTokenDetailsRouter {

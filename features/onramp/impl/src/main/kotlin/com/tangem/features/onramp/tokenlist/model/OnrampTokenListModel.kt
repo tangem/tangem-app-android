@@ -20,6 +20,7 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.tokens.model.TotalFiatBalance
+import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.tokenlist.OnrampTokenListComponent
@@ -59,7 +60,8 @@ internal class OnrampTokenListModel @Inject constructor(
 
     private val params: OnrampTokenListComponent.Params = paramsContainer.require()
     private val scanResponse by lazy {
-        getWalletsUseCase.invokeSync().first { it.walletId == params.userWalletId }.scanResponse
+        getWalletsUseCase.invokeSync().first { it.walletId == params.userWalletId }
+            .requireColdWallet().scanResponse // TODO [REDACTED_TASK_KEY]
     }
 
     init {

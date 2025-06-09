@@ -59,6 +59,7 @@ fun AmountTextField(
     textStyle: TextStyle,
     modifier: Modifier = Modifier,
     color: Color = TangemTheme.colors.text.primary1,
+    backgroundColor: Color = TangemTheme.colors.background.action,
     visualTransformation: VisualTransformation = AmountVisualTransformation(decimals),
     keyboardOptions: KeyboardOptions = KeyboardOptions(
         keyboardType = KeyboardType.Number,
@@ -117,7 +118,7 @@ fun AmountTextField(
             singleLine = true,
             readOnly = !isEnabled,
             visualTransformation = visualTransformation,
-            modifier = Modifier.background(TangemTheme.colors.background.action),
+            modifier = Modifier.background(backgroundColor),
         )
     }
 }

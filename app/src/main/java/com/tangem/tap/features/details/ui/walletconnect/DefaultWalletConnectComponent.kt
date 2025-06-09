@@ -22,10 +22,10 @@ import org.rekotlin.StoreSubscriber
 @Suppress("UnusedPrivateMember")
 internal class DefaultWalletConnectComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
-    @Assisted params: Unit,
+    @Assisted params: WalletConnectComponent.Params,
 ) : WalletConnectComponent, AppComponentContext by appComponentContext, StoreSubscriber<WalletConnectState> {
 
-    private val model: WalletConnectModel = getOrCreateModel()
+    private val model: WalletConnectModel = getOrCreateModel(params)
 
     private var screenState: MutableState<WalletConnectScreenState> =
         mutableStateOf(model.updateState(store.state.walletConnectState))
@@ -65,6 +65,9 @@ internal class DefaultWalletConnectComponent @AssistedInject constructor(
 
     @AssistedFactory
     interface Factory : WalletConnectComponent.Factory {
-        override fun create(context: AppComponentContext, params: Unit): DefaultWalletConnectComponent
+        override fun create(
+            context: AppComponentContext,
+            params: WalletConnectComponent.Params,
+        ): DefaultWalletConnectComponent
     }
 }

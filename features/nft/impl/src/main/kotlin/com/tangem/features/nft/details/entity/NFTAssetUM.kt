@@ -3,9 +3,7 @@ package com.tangem.features.nft.details.entity
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.atoms.text.TextEllipsis
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.domain.appcurrency.model.AppCurrency
 import kotlinx.collections.immutable.ImmutableList
-import java.math.BigDecimal
 
 data class NFTAssetUM(
     val name: String,
@@ -31,7 +29,6 @@ data class NFTAssetUM(
     sealed class Media {
         data object Empty : Media()
         data class Content(
-            val mimetype: String?,
             val url: String,
         ) : Media()
     }
@@ -41,11 +38,9 @@ data class NFTAssetUM(
         data object Loading : SalePrice()
         data object Empty : SalePrice()
         data class Content(
-            val value: BigDecimal,
-            val symbol: String,
-            val decimals: Int,
-            val rate: BigDecimal?,
-            val appCurrency: AppCurrency,
+            val isFlickering: Boolean,
+            val cryptoPrice: TextReference,
+            val fiatPrice: TextReference,
         ) : SalePrice()
     }
 

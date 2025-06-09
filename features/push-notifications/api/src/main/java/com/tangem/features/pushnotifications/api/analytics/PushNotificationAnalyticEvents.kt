@@ -43,4 +43,22 @@ sealed class PushNotificationAnalyticEvents(
             AnalyticsParam.STATE to if (isAllowed) "Allow" else "Cancel",
         ),
     )
+
+    data class NotificationOpened(
+        val type: String,
+    ) : PushNotificationAnalyticEvents(
+        event = "Push Notification Opened",
+        params = mapOf(
+            AnalyticsParam.TYPE to type,
+        ),
+    )
+
+    data class NotificationsEnabled(
+        val isEnabled: Boolean,
+    ) : PushNotificationAnalyticEvents(
+        event = "Push Toggle Clicked",
+        params = mapOf(
+            AnalyticsParam.STATE to if (isEnabled) "On" else "Off",
+        ),
+    )
 }

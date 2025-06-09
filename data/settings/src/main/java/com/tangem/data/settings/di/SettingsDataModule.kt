@@ -1,5 +1,6 @@
 package com.tangem.data.settings.di
 
+import android.content.Context
 import com.tangem.data.settings.DefaultAppRatingRepository
 import com.tangem.data.settings.DefaultPermissionRepository
 import com.tangem.data.settings.DefaultSettingsRepository
@@ -13,6 +14,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
@@ -44,7 +46,13 @@ internal object SettingsDataModule {
 
     @Provides
     @Singleton
-    fun providePushPermissionRepository(appPreferencesStore: AppPreferencesStore): PermissionRepository {
-        return DefaultPermissionRepository(appPreferencesStore = appPreferencesStore)
+    fun providePushPermissionRepository(
+        appPreferencesStore: AppPreferencesStore,
+        @ApplicationContext context: Context,
+    ): PermissionRepository {
+        return DefaultPermissionRepository(
+            appPreferencesStore = appPreferencesStore,
+            context = context,
+        )
     }
 }

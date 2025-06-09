@@ -217,5 +217,7 @@ sealed class AnalyticsParam {
         const val PAYMENT_METHOD = "Payment Method"
         const val WATCHED = "Watched"
         const val ACTION = "Action"
+        const val COLLECTIONS = "Collections"
+        const val NFT = "Nft"
     }
 }

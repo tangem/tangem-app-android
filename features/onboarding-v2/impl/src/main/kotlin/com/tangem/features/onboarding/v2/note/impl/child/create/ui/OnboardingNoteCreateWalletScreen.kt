@@ -7,7 +7,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -43,7 +42,8 @@ internal fun OnboardingNoteCreateWallet(state: OnboardingNoteCreateWalletUM, mod
             state = WalletArtworksState.Folded,
         )
         Column(
-            modifier = Modifier.weight(1 - ALL_STEPS_TOP_CONTAINER_WEIGHT)
+            modifier = Modifier
+                .weight(1 - ALL_STEPS_TOP_CONTAINER_WEIGHT)
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 32.dp),
@@ -51,7 +51,7 @@ internal fun OnboardingNoteCreateWallet(state: OnboardingNoteCreateWalletUM, mod
         ) {
             SpacerHMax()
             Text(
-                text = stringResource(R.string.onboarding_create_wallet_header),
+                text = stringResourceSafe(R.string.onboarding_create_wallet_header),
                 style = TangemTheme.typography.h2,
                 color = TangemTheme.colors.text.primary1,
                 textAlign = TextAlign.Center,
@@ -59,7 +59,7 @@ internal fun OnboardingNoteCreateWallet(state: OnboardingNoteCreateWalletUM, mod
             )
             SpacerH16()
             Text(
-                text = stringResource(R.string.onboarding_create_wallet_body),
+                text = stringResourceSafe(R.string.onboarding_create_wallet_body),
                 style = TangemTheme.typography.body1,
                 color = TangemTheme.colors.text.secondary,
                 textAlign = TextAlign.Center,

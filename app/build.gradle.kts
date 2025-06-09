@@ -96,6 +96,7 @@ dependencies {
     implementation(projects.domain.visa)
     implementation(projects.domain.onboarding)
     implementation(projects.domain.feedback)
+    implementation(projects.domain.feedback.models)
     implementation(projects.domain.qrScanning)
     implementation(projects.domain.qrScanning.models)
     implementation(projects.domain.staking)
@@ -111,6 +112,8 @@ dependencies {
     implementation(projects.domain.networks)
     implementation(projects.domain.quotes)
     implementation(projects.domain.notifications)
+    implementation(projects.domain.notifications.models)
+    implementation(projects.domain.notifications.toggles)
 
     implementation(projects.common)
     implementation(projects.common.routing)
@@ -175,8 +178,6 @@ dependencies {
     implementation(projects.features.tokendetails.impl)
     implementation(projects.features.manageTokens.api)
     implementation(projects.features.manageTokens.impl)
-    implementation(projects.features.send.api)
-    implementation(projects.features.send.impl)
     implementation(projects.features.sendV2.api)
     implementation(projects.features.sendV2.impl)
     implementation(projects.features.qrScanning.api)
@@ -207,6 +208,10 @@ dependencies {
     implementation(projects.features.nft.impl)
     implementation(projects.features.walletconnect.api)
     implementation(projects.features.walletconnect.impl)
+    implementation(projects.features.usedesk.api)
+    implementation(projects.features.usedesk.impl)
+    implementation(projects.features.feeSelector.api)
+    implementation(projects.features.feeSelector.impl)
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)

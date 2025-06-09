@@ -1,17 +1,13 @@
 package com.tangem.features.staking.impl.presentation.state.helpers
 
 import com.tangem.domain.staking.FetchActionsUseCase
-import com.tangem.domain.staking.FetchStakingYieldBalanceUseCase
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.action.StakingActionStatus
+import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
 import com.tangem.domain.tokens.FetchPendingTransactionsUseCase
-import com.tangem.domain.tokens.TokensFeatureToggles
-import com.tangem.domain.tokens.UpdateDelayedNetworkStatusUseCase
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
-import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.features.txhistory.TxHistoryFeatureToggles
 import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
 import com.tangem.utils.coroutines.DelayedWork
 import dagger.assisted.Assisted
@@ -22,76 +18,63 @@ import kotlinx.coroutines.*
 @Suppress("LongParameterList")
 internal class StakingBalanceUpdater @AssistedInject constructor(
     private val fetchPendingTransactionsUseCase: FetchPendingTransactionsUseCase,
-    private val updateDelayedNetworkStatusUseCase: UpdateDelayedNetworkStatusUseCase,
-    private val stakingYieldBalanceUseCase: FetchStakingYieldBalanceUseCase,
     private val getTxHistoryItemsCountUseCase: GetTxHistoryItemsCountUseCase,
-    private val getTxHistoryItemsUseCase: GetTxHistoryItemsUseCase,
     private val fetchActionsUseCase: FetchActionsUseCase,
-    private val txHistoryFeatureToggles: TxHistoryFeatureToggles,
     private val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter,
-    private val tokensFeatureToggles: TokensFeatureToggles,
+    private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
     @DelayedWork private val coroutineScope: CoroutineScope,
     @Assisted private val userWallet: UserWallet,
     @Assisted private val cryptoCurrencyStatus: CryptoCurrencyStatus,
     @Assisted private val yield: Yield,
 ) {
-    fun fullUpdate() {
+    fun updateAfterTransaction() {
         coroutineScope.launch {
             listOf(
                 // we should update network to find pending tx after 1 sec
                 async {
                     fetchPendingTransactionsUseCase(
                         userWalletId = userWallet.walletId,
-                        networks = setOf(cryptoCurrencyStatus.currency.network),
+                        network = cryptoCurrencyStatus.currency.network,
                     )
                 },
                 // we should update tx history and network for new balances
                 async {
-                    updateStakeBalance()
+                    fetchCurrencyStatus(delayMillis = BALANCE_UPDATE_DELAY)
                 },
                 async {
                     updateTxHistory()
                 },
                 async {
-                    updateNetworkStatuses()
-                },
-                async {
-                    updateProcessingActions()
+                    updateStakingActions()
                 },
             ).awaitAll()
         }
     }
 
-    suspend fun partialUpdate() {
+    suspend fun updatePullToRefresh() {
         coroutineScope {
             listOf(
                 async {
-                    updateStakeBalance()
+                    fetchCurrencyStatus()
                 },
                 async {
-                    updateNetworkStatuses(delay = 0)
-                },
-                async {
-                    updateProcessingActions()
+                    updateStakingActions()
                 },
             ).awaitAll()
         }
     }
 
-    private suspend fun updateNetworkStatuses(delay: Long = BALANCE_UPDATE_DELAY) {
-        updateDelayedNetworkStatusUseCase(
-            userWalletId = userWallet.walletId,
-            network = cryptoCurrencyStatus.currency.network,
-            delayMillis = delay,
-            refresh = true,
-        )
+    suspend fun updateAfterNavigationToInitial() {
+        coroutineScope {
+            async { updateStakingActions() }.await()
+        }
     }
 
-    private suspend fun updateStakeBalance() {
-        stakingYieldBalanceUseCase(
+    private suspend fun fetchCurrencyStatus(delayMillis: Long = 0L) {
+        delay(delayMillis)
+        fetchCurrencyStatusUseCase(
             userWalletId = userWallet.walletId,
-            cryptoCurrency = cryptoCurrencyStatus.currency,
-            isRefactoringEnabled = tokensFeatureToggles.isStakingLoadingRefactoringEnabled,
+            id = cryptoCurrencyStatus.currency.id,
             refresh = true,
         )
     }
@@ -104,19 +87,11 @@ internal class StakingBalanceUpdater @AssistedInject constructor(
         )
 
         txHistoryItemsCountEither.onRight {
-            if (txHistoryFeatureToggles.isFeatureEnabled) {
-                txHistoryContentUpdateEmitter.triggerUpdate()
-            } else {
-                getTxHistoryItemsUseCase(
-                    userWalletId = userWallet.walletId,
-                    currency = cryptoCurrencyStatus.currency,
-                    refresh = true,
-                )
-            }
+            txHistoryContentUpdateEmitter.triggerUpdate()
         }
     }
 
-    private suspend fun updateProcessingActions() {
+    private suspend fun updateStakingActions() {
         fetchActionsUseCase(
             userWalletId = userWallet.walletId,
             cryptoCurrency = cryptoCurrencyStatus.currency,

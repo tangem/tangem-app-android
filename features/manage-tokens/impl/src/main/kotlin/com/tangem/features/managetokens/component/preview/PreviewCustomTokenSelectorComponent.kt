@@ -3,7 +3,7 @@ package com.tangem.features.managetokens.component.preview
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.managetokens.component.CustomTokenSelectorComponent
 import com.tangem.features.managetokens.component.CustomTokenSelectorComponent.Params
@@ -26,17 +26,19 @@ internal class PreviewCustomTokenSelectorComponent(
 ) : CustomTokenSelectorComponent {
 
     private val previewItems = List(size = itemsSize) { index ->
+        val derivationPath = Network.DerivationPath.Card("m/44'/0'/0'/0/$index")
+
         when (params) {
             is Params.DerivationPathSelector -> {
                 val d = SelectedDerivationPath(
-                    id = Network.ID(index.toString()),
-                    value = Network.DerivationPath.Card("m/44'/0'/0'/0/$index"),
+                    id = Network.ID(value = index.toString(), derivationPath = derivationPath),
+                    value = derivationPath,
                     name = "Network $index",
                     isDefault = false,
                 )
 
                 DerivationPathUM(
-                    id = d.id?.value ?: "",
+                    id = d.id?.rawId?.value ?: "",
                     value = d.value.value.orEmpty(),
                     networkName = stringReference(d.name),
                     isSelected = d.value == params.selectedDerivationPath?.value,
@@ -45,16 +47,16 @@ internal class PreviewCustomTokenSelectorComponent(
             }
             is Params.NetworkSelector -> {
                 val n = SelectedNetwork(
-                    id = Network.ID(index.toString()),
+                    id = Network.ID(value = index.toString(), derivationPath = derivationPath),
                     name = "Network $index",
-                    derivationPath = Network.DerivationPath.Card("m/44'/0'/0'/0/$index"),
+                    derivationPath = derivationPath,
                     canHandleTokens = false,
                 )
 
                 CurrencyNetworkUM(
                     network = Network(
                         id = n.id,
-                        backendId = n.id.value,
+                        backendId = n.id.rawId.value,
                         name = "Network $index",
                         currencySymbol = "N$index",
                         derivationPath = Network.DerivationPath.Card(""),
@@ -76,7 +78,7 @@ internal class PreviewCustomTokenSelectorComponent(
         }
     }.toImmutableList()
 
-    val previewState = CustomTokenSelectorUM(
+    private val previewState = CustomTokenSelectorUM(
         header = when (params) {
             is Params.DerivationPathSelector -> CustomTokenSelectorUM.HeaderUM.CustomDerivationButton(
                 value = null,

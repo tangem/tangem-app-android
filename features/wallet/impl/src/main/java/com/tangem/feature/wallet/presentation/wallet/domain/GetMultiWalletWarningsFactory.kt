@@ -6,11 +6,11 @@ import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.promo.ShouldShowPromoWalletUseCase
 import com.tangem.domain.promo.models.PromoId
 import com.tangem.domain.settings.IsReadyToShowRateAppUseCase
 import com.tangem.domain.tokens.error.TokenListError
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.tokens.model.TotalFiatBalance
@@ -41,7 +41,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
 
     @Suppress("MagicNumber", "MaximumLineLength")
     fun create(userWallet: UserWallet, clickIntents: WalletClickIntents): Flow<ImmutableList<WalletNotification>> {
-        val cardTypesResolver = userWallet.scanResponse.cardTypesResolver
+        val cardTypesResolver = (userWallet as? UserWallet.Cold)?.scanResponse?.cardTypesResolver
 
         return combine(
             flow = tokenListStore.getOrThrow(userWallet.walletId),
@@ -94,6 +94,10 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
         seedPhraseIssueStatus: SeedPhraseNotificationsStatus,
         clickIntents: WalletClickIntents,
     ) {
+        if (userWallet !is UserWallet.Cold) {
+            return
+        }
+
         addSeedNotificationIfNeeded(userWallet, seedPhraseIssueStatus, clickIntents)
 
         val cardTypesResolver = userWallet.scanResponse.cardTypesResolver
@@ -121,7 +125,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
     }
 
     private fun MutableList<WalletNotification>.addSeedNotificationIfNeeded(
-        userWallet: UserWallet,
+        userWallet: UserWallet.Cold,
         seedPhraseIssueStatus: SeedPhraseNotificationsStatus,
         clickIntents: WalletClickIntents,
     ) {
@@ -154,13 +158,13 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
     }
 
     private fun MutableList<WalletNotification>.addInformationalNotifications(
-        cardTypesResolver: CardTypesResolver,
+        cardTypesResolver: CardTypesResolver?,
         maybeTokenList: Lce<TokenListError, TokenList>,
         clickIntents: WalletClickIntents,
     ) {
         addIf(
             element = WalletNotification.Informational.DemoCard,
-            condition = isDemoCardUseCase(cardId = cardTypesResolver.getCardId()),
+            condition = cardTypesResolver != null && isDemoCardUseCase(cardId = cardTypesResolver.getCardId()),
         )
 
         addMissingAddressesNotification(maybeTokenList, clickIntents)
@@ -194,7 +198,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
     }
 
     private fun MutableList<WalletNotification>.addReferralPromoNotification(
-        cardTypesResolver: CardTypesResolver,
+        cardTypesResolver: CardTypesResolver?,
         clickIntents: WalletClickIntents,
         shouldShowPromo: Boolean,
     ) {
@@ -203,12 +207,12 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
                 onCloseClick = { clickIntents.onClosePromoClick(promoId = PromoId.Referral) },
                 onClick = { clickIntents.onPromoClick(promoId = PromoId.Referral) },
             ),
-            condition = shouldShowPromo && cardTypesResolver.isTangemWallet(),
+            condition = shouldShowPromo && (cardTypesResolver == null || cardTypesResolver.isTangemWallet()),
         )
     }
 
     private fun MutableList<WalletNotification>.addWarningNotifications(
-        cardTypesResolver: CardTypesResolver,
+        cardTypesResolver: CardTypesResolver?,
         tokenList: Lce<TokenListError, TokenList>,
         isNeedToBackup: Boolean,
         clickIntents: WalletClickIntents,
@@ -222,7 +226,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
 
         addIf(
             element = WalletNotification.Warning.TestNetCard,
-            condition = cardTypesResolver.isTestCard(),
+            condition = cardTypesResolver?.isTestCard() == true,
         )
 
         addIf(
