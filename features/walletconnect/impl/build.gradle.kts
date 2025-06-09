@@ -64,4 +64,5 @@ dependencies {
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.timber)
     implementation(tangemDeps.card.core)
+    implementation(tangemDeps.blockchain)
 }
