@@ -13,22 +13,30 @@ import com.tangem.features.details.impl.R
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.toPersistentList
 import javax.inject.Inject
 
 @ModelScoped
 internal class ItemsBuilder @Inject constructor(private val router: Router) {
 
+    @Suppress("LongParameterList")
     fun buildAll(
         isWalletConnectAvailable: Boolean,
+        isSupportChatAvailable: Boolean,
         userWalletId: UserWalletId,
-        onSupportClick: () -> Unit,
+        onSupportEmailClick: () -> Unit,
+        onSupportChatClick: () -> Unit,
         onBuyClick: () -> Unit,
     ): ImmutableList<DetailsItemUM> = buildList {
         buildWalletConnectBlock(isWalletConnectAvailable, userWalletId)?.let(::add)
         buildUserWalletListBlock().let(::add)
         buildShopBlock(onBuyClick).let(::add)
         buildSettingsBlock().let(::add)
-        buildSupportBlock(onSupportClick).let(::add)
+        buildSupportBlock(
+            onSupportEmailClick = onSupportEmailClick,
+            onSupportChatClick = onSupportChatClick,
+            isSupportChatAvailable = isSupportChatAvailable,
+        ).let(::add)
     }.toImmutableList()
 
     private fun buildWalletConnectBlock(isWalletConnectAvailable: Boolean, userWalletId: UserWalletId): DetailsItemUM? {
@@ -82,17 +90,33 @@ internal class ItemsBuilder @Inject constructor(private val router: Router) {
         }.toImmutableList(),
     )
 
-    private fun buildSupportBlock(onClick: () -> Unit): DetailsItemUM = DetailsItemUM.Basic(
+    private fun buildSupportBlock(
+        onSupportEmailClick: () -> Unit,
+        onSupportChatClick: () -> Unit,
+        isSupportChatAvailable: Boolean,
+    ): DetailsItemUM = DetailsItemUM.Basic(
         id = "support",
-        items = persistentListOf(
+        items = buildList {
             DetailsItemUM.Basic.Item(
-                id = "send_feedback",
+                id = "support_email",
                 block = BlockUM(
                     text = resourceReference(R.string.details_row_title_contact_to_support),
                     iconRes = R.drawable.ic_comment_24,
-                    onClick = onClick,
+                    onClick = onSupportEmailClick,
                 ),
-            ),
+            ).let(::add)
+
+            if (isSupportChatAvailable) {
+                DetailsItemUM.Basic.Item(
+                    id = "support_chat",
+                    block = BlockUM(
+                        text = resourceReference(R.string.details_row_title_contact_to_support_chat),
+                        iconRes = R.drawable.ic_chat_24,
+                        onClick = onSupportChatClick,
+                    ),
+                ).let(::add)
+            }
+
             DetailsItemUM.Basic.Item(
                 id = "disclaimer",
                 block = BlockUM(
@@ -100,7 +124,7 @@ internal class ItemsBuilder @Inject constructor(private val router: Router) {
                     iconRes = R.drawable.ic_text_24,
                     onClick = { router.push(AppRoute.Disclaimer(isTosAccepted = true)) },
                 ),
-            ),
-        ),
+            ).let(::add)
+        }.toPersistentList(),
     )
 }
