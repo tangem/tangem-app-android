@@ -38,6 +38,7 @@ dependencies {
     implementation(projects.domain.settings)
     implementation(projects.domain.staking)
     implementation(projects.domain.feedback)
+    implementation(projects.domain.feedback.models)
     implementation(projects.domain.promo)
     implementation(projects.domain.promo.models)
     implementation(projects.domain.txhistory)

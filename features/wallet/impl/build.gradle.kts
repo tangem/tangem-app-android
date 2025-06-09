@@ -74,6 +74,7 @@ dependencies {
     implementation(projects.domain.card)
     implementation(projects.domain.demo)
     implementation(projects.domain.feedback)
+    implementation(projects.domain.feedback.models)
     implementation(projects.domain.legacy)
     implementation(projects.domain.markets.models)
     implementation(projects.domain.models)
