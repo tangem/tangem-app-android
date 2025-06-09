@@ -72,9 +72,14 @@ internal fun SendDestinationContent(
         )
         listItem(
             list = wallets,
-            clickIntents = clickIntents,
             isLast = recipients.any { !it.isVisible },
             isBalanceHidden = isBalanceHidden,
+            onClick = { title ->
+                clickIntents.onRecipientAddressValueChange(
+                    title,
+                    EnterAddressSource.MyWallets,
+                )
+            },
         )
         listHeaderItem(
             titleRes = R.string.send_recent_transactions,
@@ -83,9 +88,14 @@ internal fun SendDestinationContent(
         )
         listItem(
             list = recipients,
-            clickIntents = clickIntents,
             isLast = true,
             isBalanceHidden = isBalanceHidden,
+            onClick = { title ->
+                clickIntents.onRecipientAddressValueChange(
+                    title,
+                    EnterAddressSource.RecentAddress,
+                )
+            },
         )
     }
 }
@@ -182,9 +192,9 @@ private fun LazyListScope.listHeaderItem(@StringRes titleRes: Int, isVisible: Bo
 
 private fun LazyListScope.listItem(
     list: ImmutableList<DestinationRecipientListUM>,
-    clickIntents: SendDestinationClickIntents,
     isLast: Boolean,
     isBalanceHidden: Boolean,
+    onClick: (String) -> Unit,
 ) {
     items(
         count = list.size,
@@ -201,12 +211,7 @@ private fun LazyListScope.listItem(
                 info = item.timestamp?.resolveReference(),
                 subtitleEndOffset = item.subtitleEndOffset,
                 subtitleIconRes = item.subtitleIconRes,
-                onClick = {
-                    clickIntents.onRecipientAddressValueChange(
-                        title,
-                        EnterAddressSource.RecentAddress,
-                    )
-                },
+                onClick = { onClick(title) },
                 isLoading = item.isLoading,
                 modifier = Modifier
                     .animateItem()

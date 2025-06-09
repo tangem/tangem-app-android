@@ -6,6 +6,7 @@ import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
@@ -25,6 +26,8 @@ internal class WalletLoadingStateFactory(
 ) {
 
     fun create(userWallet: UserWallet): WalletState {
+        userWallet.requireColdWallet()
+
         return userWallet.createStateByWalletType(
             multiCurrencyCreator = { createLoadingMultiCurrencyContent(userWallet) },
             singleCurrencyCreator = { createLoadingSingleCurrencyContent(userWallet) },
@@ -32,7 +35,7 @@ internal class WalletLoadingStateFactory(
         )
     }
 
-    private fun createLoadingMultiCurrencyContent(userWallet: UserWallet): WalletState.MultiCurrency.Content {
+    private fun createLoadingMultiCurrencyContent(userWallet: UserWallet.Cold): WalletState.MultiCurrency.Content {
         return WalletState.MultiCurrency.Content(
             pullToRefreshConfig = createPullToRefreshConfig(),
             walletCardState = userWallet.toLoadingWalletCardState(),
@@ -44,7 +47,7 @@ internal class WalletLoadingStateFactory(
         )
     }
 
-    private fun createLoadingSingleCurrencyContent(userWallet: UserWallet): WalletState.SingleCurrency.Content {
+    private fun createLoadingSingleCurrencyContent(userWallet: UserWallet.Cold): WalletState.SingleCurrency.Content {
         val currencySymbol = userWallet.scanResponse.cardTypesResolver.getBlockchain().currency
         return WalletState.SingleCurrency.Content(
             pullToRefreshConfig = createPullToRefreshConfig(),
@@ -63,7 +66,7 @@ internal class WalletLoadingStateFactory(
         )
     }
 
-    private fun createLoadingVisaWalletContent(userWallet: UserWallet): WalletState.Visa.Content {
+    private fun createLoadingVisaWalletContent(userWallet: UserWallet.Cold): WalletState.Visa.Content {
         return WalletState.Visa.Content(
             pullToRefreshConfig = createPullToRefreshConfig(),
             walletCardState = userWallet.toLoadingWalletCardState(),
@@ -86,7 +89,7 @@ internal class WalletLoadingStateFactory(
         )
     }
 
-    private fun UserWallet.toLoadingWalletCardState(): WalletCardState {
+    private fun UserWallet.Cold.toLoadingWalletCardState(): WalletCardState {
         return WalletCardState.Loading(
             id = walletId,
             title = name,
@@ -96,7 +99,7 @@ internal class WalletLoadingStateFactory(
         )
     }
 
-    private fun createMultiWalletActions(userWallet: UserWallet): PersistentList<WalletManageButton> {
+    private fun createMultiWalletActions(userWallet: UserWallet.Cold): PersistentList<WalletManageButton> {
         val isSingleWalletWithToken = userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()
         if (isSingleWalletWithToken) return persistentListOf()
 

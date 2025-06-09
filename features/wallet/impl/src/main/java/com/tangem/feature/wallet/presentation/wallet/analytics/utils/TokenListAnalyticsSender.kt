@@ -17,6 +17,7 @@ import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.tokens.model.TotalFiatBalance
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.models.isMultiCurrency
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.Basic
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.MainScreen
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState

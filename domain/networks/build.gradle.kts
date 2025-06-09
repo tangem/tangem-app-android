@@ -5,6 +5,6 @@ plugins {
 
 dependencies {
     api(projects.domain.core)
-    api(projects.domain.tokens.models)
+    api(projects.domain.models)
     api(projects.domain.wallets.models)
 }

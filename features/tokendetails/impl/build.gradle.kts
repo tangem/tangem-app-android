@@ -87,6 +87,7 @@ dependencies {
     implementation(projects.domain.promo)
     implementation(projects.domain.promo.models)
     implementation(projects.domain.quotes)
+    implementation(projects.domain.notifications.models)
 
     /** Temp dependency to swap domain */
     implementation(projects.features.swap.domain)
@@ -95,10 +96,10 @@ dependencies {
 
     /** Feature Apis */
     implementation(projects.features.tokendetails.api)
-    implementation(projects.features.send.api)
     implementation(projects.features.staking.api)
     implementation(projects.features.markets.api)
     implementation(projects.features.onramp.api)
+    implementation(projects.features.pushNotifications.api)
     implementation(projects.features.swap.api)
     implementation(projects.features.txhistory.api)
 

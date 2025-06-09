@@ -1,7 +1,7 @@
 package com.tangem.domain.markets
 
 import com.tangem.domain.core.serialization.SerializedBigDecimal
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import kotlinx.serialization.Serializable
 
 @Serializable

@@ -8,13 +8,13 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.onramp.analytics.OnrampAnalyticsEvent
 import com.tangem.domain.onramp.model.OnrampCurrency
 import com.tangem.domain.onramp.model.OnrampProviderWithQuote
 import com.tangem.domain.onramp.model.OnrampQuote
 import com.tangem.domain.onramp.model.error.OnrampError
 import com.tangem.domain.tokens.model.AmountType
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.main.entity.*
 import com.tangem.features.onramp.providers.entity.SelectProviderResult

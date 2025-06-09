@@ -1,9 +1,11 @@
 package com.tangem.data.walletconnect.sign
 
 import arrow.core.left
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.data.walletconnect.sign.SignStateConverter.toPreSign
 import com.tangem.data.walletconnect.sign.SignStateConverter.toResult
 import com.tangem.data.walletconnect.sign.SignStateConverter.toSigning
+import com.tangem.domain.walletconnect.WcAnalyticEvents
 import com.tangem.domain.walletconnect.usecase.method.WcSignState
 import com.tangem.domain.walletconnect.usecase.method.WcSignStep
 import kotlinx.coroutines.Job
@@ -13,6 +15,8 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 internal class WcSignUseCaseDelegate<MiddleAction, SignModel>(
+    private val analytics: AnalyticsEventHandler,
+    private val context: WcMethodUseCaseContext,
     private val finalActionCollector: FinalActionCollector<SignModel>,
     private val middleActionCollector: MiddleActionCollector<MiddleAction, SignModel>,
 ) : FinalActionCollector<SignModel> by finalActionCollector,
@@ -35,6 +39,13 @@ internal class WcSignUseCaseDelegate<MiddleAction, SignModel>(
 
     operator fun invoke(initModel: SignModel) = channelFlow {
         val state = MutableStateFlow(WcSignState(initModel, WcSignStep.PreSign))
+        analytics.send(
+            WcAnalyticEvents.SignatureRequestReceived(
+                session = context.session,
+                rawRequest = context.rawSdkRequest,
+                network = context.network,
+            ),
+        )
 
         state
             .onEach { newState -> channel.send(newState) }
@@ -53,6 +64,27 @@ internal class WcSignUseCaseDelegate<MiddleAction, SignModel>(
             .catch { exception ->
                 val errorResult = state.value.toResult(exception.left())
                 state.update { errorResult }
+            }
+            .onEach { state ->
+                val step = state.domainStep as? WcSignStep.Result ?: return@onEach
+                val event = step.result.fold(
+                    ifLeft = {
+                        WcAnalyticEvents.SignatureRequestFailed(
+                            session = context.session,
+                            rawRequest = context.rawSdkRequest,
+                            network = context.network,
+                            it.message.orEmpty(),
+                        )
+                    },
+                    ifRight = {
+                        WcAnalyticEvents.SignatureRequestHandled(
+                            session = context.session,
+                            rawRequest = context.rawSdkRequest,
+                            network = context.network,
+                        )
+                    },
+                )
+                analytics.send(event)
             }
 
         var signJob: Job? = null

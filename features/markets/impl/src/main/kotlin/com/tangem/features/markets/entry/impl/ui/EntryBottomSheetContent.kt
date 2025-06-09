@@ -20,7 +20,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.markets.details.MarketsTokenDetailsComponent
 import com.tangem.features.markets.entry.BottomSheetState
 import com.tangem.features.markets.entry.impl.MarketsEntryChildFactory
-import com.tangem.features.markets.tokenlist.api.MarketsTokenListComponent
+import com.tangem.features.markets.tokenlist.MarketsTokenListComponent
 
 @Composable
 internal fun EntryBottomSheetContent(
