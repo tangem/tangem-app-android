@@ -1,7 +1,7 @@
 package com.tangem.domain.nft.models
 
 import com.tangem.domain.models.StatusSource
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.network.Network
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -41,7 +41,7 @@ data class NFTCollection(
         data class TON(val contractAddress: String?) : Identifier()
 
         @Serializable
-        data class Solana(val collection: String?) : Identifier()
+        data class Solana(val collectionAddress: String?) : Identifier()
 
         @Serializable
         data object Unknown : Identifier()

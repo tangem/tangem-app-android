@@ -1,7 +1,7 @@
 package com.tangem.features.send.v2.subcomponents.fee.model.transformers
 
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeSelectorUM
 import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeUM
@@ -28,7 +28,7 @@ internal class SendFeeInitialStateTransformer(
             isCustomSelected = false,
             isFeeConvertibleToFiat = feeCryptoCurrencyStatus.currency.network.hasFiatFeeRate,
             isTronToken = cryptoCurrency is CryptoCurrency.Token &&
-                isTron(cryptoCurrency.network.id.value),
+                isTron(cryptoCurrency.network.rawId),
         )
     }
 }

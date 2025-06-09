@@ -2,9 +2,9 @@ package com.tangem.domain.transaction.usecase
 
 import arrow.core.left
 import arrow.core.right
-import com.tangem.domain.tokens.model.CryptoCurrencyAddress
-import com.tangem.domain.tokens.model.Network
-import com.tangem.domain.tokens.model.NetworkAddress
+import com.tangem.domain.models.network.CryptoCurrencyAddress
+import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.transaction.WalletAddressServiceRepository
 import com.tangem.domain.transaction.error.AddressValidation
 import com.tangem.domain.transaction.error.AddressValidationResult
@@ -26,7 +26,7 @@ class ValidateWalletAddressUseCase(
         address: String,
         currencyAddress: Set<NetworkAddress.Address>?,
     ): AddressValidationResult {
-        val decodedXAddress = BlockchainUtils.decodeRippleXAddress(address, network.id.value)
+        val decodedXAddress = BlockchainUtils.decodeRippleXAddress(address, network.rawId)
         val isUtxoConsolidationAvailable =
             walletManagersFacade.checkUtxoConsolidationAvailability(userWalletId, network)
 
@@ -50,7 +50,7 @@ class ValidateWalletAddressUseCase(
         address: String,
         senderAddresses: List<CryptoCurrencyAddress>,
     ): AddressValidationResult {
-        val decodedXAddress = BlockchainUtils.decodeRippleXAddress(address, network.id.value)
+        val decodedXAddress = BlockchainUtils.decodeRippleXAddress(address, network.rawId)
         val isUtxoConsolidationAvailable =
             walletManagersFacade.checkUtxoConsolidationAvailability(userWalletId, network)
 

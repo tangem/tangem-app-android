@@ -12,4 +12,5 @@ internal enum class TesterScreen {
     TESTER_ACTIONS,
     EXCLUDED_BLOCKCHAINS,
     BLOCKCHAIN_PROVIDERS,
+    TEST_PUSHES,
 }

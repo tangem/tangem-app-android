@@ -1,8 +1,7 @@
 package com.tangem.domain.networks.single
 
 import com.tangem.domain.core.flow.FlowFetcher
-import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.wallets.models.UserWalletId
 
 /**
@@ -12,18 +11,11 @@ import com.tangem.domain.wallets.models.UserWalletId
  */
 interface SingleNetworkStatusFetcher : FlowFetcher<SingleNetworkStatusFetcher.Params> {
 
-    /** Params */
-    sealed interface Params {
-
-        val userWalletId: UserWalletId
-        val network: Network
-
-        data class Simple(override val userWalletId: UserWalletId, override val network: Network) : Params
-
-        data class Prepared(
-            override val userWalletId: UserWalletId,
-            override val network: Network,
-            val addedNetworkCurrencies: Set<CryptoCurrency>,
-        ) : Params
-    }
+    /**
+     * Params
+     *
+     * @property userWalletId user wallet id
+     * @property network      network
+     */
+    data class Params(val userWalletId: UserWalletId, val network: Network)
 }

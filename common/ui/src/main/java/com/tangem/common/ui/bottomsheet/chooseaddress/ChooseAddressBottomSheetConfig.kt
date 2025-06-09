@@ -4,8 +4,8 @@ import com.tangem.common.ui.bottomsheet.receive.AddressModel
 import com.tangem.common.ui.bottomsheet.receive.TokenReceiveBottomSheetConfig
 import com.tangem.common.ui.bottomsheet.receive.mapToAddressModels
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
-import com.tangem.domain.tokens.model.Network
-import com.tangem.domain.tokens.model.NetworkAddress
+import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.network.NetworkAddress
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 

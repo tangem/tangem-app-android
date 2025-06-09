@@ -13,11 +13,13 @@ android {
 dependencies {
 
     /** Domain */
+    implementation(projects.domain.models)
     implementation(projects.domain.qrScanning)
     implementation(projects.domain.qrScanning.models)
     implementation(projects.domain.tokens.models)
 
     implementation(projects.core.ui)
+    implementation(projects.libs.blockchainSdk)
 
     /** SdK */
     implementation(tangemDeps.blockchain)

@@ -32,8 +32,6 @@ import com.tangem.core.ui.components.BottomFade
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.TangemSwitch
 import com.tangem.core.ui.components.TextShimmer
-import com.tangem.core.ui.components.appbar.TangemTopAppBar
-import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.buttons.SecondarySmallButton
 import com.tangem.core.ui.components.buttons.SmallButtonConfig
 import com.tangem.core.ui.components.buttons.common.TangemButton
@@ -41,8 +39,6 @@ import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
 import com.tangem.core.ui.components.buttons.common.TangemButtonsDefaults
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
-import com.tangem.core.ui.components.fields.SearchBar
-import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.components.list.InfiniteListHandler
 import com.tangem.core.ui.components.rows.ArrowRow
 import com.tangem.core.ui.components.rows.BlockchainRow
@@ -51,7 +47,6 @@ import com.tangem.core.ui.components.rows.ChainRowContainer
 import com.tangem.core.ui.components.rows.model.BlockchainRowUM
 import com.tangem.core.ui.components.rows.model.ChainRowUM
 import com.tangem.core.ui.event.EventEffect
-import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.haptic.TangemHapticEffect
@@ -66,14 +61,13 @@ import com.tangem.features.managetokens.component.ManageTokensSource
 import com.tangem.features.managetokens.component.preview.PreviewManageTokensComponent
 import com.tangem.features.managetokens.entity.item.CurrencyItemUM
 import com.tangem.features.managetokens.entity.item.CurrencyItemUM.Basic.NetworksUM
-import com.tangem.features.managetokens.entity.managetokens.ManageTokensTopBarUM
 import com.tangem.features.managetokens.entity.managetokens.ManageTokensUM
 import com.tangem.features.managetokens.impl.R
 import kotlinx.collections.immutable.ImmutableList
 
 private const val CHEVRON_ROTATION_EXPANDED = 180f
 private const val CHEVRON_ROTATION_COLLAPSED = 0f
-private const val LOAD_ITEMS_BUFFER = 10
+internal const val LOAD_ITEMS_BUFFER = 10
 
 @Composable
 internal fun ManageTokensScreen(state: ManageTokensUM, modifier: Modifier = Modifier) {
@@ -85,7 +79,9 @@ internal fun ManageTokensScreen(state: ManageTokensUM, modifier: Modifier = Modi
         contentWindowInsets = WindowInsetsZero,
         topBar = {
             ManageTokensTopBar(
-                modifier = Modifier.statusBarsPadding(),
+                modifier = Modifier
+                    .statusBarsPadding()
+                    .background(TangemTheme.colors.background.primary),
                 topBar = state.topBar,
                 search = state.search,
             )
@@ -114,31 +110,6 @@ internal fun ManageTokensScreen(state: ManageTokensUM, modifier: Modifier = Modi
             }
         },
     )
-}
-
-@Composable
-private fun ManageTokensTopBar(topBar: ManageTokensTopBarUM?, search: SearchBarUM, modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier.background(TangemTheme.colors.background.primary),
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
-    ) {
-        if (topBar != null) {
-            TangemTopAppBar(
-                title = topBar.title.resolveReference(),
-                startButton = TopAppBarButtonUM.Back(topBar.onBackButtonClick),
-                endButton = when (topBar) {
-                    is ManageTokensTopBarUM.ManageContent -> topBar.endButton
-                    is ManageTokensTopBarUM.ReadContent -> null
-                },
-            )
-        }
-        SearchBar(
-            modifier = Modifier
-                .padding(bottom = TangemTheme.dimens.spacing12)
-                .padding(horizontal = TangemTheme.dimens.spacing16),
-            state = search,
-        )
-    }
 }
 
 @Composable
@@ -263,7 +234,7 @@ internal fun Currencies(
 }
 
 @Composable
-private fun SearchNothingFoundText(modifier: Modifier = Modifier) {
+fun SearchNothingFoundText(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier,
         contentAlignment = Alignment.Center,
@@ -277,7 +248,7 @@ private fun SearchNothingFoundText(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun ProgressIndicator(modifier: Modifier = Modifier) {
+fun ProgressIndicator(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier.background(color = TangemTheme.colors.background.primary),
         contentAlignment = Alignment.Center,
@@ -287,7 +258,7 @@ private fun ProgressIndicator(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun LoadingItem(modifier: Modifier = Modifier) {
+fun LoadingItem(modifier: Modifier = Modifier) {
     ChainRowContainer(
         modifier = modifier,
         icon = {

@@ -1,12 +1,10 @@
 package com.tangem.data.networks.converters
 
 import com.tangem.data.networks.models.SimpleNetworkStatus
-import com.tangem.datasource.local.network.converter.NetworkAddressConverter
-import com.tangem.datasource.local.network.converter.NetworkAmountsConverter
-import com.tangem.datasource.local.network.converter.NetworkDerivationPathConverter
 import com.tangem.datasource.local.network.entity.NetworkStatusDM
 import com.tangem.domain.models.StatusSource
-import com.tangem.domain.tokens.model.NetworkStatus
+import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.utils.converter.Converter
 
 /**
@@ -17,15 +15,19 @@ import com.tangem.utils.converter.Converter
 internal object SimpleNetworkStatusConverter : Converter<NetworkStatusDM, SimpleNetworkStatus> {
 
     override fun convert(value: NetworkStatusDM): SimpleNetworkStatus {
-        val address = NetworkAddressConverter(selectedAddress = value.selectedAddress)
-            .convert(value = value.availableAddresses)
+        val address = NetworkAddressConverter.convert(
+            value = NetworkAddressConverter.Value(
+                selectedAddress = value.selectedAddress,
+                addresses = value.availableAddresses,
+            ),
+        )
 
         val status = when (value) {
             is NetworkStatusDM.Verified -> {
                 NetworkStatus.Verified(
                     address = address,
                     amounts = NetworkAmountsConverter.convert(value = value.amounts),
-                    pendingTransactions = mapOf(),
+                    pendingTransactions = emptyMap(),
                     source = StatusSource.CACHE,
                 )
             }
@@ -40,8 +42,8 @@ internal object SimpleNetworkStatusConverter : Converter<NetworkStatusDM, Simple
         }
 
         return SimpleNetworkStatus(
-            id = SimpleNetworkStatus.Id(
-                networkId = value.networkId,
+            id = Network.ID(
+                value = value.networkId.value,
                 derivationPath = NetworkDerivationPathConverter.convert(value = value.derivationPath),
             ),
             value = status,

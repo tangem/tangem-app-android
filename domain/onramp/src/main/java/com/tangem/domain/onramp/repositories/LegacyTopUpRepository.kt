@@ -1,6 +1,6 @@
 package com.tangem.domain.onramp.repositories
 
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 
 /**
  * Support legacy onboarding note/twins to get top up URL from mercuryo

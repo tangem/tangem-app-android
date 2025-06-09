@@ -17,7 +17,7 @@ internal fun checkAndCalculateSubtractedAmount(
     reduceAmountBy: BigDecimal,
 ): BigDecimal {
     val balance = cryptoCurrencyStatus.value.amount ?: return amountValue
-    val isTron = isTron(cryptoCurrencyStatus.currency.network.id.value)
+    val isTron = isTron(cryptoCurrencyStatus.currency.network.rawId)
     val feeValueRounded = if (isTron) {
         feeValue.round(MathContext(0, RoundingMode.UP))
     } else {
@@ -32,7 +32,7 @@ internal fun checkAndCalculateSubtractedAmount(
     )
     return if (isFeeCoverage) {
         val reducedAmount = balance.minus(reduceAmountBy).minus(feeValueRounded)
-        if (isTron(cryptoCurrencyStatus.currency.network.id.value)) {
+        if (isTron(cryptoCurrencyStatus.currency.network.rawId)) {
             reducedAmount.setScale(0, RoundingMode.DOWN)
         } else {
             reducedAmount

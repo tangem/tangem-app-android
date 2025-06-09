@@ -5,17 +5,15 @@ import arrow.core.flatten
 import com.tangem.domain.card.repository.DerivationsRepository
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
 import com.tangem.domain.managetokens.repository.CustomTokensRepository
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.quotes.multi.MultiQuoteFetcher
 import com.tangem.domain.staking.fetcher.YieldBalanceFetcherParams
 import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.TokensFeatureToggles
-import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.repository.CurrenciesRepository
-import com.tangem.domain.tokens.repository.NetworksRepository
-import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWalletId
 
@@ -24,10 +22,8 @@ class SaveManagedTokensUseCase(
     private val customTokensRepository: CustomTokensRepository,
     private val walletManagersFacade: WalletManagersFacade,
     private val currenciesRepository: CurrenciesRepository,
-    private val networksRepository: NetworksRepository,
     private val derivationsRepository: DerivationsRepository,
     private val stakingRepository: StakingRepository,
-    private val quotesRepository: QuotesRepository,
     private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
     private val multiQuoteFetcher: MultiQuoteFetcher,
     private val multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
@@ -102,20 +98,12 @@ class SaveManagedTokensUseCase(
         val networkToUpdate = currenciesToAdd.map { it.network }
             .subtract(existingCurrencies.map { it.network }.toSet())
 
-        if (tokensFeatureToggles.isNetworksLoadingRefactoringEnabled) {
-            multiNetworkStatusFetcher(
-                MultiNetworkStatusFetcher.Params(
-                    userWalletId = userWalletId,
-                    networks = networksToUpdate + networkToUpdate,
-                ),
-            )
-        } else {
-            networksRepository.getNetworkStatusesSync(
+        multiNetworkStatusFetcher(
+            MultiNetworkStatusFetcher.Params(
                 userWalletId = userWalletId,
                 networks = networksToUpdate + networkToUpdate,
-                refresh = true,
-            )
-        }
+            ),
+        )
     }
 
     private suspend fun refreshUpdatedYieldBalances(
@@ -139,19 +127,12 @@ class SaveManagedTokensUseCase(
     }
 
     private suspend fun refreshUpdatedQuotes(addedCurrencies: List<CryptoCurrency>) {
-        if (tokensFeatureToggles.isQuotesLoadingRefactoringEnabled) {
-            multiQuoteFetcher(
-                params = MultiQuoteFetcher.Params(
-                    currenciesIds = addedCurrencies.mapNotNullTo(hashSetOf()) { it.id.rawCurrencyId },
-                    appCurrencyId = null,
-                ),
-            )
-        } else {
-            quotesRepository.fetchQuotes(
+        multiQuoteFetcher(
+            params = MultiQuoteFetcher.Params(
                 currenciesIds = addedCurrencies.mapNotNullTo(hashSetOf()) { it.id.rawCurrencyId },
-                refresh = true,
-            )
-        }
+                appCurrencyId = null,
+            ),
+        )
     }
 
     /**

@@ -290,6 +290,7 @@
   <string name="exchange_tokens_unavailable_tokens_header">Cannot be swapped for %s</string>
   <string name="express_by_provider">Provided by</string>
   <string name="express_cex_status_button_title">Status</string>
+  <string name="express_choose_provider">Choose provider</string>
   <string name="express_choose_providers_subtitle">Providers facilitate transactions</string>
   <string name="express_choose_providers_title">Provider</string>
   <string name="express_error_code">An error occurred. Code: %s</string>
@@ -1341,6 +1342,7 @@
   <string name="wc_alert_domain_issues_description">This domain cannot be verified. Check the request carefully approving.</string>
   <string name="wc_alert_session_disconnected_description">Please return to your browser and reconnect via WalletConnect.</string>
   <string name="wc_alert_session_disconnected_title">WalletConnect session was disconnected</string>
+  <string name="wc_alert_sign_anyway">Sign anyway</string>
   <string name="wc_alert_unknown_error_description">Error code: %s. If the problem persists — feel free to contact our support.</string>
   <string name="wc_alert_unknown_error_title">We\'ve encountered unknown error</string>
   <string name="wc_alert_unsupported_method_description">Error code: 8 005. If the problem persists — feel free to contact our support.</string>

@@ -111,7 +111,7 @@ internal class AmountRequirementStateTransformer(
         val cryptoAmountValue = amountState.amountTextField.cryptoAmount.value ?: return false
 
         val isEnterOrExit = actionType is StakingActionCommonType.Enter || actionType is StakingActionCommonType.Exit
-        val isTron = isTron(cryptoCurrencyStatus.currency.network.id.value)
+        val isTron = isTron(cryptoCurrencyStatus.currency.network.rawId)
 
         val isIntegerOnly = cryptoAmountValue.isZero() || cryptoAmountValue.remainder(BigDecimal.ONE).isZero()
 

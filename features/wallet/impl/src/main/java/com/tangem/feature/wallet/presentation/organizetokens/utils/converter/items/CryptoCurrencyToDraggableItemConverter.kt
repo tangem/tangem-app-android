@@ -65,7 +65,7 @@ internal class CryptoCurrencyToDraggableItemConverter(
     private fun getFormattedFiatAmount(currency: CryptoCurrencyStatus, appCurrency: AppCurrency): String {
         val yieldBalance = currency.value.yieldBalance as? YieldBalance.Data
         val fiatRate = currency.value.fiatRate ?: BigDecimal.ZERO
-        val fiatYieldBalance = yieldBalance?.getTotalWithRewardsStakingBalance(currency.currency.network.id.value)
+        val fiatYieldBalance = yieldBalance?.getTotalWithRewardsStakingBalance(currency.currency.network.rawId)
             ?.multiply(fiatRate).orZero()
 
         val fiatAmount = currency.value.fiatAmount ?: return BigDecimalFormatConstants.EMPTY_BALANCE_SIGN

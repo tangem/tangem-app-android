@@ -6,28 +6,34 @@ import com.tangem.tap.domain.userWalletList.model.UserWalletPublicInformation
 import com.tangem.tap.domain.userWalletList.model.UserWalletSensitiveInformation
 
 internal val UserWallet.sensitiveInformation: UserWalletSensitiveInformation
-    get() = UserWalletSensitiveInformation(
-        wallets = scanResponse.card.wallets,
-        visaCardActivationStatus = scanResponse.visaCardActivationStatus,
-    )
+    get() = when (this) {
+        is UserWallet.Cold -> UserWalletSensitiveInformation(
+            wallets = scanResponse.card.wallets,
+            visaCardActivationStatus = scanResponse.visaCardActivationStatus,
+        )
+        is UserWallet.Hot -> TODO("[REDACTED_TASK_KEY]")
+    }
 
 internal val UserWallet.publicInformation: UserWalletPublicInformation
-    get() = UserWalletPublicInformation(
-        name = name,
-        walletId = walletId,
-        cardsInWallet = cardsInWallet,
-        isMultiCurrency = isMultiCurrency,
-        scanResponse = scanResponse.copy(
-            card = scanResponse.card.copy(
-                wallets = emptyList(),
+    get() = when (this) {
+        is UserWallet.Cold -> UserWalletPublicInformation(
+            name = name,
+            walletId = walletId,
+            cardsInWallet = cardsInWallet,
+            isMultiCurrency = isMultiCurrency,
+            scanResponse = scanResponse.copy(
+                card = scanResponse.card.copy(
+                    wallets = emptyList(),
+                ),
+                visaCardActivationStatus = null,
             ),
-            visaCardActivationStatus = null,
-        ),
-        hasBackupError = hasBackupError,
-    )
+            hasBackupError = hasBackupError,
+        )
+        is UserWallet.Hot -> TODO("[REDACTED_TASK_KEY]")
+    }
 
 internal fun UserWalletPublicInformation.toUserWallet(): UserWallet {
-    return UserWallet(
+    return UserWallet.Cold(
         name = name,
         walletId = walletId,
         cardsInWallet = cardsInWallet,
@@ -42,14 +48,19 @@ internal fun List<UserWalletPublicInformation>.toUserWallets(): List<UserWallet>
 }
 
 internal fun UserWallet.updateWith(sensitiveInformation: UserWalletSensitiveInformation): UserWallet {
-    return copy(
-        scanResponse = scanResponse.copy(
-            card = scanResponse.card.copy(
-                wallets = sensitiveInformation.wallets,
-            ),
-            visaCardActivationStatus = sensitiveInformation.visaCardActivationStatus,
-        ),
-    )
+    return when (this) {
+        is UserWallet.Cold -> {
+            copy(
+                scanResponse = scanResponse.copy(
+                    card = scanResponse.card.copy(
+                        wallets = sensitiveInformation.wallets,
+                    ),
+                    visaCardActivationStatus = sensitiveInformation.visaCardActivationStatus,
+                ),
+            )
+        }
+        is UserWallet.Hot -> TODO("[REDACTED_TASK_KEY]")
+    }
 }
 
 internal fun List<UserWallet>.updateWith(
@@ -68,11 +79,16 @@ internal fun List<UserWallet>.updateWith(
 
 internal fun List<UserWallet>.lockAll(): List<UserWallet> = map(UserWallet::lock)
 
-internal fun UserWallet.lock(): UserWallet = copy(
-    scanResponse = scanResponse.copy(
-        card = scanResponse.card.copy(
-            wallets = emptyList(),
-        ),
-        visaCardActivationStatus = null,
-    ),
-)
+internal fun UserWallet.lock(): UserWallet = when (this) {
+    is UserWallet.Cold -> {
+        copy(
+            scanResponse = scanResponse.copy(
+                card = scanResponse.card.copy(
+                    wallets = emptyList(),
+                ),
+                visaCardActivationStatus = null,
+            ),
+        )
+    }
+    is UserWallet.Hot -> TODO("[REDACTED_TASK_KEY]")
+}

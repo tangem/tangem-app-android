@@ -9,7 +9,7 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.managetokens.ValidateDerivationPathUseCase
 import com.tangem.domain.managetokens.model.exceptoin.DerivationPathValidationException
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.network.Network
 import com.tangem.features.managetokens.component.CustomTokenDerivationInputComponent
 import com.tangem.features.managetokens.entity.customtoken.CustomDerivationInputUM
 import com.tangem.features.managetokens.entity.customtoken.SelectedDerivationPath

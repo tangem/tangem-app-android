@@ -23,6 +23,7 @@ data class TesterMenuUM(
         ENVIRONMENT_TOGGLES(R.string.environment_toggles),
         BLOCKCHAIN_PROVIDERS(R.string.blockchain_providers),
         TESTER_ACTIONS(R.string.tester_actions),
+        TEST_PUSHES(R.string.test_push),
         ;
     }
 }

@@ -1,8 +1,8 @@
 package com.tangem.features.txhistory.utils
 
 import com.tangem.core.ui.utils.toDateFormatWithTodayYesterday
+import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.txhistory.models.PaginationWrapper
-import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.features.txhistory.converter.TxHistoryItemToTransactionStateConverter
 import com.tangem.features.txhistory.entity.TxHistoryUM
 import com.tangem.pagination.Batch
@@ -35,7 +35,7 @@ internal class TxHistoryUiManager(
         .distinctUntilChanged()
 
     fun createOrUpdateUiBatches(
-        newCurrencyBatches: List<Batch<Int, PaginationWrapper<TxHistoryItem>>>,
+        newCurrencyBatches: List<Batch<Int, PaginationWrapper<TxInfo>>>,
         clearUiBatches: Boolean,
     ): List<Batch<Int, List<TxHistoryUM.TxHistoryItemUM>>> {
         val currentUiBatches = state.value.uiBatches
@@ -67,7 +67,7 @@ internal class TxHistoryUiManager(
         return batches
     }
 
-    private fun generateUiItems(key: Int, data: PaginationWrapper<TxHistoryItem>): List<TxHistoryUM.TxHistoryItemUM> {
+    private fun generateUiItems(key: Int, data: PaginationWrapper<TxInfo>): List<TxHistoryUM.TxHistoryItemUM> {
         val items = mutableListOf<TxHistoryUM.TxHistoryItemUM>()
 
         // Add title for the first batch
@@ -109,9 +109,7 @@ internal class TxHistoryUiManager(
         return items
     }
 
-    private fun List<TxHistoryUM.TxHistoryItemUM>.transactionItemsSizeNotEqual(
-        txHistoryItems: List<TxHistoryItem>,
-    ): Boolean {
-        return this.filterIsInstance<TxHistoryUM.TxHistoryItemUM.Transaction>().size != txHistoryItems.size
+    private fun List<TxHistoryUM.TxHistoryItemUM>.transactionItemsSizeNotEqual(txInfos: List<TxInfo>): Boolean {
+        return this.filterIsInstance<TxHistoryUM.TxHistoryItemUM.Transaction>().size != txInfos.size
     }
 }
