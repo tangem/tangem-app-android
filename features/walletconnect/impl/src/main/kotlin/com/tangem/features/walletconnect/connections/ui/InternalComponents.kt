@@ -45,6 +45,8 @@ internal fun WcAppInfoItem(
                 .clip(RoundedCornerShape(TangemTheme.dimens.radius8)),
             model = iconUrl,
             contentDescription = title,
+            error = painterResource(R.drawable.img_wc_dapp_icon_placeholder_48),
+            fallback = painterResource(R.drawable.img_wc_dapp_icon_placeholder_48),
         )
         Column(
             modifier = Modifier.fillMaxWidth(),
