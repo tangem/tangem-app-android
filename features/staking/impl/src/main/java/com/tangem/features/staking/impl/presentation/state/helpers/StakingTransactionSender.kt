@@ -255,7 +255,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
                     networkId = cryptoCurrencyStatus.currency.network.id,
                 ).getOrNull() ?: ""
 
-                balanceUpdater.fullUpdate()
+                balanceUpdater.updateAfterTransaction()
                 onSendSuccess(txUrl)
             },
         )
