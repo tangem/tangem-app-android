@@ -33,4 +33,10 @@ internal sealed class QuickActionUM(
         icon = R.drawable.ic_arrow_down_24,
         longClickAvailable = true,
     )
+
+    data object Stake : QuickActionUM(
+        title = resourceReference(R.string.common_stake),
+        description = resourceReference(R.string.stake_token_description),
+        icon = R.drawable.ic_staking_24,
+    )
 }
