@@ -115,7 +115,8 @@ class AppLogsStore @Inject constructor(
         BufferedWriter(FileWriter(logFile, true)).use { writer ->
             writer.append(formatter.print(DateTime.now()))
             writer.append(": $tag ")
-            messages.forEach(writer::append)
+            messages.map(LogsSanitizer::sanitize)
+                .forEach(writer::append)
             writer.newLine()
         }
     }
