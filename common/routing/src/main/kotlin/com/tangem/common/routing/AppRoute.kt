@@ -6,11 +6,12 @@ import com.tangem.common.routing.bundle.bundle
 import com.tangem.common.routing.entity.SerializableIntent
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.feedback.models.CardInfo
 import com.tangem.domain.markets.TokenMarketParams
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.nft.models.NFTAsset
 import com.tangem.domain.onramp.model.OnrampSource
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.serialization.Serializable
 
@@ -76,6 +77,11 @@ sealed class AppRoute(val path: String) : Route {
     ) : AppRoute(path = "/details/security")
 
     @Serializable
+    data class Usedesk(
+        val cardInfo: CardInfo,
+    ) : AppRoute(path = "/usedesk/${cardInfo.cardId}")
+
+    @Serializable
     data class CardSettings(
         val userWalletId: UserWalletId,
     ) : AppRoute(path = "/card_settings/${userWalletId.stringValue}")
@@ -122,7 +128,7 @@ sealed class AppRoute(val path: String) : Route {
     }
 
     @Serializable
-    data object WalletConnectSessions : AppRoute(path = "/wallet_connect_sessions")
+    data class WalletConnectSessions(val userWalletId: UserWalletId) : AppRoute(path = "/wallet_connect_sessions")
 
     @Serializable
     data class QrScanning(val source: Source) : AppRoute(path = "/$source/qr_scanning${source.path}") {
@@ -181,6 +187,9 @@ sealed class AppRoute(val path: String) : Route {
     data class WalletSettings(
         val userWalletId: UserWalletId,
     ) : AppRoute(path = "/wallet_settings/${userWalletId.stringValue}")
+
+    @Serializable
+    data object Markets : AppRoute(path = "/markets")
 
     @Serializable
     data class MarketsTokenDetails(

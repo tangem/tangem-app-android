@@ -65,6 +65,7 @@ dependencies {
     implementation(projects.domain.transaction.models)
     implementation(projects.domain.txhistory)
     implementation(projects.domain.feedback)
+    implementation(projects.domain.feedback.models)
 
     /** Common */
     implementation(projects.common.ui)

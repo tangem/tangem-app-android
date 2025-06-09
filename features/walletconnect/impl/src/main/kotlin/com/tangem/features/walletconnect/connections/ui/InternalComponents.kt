@@ -14,7 +14,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.tangem.core.ui.extensions.clickableSingle
+import com.tangem.core.ui.extensions.conditional
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.features.walletconnect.connections.entity.VerifiedDAppState
 import com.tangem.features.walletconnect.impl.R
 
 @Composable
@@ -22,11 +25,18 @@ internal fun WcAppInfoItem(
     iconUrl: String,
     title: String,
     subtitle: String,
-    isVerified: Boolean,
+    verifiedDAppState: VerifiedDAppState,
     modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier = modifier.padding(TangemTheme.dimens.spacing12),
+        modifier = modifier
+            .conditional(
+                condition = verifiedDAppState is VerifiedDAppState.Verified,
+                modifier = {
+                    clickableSingle { (verifiedDAppState as VerifiedDAppState.Verified).onVerifiedClick() }
+                },
+            )
+            .padding(TangemTheme.dimens.spacing12),
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
     ) {
         AsyncImage(
@@ -35,6 +45,8 @@ internal fun WcAppInfoItem(
                 .clip(RoundedCornerShape(TangemTheme.dimens.radius8)),
             model = iconUrl,
             contentDescription = title,
+            error = painterResource(R.drawable.img_wc_dapp_icon_placeholder_48),
+            fallback = painterResource(R.drawable.img_wc_dapp_icon_placeholder_48),
         )
         Column(
             modifier = Modifier.fillMaxWidth(),
@@ -50,7 +62,7 @@ internal fun WcAppInfoItem(
                     color = TangemTheme.colors.text.primary1,
                     style = TangemTheme.typography.h3,
                 )
-                if (isVerified) {
+                if (verifiedDAppState is VerifiedDAppState.Verified) {
                     Icon(
                         modifier = Modifier.size(20.dp),
                         painter = painterResource(R.drawable.img_approvale2_20),
@@ -81,7 +93,9 @@ internal fun WcNetworkInfoItem(@DrawableRes icon: Int, name: String, symbol: Str
             tint = Color.Unspecified,
         )
         Text(
-            modifier = Modifier.padding(start = 12.dp).weight(1f, fill = false),
+            modifier = Modifier
+                .padding(start = 12.dp)
+                .weight(1f, fill = false),
             text = name,
             style = TangemTheme.typography.body1,
             color = TangemTheme.colors.text.primary1,

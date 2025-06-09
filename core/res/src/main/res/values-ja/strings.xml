@@ -345,6 +345,8 @@
   <string name="express_status_hide_button_text">この取引を非表示にする</string>
   <string name="express_status_hide_dialog_text">一度非表示にすると、取引状況を再度表示することはできません。代わりに、スワイプして閉じることができます。</string>
   <string name="express_status_hide_dialog_title">取引状況を非表示にしますか？</string>
+  <string name="express_swap_not_supported_text">このトークンはサポートされていません。別のトークンを選択してスワップしてください。</string>
+  <string name="express_swap_not_supported_title">%sはサポートされていません</string>
   <string name="express_swap_with">スワップする</string>
   <string name="express_token_list_empty_search">トークンが見つかりません。別のリクエストをお試しください。</string>
   <string name="express_transaction_id">ID: %s</string>
@@ -1001,6 +1003,7 @@
   <string name="story_web3_title">Web3.0対応</string>
   <string name="sui_not_enough_coin_for_fee_description">続行するには少なくとも%1$sの受信取引が必要です</string>
   <string name="sui_not_enough_coin_for_fee_title">残高不足</string>
+  <string name="swap_fixed_rate">固定レート</string>
   <string name="swap_give_permission_fee_footer">ネットワークは、あなたがトークンのスワップを承認していることを確認するために、トークン承認手数料を請求します。</string>
   <string name="swap_promo_text">より多くのトークンをより良いレートで、ウォレット内にて直接交換します。</string>
   <string name="swap_promo_title">新しいスワッププロバイダーが利用可能になりました！</string>
