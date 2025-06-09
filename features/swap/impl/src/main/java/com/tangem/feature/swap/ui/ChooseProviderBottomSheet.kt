@@ -14,8 +14,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -47,17 +50,32 @@ private fun ChooseProviderBottomSheetContent(content: ChooseProviderBottomSheetC
             style = TangemTheme.typography.caption2,
             color = TangemTheme.colors.text.secondary,
             modifier = Modifier
-                .padding(top = TangemTheme.dimens.spacing10)
+                .padding(
+                    top = 10.dp,
+                    bottom = 16.dp,
+                )
                 .padding(horizontal = TangemTheme.dimens.spacing56),
             textAlign = TextAlign.Center,
         )
+        if (content.notification != null) {
+            Notification(
+                config = content.notification.config,
+                modifier = Modifier
+                    .padding(
+                        start = 16.dp,
+                        end = 16.dp,
+                        bottom = 12.dp,
+                    ),
+                iconTint = TangemTheme.colors.icon.warning,
+            )
+        }
+
         Column(
             modifier = Modifier
                 .padding(
-                    top = TangemTheme.dimens.spacing16,
-                    start = TangemTheme.dimens.spacing16,
-                    end = TangemTheme.dimens.spacing16,
-                    bottom = TangemTheme.dimens.spacing14,
+                    start = 16.dp,
+                    end = 16.dp,
+                    bottom = 14.dp,
                 )
                 .background(
                     color = TangemTheme.colors.background.action,
@@ -129,6 +147,10 @@ private fun Preview_ChooseProviderBottomSheet() {
     )
     val content = ChooseProviderBottomSheetConfig(
         selectedProviderId = "1",
+        notification = NotificationUM.Error(
+            title = resourceReference(R.string.warning_express_providers_fca_warning_title),
+            subtitle = resourceReference(R.string.warning_express_providers_fca_warning_description),
+        ),
         providers = providers,
     )
     TangemThemePreview {
