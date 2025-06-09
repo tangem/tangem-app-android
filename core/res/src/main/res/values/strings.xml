@@ -114,6 +114,7 @@
   <string name="common_cancel">Cancel</string>
   <string name="common_change">Change</string>
   <string name="common_choose_action">Choose action</string>
+  <string name="common_choose_network">Choose network</string>
   <string name="common_choose_token">Choose token</string>
   <string name="common_claim">Claim</string>
   <string name="common_claim_rewards">Claim rewards</string>
@@ -289,6 +290,7 @@
   <string name="exchange_tokens_unavailable_tokens_header">Cannot be swapped for %s</string>
   <string name="express_by_provider">Provided by</string>
   <string name="express_cex_status_button_title">Status</string>
+  <string name="express_choose_provider">Choose provider</string>
   <string name="express_choose_providers_subtitle">Providers facilitate transactions</string>
   <string name="express_choose_providers_title">Provider</string>
   <string name="express_error_code">An error occurred. Code: %s</string>
@@ -349,6 +351,8 @@
   <string name="express_status_hide_button_text">Hide this transaction</string>
   <string name="express_status_hide_dialog_text">Once hidden, the transaction status cannot be viewed again. You can simply swipe to dismiss instead.</string>
   <string name="express_status_hide_dialog_title">Hide Transaction Status?</string>
+  <string name="express_swap_not_supported_text">This token is not supported. Please choose a different token to swap.</string>
+  <string name="express_swap_not_supported_title">%s is not supported</string>
   <string name="express_swap_with">Swap with</string>
   <string name="express_token_list_empty_search">No tokens found. Please try another request</string>
   <string name="express_transaction_id">ID: %s</string>
@@ -864,7 +868,6 @@
   <string name="send_summary_transaction_description_suffix_fee_covered">network fee will be covered by using %1$s energy</string>
   <string name="send_summary_transaction_description_suffix_fee_reduced">network fee will be reduced by spending %1$s energy</string>
   <string name="send_summary_transaction_description_suffix_including">including a network fee of %1$s</string>
-  <string name="send_test_alert_title">asdflkdsl;kfasl;fn;lnf asdjfnasdk;jf dfk;jasdjf;kajsdnf</string>
   <string name="send_transaction_success">Transaction has been successfully signed and sent to the blockchain node. Wallet balance will be updated in a while</string>
   <string name="send_tron_account_activation_error">%1$s is an asset in the Tron network. To calculate the fee and make a transaction you need to deposit some Tron (TRX) in your account.</string>
   <string name="send_validation_amount_exceeds_balance">Amount exceeds balance</string>
@@ -880,6 +883,7 @@
   <string name="settings_forget_wallet">Forget wallet</string>
   <string name="settings_forget_wallet_footer">This will remove the wallet from the application. The wallet itself can be added again.</string>
   <string name="settings_wallet_name_title">Name</string>
+  <string name="stake_token_description">Join staking with this token</string>
   <string name="staking_amount_requirement_error">The amount to stake must be at least %s</string>
   <string name="staking_amount_tron_integer_error">Staking amount will be rounded to %1$s TRX due to network rules.</string>
   <string name="staking_amount_tron_integer_error_unstaking">Unstaking amount will be rounded to %1$s TRX due to network rules.</string>
@@ -1014,6 +1018,7 @@
   <string name="story_web3_title">Web 3.0 Compatible</string>
   <string name="sui_not_enough_coin_for_fee_description">An incoming transaction of at least %1$s is required to proceed</string>
   <string name="sui_not_enough_coin_for_fee_title">Insufficient funds</string>
+  <string name="swap_fixed_rate">Fixed Rate</string>
   <string name="swap_give_permission_fee_footer">The network will charge a token approval fee to verify that you are authorizing the use of your token for the swap.</string>
   <string name="swap_promo_text">Exchange more tokens at better rates directly in your wallet.</string>
   <string name="swap_promo_title">New Swap Provider Available!</string>
@@ -1337,6 +1342,7 @@
   <string name="wc_alert_domain_issues_description">This domain cannot be verified. Check the request carefully approving.</string>
   <string name="wc_alert_session_disconnected_description">Please return to your browser and reconnect via WalletConnect.</string>
   <string name="wc_alert_session_disconnected_title">WalletConnect session was disconnected</string>
+  <string name="wc_alert_sign_anyway">Sign anyway</string>
   <string name="wc_alert_unknown_error_description">Error code: %s. If the problem persists — feel free to contact our support.</string>
   <string name="wc_alert_unknown_error_title">We\'ve encountered unknown error</string>
   <string name="wc_alert_unsupported_method_description">Error code: 8 005. If the problem persists — feel free to contact our support.</string>
