@@ -3,7 +3,6 @@ package com.tangem.domain.walletconnect.usecase.method
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
-import com.tangem.domain.walletconnect.usecase.blockaid.WcBlockAidEligibleTransactionUseCase
 
 /**
  * Base UseCase for wc methods with single TransactionData
@@ -27,7 +26,7 @@ interface WcTransactionUseCase :
  */
 interface WcListTransactionUseCase :
     WcSignUseCase<List<TransactionData>>,
-    WcBlockAidEligibleTransactionUseCase
+    BlockAidTransactionCheck
 
 /**
  * Wc Methods that support an updatable fee

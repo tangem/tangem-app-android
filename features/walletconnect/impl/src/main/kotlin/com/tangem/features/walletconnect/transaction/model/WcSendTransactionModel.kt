@@ -3,7 +3,7 @@ package com.tangem.features.walletconnect.transaction.model
 import androidx.compose.runtime.Stable
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.pushNew
-import com.domain.blockaid.models.transaction.TransactionData
+import com.tangem.blockchain.common.TransactionData
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -12,16 +12,16 @@ import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.walletconnect.WcRequestUseCaseFactory
 import com.tangem.domain.walletconnect.usecase.method.*
+import com.tangem.features.walletconnect.connections.routing.WcInnerRoute
 import com.tangem.features.walletconnect.transaction.components.common.WcTransactionModelParams
+import com.tangem.features.walletconnect.transaction.converter.WcCommonTransactionUMConverter
+import com.tangem.features.walletconnect.transaction.entity.blockaid.WcSendReceiveTransactionCheckResultsUM
 import com.tangem.features.walletconnect.transaction.entity.common.WcCommonTransactionModel
 import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionActionsUM
 import com.tangem.features.walletconnect.transaction.entity.send.WcSendTransactionUM
 import com.tangem.features.walletconnect.transaction.routes.WcTransactionRoutes
-import com.tangem.features.walletconnect.transaction.converter.WcCommonTransactionUMConverter
-import com.tangem.features.walletconnect.transaction.entity.blockaid.WcSendReceiveTransactionCheckResultsUM
 import com.tangem.features.walletconnect.transaction.ui.blockaid.WcSendAndReceiveBlockAidUiConverter
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -47,52 +47,69 @@ internal class WcSendTransactionModel @Inject constructor(
     val stackNavigation = StackNavigation<WcTransactionRoutes>()
 
     init {
+        @Suppress("UnusedPrivateMember")
         modelScope.launch {
-            when (val useCase: WcSignUseCase<TransactionData> = useCaseFactory.createUseCase(params.rawRequest)) {
-                is WcTransactionUseCase,
+            val unknownMethodRunnable = { router.push(WcInnerRoute.UnsupportedMethodAlert(params.rawRequest)) }
+            val useCase = useCaseFactory.createUseCase<WcSignUseCase<*>>(params.rawRequest)
+                .onLeft { unknownMethodRunnable() }
+                .getOrNull() ?: return@launch
+            when (useCase) {
                 is WcListTransactionUseCase,
-                -> {
-                    observeTransactionData(useCase)
-                }
+                is WcTransactionUseCase,
+                -> combine(
+                    useCase.invoke(),
+                    useCase.securityStatus,
+                ) { signState, securityCheck -> signState to securityCheck }
+                    .distinctUntilChanged()
+                    .collectLatest {
+                        val (signState, securityCheck) = it
+                        if (signingIsDone(signState)) return@collectLatest
+                        val signModel: Any = signState.signModel
+                        val isMutableFee = useCase is WcMutableFee
+                        val dAppFee = if (isMutableFee) useCase.dAppFee() else null
+                        val selectedFee = when (signModel) {
+                            is TransactionData.Compiled -> signModel.fee
+                            is TransactionData.Uncompiled -> signModel.fee
+                            else -> null
+                        }
+                        val isDAppFeeSelected = dAppFee != null && dAppFee == selectedFee
+
+                        val isSecurityCheckContent = securityCheck is Lce.Content
+                        var isApprovalMethod = isSecurityCheckContent &&
+                            securityCheck.content is BlockAidTransactionCheck.Result.Approval
+                        buildUiState(securityCheck, useCase, signState)
+                    }
+                else -> unknownMethodRunnable()
             }
         }
     }
 
-    private suspend fun observeSecurityData(useCase: WcSignUseCase<TransactionData>) {
-        (useCase as? BlockAidTransactionCheck)?.let {
-            useCase.securityStatus.collectLatest {
-                val blockAidState = when (it) {
-                    is Lce.Content -> blockAidUiConverter.convert(it.content.result)
-                    is Lce.Error -> WcSendReceiveTransactionCheckResultsUM(isLoading = false)
-                    is Lce.Loading -> WcSendReceiveTransactionCheckResultsUM(isLoading = true)
-                }
-                val current = _uiState.value
-                _uiState.emit(
-                    current?.copy(transaction = current.transaction.copy(estimatedWalletChanges = blockAidState)),
-                )
-            }
+    private suspend fun buildUiState(
+        securityCheck: Lce<Throwable, BlockAidTransactionCheck.Result>,
+        useCase: WcSignUseCase<*>,
+        signState: WcSignState<*>,
+    ) {
+        val blockAidState = when (securityCheck) {
+            is Lce.Content -> blockAidUiConverter.convert(securityCheck.content.result)
+            is Lce.Error -> WcSendReceiveTransactionCheckResultsUM(isLoading = false)
+            is Lce.Loading -> WcSendReceiveTransactionCheckResultsUM(isLoading = true)
         }
-    }
-
-    private fun CoroutineScope.observeTransactionData(useCase: WcSignUseCase<TransactionData>) {
-        useCase.invoke().onEach { signState ->
-            if (signingIsDone(signState)) return@onEach
-            val transactionUM = converter.convert(
-                WcCommonTransactionUMConverter.Input(
-                    useCase = useCase,
-                    signState = signState,
-                    actions = WcTransactionActionsUM(
-                        onShowVerifiedAlert = ::showVerifiedAlert,
-                        onDismiss = { cancel(useCase) },
-                        onSign = useCase::sign,
-                        onCopy = { copyData(useCase.rawSdkRequest.request.params) },
-                    ),
+        var transactionUM = converter.convert(
+            WcCommonTransactionUMConverter.Input(
+                useCase = useCase,
+                signState = signState,
+                actions = WcTransactionActionsUM(
+                    onShowVerifiedAlert = ::showVerifiedAlert,
+                    onDismiss = { cancel(useCase) },
+                    onSign = useCase::sign,
+                    onCopy = { copyData(useCase.rawSdkRequest.request.params) },
                 ),
-            ) as? WcSendTransactionUM
-            _uiState.emit(transactionUM)
-            observeSecurityData(useCase)
-        }
-            .launchIn(this)
+            ),
+        ) as? WcSendTransactionUM
+        transactionUM = transactionUM?.copy(
+            transaction = transactionUM.transaction.copy(estimatedWalletChanges = blockAidState),
+        )
+        _uiState.emit(transactionUM)
     }
 
     override fun dismiss() {
