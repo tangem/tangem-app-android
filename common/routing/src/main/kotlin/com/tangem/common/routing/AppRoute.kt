@@ -6,6 +6,7 @@ import com.tangem.common.routing.bundle.bundle
 import com.tangem.common.routing.entity.SerializableIntent
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.feedback.models.CardInfo
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.scan.ScanResponse
@@ -74,6 +75,11 @@ sealed class AppRoute(val path: String) : Route {
     data class DetailsSecurity(
         val userWalletId: UserWalletId,
     ) : AppRoute(path = "/details/security")
+
+    @Serializable
+    data class Usedesk(
+        val cardInfo: CardInfo,
+    ) : AppRoute(path = "/usedesk/${cardInfo.cardId}")
 
     @Serializable
     data class CardSettings(
