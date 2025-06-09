@@ -4,6 +4,7 @@ import arrow.core.left
 import com.domain.blockaid.models.transaction.CheckTransactionResult
 import com.tangem.blockchain.extensions.decodeBase58
 import com.tangem.blockchain.extensions.encodeBase58
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.data.walletconnect.respond.WcRespondService
 import com.tangem.data.walletconnect.sign.BaseWcSignUseCase
 import com.tangem.data.walletconnect.sign.SignCollector
@@ -25,6 +26,7 @@ internal class WcSolanaMessageSignUseCase @AssistedInject constructor(
     @Assisted override val method: WcSolanaMethod.SignMessage,
     private val signUseCase: SignUseCase,
     override val respondService: WcRespondService,
+    override val analytics: AnalyticsEventHandler,
 ) : BaseWcSignUseCase<Nothing, WcMessageSignUseCase.SignModel>(),
     WcMessageSignUseCase {
 

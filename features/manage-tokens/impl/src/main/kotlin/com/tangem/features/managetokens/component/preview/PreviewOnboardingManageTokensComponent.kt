@@ -7,7 +7,7 @@ import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.network.Network
 import com.tangem.features.managetokens.component.OnboardingManageTokensComponent
 import com.tangem.features.managetokens.entity.item.CurrencyItemUM
 import com.tangem.features.managetokens.entity.item.CurrencyNetworkUM
@@ -90,13 +90,15 @@ internal class PreviewOnboardingManageTokensComponent(
     )
 
     private fun getCurrencyNetworks() = List(size = 3) { networkIndex ->
+        val derivationPath = Network.DerivationPath.Card("")
+
         CurrencyNetworkUM(
             network = Network(
-                id = Network.ID(networkIndex.toString()),
+                id = Network.ID(value = networkIndex.toString(), derivationPath = derivationPath),
                 backendId = networkIndex.toString(),
                 name = "Network $networkIndex",
                 currencySymbol = "N$networkIndex",
-                derivationPath = Network.DerivationPath.Card(""),
+                derivationPath = derivationPath,
                 isTestnet = false,
                 standardType = Network.StandardType.ERC20,
                 hasFiatFeeRate = false,

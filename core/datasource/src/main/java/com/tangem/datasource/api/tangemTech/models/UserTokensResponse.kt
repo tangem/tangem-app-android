@@ -9,6 +9,7 @@ data class UserTokensResponse(
     @Json(name = "version") val version: Int = 0,
     @Json(name = "group") val group: GroupType,
     @Json(name = "sort") val sort: SortType,
+    @Json(name = "notifyStatus") val notifyStatus: Boolean? = null,
     @Json(name = "tokens") val tokens: List<Token> = emptyList(),
 ) {
 
@@ -21,6 +22,7 @@ data class UserTokensResponse(
         @Json(name = "symbol") val symbol: String,
         @Json(name = "decimals") val decimals: Int,
         @Json(name = "contractAddress") val contractAddress: String?,
+        @Json(name = "addresses") val addresses: List<String>? = null,
     ) {
         override fun equals(other: Any?): Boolean {
             val otherToken = other as? Token ?: return false

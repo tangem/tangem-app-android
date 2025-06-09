@@ -1,7 +1,7 @@
 package com.tangem.tap.network.exchangeServices.mercuryo
 
 import android.net.Uri
-import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.common.extensions.calculateSha512
 import com.tangem.common.extensions.toHexString
 import com.tangem.common.services.Result
@@ -10,8 +10,8 @@ import com.tangem.data.onramp.legacy.mercuryoNetwork
 import com.tangem.domain.core.utils.lceContent
 import com.tangem.domain.core.utils.lceError
 import com.tangem.domain.core.utils.lceLoading
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.tap.domain.model.Currency
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
 import com.tangem.tap.network.exchangeServices.ExchangeService
@@ -77,7 +77,7 @@ internal class MercuryoService(private val environment: MercuryoEnvironment) : E
     ): String {
         if (action == CurrencyExchangeManager.Action.Sell) throw UnsupportedOperationException()
 
-        val blockchain = Blockchain.fromId(cryptoCurrency.network.id.value)
+        val blockchain = cryptoCurrency.network.toBlockchain()
 
         val builder = Uri.Builder()
             .scheme(ExchangeUrlBuilder.SCHEME)

@@ -16,7 +16,9 @@ sealed class YieldBalance {
         return when (this) {
             is Data -> copy(source = source)
             is Empty -> copy(source = source)
-            is Error -> this
+            is Error,
+            is Unsupported,
+            -> this
         }
     }
 
@@ -41,6 +43,12 @@ sealed class YieldBalance {
         override val address: String,
         override val source: StatusSource,
     ) : YieldBalance()
+
+    data object Unsupported : YieldBalance() {
+        override val integrationId: String? = null
+        override val address: String? = null
+        override val source: StatusSource = StatusSource.ACTUAL
+    }
 
     data class Error(override val integrationId: String?, override val address: String?) : YieldBalance() {
         override val source: StatusSource = StatusSource.ACTUAL

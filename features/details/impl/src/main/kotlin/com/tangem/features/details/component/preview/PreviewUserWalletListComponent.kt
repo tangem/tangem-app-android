@@ -77,11 +77,12 @@ internal class PreviewUserWalletListComponent : UserWalletListComponent {
         }
     }
 
-    private fun getInformation(cardCount: Int): TextReference {
-        return TextReference.PluralRes(
+    private fun getInformation(cardCount: Int): UserWalletItemUM.Information.Loaded {
+        val text = TextReference.PluralRes(
             id = R.plurals.card_label_card_count,
             count = cardCount,
             formatArgs = wrappedList(cardCount),
         )
+        return UserWalletItemUM.Information.Loaded(text)
     }
 }

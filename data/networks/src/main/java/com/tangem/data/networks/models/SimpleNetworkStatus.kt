@@ -1,7 +1,7 @@
 package com.tangem.data.networks.models
 
-import com.tangem.domain.tokens.model.Network
-import com.tangem.domain.tokens.model.NetworkStatus
+import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.network.NetworkStatus
 
 /**
  * Simplified model of network status. Like [NetworkStatus] but without metadata.
@@ -9,19 +9,8 @@ import com.tangem.domain.tokens.model.NetworkStatus
  * @property id    identifier
  * @property value value
  */
-internal data class SimpleNetworkStatus(val id: Id, val value: NetworkStatus.Value) {
+internal data class SimpleNetworkStatus(val id: Network.ID, val value: NetworkStatus.Value) {
 
-    /**
-     * Identifier of [SimpleNetworkStatus]
-     *
-     * @property networkId      network id
-     * @property derivationPath derivation path
-     */
-    data class Id(val networkId: Network.ID, val derivationPath: Network.DerivationPath) {
-
-        constructor(network: Network) : this(
-            networkId = network.id,
-            derivationPath = network.derivationPath,
-        )
-    }
+    /** Constructs [SimpleNetworkStatus] from [NetworkStatus] */
+    constructor(status: NetworkStatus) : this(id = status.network.id, value = status.value)
 }

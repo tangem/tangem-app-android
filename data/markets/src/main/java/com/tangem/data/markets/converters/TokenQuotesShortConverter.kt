@@ -2,7 +2,7 @@ package com.tangem.data.markets.converters
 
 import com.tangem.datasource.api.tangemTech.models.QuotesResponse
 import com.tangem.domain.markets.TokenQuotesShort
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import java.math.BigDecimal
 
 internal object TokenQuotesShortConverter {

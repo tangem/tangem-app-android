@@ -18,9 +18,10 @@ dependencies {
     /* Project - Core */
     implementation(projects.core.decompose)
     implementation(projects.core.ui)
-    implementation(projects.common.routing)
     implementation(projects.core.configToggles)
     implementation(projects.core.analytics)
+    implementation(projects.common.routing)
+    implementation(projects.common.ui)
 
     /* Project - Domain */
     implementation(projects.domain.card)
