@@ -21,8 +21,10 @@ internal class PreviewDetailsComponent : DetailsComponent {
             router = DummyRouter(),
         ).buildAll(
             isWalletConnectAvailable = true,
+            isSupportChatAvailable = true,
             userWalletId = UserWalletId(""),
-            onSupportClick = {},
+            onSupportEmailClick = {},
+            onSupportChatClick = {},
             onBuyClick = {},
         )
     }
