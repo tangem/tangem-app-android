@@ -101,6 +101,7 @@ internal class WcPairModel @Inject constructor(
                     is WcPairState.Proposal -> {
                         sessionProposal = pairState.dAppSession
                         proposalNetwork = sessionProposal.proposalNetwork.getValue(selectedUserWalletFlow.value)
+                        proposalNetwork.available.mapTo(additionallyEnabledNetworks) { it.id.rawId }
                         appInfoUiState.transformerUpdate(
                             WcAppInfoTransformer(
                                 dAppSession = sessionProposal,
@@ -179,6 +180,7 @@ internal class WcPairModel @Inject constructor(
         selectedUserWalletFlow.update { selectedUserWallet }
         appInfoUiState.transformerUpdate(WcAppInfoWalletChangedTransformer(selectedUserWallet, proposalNetwork))
         additionallyEnabledNetworks.clear()
+        proposalNetwork.available.mapTo(additionallyEnabledNetworks) { it.id.rawId }
     }
 
     override fun onNetworksSelected(selectedNetworks: Set<Network.RawID>) {
