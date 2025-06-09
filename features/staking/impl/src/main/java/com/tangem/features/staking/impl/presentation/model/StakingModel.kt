@@ -28,6 +28,7 @@ import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.staking.*
 import com.tangem.domain.staking.analytics.StakeScreenSource
@@ -420,7 +421,7 @@ internal class StakingModel @Inject constructor(
     override fun onRefreshSwipe(isRefreshing: Boolean) {
         stateController.update(SetInitialLoadingStateTransformer(isRefreshing))
         coroutineScope.launch {
-            balanceUpdater.partialUpdate()
+            balanceUpdater.updatePullToRefresh()
         }.invokeOnCompletion {
             stateController.update(SetInitialLoadingStateTransformer(false))
         }
@@ -929,7 +930,12 @@ internal class StakingModel @Inject constructor(
             isSingleWalletWithTokens = false,
         )
             .conflate()
-            .distinctUntilChangedBy { it.getOrNull()?.value?.yieldBalance }
+            .filter {
+                val sources = it.getOrNull()?.value?.sources ?: return@filter true
+
+                sources.networkSource == StatusSource.ACTUAL && sources.yieldBalanceSource == StatusSource.ACTUAL
+            }
+            .distinctUntilChanged()
             .filter { value.currentStep == StakingStep.InitialInfo }
             .onEach { maybeStatus ->
                 maybeStatus.fold(
@@ -1005,7 +1011,7 @@ internal class StakingModel @Inject constructor(
                 when {
                     isInitState() -> {
                         updateInitialData(status)
-                        balanceUpdater.partialUpdate()
+                        balanceUpdater.updateAfterNavigationToInitial()
                     }
                     isAssentState() -> {
                         getFee()
