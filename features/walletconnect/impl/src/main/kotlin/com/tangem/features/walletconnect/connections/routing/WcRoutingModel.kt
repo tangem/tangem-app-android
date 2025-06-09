@@ -11,7 +11,6 @@ import com.tangem.domain.walletconnect.model.WcEthMethodName
 import com.tangem.domain.walletconnect.model.WcMethodName
 import com.tangem.domain.walletconnect.model.WcSolanaMethodName
 import com.tangem.features.walletconnect.components.WalletConnectFeatureToggles
-import com.tangem.features.walletconnect.connections.components.AlertsComponent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
@@ -58,9 +57,7 @@ internal class WcRoutingModel @Inject constructor(
                     WcSolanaMethodName.SendAllTransaction,
                     -> WcInnerRoute.Send(rawRequest)
                     is WcMethodName.Unsupported,
-                    -> WcInnerRoute.Alert(
-                        alertType = AlertsComponent.AlertType.UnsupportedMethod { innerRouter.pop() },
-                    )
+                    -> WcInnerRoute.UnsupportedMethodAlert(rawRequest)
                 }
             }
 
