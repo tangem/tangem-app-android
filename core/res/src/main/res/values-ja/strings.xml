@@ -112,6 +112,8 @@
   <string name="common_cancel">キャンセル</string>
   <string name="common_change">変更</string>
   <string name="common_choose_action">アクションを選択</string>
+  <string name="common_choose_network">ネットワークを選択</string>
+  <string name="common_choose_token">トークンを選択</string>
   <string name="common_claim">請求</string>
   <string name="common_claim_rewards">報酬を受け取る</string>
   <string name="common_close">閉じる</string>
@@ -151,6 +153,7 @@
   <string name="common_generate_addresses">アドレスを同期する</string>
   <string name="common_go_to_provider">プロバイダーへ移動</string>
   <string name="common_go_to_token">トークンへ移動</string>
+  <string name="common_got_it">わかりました</string>
   <string name="common_hide">非表示</string>
   <string name="common_hour">時間</string>
   <string name="common_import">インポート</string>
@@ -205,6 +208,7 @@
   <string name="common_submit">送信</string>
   <string name="common_success">成功</string>
   <string name="common_support">サポート</string>
+  <string name="common_supported_networks">対応ネットワーク</string>
   <string name="common_swap">スワップ</string>
   <string name="common_terms_and_conditions">利用規約</string>
   <string name="common_terms_of_use">利用規約</string>
@@ -264,6 +268,7 @@
   <string name="details_row_subtitle_signed_hashes_format">%sハッシュ</string>
   <string name="details_row_title_cid">デバイスID</string>
   <string name="details_row_title_contact_to_support">サポートへのお問い合わせ</string>
+  <string name="details_row_title_contact_to_support_chat">サポートチャットを開く</string>
   <string name="details_row_title_create_backup">他のカードをリンクする</string>
   <string name="details_row_title_currency">アプリ通貨</string>
   <string name="details_row_title_flip_to_hide">フリップして残高を非表示にする</string>
@@ -328,6 +333,7 @@
   <string name="express_more_providers_soon">さらに多くのプロバイダーが利用可能になる予定です</string>
   <string name="express_provider">プロバイダー</string>
   <string name="express_provider_best_rate">ベストレート</string>
+  <string name="express_provider_fca_warning_list">FCA警告リスト</string>
   <string name="express_provider_max_amount">最大 %s まで使用可能</string>
   <string name="express_provider_min_amount">%s 以上で利用可能</string>
   <string name="express_provider_not_available">このペアは利用できません</string>
@@ -558,6 +564,9 @@
   <string name="nft_traits_title">特徴</string>
   <string name="nft_untitled_collection">無題のコレクション</string>
   <string name="nft_wallet_count">%2$dコレクションの%1$dNFT</string>
+  <plurals name="nft_wallet_count_android">
+    <item quantity="other">%2$dコレクションの%1$dNFT</item>
+  </plurals>
   <string name="nft_wallet_receive_nft">ここをタップして最初のNFTを受け取ります</string>
   <string name="nft_wallet_title">NFTコレクション</string>
   <string name="nft_wallet_unable_to_load">データを読み込めません</string>
@@ -850,11 +859,14 @@
   <string name="send_validation_invalid_amount">無効な金額</string>
   <string name="send_validation_invalid_fee">手数料が残高を超えています</string>
   <string name="send_validation_invalid_total">合計金額が残高を超えています</string>
+  <string name="send_with_swap_notification_text">トークンを送信すれば、送信中に変換されます。受信者は必要なものをシームレスに受け取ります。</string>
+  <string name="send_with_swap_title">スワップして送信</string>
   <string name="sent_transaction_sent_title">取引が送信されました</string>
   <string name="settings_card_settings_footer">設定したいカードまたはリングをスキャンするために準備してください。</string>
   <string name="settings_forget_wallet">ウォレット削除</string>
   <string name="settings_forget_wallet_footer">これにより、ウォレットがアプリから削除されます。ウォレットは再度追加できます。</string>
   <string name="settings_wallet_name_title">名前</string>
+  <string name="stake_token_description">このトークンのステーキングに参加</string>
   <string name="staking_amount_requirement_error">ステーキング金額は %s 以上である必要があります</string>
   <string name="staking_amount_tron_integer_error">ネットワークルールにより、ステーキング金額は%1$s TRX に切り上げられます。</string>
   <string name="staking_amount_tron_integer_error_unstaking">ネットワークルールにより、ステーキング解除の量は%1$s TRX に切り上げられます。</string>
@@ -1062,6 +1074,8 @@
   <string name="transaction_history_transaction_from_address">送金元: %s</string>
   <string name="transaction_history_transaction_to_address">送金先: %s</string>
   <string name="transaction_history_transaction_validator">バリデーター: %s</string>
+  <string name="transaction_notifications_warning_description">通知は有効になっていますが、デバイスの設定で通知を許可するまでは機能しません。</string>
+  <string name="transaction_notifications_warning_title">取引通知</string>
   <string name="transfer_min_amount_error">最小%s</string>
   <string name="transfer_notification_invalid_minimum_transaction_amount_text">最小取引金額は%1$sです。</string>
   <string name="tron_will_be_send_token_fee_description">Tronネットワークの人気トークンの手数料は高い可能性があります。TRXをステーキングすると、取引コストを削減できる可能性があります。</string>
@@ -1078,10 +1092,12 @@
   <string name="twins_recreate_toolbar">Tangemツイン</string>
   <string name="twins_recreate_warning">この操作は元に戻せません。古いウォレットにはアクセスできなくなります。</string>
   <string name="twins_scan_twin_with_number">番号%sのツインカードをタップし、操作が終了するまで取り外さないでください。</string>
+  <string name="unexpected_error_title">問題が発生しました。</string>
   <string name="universal_error">エラーが発生しました。エラー コード：%s。サポートにお問い合わせください。</string>
   <string name="unlock_wallet_description_full">%sを使用するか、カード / リングをスキャンしてウォレットにアクセスしてください</string>
   <string name="unsupported_wc_version">接続に失敗しました：このdAppは、サポートされていないWallet Connectバージョン1.0を使用しています。正常に接続するには、dAppがWallet Connectバージョン2.0をサポートしていることを確認してください。</string>
   <string name="user_push_notification_agreement_argument_one">最新の機能とニュースをお届けします</string>
+  <string name="user_push_notification_agreement_argument_three">受信取引の通知を受け取る</string>
   <string name="user_push_notification_agreement_argument_two">新しいプロモーション情報をいち早く入手しましょう</string>
   <string name="user_push_notification_agreement_header">プッシュ通知を使用しますか?</string>
   <string name="user_wallet_list_add_button">新しいウォレットを追加</string>
@@ -1192,6 +1208,8 @@
   <string name="warning_express_notification_invalid_reserve_amount_title">受け取る金額は、 %s 以上である必要があります。</string>
   <string name="warning_express_pair_unavailable_message">これは、選択したペアがプロバイダーでは現在交換できないために発生する可能性があります。しばらく待ってからもう一度お試しください。(コード%s )</string>
   <string name="warning_express_pair_unavailable_title">選択されたペアは一時的に利用できません</string>
+  <string name="warning_express_providers_fca_warning_description">一部のプロバイダーは英国金融行動監視機構（FCA）の認可を受けていません。そのようなプロバイダーとの取引は避けるべきです。</string>
+  <string name="warning_express_providers_fca_warning_title">FCA警告リスト</string>
   <string name="warning_express_refresh_required_title">サービスは一時的に利用できません</string>
   <string name="warning_express_too_maximum_amount_title">スワップするトークンの量は %s を超えないでください</string>
   <string name="warning_express_too_minimal_amount_title">スワップ金額は %s 以上である必要があります</string>
@@ -1226,6 +1244,7 @@
   <string name="warning_rate_app_message">あなたのレビューは、Tangemウォレットをさらに良くするためのモチベーションになります</string>
   <string name="warning_rate_app_title">Tangemを楽しんでいますか?</string>
   <string name="warning_receive_blocked_hedera_token_association_required_message">トークンを受け取る前に、トークンを関連付ける必要があります。</string>
+  <string name="warning_receive_blocked_stelar_token_trustline_required_message">トークンを受け取る前に、トラストラインを開く必要があります</string>
   <string name="warning_rent_fee_title">ネットワーク使用料が必要です</string>
   <string name="warning_seedphrase_action_required_title">対応が必要です</string>
   <string name="warning_seedphrase_contacted_support">ウォレットの作成後、7日以内にアプリ経由でサポートに連絡しましたか？連絡した場合、あるいは連絡したかわからない場合は、「はい」をクリックして指示に従ってください。</string>
@@ -1241,6 +1260,10 @@
   <string name="warning_some_networks_unreachable_message">下にスワイプして更新するか、後でもう一度お試しください。</string>
   <string name="warning_some_networks_unreachable_title">一部のネットワークにアクセスできません</string>
   <string name="warning_some_token_balances_not_updated">一部のトークン残高を更新できませんでした</string>
+  <string name="warning_stelar_token_required_min_coin_reserve">%1$sが足りません。このトークンを関連付けるには、XLMアカウントにチャージしてください。</string>
+  <string name="warning_stellar_token_trustline_button_title">トラストラインを有効にする</string>
+  <string name="warning_stellar_token_trustline_subtiile">ネットワークルールに従い、このトークンを入金する前にトラストラインを開設する必要があります。これにより、ウォレットが資産を受け入れ、保管できるようになります。</string>
+  <string name="warning_stellar_token_trustline_tiile">このトークンのトラストラインを有効にする</string>
   <string name="warning_testnet_card_message">これはテストネットカードです。取引処理はできませんので、テストおよび開発目的でのみご利用ください。</string>
   <string name="warning_testnet_card_title">テスト目的のみ</string>
   <string name="warning_token_balance_not_updated">残高が古い可能性があります。ページを更新してください。</string>
@@ -1264,8 +1287,10 @@
   <string name="wc_allow_to_spend">使用を許可する</string>
   <string name="wc_common_address">アドレス</string>
   <string name="wc_common_connect">接続する</string>
+  <string name="wc_common_loading">読み込み中</string>
   <string name="wc_common_network">ネットワーク</string>
   <string name="wc_common_networks">ネットワーク</string>
+  <string name="wc_common_unlimited">無制限</string>
   <string name="wc_common_wallet">ウォレット</string>
   <string name="wc_connected_networks">接続されたネットワーク</string>
   <string name="wc_connection_reqeust_can_view_balance">ウォレットの残高とアクティビティを表示する</string>
@@ -1282,6 +1307,7 @@
   <string name="wc_disconnect_all_alert_desc">すべてのdAppsの接続解除に関するテキスト</string>
   <string name="wc_disconnect_all_alert_title">すべてのdAppを接続解除する</string>
   <string name="wc_estimated_wallet_changes">ウォレットの変更の予測</string>
+  <string name="wc_estimated_wallet_changes_not_simulated">取引をシミュレーションできませんでした。注意して続行してください。</string>
   <string name="wc_malicious_transaction">悪意のある取引</string>
   <string name="wc_missing_required_network_description">このウォレットのプロフィールに%sネットワークを追加する</string>
   <string name="wc_missing_required_network_title">ウォレットに必要なネットワークはありません</string>
