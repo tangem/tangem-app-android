@@ -213,6 +213,9 @@ include(":features:details:impl")
 include(":features:disclaimer:api")
 include(":features:disclaimer:impl")
 
+include(":features:usedesk:api")
+include(":features:usedesk:impl")
+
 include(":features:push-notifications:api")
 include(":features:push-notifications:impl")
 
@@ -272,6 +275,7 @@ include(":domain:visa")
 include(":domain:visa:models")
 include(":domain:onboarding")
 include(":domain:feedback")
+include(":domain:feedback:models")
 include(":domain:qr-scanning")
 include(":domain:qr-scanning:models")
 include(":domain:staking")

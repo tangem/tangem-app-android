@@ -28,6 +28,7 @@ dependencies {
     implementation(projects.domain.card)
     implementation(projects.domain.demo)
     implementation(projects.domain.feedback)
+    implementation(projects.domain.feedback.models)
     implementation(projects.domain.manageTokens)
     implementation(projects.domain.markets)
     implementation(projects.domain.onramp.models)
