@@ -9,9 +9,9 @@ import com.tangem.domain.models.quote.QuoteStatus
  *
 [REDACTED_AUTHOR]
  */
-interface SingleQuoteProducer : FlowProducer<QuoteStatus> {
+interface SingleQuoteStatusProducer : FlowProducer<QuoteStatus> {
 
     data class Params(val rawCurrencyId: CryptoCurrency.RawID)
 
-    interface Factory : FlowProducer.Factory<Params, SingleQuoteProducer>
+    interface Factory : FlowProducer.Factory<Params, SingleQuoteStatusProducer>
 }
