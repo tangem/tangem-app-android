@@ -1,7 +1,7 @@
 package com.tangem.data.quotes.di
 
-import com.tangem.domain.quotes.single.SingleQuoteProducer
-import com.tangem.domain.quotes.single.SingleQuoteSupplier
+import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
+import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -10,12 +10,12 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-internal object QuoteSupplierModule {
+internal object QuoteStatusSupplierModule {
 
     @Provides
     @Singleton
-    fun provideSingleQuoteSupplier(factory: SingleQuoteProducer.Factory): SingleQuoteSupplier {
-        return object : SingleQuoteSupplier(
+    fun provideSingleQuoteStatusSupplier(factory: SingleQuoteStatusProducer.Factory): SingleQuoteStatusSupplier {
+        return object : SingleQuoteStatusSupplier(
             factory = factory,
             keyCreator = { "single_quote_${it.rawCurrencyId.value}" },
         ) {}
