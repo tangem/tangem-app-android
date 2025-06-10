@@ -15,16 +15,25 @@ internal class TestPushMarketTokenBottomSheetTransformer(
     private val onItemClick: (TokenMarket) -> Unit,
 ) : Transformer<TestPushUM> {
     override fun transform(prevState: TestPushUM): TestPushUM {
+        val content = (prevState.bottomSheetConfig?.content as? TestPushMarketsTokenConfigUM)?.copy(
+            itemList = item,
+            onSearchValueEdit = onSearchEdit,
+            onItemClick = onItemClick,
+        ) ?: TestPushMarketsTokenConfigUM(
+            itemList = item,
+            searchValue = TextFieldValue(""),
+            onSearchValueEdit = onSearchEdit,
+            onItemClick = onItemClick,
+        )
         return prevState.copy(
-            bottomSheetConfig = TangemBottomSheetConfig(
+            bottomSheetConfig = prevState.bottomSheetConfig?.let {
+                prevState.bottomSheetConfig.copy(
+                    content = content,
+                )
+            } ?: TangemBottomSheetConfig(
                 isShown = true,
                 onDismissRequest = onDismissBottomSheet,
-                content = TestPushMarketsTokenConfigUM(
-                    itemList = item,
-                    searchValue = TextFieldValue(""),
-                    onSearchValueEdit = onSearchEdit,
-                    onItemClick = onItemClick,
-                ),
+                content = content,
             ),
         )
     }
