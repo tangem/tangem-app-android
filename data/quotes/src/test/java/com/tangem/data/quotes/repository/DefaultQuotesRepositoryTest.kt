@@ -5,8 +5,8 @@ import com.tangem.common.test.utils.ProvideTestModels
 import com.tangem.data.quotes.store.QuotesStatusesStore
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.quotes.QuotesRepository
-import com.tangem.domain.tokens.model.QuoteStatus
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.mockk
