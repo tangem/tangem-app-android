@@ -1,5 +1,7 @@
 package com.tangem.domain.tokens.model
 
+import com.tangem.domain.models.quote.QuoteStatus
+
 /**
  * Represents a domain model for a token (as part of a general list of tokens).
  *
