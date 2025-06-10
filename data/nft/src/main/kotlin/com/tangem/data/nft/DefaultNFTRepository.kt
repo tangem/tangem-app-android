@@ -119,7 +119,9 @@ internal class DefaultNFTRepository @Inject constructor(
         userWalletId: UserWalletId,
         networks: List<Network>,
     ): Flow<List<NFTCollections>> = combine(
-        networks.map { observeCollectionsInternal(userWalletId, it) },
+        networks
+            .sortedBy { it.name }
+            .map { observeCollectionsInternal(userWalletId, it) },
     ) { it.asList() }
 
     private suspend fun observeCollectionsInternal(
