@@ -79,8 +79,8 @@ internal class NFTCollectionsModel @Inject constructor(
                     onRetryClick = ::onRefresh,
                     onExpandCollectionClick = ::onExpandCollectionClick,
                     onRetryAssetsClick = ::onRetryAssetsClick,
-                    onAssetClick = { asset, collectionName ->
-                        params.onAssetClick(asset, collectionName)
+                    onAssetClick = { asset, collection ->
+                        params.onAssetClick(asset, collection)
                     },
                     initialSearchBarFactory = ::getInitialSearchBar,
                     collectionIdProvider = collectionIdProvider,
