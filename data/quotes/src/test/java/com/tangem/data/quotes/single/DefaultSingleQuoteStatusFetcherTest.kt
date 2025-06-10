@@ -2,7 +2,7 @@ package com.tangem.data.quotes.single
 
 import com.google.common.truth.Truth
 import com.tangem.common.test.data.quote.MockQuoteResponseFactory
-import com.tangem.data.quotes.multi.DefaultMultiQuoteFetcher
+import com.tangem.data.quotes.multi.DefaultMultiQuoteStatusFetcher
 import com.tangem.data.quotes.store.QuotesStatusesStore
 import com.tangem.data.quotes.store.setSourceAsCache
 import com.tangem.data.quotes.store.setSourceAsOnlyCache
@@ -13,7 +13,7 @@ import com.tangem.datasource.api.tangemTech.models.CurrenciesResponse
 import com.tangem.datasource.api.tangemTech.models.QuotesResponse
 import com.tangem.datasource.appcurrency.AppCurrencyResponseStore
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.quotes.single.SingleQuoteFetcher
+import com.tangem.domain.quotes.single.SingleQuoteStatusFetcher
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -29,18 +29,18 @@ internal class DefaultSingleQuoteStatusFetcherTest {
     private val appCurrencyResponseStore = mockk<AppCurrencyResponseStore>(relaxed = true)
     private val quotesStore = mockk<QuotesStatusesStore>(relaxed = true)
 
-    private val multiFetcher = DefaultMultiQuoteFetcher(
+    private val multiFetcher = DefaultMultiQuoteStatusFetcher(
         tangemTechApi = tangemTechApi,
         appCurrencyResponseStore = appCurrencyResponseStore,
-        quotesStore = quotesStore,
+        quotesStatusesStore = quotesStore,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
 
-    private val singleFetcher = DefaultSingleQuoteFetcher(multiFetcher)
+    private val singleFetcher = DefaultSingleQuoteStatusFetcher(multiFetcher)
 
     @Test
     fun `fetch single quote successfully`() = runTest {
-        val params = SingleQuoteFetcher.Params(rawCurrencyId = currenciesId, appCurrencyId = null)
+        val params = SingleQuoteStatusFetcher.Params(rawCurrencyId = currenciesId, appCurrencyId = null)
 
         coEvery { appCurrencyResponseStore.getSyncOrNull() } returns usdAppCurrency
 
@@ -68,7 +68,7 @@ internal class DefaultSingleQuoteStatusFetcherTest {
     @Test
     fun `fetch single quote successfully if appCurrencyId from params is not null`() = runTest {
         val appCurrencyId = "usd"
-        val params = SingleQuoteFetcher.Params(rawCurrencyId = currenciesId, appCurrencyId = appCurrencyId)
+        val params = SingleQuoteStatusFetcher.Params(rawCurrencyId = currenciesId, appCurrencyId = appCurrencyId)
 
         val coinIds = "BTC"
         coEvery {
@@ -89,7 +89,7 @@ internal class DefaultSingleQuoteStatusFetcherTest {
     @Test
     fun `fetch single quote failure because appCurrencyId from params is blank`() = runTest {
         val appCurrencyId = ""
-        val params = SingleQuoteFetcher.Params(rawCurrencyId = currenciesId, appCurrencyId = appCurrencyId)
+        val params = SingleQuoteStatusFetcher.Params(rawCurrencyId = currenciesId, appCurrencyId = appCurrencyId)
 
         val actual = singleFetcher(params)
 
@@ -106,7 +106,7 @@ internal class DefaultSingleQuoteStatusFetcherTest {
 
     @Test
     fun `fetch single quote failure because api request failed`() = runTest {
-        val params = SingleQuoteFetcher.Params(rawCurrencyId = currenciesId, appCurrencyId = null)
+        val params = SingleQuoteStatusFetcher.Params(rawCurrencyId = currenciesId, appCurrencyId = null)
 
         coEvery { appCurrencyResponseStore.getSyncOrNull() } returns usdAppCurrency
 
@@ -134,7 +134,7 @@ internal class DefaultSingleQuoteStatusFetcherTest {
 
     @Test
     fun `fetch single quote failure because app currency not found`() = runTest {
-        val params = SingleQuoteFetcher.Params(rawCurrencyId = currenciesId, appCurrencyId = null)
+        val params = SingleQuoteStatusFetcher.Params(rawCurrencyId = currenciesId, appCurrencyId = null)
 
         coEvery { appCurrencyResponseStore.getSyncOrNull() } returns null
 
