@@ -3,7 +3,7 @@ package com.tangem.domain.tokens.mock
 import arrow.core.nonEmptySetOf
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.tokens.model.QuoteStatus
+import com.tangem.domain.models.quote.QuoteStatus
 import java.math.BigDecimal
 
 @Suppress("MemberVisibilityCanBePrivate")

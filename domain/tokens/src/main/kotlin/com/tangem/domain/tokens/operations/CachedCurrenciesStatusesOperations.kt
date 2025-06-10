@@ -13,6 +13,7 @@ import com.tangem.domain.core.utils.lceError
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkStatus
+import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
 import com.tangem.domain.networks.single.SingleNetworkStatusProducer
@@ -31,7 +32,6 @@ import com.tangem.domain.staking.single.SingleYieldBalanceSupplier
 import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.model.QuoteStatus
 import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations.Error
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.utils.extractAddress
