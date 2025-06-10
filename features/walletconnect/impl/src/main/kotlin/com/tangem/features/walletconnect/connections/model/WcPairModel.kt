@@ -13,6 +13,7 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.ToastMessage
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.walletconnect.model.WcPairError
 import com.tangem.domain.walletconnect.model.WcPairRequest
 import com.tangem.domain.walletconnect.model.WcSessionApprove
 import com.tangem.domain.walletconnect.model.WcSessionProposal
@@ -32,7 +33,6 @@ import com.tangem.features.walletconnect.connections.model.transformers.WcDAppVe
 import com.tangem.features.walletconnect.connections.routes.WcAppInfoRoutes
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
-import timber.log.Timber
 import javax.inject.Inject
 import kotlin.properties.Delegates
 import com.tangem.utils.transformer.update as transformerUpdate
@@ -78,6 +78,7 @@ internal class WcPairModel @Inject constructor(
     }
 
     private fun loadDAppInfo() {
+        fun errorToast(error: WcPairError) = messageSender.send(ToastMessage(message = stringReference(error.message)))
         wcPairUseCase()
             .onEach { pairState ->
                 when (pairState) {
@@ -88,14 +89,14 @@ internal class WcPairModel @Inject constructor(
                         appInfoUiState.transformerUpdate(
                             WcConnectButtonProgressTransformer(showProgress = false),
                         )
+                        pairState.result.onLeft(::errorToast)
                         router.pop()
                     }
                     is WcPairState.Error -> {
                         appInfoUiState.transformerUpdate(
                             WcConnectButtonProgressTransformer(showProgress = false),
                         )
-                        messageSender.send(ToastMessage(message = stringReference(pairState.error.message)))
-                        Timber.e(pairState.error)
+                        errorToast(pairState.error)
                     }
                     is WcPairState.Loading -> appInfoUiState.update { createLoadingState() }
                     is WcPairState.Proposal -> {
