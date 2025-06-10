@@ -19,7 +19,7 @@ import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.quotes.QuotesRepositoryV2
+import com.tangem.domain.quotes.QuotesRepository
 import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
 import com.tangem.domain.tokens.GetCurrencyCheckUseCase
 import com.tangem.domain.tokens.GetMultiCryptoCurrencyStatusUseCase
@@ -65,7 +65,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     private val createTransactionExtrasUseCase: CreateTransactionDataExtrasUseCase,
     private val createApprovalTransactionUseCase: CreateApprovalTransactionUseCase,
     private val isDemoCardUseCase: IsDemoCardUseCase,
-    private val quotesRepositoryV2: QuotesRepositoryV2,
+    private val quotesRepository: QuotesRepository,
     private val swapTransactionRepository: SwapTransactionRepository,
     private val currencyChecksRepository: CurrencyChecksRepository,
     private val appCurrencyRepository: AppCurrencyRepository,
@@ -1809,7 +1809,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     }
 
     private suspend fun Set<CryptoCurrency.RawID>.getQuotesOrEmpty(): Set<QuoteStatus> {
-        return runCatching { quotesRepositoryV2.getMultiQuoteSyncOrNull(currenciesIds = this) }
+        return runCatching { quotesRepository.getMultiQuoteSyncOrNull(currenciesIds = this) }
             .getOrNull()
             .orEmpty()
     }
