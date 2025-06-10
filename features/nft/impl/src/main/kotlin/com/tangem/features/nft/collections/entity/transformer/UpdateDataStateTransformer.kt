@@ -20,7 +20,7 @@ internal class UpdateDataStateTransformer(
     private val onRetryClick: () -> Unit,
     private val onExpandCollectionClick: (NFTCollection) -> Unit,
     private val onRetryAssetsClick: (NFTCollection) -> Unit,
-    private val onAssetClick: (NFTAsset, String) -> Unit,
+    private val onAssetClick: (NFTAsset, NFTCollection) -> Unit,
     private val initialSearchBarFactory: () -> SearchBarUM,
     private val collectionIdProvider: NFTCollection.() -> String,
 ) : Transformer<NFTCollectionsStateUM> {
@@ -118,12 +118,12 @@ internal class UpdateDataStateTransformer(
         is NFTCollection.Assets.Value -> NFTCollectionAssetsListUM.Content(
             items = assets
                 .items
-                .map { it.transform(name.orEmpty()) }
+                .map { it.transform(this) }
                 .toPersistentList(),
         )
     }
 
-    private fun NFTAsset.transform(collectionName: String): NFTCollectionAssetUM {
+    private fun NFTAsset.transform(collection: NFTCollection): NFTCollectionAssetUM {
         return NFTCollectionAssetUM(
             id = id.toString(),
             name = name ?: DASH_SIGN,
@@ -144,7 +144,7 @@ internal class UpdateDataStateTransformer(
                 )
             },
             onItemClick = {
-                onAssetClick(this, collectionName)
+                onAssetClick(this, collection)
             },
         )
     }
