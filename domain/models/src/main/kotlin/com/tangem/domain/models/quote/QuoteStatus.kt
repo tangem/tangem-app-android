@@ -1,4 +1,4 @@
-package com.tangem.domain.tokens.model
+package com.tangem.domain.models.quote
 
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
