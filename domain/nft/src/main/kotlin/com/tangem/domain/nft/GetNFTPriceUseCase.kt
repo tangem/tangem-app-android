@@ -1,12 +1,12 @@
 package com.tangem.domain.nft
 
 import arrow.core.Either
+import com.tangem.domain.models.quote.fold
 import com.tangem.domain.nft.models.NFTAsset
 import com.tangem.domain.nft.models.NFTSalePrice
 import com.tangem.domain.nft.repository.NFTRepository
 import com.tangem.domain.quotes.single.SingleQuoteProducer
 import com.tangem.domain.quotes.single.SingleQuoteSupplier
-import com.tangem.domain.tokens.model.fold
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map

@@ -3,9 +3,9 @@ package com.tangem.domain.tokens.operations
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.NetworkStatus
+import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.model.QuoteStatus
 import java.math.BigDecimal
 
 internal class CurrencyStatusOperations(
