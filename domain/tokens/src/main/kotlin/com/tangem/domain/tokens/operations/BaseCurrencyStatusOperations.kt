@@ -15,8 +15,8 @@ import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
 import com.tangem.domain.networks.single.SingleNetworkStatusProducer
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
 import com.tangem.domain.quotes.QuotesRepository
-import com.tangem.domain.quotes.single.SingleQuoteProducer
-import com.tangem.domain.quotes.single.SingleQuoteSupplier
+import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
+import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.staking.model.stakekit.YieldBalanceList
 import com.tangem.domain.staking.repositories.StakingRepository
@@ -45,7 +45,7 @@ abstract class BaseCurrencyStatusOperations(
     private val stakingRepository: StakingRepository,
     private val multiNetworkStatusSupplier: MultiNetworkStatusSupplier,
     private val singleNetworkStatusSupplier: SingleNetworkStatusSupplier,
-    private val singleQuoteSupplier: SingleQuoteSupplier,
+    private val singleQuoteStatusSupplier: SingleQuoteStatusSupplier,
     private val singleYieldBalanceSupplier: SingleYieldBalanceSupplier,
     private val tokensFeatureToggles: TokensFeatureToggles,
 ) {
@@ -191,7 +191,7 @@ abstract class BaseCurrencyStatusOperations(
                     }
 
                     val quote = cryptoCurrencyId.rawCurrencyId?.let { rawId ->
-                        singleQuoteSupplier(params = SingleQuoteProducer.Params(rawCurrencyId = rawId))
+                        singleQuoteStatusSupplier(params = SingleQuoteStatusProducer.Params(rawCurrencyId = rawId))
                             .firstOrNull()
                     }
                         ?.right()
@@ -287,7 +287,7 @@ abstract class BaseCurrencyStatusOperations(
         )
 
         val quotes = currency.id.rawCurrencyId?.let {
-            singleQuoteSupplier(params = SingleQuoteProducer.Params(rawCurrencyId = it))
+            singleQuoteStatusSupplier(params = SingleQuoteStatusProducer.Params(rawCurrencyId = it))
                 .firstOrNull()
         }
             ?.right()
