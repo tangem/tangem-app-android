@@ -19,9 +19,9 @@ import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
 import com.tangem.domain.networks.single.SingleNetworkStatusProducer
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
 import com.tangem.domain.quotes.QuotesRepository
-import com.tangem.domain.quotes.multi.MultiQuoteFetcher
-import com.tangem.domain.quotes.single.SingleQuoteProducer
-import com.tangem.domain.quotes.single.SingleQuoteSupplier
+import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
+import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
+import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.staking.fetcher.YieldBalanceFetcherParams
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.staking.model.stakekit.YieldBalanceList
@@ -48,8 +48,8 @@ class CachedCurrenciesStatusesOperations(
     private val singleNetworkStatusSupplier: SingleNetworkStatusSupplier,
     multiNetworkStatusSupplier: MultiNetworkStatusSupplier,
     private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
-    private val multiQuoteFetcher: MultiQuoteFetcher,
-    private val singleQuoteSupplier: SingleQuoteSupplier,
+    private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
+    private val singleQuoteStatusSupplier: SingleQuoteStatusSupplier,
     private val singleYieldBalanceSupplier: SingleYieldBalanceSupplier,
     private val multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
     private val tokensFeatureToggles: TokensFeatureToggles,
@@ -60,7 +60,7 @@ class CachedCurrenciesStatusesOperations(
         stakingRepository = stakingRepository,
         multiNetworkStatusSupplier = multiNetworkStatusSupplier,
         singleNetworkStatusSupplier = singleNetworkStatusSupplier,
-        singleQuoteSupplier = singleQuoteSupplier,
+        singleQuoteStatusSupplier = singleQuoteStatusSupplier,
         singleYieldBalanceSupplier = singleYieldBalanceSupplier,
         tokensFeatureToggles = tokensFeatureToggles,
     ) {
@@ -189,8 +189,8 @@ class CachedCurrenciesStatusesOperations(
                 async {
                     val rawCurrenciesIds = currenciesIds.mapNotNullTo(mutableSetOf()) { it.rawCurrencyId }
 
-                    multiQuoteFetcher(
-                        params = MultiQuoteFetcher.Params(currenciesIds = rawCurrenciesIds, appCurrencyId = null),
+                    multiQuoteStatusFetcher(
+                        params = MultiQuoteStatusFetcher.Params(currenciesIds = rawCurrenciesIds, appCurrencyId = null),
                     )
                 },
                 async {
@@ -282,8 +282,8 @@ class CachedCurrenciesStatusesOperations(
     }
 
     override fun getQuotes(id: CryptoCurrency.RawID): Flow<Either<Error, Set<QuoteStatus>>> {
-        return singleQuoteSupplier(
-            params = SingleQuoteProducer.Params(rawCurrencyId = id),
+        return singleQuoteStatusSupplier(
+            params = SingleQuoteStatusProducer.Params(rawCurrencyId = id),
         )
             .map<QuoteStatus, Either<Error, Set<QuoteStatus>>> { setOf(it).right() }
             .distinctUntilChanged()
@@ -361,8 +361,8 @@ class CachedCurrenciesStatusesOperations(
 
             rawCurrencyIds.onEach {
                 launch {
-                    singleQuoteSupplier(
-                        params = SingleQuoteProducer.Params(rawCurrencyId = it),
+                    singleQuoteStatusSupplier(
+                        params = SingleQuoteStatusProducer.Params(rawCurrencyId = it),
                     )
                         .onEach { quote ->
                             state.update { loadedStatuses ->

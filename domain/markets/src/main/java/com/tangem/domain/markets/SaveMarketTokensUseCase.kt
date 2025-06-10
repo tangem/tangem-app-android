@@ -6,7 +6,7 @@ import com.tangem.domain.markets.repositories.MarketsTokenRepository
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
-import com.tangem.domain.quotes.multi.MultiQuoteFetcher
+import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.staking.fetcher.YieldBalanceFetcherParams
 import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
 import com.tangem.domain.staking.repositories.StakingRepository
@@ -30,7 +30,7 @@ class SaveMarketTokensUseCase(
     private val currenciesRepository: CurrenciesRepository,
     private val stakingRepository: StakingRepository,
     private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
-    private val multiQuoteFetcher: MultiQuoteFetcher,
+    private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
     private val multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
     private val tokensFeatureToggles: TokensFeatureToggles,
 ) {
@@ -108,8 +108,8 @@ class SaveMarketTokensUseCase(
     }
 
     private suspend fun refreshUpdatedQuotes(addedCurrencies: List<CryptoCurrency>) {
-        multiQuoteFetcher(
-            params = MultiQuoteFetcher.Params(
+        multiQuoteStatusFetcher(
+            params = MultiQuoteStatusFetcher.Params(
                 currenciesIds = addedCurrencies.mapNotNullTo(hashSetOf()) { it.id.rawCurrencyId },
                 appCurrencyId = null,
             ),

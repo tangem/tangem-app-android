@@ -6,7 +6,7 @@ import com.tangem.data.quotes.store.QuotesStatusesStore
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.quote.QuoteStatus
-import com.tangem.domain.quotes.single.SingleQuoteProducer
+import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.every
 import io.mockk.mockk
@@ -21,15 +21,15 @@ import java.math.BigDecimal
  */
 internal class DefaultSingleQuoteStatusProducerTest {
 
-    private val params = SingleQuoteProducer.Params(
+    private val params = SingleQuoteStatusProducer.Params(
         rawCurrencyId = CryptoCurrency.RawID(value = "BTC"),
     )
 
     private val quotesStore = mockk<QuotesStatusesStore>()
 
-    private val producer = DefaultSingleQuoteProducer(
+    private val producer = DefaultSingleQuoteStatusProducer(
         params = params,
-        quotesStore = quotesStore,
+        quotesStatusesStore = quotesStore,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
 

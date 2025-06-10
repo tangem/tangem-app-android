@@ -2,7 +2,7 @@ package com.tangem.data.quotes.single
 
 import com.tangem.data.quotes.store.QuotesStatusesStore
 import com.tangem.domain.models.quote.QuoteStatus
-import com.tangem.domain.quotes.single.SingleQuoteProducer
+import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -13,28 +13,28 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.mapNotNull
 
 /**
- * Default implementation of [SingleQuoteProducer]
+ * Default implementation of [SingleQuoteStatusProducer]
  *
- * @property params      params
- * @property quotesStore quotes store
+ * @property params              params
+ * @property quotesStatusesStore quotes store
  */
-internal class DefaultSingleQuoteProducer @AssistedInject constructor(
-    @Assisted val params: SingleQuoteProducer.Params,
-    private val quotesStore: QuotesStatusesStore,
+internal class DefaultSingleQuoteStatusProducer @AssistedInject constructor(
+    @Assisted val params: SingleQuoteStatusProducer.Params,
+    private val quotesStatusesStore: QuotesStatusesStore,
     private val dispatchers: CoroutineDispatcherProvider,
-) : SingleQuoteProducer {
+) : SingleQuoteStatusProducer {
 
     override val fallback: QuoteStatus = QuoteStatus(rawCurrencyId = params.rawCurrencyId)
 
     override fun produce(): Flow<QuoteStatus> {
-        return quotesStore.get()
+        return quotesStatusesStore.get()
             .mapNotNull { quotes -> quotes.firstOrNull { it.rawCurrencyId == params.rawCurrencyId } }
             .distinctUntilChanged()
             .flowOn(dispatchers.default)
     }
 
     @AssistedFactory
-    interface Factory : SingleQuoteProducer.Factory {
-        override fun create(params: SingleQuoteProducer.Params): DefaultSingleQuoteProducer
+    interface Factory : SingleQuoteStatusProducer.Factory {
+        override fun create(params: SingleQuoteStatusProducer.Params): DefaultSingleQuoteStatusProducer
     }
 }
