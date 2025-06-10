@@ -8,7 +8,7 @@ import com.tangem.domain.tokens.model.QuoteStatus
  *
 [REDACTED_AUTHOR]
  */
-interface QuotesRepositoryV2 {
+interface QuotesRepository {
 
     /** Get quotes by [currenciesIds] synchronously or null */
     suspend fun getMultiQuoteSyncOrNull(currenciesIds: Set<CryptoCurrency.RawID>): Set<QuoteStatus>?
