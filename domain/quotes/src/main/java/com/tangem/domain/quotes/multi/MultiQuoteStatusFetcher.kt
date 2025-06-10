@@ -4,11 +4,11 @@ import com.tangem.domain.core.flow.FlowFetcher
 import com.tangem.domain.models.currency.CryptoCurrency
 
 /**
- * Fetcher of quotes
+ * Fetcher of quotes statuses for specified list of [CryptoCurrency.RawID]
  *
 [REDACTED_AUTHOR]
  */
-interface MultiQuoteFetcher : FlowFetcher<MultiQuoteFetcher.Params> {
+interface MultiQuoteStatusFetcher : FlowFetcher<MultiQuoteStatusFetcher.Params> {
 
     /**
      * Params
