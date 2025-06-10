@@ -6,7 +6,7 @@ import com.tangem.datasource.local.datastore.RuntimeSharedStore
 import com.tangem.datasource.local.quote.converter.QuoteStatusConverter
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.tokens.model.QuoteStatus
+import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.addOrReplace
 import kotlinx.coroutines.CoroutineScope
