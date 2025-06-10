@@ -7,7 +7,7 @@ import arrow.core.raise.either
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
-import com.tangem.domain.quotes.multi.MultiQuoteFetcher
+import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.staking.fetcher.YieldBalanceFetcherParams
 import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
 import com.tangem.domain.staking.repositories.StakingRepository
@@ -23,7 +23,7 @@ class FetchCardTokenListUseCase(
     private val currenciesRepository: CurrenciesRepository,
     private val stakingRepository: StakingRepository,
     private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
-    private val multiQuoteFetcher: MultiQuoteFetcher,
+    private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
     private val multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
     private val tokensFeatureToggles: TokensFeatureToggles,
 ) {
@@ -83,8 +83,8 @@ class FetchCardTokenListUseCase(
     }
 
     private suspend fun fetchQuotes(currenciesIds: Set<CryptoCurrency.RawID>) {
-        multiQuoteFetcher(
-            params = MultiQuoteFetcher.Params(currenciesIds = currenciesIds, appCurrencyId = null),
+        multiQuoteStatusFetcher(
+            params = MultiQuoteStatusFetcher.Params(currenciesIds = currenciesIds, appCurrencyId = null),
         )
     }
 
