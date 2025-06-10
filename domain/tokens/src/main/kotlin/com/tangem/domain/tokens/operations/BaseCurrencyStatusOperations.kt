@@ -13,7 +13,7 @@ import com.tangem.domain.networks.multi.MultiNetworkStatusProducer
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
 import com.tangem.domain.networks.single.SingleNetworkStatusProducer
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
-import com.tangem.domain.quotes.QuotesRepositoryV2
+import com.tangem.domain.quotes.QuotesRepository
 import com.tangem.domain.quotes.single.SingleQuoteProducer
 import com.tangem.domain.quotes.single.SingleQuoteSupplier
 import com.tangem.domain.staking.model.stakekit.YieldBalance
@@ -41,7 +41,7 @@ import kotlinx.coroutines.flow.*
 @Suppress("LargeClass", "LongParameterList")
 abstract class BaseCurrencyStatusOperations(
     private val currenciesRepository: CurrenciesRepository,
-    private val quotesRepositoryV2: QuotesRepositoryV2,
+    private val quotesRepository: QuotesRepository,
     private val stakingRepository: StakingRepository,
     private val multiNetworkStatusSupplier: MultiNetworkStatusSupplier,
     private val singleNetworkStatusSupplier: SingleNetworkStatusSupplier,
@@ -257,7 +257,7 @@ abstract class BaseCurrencyStatusOperations(
                     val (_, currenciesIds) = getIds(nonEmptyCurrencies)
                     val rawIds = currenciesIds.mapNotNull { it.rawCurrencyId }.toSet()
 
-                    val quotes = quotesRepositoryV2.getMultiQuoteSyncOrNull(currenciesIds = rawIds)?.right()
+                    val quotes = quotesRepository.getMultiQuoteSyncOrNull(currenciesIds = rawIds)?.right()
 
                     val networkStatuses = multiNetworkStatusSupplier(
                         params = MultiNetworkStatusProducer.Params(userWalletId = userWalletId),
