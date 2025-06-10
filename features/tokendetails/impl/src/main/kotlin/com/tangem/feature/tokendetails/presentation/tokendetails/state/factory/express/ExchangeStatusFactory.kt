@@ -6,7 +6,7 @@ import com.tangem.datasource.local.swaptx.ExpressAnalyticsStatus
 import com.tangem.datasource.local.swaptx.SwapTransactionStatusStore
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.quotes.QuotesRepositoryV2
+import com.tangem.domain.quotes.QuotesRepository
 import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.model.QuoteStatus
 import com.tangem.domain.tokens.model.analytics.TokenExchangeAnalyticsEvent
@@ -32,7 +32,7 @@ import kotlinx.coroutines.flow.map
 internal class ExchangeStatusFactory @AssistedInject constructor(
     private val swapTransactionRepository: SwapTransactionRepository,
     private val swapRepository: SwapRepository,
-    private val quotesRepositoryV2: QuotesRepositoryV2,
+    private val quotesRepository: QuotesRepository,
     private val addCryptoCurrenciesUseCase: AddCryptoCurrenciesUseCase,
     private val swapTransactionStatusStore: SwapTransactionStatusStore,
     private val analyticsEventsHandler: AnalyticsEventHandler,
@@ -190,7 +190,7 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
     private suspend fun Set<CryptoCurrency.ID>.getQuotesOrEmpty(): Set<QuoteStatus> {
         val rawIds = mapNotNull { it.rawCurrencyId }.toSet()
 
-        return runCatching { quotesRepositoryV2.getMultiQuoteSyncOrNull(currenciesIds = rawIds) }
+        return runCatching { quotesRepository.getMultiQuoteSyncOrNull(currenciesIds = rawIds) }
             .getOrNull()
             .orEmpty()
     }
