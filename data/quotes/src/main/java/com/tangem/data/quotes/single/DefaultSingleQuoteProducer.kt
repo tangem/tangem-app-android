@@ -1,8 +1,8 @@
 package com.tangem.data.quotes.single
 
 import com.tangem.data.quotes.store.QuotesStatusesStore
+import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.quotes.single.SingleQuoteProducer
-import com.tangem.domain.tokens.model.QuoteStatus
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
