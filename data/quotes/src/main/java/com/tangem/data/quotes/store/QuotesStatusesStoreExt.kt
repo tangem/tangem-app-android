@@ -2,7 +2,7 @@ package com.tangem.data.quotes.store
 
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.tokens.model.QuoteStatus
+import com.tangem.domain.models.quote.QuoteStatus
 
 /** Set [StatusSource] of quotes statuses as [StatusSource.CACHE] for [currenciesIds] */
 internal suspend fun QuotesStatusesStore.setSourceAsCache(currenciesIds: Set<CryptoCurrency.RawID>) {
