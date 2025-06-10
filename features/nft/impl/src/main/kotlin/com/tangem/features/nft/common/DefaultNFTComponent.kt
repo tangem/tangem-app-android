@@ -112,12 +112,12 @@ internal class DefaultNFTComponent @AssistedInject constructor(
                     ),
                 )
             },
-            onAssetClick = { asset, collectionName ->
+            onAssetClick = { asset, collection ->
                 innerRouter.push(
                     NFTRoute.Details(
                         userWalletId = route.userWalletId,
                         nftAsset = asset,
-                        collectionName = collectionName,
+                        collection = collection,
                     ),
                 )
             },
@@ -144,7 +144,7 @@ internal class DefaultNFTComponent @AssistedInject constructor(
         params = NFTDetailsComponent.Params(
             userWalletId = route.userWalletId,
             nftAsset = route.nftAsset,
-            nftCollectionName = route.collectionName,
+            nftCollection = route.collection,
             onBackClick = ::onChildBack,
             onAllTraitsClick = {
                 innerRouter.push(
