@@ -2,8 +2,7 @@ package com.tangem.feature.tester.presentation.testpush.ui
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Text
@@ -29,8 +28,12 @@ internal fun TestPushDeeplinkBottomSheet(config: TangemBottomSheetConfig?) {
 
 @Composable
 private fun TestPushMenuDeepLinkBottomSheetContent(config: TangemBottomSheetConfig) {
-    TangemBottomSheet<TestPushMenuConfigUM>(config) { content ->
-        LazyColumn {
+    TangemBottomSheet<TestPushMenuConfigUM>(config = config, addBottomInsets = false) { content ->
+        LazyColumn(
+            modifier = Modifier
+                .navigationBarsPadding()
+                .imePadding(),
+        ) {
             items(
                 items = content.itemList.toList(),
                 key = { it },
@@ -56,8 +59,13 @@ private fun TestPushMenuDeepLinkBottomSheetContent(config: TangemBottomSheetConf
 
 @Composable
 private fun TestPushMarketsTokenBottomSheetContent(config: TangemBottomSheetConfig) {
-    TangemBottomSheet<TestPushMarketsTokenConfigUM>(config) { content ->
-        LazyColumn {
+    TangemBottomSheet<TestPushMarketsTokenConfigUM>(config = config, addBottomInsets = false) { content ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .navigationBarsPadding()
+                .imePadding(),
+        ) {
             item(key = "Markets Search") {
                 OutlineTextField(
                     label = "Title",
