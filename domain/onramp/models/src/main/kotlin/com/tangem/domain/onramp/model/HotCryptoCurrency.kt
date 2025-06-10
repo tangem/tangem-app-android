@@ -1,7 +1,7 @@
 package com.tangem.domain.onramp.model
 
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.tokens.model.QuoteStatus
+import com.tangem.domain.models.quote.QuoteStatus
 
 /**
  * Hot crypto currency

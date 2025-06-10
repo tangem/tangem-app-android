@@ -2,8 +2,8 @@ package com.tangem.data.quotes.repository
 
 import com.tangem.data.quotes.store.QuotesStatusesStore
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.quotes.QuotesRepository
-import com.tangem.domain.tokens.model.QuoteStatus
 import timber.log.Timber
 import javax.inject.Inject
 
