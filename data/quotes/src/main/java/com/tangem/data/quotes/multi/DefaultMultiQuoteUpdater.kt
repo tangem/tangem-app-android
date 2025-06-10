@@ -5,9 +5,9 @@ import arrow.core.left
 import com.tangem.data.quotes.store.QuotesStatusesStore
 import com.tangem.datasource.appcurrency.AppCurrencyResponseStore
 import com.tangem.domain.core.utils.EitherFlow
+import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.quotes.multi.MultiQuoteFetcher
 import com.tangem.domain.quotes.multi.MultiQuoteUpdater
-import com.tangem.domain.tokens.model.QuoteStatus
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
