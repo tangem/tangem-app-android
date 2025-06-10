@@ -3,7 +3,7 @@ package com.tangem.datasource.local.quote.converter
 import com.tangem.datasource.api.tangemTech.models.QuotesResponse
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.tokens.model.QuoteStatus
+import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.orZero
 

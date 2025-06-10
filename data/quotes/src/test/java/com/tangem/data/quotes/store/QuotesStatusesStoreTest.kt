@@ -10,7 +10,7 @@ import com.tangem.common.test.utils.getEmittedValues
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.tokens.model.QuoteStatus
+import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.every
 import io.mockk.mockk

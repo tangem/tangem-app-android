@@ -4,9 +4,9 @@ import arrow.core.None
 import arrow.core.Option
 import arrow.core.toOption
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.quotes.single.SingleQuoteProducer
 import com.tangem.domain.quotes.single.SingleQuoteSupplier
-import com.tangem.domain.tokens.model.QuoteStatus
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flowOf

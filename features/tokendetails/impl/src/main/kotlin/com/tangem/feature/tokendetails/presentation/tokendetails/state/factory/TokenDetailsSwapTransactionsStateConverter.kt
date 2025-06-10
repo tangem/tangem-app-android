@@ -17,9 +17,9 @@ import com.tangem.core.ui.utils.toDateFormatWithTodayYesterday
 import com.tangem.core.ui.utils.toTimeFormat
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.tokens.model.QuoteStatus
+import com.tangem.domain.models.quote.QuoteStatus
+import com.tangem.domain.models.quote.mapData
 import com.tangem.domain.tokens.model.analytics.TokenExchangeAnalyticsEvent
-import com.tangem.domain.tokens.model.mapData
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatus
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatus.Companion.isFailed
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatusModel
