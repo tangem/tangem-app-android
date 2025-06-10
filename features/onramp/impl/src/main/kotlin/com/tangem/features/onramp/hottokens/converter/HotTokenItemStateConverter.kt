@@ -9,9 +9,9 @@ import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.quote.QuoteStatus
+import com.tangem.domain.models.quote.fold
 import com.tangem.domain.onramp.model.HotCryptoCurrency
-import com.tangem.domain.tokens.model.QuoteStatus
-import com.tangem.domain.tokens.model.fold
 import com.tangem.utils.converter.Converter
 import java.math.BigDecimal
 
