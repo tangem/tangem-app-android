@@ -5,7 +5,6 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.quotes.QuotesRepository
 import timber.log.Timber
-import javax.inject.Inject
 
 /**
  * Default implementation of [QuotesRepository]
@@ -14,7 +13,7 @@ import javax.inject.Inject
  *
 [REDACTED_AUTHOR]
  */
-internal class DefaultQuotesRepository @Inject constructor(
+internal class DefaultQuotesRepository(
     private val quotesStatusesStore: QuotesStatusesStore,
 ) : QuotesRepository {
 

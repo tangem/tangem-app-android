@@ -5,7 +5,7 @@ import com.tangem.domain.managetokens.*
 import com.tangem.domain.managetokens.repository.CustomTokensRepository
 import com.tangem.domain.managetokens.repository.ManageTokensRepository
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
-import com.tangem.domain.quotes.multi.MultiQuoteFetcher
+import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.TokensFeatureToggles
@@ -71,7 +71,7 @@ internal object ManageTokensDomainModule {
         derivationsRepository: DerivationsRepository,
         stakingRepository: StakingRepository,
         multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
-        multiQuoteFetcher: MultiQuoteFetcher,
+        multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
         multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
         tokensFeatureToggles: TokensFeatureToggles,
     ): SaveManagedTokensUseCase {
@@ -82,7 +82,7 @@ internal object ManageTokensDomainModule {
             derivationsRepository = derivationsRepository,
             stakingRepository = stakingRepository,
             multiNetworkStatusFetcher = multiNetworkStatusFetcher,
-            multiQuoteFetcher = multiQuoteFetcher,
+            multiQuoteStatusFetcher = multiQuoteStatusFetcher,
             multiYieldBalanceFetcher = multiYieldBalanceFetcher,
             tokensFeatureToggles = tokensFeatureToggles,
         )
