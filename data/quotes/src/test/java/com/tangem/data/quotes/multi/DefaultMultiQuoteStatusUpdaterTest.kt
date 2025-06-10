@@ -6,7 +6,7 @@ import com.tangem.common.test.utils.getEmittedValues
 import com.tangem.data.quotes.store.QuotesStatusesStore
 import com.tangem.datasource.api.tangemTech.models.CurrenciesResponse
 import com.tangem.datasource.appcurrency.AppCurrencyResponseStore
-import com.tangem.domain.quotes.multi.MultiQuoteFetcher
+import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
 import kotlinx.coroutines.flow.*
@@ -20,12 +20,12 @@ internal class DefaultMultiQuoteStatusUpdaterTest {
 
     private val appCurrencyResponseStore: AppCurrencyResponseStore = mockk()
     private val quotesStore: QuotesStatusesStore = mockk()
-    private val multiQuoteFetcher: MultiQuoteFetcher = mockk()
+    private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher = mockk()
 
     private val multiQuoteUpdater = DefaultMultiQuoteUpdater(
         appCurrencyResponseStore = appCurrencyResponseStore,
-        quotesStore = quotesStore,
-        multiQuoteFetcher = multiQuoteFetcher,
+        quotesStatusesStore = quotesStore,
+        multiQuoteStatusFetcher = multiQuoteStatusFetcher,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
 
@@ -36,8 +36,8 @@ internal class DefaultMultiQuoteStatusUpdaterTest {
         every { appCurrencyResponseStore.get() } returns appCurrencyFlow
         coEvery { quotesStore.getAllSyncOrNull() } returns emptySet()
 
-        val params = MultiQuoteFetcher.Params(currenciesIds = emptySet(), appCurrencyId = usdAppCurrency.id)
-        coEvery { multiQuoteFetcher(params) } returns Unit.right()
+        val params = MultiQuoteStatusFetcher.Params(currenciesIds = emptySet(), appCurrencyId = usdAppCurrency.id)
+        coEvery { multiQuoteStatusFetcher(params) } returns Unit.right()
 
         val actual = multiQuoteUpdater.getMultiQuoteUpdatesFlow()
 
@@ -48,7 +48,7 @@ internal class DefaultMultiQuoteStatusUpdaterTest {
 
         coVerifyOrder {
             quotesStore.getAllSyncOrNull()
-            multiQuoteFetcher(params)
+            multiQuoteStatusFetcher(params)
         }
     }
 
@@ -59,8 +59,8 @@ internal class DefaultMultiQuoteStatusUpdaterTest {
         every { appCurrencyResponseStore.get() } returns appCurrencyFlow
         coEvery { quotesStore.getAllSyncOrNull() } returns emptySet()
 
-        val params = MultiQuoteFetcher.Params(currenciesIds = emptySet(), appCurrencyId = usdAppCurrency.id)
-        coEvery { multiQuoteFetcher(params) } returns Unit.right()
+        val params = MultiQuoteStatusFetcher.Params(currenciesIds = emptySet(), appCurrencyId = usdAppCurrency.id)
+        coEvery { multiQuoteStatusFetcher(params) } returns Unit.right()
 
         val actual = multiQuoteUpdater.getMultiQuoteUpdatesFlow()
 
@@ -71,7 +71,7 @@ internal class DefaultMultiQuoteStatusUpdaterTest {
 
         coVerifyOrder {
             quotesStore.getAllSyncOrNull()
-            multiQuoteFetcher(params)
+            multiQuoteStatusFetcher(params)
         }
     }
 
@@ -90,7 +90,7 @@ internal class DefaultMultiQuoteStatusUpdaterTest {
 
         coVerify(inverse = true) {
             quotesStore.getAllSyncOrNull()
-            multiQuoteFetcher(any())
+            multiQuoteStatusFetcher(any())
         }
     }
 
@@ -111,8 +111,8 @@ internal class DefaultMultiQuoteStatusUpdaterTest {
         every { appCurrencyResponseStore.get() } returns appCurrencyFlow
         coEvery { quotesStore.getAllSyncOrNull() } returns emptySet()
 
-        val params = MultiQuoteFetcher.Params(currenciesIds = emptySet(), appCurrencyId = usdAppCurrency.id)
-        coEvery { multiQuoteFetcher(params) } returns Unit.right()
+        val params = MultiQuoteStatusFetcher.Params(currenciesIds = emptySet(), appCurrencyId = usdAppCurrency.id)
+        coEvery { multiQuoteStatusFetcher(params) } returns Unit.right()
 
         val actual = multiQuoteUpdater.getMultiQuoteUpdatesFlow()
 
@@ -126,7 +126,7 @@ internal class DefaultMultiQuoteStatusUpdaterTest {
 
         coVerify(inverse = true) {
             quotesStore.getAllSyncOrNull()
-            multiQuoteFetcher(any())
+            multiQuoteStatusFetcher(any())
         }
 
         innerFlow.emit(value = true)
@@ -136,7 +136,7 @@ internal class DefaultMultiQuoteStatusUpdaterTest {
 
         coVerifyOrder {
             quotesStore.getAllSyncOrNull()
-            multiQuoteFetcher(params)
+            multiQuoteStatusFetcher(params)
         }
     }
 
