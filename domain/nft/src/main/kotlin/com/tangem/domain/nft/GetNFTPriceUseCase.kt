@@ -5,15 +5,15 @@ import com.tangem.domain.models.quote.fold
 import com.tangem.domain.nft.models.NFTAsset
 import com.tangem.domain.nft.models.NFTSalePrice
 import com.tangem.domain.nft.repository.NFTRepository
-import com.tangem.domain.quotes.single.SingleQuoteProducer
-import com.tangem.domain.quotes.single.SingleQuoteSupplier
+import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
+import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 class GetNFTPriceUseCase(
     private val nftRepository: NFTRepository,
-    private val singleQuoteSupplier: SingleQuoteSupplier,
+    private val singleQuoteStatusSupplier: SingleQuoteStatusSupplier,
 ) {
 
     suspend operator fun invoke(userWalletId: UserWalletId, nftAsset: NFTAsset): Either<Throwable, Flow<NFTSalePrice>> {
@@ -21,8 +21,8 @@ class GetNFTPriceUseCase(
             val nftCurrency = nftRepository.getNFTCurrency(nftAsset.network)
             val rawId = nftCurrency.id.rawCurrencyId ?: error("Invalid nft currency id")
 
-            singleQuoteSupplier(
-                params = SingleQuoteProducer.Params(rawCurrencyId = rawId),
+            singleQuoteStatusSupplier(
+                params = SingleQuoteStatusProducer.Params(rawCurrencyId = rawId),
             ).map { quote ->
                 val nftPrice = nftRepository.getNFTSalePrice(
                     userWalletId = userWalletId,
