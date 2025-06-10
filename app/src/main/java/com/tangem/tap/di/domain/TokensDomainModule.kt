@@ -8,7 +8,7 @@ import com.tangem.domain.networks.repository.NetworksRepository
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
 import com.tangem.domain.promo.PromoRepository
-import com.tangem.domain.quotes.QuotesRepositoryV2
+import com.tangem.domain.quotes.QuotesRepository
 import com.tangem.domain.quotes.multi.MultiQuoteFetcher
 import com.tangem.domain.quotes.single.SingleQuoteSupplier
 import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
@@ -368,7 +368,7 @@ internal object TokensDomainModule {
     fun provideBaseCurrenciesStatusesOperations(
         tokensFeatureToggles: TokensFeatureToggles,
         currenciesRepository: CurrenciesRepository,
-        quotesRepositoryV2: QuotesRepositoryV2,
+        quotesRepository: QuotesRepository,
         stakingRepository: StakingRepository,
         singleNetworkStatusSupplier: SingleNetworkStatusSupplier,
         multiNetworkStatusSupplier: MultiNetworkStatusSupplier,
@@ -380,7 +380,7 @@ internal object TokensDomainModule {
     ): BaseCurrenciesStatusesOperations {
         return CachedCurrenciesStatusesOperations(
             currenciesRepository = currenciesRepository,
-            quotesRepositoryV2 = quotesRepositoryV2,
+            quotesRepository = quotesRepository,
             stakingRepository = stakingRepository,
             singleNetworkStatusSupplier = singleNetworkStatusSupplier,
             multiNetworkStatusSupplier = multiNetworkStatusSupplier,
@@ -398,7 +398,7 @@ internal object TokensDomainModule {
     fun provideBaseCurrencyStatusOperations(
         tokensFeatureToggles: TokensFeatureToggles,
         currenciesRepository: CurrenciesRepository,
-        quotesRepositoryV2: QuotesRepositoryV2,
+        quotesRepository: QuotesRepository,
         stakingRepository: StakingRepository,
         singleNetworkStatusSupplier: SingleNetworkStatusSupplier,
         multiNetworkStatusSupplier: MultiNetworkStatusSupplier,
@@ -410,7 +410,7 @@ internal object TokensDomainModule {
     ): BaseCurrencyStatusOperations {
         return CachedCurrenciesStatusesOperations(
             currenciesRepository = currenciesRepository,
-            quotesRepositoryV2 = quotesRepositoryV2,
+            quotesRepository = quotesRepository,
             stakingRepository = stakingRepository,
             singleNetworkStatusSupplier = singleNetworkStatusSupplier,
             multiNetworkStatusSupplier = multiNetworkStatusSupplier,
