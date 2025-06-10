@@ -14,6 +14,7 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.nft.models.NFTAsset
+import com.tangem.domain.nft.models.NFTCollection
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.nft.details.entity.NFTDetailsBottomSheetConfig
 import com.tangem.features.nft.details.info.NFTDetailsInfoComponent
@@ -65,7 +66,7 @@ internal class NFTDetailsComponent @AssistedInject constructor(
     data class Params(
         val userWalletId: UserWalletId,
         val nftAsset: NFTAsset,
-        val nftCollectionName: String,
+        val nftCollection: NFTCollection,
         val onBackClick: () -> Unit,
         val onAllTraitsClick: () -> Unit,
     )
