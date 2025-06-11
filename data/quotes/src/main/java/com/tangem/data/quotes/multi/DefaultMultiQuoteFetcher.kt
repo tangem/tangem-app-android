@@ -5,7 +5,7 @@ import com.tangem.data.common.api.safeApiCallWithTimeout
 import com.tangem.data.quotes.store.QuotesStatusesStore
 import com.tangem.data.quotes.store.setSourceAsCache
 import com.tangem.data.quotes.store.setSourceAsOnlyCache
-import com.tangem.data.tokens.utils.QuotesUnsupportedCurrenciesIdAdapter
+import com.tangem.data.quotes.utils.QuotesUnsupportedCurrenciesIdAdapter
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.appcurrency.AppCurrencyResponseStore
 import com.tangem.domain.core.utils.catchOn
@@ -35,8 +35,6 @@ internal class DefaultMultiQuoteFetcher @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
 ) : MultiQuoteFetcher {
 
-    private val quotesUnsupportedCurrenciesAdapter = QuotesUnsupportedCurrenciesIdAdapter()
-
     override suspend fun invoke(params: MultiQuoteFetcher.Params) = Either.catchOn(dispatchers.default) {
         if (params.currenciesIds.isEmpty()) {
             Timber.d("No currencies to fetch quotes for")
@@ -45,7 +43,7 @@ internal class DefaultMultiQuoteFetcher @Inject constructor(
 
         quotesStore.setSourceAsCache(currenciesIds = params.currenciesIds)
 
-        val replacementIdsResult = quotesUnsupportedCurrenciesAdapter.replaceUnsupportedCurrencies(
+        val replacementIdsResult = QuotesUnsupportedCurrenciesIdAdapter.replaceUnsupportedCurrencies(
             currenciesIds = params.currenciesIds.mapTo(
                 destination = hashSetOf(),
                 transform = CryptoCurrency.RawID::value,
@@ -64,7 +62,7 @@ internal class DefaultMultiQuoteFetcher @Inject constructor(
             onError = { error -> throw error },
         )
 
-        val updatedResponse = quotesUnsupportedCurrenciesAdapter.getResponseWithUnsupportedCurrencies(
+        val updatedResponse = QuotesUnsupportedCurrenciesIdAdapter.getResponseWithUnsupportedCurrencies(
             response = response,
             filteredIds = replacementIdsResult.idsFiltered,
         )
