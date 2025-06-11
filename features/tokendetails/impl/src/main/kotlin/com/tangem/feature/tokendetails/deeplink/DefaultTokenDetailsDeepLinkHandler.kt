@@ -39,56 +39,57 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
     }
 
     private fun handleDeepLink() {
-        // It is okay here, we are navigating from outside, and there is no other way to getting UserWallet
-        val userWalletId = queryParams[WALLET_ID_KEY]?.let(::UserWalletId)
-            ?: getSelectedWalletSyncUseCase().getOrNull()?.walletId
-
-        if (userWalletId == null) {
-            Timber.e("Error on getting user wallet")
-            return
-        }
-
         val networkId = queryParams[NETWORK_ID_KEY]
         val tokenId = queryParams[TOKEN_ID_KEY]
         val type = NotificationType.getType(queryParams[TYPE_KEY])
 
-        if (type != NotificationType.Unknown) {
-            scope.launch {
-                val cryptoCurrency = getCryptoCurrenciesUseCase(userWalletId = userWalletId).getOrElse {
-                    Timber.e("Error on getting crypto currency list")
-                    return@launch
-                }.firstOrNull {
-                    it.network.backendId == networkId &&
-                        it.id.rawCurrencyId?.value == tokenId
-                }
+        // It is okay here, we are navigating from outside, and there is no other way to getting UserWallet
+        val selectedUserWalletId = getSelectedWalletSyncUseCase().getOrNull()?.walletId
+        val walletId = queryParams[WALLET_ID_KEY]?.let(::UserWalletId) ?: selectedUserWalletId
 
-                if (cryptoCurrency == null) {
-                    Timber.e(
-                        """
+        // If selected user wallet is different than from deeplink - ignore deeplink
+        // If selected user wallet is null - ignore deeplink
+        if (walletId != selectedUserWalletId || selectedUserWalletId == null) {
+            Timber.e("Error on getting user wallet")
+            return
+        }
+
+        scope.launch {
+            val cryptoCurrency = getCryptoCurrenciesUseCase(userWalletId = selectedUserWalletId).getOrElse {
+                Timber.e("Error on getting crypto currency list")
+                return@launch
+            }.firstOrNull {
+                val isNetwork = it.network.backendId.equals(networkId, ignoreCase = true)
+                val isCurrency = it.id.rawCurrencyId?.value?.equals(tokenId, ignoreCase = true) == true
+                isNetwork && isCurrency
+            }
+
+            if (cryptoCurrency == null) {
+                Timber.e(
+                    """
                         Could not get crypto currency for
                         |- $NETWORK_ID_KEY: $networkId
                         |- $TOKEN_ID_KEY: $tokenId
-                        """.trimIndent(),
-                    )
-                    return@launch
-                }
-
-                analyticsEventHandler.send(PushNotificationAnalyticEvents.NotificationOpened(type.name))
-
-                appRouter.push(
-                    AppRoute.CurrencyDetails(
-                        userWalletId = userWalletId,
-                        currency = cryptoCurrency,
-                    ),
+                    """.trimIndent(),
                 )
+                return@launch
+            }
 
-                if (isFromOnNewIntent) {
-                    fetchCurrencyStatusUseCase.invoke(
-                        userWalletId = userWalletId,
-                        id = cryptoCurrency.id,
-                        refresh = true,
-                    )
-                }
+            analyticsEventHandler.send(PushNotificationAnalyticEvents.NotificationOpened(type.name))
+
+            appRouter.push(
+                AppRoute.CurrencyDetails(
+                    userWalletId = selectedUserWalletId,
+                    currency = cryptoCurrency,
+                ),
+            )
+
+            if (isFromOnNewIntent) {
+                fetchCurrencyStatusUseCase.invoke(
+                    userWalletId = selectedUserWalletId,
+                    id = cryptoCurrency.id,
+                    refresh = true,
+                )
             }
         }
     }
