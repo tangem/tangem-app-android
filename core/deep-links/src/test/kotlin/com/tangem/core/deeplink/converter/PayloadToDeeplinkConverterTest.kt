@@ -2,10 +2,11 @@ package com.tangem.core.deeplink.converter
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.deeplink.DEEPLINK_KEY
+import com.tangem.core.deeplink.DeeplinkConst.DERIVATION_PATH_KEY
 import com.tangem.core.deeplink.DeeplinkConst.NETWORK_ID_KEY
-import com.tangem.core.deeplink.DeeplinkConst.PAYLOAD_WALLET_ID_KEY
 import com.tangem.core.deeplink.DeeplinkConst.TOKEN_ID_KEY
 import com.tangem.core.deeplink.DeeplinkConst.TYPE_KEY
+import com.tangem.core.deeplink.DeeplinkConst.WALLET_ID_KEY
 import org.junit.Test
 
 internal class PayloadToDeeplinkConverterTest {
@@ -14,7 +15,8 @@ internal class PayloadToDeeplinkConverterTest {
     fun `GIVEN payload with deeplink key WHEN convert THEN should return deeplink value`() {
         // GIVEN
         val payload = mapOf(
-            DEEPLINK_KEY to "tangem://token-details?networkId=ethereum&tokenId=0x123&type=token&walletId=wallet123",
+            DEEPLINK_KEY to "tangem://token-details?networkId=ethereum&tokenId=0x123&type=token&user_wallet_id=wallet123" +
+                "&derivation_path=m'0'0'0",
         )
 
         // WHEN
@@ -22,7 +24,7 @@ internal class PayloadToDeeplinkConverterTest {
 
         // THEN
         assertThat(result).isEqualTo(
-            "tangem://token-details?networkId=ethereum&tokenId=0x123&type=token&walletId=wallet123",
+            "tangem://token-details?networkId=ethereum&tokenId=0x123&type=token&user_wallet_id=wallet123&derivation_path=m'0'0'0",
         )
     }
 
@@ -33,7 +35,8 @@ internal class PayloadToDeeplinkConverterTest {
             TYPE_KEY to "token",
             NETWORK_ID_KEY to "ethereum",
             TOKEN_ID_KEY to "0x123",
-            PAYLOAD_WALLET_ID_KEY to "wallet123",
+            WALLET_ID_KEY to "wallet123",
+            DERIVATION_PATH_KEY to "m'0'0'0",
         )
 
         // WHEN
@@ -41,7 +44,7 @@ internal class PayloadToDeeplinkConverterTest {
 
         // THEN
         assertThat(result).isEqualTo(
-            "tangem://token?network_id=ethereum&token_id=0x123&type=token&walletId=wallet123",
+            "tangem://token?network_id=ethereum&token_id=0x123&type=token&user_wallet_id=wallet123&derivation_path=m'0'0'0",
         )
     }
 
@@ -51,7 +54,8 @@ internal class PayloadToDeeplinkConverterTest {
         val payload = mapOf(
             NETWORK_ID_KEY to "ethereum",
             TOKEN_ID_KEY to "0x123",
-            PAYLOAD_WALLET_ID_KEY to "wallet123",
+            WALLET_ID_KEY to "wallet123",
+            DERIVATION_PATH_KEY to "m'0'0'0",
         )
 
         // WHEN
@@ -67,7 +71,8 @@ internal class PayloadToDeeplinkConverterTest {
         val payload = mapOf(
             TYPE_KEY to "token",
             TOKEN_ID_KEY to "0x123",
-            PAYLOAD_WALLET_ID_KEY to "wallet123",
+            WALLET_ID_KEY to "wallet123",
+            DERIVATION_PATH_KEY to "m'0'0'0",
         )
 
         // WHEN
@@ -83,7 +88,8 @@ internal class PayloadToDeeplinkConverterTest {
         val payload = mapOf(
             TYPE_KEY to "token",
             NETWORK_ID_KEY to "ethereum",
-            PAYLOAD_WALLET_ID_KEY to "wallet123",
+            WALLET_ID_KEY to "wallet123",
+            DERIVATION_PATH_KEY to "m'0'0'0",
         )
 
         // WHEN
