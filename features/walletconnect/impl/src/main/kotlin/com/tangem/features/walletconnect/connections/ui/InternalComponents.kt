@@ -37,6 +37,7 @@ internal fun WcAppInfoItem(
                 },
             )
             .padding(TangemTheme.dimens.spacing12),
+        verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
     ) {
         AsyncImage(
