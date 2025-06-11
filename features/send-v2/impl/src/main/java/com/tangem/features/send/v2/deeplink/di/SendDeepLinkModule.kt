@@ -1,7 +1,7 @@
 package com.tangem.features.send.v2.deeplink.di
 
-import com.tangem.features.send.v2.api.deeplink.SellDeepLinkHandler
-import com.tangem.features.send.v2.deeplink.DefaultSellDeepLinkHandler
+import com.tangem.features.send.v2.api.deeplink.SellRedirectDeepLinkHandler
+import com.tangem.features.send.v2.deeplink.DefaultSellRedirectDeepLinkHandler
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -14,5 +14,5 @@ internal interface SendDeepLinkModule {
 
     @Binds
     @Singleton
-    fun bindFactory(impl: DefaultSellDeepLinkHandler.Factory): SellDeepLinkHandler.Factory
+    fun bindFactory(impl: DefaultSellRedirectDeepLinkHandler.Factory): SellRedirectDeepLinkHandler.Factory
 }
