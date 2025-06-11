@@ -27,7 +27,7 @@ internal class WcAppInfoTransformer(
             verifiedDAppState = dAppVerifiedStateConverter.convert(
                 dAppSession.securityStatus to dAppSession.dAppMetaData.name,
             ),
-            appSubtitle = dAppSession.dAppMetaData.description,
+            appSubtitle = dAppSession.dAppMetaData.url,
             notification = createNotification(dAppSession.securityStatus),
             walletName = userWallet.name,
             onWalletClick = onWalletClick,
