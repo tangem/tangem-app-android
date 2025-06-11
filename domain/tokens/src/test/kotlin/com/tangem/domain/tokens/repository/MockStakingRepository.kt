@@ -48,6 +48,11 @@ class MockStakingRepository : StakingRepository {
         cryptoCurrency: CryptoCurrency,
     ): Flow<StakingAvailability> = flowOf(StakingAvailability.Unavailable)
 
+    override suspend fun getStakingAvailabilitySync(
+        userWalletId: UserWalletId,
+        cryptoCurrency: CryptoCurrency,
+    ): StakingAvailability = StakingAvailability.Unavailable
+
     override suspend fun getActions(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
