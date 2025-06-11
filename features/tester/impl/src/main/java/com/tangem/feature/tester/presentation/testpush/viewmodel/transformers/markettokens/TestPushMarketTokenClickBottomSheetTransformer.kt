@@ -19,8 +19,7 @@ internal class TestPushMarketTokenClickBottomSheetTransformer(
                         append(DeepLinkRoute.MarketTokenDetail.host)
                         append("?token_id=")
                         append(tokenMarket.id)
-                        append("&token_symbol=")
-                        append(tokenMarket.symbol)
+                        append("&type=promo")
                     },
                 ),
             ),
