@@ -44,7 +44,7 @@ class DefaultUserWalletsSyncDelegate(
                 raise(UpdateWalletError.NameAlreadyExists)
             }
 
-            return@withContext when (
+            when (
                 val result =
                     userWalletsListManager.update(userWalletId) { it.copy(name = name) }
             ) {
