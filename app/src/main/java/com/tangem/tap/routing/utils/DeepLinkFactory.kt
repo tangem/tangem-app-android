@@ -4,12 +4,12 @@ import android.net.Uri
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.DeepLinkRoute
 import com.tangem.common.routing.DeepLinkScheme
+import com.tangem.data.card.sdk.CardSdkProvider
 import com.tangem.feature.referral.api.deeplink.ReferralDeepLinkHandler
 import com.tangem.features.markets.deeplink.MarketsDeepLinkHandler
 import com.tangem.features.markets.deeplink.MarketsTokenDetailDeepLinkHandler
-import com.tangem.features.onramp.deeplink.BuyDeepLinkHandler
-import com.tangem.features.onramp.deeplink.OnrampDeepLinkHandler
-import com.tangem.features.send.v2.api.deeplink.SellDeepLinkHandler
+import com.tangem.features.onramp.deeplink.*
+import com.tangem.features.send.v2.api.deeplink.SellRedirectDeepLinkHandler
 import com.tangem.features.staking.api.deeplink.StakingDeepLinkHandler
 import com.tangem.features.tokendetails.deeplink.TokenDetailsDeepLinkHandler
 import com.tangem.features.wallet.deeplink.WalletDeepLinkHandler
@@ -21,6 +21,7 @@ import dagger.hilt.android.scopes.ActivityScoped
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.transformLatest
 import timber.log.Timber
@@ -29,9 +30,10 @@ import javax.inject.Inject
 @Suppress("LongParameterList")
 @ActivityScoped
 internal class DeepLinkFactory @Inject constructor(
+    private val cardSdkProvider: CardSdkProvider,
     private val onrampDeepLink: OnrampDeepLinkHandler.Factory,
-    private val sellDeepLink: SellDeepLinkHandler.Factory,
-    private val buyDeepLink: BuyDeepLinkHandler.Factory,
+    private val sellRedirectDeepLink: SellRedirectDeepLinkHandler.Factory,
+    private val buyRedirectDeepLink: BuyRedirectDeepLinkHandler.Factory,
     private val referralDeepLink: ReferralDeepLinkHandler.Factory,
     private val walletConnectDeepLink: WalletConnectDeepLinkHandler.Factory,
     private val walletDeepLink: WalletDeepLinkHandler.Factory,
@@ -39,6 +41,9 @@ internal class DeepLinkFactory @Inject constructor(
     private val stakingDeepLink: StakingDeepLinkHandler.Factory,
     private val marketsDeepLink: MarketsDeepLinkHandler.Factory,
     private val marketsTokenDetailDeepLink: MarketsTokenDetailDeepLinkHandler.Factory,
+    private val buyDeepLink: BuyDeepLinkHandler.Factory,
+    private val sellDeepLink: SellDeepLinkHandler.Factory,
+    private val swapDeepLink: SwapDeepLinkHandler.Factory,
 ) {
     private val permittedAppRoute = MutableStateFlow(false)
 
@@ -55,15 +60,19 @@ internal class DeepLinkFactory @Inject constructor(
                 |- Received URI: $deeplinkUri
             """.trimIndent(),
         )
-        permittedAppRoute
-            .transformLatest<Boolean, Unit> { isPermitted ->
-                if (isPermitted) {
-                    lastDeepLink?.let {
-                        launchDeepLink(it, coroutineScope, isFromOnNewIntent)
-                    }
-                    lastDeepLink = null
+        combine(
+            permittedAppRoute,
+            cardSdkProvider.sdk.uiVisibility(),
+        ) { isRoutePermitted, isCardSdkVisible ->
+            isRoutePermitted to isCardSdkVisible
+        }.transformLatest<Pair<Boolean, Boolean>, Unit> { (isRoutePermitted, isCardSdkVisible) ->
+            if (isRoutePermitted && !isCardSdkVisible) {
+                lastDeepLink?.let {
+                    launchDeepLink(it, coroutineScope, isFromOnNewIntent)
                 }
+                lastDeepLink = null
             }
+        }
             .launchIn(coroutineScope)
             .saveIn(deepLinkHandlerJobHolder)
     }
@@ -103,8 +112,8 @@ internal class DeepLinkFactory @Inject constructor(
         val queryParams = getQueryParams(deeplinkUri)
         when (deeplinkUri.host) {
             DeepLinkRoute.Onramp.host -> onrampDeepLink.create(coroutineScope, queryParams)
-            DeepLinkRoute.Sell.host -> sellDeepLink.create(coroutineScope, queryParams)
-            DeepLinkRoute.Buy.host -> buyDeepLink.create(coroutineScope)
+            DeepLinkRoute.SellRedirect.host -> sellRedirectDeepLink.create(coroutineScope, queryParams)
+            DeepLinkRoute.BuyRedirect.host -> buyRedirectDeepLink.create(coroutineScope)
             DeepLinkRoute.Referral.host -> referralDeepLink.create()
             DeepLinkRoute.Wallet.host -> walletDeepLink.create()
             DeepLinkRoute.TokenDetails.host -> tokenDetailsDeepLink.create(
@@ -115,6 +124,9 @@ internal class DeepLinkFactory @Inject constructor(
             DeepLinkRoute.Staking.host -> stakingDeepLink.create(coroutineScope, queryParams)
             DeepLinkRoute.Markets.host -> marketsDeepLink.create()
             DeepLinkRoute.MarketTokenDetail.host -> marketsTokenDetailDeepLink.create(coroutineScope, queryParams)
+            DeepLinkRoute.Buy.host -> buyDeepLink.create()
+            DeepLinkRoute.Sell.host -> sellDeepLink.create()
+            DeepLinkRoute.Swap.host -> swapDeepLink.create()
             else -> {
                 Timber.i(
                     """
