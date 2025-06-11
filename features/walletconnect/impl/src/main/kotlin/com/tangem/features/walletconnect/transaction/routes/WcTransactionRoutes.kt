@@ -21,6 +21,7 @@ internal sealed class WcTransactionRoutes : TangemBottomSheetConfigContent, Rout
             data class Verified(val appName: String) : Type()
             data object UnknownDomain : Type()
             data object UnsafeDomain : Type()
+            data class MaliciousDApp(val description: String, val onClick: () -> Unit) : Type()
         }
     }
 }
