@@ -19,12 +19,11 @@ import com.tangem.features.walletconnect.impl.R
 import com.tangem.features.walletconnect.transaction.entity.blockaid.WcEstimatedWalletChangeUM
 import com.tangem.features.walletconnect.transaction.entity.blockaid.WcEstimatedWalletChangesUM
 import com.tangem.features.walletconnect.transaction.entity.blockaid.WcSendReceiveTransactionCheckResultsUM
+import com.tangem.features.walletconnect.transaction.ui.approve.WcSpendAllowanceItem
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
 internal fun TransactionCheckResultsItem(item: WcSendReceiveTransactionCheckResultsUM, modifier: Modifier = Modifier) {
-    if (item.notificationText == null && item.estimatedWalletChanges == null) return
-
     Column(
         modifier = modifier
             .fillMaxWidth(),
@@ -38,6 +37,8 @@ internal fun TransactionCheckResultsItem(item: WcSendReceiveTransactionCheckResu
             }
             if (item.estimatedWalletChanges != null) {
                 WcEstimatedWalletChangesItem(item.estimatedWalletChanges)
+            } else if (item.spendAllowance != null) {
+                WcSpendAllowanceItem(item.spendAllowance)
             } else {
                 WcEstimatedWalletChangesNotLoadedItem()
             }
