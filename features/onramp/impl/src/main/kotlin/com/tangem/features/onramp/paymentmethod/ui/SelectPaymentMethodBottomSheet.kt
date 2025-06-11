@@ -14,11 +14,11 @@ import androidx.compose.ui.draw.clip
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.selectedBorder
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.paymentmethod.entity.PaymentMethodUM
 import com.tangem.features.onramp.paymentmethod.entity.PaymentMethodsBottomSheetConfig
-import com.tangem.features.onramp.utils.selectedBorder
 import kotlinx.collections.immutable.ImmutableList
 
 @Composable
@@ -59,27 +59,16 @@ private fun SelectPaymentMethodBottomSheetContent(
                 val isSelected = remember(item, selectedMethodId) {
                     item.id == selectedMethodId
                 }
-                val itemModifier = if (isSelected) {
-                    Modifier
-                        .fillMaxWidth()
-                        .selectedBorder()
-                        .clickable(onClick = item.onSelect)
-                        .padding(
-                            start = TangemTheme.dimens.spacing12,
-                            top = TangemTheme.dimens.spacing10,
-                            bottom = TangemTheme.dimens.spacing10,
-                        )
-                } else {
-                    Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(TangemTheme.dimens.radius16))
-                        .clickable(onClick = item.onSelect)
-                        .padding(
-                            start = TangemTheme.dimens.spacing12,
-                            top = TangemTheme.dimens.spacing10,
-                            bottom = TangemTheme.dimens.spacing10,
-                        )
-                }
+                val itemModifier = Modifier
+                    .fillMaxWidth()
+                    .selectedBorder(isSelected = isSelected)
+                    .clip(RoundedCornerShape(TangemTheme.dimens.radius16))
+                    .clickable(onClick = item.onSelect)
+                    .padding(
+                        start = TangemTheme.dimens.spacing12,
+                        top = TangemTheme.dimens.spacing10,
+                        bottom = TangemTheme.dimens.spacing10,
+                    )
                 PaymentMethodItem(
                     modifier = itemModifier,
                     paymentMethod = item,
