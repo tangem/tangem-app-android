@@ -49,7 +49,9 @@ internal object WcEthTxHelper {
             .hexToBigDecimal()
             .movePointLeft(blockchain.decimals())
 
-        val callData = CompiledSmartContractCallData(txParams.data.removePrefix(HEX_PREFIX).hexToBytes())
+        val callData = txParams.data?.removePrefix(HEX_PREFIX)?.hexToBytes()?.let {
+            CompiledSmartContractCallData(it)
+        }
         return TransactionData.Uncompiled(
             amount = Amount(value, blockchain),
             fee = dAppFee,
@@ -62,10 +64,10 @@ internal object WcEthTxHelper {
         )
     }
 
-    fun getApprovedAmount(txData: String, result: CheckTransactionResult): ApprovedAmount? {
+    fun getApprovedAmount(txData: String?, result: CheckTransactionResult): ApprovedAmount? {
         val approvalMethodId = ApprovalERC20TokenCallData("", null).methodId
-        val isApprovalWcMethod = txData.startsWith(approvalMethodId)
-        if (!isApprovalWcMethod) return null
+        val isApprovalWcMethod = txData?.startsWith(approvalMethodId)
+        if (isApprovalWcMethod != true) return null
         val simulation = result.simulation as? SimulationResult.Success
             ?: return null
         val approves = (simulation.data as? SimulationData.Approve)?.approvedAmounts
