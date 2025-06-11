@@ -32,4 +32,14 @@ class GetStakingAvailabilityUseCase(
             it.right()
         }.catch { emit(stakingErrorResolver.resolve(it).left()) }
     }
+
+    suspend fun invokeSync(
+        userWalletId: UserWalletId,
+        cryptoCurrency: CryptoCurrency,
+    ): Either<StakingError, StakingAvailability> = Either.catch {
+        stakingRepository.getStakingAvailabilitySync(
+            userWalletId = userWalletId,
+            cryptoCurrency = cryptoCurrency,
+        )
+    }.mapLeft(stakingErrorResolver::resolve)
 }
