@@ -58,7 +58,7 @@ internal class WcConnectedAppInfoModel @Inject constructor(
                         appIcon = session.sdkModel.appMetaData.icons.firstOrNull().orEmpty(),
                         isVerified = session.securityStatus == CheckDAppResult.SAFE,
                         verifiedDAppState = extractVerifiedState(session),
-                        appSubtitle = session.sdkModel.appMetaData.description,
+                        appSubtitle = session.sdkModel.appMetaData.url,
                         walletName = session.wallet.name,
                         networks = session.networks
                             .map {
