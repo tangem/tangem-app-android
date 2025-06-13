@@ -1,9 +1,9 @@
 package com.tangem.data.quotes.store
 
 import androidx.datastore.core.DataStore
+import com.tangem.data.quotes.converter.QuoteStatusConverter
 import com.tangem.datasource.api.tangemTech.models.QuotesResponse
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
-import com.tangem.datasource.local.quote.converter.QuoteStatusConverter
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.quote.QuoteStatus
@@ -41,7 +41,7 @@ internal class DefaultQuotesStatusesStore(
             if (cachedStatuses.isNullOrEmpty()) return@launch
 
             runtimeStore.store(
-                value = QuoteStatusConverter(isCached = true).convertSet(input = cachedStatuses.entries),
+                value = QuoteStatusConverter(source = StatusSource.CACHE).convertSet(input = cachedStatuses.entries),
             )
         }
     }
@@ -95,7 +95,7 @@ internal class DefaultQuotesStatusesStore(
     }
 
     private suspend fun storeInRuntime(values: CurrencyIdWithQuote) {
-        val quotes = QuoteStatusConverter(isCached = false).convertSet(input = values.entries)
+        val quotes = QuoteStatusConverter(source = StatusSource.ACTUAL).convertSet(input = values.entries)
 
         runtimeStore.update(default = emptySet()) { saved ->
             saved.addOrReplace(items = quotes) { prev, new -> prev.rawCurrencyId == new.rawCurrencyId }
