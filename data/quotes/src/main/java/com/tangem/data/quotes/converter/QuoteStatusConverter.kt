@@ -1,4 +1,4 @@
-package com.tangem.datasource.local.quote.converter
+package com.tangem.data.quotes.converter
 
 import com.tangem.datasource.api.tangemTech.models.QuotesResponse
 import com.tangem.domain.models.StatusSource
@@ -14,18 +14,9 @@ import com.tangem.utils.extensions.orZero
  *
 [REDACTED_AUTHOR]
  */
-class QuoteStatusConverter(
+internal class QuoteStatusConverter(
     private val source: StatusSource,
 ) : Converter<Map.Entry<String, QuotesResponse.Quote>, QuoteStatus> {
-
-    /**
-     * Secondary constructor
-     *
-     * @param isCached flag that determines whether the quote is a cache
-     */
-    constructor(isCached: Boolean) : this(
-        source = if (isCached) StatusSource.CACHE else StatusSource.ACTUAL,
-    )
 
     override fun convert(value: Map.Entry<String, QuotesResponse.Quote>): QuoteStatus {
         val (currencyId, quote) = value
