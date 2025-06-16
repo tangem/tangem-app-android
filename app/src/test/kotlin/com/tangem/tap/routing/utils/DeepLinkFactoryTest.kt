@@ -2,12 +2,12 @@ package com.tangem.tap.routing.utils
 
 import android.net.Uri
 import com.tangem.common.routing.AppRoute
+import com.tangem.data.card.sdk.CardSdkProvider
 import com.tangem.feature.referral.api.deeplink.ReferralDeepLinkHandler
 import com.tangem.features.markets.deeplink.MarketsDeepLinkHandler
 import com.tangem.features.markets.deeplink.MarketsTokenDetailDeepLinkHandler
-import com.tangem.features.onramp.deeplink.BuyDeepLinkHandler
-import com.tangem.features.onramp.deeplink.OnrampDeepLinkHandler
-import com.tangem.features.send.v2.api.deeplink.SellDeepLinkHandler
+import com.tangem.features.onramp.deeplink.*
+import com.tangem.features.send.v2.api.deeplink.SellRedirectDeepLinkHandler
 import com.tangem.features.staking.api.deeplink.StakingDeepLinkHandler
 import com.tangem.features.tokendetails.deeplink.TokenDetailsDeepLinkHandler
 import com.tangem.features.wallet.deeplink.WalletDeepLinkHandler
@@ -18,6 +18,7 @@ import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.*
 import org.junit.After
 import org.junit.Before
@@ -30,10 +31,10 @@ class DeepLinkFactoryTest {
     private val onrampDeepLinkFactory = mockk<OnrampDeepLinkHandler.Factory>(relaxed = true) {
         every { create(any(), any()) } returns mockk()
     }
-    private val sellDeepLinkFactory = mockk<SellDeepLinkHandler.Factory>(relaxed = true) {
+    private val sellRedirectDeepLinkFactory = mockk<SellRedirectDeepLinkHandler.Factory>(relaxed = true) {
         every { create(any(), any()) } returns mockk()
     }
-    private val buyDeepLinkFactory = mockk<BuyDeepLinkHandler.Factory>(relaxed = true) {
+    private val buyRedirectDeepLinkFactory = mockk<BuyRedirectDeepLinkHandler.Factory>(relaxed = true) {
         every { create(any()) } returns mockk()
     }
     private val referralDeepLinkFactory = mockk<ReferralDeepLinkHandler.Factory>(relaxed = true) {
@@ -57,7 +58,19 @@ class DeepLinkFactoryTest {
     private val marketsTokenDetailDeepLinkFactory = mockk<MarketsTokenDetailDeepLinkHandler.Factory>(relaxed = true) {
         every { create(any(), any()) } returns mockk()
     }
+    private val sellDeepLinkFactory = mockk<SellDeepLinkHandler.Factory>(relaxed = true) {
+        every { create() } returns mockk()
+    }
+    private val buyDeepLinkFactory = mockk<BuyDeepLinkHandler.Factory>(relaxed = true) {
+        every { create() } returns mockk()
+    }
+    private val swapDeepLinkFactory = mockk<SwapDeepLinkHandler.Factory>(relaxed = true) {
+        every { create() } returns mockk()
+    }
 
+    private val cardSdkProvider = mockk<CardSdkProvider>(relaxed = true) {
+        every { sdk.uiVisibility() } returns MutableStateFlow(false)
+    }
     private val mockedUri = mockk<Uri>(relaxed = true)
     private val isFromOnNewIntent: Boolean = false
 
@@ -65,16 +78,20 @@ class DeepLinkFactoryTest {
     private lateinit var testScope: TestScope
 
     private val deepLinkFactory = DeepLinkFactory(
-        onrampDeepLinkFactory,
-        sellDeepLinkFactory,
-        buyDeepLinkFactory,
-        referralDeepLinkFactory,
-        walletConnectDeepLinkFactory,
-        walletDeepLinkFactory,
-        tokenDetailsDeepLinkFactory,
-        stakingDeepLinkFactory,
-        marketsDeepLinkFactory,
-        marketsTokenDetailDeepLinkFactory,
+        cardSdkProvider = cardSdkProvider,
+        onrampDeepLink = onrampDeepLinkFactory,
+        sellRedirectDeepLink = sellRedirectDeepLinkFactory,
+        buyRedirectDeepLink = buyRedirectDeepLinkFactory,
+        referralDeepLink = referralDeepLinkFactory,
+        walletConnectDeepLink = walletConnectDeepLinkFactory,
+        walletDeepLink = walletDeepLinkFactory,
+        tokenDetailsDeepLink = tokenDetailsDeepLinkFactory,
+        stakingDeepLink = stakingDeepLinkFactory,
+        marketsDeepLink = marketsDeepLinkFactory,
+        marketsTokenDetailDeepLink = marketsTokenDetailDeepLinkFactory,
+        buyDeepLink = buyDeepLinkFactory,
+        sellDeepLink = sellDeepLinkFactory,
+        swapDeepLink = swapDeepLinkFactory,
     )
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -141,6 +158,24 @@ class DeepLinkFactoryTest {
     }
 
     @Test
+    fun `handleDeeplink does not launch when card scan visible`() = runTest {
+        every { mockedUri.scheme } returns "tangem"
+        every { mockedUri.host } returns "onramp"
+        every { mockedUri.query } returns "param=value"
+        every { mockedUri.queryParameterNames } returns setOf("param")
+        every { mockedUri.getQueryParameter("param") } returns "value"
+        every { cardSdkProvider.sdk.uiVisibility() } returns MutableStateFlow(true)
+
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+
+        advanceUntilIdle()
+
+        // Verify no handler was called
+        verify(inverse = true) { onrampDeepLinkFactory.create(any(), any()) }
+    }
+
+    @Test
     fun `launchDeepLink handles tangem scheme correctly`() = runTest {
         every { mockedUri.scheme } returns "tangem"
         every { mockedUri.host } returns "onramp"
@@ -184,8 +219,8 @@ class DeepLinkFactoryTest {
 
         verify(inverse = true) {
             onrampDeepLinkFactory.create(any(), any())
-            sellDeepLinkFactory.create(any(), any())
-            buyDeepLinkFactory.create(any())
+            sellRedirectDeepLinkFactory.create(any(), any())
+            buyRedirectDeepLinkFactory.create(any())
             referralDeepLinkFactory.create()
             walletConnectDeepLinkFactory.create(any())
             walletDeepLinkFactory.create()
@@ -208,11 +243,11 @@ class DeepLinkFactoryTest {
         advanceUntilIdle()
         verify { onrampDeepLinkFactory.create(eq(testScope), eq(mapOf("param" to "value"))) }
 
-        // Test Sell
+        // Test Sell Redirect
         every { mockedUri.host } returns "redirect_sell"
         deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
         advanceUntilIdle()
-        verify { sellDeepLinkFactory.create(eq(testScope), eq(mapOf("param" to "value"))) }
+        verify { sellRedirectDeepLinkFactory.create(eq(testScope), eq(mapOf("param" to "value"))) }
 
         // Test Token Details
         every { mockedUri.host } returns "token"
@@ -242,11 +277,11 @@ class DeepLinkFactoryTest {
         every { mockedUri.queryParameterNames } returns emptySet()
         every { mockedUri.getQueryParameter(any()) } returns ""
 
-        // Test Buy
+        // Test Buy Redirect
         every { mockedUri.host } returns "redirect"
         deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
         advanceUntilIdle()
-        verify { buyDeepLinkFactory.create(eq(testScope)) }
+        verify { buyRedirectDeepLinkFactory.create(eq(testScope)) }
 
         // Test Referral
         every { mockedUri.host } returns "referral"
@@ -265,6 +300,24 @@ class DeepLinkFactoryTest {
         deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
         advanceUntilIdle()
         verify { marketsDeepLinkFactory.create() }
+
+        // Test Sell
+        every { mockedUri.host } returns "sell"
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+        verify { sellDeepLinkFactory.create() }
+
+        // Test Swap
+        every { mockedUri.host } returns "swap"
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+        verify { sellDeepLinkFactory.create() }
+
+        // Test Buy
+        every { mockedUri.host } returns "buy"
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+        verify { buyDeepLinkFactory.create() }
     }
 
     @Test
@@ -279,12 +332,15 @@ class DeepLinkFactoryTest {
 
         verify(inverse = true) {
             onrampDeepLinkFactory.create(any(), any())
-            sellDeepLinkFactory.create(any(), any())
-            buyDeepLinkFactory.create(any())
+            sellRedirectDeepLinkFactory.create(any(), any())
+            buyRedirectDeepLinkFactory.create(any())
             referralDeepLinkFactory.create()
             walletConnectDeepLinkFactory.create(any())
             walletDeepLinkFactory.create()
             tokenDetailsDeepLinkFactory.create(any(), any(), any())
+            buyDeepLinkFactory.create()
+            sellDeepLinkFactory.create()
+            swapDeepLinkFactory.create()
         }
     }
 
