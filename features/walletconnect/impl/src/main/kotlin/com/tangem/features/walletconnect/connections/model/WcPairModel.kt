@@ -26,10 +26,7 @@ import com.tangem.features.walletconnect.connections.components.WcSelectNetworks
 import com.tangem.features.walletconnect.connections.components.WcSelectWalletComponent
 import com.tangem.features.walletconnect.connections.entity.WcAppInfoUM
 import com.tangem.features.walletconnect.connections.entity.WcPrimaryButtonConfig
-import com.tangem.features.walletconnect.connections.model.transformers.WcAppInfoTransformer
-import com.tangem.features.walletconnect.connections.model.transformers.WcAppInfoWalletChangedTransformer
-import com.tangem.features.walletconnect.connections.model.transformers.WcConnectButtonProgressTransformer
-import com.tangem.features.walletconnect.connections.model.transformers.WcDAppVerifiedStateConverter
+import com.tangem.features.walletconnect.connections.model.transformers.*
 import com.tangem.features.walletconnect.connections.routes.WcAppInfoRoutes
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
@@ -67,7 +64,7 @@ internal class WcPairModel @Inject constructor(
         MutableStateFlow(getWalletsUseCase.invokeSync().first { it.walletId == params.userWalletId })
     private var proposalNetwork by Delegates.notNull<WcSessionProposal.ProposalNetwork>()
     private var sessionProposal by Delegates.notNull<WcSessionProposal>()
-    private val additionallyEnabledNetworks = mutableSetOf<Network.RawID>()
+    private var additionallyEnabledNetworks = setOf<Network>()
     private val dAppVerifiedStateConverter = WcDAppVerifiedStateConverter(onVerifiedClick = ::showVerifiedAlert)
 
     val appInfoUiState: StateFlow<WcAppInfoUM>
@@ -102,7 +99,7 @@ internal class WcPairModel @Inject constructor(
                     is WcPairState.Proposal -> {
                         sessionProposal = pairState.dAppSession
                         proposalNetwork = sessionProposal.proposalNetwork.getValue(selectedUserWalletFlow.value)
-                        proposalNetwork.available.mapTo(additionallyEnabledNetworks) { it.id.rawId }
+                        additionallyEnabledNetworks = proposalNetwork.available
                         appInfoUiState.transformerUpdate(
                             WcAppInfoTransformer(
                                 dAppSession = sessionProposal,
@@ -127,6 +124,7 @@ internal class WcPairModel @Inject constructor(
                                 },
                                 userWallet = selectedUserWalletFlow.value,
                                 proposalNetwork = proposalNetwork,
+                                additionallyEnabledNetworks = additionallyEnabledNetworks,
                             ),
                         )
                     }
@@ -154,7 +152,7 @@ internal class WcPairModel @Inject constructor(
 
     private fun connect() {
         val enabledAvailableNetworks =
-            proposalNetwork.available.filter { network -> network.id.rawId in additionallyEnabledNetworks }
+            proposalNetwork.available.filter { network -> network in additionallyEnabledNetworks }
         wcPairUseCase.approve(
             WcSessionApprove(
                 wallet = selectedUserWalletFlow.value,
@@ -179,14 +177,25 @@ internal class WcPairModel @Inject constructor(
         val selectedUserWallet = sessionProposal.proposalNetwork.keys.first { it.walletId == userWalletId }
         proposalNetwork = sessionProposal.proposalNetwork.getValue(selectedUserWallet)
         selectedUserWalletFlow.update { selectedUserWallet }
-        appInfoUiState.transformerUpdate(WcAppInfoWalletChangedTransformer(selectedUserWallet, proposalNetwork))
-        additionallyEnabledNetworks.clear()
-        proposalNetwork.available.mapTo(additionallyEnabledNetworks) { it.id.rawId }
+        additionallyEnabledNetworks = proposalNetwork.available
+        appInfoUiState.transformerUpdate(
+            WcAppInfoWalletChangedTransformer(
+                selectedUserWallet = selectedUserWallet,
+                proposalNetwork = proposalNetwork,
+                additionallyEnabledNetworks = additionallyEnabledNetworks,
+            ),
+        )
     }
 
-    override fun onNetworksSelected(selectedNetworks: Set<Network.RawID>) {
-        additionallyEnabledNetworks.clear()
-        additionallyEnabledNetworks.addAll(selectedNetworks)
+    override fun onNetworksSelected(selectedNetworks: Set<Network>) {
+        additionallyEnabledNetworks = selectedNetworks
+        appInfoUiState.transformerUpdate(
+            WcNetworksSelectedTransformer(
+                missingNetworks = proposalNetwork.missingRequired,
+                requiredNetworks = proposalNetwork.required,
+                additionallyEnabledNetworks = additionallyEnabledNetworks,
+            ),
+        )
     }
 
     private fun createLoadingState(): WcAppInfoUM.Loading {

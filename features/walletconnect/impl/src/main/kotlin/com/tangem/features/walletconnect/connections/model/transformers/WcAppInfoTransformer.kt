@@ -1,6 +1,7 @@
 package com.tangem.features.walletconnect.connections.model.transformers
 
 import com.domain.blockaid.models.dapp.CheckDAppResult
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.walletconnect.model.WcSessionProposal
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.walletconnect.connections.entity.WcAppInfoSecurityNotification
@@ -18,6 +19,7 @@ internal class WcAppInfoTransformer(
     private val onNetworksClick: () -> Unit,
     private val userWallet: UserWallet,
     private val proposalNetwork: WcSessionProposal.ProposalNetwork,
+    private val additionallyEnabledNetworks: Set<Network>,
 ) : Transformer<WcAppInfoUM> {
 
     override fun transform(prevState: WcAppInfoUM): WcAppInfoUM {
@@ -31,7 +33,13 @@ internal class WcAppInfoTransformer(
             notification = createNotification(dAppSession.securityStatus),
             walletName = userWallet.name,
             onWalletClick = onWalletClick,
-            networksInfo = WcNetworksInfoConverter.convert(proposalNetwork),
+            networksInfo = WcNetworksInfoConverter.convert(
+                value = WcNetworksInfoConverter.Input(
+                    missingNetworks = proposalNetwork.missingRequired,
+                    requiredNetworks = proposalNetwork.required,
+                    additionallyEnabledNetworks = additionallyEnabledNetworks,
+                ),
+            ),
             onNetworksClick = onNetworksClick,
             connectButtonConfig = WcPrimaryButtonConfig(
                 showProgress = false,
