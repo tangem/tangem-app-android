@@ -1,8 +1,8 @@
 package com.tangem.features.onramp.deeplink
 
-interface BuyDeepLinkHandler {
+interface SwapDeepLinkHandler {
 
     interface Factory {
-        fun create(): BuyDeepLinkHandler
+        fun create(): SwapDeepLinkHandler
     }
 }
