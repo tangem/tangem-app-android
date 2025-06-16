@@ -1,29 +1,27 @@
 package com.tangem.features.walletconnect.connections.model.transformers
 
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.walletconnect.model.WcSessionProposal
-import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.walletconnect.connections.entity.WcAppInfoUM
 import com.tangem.utils.transformer.Transformer
 
-internal class WcAppInfoWalletChangedTransformer(
-    private val selectedUserWallet: UserWallet,
-    private val proposalNetwork: WcSessionProposal.ProposalNetwork,
+internal class WcNetworksSelectedTransformer(
+    private val missingNetworks: Set<Network>,
+    private val requiredNetworks: Set<Network>,
     private val additionallyEnabledNetworks: Set<Network>,
 ) : Transformer<WcAppInfoUM> {
     override fun transform(prevState: WcAppInfoUM): WcAppInfoUM {
         val contentState = prevState as? WcAppInfoUM.Content ?: return prevState
         return contentState.copy(
-            walletName = selectedUserWallet.name,
+            connectButtonConfig = contentState.connectButtonConfig.copy(
+                enabled = missingNetworks.isEmpty() &&
+                    (requiredNetworks.isNotEmpty() || additionallyEnabledNetworks.isNotEmpty()),
+            ),
             networksInfo = WcNetworksInfoConverter.convert(
-                WcNetworksInfoConverter.Input(
-                    missingNetworks = proposalNetwork.missingRequired,
-                    requiredNetworks = proposalNetwork.required,
+                value = WcNetworksInfoConverter.Input(
+                    missingNetworks = missingNetworks,
+                    requiredNetworks = requiredNetworks,
                     additionallyEnabledNetworks = additionallyEnabledNetworks,
                 ),
-            ),
-            connectButtonConfig = prevState.connectButtonConfig.copy(
-                enabled = proposalNetwork.missingRequired.isEmpty(),
             ),
         )
     }
