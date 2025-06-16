@@ -13,6 +13,7 @@ import com.tangem.domain.visa.model.VisaActivationRemoteState
 import com.tangem.domain.visa.model.VisaCardActivationStatus
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.sdk.storage.AndroidSecureStorage
+import com.tangem.sdk.storage.AndroidSecureStorageV2
 import com.tangem.sdk.storage.createEncryptedSharedPreferences
 import com.tangem.tap.domain.userWalletList.implementation.BiometricUserWalletsListManager
 import com.tangem.tap.domain.userWalletList.implementation.GeneralUserWalletsListManager
@@ -79,6 +80,10 @@ internal object UserWalletsListManagerModule {
             preferences = SecureStorage.createEncryptedSharedPreferences(
                 context = applicationContext,
                 storageName = "user_wallets_storage",
+            ),
+            androidSecureStorageV2 = AndroidSecureStorageV2(
+                appContext = applicationContext,
+                name = "user_wallets_storage2",
             ),
         )
 
