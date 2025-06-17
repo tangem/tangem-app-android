@@ -242,6 +242,9 @@ include(":features:nft:impl")
 
 include(":features:walletconnect:api")
 include(":features:walletconnect:impl")
+
+include(":features:hot-wallet:api")
+include(":features:hot-wallet:impl")
 // endregion Feature modules
 
 // region Domain modules
