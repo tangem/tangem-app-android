@@ -1,7 +1,7 @@
-package com.tangem.features.feeselector.impl.di
+package com.tangem.features.send.v2.feeselector.di
 
-import com.tangem.features.feeselector.api.component.FeeSelectorComponent
-import com.tangem.features.feeselector.impl.component.DefaultFeeSelectorComponent
+import com.tangem.features.send.v2.api.FeeSelectorComponent
+import com.tangem.features.send.v2.feeselector.DefaultFeeSelectorComponent
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
