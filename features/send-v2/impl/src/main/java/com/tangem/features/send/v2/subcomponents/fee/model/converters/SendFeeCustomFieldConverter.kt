@@ -5,11 +5,11 @@ import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.features.feeselector.api.entity.CustomFeeFieldUM
 import com.tangem.features.send.v2.subcomponents.fee.model.SendFeeClickIntents
 import com.tangem.features.send.v2.subcomponents.fee.model.converters.custom.bitcoin.BitcoinCustomFeeConverter
 import com.tangem.features.send.v2.subcomponents.fee.model.converters.custom.ethereum.EthereumCustomFeeConverter
 import com.tangem.features.send.v2.subcomponents.fee.model.converters.custom.kaspa.KaspaCustomFeeConverter
+import com.tangem.features.send.v2.subcomponents.fee.ui.state.CustomFeeFieldUM
 import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeSelectorUM
 import com.tangem.utils.converter.TwoWayConverter
 import kotlinx.collections.immutable.ImmutableList
