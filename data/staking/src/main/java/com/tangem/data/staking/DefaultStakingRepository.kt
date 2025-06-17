@@ -246,6 +246,47 @@ internal class DefaultStakingRepository(
         }
     }
 
+    override suspend fun getStakingAvailabilitySync(
+        userWalletId: UserWalletId,
+        cryptoCurrency: CryptoCurrency,
+    ): StakingAvailability {
+        if (!checkFeatureToggleEnabled(cryptoCurrency.network.id)) {
+            return StakingAvailability.Unavailable
+        }
+
+        if (checkForInvalidCardBatch(userWalletId, cryptoCurrency)) {
+            return StakingAvailability.Unavailable
+        }
+
+        val rawCurrencyId = cryptoCurrency.id.rawCurrencyId
+        if (rawCurrencyId == null) {
+            return StakingAvailability.Unavailable
+        }
+
+        val isSupportedInMobileApp = getSupportedIntegrationId(cryptoCurrency.id).isNullOrEmpty().not()
+
+        val yields = getEnabledYieldsSync()
+        if (yields.isEmpty()) {
+            return StakingAvailability.TemporaryUnavailable
+        }
+
+        val prefetchedYield = findPrefetchedYield(
+            yields = yields,
+            currencyId = rawCurrencyId,
+            symbol = cryptoCurrency.symbol,
+        )
+
+        return when {
+            prefetchedYield != null && isSupportedInMobileApp -> {
+                StakingAvailability.Available(prefetchedYield.id)
+            }
+            prefetchedYield == null && isSupportedInMobileApp -> {
+                StakingAvailability.TemporaryUnavailable
+            }
+            else -> StakingAvailability.Unavailable
+        }
+    }
+
     private fun checkFeatureToggleEnabled(networkId: Network.ID): Boolean {
         return when (networkId.toBlockchain()) {
             Blockchain.TON -> stakingFeatureToggles.isTonStakingEnabled
