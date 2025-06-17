@@ -127,7 +127,7 @@ internal class WcEthSignTransactionUseCase @AssistedInject constructor(
         return dAppFee
     }
 
-    override suspend fun getAmount(): Amount? {
+    override fun getAmount(): Amount? {
         return approvalAmount
     }
 
