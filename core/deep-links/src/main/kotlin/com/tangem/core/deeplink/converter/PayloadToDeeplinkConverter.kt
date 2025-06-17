@@ -3,9 +3,11 @@ package com.tangem.core.deeplink.converter
 import com.tangem.common.routing.DeepLinkRoute
 import com.tangem.common.routing.DeepLinkScheme
 import com.tangem.core.deeplink.DEEPLINK_KEY
+import com.tangem.core.deeplink.DeeplinkConst.DERIVATION_PATH_KEY
+import com.tangem.core.deeplink.DeeplinkConst.NAME_KEY
 import com.tangem.core.deeplink.DeeplinkConst.NETWORK_ID_KEY
-import com.tangem.core.deeplink.DeeplinkConst.PAYLOAD_WALLET_ID_KEY
 import com.tangem.core.deeplink.DeeplinkConst.TOKEN_ID_KEY
+import com.tangem.core.deeplink.DeeplinkConst.TRANSACTION_ID_KEY
 import com.tangem.core.deeplink.DeeplinkConst.TYPE_KEY
 import com.tangem.core.deeplink.DeeplinkConst.WALLET_ID_KEY
 import com.tangem.utils.converter.Converter
@@ -25,21 +27,29 @@ object PayloadToDeeplinkConverter : Converter<Map<String, String>, String?> {
         val type = payload[TYPE_KEY] ?: return null
         val networkId = payload[NETWORK_ID_KEY] ?: return null
         val tokenId = payload[TOKEN_ID_KEY] ?: return null
-        val walletId = payload[PAYLOAD_WALLET_ID_KEY] ?: return null
+        val walletId = payload[WALLET_ID_KEY] ?: return null
+        val derivationPath = payload[DERIVATION_PATH_KEY] ?: return null
+        val transactionId = payload[TRANSACTION_ID_KEY]
+        val name = payload[NAME_KEY]
 
-        return DeepLinkBuilder().setScheme(DeepLinkScheme.Tangem.scheme)
-            .setAction(DeepLinkRoute.TokenDetails.host)
-            .addQueryParam(NETWORK_ID_KEY, networkId)
-            .addQueryParam(TOKEN_ID_KEY, tokenId)
-            .addQueryParam(TYPE_KEY, type)
-            .addQueryParam(WALLET_ID_KEY, walletId)
-            .build()
+        return DeepLinkBuilder().setScheme(DeepLinkScheme.Tangem.scheme).apply {
+            setAction(DeepLinkRoute.TokenDetails.host)
+            addQueryParam(NETWORK_ID_KEY, networkId)
+            addQueryParam(TOKEN_ID_KEY, tokenId)
+            addQueryParam(TYPE_KEY, type)
+            addQueryParam(WALLET_ID_KEY, walletId)
+            addQueryParam(DERIVATION_PATH_KEY, derivationPath)
+
+            transactionId?.let { addQueryParam(TRANSACTION_ID_KEY, it) }
+            name?.let { addQueryParam(NAME_KEY, it) }
+        }.build()
     }
 
     private fun isTangemPushNotificationPayload(payload: Map<String, String>): Boolean {
         return payload.containsKey(TYPE_KEY) &&
             payload.containsKey(NETWORK_ID_KEY) &&
             payload.containsKey(TOKEN_ID_KEY) &&
-            payload.containsKey(PAYLOAD_WALLET_ID_KEY)
+            payload.containsKey(WALLET_ID_KEY) &&
+            payload.containsKey(DERIVATION_PATH_KEY)
     }
 }
