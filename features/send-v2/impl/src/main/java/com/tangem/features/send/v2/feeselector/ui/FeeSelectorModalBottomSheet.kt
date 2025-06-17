@@ -1,4 +1,4 @@
-package com.tangem.features.feeselector.impl.ui
+package com.tangem.features.send.v2.feeselector.ui
 
 import android.content.res.Configuration
 import androidx.annotation.DrawableRes
@@ -46,18 +46,20 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.features.feeselector.api.entity.CustomFeeFieldUM
-import com.tangem.features.feeselector.impl.R
-import com.tangem.features.feeselector.impl.entity.FeeFiatRateDataHolder
-import com.tangem.features.feeselector.impl.entity.FeeItem
-import com.tangem.features.feeselector.impl.entity.FeeSelectorUM
+import com.tangem.features.send.v2.feeselector.entity.FeeFiatRateDataHolder
+import com.tangem.features.send.v2.feeselector.entity.FeeItem
+import com.tangem.features.send.v2.feeselector.entity.FeeSelectorUM
+import com.tangem.features.send.v2.impl.R
+import com.tangem.features.send.v2.subcomponents.fee.ui.state.CustomFeeFieldUM
 import com.tangem.utils.StringsSigns
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import java.math.BigDecimal
 
 @Composable
-internal fun FeeSelectorModalBottomSheet(state: FeeSelectorUM.Content, onDismiss: () -> Unit) {
+internal fun FeeSelectorModalBottomSheet(state: FeeSelectorUM, onDismiss: () -> Unit) {
+    if (state !is FeeSelectorUM.Content) return
+
     TangemModalBottomSheetWithFooter<TangemBottomSheetConfigContent.Empty>(
         config = TangemBottomSheetConfig(
             isShown = true,
