@@ -301,6 +301,10 @@ include(":domain:blockaid:models")
 include(":domain:notifications")
 include(":domain:notifications:models")
 include(":domain:notifications:toggles")
+include(":domain:express")
+include(":domain:express:models")
+include(":domain:swap")
+include(":domain:swap:models")
 // endregion Domain modules
 
 // region Data modules
@@ -331,3 +335,5 @@ include(":data:quotes")
 include(":data:notifications")
 include(":data:blockaid")
 // endregion Data modules
+include(":data:swap")
+include(":data:express")
