@@ -8,4 +8,5 @@ data class GetAccessTokenByCardWalletRequest(
     @Json(name = "auth_type") val authType: String = "card_wallet",
     @Json(name = "session_id") val sessionId: String,
     @Json(name = "signature") val signature: String,
+    @Json(name = "salt") val salt: String,
 )
