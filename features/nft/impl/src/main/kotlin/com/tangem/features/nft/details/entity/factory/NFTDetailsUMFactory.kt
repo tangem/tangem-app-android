@@ -10,6 +10,7 @@ import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.nft.models.NFTAsset
+import com.tangem.domain.nft.models.NFTCollection
 import com.tangem.domain.nft.models.NFTSalePrice
 import com.tangem.features.nft.details.entity.NFTAssetUM
 import com.tangem.features.nft.details.entity.NFTDetailsUM
@@ -29,8 +30,8 @@ internal class NFTDetailsUMFactory(
     private val onInfoBlockClick: (title: TextReference, text: TextReference) -> Unit,
 ) {
 
-    fun getInitialState(nftAsset: NFTAsset): NFTDetailsUM = NFTDetailsUM(
-        nftAsset = nftAsset.transform(),
+    fun getInitialState(nftAsset: NFTAsset, nftCollection: NFTCollection): NFTDetailsUM = NFTDetailsUM(
+        nftAsset = nftAsset.transform(nftCollection),
         pullToRefreshConfig = PullToRefreshConfig(
             isRefreshing = false,
             onRefresh = { onRefresh() },
@@ -42,63 +43,62 @@ internal class NFTDetailsUMFactory(
         onSendClick = onSendClick,
     )
 
-    private fun NFTAsset.transform(): NFTAssetUM = NFTAssetUM(
-        name = name.orEmpty(),
-        media = media?.imageUrl?.let {
-            NFTAssetUM.Media.Content(
-                url = it,
-            )
-        } ?: NFTAssetUM.Media.Empty,
-        topInfo = when {
-            !hasSalePrice() && description.isNullOrEmpty() && rarity == null -> {
-                NFTAssetUM.TopInfo.Empty
-            }
-            else -> {
-                val hasSalePrice = hasSalePrice()
-                val hasDescription = !description.isNullOrEmpty()
-                val rarity = rarity
-                NFTAssetUM.TopInfo.Content(
-                    title = if (hasSalePrice) {
-                        resourceReference(R.string.nft_details_last_sale_price)
-                    } else {
-                        null
-                    },
-                    salePrice = toSalePrice(),
-                    description = description,
-                    rarity = if (rarity != null) {
-                        NFTAssetUM.Rarity.Content(
-                            rank = rarity.rank,
-                            label = rarity.label,
-                            showDivider = hasSalePrice || hasDescription,
-                            onLabelClick = {
-                                onInfoBlockClick(
-                                    resourceReference(R.string.nft_details_rarity_label),
-                                    resourceReference(R.string.nft_details_info_rarity_label),
-                                )
-                            },
-                            onRankClick = {
-                                onInfoBlockClick(
-                                    resourceReference(R.string.nft_details_rarity_rank),
-                                    resourceReference(R.string.nft_details_info_rarity_rank),
-                                )
-                            },
-                        )
-                    } else {
-                        NFTAssetUM.Rarity.Empty
-                    },
+    private fun NFTAsset.transform(nftCollection: NFTCollection): NFTAssetUM {
+        val description = description?.takeIf { it.isNotEmpty() } ?: nftCollection.description
+        return NFTAssetUM(
+            name = name.orEmpty(),
+            media = media?.imageUrl?.let {
+                NFTAssetUM.Media.Content(
+                    url = it,
                 )
-            }
-        },
-        traits = traits.take(MAX_TRAITS_COUNT).map {
-            NFTAssetUM.BlockItem(
-                title = stringReference(it.name),
-                value = it.value,
-                showInfoButton = false,
-            )
-        }.toImmutableList(),
-        showAllTraitsButton = traits.size > MAX_TRAITS_COUNT,
-        baseInfoItems = buildBaseInfoItems(),
-    )
+            } ?: NFTAssetUM.Media.Empty,
+            topInfo = when {
+                !hasSalePrice() && description.isNullOrEmpty() && rarity == null -> {
+                    NFTAssetUM.TopInfo.Empty
+                }
+                else -> {
+                    val hasSalePrice = hasSalePrice()
+                    val hasDescription = !description.isNullOrEmpty()
+                    val rarity = rarity
+                    NFTAssetUM.TopInfo.Content(
+                        title = resourceReference(R.string.nft_details_last_sale_price).takeIf { hasSalePrice },
+                        salePrice = toSalePrice(),
+                        description = description,
+                        rarity = if (rarity != null) {
+                            NFTAssetUM.Rarity.Content(
+                                rank = rarity.rank,
+                                label = rarity.label,
+                                showDivider = hasSalePrice || hasDescription,
+                                onLabelClick = {
+                                    onInfoBlockClick(
+                                        resourceReference(R.string.nft_details_rarity_label),
+                                        resourceReference(R.string.nft_details_info_rarity_label),
+                                    )
+                                },
+                                onRankClick = {
+                                    onInfoBlockClick(
+                                        resourceReference(R.string.nft_details_rarity_rank),
+                                        resourceReference(R.string.nft_details_info_rarity_rank),
+                                    )
+                                },
+                            )
+                        } else {
+                            NFTAssetUM.Rarity.Empty
+                        },
+                    )
+                }
+            },
+            traits = traits.take(MAX_TRAITS_COUNT).map {
+                NFTAssetUM.BlockItem(
+                    title = stringReference(it.name),
+                    value = it.value,
+                    showInfoButton = false,
+                )
+            }.toImmutableList(),
+            showAllTraitsButton = traits.size > MAX_TRAITS_COUNT,
+            baseInfoItems = buildBaseInfoItems(),
+        )
+    }
 
     private fun NFTAsset.hasSalePrice() = salePrice !is NFTSalePrice.Empty && salePrice !is NFTSalePrice.Error
 
