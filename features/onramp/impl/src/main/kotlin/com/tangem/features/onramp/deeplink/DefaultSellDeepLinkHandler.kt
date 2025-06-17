@@ -7,10 +7,10 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import timber.log.Timber
 
-internal class DefaultBuyDeepLinkHandler @AssistedInject constructor(
+internal class DefaultSellDeepLinkHandler @AssistedInject constructor(
     router: AppRouter,
     getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
-) : BuyDeepLinkHandler {
+) : SellDeepLinkHandler {
 
     init {
         // It is okay here, we are navigating from outside, and there is no other way to getting UserWallet
@@ -19,13 +19,13 @@ internal class DefaultBuyDeepLinkHandler @AssistedInject constructor(
                 Timber.e("Error on getting user wallet: $it")
             },
             ifRight = { userWallet ->
-                router.push(AppRoute.BuyCrypto(userWallet.walletId))
+                router.push(AppRoute.SellCrypto(userWallet.walletId))
             },
         )
     }
 
     @AssistedFactory
-    interface Factory : BuyDeepLinkHandler.Factory {
-        override fun create(): DefaultBuyDeepLinkHandler
+    interface Factory : SellDeepLinkHandler.Factory {
+        override fun create(): DefaultSellDeepLinkHandler
     }
 }
