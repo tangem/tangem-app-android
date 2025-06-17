@@ -210,8 +210,6 @@ dependencies {
     implementation(projects.features.walletconnect.impl)
     implementation(projects.features.usedesk.api)
     implementation(projects.features.usedesk.impl)
-    implementation(projects.features.feeSelector.api)
-    implementation(projects.features.feeSelector.impl)
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)
