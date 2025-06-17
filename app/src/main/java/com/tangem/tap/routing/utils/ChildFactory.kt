@@ -3,10 +3,10 @@ package com.tangem.tap.routing.utils
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.domain.qrscanning.models.SourceType
-import com.tangem.feature.usedesk.api.UsedeskComponent
 import com.tangem.feature.qrscanning.QrScanningComponent
 import com.tangem.feature.referral.api.ReferralComponent
 import com.tangem.feature.stories.api.StoriesComponent
+import com.tangem.feature.usedesk.api.UsedeskComponent
 import com.tangem.feature.walletsettings.component.WalletSettingsComponent
 import com.tangem.features.details.component.DetailsComponent
 import com.tangem.features.disclaimer.api.components.DisclaimerComponent
@@ -49,7 +49,7 @@ internal class ChildFactory @Inject constructor(
     private val disclaimerComponentFactory: DisclaimerComponent.Factory,
     private val manageTokensComponentFactory: ManageTokensComponent.Factory,
     private val marketsTokenDetailsComponentFactory: MarketsTokenDetailsComponent.Factory,
-    private val marketsTokenListComponentFactory: MarketsTokenListComponent.Factory,
+    private val marketsTokenListComponentFactory: MarketsTokenListComponent.FactoryScreen,
     private val onrampComponentFactory: OnrampComponent.Factory,
     private val onrampSuccessComponentFactory: OnrampSuccessComponent.Factory,
     private val buyCryptoComponentFactory: BuyCryptoComponent.Factory,
