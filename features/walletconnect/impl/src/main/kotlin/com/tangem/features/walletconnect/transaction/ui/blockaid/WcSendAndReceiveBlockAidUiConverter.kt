@@ -5,6 +5,7 @@ import com.domain.blockaid.models.transaction.SimulationResult
 import com.domain.blockaid.models.transaction.ValidationResult
 import com.domain.blockaid.models.transaction.simultation.AmountInfo
 import com.domain.blockaid.models.transaction.simultation.SimulationData
+import com.tangem.blockchain.common.Amount
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
@@ -21,21 +22,20 @@ import javax.inject.Inject
 
 internal const val DECIMALS_AMOUNT = 2
 
+@Suppress("CyclomaticComplexMethod")
 internal class WcSendAndReceiveBlockAidUiConverter @Inject constructor(
     private val estimatedWalletChangeUMConverter: WcEstimatedWalletChangeUMConverter,
     private val spendAllowanceUMConverter: WcSpendAllowanceUMConverter,
-) :
-    Converter<CheckTransactionResult, WcSendReceiveTransactionCheckResultsUM> {
-    override fun convert(value: CheckTransactionResult): WcSendReceiveTransactionCheckResultsUM {
+) : Converter<WcSendAndReceiveBlockAidUiConverter.Input, WcSendReceiveTransactionCheckResultsUM> {
+    override fun convert(value: Input): WcSendReceiveTransactionCheckResultsUM {
+        val description = value.result.description
         return WcSendReceiveTransactionCheckResultsUM(
             isLoading = false,
-            notificationText = when (value.validation) {
+            notificationText = when (value.result.validation) {
                 ValidationResult.SAFE, ValidationResult.FAILED_TO_VALIDATE -> null
-                // TODO("Add text after approve with designer")
-                ValidationResult.UNSAFE ->
-                    TextReference.Str("The transaction approves tokens to a known malicious address")
+                ValidationResult.UNSAFE -> if (!description.isNullOrEmpty()) TextReference.Str(description) else null
             },
-            estimatedWalletChanges = (value.simulation as? SimulationResult.Success)?.data?.let { data ->
+            estimatedWalletChanges = (value.result.simulation as? SimulationResult.Success)?.data?.let { data ->
                 when (data) {
                     is SimulationData.Approve -> null
                     is SimulationData.SendAndReceive -> {
@@ -82,15 +82,21 @@ internal class WcSendAndReceiveBlockAidUiConverter @Inject constructor(
                     }
                 }
             },
-            spendAllowance = (value.simulation as? SimulationResult.Success)?.data?.let { data ->
+            spendAllowance = (value.result.simulation as? SimulationResult.Success)?.data?.let { data ->
                 when (data) {
                     is SimulationData.SendAndReceive -> null
-                    is SimulationData.Approve -> data.approvedAmounts.map { spendAllowanceUMConverter.convert(it) }
-                        .firstOrNull()
+                    is SimulationData.Approve -> value.approvedAmount?.let {
+                        data.approvedAmounts.map { spendAllowanceUMConverter.convert(it) }.firstOrNull()
+                    }
                 }
             },
         )
     }
+
+    data class Input(
+        val result: CheckTransactionResult,
+        val approvedAmount: Amount?,
+    )
 }
 
 internal fun BigDecimal.amountText() = format { crypto("", DECIMALS_AMOUNT) }
