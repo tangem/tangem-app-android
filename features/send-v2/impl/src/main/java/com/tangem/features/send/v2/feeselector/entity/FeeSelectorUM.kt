@@ -1,10 +1,10 @@
-package com.tangem.features.feeselector.impl.entity
+package com.tangem.features.send.v2.feeselector.entity
 
 import androidx.compose.runtime.Immutable
 import com.tangem.blockchain.common.Amount
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.features.feeselector.api.entity.CustomFeeFieldUM
+import com.tangem.features.send.v2.subcomponents.fee.ui.state.CustomFeeFieldUM
 import kotlinx.collections.immutable.ImmutableList
 import java.math.BigDecimal
 
