@@ -502,7 +502,8 @@ internal class DefaultCurrenciesRepository(
         currencyRawId: CryptoCurrency.RawID,
     ): Flow<Map<UserWallet, List<CryptoCurrency>>> {
         return userWalletsStore.userWallets.flatMapLatest { userWallets ->
-            userWallets.forEach { fetchTokensIfCacheExpired(userWallet = it, refresh = false) }
+            userWallets.filter { it.isMultiCurrency }
+                .forEach { fetchTokensIfCacheExpired(userWallet = it, refresh = false) }
 
             val userWalletsWithCurrencies = userWallets
                 .filterNot(UserWallet::isLocked)
