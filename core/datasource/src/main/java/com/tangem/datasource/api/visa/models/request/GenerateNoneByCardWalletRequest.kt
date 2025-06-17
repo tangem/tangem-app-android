@@ -7,4 +7,5 @@ import com.squareup.moshi.JsonClass
 data class GenerateNoneByCardWalletRequest(
     @Json(name = "auth_type") val authType: String = "card_wallet",
     @Json(name = "card_wallet_address") val cardWalletAddress: String,
+    @Json(name = "card_id") val cardId: String,
 )
