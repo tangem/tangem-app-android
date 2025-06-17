@@ -1,4 +1,4 @@
-package com.tangem.features.feeselector.api.component
+package com.tangem.features.send.v2.api
 
 import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
