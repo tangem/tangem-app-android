@@ -3,7 +3,6 @@ package com.tangem.features.send.v2.subcomponents.fee.ui.state
 import androidx.compose.runtime.Stable
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.features.feeselector.api.entity.CustomFeeFieldUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import java.math.BigDecimal
