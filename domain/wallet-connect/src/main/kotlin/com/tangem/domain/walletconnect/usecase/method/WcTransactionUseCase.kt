@@ -44,6 +44,6 @@ interface WcMutableFee {
  * [updateAmount] triggered a new [TransactionData] emit
  */
 interface WcApproval {
-    suspend fun getAmount(): Amount?
+    fun getAmount(): Amount?
     fun updateAmount(amount: Amount?)
 }
