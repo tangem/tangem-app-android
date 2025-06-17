@@ -23,7 +23,11 @@ import com.tangem.features.walletconnect.transaction.ui.approve.WcSpendAllowance
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
-internal fun TransactionCheckResultsItem(item: WcSendReceiveTransactionCheckResultsUM, modifier: Modifier = Modifier) {
+internal fun TransactionCheckResultsItem(
+    item: WcSendReceiveTransactionCheckResultsUM,
+    onClickAllowToSpend: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Column(
         modifier = modifier
             .fillMaxWidth(),
@@ -38,7 +42,7 @@ internal fun TransactionCheckResultsItem(item: WcSendReceiveTransactionCheckResu
             if (item.estimatedWalletChanges != null) {
                 WcEstimatedWalletChangesItem(item.estimatedWalletChanges)
             } else if (item.spendAllowance != null) {
-                WcSpendAllowanceItem(item.spendAllowance)
+                WcSpendAllowanceItem(item.spendAllowance, onClickAllowToSpend)
             } else {
                 WcEstimatedWalletChangesNotLoadedItem()
             }
@@ -57,7 +61,7 @@ private fun TransactionCheckResultsItemPreview(
             modifier = Modifier
                 .background(TangemTheme.colors.background.tertiary),
         ) {
-            TransactionCheckResultsItem(item = item)
+            TransactionCheckResultsItem(item = item, {})
         }
     }
 }
