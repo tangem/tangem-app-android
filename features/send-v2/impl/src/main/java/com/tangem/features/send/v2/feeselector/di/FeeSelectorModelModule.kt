@@ -1,8 +1,8 @@
-package com.tangem.features.feeselector.impl.di
+package com.tangem.features.send.v2.feeselector.di
 
 import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
-import com.tangem.features.feeselector.impl.model.FeeSelectorModel
+import com.tangem.features.send.v2.feeselector.model.FeeSelectorModel
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
