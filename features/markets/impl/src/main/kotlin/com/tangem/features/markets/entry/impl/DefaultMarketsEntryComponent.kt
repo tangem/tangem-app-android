@@ -5,6 +5,7 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
+import com.arkivanov.decompose.ExperimentalDecomposeApi
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.StackNavigation
@@ -14,6 +15,9 @@ import com.arkivanov.decompose.value.Value
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.navigation.inner.InnerRouter
+import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.markets.TokenMarketParams
+import com.tangem.features.markets.details.MarketsTokenDetailsComponent
 import com.tangem.features.markets.entry.BottomSheetState
 import com.tangem.features.markets.entry.MarketsEntryComponent
 import com.tangem.features.markets.entry.impl.MarketsEntryChildFactory.Child
@@ -48,6 +52,7 @@ internal class DefaultMarketsEntryComponent @AssistedInject constructor(
                     componentContext = factoryContext,
                     router = innerRouter,
                 ),
+                onTokenClick = ::marketsListTokenSelected,
             )
         },
     )
@@ -64,6 +69,23 @@ internal class DefaultMarketsEntryComponent @AssistedInject constructor(
             onHeaderSizeChange = onHeaderSizeChange,
             stackState = stack.subscribeAsState(),
             modifier = modifier,
+        )
+    }
+
+    @OptIn(ExperimentalDecomposeApi::class)
+    private fun marketsListTokenSelected(token: TokenMarketParams, appCurrency: AppCurrency) {
+        innerRouter.push(
+            route = Child.TokenDetails(
+                params = MarketsTokenDetailsComponent.Params(
+                    token = token,
+                    appCurrency = appCurrency,
+                    showPortfolio = true,
+                    analyticsParams = MarketsTokenDetailsComponent.AnalyticsParams(
+                        blockchain = null,
+                        source = "Market",
+                    ),
+                ),
+            ),
         )
     }
 
