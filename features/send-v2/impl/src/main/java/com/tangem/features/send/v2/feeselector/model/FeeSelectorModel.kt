@@ -1,12 +1,12 @@
-package com.tangem.features.feeselector.impl.model
+package com.tangem.features.send.v2.feeselector.model
 
 import androidx.compose.runtime.Stable
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
-import com.tangem.features.feeselector.api.component.FeeSelectorComponent
-import com.tangem.features.feeselector.impl.entity.FeeSelectorUM
+import com.tangem.features.send.v2.api.FeeSelectorComponent
+import com.tangem.features.send.v2.feeselector.entity.FeeSelectorUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
