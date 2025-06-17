@@ -27,6 +27,7 @@ internal class WcSendTransactionComponent(
                 onClickTransactionRequest = model::showTransactionRequest,
                 onBack = router::pop,
                 onDismiss = ::dismiss,
+                onClickAllowToSpend = model::onClickAllowToSpend,
             )
         }
     }
