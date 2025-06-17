@@ -2,6 +2,7 @@ package com.tangem.features.walletconnect.transaction.ui.approve
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -22,13 +23,18 @@ import com.tangem.features.walletconnect.transaction.entity.approve.WcSpendAllow
 import com.tangem.features.walletconnect.transaction.ui.common.WcSmallTitleItem
 
 @Composable
-internal fun WcSpendAllowanceItem(spendAllowance: WcSpendAllowanceUM, modifier: Modifier = Modifier) {
+internal fun WcSpendAllowanceItem(
+    spendAllowance: WcSpendAllowanceUM,
+    onClickAllowToSpend: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(14.dp))
             .background(TangemTheme.colors.background.action)
             .fillMaxWidth()
-            .padding(end = 12.dp, bottom = 12.dp),
+            .padding(end = 12.dp, bottom = 12.dp)
+            .clickable { onClickAllowToSpend() },
     ) {
         WcSmallTitleItem(R.string.wc_allow_to_spend)
 

@@ -46,6 +46,7 @@ internal fun WcSendTransactionModalBottomSheet(
     onClickTransactionRequest: () -> Unit,
     onBack: () -> Unit,
     onDismiss: () -> Unit,
+    onClickAllowToSpend: () -> Unit,
 ) {
     TangemModalBottomSheetWithFooter<TangemBottomSheetConfigContent.Empty>(
         config = TangemBottomSheetConfig(
@@ -92,7 +93,7 @@ internal fun WcSendTransactionModalBottomSheet(
                 }
                 Column(modifier = Modifier.padding(top = 16.dp)) {
                     if (state.estimatedWalletChanges != null) {
-                        TransactionCheckResultsItem(state.estimatedWalletChanges)
+                        TransactionCheckResultsItem(state.estimatedWalletChanges, onClickAllowToSpend)
                     }
                     Spacer(Modifier.height(16.dp))
                     WcSendTransactionItems(
@@ -140,7 +141,7 @@ private fun WcSendTransactionBottomSheetPreview(
                 )
             },
             content = {
-                WcSendTransactionModalBottomSheet(state, {}, {}, {})
+                WcSendTransactionModalBottomSheet(state, {}, {}, {}, {})
             },
         )
     }

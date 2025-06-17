@@ -15,6 +15,9 @@ internal sealed class WcTransactionRoutes : TangemBottomSheetConfigContent, Rout
     data object TransactionRequestInfo : WcTransactionRoutes()
 
     @Serializable
+    data object CustomAllowance : WcTransactionRoutes()
+
+    @Serializable
     data class Alert(val type: Type) : WcTransactionRoutes() {
         @Serializable
         sealed class Type {
