@@ -47,12 +47,14 @@ internal class DefaultVisaAuthRepository @Inject constructor(
     }
 
     override suspend fun getCardWalletAuthChallenge(
+        cardId: String,
         cardWalletAddress: String,
     ): Either<VisaApiError, VisaAuthChallenge.Wallet> = withContext(dispatchers.io) {
         request {
             visaAuthApi.generateNonceByCardWallet(
                 GenerateNoneByCardWalletRequest(
                     cardWalletAddress = cardWalletAddress,
+                    cardId = cardId,
                 ),
             ).getOrThrow()
         }.map { response ->
@@ -82,6 +84,7 @@ internal class DefaultVisaAuthRepository @Inject constructor(
                         GetAccessTokenByCardWalletRequest(
                             sessionId = signedChallenge.challenge.session.sessionId,
                             signature = signedChallenge.signature,
+                            salt = signedChallenge.salt,
                         ),
                     ).getOrThrow()
                 }
