@@ -21,5 +21,19 @@ internal interface OnrampDeeplinkModule {
 
     @Binds
     @Singleton
+    fun bindBuyRedirectDeepLinkHandler(
+        impl: DefaultBuyRedirectDeepLinkHandler.Factory,
+    ): BuyRedirectDeepLinkHandler.Factory
+
+    @Binds
+    @Singleton
     fun bindBuyDeepLinkHandler(impl: DefaultBuyDeepLinkHandler.Factory): BuyDeepLinkHandler.Factory
+
+    @Binds
+    @Singleton
+    fun bindSellDeepLinkHandler(impl: DefaultSellDeepLinkHandler.Factory): SellDeepLinkHandler.Factory
+
+    @Binds
+    @Singleton
+    fun bindSwapDeepLinkHandler(impl: DefaultSwapDeepLinkHandler.Factory): SwapDeepLinkHandler.Factory
 }
