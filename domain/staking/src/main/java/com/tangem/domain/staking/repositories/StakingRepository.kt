@@ -37,6 +37,11 @@ interface StakingRepository {
 
     fun getStakingAvailability(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): Flow<StakingAvailability>
 
+    suspend fun getStakingAvailabilitySync(
+        userWalletId: UserWalletId,
+        cryptoCurrency: CryptoCurrency,
+    ): StakingAvailability
+
     suspend fun getActions(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,

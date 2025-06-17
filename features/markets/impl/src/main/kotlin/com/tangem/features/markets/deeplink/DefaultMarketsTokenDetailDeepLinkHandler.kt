@@ -3,6 +3,7 @@ package com.tangem.features.markets.deeplink
 import arrow.core.getOrElse
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.core.deeplink.DeeplinkConst.TOKEN_ID_KEY
 import com.tangem.data.common.currency.getTokenIconUrlFromDefaultHost
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -17,14 +18,18 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 
 internal class DefaultMarketsTokenDetailDeepLinkHandler @AssistedInject constructor(
-    @Assisted scope: CoroutineScope,
-    @Assisted queryParams: Map<String, String>,
-    appRouter: AppRouter,
-    getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
-    getTokenMarketInfoUseCase: GetTokenMarketInfoUseCase,
+    @Assisted private val scope: CoroutineScope,
+    @Assisted private val queryParams: Map<String, String>,
+    private val appRouter: AppRouter,
+    private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
+    private val getTokenMarketInfoUseCase: GetTokenMarketInfoUseCase,
 ) : MarketsTokenDetailDeepLinkHandler {
 
     init {
+        handleDeepLink()
+    }
+
+    private fun handleDeepLink() {
         val tokenId = queryParams[TOKEN_ID_KEY]
 
         val rawTokenId = CryptoCurrency.RawID(tokenId.orEmpty())
@@ -36,7 +41,7 @@ internal class DefaultMarketsTokenDetailDeepLinkHandler @AssistedInject construc
             val tokenInfo = getTokenMarketInfoUseCase(
                 appCurrency = appCurrency,
                 tokenId = rawTokenId,
-                tokenSymbol = TOKEN_SYMBOL_KEY,
+                tokenSymbol = "", // used for analytics
             ).getOrElse {
                 Timber.e("Failed to get market token info")
                 return@launch
@@ -70,10 +75,5 @@ internal class DefaultMarketsTokenDetailDeepLinkHandler @AssistedInject construc
             coroutineScope: CoroutineScope,
             queryParams: Map<String, String>,
         ): DefaultMarketsTokenDetailDeepLinkHandler
-    }
-
-    private companion object {
-        const val TOKEN_ID_KEY = "token_id"
-        const val TOKEN_SYMBOL_KEY = "token_symbol"
     }
 }
