@@ -39,6 +39,7 @@ internal object BlockAidMapper {
             } else {
                 mapSimulationSuccessResult(from.simulation.accountSummary)
             },
+            description = from.validation.description,
         )
     }
 
