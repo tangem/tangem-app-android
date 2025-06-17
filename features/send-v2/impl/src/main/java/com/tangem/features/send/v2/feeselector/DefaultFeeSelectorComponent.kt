@@ -1,13 +1,15 @@
-package com.tangem.features.feeselector.impl.component
+package com.tangem.features.send.v2.feeselector
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
-import com.tangem.features.feeselector.api.component.FeeSelectorComponent
-import com.tangem.features.feeselector.impl.model.FeeSelectorModel
-import com.tangem.features.feeselector.impl.ui.FeeSelectorModalBottomSheet
+import com.tangem.features.send.v2.api.FeeSelectorComponent
+import com.tangem.features.send.v2.feeselector.model.FeeSelectorModel
+import com.tangem.features.send.v2.feeselector.ui.FeeSelectorModalBottomSheet
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -31,8 +33,9 @@ internal class DefaultFeeSelectorComponent @AssistedInject constructor(
     // Temporary workaround, to use test this component
     @Composable
     override fun Content(modifier: Modifier) {
+        val state by model.uiState.collectAsStateWithLifecycle()
         BackHandler(onBack = router::pop)
-        FeeSelectorModalBottomSheet(onDismiss = ::dismiss, state = TODO())
+        FeeSelectorModalBottomSheet(onDismiss = ::dismiss, state = state)
     }
 
     @AssistedFactory
