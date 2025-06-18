@@ -7,7 +7,6 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.quotes.multi.MultiQuoteFetcher
-import com.tangem.domain.staking.fetcher.YieldBalanceFetcherParams
 import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.TokensFeatureToggles
@@ -93,7 +92,7 @@ class SaveMarketTokensUseCase(
     ) {
         if (tokensFeatureToggles.isStakingLoadingRefactoringEnabled) {
             multiYieldBalanceFetcher(
-                params = YieldBalanceFetcherParams.Multi(
+                params = MultiYieldBalanceFetcher.Params(
                     userWalletId = userWalletId,
                     currencyIdWithNetworkMap = existingCurrencies.associateTo(hashMapOf()) { it.id to it.network },
                 ),
