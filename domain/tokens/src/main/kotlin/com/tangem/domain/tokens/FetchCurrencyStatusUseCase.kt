@@ -8,7 +8,6 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.quotes.multi.MultiQuoteFetcher
-import com.tangem.domain.staking.fetcher.YieldBalanceFetcherParams
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.staking.single.SingleYieldBalanceFetcher
 import com.tangem.domain.tokens.error.CurrencyStatusError
@@ -140,7 +139,7 @@ class FetchCurrencyStatusUseCase(
     ) {
         if (tokensFeatureToggles.isStakingLoadingRefactoringEnabled) {
             singleYieldBalanceFetcher(
-                params = YieldBalanceFetcherParams.Single(
+                params = SingleYieldBalanceFetcher.Params(
                     userWalletId = userWalletId,
                     currencyId = cryptoCurrency.id,
                     network = cryptoCurrency.network,
