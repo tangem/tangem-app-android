@@ -8,7 +8,6 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.quotes.multi.MultiQuoteFetcher
-import com.tangem.domain.staking.fetcher.YieldBalanceFetcherParams
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.staking.single.SingleYieldBalanceFetcher
 import com.tangem.domain.tokens.repository.CurrenciesRepository
@@ -147,7 +146,7 @@ class AddCryptoCurrenciesUseCase(
     private suspend fun refreshUpdatedYieldBalances(userWalletId: UserWalletId, addedCurrency: CryptoCurrency) {
         if (tokensFeatureToggles.isStakingLoadingRefactoringEnabled) {
             singleYieldBalanceFetcher(
-                params = YieldBalanceFetcherParams.Single(
+                params = SingleYieldBalanceFetcher.Params(
                     userWalletId = userWalletId,
                     currencyId = addedCurrency.id,
                     network = addedCurrency.network,
