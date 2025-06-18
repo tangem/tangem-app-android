@@ -21,7 +21,6 @@ import com.tangem.domain.quotes.QuotesRepositoryV2
 import com.tangem.domain.quotes.multi.MultiQuoteFetcher
 import com.tangem.domain.quotes.single.SingleQuoteProducer
 import com.tangem.domain.quotes.single.SingleQuoteSupplier
-import com.tangem.domain.staking.fetcher.YieldBalanceFetcherParams
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.staking.model.stakekit.YieldBalanceList
 import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
@@ -196,7 +195,7 @@ class CachedCurrenciesStatusesOperations(
                 async {
                     if (tokensFeatureToggles.isStakingLoadingRefactoringEnabled) {
                         multiYieldBalanceFetcher(
-                            params = YieldBalanceFetcherParams.Multi(
+                            params = MultiYieldBalanceFetcher.Params(
                                 userWalletId = userWalletId,
                                 currencyIdWithNetworkMap = currencies.associateTo(hashMapOf()) { it.id to it.network },
                             ),
