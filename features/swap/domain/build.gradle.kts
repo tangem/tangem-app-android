@@ -8,7 +8,7 @@ plugins {
 }
 
 android {
-    namespace = "com.tangem.domain.swap"
+    namespace = "com.tangem.features.domain.swap"
 }
 
 dependencies {
