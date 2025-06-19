@@ -381,6 +381,8 @@
   <string name="give_permission_swap_subtitle" formatted="false">To continue, grant %1s smart contracts permission to use your %2s</string>
   <string name="give_permission_title">Give Permission</string>
   <string name="give_permission_unlimited">Unlimited</string>
+  <string name="home_button_add_existing_wallet">Add Existing Wallet</string>
+  <string name="home_button_create_new_wallet">Create New Wallet</string>
   <string name="home_button_order">Order Tangem</string>
   <string name="home_button_scan">Scan Tangem</string>
   <string name="hot_crypto_add_token_subtitle">to %s</string>
@@ -573,7 +575,7 @@
   <string name="nft_receive_unavailable_asset_warning_title">Network not added</string>
   <string name="nft_receive_unavailable_section_title">Not Added</string>
   <string name="nft_receive_unsupported_types">Unsupported NFT types</string>
-  <string name="nft_receive_unsupported_types_description">cNFTs and pNFTs are not supported yet</string>
+  <string name="nft_receive_unsupported_types_description">cNFTs and pNFTs are not supported yet. Please don\'t send them to your wallet.</string>
   <string name="nft_send">Send NFT</string>
   <string name="nft_traits_title">Traits</string>
   <string name="nft_untitled_collection">Untitled collection</string>
@@ -820,6 +822,7 @@
   <string name="send_fee_unreachable_error_text">Check your network connection</string>
   <string name="send_fee_unreachable_error_title">Network fee info unreachable</string>
   <string name="send_from_wallet_android">From</string>
+  <string name="send_from_wallet_name">From %s</string>
   <string name="send_gas_limit">Gas limit</string>
   <string name="send_gas_limit_footer">This is the maximum amount of gas that will be spent to complete a transaction or contract. A gas limit prevents unexpected or unlimited charges when executing a transaction.</string>
   <string name="send_gas_price">Gas price</string>
@@ -827,6 +830,7 @@
   <string name="send_max_amount">Max</string>
   <string name="send_max_amount_label">Maximum amount</string>
   <string name="send_max_fee">Fee up to</string>
+  <string name="send_memo">Memo: %s</string>
   <string name="send_memo_destination_tag_error">Invalid Memo</string>
   <string name="send_network_fee_warning_title">Network fee coverage</string>
   <string name="send_nonce">Nonce</string>
@@ -859,10 +863,12 @@
   <string name="send_recipient">Recipient</string>
   <string name="send_recipient_address_error">Not a valid address</string>
   <string name="send_recipient_address_footer">Ensure the receiving wallet address is on the %s network to avoid losing your tokens</string>
-  <string name="send_recipient_address_footer_markdown">Ensure you **send to %s** network address, as errors may result in lost transfers</string>
+  <string name="send_recipient_address_footer_highlighted_part">send to %s</string>
+  <string name="send_recipient_address_footer_v2">Ensure you %s network address, as errors may result in lost transfers</string>
   <string name="send_recipient_label">Send to</string>
   <string name="send_recipient_memo_footer">A Memo/Destination Tag is a unique ID for differentiating transactions sent to the same recipient on the same network. Caution: Omitting a memo may lead to misplaced funds</string>
-  <string name="send_recipient_memo_footer_markdown">Memo / Destination Tag is a code separating transactions to a shared recipient in a crypto network. **Caution: Missing a memo may lead to fund loss.**</string>
+  <string name="send_recipient_memo_footer_v2">Memo / Destination Tag is a code separating transactions to a shared recipient in a crypto network.</string>
+  <string name="send_recipient_memo_footer_v2_highlighted">Caution: Missing a memo may lead to fund loss.</string>
   <string name="send_recipient_wallets_title">My wallets</string>
   <string name="send_satoshi_per_byte_text">A way of measuring Bitcoin transaction fees. It indicates the number of the smallest Bitcoin unit (Satoshi) for each virtual byte in a transaction. The higher the number, the faster the transaction will be processed by miners.</string>
   <string name="send_satoshi_per_byte_title">Satoshi / vByte</string>
@@ -875,6 +881,7 @@
   <string name="send_summary_transaction_description_suffix_fee_covered">network fee will be covered by using %1$s energy</string>
   <string name="send_summary_transaction_description_suffix_fee_reduced">network fee will be reduced by spending %1$s energy</string>
   <string name="send_summary_transaction_description_suffix_including">including a network fee of %1$s</string>
+  <string name="send_to_address">To address</string>
   <string name="send_transaction_success">Transaction has been successfully signed and sent to the blockchain node. Wallet balance will be updated in a while</string>
   <string name="send_tron_account_activation_error">%1$s is an asset in the Tron network. To calculate the fee and make a transaction you need to deposit some Tron (TRX) in your account.</string>
   <string name="send_validation_amount_exceeds_balance">Amount exceeds balance</string>
@@ -884,6 +891,7 @@
   <string name="send_validation_invalid_fee">Fee exceeds balance</string>
   <string name="send_validation_invalid_total">Total amount exceeds balance</string>
   <string name="send_with_swap_notification_text">Send any token, and we’ll convert it on the way. Your recipient gets exactly what they need—seamlessly.</string>
+  <string name="send_with_swap_recipient_amount_text">Will be sent a recipient</string>
   <string name="send_with_swap_title">Send with swap</string>
   <string name="sent_transaction_sent_title">Transaction sent</string>
   <string name="settings_card_settings_footer">Prepare to scan card or ring you want to set up.</string>
@@ -1340,8 +1348,8 @@
   <string name="warning_token_balance_not_updated">Balance may be outdated. Refresh the page.</string>
   <string name="warning_token_required_min_coin_reserve">Not enough %1$s. Top up your XLM account to associate this token</string>
   <string name="warning_token_trustline_button_title">Enable Trustline</string>
-  <string name="warning_token_trustline_subtiile">A Trustline must be enabled to receive this token. The network requires a %1$s %2$s reserve.</string>
-  <string name="warning_token_trustline_tiile">Trustline Required</string>
+  <string name="warning_token_trustline_subtitle">A Trustline must be enabled to receive this token. The network requires a %1$s %2$s reserve.</string>
+  <string name="warning_token_trustline_title">Trustline Required</string>
   <string name="wc_alert_audit_unknown_domain">Unknown domain</string>
   <string name="wc_alert_connect_anyway">Connect anyway</string>
   <string name="wc_alert_connection_timeout_description">Timeout error. Please, try again later.</string>
@@ -1351,6 +1359,7 @@
   <string name="wc_alert_session_disconnected_title">WalletConnect session was disconnected</string>
   <string name="wc_alert_sign_anyway">Sign anyway</string>
   <string name="wc_alert_unknown_error_description">Error code: %s. If the problem persists — feel free to contact our support.</string>
+  <string name="wc_alert_unknown_error_description_no_error_code">If the problem persists — feel free to contact our support.</string>
   <string name="wc_alert_unknown_error_title">We\'ve encountered unknown error</string>
   <string name="wc_alert_unsupported_method_description">Error code: 8 005. If the problem persists — feel free to contact our support.</string>
   <string name="wc_alert_unsupported_method_title">We\'ve encountered unknown error</string>

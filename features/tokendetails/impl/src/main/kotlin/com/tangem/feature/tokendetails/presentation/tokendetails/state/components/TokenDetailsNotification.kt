@@ -199,9 +199,9 @@ internal sealed class TokenDetailsNotification(val config: NotificationConfig) {
         private val currencySymbol: String,
         private val onOpenClick: () -> Unit,
     ) : Warning(
-        title = resourceReference(id = R.string.warning_token_trustline_tiile),
+        title = resourceReference(id = R.string.warning_token_trustline_title),
         subtitle = resourceReference(
-            id = R.string.warning_token_trustline_subtiile,
+            id = R.string.warning_token_trustline_subtitle,
             formatArgs = wrappedList(amount, currencySymbol),
         ),
         iconResId = currency.networkIconResId,

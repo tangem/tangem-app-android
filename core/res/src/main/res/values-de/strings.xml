@@ -380,6 +380,8 @@
   <string name="give_permission_swap_subtitle" formatted="false">Um fortzufahren, erteile %1s Smart Contracts die Berechtigung, dein zu %2s verwenden.</string>
   <string name="give_permission_title">Erlaubnis erteilen</string>
   <string name="give_permission_unlimited">Unbegrenzt</string>
+  <string name="home_button_add_existing_wallet">Vorhandene Wallet hinzufügen</string>
+  <string name="home_button_create_new_wallet">Neues Wallet erstellen</string>
   <string name="home_button_order">Karte oder Ring bestellen</string>
   <string name="home_button_scan">Karte oder Ring scannen</string>
   <string name="hot_crypto_add_token_subtitle">An %s</string>
@@ -571,6 +573,8 @@
   <string name="nft_receive_unavailable_asset_warning_message">Du hast dieses Netzwerk noch nicht hinzugefügt. Um NFTs zu erhalten, füge es Deinem Portfolio hinzu.</string>
   <string name="nft_receive_unavailable_asset_warning_title">Netzwerk nicht hinzugefügt</string>
   <string name="nft_receive_unavailable_section_title">Nicht hinzugefügt</string>
+  <string name="nft_receive_unsupported_types">Nicht unterstützte NFT-Arten</string>
+  <string name="nft_receive_unsupported_types_description">cNFTs und pNFTs werden derzeit nicht unterstützt. Bitte sende diese nicht an Deine Wallet.</string>
   <string name="nft_send">NFT senden</string>
   <string name="nft_traits_title">Eigenschaften</string>
   <string name="nft_untitled_collection">Unbetitelte Sammlung</string>
@@ -856,8 +860,12 @@
   <string name="send_recipient">Empfänger</string>
   <string name="send_recipient_address_error">Keine gültige Adresse</string>
   <string name="send_recipient_address_footer">Vergewisser dich, dass die empfangende Wallet-Adresse im %s Netzwerk ist, damit du deine Token nicht verlierst.</string>
+  <string name="send_recipient_address_footer_highlighted_part">senden an %s</string>
+  <string name="send_recipient_address_footer_v2">Stelle sicher, dass Du %s Netzwerkadresse hast, da Fehler zu verlorenen Übertragungen führen können</string>
   <string name="send_recipient_label">Senden an</string>
   <string name="send_recipient_memo_footer">Ein Memo/Destination Tag ist eine eindeutige ID zur Unterscheidung von Transaktionen, die an denselben Empfänger im selben Netzwerk gesendet werden. Vorsicht! Das Weglassen eines Vermerks kann dazu führen, dass Gelder für immer verloren sind!</string>
+  <string name="send_recipient_memo_footer_v2">Memo / Destination Tag ist ein Code, der Transaktionen an einen gemeinsamen Empfänger im Kryptonetzwerk voneinander trennt.</string>
+  <string name="send_recipient_memo_footer_v2_highlighted">Achtung: Das Fehlen eines Memos kann zum Verlust von Geldern führen.</string>
   <string name="send_recipient_wallets_title">Meine Wallet</string>
   <string name="send_satoshi_per_byte_text">Eine Möglichkeit, Bitcoin-Transaktionsgebühren zu messen. Du gibst die Anzahl der kleinsten Bitcoin-Einheiten (Satoshi) für jedes virtuelle Byte in einer Transaktion an. Je höher die Zahl, desto schneller wird die Transaktion von den Minern verarbeitet.</string>
   <string name="send_satoshi_per_byte_title">Satoshi / vByte</string>
@@ -1291,8 +1299,8 @@
   <string name="warning_token_balance_not_updated">Der Kontostand ist möglicherweise veraltet. Aktualisiere bittre die Seite.</string>
   <string name="warning_token_required_min_coin_reserve">Nicht genug %1$s. Lade Dein XLM-Konto auf, um dieses Token zu verknüpfen</string>
   <string name="warning_token_trustline_button_title">Trustline aktivieren</string>
-  <string name="warning_token_trustline_subtiile">Gemäß den Netzwerkregeln musst Du vor der Einzahlung dieses Tokens eine Trustline eröffnen. Dadurch kann Ihr Wallet den Vermögenswert akzeptieren und halten.</string>
-  <string name="warning_token_trustline_tiile">Trustline für dieses Token aktivieren</string>
+  <string name="warning_token_trustline_subtitle">Um dieses Token zu erhalten, muss eine Trustline aktiviert sein. Das Netzwerk benötigt eine Reserve von %1$s %2$s.</string>
+  <string name="warning_token_trustline_title">Trustline erforderlich</string>
   <string name="wc_alert_audit_unknown_domain">Unbekannte Domäne</string>
   <string name="wc_alert_connect_anyway">Trotzdem verbinden</string>
   <string name="wc_alert_connection_timeout_description">Zeitüberschreitungsfehler. Bitte versuche es später erneut.</string>
@@ -1302,6 +1310,7 @@
   <string name="wc_alert_session_disconnected_title">WalletConnect-Sitzung wurde getrennt</string>
   <string name="wc_alert_sign_anyway">Trotzdem unterschreiben</string>
   <string name="wc_alert_unknown_error_description">Fehlercode: %s. Wenn das Problem weiterhin besteht, wende Dich bitte an unseren Support.</string>
+  <string name="wc_alert_unknown_error_description_no_error_code">Wenn das Problem weiterhin besteht, wende Dich bitte an unseren Support.</string>
   <string name="wc_alert_unknown_error_title">Wir haben einen unbekannten Fehler festgestellt.</string>
   <string name="wc_alert_unsupported_method_description">Fehlercode: 8 005. Wenn das Problem weiterhin besteht, wende Dich bitte an unseren Support.</string>
   <string name="wc_alert_unsupported_method_title">Wir haben einen unbekannten Fehler festgestellt.</string>

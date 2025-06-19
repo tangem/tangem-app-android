@@ -191,6 +191,7 @@
   <string name="common_search">Пошук</string>
   <string name="common_search_tokens">Пошук токенів</string>
   <string name="common_second_no_param">сек</string>
+  <string name="common_see_all">Переглянути все</string>
   <string name="common_seed_phrase">Seed-фраза</string>
   <string name="common_select_action">Оберіть дію</string>
   <string name="common_sell">Продати</string>
@@ -567,6 +568,8 @@
   <string name="nft_receive_unavailable_asset_warning_message">Ви ще не додали цю мережу. Щоб отримувати NFT, додайте її до свого портфоліо.</string>
   <string name="nft_receive_unavailable_asset_warning_title">Мережу не додано</string>
   <string name="nft_receive_unavailable_section_title">Не додано</string>
+  <string name="nft_receive_unsupported_types">Непідтримувані типи NFT</string>
+  <string name="nft_receive_unsupported_types_description">cNFT і pNFT наразі не підтримуються. Будь ласка, не надсилайте їх на свій гаманець.</string>
   <string name="nft_send">Надіслати NFT</string>
   <string name="nft_traits_title">Риси</string>
   <string name="nft_wallet_count">NFTs в %2$d колекціях%1$d</string>
@@ -723,6 +726,7 @@
   <string name="qr_scanner_camera_denied_title">Доступ до камери заборонено</string>
   <string name="receive_bottom_sheet_no_memo_required_message">Memo не вимагається</string>
   <string name="receive_bottom_sheet_warning_message">%1$s (%2$s) у мережі %3$s</string>
+  <string name="receive_bottom_sheet_warning_message_compact">%1$s у мережі %2$s</string>
   <string name="receive_bottom_sheet_warning_message_description">Використання іншої мережі може призвести до втрати коштів.</string>
   <string name="receive_bottom_sheet_warning_message_full">Надсилайте лише %s на цю адресу. Надсилання будь-якої іншої валюти призведе до її незворотної втрати.</string>
   <string name="receive_bottom_sheet_warning_title">Надсилайте лише %1$s у мережі %2$s</string>
@@ -854,6 +858,8 @@
   <string name="send_recipient_address_footer">Переконайтеся, що адреса гаманця одержувача знаходиться в мережі %s, щоб уникнути втрати ваших токенів</string>
   <string name="send_recipient_label">Надіслати до</string>
   <string name="send_recipient_memo_footer">Memo/ Тег призначення — це унікальний ідентифікатор для розрізнення транзакцій, надісланих тому самому одержувачу в тій самій мережі. Застереження: відсутність тегу може призвести до втрати коштів.</string>
+  <string name="send_recipient_memo_footer_v2">Мемо / Destination Tag — це код, що розділяє транзакції до спільного одержувача в криптовалютній мережі.</string>
+  <string name="send_recipient_memo_footer_v2_highlighted">Увага: відсутність Memo може призвести до втрати коштів.</string>
   <string name="send_recipient_wallets_title">Мої гаманці</string>
   <string name="send_satoshi_per_byte_text">Спосіб виміру комісії за біткоїн-транзакцію. Він свідчить про кількість найменшої одиниці біткоїна (сатоші) за кожен віртуальний байт у транзакції. Чим вище число, тим швидше буде оброблено транзакцію майнерами.</string>
   <string name="send_satoshi_per_byte_title">Сатоші / вбайт</string>
