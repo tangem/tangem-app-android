@@ -30,6 +30,7 @@ import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.PaginationStatus
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -142,7 +143,11 @@ internal class ChooseManagedTokensModel @Inject constructor(
     private fun updateItems(items: ImmutableList<CurrencyItemUM>) {
         uiState.update { state ->
             state.copy(
-                readContent = state.readContent.copy(items = items),
+                readContent = state.readContent.copy(
+                    items = items.filterNot {
+                        it.id.value == params.initialCurrency.id.rawCurrencyId?.value
+                    }.toPersistentList(),
+                ),
             )
         }
     }
