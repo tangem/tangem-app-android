@@ -185,6 +185,7 @@
   <string name="common_search">Buscar</string>
   <string name="common_search_tokens">Buscar tokens</string>
   <string name="common_second_no_param">sec</string>
+  <string name="common_see_all">Ver todo</string>
   <string name="common_seed_phrase">Seed phrase</string>
   <string name="common_select_action">Seleccione una acción</string>
   <string name="common_sell">Vender</string>
@@ -552,6 +553,8 @@
   <string name="nft_receive_unavailable_asset_warning_message">Todavía no ha agregado esta red. Para recibir NFTs, añádala a su portafolio.</string>
   <string name="nft_receive_unavailable_asset_warning_title">Red no agregada</string>
   <string name="nft_receive_unavailable_section_title">No aregada</string>
+  <string name="nft_receive_unsupported_types">Tipos de NFT no compatibles</string>
+  <string name="nft_receive_unsupported_types_description">cNFT y pNFT aún no son compatibles. Por favor, no los envíes a tu billetera.</string>
   <string name="nft_send">Enviar NFT</string>
   <string name="nft_traits_title">Rasgos</string>
   <string name="nft_untitled_collection">Colección sin título</string>
@@ -701,6 +704,7 @@
   <string name="qr_scanner_camera_denied_title">Acceso a la cámara denegado</string>
   <string name="receive_bottom_sheet_no_memo_required_message">No se requiere nota</string>
   <string name="receive_bottom_sheet_warning_message">%1$s (%2$s) en la red %3$s</string>
+  <string name="receive_bottom_sheet_warning_message_compact">%1$s en la red %2$s</string>
   <string name="receive_bottom_sheet_warning_message_description">El envío de cualquier otra moneda supondrá una pérdida irreversible.</string>
   <string name="receive_bottom_sheet_warning_message_full">Envíe solo %s a esta dirección. Enviar cualquier otra moneda resultará en su pérdida irreversible.</string>
   <string name="receive_bottom_sheet_warning_title">Envíe solo %1$s en la red %2$s</string>
@@ -828,6 +832,8 @@
   <string name="send_recipient_address_footer">Asegúrese de que la dirección de la billetera receptora esté en la red %s para evitar perder sus tokens</string>
   <string name="send_recipient_label">Destinatario</string>
   <string name="send_recipient_memo_footer">Un Memo/ID de destino es un ID único para diferenciar transacciones enviadas al mismo destinatario en la misma red. Precaución: Omitir un memo puede llevar a la pérdida de fondos</string>
+  <string name="send_recipient_memo_footer_v2">Memo / Destination Tag es un código que separa las transacciones dirigidas a un destinatario compartido en una red de criptomonedas.</string>
+  <string name="send_recipient_memo_footer_v2_highlighted">Atención: si falta el Memo, можно потерять средства.</string>
   <string name="send_recipient_wallets_title">Mis billeteras</string>
   <string name="send_satoshi_per_byte_text">Una forma de medir las tarifas de transacción de Bitcoin. Indique el número de la unidad más pequeña de Bitcoin (Satoshi) por cada byte virtual en una transacción. Cuanto más alto sea el número, más rápido procesarán los mineros la transacción.</string>
   <string name="send_satoshi_per_byte_title">Satoshi / vByte</string>

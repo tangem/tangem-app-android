@@ -376,6 +376,8 @@
   <string name="give_permission_swap_subtitle" formatted="false">続行するには、%1sスマートコントラクトに%2sを使用する権限を付与してください</string>
   <string name="give_permission_title">許可を与える</string>
   <string name="give_permission_unlimited">無制限</string>
+  <string name="home_button_add_existing_wallet">既存のウォレットを追加</string>
+  <string name="home_button_create_new_wallet">新しいウォレットを作成する</string>
   <string name="home_button_order">Tangemを注文</string>
   <string name="home_button_scan">Tangemをスキャン</string>
   <string name="hot_crypto_add_token_subtitle">%sへ</string>
@@ -563,6 +565,8 @@
   <string name="nft_receive_unavailable_asset_warning_message">このネットワークはまだ追加されていません。NFTを受け取るには、ポートフォリオに追加してください。</string>
   <string name="nft_receive_unavailable_asset_warning_title">ネットワークが追加されていません</string>
   <string name="nft_receive_unavailable_section_title">未追加</string>
+  <string name="nft_receive_unsupported_types">サポートされていないNFTタイプ</string>
+  <string name="nft_receive_unsupported_types_description">cNFTとpNFTはまだサポートされていません。ウォレットに送信しないでください。</string>
   <string name="nft_send">NFTを送信する</string>
   <string name="nft_traits_title">特徴</string>
   <string name="nft_untitled_collection">無題のコレクション</string>
@@ -843,8 +847,12 @@
   <string name="send_recipient">受取人</string>
   <string name="send_recipient_address_error">有効なアドレスではありません</string>
   <string name="send_recipient_address_footer">トークンを失わないように、受信ウォレットアドレスが%sネットワーク上にあることを確認してください。</string>
+  <string name="send_recipient_address_footer_highlighted_part">%s に送信</string>
+  <string name="send_recipient_address_footer_v2">%sネットワークアドレスを確認してください。エラーが発生すると転送が失われる可能性があります。</string>
   <string name="send_recipient_label">送金先</string>
   <string name="send_recipient_memo_footer">メモ/宛先タグは、同じネットワーク上の同じ受信者に送信された取引を区別するためのユニークなIDです。注意：メモを省略すると、資金の行き違いにつながる可能性があります。</string>
+  <string name="send_recipient_memo_footer_v2">メモ / 宛先タグは、暗号資産ネットワーク内の共有受信者への取引を分離するコードです。</string>
+  <string name="send_recipient_memo_footer_v2_highlighted">注意：メモを忘れると資金が失われる可能性があります。</string>
   <string name="send_recipient_wallets_title">マイウォレット</string>
   <string name="send_satoshi_per_byte_text">Bitcoinの取引手数料を測定する方法。取引における各仮想バイトの最小Bitcoin単位（Satoshi）の数を示します。数値が高いほど、マイナーによる取引の処理速度が速くなります。</string>
   <string name="send_satoshi_per_byte_title">Satoshi / vByte</string>
@@ -866,13 +874,14 @@
   <string name="send_validation_invalid_fee">手数料が残高を超えています</string>
   <string name="send_validation_invalid_total">合計金額が残高を超えています</string>
   <string name="send_with_swap_notification_text">トークンを送信すれば、送信中に変換されます。受信者は必要なものをシームレスに受け取ります。</string>
+  <string name="send_with_swap_recipient_amount_text">受信者に送信されます</string>
   <string name="send_with_swap_title">スワップして送信</string>
   <string name="sent_transaction_sent_title">取引が送信されました</string>
   <string name="settings_card_settings_footer">設定したいカードまたはリングをスキャンするために準備してください。</string>
   <string name="settings_forget_wallet">ウォレット削除</string>
   <string name="settings_forget_wallet_footer">これにより、ウォレットがアプリから削除されます。ウォレットは再度追加できます。</string>
   <string name="settings_wallet_name_title">名前</string>
-  <string name="stake_token_description">このトークンのステーキングに参加</string>
+  <string name="stake_token_description">トークンを活用しよう</string>
   <string name="staking_amount_requirement_error">ステーキング金額は %s 以上である必要があります</string>
   <string name="staking_amount_tron_integer_error">ネットワークルールにより、ステーキング金額は%1$s TRX に切り上げられます。</string>
   <string name="staking_amount_tron_integer_error_unstaking">ネットワークルールにより、ステーキング解除の量は%1$s TRX に切り上げられます。</string>
@@ -1272,8 +1281,8 @@
   <string name="warning_token_balance_not_updated">残高が古い可能性があります。ページを更新してください。</string>
   <string name="warning_token_required_min_coin_reserve">%1$sが足りません。このトークンを関連付けるには、XLMアカウントにチャージしてください。</string>
   <string name="warning_token_trustline_button_title">トラストラインを有効にする</string>
-  <string name="warning_token_trustline_subtiile">ネットワークルールに従い、このトークンを入金する前にトラストラインを開設する必要があります。これにより、ウォレットが資産を受け入れ、保管できるようになります。</string>
-  <string name="warning_token_trustline_tiile">このトークンのトラストラインを有効にする</string>
+  <string name="warning_token_trustline_subtitle">このトークンを受け取るには、トラストラインを有効にする必要があります。ネットワークには%1$s %2$s予備金が必要です。</string>
+  <string name="warning_token_trustline_title">トラストラインが必要</string>
   <string name="wc_alert_audit_unknown_domain">不明なドメイン</string>
   <string name="wc_alert_connect_anyway">とにかく接続する</string>
   <string name="wc_alert_connection_timeout_description">タイムアウトエラーが発生しました。しばらくしてからもう一度お試しください。</string>
@@ -1283,6 +1292,7 @@
   <string name="wc_alert_session_disconnected_title">WalletConnectセッションが接続解除されました</string>
   <string name="wc_alert_sign_anyway">とにかくサインする</string>
   <string name="wc_alert_unknown_error_description">エラーコード: %s 。問題が解決しない場合は、お気軽にサポートまでお問い合わせください。</string>
+  <string name="wc_alert_unknown_error_description_no_error_code">問題が解決しない場合は、お気軽にサポートまでお問い合わせください。</string>
   <string name="wc_alert_unknown_error_title">不明なエラーが発生しました</string>
   <string name="wc_alert_unsupported_method_description">エラーコード: 8 005。問題が解決しない場合は、お気軽にサポートまでお問い合わせください。</string>
   <string name="wc_alert_unsupported_method_title">不明なエラーが発生しました</string>

@@ -185,6 +185,7 @@
   <string name="common_search">Rechercher</string>
   <string name="common_search_tokens">Rechercher des jetons</string>
   <string name="common_second_no_param">sec</string>
+  <string name="common_see_all">Voir tout</string>
   <string name="common_seed_phrase">Seed phrase</string>
   <string name="common_select_action">Sélectionnez une action</string>
   <string name="common_sell">Vendre</string>
@@ -553,6 +554,8 @@
   <string name="nft_receive_unavailable_asset_warning_message">Vous n\'avez pas encore ajouté ce réseau. Pour recevoir des NFT, ajoutez-le à votre portefeuille.</string>
   <string name="nft_receive_unavailable_asset_warning_title">Réseau non ajouté</string>
   <string name="nft_receive_unavailable_section_title">Non ajouté</string>
+  <string name="nft_receive_unsupported_types">Types de NFT non pris en charge</string>
+  <string name="nft_receive_unsupported_types_description">Les cNFT et les pNFT ne sont pas encore pris en charge</string>
   <string name="nft_send">Envoyer un NFT</string>
   <string name="nft_traits_title">Caractéristiques</string>
   <string name="nft_untitled_collection">Collection sans titre</string>
@@ -702,6 +705,7 @@
   <string name="qr_scanner_camera_denied_title">Accès à la caméra refusé</string>
   <string name="receive_bottom_sheet_no_memo_required_message">Aucun mémo requis</string>
   <string name="receive_bottom_sheet_warning_message">%1$s (%2$s) sur le réseau %3$s</string>
+  <string name="receive_bottom_sheet_warning_message_compact">%1$s sur le réseau %2$s</string>
   <string name="receive_bottom_sheet_warning_message_description">L’envoi de toute autre devise entraînera sa perte irréversible.</string>
   <string name="receive_bottom_sheet_warning_message_full">Envoyez uniquement %s à cette adresse. L\'envoi de toute autre devise entraînera sa perte irréversible.</string>
   <string name="receive_bottom_sheet_warning_title">Envoyez uniquement %1$s sur le réseau %2$s</string>
@@ -829,6 +833,8 @@
   <string name="send_recipient_address_footer">Assurez-vous que l\'adresse du portefeuille de réception est sur le réseau %s pour éviter de perdre vos jetons</string>
   <string name="send_recipient_label">Envoyer à</string>
   <string name="send_recipient_memo_footer">Un Memo/Destination Tag est un identifiant unique permettant de différencier les transactions envoyées au même destinataire sur le même réseau. Attention : L\'omission d\'un mémo peut entraîner des fonds mal placés</string>
+  <string name="send_recipient_memo_footer_v2">Le Memo / Destination Tag est un code qui distingue les transactions envoyées à un destinataire partagé sur un réseau crypto.</string>
+  <string name="send_recipient_memo_footer_v2_highlighted">Attention : l\'absence de Memo peut entraîner une perte de fonds.</string>
   <string name="send_recipient_wallets_title">Mes portefeuilles</string>
   <string name="send_satoshi_per_byte_text">Un moyen de mesurer les frais de transaction Bitcoin. Il indique le nombre de la plus petite unité de Bitcoin (Satoshi) pour chaque octet virtuel dans une transaction. Plus le nombre est élevé, plus la transaction sera traitée rapidement par les mineurs.</string>
   <string name="send_satoshi_per_byte_title">Satoshi / vByte</string>
