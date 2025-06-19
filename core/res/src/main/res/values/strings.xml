@@ -572,6 +572,8 @@
   <string name="nft_receive_unavailable_asset_warning_message">You haven\'t added this network yet. To receive NFTs, add it to your portfolio.</string>
   <string name="nft_receive_unavailable_asset_warning_title">Network not added</string>
   <string name="nft_receive_unavailable_section_title">Not Added</string>
+  <string name="nft_receive_unsupported_types">Unsupported NFT types</string>
+  <string name="nft_receive_unsupported_types_description">cNFTs and pNFTs are not supported yet. Please don’t send them to your wallet.</string>
   <string name="nft_send">Send NFT</string>
   <string name="nft_traits_title">Traits</string>
   <string name="nft_untitled_collection">Untitled collection</string>
