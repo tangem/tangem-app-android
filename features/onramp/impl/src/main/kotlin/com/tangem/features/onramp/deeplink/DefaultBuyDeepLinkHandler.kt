@@ -1,25 +1,15 @@
 package com.tangem.features.onramp.deeplink
 
-import arrow.core.getOrElse
-import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.domain.tokens.GetCryptoCurrencyUseCase
-import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent
-import com.tangem.domain.wallets.models.isMultiCurrency
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRouter
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
-import com.tangem.features.onramp.OnrampFeatureToggles
-import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 import timber.log.Timber
 
 internal class DefaultBuyDeepLinkHandler @AssistedInject constructor(
-    @Assisted scope: CoroutineScope,
-    onrampFeatureToggles: OnrampFeatureToggles,
+    router: AppRouter,
     getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
-    getCryptoCurrencyUseCase: GetCryptoCurrencyUseCase,
-    analyticsEventHandler: AnalyticsEventHandler,
 ) : BuyDeepLinkHandler {
 
     init {
@@ -29,21 +19,13 @@ internal class DefaultBuyDeepLinkHandler @AssistedInject constructor(
                 Timber.e("Error on getting user wallet: $it")
             },
             ifRight = { userWallet ->
-                if (!onrampFeatureToggles.isFeatureEnabled && !userWallet.isMultiCurrency) {
-                    scope.launch {
-                        val cryptoCurrency = getCryptoCurrencyUseCase(userWallet.walletId).getOrElse {
-                            Timber.e("Error on getting cryptoCurrency: $it")
-                            return@launch
-                        }
-                        analyticsEventHandler.send(TokenScreenAnalyticsEvent.Bought(cryptoCurrency.symbol))
-                    }
-                }
+                router.push(AppRoute.BuyCrypto(userWallet.walletId))
             },
         )
     }
 
     @AssistedFactory
     interface Factory : BuyDeepLinkHandler.Factory {
-        override fun create(coroutineScope: CoroutineScope): DefaultBuyDeepLinkHandler
+        override fun create(): DefaultBuyDeepLinkHandler
     }
 }

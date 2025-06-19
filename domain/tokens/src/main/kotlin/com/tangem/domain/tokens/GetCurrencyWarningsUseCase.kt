@@ -225,6 +225,8 @@ class GetCurrencyWarningsUseCase(
             is AssetRequirementsCondition.RequiredTrustline -> CryptoCurrencyWarning.RequiredTrustline(
                 currency = currency,
                 requiredAmount = requirements.requiredAmount,
+                currencyDecimals = requirements.decimals,
+                currencySymbol = requirements.currencySymbol,
             )
             is AssetRequirementsCondition.PaidTransactionWithFee -> {
                 HederaWarnings.AssociateWarningWithFee(

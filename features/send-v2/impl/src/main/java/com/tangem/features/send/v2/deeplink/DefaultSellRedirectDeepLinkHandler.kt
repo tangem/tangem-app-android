@@ -5,7 +5,7 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.domain.tokens.GetCryptoCurrencyUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
-import com.tangem.features.send.v2.api.deeplink.SellDeepLinkHandler
+import com.tangem.features.send.v2.api.deeplink.SellRedirectDeepLinkHandler
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -14,13 +14,13 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 
 @Suppress("ComplexCondition")
-internal class DefaultSellDeepLinkHandler @AssistedInject constructor(
+internal class DefaultSellRedirectDeepLinkHandler @AssistedInject constructor(
     @Assisted scope: CoroutineScope,
     @Assisted queryParams: Map<String, String>,
     appRouter: AppRouter,
     getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     getCryptoCurrencyUseCase: GetCryptoCurrencyUseCase,
-) : SellDeepLinkHandler {
+) : SellRedirectDeepLinkHandler {
 
     init {
         val currencyId = queryParams[CURRENCY_ID_KEY]
@@ -70,11 +70,11 @@ internal class DefaultSellDeepLinkHandler @AssistedInject constructor(
     }
 
     @AssistedFactory
-    interface Factory : SellDeepLinkHandler.Factory {
+    interface Factory : SellRedirectDeepLinkHandler.Factory {
         override fun create(
             coroutineScope: CoroutineScope,
             queryParams: Map<String, String>,
-        ): DefaultSellDeepLinkHandler
+        ): DefaultSellRedirectDeepLinkHandler
     }
 
     private companion object {

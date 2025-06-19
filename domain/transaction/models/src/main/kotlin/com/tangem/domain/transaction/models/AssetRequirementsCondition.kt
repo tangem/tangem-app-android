@@ -15,6 +15,7 @@ sealed class AssetRequirementsCondition {
     data class RequiredTrustline(
         val requiredAmount: BigDecimal,
         val currencySymbol: String,
+        val decimals: Int,
     ) : AssetRequirementsCondition()
 
     /**

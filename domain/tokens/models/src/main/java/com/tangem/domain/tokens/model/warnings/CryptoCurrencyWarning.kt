@@ -64,6 +64,8 @@ sealed class CryptoCurrencyWarning {
 
     data class RequiredTrustline(
         val currency: CryptoCurrency,
+        val currencySymbol: String,
         val requiredAmount: BigDecimal,
+        val currencyDecimals: Int,
     ) : CryptoCurrencyWarning()
 }

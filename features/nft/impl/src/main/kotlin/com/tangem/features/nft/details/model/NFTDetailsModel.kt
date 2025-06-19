@@ -74,7 +74,7 @@ internal class NFTDetailsModel @Inject constructor(
 
     private val _state by lazy {
         MutableStateFlow(
-            value = stateFactory.getInitialState(params.nftAsset),
+            value = stateFactory.getInitialState(params.nftAsset, params.nftCollection),
         )
     }
 
@@ -187,7 +187,7 @@ internal class NFTDetailsModel @Inject constructor(
             AppRoute.NFTSend(
                 userWalletId = params.userWalletId,
                 nftAsset = params.nftAsset,
-                nftCollectionName = params.nftCollectionName,
+                nftCollectionName = params.nftCollection.name.orEmpty(),
             ),
         )
     }

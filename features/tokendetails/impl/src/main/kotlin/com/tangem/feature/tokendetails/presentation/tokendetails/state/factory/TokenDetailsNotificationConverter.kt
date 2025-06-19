@@ -126,7 +126,8 @@ internal class TokenDetailsNotificationConverter(
             )
             is CryptoCurrencyWarning.RequiredTrustline -> RequiredTrustlineWarning(
                 currency = warning.currency,
-                amount = warning.requiredAmount.format { crypto(warning.currency) },
+                amount = warning.requiredAmount.format { crypto(symbol = "", warning.currencyDecimals) },
+                currencySymbol = warning.currencySymbol,
                 onOpenClick = clickIntents::onOpenTrustlineClick,
             )
             is KaspaWarnings.IncompleteTransaction -> KaspaIncompleteTransactionWarning(

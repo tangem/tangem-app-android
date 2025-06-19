@@ -46,7 +46,7 @@ internal fun EntryBottomSheetContent(
                     modifier = modifier,
                 )
             }
-            MarketsEntryChildFactory.Child.TokenList -> {
+            is MarketsEntryChildFactory.Child.TokenList -> {
                 (it.instance as MarketsTokenListComponent).BottomSheetContent(
                     bottomSheetState = bottomSheetState,
                     onHeaderSizeChange = onHeaderSizeChange,
@@ -84,7 +84,7 @@ private fun BackgroundColorEffects(
                     animationSpec = tween(durationMillis = 500),
                 )
             }
-            MarketsEntryChildFactory.Child.TokenList -> {
+            is MarketsEntryChildFactory.Child.TokenList -> {
                 backgroundColor.animateTo(
                     primary,
                     animationSpec = tween(durationMillis = 500),
@@ -119,7 +119,7 @@ private fun BackgroundColorEffects(
             is MarketsEntryChildFactory.Child.TokenDetails -> {
                 backgroundColor.snapTo(tertiary)
             }
-            MarketsEntryChildFactory.Child.TokenList -> {
+            is MarketsEntryChildFactory.Child.TokenList -> {
                 backgroundColor.snapTo(primary)
             }
         }
