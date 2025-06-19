@@ -36,8 +36,10 @@ internal object ManageTokensDomainModule {
 
     @Provides
     @Singleton
-    fun provideCreateCurrencyUseCase(customTokensRepository: CustomTokensRepository): CreateCurrencyUseCase {
-        return CreateCurrencyUseCase(customTokensRepository)
+    fun provideCreateCryptoCurrencyUseCase(
+        customTokensRepository: CustomTokensRepository,
+    ): CreateCryptoCurrencyUseCase {
+        return CreateCryptoCurrencyUseCase(customTokensRepository)
     }
 
     @Provides
