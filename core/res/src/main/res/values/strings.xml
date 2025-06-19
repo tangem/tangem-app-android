@@ -383,6 +383,8 @@
   <string name="give_permission_unlimited">Unlimited</string>
   <string name="home_button_order">Order Tangem</string>
   <string name="home_button_scan">Scan Tangem</string>
+  <string name="home_button_create_new_wallet">Create New Wallet</string>
+  <string name="home_button_add_existing_wallet">Add Existing Wallet</string>
   <string name="hot_crypto_add_token_subtitle">to %s</string>
   <string name="hot_crypto_token_network">On %s network</string>
   <string name="information_generated_with_ai">This information was generated with AI.\nTap here, if you find any errors.</string>
