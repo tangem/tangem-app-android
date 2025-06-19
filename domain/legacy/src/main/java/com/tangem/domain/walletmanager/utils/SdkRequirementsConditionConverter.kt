@@ -11,6 +11,7 @@ internal class SdkRequirementsConditionConverter : Converter<SdkRequirementsCond
             is SdkRequirementsCondition.RequiredTrustline -> AssetRequirementsCondition.RequiredTrustline(
                 requiredAmount = requireNotNull(value.amount.value),
                 currencySymbol = value.amount.currencySymbol,
+                decimals = value.amount.decimals,
             )
             is SdkRequirementsCondition.PaidTransactionWithFee -> AssetRequirementsCondition.PaidTransactionWithFee(
                 feeAmount = requireNotNull(value.feeAmount.value),
