@@ -62,7 +62,7 @@ fun MessageBottomSheetV2(state: MessageBottomSheetUMV2, onDismissRequest: () -> 
 }
 
 @Composable
-private fun MessageBottomSheetV2Content(state: MessageBottomSheetUMV2, modifier: Modifier = Modifier) {
+fun MessageBottomSheetV2Content(state: MessageBottomSheetUMV2, modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
         state.elements.fastForEach {
             when (it) {
