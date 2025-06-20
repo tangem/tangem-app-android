@@ -51,7 +51,18 @@ class FetchCurrencyStatusUseCase(
         return either {
             val currency = getCurrency(userWalletId, id)
 
-            fetchCurrencyStatus(userWalletId, currency, refresh)
+            coroutineScope {
+                val fetchStatus = async {
+                    fetchNetworkStatus(userWalletId, currency.network)
+                }
+                val fetchQuote = async {
+                    fetchQuote(currency.id)
+                }
+                val fetchStakingBalance = async {
+                    fetchStakingBalance(userWalletId, currency, refresh)
+                }
+                awaitAll(fetchStatus, fetchQuote, fetchStakingBalance)
+            }
         }
     }
 
@@ -69,26 +80,16 @@ class FetchCurrencyStatusUseCase(
         return either {
             val currency = getPrimaryCurrency(userWalletId, refresh)
 
-            fetchCurrencyStatus(userWalletId, currency, refresh)
+            coroutineScope {
+                val fetchStatus = async {
+                    fetchNetworkStatus(userWalletId, currency.network)
+                }
+                val fetchQuote = async {
+                    fetchQuote(currency.id)
+                }
+                awaitAll(fetchStatus, fetchQuote)
+            }
         }
-    }
-
-    private suspend fun Raise<CurrencyStatusError>.fetchCurrencyStatus(
-        userWalletId: UserWalletId,
-        currency: CryptoCurrency,
-        refresh: Boolean,
-    ) = coroutineScope {
-        val fetchStatus = async {
-            fetchNetworkStatus(userWalletId, currency.network)
-        }
-        val fetchQuote = async {
-            fetchQuote(currency.id)
-        }
-        val fetchStakingBalance = async {
-            fetchStakingBalance(userWalletId, currency, refresh)
-        }
-
-        awaitAll(fetchStatus, fetchQuote, fetchStakingBalance)
     }
 
     private suspend fun Raise<CurrencyStatusError>.getCurrency(
