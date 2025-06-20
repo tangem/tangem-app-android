@@ -57,7 +57,11 @@ fun Notification(
     titleColor: Color = TangemTheme.colors.text.primary1,
     subtitleColor: Color = TangemTheme.colors.text.tertiary,
     containerColor: Color? = null,
-    iconTint: Color? = null,
+    iconTint: Color? = when (config.iconTint) {
+        NotificationConfig.IconTint.Unspecified -> null
+        NotificationConfig.IconTint.Accent -> TangemTheme.colors.icon.accent
+        NotificationConfig.IconTint.Attention -> TangemTheme.colors.icon.attention
+    },
     iconSize: Dp = 20.dp,
     isEnabled: Boolean = true,
 ) {
