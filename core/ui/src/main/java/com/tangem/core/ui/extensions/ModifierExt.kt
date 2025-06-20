@@ -82,7 +82,7 @@ fun Modifier.selectedBorder(
             color = color,
             shape = RoundedCornerShape(radius),
         )
-            .padding(2.5.dp)
+            .padding(width)
             .border(
                 width = 1.dp,
                 color = TangemTheme.colors.text.accent,
@@ -91,7 +91,7 @@ fun Modifier.selectedBorder(
             .clip(RoundedCornerShape(radius - 2.dp))
     },
     otherModifier = {
-        padding(2.dp)
+        padding(width)
             .clip(RoundedCornerShape(radius - 2.dp))
     },
 )
