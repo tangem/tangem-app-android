@@ -3,7 +3,7 @@
 
 [versions]
 # region Classpath
-androidGradlePlugin = "8.2.2"
+androidGradlePlugin = "8.10.1"
 firebaseCrashlytics = "3.0.1"
 googleServices = "4.4.1"
 kotlin = "2.1.10"
