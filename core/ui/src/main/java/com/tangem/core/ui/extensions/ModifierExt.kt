@@ -1,12 +1,21 @@
 package com.tangem.core.ui.extensions
 
 import androidx.compose.foundation.LocalIndication
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.MultipleClickPreventer
 
 /**
@@ -39,3 +48,50 @@ fun Modifier.conditional(condition: Boolean, modifier: Modifier.() -> Modifier):
         this
     }
 }
+
+/**
+ * Conditionally applies a modifier based on a boolean condition.
+ */
+@Composable
+fun Modifier.conditionalCompose(
+    condition: Boolean,
+    modifier: @Composable Modifier.() -> Modifier = { Modifier },
+    otherModifier: @Composable Modifier.() -> Modifier = { this },
+): Modifier {
+    return if (condition) {
+        then(modifier(Modifier))
+    } else {
+        otherModifier()
+    }
+}
+
+/**
+ * Border with accent outline when selected
+ */
+@Composable
+fun Modifier.selectedBorder(
+    isSelected: Boolean,
+    width: Dp = 2.5.dp,
+    color: Color = TangemTheme.colors.text.accent.copy(alpha = 0.1f),
+    radius: Dp = 16.dp,
+) = conditionalCompose(
+    condition = isSelected,
+    modifier = {
+        border(
+            width = width,
+            color = color,
+            shape = RoundedCornerShape(radius),
+        )
+            .padding(2.5.dp)
+            .border(
+                width = 1.dp,
+                color = TangemTheme.colors.text.accent,
+                shape = RoundedCornerShape(radius - 2.dp),
+            )
+            .clip(RoundedCornerShape(radius - 2.dp))
+    },
+    otherModifier = {
+        padding(2.dp)
+            .clip(RoundedCornerShape(radius - 2.dp))
+    },
+)

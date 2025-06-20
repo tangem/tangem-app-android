@@ -2,16 +2,19 @@ package com.tangem.features.walletconnect.connections.utils
 
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.bottomsheets.message.*
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.features.walletconnect.transaction.routes.WcTransactionRoutes
 
 internal object WcAlertsFactory {
 
-    internal fun createCommonTransactionAppInfoAlertUM(alertType: WcTransactionRoutes.Alert.Type) = when (alertType) {
+    fun createCommonTransactionAppInfoAlertUM(alertType: WcTransactionRoutes.Alert.Type) = when (alertType) {
         is WcTransactionRoutes.Alert.Type.Verified -> createVerifiedDomainAlert(alertType.appName)
         is WcTransactionRoutes.Alert.Type.UnknownDomain -> createUnknownDomainAlert()
         is WcTransactionRoutes.Alert.Type.UnsafeDomain -> createUnsafeDomainAlert()
+        is WcTransactionRoutes.Alert.Type.MaliciousDApp ->
+            createMaliciousDAppAlert(alertType.description, alertType.onClick)
     }
 
     fun createUnknownDomainAlert(activeButtonOnClick: (() -> Unit)? = null): MessageBottomSheetUMV2 {
@@ -62,6 +65,30 @@ internal object WcAlertsFactory {
                     text = resourceReference(R.string.wc_alert_connect_anyway)
                     onClick { activeButtonOnClick() }
                 }
+            }
+        }
+    }
+
+    private fun createMaliciousDAppAlert(
+        description: String,
+        activeButtonOnClick: (() -> Unit),
+    ): MessageBottomSheetUMV2 {
+        return messageBottomSheetUM {
+            infoBlock {
+                icon(R.drawable.img_knight_shield_32) {
+                    type = MessageBottomSheetUMV2.Icon.Type.Warning
+                    backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.SameAsTint
+                }
+                title = resourceReference(R.string.security_alert_title)
+                body = TextReference.Str(description)
+            }
+            primaryButton {
+                text = resourceReference(R.string.common_cancel)
+                onClick { closeBs() }
+            }
+            secondaryButton {
+                text = resourceReference(R.string.wc_alert_sign_anyway)
+                onClick { activeButtonOnClick() }
             }
         }
     }
