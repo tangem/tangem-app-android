@@ -16,13 +16,13 @@ import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
+import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.networks.single.SingleNetworkStatusProducer
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
 import com.tangem.domain.quotes.QuotesRepository
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
-import com.tangem.domain.staking.fetcher.YieldBalanceFetcherParams
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.staking.model.stakekit.YieldBalanceList
 import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
@@ -37,6 +37,7 @@ import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.utils.extractAddress
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.extensions.addOrReplace
+import com.tangem.utils.extensions.isSingleItem
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
@@ -48,6 +49,7 @@ class CachedCurrenciesStatusesOperations(
     private val singleNetworkStatusSupplier: SingleNetworkStatusSupplier,
     multiNetworkStatusSupplier: MultiNetworkStatusSupplier,
     private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
+    private val singleNetworkStatusFetcher: SingleNetworkStatusFetcher,
     private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
     private val singleQuoteStatusSupplier: SingleQuoteStatusSupplier,
     private val singleYieldBalanceSupplier: SingleYieldBalanceSupplier,
@@ -182,9 +184,21 @@ class CachedCurrenciesStatusesOperations(
         coroutineScope {
             awaitAll(
                 async {
-                    multiNetworkStatusFetcher(
-                        params = MultiNetworkStatusFetcher.Params(userWalletId = userWalletId, networks = networks),
-                    )
+                    if (networks.isSingleItem()) {
+                        singleNetworkStatusFetcher(
+                            params = SingleNetworkStatusFetcher.Params(
+                                userWalletId = userWalletId,
+                                network = networks.first(),
+                            ),
+                        )
+                    } else {
+                        multiNetworkStatusFetcher(
+                            params = MultiNetworkStatusFetcher.Params(
+                                userWalletId = userWalletId,
+                                networks = networks,
+                            ),
+                        )
+                    }
                 },
                 async {
                     val rawCurrenciesIds = currenciesIds.mapNotNullTo(mutableSetOf()) { it.rawCurrencyId }
@@ -196,7 +210,7 @@ class CachedCurrenciesStatusesOperations(
                 async {
                     if (tokensFeatureToggles.isStakingLoadingRefactoringEnabled) {
                         multiYieldBalanceFetcher(
-                            params = YieldBalanceFetcherParams.Multi(
+                            params = MultiYieldBalanceFetcher.Params(
                                 userWalletId = userWalletId,
                                 currencyIdWithNetworkMap = currencies.associateTo(hashMapOf()) { it.id to it.network },
                             ),

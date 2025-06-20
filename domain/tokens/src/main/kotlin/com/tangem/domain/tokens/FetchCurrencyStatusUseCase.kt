@@ -8,7 +8,6 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
-import com.tangem.domain.staking.fetcher.YieldBalanceFetcherParams
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.staking.single.SingleYieldBalanceFetcher
 import com.tangem.domain.tokens.error.CurrencyStatusError
@@ -52,7 +51,18 @@ class FetchCurrencyStatusUseCase(
         return either {
             val currency = getCurrency(userWalletId, id)
 
-            fetchCurrencyStatus(userWalletId, currency, refresh)
+            coroutineScope {
+                val fetchStatus = async {
+                    fetchNetworkStatus(userWalletId, currency.network)
+                }
+                val fetchQuote = async {
+                    fetchQuote(currency.id)
+                }
+                val fetchStakingBalance = async {
+                    fetchStakingBalance(userWalletId, currency, refresh)
+                }
+                awaitAll(fetchStatus, fetchQuote, fetchStakingBalance)
+            }
         }
     }
 
@@ -70,26 +80,16 @@ class FetchCurrencyStatusUseCase(
         return either {
             val currency = getPrimaryCurrency(userWalletId, refresh)
 
-            fetchCurrencyStatus(userWalletId, currency, refresh)
+            coroutineScope {
+                val fetchStatus = async {
+                    fetchNetworkStatus(userWalletId, currency.network)
+                }
+                val fetchQuote = async {
+                    fetchQuote(currency.id)
+                }
+                awaitAll(fetchStatus, fetchQuote)
+            }
         }
-    }
-
-    private suspend fun Raise<CurrencyStatusError>.fetchCurrencyStatus(
-        userWalletId: UserWalletId,
-        currency: CryptoCurrency,
-        refresh: Boolean,
-    ) = coroutineScope {
-        val fetchStatus = async {
-            fetchNetworkStatus(userWalletId, currency.network)
-        }
-        val fetchQuote = async {
-            fetchQuote(currency.id)
-        }
-        val fetchStakingBalance = async {
-            fetchStakingBalance(userWalletId, currency, refresh)
-        }
-
-        awaitAll(fetchStatus, fetchQuote, fetchStakingBalance)
     }
 
     private suspend fun Raise<CurrencyStatusError>.getCurrency(
@@ -140,7 +140,7 @@ class FetchCurrencyStatusUseCase(
     ) {
         if (tokensFeatureToggles.isStakingLoadingRefactoringEnabled) {
             singleYieldBalanceFetcher(
-                params = YieldBalanceFetcherParams.Single(
+                params = SingleYieldBalanceFetcher.Params(
                     userWalletId = userWalletId,
                     currencyId = cryptoCurrency.id,
                     network = cryptoCurrency.network,
