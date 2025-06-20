@@ -14,6 +14,7 @@ android {
 dependencies {
     implementation(projects.features.wallet.api)
     implementation(projects.features.walletconnect.api)
+    implementation(projects.features.sendV2.api)
 
     /** Core */
     implementation(projects.core.configToggles)
