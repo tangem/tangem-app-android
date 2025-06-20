@@ -36,7 +36,7 @@ fun AmountBlock(amountState: AmountState, isClickDisabled: Boolean, isEditingDis
     val fiatAmount = amount.fiatAmount.value.format {
         fiat(
             fiatCurrencySymbol = amount.fiatAmount.currencySymbol,
-            fiatCurrencyCode = amountState.appCurrencyCode,
+            fiatCurrencyCode = amountState.appCurrency.code,
         )
     }
 
