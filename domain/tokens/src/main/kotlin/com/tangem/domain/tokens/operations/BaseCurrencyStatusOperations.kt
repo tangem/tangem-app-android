@@ -9,13 +9,14 @@ import com.tangem.domain.core.utils.EitherFlow
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkStatus
+import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.networks.multi.MultiNetworkStatusProducer
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
 import com.tangem.domain.networks.single.SingleNetworkStatusProducer
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
-import com.tangem.domain.quotes.QuotesRepositoryV2
-import com.tangem.domain.quotes.single.SingleQuoteProducer
-import com.tangem.domain.quotes.single.SingleQuoteSupplier
+import com.tangem.domain.quotes.QuotesRepository
+import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
+import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.staking.model.stakekit.YieldBalanceList
 import com.tangem.domain.staking.repositories.StakingRepository
@@ -23,7 +24,6 @@ import com.tangem.domain.staking.single.SingleYieldBalanceProducer
 import com.tangem.domain.staking.single.SingleYieldBalanceSupplier
 import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.model.Quote
 import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations.Error
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.utils.CurrencyStatusProxyCreator
@@ -41,18 +41,18 @@ import kotlinx.coroutines.flow.*
 @Suppress("LargeClass", "LongParameterList")
 abstract class BaseCurrencyStatusOperations(
     private val currenciesRepository: CurrenciesRepository,
-    private val quotesRepositoryV2: QuotesRepositoryV2,
+    private val quotesRepository: QuotesRepository,
     private val stakingRepository: StakingRepository,
     private val multiNetworkStatusSupplier: MultiNetworkStatusSupplier,
     private val singleNetworkStatusSupplier: SingleNetworkStatusSupplier,
-    private val singleQuoteSupplier: SingleQuoteSupplier,
+    private val singleQuoteStatusSupplier: SingleQuoteStatusSupplier,
     private val singleYieldBalanceSupplier: SingleYieldBalanceSupplier,
     private val tokensFeatureToggles: TokensFeatureToggles,
 ) {
 
     protected val currencyStatusProxyCreator = CurrencyStatusProxyCreator(stakingRepository)
 
-    protected abstract fun getQuotes(id: CryptoCurrency.RawID): Flow<Either<Error, Set<Quote>>>
+    protected abstract fun getQuotes(id: CryptoCurrency.RawID): Flow<Either<Error, Set<QuoteStatus>>>
 
     protected abstract fun getNetworksStatuses(
         userWalletId: UserWalletId,
@@ -120,7 +120,7 @@ abstract class BaseCurrencyStatusOperations(
             combine(quoteFlow, statusFlow, yieldBalanceFlow) { maybeQuote, maybeNetworkStatus, maybeYieldBalance ->
                 currencyStatusProxyCreator.createCurrencyStatus(
                     currency = currency,
-                    maybeQuote = maybeQuote,
+                    maybeQuoteStatus = maybeQuote,
                     maybeNetworkStatus = maybeNetworkStatus,
                     maybeYieldBalance = maybeYieldBalance,
                 )
@@ -129,7 +129,7 @@ abstract class BaseCurrencyStatusOperations(
             combine(quoteFlow, statusFlow) { maybeQuote, maybeNetworkStatus ->
                 currencyStatusProxyCreator.createCurrencyStatus(
                     currency = currency,
-                    maybeQuote = maybeQuote,
+                    maybeQuoteStatus = maybeQuote,
                     maybeNetworkStatus = maybeNetworkStatus,
                     maybeYieldBalance = null,
                 )
@@ -191,7 +191,7 @@ abstract class BaseCurrencyStatusOperations(
                     }
 
                     val quote = cryptoCurrencyId.rawCurrencyId?.let { rawId ->
-                        singleQuoteSupplier(params = SingleQuoteProducer.Params(rawCurrencyId = rawId))
+                        singleQuoteStatusSupplier(params = SingleQuoteStatusProducer.Params(rawCurrencyId = rawId))
                             .firstOrNull()
                     }
                         ?.right()
@@ -210,7 +210,7 @@ abstract class BaseCurrencyStatusOperations(
 
                     return currencyStatusProxyCreator.createCurrencyStatus(
                         currency = currency,
-                        maybeQuote = quote,
+                        maybeQuoteStatus = quote,
                         maybeNetworkStatus = networkStatuses,
                         maybeYieldBalance = yieldBalances,
                     )
@@ -257,7 +257,7 @@ abstract class BaseCurrencyStatusOperations(
                     val (_, currenciesIds) = getIds(nonEmptyCurrencies)
                     val rawIds = currenciesIds.mapNotNull { it.rawCurrencyId }.toSet()
 
-                    val quotes = quotesRepositoryV2.getMultiQuoteSyncOrNull(currenciesIds = rawIds)?.right()
+                    val quotes = quotesRepository.getMultiQuoteSyncOrNull(currenciesIds = rawIds)?.right()
 
                     val networkStatuses = multiNetworkStatusSupplier(
                         params = MultiNetworkStatusProducer.Params(userWalletId = userWalletId),
@@ -287,7 +287,7 @@ abstract class BaseCurrencyStatusOperations(
         )
 
         val quotes = currency.id.rawCurrencyId?.let {
-            singleQuoteSupplier(params = SingleQuoteProducer.Params(rawCurrencyId = it))
+            singleQuoteStatusSupplier(params = SingleQuoteStatusProducer.Params(rawCurrencyId = it))
                 .firstOrNull()
         }
             ?.right()
@@ -303,7 +303,7 @@ abstract class BaseCurrencyStatusOperations(
 
         return currencyStatusProxyCreator.createCurrencyStatus(
             currency = currency,
-            maybeQuote = quotes,
+            maybeQuoteStatus = quotes,
             maybeNetworkStatus = networkStatus,
             maybeYieldBalance = yieldBalances,
         )
