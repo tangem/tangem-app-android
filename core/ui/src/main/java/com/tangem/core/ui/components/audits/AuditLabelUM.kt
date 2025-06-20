@@ -22,5 +22,8 @@ data class AuditLabelUM(val text: TextReference, val type: Type) {
 
         /** Blue. Like, "trusted" */
         Permit,
+
+        /** Blue with white text. Like, "best rate" */
+        Info,
     }
 }
