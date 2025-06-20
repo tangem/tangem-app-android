@@ -24,6 +24,7 @@ import com.tangem.features.walletconnect.transaction.ui.blockaid.WcSendAndReceiv
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.math.BigDecimal
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -45,6 +46,8 @@ internal class WcSendTransactionModel @Inject constructor(
     override val uiState: StateFlow<WcSendTransactionUM?> = _uiState
 
     val stackNavigation = StackNavigation<WcTransactionRoutes>()
+
+    private var wcApproval: WcApproval? = null
 
     init {
         @Suppress("UnusedPrivateMember")
@@ -77,6 +80,7 @@ internal class WcSendTransactionModel @Inject constructor(
                         val isSecurityCheckContent = securityCheck is Lce.Content
                         var isApprovalMethod = isSecurityCheckContent &&
                             securityCheck.content is BlockAidTransactionCheck.Result.Approval
+                        wcApproval = useCase as? WcApproval
                         buildUiState(securityCheck, useCase, signState)
                     }
                 else -> unknownMethodRunnable()
@@ -90,7 +94,9 @@ internal class WcSendTransactionModel @Inject constructor(
         signState: WcSignState<*>,
     ) {
         val blockAidState = when (securityCheck) {
-            is Lce.Content -> blockAidUiConverter.convert(securityCheck.content.result)
+            is Lce.Content -> blockAidUiConverter.convert(
+                WcSendAndReceiveBlockAidUiConverter.Input(securityCheck.content.result, wcApproval?.getAmount()),
+            )
             is Lce.Error -> WcSendReceiveTransactionCheckResultsUM(isLoading = false)
             is Lce.Loading -> WcSendReceiveTransactionCheckResultsUM(isLoading = true)
         }
@@ -108,6 +114,7 @@ internal class WcSendTransactionModel @Inject constructor(
         ) as? WcSendTransactionUM
         transactionUM = transactionUM?.copy(
             transaction = transactionUM.transaction.copy(estimatedWalletChanges = blockAidState),
+            spendAllowance = blockAidState.spendAllowance,
         )
         _uiState.emit(transactionUM)
     }
@@ -118,6 +125,17 @@ internal class WcSendTransactionModel @Inject constructor(
 
     fun showTransactionRequest() {
         stackNavigation.pushNew(WcTransactionRoutes.TransactionRequestInfo)
+    }
+
+    fun onClickDoneCustomAllowance(value: BigDecimal, isUnlimited: Boolean) {
+        val maxValue = if (isUnlimited) Double.MAX_VALUE.toBigDecimal() else value
+        wcApproval?.getAmount()?.let { currentAmount ->
+            wcApproval?.updateAmount(currentAmount.copy(maxValue = maxValue))
+        }
+    }
+
+    fun onClickAllowToSpend() {
+        wcApproval?.let { stackNavigation.pushNew(WcTransactionRoutes.CustomAllowance) }
     }
 
     private fun showVerifiedAlert(appName: String) {

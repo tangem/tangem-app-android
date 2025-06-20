@@ -4,7 +4,9 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.features.walletconnect.connections.components.AlertsComponentV2
 import com.tangem.features.walletconnect.connections.utils.WcAlertsFactory.createCommonTransactionAppInfoAlertUM
+import com.tangem.features.walletconnect.transaction.components.send.WcCustomAllowanceComponent
 import com.tangem.features.walletconnect.transaction.entity.common.WcCommonTransactionModel
+import com.tangem.features.walletconnect.transaction.model.WcSendTransactionModel
 import com.tangem.features.walletconnect.transaction.routes.WcTransactionRoutes
 
 internal fun getWcCommonScreen(
@@ -22,6 +24,13 @@ internal fun getWcCommonScreen(
         is WcTransactionRoutes.TransactionRequestInfo -> WcTransactionRequestInfoComponent(
             appComponentContext = appComponentContext,
             model = model,
+        )
+        is WcTransactionRoutes.CustomAllowance -> WcCustomAllowanceComponent(
+            appComponentContext = appComponentContext,
+            model = model,
+            onClickDoneCustomAllowance = { value, isUnlimited ->
+                (model as? WcSendTransactionModel)?.onClickDoneCustomAllowance(value, isUnlimited)
+            },
         )
     }
 }
