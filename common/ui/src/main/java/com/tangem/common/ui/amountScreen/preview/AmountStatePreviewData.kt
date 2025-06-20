@@ -2,18 +2,24 @@ package com.tangem.common.ui.amountScreen.preview
 
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import com.tangem.common.ui.R
 import com.tangem.common.ui.amountScreen.models.AmountFieldModel
 import com.tangem.common.ui.amountScreen.models.AmountSegmentedButtonsConfig
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.Amount
 import com.tangem.domain.tokens.model.AmountType
 import kotlinx.collections.immutable.persistentListOf
 import java.math.BigDecimal
 
 object AmountStatePreviewData {
+
+    val emptyState = AmountState.Empty()
 
     val amountState = AmountState.Data(
         isPrimaryButtonEnabled = false,
@@ -31,7 +37,8 @@ object AmountStatePreviewData {
                 isFiat = true,
             ),
         ),
-        appCurrencyCode = "usd",
+        appCurrency = AppCurrency.Default,
+        tokenName = stringReference("Tether"),
         amountTextField = AmountFieldModel(
             value = "",
             onValueChange = {},
@@ -60,6 +67,7 @@ object AmountStatePreviewData {
         ),
         isSegmentedButtonsEnabled = true,
         selectedButton = 0,
+        isRedesignEnabled = false,
     )
 
     val amountWithValueState = amountState.copy(
@@ -73,6 +81,11 @@ object AmountStatePreviewData {
                 value = BigDecimal("99.98"),
             ),
         ),
+    )
+
+    val amountStateV2 = amountState.copy(
+        isRedesignEnabled = true,
+        availableBalance = resourceReference(R.string.common_balance, wrappedList("2 130,88 USDT")),
     )
 
     val amountWithValueFiatState = amountWithValueState.copy(
