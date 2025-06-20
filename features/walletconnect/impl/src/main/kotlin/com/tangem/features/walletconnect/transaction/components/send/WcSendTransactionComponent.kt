@@ -5,12 +5,14 @@ import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
+import com.tangem.features.send.v2.api.FeeSelectorBlockComponent
 import com.tangem.features.walletconnect.transaction.model.WcSendTransactionModel
 import com.tangem.features.walletconnect.transaction.ui.send.WcSendTransactionModalBottomSheet
 
 internal class WcSendTransactionComponent(
     private val appComponentContext: AppComponentContext,
     private val model: WcSendTransactionModel,
+    private val feeSelectorBlockComponent: FeeSelectorBlockComponent,
 ) : AppComponentContext by appComponentContext, ComposableBottomSheetComponent {
 
     override fun dismiss() {
@@ -24,9 +26,11 @@ internal class WcSendTransactionComponent(
         if (content != null) {
             WcSendTransactionModalBottomSheet(
                 state = content!!.transaction,
+                feeSelectorBlockComponent = feeSelectorBlockComponent,
                 onClickTransactionRequest = model::showTransactionRequest,
                 onBack = router::pop,
                 onDismiss = ::dismiss,
+                onClickAllowToSpend = model::onClickAllowToSpend,
             )
         }
     }
