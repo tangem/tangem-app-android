@@ -7,7 +7,7 @@ import arrow.core.raise.either
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
-import com.tangem.domain.quotes.multi.MultiQuoteFetcher
+import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.staking.single.SingleYieldBalanceFetcher
 import com.tangem.domain.tokens.error.CurrencyStatusError
@@ -30,7 +30,7 @@ class FetchCurrencyStatusUseCase(
     private val currenciesRepository: CurrenciesRepository,
     private val stakingRepository: StakingRepository,
     private val singleNetworkStatusFetcher: SingleNetworkStatusFetcher,
-    private val multiQuoteFetcher: MultiQuoteFetcher,
+    private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
     private val singleYieldBalanceFetcher: SingleYieldBalanceFetcher,
     private val tokensFeatureToggles: TokensFeatureToggles,
 ) {
@@ -123,8 +123,8 @@ class FetchCurrencyStatusUseCase(
     }
 
     private suspend fun Raise<CurrencyStatusError>.fetchQuote(currencyId: CryptoCurrency.ID) {
-        multiQuoteFetcher(
-            params = MultiQuoteFetcher.Params(
+        multiQuoteStatusFetcher(
+            params = MultiQuoteStatusFetcher.Params(
                 currenciesIds = setOfNotNull(currencyId.rawCurrencyId),
                 appCurrencyId = null,
             ),
