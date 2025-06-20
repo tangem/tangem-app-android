@@ -12,7 +12,7 @@ internal fun Project.configureKotlinCompilerOptions() {
     }
     project.tasks.withType<KotlinCompile> {
         kotlinOptions {
-            jvmTarget = "17"
+            jvmTarget = "21"
             allWarningsAsErrors = false
             // this is required to produce a unique META-INF/*.kotlin_module files
             moduleName = project.path.removePrefix(":").replace(':', '-')
