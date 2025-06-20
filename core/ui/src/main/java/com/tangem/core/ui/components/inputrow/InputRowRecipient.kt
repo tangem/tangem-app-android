@@ -2,6 +2,10 @@ package com.tangem.core.ui.components.inputrow
 
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -16,6 +20,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.core.ui.R
+import com.tangem.core.ui.components.buttons.small.TangemIconButton
 import com.tangem.core.ui.components.fields.SimpleTextField
 import com.tangem.core.ui.components.icons.identicon.IdentIcon
 import com.tangem.core.ui.components.inputrow.inner.CrossIcon
@@ -25,24 +30,29 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.utils.DEFAULT_ANIMATION_DURATION
 import kotlinx.coroutines.delay
 
 /**
- * [Input Row Recipient](https://www.figma.com/file/14ISV23YB1yVW1uNVwqrKv/Android?type=design&node-id=2100-826&mode=design&t=IQ5lBJEkFGU4WSvi-4)
+ * * [Design Reference](https://www.figma.com/file/14ISV23YB1yVW1uNVwqrKv/Android?type=design&node-id=2100-826&mode=design&t=IQ5lBJEkFGU4WSvi-4)
  *
- * @param title title reference
- * @param value recipient address
- * @param placeholder placeholder
- * @param onValueChange callback for value change
- * @param onPasteClick callback for paste
- * @param modifier composable modifier
- * @param singleLine is single line text
- * @param error error text
- * @param isError is error flag
- * @param showDivider show divider
+ * @param title The title text reference to display above the input field
+ * @param value The current recipient address value to display in the input field
+ * @param placeholder The placeholder text reference to show when the input is empty
+ * @param onValueChange Callback invoked when the input value changes, receives the new string value
+ * @param onPasteClick Callback invoked when the paste button is clicked, receives the pasted string
+ * @param onQrCodeClick Callback invoked when the QR code scan button is clicked
+ * @param modifier Optional modifier to apply to the composable
+ * @param singleLine Whether the text field should be constrained to a single line (default: false)
+ * @param error Optional error text reference to display when validation fails
+ * @param isError Whether the input is in an error state, affects styling and title color
+ * @param showDivider Whether to show a divider below the component (default: false)
+ * @param isLoading Whether to show a loading indicator instead of the identicon (default: false)
+ * @param isValuePasted Whether the current value was pasted, affects visual feedback (default: false)
  *
- * @see InputRowRecipientDefault for readonly version
+ * @see InputRowRecipientDefault for a read-only version of this component
  */
+@Suppress("LongParameterList", "LongMethod")
 @Composable
 fun InputRowRecipient(
     title: TextReference,
@@ -50,6 +60,8 @@ fun InputRowRecipient(
     placeholder: TextReference,
     onValueChange: (String) -> Unit,
     onPasteClick: (String) -> Unit,
+    onQrCodeClick: () -> Unit,
+    isRedesignEnabled: Boolean,
     modifier: Modifier = Modifier,
     singleLine: Boolean = false,
     error: TextReference? = null,
@@ -109,15 +121,52 @@ fun InputRowRecipient(
                             .padding(start = TangemTheme.dimens.spacing8),
                     )
                 }
-                PasteButton(
-                    isPasteButtonVisible = value.isBlank(),
-                    onClick = onPasteClick,
+                Row(
                     modifier = Modifier
-                        .align(CenterEnd)
-                        .padding(start = TangemTheme.dimens.spacing8),
-                )
+                        .align(CenterEnd),
+                ) {
+                    if (isRedesignEnabled) {
+                        QrButton(
+                            visible = !singleLine,
+                            onQrCodeClick = onQrCodeClick,
+                        )
+                    }
+                    PasteButton(
+                        isPasteButtonVisible = value.isBlank(),
+                        onClick = onPasteClick,
+                        backgroundColorEnabled = if (isRedesignEnabled) {
+                            TangemTheme.colors.button.secondary
+                        } else {
+                            TangemTheme.colors.button.primary
+                        },
+                        textColor = if (isRedesignEnabled) {
+                            TangemTheme.colors.text.primary1
+                        } else {
+                            TangemTheme.colors.text.primary2
+                        },
+                        modifier = Modifier
+                            .padding(start = TangemTheme.dimens.spacing8),
+                    )
+                }
             }
         }
+    }
+}
+
+@Composable
+private fun QrButton(visible: Boolean, onQrCodeClick: () -> Unit, modifier: Modifier = Modifier) {
+    AnimatedVisibility(
+        visible = visible,
+        enter = fadeIn(),
+        exit = fadeOut(animationSpec = tween(DEFAULT_ANIMATION_DURATION)),
+        modifier = modifier,
+    ) {
+        TangemIconButton(
+            iconRes = R.drawable.ic_scan_16,
+            onClick = onQrCodeClick,
+            background = TangemTheme.colors.button.secondary,
+            iconTint = TangemTheme.colors.text.primary1,
+        )
     }
 }
 
@@ -172,7 +221,9 @@ private fun InputRowRecipientPreview(
             showDivider = true,
             onValueChange = {},
             onPasteClick = {},
+            onQrCodeClick = {},
             modifier = Modifier.background(TangemTheme.colors.background.primary),
+            isRedesignEnabled = false,
         )
     }
 }
