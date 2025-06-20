@@ -1,8 +1,8 @@
 package com.tangem.features.send.v2.subcomponents.fee.model.converters.custom.ethereum
 
 import com.tangem.blockchain.common.transaction.Fee
-import com.tangem.features.feeselector.api.entity.CustomFeeFieldUM
 import com.tangem.features.send.v2.subcomponents.fee.model.converters.custom.CustomFeeConverter
+import com.tangem.features.send.v2.subcomponents.fee.ui.state.CustomFeeFieldUM
 import kotlinx.collections.immutable.ImmutableList
 
 /**
