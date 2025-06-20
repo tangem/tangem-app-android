@@ -114,6 +114,8 @@ dependencies {
     implementation(projects.domain.notifications)
     implementation(projects.domain.notifications.models)
     implementation(projects.domain.notifications.toggles)
+    implementation(projects.domain.swap.models)
+    implementation(projects.domain.swap)
 
     implementation(projects.common)
     implementation(projects.common.routing)
@@ -160,6 +162,7 @@ dependencies {
     implementation(projects.data.quotes)
     implementation(projects.data.blockaid)
     implementation(projects.data.notifications)
+    implementation(projects.data.swap)
 
     /** Features */
     implementation(projects.features.referral.impl)
@@ -170,6 +173,8 @@ dependencies {
     implementation(projects.features.swap.domain)
     implementation(projects.features.swap.domain.api)
     implementation(projects.features.swap.data)
+    implementation(projects.features.swapV2.api)
+    implementation(projects.features.swapV2.impl)
     implementation(projects.features.tester.api)
     implementation(projects.features.tester.impl)
     implementation(projects.features.wallet.api)
@@ -210,8 +215,8 @@ dependencies {
     implementation(projects.features.walletconnect.impl)
     implementation(projects.features.usedesk.api)
     implementation(projects.features.usedesk.impl)
-    implementation(projects.features.feeSelector.api)
-    implementation(projects.features.feeSelector.impl)
+    implementation(projects.features.hotWallet.api)
+    implementation(projects.features.hotWallet.impl)
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)
