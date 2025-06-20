@@ -12,14 +12,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.divider.DividerWithPadding
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.features.send.v2.api.FeeSelectorBlockComponent
 import com.tangem.features.walletconnect.transaction.entity.common.WcNetworkInfoUM
 
 @Composable
 internal fun WcSendTransactionItems(
     walletName: String,
     networkInfo: WcNetworkInfoUM,
+    feeSelectorBlockComponent: FeeSelectorBlockComponent,
     modifier: Modifier = Modifier,
-    networkFee: String? = null,
     address: String? = null,
 ) {
     Column(
@@ -50,12 +51,7 @@ internal fun WcSendTransactionItems(
                 addressText = address,
             )
         }
-        if (!networkFee.isNullOrEmpty()) {
-            DividerWithPadding(start = TangemTheme.dimens.spacing40, end = TangemTheme.dimens.spacing12)
-            WcNetworkFeeItem(
-                modifier = itemsModifier,
-                networkFeeText = networkFee,
-            )
-        }
+        DividerWithPadding(start = 40.dp, end = 12.dp)
+        feeSelectorBlockComponent.Content(Modifier)
     }
 }
