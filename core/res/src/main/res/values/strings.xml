@@ -381,10 +381,10 @@
   <string name="give_permission_swap_subtitle" formatted="false">To continue, grant %1s smart contracts permission to use your %2s</string>
   <string name="give_permission_title">Give Permission</string>
   <string name="give_permission_unlimited">Unlimited</string>
+  <string name="home_button_add_existing_wallet">Add Existing Wallet</string>
+  <string name="home_button_create_new_wallet">Create New Wallet</string>
   <string name="home_button_order">Order Tangem</string>
   <string name="home_button_scan">Scan Tangem</string>
-  <string name="home_button_create_new_wallet">Create New Wallet</string>
-  <string name="home_button_add_existing_wallet">Add Existing Wallet</string>
   <string name="hot_crypto_add_token_subtitle">to %s</string>
   <string name="hot_crypto_token_network">On %s network</string>
   <string name="information_generated_with_ai">This information was generated with AI.\nTap here, if you find any errors.</string>
@@ -575,7 +575,7 @@
   <string name="nft_receive_unavailable_asset_warning_title">Network not added</string>
   <string name="nft_receive_unavailable_section_title">Not Added</string>
   <string name="nft_receive_unsupported_types">Unsupported NFT types</string>
-  <string name="nft_receive_unsupported_types_description">cNFTs and pNFTs are not supported yet. Please don’t send them to your wallet.</string>
+  <string name="nft_receive_unsupported_types_description">cNFTs and pNFTs are not supported yet. Please don\'t send them to your wallet.</string>
   <string name="nft_send">Send NFT</string>
   <string name="nft_traits_title">Traits</string>
   <string name="nft_untitled_collection">Untitled collection</string>
@@ -831,6 +831,9 @@
   <string name="send_max_fee">Fee up to</string>
   <string name="send_memo_destination_tag_error">Invalid Memo</string>
   <string name="send_network_fee_warning_title">Network fee coverage</string>
+  <string name="send_nonce">Nonce</string>
+  <string name="send_nonce_footer">Unique number for each transaction. Use it to resend or cancel a pending transaction.</string>
+  <string name="send_nonce_hint">Enter nonce…</string>
   <string name="send_notification_exceed_balance_text">Insufficient funds for the transfer, as the total of the fee and transfer amount exceeds the existing balance</string>
   <string name="send_notification_exceed_balance_title">Total exceeds balance</string>
   <string name="send_notification_existential_deposit_text">A balance of at least %s is required to keep your account on the blockchain to prevent security risks. This amount will remain in your balance and cannot be withdrawn.</string>
@@ -1320,7 +1323,7 @@
   <string name="warning_rate_app_message">Your review keeps us motivated to make Tangem Wallet even better</string>
   <string name="warning_rate_app_title">Enjoying Tangem?</string>
   <string name="warning_receive_blocked_hedera_token_association_required_message">You must associate your token before receiving tokens</string>
-  <string name="warning_receive_blocked_stelar_token_trustline_required_message">You must open trustline for your token before receiving it</string>
+  <string name="warning_receive_blocked_token_trustline_required_message">You must open trustline for your token before receiving it</string>
   <string name="warning_rent_fee_title">Network rent fee required</string>
   <string name="warning_seedphrase_action_required_title">Action required</string>
   <string name="warning_seedphrase_contacted_support">Did you contact support via the app within 7 days of creating your wallet? If yes, or if you\'re unsure, click \'Yes\' and follow the instructions.</string>
@@ -1336,13 +1339,13 @@
   <string name="warning_some_networks_unreachable_message">Swipe down to refresh or try again later.</string>
   <string name="warning_some_networks_unreachable_title">Some networks are unreachable</string>
   <string name="warning_some_token_balances_not_updated">Some token balances could not be updated</string>
-  <string name="warning_stelar_token_required_min_coin_reserve">Not enough %1$s. Top up your XLM account to associate this token</string>
-  <string name="warning_stellar_token_trustline_button_title">Enable Trustline</string>
-  <string name="warning_stellar_token_trustline_subtiile">According to network rules, you need to open a Trustline before depositing this token. It allows your wallet to accept and hold the asset.</string>
-  <string name="warning_stellar_token_trustline_tiile">Enable Trustline for this token</string>
   <string name="warning_testnet_card_message">This is a Testnet card. It cannot process transactions and should only be used for testing and development purposes.</string>
   <string name="warning_testnet_card_title">For testing purposes only</string>
   <string name="warning_token_balance_not_updated">Balance may be outdated. Refresh the page.</string>
+  <string name="warning_token_required_min_coin_reserve">Not enough %1$s. Top up your XLM account to associate this token</string>
+  <string name="warning_token_trustline_button_title">Enable Trustline</string>
+  <string name="warning_token_trustline_subtiile">A Trustline must be enabled to receive this token. The network requires a %1$s %2$s reserve.</string>
+  <string name="warning_token_trustline_tiile">Trustline Required</string>
   <string name="wc_alert_audit_unknown_domain">Unknown domain</string>
   <string name="wc_alert_connect_anyway">Connect anyway</string>
   <string name="wc_alert_connection_timeout_description">Timeout error. Please, try again later.</string>
@@ -1352,6 +1355,7 @@
   <string name="wc_alert_session_disconnected_title">WalletConnect session was disconnected</string>
   <string name="wc_alert_sign_anyway">Sign anyway</string>
   <string name="wc_alert_unknown_error_description">Error code: %s. If the problem persists — feel free to contact our support.</string>
+  <string name="wc_alert_unknown_error_description_no_error_code">If the problem persists — feel free to contact our support.</string>
   <string name="wc_alert_unknown_error_title">We\'ve encountered unknown error</string>
   <string name="wc_alert_unsupported_method_description">Error code: 8 005. If the problem persists — feel free to contact our support.</string>
   <string name="wc_alert_unsupported_method_title">We\'ve encountered unknown error</string>
