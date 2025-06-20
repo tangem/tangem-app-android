@@ -383,6 +383,8 @@
   <string name="give_permission_unlimited">Unlimited</string>
   <string name="home_button_order">Order Tangem</string>
   <string name="home_button_scan">Scan Tangem</string>
+  <string name="home_button_create_new_wallet">Create New Wallet</string>
+  <string name="home_button_add_existing_wallet">Add Existing Wallet</string>
   <string name="hot_crypto_add_token_subtitle">to %s</string>
   <string name="hot_crypto_token_network">On %s network</string>
   <string name="information_generated_with_ai">This information was generated with AI.\nTap here, if you find any errors.</string>
@@ -856,8 +858,12 @@
   <string name="send_recipient">Recipient</string>
   <string name="send_recipient_address_error">Not a valid address</string>
   <string name="send_recipient_address_footer">Ensure the receiving wallet address is on the %s network to avoid losing your tokens</string>
+  <string name="send_recipient_address_footer_highlighted_part">send to %s</string>
+  <string name="send_recipient_address_footer_v2">Ensure you %s network address, as errors may result in lost transfers</string>
   <string name="send_recipient_label">Send to</string>
   <string name="send_recipient_memo_footer">A Memo/Destination Tag is a unique ID for differentiating transactions sent to the same recipient on the same network. Caution: Omitting a memo may lead to misplaced funds</string>
+  <string name="send_recipient_memo_footer_v2">Memo / Destination Tag is a code separating transactions to a shared recipient in a crypto network.</string>
+  <string name="send_recipient_memo_footer_v2_highlighted">Caution: Missing a memo may lead to fund loss.</string>
   <string name="send_recipient_wallets_title">My wallets</string>
   <string name="send_satoshi_per_byte_text">A way of measuring Bitcoin transaction fees. It indicates the number of the smallest Bitcoin unit (Satoshi) for each virtual byte in a transaction. The higher the number, the faster the transaction will be processed by miners.</string>
   <string name="send_satoshi_per_byte_title">Satoshi / vByte</string>
@@ -885,7 +891,7 @@
   <string name="settings_forget_wallet">Forget wallet</string>
   <string name="settings_forget_wallet_footer">This will remove the wallet from the application. The wallet itself can be added again.</string>
   <string name="settings_wallet_name_title">Name</string>
-  <string name="stake_token_description">Join staking with this token</string>
+  <string name="stake_token_description">Put your token to work</string>
   <string name="staking_amount_requirement_error">The amount to stake must be at least %s</string>
   <string name="staking_amount_tron_integer_error">Staking amount will be rounded to %1$s TRX due to network rules.</string>
   <string name="staking_amount_tron_integer_error_unstaking">Unstaking amount will be rounded to %1$s TRX due to network rules.</string>
