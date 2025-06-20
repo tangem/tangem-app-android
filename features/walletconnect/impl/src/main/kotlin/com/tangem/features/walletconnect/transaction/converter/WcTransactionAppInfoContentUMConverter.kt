@@ -15,7 +15,7 @@ internal class WcTransactionAppInfoContentUMConverter @Inject constructor() :
         verifiedState = WcDAppVerifiedStateConverter(onVerifiedClick = value.onShowVerifiedAlert).convert(
             value.session.securityStatus to value.session.sdkModel.appMetaData.name,
         ),
-        appSubtitle = value.session.sdkModel.appMetaData.description,
+        appSubtitle = value.session.sdkModel.appMetaData.url,
     )
 
     data class Input(

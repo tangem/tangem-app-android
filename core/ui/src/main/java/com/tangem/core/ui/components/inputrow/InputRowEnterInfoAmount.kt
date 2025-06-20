@@ -141,7 +141,7 @@ fun InputRowEnterInfoAmountV2(
                 )
                 Icon(
                     modifier = Modifier.size(16.dp),
-                    painter = painterResource(R.drawable.ic_union_16),
+                    painter = painterResource(R.drawable.ic_token_info_24),
                     tint = TangemTheme.colors.icon.informative,
                     contentDescription = null,
                 )
