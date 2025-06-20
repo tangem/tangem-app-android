@@ -3,30 +3,24 @@ package com.tangem.domain.tokens.operations
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.NetworkStatus
+import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.model.Quote
 import java.math.BigDecimal
 
 internal class CurrencyStatusOperations(
     private val currency: CryptoCurrency,
-    private val quote: Quote?,
+    private val quoteStatus: QuoteStatus?,
     private val networkStatus: NetworkStatus?,
     private val yieldBalance: YieldBalance?,
     private val ignoreQuote: Boolean,
 ) {
 
-    private val Quote?.fiatRate: BigDecimal?
-        get() = when (this) {
-            is Quote.Value -> this.fiatRate
-            is Quote.Empty, null -> null
-        }
+    private val QuoteStatus?.fiatRate: BigDecimal?
+        get() = (this?.value as? QuoteStatus.Data)?.fiatRate
 
-    private val Quote?.priceChange: BigDecimal?
-        get() = when (this) {
-            is Quote.Value -> this.priceChange
-            is Quote.Empty, null -> null
-        }
+    private val QuoteStatus?.priceChange: BigDecimal?
+        get() = (this?.value as? QuoteStatus.Data)?.priceChange
 
     fun createTokenStatus(): CryptoCurrencyStatus = CryptoCurrencyStatus(currency, createStatus())
 
@@ -41,12 +35,12 @@ internal class CurrencyStatusOperations(
     }
 
     private fun createMissedDerivationStatus(): CryptoCurrencyStatus.MissedDerivation =
-        CryptoCurrencyStatus.MissedDerivation(priceChange = quote?.priceChange, fiatRate = quote?.fiatRate)
+        CryptoCurrencyStatus.MissedDerivation(priceChange = quoteStatus?.priceChange, fiatRate = quoteStatus?.fiatRate)
 
     private fun createUnreachableStatus(status: NetworkStatus.Unreachable): CryptoCurrencyStatus.Unreachable {
         return CryptoCurrencyStatus.Unreachable(
-            priceChange = quote?.priceChange,
-            fiatRate = quote?.fiatRate,
+            priceChange = quoteStatus?.priceChange,
+            fiatRate = quoteStatus?.fiatRate,
             networkAddress = status.address,
         )
     }
@@ -54,13 +48,13 @@ internal class CurrencyStatusOperations(
     private fun createNoAccountStatus(status: NetworkStatus.NoAccount): CryptoCurrencyStatus.NoAccount {
         return CryptoCurrencyStatus.NoAccount(
             amountToCreateAccount = status.amountToCreateAccount,
-            fiatAmount = if (quote == null) null else BigDecimal.ZERO,
-            priceChange = quote?.priceChange,
-            fiatRate = quote?.fiatRate,
+            fiatAmount = if (quoteStatus == null) null else BigDecimal.ZERO,
+            priceChange = quoteStatus?.priceChange,
+            fiatRate = quoteStatus?.fiatRate,
             networkAddress = status.address,
             sources = CryptoCurrencyStatus.Sources(
                 networkSource = status.source,
-                quoteSource = (quote as? Quote.Value)?.source ?: StatusSource.ACTUAL,
+                quoteSource = quoteStatus?.value?.source ?: StatusSource.ACTUAL,
             ),
         )
     }
@@ -75,7 +69,10 @@ internal class CurrencyStatusOperations(
                 return CryptoCurrencyStatus.Loading
             }
             is NetworkStatus.Amount.NotFound -> {
-                return CryptoCurrencyStatus.NoAmount(priceChange = quote?.priceChange, fiatRate = quote?.fiatRate)
+                return CryptoCurrencyStatus.NoAmount(
+                    priceChange = quoteStatus?.priceChange,
+                    fiatRate = quoteStatus?.fiatRate,
+                )
             }
             is NetworkStatus.Amount.Loaded -> amount.value
         }
@@ -96,24 +93,27 @@ internal class CurrencyStatusOperations(
         } else {
             null
         }
+
+        val quoteValue = quoteStatus?.value
+
         // order is important for correct total balance calculation
         return when {
             currency is CryptoCurrency.Token && currency.isCustom -> CryptoCurrencyStatus.Custom(
                 amount = amount,
-                fiatAmount = calculateFiatAmountOrNull(amount, quote?.fiatRate),
-                fiatRate = quote?.fiatRate,
-                priceChange = quote?.priceChange,
+                fiatAmount = calculateFiatAmountOrNull(amount, quoteStatus?.fiatRate),
+                fiatRate = quoteStatus?.fiatRate,
+                priceChange = quoteStatus?.priceChange,
                 hasCurrentNetworkTransactions = hasCurrentNetworkTransactions,
                 pendingTransactions = currentTransactions,
                 networkAddress = networkStatusValue.address,
                 yieldBalance = currentYieldBalance,
                 sources = CryptoCurrencyStatus.Sources(
                     networkSource = networkStatusValue.source,
-                    quoteSource = (quote as? Quote.Value)?.source ?: StatusSource.ACTUAL,
+                    quoteSource = quoteStatus?.value?.source ?: StatusSource.ACTUAL,
                     yieldBalanceSource = currentYieldBalance?.source ?: StatusSource.ACTUAL,
                 ),
             )
-            quote is Quote.Empty || ignoreQuote -> CryptoCurrencyStatus.NoQuote(
+            quoteValue is QuoteStatus.Empty || ignoreQuote -> CryptoCurrencyStatus.NoQuote(
                 amount = amount,
                 hasCurrentNetworkTransactions = hasCurrentNetworkTransactions,
                 pendingTransactions = currentTransactions,
@@ -121,22 +121,22 @@ internal class CurrencyStatusOperations(
                 yieldBalance = currentYieldBalance,
                 sources = CryptoCurrencyStatus.Sources(
                     networkSource = networkStatusValue.source,
-                    quoteSource = (quote as? Quote.Value)?.source ?: StatusSource.ACTUAL,
+                    quoteSource = quoteStatus?.value?.source ?: StatusSource.ACTUAL,
                     yieldBalanceSource = currentYieldBalance?.source ?: StatusSource.ACTUAL,
                 ),
             )
-            quote is Quote.Value -> CryptoCurrencyStatus.Loaded(
+            quoteValue is QuoteStatus.Data -> CryptoCurrencyStatus.Loaded(
                 amount = amount,
-                fiatAmount = calculateFiatAmount(amount, quote.fiatRate),
-                fiatRate = quote.fiatRate,
-                priceChange = quote.priceChange,
+                fiatAmount = calculateFiatAmount(amount, quoteValue.fiatRate),
+                fiatRate = quoteValue.fiatRate,
+                priceChange = quoteValue.priceChange,
                 hasCurrentNetworkTransactions = hasCurrentNetworkTransactions,
                 pendingTransactions = currentTransactions,
                 networkAddress = networkStatusValue.address,
                 yieldBalance = currentYieldBalance,
                 sources = CryptoCurrencyStatus.Sources(
                     networkSource = networkStatusValue.source,
-                    quoteSource = quote.source,
+                    quoteSource = quoteValue.source,
                     yieldBalanceSource = currentYieldBalance?.source ?: StatusSource.ACTUAL,
                 ),
             )
