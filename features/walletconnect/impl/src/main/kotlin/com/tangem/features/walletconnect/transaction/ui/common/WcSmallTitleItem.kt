@@ -15,7 +15,7 @@ fun WcSmallTitleItem(@StringRes textRex: Int, modifier: Modifier = Modifier) {
     Text(
         modifier = modifier
             .fillMaxWidth()
-            .padding(top = 12.dp, start = 12.dp),
+            .padding(top = 12.dp, start = 12.dp, end = 12.dp),
         text = stringResourceSafe(textRex),
         color = TangemTheme.colors.text.tertiary,
         style = TangemTheme.typography.subtitle2,
