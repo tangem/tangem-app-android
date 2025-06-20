@@ -51,7 +51,7 @@ internal class StakingBalanceUpdater @AssistedInject constructor(
         }
     }
 
-    suspend fun updatePullToRefresh() {
+    suspend fun partialUpdate() {
         coroutineScope {
             listOf(
                 async {
@@ -61,12 +61,6 @@ internal class StakingBalanceUpdater @AssistedInject constructor(
                     updateStakingActions()
                 },
             ).awaitAll()
-        }
-    }
-
-    suspend fun updateAfterNavigationToInitial() {
-        coroutineScope {
-            async { updateStakingActions() }.await()
         }
     }
 
