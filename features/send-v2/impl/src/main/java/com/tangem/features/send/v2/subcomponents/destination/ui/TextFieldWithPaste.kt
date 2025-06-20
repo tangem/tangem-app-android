@@ -20,6 +20,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.components.containers.FooterContainer
 
+@Suppress("LongMethod", "LongParameterList")
 @Composable
 internal fun TextFieldWithPaste(
     value: String,
@@ -27,6 +28,7 @@ internal fun TextFieldWithPaste(
     label: TextReference,
     onValueChange: (String) -> Unit,
     onPasteClick: (String) -> Unit,
+    isRedesignEnabled: Boolean,
     modifier: Modifier = Modifier,
     footer: TextReference? = null,
     labelStyle: TextStyle = TangemTheme.typography.body2,
@@ -96,6 +98,18 @@ internal fun TextFieldWithPaste(
                 PasteButton(
                     isPasteButtonVisible = value.isBlank(),
                     onClick = onPasteClick,
+                    backgroundColorEnabled = if (isRedesignEnabled) {
+                        TangemTheme.colors.button.secondary
+                    } else {
+                        TangemTheme.colors.button.primary
+                    },
+                    textColor = if (isRedesignEnabled) {
+                        TangemTheme.colors.text.primary1
+                    } else {
+                        TangemTheme.colors.text.primary2
+                    },
+                    modifier = Modifier
+                        .padding(start = TangemTheme.dimens.spacing8),
                 )
             }
         }
