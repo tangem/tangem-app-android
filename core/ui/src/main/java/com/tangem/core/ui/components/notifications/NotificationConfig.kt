@@ -25,6 +25,7 @@ data class NotificationConfig(
     val onClick: (() -> Unit)? = null,
     val onCloseClick: (() -> Unit)? = null,
     val showArrowIcon: Boolean = onClick != null,
+    val iconTint: IconTint = IconTint.Unspecified,
 ) {
 
     sealed class ButtonsState {
@@ -55,5 +56,11 @@ data class NotificationConfig(
             val rightText: TextReference,
             val onRightClick: () -> Unit,
         ) : ButtonsState()
+    }
+
+    enum class IconTint {
+        Unspecified,
+        Accent,
+        Attention,
     }
 }
