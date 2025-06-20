@@ -15,10 +15,12 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.features.send.v2.api.FeeSelectorBlockComponent
 import com.tangem.features.walletconnect.transaction.routes.WcTransactionRoutes
 
 internal abstract class WcCommonTransactionComponentDelegate(
     private val appComponentContext: AppComponentContext,
+    private val feeSelectorBlockComponentFactory: FeeSelectorBlockComponent.Factory,
 ) : AppComponentContext by appComponentContext, ComposableContentComponent {
 
     private var stackNavigation: StackNavigation<WcTransactionRoutes>? = null
@@ -29,6 +31,10 @@ internal abstract class WcCommonTransactionComponentDelegate(
             InnerRouter<WcTransactionRoutes>(stackNavigation = it, popCallback = { onChildBack() })
         }
     }
+    protected val feeSelectorBlockComponent = feeSelectorBlockComponentFactory.create(
+        context = appComponentContext,
+        params = Unit,
+    )
 
     protected fun init(
         navigation: StackNavigation<WcTransactionRoutes>,
@@ -60,6 +66,7 @@ internal abstract class WcCommonTransactionComponentDelegate(
             is WcTransactionRoutes.Transaction,
             is WcTransactionRoutes.TransactionRequestInfo,
             is WcTransactionRoutes.Alert,
+            is WcTransactionRoutes.CustomAllowance,
             -> stackNavigation?.pop()
             else -> Unit
         }

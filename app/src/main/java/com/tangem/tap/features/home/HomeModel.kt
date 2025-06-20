@@ -71,6 +71,14 @@ internal class HomeModel @Inject constructor(
             .launchIn(modelScope)
     }
 
+    fun onCreateNewWalletScreen() {
+        // TODO implement navigation to create new wallet
+    }
+
+    fun onAddExistingWalletScreen() {
+        // TODO implement navigation to add existing wallet
+    }
+
     fun onScanClick() {
         analyticsEventHandler.send(IntroductionProcess.ButtonScanCard())
         scanCard()
