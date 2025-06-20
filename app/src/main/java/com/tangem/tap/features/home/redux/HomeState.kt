@@ -6,6 +6,7 @@ import org.rekotlin.StateType
 // [REDACTED_TODO_COMMENT]
 data class HomeState(
     val scanInProgress: Boolean = false,
+    val isV2StoriesEnabled: Boolean = false,
     val stories: ImmutableList<Stories> = getRestrictedStories().toImmutableList(),
 ) : StateType {
 

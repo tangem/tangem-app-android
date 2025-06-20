@@ -16,6 +16,7 @@ import com.tangem.core.ui.utils.findActivity
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.home.api.HomeComponent
 import com.tangem.tap.features.home.compose.StoriesScreen
+import com.tangem.tap.features.home.compose.StoriesScreenV2
 import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.home.redux.HomeState
 import com.tangem.tap.store
@@ -57,12 +58,22 @@ internal class DefaultHomeComponent @AssistedInject constructor(
         val activity = LocalContext.current.findActivity()
         BackHandler(onBack = activity::finish)
         SystemBarsIconsDisposable(darkIcons = false)
-        StoriesScreen(
-            homeState = homeState,
-            onScanButtonClick = model::onScanClick,
-            onShopButtonClick = model::onShopClick,
-            onSearchTokensClick = model::onSearchClick,
-        )
+        if (homeState.value.isV2StoriesEnabled) {
+            StoriesScreenV2(
+                homeState = homeState,
+                onCreateNewWalletButtonClick = model::onCreateNewWalletScreen,
+                onAddExistingWalletButtonClick = model::onAddExistingWalletScreen,
+                onScanButtonClick = model::onScanClick,
+            )
+        } else {
+            StoriesScreen(
+                homeState = homeState,
+                onScanButtonClick = model::onScanClick,
+                onShopButtonClick = model::onShopClick,
+                onSearchTokensClick = model::onSearchClick,
+            )
+        }
+
         ChangeRootBackgroundColorEffect(Color(color = 0xFF010101))
     }
 

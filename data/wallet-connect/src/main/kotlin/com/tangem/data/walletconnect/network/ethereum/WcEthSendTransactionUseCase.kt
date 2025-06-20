@@ -119,7 +119,7 @@ internal class WcEthSendTransactionUseCase @AssistedInject constructor(
         emitAll(delegate.invoke(transactionData))
     }
 
-    override suspend fun getAmount(): Amount? {
+    override fun getAmount(): Amount? {
         return approvalAmount
     }
 

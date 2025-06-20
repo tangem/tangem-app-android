@@ -12,7 +12,7 @@ import com.tangem.core.ui.components.containers.FooterContainer
 import com.tangem.core.ui.components.inputrow.InputRowEnterAmount
 import com.tangem.core.ui.components.inputrow.InputRowEnterInfoAmount
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.features.feeselector.api.entity.CustomFeeFieldUM
+import com.tangem.features.send.v2.subcomponents.fee.ui.state.CustomFeeFieldUM
 import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeType
 import kotlinx.collections.immutable.ImmutableList
 
