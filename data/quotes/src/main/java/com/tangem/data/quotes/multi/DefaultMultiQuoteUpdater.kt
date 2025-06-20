@@ -2,12 +2,12 @@ package com.tangem.data.quotes.multi
 
 import androidx.annotation.VisibleForTesting
 import arrow.core.left
-import com.tangem.data.quotes.store.QuotesStoreV2
+import com.tangem.data.quotes.store.QuotesStatusesStore
 import com.tangem.datasource.appcurrency.AppCurrencyResponseStore
 import com.tangem.domain.core.utils.EitherFlow
-import com.tangem.domain.quotes.multi.MultiQuoteFetcher
+import com.tangem.domain.models.quote.QuoteStatus
+import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.quotes.multi.MultiQuoteUpdater
-import com.tangem.domain.tokens.model.Quote
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -17,24 +17,21 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import timber.log.Timber
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Default implementation of [MultiQuoteUpdater] which updates quotes when the app currency changes
  *
  * @property appCurrencyResponseStore app currency response store
- * @property quotesStore              quotes store
- * @property multiQuoteFetcher        multi quote fetcher
+ * @property quotesStatusesStore      quotes store
+ * @property multiQuoteStatusFetcher  multi quote status fetcher
  * @param dispatchers                 dispatchers
  *
 [REDACTED_AUTHOR]
  */
-@Singleton
-internal class DefaultMultiQuoteUpdater @Inject constructor(
+internal class DefaultMultiQuoteUpdater(
     private val appCurrencyResponseStore: AppCurrencyResponseStore,
-    private val quotesStore: QuotesStoreV2,
-    private val multiQuoteFetcher: MultiQuoteFetcher,
+    private val quotesStatusesStore: QuotesStatusesStore,
+    private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
     dispatchers: CoroutineDispatcherProvider,
 ) : MultiQuoteUpdater {
 
@@ -60,11 +57,14 @@ internal class DefaultMultiQuoteUpdater @Inject constructor(
             .distinctUntilChanged()
             .filterNotNull()
             .mapLatest { appCurrency ->
-                val currenciesIds = quotesStore.getAllSyncOrNull().orEmpty()
-                    .mapTo(destination = hashSetOf(), transform = Quote::rawCurrencyId)
+                val currenciesIds = quotesStatusesStore.getAllSyncOrNull().orEmpty()
+                    .mapTo(destination = hashSetOf(), transform = QuoteStatus::rawCurrencyId)
 
-                multiQuoteFetcher(
-                    params = MultiQuoteFetcher.Params(currenciesIds = currenciesIds, appCurrencyId = appCurrency.id),
+                multiQuoteStatusFetcher(
+                    params = MultiQuoteStatusFetcher.Params(
+                        currenciesIds = currenciesIds,
+                        appCurrencyId = appCurrency.id,
+                    ),
                 )
                     .onLeft(Timber::e)
             }
