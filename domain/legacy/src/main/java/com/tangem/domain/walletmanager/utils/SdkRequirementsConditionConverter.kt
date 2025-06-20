@@ -8,6 +8,7 @@ internal class SdkRequirementsConditionConverter : Converter<SdkRequirementsCond
     override fun convert(value: SdkRequirementsCondition): AssetRequirementsCondition {
         return when (value) {
             is SdkRequirementsCondition.PaidTransaction -> AssetRequirementsCondition.PaidTransaction
+            is SdkRequirementsCondition.RequiredTrustline -> TODO("added in [REDACTED_TASK_KEY]")
             is SdkRequirementsCondition.PaidTransactionWithFee -> AssetRequirementsCondition.PaidTransactionWithFee(
                 feeAmount = requireNotNull(value.feeAmount.value),
                 feeCurrencySymbol = value.feeAmount.currencySymbol,
