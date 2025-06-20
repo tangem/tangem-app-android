@@ -20,5 +20,8 @@ internal object CardSdkModule {
     @Provides
     @Singleton
     fun provideCardArtworksProvider(sdkRepository: CardSdkConfigRepository): CardArtworksProvider =
-        CardArtworksProvider(sdkRepository.sdk.config.isTangemAttestationProdEnv)
+        CardArtworksProvider(
+            sdkRepository.sdk.config.isTangemAttestationProdEnv,
+            sdkRepository.sdk.secureStorage,
+        )
 }
