@@ -3,8 +3,9 @@ package com.tangem.domain.tokens.mock
 import arrow.core.nonEmptyListOf
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.network.NetworkStatus
+import com.tangem.domain.models.quote.QuoteStatus
+import com.tangem.domain.models.quote.fold
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.model.Quote
 import java.math.BigDecimal
 
 @Suppress("MemberVisibilityCanBePrivate")
@@ -13,8 +14,8 @@ internal object MockTokensStates {
     val tokenState1 = CryptoCurrencyStatus(
         currency = MockTokens.token1,
         value = CryptoCurrencyStatus.Unreachable(
-            priceChange = MockQuotes.quote1.priceChange,
-            fiatRate = MockQuotes.quote1.fiatRate,
+            priceChange = MockQuotes.quote1.getPriceChange(),
+            fiatRate = MockQuotes.quote1.getFiatRate(),
             networkAddress = NetworkAddress.Single(
                 defaultAddress = NetworkAddress.Address(value = "mock", NetworkAddress.Address.Type.Primary),
             ),
@@ -24,8 +25,8 @@ internal object MockTokensStates {
     val tokenState2 = CryptoCurrencyStatus(
         currency = MockTokens.token2,
         value = CryptoCurrencyStatus.Unreachable(
-            priceChange = MockQuotes.quote2.priceChange,
-            fiatRate = MockQuotes.quote2.fiatRate,
+            priceChange = MockQuotes.quote2.getPriceChange(),
+            fiatRate = MockQuotes.quote2.getFiatRate(),
             networkAddress = NetworkAddress.Single(
                 defaultAddress = NetworkAddress.Address(value = "mock", NetworkAddress.Address.Type.Primary),
             ),
@@ -35,8 +36,8 @@ internal object MockTokensStates {
     val tokenState3 = CryptoCurrencyStatus(
         currency = MockTokens.token3,
         value = CryptoCurrencyStatus.Unreachable(
-            priceChange = MockQuotes.quote3.priceChange,
-            fiatRate = MockQuotes.quote3.fiatRate,
+            priceChange = MockQuotes.quote3.getPriceChange(),
+            fiatRate = MockQuotes.quote3.getFiatRate(),
             networkAddress = NetworkAddress.Single(
                 defaultAddress = NetworkAddress.Address(value = "mock", NetworkAddress.Address.Type.Primary),
             ),
@@ -46,24 +47,24 @@ internal object MockTokensStates {
     val tokenState4 = CryptoCurrencyStatus(
         currency = MockTokens.token4,
         value = CryptoCurrencyStatus.MissedDerivation(
-            priceChange = MockQuotes.quote4.priceChange,
-            fiatRate = MockQuotes.quote4.fiatRate,
+            priceChange = MockQuotes.quote4.getPriceChange(),
+            fiatRate = MockQuotes.quote4.getFiatRate(),
         ),
     )
 
     val tokenState5 = CryptoCurrencyStatus(
         currency = MockTokens.token5,
         value = CryptoCurrencyStatus.MissedDerivation(
-            priceChange = MockQuotes.quote5.priceChange,
-            fiatRate = MockQuotes.quote5.fiatRate,
+            priceChange = MockQuotes.quote5.getPriceChange(),
+            fiatRate = MockQuotes.quote5.getFiatRate(),
         ),
     )
 
     val tokenState6 = CryptoCurrencyStatus(
         currency = MockTokens.token6,
         value = CryptoCurrencyStatus.MissedDerivation(
-            priceChange = MockQuotes.quote6.priceChange,
-            fiatRate = MockQuotes.quote6.fiatRate,
+            priceChange = MockQuotes.quote6.getPriceChange(),
+            fiatRate = MockQuotes.quote6.getFiatRate(),
         ),
     )
 
@@ -71,8 +72,8 @@ internal object MockTokensStates {
         currency = MockTokens.token7,
         value = CryptoCurrencyStatus.NoAccount(
             fiatAmount = BigDecimal.ZERO,
-            priceChange = MockQuotes.quote7.priceChange,
-            fiatRate = MockQuotes.quote7.fiatRate,
+            priceChange = MockQuotes.quote7.getPriceChange(),
+            fiatRate = MockQuotes.quote7.getFiatRate(),
             amountToCreateAccount = MockNetworks.amountToCreateAccount,
             networkAddress = NetworkAddress.Single(
                 defaultAddress = NetworkAddress.Address(value = "mock", NetworkAddress.Address.Type.Primary),
@@ -85,8 +86,8 @@ internal object MockTokensStates {
         currency = MockTokens.token8,
         value = CryptoCurrencyStatus.NoAccount(
             fiatAmount = BigDecimal.ZERO,
-            priceChange = MockQuotes.quote8.priceChange,
-            fiatRate = MockQuotes.quote8.fiatRate,
+            priceChange = MockQuotes.quote8.getPriceChange(),
+            fiatRate = MockQuotes.quote8.getFiatRate(),
             amountToCreateAccount = MockNetworks.amountToCreateAccount,
             networkAddress = NetworkAddress.Single(
                 defaultAddress = NetworkAddress.Address(value = "mock", NetworkAddress.Address.Type.Primary),
@@ -99,8 +100,8 @@ internal object MockTokensStates {
         currency = MockTokens.token9,
         value = CryptoCurrencyStatus.NoAccount(
             fiatAmount = BigDecimal.ZERO,
-            priceChange = MockQuotes.quote9.priceChange,
-            fiatRate = MockQuotes.quote9.fiatRate,
+            priceChange = MockQuotes.quote9.getPriceChange(),
+            fiatRate = MockQuotes.quote9.getFiatRate(),
             amountToCreateAccount = MockNetworks.amountToCreateAccount,
             networkAddress = NetworkAddress.Single(
                 defaultAddress = NetworkAddress.Address(value = "mock", NetworkAddress.Address.Type.Primary),
@@ -113,8 +114,8 @@ internal object MockTokensStates {
         currency = MockTokens.token10,
         value = CryptoCurrencyStatus.NoAccount(
             fiatAmount = BigDecimal.ZERO,
-            priceChange = MockQuotes.quote10.priceChange,
-            fiatRate = MockQuotes.quote10.fiatRate,
+            priceChange = MockQuotes.quote10.getPriceChange(),
+            fiatRate = MockQuotes.quote10.getFiatRate(),
             amountToCreateAccount = MockNetworks.amountToCreateAccount,
             networkAddress = NetworkAddress.Single(
                 defaultAddress = NetworkAddress.Address(value = "mock", NetworkAddress.Address.Type.Primary),
@@ -145,8 +146,8 @@ internal object MockTokensStates {
             )?.value ?: BigDecimal.ZERO
         val quote = MockQuotes.quotes.first { it.rawCurrencyId == status.currency.id.rawCurrencyId }
 
-        val value = when (quote) {
-            is Quote.Empty -> CryptoCurrencyStatus.NoQuote(
+        val value = when (val value = quote.value) {
+            is QuoteStatus.Empty -> CryptoCurrencyStatus.NoQuote(
                 amount = status.value.amount!!,
                 pendingTransactions = emptySet(),
                 hasCurrentNetworkTransactions = false,
@@ -156,11 +157,11 @@ internal object MockTokensStates {
                 yieldBalance = null,
                 sources = CryptoCurrencyStatus.Sources(),
             )
-            is Quote.Value -> CryptoCurrencyStatus.Loaded(
+            is QuoteStatus.Data -> CryptoCurrencyStatus.Loaded(
                 amount = amount,
-                fiatAmount = amount * quote.fiatRate,
-                fiatRate = quote.fiatRate,
-                priceChange = quote.priceChange,
+                fiatAmount = amount * value.fiatRate,
+                fiatRate = value.fiatRate,
+                priceChange = value.priceChange,
                 pendingTransactions = emptySet(),
                 hasCurrentNetworkTransactions = false,
                 networkAddress = requireNotNull(networkStatus.value as? NetworkStatus.Verified).address,
@@ -187,4 +188,7 @@ internal object MockTokensStates {
             ),
         )
     }
+
+    private fun QuoteStatus.getPriceChange(): BigDecimal? = fold(onData = { priceChange }, onEmpty = { null })
+    private fun QuoteStatus.getFiatRate(): BigDecimal? = fold(onData = { fiatRate }, onEmpty = { null })
 }
