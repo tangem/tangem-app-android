@@ -13,16 +13,6 @@ configure<JavaPluginExtension> {
     targetCompatibility = JavaVersion.VERSION_17
 }
 
-kotlin {
-    jvmToolchain(17)
-}
-
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(17))
-    }
-}
-
 dependencies {
     implementation(deps.gradle.kotlin)
     implementation(deps.gradle.android)
