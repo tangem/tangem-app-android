@@ -23,6 +23,7 @@ import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.isLocked
 import com.tangem.domain.wallets.models.isMultiCurrency
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
+import com.tangem.features.send.v2.api.SendFeatureToggles
 import com.tangem.features.send.v2.common.PredefinedValues
 import com.tangem.features.send.v2.common.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.v2.common.analytics.CommonSendAnalyticEvents.SendScreenSource
@@ -65,6 +66,7 @@ internal class SendDestinationModel @Inject constructor(
     private val listenToQrScanningUseCase: ListenToQrScanningUseCase,
     private val parseQrCodeUseCase: ParseQrCodeUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val sendFeatureToggles: SendFeatureToggles,
 ) : Model(), SendDestinationClickIntents {
     private val params: SendDestinationComponentParams = paramsContainer.require()
 
@@ -90,6 +92,7 @@ internal class SendDestinationModel @Inject constructor(
             _uiState.update(
                 SendDestinationInitialStateTransformer(
                     cryptoCurrency = cryptoCurrency,
+                    isRedesignEnabled = sendFeatureToggles.isSendRedesignEnabled,
                     isInitialized = true,
                 ),
             )
@@ -297,6 +300,7 @@ internal class SendDestinationModel @Inject constructor(
             flow2 = params.currentRoute,
             transform = { state, route -> state to route },
         ).onEach { (state, route) ->
+            val isRedesignEnabled = sendFeatureToggles.isSendRedesignEnabled
             params.callback.onNavigationResult(
                 NavigationUM.Content(
                     title = params.title,
@@ -319,8 +323,16 @@ internal class SendDestinationModel @Inject constructor(
                         }
                         params.onBackClick()
                     },
-                    additionalIconRes = R.drawable.ic_qrcode_scan_24,
-                    additionalIconClick = ::onQrCodeScanClick,
+                    additionalIconRes = if (isRedesignEnabled) {
+                        null
+                    } else {
+                        R.drawable.ic_qrcode_scan_24
+                    },
+                    additionalIconClick = if (isRedesignEnabled) {
+                        null
+                    } else {
+                        ::onQrCodeScanClick
+                    },
                     primaryButton = ButtonsUM.PrimaryButtonUM(
                         text = if (route.isEditMode) {
                             resourceReference(R.string.common_continue)
