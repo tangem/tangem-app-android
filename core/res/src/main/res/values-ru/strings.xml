@@ -370,6 +370,8 @@
   <string name="give_permission_swap_subtitle" formatted="false">Чтобы продолжить, вам нужно разрешить смарт-контракту %1s использовать ваш %2s</string>
   <string name="give_permission_title">Дать разрешение</string>
   <string name="give_permission_unlimited">Безлимитно</string>
+  <string name="home_button_add_existing_wallet">Добавить существующий кошелек</string>
+  <string name="home_button_create_new_wallet">Создать новый кошелек</string>
   <string name="home_button_order">Купить</string>
   <string name="home_button_scan">Сканировать</string>
   <string name="hot_crypto_add_token_subtitle">в %s</string>
@@ -568,14 +570,17 @@
   <string name="nft_receive_unavailable_asset_warning_message">Вы ещё не добавили эту сеть. Чтобы получать NFT, добавьте её в ваш портфель.</string>
   <string name="nft_receive_unavailable_asset_warning_title">Сеть не добавлена</string>
   <string name="nft_receive_unavailable_section_title">Не добавлено</string>
+  <string name="nft_receive_unsupported_types">Неподдерживаемый тип NFT</string>
+  <string name="nft_receive_unsupported_types_description">cNFT и pNFT не поддерживаются. Пожалуйста, не отправляйте их на свой кошелёк.</string>
   <string name="nft_send">Отправить NFT</string>
   <string name="nft_traits_title">Черты</string>
+  <string name="nft_untitled_collection">Безымянная коллекция</string>
   <string name="nft_wallet_count">%1$d NFTs в %2$d коллекциях</string>
   <plurals name="nft_wallet_count_android">
-    <item quantity="one"></item>
-    <item quantity="few"></item>
+    <item quantity="one">%1$d NFT в %2$d коллекции</item>
+    <item quantity="few">%1$d NFT в %2$d коллекциях</item>
     <item quantity="many"></item>
-    <item quantity="other">%1$d NFTs в %2$d коллекциях</item>
+    <item quantity="other">%1$d NFT в %2$d коллекциях</item>
   </plurals>
   <string name="nft_wallet_receive_nft">Нажмите здесь, чтобы получить первую NFT</string>
   <string name="nft_wallet_title">NFT коллекции</string>
@@ -724,6 +729,7 @@
   <string name="qr_scanner_camera_denied_title">Доступ к камере запрещен</string>
   <string name="receive_bottom_sheet_no_memo_required_message">Memo не требуется</string>
   <string name="receive_bottom_sheet_warning_message">%1$s (%2$s) в сети %3$s</string>
+  <string name="receive_bottom_sheet_warning_message_compact">%1$s в %2$s сети</string>
   <string name="receive_bottom_sheet_warning_message_description">Использование другой сети может привести к утрате средств.</string>
   <string name="receive_bottom_sheet_warning_message_full">Отправляйте только %s на этот адрес. Использование другой сети может привести к утрате средств.</string>
   <string name="receive_bottom_sheet_warning_title">Отправляйте только %1$s в сети %2$s</string>
@@ -826,6 +832,9 @@
   <string name="send_max_fee">Комиссия не превысит</string>
   <string name="send_memo_destination_tag_error">Недопустимый Memo</string>
   <string name="send_network_fee_warning_title">Покрытие сетевой комиссии</string>
+  <string name="send_nonce">Nonce</string>
+  <string name="send_nonce_footer">Уникальный номер транзакции. Измените, чтобы ускорить отправку или отменить зависшую операцию.</string>
+  <string name="send_nonce_hint">Введите nonce…</string>
   <string name="send_notification_exceed_balance_text">Недостаточно средств для перевода, так как сумма комиссии и сумма перевода в совокупности больше имеющегося баланса</string>
   <string name="send_notification_exceed_balance_title">Недостаточно средств</string>
   <string name="send_notification_existential_deposit_text">Для сохранения вашего аккаунта в блокчейне и защиты от возможных рисков необходим баланс не менее %s. Эта сумма останется на вашем счете и не может быть снята.</string>
@@ -855,6 +864,8 @@
   <string name="send_recipient_address_footer">Убедитесь, что вы отправляете средства на адрес кошелька %s. Ошибки могут привести к потере ваших токенов.</string>
   <string name="send_recipient_label">Отправить</string>
   <string name="send_recipient_memo_footer">Мемо/ Код назначения - это код, разделяющий транзакции к общему получателю в сети криптовалют. Внимание: отсутствие мемо может привести к потере средств.</string>
+  <string name="send_recipient_memo_footer_v2">Memo / Destination Tag — это код, разделяющий транзакции, отправляемые одному и тому же получателю в криптовалютной сети.</string>
+  <string name="send_recipient_memo_footer_v2_highlighted">Внимание: отсутствие Memo может привести к потере средств.</string>
   <string name="send_recipient_wallets_title">Мои кошельки</string>
   <string name="send_satoshi_per_byte_text">Способ измерения комиссии за биткоин-транзакцию. Он указывает на количество самой маленькой единицы биткоина (сатоши) за каждый виртуальный байт в транзакции. Чем выше число, тем быстрее будет обработана транзакция майнерами.</string>
   <string name="send_satoshi_per_byte_title">Сатоши / вбайт</string>
@@ -879,6 +890,7 @@
   <string name="settings_forget_wallet">Забыть кошелек</string>
   <string name="settings_forget_wallet_footer">Это приведет к удалению кошелька из приложения. Сам кошелек можно добавить снова.</string>
   <string name="settings_wallet_name_title">Имя</string>
+  <string name="stake_token_description">Заставьте ваш токен работать</string>
   <string name="staking_amount_requirement_error">Сумма для стейкинга должна быть не менее %s</string>
   <string name="staking_amount_tron_integer_error">Согласно правилам сети, сумма стейкинга будет округлена до %1$sTRX.</string>
   <string name="staking_amount_tron_integer_error_unstaking">Сумма для вывода из стейкинга будет округлена до %1$s TRX ввиду особенностей сети.</string>
@@ -1247,12 +1259,12 @@
   <string name="warning_some_networks_unreachable_message">Свайпните вниз для обновления или попробуйте позже.</string>
   <string name="warning_some_networks_unreachable_title">Некоторые сети недоступны</string>
   <string name="warning_some_token_balances_not_updated">Некоторые балансы токенов не удалось обновить</string>
-  <string name="warning_stellar_token_trustline_button_title">Открыть Trustline</string>
-  <string name="warning_stellar_token_trustline_subtiile">Согласно правилам сети, чтобы пополнить этот токен, необходимо сначала открыть Trustline — это позволит вашему кошельку принимать и хранить этот актив.</string>
-  <string name="warning_stellar_token_trustline_tiile">Откройте Trustline</string>
   <string name="warning_testnet_card_message">Это Testnet карта. Он не может обрабатывать транзакции и используется только в целях тестирования и разработки.</string>
   <string name="warning_testnet_card_title">Только для целей тестирования</string>
   <string name="warning_token_balance_not_updated">Возможно, баланс устарел. Обновите страницу.</string>
+  <string name="warning_token_trustline_button_title">Открыть Trustline</string>
+  <string name="warning_token_trustline_subtiile">Согласно правилам сети, чтобы пополнить этот токен, необходимо сначала открыть Trustline — это позволит вашему кошельку принимать и хранить этот актив.</string>
+  <string name="warning_token_trustline_tiile">Откройте Trustline</string>
   <string name="wc_alert_session_disconnected_description">Пожалуйста, вернитесь в браузер и выполните повторное подключение через WalletConnect.</string>
   <string name="wc_alert_wrong_card_description">Выбрана не верная карта или кольцо</string>
   <string name="wc_common_address">Адрес</string>
