@@ -165,6 +165,7 @@ internal class StakingModel @Inject constructor(
         }
 
     private var isInitialInfoAnalyticSent: Boolean = false
+    private var isBalanceUpdatedAfterStart: Boolean = false
 
     private val balanceUpdater by lazy(LazyThreadSafetyMode.NONE) {
         stakingBalanceUpdater.create(
@@ -421,7 +422,7 @@ internal class StakingModel @Inject constructor(
     override fun onRefreshSwipe(isRefreshing: Boolean) {
         stateController.update(SetInitialLoadingStateTransformer(isRefreshing))
         coroutineScope.launch {
-            balanceUpdater.updatePullToRefresh()
+            balanceUpdater.partialUpdate()
         }.invokeOnCompletion {
             stateController.update(SetInitialLoadingStateTransformer(false))
         }
@@ -1011,7 +1012,11 @@ internal class StakingModel @Inject constructor(
                 when {
                     isInitState() -> {
                         updateInitialData(status)
-                        balanceUpdater.updateAfterNavigationToInitial()
+
+                        if (!isBalanceUpdatedAfterStart) {
+                            isBalanceUpdatedAfterStart = true
+                            balanceUpdater.partialUpdate()
+                        }
                     }
                     isAssentState() -> {
                         getFee()
