@@ -14,6 +14,7 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.features.send.v2.api.FeeSelectorBlockComponent
 import com.tangem.features.walletconnect.components.WcRoutingComponent
 import com.tangem.features.walletconnect.connections.components.AlertsComponent
 import com.tangem.features.walletconnect.connections.components.WcPairComponent
@@ -29,6 +30,7 @@ import dagger.assisted.AssistedInject
 internal class DefaultWcRoutingComponent @AssistedInject constructor(
     @Assisted private val appComponentContext: AppComponentContext,
     @Assisted params: Unit,
+    private val feeSelectorBlockComponentFactory: FeeSelectorBlockComponent.Factory,
 ) : AppComponentContext by appComponentContext, WcRoutingComponent {
 
     private val model: WcRoutingModel = getOrCreateModel()
@@ -62,14 +64,17 @@ internal class DefaultWcRoutingComponent @AssistedInject constructor(
             is WcInnerRoute.SignMessage -> WcSignTransactionContainerComponent(
                 appComponentContext = childContext,
                 params = WcTransactionModelParams(config.rawRequest),
+                feeSelectorBlockComponentFactory = feeSelectorBlockComponentFactory,
             )
             is WcInnerRoute.AddNetwork -> WcAddNetworkContainerComponent(
                 appComponentContext = childContext,
                 params = WcTransactionModelParams(config.rawRequest),
+                feeSelectorBlockComponentFactory = feeSelectorBlockComponentFactory,
             )
             is WcInnerRoute.Send -> WcSendTransactionContainerComponent(
                 appComponentContext = childContext,
                 params = WcTransactionModelParams(config.rawRequest),
+                feeSelectorBlockComponentFactory = feeSelectorBlockComponentFactory,
             )
             is WcInnerRoute.Pair -> WcPairComponent(
                 appComponentContext = childContext,
