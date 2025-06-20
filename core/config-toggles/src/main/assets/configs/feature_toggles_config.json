@@ -70,5 +70,9 @@
     {
         "name": "SWAP_REDESIGN_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "SEND_REDESIGN_ENABLED",
+        "version": "undefined"
     }
 ]
