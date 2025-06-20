@@ -24,9 +24,11 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.features.send.v2.api.FeeSelectorBlockComponent
 import com.tangem.features.walletconnect.connections.entity.VerifiedDAppState
 import com.tangem.features.walletconnect.connections.ui.WcAppInfoItem
 import com.tangem.features.walletconnect.impl.R
+import com.tangem.features.walletconnect.transaction.components.PreviewFeeSelectorBlockComponent
 import com.tangem.features.walletconnect.transaction.entity.blockaid.WcEstimatedWalletChangeUM
 import com.tangem.features.walletconnect.transaction.entity.blockaid.WcEstimatedWalletChangesUM
 import com.tangem.features.walletconnect.transaction.entity.blockaid.WcSendReceiveTransactionCheckResultsUM
@@ -40,9 +42,11 @@ import com.tangem.features.walletconnect.transaction.ui.common.WcTransactionRequ
 import com.tangem.features.walletconnect.transaction.ui.common.WcTransactionRequestItem
 import kotlinx.collections.immutable.persistentListOf
 
+@Suppress("LongParameterList")
 @Composable
 internal fun WcSendTransactionModalBottomSheet(
     state: WcSendTransactionItemUM,
+    feeSelectorBlockComponent: FeeSelectorBlockComponent,
     onClickTransactionRequest: () -> Unit,
     onBack: () -> Unit,
     onDismiss: () -> Unit,
@@ -99,7 +103,7 @@ internal fun WcSendTransactionModalBottomSheet(
                     WcSendTransactionItems(
                         walletName = state.walletName,
                         networkInfo = state.networkInfo,
-                        networkFee = state.networkFee,
+                        feeSelectorBlockComponent = feeSelectorBlockComponent,
                         address = state.address,
                     )
                 }
@@ -141,7 +145,14 @@ private fun WcSendTransactionBottomSheetPreview(
                 )
             },
             content = {
-                WcSendTransactionModalBottomSheet(state, {}, {}, {}, {})
+                WcSendTransactionModalBottomSheet(
+                    state = state,
+                    feeSelectorBlockComponent = PreviewFeeSelectorBlockComponent(),
+                    onClickTransactionRequest = {},
+                    onBack = {},
+                    onDismiss = {},
+                    onClickAllowToSpend = {},
+                )
             },
         )
     }
