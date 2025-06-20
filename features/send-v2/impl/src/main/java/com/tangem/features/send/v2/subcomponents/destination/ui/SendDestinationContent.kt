@@ -16,6 +16,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.containers.FooterContainer
 import com.tangem.core.ui.components.inputrow.InputRowRecipient
@@ -60,10 +64,13 @@ internal fun SendDestinationContent(
             isError = isError,
             isValidating = isValidating,
             onAddressChange = clickIntents::onRecipientAddressValueChange,
+            onQrCodeClick = clickIntents::onQrCodeScanClick,
+            isRedesignEnabled = state.isRedesignEnabled,
         )
         memoField(
             memoField = memoField,
             onMemoChange = clickIntents::onRecipientMemoValueChange,
+            isRedesignEnabled = state.isRedesignEnabled,
         )
         listHeaderItem(
             titleRes = R.string.send_recipient_wallets_title,
@@ -100,16 +107,23 @@ internal fun SendDestinationContent(
     }
 }
 
+@Suppress("LongParameterList")
 private fun LazyListScope.addressItem(
     address: DestinationTextFieldUM.RecipientAddress,
     networkName: String,
     isError: Boolean,
     isValidating: Boolean,
     onAddressChange: (String, EnterAddressSource) -> Unit,
+    onQrCodeClick: () -> Unit,
+    isRedesignEnabled: Boolean,
 ) {
     item(key = ADDRESS_FIELD_KEY) {
         FooterContainer(
-            footer = resourceReference(R.string.send_recipient_address_footer, wrappedList(networkName)),
+            footer = if (isRedesignEnabled) {
+                buildHighlightedFooterText(networkName)
+            } else {
+                resourceReference(R.string.send_recipient_address_footer, wrappedList(networkName))
+            },
         ) {
             InputRowRecipient(
                 value = address.value,
@@ -117,6 +131,8 @@ private fun LazyListScope.addressItem(
                 placeholder = address.placeholder,
                 onValueChange = { onAddressChange(it, EnterAddressSource.InputField) },
                 onPasteClick = { onAddressChange(it, EnterAddressSource.PasteButton) },
+                onQrCodeClick = onQrCodeClick,
+                isRedesignEnabled = isRedesignEnabled,
                 isError = isError,
                 isLoading = isValidating,
                 error = address.error,
@@ -131,9 +147,37 @@ private fun LazyListScope.addressItem(
     }
 }
 
+@Composable
+private fun buildHighlightedFooterText(networkName: String): TextReference {
+    return annotatedReference(
+        buildAnnotatedString {
+            val styledText = stringResourceSafe(
+                R.string.send_recipient_address_footer_highlighted_part,
+                networkName,
+            )
+            val styledColor = TangemTheme.colors.text.secondary
+            appendWithStyledPlaceholder(
+                template = stringResourceSafe(
+                    R.string.send_recipient_address_footer_v2,
+                    networkName,
+                ),
+                placeholder = networkName,
+            ) {
+                withStyle(SpanStyle(fontWeight = FontWeight.Medium)) {
+                    appendColored(
+                        text = styledText,
+                        color = styledColor,
+                    )
+                }
+            }
+        },
+    )
+}
+
 private fun LazyListScope.memoField(
     memoField: DestinationTextFieldUM.RecipientMemo?,
     onMemoChange: (String, Boolean) -> Unit,
+    isRedesignEnabled: Boolean,
 ) {
     if (memoField != null) {
         item(key = MEMO_FIELD_KEY) {
@@ -142,7 +186,24 @@ private fun LazyListScope.memoField(
                 value = memoField.value,
                 label = memoField.label,
                 placeholder = placeholder,
-                footer = resourceReference(R.string.send_recipient_memo_footer),
+                footer = if (isRedesignEnabled) {
+                    annotatedReference(
+                        buildAnnotatedString {
+                            append(stringResourceSafe(R.string.send_recipient_memo_footer_v2))
+                            append("\n")
+                            withStyle(SpanStyle(fontWeight = FontWeight.Medium)) {
+                                appendColored(
+                                    text = stringResourceSafe(
+                                        R.string.send_recipient_memo_footer_v2_highlighted,
+                                    ),
+                                    color = TangemTheme.colors.text.secondary,
+                                )
+                            }
+                        },
+                    )
+                } else {
+                    resourceReference(R.string.send_recipient_memo_footer)
+                },
                 onValueChange = { onMemoChange(it, false) },
                 onPasteClick = { onMemoChange(it, true) },
                 modifier = Modifier.padding(top = 20.dp),
@@ -151,6 +212,7 @@ private fun LazyListScope.memoField(
                 error = memoField.error,
                 isReadOnly = !memoField.isEnabled,
                 isValuePasted = memoField.isValuePasted,
+                isRedesignEnabled = isRedesignEnabled,
             )
         }
     }
