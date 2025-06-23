@@ -31,56 +31,6 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.rememberDecimalFormat
 import kotlinx.coroutines.delay
 
-@Deprecated("Use AmountField with clicks")
-@Composable
-internal fun AmountField(amountField: AmountFieldModel, appCurrencyCode: String) {
-    val decimalFormat = rememberDecimalFormat()
-    val isFiatValue = amountField.isFiatValue
-    val currencyCode = if (isFiatValue) appCurrencyCode else null
-    val (primaryAmount, primaryValue) = if (isFiatValue) {
-        amountField.fiatAmount to amountField.fiatValue
-    } else {
-        amountField.cryptoAmount to amountField.value
-    }
-    val requester = remember { FocusRequester() }
-
-    AmountTextField(
-        value = primaryValue,
-        decimals = primaryAmount.decimals,
-        visualTransformation = AmountVisualTransformation(
-            decimals = primaryAmount.decimals,
-            symbol = primaryAmount.currencySymbol,
-            currencyCode = currencyCode,
-            decimalFormat = decimalFormat,
-        ),
-        onValueChange = amountField.onValueChange,
-        keyboardOptions = amountField.keyboardOptions,
-        keyboardActions = amountField.keyboardActions,
-        textStyle = TangemTheme.typography.h2.copy(
-            color = TangemTheme.colors.text.primary1,
-            textAlign = TextAlign.Center,
-        ),
-        isAutoResize = true,
-        isValuePasted = amountField.isValuePasted,
-        onValuePastedTriggerDismiss = amountField.onValuePastedTriggerDismiss,
-        modifier = Modifier
-            .focusRequester(requester)
-            .padding(
-                top = TangemTheme.dimens.spacing24,
-                start = TangemTheme.dimens.spacing12,
-                end = TangemTheme.dimens.spacing12,
-            )
-            .requiredHeightIn(min = TangemTheme.dimens.size32),
-    )
-
-    LaunchedEffect(key1 = Unit) {
-        delay(timeMillis = 200)
-        requester.requestFocus()
-    }
-
-    AmountSecondary(amountField, appCurrencyCode)
-}
-
 @Composable
 internal fun AmountField(
     amountField: AmountFieldModel,
@@ -97,7 +47,7 @@ internal fun AmountField(
         amountField.cryptoAmount to amountField.value
     }
     val requester = remember { FocusRequester() }
-
+    val symbolColor = if (primaryValue.isBlank()) TangemTheme.colors.text.disabled else TangemTheme.colors.text.primary1
     AmountTextField(
         value = primaryValue,
         decimals = primaryAmount.decimals,
@@ -106,6 +56,7 @@ internal fun AmountField(
             symbol = primaryAmount.currencySymbol,
             currencyCode = currencyCode,
             decimalFormat = decimalFormat,
+            symbolColor = symbolColor,
         ),
         onValueChange = onValueChange,
         keyboardOptions = amountField.keyboardOptions,
