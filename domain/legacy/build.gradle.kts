@@ -52,6 +52,5 @@ dependencies {
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)
     testImplementation(projects.common.test)
-    androidTestImplementation(deps.test.junit.android)
-    androidTestImplementation(deps.test.espresso)
+
 }
