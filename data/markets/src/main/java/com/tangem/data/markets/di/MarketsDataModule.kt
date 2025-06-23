@@ -4,9 +4,9 @@ import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.common.network.NetworkFactory
+import com.tangem.data.common.quote.QuotesFetcher
 import com.tangem.data.markets.DefaultMarketsTokenRepository
 import com.tangem.datasource.api.markets.TangemTechMarketsApi
-import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.datastore.RuntimeStateStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.markets.repositories.MarketsTokenRepository
@@ -25,7 +25,7 @@ internal object MarketsDataModule {
     @Singleton
     fun provideMarketsTokenRepository(
         marketsApi: TangemTechMarketsApi,
-        tangemTechApi: TangemTechApi,
+        quotesFetcher: QuotesFetcher,
         userWalletsStore: UserWalletsStore,
         dispatchers: CoroutineDispatcherProvider,
         analyticsEventHandler: AnalyticsEventHandler,
@@ -35,7 +35,7 @@ internal object MarketsDataModule {
     ): MarketsTokenRepository {
         return DefaultMarketsTokenRepository(
             marketsApi = marketsApi,
-            tangemTechApi = tangemTechApi,
+            quotesFetcher = quotesFetcher,
             dispatcherProvider = dispatchers,
             userWalletsStore = userWalletsStore,
             analyticsEventHandler = analyticsEventHandler,
