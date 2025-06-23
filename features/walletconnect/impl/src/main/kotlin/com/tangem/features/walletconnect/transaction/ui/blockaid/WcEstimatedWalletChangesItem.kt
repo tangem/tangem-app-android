@@ -4,6 +4,7 @@ import android.content.res.Configuration
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
@@ -68,9 +69,14 @@ internal fun WcEstimatedWalletChangesItem(item: WcEstimatedWalletChangesUM, modi
         }
 
         if (item.items.size > MAX_CHANGES_SIZE) {
+            val interactionSource = remember { MutableInteractionSource() }
             Row(
                 modifier = Modifier
-                    .clickable { isExpanded = !isExpanded }
+                    .clickable(
+                        interactionSource = interactionSource,
+                        indication = null,
+                        onClick = { isExpanded = !isExpanded },
+                    )
                     .padding(bottom = 12.dp, start = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
