@@ -1,18 +1,18 @@
 package com.tangem.data.quotes.multi
 
 import arrow.core.Either
-import com.tangem.data.common.api.safeApiCallWithTimeout
+import arrow.core.getOrElse
+import com.tangem.data.common.quote.QuotesFetcher
+import com.tangem.data.common.quote.QuotesFetcher.Field
 import com.tangem.data.quotes.store.QuotesStatusesStore
 import com.tangem.data.quotes.store.setSourceAsCache
 import com.tangem.data.quotes.store.setSourceAsOnlyCache
 import com.tangem.data.quotes.utils.QuotesUnsupportedCurrenciesIdAdapter
-import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.appcurrency.AppCurrencyResponseStore
 import com.tangem.domain.core.utils.catchOn
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -20,16 +20,16 @@ import javax.inject.Singleton
 /**
  * Default implementation of [MultiQuoteStatusFetcher]
  *
- * @property tangemTechApi            tangemTech api
+ * @property quotesFetcher            quotes fetcher
  * @property appCurrencyResponseStore app currency response store
- * @property quotesStatusesStore              quotes store
+ * @property quotesStatusesStore      quotes statuses store
  * @property dispatchers              dispatchers
  *
 [REDACTED_AUTHOR]
  */
 @Singleton
 internal class DefaultMultiQuoteStatusFetcher @Inject constructor(
-    private val tangemTechApi: TangemTechApi,
+    private val quotesFetcher: QuotesFetcher,
     private val appCurrencyResponseStore: AppCurrencyResponseStore,
     private val quotesStatusesStore: QuotesStatusesStore,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -51,16 +51,13 @@ internal class DefaultMultiQuoteStatusFetcher @Inject constructor(
         )
 
         val appCurrencyId = getAppCurrencyId(params = params)
-        val coinIds = replacementIdsResult.idsForRequest.joinToString(separator = ",")
 
-        val response = safeApiCallWithTimeout(
-            call = {
-                withContext(dispatchers.io) {
-                    tangemTechApi.getQuotes(currencyId = appCurrencyId, coinIds = coinIds).bind()
-                }
-            },
-            onError = { error -> throw error },
+        val response = quotesFetcher.fetch(
+            fiatCurrencyId = appCurrencyId,
+            currenciesIds = replacementIdsResult.idsForRequest,
+            fields = setOf(Field.PRICE, Field.PRICE_CHANGE_24H),
         )
+            .getOrElse { error("Cause: $it") }
 
         val updatedResponse = QuotesUnsupportedCurrenciesIdAdapter.getResponseWithUnsupportedCurrencies(
             response = response,
