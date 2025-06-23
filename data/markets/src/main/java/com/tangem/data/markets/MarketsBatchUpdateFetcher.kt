@@ -1,6 +1,8 @@
 package com.tangem.data.markets
 
+import arrow.core.getOrElse
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.data.common.quote.QuotesFetcher
 import com.tangem.data.common.utils.retryOnError
 import com.tangem.data.markets.analytics.MarketsDataAnalyticsEvent
 import com.tangem.data.markets.converters.TokenMarketChartsConverter
@@ -11,8 +13,6 @@ import com.tangem.datasource.api.common.response.catchApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.markets.TangemTechMarketsApi
 import com.tangem.datasource.api.markets.models.response.TokenMarketChartListResponse
-import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.datasource.api.tangemTech.TangemTechApi.Companion.marketsQuoteFields
 import com.tangem.domain.markets.TokenMarket
 import com.tangem.domain.markets.TokenMarketUpdateRequest
 import com.tangem.pagination.Batch
@@ -24,7 +24,7 @@ import kotlinx.coroutines.launch
 
 internal class MarketsBatchUpdateFetcher(
     private val marketsApi: TangemTechMarketsApi,
-    private val tangemTechApi: TangemTechApi,
+    private val quotesFetcher: QuotesFetcher,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val onApiResponseError: (ApiResponseError) -> Unit,
 ) : BatchUpdateFetcher<Int, List<TokenMarket>, TokenMarketUpdateRequest> {
@@ -72,13 +72,24 @@ internal class MarketsBatchUpdateFetcher(
             }
             is TokenMarketUpdateRequest.UpdateQuotes -> {
                 val quotesRes = retryOnError {
-                    catchApiResponseError(onApiResponseError) {
-                        tangemTechApi.getQuotes(
-                            currencyId = updateRequest.currencyId,
-                            coinIds = idsToUpdate.map { it.second }.flatten().joinToString(separator = ","),
-                            fields = marketsQuoteFields.joinToString(separator = ","),
-                        ).getOrThrow()
-                    }
+                    val currenciesIds = idsToUpdate.flatMapTo(hashSetOf()) { it.second.map { rawID -> rawID.value } }
+
+                    quotesFetcher.fetch(
+                        fiatCurrencyId = updateRequest.currencyId,
+                        currenciesIds = currenciesIds,
+                        fields = setOf(QuotesFetcher.Field.ALL_PRICES),
+                    )
+                        .getOrElse {
+                            val exception = if (it is QuotesFetcher.Error.ApiOperationError) {
+                                onApiResponseError(it.apiError)
+
+                                it.apiError
+                            } else {
+                                error("Cause: $it")
+                            }
+
+                            throw exception
+                        }
                 }
 
                 update {
