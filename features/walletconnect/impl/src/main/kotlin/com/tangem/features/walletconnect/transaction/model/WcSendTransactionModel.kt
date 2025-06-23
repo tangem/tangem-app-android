@@ -1,8 +1,11 @@
 package com.tangem.features.walletconnect.transaction.model
 
 import androidx.compose.runtime.Stable
+import arrow.core.Either
 import com.arkivanov.decompose.router.stack.StackNavigation
+import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.pushNew
+import com.domain.blockaid.models.transaction.ValidationResult
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -48,6 +51,7 @@ internal class WcSendTransactionModel @Inject constructor(
     val stackNavigation = StackNavigation<WcTransactionRoutes>()
 
     private var wcApproval: WcApproval? = null
+    private var sign: () -> Unit = {}
 
     init {
         @Suppress("UnusedPrivateMember")
@@ -66,7 +70,7 @@ internal class WcSendTransactionModel @Inject constructor(
                     .distinctUntilChanged()
                     .collectLatest {
                         val (signState, securityCheck) = it
-                        if (signingIsDone(signState)) return@collectLatest
+                        if (signingIsDone(signState, useCase)) return@collectLatest
                         val signModel: Any = signState.signModel
                         val isMutableFee = useCase is WcMutableFee
                         val dAppFee = if (isMutableFee) useCase.dAppFee() else null
@@ -81,6 +85,7 @@ internal class WcSendTransactionModel @Inject constructor(
                         var isApprovalMethod = isSecurityCheckContent &&
                             securityCheck.content is BlockAidTransactionCheck.Result.Approval
                         wcApproval = useCase as? WcApproval
+                        sign = { useCase.sign() }
                         buildUiState(securityCheck, useCase, signState)
                     }
                 else -> unknownMethodRunnable()
@@ -107,7 +112,7 @@ internal class WcSendTransactionModel @Inject constructor(
                 actions = WcTransactionActionsUM(
                     onShowVerifiedAlert = ::showVerifiedAlert,
                     onDismiss = { cancel(useCase) },
-                    onSign = useCase::sign,
+                    onSign = { onSign(securityCheck.getOrNull()) },
                     onCopy = { copyData(useCase.rawSdkRequest.request.params) },
                 ),
             ),
@@ -127,6 +132,14 @@ internal class WcSendTransactionModel @Inject constructor(
         stackNavigation.pushNew(WcTransactionRoutes.TransactionRequestInfo)
     }
 
+    private fun onSign(securityCheck: BlockAidTransactionCheck.Result?) {
+        if (securityCheck?.result?.validation == ValidationResult.UNSAFE) {
+            showMaliciousAlert(securityCheck.result.description)
+        } else {
+            sign()
+        }
+    }
+
     fun onClickDoneCustomAllowance(value: BigDecimal, isUnlimited: Boolean) {
         val maxValue = if (isUnlimited) Double.MAX_VALUE.toBigDecimal() else value
         wcApproval?.getAmount()?.let { currentAmount ->
@@ -142,12 +155,34 @@ internal class WcSendTransactionModel @Inject constructor(
         stackNavigation.pushNew(WcTransactionRoutes.Alert(WcTransactionRoutes.Alert.Type.Verified(appName)))
     }
 
-    private fun signingIsDone(signState: WcSignState<*>): Boolean {
+    private fun showMaliciousAlert(description: String?) {
+        val type = WcTransactionRoutes.Alert.Type.MaliciousInfo(description = description, onClick = ::signFromAlert)
+        stackNavigation.pushNew(WcTransactionRoutes.Alert(type))
+    }
+
+    private fun signFromAlert() {
+        stackNavigation.pop()
+        sign()
+    }
+
+    private fun signingIsDone(signState: WcSignState<*>, useCase: WcSignUseCase<*>): Boolean {
         (signState.domainStep as? WcSignStep.Result)?.result?.let {
-            router.pop()
+            handleSigningError(it, useCase)
             return true
         }
         return false
+    }
+
+    private fun handleSigningError(result: Either<Throwable, Unit>, useCase: WcSignUseCase<*>) {
+        if (result.isLeft()) {
+            val error = WcTransactionRoutes.Alert.Type.UnknownError(
+                errorMessage = result.leftOrNull()?.message,
+                onDismiss = { cancel(useCase) },
+            )
+            stackNavigation.pushNew(WcTransactionRoutes.Alert(error))
+        } else {
+            router.pop()
+        }
     }
 
     private fun cancel(useCase: WcSignUseCase<*>) {
