@@ -118,6 +118,7 @@ dependencyResolutionManagement {
             }
         }
         maven("https://jitpack.io")
+        maven("https://maven.sumsub.com/repository/maven-public/")
     }
 
     versionCatalogs {
@@ -247,6 +248,9 @@ include(":features:walletconnect:impl")
 
 include(":features:hot-wallet:api")
 include(":features:hot-wallet:impl")
+
+include(":features:kyc:api")
+include(":features:kyc:impl")
 // endregion Feature modules
 
 // region Domain modules
