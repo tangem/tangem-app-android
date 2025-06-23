@@ -217,6 +217,8 @@ dependencies {
     implementation(projects.features.usedesk.impl)
     implementation(projects.features.hotWallet.api)
     implementation(projects.features.hotWallet.impl)
+    implementation(projects.features.kyc.api)
+    implementation(projects.features.kyc.impl)
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)
