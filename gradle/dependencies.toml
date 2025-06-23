@@ -107,9 +107,8 @@ junitAndroidExt = "1.1.5"
 mockk = "1.13.4"
 turbine = "1.2.0"
 truth = "1.1.3"
-ultron-android = "2.5.4"
-ultron-compose = "2.5.4"
-ultron-allure ="2.5.4"
+kaspresso = "1.5.4"
+kaspresso-compose = "1.5.4"
 compose-junit = "1.6.2"
 hamcrest = "2.2"
 # endregion Testing
@@ -207,9 +206,8 @@ test-junit-android = { module = "androidx.test.ext:junit", version.ref = "junitA
 test-truth = { module = "com.google.truth:truth", version.ref = "truth" }
 test-mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 test-turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
-test-ultron-android = { module = "com.atiurin:ultron-android", version.ref = "ultron-android" }
-test-ultron-compose = { module = "com.atiurin:ultron-compose", version.ref = "ultron-compose" }
-test-ultron-allure = { module = "com.atiurin:ultron-allure", version.ref = "ultron-allure" }
+test-kaspresso = { module = "com.kaspersky.android-components:kaspresso", version.ref = "kaspresso" }
+test-kaspresso-compose = { module = "com.kaspersky.android-components:kaspresso-compose-support", version.ref = "kaspresso-compose" }
 test-compose-junit = { module = "androidx.compose.ui:ui-test-junit4", version.ref = "compose-junit" }
 test-hamcrest = { module = "org.hamcrest:hamcrest", version.ref = "hamcrest" }
 test-hilt = { module = "com.google.dagger:hilt-android-testing", version.ref = "hilt" }
