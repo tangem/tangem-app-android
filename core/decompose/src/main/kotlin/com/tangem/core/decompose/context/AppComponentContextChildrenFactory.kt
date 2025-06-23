@@ -10,6 +10,7 @@ import com.tangem.core.decompose.ui.DefaultUiMessageSender
 import com.tangem.core.decompose.ui.UiMessageHandler
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.decompose.ui.UiMessageSenderOwner
+import com.tangem.core.decompose.utils.ActivityHolder
 import com.tangem.core.decompose.utils.ComponentCoroutineScope
 import com.tangem.core.decompose.utils.DispatchersOwner
 import kotlinx.coroutines.CoroutineScope
@@ -58,7 +59,8 @@ fun AppComponentContext.childByContext(
     NavigationOwner by this@childByContext,
     UiMessageSenderOwner by this@childByContext,
     DispatchersOwner by this@childByContext,
-    HiltComponentBuilderOwner by this@childByContext {
+    HiltComponentBuilderOwner by this@childByContext,
+    ActivityHolder by this@childByContext {
 
     override val tags: HashMap<String, Any> = HashMap()
 
