@@ -111,6 +111,7 @@ kaspresso = "1.5.4"
 kaspresso-compose = "1.5.4"
 compose-junit = "1.6.2"
 hamcrest = "2.2"
+orchestrator = "1.5.1"
 # endregion Testing
 
 [plugins]
@@ -212,6 +213,7 @@ test-compose-junit = { module = "androidx.compose.ui:ui-test-junit4", version.re
 test-hamcrest = { module = "org.hamcrest:hamcrest", version.ref = "hamcrest" }
 test-hilt = { module = "com.google.dagger:hilt-android-testing", version.ref = "hilt" }
 test-hilt-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hilt" }
+test-orchestrator = { module = "androidx.test:orchestrator", version.ref = "orchestrator" }
 # endregion Test
 
 # region Other
