@@ -6,6 +6,7 @@ import com.tangem.datasource.api.express.models.response.ExpressErrorResponse
 import com.tangem.domain.onramp.model.error.OnrampError
 import com.tangem.utils.converter.Converter
 
+@Deprecated("Use ExpressErrorConverter")
 internal class OnrampErrorConverter(
     private val jsonAdapter: JsonAdapter<ExpressErrorResponse>,
 ) : Converter<String, OnrampError> {
