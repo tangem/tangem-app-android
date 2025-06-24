@@ -251,6 +251,9 @@ include(":features:hot-wallet:impl")
 
 include(":features:kyc:api")
 include(":features:kyc:impl")
+
+include(":features:create-wallet-selection:api")
+include(":features:create-wallet-selection:impl")
 // endregion Feature modules
 
 // region Domain modules
