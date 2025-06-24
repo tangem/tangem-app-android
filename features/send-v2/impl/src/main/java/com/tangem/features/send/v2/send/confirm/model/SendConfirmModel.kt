@@ -454,6 +454,7 @@ internal class SendConfirmModel @Inject constructor(
         }
     }
 
+    @Suppress("LongMethod")
     private fun configConfirmNavigation() {
         combine(
             flow = uiState,
@@ -470,7 +471,11 @@ internal class SendConfirmModel @Inject constructor(
                             id = R.string.send_summary_title,
                             formatArgs = wrappedList(params.cryptoCurrencyStatus.currency.name),
                         ),
-                        subtitle = amountUM?.title,
+                        subtitle = if (uiState.value.isRedesignEnabled) {
+                            null
+                        } else {
+                            amountUM?.title
+                        },
                         backIconRes = R.drawable.ic_close_24,
                         backIconClick = {
                             analyticsEventHandler.send(
