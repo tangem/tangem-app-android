@@ -83,6 +83,7 @@ internal class DefaultTransactionRepository(
         destination: String,
         userWalletId: UserWalletId,
         network: Network,
+        nonce: BigInteger?,
     ): TransactionData.Uncompiled = withContext(coroutineDispatcherProvider.io) {
         val blockchain = network.toBlockchain()
         val walletManager = walletManagersFacade.getOrCreateWalletManager(
@@ -101,7 +102,7 @@ internal class DefaultTransactionRepository(
             createTransactionDataExtras(
                 callData = callData,
                 network = network,
-                nonce = null,
+                nonce = nonce,
                 gasLimit = null,
             )
         } else {
