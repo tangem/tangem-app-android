@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
@@ -55,6 +56,7 @@ import com.tangem.utils.StringsSigns
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import java.math.BigDecimal
+import java.math.BigInteger
 
 @Composable
 internal fun FeeSelectorModalBottomSheet(state: FeeSelectorUM, onDismiss: () -> Unit) {
@@ -75,7 +77,10 @@ internal fun FeeSelectorModalBottomSheet(state: FeeSelectorUM, onDismiss: () -> 
             )
         },
         content = {
-            FeeSelectorItems(state = state, modifier = Modifier.padding(vertical = 4.dp, horizontal = 16.dp))
+            FeeSelectorItems(
+                state = state,
+                modifier = Modifier.padding(vertical = 4.dp, horizontal = 16.dp),
+            )
         },
         footer = {
             PrimaryButton(
@@ -240,18 +245,25 @@ private fun FeeSelectorItems(state: FeeSelectorUM.Content, modifier: Modifier = 
                     isSelected = isSelected,
                     iconBackgroundColor = iconBackgroundColor,
                     iconTint = iconTint,
+                    displayNonceInput = state.displayNonceInput,
+                    nonce = state.nonce,
+                    onNonceChange = state.onNonceChange,
                 )
             }
         }
     }
 }
 
+@Suppress("LongParameterList")
 @Composable
 private fun CustomFeeBlock(
     customFee: FeeItem.Custom,
     isSelected: Boolean,
     iconBackgroundColor: Color,
     iconTint: Color,
+    displayNonceInput: Boolean,
+    nonce: BigInteger?,
+    onNonceChange: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
@@ -281,7 +293,13 @@ private fun CustomFeeBlock(
             enter = expandVertically().plus(fadeIn()),
             exit = shrinkVertically().plus(fadeOut()),
         ) {
-            ExpandedCustomFeeItems(customFeeFields = customFee.customValues, onValueChange = { _, _ -> })
+            ExpandedCustomFeeItems(
+                customFeeFields = customFee.customValues,
+                onValueChange = { _, _ -> },
+                displayNonceInput = displayNonceInput,
+                nonce = nonce,
+                onNonceChange = onNonceChange,
+            )
         }
     }
 }
@@ -290,11 +308,14 @@ private fun CustomFeeBlock(
 private fun ExpandedCustomFeeItems(
     customFeeFields: ImmutableList<CustomFeeFieldUM>,
     onValueChange: (Int, String) -> Unit,
+    displayNonceInput: Boolean,
+    nonce: BigInteger?,
+    onNonceChange: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
         customFeeFields.fastForEachIndexed { index, field ->
-            val showDivider = index != customFeeFields.size - 1
+            val showDivider = index != customFeeFields.size - 1 || displayNonceInput
             if (field.label != null) {
                 InputRowEnterInfoAmountV2(
                     text = field.value,
@@ -322,6 +343,21 @@ private fun ExpandedCustomFeeItems(
                     showDivider = showDivider,
                 )
             }
+        }
+
+        if (displayNonceInput) {
+            // TODO implement v2 input without binding to amount
+            InputRowEnterInfoAmountV2(
+                text = nonce?.toString() ?: "",
+                decimals = 0,
+                title = resourceReference(R.string.send_nonce),
+                titleColor = TangemTheme.colors.text.tertiary,
+                symbol = null,
+                onValueChange = onNonceChange,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                keyboardActions = KeyboardActions(),
+                showDivider = false,
+            )
         }
     }
 }
@@ -466,6 +502,9 @@ private class FeeSelectorUMContentProvider : CollectionPreviewParameterProvider<
                 rate = BigDecimal.TEN,
                 appCurrency = AppCurrency.Default,
             ),
+            displayNonceInput = true,
+            onNonceChange = {},
+            nonce = null,
         ),
     ),
 )

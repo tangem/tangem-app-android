@@ -320,6 +320,7 @@ internal class SendConfirmModel @Inject constructor(
         val memo = destinationUM?.memoTextField?.value
         val fee = feeSelectorUM?.selectedFee
         val feeValue = fee?.amount?.value ?: return
+        val nonce = feeSelectorUM?.nonce
 
         val receivingAmount = checkAndCalculateSubtractedAmount(
             isAmountSubtractAvailable = isAmountSubtractAvailable,
@@ -334,6 +335,7 @@ internal class SendConfirmModel @Inject constructor(
                 amount = receivingAmount.convertToSdkAmount(cryptoCurrency),
                 fee = fee,
                 memo = memo,
+                nonce = nonce,
                 destination = destination,
                 userWalletId = userWallet.walletId,
                 network = cryptoCurrency.network,
