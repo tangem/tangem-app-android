@@ -364,5 +364,6 @@ internal class SendModel @Inject constructor(
         feeUM = FeeUM.Empty(),
         confirmUM = ConfirmUM.Empty,
         navigationUM = NavigationUM.Empty,
+        isRedesignEnabled = sendFeatureToggles.isSendRedesignEnabled,
     )
 }
