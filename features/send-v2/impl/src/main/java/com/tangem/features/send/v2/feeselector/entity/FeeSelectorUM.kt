@@ -7,6 +7,7 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.features.send.v2.subcomponents.fee.ui.state.CustomFeeFieldUM
 import kotlinx.collections.immutable.ImmutableList
 import java.math.BigDecimal
+import java.math.BigInteger
 
 @Immutable
 internal sealed class FeeSelectorUM {
@@ -19,6 +20,9 @@ internal sealed class FeeSelectorUM {
         val selectedFeeItem: FeeItem,
         val isFeeApproximate: Boolean,
         val feeFiatRateDataHolder: FeeFiatRateDataHolder?,
+        val displayNonceInput: Boolean,
+        val nonce: BigInteger?,
+        val onNonceChange: (String) -> Unit,
     ) : FeeSelectorUM()
 }
 
