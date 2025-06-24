@@ -15,7 +15,7 @@ firebasePerf = "1.4.2"
 androidxActivityCompose = "1.8.0"
 androidxAppCompat = "1.5.1"
 androidxBrowser = "1.4.0"
-androidxConstraintLayout = "2.1.4"
+androidxConstraintLayout = "2.2.1"
 androidxKtx = "1.9.0"
 androidxSplashScreen = "1.0.1"
 androidxFragment = "1.8.5"
@@ -32,7 +32,7 @@ compose-runtime = "1.7.4"
 compose-foundation = "1.7.4"
 compose-material = "1.7.4"
 compose-material3 = "1.3.1"
-compose-constraint = "1.0.1"
+compose-constraint = "1.1.1"
 compose-navigation = "2.7.7"
 compose-accompanist = "0.30.1"
 compose-paging = "3.2.1"
@@ -90,6 +90,7 @@ room = "2.6.1"
 markdown = "0.7.2"
 markdownComposeView = "0.5.4"
 usedesk = "4.4.0"
+sumsub = "1.36.0"
 # endregion Other libraries
 
 # region Tools
@@ -106,9 +107,8 @@ junitAndroidExt = "1.1.5"
 mockk = "1.13.4"
 turbine = "1.2.0"
 truth = "1.1.3"
-ultron-android = "2.5.4"
-ultron-compose = "2.5.4"
-ultron-allure ="2.5.4"
+kaspresso = "1.5.4"
+kaspresso-compose = "1.5.4"
 compose-junit = "1.6.2"
 hamcrest = "2.2"
 # endregion Testing
@@ -206,9 +206,8 @@ test-junit-android = { module = "androidx.test.ext:junit", version.ref = "junitA
 test-truth = { module = "com.google.truth:truth", version.ref = "truth" }
 test-mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 test-turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
-test-ultron-android = { module = "com.atiurin:ultron-android", version.ref = "ultron-android" }
-test-ultron-compose = { module = "com.atiurin:ultron-compose", version.ref = "ultron-compose" }
-test-ultron-allure = { module = "com.atiurin:ultron-allure", version.ref = "ultron-allure" }
+test-kaspresso = { module = "com.kaspersky.android-components:kaspresso", version.ref = "kaspresso" }
+test-kaspresso-compose = { module = "com.kaspersky.android-components:kaspresso-compose-support", version.ref = "kaspresso-compose" }
 test-compose-junit = { module = "androidx.compose.ui:ui-test-junit4", version.ref = "compose-junit" }
 test-hamcrest = { module = "org.hamcrest:hamcrest", version.ref = "hamcrest" }
 test-hilt = { module = "com.google.dagger:hilt-android-testing", version.ref = "hilt" }
@@ -277,4 +276,5 @@ markdown = { module = "org.jetbrains:markdown", version.ref = "markdown" }
 markdown-composeview = { module = "com.github.jeziellago:compose-markdown", version.ref = "markdownComposeView" }
 usedesk-chat-sdk = { module = "com.github.Usedesk.Android_SDK:chat-sdk", version.ref = "usedesk" }
 usedesk-chat-gui = { module = "com.github.Usedesk.Android_SDK:chat-gui", version.ref = "usedesk" }
+sumsub-sdk = { module = "com.sumsub.sns:idensic-mobile-sdk", version.ref = "sumsub" }
 # endregion Other

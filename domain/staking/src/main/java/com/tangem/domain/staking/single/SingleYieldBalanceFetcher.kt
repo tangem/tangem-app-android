@@ -3,7 +3,6 @@ package com.tangem.domain.staking.single
 import com.tangem.domain.core.flow.FlowFetcher
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.staking.fetcher.YieldBalanceFetcherParams
 import com.tangem.domain.wallets.models.UserWalletId
 
 /**
@@ -11,7 +10,7 @@ import com.tangem.domain.wallets.models.UserWalletId
  *
 [REDACTED_AUTHOR]
  */
-interface SingleYieldBalanceFetcher : FlowFetcher<YieldBalanceFetcherParams.Single> {
+interface SingleYieldBalanceFetcher : FlowFetcher<SingleYieldBalanceFetcher.Params> {
 
     /**
      * Params for fetching single yield balance

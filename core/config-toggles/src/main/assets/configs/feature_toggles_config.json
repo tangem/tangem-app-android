@@ -17,15 +17,15 @@
     },
     {
         "name": "NFT_ENABLED",
-        "version": "undefined"
+        "version": "5.25.0"
     },
     {
         "name": "NFT_EVM_ENABLED",
-        "version": "undefined"
+        "version": "5.25.0"
     },
     {
         "name": "NFT_SOLANA_ENABLED",
-        "version": "undefined"
+        "version": "5.25.0"
     },
     {
         "name": "NFT_MEDIA_CONTENT_ENABLED",
@@ -69,6 +69,10 @@
     },
     {
         "name": "SWAP_REDESIGN_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "SEND_REDESIGN_ENABLED",
         "version": "undefined"
     }
 ]

@@ -27,6 +27,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastForEach
 import com.tangem.core.res.getStringSafe
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SecondaryButtonIconStart
@@ -39,6 +40,7 @@ import com.tangem.core.ui.components.snackbar.CopiedTextSnackbarHost
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.launch
 
@@ -67,9 +69,8 @@ private fun TokenReceiveBottomSheetContent(content: TokenReceiveBottomSheetConfi
             QrCodeContent(content = content, onAddressChange = { selectedAddress = it })
 
             Info(
-                symbol = content.asset.displaySymbol,
-                network = content.network,
                 showMemoDisclaimer = content.showMemoDisclaimer,
+                notifications = content.notifications,
             )
 
             Buttons(
@@ -82,7 +83,11 @@ private fun TokenReceiveBottomSheetContent(content: TokenReceiveBottomSheetConfi
 }
 
 @Composable
-private fun Info(symbol: TextReference, network: String, showMemoDisclaimer: Boolean, modifier: Modifier = Modifier) {
+private fun Info(
+    showMemoDisclaimer: Boolean,
+    notifications: ImmutableList<NotificationConfig>,
+    modifier: Modifier = Modifier,
+) {
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -100,17 +105,11 @@ private fun Info(symbol: TextReference, network: String, showMemoDisclaimer: Boo
             )
         }
 
-        Notification(
-            config = NotificationConfig(
-                title = resourceReference(
-                    R.string.receive_bottom_sheet_warning_title,
-                    wrappedList(symbol.resolveReference(), network),
-                ),
-                subtitle = resourceReference(R.string.receive_bottom_sheet_warning_message_description),
-                iconResId = R.drawable.ic_alert_circle_24,
-            ),
-            iconTint = TangemTheme.colors.icon.accent,
-        )
+        notifications.fastForEach {
+            key(it.hashCode()) {
+                Notification(config = it)
+            }
+        }
     }
 }
 
@@ -294,6 +293,13 @@ private class TokenReceiveBottomSheetConfigPreviewProvider : PreviewParameterPro
             symbol = "XLM",
         ),
         network = "Ethereum",
+        notifications = persistentListOf(
+            NotificationConfig(
+                title = stringReference("Send only XLM on the Ethereum network"),
+                subtitle = resourceReference(R.string.receive_bottom_sheet_warning_message_description),
+                iconResId = R.drawable.ic_alert_circle_24,
+            ),
+        ),
         addresses = persistentListOf(address),
         showMemoDisclaimer = false,
         onCopyClick = {},
