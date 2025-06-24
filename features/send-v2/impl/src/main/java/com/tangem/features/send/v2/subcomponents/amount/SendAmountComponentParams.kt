@@ -18,6 +18,7 @@ internal sealed class SendAmountComponentParams {
     abstract val appCurrency: AppCurrency
     abstract val cryptoCurrencyStatus: CryptoCurrencyStatus
     abstract val predefinedValues: PredefinedValues
+    abstract val isRedesignEnabled: Boolean
 
     data class AmountParams(
         override val state: AmountState,
@@ -26,6 +27,7 @@ internal sealed class SendAmountComponentParams {
         override val appCurrency: AppCurrency,
         override val cryptoCurrencyStatus: CryptoCurrencyStatus,
         override val predefinedValues: PredefinedValues,
+        override val isRedesignEnabled: Boolean,
         val callback: ModelCallback,
         val currentRoute: Flow<CommonSendRoute.Amount>,
         val isBalanceHidingFlow: StateFlow<Boolean>,
@@ -40,6 +42,7 @@ internal sealed class SendAmountComponentParams {
         override val appCurrency: AppCurrency,
         override val cryptoCurrencyStatus: CryptoCurrencyStatus,
         override val predefinedValues: PredefinedValues,
+        override val isRedesignEnabled: Boolean,
         val blockClickEnableFlow: StateFlow<Boolean>,
     ) : SendAmountComponentParams()
 }

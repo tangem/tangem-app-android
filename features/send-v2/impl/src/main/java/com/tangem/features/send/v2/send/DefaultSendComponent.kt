@@ -206,6 +206,7 @@ internal class DefaultSendComponent @AssistedInject constructor(
                             childStack = childStack,
                         )
                     },
+                    isRedesignEnabled = model.uiState.value.isRedesignEnabled,
                 ),
             )
         } else {
@@ -225,6 +226,7 @@ internal class DefaultSendComponent @AssistedInject constructor(
         return if (sendAmount != null && destinationAddress != null &&
             feeCryptoCurrencyStatus != null && cryptoCurrencyStatus != null
         ) {
+// [REDACTED_TODO_COMMENT]
             SendFeeComponent(
                 appComponentContext = factoryContext,
                 params = SendFeeComponentParams.FeeParams(
