@@ -26,6 +26,8 @@ internal class SendAnalyticHelper @Inject constructor(
             SendAnalyticEvents.TransactionScreenOpened(
                 token = cryptoCurrency.symbol,
                 feeType = feeType,
+                blockchain = cryptoCurrency.network.name,
+                nonceNotEmpty = feeSelectorUM.nonce != null,
             ),
         )
         analyticsEventHandler.send(
