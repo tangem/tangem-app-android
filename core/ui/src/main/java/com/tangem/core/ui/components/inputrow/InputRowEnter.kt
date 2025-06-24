@@ -50,6 +50,7 @@ fun InputRowEnter(
     text: String,
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
+    placeholder: TextReference? = null,
     titleColor: Color = TangemTheme.colors.text.secondary,
     textColor: Color = TangemTheme.colors.text.primary1,
     isSingleLine: Boolean = false,
@@ -78,6 +79,7 @@ fun InputRowEnter(
                 SimpleTextField(
                     value = text,
                     onValueChange = onValueChange,
+                    placeholder = placeholder,
                     color = textColor,
                     singleLine = isSingleLine,
                     visualTransformation = visualTransformation,
