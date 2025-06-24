@@ -71,6 +71,10 @@ configurations.all {
     }
 }
 
+configurations.androidTestImplementation {
+    exclude(module = "protobuf-lite")
+}
+
 
 dependencies {
     implementation(projects.domain.legacy)
@@ -215,6 +219,10 @@ dependencies {
     implementation(projects.features.walletconnect.impl)
     implementation(projects.features.usedesk.api)
     implementation(projects.features.usedesk.impl)
+    implementation(projects.features.hotWallet.api)
+    implementation(projects.features.hotWallet.impl)
+    implementation(projects.features.kyc.api)
+    implementation(projects.features.kyc.impl)
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)
@@ -313,19 +321,13 @@ dependencies {
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)
     androidTestImplementation(deps.test.junit.android)
-    androidTestImplementation(deps.test.espresso){
-        exclude(group = "com.google.protobuf", module = "protobuf-lite") //conflicting with firebasePerf
-    }
+    androidTestImplementation(deps.test.espresso)
     androidTestImplementation(deps.test.espresso.intents)
-    {
-        exclude(group = "com.google.protobuf", module = "protobuf-lite") //conflicting with firebasePerf
-    }
+    androidTestImplementation(deps.test.kaspresso)
+    androidTestImplementation(deps.test.kaspresso.compose)
     androidTestImplementation(deps.test.compose.junit)
     androidTestImplementation(deps.test.hamcrest)
     androidTestImplementation(deps.test.hilt)
-    androidTestImplementation(deps.test.ultron.android)
-    androidTestImplementation(deps.test.ultron.compose)
-    androidTestImplementation(deps.test.ultron.allure)
     kaptAndroidTest(deps.test.hilt.compiler)
 
     /** Chucker */

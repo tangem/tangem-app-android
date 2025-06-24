@@ -5,6 +5,7 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
+import com.tangem.features.send.v2.api.FeeSelectorBlockComponent
 import com.tangem.features.walletconnect.transaction.components.common.WcCommonTransactionComponentDelegate
 import com.tangem.features.walletconnect.transaction.components.common.WcTransactionModelParams
 import com.tangem.features.walletconnect.transaction.components.common.getWcCommonScreen
@@ -14,7 +15,8 @@ import com.tangem.features.walletconnect.transaction.routes.WcTransactionRoutes
 internal class WcAddNetworkContainerComponent(
     appComponentContext: AppComponentContext,
     params: WcTransactionModelParams,
-) : WcCommonTransactionComponentDelegate(appComponentContext) {
+    feeSelectorBlockComponentFactory: FeeSelectorBlockComponent.Factory,
+) : WcCommonTransactionComponentDelegate(appComponentContext, feeSelectorBlockComponentFactory) {
 
     private val model: WcAddNetworkModel = getOrCreateModel(params = params)
 

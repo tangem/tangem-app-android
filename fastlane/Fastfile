@@ -19,7 +19,7 @@ platform :android do
 
   desc "Run detekt"
   lane :detekt do
-    FileUtils.cp("../ci_resources/tests_8gb_ram_ci_gradle.properties", "../gradle.properties")
+    FileUtils.cp("../ci_resources/tests_ci_gradle.properties", "../gradle.properties")
     puts File.read("../gradle.properties")
     gradle(task: "detekt")
   end
@@ -27,7 +27,7 @@ platform :android do
   desc "Run tests"
   lane :test do
     FileUtils.cp("../app/src/main/assets/tangem-app-config/android/google-services/dev/google-services.json", "../app")
-    FileUtils.cp("../ci_resources/tests_8gb_ram_ci_gradle.properties", "../gradle.properties")
+    FileUtils.cp("../ci_resources/tests_ci_gradle.properties", "../gradle.properties")
     puts File.read("../gradle.properties")
     gradle(task: "testDebugUnitTest")
   end

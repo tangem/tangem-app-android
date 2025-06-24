@@ -903,7 +903,7 @@ internal class TokenDetailsModel @Inject constructor(
                 blockchain = cryptoCurrency.network.name,
             ),
         )
-        modelScope.launch(dispatchers.io) {
+        modelScope.launch(dispatchers.mainImmediate) {
             openTrustlineUseCase(
                 userWalletId = userWalletId,
                 currency = cryptoCurrency,

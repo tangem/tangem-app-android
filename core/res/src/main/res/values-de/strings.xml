@@ -574,7 +574,7 @@
   <string name="nft_receive_unavailable_asset_warning_title">Netzwerk nicht hinzugefügt</string>
   <string name="nft_receive_unavailable_section_title">Nicht hinzugefügt</string>
   <string name="nft_receive_unsupported_types">Nicht unterstützte NFT-Arten</string>
-  <string name="nft_receive_unsupported_types_description">cNFTs und pNFTs werden derzeit nicht unterstützt. Bitte sende diese nicht an Deine Wallet.</string>
+  <string name="nft_receive_unsupported_types_description">cNFTs und pNFTs werden noch nicht unterstützt</string>
   <string name="nft_send">NFT senden</string>
   <string name="nft_traits_title">Eigenschaften</string>
   <string name="nft_untitled_collection">Unbetitelte Sammlung</string>

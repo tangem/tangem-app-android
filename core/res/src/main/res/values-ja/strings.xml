@@ -377,7 +377,6 @@
   <string name="give_permission_title">許可を与える</string>
   <string name="give_permission_unlimited">無制限</string>
   <string name="home_button_add_existing_wallet">既存のウォレットを追加</string>
-  <string name="home_button_create_new_wallet">新しいウォレットを作成する</string>
   <string name="home_button_order">Tangemを注文</string>
   <string name="home_button_scan">Tangemをスキャン</string>
   <string name="hot_crypto_add_token_subtitle">%sへ</string>
@@ -566,7 +565,7 @@
   <string name="nft_receive_unavailable_asset_warning_title">ネットワークが追加されていません</string>
   <string name="nft_receive_unavailable_section_title">未追加</string>
   <string name="nft_receive_unsupported_types">サポートされていないNFTタイプ</string>
-  <string name="nft_receive_unsupported_types_description">cNFTとpNFTはまだサポートされていません。ウォレットに送信しないでください。</string>
+  <string name="nft_receive_unsupported_types_description">cNFTとpNFTはまだサポートされていません</string>
   <string name="nft_send">NFTを送信する</string>
   <string name="nft_traits_title">特徴</string>
   <string name="nft_untitled_collection">無題のコレクション</string>

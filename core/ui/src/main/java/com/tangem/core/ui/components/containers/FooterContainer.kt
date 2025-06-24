@@ -9,7 +9,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.resolveAnnotatedReference
 import com.tangem.core.ui.res.TangemTheme
 
 /**
@@ -32,7 +32,7 @@ fun FooterContainer(
         AnimatedVisibility(visible = footer != null) {
             val footerWrapped = remember(this) { requireNotNull(footer) }
             Text(
-                text = footerWrapped.resolveReference(),
+                text = footerWrapped.resolveAnnotatedReference(),
                 style = TangemTheme.typography.caption2,
                 color = TangemTheme.colors.text.tertiary,
                 modifier = Modifier
