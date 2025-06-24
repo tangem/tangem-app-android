@@ -18,6 +18,7 @@ android {
     namespace = "com.tangem.wallet"
     testOptions {
         animationsDisabled = true
+        execution = "ANDROIDX_TEST_ORCHESTRATOR"
     }
     packaging {
         jniLibs {
@@ -344,6 +345,8 @@ dependencies {
 
     implementation(deps.listenableFuture)
     implementation(deps.mlKit.barcodeScanning)
+
+    androidTestUtil(deps.test.orchestrator)
 
     /** Leakcanary */
     debugImplementation(deps.leakcanary)
