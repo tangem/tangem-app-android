@@ -6,6 +6,7 @@ import com.tangem.features.walletconnect.transaction.entity.blockaid.WcSendRecei
 import com.tangem.features.walletconnect.transaction.entity.common.WcCommonTransactionUM
 import com.tangem.features.walletconnect.transaction.entity.common.WcNetworkInfoUM
 import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionAppInfoContentUM
+import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionFeeState
 import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionRequestInfoUM
 
 internal data class WcSendTransactionUM(
@@ -15,13 +16,13 @@ internal data class WcSendTransactionUM(
 ) : WcCommonTransactionUM
 
 internal data class WcSendTransactionItemUM(
+    val feeState: WcTransactionFeeState,
     val onDismiss: () -> Unit,
     val onSend: () -> Unit,
     val appInfo: WcTransactionAppInfoContentUM,
     val estimatedWalletChanges: WcSendReceiveTransactionCheckResultsUM?,
     val walletName: String,
     val networkInfo: WcNetworkInfoUM,
-    val networkFee: String? = null,
     val address: String? = null,
     val isLoading: Boolean = false,
 ) : TangemBottomSheetConfigContent
