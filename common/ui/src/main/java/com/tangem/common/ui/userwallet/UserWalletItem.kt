@@ -164,7 +164,7 @@ private fun NameAndInfo(
 
 @Suppress("MagicNumber")
 @Composable
-private fun CardImage(imageState: UserWalletItemUM.ImageState, modifier: Modifier = Modifier) {
+fun CardImage(imageState: UserWalletItemUM.ImageState, modifier: Modifier = Modifier) {
     val imageModifier = modifier
         .width(TangemTheme.dimens.size36)
         .height(TangemTheme.dimens.size24)
