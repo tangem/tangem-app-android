@@ -34,6 +34,7 @@ import com.tangem.features.walletconnect.transaction.entity.blockaid.WcEstimated
 import com.tangem.features.walletconnect.transaction.entity.blockaid.WcSendReceiveTransactionCheckResultsUM
 import com.tangem.features.walletconnect.transaction.entity.common.WcNetworkInfoUM
 import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionAppInfoContentUM
+import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionFeeState
 import com.tangem.features.walletconnect.transaction.entity.send.WcSendTransactionItemUM
 import com.tangem.features.walletconnect.transaction.ui.blockaid.TransactionCheckResultsItem
 import com.tangem.features.walletconnect.transaction.ui.common.WcSendTransactionItems
@@ -42,7 +43,7 @@ import com.tangem.features.walletconnect.transaction.ui.common.WcTransactionRequ
 import com.tangem.features.walletconnect.transaction.ui.common.WcTransactionRequestItem
 import kotlinx.collections.immutable.persistentListOf
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LongMethod")
 @Composable
 internal fun WcSendTransactionModalBottomSheet(
     state: WcSendTransactionItemUM,
@@ -103,6 +104,7 @@ internal fun WcSendTransactionModalBottomSheet(
                     WcSendTransactionItems(
                         walletName = state.walletName,
                         networkInfo = state.networkInfo,
+                        feeState = state.feeState,
                         feeSelectorBlockComponent = feeSelectorBlockComponent,
                         address = state.address,
                     )
@@ -192,7 +194,7 @@ private class WcSendTransactionStateProvider : CollectionPreviewParameterProvide
             ),
             walletName = "Tangem 2.0",
             networkInfo = WcNetworkInfoUM(name = "Ethereum", iconRes = R.drawable.img_eth_22),
-            networkFee = "~ 0.22 $",
+            feeState = WcTransactionFeeState.Loading,
             address = "0x345FF...34FA",
         ),
     ),
