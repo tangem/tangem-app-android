@@ -123,7 +123,7 @@ internal class WcEthSignTransactionUseCase @AssistedInject constructor(
         emitAll(delegate.invoke(transactionData))
     }
 
-    override suspend fun dAppFee(): Fee.Ethereum.Legacy? {
+    override fun dAppFee(): Fee.Ethereum.Legacy? {
         return dAppFee
     }
 

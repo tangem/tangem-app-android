@@ -15,8 +15,8 @@ import com.tangem.features.walletconnect.transaction.routes.WcTransactionRoutes
 internal class WcSendTransactionContainerComponent(
     appComponentContext: AppComponentContext,
     params: WcTransactionModelParams,
-    feeSelectorBlockComponentFactory: FeeSelectorBlockComponent.Factory,
-) : WcCommonTransactionComponentDelegate(appComponentContext, feeSelectorBlockComponentFactory) {
+    private val feeSelectorBlockComponentFactory: FeeSelectorBlockComponent.Factory,
+) : WcCommonTransactionComponentDelegate(appComponentContext) {
 
     private val model: WcSendTransactionModel = getOrCreateModel(params = params)
 
@@ -45,7 +45,7 @@ internal class WcSendTransactionContainerComponent(
         return WcSendTransactionComponent(
             appComponentContext = appComponentContext,
             model = model,
-            feeSelectorBlockComponent = feeSelectorBlockComponent,
+            feeSelectorBlockComponentFactory = feeSelectorBlockComponentFactory,
         )
     }
 }
