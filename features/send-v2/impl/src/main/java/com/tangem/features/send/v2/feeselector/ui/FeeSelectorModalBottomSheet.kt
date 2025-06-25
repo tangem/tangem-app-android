@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEachIndexed
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.common.ui.amountScreen.utils.getFiatReference
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.atoms.text.EllipsisText
@@ -47,9 +48,10 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.features.send.v2.feeselector.entity.FeeFiatRateDataHolder
+import com.tangem.features.send.v2.feeselector.entity.FeeFiatRateUM
 import com.tangem.features.send.v2.feeselector.entity.FeeItem
 import com.tangem.features.send.v2.feeselector.entity.FeeSelectorUM
+import com.tangem.features.send.v2.feeselector.entity.PrimaryButtonConfig
 import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.subcomponents.fee.ui.state.CustomFeeFieldUM
 import com.tangem.utils.StringsSigns
@@ -88,8 +90,8 @@ internal fun FeeSelectorModalBottomSheet(state: FeeSelectorUM, onDismiss: () -> 
                     .fillMaxWidth()
                     .padding(16.dp),
                 text = stringResourceSafe(R.string.common_done),
-                onClick = onDismiss,
-                enabled = state.isDoneEnabled,
+                onClick = state.doneButtonConfig.onClick,
+                enabled = state.doneButtonConfig.enabled,
             )
         },
     )
@@ -114,7 +116,7 @@ private fun FeeSelectorItems(state: FeeSelectorUM.Content, modifier: Modifier = 
                 },
                 label = "Fee selector icon background change",
             )
-            val onSelect by rememberUpdatedState(item.onSelect)
+            val onSelect by rememberUpdatedState(state.onFeeSelected)
             val itemModifier = Modifier
                 .fillMaxWidth()
                 .background(TangemTheme.colors.background.primary)
@@ -133,7 +135,7 @@ private fun FeeSelectorItems(state: FeeSelectorUM.Content, modifier: Modifier = 
                         Modifier
                     },
                 )
-                .clickableSingle(onClick = onSelect)
+                .clickableSingle(onClick = { onSelect(item) })
             when (item) {
                 is FeeItem.Suggested -> RegularFeeItemContent(
                     modifier = itemModifier,
@@ -142,23 +144,23 @@ private fun FeeSelectorItems(state: FeeSelectorUM.Content, modifier: Modifier = 
                     iconBackgroundColor = iconBackgroundColor,
                     iconTint = iconTint,
                     preDot = stringReference(
-                        item.amount.value.format {
+                        item.fee.amount.value.format {
                             crypto(
-                                symbol = item.amount.currencySymbol,
-                                decimals = item.amount.decimals,
+                                symbol = item.fee.amount.currencySymbol,
+                                decimals = item.fee.amount.decimals,
                             ).fee(canBeLower = state.isFeeApproximate)
                         },
                     ),
-                    postDot = if (state.feeFiatRateDataHolder != null) {
+                    postDot = if (state.feeFiatRateUM != null) {
                         getFiatReference(
-                            value = item.amount.value,
-                            rate = state.feeFiatRateDataHolder.rate,
-                            appCurrency = state.feeFiatRateDataHolder.appCurrency,
+                            value = item.fee.amount.value,
+                            rate = state.feeFiatRateUM.rate,
+                            appCurrency = state.feeFiatRateUM.appCurrency,
                         )
                     } else {
                         null
                     },
-                    ellipsizeOffset = item.amount.currencySymbol.length,
+                    ellipsizeOffset = item.fee.amount.currencySymbol.length,
                     showDivider = !isSelected && !lastItem,
                 )
                 is FeeItem.Slow -> RegularFeeItemContent(
@@ -168,23 +170,23 @@ private fun FeeSelectorItems(state: FeeSelectorUM.Content, modifier: Modifier = 
                     iconBackgroundColor = iconBackgroundColor,
                     iconTint = iconTint,
                     preDot = stringReference(
-                        item.amount.value.format {
+                        item.fee.amount.value.format {
                             crypto(
-                                symbol = item.amount.currencySymbol,
-                                decimals = item.amount.decimals,
+                                symbol = item.fee.amount.currencySymbol,
+                                decimals = item.fee.amount.decimals,
                             ).fee(canBeLower = state.isFeeApproximate)
                         },
                     ),
-                    postDot = if (state.feeFiatRateDataHolder != null) {
+                    postDot = if (state.feeFiatRateUM != null) {
                         getFiatReference(
-                            value = item.amount.value,
-                            rate = state.feeFiatRateDataHolder.rate,
-                            appCurrency = state.feeFiatRateDataHolder.appCurrency,
+                            value = item.fee.amount.value,
+                            rate = state.feeFiatRateUM.rate,
+                            appCurrency = state.feeFiatRateUM.appCurrency,
                         )
                     } else {
                         null
                     },
-                    ellipsizeOffset = item.amount.currencySymbol.length,
+                    ellipsizeOffset = item.fee.amount.currencySymbol.length,
                     showDivider = !isSelected && !lastItem,
                 )
                 is FeeItem.Market -> RegularFeeItemContent(
@@ -194,23 +196,23 @@ private fun FeeSelectorItems(state: FeeSelectorUM.Content, modifier: Modifier = 
                     iconBackgroundColor = iconBackgroundColor,
                     iconTint = iconTint,
                     preDot = stringReference(
-                        item.amount.value.format {
+                        item.fee.amount.value.format {
                             crypto(
-                                symbol = item.amount.currencySymbol,
-                                decimals = item.amount.decimals,
+                                symbol = item.fee.amount.currencySymbol,
+                                decimals = item.fee.amount.decimals,
                             ).fee(canBeLower = state.isFeeApproximate)
                         },
                     ),
-                    postDot = if (state.feeFiatRateDataHolder != null) {
+                    postDot = if (state.feeFiatRateUM != null) {
                         getFiatReference(
-                            value = item.amount.value,
-                            rate = state.feeFiatRateDataHolder.rate,
-                            appCurrency = state.feeFiatRateDataHolder.appCurrency,
+                            value = item.fee.amount.value,
+                            rate = state.feeFiatRateUM.rate,
+                            appCurrency = state.feeFiatRateUM.appCurrency,
                         )
                     } else {
                         null
                     },
-                    ellipsizeOffset = item.amount.currencySymbol.length,
+                    ellipsizeOffset = item.fee.amount.currencySymbol.length,
                     showDivider = !isSelected && !lastItem,
                 )
                 is FeeItem.Fast -> RegularFeeItemContent(
@@ -220,23 +222,23 @@ private fun FeeSelectorItems(state: FeeSelectorUM.Content, modifier: Modifier = 
                     iconBackgroundColor = iconBackgroundColor,
                     iconTint = iconTint,
                     preDot = stringReference(
-                        item.amount.value.format {
+                        item.fee.amount.value.format {
                             crypto(
-                                symbol = item.amount.currencySymbol,
-                                decimals = item.amount.decimals,
+                                symbol = item.fee.amount.currencySymbol,
+                                decimals = item.fee.amount.decimals,
                             ).fee(canBeLower = state.isFeeApproximate)
                         },
                     ),
-                    postDot = if (state.feeFiatRateDataHolder != null) {
+                    postDot = if (state.feeFiatRateUM != null) {
                         getFiatReference(
-                            value = item.amount.value,
-                            rate = state.feeFiatRateDataHolder.rate,
-                            appCurrency = state.feeFiatRateDataHolder.appCurrency,
+                            value = item.fee.amount.value,
+                            rate = state.feeFiatRateUM.rate,
+                            appCurrency = state.feeFiatRateUM.appCurrency,
                         )
                     } else {
                         null
                     },
-                    ellipsizeOffset = item.amount.currencySymbol.length,
+                    ellipsizeOffset = item.fee.amount.currencySymbol.length,
                     showDivider = !isSelected && !lastItem,
                 )
                 is FeeItem.Custom -> CustomFeeBlock(
@@ -471,34 +473,24 @@ private fun FeeSelectorBS_Preview(
 private class FeeSelectorUMContentProvider : CollectionPreviewParameterProvider<FeeSelectorUM.Content>(
     collection = listOf(
         FeeSelectorUM.Content(
-            isDoneEnabled = false,
+            doneButtonConfig = PrimaryButtonConfig(enabled = true, onClick = {}),
             feeItems = persistentListOf(
                 FeeItem.Suggested(
                     title = stringReference("Suggested by Tangem"),
-                    amount = Amount(value = BigDecimal("0.1"), blockchain = Blockchain.Ethereum),
-                    onSelect = onSelectStub,
+                    fee = Fee.Common(Amount(value = BigDecimal("0.1"), blockchain = Blockchain.Ethereum)),
                 ),
-                FeeItem.Slow(
-                    amount = Amount(value = BigDecimal("0.01"), blockchain = Blockchain.Ethereum),
-                    onSelect = onSelectStub,
-                ),
-                FeeItem.Market(
-                    amount = Amount(value = BigDecimal("0.02"), blockchain = Blockchain.Ethereum),
-                    onSelect = onSelectStub,
-                ),
-                FeeItem.Fast(
-                    amount = Amount(value = BigDecimal("0.3"), blockchain = Blockchain.Ethereum),
-                    onSelect = onSelectStub,
-                ),
-                FeeItem.Custom(customValues = customFeeFields, onSelect = onSelectStub),
+                FeeItem.Slow(fee = Fee.Common(Amount(value = BigDecimal("0.01"), blockchain = Blockchain.Ethereum))),
+                FeeItem.Market(fee = Fee.Common(Amount(value = BigDecimal("0.02"), blockchain = Blockchain.Ethereum))),
+                FeeItem.Fast(fee = Fee.Common(Amount(value = BigDecimal("0.03"), blockchain = Blockchain.Ethereum))),
+                customFeeItem,
             ),
+            onFeeSelected = {},
             // selectedFeeItem = FeeItem.Market(
             //     amount = Amount(value = BigDecimal("0.02"), blockchain = Blockchain.Ethereum),
-            //     onSelect = onSelectStub
             // ),
-            selectedFeeItem = FeeItem.Custom(customValues = customFeeFields, onSelect = onSelectStub),
+            selectedFeeItem = customFeeItem,
             isFeeApproximate = true,
-            feeFiatRateDataHolder = FeeFiatRateDataHolder(
+            feeFiatRateUM = FeeFiatRateUM(
                 rate = BigDecimal.TEN,
                 appCurrency = AppCurrency.Default,
             ),
@@ -509,43 +501,44 @@ private class FeeSelectorUMContentProvider : CollectionPreviewParameterProvider<
     ),
 )
 
-private val onSelectStub: () -> Unit = {}
-
-private val customFeeFields = persistentListOf(
-    CustomFeeFieldUM(
-        value = "0.119806",
-        onValueChange = {},
-        keyboardOptions = KeyboardOptions(),
-        keyboardActions = KeyboardActions(),
-        symbol = "ETH",
-        decimals = 8,
-        title = resourceReference(R.string.send_max_fee),
-        footer = resourceReference(R.string.send_custom_amount_fee_footer),
-        label = stringReference("~ 0,03 \$"),
-        isReadonly = false,
-    ),
-    CustomFeeFieldUM(
-        value = "40000",
-        onValueChange = {},
-        keyboardOptions = KeyboardOptions(),
-        keyboardActions = KeyboardActions(),
-        symbol = "GWEI",
-        decimals = 8,
-        title = resourceReference(R.string.send_gas_price),
-        footer = resourceReference(R.string.send_gas_price_footer),
-        label = null,
-        isReadonly = false,
-    ),
-    CustomFeeFieldUM(
-        value = "31400",
-        onValueChange = {},
-        keyboardOptions = KeyboardOptions(),
-        keyboardActions = KeyboardActions(),
-        symbol = null,
-        decimals = 8,
-        title = resourceReference(R.string.send_gas_limit),
-        footer = resourceReference(R.string.send_gas_limit_footer),
-        label = null,
-        isReadonly = false,
+private val customFeeItem = FeeItem.Custom(
+    fee = Fee.Common(Amount(value = BigDecimal("0.05"), blockchain = Blockchain.Ethereum)),
+    customValues = persistentListOf(
+        CustomFeeFieldUM(
+            value = "0.119806",
+            onValueChange = {},
+            keyboardOptions = KeyboardOptions(),
+            keyboardActions = KeyboardActions(),
+            symbol = "ETH",
+            decimals = 8,
+            title = resourceReference(R.string.send_max_fee),
+            footer = resourceReference(R.string.send_custom_amount_fee_footer),
+            label = stringReference("~ 0,03 \$"),
+            isReadonly = false,
+        ),
+        CustomFeeFieldUM(
+            value = "40000",
+            onValueChange = {},
+            keyboardOptions = KeyboardOptions(),
+            keyboardActions = KeyboardActions(),
+            symbol = "GWEI",
+            decimals = 8,
+            title = resourceReference(R.string.send_gas_price),
+            footer = resourceReference(R.string.send_gas_price_footer),
+            label = null,
+            isReadonly = false,
+        ),
+        CustomFeeFieldUM(
+            value = "31400",
+            onValueChange = {},
+            keyboardOptions = KeyboardOptions(),
+            keyboardActions = KeyboardActions(),
+            symbol = null,
+            decimals = 8,
+            title = resourceReference(R.string.send_gas_limit),
+            footer = resourceReference(R.string.send_gas_limit_footer),
+            label = null,
+            isReadonly = false,
+        ),
     ),
 )
