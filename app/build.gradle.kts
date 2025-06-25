@@ -224,6 +224,8 @@ dependencies {
     implementation(projects.features.hotWallet.impl)
     implementation(projects.features.kyc.api)
     implementation(projects.features.kyc.impl)
+    implementation(projects.features.welcome.api)
+    implementation(projects.features.welcome.impl)
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)
