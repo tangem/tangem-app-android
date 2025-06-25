@@ -64,12 +64,10 @@ internal class DefaultWcRoutingComponent @AssistedInject constructor(
             is WcInnerRoute.SignMessage -> WcSignTransactionContainerComponent(
                 appComponentContext = childContext,
                 params = WcTransactionModelParams(config.rawRequest),
-                feeSelectorBlockComponentFactory = feeSelectorBlockComponentFactory,
             )
             is WcInnerRoute.AddNetwork -> WcAddNetworkContainerComponent(
                 appComponentContext = childContext,
                 params = WcTransactionModelParams(config.rawRequest),
-                feeSelectorBlockComponentFactory = feeSelectorBlockComponentFactory,
             )
             is WcInnerRoute.Send -> WcSendTransactionContainerComponent(
                 appComponentContext = childContext,
