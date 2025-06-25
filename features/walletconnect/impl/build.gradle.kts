@@ -30,6 +30,7 @@ dependencies {
     implementation(projects.domain.models)
     implementation(projects.domain.qrScanning.models)
     implementation(projects.domain.tokens.models)
+    implementation(projects.domain.transaction.models)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.walletConnect)
     implementation(projects.domain.walletConnect.models)
@@ -37,8 +38,10 @@ dependencies {
     /** Domain */
     implementation(projects.domain.appCurrency)
     implementation(projects.domain.balanceHiding)
+    implementation(projects.domain.legacy)
     implementation(projects.domain.qrScanning)
     implementation(projects.domain.tokens)
+    implementation(projects.domain.transaction)
     implementation(projects.domain.wallets)
 
     /** DI */
