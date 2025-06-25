@@ -12,7 +12,6 @@ import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.send.v2.impl.R
-import com.tangem.features.send.v2.subcomponents.fee.model.SendFeeClickIntents
 import com.tangem.features.send.v2.subcomponents.fee.model.checkExceedBalance
 import com.tangem.features.send.v2.subcomponents.fee.model.converters.custom.ethereum.EthereumCustomFeeConverter.Companion.ETHEREUM_GAS_UNIT
 import com.tangem.features.send.v2.subcomponents.fee.model.converters.custom.ethereum.EthereumCustomFeeConverter.Companion.FEE_AMOUNT
@@ -26,7 +25,7 @@ import kotlinx.collections.immutable.toImmutableList
 import java.math.RoundingMode
 
 internal class EthereumLegacyCustomFeeConverter(
-    private val clickIntents: SendFeeClickIntents,
+    private val onCustomFeeValueChange: (Int, String) -> Unit,
     private val appCurrency: AppCurrency,
     feeCryptoCurrencyStatus: CryptoCurrencyStatus,
 ) : BaseEthereumCustomFeeConverter<Fee.Ethereum.Legacy> {
@@ -41,7 +40,7 @@ internal class EthereumLegacyCustomFeeConverter(
                 symbol = ETHEREUM_GAS_UNIT,
                 title = resourceReference(R.string.send_gas_price),
                 footer = resourceReference(R.string.send_gas_price_footer),
-                onValueChange = { clickIntents.onCustomFeeValueChange(GAS_PRICE, it) },
+                onValueChange = { onCustomFeeValueChange(GAS_PRICE, it) },
                 keyboardOptions = KeyboardOptions(
                     imeAction = ImeAction.Next,
                     keyboardType = KeyboardType.Number,
