@@ -32,6 +32,8 @@ class OpenTrustlineUseCase(
                         is SimpleResult.Failure -> when (val error = result.error) {
                             is BlockchainSdkError.Stellar.MinReserveRequired ->
                                 raise(OpenTrustlineError.NotEnoughCoin(error.amount, result.error.customMessage))
+                            is BlockchainSdkError.Xrp.MinReserveRequired ->
+                                raise(OpenTrustlineError.NotEnoughCoin(error.amount, result.error.customMessage))
                             else -> raise(OpenTrustlineError.SomeError(result.error.customMessage))
                         }
                         SimpleResult.Success -> Unit
