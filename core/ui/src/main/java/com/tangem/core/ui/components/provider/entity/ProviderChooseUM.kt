@@ -14,7 +14,7 @@ import kotlinx.collections.immutable.ImmutableList
  * @property infoText   info text
  * @property iconUrl    icon url
  * @property isSelected indicated whether component is selected (border outline)
- * @property badgeList  list of badge components
+ * @property extraUM    list of extra components
  * @property labelUM    label component (whether AuditLabel or text)
  */
 data class ProviderChooseUM(
@@ -23,7 +23,7 @@ data class ProviderChooseUM(
     val infoText: TextReference,
     val iconUrl: String,
     val isSelected: Boolean,
-    val badgeList: ImmutableList<BadgeUM>,
+    val extraUM: ExtraUM,
     val labelUM: LabelUM?,
 ) {
     @Immutable
@@ -35,5 +35,21 @@ data class ProviderChooseUM(
         data class Text(
             val text: TextReference,
         ) : LabelUM()
+    }
+
+    @Immutable
+    sealed class ExtraUM {
+        data object Empty : ExtraUM()
+        data class Badges(
+            val badgeList: ImmutableList<BadgeUM>,
+        ) : ExtraUM()
+
+        data class Action(
+            val text: TextReference,
+        ) : ExtraUM()
+
+        data class Error(
+            val text: TextReference,
+        ) : ExtraUM()
     }
 }
