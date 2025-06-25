@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.sp
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.utils.StringsSigns.PASSWORD_VISUAL_CHAR
+import kotlinx.coroutines.delay
 import kotlin.random.Random
 
 @Composable
@@ -74,6 +75,11 @@ fun PinTextField(
             )
         },
     )
+
+    LaunchedEffect(Unit) {
+        delay(timeMillis = 200)
+        focusRequester.requestFocus()
+    }
 }
 
 @Suppress("MagicNumber")
