@@ -24,7 +24,8 @@ internal class SendFeeCustomFieldConverter(
 
     private val ethereumCustomFeeConverter by lazy(LazyThreadSafetyMode.NONE) {
         EthereumCustomFeeConverter(
-            clickIntents = clickIntents,
+            onCustomFeeValueChange = clickIntents::onCustomFeeValueChange,
+            onNextClick = clickIntents::onNextClick,
             appCurrency = appCurrency,
             feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
         )
@@ -32,7 +33,8 @@ internal class SendFeeCustomFieldConverter(
 
     private val bitcoinCustomFeeConverter by lazy(LazyThreadSafetyMode.NONE) {
         BitcoinCustomFeeConverter(
-            clickIntents = clickIntents,
+            onCustomFeeValueChange = clickIntents::onCustomFeeValueChange,
+            onNextClick = clickIntents::onNextClick,
             appCurrency = appCurrency,
             feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
         )
@@ -40,7 +42,7 @@ internal class SendFeeCustomFieldConverter(
 
     private val kaspaCustomFeeConverter by lazy(LazyThreadSafetyMode.NONE) {
         KaspaCustomFeeConverter(
-            clickIntents = clickIntents,
+            onCustomFeeValueChange = clickIntents::onCustomFeeValueChange,
             appCurrency = appCurrency,
             feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
         )

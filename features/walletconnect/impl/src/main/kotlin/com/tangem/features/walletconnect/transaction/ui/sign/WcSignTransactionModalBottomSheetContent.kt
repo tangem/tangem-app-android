@@ -25,11 +25,9 @@ import com.tangem.core.ui.components.divider.DividerWithPadding
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.features.send.v2.api.FeeSelectorBlockComponent
 import com.tangem.features.walletconnect.connections.entity.VerifiedDAppState
 import com.tangem.features.walletconnect.connections.ui.WcAppInfoItem
 import com.tangem.features.walletconnect.impl.R
-import com.tangem.features.walletconnect.transaction.components.PreviewFeeSelectorBlockComponent
 import com.tangem.features.walletconnect.transaction.entity.common.WcNetworkInfoUM
 import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionAppInfoContentUM
 import com.tangem.features.walletconnect.transaction.entity.sign.WcSignTransactionItemUM
@@ -38,7 +36,6 @@ import com.tangem.features.walletconnect.transaction.ui.common.*
 @Composable
 internal fun WcSignTransactionModalBottomSheetContent(
     state: WcSignTransactionItemUM,
-    feeSelectorBlockComponent: FeeSelectorBlockComponent,
     onClickTransactionRequest: () -> Unit,
     onBack: () -> Unit,
     onDismiss: () -> Unit,
@@ -87,7 +84,7 @@ internal fun WcSignTransactionModalBottomSheetContent(
                     )
                 }
                 Column(modifier = Modifier.padding(top = 16.dp)) {
-                    WcSignTransactionItems(state, feeSelectorBlockComponent)
+                    WcSignTransactionItems(state)
                 }
             }
         },
@@ -104,11 +101,7 @@ internal fun WcSignTransactionModalBottomSheetContent(
 }
 
 @Composable
-private fun WcSignTransactionItems(
-    state: WcSignTransactionItemUM,
-    feeSelectorBlockComponent: FeeSelectorBlockComponent,
-    modifier: Modifier = Modifier,
-) {
+private fun WcSignTransactionItems(state: WcSignTransactionItemUM, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(14.dp))
@@ -138,7 +131,6 @@ private fun WcSignTransactionItems(
             )
         }
         DividerWithPadding(start = 40.dp, end = 12.dp)
-        feeSelectorBlockComponent.Content(modifier = Modifier)
     }
 }
 
@@ -168,7 +160,6 @@ private fun WcSignTransactionBottomSheetPreview(
             content = {
                 WcSignTransactionModalBottomSheetContent(
                     state = state,
-                    feeSelectorBlockComponent = PreviewFeeSelectorBlockComponent(),
                     onClickTransactionRequest = {},
                     onBack = {},
                     onDismiss = {},

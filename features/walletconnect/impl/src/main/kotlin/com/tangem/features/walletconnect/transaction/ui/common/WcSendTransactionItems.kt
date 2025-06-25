@@ -14,11 +14,13 @@ import com.tangem.core.ui.components.divider.DividerWithPadding
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.send.v2.api.FeeSelectorBlockComponent
 import com.tangem.features.walletconnect.transaction.entity.common.WcNetworkInfoUM
+import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionFeeState
 
 @Composable
 internal fun WcSendTransactionItems(
     walletName: String,
     networkInfo: WcNetworkInfoUM,
+    feeState: WcTransactionFeeState,
     feeSelectorBlockComponent: FeeSelectorBlockComponent,
     modifier: Modifier = Modifier,
     address: String? = null,
@@ -52,6 +54,8 @@ internal fun WcSendTransactionItems(
             )
         }
         DividerWithPadding(start = 40.dp, end = 12.dp)
-        feeSelectorBlockComponent.Content(Modifier)
+        if (feeState != WcTransactionFeeState.None) {
+            feeSelectorBlockComponent.Content(Modifier)
+        }
     }
 }
