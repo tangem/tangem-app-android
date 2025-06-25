@@ -102,7 +102,7 @@ internal class WcEthSendTransactionUseCase @AssistedInject constructor(
         emit(newState)
     }
 
-    override suspend fun dAppFee(): Fee.Ethereum.Legacy? {
+    override fun dAppFee(): Fee.Ethereum.Legacy? {
         return dAppFee
     }
 
