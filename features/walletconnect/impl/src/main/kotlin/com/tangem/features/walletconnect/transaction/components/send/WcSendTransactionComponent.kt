@@ -6,14 +6,27 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.features.send.v2.api.FeeSelectorBlockComponent
+import com.tangem.features.send.v2.api.params.FeeSelectorParams
 import com.tangem.features.walletconnect.transaction.model.WcSendTransactionModel
 import com.tangem.features.walletconnect.transaction.ui.send.WcSendTransactionModalBottomSheet
 
 internal class WcSendTransactionComponent(
     private val appComponentContext: AppComponentContext,
     private val model: WcSendTransactionModel,
-    private val feeSelectorBlockComponent: FeeSelectorBlockComponent,
+    private val feeSelectorBlockComponentFactory: FeeSelectorBlockComponent.Factory,
 ) : AppComponentContext by appComponentContext, ComposableBottomSheetComponent {
+
+    private val feeSelectorBlockComponent by lazy {
+        feeSelectorBlockComponentFactory.create(
+            context = appComponentContext,
+            params = FeeSelectorParams.FeeSelectorBlockParams(
+                onLoadFee = model::loadFee,
+                network = model.useCase.network,
+                cryptoCurrencyStatus = model.cryptoCurrencyStatus,
+                suggestedFeeState = model.suggestedFeeState,
+            ),
+        )
+    }
 
     override fun dismiss() {
         model.dismiss()
