@@ -11,14 +11,14 @@ import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.send.v2.impl.R
-import com.tangem.features.send.v2.subcomponents.fee.model.SendFeeClickIntents
 import com.tangem.features.send.v2.subcomponents.fee.model.checkExceedBalance
 import com.tangem.features.send.v2.subcomponents.fee.ui.state.CustomFeeFieldUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
 internal class EthereumCustomFeeConverter(
-    private val clickIntents: SendFeeClickIntents,
+    private val onCustomFeeValueChange: (Int, String) -> Unit,
+    private val onNextClick: () -> Unit,
     private val appCurrency: AppCurrency,
     feeCryptoCurrencyStatus: CryptoCurrencyStatus,
 ) : BaseEthereumCustomFeeConverter<Fee.Ethereum> {
@@ -26,13 +26,13 @@ internal class EthereumCustomFeeConverter(
     private val currencyStatus = feeCryptoCurrencyStatus.value
 
     private val legacyFeeConverter = EthereumLegacyCustomFeeConverter(
-        clickIntents = clickIntents,
+        onCustomFeeValueChange = onCustomFeeValueChange,
         appCurrency = appCurrency,
         feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
     )
 
     private val eipFeeConverter = EthereumEIPCustomFeeConverter(
-        clickIntents = clickIntents,
+        onCustomFeeValueChange = onCustomFeeValueChange,
         appCurrency = appCurrency,
         feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
     )
@@ -84,7 +84,7 @@ internal class EthereumCustomFeeConverter(
             value = feeValue?.parseBigDecimal(value.amount.decimals).orEmpty(),
             decimals = value.amount.decimals,
             symbol = value.amount.currencySymbol,
-            onValueChange = { clickIntents.onCustomFeeValueChange(FEE_AMOUNT, it) },
+            onValueChange = { onCustomFeeValueChange(FEE_AMOUNT, it) },
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next, keyboardType = KeyboardType.Number),
             title = resourceReference(R.string.send_max_fee),
             footer = resourceReference(R.string.send_custom_amount_fee_footer),
@@ -106,13 +106,13 @@ internal class EthereumCustomFeeConverter(
             symbol = "",
             title = resourceReference(R.string.send_gas_limit),
             footer = resourceReference(R.string.send_gas_limit_footer),
-            onValueChange = { clickIntents.onCustomFeeValueChange(getGasLimitIndex(value), it) },
+            onValueChange = { onCustomFeeValueChange(getGasLimitIndex(value), it) },
             keyboardOptions = KeyboardOptions(
                 imeAction = if (isExceedBalance) ImeAction.None else ImeAction.Done,
                 keyboardType = KeyboardType.Number,
             ),
             keyboardActions = KeyboardActions(
-                onDone = { clickIntents.onNextClick() },
+                onDone = { onNextClick() },
             ),
         )
     }
