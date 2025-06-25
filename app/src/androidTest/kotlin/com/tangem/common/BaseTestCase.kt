@@ -56,16 +56,7 @@ abstract class BaseTestCase : TestCase(
         hiltRule.inject()
         Intents.init()
         additionalBeforeSection()
-
-        runBlocking {
-            delay(INIT_DELAY)
-        }
-
     }.after {
-        runBlocking {
-            appPreferencesStore.editData { prefs -> prefs.clear() }
-        }
-
         additionalAfterSection()
         Intents.release()
     }
