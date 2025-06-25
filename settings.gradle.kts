@@ -254,6 +254,9 @@ include(":features:kyc:impl")
 
 include(":features:create-wallet-selection:api")
 include(":features:create-wallet-selection:impl")
+
+include(":features:welcome:api")
+include(":features:welcome:impl")
 // endregion Feature modules
 
 // region Domain modules
@@ -341,6 +344,6 @@ include(":data:onramp")
 include(":data:quotes")
 include(":data:notifications")
 include(":data:blockaid")
-// endregion Data modules
 include(":data:swap")
 include(":data:express")
+// endregion Data modules
