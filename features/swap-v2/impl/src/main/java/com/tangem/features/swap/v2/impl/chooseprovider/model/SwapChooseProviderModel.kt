@@ -21,15 +21,15 @@ internal class SwapChooseProviderModel @Inject constructor(
 
     private val params: SwapChooseProviderComponent.Params = paramsContainer.require()
 
-    val uiState: StateFlow<SwapChooseProviderBottomSheetContent>
-    field: MutableStateFlow<SwapChooseProviderBottomSheetContent> = MutableStateFlow(getInitialState())
-
     private val swapProviderListItemConverter by lazy(LazyThreadSafetyMode.NONE) {
         SwapProviderListItemConverter(
             cryptoCurrency = params.cryptoCurrency,
             selectedProvider = params.selectedProvider,
         )
     }
+
+    val uiState: StateFlow<SwapChooseProviderBottomSheetContent>
+    field: MutableStateFlow<SwapChooseProviderBottomSheetContent> = MutableStateFlow(getInitialState())
 
     fun onProviderClick(quoteUM: SwapQuoteUM) {
         params.callback.onProviderResult(quoteUM)
