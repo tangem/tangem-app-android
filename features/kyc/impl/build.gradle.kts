@@ -15,6 +15,10 @@ dependencies {
     /** Api */
     implementation(projects.features.kyc.api)
 
+    /** Domain */
+    implementation(projects.domain.visa)
+    implementation(projects.domain.wallets.models)
+
     /** Core modules */
     implementation(projects.core.configToggles)
     implementation(projects.core.analytics)
@@ -25,6 +29,7 @@ dependencies {
     implementation(projects.core.decompose)
     implementation(projects.core.navigation)
     implementation(projects.core.datasource)
+    implementation(projects.core.error)
 
     /** Common */
     implementation(projects.common.ui)
@@ -47,6 +52,7 @@ dependencies {
     implementation(deps.timber)
     implementation(deps.firebase.crashlytics)
     implementation(deps.sumsub.sdk)
+    implementation(deps.arrow.core)
 
     /** DI */
     implementation(deps.hilt.android)
