@@ -59,9 +59,9 @@ internal class OnrampTokenListModel @Inject constructor(
     val state: StateFlow<TokenListUM> = tokenListUMController.state
 
     private val params: OnrampTokenListComponent.Params = paramsContainer.require()
-    private val scanResponse by lazy {
+    private val userWallet by lazy {
         getWalletsUseCase.invokeSync().first { it.walletId == params.userWalletId }
-            .requireColdWallet().scanResponse // TODO AND-11142
+            .requireColdWallet() // TODO AND-11142
     }
 
     init {
@@ -229,16 +229,13 @@ internal class OnrampTokenListModel @Inject constructor(
         return when (params.filterOperation) {
             OnrampOperation.BUY -> {
                 rampStateManager.availableForBuy(
-                    scanResponse = scanResponse,
+                    scanResponse = userWallet.scanResponse,
                     userWalletId = params.userWalletId,
                     cryptoCurrency = status.currency,
                 ).isAvailable()
             }
             OnrampOperation.SELL -> {
-                rampStateManager.availableForSell(
-                    userWalletId = params.userWalletId,
-                    status = status,
-                ).isRight()
+                rampStateManager.availableForSell(userWallet = userWallet, status = status).isRight()
             }
             OnrampOperation.SWAP -> {
                 val isAvailable = rampStateManager.availableForSwap(

@@ -14,6 +14,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
  * Common implementation of network status fetcher
@@ -24,6 +25,7 @@ import javax.inject.Inject
  *
 * [REDACTED_AUTHOR]
  */
+@Singleton
 internal class CommonNetworkStatusFetcher @Inject constructor(
     private val walletManagersFacade: WalletManagersFacade,
     private val networksStatusesStore: NetworksStatusesStore,

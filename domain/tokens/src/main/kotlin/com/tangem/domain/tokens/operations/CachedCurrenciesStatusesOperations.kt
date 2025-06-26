@@ -303,18 +303,6 @@ class CachedCurrenciesStatusesOperations(
             .distinctUntilChanged()
     }
 
-    override fun getNetworksStatuses(
-        userWalletId: UserWalletId,
-        network: Network,
-    ): EitherFlow<Error, Set<NetworkStatus>> {
-        return singleNetworkStatusSupplier(
-            params = SingleNetworkStatusProducer.Params(userWalletId = userWalletId, network = network),
-        )
-            .map<NetworkStatus, Either<Error, Set<NetworkStatus>>> { setOf(it).right() }
-            .distinctUntilChanged()
-            .onEmpty { emit(Error.EmptyNetworksStatuses.left()) }
-    }
-
     private fun getYieldBalances(
         userWalletId: UserWalletId,
         cryptoCurrencies: List<CryptoCurrency>,
