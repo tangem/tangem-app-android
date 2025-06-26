@@ -1,9 +1,11 @@
 package com.tangem.data.swap.di
 
 import com.squareup.moshi.Moshi
+import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.data.express.converter.ExpressErrorConverter
 import com.tangem.data.swap.DefaultSwapErrorResolver
 import com.tangem.data.swap.DefaultSwapRepositoryV2
+import com.tangem.data.swap.DefaultSwapTransactionRepository
 import com.tangem.datasource.api.express.TangemExpressApi
 import com.tangem.datasource.api.express.models.response.ExpressErrorResponse
 import com.tangem.datasource.di.NetworkMoshi
@@ -11,6 +13,7 @@ import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.express.ExpressRepository
 import com.tangem.domain.swap.SwapErrorResolver
 import com.tangem.domain.swap.SwapRepositoryV2
+import com.tangem.domain.swap.SwapTransactionRepository
 import com.tangem.domain.tokens.operations.BaseCurrencyStatusOperations
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -47,6 +50,20 @@ internal object SwapDataModule {
             coroutineDispatcher = coroutineDispatcher,
             appPreferencesStore = appPreferencesStore,
             currencyStatusOperations = currencyStatusOperations,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideSwapTransactionRepository(
+        coroutineDispatcher: CoroutineDispatcherProvider,
+        appPreferencesStore: AppPreferencesStore,
+        excludedBlockchains: ExcludedBlockchains,
+    ): SwapTransactionRepository {
+        return DefaultSwapTransactionRepository(
+            appPreferencesStore = appPreferencesStore,
+            dispatchers = coroutineDispatcher,
+            excludedBlockchains = excludedBlockchains,
         )
     }
 }
