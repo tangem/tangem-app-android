@@ -31,6 +31,7 @@ import com.tangem.domain.onboarding.repository.OnboardingRepository
 import com.tangem.domain.onramp.FetchHotCryptoUseCase
 import com.tangem.domain.promo.GetStoryContentUseCase
 import com.tangem.domain.promo.models.StoryContentIds
+import com.tangem.domain.quotes.multi.MultiQuoteUpdater
 import com.tangem.domain.settings.DeleteDeprecatedLogsUseCase
 import com.tangem.domain.settings.IncrementAppLaunchCounterUseCase
 import com.tangem.domain.settings.usercountry.FetchUserCountryUseCase
@@ -86,6 +87,7 @@ internal class MainViewModel @Inject constructor(
     private val updateRemoteWalletsInfoUseCase: UpdateRemoteWalletsInfoUseCase,
     private val sendPushTokenUseCase: SendPushTokenUseCase,
     private val apiConfigsManager: ApiConfigsManager,
+    private val multiQuoteUpdater: MultiQuoteUpdater,
     routingFeatureToggle: RoutingFeatureToggle,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
 ) : ViewModel() {
@@ -116,6 +118,8 @@ internal class MainViewModel @Inject constructor(
 
         viewModelScope.launch { incrementAppLaunchCounterUseCase() }
 
+        multiQuoteUpdater.subscribe()
+
         observeFlips()
         displayBalancesHidingStatusToast()
         displayHiddenBalancesModalNotification()
@@ -129,6 +133,12 @@ internal class MainViewModel @Inject constructor(
         if (!routingFeatureToggle.isDeepLinkNavigationEnabled) {
             initializeDeepLinks()
         }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+
+        multiQuoteUpdater.unsubscribe()
     }
 
     fun checkForUnfinishedBackup() {
