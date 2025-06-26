@@ -10,6 +10,7 @@ import com.tangem.feature.usedesk.api.UsedeskComponent
 import com.tangem.feature.walletsettings.component.WalletSettingsComponent
 import com.tangem.features.details.component.DetailsComponent
 import com.tangem.features.disclaimer.api.components.DisclaimerComponent
+import com.tangem.features.managetokens.component.ChooseManagedTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensSource
 import com.tangem.features.markets.details.MarketsTokenDetailsComponent
@@ -78,6 +79,7 @@ internal class ChildFactory @Inject constructor(
     private val nftComponentFactory: NFTComponent.Factory,
     private val nftSendComponentFactory: NFTSendComponent.Factory,
     private val usedeskComponentFactory: UsedeskComponent.Factory,
+    private val chooseManagedTokensComponentFactory: ChooseManagedTokensComponent.Factory,
     private val testerRouter: TesterRouter,
     private val walletConnectFeatureToggles: WalletConnectFeatureToggles,
 ) {
@@ -405,6 +407,17 @@ internal class ChildFactory @Inject constructor(
                     context = context,
                     params = UsedeskComponent.Params(),
                     componentFactory = usedeskComponentFactory,
+                )
+            }
+            is AppRoute.ChooseManagedTokens -> {
+                createComponentChild(
+                    context = context,
+                    params = ChooseManagedTokensComponent.Params(
+                        userWalletId = route.userWalletId,
+                        initialCurrency = route.initialCurrency,
+                        source = ChooseManagedTokensComponent.Source.valueOf(route.source.name),
+                    ),
+                    componentFactory = chooseManagedTokensComponentFactory,
                 )
             }
         }
