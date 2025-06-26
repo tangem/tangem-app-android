@@ -477,7 +477,7 @@ internal class SwapAmountModel @Inject constructor(
                         //         ),
                         //     )
                         // }
-                        params.onBackClick()
+                        params.callback.onBackClick()
                     },
                     primaryButton = NavigationButton(
                         textReference = if (route.isEditMode) {
@@ -488,7 +488,7 @@ internal class SwapAmountModel @Inject constructor(
                         isEnabled = state.isPrimaryButtonEnabled,
                         onClick = {
                             saveResult()
-                            params.onNextClick()
+                            params.callback.onNextClick()
                         },
                     ),
                 ),
