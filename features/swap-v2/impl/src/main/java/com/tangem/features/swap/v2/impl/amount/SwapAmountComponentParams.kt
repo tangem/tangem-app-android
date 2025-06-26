@@ -30,8 +30,6 @@ internal sealed class SwapAmountComponentParams {
         val secondaryCryptoCurrency: CryptoCurrency?,
         val callback: SwapAmountComponent.ModelCallback,
         val currentRoute: Flow<SwapRoute.Amount>,
-        val onBackClick: () -> Unit,
-        val onNextClick: () -> Unit,
     ) : SwapAmountComponentParams()
 
     data class AmountBlockParams(
