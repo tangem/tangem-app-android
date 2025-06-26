@@ -1,27 +1,27 @@
-package com.tangem.datasource.api.visa
+package com.tangem.datasource.api.pay
 
 import com.tangem.datasource.api.common.response.ApiResponse
-import com.tangem.datasource.api.visa.models.request.ActivationByCardWalletRequest
-import com.tangem.datasource.api.visa.models.request.ActivationByCustomerWalletRequest
-import com.tangem.datasource.api.visa.models.request.ActivationStatusRequest
-import com.tangem.datasource.api.visa.models.request.ExchangeAccessTokenRequest
-import com.tangem.datasource.api.visa.models.request.GenerateNoneByCardIdRequest
-import com.tangem.datasource.api.visa.models.request.GenerateNoneByCardWalletRequest
-import com.tangem.datasource.api.visa.models.request.GetAccessTokenByCardIdRequest
-import com.tangem.datasource.api.visa.models.request.GetAccessTokenByCardWalletRequest
-import com.tangem.datasource.api.visa.models.request.GetCardWalletAcceptanceRequest
-import com.tangem.datasource.api.visa.models.request.GetCustomerWalletAcceptanceRequest
-import com.tangem.datasource.api.visa.models.request.RefreshTokenByCardIdRequest
-import com.tangem.datasource.api.visa.models.request.RefreshTokenByCardWalletRequest
-import com.tangem.datasource.api.visa.models.request.SetPinCodeRequest
-import com.tangem.datasource.api.visa.models.response.*
+import com.tangem.datasource.api.pay.models.request.ActivationByCardWalletRequest
+import com.tangem.datasource.api.pay.models.request.ActivationByCustomerWalletRequest
+import com.tangem.datasource.api.pay.models.request.ActivationStatusRequest
+import com.tangem.datasource.api.pay.models.request.ExchangeAccessTokenRequest
+import com.tangem.datasource.api.pay.models.request.GenerateNoneByCardIdRequest
+import com.tangem.datasource.api.pay.models.request.GenerateNoneByCardWalletRequest
+import com.tangem.datasource.api.pay.models.request.GetAccessTokenByCardIdRequest
+import com.tangem.datasource.api.pay.models.request.GetAccessTokenByCardWalletRequest
+import com.tangem.datasource.api.pay.models.request.GetCardWalletAcceptanceRequest
+import com.tangem.datasource.api.pay.models.request.GetCustomerWalletAcceptanceRequest
+import com.tangem.datasource.api.pay.models.request.RefreshTokenByCardIdRequest
+import com.tangem.datasource.api.pay.models.request.RefreshTokenByCardWalletRequest
+import com.tangem.datasource.api.pay.models.request.SetPinCodeRequest
+import com.tangem.datasource.api.pay.models.response.*
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.Query
 
-interface TangemVisaApi {
+interface TangemPayApi {
 
     // region: auth
 
@@ -104,4 +104,7 @@ interface TangemVisaApi {
         @Query("limit") limit: Int,
         @Query("offset") offset: Int,
     ): ApiResponse<VisaTxHistoryResponse>
+
+    @GET("v1/customer/kyc")
+    suspend fun getKycAccess(@Header("Authorization") authHeader: String): ApiResponse<KycAccessInfoResponse>
 }
