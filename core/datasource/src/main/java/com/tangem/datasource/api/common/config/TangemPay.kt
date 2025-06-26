@@ -3,7 +3,7 @@ package com.tangem.datasource.api.common.config
 import com.tangem.utils.ProviderSuspend
 import com.tangem.utils.version.AppVersionProvider
 
-internal class TangemVisa(
+internal class TangemPay(
     private val appVersionProvider: AppVersionProvider,
 ) : ApiConfig() {
 
