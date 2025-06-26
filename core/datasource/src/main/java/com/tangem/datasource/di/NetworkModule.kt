@@ -17,7 +17,7 @@ import com.tangem.datasource.api.onramp.OnrampApi
 import com.tangem.datasource.api.stakekit.StakeKitApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.TangemTechApiV2
-import com.tangem.datasource.api.visa.TangemVisaApi
+import com.tangem.datasource.api.pay.TangemPayApi
 import com.tangem.datasource.local.logs.AppLogsStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.utils.*
@@ -206,9 +206,9 @@ internal object NetworkModule {
         analyticsErrorHandler: AnalyticsErrorHandler,
         apiConfigsManager: ApiConfigsManager,
         appLogsStore: AppLogsStore,
-    ): TangemVisaApi {
-        return createApi<TangemVisaApi>(
-            id = ApiConfig.ID.TangemVisa,
+    ): TangemPayApi {
+        return createApi<TangemPayApi>(
+            id = ApiConfig.ID.TangemPay,
             moshi = moshi,
             context = context,
             apiConfigsManager = apiConfigsManager,
