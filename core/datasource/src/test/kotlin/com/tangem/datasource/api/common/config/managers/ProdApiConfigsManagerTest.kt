@@ -37,7 +37,7 @@ private val API_CONFIGS = setOf(
     Express(configManager, expressAuthProvider, appVersionProvider, appInfoProvider),
     TangemTech(appVersionProvider, appAuthProvider, appInfoProvider),
     StakeKit(stakeKitAuthProvider),
-    TangemVisa(appVersionProvider),
+    TangemPay(appVersionProvider),
 )
 
 /**
@@ -88,7 +88,7 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
                 is Express -> createExpressModel()
                 is TangemTech -> createTangemTechModel()
                 is StakeKit -> createStakeKitModel()
-                is TangemVisa -> createVisaModel()
+                is TangemPay -> createVisaModel()
                 is Attestation -> createAttestationModel()
                 is BlockAid -> createBlockAidSdkModel()
             }
@@ -182,7 +182,7 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
 
         private fun createVisaModel(): Model {
             return Model(
-                id = ApiConfig.ID.TangemVisa,
+                id = ApiConfig.ID.TangemPay,
                 expected = ApiEnvironmentConfig(
                     environment = ApiEnvironment.DEV,
                     baseUrl = "[REDACTED_ENV_URL]",
