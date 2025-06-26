@@ -1,4 +1,4 @@
-package com.tangem.datasource.api.visa.models.request
+package com.tangem.datasource.api.pay.models.request
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
