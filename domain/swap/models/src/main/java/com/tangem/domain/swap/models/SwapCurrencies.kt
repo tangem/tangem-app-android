@@ -12,7 +12,14 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 data class SwapCurrencies(
     val fromGroup: SwapCurrenciesGroup,
     val toGroup: SwapCurrenciesGroup,
-)
+) {
+    companion object {
+        val EMPTY = SwapCurrencies(
+            fromGroup = SwapCurrenciesGroup(emptyList(), emptyList(), false),
+            toGroup = SwapCurrenciesGroup(emptyList(), emptyList(), false),
+        )
+    }
+}
 
 /**
  * Return swap group depending on [swapDirection]
