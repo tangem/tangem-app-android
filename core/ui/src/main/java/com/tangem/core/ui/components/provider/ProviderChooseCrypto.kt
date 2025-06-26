@@ -54,7 +54,7 @@ fun ProviderChooseCrypto(providerChooseUM: ProviderChooseUM, onClick: () -> Unit
             .fillMaxWidth()
             .padding(all = 12.dp),
     ) {
-        val (iconRef, titleRef, badgeRef, infoRef, labelRef) = createRefs()
+        val (iconRef, titleRef, extraRef, infoRef, labelRef) = createRefs()
         val titleEndRef = createStartBarrier(infoRef, labelRef)
 
         IconContent(
@@ -72,19 +72,19 @@ fun ProviderChooseCrypto(providerChooseUM: ProviderChooseUM, onClick: () -> Unit
                 start.linkTo(iconRef.end, 12.dp)
                 end.linkTo(titleEndRef, 4.dp)
                 top.linkTo(parent.top)
-                bottom.linkTo(badgeRef.top)
+                bottom.linkTo(extraRef.top)
                 width = Dimension.fillToConstraints
             },
         )
-        BadgeContent(
+        ExtraContent(
             providerChooseUM = providerChooseUM,
-            modifier = Modifier.constrainAs(badgeRef) {
+            modifier = Modifier.constrainAs(extraRef) {
                 start.linkTo(iconRef.end, 12.dp)
                 end.linkTo(labelRef.start, 4.dp)
-                top.linkTo(titleRef.bottom, 4.dp)
+                top.linkTo(titleRef.bottom)
                 bottom.linkTo(parent.bottom)
                 width = Dimension.fillToConstraints
-                visibility = if (providerChooseUM.badgeList.isEmpty()) {
+                visibility = if (providerChooseUM.extraUM is ProviderChooseUM.ExtraUM.Empty) {
                     Visibility.Gone
                 } else {
                     Visibility.Visible
@@ -165,16 +165,36 @@ private fun InfoContent(text: TextReference, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun BadgeContent(providerChooseUM: ProviderChooseUM, modifier: Modifier = Modifier) {
+private fun ExtraContent(providerChooseUM: ProviderChooseUM, modifier: Modifier = Modifier) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(4.dp),
         modifier = modifier,
     ) {
-        providerChooseUM.badgeList.fastForEach { badge ->
-            Badge(
-                iconRes = badge.iconRes,
-                text = badge.text,
+        when (val extraUM = providerChooseUM.extraUM) {
+            is ProviderChooseUM.ExtraUM.Action -> Text(
+                text = extraUM.text.resolveReference(),
+                style = TangemTheme.typography.caption1,
+                color = TangemTheme.colors.text.tertiary,
+                modifier = Modifier
+                    .padding(top = 4.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(TangemTheme.colors.button.secondary)
+                    .padding(horizontal = 6.dp, vertical = 1.dp),
             )
+            is ProviderChooseUM.ExtraUM.Badges -> extraUM.badgeList.fastForEach { badge ->
+                Badge(
+                    iconRes = badge.iconRes,
+                    text = badge.text,
+                    modifier = Modifier.padding(top = 4.dp),
+                )
+            }
+            is ProviderChooseUM.ExtraUM.Error -> Text(
+                text = extraUM.text.resolveReference(),
+                style = TangemTheme.typography.caption2,
+                color = TangemTheme.colors.text.tertiary,
+                modifier = Modifier.padding(top = 6.dp),
+            )
+            else -> Unit
         }
     }
 }
@@ -219,18 +239,20 @@ private class ProviderChooseCryptoPreviewProvider : PreviewParameterProvider<Pro
                 subtitle = stringReference("CEX"),
                 infoText = stringReference("1 800,00 POL"),
                 iconUrl = "",
-                badgeList = persistentListOf(
-                    BadgeUM(
-                        text = stringReference("4.9"),
-                        iconRes = R.drawable.ic_star_outline_24,
-                    ),
-                    BadgeUM(
-                        text = stringReference("5 mins"),
-                        iconRes = R.drawable.ic_speed_24,
-                    ),
-                    BadgeUM(
-                        text = stringReference("$3.45"),
-                        iconRes = R.drawable.ic_gas_24,
+                extraUM = ProviderChooseUM.ExtraUM.Badges(
+                    persistentListOf(
+                        BadgeUM(
+                            text = stringReference("4.9"),
+                            iconRes = R.drawable.ic_star_outline_24,
+                        ),
+                        BadgeUM(
+                            text = stringReference("5 mins"),
+                            iconRes = R.drawable.ic_speed_24,
+                        ),
+                        BadgeUM(
+                            text = stringReference("$3.45"),
+                            iconRes = R.drawable.ic_gas_24,
+                        ),
                     ),
                 ),
                 isSelected = true,
@@ -246,19 +268,8 @@ private class ProviderChooseCryptoPreviewProvider : PreviewParameterProvider<Pro
                 subtitle = stringReference("CEX"),
                 infoText = stringReference("1 799,12 POL"),
                 iconUrl = "",
-                badgeList = persistentListOf(
-                    BadgeUM(
-                        text = stringReference("4.9"),
-                        iconRes = R.drawable.ic_star_outline_24,
-                    ),
-                    BadgeUM(
-                        text = stringReference("5 mins"),
-                        iconRes = R.drawable.ic_speed_24,
-                    ),
-                    BadgeUM(
-                        text = stringReference("$3.45"),
-                        iconRes = R.drawable.ic_gas_24,
-                    ),
+                extraUM = ProviderChooseUM.ExtraUM.Action(
+                    text = resourceReference(R.string.express_provider_permission_needed),
                 ),
                 isSelected = false,
                 labelUM = ProviderChooseUM.LabelUM.Text(
@@ -270,7 +281,9 @@ private class ProviderChooseCryptoPreviewProvider : PreviewParameterProvider<Pro
                 subtitle = stringReference("CEX"),
                 infoText = stringReference("1 799,12 POL"),
                 iconUrl = "",
-                badgeList = persistentListOf(),
+                extraUM = ProviderChooseUM.ExtraUM.Error(
+                    text = resourceReference(R.string.express_provider_min_amount, wrappedList("1 POL")),
+                ),
                 isSelected = false,
                 labelUM = ProviderChooseUM.LabelUM.Text(
                     text = stringReference("–0.2%"),
@@ -281,7 +294,7 @@ private class ProviderChooseCryptoPreviewProvider : PreviewParameterProvider<Pro
                 subtitle = stringReference("CEX"),
                 infoText = stringReference("1 POL"),
                 iconUrl = "",
-                badgeList = persistentListOf(),
+                extraUM = ProviderChooseUM.ExtraUM.Empty,
                 isSelected = false,
                 labelUM = ProviderChooseUM.LabelUM.Text(
                     text = stringReference("–0.2%"),
@@ -292,7 +305,7 @@ private class ProviderChooseCryptoPreviewProvider : PreviewParameterProvider<Pro
                 subtitle = stringReference("CEX"),
                 infoText = stringReference("1 POL"),
                 iconUrl = "",
-                badgeList = persistentListOf(),
+                extraUM = ProviderChooseUM.ExtraUM.Empty,
                 isSelected = false,
                 labelUM = null,
             ),
@@ -301,18 +314,20 @@ private class ProviderChooseCryptoPreviewProvider : PreviewParameterProvider<Pro
                 subtitle = stringReference("CEX"),
                 infoText = stringReference("1 POL"),
                 iconUrl = "",
-                badgeList = persistentListOf(
-                    BadgeUM(
-                        text = stringReference("4.9"),
-                        iconRes = R.drawable.ic_star_outline_24,
-                    ),
-                    BadgeUM(
-                        text = stringReference("5 mins"),
-                        iconRes = R.drawable.ic_speed_24,
-                    ),
-                    BadgeUM(
-                        text = stringReference("$3.45"),
-                        iconRes = R.drawable.ic_gas_24,
+                extraUM = ProviderChooseUM.ExtraUM.Badges(
+                    persistentListOf(
+                        BadgeUM(
+                            text = stringReference("4.9"),
+                            iconRes = R.drawable.ic_star_outline_24,
+                        ),
+                        BadgeUM(
+                            text = stringReference("5 mins"),
+                            iconRes = R.drawable.ic_speed_24,
+                        ),
+                        BadgeUM(
+                            text = stringReference("$3.45"),
+                            iconRes = R.drawable.ic_gas_24,
+                        ),
                     ),
                 ),
                 isSelected = false,
