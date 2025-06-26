@@ -9,9 +9,11 @@ import com.tangem.datasource.exchangeservice.swap.ExpressUtils
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.express.ExpressRepository
 import com.tangem.domain.express.models.ExpressProvider
+import com.tangem.domain.express.models.ExpressRateType
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.swap.SwapRepositoryV2
 import com.tangem.domain.swap.models.SwapPairModel
+import com.tangem.domain.swap.models.SwapQuoteModel
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.operations.BaseCurrencyStatusOperations
 import com.tangem.domain.wallets.models.UserWallet
@@ -22,6 +24,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
 import timber.log.Timber
+import java.math.BigDecimal
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -34,6 +37,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
 ) : SwapRepositoryV2 {
 
     private val tokenInfoConverter = TokenInfoConverter()
+
     override suspend fun getPairs(
         userWallet: UserWallet,
         initialCurrency: CryptoCurrency,
@@ -113,6 +117,40 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
                 )
             }
         }.awaitAll().filterNotNull()
+    }
+
+    override suspend fun getSwapQuote(
+        userWallet: UserWallet,
+        fromCryptoCurrency: CryptoCurrency,
+        toCryptoCurrency: CryptoCurrency,
+        fromAmount: BigDecimal,
+        provider: ExpressProvider,
+        rateType: ExpressRateType,
+    ): SwapQuoteModel = withContext(coroutineDispatcher.io) {
+        val response = tangemExpressApi.getExchangeQuote(
+            fromAmount = fromAmount.movePointRight(fromCryptoCurrency.decimals).toString(),
+            fromNetwork = fromCryptoCurrency.network.backendId,
+            fromContractAddress = fromCryptoCurrency.getContractAddress(),
+            fromDecimals = fromCryptoCurrency.decimals,
+            toNetwork = toCryptoCurrency.network.backendId,
+            toContractAddress = toCryptoCurrency.getContractAddress(),
+            toDecimals = toCryptoCurrency.decimals,
+            providerId = provider.providerId,
+            rateType = rateType.name.lowercase(),
+            userWalletId = userWallet.walletId.stringValue,
+            refCode = ExpressUtils.getRefCode(
+                userWallet = userWallet,
+                appPreferencesStore = appPreferencesStore,
+            ),
+        ).getOrThrow()
+
+        val toTokenAmount = requireNotNull(response.toAmount.toBigDecimalOrNull()?.movePointLeft(response.toDecimals))
+
+        return@withContext SwapQuoteModel(
+            provider = provider,
+            toTokenAmount = toTokenAmount,
+            allowanceContract = response.allowanceContract,
+        )
     }
 
     private suspend fun CoroutineScope.getPairsInternal(
