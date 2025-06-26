@@ -1,6 +1,7 @@
 package com.tangem.features.staking.impl.presentation.state.helpers
 
 import com.tangem.domain.staking.FetchActionsUseCase
+import com.tangem.domain.staking.FetchStakingYieldBalanceUseCase
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.action.StakingActionStatus
 import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
@@ -22,6 +23,7 @@ internal class StakingBalanceUpdater @AssistedInject constructor(
     private val fetchActionsUseCase: FetchActionsUseCase,
     private val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter,
     private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
+    private val fetchStakingYieldBalanceUseCase: FetchStakingYieldBalanceUseCase,
     @DelayedWork private val coroutineScope: CoroutineScope,
     @Assisted private val userWallet: UserWallet,
     @Assisted private val cryptoCurrencyStatus: CryptoCurrencyStatus,
@@ -35,6 +37,13 @@ internal class StakingBalanceUpdater @AssistedInject constructor(
                     fetchPendingTransactionsUseCase(
                         userWalletId = userWallet.walletId,
                         network = cryptoCurrencyStatus.currency.network,
+                    )
+                },
+                async {
+                    fetchStakingYieldBalanceUseCase(
+                        userWalletId = userWallet.walletId,
+                        cryptoCurrency = cryptoCurrencyStatus.currency,
+                        isRefactoringEnabled = true,
                     )
                 },
                 // we should update tx history and network for new balances
