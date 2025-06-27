@@ -12,6 +12,7 @@ import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.preview.AmountScreenClickIntentsStub
 import com.tangem.common.ui.amountScreen.preview.AmountStatePreviewData
 import com.tangem.common.ui.amountScreen.ui.amountField
+import com.tangem.common.ui.amountScreen.ui.amountFieldV2
 import com.tangem.common.ui.amountScreen.ui.buttons
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -40,18 +41,28 @@ fun AmountScreenContent(
                 bottom = TangemTheme.dimens.spacing16,
             ),
     ) {
-        amountField(
-            amountState = amountState,
-            isBalanceHidden = isBalanceHidden,
-            onValueChange = clickIntents::onAmountValueChange,
-            onValuePastedTriggerDismiss = clickIntents::onAmountPasteTriggerDismiss,
-        )
-        buttons(
-            segmentedButtonConfig = amountState.segmentedButtonConfig,
-            clickIntents = clickIntents,
-            isSegmentedButtonsEnabled = amountState.isSegmentedButtonsEnabled,
-            selectedButton = amountState.selectedButton,
-        )
+        if (amountState.isRedesignEnabled) {
+            amountFieldV2(
+                amountState = amountState,
+                onValueChange = clickIntents::onAmountValueChange,
+                onValuePastedTriggerDismiss = clickIntents::onAmountPasteTriggerDismiss,
+                onCurrencyChange = clickIntents::onCurrencyChangeClick,
+                onMaxAmountClick = clickIntents::onMaxValueClick,
+            )
+        } else {
+            amountField(
+                amountState = amountState,
+                isBalanceHidden = isBalanceHidden,
+                onValueChange = clickIntents::onAmountValueChange,
+                onValuePastedTriggerDismiss = clickIntents::onAmountPasteTriggerDismiss,
+            )
+            buttons(
+                segmentedButtonConfig = amountState.segmentedButtonConfig,
+                clickIntents = clickIntents,
+                isSegmentedButtonsEnabled = amountState.isSegmentedButtonsEnabled,
+                selectedButton = amountState.selectedButton,
+            )
+        }
     }
 }
 
@@ -75,6 +86,7 @@ private class SendAmountContentPreviewProvider : PreviewParameterProvider<Amount
     override val values: Sequence<AmountState>
         get() = sequenceOf(
             AmountStatePreviewData.amountState,
+            AmountStatePreviewData.amountStateV2,
         )
 }
 // endregion
