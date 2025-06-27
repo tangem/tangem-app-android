@@ -14,7 +14,6 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.tokens.GetNetworkCoinStatusUseCase
@@ -132,11 +131,9 @@ internal class WcSendTransactionModel @Inject constructor(
         network: Network,
     ): Either<CurrencyStatusError, CryptoCurrencyStatus> {
         return getNetworkCoinUseCase.invokeSync(
-            userWalletId = userWallet.walletId,
+            userWallet = userWallet,
             networkId = network.id,
             derivationPath = network.derivationPath,
-            isSingleWalletWithTokens = userWallet is UserWallet.Cold &&
-                userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
         )
     }
 
