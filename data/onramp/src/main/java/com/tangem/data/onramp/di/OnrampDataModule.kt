@@ -8,7 +8,6 @@ import com.tangem.data.onramp.DefaultOnrampErrorResolver
 import com.tangem.data.onramp.DefaultOnrampRepository
 import com.tangem.data.onramp.DefaultOnrampTransactionRepository
 import com.tangem.data.onramp.converters.error.OnrampErrorConverter
-import com.tangem.domain.onramp.repositories.LegacyTopUpRepository
 import com.tangem.data.onramp.legacy.MercuryoTopUpRepository
 import com.tangem.datasource.api.express.TangemExpressApi
 import com.tangem.datasource.api.express.models.response.ExpressErrorResponse
@@ -24,11 +23,9 @@ import com.tangem.datasource.local.onramp.pairs.OnrampPairsStore
 import com.tangem.datasource.local.onramp.paymentmethods.OnrampPaymentMethodsStore
 import com.tangem.datasource.local.onramp.quotes.OnrampQuotesStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
-import com.tangem.domain.onramp.repositories.HotCryptoRepository
-import com.tangem.domain.onramp.repositories.OnrampErrorResolver
-import com.tangem.domain.onramp.repositories.OnrampRepository
-import com.tangem.domain.onramp.repositories.OnrampTransactionRepository
+import com.tangem.domain.onramp.repositories.*
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -104,6 +101,7 @@ internal object OnrampDataModule {
         appPreferencesStore: AppPreferencesStore,
         dispatchers: CoroutineDispatcherProvider,
         analyticsEventHandler: AnalyticsEventHandler,
+        userTokensResponseStore: UserTokensResponseStore,
     ): HotCryptoRepository {
         return DefaultHotCryptoRepository(
             excludedBlockchains = excludedBlockchains,
@@ -113,6 +111,7 @@ internal object OnrampDataModule {
             appPreferencesStore = appPreferencesStore,
             dispatchers = dispatchers,
             analyticsEventHandler = analyticsEventHandler,
+            userTokensResponseStore = userTokensResponseStore,
         )
     }
 
