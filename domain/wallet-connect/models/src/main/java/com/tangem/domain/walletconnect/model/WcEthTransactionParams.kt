@@ -12,7 +12,7 @@ data class WcEthTransactionParams(
     val to: String?,
 
     @Json(name = "data")
-    val data: String,
+    val data: String?,
 
     @Json(name = "gas")
     val gas: String?,
