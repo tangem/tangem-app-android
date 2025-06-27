@@ -238,19 +238,31 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
 
     override fun onNFTClick(userWallet: UserWallet) {
         val selectedWallet = stateHolder.getSelectedWallet() as? WalletState.MultiCurrency.Content ?: return
-        val analyticsState = when (val nftState = selectedWallet.nftState) {
-            is WalletNFTItemUM.Content -> NFTAnalyticsEvent.NFTListScreenOpened.State.Full(
-                assetsCount = nftState.assetsCount,
-                collectionsCount = nftState.collectionsCount,
-            )
-            is WalletNFTItemUM.Empty -> NFTAnalyticsEvent.NFTListScreenOpened.State.Empty
+        when (val state = selectedWallet.nftState) {
+            is WalletNFTItemUM.Content -> {
+                analyticsEventHandler.send(
+                    NFTAnalyticsEvent.NFTListScreenOpened(
+                        state = NFTAnalyticsEvent.NFTListScreenOpened.State.Full,
+                        allAssetsCount = state.allAssetsCount,
+                        collectionsCount = state.collectionsCount,
+                        noCollectionAssetsCount = state.noCollectionAssetsCount,
+                    ),
+                )
+            }
+            is WalletNFTItemUM.Empty -> {
+                analyticsEventHandler.send(
+                    NFTAnalyticsEvent.NFTListScreenOpened(
+                        state = NFTAnalyticsEvent.NFTListScreenOpened.State.Empty,
+                        allAssetsCount = 0,
+                        collectionsCount = 0,
+                        noCollectionAssetsCount = 0,
+                    ),
+                )
+            }
             is WalletNFTItemUM.Failed,
             is WalletNFTItemUM.Hidden,
             is WalletNFTItemUM.Loading,
-            -> null
-        }
-        analyticsState?.let {
-            analyticsEventHandler.send(NFTAnalyticsEvent.NFTListScreenOpened(analyticsState))
+            -> Unit
         }
 
         router.openNFT(userWallet)
