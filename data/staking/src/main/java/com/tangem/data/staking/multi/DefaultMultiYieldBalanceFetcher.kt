@@ -165,7 +165,7 @@ internal class DefaultMultiYieldBalanceFetcher @Inject constructor(
                 val yieldBalances = coroutineScope {
                     requests
 // [REDACTED_TODO_COMMENT]
-                        .chunked(size = 16) // StakeKitApi limitation: no more than 16 requests at the same time
+                        .chunked(size = 15) // StakeKitApi limitation: no more than 15 requests at the same time
                         .map {
                             async(dispatchers.io) { stakeKitApi.getMultipleYieldBalances(it).bind() }
                         }

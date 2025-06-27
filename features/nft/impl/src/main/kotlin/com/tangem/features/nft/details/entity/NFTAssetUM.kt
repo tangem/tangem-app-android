@@ -62,6 +62,7 @@ data class NFTAssetUM(
         val value: String,
         val valueTextEllipsis: TextEllipsis = TextEllipsis.End,
         val showInfoButton: Boolean,
-        val onClick: () -> Unit = { },
+        val onBlockClick: (() -> Unit)? = null,
+        val onValueClick: (() -> Unit)? = null,
     )
 }
