@@ -6,6 +6,8 @@ import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam.OnOffState.Off
+import com.tangem.core.analytics.models.AnalyticsParam.OnOffState.On
 import com.tangem.core.analytics.utils.AnalyticsContextProxy
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -29,6 +31,7 @@ import com.tangem.domain.wallets.models.isMultiCurrency
 import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.domain.wallets.usecase.*
 import com.tangem.feature.walletsettings.analytics.Settings
+import com.tangem.feature.walletsettings.analytics.WalletSettingsAnalyticEvents
 import com.tangem.feature.walletsettings.component.WalletSettingsComponent
 import com.tangem.feature.walletsettings.entity.DialogConfig
 import com.tangem.feature.walletsettings.entity.NetworksAvailableForNotificationBSConfig
@@ -214,6 +217,11 @@ internal class WalletSettingsModel @Inject constructor(
             } else {
                 disableWalletNFTUseCase.invoke(params.userWalletId)
             }
+            analyticsEventHandler.send(
+                WalletSettingsAnalyticEvents.NftToggleSwitch(
+                    enabled = if (isChecked) On else Off,
+                ),
+            )
         }
     }
 
