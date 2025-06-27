@@ -105,11 +105,11 @@ internal class WcSendTransactionModel @Inject constructor(
 
                             this@WcSendTransactionModel.signState = signState
                             val isSecurityCheckContent = securityCheck is Lce.Content
-                            var isApprovalMethod = isSecurityCheckContent &&
+                            val isApprovalMethod = isSecurityCheckContent &&
                                 securityCheck.content is BlockAidTransactionCheck.Result.Approval
                             wcApproval = useCase as? WcApproval
                             sign = { useCase.sign() }
-                            buildUiState(securityCheck, useCase, signState)
+                            buildUiState(securityCheck, useCase, signState, isApprovalMethod)
                         }
                 }
                 else -> unknownMethodRunnable()
@@ -144,10 +144,14 @@ internal class WcSendTransactionModel @Inject constructor(
         securityCheck: Lce<Throwable, BlockAidTransactionCheck.Result>,
         useCase: WcSignUseCase<*>,
         signState: WcSignState<*>,
+        isApproval: Boolean,
     ) {
         val blockAidState = when (securityCheck) {
             is Lce.Content -> blockAidUiConverter.convert(
-                WcSendAndReceiveBlockAidUiConverter.Input(securityCheck.content.result, wcApproval?.getAmount()),
+                WcSendAndReceiveBlockAidUiConverter.Input(
+                    securityCheck.content.result,
+                    if (isApproval) wcApproval?.getAmount() else null,
+                ),
             )
             is Lce.Error -> WcSendReceiveTransactionCheckResultsUM(isLoading = false)
             is Lce.Loading -> WcSendReceiveTransactionCheckResultsUM(isLoading = true)
@@ -188,9 +192,9 @@ internal class WcSendTransactionModel @Inject constructor(
     }
 
     fun onClickDoneCustomAllowance(value: BigDecimal, isUnlimited: Boolean) {
-        val maxValue = if (isUnlimited) Double.MAX_VALUE.toBigDecimal() else value
+        val newValue = if (isUnlimited) null else value
         wcApproval?.getAmount()?.let { currentAmount ->
-            wcApproval?.updateAmount(currentAmount.copy(maxValue = maxValue))
+            wcApproval?.updateAmount(currentAmount.copy(amount = currentAmount.amount?.copy(value = newValue)))
         }
     }
 
