@@ -14,6 +14,8 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.features.send.v2.api.SendNotificationsComponent
+import com.tangem.features.send.v2.api.SendNotificationsComponent.Params.NotificationData
 import com.tangem.features.send.v2.common.CommonSendRoute
 import com.tangem.features.send.v2.common.PredefinedValues
 import com.tangem.features.send.v2.common.ui.state.ConfirmUM
@@ -26,8 +28,7 @@ import com.tangem.features.send.v2.subcomponents.destination.SendDestinationBloc
 import com.tangem.features.send.v2.subcomponents.destination.SendDestinationComponentParams.DestinationBlockParams
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeBlockComponent
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeComponentParams
-import com.tangem.features.send.v2.subcomponents.notifications.NotificationsComponent
-import com.tangem.features.send.v2.subcomponents.notifications.model.NotificationData
+import com.tangem.features.send.v2.subcomponents.notifications.DefaultSendNotificationsComponent
 import com.tangem.utils.extensions.orZero
 import kotlinx.coroutines.flow.*
 
@@ -89,9 +90,9 @@ internal class SendConfirmComponent(
         onClick = model::showEditFee,
     )
 
-    private val notificationsComponent = NotificationsComponent(
+    private val notificationsComponent = DefaultSendNotificationsComponent(
         appComponentContext = child("sendConfirmNotifications"),
-        params = NotificationsComponent.Params(
+        params = SendNotificationsComponent.Params(
             analyticsCategoryName = params.analyticsCategoryName,
             userWalletId = params.userWallet.walletId,
             cryptoCurrencyStatus = params.cryptoCurrencyStatus,
