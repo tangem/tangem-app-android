@@ -7,6 +7,7 @@ import org.rekotlin.StateType
 // todo refactor [REDACTED_TASK_KEY]
 data class HomeState(
     val scanInProgress: Boolean = false,
+    val isV2StoriesEnabled: Boolean = false,
     val stories: ImmutableList<Stories> = getRestrictedStories().toImmutableList(),
 ) : StateType {
 

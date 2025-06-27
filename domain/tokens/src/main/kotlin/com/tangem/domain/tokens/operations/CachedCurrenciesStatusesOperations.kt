@@ -13,15 +13,16 @@ import com.tangem.domain.core.utils.lceError
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkStatus
+import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.networks.single.SingleNetworkStatusProducer
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
-import com.tangem.domain.quotes.QuotesRepositoryV2
-import com.tangem.domain.quotes.multi.MultiQuoteFetcher
-import com.tangem.domain.quotes.single.SingleQuoteProducer
-import com.tangem.domain.quotes.single.SingleQuoteSupplier
+import com.tangem.domain.quotes.QuotesRepository
+import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
+import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
+import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.staking.model.stakekit.YieldBalanceList
 import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
@@ -31,7 +32,6 @@ import com.tangem.domain.staking.single.SingleYieldBalanceSupplier
 import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.model.Quote
 import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations.Error
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.utils.extractAddress
@@ -44,25 +44,25 @@ import kotlinx.coroutines.flow.*
 @Suppress("LongParameterList", "LargeClass")
 class CachedCurrenciesStatusesOperations(
     private val currenciesRepository: CurrenciesRepository,
-    quotesRepositoryV2: QuotesRepositoryV2,
+    quotesRepository: QuotesRepository,
     private val stakingRepository: StakingRepository,
     private val singleNetworkStatusSupplier: SingleNetworkStatusSupplier,
     multiNetworkStatusSupplier: MultiNetworkStatusSupplier,
     private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
     private val singleNetworkStatusFetcher: SingleNetworkStatusFetcher,
-    private val multiQuoteFetcher: MultiQuoteFetcher,
-    private val singleQuoteSupplier: SingleQuoteSupplier,
+    private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
+    private val singleQuoteStatusSupplier: SingleQuoteStatusSupplier,
     private val singleYieldBalanceSupplier: SingleYieldBalanceSupplier,
     private val multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
     private val tokensFeatureToggles: TokensFeatureToggles,
 ) : BaseCurrenciesStatusesOperations,
     BaseCurrencyStatusOperations(
         currenciesRepository = currenciesRepository,
-        quotesRepositoryV2 = quotesRepositoryV2,
+        quotesRepository = quotesRepository,
         stakingRepository = stakingRepository,
         multiNetworkStatusSupplier = multiNetworkStatusSupplier,
         singleNetworkStatusSupplier = singleNetworkStatusSupplier,
-        singleQuoteSupplier = singleQuoteSupplier,
+        singleQuoteStatusSupplier = singleQuoteStatusSupplier,
         singleYieldBalanceSupplier = singleYieldBalanceSupplier,
         tokensFeatureToggles = tokensFeatureToggles,
     ) {
@@ -123,7 +123,7 @@ class CachedCurrenciesStatusesOperations(
             val (networks, currenciesIds) = getIds(currencies)
 
             fun createCurrenciesStatuses(
-                maybeQuotes: Either<TokenListError, Set<Quote>>?,
+                maybeQuotes: Either<TokenListError, Set<QuoteStatus>>?,
                 maybeNetworkStatuses: Either<TokenListError, Set<NetworkStatus>>?,
                 maybeYieldBalances: Either<TokenListError, YieldBalanceList>?,
                 isUpdating: Boolean,
@@ -203,8 +203,8 @@ class CachedCurrenciesStatusesOperations(
                 async {
                     val rawCurrenciesIds = currenciesIds.mapNotNullTo(mutableSetOf()) { it.rawCurrencyId }
 
-                    multiQuoteFetcher(
-                        params = MultiQuoteFetcher.Params(currenciesIds = rawCurrenciesIds, appCurrencyId = null),
+                    multiQuoteStatusFetcher(
+                        params = MultiQuoteStatusFetcher.Params(currenciesIds = rawCurrenciesIds, appCurrencyId = null),
                     )
                 },
                 async {
@@ -226,7 +226,7 @@ class CachedCurrenciesStatusesOperations(
 
     private fun createCurrenciesStatuses(
         currencies: NonEmptyList<CryptoCurrency>,
-        maybeQuotes: Either<TokenListError, Set<Quote>>?,
+        maybeQuotes: Either<TokenListError, Set<QuoteStatus>>?,
         maybeNetworkStatuses: Either<TokenListError, Set<NetworkStatus>>?,
         maybeYieldBalances: Either<TokenListError, YieldBalanceList>?,
         isUpdating: Boolean,
@@ -252,7 +252,7 @@ class CachedCurrenciesStatusesOperations(
 
             val currencyStatus = currencyStatusProxyCreator.createCurrencyStatus(
                 currency = currency,
-                quote = quote,
+                quoteStatus = quote,
                 networkStatus = networkStatus,
                 yieldBalance = yieldBalance,
                 ignoreQuote = quotesRetrievingFailed,
@@ -286,7 +286,7 @@ class CachedCurrenciesStatusesOperations(
             .distinctUntilChanged()
     }
 
-    private fun getQuotes(tokensIds: NonEmptySet<CryptoCurrency.ID>): Flow<Either<TokenListError, Set<Quote>>> {
+    private fun getQuotes(tokensIds: NonEmptySet<CryptoCurrency.ID>): Flow<Either<TokenListError, Set<QuoteStatus>>> {
         return getQuotesUpdates(
             rawCurrencyIds = tokensIds.mapNotNullTo(
                 destination = hashSetOf(),
@@ -295,11 +295,11 @@ class CachedCurrenciesStatusesOperations(
         )
     }
 
-    override fun getQuotes(id: CryptoCurrency.RawID): Flow<Either<Error, Set<Quote>>> {
-        return singleQuoteSupplier(
-            params = SingleQuoteProducer.Params(rawCurrencyId = id),
+    override fun getQuotes(id: CryptoCurrency.RawID): Flow<Either<Error, Set<QuoteStatus>>> {
+        return singleQuoteStatusSupplier(
+            params = SingleQuoteStatusProducer.Params(rawCurrencyId = id),
         )
-            .map<Quote, Either<Error, Set<Quote>>> { setOf(it).right() }
+            .map<QuoteStatus, Either<Error, Set<QuoteStatus>>> { setOf(it).right() }
             .distinctUntilChanged()
     }
 
@@ -355,14 +355,16 @@ class CachedCurrenciesStatusesOperations(
     }
 
     // temporary code because token list is built using networks list
-    private fun getQuotesUpdates(rawCurrencyIds: Set<CryptoCurrency.RawID>): EitherFlow<TokenListError, Set<Quote>> {
+    private fun getQuotesUpdates(
+        rawCurrencyIds: Set<CryptoCurrency.RawID>,
+    ): EitherFlow<TokenListError, Set<QuoteStatus>> {
         return channelFlow {
-            val state = MutableStateFlow(emptySet<Quote>())
+            val state = MutableStateFlow(emptySet<QuoteStatus>())
 
             rawCurrencyIds.onEach {
                 launch {
-                    singleQuoteSupplier(
-                        params = SingleQuoteProducer.Params(rawCurrencyId = it),
+                    singleQuoteStatusSupplier(
+                        params = SingleQuoteStatusProducer.Params(rawCurrencyId = it),
                     )
                         .onEach { quote ->
                             state.update { loadedStatuses ->
@@ -377,7 +379,7 @@ class CachedCurrenciesStatusesOperations(
                 .onEach(::send)
                 .launchIn(scope = this)
         }
-            .map<Set<Quote>, Either<TokenListError, Set<Quote>>> { it.right() }
+            .map<Set<QuoteStatus>, Either<TokenListError, Set<QuoteStatus>>> { it.right() }
             .distinctUntilChanged()
     }
 
