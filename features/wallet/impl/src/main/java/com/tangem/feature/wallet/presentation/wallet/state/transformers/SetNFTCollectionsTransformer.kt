@@ -52,8 +52,24 @@ internal class SetNFTCollectionsTransformer(
                     .toPersistentList()
             },
             collectionsCount = collections.size,
-            assetsCount = collections
-                .sumOf { it.count },
+            allAssetsCount = collections.sumOf { it.count },
+            noCollectionAssetsCount = collections.sumOf { collection ->
+                when (val collectionId = collection.id) {
+                    is NFTCollection.Identifier.Solana ->
+                        collection
+                            .count
+                            .takeIf { collectionId.collectionAddress == null }
+                            ?: 0
+                    is NFTCollection.Identifier.TON ->
+                        collection
+                            .count
+                            .takeIf { collectionId.contractAddress == null }
+                            ?: 0
+                    is NFTCollection.Identifier.EVM,
+                    is NFTCollection.Identifier.Unknown,
+                    -> 0
+                }
+            },
             isFlickering = false,
             onItemClick = onItemClick,
         )
