@@ -7,9 +7,9 @@ import com.domain.blockaid.models.dapp.CheckDAppResult
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import com.tangem.data.walletconnect.pair.AssociateNetworksDelegate
+import com.tangem.data.walletconnect.utils.WC_TAG
 import com.tangem.data.walletconnect.utils.WcSdkObserver
 import com.tangem.data.walletconnect.utils.WcSdkSessionConverter
-import com.tangem.data.walletconnect.utils.WC_TAG
 import com.tangem.datasource.local.walletconnect.WalletConnectStore
 import com.tangem.domain.walletconnect.model.WcSession
 import com.tangem.domain.walletconnect.model.WcSessionDTO
@@ -18,11 +18,9 @@ import com.tangem.domain.walletconnect.repository.WcSessionsManager
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlinx.coroutines.withContext
 import timber.log.Timber
 import kotlin.coroutines.resume
 
@@ -37,6 +35,7 @@ internal class DefaultWcSessionsManager(
 
     private val onSessionDelete = Channel<Wallet.Model.SessionDelete>(capacity = Channel.BUFFERED)
     private val oneTimeMigration = MutableStateFlow(true)
+    private val oneTimeSessionExtend = MutableStateFlow(true)
 
     override val sessions: Flow<Map<UserWallet, List<WcSession>>>
         get() = combine(getWallets(), store.sessions) { wallets, inStore -> wallets to inStore }
@@ -51,6 +50,10 @@ internal class DefaultWcSessionsManager(
                 val associatedSessions: List<WcSession> = associate(inSdk, inStore, wallets)
                 val someRemove = removeUnknownSessions(inStore, associatedSessions)
                 if (someRemove) return@transform // ignore emit, wait next one
+                if (oneTimeSessionExtend.value) {
+                    oneTimeSessionExtend.value = false
+                    scope.launch { extendAliveSessions(associatedSessions) }
+                }
                 emit(associatedSessions.groupBy { it.wallet })
             }
             .distinctUntilChanged()
@@ -58,6 +61,7 @@ internal class DefaultWcSessionsManager(
 
     override fun onWcSdkInit() {
         oneTimeMigration.value = true
+        oneTimeSessionExtend.value = true
         listenOnSessionDelete()
     }
 
@@ -150,10 +154,25 @@ internal class DefaultWcSessionsManager(
         return haveSomeUnknown
     }
 
+    private suspend fun extendAliveSessions(sessions: List<WcSession>) = coroutineScope {
+        val jobs = sessions.map { launch { sdkSessionExtend(it.sdkModel.topic) } }
+        jobs.joinAll()
+    }
+
     private suspend fun sdkDisconnectSession(topic: String): Either<Throwable, Unit> {
         return suspendCancellableCoroutine { continuation ->
             WalletKit.disconnectSession(
                 params = Wallet.Params.SessionDisconnect(topic),
+                onSuccess = { continuation.resume(Unit.right()) },
+                onError = { continuation.resume(it.throwable.left()) },
+            )
+        }
+    }
+
+    private suspend fun sdkSessionExtend(topic: String): Either<Throwable, Unit> {
+        return suspendCancellableCoroutine { continuation ->
+            WalletKit.extendSession(
+                params = Wallet.Params.SessionExtend(topic),
                 onSuccess = { continuation.resume(Unit.right()) },
                 onError = { continuation.resume(it.throwable.left()) },
             )
