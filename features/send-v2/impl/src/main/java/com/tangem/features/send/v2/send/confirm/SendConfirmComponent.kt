@@ -65,6 +65,7 @@ internal class SendConfirmComponent(
             appCurrency = params.appCurrency,
             blockClickEnableFlow = blockClickEnableFlow.asStateFlow(),
             predefinedValues = params.predefinedValues,
+            isRedesignEnabled = model.uiState.value.isRedesignEnabled,
         ),
         onResult = model::onAmountResult,
         onClick = model::showEditAmount,
