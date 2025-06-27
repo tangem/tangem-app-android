@@ -27,7 +27,8 @@ internal class NFTDetailsUMFactory(
     private val onExploreClick: () -> Unit,
     private val onSendClick: () -> Unit,
     private val onRefresh: () -> Unit,
-    private val onInfoBlockClick: (title: TextReference, text: TextReference) -> Unit,
+    private val onRegularInfoBlockClick: (title: TextReference, text: TextReference) -> Unit,
+    private val onTokenAddressBlockClick: () -> Unit,
 ) {
 
     fun getInitialState(nftAsset: NFTAsset, nftCollection: NFTCollection): NFTDetailsUM = NFTDetailsUM(
@@ -70,13 +71,13 @@ internal class NFTDetailsUMFactory(
                                 label = rarity.label,
                                 showDivider = hasSalePrice || hasDescription,
                                 onLabelClick = {
-                                    onInfoBlockClick(
+                                    onRegularInfoBlockClick(
                                         resourceReference(R.string.nft_details_rarity_label),
                                         resourceReference(R.string.nft_details_info_rarity_label),
                                     )
                                 },
                                 onRankClick = {
-                                    onInfoBlockClick(
+                                    onRegularInfoBlockClick(
                                         resourceReference(R.string.nft_details_rarity_rank),
                                         resourceReference(R.string.nft_details_info_rarity_rank),
                                     )
@@ -135,8 +136,8 @@ internal class NFTDetailsUMFactory(
                 title = resourceReference(R.string.nft_details_token_standard),
                 value = contractType,
                 showInfoButton = true,
-                onClick = {
-                    onInfoBlockClick(
+                onBlockClick = {
+                    onRegularInfoBlockClick(
                         resourceReference(R.string.nft_details_token_standard),
                         resourceReference(R.string.nft_details_info_token_standard),
                     )
@@ -147,11 +148,14 @@ internal class NFTDetailsUMFactory(
                 value = id.tokenAddress,
                 valueTextEllipsis = TextEllipsis.Middle,
                 showInfoButton = true,
-                onClick = {
-                    onInfoBlockClick(
+                onBlockClick = {
+                    onRegularInfoBlockClick(
                         resourceReference(R.string.nft_details_contract_address),
                         resourceReference(R.string.nft_details_info_contract_address),
                     )
+                },
+                onValueClick = {
+                    onTokenAddressBlockClick()
                 },
             ),
             NFTAssetUM.BlockItem(
@@ -159,8 +163,8 @@ internal class NFTDetailsUMFactory(
                 value = id.tokenId.toString(),
                 valueTextEllipsis = TextEllipsis.Middle,
                 showInfoButton = true,
-                onClick = {
-                    onInfoBlockClick(
+                onBlockClick = {
+                    onRegularInfoBlockClick(
                         resourceReference(R.string.nft_details_token_id),
                         resourceReference(R.string.nft_details_info_token_id),
                     )
@@ -170,8 +174,8 @@ internal class NFTDetailsUMFactory(
                 title = resourceReference(R.string.nft_details_chain),
                 value = network.name,
                 showInfoButton = true,
-                onClick = {
-                    onInfoBlockClick(
+                onBlockClick = {
+                    onRegularInfoBlockClick(
                         resourceReference(R.string.nft_details_chain),
                         resourceReference(R.string.nft_details_info_chain),
                     )
@@ -184,19 +188,22 @@ internal class NFTDetailsUMFactory(
                 value = id.tokenAddress,
                 valueTextEllipsis = TextEllipsis.Middle,
                 showInfoButton = true,
-                onClick = {
-                    onInfoBlockClick(
+                onBlockClick = {
+                    onRegularInfoBlockClick(
                         resourceReference(R.string.nft_details_token_address),
                         resourceReference(R.string.nft_details_info_token_address),
                     )
+                },
+                onValueClick = {
+                    onTokenAddressBlockClick()
                 },
             ),
             NFTAssetUM.BlockItem(
                 title = resourceReference(R.string.nft_details_chain),
                 value = network.name,
                 showInfoButton = true,
-                onClick = {
-                    onInfoBlockClick(
+                onBlockClick = {
+                    onRegularInfoBlockClick(
                         resourceReference(R.string.nft_details_chain),
                         resourceReference(R.string.nft_details_info_chain),
                     )
@@ -209,19 +216,22 @@ internal class NFTDetailsUMFactory(
                 value = id.tokenAddress,
                 valueTextEllipsis = TextEllipsis.Middle,
                 showInfoButton = true,
-                onClick = {
-                    onInfoBlockClick(
+                onBlockClick = {
+                    onRegularInfoBlockClick(
                         resourceReference(R.string.nft_details_token_address),
                         resourceReference(R.string.nft_details_info_token_address),
                     )
+                },
+                onValueClick = {
+                    onTokenAddressBlockClick()
                 },
             ),
             NFTAssetUM.BlockItem(
                 title = resourceReference(R.string.nft_details_chain),
                 value = network.name,
                 showInfoButton = true,
-                onClick = {
-                    onInfoBlockClick(
+                onBlockClick = {
+                    onRegularInfoBlockClick(
                         resourceReference(R.string.nft_details_chain),
                         resourceReference(R.string.nft_details_info_chain),
                     )
