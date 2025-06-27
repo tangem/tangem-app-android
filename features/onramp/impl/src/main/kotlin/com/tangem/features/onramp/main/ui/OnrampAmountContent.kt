@@ -51,6 +51,11 @@ internal fun OnrampAmountContent(state: OnrampAmountBlockUM, modifier: Modifier 
 private fun OnrampAmountField(amountField: AmountFieldModel) {
     val decimalFormat = rememberDecimalFormat()
     val requester = remember { FocusRequester() }
+    val symbolColor = if (amountField.fiatValue.isBlank()) {
+        TangemTheme.colors.text.disabled
+    } else {
+        TangemTheme.colors.text.primary1
+    }
     AmountTextField(
         value = amountField.fiatValue,
         decimals = amountField.fiatAmount.decimals,
@@ -59,6 +64,7 @@ private fun OnrampAmountField(amountField: AmountFieldModel) {
             symbol = amountField.fiatAmount.currencySymbol,
             currencyCode = amountField.fiatAmount.currencySymbol,
             decimalFormat = decimalFormat,
+            symbolColor = symbolColor,
         ),
         onValueChange = amountField.onValueChange,
         keyboardOptions = amountField.keyboardOptions,
