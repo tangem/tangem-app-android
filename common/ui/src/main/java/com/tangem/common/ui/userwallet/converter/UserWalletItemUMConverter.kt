@@ -2,7 +2,6 @@ package com.tangem.common.ui.userwallet.converter
 
 import com.tangem.common.ui.R
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
-import com.tangem.core.ui.components.artwork.ArtworkUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -38,6 +37,8 @@ class UserWalletItemUMConverter(
     private val artwork: ArtworkModel? = null,
 ) : Converter<UserWallet, UserWalletItemUM> {
 
+    private val artworkUMConverter = ArtworkUMConverter()
+
     override fun convert(value: UserWallet): UserWalletItemUM {
         return with(value) {
             UserWalletItemUM(
@@ -49,7 +50,7 @@ class UserWalletItemUMConverter(
                 endIcon = endIcon,
                 onClick = { onClick(value.walletId) },
                 imageState = artwork?.let {
-                    UserWalletItemUM.ImageState.Image(ArtworkUM(it.verifiedArtwork, it.defaultUrl))
+                    UserWalletItemUM.ImageState.Image(artworkUMConverter.convert(it))
                 } ?: UserWalletItemUM.ImageState.Loading,
             )
         }
