@@ -39,26 +39,24 @@ internal class DefaultSingleYieldBalanceProducer @AssistedInject constructor(
         )
     }
 
-    private var stakingIds: Set<StakingID>? = null
+    private var stakingId: StakingID? = null
 
     override fun produce(): Flow<YieldBalance> {
         return multiYieldBalanceSupplier(
             params = MultiYieldBalanceProducer.Params(userWalletId = params.userWalletId),
         )
             .mapNotNull { balances ->
-                val currentStakingIds = getStakingIds().ifEmpty {
-                    return@mapNotNull YieldBalance.Unsupported
-                }
+                val currentStakingId = getStakingId() ?: return@mapNotNull YieldBalance.Unsupported
 
-                balances.firstOrNull { currentStakingIds.contains(it.getStakingId()) }
+                balances.firstOrNull { it.getStakingId() == currentStakingId }
                     ?: YieldBalance.Unsupported
             }
             .distinctUntilChanged()
             .flowOn(dispatchers.default)
     }
 
-    private suspend fun getStakingIds(): Set<StakingID> {
-        val saved = stakingIds
+    private suspend fun getStakingId(): StakingID? {
+        val saved = stakingId
 
         if (saved != null) return saved
 
@@ -67,7 +65,7 @@ internal class DefaultSingleYieldBalanceProducer @AssistedInject constructor(
             currencyId = params.currencyId,
             network = params.network,
         )
-            .also { stakingIds = it }
+            .also { stakingId = it }
     }
 
     @AssistedFactory
