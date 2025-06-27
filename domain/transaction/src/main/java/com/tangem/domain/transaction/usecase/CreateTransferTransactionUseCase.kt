@@ -6,6 +6,7 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.transaction.TransactionRepository
 import com.tangem.domain.wallets.models.UserWalletId
+import java.math.BigInteger
 
 /**
  * Use case to create and get transfer transaction
@@ -28,11 +29,13 @@ class CreateTransferTransactionUseCase(
         destination: String,
         userWalletId: UserWalletId,
         network: Network,
+        nonce: BigInteger? = null,
     ) = Either.catch {
         transactionRepository.createTransferTransaction(
             amount = amount,
             fee = fee,
             memo = memo,
+            nonce = nonce,
             destination = destination,
             userWalletId = userWalletId,
             network = network,
@@ -49,11 +52,13 @@ class CreateTransferTransactionUseCase(
         destination: String,
         userWalletId: UserWalletId,
         network: Network,
+        nonce: BigInteger? = null,
     ) = Either.catch {
         transactionRepository.createTransferTransaction(
             amount = amount,
             memo = memo,
             fee = null,
+            nonce = nonce,
             destination = destination,
             userWalletId = userWalletId,
             network = network,

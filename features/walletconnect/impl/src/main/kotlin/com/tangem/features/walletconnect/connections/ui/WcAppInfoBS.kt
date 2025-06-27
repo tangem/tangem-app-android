@@ -349,12 +349,7 @@ private fun SelectNetworksBlock(networksInfo: WcNetworksInfo, modifier: Modifier
         }
         Icon(
             modifier = Modifier.size(width = 18.dp, height = 24.dp),
-            painter = painterResource(
-                id = when (networksInfo) {
-                    is WcNetworksInfo.ContainsAllRequiredNetworks -> R.drawable.ic_select_18_24
-                    is WcNetworksInfo.MissingRequiredNetworkInfo -> R.drawable.ic_chevron_right_24
-                },
-            ),
+            painter = painterResource(id = R.drawable.ic_select_18_24),
             contentDescription = null,
             tint = TangemTheme.colors.icon.informative,
         )

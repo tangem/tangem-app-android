@@ -12,4 +12,5 @@ internal data class SendUM(
     val feeUM: FeeUM,
     val confirmUM: ConfirmUM,
     val navigationUM: NavigationUM,
+    val isRedesignEnabled: Boolean,
 )
