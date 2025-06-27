@@ -6,8 +6,8 @@ import com.tangem.domain.markets.*
 import com.tangem.domain.markets.repositories.MarketsTokenRepository
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.promo.PromoRepository
-import com.tangem.domain.quotes.multi.MultiQuoteFetcher
-import com.tangem.domain.quotes.single.SingleQuoteSupplier
+import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
+import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
 import com.tangem.domain.staking.repositories.StakingRepository
@@ -52,8 +52,8 @@ object MarketsDomainModule {
 
     @Provides
     @Singleton
-    fun provideGetTokenQuotesUseCase(singleQuoteSupplier: SingleQuoteSupplier): GetCurrencyQuotesUseCase {
-        return GetCurrencyQuotesUseCase(singleQuoteSupplier = singleQuoteSupplier)
+    fun provideGetTokenQuotesUseCase(singleQuoteStatusSupplier: SingleQuoteStatusSupplier): GetCurrencyQuotesUseCase {
+        return GetCurrencyQuotesUseCase(singleQuoteStatusSupplier = singleQuoteStatusSupplier)
     }
 
     @Provides
@@ -64,7 +64,7 @@ object MarketsDomainModule {
         currenciesRepository: CurrenciesRepository,
         stakingRepository: StakingRepository,
         multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
-        multiQuoteFetcher: MultiQuoteFetcher,
+        multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
         multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
         tokensFeatureToggles: TokensFeatureToggles,
     ): SaveMarketTokensUseCase {
@@ -74,7 +74,7 @@ object MarketsDomainModule {
             currenciesRepository = currenciesRepository,
             stakingRepository = stakingRepository,
             multiNetworkStatusFetcher = multiNetworkStatusFetcher,
-            multiQuoteFetcher = multiQuoteFetcher,
+            multiQuoteStatusFetcher = multiQuoteStatusFetcher,
             multiYieldBalanceFetcher = multiYieldBalanceFetcher,
             tokensFeatureToggles = tokensFeatureToggles,
         )
