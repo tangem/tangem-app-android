@@ -320,6 +320,7 @@ internal class SendConfirmModel @Inject constructor(
         val memo = destinationUM?.memoTextField?.value
         val fee = feeSelectorUM?.selectedFee
         val feeValue = fee?.amount?.value ?: return
+        val nonce = feeSelectorUM?.nonce
 
         val receivingAmount = checkAndCalculateSubtractedAmount(
             isAmountSubtractAvailable = isAmountSubtractAvailable,
@@ -334,6 +335,7 @@ internal class SendConfirmModel @Inject constructor(
                 amount = receivingAmount.convertToSdkAmount(cryptoCurrency),
                 fee = fee,
                 memo = memo,
+                nonce = nonce,
                 destination = destination,
                 userWalletId = userWallet.walletId,
                 network = cryptoCurrency.network,
@@ -454,6 +456,7 @@ internal class SendConfirmModel @Inject constructor(
         }
     }
 
+    @Suppress("LongMethod")
     private fun configConfirmNavigation() {
         combine(
             flow = uiState,
@@ -470,7 +473,11 @@ internal class SendConfirmModel @Inject constructor(
                             id = R.string.send_summary_title,
                             formatArgs = wrappedList(params.cryptoCurrencyStatus.currency.name),
                         ),
-                        subtitle = amountUM?.title,
+                        subtitle = if (uiState.value.isRedesignEnabled) {
+                            null
+                        } else {
+                            amountUM?.title
+                        },
                         backIconRes = R.drawable.ic_close_24,
                         backIconClick = {
                             analyticsEventHandler.send(

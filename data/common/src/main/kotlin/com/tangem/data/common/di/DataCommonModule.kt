@@ -5,6 +5,8 @@ import com.tangem.data.common.currency.CardCryptoCurrencyFactory
 import com.tangem.data.common.currency.DefaultCardCryptoCurrencyFactory
 import com.tangem.data.common.currency.UserTokensResponseAddressesEnricher
 import com.tangem.data.common.currency.UserTokensSaver
+import com.tangem.data.common.quote.DefaultQuotesFetcher
+import com.tangem.data.common.quote.QuotesFetcher
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.token.UserTokensResponseStore
@@ -69,5 +71,11 @@ internal object DataCommonModule {
             dispatchers = dispatchers,
             userTokensResponseAddressesEnricher = enricher,
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideQuotesFetcher(tangemTechApi: TangemTechApi, dispatchers: CoroutineDispatcherProvider): QuotesFetcher {
+        return DefaultQuotesFetcher(tangemTechApi = tangemTechApi, dispatchers = dispatchers)
     }
 }
