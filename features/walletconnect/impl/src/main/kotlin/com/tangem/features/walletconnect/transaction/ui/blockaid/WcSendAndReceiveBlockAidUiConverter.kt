@@ -5,10 +5,10 @@ import com.domain.blockaid.models.transaction.SimulationResult
 import com.domain.blockaid.models.transaction.ValidationResult
 import com.domain.blockaid.models.transaction.simultation.AmountInfo
 import com.domain.blockaid.models.transaction.simultation.SimulationData
-import com.tangem.blockchain.common.Amount
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.domain.walletconnect.model.WcApprovedAmount
 import com.tangem.features.walletconnect.impl.R
 import com.tangem.features.walletconnect.transaction.entity.blockaid.WcEstimatedWalletChangeUM
 import com.tangem.features.walletconnect.transaction.entity.blockaid.WcEstimatedWalletChangesUM
@@ -86,7 +86,7 @@ internal class WcSendAndReceiveBlockAidUiConverter @Inject constructor(
                 when (data) {
                     is SimulationData.SendAndReceive -> null
                     is SimulationData.Approve -> value.approvedAmount?.let {
-                        data.approvedAmounts.map { spendAllowanceUMConverter.convert(it) }.firstOrNull()
+                        spendAllowanceUMConverter.convert(it)
                     }
                 }
             },
@@ -95,7 +95,7 @@ internal class WcSendAndReceiveBlockAidUiConverter @Inject constructor(
 
     data class Input(
         val result: CheckTransactionResult,
-        val approvedAmount: Amount?,
+        val approvedAmount: WcApprovedAmount?,
     )
 }
 

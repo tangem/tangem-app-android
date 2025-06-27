@@ -16,6 +16,7 @@ import com.tangem.blockchain.extensions.hexToBigDecimal
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.walletconnect.model.WcApprovedAmount
 import com.tangem.domain.walletconnect.model.WcEthTransactionParams
 import java.math.BigDecimal
 
@@ -81,5 +82,5 @@ internal object WcEthTxHelper {
 sealed interface WcEthTxAction {
 
     data class UpdateFee(val fee: Fee) : WcEthTxAction
-    data class UpdateApprovalAmount(val amount: Amount?) : WcEthTxAction
+    data class UpdateApprovalAmount(val amount: WcApprovedAmount?) : WcEthTxAction
 }
