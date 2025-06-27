@@ -54,11 +54,6 @@ abstract class BaseCurrencyStatusOperations(
 
     protected abstract fun getQuotes(id: CryptoCurrency.RawID): Flow<Either<Error, Set<QuoteStatus>>>
 
-    protected abstract fun getNetworksStatuses(
-        userWalletId: UserWalletId,
-        network: Network,
-    ): EitherFlow<Error, Set<NetworkStatus>>
-
     protected abstract suspend fun fetchComponents(
         userWalletId: UserWalletId,
         networks: Set<Network>,
@@ -106,13 +101,7 @@ abstract class BaseCurrencyStatusOperations(
             flow { emit(Error.EmptyQuotes.left()) }
         }
 
-        val statusFlow = getNetworksStatuses(userWalletId = userWalletId, network = currency.network)
-            .map { maybeStatuses ->
-                maybeStatuses.flatMap { statuses ->
-                    statuses.singleOrNull { it.network == currency.network }?.right()
-                        ?: Error.EmptyNetworksStatuses.left()
-                }
-            }
+        val statusFlow = getNetworkStatus(userWalletId = userWalletId, network = currency.network)
 
         val yieldBalanceFlow = getYieldBalance(userWalletId = userWalletId, cryptoCurrency = currency)
 
@@ -347,6 +336,15 @@ abstract class BaseCurrencyStatusOperations(
             .map<YieldBalance, Either<Error, YieldBalance>> { it.right() }
             .catch { emit(Error.DataError(it).left()) }
             .onEmpty { emit(Error.EmptyYieldBalances.left()) }
+    }
+
+    private fun getNetworkStatus(userWalletId: UserWalletId, network: Network): EitherFlow<Error, NetworkStatus> {
+        return singleNetworkStatusSupplier(
+            params = SingleNetworkStatusProducer.Params(userWalletId = userWalletId, network = network),
+        )
+            .map<NetworkStatus, Either<Error, NetworkStatus>>(NetworkStatus::right)
+            .distinctUntilChanged()
+            .onEmpty { emit(Error.EmptyNetworksStatuses.left()) }
     }
 
     private suspend fun Raise<Error>.getNetworkCoin(
