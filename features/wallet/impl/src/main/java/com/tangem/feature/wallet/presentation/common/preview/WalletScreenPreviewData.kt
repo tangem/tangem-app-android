@@ -123,7 +123,8 @@ internal object WalletScreenPreviewData {
             nftState = WalletNFTItemUM.Content(
                 previews = persistentListOf(WalletNFTItemUM.Content.CollectionPreview.Image("img1")),
                 collectionsCount = 1,
-                assetsCount = 3,
+                allAssetsCount = 3,
+                noCollectionAssetsCount = 0,
                 isFlickering = false,
                 onItemClick = { },
             ),
