@@ -5,9 +5,9 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.domain.transaction.error.GetFeeError
-import com.tangem.features.feeselector.api.entity.CustomFeeFieldUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import java.math.BigInteger
 
 @Stable
 internal sealed class FeeSelectorUM {
@@ -17,6 +17,7 @@ internal sealed class FeeSelectorUM {
         val selectedType: FeeType = FeeType.Market,
         val selectedFee: Fee?,
         val customValues: ImmutableList<CustomFeeFieldUM> = persistentListOf(),
+        val nonce: BigInteger? = null,
     ) : FeeSelectorUM()
 
     data object Loading : FeeSelectorUM()

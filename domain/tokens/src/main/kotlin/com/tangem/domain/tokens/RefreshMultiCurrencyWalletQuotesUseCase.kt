@@ -5,7 +5,7 @@ import arrow.core.getOrElse
 import arrow.core.raise.catch
 import arrow.core.raise.either
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.quotes.multi.MultiQuoteFetcher
+import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.tokens.error.QuotesError
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.wallets.models.UserWalletId
@@ -15,7 +15,7 @@ import kotlinx.coroutines.coroutineScope
 
 class RefreshMultiCurrencyWalletQuotesUseCase(
     private val currenciesRepository: CurrenciesRepository,
-    private val multiQuoteFetcher: MultiQuoteFetcher,
+    private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
 ) {
 
     suspend operator fun invoke(userWalletId: UserWalletId): Either<QuotesError, Unit> {
@@ -45,8 +45,8 @@ class RefreshMultiCurrencyWalletQuotesUseCase(
     }
 
     private suspend fun fetchQuotes(currenciesIds: Set<CryptoCurrency.ID>) {
-        multiQuoteFetcher(
-            params = MultiQuoteFetcher.Params(
+        multiQuoteStatusFetcher(
+            params = MultiQuoteStatusFetcher.Params(
                 currenciesIds = currenciesIds.mapNotNullTo(hashSetOf(), CryptoCurrency.ID::rawCurrencyId),
                 appCurrencyId = null,
             ),
