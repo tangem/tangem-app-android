@@ -334,6 +334,11 @@ internal class TokenDetailsStateFactory(
         return state.copy(notifications = notificationConverter.removeHederaAssociateWarning(state))
     }
 
+    fun getStateWithRemovedRequiredTrustlineNotification(): TokenDetailsState {
+        val state = currentStateProvider()
+        return state.copy(notifications = notificationConverter.removeRequiredTrustlineWarning(state))
+    }
+
     fun getStateWithRemovedKaspaIncompleteTransactionNotification(): TokenDetailsState {
         val state = currentStateProvider()
         return state.copy(
