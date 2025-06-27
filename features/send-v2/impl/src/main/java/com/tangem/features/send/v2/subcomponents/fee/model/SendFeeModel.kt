@@ -9,6 +9,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
+import com.tangem.features.send.v2.common.analytics.CommonSendAnalyticEvents.NonceInserted
 import com.tangem.features.send.v2.common.ui.state.NavigationUM
 import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.send.ui.state.ButtonsUM
@@ -129,6 +130,12 @@ internal class SendFeeModel @Inject constructor(
         updateFeeNotifications()
     }
 
+    override fun onNonceChange(value: String) {
+        _uiState.update(
+            SendFeeNonceChangeTransformer(value = value),
+        )
+    }
+
     override fun onReadMoreClick() {
         val locale = if (Locale.getDefault().language == RU_LOCALE) RU_LOCALE else EN_LOCALE
         val url = buildString {
@@ -156,6 +163,16 @@ internal class SendFeeModel @Inject constructor(
                         feeType = feeSelectorUM.selectedType.toAnalyticType(feeSelectorUM),
                     ),
                 )
+
+                if (feeSelectorUM.nonce != null) {
+                    analyticsEventHandler.send(
+                        NonceInserted(
+                            categoryName = analyticsCategoryName,
+                            token = cryptoCurrencyStatus.currency.symbol,
+                            blockchain = cryptoCurrencyStatus.currency.network.name,
+                        ),
+                    )
+                }
 
                 saveResult()
             }
