@@ -19,7 +19,7 @@ platform :android do
 
   desc "Run detekt"
   lane :detekt do
-    FileUtils.cp("../ci_resources/tests_8gb_ram_ci_gradle.properties", "../gradle.properties")
+    FileUtils.cp("../tangem-android-tools/CI/gradle_properties/tests_ci_gradle.properties", "../gradle.properties")
     puts File.read("../gradle.properties")
     gradle(task: "detekt")
   end
@@ -27,7 +27,7 @@ platform :android do
   desc "Run tests"
   lane :test do
     FileUtils.cp("../app/src/main/assets/tangem-app-config/android/google-services/dev/google-services.json", "../app")
-    FileUtils.cp("../ci_resources/tests_8gb_ram_ci_gradle.properties", "../gradle.properties")
+    FileUtils.cp("../tangem-android-tools/CI/gradle_properties/tests_ci_gradle.properties", "../gradle.properties")
     puts File.read("../gradle.properties")
     gradle(task: "testDebugUnitTest")
   end
@@ -36,7 +36,7 @@ platform :android do
   desc "Build release AAB and APK"
     lane :buildRelease do |options|
        FileUtils.cp("../app/src/main/assets/tangem-app-config/android/google-services/release/google-services.json", "../app")
-       FileUtils.cp("../ci_resources/build_ci_gradle.properties", "../gradle.properties")
+       FileUtils.cp("../tangem-android-tools/CI/gradle_properties/build_ci_gradle.properties", "../gradle.properties")
        puts File.read("../gradle.properties")
 
        gradle(
@@ -69,7 +69,7 @@ platform :android do
   desc "Build internal APK Firebase App Distribution"
   lane :buildInternal do |options|
     FileUtils.cp("../app/src/main/assets/tangem-app-config/android/google-services/dev/google-services.json", "../app")
-    FileUtils.cp("../ci_resources/build_ci_gradle.properties", "../gradle.properties")
+    FileUtils.cp("../tangem-android-tools/CI/gradle_properties/build_ci_gradle.properties", "../gradle.properties")
     puts File.read("../gradle.properties")
 
     gradle(
