@@ -56,7 +56,7 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
             // check unsupported dApps, just local constant for now, finish if unsupported
             if (sdkSessionProposal.name in unsupportedDApps) {
                 Timber.tag(WC_TAG).i("Unsupported DApp ${sdkSessionProposal.name}")
-                val error = WcPairState.Error(WcPairError.UnsupportedDApp)
+                val error = WcPairState.Error(WcPairError.UnsupportedDomain)
                 emit(error)
                 return@flow
             }
@@ -104,7 +104,7 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
                 )
                 newSession
             }.onLeft {
-                analytics.send(WcAnalyticEvents.DAppConnectionFailed(it.message))
+                analytics.send(WcAnalyticEvents.DAppConnectionFailed(it.code))
                 Timber.tag(WC_TAG).e(it, "Failed to approve session ${sdkSessionProposal.name}")
             }
             emit(WcPairState.Approving.Result(sessionForApprove, either))
