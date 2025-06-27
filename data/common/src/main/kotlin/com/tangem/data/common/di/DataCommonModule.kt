@@ -8,7 +8,6 @@ import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.data.common.quote.DefaultQuotesFetcher
 import com.tangem.data.common.quote.QuotesFetcher
 import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.demo.DemoConfig
@@ -61,13 +60,13 @@ internal object DataCommonModule {
     @Singleton
     fun provideUserTokensSaver(
         tangemTechApi: TangemTechApi,
-        appPreferencesStore: AppPreferencesStore,
+        userTokensResponseStore: UserTokensResponseStore,
         dispatchers: CoroutineDispatcherProvider,
         enricher: UserTokensResponseAddressesEnricher,
     ): UserTokensSaver {
         return UserTokensSaver(
             tangemTechApi = tangemTechApi,
-            appPreferencesStore = appPreferencesStore,
+            userTokensResponseStore = userTokensResponseStore,
             dispatchers = dispatchers,
             userTokensResponseAddressesEnricher = enricher,
         )

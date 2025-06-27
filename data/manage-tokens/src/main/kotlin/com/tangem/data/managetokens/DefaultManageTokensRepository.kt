@@ -17,9 +17,7 @@ import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.local.config.testnet.TestnetTokensStorage
-import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.preferences.PreferencesKeys
-import com.tangem.datasource.local.preferences.utils.getObjectSyncOrNull
+import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.domain.common.extensions.canHandleBlockchain
@@ -46,7 +44,7 @@ internal class DefaultManageTokensRepository(
     private val tangemTechApi: TangemTechApi,
     private val userWalletsStore: UserWalletsStore,
     private val manageTokensUpdateFetcher: ManageTokensUpdateFetcher,
-    private val appPreferencesStore: AppPreferencesStore,
+    private val userTokensResponseStore: UserTokensResponseStore,
     private val testnetTokensStorage: TestnetTokensStorage,
     private val excludedBlockchains: ExcludedBlockchains,
     private val cardCryptoCurrencyFactory: CardCryptoCurrencyFactory,
@@ -251,9 +249,7 @@ internal class DefaultManageTokensRepository(
     }
 
     private suspend fun getSavedUserTokensResponseSync(key: UserWalletId): UserTokensResponse? {
-        return appPreferencesStore.getObjectSyncOrNull<UserTokensResponse>(
-            key = PreferencesKeys.getUserTokensKey(key.stringValue),
-        )
+        return userTokensResponseStore.getSyncOrNull(userWalletId = key)
     }
 
     override suspend fun checkCurrencyUnsupportedState(
