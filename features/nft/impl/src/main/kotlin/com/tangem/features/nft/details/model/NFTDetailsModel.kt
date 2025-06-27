@@ -10,6 +10,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -20,6 +21,7 @@ import com.tangem.domain.nft.FetchNFTPriceUseCase
 import com.tangem.domain.nft.GetNFTExploreUrlUseCase
 import com.tangem.domain.nft.GetNFTPriceUseCase
 import com.tangem.domain.nft.analytics.NFTAnalyticsEvent
+import com.tangem.domain.nft.models.NFTAsset
 import com.tangem.features.nft.details.NFTDetailsComponent
 import com.tangem.features.nft.details.entity.NFTAssetUM
 import com.tangem.features.nft.details.entity.NFTDetailsBottomSheetConfig
@@ -49,6 +51,7 @@ internal class NFTDetailsModel @Inject constructor(
     private val getNFTPriceUseCase: GetNFTPriceUseCase,
     private val fetchNFTCollectionAssetsUseCase: FetchNFTCollectionAssetsUseCase,
     private val fetchNFTPriceUseCase: FetchNFTPriceUseCase,
+    private val clipboardManager: ClipboardManager,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
@@ -68,8 +71,9 @@ internal class NFTDetailsModel @Inject constructor(
         },
         onExploreClick = ::onExploreClick,
         onSendClick = ::onSendClick,
-        onInfoBlockClick = ::onInfoBlockClick,
+        onRegularInfoBlockClick = ::onInfoBlockClick,
         onRefresh = ::onRefresh,
+        onTokenAddressBlockClick = ::onTokenAddressBlockClick,
     )
 
     private val _state by lazy {
@@ -190,5 +194,16 @@ internal class NFTDetailsModel @Inject constructor(
                 nftCollectionName = params.nftCollection.name.orEmpty(),
             ),
         )
+    }
+
+    private fun onTokenAddressBlockClick() {
+        val asset = params.nftAsset
+        val addressToCopy = when (val id = asset.id) {
+            is NFTAsset.Identifier.EVM -> id.tokenAddress
+            is NFTAsset.Identifier.Solana -> id.tokenAddress
+            is NFTAsset.Identifier.TON -> id.tokenAddress
+            is NFTAsset.Identifier.Unknown -> return
+        }
+        clipboardManager.setText(text = addressToCopy, isSensitive = false)
     }
 }
