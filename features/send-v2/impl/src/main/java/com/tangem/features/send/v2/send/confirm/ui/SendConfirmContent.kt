@@ -98,8 +98,13 @@ private fun LazyListScope.blocks(
                     modifier = Modifier.padding(vertical = 12.dp),
                 )
             }
-            destinationBlockComponent.Content(modifier = Modifier)
-            amountBlockComponent.Content(modifier = Modifier)
+            if (uiState.isRedesignEnabled) {
+                amountBlockComponent.Content(modifier = Modifier)
+                destinationBlockComponent.Content(modifier = Modifier)
+            } else {
+                destinationBlockComponent.Content(modifier = Modifier)
+                amountBlockComponent.Content(modifier = Modifier)
+            }
             feeBlockComponent.Content(modifier = Modifier)
         }
     }
