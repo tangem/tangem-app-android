@@ -68,7 +68,7 @@ data class NFTAsset(
         @Serializable
         data class Solana(
             val tokenAddress: String,
-            val cnft: Boolean,
+            val tokenStandard: Int?,
         ) : Identifier() {
             override val stringValue: String = tokenAddress
         }
