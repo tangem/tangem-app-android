@@ -37,6 +37,7 @@ import com.tangem.domain.wallets.models.isMultiCurrency
 import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.v2.api.SendComponent
+import com.tangem.features.send.v2.api.SendFeatureToggles
 import com.tangem.features.send.v2.common.CommonSendRoute
 import com.tangem.features.send.v2.common.PredefinedValues
 import com.tangem.features.send.v2.common.SendConfirmAlertFactory
@@ -87,6 +88,7 @@ internal class SendModel @Inject constructor(
     private val createTransferTransactionUseCase: CreateTransferTransactionUseCase,
     private val getFeeUseCase: GetFeeUseCase,
     private val sendAmountUpdateQRTrigger: SendAmountUpdateQRTrigger,
+    private val sendFeatureToggles: SendFeatureToggles,
 ) : Model(), SendComponentCallback {
 
     private val params: SendComponent.Params = paramsContainer.require()
@@ -361,9 +363,11 @@ internal class SendModel @Inject constructor(
         amountUM = AmountState.Empty(),
         destinationUM = SendDestinationInitialStateTransformer(
             cryptoCurrency = cryptoCurrency,
+            isRedesignEnabled = sendFeatureToggles.isSendRedesignEnabled,
         ).transform(DestinationUM.Empty()),
         feeUM = FeeUM.Empty(),
         confirmUM = ConfirmUM.Empty,
         navigationUM = NavigationUM.Empty,
+        isRedesignEnabled = sendFeatureToggles.isSendRedesignEnabled,
     )
 }

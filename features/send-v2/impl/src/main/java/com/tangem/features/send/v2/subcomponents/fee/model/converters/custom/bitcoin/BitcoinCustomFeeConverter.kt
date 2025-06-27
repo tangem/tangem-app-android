@@ -11,11 +11,10 @@ import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.features.feeselector.api.entity.CustomFeeFieldUM
 import com.tangem.features.send.v2.impl.R
-import com.tangem.features.send.v2.subcomponents.fee.model.SendFeeClickIntents
 import com.tangem.features.send.v2.subcomponents.fee.model.checkExceedBalance
 import com.tangem.features.send.v2.subcomponents.fee.model.converters.custom.CustomFeeConverter
+import com.tangem.features.send.v2.subcomponents.fee.ui.state.CustomFeeFieldUM
 import com.tangem.lib.crypto.BlockchainUtils
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -24,7 +23,8 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 
 internal class BitcoinCustomFeeConverter(
-    private val clickIntents: SendFeeClickIntents,
+    private val onCustomFeeValueChange: (Int, String) -> Unit,
+    private val onNextClick: () -> Unit,
     private val appCurrency: AppCurrency,
     private val feeCryptoCurrencyStatus: CryptoCurrencyStatus,
 ) : CustomFeeConverter<Fee.Bitcoin> {
@@ -40,7 +40,7 @@ internal class BitcoinCustomFeeConverter(
                     value = feeValue?.parseBigDecimal(value.amount.decimals).orEmpty(),
                     decimals = value.amount.decimals,
                     symbol = value.amount.currencySymbol,
-                    onValueChange = { clickIntents.onCustomFeeValueChange(FEE_AMOUNT_INDEX, it) },
+                    onValueChange = { onCustomFeeValueChange(FEE_AMOUNT_INDEX, it) },
                     keyboardOptions = KeyboardOptions(
                         imeAction = ImeAction.Companion.Next,
                         keyboardType = KeyboardType.Companion.Number,
@@ -65,7 +65,7 @@ internal class BitcoinCustomFeeConverter(
                     symbol = "",
                     title = resourceReference(R.string.send_satoshi_per_byte_title),
                     footer = resourceReference(R.string.send_satoshi_per_byte_text),
-                    onValueChange = { clickIntents.onCustomFeeValueChange(FEE_SATOSHI_INDEX, it) },
+                    onValueChange = { onCustomFeeValueChange(FEE_SATOSHI_INDEX, it) },
                     keyboardOptions = KeyboardOptions(
                         imeAction = if (checkExceedBalance(
                                 feeBalance = currencyStatus.amount,
@@ -78,9 +78,7 @@ internal class BitcoinCustomFeeConverter(
                         },
                         keyboardType = KeyboardType.Companion.Number,
                     ),
-                    keyboardActions = KeyboardActions(
-                        onDone = { clickIntents.onNextClick() },
-                    ),
+                    keyboardActions = KeyboardActions(onDone = { onNextClick() }),
                 ),
             )
         } else {
