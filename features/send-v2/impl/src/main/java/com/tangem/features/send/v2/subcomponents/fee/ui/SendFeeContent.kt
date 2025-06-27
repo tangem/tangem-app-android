@@ -40,6 +40,8 @@ internal fun SendFeeContent(state: FeeUM, clickIntents: SendFeeClickIntents) {
             customFee(
                 feeSelectorUM = feeSelectorUM,
                 onValueChange = clickIntents::onCustomFeeValueChange,
+                onNonceChange = clickIntents::onNonceChange,
+                nonce = state.nonce?.toString().orEmpty(),
                 hasNotifications = hasNotifications,
             )
         }
@@ -61,6 +63,8 @@ internal fun LazyListScope.customFee(
     feeSelectorUM: FeeSelectorUM.Content,
     hasNotifications: Boolean,
     onValueChange: (Int, String) -> Unit,
+    onNonceChange: (String) -> Unit,
+    nonce: String?,
     modifier: Modifier = Modifier,
 ) {
     item(key = FEE_CUSTOM_KEY) {
@@ -69,6 +73,8 @@ internal fun LazyListScope.customFee(
             selectedFee = feeSelectorUM.selectedType,
             hasNotifications = hasNotifications,
             onValueChange = onValueChange,
+            onNonceChange = onNonceChange,
+            nonce = nonce,
             modifier = modifier
                 .fillMaxWidth()
                 .animateItem()

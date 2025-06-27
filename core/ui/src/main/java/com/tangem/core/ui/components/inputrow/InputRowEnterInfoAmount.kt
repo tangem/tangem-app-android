@@ -82,6 +82,7 @@ fun InputRowEnterInfoAmount(
                         decimals = decimals,
                         symbol = symbol,
                         decimalFormat = rememberDecimalFormat(),
+                        symbolColor = textColor,
                     ),
                     onValueChange = onValueChange,
                     color = textColor,
@@ -120,6 +121,7 @@ fun InputRowEnterInfoAmountV2(
     titleColor: Color = TangemTheme.colors.text.secondary,
     textColor: Color = TangemTheme.colors.text.primary1,
     infoColor: Color = TangemTheme.colors.text.tertiary,
+    symbolColor: Color = TangemTheme.colors.text.primary1,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     showDivider: Boolean = false,
@@ -141,7 +143,7 @@ fun InputRowEnterInfoAmountV2(
                 )
                 Icon(
                     modifier = Modifier.size(16.dp),
-                    painter = painterResource(R.drawable.ic_union_16),
+                    painter = painterResource(R.drawable.ic_token_info_24),
                     tint = TangemTheme.colors.icon.informative,
                     contentDescription = null,
                 )
@@ -154,6 +156,7 @@ fun InputRowEnterInfoAmountV2(
                         decimals = decimals,
                         symbol = symbol,
                         decimalFormat = rememberDecimalFormat(),
+                        symbolColor = symbolColor,
                     ),
                     onValueChange = onValueChange,
                     color = textColor,
