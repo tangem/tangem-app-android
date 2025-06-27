@@ -157,9 +157,10 @@ private fun WalletBlock(
             .padding(16.dp)
             .clickable(onClick = onClick),
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row {
             Text(
                 modifier = Modifier
+                    .weight(1f)
                     .padding(end = 8.dp),
                 text = title,
                 style = TangemTheme.typography.subtitle1,
