@@ -101,9 +101,9 @@ internal fun WcSignTransactionModalBottomSheetContent(
 }
 
 @Composable
-private fun WcSignTransactionItems(state: WcSignTransactionItemUM) {
+private fun WcSignTransactionItems(state: WcSignTransactionItemUM, modifier: Modifier = Modifier) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .clip(RoundedCornerShape(14.dp))
             .background(color = TangemTheme.colors.background.action)
             .fillMaxWidth()
@@ -130,6 +130,7 @@ private fun WcSignTransactionItems(state: WcSignTransactionItemUM) {
                 addressText = state.addressText,
             )
         }
+        DividerWithPadding(start = 40.dp, end = 12.dp)
     }
 }
 
@@ -157,7 +158,12 @@ private fun WcSignTransactionBottomSheetPreview(
                 )
             },
             content = {
-                WcSignTransactionModalBottomSheetContent(state, {}, {}, {})
+                WcSignTransactionModalBottomSheetContent(
+                    state = state,
+                    onClickTransactionRequest = {},
+                    onBack = {},
+                    onDismiss = {},
+                )
             },
         )
     }

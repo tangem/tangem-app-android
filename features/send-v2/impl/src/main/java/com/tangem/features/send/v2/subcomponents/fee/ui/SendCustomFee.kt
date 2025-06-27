@@ -5,23 +5,31 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.containers.FooterContainer
+import com.tangem.core.ui.components.inputrow.InputRowEnter
 import com.tangem.core.ui.components.inputrow.InputRowEnterAmount
 import com.tangem.core.ui.components.inputrow.InputRowEnterInfoAmount
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.features.feeselector.api.entity.CustomFeeFieldUM
+import com.tangem.features.send.v2.impl.R
+import com.tangem.features.send.v2.subcomponents.fee.ui.state.CustomFeeFieldUM
 import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeType
 import kotlinx.collections.immutable.ImmutableList
 
+@Suppress("LongParameterList")
 @Composable
 internal fun SendCustomFee(
     customValues: ImmutableList<CustomFeeFieldUM>,
     selectedFee: FeeType,
     hasNotifications: Boolean,
     onValueChange: (Int, String) -> Unit,
+    onNonceChange: (String) -> Unit,
+    nonce: String?,
     modifier: Modifier = Modifier,
 ) {
     AnimatedVisibility(
@@ -77,6 +85,32 @@ internal fun SendCustomFee(
                     }
                 }
             }
+            Nonce(
+                onNonceChange = onNonceChange,
+                nonce = nonce,
+            )
         }
+    }
+}
+
+@Composable
+private fun Nonce(onNonceChange: (String) -> Unit, nonce: String?) {
+    FooterContainer(
+        footer = resourceReference(R.string.send_nonce_footer),
+        modifier = Modifier.padding(bottom = 12.dp),
+    ) {
+        InputRowEnter(
+            text = nonce.orEmpty(),
+            title = resourceReference(R.string.send_nonce),
+            onValueChange = onNonceChange,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            placeholder = resourceReference(R.string.send_nonce_hint),
+            showDivider = false,
+            modifier = Modifier
+                .background(
+                    color = TangemTheme.colors.background.action,
+                    shape = TangemTheme.shapes.roundedCornersXMedium,
+                ),
+        )
     }
 }

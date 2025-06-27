@@ -17,6 +17,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.tokens.GetMinimumTransactionAmountSyncUseCase
+import com.tangem.features.send.v2.api.SendFeatureToggles
 import com.tangem.features.send.v2.common.PredefinedValues
 import com.tangem.features.send.v2.common.ui.state.NavigationUM
 import com.tangem.features.send.v2.impl.R
@@ -47,6 +48,7 @@ internal class SendAmountModel @Inject constructor(
     private val feeReloadTrigger: SendFeeReloadTrigger,
     private val sendAmountUpdateQRListener: SendAmountUpdateQRListener,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val sendFeatureToggles: SendFeatureToggles,
 ) : Model(), AmountScreenClickIntents {
 
     private val params: SendAmountComponentParams = paramsContainer.require()
@@ -95,6 +97,7 @@ internal class SendAmountModel @Inject constructor(
                     cryptoCurrencyStatus = cryptoCurrencyStatus,
                     maxEnterAmount = maxAmountBoundary,
                     iconStateConverter = CryptoCurrencyToIconStateConverter(),
+                    isRedesignEnabled = sendFeatureToggles.isSendRedesignEnabled,
                 ).convert(
                     AmountParameters(
                         title = stringReference(userWallet.name),
