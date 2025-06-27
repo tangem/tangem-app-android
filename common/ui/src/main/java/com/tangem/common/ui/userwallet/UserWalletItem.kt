@@ -12,7 +12,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.vectorResource
@@ -178,32 +180,42 @@ fun CardImage(imageState: UserWalletItemUM.ImageState, modifier: Modifier = Modi
             )
         }
         is UserWalletItemUM.ImageState.Image -> {
-            SubcomposeAsyncImage(
-                modifier = imageModifier,
-                model = ImageRequest.Builder(LocalContext.current)
-                    .size(
-                        width = with(LocalDensity.current) { TangemTheme.dimens.size36.roundToPx() },
-                        height = with(LocalDensity.current) { TangemTheme.dimens.size24.roundToPx() },
-                    )
-                    .data(imageState.artwork.verifiedArtwork?.toByteArray() ?: imageState.artwork.defaultUrl)
-                    .crossfade(enable = true)
-                    .allowHardware(enable = false)
-                    .build(),
-                loading = {
-                    RectangleShimmer(
-                        modifier = imageModifier,
-                        radius = TangemTheme.dimens.size2,
-                    )
-                },
-                error = {
-                    Image(
-                        modifier = imageModifier.then(Modifier.rotate(90F)),
-                        imageVector = ImageVector.vectorResource(R.drawable.img_card_wallet_2_gray_22_36),
-                        contentDescription = null,
-                    )
-                },
-                contentDescription = null,
-            )
+            val verifiedArtwork = imageState.artwork.verifiedArtwork
+            if (verifiedArtwork != null) {
+                Image(
+                    modifier = imageModifier,
+                    painter = BitmapPainter(verifiedArtwork),
+                    contentScale = ContentScale.Fit,
+                    contentDescription = null,
+                )
+            } else {
+                SubcomposeAsyncImage(
+                    modifier = imageModifier,
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .size(
+                            width = with(LocalDensity.current) { TangemTheme.dimens.size36.roundToPx() },
+                            height = with(LocalDensity.current) { TangemTheme.dimens.size24.roundToPx() },
+                        )
+                        .data(imageState.artwork.defaultUrl)
+                        .crossfade(enable = true)
+                        .allowHardware(enable = false)
+                        .build(),
+                    loading = {
+                        RectangleShimmer(
+                            modifier = imageModifier,
+                            radius = TangemTheme.dimens.size2,
+                        )
+                    },
+                    error = {
+                        Image(
+                            modifier = imageModifier.then(Modifier.rotate(90F)),
+                            imageVector = ImageVector.vectorResource(R.drawable.img_card_wallet_2_gray_22_36),
+                            contentDescription = null,
+                        )
+                    },
+                    contentDescription = null,
+                )
+            }
         }
     }
 }
