@@ -194,10 +194,7 @@ class GetCryptoCurrencyActionsUseCase(
         }
 
         // region sell
-        rampManager.availableForSell(
-            userWalletId = userWallet.walletId,
-            status = cryptoCurrencyStatus,
-        )
+        rampManager.availableForSell(userWallet = userWallet, status = cryptoCurrencyStatus)
             .onRight {
                 activeList.add(TokenActionsState.ActionState.Sell(ScenarioUnavailabilityReason.None))
             }
