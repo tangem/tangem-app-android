@@ -277,14 +277,18 @@ internal class SendModel @Inject constructor(
         isSingleWalletWithToken: Boolean,
         isMultiCurrency: Boolean,
     ): Flow<Either<CurrencyStatusError, CryptoCurrencyStatus>> {
-        return if (isMultiCurrency) {
-            getSingleCryptoCurrencyStatusUseCase.invokeMultiWallet(
+        return when {
+            isSingleWalletWithToken -> getSingleCryptoCurrencyStatusUseCase.invokeMultiWallet(
                 userWalletId = userWalletId,
                 currencyId = cryptoCurrency.id,
-                isSingleWalletWithTokens = isSingleWalletWithToken,
+                isSingleWalletWithTokens = true,
             )
-        } else {
-            getSingleCryptoCurrencyStatusUseCase.invokeSingleWallet(userWalletId = userWalletId)
+            isMultiCurrency -> getSingleCryptoCurrencyStatusUseCase.invokeMultiWallet(
+                userWalletId = userWalletId,
+                currencyId = cryptoCurrency.id,
+                isSingleWalletWithTokens = false,
+            )
+            else -> getSingleCryptoCurrencyStatusUseCase.invokeSingleWallet(userWalletId = userWalletId)
         }
     }
 
