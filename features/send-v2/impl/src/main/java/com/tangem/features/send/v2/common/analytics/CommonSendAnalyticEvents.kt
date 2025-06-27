@@ -1,6 +1,7 @@
 package com.tangem.features.send.v2.common.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsParam.Key.BLOCKCHAIN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.SOURCE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
 
@@ -93,6 +94,20 @@ internal sealed class CommonSendAnalyticEvents(
         category = categoryName,
         event = "Screen Reopened",
         params = mapOf(SOURCE to source.name),
+    )
+
+    /** Fee screen is closed with non empty nonce */
+    data class NonceInserted(
+        val categoryName: String,
+        val token: String,
+        val blockchain: String,
+    ) : CommonSendAnalyticEvents(
+        category = categoryName,
+        event = "Nonce Inserted",
+        params = mapOf(
+            TOKEN_PARAM to token,
+            BLOCKCHAIN to blockchain,
+        ),
     )
 
     companion object {

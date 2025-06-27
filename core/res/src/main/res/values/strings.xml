@@ -822,6 +822,7 @@
   <string name="send_fee_unreachable_error_text">Check your network connection</string>
   <string name="send_fee_unreachable_error_title">Network fee info unreachable</string>
   <string name="send_from_wallet_android">From</string>
+  <string name="send_from_wallet_name">From %s</string>
   <string name="send_gas_limit">Gas limit</string>
   <string name="send_gas_limit_footer">This is the maximum amount of gas that will be spent to complete a transaction or contract. A gas limit prevents unexpected or unlimited charges when executing a transaction.</string>
   <string name="send_gas_price">Gas price</string>
@@ -829,6 +830,7 @@
   <string name="send_max_amount">Max</string>
   <string name="send_max_amount_label">Maximum amount</string>
   <string name="send_max_fee">Fee up to</string>
+  <string name="send_memo">Memo: %s</string>
   <string name="send_memo_destination_tag_error">Invalid Memo</string>
   <string name="send_network_fee_warning_title">Network fee coverage</string>
   <string name="send_nonce">Nonce</string>
@@ -879,6 +881,7 @@
   <string name="send_summary_transaction_description_suffix_fee_covered">network fee will be covered by using %1$s energy</string>
   <string name="send_summary_transaction_description_suffix_fee_reduced">network fee will be reduced by spending %1$s energy</string>
   <string name="send_summary_transaction_description_suffix_including">including a network fee of %1$s</string>
+  <string name="send_to_address">To address</string>
   <string name="send_transaction_success">Transaction has been successfully signed and sent to the blockchain node. Wallet balance will be updated in a while</string>
   <string name="send_tron_account_activation_error">%1$s is an asset in the Tron network. To calculate the fee and make a transaction you need to deposit some Tron (TRX) in your account.</string>
   <string name="send_validation_amount_exceeds_balance">Amount exceeds balance</string>
@@ -888,6 +891,7 @@
   <string name="send_validation_invalid_fee">Fee exceeds balance</string>
   <string name="send_validation_invalid_total">Total amount exceeds balance</string>
   <string name="send_with_swap_notification_text">Send any token, and we’ll convert it on the way. Your recipient gets exactly what they need—seamlessly.</string>
+  <string name="send_with_swap_recipient_amount_text">Will be sent a recipient</string>
   <string name="send_with_swap_title">Send with swap</string>
   <string name="sent_transaction_sent_title">Transaction sent</string>
   <string name="settings_card_settings_footer">Prepare to scan card or ring you want to set up.</string>
@@ -1344,8 +1348,8 @@
   <string name="warning_token_balance_not_updated">Balance may be outdated. Refresh the page.</string>
   <string name="warning_token_required_min_coin_reserve">Not enough %1$s. Top up your XLM account to associate this token</string>
   <string name="warning_token_trustline_button_title">Enable Trustline</string>
-  <string name="warning_token_trustline_subtiile">A Trustline must be enabled to receive this token. The network requires a %1$s %2$s reserve.</string>
-  <string name="warning_token_trustline_tiile">Trustline Required</string>
+  <string name="warning_token_trustline_subtitle">A Trustline must be enabled to receive this token. The network requires a %1$s %2$s reserve.</string>
+  <string name="warning_token_trustline_title">Trustline Required</string>
   <string name="wc_alert_audit_unknown_domain">Unknown domain</string>
   <string name="wc_alert_connect_anyway">Connect anyway</string>
   <string name="wc_alert_connection_timeout_description">Timeout error. Please, try again later.</string>
