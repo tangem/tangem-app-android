@@ -36,7 +36,7 @@ internal fun WcEstimatedWalletChangesLoadingItem(modifier: Modifier = Modifier) 
 
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(bottom = 14.dp),
+            modifier = Modifier.padding(start = 12.dp, end = 12.dp, bottom = 14.dp),
         ) {
             CircularProgressIndicator(
                 color = TangemTheme.colors.icon.accent,
@@ -45,7 +45,8 @@ internal fun WcEstimatedWalletChangesLoadingItem(modifier: Modifier = Modifier) 
             )
             Text(
                 modifier = modifier
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .padding(start = 8.dp),
                 text = stringResourceSafe(R.string.wc_common_loading),
                 color = TangemTheme.colors.text.disabled,
                 style = TangemTheme.typography.body2,
