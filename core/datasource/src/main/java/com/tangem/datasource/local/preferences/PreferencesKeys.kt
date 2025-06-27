@@ -151,8 +151,6 @@ object PreferencesKeys {
     fun getShouldShowInitialPermissionScreen(permission: String) =
         booleanPreferencesKey("shouldShowInitialPushPermissionScreen_$permission")
     // endregion
-
-    fun getUserTokensKey(userWalletId: String) = stringPreferencesKey(name = "user_tokens_$userWalletId")
 }
 
 /** Preferences keys set that should be migrated from "PreferencesDataSource" to a new DataStore<Preferences> */
