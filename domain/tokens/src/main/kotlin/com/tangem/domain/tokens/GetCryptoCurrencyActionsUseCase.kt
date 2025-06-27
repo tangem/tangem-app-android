@@ -372,12 +372,14 @@ class GetCryptoCurrencyActionsUseCase(
     }
 
     private fun getReceiveScenario(requirements: AssetRequirementsCondition?): ScenarioUnavailabilityReason {
-        return if (requirements is AssetRequirementsCondition.PaidTransaction ||
-            requirements is AssetRequirementsCondition.PaidTransactionWithFee
-        ) {
-            ScenarioUnavailabilityReason.UnassociatedAsset
-        } else {
-            ScenarioUnavailabilityReason.None
+        return when (requirements) {
+            AssetRequirementsCondition.PaidTransaction,
+            is AssetRequirementsCondition.PaidTransactionWithFee,
+            -> ScenarioUnavailabilityReason.UnassociatedAsset
+            is AssetRequirementsCondition.IncompleteTransaction,
+            null,
+            -> ScenarioUnavailabilityReason.None
+            is AssetRequirementsCondition.RequiredTrustline -> ScenarioUnavailabilityReason.TrustlineRequired
         }
     }
 
