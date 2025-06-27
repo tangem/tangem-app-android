@@ -32,6 +32,7 @@ import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.wallets.models.requireColdWallet
+import com.tangem.features.send.v2.api.SendNotificationsComponent.Params.NotificationData
 import com.tangem.features.send.v2.common.CommonSendRoute
 import com.tangem.features.send.v2.common.SendBalanceUpdater
 import com.tangem.features.send.v2.common.SendConfirmAlertFactory
@@ -55,7 +56,6 @@ import com.tangem.features.send.v2.subcomponents.fee.model.checkAndCalculateSubt
 import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeSelectorUM
 import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeUM
 import com.tangem.features.send.v2.subcomponents.notifications.NotificationsUpdateTrigger
-import com.tangem.features.send.v2.subcomponents.notifications.model.NotificationData
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.orZero
 import com.tangem.utils.extensions.stripZeroPlainString
