@@ -1,12 +1,12 @@
 package com.tangem.features.onboarding.v2.note.impl.model
 
 import com.arkivanov.decompose.router.stack.StackNavigation
+import com.tangem.common.ui.userwallet.converter.ArtworkUMConverter
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
-import com.tangem.core.ui.components.artwork.ArtworkUM
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GetCardImageUseCase
 import com.tangem.features.onboarding.v2.common.ui.exitOnboardingDialog
@@ -29,6 +29,7 @@ internal class OnboardingNoteModel @Inject constructor(
     private val router: Router,
     private val messageSender: UiMessageSender,
     private val getCardImageUseCase: GetCardImageUseCase,
+    private val artworkUMConverter: ArtworkUMConverter,
 ) : Model() {
 
     @Suppress("UnusedPrivateMember")
@@ -98,7 +99,7 @@ internal class OnboardingNoteModel @Inject constructor(
                 firmwareVersion = cardInfo.firmwareVersion.toSdkFirmwareVersion(),
             )
             _uiState.update {
-                it.copy(cardArtwork = ArtworkUM(artwork.verifiedArtwork, artwork.defaultUrl))
+                it.copy(cardArtwork = artworkUMConverter.convert(artwork))
             }
         }
     }
