@@ -14,6 +14,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -34,14 +35,21 @@ import com.tangem.core.ui.utils.DEFAULT_ANIMATION_DURATION
  * @param modifier composable modifier
  */
 @Composable
-fun PasteButton(isPasteButtonVisible: Boolean, onClick: (String) -> Unit, modifier: Modifier = Modifier) {
+fun PasteButton(
+    isPasteButtonVisible: Boolean,
+    onClick: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    backgroundColorEnabled: Color = TangemTheme.colors.button.primary,
+    backgroundColorDisabled: Color = TangemTheme.colors.button.secondary,
+    textColor: Color = TangemTheme.colors.text.primary2,
+) {
     val clipboardManager = LocalClipboardManager.current
     val hapticFeedback = LocalHapticFeedback.current
     val isPasteEnabled = !clipboardManager.getText()?.text.isNullOrEmpty()
     val color = if (isPasteEnabled) {
-        TangemTheme.colors.button.primary
+        backgroundColorEnabled
     } else {
-        TangemTheme.colors.button.secondary
+        backgroundColorDisabled
     }
     AnimatedVisibility(
         visible = isPasteButtonVisible,
@@ -53,7 +61,7 @@ fun PasteButton(isPasteButtonVisible: Boolean, onClick: (String) -> Unit, modifi
         Text(
             text = stringResourceSafe(R.string.common_paste),
             style = TangemTheme.typography.caption1,
-            color = TangemTheme.colors.text.primary2,
+            color = textColor,
             modifier = Modifier
                 .background(
                     color = color,
