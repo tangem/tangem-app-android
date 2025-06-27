@@ -28,7 +28,7 @@ import com.tangem.features.send.v2.sendnft.ui.state.NFTSendUM
 import com.tangem.features.send.v2.subcomponents.destination.SendDestinationBlockComponent
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeBlockComponent
 import com.tangem.features.send.v2.subcomponents.notifications
-import com.tangem.features.send.v2.subcomponents.notifications.NotificationsComponent
+import com.tangem.features.send.v2.subcomponents.notifications.DefaultSendNotificationsComponent
 import kotlinx.collections.immutable.ImmutableList
 
 private const val BLOCKS_KEY = "BLOCKS_KEY"
@@ -40,7 +40,7 @@ internal fun NFTSendConfirmContent(
     destinationBlockComponent: SendDestinationBlockComponent,
     nftDetailsBlockComponent: NFTDetailsBlockComponent,
     feeBlockComponent: SendFeeBlockComponent,
-    notificationsComponent: NotificationsComponent,
+    notificationsComponent: DefaultSendNotificationsComponent,
     notificationsUM: ImmutableList<NotificationUM>,
 ) {
     val confirmUM = nftSendUM.confirmUM as? ConfirmUM.Content
