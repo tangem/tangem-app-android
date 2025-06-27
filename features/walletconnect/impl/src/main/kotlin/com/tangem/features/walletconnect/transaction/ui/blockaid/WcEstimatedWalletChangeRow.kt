@@ -63,7 +63,7 @@ internal fun WcEstimatedWalletChangeRow(item: WcEstimatedWalletChangeUM, modifie
             }
         }
 
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(8.dp))
 
         AsyncImage(
             model = item.tokenIconUrl,
