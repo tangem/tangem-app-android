@@ -62,5 +62,17 @@
     {
         "name": "USEDESK_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "SEND_VIA_SWAP_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "SWAP_REDESIGN_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "SEND_REDESIGN_ENABLED",
+        "version": "undefined"
     }
 ]
