@@ -43,11 +43,11 @@ internal class DefaultCurrenciesRepository(
     private val cardCryptoCurrencyFactory: CardCryptoCurrencyFactory,
     private val userTokensSaver: UserTokensSaver,
     private val userTokensResponseStore: UserTokensResponseStore,
+    private val responseCryptoCurrenciesFactory: ResponseCryptoCurrenciesFactory,
     excludedBlockchains: ExcludedBlockchains,
 ) : CurrenciesRepository {
 
     private val demoConfig = DemoConfig()
-    private val responseCurrenciesFactory = ResponseCryptoCurrenciesFactory(excludedBlockchains)
     private val cryptoCurrencyFactory = CryptoCurrencyFactory(excludedBlockchains)
     private val userTokensResponseFactory = UserTokensResponseFactory()
     private val customTokensMerger = CustomTokensMerger(
@@ -314,7 +314,7 @@ internal class DefaultCurrenciesRepository(
             },
         )
 
-        responseCurrenciesFactory.createCurrencies(storedTokens, userWallet.requireColdWallet().scanResponse)
+        responseCryptoCurrenciesFactory.createCurrencies(storedTokens, userWallet.requireColdWallet().scanResponse)
     }
 
     override suspend fun getMultiCurrencyWalletCachedCurrenciesSync(userWalletId: UserWalletId) =
@@ -329,7 +329,7 @@ internal class DefaultCurrenciesRepository(
                 },
             )
 
-            responseCurrenciesFactory.createCurrencies(storedTokens, userWallet.requireColdWallet().scanResponse)
+            responseCryptoCurrenciesFactory.createCurrencies(storedTokens, userWallet.requireColdWallet().scanResponse)
         }
 
     override suspend fun getMultiCurrencyWalletCurrency(
@@ -351,7 +351,7 @@ internal class DefaultCurrenciesRepository(
                 },
             )
 
-            responseCurrenciesFactory.createCurrency(
+            responseCryptoCurrenciesFactory.createCurrency(
                 currencyId = id,
                 response = response,
                 scanResponse = userWallet.requireColdWallet().scanResponse,
@@ -386,7 +386,10 @@ internal class DefaultCurrenciesRepository(
                         it.derivationPath == derivationPath.value
                 } ?: error("Coin in this network $networkId not found")
 
-            val coin = responseCurrenciesFactory.createCurrency(storedCoin, userWallet.requireColdWallet().scanResponse)
+            val coin = responseCryptoCurrenciesFactory.createCurrency(
+                responseToken = storedCoin,
+                scanResponse = userWallet.requireColdWallet().scanResponse,
+            )
 
             coin as? CryptoCurrency.Coin ?: error("Unable to create currency")
         }
@@ -526,7 +529,7 @@ internal class DefaultCurrenciesRepository(
                                 getL2CompatibilityTokenComparison(it, currencyRawId.value)
                             }
 
-                            responseCurrenciesFactory.createCurrencies(
+                            responseCryptoCurrenciesFactory.createCurrencies(
                                 response = storedTokens.copy(tokens = filterResponse),
                                 scanResponse = userWallet.requireColdWallet().scanResponse,
                             )
@@ -572,7 +575,7 @@ internal class DefaultCurrenciesRepository(
 
     private fun getMultiCurrencyWalletCurrencies(userWallet: UserWallet): Flow<List<CryptoCurrency>> {
         return getSavedUserTokensResponse(userWallet.walletId).map { storedTokens ->
-            responseCurrenciesFactory.createCurrencies(
+            responseCryptoCurrenciesFactory.createCurrencies(
                 response = storedTokens,
                 scanResponse = userWallet.requireColdWallet().scanResponse,
             )
