@@ -1,6 +1,5 @@
 package com.tangem.data.swap.converter.transaction
 
-import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
 import com.tangem.data.swap.models.SwapStatusDTO
 import com.tangem.data.swap.models.SwapTransactionDTO
@@ -9,9 +8,9 @@ import com.tangem.domain.swap.models.SwapTransactionModel
 import com.tangem.utils.converter.TwoWayConverter
 
 internal class SavedSwapTransactionConverter(
-    excludedBlockchains: ExcludedBlockchains,
+    private val responseCryptoCurrenciesFactory: ResponseCryptoCurrenciesFactory,
 ) : TwoWayConverter<SwapTransactionModel, SwapTransactionDTO> {
-    private val responseCryptoCurrenciesFactory = ResponseCryptoCurrenciesFactory(excludedBlockchains)
+
     private val statusConverter by lazy(LazyThreadSafetyMode.NONE) {
         SavedSwapStatusConverter()
     }
