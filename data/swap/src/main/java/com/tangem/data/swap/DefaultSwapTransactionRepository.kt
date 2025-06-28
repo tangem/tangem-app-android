@@ -1,6 +1,6 @@
 package com.tangem.data.swap
 
-import com.tangem.blockchainsdk.utils.ExcludedBlockchains
+import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
 import com.tangem.data.common.currency.UserTokensResponseFactory
 import com.tangem.data.swap.converter.transaction.SavedSwapStatusConverter
 import com.tangem.data.swap.converter.transaction.SavedSwapTransactionConverter
@@ -31,15 +31,15 @@ import kotlinx.coroutines.withContext
 
 internal class DefaultSwapTransactionRepository(
     private val appPreferencesStore: AppPreferencesStore,
+    private val responseCryptoCurrenciesFactory: ResponseCryptoCurrenciesFactory,
     private val dispatchers: CoroutineDispatcherProvider,
-    excludedBlockchains: ExcludedBlockchains,
 ) : SwapTransactionRepository {
 
     private val listConverter by lazy(LazyThreadSafetyMode.NONE) {
-        SavedSwapTransactionListConverter(excludedBlockchains)
+        SavedSwapTransactionListConverter(responseCryptoCurrenciesFactory = responseCryptoCurrenciesFactory)
     }
     private val converter by lazy(LazyThreadSafetyMode.NONE) {
-        SavedSwapTransactionConverter(excludedBlockchains)
+        SavedSwapTransactionConverter(responseCryptoCurrenciesFactory = responseCryptoCurrenciesFactory)
     }
     private val savedStatusConverter by lazy(LazyThreadSafetyMode.NONE) {
         SavedSwapStatusConverter()
