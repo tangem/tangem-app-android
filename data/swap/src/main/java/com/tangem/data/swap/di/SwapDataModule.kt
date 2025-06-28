@@ -1,7 +1,7 @@
 package com.tangem.data.swap.di
 
 import com.squareup.moshi.Moshi
-import com.tangem.blockchainsdk.utils.ExcludedBlockchains
+import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
 import com.tangem.data.express.converter.ExpressErrorConverter
 import com.tangem.data.swap.DefaultSwapErrorResolver
 import com.tangem.data.swap.DefaultSwapRepositoryV2
@@ -56,14 +56,14 @@ internal object SwapDataModule {
     @Provides
     @Singleton
     fun provideSwapTransactionRepository(
-        coroutineDispatcher: CoroutineDispatcherProvider,
         appPreferencesStore: AppPreferencesStore,
-        excludedBlockchains: ExcludedBlockchains,
+        responseCryptoCurrenciesFactory: ResponseCryptoCurrenciesFactory,
+        dispatchers: CoroutineDispatcherProvider,
     ): SwapTransactionRepository {
         return DefaultSwapTransactionRepository(
             appPreferencesStore = appPreferencesStore,
-            dispatchers = coroutineDispatcher,
-            excludedBlockchains = excludedBlockchains,
+            responseCryptoCurrenciesFactory = responseCryptoCurrenciesFactory,
+            dispatchers = dispatchers,
         )
     }
 }

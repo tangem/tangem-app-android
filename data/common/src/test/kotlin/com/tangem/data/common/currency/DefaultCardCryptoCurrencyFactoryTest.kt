@@ -8,6 +8,7 @@ import com.tangem.common.card.WalletData
 import com.tangem.common.test.domain.card.MockScanResponseFactory
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.test.utils.ProvideTestModels
+import com.tangem.data.common.network.NetworkFactory
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
@@ -34,12 +35,16 @@ internal class DefaultCardCryptoCurrencyFactoryTest {
 
     private val userWalletsStore: UserWalletsStore = mockk()
     private val userTokensResponseStore: UserTokensResponseStore = mockk()
+    private val excludedBlockchains = ExcludedBlockchains()
 
     private val factory = DefaultCardCryptoCurrencyFactory(
         demoConfig = DemoConfig(),
-        excludedBlockchains = ExcludedBlockchains(),
+        excludedBlockchains = excludedBlockchains,
         userWalletsStore = userWalletsStore,
         userTokensResponseStore = userTokensResponseStore,
+        responseCryptoCurrenciesFactory = ResponseCryptoCurrenciesFactory(
+            networkFactory = NetworkFactory(excludedBlockchains = excludedBlockchains),
+        ),
     )
 
     private val cryptoCurrencyFactory = MockCryptoCurrencyFactory()
