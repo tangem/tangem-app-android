@@ -1,10 +1,7 @@
 package com.tangem.data.common.di
 
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
-import com.tangem.data.common.currency.CardCryptoCurrencyFactory
-import com.tangem.data.common.currency.DefaultCardCryptoCurrencyFactory
-import com.tangem.data.common.currency.UserTokensResponseAddressesEnricher
-import com.tangem.data.common.currency.UserTokensSaver
+import com.tangem.data.common.currency.*
 import com.tangem.data.common.quote.DefaultQuotesFetcher
 import com.tangem.data.common.quote.QuotesFetcher
 import com.tangem.datasource.api.tangemTech.TangemTechApi
@@ -31,12 +28,14 @@ internal object DataCommonModule {
         excludedBlockchains: ExcludedBlockchains,
         userWalletsStore: UserWalletsStore,
         userTokensResponseStore: UserTokensResponseStore,
+        responseCryptoCurrenciesFactory: ResponseCryptoCurrenciesFactory,
     ): CardCryptoCurrencyFactory {
         return DefaultCardCryptoCurrencyFactory(
             demoConfig = DemoConfig(),
             excludedBlockchains = excludedBlockchains,
             userWalletsStore = userWalletsStore,
             userTokensResponseStore = userTokensResponseStore,
+            responseCryptoCurrenciesFactory = responseCryptoCurrenciesFactory,
         )
     }
 
