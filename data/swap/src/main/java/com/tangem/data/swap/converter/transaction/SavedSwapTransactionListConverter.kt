@@ -1,6 +1,5 @@
 package com.tangem.data.swap.converter.transaction
 
-import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
 import com.tangem.data.common.currency.UserTokensResponseFactory
 import com.tangem.data.swap.models.SwapStatusDTO
@@ -13,13 +12,12 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.converter.Converter
 
 internal class SavedSwapTransactionListConverter(
-    excludedBlockchains: ExcludedBlockchains,
+    private val responseCryptoCurrenciesFactory: ResponseCryptoCurrenciesFactory,
 ) : Converter<SwapTransactionListModel, SwapTransactionListDTO> {
 
-    private val responseCryptoCurrenciesFactory = ResponseCryptoCurrenciesFactory(excludedBlockchains)
     private val userTokensResponseFactory = UserTokensResponseFactory()
     private val savedSwapTransactionConverter by lazy(LazyThreadSafetyMode.NONE) {
-        SavedSwapTransactionConverter(excludedBlockchains)
+        SavedSwapTransactionConverter(responseCryptoCurrenciesFactory = responseCryptoCurrenciesFactory)
     }
 
     override fun convert(value: SwapTransactionListModel) = SwapTransactionListDTO(
