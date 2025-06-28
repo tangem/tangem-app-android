@@ -2,7 +2,6 @@ package com.tangem.data.common.currency
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
-import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.toCoinId
 import com.tangem.data.common.network.NetworkFactory
@@ -11,11 +10,12 @@ import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.scan.ScanResponse
 import timber.log.Timber
+import javax.inject.Inject
 import com.tangem.blockchain.common.Token as SdkToken
 
-class ResponseCryptoCurrenciesFactory(excludedBlockchains: ExcludedBlockchains) {
-
-    private val networkFactory by lazy(LazyThreadSafetyMode.NONE) { NetworkFactory(excludedBlockchains) }
+class ResponseCryptoCurrenciesFactory @Inject constructor(
+    private val networkFactory: NetworkFactory,
+) {
 
     fun createCurrency(currencyId: String, response: UserTokensResponse, scanResponse: ScanResponse): CryptoCurrency {
         return response.tokens
@@ -25,11 +25,7 @@ class ResponseCryptoCurrenciesFactory(excludedBlockchains: ExcludedBlockchains) 
     }
 
     fun createCurrencies(response: UserTokensResponse, scanResponse: ScanResponse): List<CryptoCurrency> {
-        return response.tokens
-            .asSequence()
-            .mapNotNull { createCurrency(it, scanResponse) }
-            .distinctBy { it.id }
-            .toList()
+        return createCurrencies(tokens = response.tokens, scanResponse = scanResponse)
     }
 
     fun createCurrencies(tokens: List<UserTokensResponse.Token>, scanResponse: ScanResponse): List<CryptoCurrency> {
