@@ -92,7 +92,6 @@ internal class SendModel @Inject constructor(
 ) : Model(), SendComponentCallback {
 
     private val params: SendComponent.Params = paramsContainer.require()
-    private val userWalletId = params.userWalletId
     private val cryptoCurrency = params.currency
 
     private val _uiState = MutableStateFlow(initialState())
@@ -101,9 +100,23 @@ internal class SendModel @Inject constructor(
     private val _isBalanceHiddenFlow = MutableStateFlow(false)
     val isBalanceHiddenFlow = _isBalanceHiddenFlow.asStateFlow()
 
+    private val _cryptoCurrencyStatusFlow = MutableStateFlow(
+        CryptoCurrencyStatus(
+            params.currency,
+            value = CryptoCurrencyStatus.Loading,
+        ),
+    )
+    val cryptoCurrencyStatusFlow = _cryptoCurrencyStatusFlow.asStateFlow()
+
+    private val _feeCryptoCurrencyStatusFlow = MutableStateFlow(
+        CryptoCurrencyStatus(
+            params.currency,
+            value = CryptoCurrencyStatus.Loading,
+        ),
+    )
+    val feeCryptoCurrencyStatusFlow = _feeCryptoCurrencyStatusFlow.asStateFlow()
+
     var userWallet: UserWallet by Delegates.notNull()
-    var cryptoCurrencyStatus: CryptoCurrencyStatus? = null
-    var feeCryptoCurrencyStatus: CryptoCurrencyStatus? = null
     var appCurrency: AppCurrency = AppCurrency.Default
     var predefinedValues: PredefinedValues = PredefinedValues.Empty
 
@@ -279,16 +292,16 @@ internal class SendModel @Inject constructor(
     ): Flow<Either<CurrencyStatusError, CryptoCurrencyStatus>> {
         return when {
             isSingleWalletWithToken -> getSingleCryptoCurrencyStatusUseCase.invokeMultiWallet(
-                userWalletId = userWalletId,
+                userWalletId = params.userWalletId,
                 currencyId = cryptoCurrency.id,
                 isSingleWalletWithTokens = true,
             )
             isMultiCurrency -> getSingleCryptoCurrencyStatusUseCase.invokeMultiWallet(
-                userWalletId = userWalletId,
+                userWalletId = params.userWalletId,
                 currencyId = cryptoCurrency.id,
                 isSingleWalletWithTokens = false,
             )
-            else -> getSingleCryptoCurrencyStatusUseCase.invokeSingleWallet(userWalletId = userWalletId)
+            else -> getSingleCryptoCurrencyStatusUseCase.invokeSingleWallet(userWalletId = params.userWalletId)
         }
     }
 
@@ -298,7 +311,7 @@ internal class SendModel @Inject constructor(
     ): CryptoCurrencyStatus {
         return if (isMultiCurrency) {
             getFeePaidCryptoCurrencyStatusSyncUseCase(
-                userWalletId = userWalletId,
+                userWalletId = params.userWalletId,
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
             ).getOrNull() ?: cryptoCurrencyStatus
         } else {
@@ -307,8 +320,8 @@ internal class SendModel @Inject constructor(
     }
 
     private fun onDataLoaded(currencyStatus: CryptoCurrencyStatus, feeCurrencyStatus: CryptoCurrencyStatus) {
-        cryptoCurrencyStatus = currencyStatus
-        feeCryptoCurrencyStatus = feeCurrencyStatus
+        _cryptoCurrencyStatusFlow.value = currencyStatus
+        _feeCryptoCurrencyStatusFlow.value = feeCurrencyStatus
 
         if (params.amount != null) {
             router.replaceAll(CommonSendRoute.Confirm)
@@ -360,7 +373,7 @@ internal class SendModel @Inject constructor(
     }
 
     private fun initialState(): SendUM = SendUM(
-        amountUM = AmountState.Empty(),
+        amountUM = AmountState.Empty(isRedesignEnabled = sendFeatureToggles.isSendRedesignEnabled),
         destinationUM = SendDestinationInitialStateTransformer(
             cryptoCurrency = cryptoCurrency,
             isRedesignEnabled = sendFeatureToggles.isSendRedesignEnabled,
