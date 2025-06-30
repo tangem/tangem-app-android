@@ -30,8 +30,6 @@ fun AmountScreenContent(
     clickIntents: AmountScreenClickIntents,
     modifier: Modifier = Modifier,
 ) {
-    if (amountState !is AmountState.Data) return
-
     // Do not put fillMaxSize() in here
     LazyColumn(
         modifier = modifier
@@ -49,7 +47,7 @@ fun AmountScreenContent(
                 onCurrencyChange = clickIntents::onCurrencyChangeClick,
                 onMaxAmountClick = clickIntents::onMaxValueClick,
             )
-        } else {
+        } else if (amountState is AmountState.Data) {
             amountField(
                 amountState = amountState,
                 isBalanceHidden = isBalanceHidden,
