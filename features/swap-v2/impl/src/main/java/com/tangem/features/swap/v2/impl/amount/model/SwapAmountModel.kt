@@ -116,8 +116,6 @@ internal class SwapAmountModel @Inject constructor(
         uiState.transformerUpdate(
             SwapAmountSelectQuoteTransformer(
                 quoteUM = quoteUM,
-                primaryCryptoCurrencyStatus = primaryCryptoCurrencyStatus,
-                secondaryCryptoCurrencyStatus = secondaryCryptoCurrencyStatus,
                 secondaryMaximumAmountBoundary = secondaryMaximumAmountBoundary,
                 secondaryMinimumAmountBoundary = secondaryMinimumAmountBoundary,
             ),
@@ -136,8 +134,6 @@ internal class SwapAmountModel @Inject constructor(
     override fun onAmountValueChange(value: String) {
         uiState.transformerUpdate(
             SwapAmountValueChangeTransformer(
-                primaryCryptoCurrencyStatus = primaryCryptoCurrencyStatus,
-                secondaryCryptoCurrencyStatus = secondaryCryptoCurrencyStatus,
                 primaryMaximumAmountBoundary = primaryMaximumAmountBoundary,
                 secondaryMaximumAmountBoundary = secondaryMaximumAmountBoundary,
                 primaryMinimumAmountBoundary = primaryMinimumAmountBoundary,
@@ -155,8 +151,6 @@ internal class SwapAmountModel @Inject constructor(
     override fun onMaxValueClick() {
         uiState.transformerUpdate(
             SwapAmountValueMaxTransformer(
-                primaryCryptoCurrencyStatus = primaryCryptoCurrencyStatus,
-                secondaryCryptoCurrencyStatus = secondaryCryptoCurrencyStatus,
                 primaryMaximumAmountBoundary = primaryMaximumAmountBoundary,
                 secondaryMaximumAmountBoundary = secondaryMaximumAmountBoundary,
                 primaryMinimumAmountBoundary = primaryMinimumAmountBoundary,
@@ -169,8 +163,6 @@ internal class SwapAmountModel @Inject constructor(
     override fun onCurrencyChangeClick(isFiat: Boolean) {
         uiState.transformerUpdate(
             SwapAmountChangeCurrencyTransformer(
-                primaryCryptoCurrencyStatus = primaryCryptoCurrencyStatus,
-                secondaryCryptoCurrencyStatus = secondaryCryptoCurrencyStatus,
                 isFiatSelected = isFiat,
             ),
         )
@@ -378,8 +370,6 @@ internal class SwapAmountModel @Inject constructor(
             uiState.transformerUpdate(
                 SwapAmountSetQuotesTransformer(
                     quotes = quotes,
-                    primaryCryptoCurrencyStatus = primaryCryptoCurrencyStatus,
-                    secondaryCryptoCurrencyStatus = secondaryCryptoCurrencyStatus,
                     secondaryMaximumAmountBoundary = secondaryMaximumAmountBoundary,
                     secondaryMinimumAmountBoundary = secondaryMinimumAmountBoundary,
                 ),
