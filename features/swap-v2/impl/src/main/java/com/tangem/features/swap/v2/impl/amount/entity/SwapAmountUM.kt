@@ -34,8 +34,8 @@ internal sealed class SwapAmountUM {
         override val primaryAmount: SwapAmountFieldUM,
         override val secondaryAmount: SwapAmountFieldUM,
         override val selectedAmountType: SwapAmountType,
-        val primaryCryptoCurrencyStatus: CryptoCurrencyStatus?,
-        val secondaryCryptoCurrencyStatus: CryptoCurrencyStatus?,
+        val primaryCryptoCurrencyStatus: CryptoCurrencyStatus,
+        val secondaryCryptoCurrencyStatus: CryptoCurrencyStatus,
 
         // selected swap route
         val swapDirection: SwapDirection,
@@ -61,7 +61,7 @@ sealed class SwapAmountFieldUM {
     ) : SwapAmountFieldUM() {
         override val amountField: AmountState = AmountState.Empty(
             isPrimaryButtonEnabled = false,
-            isRedesignEnabled = false,
+            isRedesignEnabled = true,
         )
     }
 
@@ -70,7 +70,7 @@ sealed class SwapAmountFieldUM {
     ) : SwapAmountFieldUM() {
         override val amountField: AmountState = AmountState.Empty(
             isPrimaryButtonEnabled = false,
-            isRedesignEnabled = false,
+            isRedesignEnabled = true,
         )
     }
 
