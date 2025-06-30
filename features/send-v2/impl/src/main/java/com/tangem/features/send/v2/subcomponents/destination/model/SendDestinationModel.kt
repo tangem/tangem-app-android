@@ -8,6 +8,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.network.CryptoCurrencyAddress
 import com.tangem.domain.qrscanning.models.SourceType
@@ -293,6 +294,7 @@ internal class SendDestinationModel @Inject constructor(
         params.callback.onDestinationResult(uiState.value)
     }
 
+    @Suppress("LongMethod")
     private fun configDestinationNavigation() {
         val params = params as? SendDestinationComponentParams.DestinationParams ?: return
         combine(
@@ -305,7 +307,7 @@ internal class SendDestinationModel @Inject constructor(
                 NavigationUM.Content(
                     title = params.title,
                     subtitle = null,
-                    backIconRes = if (route.isEditMode) {
+                    backIconRes = if (route.isEditMode || isRedesignEnabled) {
                         R.drawable.ic_back_24
                     } else {
                         R.drawable.ic_close_24
@@ -345,7 +347,19 @@ internal class SendDestinationModel @Inject constructor(
                             params.onNextClick()
                         },
                     ),
-                    prevButton = null,
+                    prevButton = if (isRedesignEnabled) {
+                        ButtonsUM.PrimaryButtonUM(
+                            text = TextReference.EMPTY,
+                            iconResId = R.drawable.ic_back_24,
+                            isEnabled = true,
+                            onClick = {
+                                saveResult()
+                                params.onBackClick()
+                            },
+                        )
+                    } else {
+                        null
+                    },
                     secondaryPairButtonsUM = null,
                 ),
             )
