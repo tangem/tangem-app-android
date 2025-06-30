@@ -39,11 +39,8 @@ internal class SendAmountBlockComponent(
         val isClickEnabled by params.blockClickEnableFlow.collectAsStateWithLifecycle()
 
         if (params.isRedesignEnabled) {
-            val amountState = state as? AmountState.Data ?: return
-
             AmountBlockV2(
                 amountState = state,
-                currencyIconState = amountState.tokenIconState,
                 isClickDisabled = !isClickEnabled,
                 isEditingDisabled = params.predefinedValues is PredefinedValues.Content.Deeplink,
                 onClick = onClick,
