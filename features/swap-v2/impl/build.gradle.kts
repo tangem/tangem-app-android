@@ -53,6 +53,7 @@ dependencies {
     implementation(projects.domain.manageTokens)
     implementation(projects.domain.transaction.models)
     implementation(projects.domain.transaction)
+    implementation(projects.domain.legacy)
 
     /** Compose */
     implementation(deps.compose.foundation)
