@@ -223,6 +223,7 @@
   <string name="common_unreachable">Недоступно</string>
   <string name="common_unstake">Завершить стейкинг</string>
   <string name="common_utxo_validate_withdrawal_message_warning">Из-за ограничений %1$s в одну транзакцию может поместиться только %2$d UTXO. Это означает, что вы можете отправить только %3$s или меньше. Вам нужно уменьшить сумму.</string>
+  <string name="common_value_copied">Значение скопировано</string>
   <string name="common_week">неделю</string>
   <string name="common_with">с</string>
   <string name="common_yes">Да</string>
@@ -843,6 +844,7 @@
   <string name="send_notification_fee_too_high_title">Установлена высокая комиссия</string>
   <string name="send_notification_high_fee_text">Ввиду особенности сети %1$s комиссия при переводе всего баланса выше. Для того, чтобы снизить комиссию Вы можете оставить %2$s.</string>
   <string name="send_notification_high_fee_title">Комиссия повышена</string>
+  <string name="send_notification_invalid_amount_rent_destination">Аккаунт получателя не активирован. Минимальная сумма перевода должна быть не меньше баланса, необходимого для покрытия арендной платы: %1$s.</string>
   <string name="send_notification_invalid_amount_rent_fee">Баланс вашего счета не может быть ниже арендной платы. Пожалуйста, оставьте на счете не менее %1$s или выведите все средства.</string>
   <string name="send_notification_invalid_amount_text">Включенная комиссия превышает сумму перевода, что приводит к отрицательному значению</string>
   <string name="send_notification_invalid_amount_title">Недопустимая сумма</string>
@@ -1259,6 +1261,9 @@
   <string name="warning_some_networks_unreachable_message">Свайпните вниз для обновления или попробуйте позже.</string>
   <string name="warning_some_networks_unreachable_title">Некоторые сети недоступны</string>
   <string name="warning_some_token_balances_not_updated">Некоторые балансы токенов не удалось обновить</string>
+  <string name="warning_stellar_token_trustline_button_title">Открыть Trustline</string>
+  <string name="warning_stellar_token_trustline_subtitle">Чтобы получить этот токен, необходимо открыть Trustline. Сеть удержит резерв в размере 0.5 XLM.</string>
+  <string name="warning_stellar_token_trustline_title">Откройте Trustline</string>
   <string name="warning_testnet_card_message">Это Testnet карта. Он не может обрабатывать транзакции и используется только в целях тестирования и разработки.</string>
   <string name="warning_testnet_card_title">Только для целей тестирования</string>
   <string name="warning_token_balance_not_updated">Возможно, баланс устарел. Обновите страницу.</string>
