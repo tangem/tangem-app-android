@@ -4,7 +4,7 @@ import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.Text
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -13,14 +13,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
-import com.tangem.common.ui.R
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.preview.AmountStatePreviewData
+import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.conditional
 import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
@@ -30,11 +30,11 @@ import com.tangem.core.ui.res.TangemThemePreview
 @Composable
 fun AmountBlockV2(
     amountState: AmountState,
-    currencyIconState: CurrencyIconState,
     isClickDisabled: Boolean,
     isEditingDisabled: Boolean,
-    onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
+    extraContent: @Composable () -> Unit = {},
 ) {
     if (amountState !is AmountState.Data) return
     val amount = amountState.amountTextField
@@ -48,7 +48,7 @@ fun AmountBlockV2(
 
     val fiatAmount = amount.fiatAmount.value.format {
         fiat(
-            fiatCurrencySymbol = amount.fiatAmount.currencySymbol,
+            fiatCurrencySymbol = amountState.appCurrency.symbol,
             fiatCurrencyCode = amountState.appCurrency.code,
         )
     }
@@ -58,33 +58,26 @@ fun AmountBlockV2(
     } else {
         cryptoAmount to fiatAmount
     }
-
-    val title = TextReference.Str(
-        stringResourceSafe(
-            R.string.send_from_wallet_name,
-            amountState.title
-                .resolveReference(),
-        ),
-    )
     val currencyTitle = amount.cryptoAmount.currencySymbol
 
     AmountBlockV2(
-        title = title,
+        title = amountState.title,
         balance = amountState.availableBalance,
         currencyTitle = currencyTitle,
-        currencyIconState = currencyIconState,
+        currencyIconState = amountState.tokenIconState,
         firstAmount = firstAmount,
         secondAmount = secondAmount,
         isClickDisabled = isClickDisabled,
         isEditingDisabled = isEditingDisabled,
         onClick = onClick,
         modifier = modifier,
+        extraContent = extraContent,
     )
 }
 
 @Suppress("LongParameterList")
 @Composable
-internal fun AmountBlockV2(
+private fun AmountBlockV2(
     title: TextReference,
     balance: TextReference,
     currencyTitle: String,
@@ -93,14 +86,17 @@ internal fun AmountBlockV2(
     secondAmount: String,
     isClickDisabled: Boolean,
     isEditingDisabled: Boolean,
-    onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
+    extraContent: @Composable () -> Unit = {},
 ) {
     Column(
         modifier = modifier
             .clip(TangemTheme.shapes.roundedCornersXMedium)
             .background(TangemTheme.colors.background.action)
-            .clickable(enabled = !isClickDisabled && !isEditingDisabled, onClick = onClick)
+            .conditional(onClick != null) {
+                clickable(enabled = !isClickDisabled && !isEditingDisabled, onClick = onClick!!)
+            }
             .padding(TangemTheme.dimens.spacing16),
     ) {
         Row {
@@ -109,7 +105,7 @@ internal fun AmountBlockV2(
                 style = TangemTheme.typography.body2,
                 color = TangemTheme.colors.text.tertiary,
             )
-            Spacer(modifier = modifier.weight(1f))
+            SpacerWMax()
             Text(
                 text = balance.resolveReference(),
                 style = TangemTheme.typography.body2,
@@ -130,11 +126,16 @@ internal fun AmountBlockV2(
                     style = TangemTheme.typography.h2,
                     color = TangemTheme.colors.text.primary1,
                 )
-                Text(
-                    text = secondAmount,
-                    style = TangemTheme.typography.body2,
-                    color = TangemTheme.colors.text.tertiary,
-                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Text(
+                        text = secondAmount,
+                        style = TangemTheme.typography.body2,
+                        color = TangemTheme.colors.text.tertiary,
+                    )
+                    extraContent()
+                }
             }
             Column(
                 verticalArrangement = Arrangement.spacedBy(2.dp),
@@ -163,7 +164,6 @@ private fun AmountBlockPreview(@PreviewParameter(AmountBlockV2PreviewProvider::c
     TangemThemePreview {
         AmountBlockV2(
             amountState = value,
-            currencyIconState = CurrencyIconState.Empty(),
             isClickDisabled = false,
             isEditingDisabled = false,
             onClick = {},
