@@ -19,7 +19,7 @@ import java.math.BigDecimal
 
 object AmountStatePreviewData {
 
-    val emptyState = AmountState.Empty()
+    val emptyState = AmountState.Empty(isRedesignEnabled = true)
 
     val amountState = AmountState.Data(
         isPrimaryButtonEnabled = false,
