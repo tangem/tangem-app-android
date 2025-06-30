@@ -31,6 +31,7 @@ import com.tangem.features.send.v2.subcomponents.fee.SendFeeComponentParams
 import com.tangem.features.send.v2.subcomponents.notifications.DefaultSendNotificationsComponent
 import com.tangem.utils.extensions.orZero
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.StateFlow
 
 internal class SendConfirmComponent(
     appComponentContext: AppComponentContext,
@@ -62,11 +63,13 @@ internal class SendConfirmComponent(
             state = model.uiState.value.amountUM,
             analyticsCategoryName = params.analyticsCategoryName,
             userWallet = params.userWallet,
-            cryptoCurrencyStatus = params.cryptoCurrencyStatus,
             appCurrency = params.appCurrency,
             blockClickEnableFlow = blockClickEnableFlow.asStateFlow(),
             predefinedValues = params.predefinedValues,
             isRedesignEnabled = model.uiState.value.isRedesignEnabled,
+            userWalletId = params.userWallet.walletId,
+            cryptoCurrency = params.cryptoCurrencyStatus.currency,
+            cryptoCurrencyStatusFlow = params.cryptoCurrencyStatusFlow,
         ),
         onResult = model::onAmountResult,
         onClick = model::showEditAmount,
@@ -145,6 +148,8 @@ internal class SendConfirmComponent(
         val userWallet: UserWallet,
         val cryptoCurrencyStatus: CryptoCurrencyStatus,
         val feeCryptoCurrencyStatus: CryptoCurrencyStatus,
+        val cryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>,
+        val feeCryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>,
         val appCurrency: AppCurrency,
         val callback: ModelCallback,
         val currentRoute: Flow<CommonSendRoute>,
