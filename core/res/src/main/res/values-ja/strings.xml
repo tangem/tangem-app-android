@@ -1,5 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
+  <string name="access_code_alert_skip_description">アクセスコードがないとウォレットは保護されません。</string>
+  <string name="access_code_alert_skip_ok">とにかくスキップ</string>
+  <string name="access_code_alert_skip_title">アクセスコードが設定されていません</string>
+  <string name="access_code_check_title">アクセスコードを入力</string>
+  <string name="access_code_confirm_description">続行するには、以前に入力したコードを確認してください</string>
+  <string name="access_code_confirm_title">アクセスコードを再入力</string>
+  <string name="access_code_create_description">ウォレットのロックを解除するには、 %s桁のアクセスコードを設定します。</string>
+  <string name="access_code_create_title">アクセスコードの作成</string>
+  <string name="access_code_navtitle">アクセスコード</string>
   <string name="action_buttons_buy_empty_search_message">トークンが見つかりませんか？メインページのマーケットセクションに移動し、ポートフォリオに追加して買付できるようにします。</string>
   <string name="action_buttons_sell_empty_search_message">トークンが見つかりませんか？メインページのマーケットセクションに移動し、ポートフォリオに追加して売却できるようにします。</string>
   <string name="action_buttons_sell_navigation_bar_title">売却</string>
@@ -49,6 +58,17 @@
   <string name="app_settings_theme_mode_system">システムのデフォルト</string>
   <string name="app_settings_theme_selector_title">テーマ</string>
   <string name="app_settings_title">アプリ設定</string>
+  <string name="backup_complete_description">ウォレットのバックアップが正常に完了しました。</string>
+  <string name="backup_complete_title">バックアップが完了しました</string>
+  <string name="backup_info_description">シークレットリカバリーフレーズは、ウォレットへのアクセスと復元のために使用される%sのランダムな単語のセットです。</string>
+  <string name="backup_info_keep_description">これらの単語は紛失した場合、復元できません。必ず安全な場所に保管してください。</string>
+  <string name="backup_info_keep_title">安全に保管してください</string>
+  <string name="backup_info_save_description">これらの%s個の単語をパスワードマネージャーなどの安全な場所に保存し、決して他の人と共有しないでください。</string>
+  <string name="backup_info_save_title">復元は不可能です</string>
+  <string name="backup_info_title">リカバリーフレーズ</string>
+  <string name="backup_seed_description">これらの%s語を順番に書き留めて、安全かつプライベートに保管してください。</string>
+  <string name="backup_seed_responsibility">ウォレットと、リカバリーフレーズのセキュリティとバックアップの全責任は、Tangemではなくユーザーにあります。</string>
+  <string name="backup_seed_title">リカバリーフレーズ</string>
   <string name="balance_hidden_description">残高を表示または非表示にするには、デバイスの画面を下向きにするか、設定でオフにしてください。</string>
   <string name="balance_hidden_do_not_show_button">今後表示しない</string>
   <string name="balance_hidden_got_it_button">わかりました</string>
@@ -101,6 +121,7 @@
   <string name="common_approval">承認</string>
   <string name="common_approve">承認</string>
   <string name="common_attention">注意</string>
+  <string name="common_backup">バックアップ</string>
   <string name="common_balance">残高: %s</string>
   <string name="common_balance_title">残高</string>
   <string name="common_biometric_authentication">生体認証</string>
@@ -117,10 +138,12 @@
   <string name="common_claim">請求</string>
   <string name="common_claim_rewards">報酬を受け取る</string>
   <string name="common_close">閉じる</string>
+  <string name="common_coming_soon">近日公開</string>
   <string name="common_confirm">確認</string>
   <string name="common_contact_tangem_support">Tangemサポートへ問い合わせる</string>
   <string name="common_contact_visa_support">Visaサポートへ問い合わせる</string>
   <string name="common_continue">続ける</string>
+  <string name="common_convert">変換する</string>
   <string name="common_copy">コピー</string>
   <string name="common_copy_address">アドレスをコピー</string>
   <string name="common_create">作成</string>
@@ -150,6 +173,7 @@
   <string name="common_fee_selector_option_slow">遅い</string>
   <string name="common_fee_selector_title">速度と料金</string>
   <string name="common_finish">終了</string>
+  <string name="common_free">無料</string>
   <string name="common_generate_addresses">アドレスを同期する</string>
   <string name="common_go_to_provider">プロバイダーへ移動</string>
   <string name="common_go_to_token">トークンへ移動</string>
@@ -202,6 +226,7 @@
   <string name="common_show_more">もっと見る</string>
   <string name="common_sign">署名</string>
   <string name="common_sign_and_send">署名して送信</string>
+  <string name="common_skip">スキップ</string>
   <string name="common_stake">ステーキング</string>
   <string name="common_staking">ステーキング</string>
   <string name="common_start">始める</string>
@@ -222,6 +247,7 @@
   <string name="common_unreachable">アクセスできません</string>
   <string name="common_unstake">ステーキング解除</string>
   <string name="common_utxo_validate_withdrawal_message_warning">%1$sの制限により、1つのトランザクションに収まるUTXOは%2$d個のみです。つまり、 %3$s以下しか送信できません。量を減らす必要があります。</string>
+  <string name="common_value_copied">値がコピーされました</string>
   <string name="common_week">週</string>
   <string name="common_with">で</string>
   <string name="common_yes">はい</string>
@@ -377,10 +403,19 @@
   <string name="give_permission_title">許可を与える</string>
   <string name="give_permission_unlimited">無制限</string>
   <string name="home_button_add_existing_wallet">既存のウォレットを追加</string>
+  <string name="home_button_create_new_wallet">新しいウォレットを作成する</string>
   <string name="home_button_order">Tangemを注文</string>
   <string name="home_button_scan">Tangemをスキャン</string>
   <string name="hot_crypto_add_token_subtitle">%sへ</string>
   <string name="hot_crypto_token_network">%sネットワーク</string>
+  <string name="hw_backup_need_action">バックアップへ移動</string>
+  <string name="hw_backup_need_description">アクセスコードを使用してウォレットを保護するには、まずバックアップを完了してください。</string>
+  <string name="hw_backup_need_title">まずバックアップを完了する</string>
+  <string name="hw_create_keys_description">受信取引の通知を受け取る</string>
+  <string name="hw_create_keys_title">鍵はアプリに保存されます</string>
+  <string name="hw_create_seed_description">最新の機能とニュースをお届けします</string>
+  <string name="hw_create_seed_title">シードフレーズのバックアップ</string>
+  <string name="hw_create_title">モバイルウォレットを作成する</string>
   <string name="information_generated_with_ai">この情報はAIで生成されました。 \nエラーが見つかった場合は、ここをタップしてください。</string>
   <string name="initial_message_change_access_code_body">アクセスコードを変更するには、上図のようにカードまたはリングをタップし、操作が終了するまで取り外さないでください。</string>
   <string name="initial_message_change_passcode_body">パスコードを変更するには、上記のようにカードをタップし、操作が終了するまで取り外さないでください。</string>
@@ -565,7 +600,7 @@
   <string name="nft_receive_unavailable_asset_warning_title">ネットワークが追加されていません</string>
   <string name="nft_receive_unavailable_section_title">未追加</string>
   <string name="nft_receive_unsupported_types">サポートされていないNFTタイプ</string>
-  <string name="nft_receive_unsupported_types_description">cNFTとpNFTはまだサポートされていません</string>
+  <string name="nft_receive_unsupported_types_description">cNFTとpNFTはまだサポートされていません。ウォレットに送信しないでください。</string>
   <string name="nft_send">NFTを送信する</string>
   <string name="nft_traits_title">特徴</string>
   <string name="nft_untitled_collection">無題のコレクション</string>
@@ -621,6 +656,7 @@
   <string name="onboarding_create_wallet_options_title">秘密鍵を非公開で生成する</string>
   <string name="onboarding_done_body">カードは有効化され、使用可能になりました</string>
   <string name="onboarding_done_header">成功！</string>
+  <string name="onboarding_done_wallet">ウォレットの設定が完了し、使用できるようになりました。</string>
   <string name="onboarding_exit_alert_message">この場合は、最初からやり直す必要があります。</string>
   <string name="onboarding_exit_alert_title">アクティベーション処理を途中で終了しますか?</string>
   <string name="onboarding_getting_started">スタート</string>
@@ -783,7 +819,9 @@
   <string name="send_alert_fee_too_low_text">推奨手数料を下回る手数料が指定されたため、取引に遅れが生じる可能性があります。続行しますか？</string>
   <string name="send_alert_transaction_failed_text">理由: %1$s \nコード: %2$s</string>
   <string name="send_alert_transaction_failed_title">取引は完了していません</string>
+  <string name="send_amount_convert_to_another_token">別のトークンに変換する</string>
   <string name="send_amount_label">金額</string>
+  <string name="send_amount_receive_token_subtitle">受取人に送信されます</string>
   <string name="send_bitcoin_custom_fee_footer">取引手数料は、vByteフィールドのSatoshiの値を調整して設定できます。</string>
   <string name="send_custom_amount_fee_footer">取引にかかる手数料です。自由に設定できます。</string>
   <string name="send_custom_evm_max_fee">最大手数料</string>
@@ -807,6 +845,7 @@
   <string name="send_fee_unreachable_error_text">ネットワーク接続を確認してください</string>
   <string name="send_fee_unreachable_error_title">ネットワーク手数料についての情報にアクセスできません</string>
   <string name="send_from_wallet_android">より</string>
+  <string name="send_from_wallet_name">%sから</string>
   <string name="send_gas_limit">ガス上限</string>
   <string name="send_gas_limit_footer">これは、取引または契約を完了するために使用されるガスの最大額です。ガス上限を設定することで、取引実行時に予期せぬ請求や無制限の請求を防ぐことができます。</string>
   <string name="send_gas_price">ガス代</string>
@@ -814,6 +853,7 @@
   <string name="send_max_amount">最大</string>
   <string name="send_max_amount_label">最大金額</string>
   <string name="send_max_fee">最大手数料</string>
+  <string name="send_memo">メモ: %s</string>
   <string name="send_memo_destination_tag_error">無効なメモ</string>
   <string name="send_network_fee_warning_title">ネットワーク手数料のカバー</string>
   <string name="send_nonce">ナンス</string>
@@ -827,6 +867,7 @@
   <string name="send_notification_fee_too_high_title">カスタム手数料が高くなっています</string>
   <string name="send_notification_high_fee_text">%1$sネットワークの特殊性により、残高全体を転送する場合の手数料は高くなります。手数料を削減するには、 %2$sを残します。</string>
   <string name="send_notification_high_fee_title">手数料が高くなっています</string>
+  <string name="send_notification_invalid_amount_rent_destination">受取人の口座が有効化されていません。最低送金額はレント免除残高%1$s以上である必要があります。</string>
   <string name="send_notification_invalid_amount_rent_fee">口座残高はレンタル料金より低くすることはできません。残高を少なくとも%1$sに維持するか、すべての資金を引き出してください。</string>
   <string name="send_notification_invalid_amount_text">手数料が送金金額を超えており、マイナスの値になってしまいます。</string>
   <string name="send_notification_invalid_amount_title">無効な金額</string>
@@ -845,7 +886,7 @@
   <string name="send_recent_transactions">最近の取引</string>
   <string name="send_recipient">受取人</string>
   <string name="send_recipient_address_error">有効なアドレスではありません</string>
-  <string name="send_recipient_address_footer">トークンを失わないように、受信ウォレットアドレスが%sネットワーク上にあることを確認してください。</string>
+  <string name="send_recipient_address_footer">トークンの損失を避けるために、受信ウォレットアドレスが** %sネットワーク**上にあることを確認してください</string>
   <string name="send_recipient_address_footer_highlighted_part">%s に送信</string>
   <string name="send_recipient_address_footer_v2">%sネットワークアドレスを確認してください。エラーが発生すると転送が失われる可能性があります。</string>
   <string name="send_recipient_label">送金先</string>
@@ -864,6 +905,7 @@
   <string name="send_summary_transaction_description_suffix_fee_covered">ネットワーク手数料は%1$sエネルギーを使用してカバーされます</string>
   <string name="send_summary_transaction_description_suffix_fee_reduced">%1$sエネルギーを使用するとネットワーク手数料が減額されます</string>
   <string name="send_summary_transaction_description_suffix_including">ネットワーク手数料%1$sを含む</string>
+  <string name="send_to_address">アドレスへ</string>
   <string name="send_transaction_success">取引は正常に署名され、ブロックチェーンノードに送信されました。ウォレットの残高はしばらくして更新されます。</string>
   <string name="send_tron_account_activation_error">%1$sはTronネットワークのアセットです。手数料を計算して取引を行うには、アカウントにTron（TRX）を入金する必要があります。</string>
   <string name="send_validation_amount_exceeds_balance">金額が残高を超えています</string>
@@ -873,6 +915,8 @@
   <string name="send_validation_invalid_fee">手数料が残高を超えています</string>
   <string name="send_validation_invalid_total">合計金額が残高を超えています</string>
   <string name="send_with_swap_notification_text">トークンを送信すれば、送信中に変換されます。受信者は必要なものをシームレスに受け取ります。</string>
+  <string name="send_with_swap_recipient_amount_text">受信者に送信されます</string>
+  <string name="send_with_swap_recipient_amount_title">受取金額</string>
   <string name="send_with_swap_title">スワップして送信</string>
   <string name="sent_transaction_sent_title">取引が送信されました</string>
   <string name="settings_card_settings_footer">設定したいカードまたはリングをスキャンするために準備してください。</string>
@@ -1028,6 +1072,7 @@
   <string name="swap_story_second_title">破格のレート</string>
   <string name="swap_story_third_subtitle">手間がかからず直感的に操作でき、数回タップするだけでトークンを交換できます。</string>
   <string name="swap_story_third_title">とにかく便利</string>
+  <string name="swap_via_provider">プロバイダー経由のスワップ</string>
   <string name="swapping_alert_cex_description">この金額には以下が含まれます：\n- サービスプロバイダーの手数料\n- 取引所からユーザーのアドレスに%s を送り返すためのネットワーク手数料。</string>
   <string name="swapping_alert_cex_description_with_slippage">金額には以下が含まれます: \n • サービス プロバイダーの手数料\n • 取引所からユーザーのアドレスに%1$sを送金するためのネットワーク手数料。 \n\nプロバイダーのスリッページは最大%2$sです</string>
   <string name="swapping_alert_dex_description">この金額には、サービスプロバイダーの手数料が含まれています。</string>
@@ -1178,6 +1223,27 @@
   <string name="wallet_connect_subtitle">dAppsに接続する</string>
   <string name="wallet_connect_title">WalletConnect</string>
   <string name="wallet_connect_toast_awaiting_session_proposal">接続には数秒かかる場合があります</string>
+  <string name="wallet_create_hardware_badge">%sから</string>
+  <string name="wallet_create_hardware_description">Tangemウォレットを購入 — 暗号資産をオフラインで安全に保管できる物理カードです。</string>
+  <string name="wallet_create_hardware_title">ハードウェアウォレット</string>
+  <string name="wallet_create_mobile_description">数秒でスマートフォンに安全なウォレットが作成されます。</string>
+  <string name="wallet_create_mobile_title">モバイルウォレット</string>
+  <string name="wallet_create_nav_info_title">何を選ぶべき？</string>
+  <string name="wallet_create_scan_question">すでにTangemウォレットをお持ちですか？</string>
+  <string name="wallet_create_scan_title">今すぐスキャン</string>
+  <string name="wallet_create_title">ウォレットの作成方法を選択してください</string>
+  <string name="wallet_import_buy_question">Tangemウォレットを購入しますか？</string>
+  <string name="wallet_import_buy_title">今すぐ購入</string>
+  <string name="wallet_import_navtitle">既存のウォレットを追加</string>
+  <string name="wallet_import_scan_description">暗号資産をオフラインで安全に保管する物理カード。</string>
+  <string name="wallet_import_scan_title">Tangemウォレットをスキャンする</string>
+  <string name="wallet_import_seed_description">ウォレットを復元するためのシードフレーズ</string>
+  <string name="wallet_import_seed_navtitle">ウォレットをインポート</string>
+  <string name="wallet_import_seed_title">リカバリーフレーズをインポートする</string>
+  <string name="wallet_import_success_description">ウォレットのバックアップが正常に完了しました。</string>
+  <string name="wallet_import_success_navtitle">ウォレットをインポート</string>
+  <string name="wallet_import_success_title">インポート完了</string>
+  <string name="wallet_import_title">ウォレットをインポート</string>
   <string name="wallet_marketplace_block_title">%s市場価格</string>
   <string name="wallet_marketprice_block_update_time">直近24時間</string>
   <string name="wallet_network_group_title">%sネットワーク</string>
@@ -1186,6 +1252,8 @@
   <string name="wallet_promo_banner_button_title">今すぐ10 % オフで購入</string>
   <string name="wallet_promo_banner_description">1.3万種類以上の暗号資産にアクセス。ワンタップで買付、売却、スワップ、ステーキングが可能です。\nバックアップ用に最大3枚のカードを連携できます。</string>
   <string name="wallet_promo_banner_title">Tangemウォレットを見る</string>
+  <string name="wallet_settings_access_code_description">このウォレットを保護するためのシークレットコードです。ログインと署名に使用されます。</string>
+  <string name="wallet_settings_access_code_title">アクセスコードの設定 / 変更</string>
   <string name="wallet_settings_push_notifications_description">ウォレットの受信取引とTangemの更新について通知を受け取る。</string>
   <string name="wallet_settings_push_notifications_title">取引通知</string>
   <string name="wallet_settings_title">ウォレット設定</string>
@@ -1274,6 +1342,10 @@
   <string name="warning_some_networks_unreachable_message">下にスワイプして更新するか、後でもう一度お試しください。</string>
   <string name="warning_some_networks_unreachable_title">一部のネットワークにアクセスできません</string>
   <string name="warning_some_token_balances_not_updated">一部のトークン残高を更新できませんでした</string>
+  <string name="warning_stellar_token_trustline_button_title">トラストラインを有効にする</string>
+  <string name="warning_stellar_token_trustline_not_enough_xlm">%sが足りません。このトークンを関連付けるには、XLMアカウントに資金を追加してください。</string>
+  <string name="warning_stellar_token_trustline_subtitle">このトークンを受け取るには、トラストラインを有効にする必要があります。ネットワークには 0.5 XLMの準備金が必要です。</string>
+  <string name="warning_stellar_token_trustline_title">トラストラインが必要</string>
   <string name="warning_testnet_card_message">これはテストネットカードです。取引処理はできませんので、テストおよび開発目的でのみご利用ください。</string>
   <string name="warning_testnet_card_title">テスト目的のみ</string>
   <string name="warning_token_balance_not_updated">残高が古い可能性があります。ページを更新してください。</string>
