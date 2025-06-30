@@ -1,6 +1,5 @@
 package com.tangem.features.swap.v2.impl.amount
 
-import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.swap.models.SwapDirection
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -15,19 +14,19 @@ internal sealed class SwapAmountComponentParams {
     abstract val amountUM: SwapAmountUM
     abstract val analyticsCategoryName: String
     abstract val userWallet: UserWallet
-    abstract val appCurrency: AppCurrency
     abstract val swapDirection: SwapDirection
     abstract val isBalanceHidingFlow: StateFlow<Boolean>
+    abstract val primaryCryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>
+    abstract val secondaryCryptoCurrency: CryptoCurrency?
 
     data class AmountParams(
         override val amountUM: SwapAmountUM,
         override val analyticsCategoryName: String,
         override val userWallet: UserWallet,
         override val isBalanceHidingFlow: StateFlow<Boolean>,
-        override val appCurrency: AppCurrency,
         override val swapDirection: SwapDirection,
-        val primaryCryptoCurrency: CryptoCurrency,
-        val secondaryCryptoCurrency: CryptoCurrency?,
+        override val primaryCryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>,
+        override val secondaryCryptoCurrency: CryptoCurrency?,
         val callback: SwapAmountComponent.ModelCallback,
         val currentRoute: Flow<SwapRoute.Amount>,
     ) : SwapAmountComponentParams()
@@ -37,10 +36,9 @@ internal sealed class SwapAmountComponentParams {
         override val analyticsCategoryName: String,
         override val userWallet: UserWallet,
         override val isBalanceHidingFlow: StateFlow<Boolean>,
-        override val appCurrency: AppCurrency,
         override val swapDirection: SwapDirection,
-        val primaryCryptoCurrencyStatus: CryptoCurrencyStatus,
-        val secondaryCryptoCurrencyStatus: CryptoCurrencyStatus?,
+        override val primaryCryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>,
+        override val secondaryCryptoCurrency: CryptoCurrency?,
         val blockClickEnableFlow: StateFlow<Boolean>,
     ) : SwapAmountComponentParams()
 }
