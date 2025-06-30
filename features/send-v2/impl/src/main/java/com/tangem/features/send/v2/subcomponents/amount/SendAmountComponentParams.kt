@@ -2,8 +2,10 @@ package com.tangem.features.send.v2.subcomponents.amount
 
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.send.v2.common.CommonSendRoute
 import com.tangem.features.send.v2.common.PredefinedValues
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponent.ModelCallback
@@ -14,20 +16,22 @@ internal sealed class SendAmountComponentParams {
 
     abstract val state: AmountState
     abstract val analyticsCategoryName: String
-    abstract val userWallet: UserWallet
+    abstract val userWalletId: UserWalletId
     abstract val appCurrency: AppCurrency
-    abstract val cryptoCurrencyStatus: CryptoCurrencyStatus
     abstract val predefinedValues: PredefinedValues
     abstract val isRedesignEnabled: Boolean
+    abstract val cryptoCurrency: CryptoCurrency
+    abstract val cryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>
 
     data class AmountParams(
         override val state: AmountState,
         override val analyticsCategoryName: String,
-        override val userWallet: UserWallet,
+        override val userWalletId: UserWalletId,
         override val appCurrency: AppCurrency,
-        override val cryptoCurrencyStatus: CryptoCurrencyStatus,
         override val predefinedValues: PredefinedValues,
         override val isRedesignEnabled: Boolean,
+        override val cryptoCurrency: CryptoCurrency,
+        override val cryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>,
         val callback: ModelCallback,
         val currentRoute: Flow<CommonSendRoute.Amount>,
         val isBalanceHidingFlow: StateFlow<Boolean>,
@@ -38,11 +42,13 @@ internal sealed class SendAmountComponentParams {
     data class AmountBlockParams(
         override val state: AmountState,
         override val analyticsCategoryName: String,
-        override val userWallet: UserWallet,
         override val appCurrency: AppCurrency,
-        override val cryptoCurrencyStatus: CryptoCurrencyStatus,
+        override val userWalletId: UserWalletId,
         override val predefinedValues: PredefinedValues,
         override val isRedesignEnabled: Boolean,
+        override val cryptoCurrency: CryptoCurrency,
+        override val cryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>,
+        val userWallet: UserWallet,
         val blockClickEnableFlow: StateFlow<Boolean>,
     ) : SendAmountComponentParams()
 }
