@@ -574,7 +574,7 @@
   <string name="nft_receive_unavailable_asset_warning_title">Netzwerk nicht hinzugefügt</string>
   <string name="nft_receive_unavailable_section_title">Nicht hinzugefügt</string>
   <string name="nft_receive_unsupported_types">Nicht unterstützte NFT-Arten</string>
-  <string name="nft_receive_unsupported_types_description">cNFTs und pNFTs werden noch nicht unterstützt</string>
+  <string name="nft_receive_unsupported_types_description">cNFTs und pNFTs werden derzeit nicht unterstützt. Bitte sende diese nicht an Deine Wallet.</string>
   <string name="nft_send">NFT senden</string>
   <string name="nft_traits_title">Eigenschaften</string>
   <string name="nft_untitled_collection">Unbetitelte Sammlung</string>
@@ -821,6 +821,7 @@
   <string name="send_fee_unreachable_error_text">Überprüfe deine Netzwerkverbindung</string>
   <string name="send_fee_unreachable_error_title">Informationen zur Netzwerkgebühr nicht erreichbar</string>
   <string name="send_from_wallet_android">Von</string>
+  <string name="send_from_wallet_name">Von %s</string>
   <string name="send_gas_limit">Grenzwert Gasgebühr</string>
   <string name="send_gas_limit_footer">Dies ist die maximale Gasgebühr, die für den Abschluss einer Transaktion oder eines Vertrags ausgegeben wird. Ein Gaslimit verhindert unerwartete oder unbegrenzte Gebühren bei der Ausführung einer Transaktion.</string>
   <string name="send_gas_price">Gaspreis</string>
@@ -828,6 +829,7 @@
   <string name="send_max_amount">Max</string>
   <string name="send_max_amount_label">Höchstbetrag</string>
   <string name="send_max_fee">Gebühr bis zu</string>
+  <string name="send_memo">Memo: %s</string>
   <string name="send_memo_destination_tag_error">Ungültiges Memo</string>
   <string name="send_network_fee_warning_title">Abdeckung der Netzgebühren</string>
   <string name="send_nonce">Nonce</string>
@@ -878,6 +880,7 @@
   <string name="send_summary_transaction_description_suffix_fee_covered">Die Netzwerkgebühr wird durch die Nutzung von %1$s Energieträgern gedeckt.</string>
   <string name="send_summary_transaction_description_suffix_fee_reduced">Die Netzwerkgebühr wird durch den Verbrauch von %1$s Energie reduziert</string>
   <string name="send_summary_transaction_description_suffix_including">inklusive einer Netzgebühr von %1$s</string>
+  <string name="send_to_address">Zur Adresse</string>
   <string name="send_transaction_success">Die Transaktion wurde erfolgreich signiert und an den Blockchain-Knoten gesendet. Die Walletbilanz wird aktualisiert</string>
   <string name="send_tron_account_activation_error">%1$s ist ein Vermögenswert im Tron-Netzwerk. Um die Gebühr zu berechnen und eine Transaktion durchzuführen, musst du etwas Tron (TRX) auf deinem Konto einzahlen.</string>
   <string name="send_validation_amount_exceeds_balance">Der Betrag geht über die Bilanz hinaus</string>
@@ -887,6 +890,7 @@
   <string name="send_validation_invalid_fee">Die Gebühr geht über die Bilanz hinaus</string>
   <string name="send_validation_invalid_total">Der Gesamtbetrag geht über die Bilanz hinaus</string>
   <string name="send_with_swap_notification_text">Sende uns ein Token, und wir konvertieren es unterwegs. Dein Empfänger erhält genau das, was er braucht – nahtlos.</string>
+  <string name="send_with_swap_recipient_amount_text">Wird an den Empfänger gesendet</string>
   <string name="send_with_swap_title">Senden mit Swap</string>
   <string name="sent_transaction_sent_title">Transaktion gesendet</string>
   <string name="settings_card_settings_footer">Bereite das Scannen der Karte oder Ring vor, die du einrichten möchtest.</string>
