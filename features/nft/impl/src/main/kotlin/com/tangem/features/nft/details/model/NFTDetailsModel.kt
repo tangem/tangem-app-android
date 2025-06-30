@@ -9,11 +9,13 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.nft.FetchNFTCollectionAssetsUseCase
@@ -52,6 +54,7 @@ internal class NFTDetailsModel @Inject constructor(
     private val fetchNFTCollectionAssetsUseCase: FetchNFTCollectionAssetsUseCase,
     private val fetchNFTPriceUseCase: FetchNFTPriceUseCase,
     private val clipboardManager: ClipboardManager,
+    private val uiMessageSender: UiMessageSender,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
@@ -215,5 +218,8 @@ internal class NFTDetailsModel @Inject constructor(
             is NFTAsset.Identifier.Unknown -> return
         }
         clipboardManager.setText(text = addressToCopy, isSensitive = false)
+        uiMessageSender.send(
+            message = SnackbarMessage(message = resourceReference(R.string.wallet_notification_address_copied)),
+        )
     }
 }
