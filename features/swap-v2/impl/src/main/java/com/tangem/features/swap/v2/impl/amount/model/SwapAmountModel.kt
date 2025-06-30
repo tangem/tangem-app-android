@@ -1,6 +1,7 @@
 package com.tangem.features.swap.v2.impl.amount.model
 
 import arrow.core.getOrElse
+import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.amountScreen.converters.MaxEnterAmountConverter
@@ -29,6 +30,7 @@ import com.tangem.domain.tokens.GetMultiCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.transaction.usecase.GetAllowanceUseCase
 import com.tangem.features.swap.v2.impl.R
+import com.tangem.features.swap.v2.impl.amount.SwapAmountBlockComponent.SwapChooseProviderConfig
 import com.tangem.features.swap.v2.impl.amount.SwapAmountComponentParams
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountFieldUM
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountType
@@ -64,6 +66,7 @@ internal class SwapAmountModel @Inject constructor(
     private val getAllowanceUseCase: GetAllowanceUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val appRouter: AppRouter,
+    private val swapAlertFactory: SwapAlertFactory,
 ) : Model(), SwapAmountClickIntents, SwapChooseProviderComponent.ModelCallback {
 
     private val params: SwapAmountComponentParams = paramsContainer.require()
@@ -84,6 +87,8 @@ internal class SwapAmountModel @Inject constructor(
     private var secondaryMaximumAmountBoundary: EnterAmountBoundary by Delegates.notNull()
     private var primaryMinimumAmountBoundary: EnterAmountBoundary by Delegates.notNull()
     private var secondaryMinimumAmountBoundary: EnterAmountBoundary by Delegates.notNull()
+
+    val bottomSheetNavigation: SlotNavigation<SwapChooseProviderConfig> = SlotNavigation()
 
     val uiState: StateFlow<SwapAmountUM>
     field = MutableStateFlow(params.amountUM)
@@ -119,6 +124,18 @@ internal class SwapAmountModel @Inject constructor(
                 selectedAmountType = selectedAmountType,
             )
         }
+    }
+
+    override fun onInfoClick() {
+        val amountUM = uiState.value as? SwapAmountUM.Content ?: return
+        val selectedProvider = amountUM.selectedQuote.provider ?: return
+        val cryptoCurrency = secondaryCryptoCurrency ?: return
+
+        swapAlertFactory.priceImpactAlert(
+            hasPriceImpact = (amountUM.secondaryAmount as? SwapAmountFieldUM.Content)?.priceImpact != null,
+            currencySymbol = cryptoCurrency.symbol,
+            provider = selectedProvider,
+        )
     }
 
     override fun onAmountValueChange(value: String) {
