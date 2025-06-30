@@ -12,6 +12,7 @@ import java.math.BigDecimal
 sealed class AmountState {
 
     abstract val isPrimaryButtonEnabled: Boolean
+    abstract val isRedesignEnabled: Boolean
 
     /**
      * @param isPrimaryButtonEnabled indicates if next state button enabled
@@ -29,6 +30,7 @@ sealed class AmountState {
      */
     data class Data(
         override val isPrimaryButtonEnabled: Boolean,
+        override val isRedesignEnabled: Boolean,
         val title: TextReference,
         val availableBalance: TextReference,
         val tokenName: TextReference,
@@ -41,10 +43,10 @@ sealed class AmountState {
         val isEditingDisabled: Boolean = false,
         val reduceAmountBy: BigDecimal = BigDecimal.ZERO,
         val isIgnoreReduce: Boolean = false,
-        val isRedesignEnabled: Boolean,
     ) : AmountState()
 
     data class Empty(
         override val isPrimaryButtonEnabled: Boolean = false,
+        override val isRedesignEnabled: Boolean,
     ) : AmountState()
 }
