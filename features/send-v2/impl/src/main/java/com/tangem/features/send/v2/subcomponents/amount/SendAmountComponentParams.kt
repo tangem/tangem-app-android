@@ -7,7 +7,7 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.send.v2.common.CommonSendRoute
-import com.tangem.features.send.v2.common.PredefinedValues
+import com.tangem.features.send.v2.api.entity.PredefinedValues
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponent.ModelCallback
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
