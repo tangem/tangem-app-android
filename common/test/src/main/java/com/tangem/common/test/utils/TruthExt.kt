@@ -5,9 +5,9 @@ import com.google.common.truth.Truth
 
 fun <B> assertEither(actual: Either<Throwable, B>, expected: Either<Throwable, B>) {
     actual
-        .onRight { Truth.assertThat(it).isEqualTo(expected) }
+        .onRight { Truth.assertThat(actual).isEqualTo(expected) }
         .onLeft {
-            val expectedError = expected.leftOrNull() ?: error("Expected must be Either.Left")
+            val expectedError = expected.leftOrNull() ?: error("Actual is Either.Left: $it")
 
             Truth.assertThat(it::class.java).isEqualTo(expectedError::class.java)
         }
