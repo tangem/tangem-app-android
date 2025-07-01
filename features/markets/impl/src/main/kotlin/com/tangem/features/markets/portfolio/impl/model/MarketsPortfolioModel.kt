@@ -100,6 +100,7 @@ internal class MarketsPortfolioModel @Inject constructor(
             )
         },
         addToPortfolioBSContentUMFactory = AddToPortfolioBSContentUMFactory(
+            addToPortfolioManager = addToPortfolioManager,
             token = params.token,
             onAddToPortfolioVisibilityChange = ::onAddToPortfolioBSVisibilityChange,
             onWalletSelectorVisibilityChange = ::onWalletSelectorVisibilityChange,
@@ -175,7 +176,7 @@ internal class MarketsPortfolioModel @Inject constructor(
 
     private fun subscribeOnStateUpdates() {
         combine(
-            flow = loadPortfolioData(params.token.id, addToPortfolioManager.availableNetworks),
+            flow = loadPortfolioData(params.token.id),
             flow2 = getPortfolioUIDataFlow(),
             flow3 = artworksState,
             transform = factory::create,
@@ -184,11 +185,8 @@ internal class MarketsPortfolioModel @Inject constructor(
             .launchIn(modelScope)
     }
 
-    private fun loadPortfolioData(
-        currencyRawId: CryptoCurrency.RawID,
-        availableNetworksFlow: Flow<Set<TokenMarketInfo.Network>?>,
-    ): Flow<PortfolioData> {
-        portfolioDataLoader.load(currencyRawId, availableNetworksFlow).onEach {
+    private fun loadPortfolioData(currencyRawId: CryptoCurrency.RawID): Flow<PortfolioData> {
+        portfolioDataLoader.load(currencyRawId).onEach {
             loadArtworks(it.walletsWithCurrencies.keys.toList())
         }.also { return it }
     }
