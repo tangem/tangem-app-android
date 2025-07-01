@@ -24,6 +24,8 @@ import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.walletconnect.WcRequestUseCaseFactory
 import com.tangem.domain.walletconnect.usecase.method.*
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.features.send.v2.api.callbacks.FeeSelectorModelCallback
+import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.features.send.v2.api.params.FeeSelectorParams
 import com.tangem.features.walletconnect.connections.routing.WcInnerRoute
 import com.tangem.features.walletconnect.transaction.components.common.WcTransactionModelParams
@@ -54,18 +56,18 @@ internal class WcSendTransactionModel @Inject constructor(
     private val blockAidUiConverter: WcSendAndReceiveBlockAidUiConverter,
     private val getFeeUseCase: GetFeeUseCase,
     private val getNetworkCoinUseCase: GetNetworkCoinStatusUseCase,
-) : Model(), WcCommonTransactionModel {
+) : Model(), WcCommonTransactionModel, FeeSelectorModelCallback {
 
     private val params = paramsContainer.require<WcTransactionModelParams>()
 
     private val _uiState = MutableStateFlow<WcSendTransactionUM?>(null)
-    override val uiState: StateFlow<WcSendTransactionUM?> = _uiState
+    override val uiState: StateFlow<WcSendTransactionUM?> = _uiState.asStateFlow()
 
     val stackNavigation = StackNavigation<WcTransactionRoutes>()
 
-    internal var useCase: WcSignUseCase<*> by Delegates.notNull()
     internal var cryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
     internal var suggestedFeeState: FeeSelectorParams.SuggestedFeeState = FeeSelectorParams.SuggestedFeeState.None
+    private var useCase: WcSignUseCase<*> by Delegates.notNull()
     private var signState: WcSignState<*> by Delegates.notNull()
     private var wcApproval: WcApproval? = null
     private var sign: () -> Unit = {}
@@ -116,6 +118,12 @@ internal class WcSendTransactionModel @Inject constructor(
         }
     }
 
+    override fun onFeeResult(feeSelectorUM: FeeSelectorUM) {
+        _uiState.update { it?.copy(feeSelectorUM = feeSelectorUM) }
+        val fee = (feeSelectorUM as? FeeSelectorUM.Content)?.selectedFeeItem?.fee ?: return
+        (useCase as? WcMutableFee)?.updateFee(fee)
+    }
+
     suspend fun loadFee(): Either<GetFeeError, TransactionFee> {
         val signModel = signState.signModel
         val transactionData = signModel as? TransactionData.Uncompiled ?: error("TransactionData must be Uncompiled")
@@ -162,7 +170,9 @@ internal class WcSendTransactionModel @Inject constructor(
                     onDismiss = { cancel(useCase) },
                     onSign = { onSign(securityCheck.getOrNull()) },
                     onCopy = { copyData(useCase.rawSdkRequest.request.params) },
+                    onShowFeeBottomSheet = ::onShowFeeBottomSheet,
                 ),
+                feeSelectorUM = uiState.value?.feeSelectorUM,
             ),
         ) as? WcSendTransactionUM
         transactionUM = transactionUM?.copy(
@@ -178,6 +188,10 @@ internal class WcSendTransactionModel @Inject constructor(
 
     fun showTransactionRequest() {
         stackNavigation.pushNew(WcTransactionRoutes.TransactionRequestInfo)
+    }
+
+    private fun onShowFeeBottomSheet() {
+        stackNavigation.pushNew(WcTransactionRoutes.SelectFee)
     }
 
     private fun onSign(securityCheck: BlockAidTransactionCheck.Result?) {
