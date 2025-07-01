@@ -226,6 +226,8 @@ dependencies {
     implementation(projects.features.kyc.impl)
     implementation(projects.features.welcome.api)
     implementation(projects.features.welcome.impl)
+    implementation(projects.features.createWalletSelection.api)
+    implementation(projects.features.createWalletSelection.impl)
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)
