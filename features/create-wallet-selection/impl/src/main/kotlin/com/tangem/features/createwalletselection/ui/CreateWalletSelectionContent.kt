@@ -8,6 +8,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -17,6 +18,7 @@ import com.tangem.core.ui.components.buttons.common.TangemButton
 import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
 import com.tangem.core.ui.components.buttons.common.TangemButtonSize
 import com.tangem.core.ui.components.buttons.common.TangemButtonsDefaults
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.createwalletselection.entity.CreateWalletSelectionUM
@@ -27,13 +29,13 @@ import com.tangem.features.createwalletselection.impl.R
 @Composable
 internal fun CreateWalletSelectionContent(state: CreateWalletSelectionUM, modifier: Modifier = Modifier) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .background(TangemTheme.colors.background.primary)
             .fillMaxSize()
             .systemBarsPadding(),
     ) {
         TopAppBar(
-            modifier = modifier
+            modifier = Modifier
                 .statusBarsPadding(),
             colors = TopAppBarDefaults.topAppBarColors(
                 containerColor = TangemTheme.colors.background.primary,
@@ -52,8 +54,7 @@ internal fun CreateWalletSelectionContent(state: CreateWalletSelectionUM, modifi
                 Text(
                     modifier = Modifier
                         .padding(16.dp),
-                    // TODO [REDACTED_TASK_KEY] update and extract this string
-                    text = "What to choose?",
+                    text = stringResourceSafe(R.string.wallet_create_nav_info_title),
                     style = TangemTheme.typography.body1,
                     color = TangemTheme.colors.text.primary1,
                     maxLines = 1,
@@ -74,8 +75,7 @@ internal fun CreateWalletSelectionContent(state: CreateWalletSelectionUM, modifi
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
-                // TODO [REDACTED_TASK_KEY] update and extract this string
-                text = "Choose how you want to create your wallet",
+                text = stringResourceSafe(R.string.wallet_create_title),
                 style = TangemTheme.typography.h2,
                 color = TangemTheme.colors.text.primary1,
                 textAlign = TextAlign.Center,
@@ -83,10 +83,8 @@ internal fun CreateWalletSelectionContent(state: CreateWalletSelectionUM, modifi
             WalletBlock(
                 modifier = Modifier
                     .padding(top = 24.dp),
-                // TODO [REDACTED_TASK_KEY] update and extract this string
-                title = "Mobile Wallet",
-                // TODO [REDACTED_TASK_KEY] update and extract this string
-                description = "A secure wallet is created on your phone in seconds.",
+                title = stringResourceSafe(R.string.wallet_create_mobile_title),
+                description = stringResourceSafe(R.string.wallet_create_mobile_description),
                 badge = {
                     Box(
                         modifier = Modifier
@@ -97,8 +95,7 @@ internal fun CreateWalletSelectionContent(state: CreateWalletSelectionUM, modifi
                             .padding(horizontal = 8.dp, vertical = 4.dp),
                     ) {
                         Text(
-                            // TODO [REDACTED_TASK_KEY] update and extract this string
-                            text = "Free",
+                            text = stringResourceSafe(R.string.common_free),
                             style = TangemTheme.typography.caption1,
                             color = TangemTheme.colors.text.secondary,
                         )
@@ -107,10 +104,8 @@ internal fun CreateWalletSelectionContent(state: CreateWalletSelectionUM, modifi
                 onClick = state.onMobileWalletClick,
             )
             WalletBlock(
-                // TODO [REDACTED_TASK_KEY] update and extract this string
-                title = "Hardware Wallet",
-                // TODO [REDACTED_TASK_KEY] update and extract this string
-                description = "Buy Tangem Wallet — physical cards that securely store your crypto offline.",
+                title = stringResourceSafe(R.string.wallet_create_hardware_title),
+                description = stringResourceSafe(R.string.wallet_create_hardware_description),
                 badge = {
                     Box(
                         modifier = Modifier
@@ -121,8 +116,7 @@ internal fun CreateWalletSelectionContent(state: CreateWalletSelectionUM, modifi
                             .padding(horizontal = 8.dp, vertical = 4.dp),
                     ) {
                         Text(
-                            // TODO [REDACTED_TASK_KEY] update and extract this string
-                            text = "From $54.90",
+                            text = stringResourceSafe(R.string.wallet_create_hardware_badge, state.hardwareWalletPrice),
                             style = TangemTheme.typography.caption1,
                             color = TangemTheme.colors.text.accent,
                         )
@@ -150,12 +144,13 @@ private fun WalletBlock(
         modifier = modifier
             .fillMaxWidth()
             .padding(top = 8.dp)
+            .clip(TangemTheme.shapes.roundedCornersXMedium)
             .background(
                 color = TangemTheme.colors.background.secondary,
                 shape = TangemTheme.shapes.roundedCornersXMedium,
             )
-            .padding(16.dp)
-            .clickable(onClick = onClick),
+            .clickable(onClick = onClick)
+            .padding(16.dp),
     ) {
         Row {
             Text(
@@ -202,16 +197,14 @@ private fun AlreadyHaveTangemWalletBlock(
             modifier = Modifier
                 .weight(1f)
                 .padding(end = 16.dp),
-            // TODO [REDACTED_TASK_KEY] update and extract this string
-            text = "Do you already have Tangem Wallet?",
+            text = stringResourceSafe(R.string.wallet_create_scan_question),
             style = TangemTheme.typography.button,
             color = TangemTheme.colors.text.primary1,
         )
         TangemButton(
             modifier = Modifier
                 .wrapContentWidth(),
-            // TODO [REDACTED_TASK_KEY] update and extract this string
-            text = "Scan Now",
+            text = stringResourceSafe(R.string.wallet_create_scan_title),
             onClick = onScanClick,
             icon = TangemButtonIconPosition.End(iconResId = R.drawable.ic_tangem_24),
             size = TangemButtonSize.RoundedAction,
