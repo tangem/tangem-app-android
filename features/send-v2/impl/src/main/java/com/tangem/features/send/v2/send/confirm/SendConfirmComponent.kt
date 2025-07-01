@@ -16,22 +16,21 @@ import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.send.v2.api.SendNotificationsComponent
 import com.tangem.features.send.v2.api.SendNotificationsComponent.Params.NotificationData
+import com.tangem.features.send.v2.api.entity.PredefinedValues
+import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationComponentParams.DestinationBlockParams
 import com.tangem.features.send.v2.common.CommonSendRoute
-import com.tangem.features.send.v2.common.PredefinedValues
 import com.tangem.features.send.v2.common.ui.state.ConfirmUM
 import com.tangem.features.send.v2.send.confirm.model.SendConfirmModel
 import com.tangem.features.send.v2.send.confirm.ui.SendConfirmContent
 import com.tangem.features.send.v2.send.ui.state.SendUM
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountBlockComponent
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponentParams
-import com.tangem.features.send.v2.subcomponents.destination.SendDestinationBlockComponent
-import com.tangem.features.send.v2.subcomponents.destination.SendDestinationComponentParams.DestinationBlockParams
+import com.tangem.features.send.v2.subcomponents.destination.DefaultSendDestinationBlockComponent
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeBlockComponent
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeComponentParams
 import com.tangem.features.send.v2.subcomponents.notifications.DefaultSendNotificationsComponent
 import com.tangem.utils.extensions.orZero
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.flow.StateFlow
 
 internal class SendConfirmComponent(
     appComponentContext: AppComponentContext,
@@ -43,7 +42,7 @@ internal class SendConfirmComponent(
     private val blockClickEnableFlow = MutableStateFlow(false)
 
     private val destinationBlockComponent =
-        SendDestinationBlockComponent(
+        DefaultSendDestinationBlockComponent(
             appComponentContext = child("sendConfirmDestinationBlock"),
             params = DestinationBlockParams(
                 state = model.uiState.value.destinationUM,
