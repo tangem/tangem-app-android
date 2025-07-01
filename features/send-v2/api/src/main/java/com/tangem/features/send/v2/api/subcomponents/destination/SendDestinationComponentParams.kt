@@ -1,16 +1,14 @@
-package com.tangem.features.send.v2.subcomponents.destination
+package com.tangem.features.send.v2.api.subcomponents.destination
 
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.features.send.v2.common.CommonSendRoute
-import com.tangem.features.send.v2.common.PredefinedValues
-import com.tangem.features.send.v2.subcomponents.destination.SendDestinationComponent.ModelCallback
-import com.tangem.features.send.v2.subcomponents.destination.ui.state.DestinationUM
+import com.tangem.features.send.v2.api.entity.PredefinedValues
+import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
-internal sealed class SendDestinationComponentParams {
+sealed class SendDestinationComponentParams {
 
     abstract val state: DestinationUM
     abstract val analyticsCategoryName: String
@@ -24,8 +22,8 @@ internal sealed class SendDestinationComponentParams {
         override val userWalletId: UserWalletId,
         val title: TextReference,
         val isBalanceHidingFlow: StateFlow<Boolean>,
-        val currentRoute: Flow<CommonSendRoute.Destination>,
-        val callback: ModelCallback,
+        val currentRoute: Flow<DestinationRoute>,
+        val callback: SendDestinationComponent.ModelCallback,
         val onBackClick: () -> Unit,
         val onNextClick: () -> Unit,
     ) : SendDestinationComponentParams()
