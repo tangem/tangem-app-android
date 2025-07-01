@@ -2,6 +2,7 @@ package com.tangem.domain.tokens.repository
 
 import arrow.core.Either
 import arrow.core.getOrElse
+import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.core.error.DataError
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
@@ -165,5 +166,9 @@ internal class MockCurrenciesRepository(
 
     override suspend fun syncTokens(userWalletId: UserWalletId) {
         return Unit
+    }
+
+    override fun getCardTypesResolver(userWalletId: UserWalletId): CardTypesResolver {
+        error("No-op")
     }
 }
