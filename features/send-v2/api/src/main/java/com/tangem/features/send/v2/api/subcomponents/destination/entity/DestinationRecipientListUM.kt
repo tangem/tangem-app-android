@@ -1,4 +1,4 @@
-package com.tangem.features.send.v2.subcomponents.destination.ui.state
+package com.tangem.features.send.v2.api.subcomponents.destination.entity
 
 import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
@@ -7,7 +7,7 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.wallets.models.UserWalletId
 
 @Immutable
-internal data class DestinationRecipientListUM(
+data class DestinationRecipientListUM(
     val id: String,
     val title: TextReference = TextReference.Companion.EMPTY,
     val subtitle: TextReference = TextReference.Companion.EMPTY,
