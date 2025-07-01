@@ -194,7 +194,7 @@ private class WcSendTransactionStateProvider : CollectionPreviewParameterProvide
             ),
             walletName = "Tangem 2.0",
             networkInfo = WcNetworkInfoUM(name = "Ethereum", iconRes = R.drawable.img_eth_22),
-            feeState = WcTransactionFeeState.Loading,
+            feeState = WcTransactionFeeState.None,
             address = "0x345FF...34FA",
         ),
     ),
