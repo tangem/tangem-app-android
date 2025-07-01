@@ -560,7 +560,7 @@
   <string name="nft_untitled_collection">Colección sin título</string>
   <string name="nft_wallet_count">%1$d NFT en %2$d colecciones</string>
   <plurals name="nft_wallet_count_android">
-    <item quantity="one"></item>
+    <item quantity="one">%1$d NFT en %2$d coleccione</item>
     <item quantity="other">%1$d NFTs en %2$d colecciones</item>
   </plurals>
   <string name="nft_wallet_receive_nft">Pulse aquí para recibir el primer NFT</string>
