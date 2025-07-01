@@ -15,6 +15,7 @@ import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.hotwallet.createmobilewallet.entity.CreateMobileWalletUM
@@ -24,13 +25,13 @@ import com.tangem.features.hotwallet.createmobilewallet.entity.CreateMobileWalle
 @Composable
 internal fun CreateMobileWalletContent(state: CreateMobileWalletUM, modifier: Modifier = Modifier) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .background(TangemTheme.colors.background.primary)
             .fillMaxSize()
             .systemBarsPadding(),
     ) {
         TangemTopAppBar(
-            modifier = modifier
+            modifier = Modifier
                 .statusBarsPadding(),
             startButton = TopAppBarButtonUM.Back(state.onBackClick),
             title = TextReference.EMPTY,
@@ -59,8 +60,7 @@ internal fun CreateMobileWalletContent(state: CreateMobileWalletUM, modifier: Mo
                         top = 20.dp,
                         end = 16.dp,
                     ),
-// [REDACTED_TODO_COMMENT]
-                text = "Create Mobile Wallet",
+                text = stringResourceSafe(R.string.hw_create_title),
                 style = TangemTheme.typography.h2,
                 color = TangemTheme.colors.text.primary1,
                 textAlign = TextAlign.Center,
@@ -68,19 +68,15 @@ internal fun CreateMobileWalletContent(state: CreateMobileWalletUM, modifier: Mo
             FeatureBlock(
                 modifier = Modifier
                     .padding(top = 32.dp),
-// [REDACTED_TODO_COMMENT]
-                title = "Keys are stored in the app",
-// [REDACTED_TODO_COMMENT]
-                description = "Get notified of incoming transactions",
+                title = stringResourceSafe(R.string.hw_create_keys_title),
+                description = stringResourceSafe(R.string.hw_create_keys_description),
                 iconRes = R.drawable.ic_lock_24,
             )
             FeatureBlock(
                 modifier = Modifier
                     .padding(top = 24.dp),
-// [REDACTED_TODO_COMMENT]
-                title = "Seed phrase backup",
-// [REDACTED_TODO_COMMENT]
-                description = "Stay up to date with the latest features and news",
+                title = stringResourceSafe(R.string.hw_create_seed_title),
+                description = stringResourceSafe(R.string.hw_create_seed_description),
                 iconRes = R.drawable.ic_settings_24,
             )
         }

@@ -8,8 +8,11 @@ import com.tangem.feature.referral.api.ReferralComponent
 import com.tangem.feature.stories.api.StoriesComponent
 import com.tangem.feature.usedesk.api.UsedeskComponent
 import com.tangem.feature.walletsettings.component.WalletSettingsComponent
+import com.tangem.features.createwalletselection.CreateWalletSelectionComponent
 import com.tangem.features.details.component.DetailsComponent
 import com.tangem.features.disclaimer.api.components.DisclaimerComponent
+import com.tangem.features.hotwallet.AddExistingWalletComponent
+import com.tangem.features.hotwallet.CreateMobileWalletComponent
 import com.tangem.features.managetokens.component.ChooseManagedTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensSource
@@ -80,6 +83,9 @@ internal class ChildFactory @Inject constructor(
     private val nftSendComponentFactory: NFTSendComponent.Factory,
     private val usedeskComponentFactory: UsedeskComponent.Factory,
     private val chooseManagedTokensComponentFactory: ChooseManagedTokensComponent.Factory,
+    private val createWalletSelectionComponentFactory: CreateWalletSelectionComponent.Factory,
+    private val createMobileWalletComponentFactory: CreateMobileWalletComponent.Factory,
+    private val addExistingWalletComponentFactory: AddExistingWalletComponent.Factory,
     private val testerRouter: TesterRouter,
     private val walletConnectFeatureToggles: WalletConnectFeatureToggles,
 ) {
@@ -418,6 +424,27 @@ internal class ChildFactory @Inject constructor(
                         source = ChooseManagedTokensComponent.Source.valueOf(route.source.name),
                     ),
                     componentFactory = chooseManagedTokensComponentFactory,
+                )
+            }
+            is AppRoute.CreateWalletSelection -> {
+                createComponentChild(
+                    context = context,
+                    params = Unit,
+                    componentFactory = createWalletSelectionComponentFactory,
+                )
+            }
+            is AppRoute.CreateMobileWallet -> {
+                createComponentChild(
+                    context = context,
+                    params = Unit,
+                    componentFactory = createMobileWalletComponentFactory,
+                )
+            }
+            is AppRoute.AddExistingWallet -> {
+                createComponentChild(
+                    context = context,
+                    params = Unit,
+                    componentFactory = addExistingWalletComponentFactory,
                 )
             }
         }
