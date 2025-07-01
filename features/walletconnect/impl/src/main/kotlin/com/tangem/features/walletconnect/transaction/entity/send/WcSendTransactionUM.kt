@@ -1,6 +1,7 @@
 package com.tangem.features.walletconnect.transaction.entity.send
 
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
+import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.features.walletconnect.transaction.entity.approve.WcSpendAllowanceUM
 import com.tangem.features.walletconnect.transaction.entity.blockaid.WcSendReceiveTransactionCheckResultsUM
 import com.tangem.features.walletconnect.transaction.entity.common.WcCommonTransactionUM
@@ -13,6 +14,7 @@ internal data class WcSendTransactionUM(
     val transaction: WcSendTransactionItemUM,
     override val transactionRequestInfo: WcTransactionRequestInfoUM,
     val spendAllowance: WcSpendAllowanceUM? = null,
+    val feeSelectorUM: FeeSelectorUM,
 ) : WcCommonTransactionUM
 
 internal data class WcSendTransactionItemUM(
