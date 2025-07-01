@@ -8,6 +8,7 @@ import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.transaction.error.OpenTrustlineError
+import com.tangem.domain.transaction.error.parseWrappedError
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWalletId
 
@@ -31,15 +32,29 @@ class OpenTrustlineUseCase(
                     when (val result = walletManagersFacade.fulfillRequirements(userWalletId, currency, signer)) {
                         is SimpleResult.Failure -> when (val error = result.error) {
                             is BlockchainSdkError.Stellar.MinReserveRequired ->
-                                raise(OpenTrustlineError.NotEnoughCoin(error.amount, result.error.customMessage))
+                                raise(
+                                    OpenTrustlineError.NotEnoughCoin(
+                                        amount = error.amount,
+                                        symbol = error.symbol,
+                                        message = result.error.customMessage,
+                                    ),
+                                )
                             is BlockchainSdkError.Xrp.MinReserveRequired ->
-                                raise(OpenTrustlineError.NotEnoughCoin(error.amount, result.error.customMessage))
-                            else -> raise(OpenTrustlineError.SomeError(result.error.customMessage))
+                                raise(
+                                    OpenTrustlineError.NotEnoughCoin(
+                                        amount = error.amount,
+                                        symbol = error.symbol,
+                                        message = result.error.customMessage,
+                                    ),
+                                )
+                            is BlockchainSdkError.WrappedTangemError ->
+                                raise(OpenTrustlineError.SendError(parseWrappedError(error)))
+                            else -> raise(OpenTrustlineError.UnknownError(result.error.customMessage))
                         }
                         SimpleResult.Success -> Unit
                     }
                 },
-                catch = { error -> raise(OpenTrustlineError.SomeError(error.message)) },
+                catch = { error -> raise(OpenTrustlineError.UnknownError(error.message)) },
             )
         }
     }
