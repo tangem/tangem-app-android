@@ -909,18 +909,25 @@ internal class TokenDetailsModel @Inject constructor(
                 currency = cryptoCurrency,
             ).fold(
                 ifLeft = { e ->
-                    Timber.e(e.message)
-                    internalUiState.value = when (e) {
-                        is OpenTrustlineError.SomeError ->
-                            stateFactory.getStateWithErrorDialog(stringReference(e.message.orEmpty()))
-                        is OpenTrustlineError.NotEnoughCoin -> {
-                            val text = resourceReference(
-                                id = R.string.warning_token_required_min_coin_reserve,
-                                formatArgs = wrappedList(e.amount),
-                            )
-                            stateFactory.getStateWithErrorDialog(text)
-                        }
+                    val message: TextReference? = when (e) {
+                        is OpenTrustlineError.UnknownError -> e.message?.let { stringReference(it) }
+                        is OpenTrustlineError.NotEnoughCoin -> resourceReference(
+                            id = R.string.warning_token_required_min_coin_reserve,
+                            formatArgs = wrappedList(e.amount, e.symbol),
+                        )
+                        is OpenTrustlineError.SendError -> when (val error = e.error) {
+                            is SendTransactionError.UserCancelledError,
+                            is SendTransactionError.CreateAccountUnderfunded,
+                            is SendTransactionError.TangemSdkError,
+                            is SendTransactionError.DemoCardError,
+                            -> null
+                            is SendTransactionError.DataError -> error.message
+                            is SendTransactionError.BlockchainSdkError -> error.message
+                            is SendTransactionError.NetworkError -> error.message
+                            is SendTransactionError.UnknownError -> error.ex?.localizedMessage
+                        }?.let { stringReference(it) }
                     }
+                    message?.let { internalUiState.value = stateFactory.getStateWithErrorDialog(message) }
                 },
                 ifRight = { internalUiState.value = stateFactory.getStateWithRemovedRequiredTrustlineNotification() },
             )
