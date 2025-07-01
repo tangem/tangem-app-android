@@ -1,4 +1,4 @@
-package com.tangem.features.send.v2.subcomponents.fee.ui.state
+package com.tangem.features.send.v2.api.entity
 
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
