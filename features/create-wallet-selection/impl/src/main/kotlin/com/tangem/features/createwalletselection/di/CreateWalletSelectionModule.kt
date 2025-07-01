@@ -1,6 +1,9 @@
-package com.tangem.features.createwalletselection
+package com.tangem.features.createwalletselection.di
 
 import com.tangem.core.decompose.model.Model
+import com.tangem.features.createwalletselection.CreateWalletSelectionComponent
+import com.tangem.features.createwalletselection.CreateWalletSelectionModel
+import com.tangem.features.createwalletselection.DefaultCreateWalletSelectionComponent
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -11,11 +14,11 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-internal object CreateWalletSelectionFeatureModule
+internal object CreateWalletSelectionModule
 
 @Module
 @InstallIn(SingletonComponent::class)
-internal interface CreateWalletSelectionFeatureModuleBinds {
+internal interface CreateWalletSelectionModuleBinds {
 
     @Binds
     @Singleton
