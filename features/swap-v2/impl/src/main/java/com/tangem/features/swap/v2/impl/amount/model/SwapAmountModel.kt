@@ -1,6 +1,7 @@
 package com.tangem.features.swap.v2.impl.amount.model
 
 import arrow.core.getOrElse
+import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.amountScreen.converters.MaxEnterAmountConverter
@@ -14,10 +15,11 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
+import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.express.models.ExpressError
 import com.tangem.domain.express.models.ExpressProvider
-import com.tangem.domain.express.models.ExpressRateType
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.swap.models.SwapCurrencies
 import com.tangem.domain.swap.models.SwapDirection
 import com.tangem.domain.swap.models.SwapQuoteModel
 import com.tangem.domain.swap.usecase.GetSwapPairsUseCase
@@ -28,6 +30,7 @@ import com.tangem.domain.tokens.GetMultiCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.transaction.usecase.GetAllowanceUseCase
 import com.tangem.features.swap.v2.impl.R
+import com.tangem.features.swap.v2.impl.amount.SwapAmountBlockComponent.SwapChooseProviderConfig
 import com.tangem.features.swap.v2.impl.amount.SwapAmountComponentParams
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountFieldUM
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountType
@@ -41,12 +44,10 @@ import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM.Content.DifferencePercent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.orZero
-import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
 import kotlin.properties.Delegates
 import com.tangem.utils.transformer.update as transformerUpdate
@@ -63,47 +64,41 @@ internal class SwapAmountModel @Inject constructor(
     private val getSwapQuoteUseCase: GetSwapQuoteUseCase,
     private val swapChooseTokenNetworkListener: SwapChooseTokenNetworkListener,
     private val getAllowanceUseCase: GetAllowanceUseCase,
+    private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val appRouter: AppRouter,
+    private val swapAlertFactory: SwapAlertFactory,
 ) : Model(), SwapAmountClickIntents, SwapChooseProviderComponent.ModelCallback {
 
     private val params: SwapAmountComponentParams = paramsContainer.require()
     private val swapDirection = params.swapDirection
-    private val appCurrency = params.appCurrency
+    private var appCurrency = AppCurrency.Default
     private var userWallet = params.userWallet
 
-    private var primaryCryptoCurrency: CryptoCurrency by Delegates.notNull()
-    private var secondaryCryptoCurrency: CryptoCurrency? = null
+    private var primaryCryptoCurrency: CryptoCurrency = params.primaryCryptoCurrencyStatusFlow.value.currency
+    private var secondaryCryptoCurrency: CryptoCurrency? = params.secondaryCryptoCurrency
 
-    private var primaryCryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
-    private var secondaryCryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
+    private var primaryCryptoCurrencyStatus: CryptoCurrencyStatus = params.primaryCryptoCurrencyStatusFlow.value
+    private var secondaryCryptoCurrencyStatus: CryptoCurrencyStatus = CryptoCurrencyStatus(
+        currency = primaryCryptoCurrencyStatus.currency,
+        value = CryptoCurrencyStatus.Loading,
+    )
 
     private var primaryMaximumAmountBoundary: EnterAmountBoundary by Delegates.notNull()
     private var secondaryMaximumAmountBoundary: EnterAmountBoundary by Delegates.notNull()
     private var primaryMinimumAmountBoundary: EnterAmountBoundary by Delegates.notNull()
     private var secondaryMinimumAmountBoundary: EnterAmountBoundary by Delegates.notNull()
 
+    val bottomSheetNavigation: SlotNavigation<SwapChooseProviderConfig> = SlotNavigation()
+
     val uiState: StateFlow<SwapAmountUM>
     field = MutableStateFlow(params.amountUM)
 
     init {
-        when (params) {
-            is SwapAmountComponentParams.AmountParams -> {
-                primaryCryptoCurrency = params.primaryCryptoCurrency
-                secondaryCryptoCurrency = params.secondaryCryptoCurrency
-            }
-            is SwapAmountComponentParams.AmountBlockParams -> {
-                primaryCryptoCurrency = params.primaryCryptoCurrencyStatus.currency
-                secondaryCryptoCurrency = params.secondaryCryptoCurrencyStatus?.currency
-                primaryCryptoCurrencyStatus = params.primaryCryptoCurrencyStatus
-                params.secondaryCryptoCurrencyStatus?.let {
-                    secondaryCryptoCurrencyStatus = it
-                }
-            }
+        modelScope.launch {
+            appCurrency = getSelectedAppCurrencyUseCase.invokeSync().getOrElse { AppCurrency.Default }
         }
-
-        initialState()
         configAmountNavigation()
-
+        subscribeOnCryptoCurrencyStatusFlow()
         observeChooseSelectToken()
 // [REDACTED_TODO_COMMENT]
     }
@@ -116,8 +111,6 @@ internal class SwapAmountModel @Inject constructor(
         uiState.transformerUpdate(
             SwapAmountSelectQuoteTransformer(
                 quoteUM = quoteUM,
-                primaryCryptoCurrencyStatus = primaryCryptoCurrencyStatus,
-                secondaryCryptoCurrencyStatus = secondaryCryptoCurrencyStatus,
                 secondaryMaximumAmountBoundary = secondaryMaximumAmountBoundary,
                 secondaryMinimumAmountBoundary = secondaryMinimumAmountBoundary,
             ),
@@ -133,11 +126,21 @@ internal class SwapAmountModel @Inject constructor(
         }
     }
 
+    override fun onInfoClick() {
+        val amountUM = uiState.value as? SwapAmountUM.Content ?: return
+        val selectedProvider = amountUM.selectedQuote.provider ?: return
+        val cryptoCurrency = secondaryCryptoCurrency ?: return
+
+        swapAlertFactory.priceImpactAlert(
+            hasPriceImpact = (amountUM.secondaryAmount as? SwapAmountFieldUM.Content)?.priceImpact != null,
+            currencySymbol = cryptoCurrency.symbol,
+            provider = selectedProvider,
+        )
+    }
+
     override fun onAmountValueChange(value: String) {
         uiState.transformerUpdate(
             SwapAmountValueChangeTransformer(
-                primaryCryptoCurrencyStatus = primaryCryptoCurrencyStatus,
-                secondaryCryptoCurrencyStatus = secondaryCryptoCurrencyStatus,
                 primaryMaximumAmountBoundary = primaryMaximumAmountBoundary,
                 secondaryMaximumAmountBoundary = secondaryMaximumAmountBoundary,
                 primaryMinimumAmountBoundary = primaryMinimumAmountBoundary,
@@ -155,8 +158,6 @@ internal class SwapAmountModel @Inject constructor(
     override fun onMaxValueClick() {
         uiState.transformerUpdate(
             SwapAmountValueMaxTransformer(
-                primaryCryptoCurrencyStatus = primaryCryptoCurrencyStatus,
-                secondaryCryptoCurrencyStatus = secondaryCryptoCurrencyStatus,
                 primaryMaximumAmountBoundary = primaryMaximumAmountBoundary,
                 secondaryMaximumAmountBoundary = secondaryMaximumAmountBoundary,
                 primaryMinimumAmountBoundary = primaryMinimumAmountBoundary,
@@ -169,8 +170,6 @@ internal class SwapAmountModel @Inject constructor(
     override fun onCurrencyChangeClick(isFiat: Boolean) {
         uiState.transformerUpdate(
             SwapAmountChangeCurrencyTransformer(
-                primaryCryptoCurrencyStatus = primaryCryptoCurrencyStatus,
-                secondaryCryptoCurrencyStatus = secondaryCryptoCurrencyStatus,
                 isFiatSelected = isFiat,
             ),
         )
@@ -188,6 +187,27 @@ internal class SwapAmountModel @Inject constructor(
                 source = AppRoute.ChooseManagedTokens.Source.SendViaSwap,
             ),
         )
+    }
+
+    private fun subscribeOnCryptoCurrencyStatusFlow() {
+        params.primaryCryptoCurrencyStatusFlow.onEach { primaryCurrencyStatus ->
+            primaryCryptoCurrencyStatus = primaryCurrencyStatus
+
+            val state = uiState.value
+            if (state is SwapAmountUM.Content) {
+                secondaryCryptoCurrency = state.primaryCryptoCurrencyStatus.currency
+                secondaryCryptoCurrencyStatus = state.primaryCryptoCurrencyStatus
+                initCurrencies(
+                    primaryStatus = state.primaryCryptoCurrencyStatus,
+                    secondaryStatus = state.secondaryCryptoCurrencyStatus,
+                )
+            } else {
+                initPairs(
+                    primaryCryptoCurrency = primaryCryptoCurrency,
+                    secondaryCryptoCurrency = secondaryCryptoCurrency,
+                )
+            }
+        }.launchIn(modelScope)
     }
 
     private fun observeChooseSelectToken() {
@@ -210,45 +230,11 @@ internal class SwapAmountModel @Inject constructor(
             .launchIn(modelScope)
     }
 
-    private fun initialState() {
-        if (uiState.value is SwapAmountUM.Empty) {
-            initPairs(
-                primaryCryptoCurrency = primaryCryptoCurrency,
-                secondaryCryptoCurrency = secondaryCryptoCurrency,
-            )
-            uiState.update {
-                SwapAmountUM.Content(
-                    isPrimaryButtonEnabled = it.isPrimaryButtonEnabled,
-                    primaryAmount = it.primaryAmount,
-                    secondaryAmount = it.secondaryAmount,
-                    swapDirection = swapDirection,
-                    swapCurrencies = SwapCurrencies.EMPTY,
-                    appCurrency = appCurrency,
-                    swapQuotes = persistentListOf(),
-                    swapRateType = ExpressRateType.Float,
-                    selectedAmountType = SwapAmountType.From,
-                    selectedQuote = SwapQuoteUM.Empty,
-                    primaryCryptoCurrencyStatus = null,
-                    secondaryCryptoCurrencyStatus = null,
-                )
-            }
-        }
-    }
-
     private fun initPairs(primaryCryptoCurrency: CryptoCurrency, secondaryCryptoCurrency: CryptoCurrency?) {
         modelScope.launch {
             val cryptoCurrencyStatusList = getMultiCryptoCurrencyStatusUseCase
                 .invokeMultiWalletSync(userWallet.walletId)
                 .getOrElse { emptyList() }
-
-            val primaryStatus = cryptoCurrencyStatusList.firstOrNull {
-                it.currency.id == primaryCryptoCurrency.id
-            }
-            if (primaryStatus == null) {
-                Timber.e("Failed to get crypto currency status")
-// [REDACTED_TODO_COMMENT]
-                return@launch
-            }
 
             val cryptoCurrencyStatusListExceptPrimary = cryptoCurrencyStatusList.filter {
                 val statusFilter = it.value is CryptoCurrencyStatus.Loaded || it.value is CryptoCurrencyStatus.NoAccount
@@ -271,7 +257,9 @@ internal class SwapAmountModel @Inject constructor(
                     )
 
                     if (secondaryStatus != null) {
-                        initCurrencies(primaryStatus, secondaryStatus)
+                        initCurrencies(primaryCryptoCurrencyStatus, secondaryStatus)
+                        this@SwapAmountModel.secondaryCryptoCurrency = secondaryCryptoCurrency
+                        secondaryCryptoCurrencyStatus = secondaryStatus
                         uiState.update {
                             SwapAmountReadyStateConverter(
                                 swapCurrencies = swapCurrencies,
@@ -296,9 +284,6 @@ internal class SwapAmountModel @Inject constructor(
     }
 
     private suspend fun initCurrencies(primaryStatus: CryptoCurrencyStatus, secondaryStatus: CryptoCurrencyStatus) {
-        primaryCryptoCurrencyStatus = primaryStatus
-        secondaryCryptoCurrencyStatus = secondaryStatus
-
         primaryMinimumAmountBoundary = EnterAmountBoundary(
             amount = getMinimumTransactionAmountSyncUseCase
                 .invoke(
@@ -325,8 +310,12 @@ internal class SwapAmountModel @Inject constructor(
         val state = uiState.value as? SwapAmountUM.Content ?: return
 
         val (fromCryptoCurrency, toCryptoCurrency) = when (state.swapDirection) {
-            SwapDirection.Direct -> primaryCryptoCurrencyStatus.currency to secondaryCryptoCurrencyStatus.currency
-            SwapDirection.Reverse -> secondaryCryptoCurrencyStatus.currency to primaryCryptoCurrencyStatus.currency
+            SwapDirection.Direct -> {
+                state.primaryCryptoCurrencyStatus.currency to state.secondaryCryptoCurrencyStatus.currency
+            }
+            SwapDirection.Reverse -> {
+                state.secondaryCryptoCurrencyStatus.currency to state.primaryCryptoCurrencyStatus.currency
+            }
         }
 
         val fromAmount = when (state.swapDirection) {
@@ -346,9 +335,11 @@ internal class SwapAmountModel @Inject constructor(
         uiState.transformerUpdate(SwapQuoteLoadingStateTransformer)
 
         modelScope.launch {
-            val quotes = swapGroups.firstOrNull {
+            val quotes = swapGroups.filter {
                 it.currencyStatus.currency.id == toCryptoCurrency.id
-            }?.providers?.map { provider ->
+            }.flatMap {
+                it.providers
+            }.map { provider ->
                 async {
                     getSwapQuoteUseCase(
                         userWallet = userWallet,
@@ -361,7 +352,7 @@ internal class SwapAmountModel @Inject constructor(
                             SwapQuoteUM.Error(
                                 provider = provider,
                                 expressError = error,
-                            )
+                            ).takeIf { error is ExpressError.AmountError }
                         },
                         ifRight = { quote: SwapQuoteModel ->
                             convertToSwapProviderUM(
@@ -373,13 +364,11 @@ internal class SwapAmountModel @Inject constructor(
                         },
                     )
                 }
-            }?.awaitAll().orEmpty()
+            }.awaitAll().filterNotNull()
 
             uiState.transformerUpdate(
                 SwapAmountSetQuotesTransformer(
                     quotes = quotes,
-                    primaryCryptoCurrencyStatus = primaryCryptoCurrencyStatus,
-                    secondaryCryptoCurrencyStatus = secondaryCryptoCurrencyStatus,
                     secondaryMaximumAmountBoundary = secondaryMaximumAmountBoundary,
                     secondaryMinimumAmountBoundary = secondaryMinimumAmountBoundary,
                 ),
