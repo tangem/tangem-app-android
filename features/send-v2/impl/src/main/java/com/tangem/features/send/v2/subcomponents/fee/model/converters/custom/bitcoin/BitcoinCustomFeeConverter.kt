@@ -14,7 +14,7 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.subcomponents.fee.model.checkExceedBalance
 import com.tangem.features.send.v2.subcomponents.fee.model.converters.custom.CustomFeeConverter
-import com.tangem.features.send.v2.subcomponents.fee.ui.state.CustomFeeFieldUM
+import com.tangem.features.send.v2.api.entity.CustomFeeFieldUM
 import com.tangem.lib.crypto.BlockchainUtils
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
