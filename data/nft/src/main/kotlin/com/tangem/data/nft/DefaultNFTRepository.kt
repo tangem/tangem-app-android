@@ -95,7 +95,7 @@ internal class DefaultNFTRepository @Inject constructor(
             val salePrice = sdkPrice?.let {
                 val convertedPrice = salePriceConverter.convert(sdkPrice)
                 convertedPrice.copy(
-                    value = convertedPrice.value.movePointLeft(nftCurrency.decimals),
+                    value = convertedPrice.value,
                     decimals = nftCurrency.decimals,
                     symbol = nftCurrency.symbol,
                 )
@@ -459,7 +459,7 @@ internal class DefaultNFTRepository @Inject constructor(
                         val nftCurrency = getNFTCurrency(network)
                         NFTSalePrice.Value(
                             assetId = assetId,
-                            value = price.value.movePointLeft(nftCurrency.decimals),
+                            value = price.value,
                             fiatValue = null,
                             symbol = nftCurrency.symbol,
                             decimals = nftCurrency.decimals,
