@@ -1,32 +1,23 @@
-package com.tangem.features.send.v2.feeselector.entity
+package com.tangem.features.send.v2.api.entity
 
 import androidx.compose.runtime.Immutable
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.transaction.error.GetFeeError
-import com.tangem.features.send.v2.subcomponents.fee.ui.state.CustomFeeFieldUM
 import kotlinx.collections.immutable.ImmutableList
 import java.math.BigDecimal
 import java.math.BigInteger
 
 @Immutable
-internal sealed class FeeSelectorUM {
+sealed class FeeSelectorUM {
 
-    abstract val doneButtonConfig: PrimaryButtonConfig
+    data object Loading : FeeSelectorUM()
 
-    data class Loading(private val onDone: () -> Unit) : FeeSelectorUM() {
-        override val doneButtonConfig = PrimaryButtonConfig(enabled = false, onClick = onDone)
-    }
-
-    data class Error(val error: GetFeeError, private val onDone: () -> Unit) : FeeSelectorUM() {
-        override val doneButtonConfig = PrimaryButtonConfig(enabled = false, onClick = onDone)
-    }
+    data class Error(val error: GetFeeError) : FeeSelectorUM()
 
     data class Content(
-        override val doneButtonConfig: PrimaryButtonConfig,
         val feeItems: ImmutableList<FeeItem>,
-        val onFeeSelected: (FeeItem) -> Unit,
         val selectedFeeItem: FeeItem,
         val isFeeApproximate: Boolean,
         val feeFiatRateUM: FeeFiatRateUM?,
@@ -36,17 +27,19 @@ internal sealed class FeeSelectorUM {
     ) : FeeSelectorUM()
 }
 
-internal data class PrimaryButtonConfig(val enabled: Boolean, val onClick: () -> Unit)
-
 @Immutable
-internal data class FeeFiatRateUM(
+data class FeeFiatRateUM(
     val rate: BigDecimal,
     val appCurrency: AppCurrency,
 )
 
 @Immutable
-internal sealed class FeeItem {
+sealed class FeeItem {
     abstract val fee: Fee
+
+    fun isSame(other: FeeItem): Boolean {
+        return this::class == other::class
+    }
 
     data class Suggested(val title: TextReference, override val fee: Fee) : FeeItem()
     data class Slow(override val fee: Fee) : FeeItem()
