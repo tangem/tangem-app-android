@@ -15,7 +15,7 @@ internal class WcAppInfoTransformer(
     private val dAppVerifiedStateConverter: WcDAppVerifiedStateConverter,
     private val onDismiss: () -> Unit,
     private val onConnect: (securityStatus: CheckDAppResult) -> Unit,
-    private val onWalletClick: () -> Unit,
+    private val onWalletClick: (() -> Unit)?,
     private val onNetworksClick: () -> Unit,
     private val userWallet: UserWallet,
     private val proposalNetwork: WcSessionProposal.ProposalNetwork,
