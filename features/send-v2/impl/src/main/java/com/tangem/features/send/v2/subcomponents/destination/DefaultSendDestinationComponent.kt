@@ -6,16 +6,19 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
-import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.features.send.v2.common.SendNavigationModelCallback
+import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationComponent
+import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationComponentParams
+import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.features.send.v2.subcomponents.destination.model.SendDestinationModel
 import com.tangem.features.send.v2.subcomponents.destination.ui.SendDestinationContent
-import com.tangem.features.send.v2.subcomponents.destination.ui.state.DestinationUM
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 
-internal class SendDestinationComponent(
-    appComponentContext: AppComponentContext,
-    private val params: SendDestinationComponentParams.DestinationParams,
-) : ComposableContentComponent, AppComponentContext by appComponentContext {
+internal class DefaultSendDestinationComponent @AssistedInject constructor(
+    @Assisted appComponentContext: AppComponentContext,
+    @Assisted private val params: SendDestinationComponentParams.DestinationParams,
+) : SendDestinationComponent, AppComponentContext by appComponentContext {
 
     private val model: SendDestinationModel = getOrCreateModel(params = params)
 
@@ -29,7 +32,11 @@ internal class SendDestinationComponent(
         SendDestinationContent(state = state, clickIntents = model, isBalanceHidden = isBalanceHidden)
     }
 
-    interface ModelCallback : SendNavigationModelCallback {
-        fun onDestinationResult(destinationUM: DestinationUM)
+    @AssistedFactory
+    interface Factory : SendDestinationComponent.Factory {
+        override fun create(
+            context: AppComponentContext,
+            params: SendDestinationComponentParams.DestinationParams,
+        ): DefaultSendDestinationComponent
     }
 }
