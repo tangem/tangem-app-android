@@ -7,6 +7,7 @@ import com.tangem.domain.walletconnect.usecase.method.WcMutableFee
 import com.tangem.domain.walletconnect.usecase.method.WcSignState
 import com.tangem.domain.walletconnect.usecase.method.WcSignStep
 import com.tangem.domain.walletconnect.usecase.method.WcTransactionUseCase
+import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.features.walletconnect.impl.R
 import com.tangem.features.walletconnect.transaction.entity.blockaid.WcSendReceiveTransactionCheckResultsUM
 import com.tangem.features.walletconnect.transaction.entity.common.*
@@ -37,13 +38,14 @@ internal class WcSendTransactionUMConverter @Inject constructor(
                         onShowVerifiedAlert = value.actions.onShowVerifiedAlert,
                     ),
                 ),
-                feeState = constructFeeState(useCase = value.useCase),
+                feeState = constructFeeState(useCase = value.useCase, actions = value.actions),
                 walletName = value.useCase.session.wallet.name,
                 networkInfo = networkInfoUMConverter.convert(value.useCase.network),
                 address = value.useCase.walletAddress.toShortAddressText(),
                 estimatedWalletChanges = WcSendReceiveTransactionCheckResultsUM(),
                 isLoading = value.signState.domainStep == WcSignStep.Signing,
             ),
+            feeSelectorUM = value.feeSelectorUM ?: FeeSelectorUM.Loading,
             transactionRequestInfo = WcTransactionRequestInfoUM(
                 blocks = buildList {
                     add(
@@ -80,15 +82,19 @@ internal class WcSendTransactionUMConverter @Inject constructor(
         else -> null
     }
 
-    private fun constructFeeState(useCase: WcTransactionUseCase): WcTransactionFeeState {
+    private fun constructFeeState(
+        useCase: WcTransactionUseCase,
+        actions: WcTransactionActionsUM,
+    ): WcTransactionFeeState {
         val mutableFee = useCase as? WcMutableFee ?: return WcTransactionFeeState.None
         val dAppFee = mutableFee.dAppFee()
-        return if (dAppFee != null) WcTransactionFeeState.Success(dAppFee) else WcTransactionFeeState.Loading
+        return WcTransactionFeeState.Success(dAppFee = dAppFee, onClick = actions.onShowFeeBottomSheet)
     }
 
     data class Input(
         val useCase: WcTransactionUseCase,
         val signState: WcSignState<*>,
         val actions: WcTransactionActionsUM,
+        val feeSelectorUM: FeeSelectorUM?,
     )
 }
