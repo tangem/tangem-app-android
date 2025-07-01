@@ -108,7 +108,7 @@ internal class NFTSendConfirmModel @Inject constructor(
 
     val confirmData: ConfirmData
         get() = ConfirmData(
-            enteredDestination = destinationUM?.addressTextField?.value,
+            enteredDestination = destinationUM?.addressTextField?.actualAddress,
             enteredMemo = destinationUM?.memoTextField?.value,
             fee = feeSelectorUM?.selectedFee,
             feeError = (feeUM?.feeSelectorUM as? FeeSelectorUM.Error)?.error,
@@ -258,7 +258,7 @@ internal class NFTSendConfirmModel @Inject constructor(
     }
 
     private fun verifyAndSendTransaction() {
-        val destination = destinationUM?.addressTextField?.value ?: return
+        val destination = destinationUM?.addressTextField?.actualAddress ?: return
         val memo = destinationUM?.memoTextField?.value
         val fee = feeSelectorUM?.selectedFee ?: return
         val ownerAddress = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value ?: return
