@@ -18,7 +18,7 @@ import com.tangem.features.send.v2.subcomponents.fee.model.converters.custom.eth
 import com.tangem.features.send.v2.subcomponents.fee.model.converters.custom.ethereum.EthereumCustomFeeConverter.Companion.GAS_DECIMALS
 import com.tangem.features.send.v2.subcomponents.fee.model.converters.custom.ethereum.EthereumCustomFeeConverter.Companion.GIGA_DECIMALS
 import com.tangem.features.send.v2.subcomponents.fee.model.converters.custom.setEmpty
-import com.tangem.features.send.v2.subcomponents.fee.ui.state.CustomFeeFieldUM
+import com.tangem.features.send.v2.api.entity.CustomFeeFieldUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
