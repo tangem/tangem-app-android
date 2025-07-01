@@ -32,9 +32,9 @@ import com.tangem.features.send.v2.send.confirm.SendConfirmComponent
 import com.tangem.features.send.v2.send.model.SendModel
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponent
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponentParams
-import com.tangem.features.send.v2.subcomponents.destination.SendDestinationComponent
-import com.tangem.features.send.v2.subcomponents.destination.SendDestinationComponentParams
-import com.tangem.features.send.v2.subcomponents.destination.ui.state.DestinationUM
+import com.tangem.features.send.v2.subcomponents.destination.DefaultSendDestinationComponent
+import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationComponentParams
+import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeComponent
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeComponentParams
 import dagger.assisted.Assisted
@@ -108,7 +108,7 @@ internal class DefaultSendComponent @AssistedInject constructor(
                         )
                         activeComponent.updateState(model.uiState.value.amountUM)
                     }
-                    is SendDestinationComponent -> {
+                    is DefaultSendDestinationComponent -> {
                         analyticsEventHandler.send(
                             CommonSendAnalyticEvents.AddressScreenOpened(categoryName = analyticCategoryName),
                         )
@@ -148,7 +148,7 @@ internal class DefaultSendComponent @AssistedInject constructor(
     private fun getDestinationComponent(
         factoryContext: AppComponentContext,
         route: CommonSendRoute,
-    ): SendDestinationComponent = SendDestinationComponent(
+    ): DefaultSendDestinationComponent = DefaultSendDestinationComponent(
         appComponentContext = factoryContext,
         params = SendDestinationComponentParams.DestinationParams(
             state = model.uiState.value.destinationUM,
