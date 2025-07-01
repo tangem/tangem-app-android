@@ -5,7 +5,8 @@ import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.send.v2.api.params.FeeSelectorParams
-import com.tangem.features.send.v2.feeselector.entity.FeeItem
+import com.tangem.features.send.v2.api.entity.FeeItem
+import com.tangem.features.send.v2.feeselector.model.FeeSelectorIntents
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
@@ -13,15 +14,13 @@ import kotlinx.collections.immutable.toImmutableList
 internal class FeeItemConverter(
     private val suggestedFeeState: FeeSelectorParams.SuggestedFeeState,
     private val normalFee: Fee,
-    private val onCustomFeeValueChange: (Int, String) -> Unit,
-    private val onNextClick: () -> Unit,
+    private val feeSelectorIntents: FeeSelectorIntents,
     private val appCurrency: AppCurrency,
     cryptoCurrencyStatus: CryptoCurrencyStatus,
 ) : Converter<TransactionFee, ImmutableList<FeeItem>> {
 
     private val customFeeFieldConverter = FeeSelectorCustomFieldConverter(
-        onCustomFeeValueChange = onCustomFeeValueChange,
-        onNextClick = onNextClick,
+        feeSelectorIntents = feeSelectorIntents,
         appCurrency = appCurrency,
         feeCryptoCurrencyStatus = cryptoCurrencyStatus,
         normalFee = normalFee,
