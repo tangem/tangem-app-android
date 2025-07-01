@@ -9,7 +9,7 @@ import com.tangem.features.send.v2.subcomponents.fee.model.SendFeeClickIntents
 import com.tangem.features.send.v2.subcomponents.fee.model.converters.custom.bitcoin.BitcoinCustomFeeConverter
 import com.tangem.features.send.v2.subcomponents.fee.model.converters.custom.ethereum.EthereumCustomFeeConverter
 import com.tangem.features.send.v2.subcomponents.fee.model.converters.custom.kaspa.KaspaCustomFeeConverter
-import com.tangem.features.send.v2.subcomponents.fee.ui.state.CustomFeeFieldUM
+import com.tangem.features.send.v2.api.entity.CustomFeeFieldUM
 import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeSelectorUM
 import com.tangem.utils.converter.TwoWayConverter
 import kotlinx.collections.immutable.ImmutableList
