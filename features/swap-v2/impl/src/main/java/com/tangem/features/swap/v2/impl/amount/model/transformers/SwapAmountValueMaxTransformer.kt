@@ -2,15 +2,12 @@ package com.tangem.features.swap.v2.impl.amount.model.transformers
 
 import com.tangem.common.ui.amountScreen.converters.field.AmountFieldSetMaxAmountTransformer
 import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
 import com.tangem.features.swap.v2.impl.amount.model.SwapAmountQuoteUtils.updateAmount
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
 import com.tangem.utils.transformer.Transformer
 
 internal class SwapAmountValueMaxTransformer(
-    private val primaryCryptoCurrencyStatus: CryptoCurrencyStatus,
-    private val secondaryCryptoCurrencyStatus: CryptoCurrencyStatus,
     private val primaryMaximumAmountBoundary: EnterAmountBoundary,
     private val secondaryMaximumAmountBoundary: EnterAmountBoundary,
     private val primaryMinimumAmountBoundary: EnterAmountBoundary,
@@ -25,7 +22,7 @@ internal class SwapAmountValueMaxTransformer(
                 onPrimaryAmount = {
                     copy(
                         amountField = AmountFieldSetMaxAmountTransformer(
-                            cryptoCurrencyStatus = primaryCryptoCurrencyStatus,
+                            cryptoCurrencyStatus = prevState.primaryCryptoCurrencyStatus,
                             maxAmount = primaryMaximumAmountBoundary,
                             minAmount = primaryMinimumAmountBoundary,
                         ).transform(prevState.primaryAmount.amountField),
@@ -34,7 +31,7 @@ internal class SwapAmountValueMaxTransformer(
                 onSecondaryAmount = {
                     copy(
                         amountField = AmountFieldSetMaxAmountTransformer(
-                            cryptoCurrencyStatus = secondaryCryptoCurrencyStatus,
+                            cryptoCurrencyStatus = prevState.secondaryCryptoCurrencyStatus,
                             maxAmount = secondaryMaximumAmountBoundary,
                             minAmount = secondaryMinimumAmountBoundary,
                         ).transform(prevState.secondaryAmount.amountField),
