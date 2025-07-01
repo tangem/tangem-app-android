@@ -31,6 +31,8 @@ internal class SendDestinationValidationResultTransformer(
         }.leftOrNull()
 
         val shouldDisableMemo = shouldDisableMemo()
+        val blockchainAddress =
+            (addressValidationResult.getOrNull() as? AddressValidation.Success.ValidNamedAddress)?.blockchainAddress
 
         return state.copy(
             isValidating = false,
@@ -38,6 +40,7 @@ internal class SendDestinationValidationResultTransformer(
             addressTextField = state.addressTextField.copy(
                 error = addressErrorText?.let(::resourceReference),
                 isError = state.addressTextField.value.isNotEmpty() && !isValidAddress,
+                blockchainAddress = blockchainAddress,
             ),
             memoTextField = state.memoTextField?.copy(
                 value = state.memoTextField.value.takeIf { !shouldDisableMemo }.orEmpty(),
