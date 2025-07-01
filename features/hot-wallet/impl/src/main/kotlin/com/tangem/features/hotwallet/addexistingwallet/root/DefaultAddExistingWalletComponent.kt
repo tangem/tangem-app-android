@@ -5,7 +5,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
-import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
 import com.tangem.core.decompose.context.AppComponentContext
@@ -27,12 +26,11 @@ internal class DefaultAddExistingWalletComponent @AssistedInject constructor(
 
     private val model: AddExistingWalletModel = getOrCreateModel(params)
 
-    private val stackNavigation = StackNavigation<AddExistingWalletRoute>()
     private val startRoute = AddExistingWalletRoute.Start
 
     private val innerStack = childStack(
         key = "addExistingWalletInnerStack",
-        source = stackNavigation,
+        source = model.stackNavigation,
         serializer = null,
         initialConfiguration = startRoute,
         handleBackButton = true,
@@ -61,7 +59,7 @@ internal class DefaultAddExistingWalletComponent @AssistedInject constructor(
         if (isEmptyStack) {
             router.pop()
         } else {
-            stackNavigation.pop()
+            model.stackNavigation.pop()
         }
     }
 
