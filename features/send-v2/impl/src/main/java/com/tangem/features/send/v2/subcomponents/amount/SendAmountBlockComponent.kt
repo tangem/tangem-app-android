@@ -10,7 +10,7 @@ import com.tangem.common.ui.amountScreen.ui.AmountBlockV2
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.features.send.v2.common.PredefinedValues
+import com.tangem.features.send.v2.api.entity.PredefinedValues
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponentParams.AmountBlockParams
 import com.tangem.features.send.v2.subcomponents.amount.model.SendAmountModel
 import kotlinx.coroutines.flow.launchIn
