@@ -575,7 +575,7 @@ internal class DefaultCurrenciesRepository(
     }
 
     override fun getCardTypesResolver(userWalletId: UserWalletId): CardTypesResolver {
-        return userWalletsStore.getSyncStrict(userWalletId).requireColdWallet().cardTypesResolver
+        return userWalletsStore.getSyncStrict(userWalletId).requireColdWallet().cardTypesResolver // TODO AND-11142
     }
 
     private fun getMultiCurrencyWalletCurrencies(userWallet: UserWallet): Flow<List<CryptoCurrency>> {
