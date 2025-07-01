@@ -1,5 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
+  <string name="access_code_alert_skip_description">Your wallet won’t be protected without an Access Code.</string>
+  <string name="access_code_alert_skip_ok">Skip anyway</string>
+  <string name="access_code_alert_skip_title">Access Code not set</string>
+  <string name="access_code_check_title">Enter Access Code</string>
+  <string name="access_code_confirm_description">Confirm your previously entered code to continue</string>
+  <string name="access_code_confirm_title">Re-enter Access Code</string>
+  <string name="access_code_create_description">Set a %s-digit Access Code to unlock your wallet.</string>
+  <string name="access_code_create_title">Create Access Code</string>
+  <string name="access_code_navtitle">Access code</string>
   <string name="action_buttons_buy_empty_search_message">Can’t find your token? Go to the Market section on the main page and add it to your portfolio for purchase</string>
   <string name="action_buttons_sell_empty_search_message">Can’t find your token? Go to the Market section on the main page and add it to your portfolio for selling.</string>
   <string name="action_buttons_sell_navigation_bar_title">Sell</string>
@@ -49,6 +58,17 @@
   <string name="app_settings_theme_mode_system">System default</string>
   <string name="app_settings_theme_selector_title">Theme</string>
   <string name="app_settings_title">App settings</string>
+  <string name="backup_complete_description">You successfully backed up your wallet.</string>
+  <string name="backup_complete_title">Backup Completed</string>
+  <string name="backup_info_description">Your Secret Recovery Phrase is a fixed set of %s random words used to access and recover your wallet.</string>
+  <string name="backup_info_keep_description">These words can’t be recovered if lost. Make sure to keep it somewhere secure.</string>
+  <string name="backup_info_keep_title">Keep It Safe</string>
+  <string name="backup_info_save_description">Save these %s words in a secure location, such as a password manager, and never share them with anyone.</string>
+  <string name="backup_info_save_title">No Recovery Possible</string>
+  <string name="backup_info_title">Recovery phrase</string>
+  <string name="backup_seed_description">Write down these %s words in order and keep them safe and private</string>
+  <string name="backup_seed_responsibility">Full responsibility for the security and backup of the wallet and recovery phrase lies with the user, not with Tangem.</string>
+  <string name="backup_seed_title">Recovery phrase</string>
   <string name="balance_hidden_description">To hide or show your balances, simply flip your device screen down, or switch it off in Settings</string>
   <string name="balance_hidden_do_not_show_button">Don\'t show again</string>
   <string name="balance_hidden_got_it_button">Got it</string>
@@ -103,6 +123,7 @@
   <string name="common_approval">Approval</string>
   <string name="common_approve">Approve</string>
   <string name="common_attention">Attention</string>
+  <string name="common_backup">Backup</string>
   <string name="common_balance">Balance: %s</string>
   <string name="common_balance_title">Balance</string>
   <string name="common_biometric_authentication">biometric authentication</string>
@@ -124,6 +145,7 @@
   <string name="common_contact_tangem_support">Contact Tangem Support</string>
   <string name="common_contact_visa_support">Contact Visa Support</string>
   <string name="common_continue">Continue</string>
+  <string name="common_convert">Convert</string>
   <string name="common_copy">Copy</string>
   <string name="common_copy_address">Copy address</string>
   <string name="common_create">Create</string>
@@ -208,6 +230,7 @@
   <string name="common_show_more">Show more</string>
   <string name="common_sign">Sign</string>
   <string name="common_sign_and_send">Sign and send</string>
+  <string name="common_skip">Skip</string>
   <string name="common_stake">Stake</string>
   <string name="common_staking">Staking</string>
   <string name="common_start">Start</string>
@@ -229,6 +252,7 @@
   <string name="common_unreachable">Unreachable</string>
   <string name="common_unstake">Unstake</string>
   <string name="common_utxo_validate_withdrawal_message_warning">Due to %1$s limitations only %2$d UTXOs can fit in a single transaction. This means you can only send %3$s or less. You need to reduce the amount.</string>
+  <string name="common_value_copied">Value copied</string>
   <string name="common_week">week</string>
   <string name="common_with">with</string>
   <string name="common_yes">Yes</string>
@@ -596,7 +620,7 @@
   <string name="nft_untitled_collection">Untitled collection</string>
   <string name="nft_wallet_count">%1$d NFTs in %2$d collections</string>
   <plurals name="nft_wallet_count_android">
-    <item quantity="one"></item>
+    <item quantity="one">%1$d NFT in %2$d collection</item>
     <item quantity="other">%1$d NFTs in %2$d collections</item>
   </plurals>
   <string name="nft_wallet_receive_nft">Tap here to receive first NFT</string>
@@ -647,6 +671,7 @@
   <string name="onboarding_create_wallet_options_title">Generate keys privately</string>
   <string name="onboarding_done_body">Your card is activated and ready to be used</string>
   <string name="onboarding_done_header">Success!</string>
+  <string name="onboarding_done_wallet">Your wallet is set up and ready to use!</string>
   <string name="onboarding_exit_alert_message">In this case, you will need to start from the beginning.</string>
   <string name="onboarding_exit_alert_title">Do you want to exit the activation process?</string>
   <string name="onboarding_getting_started">Getting started</string>
@@ -813,7 +838,9 @@
   <string name="send_alert_fee_too_low_text">You specified a commission below the recommended amount, which could cause a delay in your transaction. Continue?</string>
   <string name="send_alert_transaction_failed_text">Reason: %1$s\nCode: %2$s</string>
   <string name="send_alert_transaction_failed_title">The transaction is not completed</string>
+  <string name="send_amount_convert_to_another_token">Convert to another token</string>
   <string name="send_amount_label">Amount</string>
+  <string name="send_amount_receive_token_subtitle">Will be sent to recipient</string>
   <string name="send_bitcoin_custom_fee_footer">You can set your transaction fee by adjusting the value in the Satoshi per vByte field.</string>
   <string name="send_custom_amount_fee_footer">The fee that will be charged for your transaction. You can set your own value.</string>
   <string name="send_custom_evm_max_fee">Max fee</string>
@@ -859,6 +886,7 @@
   <string name="send_notification_fee_too_high_title">Custom fee is high</string>
   <string name="send_notification_high_fee_text">Due to the peculiarities of the %1$s network, the fee for transferring the entire balance is higher. To reduce the commission, you can leave %2$s.</string>
   <string name="send_notification_high_fee_title">The fee is higher</string>
+  <string name="send_notification_invalid_amount_rent_destination">The recipient account is not activated. The minimum transfer amount must be equal to or greater than the rent-exempt balance: %1$s.</string>
   <string name="send_notification_invalid_amount_rent_fee">Your account balance cannot be lower than the rent fee. Please maintain at least %1$s on your account or withdraw all funds.</string>
   <string name="send_notification_invalid_amount_text">The included commission exceeds the transfer amount, leading to a negative value</string>
   <string name="send_notification_invalid_amount_title">Invalid amount</string>
@@ -877,7 +905,7 @@
   <string name="send_recent_transactions">Recent</string>
   <string name="send_recipient">Recipient</string>
   <string name="send_recipient_address_error">Not a valid address</string>
-  <string name="send_recipient_address_footer">Ensure the receiving wallet address is on the %s network to avoid losing your tokens</string>
+  <string name="send_recipient_address_footer">Ensure the receiving wallet address is on **the %s network** to avoid losing your tokens</string>
   <string name="send_recipient_address_footer_highlighted_part">send to %s</string>
   <string name="send_recipient_address_footer_v2">Ensure you %s network address, as errors may result in lost transfers</string>
   <string name="send_recipient_label">Send to</string>
@@ -907,6 +935,7 @@
   <string name="send_validation_invalid_total">Total amount exceeds balance</string>
   <string name="send_with_swap_notification_text">Send any token, and we’ll convert it on the way. Your recipient gets exactly what they need—seamlessly.</string>
   <string name="send_with_swap_recipient_amount_text">Will be sent a recipient</string>
+  <string name="send_with_swap_recipient_amount_title">Amount to receive</string>
   <string name="send_with_swap_title">Send with swap</string>
   <string name="sent_transaction_sent_title">Transaction sent</string>
   <string name="settings_card_settings_footer">Prepare to scan card or ring you want to set up.</string>
@@ -1062,6 +1091,7 @@
   <string name="swap_story_second_title">Unbeatable Rates</string>
   <string name="swap_story_third_subtitle">Hassle-free and intuitive, allowing you to swap tokens in just a few taps</string>
   <string name="swap_story_third_title">Simply Convenient</string>
+  <string name="swap_via_provider">Swap via provider</string>
   <string name="swapping_alert_cex_description">The amount includes:\n• service provider\'s fee\n• network fee for sending %s from the exchange back to the user\'s address.</string>
   <string name="swapping_alert_cex_description_with_slippage">The amount includes:\n• service provider\'s fee\n• network fee for sending %1$s from the exchange back to the user\'s address. \n\nProvider slippage is up to %2$s</string>
   <string name="swapping_alert_dex_description">The amount includes the service provider\'s fee.</string>
@@ -1292,6 +1322,8 @@
   <string name="wallet_promo_banner_button_title">Get now with 10% off</string>
   <string name="wallet_promo_banner_description">Access 13,000+ cryptocurrencies. Buy, sell, swap, and stake with a single tap.\nLink up to three cards for a backup.</string>
   <string name="wallet_promo_banner_title">Discover Tangem Wallet</string>
+  <string name="wallet_settings_access_code_description">Secret code to protect this wallet. Used for login and signatures.</string>
+  <string name="wallet_settings_access_code_title">Set/Change Access Code</string>
   <string name="wallet_settings_push_notifications_description">Stay notified on wallet incoming transactions and Tangem updates.</string>
   <string name="wallet_settings_push_notifications_title">Transaction Notifications</string>
   <string name="wallet_settings_title">Wallet settings</string>
@@ -1381,6 +1413,10 @@
   <string name="warning_some_networks_unreachable_message">Swipe down to refresh or try again later.</string>
   <string name="warning_some_networks_unreachable_title">Some networks are unreachable</string>
   <string name="warning_some_token_balances_not_updated">Some token balances could not be updated</string>
+  <string name="warning_stellar_token_trustline_button_title">Enable Trustline</string>
+  <string name="warning_stellar_token_trustline_not_enough_xlm">Not enough %s. Top up your XLM account to associate this token</string>
+  <string name="warning_stellar_token_trustline_subtitle">A Trustline must be enabled to receive this token. The network requires a 0.5 XLM reserve.</string>
+  <string name="warning_stellar_token_trustline_title">Trustline Required</string>
   <string name="warning_testnet_card_message">This is a Testnet card. It cannot process transactions and should only be used for testing and development purposes.</string>
   <string name="warning_testnet_card_title">For testing purposes only</string>
   <string name="warning_token_balance_not_updated">Balance may be outdated. Refresh the page.</string>
@@ -1403,7 +1439,7 @@
   <string name="wc_alert_unsupported_method_title">We\'ve encountered unknown error</string>
   <string name="wc_alert_unsupported_networks_description">Tangem does not currently support a required network by %s.</string>
   <string name="wc_alert_unsupported_networks_title">Unsuported networks</string>
-  <string name="wc_alert_verified_domain_description">Tangem support a required network by %s.</string>
+  <string name="wc_alert_verified_domain_description">Tangem support a required network by %s</string>
   <string name="wc_alert_verified_domain_title">Verified domain</string>
   <string name="wc_alert_wrong_card_description">Wrong card or ring selected in the App</string>
   <string name="wc_alert_wrong_card_title">We\'ve got some kind of problem</string>
