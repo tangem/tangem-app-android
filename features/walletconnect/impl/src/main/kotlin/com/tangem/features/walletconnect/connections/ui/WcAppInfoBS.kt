@@ -34,6 +34,7 @@ import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTi
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetWithFooter
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.notifications.NotificationConfig
+import com.tangem.core.ui.extensions.clickableSingle
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.extensions.wrappedList
@@ -253,9 +254,11 @@ private fun WcAppInfoSecondBlock(state: WcAppInfoUM.Content, modifier: Modifier 
             .fillMaxWidth()
             .padding(TangemTheme.dimens.spacing12)
         WalletRowItem(
-            modifier = Modifier
-                .clickable(onClick = state.onWalletClick)
-                .then(itemsModifier),
+            modifier = if (state.onWalletClick != null) {
+                Modifier.clickableSingle(onClick = state.onWalletClick)
+            } else {
+                Modifier
+            }.then(itemsModifier),
             walletName = state.walletName,
         )
         HorizontalDivider(thickness = 1.dp, color = TangemTheme.colors.stroke.primary)
