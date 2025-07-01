@@ -1,4 +1,4 @@
-package com.tangem.features.send.v2.common
+package com.tangem.features.send.v2.api.entity
 
 sealed class PredefinedValues {
     data object Empty : PredefinedValues()
