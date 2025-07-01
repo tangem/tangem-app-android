@@ -6,6 +6,7 @@ import com.tangem.domain.walletconnect.usecase.method.WcMessageSignUseCase
 import com.tangem.domain.walletconnect.usecase.method.WcSignState
 import com.tangem.domain.walletconnect.usecase.method.WcSignUseCase
 import com.tangem.domain.walletconnect.usecase.method.WcTransactionUseCase
+import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.features.walletconnect.transaction.entity.common.WcCommonTransactionUM
 import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionActionsUM
 import com.tangem.utils.converter.Converter
@@ -45,6 +46,7 @@ internal class WcCommonTransactionUMConverter @Inject constructor(
                     useCase = value.useCase,
                     signState = value.signState,
                     actions = value.actions,
+                    feeSelectorUM = value.feeSelectorUM,
                 ),
             )
             else -> null
@@ -55,5 +57,6 @@ internal class WcCommonTransactionUMConverter @Inject constructor(
         val useCase: WcSignUseCase<*>,
         val signState: WcSignState<*>,
         val actions: WcTransactionActionsUM,
+        val feeSelectorUM: FeeSelectorUM? = null,
     )
 }
