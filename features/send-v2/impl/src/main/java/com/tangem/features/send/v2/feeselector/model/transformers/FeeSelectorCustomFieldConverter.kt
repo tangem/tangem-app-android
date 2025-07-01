@@ -8,15 +8,15 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.send.v2.subcomponents.fee.model.converters.custom.bitcoin.BitcoinCustomFeeConverter
 import com.tangem.features.send.v2.subcomponents.fee.model.converters.custom.ethereum.EthereumCustomFeeConverter
 import com.tangem.features.send.v2.subcomponents.fee.model.converters.custom.kaspa.KaspaCustomFeeConverter
-import com.tangem.features.send.v2.subcomponents.fee.ui.state.CustomFeeFieldUM
+import com.tangem.features.send.v2.api.entity.CustomFeeFieldUM
+import com.tangem.features.send.v2.feeselector.model.FeeSelectorIntents
 import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeSelectorUM
 import com.tangem.utils.converter.TwoWayConverter
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 internal class FeeSelectorCustomFieldConverter(
-    private val onCustomFeeValueChange: (Int, String) -> Unit,
-    private val onNextClick: () -> Unit,
+    private val feeSelectorIntents: FeeSelectorIntents,
     private val appCurrency: AppCurrency,
     private val feeCryptoCurrencyStatus: CryptoCurrencyStatus,
     private val normalFee: Fee,
@@ -24,8 +24,8 @@ internal class FeeSelectorCustomFieldConverter(
 
     private val ethereumCustomFeeConverter by lazy(LazyThreadSafetyMode.NONE) {
         EthereumCustomFeeConverter(
-            onCustomFeeValueChange = onCustomFeeValueChange,
-            onNextClick = onNextClick,
+            onCustomFeeValueChange = feeSelectorIntents::onCustomFeeValueChange,
+            onNextClick = feeSelectorIntents::onCustomFeeNextClick,
             appCurrency = appCurrency,
             feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
         )
@@ -33,8 +33,8 @@ internal class FeeSelectorCustomFieldConverter(
 
     private val bitcoinCustomFeeConverter by lazy(LazyThreadSafetyMode.NONE) {
         BitcoinCustomFeeConverter(
-            onCustomFeeValueChange = onCustomFeeValueChange,
-            onNextClick = onNextClick,
+            onCustomFeeValueChange = feeSelectorIntents::onCustomFeeValueChange,
+            onNextClick = feeSelectorIntents::onCustomFeeNextClick,
             appCurrency = appCurrency,
             feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
         )
@@ -42,7 +42,7 @@ internal class FeeSelectorCustomFieldConverter(
 
     private val kaspaCustomFeeConverter by lazy(LazyThreadSafetyMode.NONE) {
         KaspaCustomFeeConverter(
-            onCustomFeeValueChange = onCustomFeeValueChange,
+            onCustomFeeValueChange = feeSelectorIntents::onCustomFeeValueChange,
             appCurrency = appCurrency,
             feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
         )

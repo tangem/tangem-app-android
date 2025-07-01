@@ -10,9 +10,9 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
+import com.tangem.features.send.v2.api.entity.FeeItem
+import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.features.send.v2.api.params.FeeSelectorParams
-import com.tangem.features.send.v2.feeselector.entity.FeeItem
-import com.tangem.features.send.v2.feeselector.entity.FeeSelectorUM
 import com.tangem.features.send.v2.feeselector.model.transformers.FeeItemSelectedTransformer
 import com.tangem.features.send.v2.feeselector.model.transformers.FeeSelectorErrorTransformer
 import com.tangem.features.send.v2.feeselector.model.transformers.FeeSelectorLoadedTransformer
@@ -31,17 +31,21 @@ internal class FeeSelectorModel @Inject constructor(
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val router: Router,
     override val dispatchers: CoroutineDispatcherProvider,
-) : Model() {
+) : Model(), FeeSelectorIntents {
 
-    private val params = paramsContainer.require<FeeSelectorParams.FeeSelectorBlockParams>()
+    private val params = paramsContainer.require<FeeSelectorParams>()
     private var appCurrency: AppCurrency = AppCurrency.Default
 
     val uiState: StateFlow<FeeSelectorUM>
-    field = MutableStateFlow<FeeSelectorUM>(FeeSelectorUM.Loading(onDone = ::onDone))
+    field = MutableStateFlow<FeeSelectorUM>(params.state)
 
     init {
         initAppCurrency()
         loadFee()
+    }
+
+    fun updateState(feeSelectorUM: FeeSelectorUM) {
+        uiState.value = feeSelectorUM
     }
 
     fun dismiss() {
@@ -58,18 +62,16 @@ internal class FeeSelectorModel @Inject constructor(
         modelScope.launch {
             params.onLoadFee()
                 .fold(
-                    ifLeft = { uiState.update(FeeSelectorErrorTransformer(it)) },
-                    ifRight = {
+                    ifLeft = { error -> uiState.update(FeeSelectorErrorTransformer(error)) },
+                    ifRight = { fee ->
                         uiState.update(
                             FeeSelectorLoadedTransformer(
                                 cryptoCurrencyStatus = params.cryptoCurrencyStatus,
                                 appCurrency = appCurrency,
-                                fees = it,
+                                fees = fee,
                                 suggestedFeeState = params.suggestedFeeState,
-                                isFeeApproximate = isFeeApproximate(it.normal.amount.type),
-                                onFeeSelected = ::onFeeItemSelected,
-                                onCustomFeeValueChange = ::onCustomFeeValueChange,
-                                onNextClick = ::onNextClick,
+                                isFeeApproximate = isFeeApproximate(fee.normal.amount.type),
+                                feeSelectorIntents = this@FeeSelectorModel,
                             ),
                         )
                     },
@@ -78,24 +80,24 @@ internal class FeeSelectorModel @Inject constructor(
     }
 
     private fun isFeeApproximate(amountType: AmountType): Boolean {
-        val networkId = params.network.id
+        val networkId = params.cryptoCurrencyStatus.currency.network.id
         return isFeeApproximateUseCase(networkId = networkId, amountType = amountType)
     }
 
-    private fun onFeeItemSelected(feeItem: FeeItem) {
+    override fun onFeeItemSelected(feeItem: FeeItem) {
         uiState.update(FeeItemSelectedTransformer(feeItem))
     }
 
-    @Suppress("UnusedPrivateMember")
-    private fun onCustomFeeValueChange(index: Int, value: String) {
+    override fun onCustomFeeValueChange(index: Int, value: String) {
         // TODO: [REDACTED_JIRA]
     }
 
-    private fun onNextClick() {
+    override fun onCustomFeeNextClick() {
         // TODO: [REDACTED_JIRA]
     }
 
-    private fun onDone() {
-        // TODO: [REDACTED_JIRA]
+    override fun onDoneClick() {
+        params.callback.onFeeResult(uiState.value)
+        dismiss()
     }
 }
