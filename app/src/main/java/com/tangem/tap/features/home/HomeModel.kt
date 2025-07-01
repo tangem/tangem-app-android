@@ -11,6 +11,7 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.card.repository.CardSdkConfigRepository
@@ -54,6 +55,7 @@ internal class HomeModel @Inject constructor(
     private val urlOpener: UrlOpener,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory,
+    private val router: Router,
     getUserCountryUseCase: GetUserCountryUseCase,
 ) : Model() {
 
@@ -72,11 +74,11 @@ internal class HomeModel @Inject constructor(
     }
 
     fun onCreateNewWalletScreen() {
-        // TODO implement navigation to create new wallet
+        router.push(AppRoute.CreateWalletSelection)
     }
 
     fun onAddExistingWalletScreen() {
-        // TODO implement navigation to add existing wallet
+        router.push(AppRoute.AddExistingWallet)
     }
 
     fun onScanClick() {
