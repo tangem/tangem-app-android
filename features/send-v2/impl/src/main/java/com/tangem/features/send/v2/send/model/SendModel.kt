@@ -165,7 +165,7 @@ internal class SendModel @Inject constructor(
         } else {
             val destinationUM = uiState.value.destinationUM as? DestinationUM.Content ?: error("Invalid destination")
             val amountUM = uiState.value.amountUM as? AmountState.Data ?: error("Invalid amount")
-            val enteredDestinationAddress = destinationUM.addressTextField.value
+            val enteredDestinationAddress = destinationUM.addressTextField.actualAddress
             val enteredMemo = destinationUM.memoTextField?.value
             val enteredAmount = amountUM.amountTextField.cryptoAmount.value ?: error("Invalid amount")
 

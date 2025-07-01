@@ -234,7 +234,7 @@ internal class DefaultSendComponent @AssistedInject constructor(
     private fun getFeeComponent(factoryContext: AppComponentContext): ComposableContentComponent {
         val state = model.uiState.value
         val sendAmount = (state.amountUM as? AmountState.Data)?.amountTextField?.cryptoAmount?.value
-        val destinationAddress = (state.destinationUM as? DestinationUM.Content)?.addressTextField?.value
+        val destinationAddress = (state.destinationUM as? DestinationUM.Content)?.addressTextField?.actualAddress
         val cryptoCurrencyStatus = model.cryptoCurrencyStatusFlow.value
         val feeCryptoCurrencyStatus = model.feeCryptoCurrencyStatusFlow.value
 
