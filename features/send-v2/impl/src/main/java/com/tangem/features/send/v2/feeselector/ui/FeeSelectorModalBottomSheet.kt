@@ -15,7 +15,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,12 +47,13 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.features.send.v2.feeselector.entity.FeeFiatRateUM
-import com.tangem.features.send.v2.feeselector.entity.FeeItem
-import com.tangem.features.send.v2.feeselector.entity.FeeSelectorUM
-import com.tangem.features.send.v2.feeselector.entity.PrimaryButtonConfig
+import com.tangem.features.send.v2.api.entity.CustomFeeFieldUM
+import com.tangem.features.send.v2.api.entity.FeeFiatRateUM
+import com.tangem.features.send.v2.api.entity.FeeItem
+import com.tangem.features.send.v2.api.entity.FeeSelectorUM
+import com.tangem.features.send.v2.feeselector.model.FeeSelectorIntents
+import com.tangem.features.send.v2.feeselector.model.StubFeeSelectorIntents
 import com.tangem.features.send.v2.impl.R
-import com.tangem.features.send.v2.subcomponents.fee.ui.state.CustomFeeFieldUM
 import com.tangem.utils.StringsSigns
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -61,7 +61,11 @@ import java.math.BigDecimal
 import java.math.BigInteger
 
 @Composable
-internal fun FeeSelectorModalBottomSheet(state: FeeSelectorUM, onDismiss: () -> Unit) {
+internal fun FeeSelectorModalBottomSheet(
+    state: FeeSelectorUM,
+    feeSelectorIntents: FeeSelectorIntents,
+    onDismiss: () -> Unit,
+) {
     if (state !is FeeSelectorUM.Content) return
 
     TangemModalBottomSheetWithFooter<TangemBottomSheetConfigContent.Empty>(
@@ -81,6 +85,7 @@ internal fun FeeSelectorModalBottomSheet(state: FeeSelectorUM, onDismiss: () -> 
         content = {
             FeeSelectorItems(
                 state = state,
+                feeSelectorIntents = feeSelectorIntents,
                 modifier = Modifier.padding(vertical = 4.dp, horizontal = 16.dp),
             )
         },
@@ -90,8 +95,7 @@ internal fun FeeSelectorModalBottomSheet(state: FeeSelectorUM, onDismiss: () -> 
                     .fillMaxWidth()
                     .padding(16.dp),
                 text = stringResourceSafe(R.string.common_done),
-                onClick = state.doneButtonConfig.onClick,
-                enabled = state.doneButtonConfig.enabled,
+                onClick = feeSelectorIntents::onDoneClick,
             )
         },
     )
@@ -99,10 +103,15 @@ internal fun FeeSelectorModalBottomSheet(state: FeeSelectorUM, onDismiss: () -> 
 
 @Suppress("LongMethod", "CyclomaticComplexMethod")
 @Composable
-private fun FeeSelectorItems(state: FeeSelectorUM.Content, modifier: Modifier = Modifier) {
+private fun FeeSelectorItems(
+    state: FeeSelectorUM.Content,
+    feeSelectorIntents: FeeSelectorIntents,
+    modifier: Modifier = Modifier,
+) {
     Column(modifier = modifier) {
+        val feeFiatRateUM = state.feeFiatRateUM
         state.feeItems.fastForEachIndexed { index, item ->
-            val isSelected = item == state.selectedFeeItem
+            val isSelected = item.isSame(state.selectedFeeItem)
             val lastItem = index == state.feeItems.size - 1
             val iconTint by animateColorAsState(
                 targetValue = if (isSelected) TangemTheme.colors.icon.accent else TangemTheme.colors.text.tertiary,
@@ -116,7 +125,6 @@ private fun FeeSelectorItems(state: FeeSelectorUM.Content, modifier: Modifier = 
                 },
                 label = "Fee selector icon background change",
             )
-            val onSelect by rememberUpdatedState(state.onFeeSelected)
             val itemModifier = Modifier
                 .fillMaxWidth()
                 .background(TangemTheme.colors.background.primary)
@@ -135,7 +143,7 @@ private fun FeeSelectorItems(state: FeeSelectorUM.Content, modifier: Modifier = 
                         Modifier
                     },
                 )
-                .clickableSingle(onClick = { onSelect(item) })
+                .clickableSingle(onClick = { feeSelectorIntents.onFeeItemSelected(item) })
             when (item) {
                 is FeeItem.Suggested -> RegularFeeItemContent(
                     modifier = itemModifier,
@@ -151,11 +159,11 @@ private fun FeeSelectorItems(state: FeeSelectorUM.Content, modifier: Modifier = 
                             ).fee(canBeLower = state.isFeeApproximate)
                         },
                     ),
-                    postDot = if (state.feeFiatRateUM != null) {
+                    postDot = if (feeFiatRateUM != null) {
                         getFiatReference(
                             value = item.fee.amount.value,
-                            rate = state.feeFiatRateUM.rate,
-                            appCurrency = state.feeFiatRateUM.appCurrency,
+                            rate = feeFiatRateUM.rate,
+                            appCurrency = feeFiatRateUM.appCurrency,
                         )
                     } else {
                         null
@@ -177,11 +185,11 @@ private fun FeeSelectorItems(state: FeeSelectorUM.Content, modifier: Modifier = 
                             ).fee(canBeLower = state.isFeeApproximate)
                         },
                     ),
-                    postDot = if (state.feeFiatRateUM != null) {
+                    postDot = if (feeFiatRateUM != null) {
                         getFiatReference(
                             value = item.fee.amount.value,
-                            rate = state.feeFiatRateUM.rate,
-                            appCurrency = state.feeFiatRateUM.appCurrency,
+                            rate = feeFiatRateUM.rate,
+                            appCurrency = feeFiatRateUM.appCurrency,
                         )
                     } else {
                         null
@@ -203,11 +211,11 @@ private fun FeeSelectorItems(state: FeeSelectorUM.Content, modifier: Modifier = 
                             ).fee(canBeLower = state.isFeeApproximate)
                         },
                     ),
-                    postDot = if (state.feeFiatRateUM != null) {
+                    postDot = if (feeFiatRateUM != null) {
                         getFiatReference(
                             value = item.fee.amount.value,
-                            rate = state.feeFiatRateUM.rate,
-                            appCurrency = state.feeFiatRateUM.appCurrency,
+                            rate = feeFiatRateUM.rate,
+                            appCurrency = feeFiatRateUM.appCurrency,
                         )
                     } else {
                         null
@@ -229,11 +237,11 @@ private fun FeeSelectorItems(state: FeeSelectorUM.Content, modifier: Modifier = 
                             ).fee(canBeLower = state.isFeeApproximate)
                         },
                     ),
-                    postDot = if (state.feeFiatRateUM != null) {
+                    postDot = if (feeFiatRateUM != null) {
                         getFiatReference(
                             value = item.fee.amount.value,
-                            rate = state.feeFiatRateUM.rate,
-                            appCurrency = state.feeFiatRateUM.appCurrency,
+                            rate = feeFiatRateUM.rate,
+                            appCurrency = feeFiatRateUM.appCurrency,
                         )
                     } else {
                         null
@@ -466,14 +474,13 @@ private fun FeeSelectorBS_Preview(
     state: FeeSelectorUM.Content,
 ) {
     TangemThemePreview {
-        FeeSelectorModalBottomSheet(onDismiss = {}, state = state)
+        FeeSelectorModalBottomSheet(onDismiss = {}, state = state, feeSelectorIntents = StubFeeSelectorIntents())
     }
 }
 
 private class FeeSelectorUMContentProvider : CollectionPreviewParameterProvider<FeeSelectorUM.Content>(
     collection = listOf(
         FeeSelectorUM.Content(
-            doneButtonConfig = PrimaryButtonConfig(enabled = true, onClick = {}),
             feeItems = persistentListOf(
                 FeeItem.Suggested(
                     title = stringReference("Suggested by Tangem"),
@@ -484,7 +491,6 @@ private class FeeSelectorUMContentProvider : CollectionPreviewParameterProvider<
                 FeeItem.Fast(fee = Fee.Common(Amount(value = BigDecimal("0.03"), blockchain = Blockchain.Ethereum))),
                 customFeeItem,
             ),
-            onFeeSelected = {},
             // selectedFeeItem = FeeItem.Market(
             //     amount = Amount(value = BigDecimal("0.02"), blockchain = Blockchain.Ethereum),
             // ),
