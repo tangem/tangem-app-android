@@ -4,13 +4,14 @@ import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
 import com.tangem.common.ui.amountScreen.AmountScreenClickIntents
 import com.tangem.common.ui.amountScreen.converters.*
+import com.tangem.common.ui.amountScreen.converters.field.AmountBoundaryUpdateTransformer
 import com.tangem.common.ui.amountScreen.converters.field.AmountFieldChangeTransformer
 import com.tangem.common.ui.amountScreen.converters.field.AmountFieldSetMaxAmountTransformer
-import com.tangem.common.ui.amountScreen.converters.field.AmountBoundaryUpdateTransformer
-import com.tangem.common.ui.amountScreen.converters.MaxEnterAmountConverter
 import com.tangem.common.ui.amountScreen.models.AmountParameters
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
+import com.tangem.common.ui.navigationButtons.NavigationButton
+import com.tangem.common.ui.navigationButtons.NavigationUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -26,10 +27,8 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.v2.api.SendFeatureToggles
-import com.tangem.features.send.v2.common.PredefinedValues
-import com.tangem.features.send.v2.common.ui.state.NavigationUM
+import com.tangem.features.send.v2.api.entity.PredefinedValues
 import com.tangem.features.send.v2.impl.R
-import com.tangem.features.send.v2.send.ui.state.ButtonsUM
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponentParams
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountReduceListener
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountUpdateQRListener
@@ -297,8 +296,8 @@ internal class SendAmountModel @Inject constructor(
                         R.drawable.ic_close_24
                     },
                     backIconClick = { params.onBackClick() },
-                    primaryButton = ButtonsUM.PrimaryButtonUM(
-                        text = if (route.isEditMode) {
+                    primaryButton = NavigationButton(
+                        textReference = if (route.isEditMode) {
                             resourceReference(R.string.common_continue)
                         } else {
                             resourceReference(R.string.common_next)
@@ -312,9 +311,9 @@ internal class SendAmountModel @Inject constructor(
                     prevButton = if (params.isRedesignEnabled) {
                         null
                     } else {
-                        ButtonsUM.PrimaryButtonUM(
-                            text = TextReference.EMPTY,
-                            iconResId = R.drawable.ic_back_24,
+                        NavigationButton(
+                            textReference = TextReference.EMPTY,
+                            iconRes = R.drawable.ic_back_24,
                             isEnabled = true,
                             onClick = {
                                 saveResult()
