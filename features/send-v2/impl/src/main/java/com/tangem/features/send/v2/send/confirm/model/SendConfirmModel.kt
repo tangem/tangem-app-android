@@ -122,7 +122,7 @@ internal class SendConfirmModel @Inject constructor(
             enteredMemo = destinationUM?.memoTextField?.value,
             reduceAmountBy = amountState?.reduceAmountBy.orZero(),
             isIgnoreReduce = amountState?.isIgnoreReduce == true,
-            enteredDestination = destinationUM?.addressTextField?.value,
+            enteredDestination = destinationUM?.addressTextField?.actualAddress,
             fee = feeSelectorUM?.selectedFee,
             feeError = (feeUM?.feeSelectorUM as? FeeSelectorUM.Error)?.error,
         )
@@ -316,7 +316,7 @@ internal class SendConfirmModel @Inject constructor(
 
     private fun verifyAndSendTransaction() {
         val amountValue = amountState?.amountTextField?.cryptoAmount?.value ?: return
-        val destination = destinationUM?.addressTextField?.value ?: return
+        val destination = destinationUM?.addressTextField?.actualAddress ?: return
         val memo = destinationUM?.memoTextField?.value
         val fee = feeSelectorUM?.selectedFee
         val feeValue = fee?.amount?.value ?: return
