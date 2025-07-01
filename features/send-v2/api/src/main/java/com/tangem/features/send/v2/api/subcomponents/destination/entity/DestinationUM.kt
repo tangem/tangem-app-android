@@ -1,10 +1,10 @@
-package com.tangem.features.send.v2.subcomponents.destination.ui.state
+package com.tangem.features.send.v2.api.subcomponents.destination.entity
 
 import androidx.compose.runtime.Immutable
 import kotlinx.collections.immutable.ImmutableList
 
 @Immutable
-internal sealed class DestinationUM {
+sealed class DestinationUM {
 
     abstract val isPrimaryButtonEnabled: Boolean
 

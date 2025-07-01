@@ -3,6 +3,8 @@ package com.tangem.features.send.v2.subcomponents.destination.model
 import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.ui.navigationButtons.NavigationButton
+import com.tangem.common.ui.navigationButtons.NavigationUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -25,18 +27,16 @@ import com.tangem.domain.wallets.models.isLocked
 import com.tangem.domain.wallets.models.isMultiCurrency
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.send.v2.api.SendFeatureToggles
-import com.tangem.features.send.v2.common.PredefinedValues
+import com.tangem.features.send.v2.api.entity.PredefinedValues
+import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationComponentParams
+import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationComponentParams.DestinationBlockParams
+import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.features.send.v2.common.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.v2.common.analytics.CommonSendAnalyticEvents.SendScreenSource
-import com.tangem.features.send.v2.common.ui.state.NavigationUM
 import com.tangem.features.send.v2.impl.R
-import com.tangem.features.send.v2.send.ui.state.ButtonsUM
-import com.tangem.features.send.v2.subcomponents.destination.SendDestinationComponentParams
-import com.tangem.features.send.v2.subcomponents.destination.SendDestinationComponentParams.DestinationBlockParams
 import com.tangem.features.send.v2.subcomponents.destination.analytics.EnterAddressSource
 import com.tangem.features.send.v2.subcomponents.destination.analytics.SendDestinationAnalyticEvents
 import com.tangem.features.send.v2.subcomponents.destination.model.transformers.*
-import com.tangem.features.send.v2.subcomponents.destination.ui.state.DestinationUM
 import com.tangem.features.send.v2.subcomponents.destination.ui.state.DestinationWalletUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
@@ -335,8 +335,8 @@ internal class SendDestinationModel @Inject constructor(
                     } else {
                         ::onQrCodeScanClick
                     },
-                    primaryButton = ButtonsUM.PrimaryButtonUM(
-                        text = if (route.isEditMode) {
+                    primaryButton = NavigationButton(
+                        textReference = if (route.isEditMode) {
                             resourceReference(R.string.common_continue)
                         } else {
                             resourceReference(R.string.common_next)
@@ -347,10 +347,10 @@ internal class SendDestinationModel @Inject constructor(
                             params.onNextClick()
                         },
                     ),
-                    prevButton = if (isRedesignEnabled) {
-                        ButtonsUM.PrimaryButtonUM(
-                            text = TextReference.EMPTY,
-                            iconResId = R.drawable.ic_back_24,
+                    prevButton = if (!route.isEditMode && isRedesignEnabled) {
+                        NavigationButton(
+                            textReference = TextReference.EMPTY,
+                            iconRes = R.drawable.ic_back_24,
                             isEnabled = true,
                             onClick = {
                                 saveResult()
