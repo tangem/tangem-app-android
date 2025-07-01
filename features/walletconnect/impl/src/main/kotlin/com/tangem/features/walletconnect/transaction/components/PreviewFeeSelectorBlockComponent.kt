@@ -15,9 +15,14 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.send.v2.api.FeeSelectorBlockComponent
+import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.features.walletconnect.impl.R
 
 internal class PreviewFeeSelectorBlockComponent : FeeSelectorBlockComponent {
+    override fun updateState(feeSelectorUM: FeeSelectorUM) {
+        /** No-op */
+    }
+
     @Composable
     override fun Content(modifier: Modifier) {
         Row(

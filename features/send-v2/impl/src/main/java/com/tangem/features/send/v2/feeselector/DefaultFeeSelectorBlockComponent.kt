@@ -33,17 +33,18 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.features.send.v2.api.FeeSelectorBlockComponent
+import com.tangem.features.send.v2.api.entity.FeeFiatRateUM
+import com.tangem.features.send.v2.api.entity.FeeItem
+import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.features.send.v2.api.params.FeeSelectorParams
-import com.tangem.features.send.v2.feeselector.entity.FeeFiatRateUM
-import com.tangem.features.send.v2.feeselector.entity.FeeItem
-import com.tangem.features.send.v2.feeselector.entity.FeeSelectorUM
-import com.tangem.features.send.v2.feeselector.entity.PrimaryButtonConfig
 import com.tangem.features.send.v2.feeselector.model.FeeSelectorModel
 import com.tangem.features.send.v2.impl.R
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import java.math.BigDecimal
 
 internal class DefaultFeeSelectorBlockComponent @AssistedInject constructor(
@@ -52,6 +53,16 @@ internal class DefaultFeeSelectorBlockComponent @AssistedInject constructor(
 ) : FeeSelectorBlockComponent, AppComponentContext by appComponentContext {
 
     private val model: FeeSelectorModel = getOrCreateModel(params = params)
+
+    init {
+        model.uiState
+            .onEach(params.callback::onFeeResult)
+            .launchIn(componentScope)
+    }
+
+    override fun updateState(feeSelectorUM: FeeSelectorUM) {
+        model.updateState(feeSelectorUM)
+    }
 
     @Composable
     override fun Content(modifier: Modifier) {
@@ -125,12 +136,13 @@ private fun RowScope.FeeLoading() {
 
 @Composable
 private fun RowScope.FeeContent(state: FeeSelectorUM.Content) {
+    val fiatRate = state.feeFiatRateUM
     EllipsisText(
-        text = if (state.feeFiatRateUM != null) {
+        text = if (fiatRate != null) {
             getFiatString(
                 value = state.selectedFeeItem.fee.amount.value,
-                rate = state.feeFiatRateUM.rate,
-                appCurrency = state.feeFiatRateUM.appCurrency,
+                rate = fiatRate.rate,
+                appCurrency = fiatRate.appCurrency,
                 approximate = state.isFeeApproximate,
             )
         } else {
@@ -167,9 +179,7 @@ private fun FeeSelectorBlockContent_Preview() {
         FeeSelectorBlockContent(
             modifier = Modifier.fillMaxWidth(),
             state = FeeSelectorUM.Content(
-                doneButtonConfig = PrimaryButtonConfig(enabled = true, onClick = {}),
                 feeItems = persistentListOf(feeItem),
-                onFeeSelected = {},
                 selectedFeeItem = feeItem,
                 isFeeApproximate = false,
                 feeFiatRateUM = FeeFiatRateUM(
