@@ -25,7 +25,7 @@ import com.tangem.features.send.v2.common.ui.state.ConfirmUM
 import com.tangem.features.send.v2.common.ui.tapHelp
 import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.sendnft.ui.state.NFTSendUM
-import com.tangem.features.send.v2.subcomponents.destination.SendDestinationBlockComponent
+import com.tangem.features.send.v2.subcomponents.destination.DefaultSendDestinationBlockComponent
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeBlockComponent
 import com.tangem.features.send.v2.subcomponents.notifications
 import com.tangem.features.send.v2.subcomponents.notifications.DefaultSendNotificationsComponent
@@ -37,7 +37,7 @@ private const val BLOCKS_KEY = "BLOCKS_KEY"
 @Composable
 internal fun NFTSendConfirmContent(
     nftSendUM: NFTSendUM,
-    destinationBlockComponent: SendDestinationBlockComponent,
+    destinationBlockComponent: DefaultSendDestinationBlockComponent,
     nftDetailsBlockComponent: NFTDetailsBlockComponent,
     feeBlockComponent: SendFeeBlockComponent,
     notificationsComponent: DefaultSendNotificationsComponent,
@@ -76,7 +76,7 @@ internal fun NFTSendConfirmContent(
 
 private fun LazyListScope.blocks(
     nftSendUM: NFTSendUM,
-    destinationBlockComponent: SendDestinationBlockComponent,
+    destinationBlockComponent: DefaultSendDestinationBlockComponent,
     nftDetailsBlockComponent: NFTDetailsBlockComponent,
     feeBlockComponent: SendFeeBlockComponent,
 ) {

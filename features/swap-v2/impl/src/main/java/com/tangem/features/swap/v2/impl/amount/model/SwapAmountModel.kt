@@ -39,7 +39,7 @@ import com.tangem.features.swap.v2.impl.amount.model.converter.SwapAmountReadySt
 import com.tangem.features.swap.v2.impl.amount.model.transformers.*
 import com.tangem.features.swap.v2.impl.chooseprovider.SwapChooseProviderComponent
 import com.tangem.features.swap.v2.impl.choosetoken.fromSupported.SwapChooseTokenNetworkListener
-import com.tangem.features.swap.v2.impl.common.entity.NavigationUM
+import com.tangem.common.ui.navigationButtons.NavigationUM
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM.Content.DifferencePercent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider

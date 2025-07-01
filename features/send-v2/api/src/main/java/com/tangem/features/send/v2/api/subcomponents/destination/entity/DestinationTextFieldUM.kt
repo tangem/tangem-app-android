@@ -1,11 +1,11 @@
-package com.tangem.features.send.v2.subcomponents.destination.ui.state
+package com.tangem.features.send.v2.api.subcomponents.destination.entity
 
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.extensions.TextReference
 
 @Immutable
-internal sealed class DestinationTextFieldUM {
+sealed class DestinationTextFieldUM {
 
     /** Current value */
     abstract val value: String
