@@ -20,6 +20,8 @@ import com.tangem.domain.walletconnect.model.WcSessionProposal
 import com.tangem.domain.walletconnect.usecase.pair.WcPairState
 import com.tangem.domain.walletconnect.usecase.pair.WcPairUseCase
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.models.isLocked
+import com.tangem.domain.wallets.models.isMultiCurrency
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.walletconnect.connections.components.WcPairComponent
 import com.tangem.features.walletconnect.connections.components.WcSelectNetworksComponent
@@ -37,6 +39,8 @@ import com.tangem.utils.transformer.update as transformerUpdate
 internal interface WcPairComponentCallback :
     WcSelectWalletComponent.ModelCallback,
     WcSelectNetworksComponent.ModelCallback
+
+private const val WC_WALLETS_SELECTOR_MIN_COUNT = 2
 
 @Stable
 @ModelScoped
@@ -97,6 +101,8 @@ internal class WcPairModel @Inject constructor(
                     }
                     is WcPairState.Loading -> appInfoUiState.update { createLoadingState() }
                     is WcPairState.Proposal -> {
+                        val availableWallets = pairState.dAppSession.proposalNetwork.keys
+                            .filter { !it.isLocked && it.isMultiCurrency }
                         sessionProposal = pairState.dAppSession
                         proposalNetwork = sessionProposal.proposalNetwork.getValue(selectedUserWalletFlow.value)
                         additionallyEnabledNetworks = proposalNetwork.available
@@ -110,7 +116,7 @@ internal class WcPairModel @Inject constructor(
                                     stackNavigation.pushNew(
                                         WcAppInfoRoutes.SelectWallet(selectedUserWalletFlow.value.walletId),
                                     )
-                                },
+                                }.takeIf { availableWallets.size >= WC_WALLETS_SELECTOR_MIN_COUNT },
                                 onNetworksClick = {
                                     stackNavigation.pushNew(
                                         WcAppInfoRoutes.SelectNetworks(
