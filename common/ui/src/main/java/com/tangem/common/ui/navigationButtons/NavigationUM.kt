@@ -1,12 +1,11 @@
-package com.tangem.features.send.v2.common.ui.state
+package com.tangem.common.ui.navigationButtons
 
 import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.features.send.v2.send.ui.state.ButtonsUM
 
 @Immutable
-internal sealed class NavigationUM {
+sealed class NavigationUM {
     data class Content(
         val title: TextReference,
         val subtitle: TextReference?,
@@ -14,9 +13,9 @@ internal sealed class NavigationUM {
         val backIconClick: () -> Unit,
         @DrawableRes val additionalIconRes: Int? = null,
         val additionalIconClick: (() -> Unit)? = null,
-        val primaryButton: ButtonsUM.PrimaryButtonUM,
-        val prevButton: ButtonsUM.PrimaryButtonUM?,
-        val secondaryPairButtonsUM: ButtonsUM.SecondaryPairButtonsUM?,
+        val primaryButton: NavigationButton,
+        val prevButton: NavigationButton? = null,
+        val secondaryPairButtonsUM: Pair<NavigationButton, NavigationButton>? = null,
     ) : NavigationUM()
 
     data object Empty : NavigationUM()
