@@ -1420,7 +1420,7 @@
   <string name="warning_testnet_card_message">This is a Testnet card. It cannot process transactions and should only be used for testing and development purposes.</string>
   <string name="warning_testnet_card_title">For testing purposes only</string>
   <string name="warning_token_balance_not_updated">Balance may be outdated. Refresh the page.</string>
-  <string name="warning_token_required_min_coin_reserve">Not enough %1$s. Top up your XLM account to associate this token</string>
+  <string name="warning_token_required_min_coin_reserve">Not enough %1$s. Top up your %2$s account to associate this token</string>
   <string name="warning_token_trustline_button_title">Enable Trustline</string>
   <string name="warning_token_trustline_subtitle">A Trustline must be enabled to receive this token. The network requires a %1$s %2$s reserve.</string>
   <string name="warning_token_trustline_title">Trustline Required</string>
