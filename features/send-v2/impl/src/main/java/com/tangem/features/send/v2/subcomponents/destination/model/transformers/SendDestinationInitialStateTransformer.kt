@@ -7,8 +7,8 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.features.send.v2.impl.R
-import com.tangem.features.send.v2.subcomponents.destination.ui.state.DestinationTextFieldUM
-import com.tangem.features.send.v2.subcomponents.destination.ui.state.DestinationUM
+import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationTextFieldUM
+import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.utils.transformer.Transformer
 
 internal class SendDestinationInitialStateTransformer(

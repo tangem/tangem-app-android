@@ -28,9 +28,9 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.subcomponents.destination.analytics.EnterAddressSource
 import com.tangem.features.send.v2.subcomponents.destination.model.SendDestinationClickIntents
-import com.tangem.features.send.v2.subcomponents.destination.ui.state.DestinationRecipientListUM
-import com.tangem.features.send.v2.subcomponents.destination.ui.state.DestinationTextFieldUM
-import com.tangem.features.send.v2.subcomponents.destination.ui.state.DestinationUM
+import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationRecipientListUM
+import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationTextFieldUM
+import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
 import kotlinx.collections.immutable.ImmutableList
 
 private const val ADDRESS_FIELD_KEY = "ADDRESS_FIELD_KEY"
