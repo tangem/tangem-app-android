@@ -15,6 +15,7 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.send.v2.api.FeeSelectorBlockComponent
+import com.tangem.features.send.v2.api.FeeSelectorComponent
 import com.tangem.features.walletconnect.components.WcRoutingComponent
 import com.tangem.features.walletconnect.connections.components.AlertsComponent
 import com.tangem.features.walletconnect.connections.components.WcPairComponent
@@ -31,6 +32,7 @@ internal class DefaultWcRoutingComponent @AssistedInject constructor(
     @Assisted private val appComponentContext: AppComponentContext,
     @Assisted params: Unit,
     private val feeSelectorBlockComponentFactory: FeeSelectorBlockComponent.Factory,
+    private val feeSelectorComponentFactory: FeeSelectorComponent.Factory,
 ) : AppComponentContext by appComponentContext, WcRoutingComponent {
 
     private val model: WcRoutingModel = getOrCreateModel()
@@ -73,6 +75,7 @@ internal class DefaultWcRoutingComponent @AssistedInject constructor(
                 appComponentContext = childContext,
                 params = WcTransactionModelParams(config.rawRequest),
                 feeSelectorBlockComponentFactory = feeSelectorBlockComponentFactory,
+                feeSelectorComponentFactory = feeSelectorComponentFactory,
             )
             is WcInnerRoute.Pair -> WcPairComponent(
                 appComponentContext = childContext,
