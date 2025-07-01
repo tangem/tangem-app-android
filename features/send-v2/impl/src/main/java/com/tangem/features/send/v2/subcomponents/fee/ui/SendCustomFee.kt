@@ -17,7 +17,7 @@ import com.tangem.core.ui.components.inputrow.InputRowEnterInfoAmount
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.send.v2.impl.R
-import com.tangem.features.send.v2.subcomponents.fee.ui.state.CustomFeeFieldUM
+import com.tangem.features.send.v2.api.entity.CustomFeeFieldUM
 import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeType
 import kotlinx.collections.immutable.ImmutableList
 
