@@ -8,4 +8,6 @@ package com.tangem.domain.tokens
 interface TokensFeatureToggles {
 
     val isStakingLoadingRefactoringEnabled: Boolean
+
+    val isWalletBalanceFetcherEnabled: Boolean
 }
