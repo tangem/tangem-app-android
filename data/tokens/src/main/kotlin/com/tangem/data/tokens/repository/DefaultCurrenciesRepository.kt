@@ -16,6 +16,7 @@ import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.exchangeservice.swap.ExpressServiceLoader
 import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.core.error.DataError
 import com.tangem.domain.demo.DemoConfig
@@ -571,6 +572,10 @@ internal class DefaultCurrenciesRepository(
                 throw IllegalStateException("Unable to push tokens")
             },
         )
+    }
+
+    override fun getCardTypesResolver(userWalletId: UserWalletId): CardTypesResolver {
+        return userWalletsStore.getSyncStrict(userWalletId).requireColdWallet().cardTypesResolver
     }
 
     private fun getMultiCurrencyWalletCurrencies(userWallet: UserWallet): Flow<List<CryptoCurrency>> {
