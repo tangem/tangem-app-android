@@ -6,6 +6,8 @@ import com.tangem.features.swap.v2.impl.amount.model.SwapAmountClickIntents
 internal object SwapAmountClickIntentsStub : SwapAmountClickIntents {
     override fun onExpandEditField(selectedAmountType: SwapAmountType) {}
 
+    override fun onInfoClick() {}
+
     override fun onSelectTokenClick() {}
 
     override fun onAmountValueChange(value: String) {}
