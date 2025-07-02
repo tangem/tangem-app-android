@@ -8,6 +8,10 @@ android {
     namespace = "com.tangem.domain.tokens"
 }
 
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+}
+
 dependencies {
 
     /** Project - Domain */
@@ -49,9 +53,12 @@ dependencies {
     implementation(deps.reKotlin)
 
     /** Tests */
-    testImplementation(deps.test.junit)
     testImplementation(deps.test.coroutine)
+    testImplementation(deps.test.junit5)
+    testRuntimeOnly(deps.test.junit5.engine)
     testImplementation(deps.test.mockk)
+    testImplementation(deps.test.truth)
+    testImplementation(projects.common.test)
     testImplementation(tangemDeps.blockchain) {
         exclude(module = "joda-time")
     }
