@@ -6,24 +6,26 @@ import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.feature.qrscanning.QrScanningComponent
 import com.tangem.feature.referral.api.ReferralComponent
 import com.tangem.feature.stories.api.StoriesComponent
+import com.tangem.feature.usedesk.api.UsedeskComponent
 import com.tangem.feature.walletsettings.component.WalletSettingsComponent
 import com.tangem.features.details.component.DetailsComponent
 import com.tangem.features.disclaimer.api.components.DisclaimerComponent
 import com.tangem.features.managetokens.component.ManageTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensSource
 import com.tangem.features.markets.details.MarketsTokenDetailsComponent
+import com.tangem.features.markets.tokenlist.MarketsTokenListComponent
 import com.tangem.features.nft.component.NFTComponent
 import com.tangem.features.onboarding.v2.entry.OnboardingEntryComponent
 import com.tangem.features.onramp.component.*
 import com.tangem.features.pushnotifications.api.PushNotificationsComponent
-import com.tangem.features.send.api.SendComponent
 import com.tangem.features.send.v2.api.NFTSendComponent
-import com.tangem.features.send.v2.api.SendFeatureToggles
+import com.tangem.features.send.v2.api.SendComponent
 import com.tangem.features.staking.api.StakingComponent
 import com.tangem.features.swap.SwapComponent
 import com.tangem.features.tester.api.TesterRouter
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.wallet.WalletEntryComponent
+import com.tangem.features.walletconnect.components.WalletConnectEntryComponent
 import com.tangem.features.walletconnect.components.WalletConnectFeatureToggles
 import com.tangem.tap.features.details.ui.appcurrency.api.AppCurrencySelectorComponent
 import com.tangem.tap.features.details.ui.appsettings.api.AppSettingsComponent
@@ -47,6 +49,7 @@ internal class ChildFactory @Inject constructor(
     private val disclaimerComponentFactory: DisclaimerComponent.Factory,
     private val manageTokensComponentFactory: ManageTokensComponent.Factory,
     private val marketsTokenDetailsComponentFactory: MarketsTokenDetailsComponent.Factory,
+    private val marketsTokenListComponentFactory: MarketsTokenListComponent.FactoryScreen,
     private val onrampComponentFactory: OnrampComponent.Factory,
     private val onrampSuccessComponentFactory: OnrampSuccessComponent.Factory,
     private val buyCryptoComponentFactory: BuyCryptoComponent.Factory,
@@ -55,7 +58,6 @@ internal class ChildFactory @Inject constructor(
     private val onboardingEntryComponentFactory: OnboardingEntryComponent.Factory,
     private val welcomeComponentFactory: WelcomeComponent.Factory,
     private val storiesComponentFactory: StoriesComponent.Factory,
-    private val sendComponentFactory: SendComponent.Factory,
     private val stakingComponentFactory: StakingComponent.Factory,
     private val swapComponentFactory: SwapComponent.Factory,
     private val homeComponentFactory: HomeComponent.Factory,
@@ -71,11 +73,11 @@ internal class ChildFactory @Inject constructor(
     private val referralComponentFactory: ReferralComponent.Factory,
     private val pushNotificationsComponentFactory: PushNotificationsComponent.Factory,
     private val walletComponentFactory: WalletEntryComponent.Factory,
-    private val sendComponentFactoryV2: com.tangem.features.send.v2.api.SendComponent.Factory,
-    private val sendFeatureToggles: SendFeatureToggles,
-    private val redesignedWalletConnectComponentFactory: RedesignedWalletConnectComponent.Factory,
+    private val sendComponentFactoryV2: SendComponent.Factory,
+    private val redesignedWalletConnectComponentFactory: WalletConnectEntryComponent.Factory,
     private val nftComponentFactory: NFTComponent.Factory,
     private val nftSendComponentFactory: NFTSendComponent.Factory,
+    private val usedeskComponentFactory: UsedeskComponent.Factory,
     private val testerRouter: TesterRouter,
     private val walletConnectFeatureToggles: WalletConnectFeatureToggles,
 ) {
@@ -252,33 +254,18 @@ internal class ChildFactory @Inject constructor(
                 )
             }
             is AppRoute.Send -> {
-                if (sendFeatureToggles.isSendV2Enabled) {
-                    createComponentChild(
-                        context = context,
-                        params = com.tangem.features.send.v2.api.SendComponent.Params(
-                            userWalletId = route.userWalletId,
-                            currency = route.currency,
-                            transactionId = route.transactionId,
-                            amount = route.amount,
-                            tag = route.tag,
-                            destinationAddress = route.destinationAddress,
-                        ),
-                        componentFactory = sendComponentFactoryV2,
-                    )
-                } else {
-                    createComponentChild(
-                        context = context,
-                        params = SendComponent.Params(
-                            userWalletId = route.userWalletId,
-                            currency = route.currency,
-                            transactionId = route.transactionId,
-                            amount = route.amount,
-                            tag = route.tag,
-                            destinationAddress = route.destinationAddress,
-                        ),
-                        componentFactory = sendComponentFactory,
-                    )
-                }
+                createComponentChild(
+                    context = context,
+                    params = SendComponent.Params(
+                        userWalletId = route.userWalletId,
+                        currency = route.currency,
+                        transactionId = route.transactionId,
+                        amount = route.amount,
+                        tag = route.tag,
+                        destinationAddress = route.destinationAddress,
+                    ),
+                    componentFactory = sendComponentFactoryV2,
+                )
             }
             is AppRoute.Home -> {
                 createComponentChild(
@@ -291,13 +278,13 @@ internal class ChildFactory @Inject constructor(
                 if (walletConnectFeatureToggles.isRedesignedWalletConnectEnabled) {
                     createComponentChild(
                         context = context,
-                        params = Unit,
+                        params = RedesignedWalletConnectComponent.Params(route.userWalletId),
                         componentFactory = redesignedWalletConnectComponentFactory,
                     )
                 } else {
                     createComponentChild(
                         context = context,
-                        params = Unit,
+                        params = WalletConnectComponent.Params(route.userWalletId),
                         componentFactory = walletConnectComponentFactory,
                     )
                 }
@@ -404,6 +391,20 @@ internal class ChildFactory @Inject constructor(
                         nftCollectionName = route.nftCollectionName,
                     ),
                     componentFactory = nftSendComponentFactory,
+                )
+            }
+            is AppRoute.Markets -> {
+                createComponentChild(
+                    context = context,
+                    params = Unit,
+                    componentFactory = marketsTokenListComponentFactory,
+                )
+            }
+            is AppRoute.Usedesk -> { // TODO [REDACTED_TASK_KEY] pass params
+                createComponentChild(
+                    context = context,
+                    params = UsedeskComponent.Params(),
+                    componentFactory = usedeskComponentFactory,
                 )
             }
         }

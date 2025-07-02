@@ -1,8 +1,7 @@
 package com.tangem.data.common.currency
 
-import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 
 class UserTokensResponseFactory {
 
@@ -27,16 +26,16 @@ class UserTokensResponseFactory {
     }
 
     fun createResponseToken(currency: CryptoCurrency): UserTokensResponse.Token {
-        val blockchain = getBlockchain(currency.network.id)
-
-        return UserTokensResponse.Token(
-            id = currency.id.rawCurrencyId?.value,
-            networkId = blockchain.toNetworkId(),
-            derivationPath = currency.network.derivationPath.value,
-            name = currency.name,
-            symbol = currency.symbol,
-            decimals = currency.decimals,
-            contractAddress = (currency as? CryptoCurrency.Token)?.contractAddress,
-        )
+        return with(currency) {
+            UserTokensResponse.Token(
+                id = id.rawCurrencyId?.value,
+                networkId = network.backendId,
+                derivationPath = network.derivationPath.value,
+                name = name,
+                symbol = symbol,
+                decimals = decimals,
+                contractAddress = (this as? CryptoCurrency.Token)?.contractAddress,
+            )
+        }
     }
 }
