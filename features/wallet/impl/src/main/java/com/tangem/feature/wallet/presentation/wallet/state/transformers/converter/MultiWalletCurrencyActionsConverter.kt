@@ -30,7 +30,9 @@ internal class MultiWalletCurrencyActionsConverter(
     }
 
     private fun List<TokenActionsState.ActionState>.filterIfSingleWithToken(): List<TokenActionsState.ActionState> {
-        return if (userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()) {
+        return if (userWallet is UserWallet.Cold &&
+            userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()
+        ) {
             filter { it !is TokenActionsState.ActionState.HideToken }
         } else {
             this

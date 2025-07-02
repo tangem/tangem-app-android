@@ -289,6 +289,7 @@
   <string name="exchange_tokens_unavailable_tokens_header">Kann nicht gegen %s ausgetauscht werden</string>
   <string name="express_by_provider">Bereitgestellt von</string>
   <string name="express_cex_status_button_title">Status</string>
+  <string name="express_choose_provider">Anbieter auswählen</string>
   <string name="express_choose_providers_subtitle">Anbieter erleichtern Transaktionen</string>
   <string name="express_choose_providers_title">Anbieter</string>
   <string name="express_error_code">Es ist ein Fehler aufgetreten. Code: %s</string>
@@ -349,6 +350,8 @@
   <string name="express_status_hide_button_text">Diese Transaktion ausblenden</string>
   <string name="express_status_hide_dialog_text">Sobald der Transaktionsstatus ausgeblendet ist, kann er nicht mehr angezeigt werden. Stattdessen kannst Du ihn durch einfaches Wischen schließen.</string>
   <string name="express_status_hide_dialog_title">Diese Transaktion ausblenden</string>
+  <string name="express_swap_not_supported_text">Dieses Token wird nicht unterstützt. Bitte wähle zum Tauschen ein anderes Token.</string>
+  <string name="express_swap_not_supported_title">%s wird nicht unterstützt</string>
   <string name="express_swap_with">Tauschen mit</string>
   <string name="express_token_list_empty_search">Keine Token gefunden. Bitte versuche eine andere Anfrage</string>
   <string name="express_transaction_id">ID: %s</string>
@@ -377,6 +380,8 @@
   <string name="give_permission_swap_subtitle" formatted="false">Um fortzufahren, erteile %1s Smart Contracts die Berechtigung, dein zu %2s verwenden.</string>
   <string name="give_permission_title">Erlaubnis erteilen</string>
   <string name="give_permission_unlimited">Unbegrenzt</string>
+  <string name="home_button_add_existing_wallet">Vorhandene Wallet hinzufügen</string>
+  <string name="home_button_create_new_wallet">Neues Wallet erstellen</string>
   <string name="home_button_order">Karte oder Ring bestellen</string>
   <string name="home_button_scan">Karte oder Ring scannen</string>
   <string name="hot_crypto_add_token_subtitle">An %s</string>
@@ -568,6 +573,8 @@
   <string name="nft_receive_unavailable_asset_warning_message">Du hast dieses Netzwerk noch nicht hinzugefügt. Um NFTs zu erhalten, füge es Deinem Portfolio hinzu.</string>
   <string name="nft_receive_unavailable_asset_warning_title">Netzwerk nicht hinzugefügt</string>
   <string name="nft_receive_unavailable_section_title">Nicht hinzugefügt</string>
+  <string name="nft_receive_unsupported_types">Nicht unterstützte NFT-Arten</string>
+  <string name="nft_receive_unsupported_types_description">cNFTs und pNFTs werden derzeit nicht unterstützt. Bitte sende diese nicht an Deine Wallet.</string>
   <string name="nft_send">NFT senden</string>
   <string name="nft_traits_title">Eigenschaften</string>
   <string name="nft_untitled_collection">Unbetitelte Sammlung</string>
@@ -814,6 +821,7 @@
   <string name="send_fee_unreachable_error_text">Überprüfe deine Netzwerkverbindung</string>
   <string name="send_fee_unreachable_error_title">Informationen zur Netzwerkgebühr nicht erreichbar</string>
   <string name="send_from_wallet_android">Von</string>
+  <string name="send_from_wallet_name">Von %s</string>
   <string name="send_gas_limit">Grenzwert Gasgebühr</string>
   <string name="send_gas_limit_footer">Dies ist die maximale Gasgebühr, die für den Abschluss einer Transaktion oder eines Vertrags ausgegeben wird. Ein Gaslimit verhindert unerwartete oder unbegrenzte Gebühren bei der Ausführung einer Transaktion.</string>
   <string name="send_gas_price">Gaspreis</string>
@@ -821,8 +829,12 @@
   <string name="send_max_amount">Max</string>
   <string name="send_max_amount_label">Höchstbetrag</string>
   <string name="send_max_fee">Gebühr bis zu</string>
+  <string name="send_memo">Memo: %s</string>
   <string name="send_memo_destination_tag_error">Ungültiges Memo</string>
   <string name="send_network_fee_warning_title">Abdeckung der Netzgebühren</string>
+  <string name="send_nonce">Nonce</string>
+  <string name="send_nonce_footer">Eindeutige Nummer für jede Transaktion. Verwende diese Nummer, um eine ausstehende Transaktion erneut zu senden oder abzubrechen.</string>
+  <string name="send_nonce_hint">Nonce eingeben…</string>
   <string name="send_notification_exceed_balance_text">Unzureichende Mittel für die Überweisung, da die Summe aus Gebühr und Überweisungsbetrag das bestehende Guthaben übersteigt</string>
   <string name="send_notification_exceed_balance_title">Gesamtbetrag übersteigt den Saldo</string>
   <string name="send_notification_existential_deposit_text">Ein Guthaben von mindestens %s ist erforderlich, um dein Konto in der Blockchain aktiv zu halten und Sicherheitsrisiken zu vermeiden. Dieser Betrag verbleibt auf deinem Guthaben und kann nicht abgehoben werden.</string>
@@ -850,8 +862,12 @@
   <string name="send_recipient">Empfänger</string>
   <string name="send_recipient_address_error">Keine gültige Adresse</string>
   <string name="send_recipient_address_footer">Vergewisser dich, dass die empfangende Wallet-Adresse im %s Netzwerk ist, damit du deine Token nicht verlierst.</string>
+  <string name="send_recipient_address_footer_highlighted_part">senden an %s</string>
+  <string name="send_recipient_address_footer_v2">Stelle sicher, dass Du %s Netzwerkadresse hast, da Fehler zu verlorenen Übertragungen führen können</string>
   <string name="send_recipient_label">Senden an</string>
   <string name="send_recipient_memo_footer">Ein Memo/Destination Tag ist eine eindeutige ID zur Unterscheidung von Transaktionen, die an denselben Empfänger im selben Netzwerk gesendet werden. Vorsicht! Das Weglassen eines Vermerks kann dazu führen, dass Gelder für immer verloren sind!</string>
+  <string name="send_recipient_memo_footer_v2">Memo / Destination Tag ist ein Code, der Transaktionen an einen gemeinsamen Empfänger im Kryptonetzwerk voneinander trennt.</string>
+  <string name="send_recipient_memo_footer_v2_highlighted">Achtung: Das Fehlen eines Memos kann zum Verlust von Geldern führen.</string>
   <string name="send_recipient_wallets_title">Meine Wallet</string>
   <string name="send_satoshi_per_byte_text">Eine Möglichkeit, Bitcoin-Transaktionsgebühren zu messen. Du gibst die Anzahl der kleinsten Bitcoin-Einheiten (Satoshi) für jedes virtuelle Byte in einer Transaktion an. Je höher die Zahl, desto schneller wird die Transaktion von den Minern verarbeitet.</string>
   <string name="send_satoshi_per_byte_title">Satoshi / vByte</string>
@@ -864,6 +880,7 @@
   <string name="send_summary_transaction_description_suffix_fee_covered">Die Netzwerkgebühr wird durch die Nutzung von %1$s Energieträgern gedeckt.</string>
   <string name="send_summary_transaction_description_suffix_fee_reduced">Die Netzwerkgebühr wird durch den Verbrauch von %1$s Energie reduziert</string>
   <string name="send_summary_transaction_description_suffix_including">inklusive einer Netzgebühr von %1$s</string>
+  <string name="send_to_address">Zur Adresse</string>
   <string name="send_transaction_success">Die Transaktion wurde erfolgreich signiert und an den Blockchain-Knoten gesendet. Die Walletbilanz wird aktualisiert</string>
   <string name="send_tron_account_activation_error">%1$s ist ein Vermögenswert im Tron-Netzwerk. Um die Gebühr zu berechnen und eine Transaktion durchzuführen, musst du etwas Tron (TRX) auf deinem Konto einzahlen.</string>
   <string name="send_validation_amount_exceeds_balance">Der Betrag geht über die Bilanz hinaus</string>
@@ -872,11 +889,15 @@
   <string name="send_validation_invalid_amount">Ungültiger Betrag</string>
   <string name="send_validation_invalid_fee">Die Gebühr geht über die Bilanz hinaus</string>
   <string name="send_validation_invalid_total">Der Gesamtbetrag geht über die Bilanz hinaus</string>
+  <string name="send_with_swap_notification_text">Sende uns ein Token, und wir konvertieren es unterwegs. Dein Empfänger erhält genau das, was er braucht – nahtlos.</string>
+  <string name="send_with_swap_recipient_amount_text">Wird an den Empfänger gesendet</string>
+  <string name="send_with_swap_title">Senden mit Swap</string>
   <string name="sent_transaction_sent_title">Transaktion gesendet</string>
   <string name="settings_card_settings_footer">Bereite das Scannen der Karte oder Ring vor, die du einrichten möchtest.</string>
   <string name="settings_forget_wallet">Entferne diese Wallet</string>
   <string name="settings_forget_wallet_footer">Hiermit wird die Wallet aus der Anwendung entfernt. Die Wallet selbst kann wieder hinzugefügt werden.</string>
   <string name="settings_wallet_name_title">Name</string>
+  <string name="stake_token_description">Lass deinen Token für dich arbeiten</string>
   <string name="staking_amount_requirement_error">Die Anzahl der zu stakenden Krypros muss mindesten %s betragen</string>
   <string name="staking_amount_tron_integer_error">Der Stakingbetrag wird aufgrund der Netzwerkregeln auf %1$s TRX aufgerundet.</string>
   <string name="staking_amount_tron_integer_error_unstaking">Der Betrag der unstaked wird, wird aufgrund der Netzwerkregeln auf %1$s TRX gerundet.</string>
@@ -1011,6 +1032,7 @@
   <string name="story_web3_title">Web 3.0-kompatibel</string>
   <string name="sui_not_enough_coin_for_fee_description">Zum Fortfahren ist eine eingehende Transaktion von mindestens %1$s erforderlich</string>
   <string name="sui_not_enough_coin_for_fee_title">Unzureichende Mittel</string>
+  <string name="swap_fixed_rate">Fester Zinssatz</string>
   <string name="swap_give_permission_fee_footer">Das Netzwerk erhebt eine Token-Genehmigungsgebühr, um zu überprüfen, ob Sie die Verwendung Ihres Tokens für den Swap genehmigen.</string>
   <string name="swap_promo_text">Tausche mehr Token zu besseren Kursen direkt in deiner Brieftasche.</string>
   <string name="swap_promo_title">Neuer Swap-Anbieter verfügbar!</string>
@@ -1260,7 +1282,7 @@
   <string name="warning_rate_app_message">Deine Bewertung motiviert uns, die Tangem Wallet noch besser zu machen.</string>
   <string name="warning_rate_app_title">Gefällt dir Tangem?</string>
   <string name="warning_receive_blocked_hedera_token_association_required_message">Du musst deinen Token zuordnen, bevor du Token erhalten kannst</string>
-  <string name="warning_receive_blocked_stelar_token_trustline_required_message">Du musst die trustline öffnen, bevor Du Token erhältst</string>
+  <string name="warning_receive_blocked_token_trustline_required_message">Du musst die Trustline für Deinen Token öffnen, bevor Du diesen erhalten kannst.</string>
   <string name="warning_rent_fee_title">Netzmietgebühr erforderlich</string>
   <string name="warning_seedphrase_action_required_title">Handlungsbedarf</string>
   <string name="warning_seedphrase_contacted_support">Hast Du innerhalb von 7 Tagen nach der Erstellung Ihres Wallets über die App Kontakt zum Support aufgenommen? Wenn ja oder wenn Du Dir nicht sicher bist, klicke auf „Ja“ und folge den Anweisungen.</string>
@@ -1276,13 +1298,13 @@
   <string name="warning_some_networks_unreachable_message">Wischen Sie nach unten, um zu aktualisieren, oder versuchen Sie es später erneut.</string>
   <string name="warning_some_networks_unreachable_title">Einige Netzwerke sind nicht erreichbar</string>
   <string name="warning_some_token_balances_not_updated">Einige Token-Guthaben konnten nicht aktualisiert werden</string>
-  <string name="warning_stelar_token_required_min_coin_reserve">Erforderliche Mindest-XLM-Reserve %1$s</string>
-  <string name="warning_stellar_token_trustline_button_title">Trustline öffnen</string>
-  <string name="warning_stellar_token_trustline_subtiile">Trustline-Untermenü öffnen</string>
-  <string name="warning_stellar_token_trustline_tiile">Trustline-Titel öffnen</string>
   <string name="warning_testnet_card_message">Dies ist eine Testnet-Karte. Sie kann keine Transaktionen verarbeiten und sollte nur zu Test- und Entwicklungszwecken verwendet werden.</string>
   <string name="warning_testnet_card_title">Nur für Testzwecke</string>
   <string name="warning_token_balance_not_updated">Der Kontostand ist möglicherweise veraltet. Aktualisiere bittre die Seite.</string>
+  <string name="warning_token_required_min_coin_reserve">Nicht genug %1$s. Lade Dein XLM-Konto auf, um dieses Token zu verknüpfen</string>
+  <string name="warning_token_trustline_button_title">Trustline aktivieren</string>
+  <string name="warning_token_trustline_subtitle">Um dieses Token zu erhalten, muss eine Trustline aktiviert sein. Das Netzwerk benötigt eine Reserve von %1$s %2$s.</string>
+  <string name="warning_token_trustline_title">Trustline erforderlich</string>
   <string name="wc_alert_audit_unknown_domain">Unbekannte Domäne</string>
   <string name="wc_alert_connect_anyway">Trotzdem verbinden</string>
   <string name="wc_alert_connection_timeout_description">Zeitüberschreitungsfehler. Bitte versuche es später erneut.</string>
@@ -1290,7 +1312,9 @@
   <string name="wc_alert_domain_issues_description">Diese Domäne kann nicht verifiziert werden. Überprüfe die Anfrage sorgfältig und bestätige diese dann.</string>
   <string name="wc_alert_session_disconnected_description">Bitte kehre zu Deinem Browser zurück und stellen die Verbindung über WalletConnect erneut her.</string>
   <string name="wc_alert_session_disconnected_title">WalletConnect-Sitzung wurde getrennt</string>
+  <string name="wc_alert_sign_anyway">Trotzdem unterschreiben</string>
   <string name="wc_alert_unknown_error_description">Fehlercode: %s. Wenn das Problem weiterhin besteht, wende Dich bitte an unseren Support.</string>
+  <string name="wc_alert_unknown_error_description_no_error_code">Wenn das Problem weiterhin besteht, wende Dich bitte an unseren Support.</string>
   <string name="wc_alert_unknown_error_title">Wir haben einen unbekannten Fehler festgestellt.</string>
   <string name="wc_alert_unsupported_method_description">Fehlercode: 8 005. Wenn das Problem weiterhin besteht, wende Dich bitte an unseren Support.</string>
   <string name="wc_alert_unsupported_method_title">Wir haben einen unbekannten Fehler festgestellt.</string>
@@ -1303,8 +1327,10 @@
   <string name="wc_allow_to_spend">Erlaubnis auszugeben</string>
   <string name="wc_common_address">Vertragsadresse</string>
   <string name="wc_common_connect">Verbinden</string>
+  <string name="wc_common_loading">Laden</string>
   <string name="wc_common_network">Netzwerk</string>
   <string name="wc_common_networks">Netzwerke</string>
+  <string name="wc_common_unlimited">Unbegrenzt</string>
   <string name="wc_common_wallet">Wallet</string>
   <string name="wc_connected_networks">Verbundene Netzwerke</string>
   <string name="wc_connection_reqeust_can_view_balance">Anzeige des Kontostands und der Aktivitäten in Deiner Wallet</string>
@@ -1321,6 +1347,7 @@
   <string name="wc_disconnect_all_alert_desc">Text über die Trennung aller dApps</string>
   <string name="wc_disconnect_all_alert_title">Alle dApps trennen</string>
   <string name="wc_estimated_wallet_changes">Geschätzte Wallet-Änderungen</string>
+  <string name="wc_estimated_wallet_changes_not_simulated">Die Transaktion konnte nicht simuliert werden. Bitte sei vorsichtig.</string>
   <string name="wc_malicious_transaction">Böswillige/ gefährliche Transaktion</string>
   <string name="wc_missing_required_network_description">Füge Deinem Profil für dieses Wallet das Netzwerk %s hinzu</string>
   <string name="wc_missing_required_network_title">Die Wallet verfügt über keine erforderlichen Netzwerke</string>
