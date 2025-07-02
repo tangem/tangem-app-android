@@ -47,6 +47,7 @@ dependencies {
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
     implementation(projects.core.decompose)
+    implementation(projects.core.deepLinks)
 
 
     /** Domain */
@@ -65,6 +66,8 @@ dependencies {
     implementation(projects.domain.transaction.models)
     implementation(projects.domain.txhistory)
     implementation(projects.domain.feedback)
+    implementation(projects.domain.feedback.models)
+    implementation(projects.domain.notifications.models)
 
     /** Common */
     implementation(projects.common.ui)
