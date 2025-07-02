@@ -13,7 +13,9 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeout
 import kotlin.coroutines.resume
+import kotlin.time.Duration.Companion.seconds
 
 internal class WcPairSdkDelegate : WcSdkObserver {
 
@@ -26,7 +28,7 @@ internal class WcPairSdkDelegate : WcSdkObserver {
             .first()
 
         val pairCall = async { sdkPair(url) }
-        val proposal = async { proposalCallback() }
+        val proposal = async { withTimeout(20.seconds) { proposalCallback() } }
         pairCall.await().onLeft {
             proposal.cancel()
             return@coroutineScope it.left()
@@ -42,7 +44,7 @@ internal class WcPairSdkDelegate : WcSdkObserver {
             .first()
 
         val approveCall = async { sdkApprove(sessionApprove) }
-        val approveCallback = async { approveCallback() }
+        val approveCallback = async { withTimeout(20.seconds) { approveCallback() } }
         approveCall.await()
             .onLeft {
                 approveCallback.cancel()
