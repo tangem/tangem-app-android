@@ -22,6 +22,7 @@ import com.tangem.domain.tokens.operations.CachedCurrenciesStatusesOperations
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.tokens.repository.PolkadotAccountHealthCheckRepository
+import com.tangem.domain.tokens.wallet.WalletBalanceFetcher
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.tap.domain.tokens.DefaultTokensFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -431,5 +432,27 @@ internal object TokensDomainModule {
     @Singleton
     fun provideGetCryptoCurrenciesUseCase(currenciesRepository: CurrenciesRepository): GetCryptoCurrenciesUseCase {
         return GetCryptoCurrenciesUseCase(currenciesRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideWalletBalanceFetcher(
+        currenciesRepository: CurrenciesRepository,
+        multiWalletCryptoCurrenciesFetcher: MultiWalletCryptoCurrenciesFetcher,
+        multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
+        multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
+        multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
+        multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
+        dispatchers: CoroutineDispatcherProvider,
+    ): WalletBalanceFetcher {
+        return WalletBalanceFetcher(
+            currenciesRepository = currenciesRepository,
+            multiWalletCryptoCurrenciesFetcher = multiWalletCryptoCurrenciesFetcher,
+            multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
+            multiNetworkStatusFetcher = multiNetworkStatusFetcher,
+            multiQuoteStatusFetcher = multiQuoteStatusFetcher,
+            multiYieldBalanceFetcher = multiYieldBalanceFetcher,
+            dispatchers = dispatchers,
+        )
     }
 }
