@@ -1,7 +1,7 @@
 package com.tangem.features.send.v2.subcomponents.destination
 
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.send.v2.common.CommonSendRoute
 import com.tangem.features.send.v2.common.PredefinedValues

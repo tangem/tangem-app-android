@@ -46,15 +46,17 @@ import javax.inject.Inject
 internal class ManageTokensModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
-    private val manageTokensListManager: ManageTokensListManager,
     private val messageSender: UiMessageSender,
     private val hasMissedDerivationsUseCase: HasMissedDerivationsUseCase,
     private val saveManagedTokensUseCase: SaveManagedTokensUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    manageTokensListManagerFactory: ManageTokensListManager.Factory,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
     private val params: ManageTokensComponent.Params = paramsContainer.require()
+
+    private val manageTokensListManager = manageTokensListManagerFactory.create()
 
     val state: MutableStateFlow<ManageTokensUM> = MutableStateFlow(getInitialState(params.userWalletId))
     val bottomSheetNavigation: SlotNavigation<ManageTokensBottomSheetConfig> = SlotNavigation()
