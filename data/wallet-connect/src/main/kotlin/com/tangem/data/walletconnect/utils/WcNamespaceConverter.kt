@@ -12,6 +12,7 @@ import com.tangem.domain.wallets.models.requireColdWallet
 internal interface WcNamespaceConverter {
 
     val namespaceKey: NamespaceKey
+    val excludedBlockchains: ExcludedBlockchains
 
     fun toBlockchain(chainId: CAIP2): Blockchain?
     fun toBlockchain(chainId: String): Blockchain? = toCAIP2(chainId)?.let { caip2 -> toBlockchain(caip2) }
@@ -19,9 +20,9 @@ internal interface WcNamespaceConverter {
     fun toCAIP2(network: Network): CAIP2?
     fun toCAIP2(chainId: String): CAIP2? = CAIP2.fromRaw(chainId)
 
-    fun toNetwork(chainId: String, wallet: UserWallet): Network?
-    fun toNetwork(chainId: String, wallet: UserWallet, excludedBlockchains: ExcludedBlockchains): Network? {
+    fun toNetwork(chainId: String, wallet: UserWallet): Network? {
         val blockchain = toBlockchain(chainId) ?: return null
+        if (blockchain.isTestnet()) return null
 
         return NetworkFactory(excludedBlockchains).create(
             blockchain = blockchain,
