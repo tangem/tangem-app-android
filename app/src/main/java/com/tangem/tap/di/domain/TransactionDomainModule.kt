@@ -81,6 +81,18 @@ internal object TransactionDomainModule {
 
     @Provides
     @Singleton
+    fun provideOpenTrustlineUseCase(
+        cardSdkConfigRepository: CardSdkConfigRepository,
+        walletManagersFacade: WalletManagersFacade,
+    ): OpenTrustlineUseCase {
+        return OpenTrustlineUseCase(
+            cardSdkConfigRepository = cardSdkConfigRepository,
+            walletManagersFacade = walletManagersFacade,
+        )
+    }
+
+    @Provides
+    @Singleton
     fun provideDismissIncompleteTransactionUseCase(
         walletManagersFacade: WalletManagersFacade,
     ): DismissIncompleteTransactionUseCase {

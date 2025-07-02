@@ -4,6 +4,8 @@ import android.net.Uri
 import androidx.core.text.isDigitsOnly
 import com.tangem.blockchain.blockchains.near.NearWalletManager
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.NameResolver
+import com.tangem.blockchain.common.ResolveAddressResult
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.transaction.WalletAddressServiceRepository
@@ -19,6 +21,28 @@ class DefaultWalletAddressServiceRepository(
     private val walletManagersFacade: WalletManagersFacade,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : WalletAddressServiceRepository {
+
+    override suspend fun resolveAddress(
+        userWalletId: UserWalletId,
+        network: Network,
+        address: String,
+    ): ResolveAddressResult {
+        return withContext(dispatchers.io) {
+            val blockchain = network.toBlockchain()
+
+            val walletManager = walletManagersFacade.getOrCreateWalletManager(
+                userWalletId = userWalletId,
+                blockchain = blockchain,
+                derivationPath = network.derivationPath.value,
+            )
+
+            if (walletManager is NameResolver) {
+                walletManager.resolve(address)
+            } else {
+                ResolveAddressResult.NotSupported
+            }
+        }
+    }
 
     override suspend fun validateAddress(userWalletId: UserWalletId, network: Network, address: String): Boolean =
         withContext(dispatchers.io) {
