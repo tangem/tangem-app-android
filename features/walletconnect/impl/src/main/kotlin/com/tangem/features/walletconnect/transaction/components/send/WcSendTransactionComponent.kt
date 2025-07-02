@@ -48,11 +48,14 @@ internal class WcSendTransactionComponent(
     @Composable
     override fun BottomSheet() {
         val content by model.uiState.collectAsStateWithLifecycle()
+        val state = content?.transaction
 
-        if (content != null) {
+        if (state != null) {
+            val feeSelectorBlock =
+                if (state.feeState !is WcTransactionFeeState.None) feeSelectorBlockComponent else null
             WcSendTransactionModalBottomSheet(
-                state = content!!.transaction,
-                feeSelectorBlockComponent = feeSelectorBlockComponent,
+                state = state,
+                feeSelectorBlockComponent = feeSelectorBlock,
                 onClickTransactionRequest = model::showTransactionRequest,
                 onBack = router::pop,
                 onDismiss = ::dismiss,
