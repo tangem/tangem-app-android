@@ -3,6 +3,7 @@ package com.tangem.data.visa
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
+import arrow.core.getOrElse
 import arrow.fx.coroutines.parZip
 import com.tangem.blockchain.common.address.Address
 import com.tangem.blockchain.common.address.AddressType
@@ -10,12 +11,11 @@ import com.tangem.common.card.EllipticCurve
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toHexString
 import com.tangem.data.common.cache.CacheRegistry
+import com.tangem.data.common.quote.QuotesFetcher
 import com.tangem.data.visa.config.VisaLibLoader
 import com.tangem.data.visa.utils.*
-import com.tangem.datasource.api.common.response.getOrThrow
-import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.datasource.api.visa.TangemVisaApi
-import com.tangem.datasource.api.visa.models.response.VisaTxHistoryResponse
+import com.tangem.datasource.api.pay.TangemPayApi
+import com.tangem.datasource.api.pay.models.response.VisaTxHistoryResponse
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.visa.model.VisaCurrency
@@ -38,12 +38,12 @@ import javax.inject.Singleton
 @Singleton
 internal class DefaultVisaRepository @Inject constructor(
     private val visaLibLoader: VisaLibLoader,
-    private val tangemTechApi: TangemTechApi,
+    private val quotesFetcher: QuotesFetcher,
     private val cacheRegistry: CacheRegistry,
     private val userWalletsStore: UserWalletsStore,
     private val dispatchers: CoroutineDispatcherProvider,
     private val visaApiRequestMaker: VisaApiRequestMaker,
-    private val visaApi: TangemVisaApi,
+    private val visaApi: TangemPayApi,
     private val visaCurrencyFactory: VisaCurrencyFactory,
 ) : VisaRepository {
 
@@ -190,10 +190,13 @@ internal class DefaultVisaRepository @Inject constructor(
 
     private suspend fun getFiatRate(): BigDecimal {
         val fiatCurrencyId = VisaConstants.fiatCurrency.code.lowercase()
-        val quotes = tangemTechApi.getQuotes(
-            currencyId = fiatCurrencyId,
-            coinIds = VisaConstants.TOKEN_ID,
-        ).getOrThrow()
+
+        val quotes = quotesFetcher.fetch(
+            fiatCurrencyId = fiatCurrencyId,
+            currencyId = VisaConstants.TOKEN_ID,
+            field = QuotesFetcher.Field.PRICE,
+        )
+            .getOrElse { error("Cause: $it") }
 
         return quotes.quotes[VisaConstants.TOKEN_ID]?.price ?: error("No price found")
     }

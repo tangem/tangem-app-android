@@ -1,10 +1,13 @@
 package com.tangem.features.send.v2.subcomponents.amount.model
 
 import androidx.compose.runtime.Stable
+import arrow.core.getOrElse
 import com.tangem.common.ui.amountScreen.AmountScreenClickIntents
 import com.tangem.common.ui.amountScreen.converters.*
 import com.tangem.common.ui.amountScreen.converters.field.AmountFieldChangeTransformer
 import com.tangem.common.ui.amountScreen.converters.field.AmountFieldSetMaxAmountTransformer
+import com.tangem.common.ui.amountScreen.converters.field.AmountBoundaryUpdateTransformer
+import com.tangem.common.ui.amountScreen.converters.MaxEnterAmountConverter
 import com.tangem.common.ui.amountScreen.models.AmountParameters
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
@@ -14,9 +17,15 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.WrappedList
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.GetMinimumTransactionAmountSyncUseCase
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.features.send.v2.api.SendFeatureToggles
 import com.tangem.features.send.v2.common.PredefinedValues
 import com.tangem.features.send.v2.common.ui.state.NavigationUM
 import com.tangem.features.send.v2.impl.R
@@ -35,6 +44,7 @@ import com.tangem.utils.transformer.update
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.properties.Delegates
 
 @Suppress("LongParameterList")
 @Stable
@@ -47,33 +57,60 @@ internal class SendAmountModel @Inject constructor(
     private val feeReloadTrigger: SendFeeReloadTrigger,
     private val sendAmountUpdateQRListener: SendAmountUpdateQRListener,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val sendFeatureToggles: SendFeatureToggles,
+    private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
+    private val getUserWalletUseCase: GetUserWalletUseCase,
 ) : Model(), AmountScreenClickIntents {
 
     private val params: SendAmountComponentParams = paramsContainer.require()
+    private var appCurrency: AppCurrency = AppCurrency.Default
+    private var userWallet: UserWallet? = null
 
     private val _uiState = MutableStateFlow(params.state)
     val uiState = _uiState.asStateFlow()
 
     private val analyticsCategoryName = params.analyticsCategoryName
-    private val userWallet = params.userWallet
-    private val cryptoCurrencyStatus = params.cryptoCurrencyStatus
+    private var cryptoCurrencyStatus: CryptoCurrencyStatus = CryptoCurrencyStatus(
+        currency = params.cryptoCurrency,
+        value = CryptoCurrencyStatus.Loading,
+    )
 
     private var minAmountBoundary: EnterAmountBoundary? = null
-    private var maxAmountBoundary: EnterAmountBoundary = MaxEnterAmountConverter().convert(cryptoCurrencyStatus)
+    private var maxAmountBoundary: EnterAmountBoundary by Delegates.notNull()
 
     init {
         configAmountNavigation()
-        initMinBoundary()
-        subscribeOnAmountReduceByTriggerUpdates()
-        subscribeOnAmountReduceToTriggerUpdates()
-        subscribeOnAmountIgnoreReduceTriggerUpdates()
-        subscribeOnAmountUpdateQRTriggerUpdates()
+        initAppCurrency()
+        subscribeOnCryptoCurrencyStatusFlow()
+    }
+
+    private fun initAppCurrency() {
+        modelScope.launch {
+            userWallet = getUserWalletUseCase(params.userWalletId).getOrNull()
+            appCurrency = getSelectedAppCurrencyUseCase.invokeSync().getOrElse { AppCurrency.Default }
+        }
+    }
+
+    private fun subscribeOnCryptoCurrencyStatusFlow() {
+        params.cryptoCurrencyStatusFlow
+            .onEach { newCryptoCurrencyStatus ->
+                cryptoCurrencyStatus = newCryptoCurrencyStatus
+                maxAmountBoundary = MaxEnterAmountConverter().convert(cryptoCurrencyStatus)
+                if (uiState.value is AmountState.Empty) {
+                    subscribeOnAmountReduceByTriggerUpdates()
+                    subscribeOnAmountReduceToTriggerUpdates()
+                    subscribeOnAmountIgnoreReduceTriggerUpdates()
+                    subscribeOnAmountUpdateQRTriggerUpdates()
+                }
+                initMinBoundary()
+            }
+            .launchIn(modelScope)
     }
 
     private fun initMinBoundary() {
         modelScope.launch {
             minAmountBoundary = getMinimumTransactionAmountSyncUseCase(
-                userWalletId = userWallet.walletId,
+                userWalletId = params.userWalletId,
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
             ).getOrNull()?.let {
                 EnterAmountBoundary(
@@ -82,22 +119,37 @@ internal class SendAmountModel @Inject constructor(
                 )
             }
 
-            initialState()
+            if (uiState.value is AmountState.Data) {
+                _uiState.update(
+                    AmountBoundaryUpdateTransformer(
+                        cryptoCurrencyStatus = cryptoCurrencyStatus,
+                        maxEnterAmount = maxAmountBoundary,
+                        appCurrency = appCurrency,
+                        isRedesignEnabled = sendFeatureToggles.isSendRedesignEnabled,
+                    ),
+                )
+            } else {
+                initialState()
+            }
         }
     }
 
     private fun initialState() {
-        if (uiState.value is AmountState.Empty) {
+        if (uiState.value is AmountState.Empty && userWallet != null) {
             _uiState.update {
                 AmountStateConverterV2(
                     clickIntents = this,
-                    appCurrency = params.appCurrency,
+                    appCurrency = appCurrency,
                     cryptoCurrencyStatus = cryptoCurrencyStatus,
                     maxEnterAmount = maxAmountBoundary,
                     iconStateConverter = CryptoCurrencyToIconStateConverter(),
+                    isRedesignEnabled = sendFeatureToggles.isSendRedesignEnabled,
                 ).convert(
                     AmountParameters(
-                        title = stringReference(userWallet.name),
+                        title = resourceReference(
+                            R.string.send_from_wallet_name,
+                            WrappedList(listOf(userWallet?.name.orEmpty())), // TODO [REDACTED_TASK_KEY]
+                        ),
                         value = "",
                     ),
                 )
@@ -239,7 +291,7 @@ internal class SendAmountModel @Inject constructor(
                 NavigationUM.Content(
                     title = resourceReference(R.string.send_amount_label),
                     subtitle = null,
-                    backIconRes = if (route.isEditMode) {
+                    backIconRes = if (route.isEditMode || params.isRedesignEnabled) {
                         R.drawable.ic_back_24
                     } else {
                         R.drawable.ic_close_24
@@ -257,15 +309,19 @@ internal class SendAmountModel @Inject constructor(
                             params.onNextClick()
                         },
                     ),
-                    prevButton = ButtonsUM.PrimaryButtonUM(
-                        text = TextReference.EMPTY,
-                        iconResId = R.drawable.ic_back_24,
-                        isEnabled = true,
-                        onClick = {
-                            saveResult()
-                            params.onBackClick()
-                        },
-                    ).takeIf { route.isEditMode.not() },
+                    prevButton = if (params.isRedesignEnabled) {
+                        null
+                    } else {
+                        ButtonsUM.PrimaryButtonUM(
+                            text = TextReference.EMPTY,
+                            iconResId = R.drawable.ic_back_24,
+                            isEnabled = true,
+                            onClick = {
+                                saveResult()
+                                params.onBackClick()
+                            },
+                        ).takeIf { route.isEditMode.not() }
+                    },
                     secondaryPairButtonsUM = null,
                 ),
             )
