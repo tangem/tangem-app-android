@@ -5,13 +5,14 @@ import com.tangem.blockchain.blockchains.polkadot.AccountCheckProvider
 import com.tangem.blockchain.blockchains.polkadot.network.accounthealthcheck.ExtrinsicListItemResponse
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.BlockchainSdkError
+import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys.POLKADOT_HEALTH_CHECKED_IMMUTABLE_ACCOUNTS_KEY
 import com.tangem.datasource.local.preferences.PreferencesKeys.POLKADOT_HEALTH_CHECKED_RESET_ACCOUNTS_KEY
 import com.tangem.datasource.local.preferences.PreferencesKeys.POLKADOT_HEALTH_CHECK_LAST_INDEXED_TX_KEY
 import com.tangem.datasource.local.preferences.utils.getObjectMapSync
 import com.tangem.datasource.local.preferences.utils.getObjectSetSync
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.tokens.repository.PolkadotAccountHealthCheckRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWalletId
@@ -39,7 +40,7 @@ internal class DefaultPolkadotAccountHealthCheckRepository(
 
     override suspend fun runCheck(userWalletId: UserWalletId, network: Network) {
         // Run Polkadot account health check
-        if (Blockchain.fromId(network.id.value) != Blockchain.Polkadot) return
+        if (network.toBlockchain() != Blockchain.Polkadot) return
 
         val walletManager = walletManagersFacade.getOrCreateWalletManager(userWalletId, network)
         val address = requireNotNull(walletManager?.wallet?.address) {

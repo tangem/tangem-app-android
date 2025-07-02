@@ -17,4 +17,7 @@ dependencies {
 
     /* Project - Domain */
     implementation(projects.domain.wallets.models)
+
+    /* Compose */
+    implementation(deps.compose.runtime)
 }
