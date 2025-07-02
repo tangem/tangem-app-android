@@ -5,6 +5,7 @@ import com.tangem.datasource.api.common.config.*
 import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
 import com.tangem.lib.auth.ExpressAuthProvider
 import com.tangem.lib.auth.StakeKitAuthProvider
+import com.tangem.utils.info.AppInfoProvider
 import com.tangem.utils.version.AppVersionProvider
 import dagger.Module
 import dagger.Provides
@@ -22,8 +23,14 @@ internal object ApiConfigsModule {
         environmentConfigStorage: EnvironmentConfigStorage,
         expressAuthProvider: ExpressAuthProvider,
         appVersionProvider: AppVersionProvider,
+        appInfoProvider: AppInfoProvider,
     ): ApiConfig {
-        return Express(environmentConfigStorage, expressAuthProvider, appVersionProvider)
+        return Express(
+            environmentConfigStorage = environmentConfigStorage,
+            expressAuthProvider = expressAuthProvider,
+            appVersionProvider = appVersionProvider,
+            appInfoProvider = appInfoProvider,
+        )
     }
 
     @Provides
@@ -34,8 +41,15 @@ internal object ApiConfigsModule {
 
     @Provides
     @IntoSet
-    fun provideTangemTechConfig(appVersionProvider: AppVersionProvider, authProvider: AuthProvider): ApiConfig =
-        TangemTech(appVersionProvider, authProvider)
+    fun provideTangemTechConfig(
+        appVersionProvider: AppVersionProvider,
+        authProvider: AuthProvider,
+        appInfoProvider: AppInfoProvider,
+    ): ApiConfig = TangemTech(
+        appVersionProvider = appVersionProvider,
+        authProvider = authProvider,
+        appInfoProvider = appInfoProvider,
+    )
 
     @Provides
     @IntoSet

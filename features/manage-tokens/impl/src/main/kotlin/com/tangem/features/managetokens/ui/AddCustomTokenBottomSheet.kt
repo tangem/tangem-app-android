@@ -12,11 +12,11 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.TangemTopAppBarHeight
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
-import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.managetokens.component.AddCustomTokenComponent
 import com.tangem.features.managetokens.component.preview.PreviewAddCustomTokenComponent
@@ -76,7 +76,7 @@ private class AddCustomTokenComponentPreviewProvider : PreviewParameterProvider<
                     userWalletId = UserWalletId(stringValue = "321"),
                     step = AddCustomTokenConfig.Step.FORM,
                     selectedNetwork = SelectedNetwork(
-                        id = Network.ID(value = "1"),
+                        id = Network.ID(value = "1", derivationPath = Network.DerivationPath.None),
                         name = "Ethereum",
                         derivationPath = Network.DerivationPath.None,
                         canHandleTokens = false,
@@ -88,7 +88,7 @@ private class AddCustomTokenComponentPreviewProvider : PreviewParameterProvider<
                     userWalletId = UserWalletId(stringValue = "321"),
                     step = AddCustomTokenConfig.Step.NETWORK_SELECTOR,
                     selectedNetwork = SelectedNetwork(
-                        id = Network.ID(value = "0"),
+                        id = Network.ID(value = "0", derivationPath = Network.DerivationPath.None),
                         name = "Ethereum",
                         derivationPath = Network.DerivationPath.None,
                         canHandleTokens = false,
@@ -100,7 +100,7 @@ private class AddCustomTokenComponentPreviewProvider : PreviewParameterProvider<
                     userWalletId = UserWalletId(stringValue = "321"),
                     step = AddCustomTokenConfig.Step.DERIVATION_PATH_SELECTOR,
                     selectedDerivationPath = SelectedDerivationPath(
-                        id = Network.ID(value = "0"),
+                        id = Network.ID(value = "0", derivationPath = Network.DerivationPath.None),
                         value = Network.DerivationPath.None,
                         name = "Ethereum",
                         isDefault = false,

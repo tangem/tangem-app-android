@@ -18,4 +18,6 @@ interface NFTPersistenceStore {
     suspend fun saveCollections(collections: List<NFTCollection>)
 
     suspend fun saveSalePrice(assetId: NFTAsset.Identifier, salePrice: NFTAsset.SalePrice)
+
+    suspend fun clear()
 }
