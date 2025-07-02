@@ -13,12 +13,25 @@ dependencies {
     implementation(projects.core.decompose)
     implementation(projects.core.ui)
 
+    /** Common */
+    implementation(projects.common.ui)
+
     /** Domain models */
     api(projects.domain.models)
-    implementation(projects.domain.wallets.models)
-    implementation(projects.domain.tokens.models)
+    implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.nft.models)
+    implementation(projects.domain.tokens.models)
+    implementation(projects.domain.transaction.models)
+    implementation(projects.domain.wallets.models)
 
-    /* Compose */
+    /** Compose */
     implementation(deps.compose.runtime)
+    implementation(deps.compose.foundation)
+
+    /** Tangem */
+    implementation(tangemDeps.blockchain)
+
+    /** Other */
+    implementation(deps.arrow.core)
+    implementation(deps.kotlin.immutable.collections)
 }

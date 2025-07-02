@@ -50,7 +50,7 @@ internal class DefaultMultiNetworkStatusProducerTest {
 
     @Test
     fun `flow is mapped for user wallet id from params`() = runTest {
-        // Assert
+        // Arrange
         val statuses = setOf(
             MockNetworkStatusFactory.createVerified(ethNetwork),
             MockNetworkStatusFactory.createVerified(cardanoNetwork),

@@ -9,4 +9,7 @@ internal class DefaultTokensFeatureToggles(
 
     override val isStakingLoadingRefactoringEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(name = "STAKING_LOADING_REFACTORING_ENABLED")
+
+    override val isWalletBalanceFetcherEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(name = "WALLET_BALANCE_FETCHER_ENABLED")
 }
