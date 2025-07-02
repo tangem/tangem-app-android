@@ -413,9 +413,14 @@
   <string name="home_button_scan">Scan Tangem</string>
   <string name="hot_crypto_add_token_subtitle">to %s</string>
   <string name="hot_crypto_token_network">On %s network</string>
+  <string name="hw_backup_icloud_description">Recover an existing wallet stored in your iCloud backup</string>
+  <string name="hw_backup_icloud_title">iCloud backup</string>
   <string name="hw_backup_need_action">Go to backup</string>
   <string name="hw_backup_need_description">To secure your wallet with a Access Code, complete the backup first.</string>
   <string name="hw_backup_need_title">Finish Backup First</string>
+  <string name="hw_backup_no_backup">No backup</string>
+  <string name="hw_backup_seed_description">Physical cards that securely store your crypto offline.</string>
+  <string name="hw_backup_seed_title">Recovery phrase</string>
   <string name="hw_create_keys_description">Get notified of incoming transactions</string>
   <string name="hw_create_keys_title">Keys are stored in the app</string>
   <string name="hw_create_seed_description">Stay up to date with the latest features and news</string>
@@ -615,7 +620,7 @@
   <string name="nft_untitled_collection">Untitled collection</string>
   <string name="nft_wallet_count">%1$d NFTs in %2$d collections</string>
   <plurals name="nft_wallet_count_android">
-    <item quantity="one"></item>
+    <item quantity="one">%1$d NFT in %2$d collection</item>
     <item quantity="other">%1$d NFTs in %2$d collections</item>
   </plurals>
   <string name="nft_wallet_receive_nft">Tap here to receive first NFT</string>
@@ -1297,6 +1302,8 @@
   <string name="wallet_create_title">Choose how you want to create your wallet</string>
   <string name="wallet_import_buy_question">Want to purchase a Tangem Wallet?</string>
   <string name="wallet_import_buy_title">Buy Now</string>
+  <string name="wallet_import_google_drive_description">Recover an existing wallet stored in your Google Drive backup</string>
+  <string name="wallet_import_google_drive_title">Import from Google Drive</string>
   <string name="wallet_import_navtitle">Add existing wallet</string>
   <string name="wallet_import_scan_description">Physical cards that securely store your crypto offline.</string>
   <string name="wallet_import_scan_title">Scan a Tangem Wallet</string>
@@ -1432,7 +1439,7 @@
   <string name="wc_alert_unsupported_method_title">We\'ve encountered unknown error</string>
   <string name="wc_alert_unsupported_networks_description">Tangem does not currently support a required network by %s.</string>
   <string name="wc_alert_unsupported_networks_title">Unsuported networks</string>
-  <string name="wc_alert_verified_domain_description">Tangem support a required network by %s.</string>
+  <string name="wc_alert_verified_domain_description">Tangem support a required network by %s</string>
   <string name="wc_alert_verified_domain_title">Verified domain</string>
   <string name="wc_alert_wrong_card_description">Wrong card or ring selected in the App</string>
   <string name="wc_alert_wrong_card_title">We\'ve got some kind of problem</string>
