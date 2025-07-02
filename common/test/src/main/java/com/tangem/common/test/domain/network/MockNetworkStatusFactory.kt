@@ -2,9 +2,9 @@ package com.tangem.common.test.domain.network
 
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.domain.models.StatusSource
-import com.tangem.domain.tokens.model.Network
-import com.tangem.domain.tokens.model.NetworkAddress
-import com.tangem.domain.tokens.model.NetworkStatus
+import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.network.NetworkAddress
+import com.tangem.domain.models.network.NetworkStatus
 import java.math.BigDecimal
 
 /**
@@ -14,36 +14,41 @@ object MockNetworkStatusFactory {
 
     private val defaultNetwork = MockCryptoCurrencyFactory().ethereum.network
 
-    fun createVerified(network: Network = defaultNetwork): NetworkStatus {
+    fun createVerified(
+        network: Network = defaultNetwork,
+        source: StatusSource = StatusSource.ACTUAL,
+        transform: (NetworkStatus.Verified) -> NetworkStatus.Verified = { it },
+    ): NetworkStatus {
         return NetworkStatus(
             network = network,
             value = NetworkStatus.Verified(
                 address = NetworkAddress.Single(
                     defaultAddress = NetworkAddress.Address(
-                        value = "0x123",
+                        value = "0x1",
                         type = NetworkAddress.Address.Type.Primary,
                     ),
                 ),
                 amounts = mapOf(),
                 pendingTransactions = mapOf(),
-                source = StatusSource.ACTUAL,
-            ),
+                source = source,
+            )
+                .let(transform),
         )
     }
 
-    fun createNoAccount(network: Network = defaultNetwork): NetworkStatus {
+    fun createNoAccount(network: Network = defaultNetwork, source: StatusSource = StatusSource.ACTUAL): NetworkStatus {
         return NetworkStatus(
             network = network,
             value = NetworkStatus.NoAccount(
                 address = NetworkAddress.Single(
                     defaultAddress = NetworkAddress.Address(
-                        value = "0x123",
+                        value = "0x1",
                         type = NetworkAddress.Address.Type.Primary,
                     ),
                 ),
                 amountToCreateAccount = BigDecimal.ONE,
                 errorMessage = "",
-                source = StatusSource.ACTUAL,
+                source = source,
             ),
         )
     }

@@ -133,15 +133,7 @@ internal class DefaultStakingBalanceStore(
                     stakingIds.any { id -> balance.integrationId == id.integrationId && balance.address == id.address }
                 }
 
-                if (yieldBalance != null) {
-                    when (yieldBalance) {
-                        is YieldBalance.Data -> yieldBalance.copy(source = StatusSource.CACHE)
-                        is YieldBalance.Empty -> yieldBalance.copy(source = StatusSource.CACHE)
-                        is YieldBalance.Error -> yieldBalance
-                    }
-                } else {
-                    it
-                }
+                yieldBalance?.copySealed(source = StatusSource.CACHE) ?: it
             }
         }
     }
@@ -254,7 +246,9 @@ internal class DefaultStakingBalanceStore(
         val updatedCached = when (cached) {
             is YieldBalance.Data -> cached.copy(source = StatusSource.ONLY_CACHE)
             is YieldBalance.Empty -> cached.copy(source = StatusSource.ONLY_CACHE)
-            is YieldBalance.Error -> null
+            is YieldBalance.Error,
+            is YieldBalance.Unsupported,
+            -> null
         }
 
         return updatedCached ?: YieldBalance.Error(integrationId = stakingID.address, address = stakingID.integrationId)

@@ -6,9 +6,9 @@ import com.tangem.common.ui.expressStatus.state.*
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.CryptoCurrency.ID
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency.ID
+import com.tangem.domain.models.network.Network
 import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatus
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
@@ -85,7 +85,7 @@ class ExpressStatusBottomSheetStateProvider : PreviewParameterProvider<ExpressSt
         get() = CryptoCurrency.Coin(
             id = ID(
                 ID.Prefix.COIN_PREFIX,
-                ID.Body.NetworkId(network.id.value),
+                ID.Body.NetworkId(network.rawId),
                 ID.Suffix.RawID("token1"),
             ),
             network = network,
@@ -97,7 +97,7 @@ class ExpressStatusBottomSheetStateProvider : PreviewParameterProvider<ExpressSt
         )
 
     private val network = Network(
-        id = Network.ID("network1"),
+        id = Network.ID(value = "network1", derivationPath = Network.DerivationPath.None),
         name = "Network One",
         isTestnet = false,
         standardType = Network.StandardType.ERC20,

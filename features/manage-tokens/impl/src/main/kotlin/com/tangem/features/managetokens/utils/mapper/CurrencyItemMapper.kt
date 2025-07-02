@@ -11,11 +11,11 @@ import com.tangem.features.managetokens.utils.ui.getIconRes
 
 internal fun ManagedCryptoCurrency.toUiModel(
     isEditable: Boolean,
-    onExpandNetworksClick: (ManagedCryptoCurrency.Token) -> Unit,
+    onTokenClick: (ManagedCryptoCurrency.Token) -> Unit,
     onRemoveCustomCurrencyClick: (ManagedCryptoCurrency.Custom) -> Unit,
 ): CurrencyItemUM = when (this) {
     is ManagedCryptoCurrency.Custom -> toUiModel(onRemoveCustomCurrencyClick)
-    is ManagedCryptoCurrency.Token -> toUiModel(isEditable, onExpandNetworksClick)
+    is ManagedCryptoCurrency.Token -> toUiModel(isEditable, onTokenClick)
 }
 
 private fun ManagedCryptoCurrency.Custom.toUiModel(
@@ -53,7 +53,7 @@ private fun ManagedCryptoCurrency.Custom.toUiModel(
 
 private fun ManagedCryptoCurrency.Token.toUiModel(
     isEditable: Boolean,
-    onExpandNetworksClick: (ManagedCryptoCurrency.Token) -> Unit,
+    onTokenClick: (ManagedCryptoCurrency.Token) -> Unit,
 ): CurrencyItemUM {
     val background = TangemColorPalette.Black
 
@@ -71,7 +71,7 @@ private fun ManagedCryptoCurrency.Token.toUiModel(
         ),
         networks = NetworksUM.Collapsed,
         onExpandClick = {
-            onExpandNetworksClick(this)
+            onTokenClick(this)
         },
     )
 }

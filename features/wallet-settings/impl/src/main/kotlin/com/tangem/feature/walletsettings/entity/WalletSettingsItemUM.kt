@@ -30,4 +30,17 @@ internal sealed class WalletSettingsItemUM {
         val isEnabled: Boolean,
         val onClick: () -> Unit,
     ) : WalletSettingsItemUM()
+
+    data class DescriptionWithMore(
+        override val id: String,
+        val text: TextReference,
+        val more: TextReference,
+        val onClick: () -> Unit,
+    ) : WalletSettingsItemUM()
+
+    data class NotificationPermission(
+        override val id: String,
+        val title: TextReference,
+        val description: TextReference,
+    ) : WalletSettingsItemUM()
 }

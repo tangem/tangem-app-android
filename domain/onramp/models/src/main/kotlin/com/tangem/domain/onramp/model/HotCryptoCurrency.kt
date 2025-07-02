@@ -1,6 +1,6 @@
 package com.tangem.domain.onramp.model
 
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.tokens.model.Quote
 
 /**
