@@ -1,12 +1,12 @@
 package com.tangem.features.nft.details.ui
 
 import android.content.res.Configuration
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -63,10 +63,11 @@ private fun Placeholder(modifier: Modifier = Modifier) {
             .background(TangemTheme.colors.field.focused),
         contentAlignment = Alignment.Center,
     ) {
-        Image(
+        Icon(
             modifier = Modifier.size(TangemTheme.dimens.size120),
-            painter = painterResource(R.drawable.ic_nft_placeholder_76),
+            painter = painterResource(R.drawable.ic_nft_placeholder_120),
             contentDescription = null,
+            tint = TangemTheme.colors.icon.primary1,
         )
     }
 }
@@ -88,7 +89,6 @@ private class NFTAssetMediaProvider : CollectionPreviewParameterProvider<NFTAsse
     collection = listOf(
         NFTAssetUM.Media.Empty,
         NFTAssetUM.Media.Content(
-            mimetype = "image/jpeg",
             url = "img1",
         ),
     ),
