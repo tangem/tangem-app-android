@@ -1,10 +1,10 @@
 package com.tangem.tap.domain.walletconnect2.domain
 
 import arrow.core.flatten
-import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.blockchainsdk.utils.toNetworkId
-import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletconnect.model.legacy.Account
 import com.tangem.domain.walletconnect.model.legacy.Session
@@ -12,6 +12,9 @@ import com.tangem.domain.walletconnect.model.legacy.WalletConnectSessionsReposit
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.models.isMultiCurrency
+import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.filterNotNull
@@ -139,7 +142,11 @@ class WalletConnectInteractor(
             if (deeplinkStack.empty()) return
             val lastDeeplink = deeplinkStack.pop()
             val action = WalletConnectAction
-                .OpenSession(lastDeeplink, WalletConnectAction.OpenSession.SourceType.DEEPLINK)
+                .OpenSession(
+                    wcUri = lastDeeplink,
+                    source = WalletConnectAction.OpenSession.SourceType.DEEPLINK,
+                    userWalletId = UserWalletId(userWalletId),
+                )
             store.dispatchOnMain(action)
         }.onFailure {
             Timber.e("WC deeplink handling failed. $it")
@@ -393,7 +400,11 @@ class WalletConnectInteractor(
         }
 
         if (isWalletConnectReadyForDeepLinks) {
-            val action = WalletConnectAction.OpenSession(deeplink, WalletConnectAction.OpenSession.SourceType.DEEPLINK)
+            val action = WalletConnectAction.OpenSession(
+                wcUri = deeplink,
+                source = WalletConnectAction.OpenSession.SourceType.DEEPLINK,
+                userWalletId = UserWalletId(userWalletId),
+            )
             store.dispatchOnMain(action)
         } else {
             deeplinkStack.push(deeplink)
@@ -401,6 +412,7 @@ class WalletConnectInteractor(
     }
 
     private fun getCardId(userWallet: UserWallet): String? {
+        userWallet.requireColdWallet() // [REDACTED_TASK_KEY]
         return if (userWallet.scanResponse.card.backupStatus?.isActive != true) {
             userWallet.cardId
         } else { // if wallet has backup, any card from wallet can be used to sign
@@ -410,7 +422,8 @@ class WalletConnectInteractor(
 
     private suspend fun getAccountsForWc(userWallet: UserWallet, networks: List<Network>): List<Account> {
         val walletManagers = networks.mapNotNull {
-            val blockchain = Blockchain.fromId(it.id.value)
+            val blockchain = it.toBlockchain()
+
             walletManagersFacade.getOrCreateWalletManager(
                 userWalletId = userWallet.walletId,
                 blockchain = blockchain,

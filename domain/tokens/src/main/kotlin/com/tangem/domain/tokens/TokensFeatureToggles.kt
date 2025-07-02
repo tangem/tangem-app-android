@@ -7,9 +7,5 @@ package com.tangem.domain.tokens
  */
 interface TokensFeatureToggles {
 
-    val isNetworksLoadingRefactoringEnabled: Boolean
-
-    val isQuotesLoadingRefactoringEnabled: Boolean
-
     val isStakingLoadingRefactoringEnabled: Boolean
 }

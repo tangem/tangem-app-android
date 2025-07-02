@@ -468,8 +468,17 @@ fun Blockchain.amountToCreateAccount(walletManager: WalletManager, token: Token?
     }
 }
 
+/** Returns flag that determines whether account should be created without reserve by [networkId] */
+fun isNeedToCreateAccountWithoutReserve(networkId: String): Boolean {
+    val blockchain = Blockchain.fromNetworkId(networkId = networkId)
+
+    return REQUIRED_ACCOUNT_WITHOUT_RESERVE_BLOCKCHAINS.contains(blockchain)
+}
+
 const val OLD_POLYGON_NAME = "matic-network"
 const val NEW_POLYGON_NAME = "polygon-ecosystem-token"
 
 private const val NODL = "NODL"
 private const val NODL_AMOUNT_TO_CREATE_ACCOUNT = 1.5
+
+private val REQUIRED_ACCOUNT_WITHOUT_RESERVE_BLOCKCHAINS = listOf(Blockchain.Aptos, Blockchain.Filecoin)

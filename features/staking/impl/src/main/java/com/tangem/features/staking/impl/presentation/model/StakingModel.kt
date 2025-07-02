@@ -28,6 +28,8 @@ import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.staking.*
 import com.tangem.domain.staking.analytics.StakeScreenSource
 import com.tangem.domain.staking.analytics.StakingAnalyticsEvent
@@ -38,7 +40,6 @@ import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
 import com.tangem.domain.staking.utils.getValidatorsCount
 import com.tangem.domain.tokens.*
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.CreateApprovalTransactionUseCase
@@ -46,6 +47,7 @@ import com.tangem.domain.transaction.usecase.GetAllowanceUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.staking.api.StakingComponent
 import com.tangem.features.staking.impl.analytics.StakingParamsInterceptor
@@ -93,7 +95,7 @@ internal class StakingModel @Inject constructor(
     private val stateController: StakingStateController,
     override val dispatchers: CoroutineDispatcherProvider,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
-    private val getCurrencyStatusUpdatesUseCase: GetCurrencyStatusUpdatesUseCase,
+    private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
     private val getMinimumTransactionAmountSyncUseCase: GetMinimumTransactionAmountSyncUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
@@ -163,6 +165,7 @@ internal class StakingModel @Inject constructor(
         }
 
     private var isInitialInfoAnalyticSent: Boolean = false
+    private var isBalanceUpdatedAfterStart: Boolean = false
 
     private val balanceUpdater by lazy(LazyThreadSafetyMode.NONE) {
         stakingBalanceUpdater.create(
@@ -549,7 +552,7 @@ internal class StakingModel @Inject constructor(
     }
 
     override fun onActiveStake(activeStake: BalanceState) {
-        val networkId = cryptoCurrencyStatus.currency.network.id.value
+        val networkId = cryptoCurrencyStatus.currency.network.rawId
         if (isSingleAction(networkId, activeStake)) {
             prepareForConfirmation(
                 balanceType = activeStake.type,
@@ -842,7 +845,9 @@ internal class StakingModel @Inject constructor(
         modelScope.launch {
             val network = cryptoCurrencyStatus.currency.network
 
-            val cardInfo = getCardInfoUseCase(userWallet.scanResponse).getOrElse { error("CardInfo must be not null") }
+            val cardInfo =
+                getCardInfoUseCase(userWallet.requireColdWallet().scanResponse)
+                    .getOrElse { error("CardInfo must be not null") }
             val amountState = uiState.value.amountState as? AmountState.Data
             val confirmationState = uiState.value.confirmationState as? StakingStates.ConfirmationState.Data
             val validatorState = uiState.value.validatorState as? StakingStates.ValidatorState.Data
@@ -854,7 +859,7 @@ internal class StakingModel @Inject constructor(
             saveBlockchainErrorUseCase(
                 error = BlockchainErrorInfo(
                     errorMessage = errorMessage,
-                    blockchainId = network.id.value,
+                    blockchainId = network.rawId,
                     derivationPath = network.derivationPath.value,
                     destinationAddress = validator?.address.orEmpty(),
                     tokenSymbol = (cryptoCurrencyStatus.currency as? CryptoCurrency.Token)?.symbol,
@@ -920,13 +925,18 @@ internal class StakingModel @Inject constructor(
                 )
             },
         )
-        getCurrencyStatusUpdatesUseCase(
+        getSingleCryptoCurrencyStatusUseCase.invokeMultiWallet(
             userWalletId = userWalletId,
             currencyId = cryptoCurrencyId,
             isSingleWalletWithTokens = false,
         )
             .conflate()
-            .distinctUntilChangedBy { it.getOrNull()?.value?.yieldBalance }
+            .filter {
+                val sources = it.getOrNull()?.value?.sources ?: return@filter true
+
+                sources.networkSource == StatusSource.ACTUAL && sources.yieldBalanceSource == StatusSource.ACTUAL
+            }
+            .distinctUntilChanged()
             .filter { value.currentStep == StakingStep.InitialInfo }
             .onEach { maybeStatus ->
                 maybeStatus.fold(
@@ -1002,7 +1012,11 @@ internal class StakingModel @Inject constructor(
                 when {
                     isInitState() -> {
                         updateInitialData(status)
-                        balanceUpdater.partialUpdate()
+
+                        if (!isBalanceUpdatedAfterStart) {
+                            isBalanceUpdatedAfterStart = true
+                            balanceUpdater.partialUpdate()
+                        }
                     }
                     isAssentState() -> {
                         getFee()
