@@ -12,10 +12,7 @@ import com.tangem.data.common.network.NetworkFactory
 import com.tangem.data.managetokens.utils.TokenAddressesConverter
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
-import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.preferences.PreferencesKeys
-import com.tangem.datasource.local.preferences.utils.getObjectSyncOrNull
+import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.common.extensions.canHandleBlockchain
 import com.tangem.domain.common.extensions.supportedBlockchains
@@ -35,7 +32,7 @@ import kotlinx.coroutines.withContext
 internal class DefaultCustomTokensRepository(
     private val tangemTechApi: TangemTechApi,
     private val userWalletsStore: UserWalletsStore,
-    private val appPreferencesStore: AppPreferencesStore,
+    private val userTokensResponseStore: UserTokensResponseStore,
     private val walletManagersFacade: WalletManagersFacade,
     private val excludedBlockchains: ExcludedBlockchains,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -57,6 +54,8 @@ internal class DefaultCustomTokensRepository(
                 -> true
                 Blockchain.Cardano,
                 Blockchain.Sui,
+                Blockchain.Stellar,
+                Blockchain.XRP,
                 -> blockchain.validateContractAddress(contractAddress)
                 else -> blockchain.validateAddress(contractAddress)
             }
@@ -69,9 +68,8 @@ internal class DefaultCustomTokensRepository(
         contractAddress: String?,
     ): Boolean {
         return withContext(dispatchers.io) {
-            val storedCurrencies = appPreferencesStore.getObjectSyncOrNull<UserTokensResponse>(
-                key = PreferencesKeys.getUserTokensKey(userWalletId.stringValue),
-            )
+            val storedCurrencies = userTokensResponseStore.getSyncOrNull(userWalletId)
+
             requireNotNull(storedCurrencies) {
                 "User tokens not found for user wallet [$userWalletId] while checking if currency is not added"
             }
@@ -228,9 +226,8 @@ internal class DefaultCustomTokensRepository(
                     contractAddress = currency.contractAddress,
                 )
             }
-            val storedCurrencies = appPreferencesStore.getObjectSyncOrNull<UserTokensResponse>(
-                key = PreferencesKeys.getUserTokensKey(userWalletId.stringValue),
-            )
+            val storedCurrencies = userTokensResponseStore.getSyncOrNull(userWalletId)
+
             requireNotNull(storedCurrencies) {
                 "User tokens not found for user wallet [$userWalletId] while removing currency"
             }
