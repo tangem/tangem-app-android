@@ -127,6 +127,16 @@ sealed class AppRoute(val path: String) : Route {
         }
     }
 
+    data class ChooseManagedTokens(
+        val userWalletId: UserWalletId,
+        val initialCurrency: CryptoCurrency,
+        val source: Source,
+    ) : AppRoute(path = "/$source/choose_managed_tokens/$userWalletId/${initialCurrency.id.value}") {
+        enum class Source {
+            SendViaSwap,
+        }
+    }
+
     @Serializable
     data class WalletConnectSessions(val userWalletId: UserWalletId) : AppRoute(path = "/wallet_connect_sessions")
 
@@ -276,4 +286,13 @@ sealed class AppRoute(val path: String) : Route {
         val nftAsset: NFTAsset,
         val nftCollectionName: String,
     ) : AppRoute(path = "/send/nft/${userWalletId.stringValue}/$nftCollectionName/${nftAsset.id}")
+
+    @Serializable
+    object CreateWalletSelection : AppRoute(path = "/create_wallet_selection")
+
+    @Serializable
+    object CreateMobileWallet : AppRoute(path = "/create_mobile_wallet")
+
+    @Serializable
+    object AddExistingWallet : AppRoute(path = "/add_existing_wallet")
 }

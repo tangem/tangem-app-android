@@ -83,11 +83,14 @@ internal class VisaCardScanHandler @Inject constructor(
 
         Timber.i("Requesting challenge for wallet authorization")
 
-        val challengeResponse = visaAuthRepository.getCardWalletAuthChallenge(cardWalletAddress = walletAddress.value)
-            .getOrElse {
-                Timber.i("Failed to get Access token for Wallet public key authorization")
-                return CompletionResult.Failure(it.tangemError)
-            }
+        val challengeResponse = visaAuthRepository.getCardWalletAuthChallenge(
+            cardId = card.cardId,
+            // This is the wallet public key, not the address and it's alright, as the API expects it in this format
+            cardWalletAddress = wallet.publicKey.toHexString(),
+        ).getOrElse {
+            Timber.i("Failed to get Access token for Wallet public key authorization")
+            return CompletionResult.Failure(it.tangemError)
+        }
 
         val signChallengeResult = signChallengeWithWallet(
             publicKey = wallet.publicKey,
@@ -96,15 +99,16 @@ internal class VisaCardScanHandler @Inject constructor(
 
         return when (signChallengeResult) {
             is CompletionResult.Success -> {
-                val signature = signChallengeResult.data.cardSignature ?: run {
-                    Timber.i("Failed to sign challenge with Wallet public key")
-                    return CompletionResult.Failure(VisaCardScanError.FailedToSignChallenge.tangemError)
-                }
+                val signature = signChallengeResult.data.walletSignature
+                val salt = signChallengeResult.data.salt
 
                 Timber.i("Challenge signed with Wallet public key")
                 handleWalletAuthorizationTokens(
                     cardWalletAddress = walletAddress.value,
-                    signedChallenge = challengeResponse.toSignedChallenge(signature.toHexString()),
+                    signedChallenge = challengeResponse.toSignedChallenge(
+                        signedChallenge = signature.toHexString(),
+                        salt = salt.toHexString(),
+                    ),
                 )
             }
             is CompletionResult.Failure -> {

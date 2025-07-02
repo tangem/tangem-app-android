@@ -16,6 +16,7 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.nft.component.NFTDetailsBlockComponent
+import com.tangem.features.send.v2.api.SendNotificationsComponent
 import com.tangem.features.send.v2.common.CommonSendRoute
 import com.tangem.features.send.v2.common.PredefinedValues
 import com.tangem.features.send.v2.common.ui.state.ConfirmUM
@@ -26,8 +27,7 @@ import com.tangem.features.send.v2.subcomponents.destination.SendDestinationBloc
 import com.tangem.features.send.v2.subcomponents.destination.SendDestinationComponentParams.DestinationBlockParams
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeBlockComponent
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeComponentParams
-import com.tangem.features.send.v2.subcomponents.notifications.NotificationsComponent
-import com.tangem.features.send.v2.subcomponents.notifications.model.NotificationData
+import com.tangem.features.send.v2.subcomponents.notifications.DefaultSendNotificationsComponent
 import kotlinx.coroutines.flow.*
 import java.math.BigDecimal
 
@@ -83,15 +83,15 @@ internal class NFTSendConfirmComponent(
         ),
     )
 
-    private val notificationsComponent = NotificationsComponent(
+    private val notificationsComponent = DefaultSendNotificationsComponent(
         appComponentContext = child("NFTSendConfirmNotifications"),
-        params = NotificationsComponent.Params(
+        params = SendNotificationsComponent.Params(
             analyticsCategoryName = params.analyticsCategoryName,
             userWalletId = params.userWallet.walletId,
             cryptoCurrencyStatus = params.cryptoCurrencyStatus,
             feeCryptoCurrencyStatus = params.feeCryptoCurrencyStatus,
             appCurrency = params.appCurrency,
-            notificationData = NotificationData(
+            notificationData = SendNotificationsComponent.Params.NotificationData(
                 destinationAddress = model.confirmData.enteredDestination.orEmpty(),
                 memo = model.confirmData.enteredMemo,
                 amountValue = BigDecimal.ZERO,

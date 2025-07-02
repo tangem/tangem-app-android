@@ -26,6 +26,7 @@ import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.features.nft.entity.NFTSendSuccessTrigger
+import com.tangem.features.send.v2.api.SendNotificationsComponent.Params.NotificationData
 import com.tangem.features.send.v2.common.CommonSendRoute
 import com.tangem.features.send.v2.common.SendBalanceUpdater
 import com.tangem.features.send.v2.common.SendConfirmAlertFactory
@@ -47,7 +48,6 @@ import com.tangem.features.send.v2.subcomponents.fee.SendFeeCheckReloadTrigger
 import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeSelectorUM
 import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeUM
 import com.tangem.features.send.v2.subcomponents.notifications.NotificationsUpdateTrigger
-import com.tangem.features.send.v2.subcomponents.notifications.model.NotificationData
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.stripZeroPlainString
 import com.tangem.utils.transformer.update
@@ -108,7 +108,7 @@ internal class NFTSendConfirmModel @Inject constructor(
 
     val confirmData: ConfirmData
         get() = ConfirmData(
-            enteredDestination = destinationUM?.addressTextField?.value,
+            enteredDestination = destinationUM?.addressTextField?.actualAddress,
             enteredMemo = destinationUM?.memoTextField?.value,
             fee = feeSelectorUM?.selectedFee,
             feeError = (feeUM?.feeSelectorUM as? FeeSelectorUM.Error)?.error,
@@ -258,7 +258,7 @@ internal class NFTSendConfirmModel @Inject constructor(
     }
 
     private fun verifyAndSendTransaction() {
-        val destination = destinationUM?.addressTextField?.value ?: return
+        val destination = destinationUM?.addressTextField?.actualAddress ?: return
         val memo = destinationUM?.memoTextField?.value
         val fee = feeSelectorUM?.selectedFee ?: return
         val ownerAddress = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value ?: return

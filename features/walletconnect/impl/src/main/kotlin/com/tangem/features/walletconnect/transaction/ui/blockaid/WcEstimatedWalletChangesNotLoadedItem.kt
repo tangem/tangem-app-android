@@ -35,7 +35,7 @@ internal fun WcEstimatedWalletChangesNotLoadedItem(modifier: Modifier = Modifier
         Text(
             modifier = modifier
                 .fillMaxWidth()
-                .padding(start = 12.dp, bottom = 14.dp),
+                .padding(start = 12.dp, end = 12.dp, bottom = 14.dp),
             text = stringResourceSafe(R.string.wc_estimated_wallet_changes_not_simulated),
             color = TangemTheme.colors.text.tertiary,
             style = TangemTheme.typography.body2,

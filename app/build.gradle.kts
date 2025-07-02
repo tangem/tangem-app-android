@@ -18,6 +18,7 @@ android {
     namespace = "com.tangem.wallet"
     testOptions {
         animationsDisabled = true
+        execution = "ANDROIDX_TEST_ORCHESTRATOR"
     }
     packaging {
         jniLibs {
@@ -71,6 +72,10 @@ configurations.all {
     }
 }
 
+configurations.androidTestImplementation {
+    exclude(module = "protobuf-lite")
+}
+
 
 dependencies {
     implementation(projects.domain.legacy)
@@ -114,6 +119,8 @@ dependencies {
     implementation(projects.domain.notifications)
     implementation(projects.domain.notifications.models)
     implementation(projects.domain.notifications.toggles)
+    implementation(projects.domain.swap.models)
+    implementation(projects.domain.swap)
 
     implementation(projects.common)
     implementation(projects.common.routing)
@@ -160,6 +167,7 @@ dependencies {
     implementation(projects.data.quotes)
     implementation(projects.data.blockaid)
     implementation(projects.data.notifications)
+    implementation(projects.data.swap)
 
     /** Features */
     implementation(projects.features.referral.impl)
@@ -170,6 +178,8 @@ dependencies {
     implementation(projects.features.swap.domain)
     implementation(projects.features.swap.domain.api)
     implementation(projects.features.swap.data)
+    implementation(projects.features.swapV2.api)
+    implementation(projects.features.swapV2.impl)
     implementation(projects.features.tester.api)
     implementation(projects.features.tester.impl)
     implementation(projects.features.wallet.api)
@@ -210,8 +220,14 @@ dependencies {
     implementation(projects.features.walletconnect.impl)
     implementation(projects.features.usedesk.api)
     implementation(projects.features.usedesk.impl)
-    implementation(projects.features.feeSelector.api)
-    implementation(projects.features.feeSelector.impl)
+    implementation(projects.features.hotWallet.api)
+    implementation(projects.features.hotWallet.impl)
+    implementation(projects.features.kyc.api)
+    implementation(projects.features.kyc.impl)
+    implementation(projects.features.welcome.api)
+    implementation(projects.features.welcome.impl)
+    implementation(projects.features.createWalletSelection.api)
+    implementation(projects.features.createWalletSelection.impl)
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)
@@ -310,19 +326,14 @@ dependencies {
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)
     androidTestImplementation(deps.test.junit.android)
-    androidTestImplementation(deps.test.espresso){
-        exclude(group = "com.google.protobuf", module = "protobuf-lite") //conflicting with firebasePerf
-    }
+    androidTestImplementation(deps.test.espresso)
     androidTestImplementation(deps.test.espresso.intents)
-    {
-        exclude(group = "com.google.protobuf", module = "protobuf-lite") //conflicting with firebasePerf
-    }
+    androidTestImplementation(deps.test.kaspresso)
+    androidTestImplementation(deps.test.kaspresso.compose)
+    androidTestImplementation(deps.test.kaspresso.allure)
     androidTestImplementation(deps.test.compose.junit)
     androidTestImplementation(deps.test.hamcrest)
     androidTestImplementation(deps.test.hilt)
-    androidTestImplementation(deps.test.ultron.android)
-    androidTestImplementation(deps.test.ultron.compose)
-    androidTestImplementation(deps.test.ultron.allure)
     kaptAndroidTest(deps.test.hilt.compiler)
 
     /** Chucker */
@@ -339,6 +350,8 @@ dependencies {
 
     implementation(deps.listenableFuture)
     implementation(deps.mlKit.barcodeScanning)
+
+    androidTestUtil(deps.test.orchestrator)
 
     /** Leakcanary */
     debugImplementation(deps.leakcanary)

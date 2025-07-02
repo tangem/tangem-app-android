@@ -1,17 +1,32 @@
 package com.tangem.features.walletconnect.transaction.model
 
 import androidx.compose.runtime.Stable
+import arrow.core.Either
 import com.arkivanov.decompose.router.stack.StackNavigation
+import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.pushNew
+import com.domain.blockaid.models.transaction.ValidationResult
 import com.tangem.blockchain.common.TransactionData
+import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.clipboard.ClipboardManager
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.core.lce.Lce
+import com.tangem.domain.models.network.Network
+import com.tangem.domain.tokens.GetNetworkCoinStatusUseCase
+import com.tangem.domain.tokens.error.CurrencyStatusError
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.walletconnect.WcRequestUseCaseFactory
 import com.tangem.domain.walletconnect.usecase.method.*
+import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.features.send.v2.api.callbacks.FeeSelectorModelCallback
+import com.tangem.features.send.v2.api.entity.FeeSelectorUM
+import com.tangem.features.send.v2.api.params.FeeSelectorParams
 import com.tangem.features.walletconnect.connections.routing.WcInnerRoute
 import com.tangem.features.walletconnect.transaction.components.common.WcTransactionModelParams
 import com.tangem.features.walletconnect.transaction.converter.WcCommonTransactionUMConverter
@@ -24,7 +39,9 @@ import com.tangem.features.walletconnect.transaction.ui.blockaid.WcSendAndReceiv
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.math.BigDecimal
 import javax.inject.Inject
+import kotlin.properties.Delegates
 
 @Suppress("LongParameterList")
 @Stable
@@ -37,14 +54,23 @@ internal class WcSendTransactionModel @Inject constructor(
     private val useCaseFactory: WcRequestUseCaseFactory,
     private val converter: WcCommonTransactionUMConverter,
     private val blockAidUiConverter: WcSendAndReceiveBlockAidUiConverter,
-) : Model(), WcCommonTransactionModel {
+    private val getFeeUseCase: GetFeeUseCase,
+    private val getNetworkCoinUseCase: GetNetworkCoinStatusUseCase,
+) : Model(), WcCommonTransactionModel, FeeSelectorModelCallback {
 
     private val params = paramsContainer.require<WcTransactionModelParams>()
 
     private val _uiState = MutableStateFlow<WcSendTransactionUM?>(null)
-    override val uiState: StateFlow<WcSendTransactionUM?> = _uiState
+    override val uiState: StateFlow<WcSendTransactionUM?> = _uiState.asStateFlow()
 
     val stackNavigation = StackNavigation<WcTransactionRoutes>()
+
+    internal var cryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
+    internal var suggestedFeeState: FeeSelectorParams.SuggestedFeeState = FeeSelectorParams.SuggestedFeeState.None
+    private var useCase: WcSignUseCase<*> by Delegates.notNull()
+    private var signState: WcSignState<*> by Delegates.notNull()
+    private var wcApproval: WcApproval? = null
+    private var sign: () -> Unit = {}
 
     init {
         @Suppress("UnusedPrivateMember")
@@ -56,41 +82,82 @@ internal class WcSendTransactionModel @Inject constructor(
             when (useCase) {
                 is WcListTransactionUseCase,
                 is WcTransactionUseCase,
-                -> combine(
-                    useCase.invoke(),
-                    useCase.securityStatus,
-                ) { signState, securityCheck -> signState to securityCheck }
-                    .distinctUntilChanged()
-                    .collectLatest {
-                        val (signState, securityCheck) = it
-                        if (signingIsDone(signState)) return@collectLatest
-                        val signModel: Any = signState.signModel
-                        val isMutableFee = useCase is WcMutableFee
-                        val dAppFee = if (isMutableFee) useCase.dAppFee() else null
-                        val selectedFee = when (signModel) {
-                            is TransactionData.Compiled -> signModel.fee
-                            is TransactionData.Uncompiled -> signModel.fee
-                            else -> null
+                -> {
+                    this@WcSendTransactionModel.cryptoCurrencyStatus =
+                        getCryptoCurrencyStatus(userWallet = useCase.wallet, network = useCase.network)
+                            .onLeft { unknownMethodRunnable() }
+                            .getOrNull() ?: return@launch
+                    this@WcSendTransactionModel.useCase = useCase
+                    (useCase as? WcMutableFee)
+                        ?.dAppFee()
+                        ?.let { dAppFee ->
+                            suggestedFeeState = FeeSelectorParams.SuggestedFeeState.Suggestion(
+                                title = stringReference(useCase.session.sdkModel.appMetaData.name),
+                                fee = dAppFee,
+                            )
                         }
-                        val isDAppFeeSelected = dAppFee != null && dAppFee == selectedFee
+                    combine(
+                        useCase.invoke(),
+                        useCase.securityStatus,
+                    ) { signState, securityCheck -> signState to securityCheck }
+                        .distinctUntilChanged()
+                        .collectLatest { (signState, securityCheck) ->
+                            if (signingIsDone(signState, useCase)) return@collectLatest
 
-                        val isSecurityCheckContent = securityCheck is Lce.Content
-                        var isApprovalMethod = isSecurityCheckContent &&
-                            securityCheck.content is BlockAidTransactionCheck.Result.Approval
-                        buildUiState(securityCheck, useCase, signState)
-                    }
+                            this@WcSendTransactionModel.signState = signState
+                            val isSecurityCheckContent = securityCheck is Lce.Content
+                            val isApprovalMethod = isSecurityCheckContent &&
+                                securityCheck.content is BlockAidTransactionCheck.Result.Approval
+                            wcApproval = useCase as? WcApproval
+                            sign = { useCase.sign() }
+                            buildUiState(securityCheck, useCase, signState, isApprovalMethod)
+                        }
+                }
                 else -> unknownMethodRunnable()
             }
         }
+    }
+
+    override fun onFeeResult(feeSelectorUM: FeeSelectorUM) {
+        _uiState.update { it?.copy(feeSelectorUM = feeSelectorUM) }
+        val fee = (feeSelectorUM as? FeeSelectorUM.Content)?.selectedFeeItem?.fee ?: return
+        (useCase as? WcMutableFee)?.updateFee(fee)
+    }
+
+    suspend fun loadFee(): Either<GetFeeError, TransactionFee> {
+        val signModel = signState.signModel
+        val transactionData = signModel as? TransactionData.Uncompiled ?: error("TransactionData must be Uncompiled")
+        return getFeeUseCase.invoke(
+            userWallet = useCase.wallet,
+            network = useCase.network,
+            transactionData = transactionData,
+        )
+    }
+
+    private suspend fun getCryptoCurrencyStatus(
+        userWallet: UserWallet,
+        network: Network,
+    ): Either<CurrencyStatusError, CryptoCurrencyStatus> {
+        return getNetworkCoinUseCase.invokeSync(
+            userWallet = userWallet,
+            networkId = network.id,
+            derivationPath = network.derivationPath,
+        )
     }
 
     private suspend fun buildUiState(
         securityCheck: Lce<Throwable, BlockAidTransactionCheck.Result>,
         useCase: WcSignUseCase<*>,
         signState: WcSignState<*>,
+        isApproval: Boolean,
     ) {
         val blockAidState = when (securityCheck) {
-            is Lce.Content -> blockAidUiConverter.convert(securityCheck.content.result)
+            is Lce.Content -> blockAidUiConverter.convert(
+                WcSendAndReceiveBlockAidUiConverter.Input(
+                    securityCheck.content.result,
+                    if (isApproval) wcApproval?.getAmount() else null,
+                ),
+            )
             is Lce.Error -> WcSendReceiveTransactionCheckResultsUM(isLoading = false)
             is Lce.Loading -> WcSendReceiveTransactionCheckResultsUM(isLoading = true)
         }
@@ -101,13 +168,16 @@ internal class WcSendTransactionModel @Inject constructor(
                 actions = WcTransactionActionsUM(
                     onShowVerifiedAlert = ::showVerifiedAlert,
                     onDismiss = { cancel(useCase) },
-                    onSign = useCase::sign,
+                    onSign = { onSign(securityCheck.getOrNull()) },
                     onCopy = { copyData(useCase.rawSdkRequest.request.params) },
+                    onShowFeeBottomSheet = ::onShowFeeBottomSheet,
                 ),
+                feeSelectorUM = uiState.value?.feeSelectorUM,
             ),
         ) as? WcSendTransactionUM
         transactionUM = transactionUM?.copy(
             transaction = transactionUM.transaction.copy(estimatedWalletChanges = blockAidState),
+            spendAllowance = blockAidState.spendAllowance,
         )
         _uiState.emit(transactionUM)
     }
@@ -120,16 +190,61 @@ internal class WcSendTransactionModel @Inject constructor(
         stackNavigation.pushNew(WcTransactionRoutes.TransactionRequestInfo)
     }
 
+    private fun onShowFeeBottomSheet() {
+        stackNavigation.pushNew(WcTransactionRoutes.SelectFee)
+    }
+
+    private fun onSign(securityCheck: BlockAidTransactionCheck.Result?) {
+        if (securityCheck?.result?.validation == ValidationResult.UNSAFE) {
+            showMaliciousAlert(securityCheck.result.description)
+        } else {
+            sign()
+        }
+    }
+
+    fun onClickDoneCustomAllowance(value: BigDecimal, isUnlimited: Boolean) {
+        val newValue = if (isUnlimited) null else value
+        wcApproval?.getAmount()?.let { currentAmount ->
+            wcApproval?.updateAmount(currentAmount.copy(amount = currentAmount.amount?.copy(value = newValue)))
+        }
+    }
+
+    fun onClickAllowToSpend() {
+        wcApproval?.let { stackNavigation.pushNew(WcTransactionRoutes.CustomAllowance) }
+    }
+
     private fun showVerifiedAlert(appName: String) {
         stackNavigation.pushNew(WcTransactionRoutes.Alert(WcTransactionRoutes.Alert.Type.Verified(appName)))
     }
 
-    private fun signingIsDone(signState: WcSignState<*>): Boolean {
+    private fun showMaliciousAlert(description: String?) {
+        val type = WcTransactionRoutes.Alert.Type.MaliciousInfo(description = description, onClick = ::signFromAlert)
+        stackNavigation.pushNew(WcTransactionRoutes.Alert(type))
+    }
+
+    private fun signFromAlert() {
+        stackNavigation.pop()
+        sign()
+    }
+
+    private fun signingIsDone(signState: WcSignState<*>, useCase: WcSignUseCase<*>): Boolean {
         (signState.domainStep as? WcSignStep.Result)?.result?.let {
-            router.pop()
+            handleSigningError(it, useCase)
             return true
         }
         return false
+    }
+
+    private fun handleSigningError(result: Either<Throwable, Unit>, useCase: WcSignUseCase<*>) {
+        if (result.isLeft()) {
+            val error = WcTransactionRoutes.Alert.Type.UnknownError(
+                errorMessage = result.leftOrNull()?.message,
+                onDismiss = { cancel(useCase) },
+            )
+            stackNavigation.pushNew(WcTransactionRoutes.Alert(error))
+        } else {
+            router.pop()
+        }
     }
 
     private fun cancel(useCase: WcSignUseCase<*>) {

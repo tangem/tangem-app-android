@@ -15,12 +15,20 @@ internal sealed class WcTransactionRoutes : TangemBottomSheetConfigContent, Rout
     data object TransactionRequestInfo : WcTransactionRoutes()
 
     @Serializable
+    data object CustomAllowance : WcTransactionRoutes()
+
+    @Serializable
+    data object SelectFee : WcTransactionRoutes()
+
+    @Serializable
     data class Alert(val type: Type) : WcTransactionRoutes() {
         @Serializable
         sealed class Type {
             data class Verified(val appName: String) : Type()
             data object UnknownDomain : Type()
             data object UnsafeDomain : Type()
+            data class MaliciousInfo(val description: String?, val onClick: () -> Unit) : Type()
+            data class UnknownError(val errorMessage: String?, val onDismiss: () -> Unit) : Type()
         }
     }
 }
