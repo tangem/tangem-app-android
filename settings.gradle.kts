@@ -118,6 +118,7 @@ dependencyResolutionManagement {
             }
         }
         maven("https://jitpack.io")
+        maven("https://maven.sumsub.com/repository/maven-public/")
     }
 
     versionCatalogs {
@@ -185,6 +186,8 @@ include(":features:swap:domain")
 include(":features:swap:domain:models")
 include(":features:swap:domain:api")
 include(":features:swap:impl")
+include(":features:swap-v2:api")
+include(":features:swap-v2:impl")
 
 include(":features:tester:api")
 include(":features:tester:impl")
@@ -243,8 +246,17 @@ include(":features:nft:impl")
 include(":features:walletconnect:api")
 include(":features:walletconnect:impl")
 
-include(":features:fee-selector:api")
-include(":features:fee-selector:impl")
+include(":features:hot-wallet:api")
+include(":features:hot-wallet:impl")
+
+include(":features:kyc:api")
+include(":features:kyc:impl")
+
+include(":features:create-wallet-selection:api")
+include(":features:create-wallet-selection:impl")
+
+include(":features:welcome:api")
+include(":features:welcome:impl")
 // endregion Feature modules
 
 // region Domain modules
@@ -299,6 +311,10 @@ include(":domain:blockaid:models")
 include(":domain:notifications")
 include(":domain:notifications:models")
 include(":domain:notifications:toggles")
+include(":domain:express")
+include(":domain:express:models")
+include(":domain:swap")
+include(":domain:swap:models")
 // endregion Domain modules
 
 // region Data modules
@@ -328,4 +344,6 @@ include(":data:onramp")
 include(":data:quotes")
 include(":data:notifications")
 include(":data:blockaid")
+include(":data:swap")
+include(":data:express")
 // endregion Data modules
