@@ -330,6 +330,7 @@ dependencies {
     androidTestImplementation(deps.test.espresso.intents)
     androidTestImplementation(deps.test.kaspresso)
     androidTestImplementation(deps.test.kaspresso.compose)
+    androidTestImplementation(deps.test.kaspresso.allure)
     androidTestImplementation(deps.test.compose.junit)
     androidTestImplementation(deps.test.hamcrest)
     androidTestImplementation(deps.test.hilt)

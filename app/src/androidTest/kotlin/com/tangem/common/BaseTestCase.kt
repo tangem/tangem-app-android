@@ -1,31 +1,37 @@
 package com.tangem.common
 
 import android.Manifest
-import android.content.Context
-import android.util.Log
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
-import androidx.datastore.dataStoreFile
 import androidx.test.espresso.intent.Intents
-import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
-import com.kaspersky.components.composesupport.config.withComposeSupport
+import com.kaspersky.components.alluresupport.interceptors.step.ScreenshotStepInterceptor
+import com.kaspersky.components.alluresupport.withForcedAllureSupport
+import com.kaspersky.components.composesupport.config.addComposeSupport
 import com.kaspersky.kaspresso.kaspresso.Kaspresso
 import com.kaspersky.kaspresso.testcases.api.testcase.TestCase
+import com.tangem.common.allure.FailedStepScreenshotInterceptor
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.MainActivity
 import dagger.hilt.android.testing.HiltAndroidRule
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
 import org.junit.Rule
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
-import org.junit.runner.RunWith
 import javax.inject.Inject
 
 abstract class BaseTestCase : TestCase(
-    kaspressoBuilder = Kaspresso.Builder.withComposeSupport()
+    kaspressoBuilder = Kaspresso.Builder.withForcedAllureSupport(
+        shouldRecordVideo = false
+    ).apply {
+        stepWatcherInterceptors = stepWatcherInterceptors.filter {
+            it !is ScreenshotStepInterceptor
+        }.toMutableList()
+        stepWatcherInterceptors.addAll(
+            listOf(
+                FailedStepScreenshotInterceptor(screenshots)
+            )
+        )
+    }.addComposeSupport()
 ) {
 
     @Inject
@@ -59,10 +65,6 @@ abstract class BaseTestCase : TestCase(
     }.after {
         additionalAfterSection()
         Intents.release()
-    }
-
-    companion object {
-        private const val INIT_DELAY = 1000L
     }
 
 }
