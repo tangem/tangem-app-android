@@ -105,6 +105,7 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
                 newSession
             }.onLeft {
                 analytics.send(WcAnalyticEvents.DAppConnectionFailed(it.code))
+                sdkDelegate.rejectSession(sdkSessionProposal.proposerPublicKey)
                 Timber.tag(WC_TAG).e(it, "Failed to approve session ${sdkSessionProposal.name}")
             }
             emit(WcPairState.Approving.Result(sessionForApprove, either))
