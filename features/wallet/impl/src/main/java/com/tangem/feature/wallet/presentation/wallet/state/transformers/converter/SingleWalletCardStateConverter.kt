@@ -7,6 +7,7 @@ import com.tangem.domain.common.util.getCardsCount
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
 import com.tangem.utils.StringsSigns.DASH_SIGN
@@ -63,7 +64,7 @@ internal class SingleWalletCardStateConverter(
             imageResId = imageResId,
             dropDownItems = dropDownItems,
             balance = formatFiatAmount(status = status, appCurrency = appCurrency),
-            cardCount = selectedWallet.getCardsCount(),
+            cardCount = selectedWallet.requireColdWallet().getCardsCount(), // TODO [REDACTED_TASK_KEY]
             isZeroBalance = status.fiatAmount?.isZero(),
             isBalanceFlickering = (status as? CryptoCurrencyStatus.Loaded)?.sources?.total == StatusSource.CACHE,
         )
