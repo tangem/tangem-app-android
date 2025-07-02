@@ -1,7 +1,7 @@
 package com.tangem.domain.networks.single
 
 import com.tangem.domain.core.flow.FlowCachingSupplier
-import com.tangem.domain.tokens.model.NetworkStatus
+import com.tangem.domain.models.network.NetworkStatus
 
 /**
  * Supplier of network status for selected wallet [SingleNetworkStatusProducer.Params]
