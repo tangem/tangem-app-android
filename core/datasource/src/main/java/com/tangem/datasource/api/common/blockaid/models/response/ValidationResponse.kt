@@ -7,4 +7,5 @@ import com.squareup.moshi.JsonClass
 data class ValidationResponse(
     @Json(name = "status") val status: String,
     @Json(name = "result_type") val resultType: String,
+    @Json(name = "description") val description: String?,
 )
