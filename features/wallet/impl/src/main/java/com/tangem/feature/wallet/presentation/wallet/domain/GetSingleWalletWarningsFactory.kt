@@ -7,7 +7,7 @@ import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.settings.IsReadyToShowRateAppUseCase
-import com.tangem.domain.tokens.GetPrimaryCurrencyStatusUpdatesUseCase
+import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
@@ -22,7 +22,7 @@ import javax.inject.Inject
 
 @ModelScoped
 internal class GetSingleWalletWarningsFactory @Inject constructor(
-    private val getPrimaryCurrencyStatusUpdatesUseCase: GetPrimaryCurrencyStatusUpdatesUseCase,
+    private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val isReadyToShowRateAppUseCase: IsReadyToShowRateAppUseCase,
     private val isNeedToBackupUseCase: IsNeedToBackupUseCase,
@@ -33,10 +33,13 @@ internal class GetSingleWalletWarningsFactory @Inject constructor(
     private var readyForRateAppNotification = false
 
     fun create(userWallet: UserWallet, clickIntents: WalletClickIntents): Flow<ImmutableList<WalletNotification>> {
+        if (userWallet !is UserWallet.Cold) {
+            return flowOf(emptyList<WalletNotification>().toImmutableList())
+        }
         val cardTypesResolver = userWallet.scanResponse.cardTypesResolver
 
         return combine(
-            flow = getPrimaryCurrencyStatusUpdatesUseCase(userWallet.walletId),
+            flow = getSingleCryptoCurrencyStatusUseCase.invokeSingleWallet(userWallet.walletId),
             flow2 = isReadyToShowRateAppUseCase().conflate(),
             flow3 = isNeedToBackupUseCase(userWallet.walletId).conflate(),
             flow4 = getWalletsUseCase().conflate(),
@@ -107,10 +110,11 @@ internal class GetSingleWalletWarningsFactory @Inject constructor(
         cardTypesResolver: CardTypesResolver,
         clickIntents: WalletClickIntents,
     ) {
-        val userHasWalletOrWallet2 = userWallets.any {
+        val userHasWalletOrWallet2 = userWallets.filterIsInstance<UserWallet.Cold>().any {
             val typesResolver = it.scanResponse.cardTypesResolver
             typesResolver.isTangemWallet() || typesResolver.isWallet2()
         }
+
         addIf(
             element = WalletNotification.NoteMigration(
                 onClick = { clickIntents.onNoteMigrationButtonClick(NOTE_MIGRATION_URL) },
@@ -125,7 +129,7 @@ internal class GetSingleWalletWarningsFactory @Inject constructor(
     }
 
     private suspend fun MutableList<WalletNotification>.addWarningNotifications(
-        userWallet: UserWallet,
+        userWallet: UserWallet.Cold,
         cardTypesResolver: CardTypesResolver,
         maybePrimaryCurrencyStatus: Either<CurrencyStatusError, CryptoCurrencyStatus>,
         isNeedToBackup: Boolean,
@@ -174,7 +178,7 @@ internal class GetSingleWalletWarningsFactory @Inject constructor(
     }
 
     private suspend fun hasSignedHashes(
-        selectedWallet: UserWallet,
+        selectedWallet: UserWallet.Cold,
         cryptoCurrencyStatus: CryptoCurrencyStatus?,
     ): Boolean {
         return cryptoCurrencyStatus?.currency?.network?.let {

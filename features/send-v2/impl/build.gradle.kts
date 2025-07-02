@@ -16,6 +16,7 @@ dependencies {
     implementation(projects.features.sendV2.api)
     implementation(projects.features.txhistory.api)
     implementation(projects.features.nft.api)
+    implementation(projects.features.feeSelector.api)
 
     /** Libs */
     implementation(projects.libs.crypto)
@@ -53,10 +54,12 @@ dependencies {
     implementation(projects.domain.qrScanning)
     implementation(projects.domain.settings)
     implementation(projects.domain.feedback)
+    implementation(projects.domain.feedback.models)
     implementation(projects.domain.txhistory)
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.balanceHiding)
     implementation(projects.domain.nft.models)
+    implementation(projects.domain.nft)
     implementation(projects.domain.notifications)
 
 

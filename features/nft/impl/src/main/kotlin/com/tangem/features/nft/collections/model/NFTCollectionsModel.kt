@@ -11,14 +11,11 @@ import com.tangem.domain.nft.FetchNFTCollectionAssetsUseCase
 import com.tangem.domain.nft.GetNFTCollectionsUseCase
 import com.tangem.domain.nft.RefreshAllNFTUseCase
 import com.tangem.domain.nft.models.NFTCollection
+import com.tangem.domain.nft.models.NFTCollections
 import com.tangem.features.nft.collections.NFTCollectionsComponent
 import com.tangem.features.nft.collections.entity.NFTCollectionsStateUM
 import com.tangem.features.nft.collections.entity.NFTCollectionsUM
 import com.tangem.features.nft.collections.entity.transformer.*
-import com.tangem.features.nft.collections.entity.transformer.ChangeCollectionExpandedStateTransformer
-import com.tangem.features.nft.collections.entity.transformer.ToggleSearchBarTransformer
-import com.tangem.features.nft.collections.entity.transformer.UpdateDataStateTransformer
-import com.tangem.features.nft.collections.entity.transformer.UpdateSearchQueryTransformer
 import com.tangem.features.nft.impl.R
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
@@ -75,16 +72,15 @@ internal class NFTCollectionsModel @Inject constructor(
         ) { nftCollections, query ->
             _state.update {
                 UpdateDataStateTransformer(
-                    nftCollections = nftCollections,
-                    searchQuery = query,
+                    nftCollections = nftCollections.filter(query),
                     onReceiveClick = {
                         params.onReceiveClick()
                     },
                     onRetryClick = ::onRefresh,
                     onExpandCollectionClick = ::onExpandCollectionClick,
                     onRetryAssetsClick = ::onRetryAssetsClick,
-                    onAssetClick = { asset, collectionName ->
-                        params.onAssetClick(asset, collectionName)
+                    onAssetClick = { asset, collection ->
+                        params.onAssetClick(asset, collection)
                     },
                     initialSearchBarFactory = ::getInitialSearchBar,
                     collectionIdProvider = collectionIdProvider,
@@ -93,6 +89,38 @@ internal class NFTCollectionsModel @Inject constructor(
         }
             .onStart { onRefresh() }
             .launchIn(modelScope)
+    }
+
+    private fun List<NFTCollections>.filter(query: String): List<NFTCollections> = map {
+        it.copy(
+            content = when (val content = it.content) {
+                is NFTCollections.Content.Collections -> content.copy(
+                    collections = content.collections.orEmpty().filter {
+                        val assetsFulfillQuery = if (query.isEmpty()) {
+                            true
+                        } else {
+                            when (val assets = it.assets) {
+                                is NFTCollection.Assets.Empty,
+                                is NFTCollection.Assets.Failed,
+                                is NFTCollection.Assets.Loading,
+                                -> false
+                                is NFTCollection.Assets.Value -> {
+                                    assets.items.any { asset ->
+                                        asset.name?.lowercase()?.contains(query.lowercase()) == true
+                                    }
+                                }
+                            }
+                        }
+
+                        val collectionFulfillQuery =
+                            query.isEmpty() || it.name?.lowercase()?.contains(query.lowercase()) == true
+
+                        collectionFulfillQuery || assetsFulfillQuery
+                    },
+                )
+                is NFTCollections.Content.Error -> it.content
+            },
+        )
     }
 
     private fun onRefresh() {
