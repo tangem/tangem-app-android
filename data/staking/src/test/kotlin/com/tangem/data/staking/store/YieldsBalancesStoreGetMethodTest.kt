@@ -32,7 +32,8 @@ internal class YieldsBalancesStoreGetMethodTest {
 
         val values = getEmittedValues(flow = actual)
 
-        Truth.assertThat(values).isEqualTo(emptyList<Set<YieldBalance>>())
+        val expected = listOf(emptySet<YieldBalance>())
+        Truth.assertThat(values).isEqualTo(expected)
     }
 
     @Test
@@ -43,7 +44,8 @@ internal class YieldsBalancesStoreGetMethodTest {
 
         val values = getEmittedValues(flow = actual)
 
-        Truth.assertThat(values).isEqualTo(emptyList<Set<YieldBalance>>())
+        val expected = listOf(emptySet<YieldBalance>())
+        Truth.assertThat(values).isEqualTo(expected)
     }
 
     @Test

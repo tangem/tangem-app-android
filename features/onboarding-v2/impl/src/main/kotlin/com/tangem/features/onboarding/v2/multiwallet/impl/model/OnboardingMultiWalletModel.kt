@@ -1,19 +1,19 @@
 package com.tangem.features.onboarding.v2.multiwallet.impl.model
 
+import com.tangem.common.ui.userwallet.converter.ArtworkUMConverter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
-import com.tangem.core.ui.components.artwork.ArtworkUM
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.onboarding.repository.OnboardingRepository
 import com.tangem.domain.wallets.usecase.GetCardImageUseCase
-import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
 import com.tangem.features.onboarding.v2.common.analytics.OnboardingEvent
 import com.tangem.features.onboarding.v2.common.ui.interruptBackupDialog
+import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
 import com.tangem.features.onboarding.v2.multiwallet.impl.model.OnboardingMultiWalletState.FinalizeStage
 import com.tangem.features.onboarding.v2.multiwallet.impl.ui.state.OnboardingMultiWalletUM
@@ -39,6 +39,7 @@ internal class OnboardingMultiWalletModel @Inject constructor(
     private val onboardingRepository: OnboardingRepository,
     private val getCardImageUseCase: GetCardImageUseCase,
     private val uiMessageSender: UiMessageSender,
+    private val artworkUMConverter: ArtworkUMConverter,
 ) : Model() {
     private val params = paramsContainer.require<OnboardingMultiWalletComponent.Params>()
     private val _uiState = MutableStateFlow(OnboardingMultiWalletUM())
@@ -90,7 +91,7 @@ internal class OnboardingMultiWalletModel @Inject constructor(
                                 firmwareVersion = backup.card2.firmwareVersion,
                             )
                         _uiState.update {
-                            it.copy(artwork2 = ArtworkUM(artwork.verifiedArtwork, artwork.defaultUrl))
+                            it.copy(artwork2 = artworkUMConverter.convert(artwork))
                         }
                     }
                     _uiState.value.artwork3 == null && backup.card3 != null -> {
@@ -103,7 +104,7 @@ internal class OnboardingMultiWalletModel @Inject constructor(
                                 firmwareVersion = backup.card3.firmwareVersion,
                             )
                         _uiState.update {
-                            it.copy(artwork3 = ArtworkUM(artwork.verifiedArtwork, artwork.defaultUrl))
+                            it.copy(artwork3 = artworkUMConverter.convert(artwork))
                         }
                     }
                 }
@@ -179,7 +180,7 @@ internal class OnboardingMultiWalletModel @Inject constructor(
                 )
 
             _uiState.update {
-                it.copy(artwork1 = ArtworkUM(artwork.verifiedArtwork, artwork.defaultUrl))
+                it.copy(artwork1 = artworkUMConverter.convert(artwork))
             }
         }
     }
