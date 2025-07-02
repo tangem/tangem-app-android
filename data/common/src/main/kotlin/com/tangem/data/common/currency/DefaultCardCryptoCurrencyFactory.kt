@@ -31,6 +31,7 @@ internal class DefaultCardCryptoCurrencyFactory(
     private val excludedBlockchains: ExcludedBlockchains,
     private val userWalletsStore: UserWalletsStore,
     private val userTokensResponseStore: UserTokensResponseStore,
+    private val responseCryptoCurrenciesFactory: ResponseCryptoCurrenciesFactory,
 ) : CardCryptoCurrencyFactory {
 
     private val cryptoCurrencyFactory by lazy { CryptoCurrencyFactory(excludedBlockchains) }
@@ -142,9 +143,7 @@ internal class DefaultCardCryptoCurrencyFactory(
         val response = userTokensResponseStore.getSyncOrNull(userWalletId = userWallet.walletId)
             ?: return emptyMap()
 
-        val responseCurrenciesFactory = ResponseCryptoCurrenciesFactory(excludedBlockchains)
-
-        return responseCurrenciesFactory.createCurrencies(
+        return responseCryptoCurrenciesFactory.createCurrencies(
             tokens = response.tokens.filter { token ->
                 networks.any { it.backendId == token.networkId && it.derivationPath.value == token.derivationPath }
             },
@@ -160,11 +159,9 @@ internal class DefaultCardCryptoCurrencyFactory(
         val response = userTokensResponseStore.getSyncOrNull(userWalletId = userWallet.walletId)
             ?: return emptyMap()
 
-        val responseCurrenciesFactory = ResponseCryptoCurrenciesFactory(excludedBlockchains)
-
         val networkIds = rawIds.map { it.toBlockchain().toNetworkId() }
 
-        return responseCurrenciesFactory.createCurrencies(
+        return responseCryptoCurrenciesFactory.createCurrencies(
             tokens = response.tokens.filter { token -> token.networkId in networkIds },
             scanResponse = userWallet.requireColdWallet().scanResponse, // TODO [REDACTED_TASK_KEY]
         )

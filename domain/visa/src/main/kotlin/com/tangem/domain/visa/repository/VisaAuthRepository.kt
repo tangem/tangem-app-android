@@ -13,7 +13,10 @@ interface VisaAuthRepository {
         cardPublicKey: String,
     ): Either<VisaApiError, VisaAuthChallenge.Card>
 
-    suspend fun getCardWalletAuthChallenge(cardWalletAddress: String): Either<VisaApiError, VisaAuthChallenge.Wallet>
+    suspend fun getCardWalletAuthChallenge(
+        cardId: String,
+        cardWalletAddress: String,
+    ): Either<VisaApiError, VisaAuthChallenge.Wallet>
 
     suspend fun getAccessTokens(signedChallenge: VisaAuthSignedChallenge): Either<VisaApiError, VisaAuthTokens>
 
