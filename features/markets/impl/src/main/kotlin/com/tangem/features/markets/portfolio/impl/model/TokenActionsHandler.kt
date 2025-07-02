@@ -14,10 +14,10 @@ import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.demo.IsDemoCardUseCase
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
-import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.markets.impl.R
@@ -59,7 +59,8 @@ internal class TokenActionsHandler @AssistedInject constructor(
                 cryptoCurrencyData = cryptoCurrencyData,
             ),
         )
-        if (handleDemoMode(action, cryptoCurrencyData.userWallet)) return
+        val userWallet = cryptoCurrencyData.userWallet
+        if (userWallet is UserWallet.Cold && handleDemoMode(action, userWallet)) return
 
         when (action) {
             TokenActionsBSContentUM.Action.Buy -> onBuyClick(cryptoCurrencyData)
@@ -72,7 +73,7 @@ internal class TokenActionsHandler @AssistedInject constructor(
         }
     }
 
-    private fun handleDemoMode(action: TokenActionsBSContentUM.Action, userWallet: UserWallet): Boolean {
+    private fun handleDemoMode(action: TokenActionsBSContentUM.Action, userWallet: UserWallet.Cold): Boolean {
         val demoCard = isDemoCardUseCase.invoke(userWallet.cardId)
         val needShowDemoWarning = demoCard && disabledActionsInDemoMode.contains(action)
 
