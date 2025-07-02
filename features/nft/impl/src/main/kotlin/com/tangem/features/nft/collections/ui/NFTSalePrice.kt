@@ -6,6 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import com.tangem.core.ui.components.TextShimmer
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.nft.collections.entity.NFTSalePriceUM
 
@@ -15,7 +16,7 @@ internal fun NFTSalePrice(state: NFTSalePriceUM, modifier: Modifier = Modifier) 
         is NFTSalePriceUM.Content -> {
             Text(
                 modifier = modifier,
-                text = state.price,
+                text = state.price.resolveReference(),
                 style = TangemTheme.typography.caption2,
                 color = TangemTheme.colors.text.tertiary,
                 maxLines = 1,
