@@ -93,7 +93,7 @@ internal class DefaultMultiYieldBalanceFetcher @Inject constructor(
     private suspend fun getStakingIds(params: MultiYieldBalanceFetcher.Params) = either {
         val stakingIds = catch(
             block = {
-                params.currencyIdWithNetworkMap.flatMapTo(hashSetOf()) { (currencyId, network) ->
+                params.currencyIdWithNetworkMap.mapNotNullTo(hashSetOf()) { (currencyId, network) ->
                     stakingIdFactory.create(
                         userWalletId = params.userWalletId,
                         currencyId = currencyId,
