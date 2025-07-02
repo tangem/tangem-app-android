@@ -21,14 +21,13 @@ import com.tangem.core.ui.components.SecondaryButton
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
+import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.features.walletconnect.connections.entity.VerifiedDAppState
-import com.tangem.features.walletconnect.connections.entity.WcConnectedAppInfoUM
-import com.tangem.features.walletconnect.connections.entity.WcNetworkInfoItem
-import com.tangem.features.walletconnect.connections.entity.WcPrimaryButtonConfig
+import com.tangem.features.walletconnect.connections.entity.*
 import com.tangem.features.walletconnect.impl.R
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -73,6 +72,28 @@ private fun WcConnectedAppInfoBSContent(state: WcConnectedAppInfoUM, modifier: M
                 .padding(top = 8.dp)
                 .then(blocksModifier),
         )
+        state.notification?.let { notification ->
+            val (containerColor, titleColor, iconTint) = when (notification) {
+                WcAppInfoSecurityNotification.SecurityRisk -> Triple(
+                    TangemColorPalette.Amaranth.copy(alpha = 0.1F),
+                    TangemTheme.colors.text.warning,
+                    TangemTheme.colors.icon.warning,
+                )
+                WcAppInfoSecurityNotification.UnknownDomain -> Triple(
+                    null,
+                    TangemTheme.colors.text.primary1,
+                    TangemTheme.colors.icon.attention,
+                )
+            }
+            Notification(
+                modifier = Modifier.padding(top = TangemTheme.dimens.spacing14),
+                config = notification.config,
+                containerColor = containerColor,
+                titleColor = titleColor,
+                subtitleColor = TangemTheme.colors.text.primary1,
+                iconTint = iconTint,
+            )
+        }
         NetworksBlock(
             networks = state.networks,
             modifier = Modifier
