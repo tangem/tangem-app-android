@@ -4,10 +4,10 @@ import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.datasource.local.txhistory.TxHistoryItemsStore
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.txhistory.models.Page
 import com.tangem.domain.txhistory.models.PaginationWrapper
-import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.walletmanager.utils.SdkPageConverter
 import com.tangem.domain.wallets.models.UserWalletId
@@ -18,18 +18,18 @@ internal class TxHistoryPagingSource(
     private val txHistoryItemsStore: TxHistoryItemsStore,
     private val walletManagersFacade: WalletManagersFacade,
     private val cacheRegistry: CacheRegistry,
-) : PagingSource<Page, TxHistoryItem>() {
+) : PagingSource<Page, TxInfo>() {
 
     private val storeKey = TxHistoryItemsStore.Key(sourceParams.userWalletId, sourceParams.currency)
     private val sdkPageConverter by lazy { SdkPageConverter() }
 
     override val keyReuseSupported: Boolean get() = true
 
-    override fun getRefreshKey(state: PagingState<Page, TxHistoryItem>): Page? {
+    override fun getRefreshKey(state: PagingState<Page, TxInfo>): Page? {
         return null
     }
 
-    override suspend fun load(params: LoadParams<Page>): LoadResult<Page, TxHistoryItem> {
+    override suspend fun load(params: LoadParams<Page>): LoadResult<Page, TxInfo> {
         val pageToLoad = params.key ?: Page.Initial
 
         return try {
@@ -50,7 +50,7 @@ internal class TxHistoryPagingSource(
         }
     }
 
-    private suspend fun loadItems(pageToLoad: Page, pageSize: Int, refresh: Boolean): PaginationWrapper<TxHistoryItem> {
+    private suspend fun loadItems(pageToLoad: Page, pageSize: Int, refresh: Boolean): PaginationWrapper<TxInfo> {
         cacheRegistry.invokeOnExpire(
             key = getTxHistoryPageKey(pageToLoad),
             skipCache = refresh,
@@ -71,7 +71,7 @@ internal class TxHistoryPagingSource(
         txHistoryItemsStore.store(key = storeKey, value = wrappedItems)
     }
 
-    private suspend fun TxHistoryItemsStore.getSync(pageToLoad: Page): PaginationWrapper<TxHistoryItem> {
+    private suspend fun TxHistoryItemsStore.getSync(pageToLoad: Page): PaginationWrapper<TxInfo> {
         val storedItems = requireNotNull(getSyncOrNull(storeKey, pageToLoad)) {
             "The transaction history page #$pageToLoad could not be retrieved"
         }
@@ -79,7 +79,7 @@ internal class TxHistoryPagingSource(
         return if (pageToLoad is Page.Initial) storedItems.addRecentTransactions() else storedItems
     }
 
-    private suspend fun PaginationWrapper<TxHistoryItem>.addRecentTransactions(): PaginationWrapper<TxHistoryItem> {
+    private suspend fun PaginationWrapper<TxInfo>.addRecentTransactions(): PaginationWrapper<TxInfo> {
         val recentItems = walletManagersFacade.getRecentTransactions(
             userWalletId = sourceParams.userWalletId,
             currency = sourceParams.currency,
@@ -97,7 +97,7 @@ internal class TxHistoryPagingSource(
                 recentItems.joinToString(
                     prefix = "[",
                     postfix = "]",
-                    transform = TxHistoryItem::txHash,
+                    transform = TxInfo::txHash,
                 ),
             )
 
@@ -105,11 +105,11 @@ internal class TxHistoryPagingSource(
         }
     }
 
-    private fun List<TxHistoryItem>.filterUnconfirmedTransaction(): List<TxHistoryItem> {
-        return filter { it.status == TxHistoryItem.TransactionStatus.Unconfirmed }
+    private fun List<TxInfo>.filterUnconfirmedTransaction(): List<TxInfo> {
+        return filter { it.status == TxInfo.TransactionStatus.Unconfirmed }
     }
 
-    private fun List<TxHistoryItem>.filterIfTxAlreadyAdded(apiItems: List<TxHistoryItem>): List<TxHistoryItem> {
+    private fun List<TxInfo>.filterIfTxAlreadyAdded(apiItems: List<TxInfo>): List<TxInfo> {
         return filter { item -> apiItems.none { it.txHash == item.txHash } }
     }
 

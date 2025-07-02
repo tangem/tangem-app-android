@@ -13,6 +13,7 @@ import com.tangem.datasource.api.common.config.ApiConfig.Companion.RELEASE_BUILD
 import com.tangem.lib.auth.ExpressAuthProvider
 import com.tangem.lib.auth.StakeKitAuthProvider
 import com.tangem.utils.ProviderSuspend
+import com.tangem.utils.info.AppInfoProvider
 import com.tangem.utils.version.AppVersionProvider
 import io.mockk.every
 import io.mockk.mockk
@@ -29,11 +30,12 @@ private val appVersionProvider = mockk<AppVersionProvider>()
 private val expressAuthProvider = mockk<ExpressAuthProvider>()
 private val stakeKitAuthProvider = mockk<StakeKitAuthProvider>()
 private val appAuthProvider = mockk<AuthProvider>()
+private val appInfoProvider = mockk<AppInfoProvider>()
 
 // Don't forget to add new config !!!
 private val API_CONFIGS = setOf(
-    Express(configManager, expressAuthProvider, appVersionProvider),
-    TangemTech(appVersionProvider, appAuthProvider),
+    Express(configManager, expressAuthProvider, appVersionProvider, appInfoProvider),
+    TangemTech(appVersionProvider, appAuthProvider, appInfoProvider),
     StakeKit(stakeKitAuthProvider),
     TangemVisa(appVersionProvider),
 )
@@ -53,6 +55,7 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
         every { stakeKitAuthProvider.getApiKey() } returns STAKE_KIT_API_KEY
         every { appAuthProvider.getCardId() } returns APP_CARD_ID
         every { appAuthProvider.getCardPublicKey() } returns APP_CARD_PUBLIC_KEY
+        every { appInfoProvider.osVersion } returns "Android 16"
     }
 
     @Test
@@ -129,6 +132,7 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
                         },
                         "session-id" to ProviderSuspend { EXPRESS_SESSION_ID },
                         "version" to ProviderSuspend { VERSION_NAME },
+                        "system_version" to ProviderSuspend { "Android 16" },
                         "platform" to ProviderSuspend { "android" },
                         "language" to ProviderSuspend { Locale.getDefault().language.checkHeaderValueOrEmpty() },
                         "timezone" to ProviderSuspend {
@@ -151,6 +155,7 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
                         "card_public_key" to ProviderSuspend { APP_CARD_PUBLIC_KEY },
                         "version" to ProviderSuspend { VERSION_NAME },
                         "platform" to ProviderSuspend { "android" },
+                        "system_version" to ProviderSuspend { "Android 16" },
                         "language" to ProviderSuspend { Locale.getDefault().language.checkHeaderValueOrEmpty() },
                         "timezone" to ProviderSuspend {
                             TimeZone.getDefault().getDisplayName(false, TimeZone.SHORT).checkHeaderValueOrEmpty()

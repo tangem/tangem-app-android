@@ -2,6 +2,7 @@ package com.tangem.features.details.model
 
 import android.content.res.Resources
 import arrow.core.getOrElse
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.AppInstanceIdProvider
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -14,9 +15,12 @@ import com.tangem.domain.feedback.GetCardInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.CardInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.feedback.repository.FeedbackFeatureToggles
 import com.tangem.domain.redux.LegacyAction
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.walletconnect.CheckIsWalletConnectAvailableUseCase
+import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.details.component.DetailsComponent
@@ -55,6 +59,7 @@ internal class DetailsModel @Inject constructor(
     private val getCardInfoUseCase: GetCardInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val getWalletsUseCase: GetWalletsUseCase,
+    private val feedbackFeatureToggles: FeedbackFeatureToggles,
     override val dispatchers: CoroutineDispatcherProvider,
 ) : Model() {
 
@@ -80,7 +85,10 @@ internal class DetailsModel @Inject constructor(
         items = MutableStateFlow(
             itemsBuilder.buildAll(
                 isWalletConnectAvailable = isWalletConnectAvailable,
-                onSupportClick = ::sendFeedback,
+                isSupportChatAvailable = feedbackFeatureToggles.isUsedeskEnabled,
+                userWalletId = params.userWalletId,
+                onSupportEmailClick = ::sendFeedback,
+                onSupportChatClick = ::openUseDesk,
                 onBuyClick = ::onBuyClick,
             ),
         )
@@ -110,14 +118,17 @@ internal class DetailsModel @Inject constructor(
         modelScope.launch {
             val userWallets = getWalletsUseCase.invokeSync()
 
-            val scanResponse = getSelectedWalletSyncUseCase().getOrNull()?.scanResponse
-                ?: error("Selected wallet is null")
+            val scanResponse =
+                getSelectedWalletSyncUseCase().getOrNull()?.requireColdWallet()?.scanResponse // TODO [REDACTED_TASK_KEY]
+                    ?: error("Selected wallet is null")
 
             val cardInfo = getCardInfoUseCase(scanResponse).getOrNull() ?: return@launch
 
             val feedbackType = when {
-                userWallets.all { it.scanResponse.card.isVisa } -> FeedbackEmailType.Visa.DirectUserRequest(cardInfo)
-                userWallets.all { it.scanResponse.card.isVisa.not() } -> FeedbackEmailType.DirectUserRequest(cardInfo)
+                userWallets.all { it is UserWallet.Cold && it.scanResponse.card.isVisa } ->
+                    FeedbackEmailType.Visa.DirectUserRequest(cardInfo)
+                userWallets.all { it !is UserWallet.Cold || it.scanResponse.card.isVisa.not() } ->
+                    FeedbackEmailType.DirectUserRequest(cardInfo)
                 else -> {
                     showFeedbackEmailTypeOptionBS(cardInfo)
                     return@launch
@@ -126,6 +137,16 @@ internal class DetailsModel @Inject constructor(
 
             sendFeedbackEmailUseCase(feedbackType)
         }
+    }
+
+    private fun openUseDesk() {
+        val scanResponse =
+            getSelectedWalletSyncUseCase().getOrNull()?.requireColdWallet()?.scanResponse // TODO [REDACTED_TASK_KEY]
+                ?: error("Selected wallet is null")
+
+        val cardInfo = getCardInfoUseCase(scanResponse).getOrNull() ?: return
+
+        router.push(AppRoute.Usedesk(cardInfo))
     }
 
     private fun showFeedbackEmailTypeOptionBS(selectedCardInfo: CardInfo) {
@@ -172,7 +193,9 @@ internal class DetailsModel @Inject constructor(
                         FeedbackEmailType.DirectUserRequest(selectedCardInfo)
                     } else {
                         val scanResponse = getWalletsUseCase.invokeSync()
-                            .firstOrNull { it.scanResponse.card.isVisa.not() }?.scanResponse ?: return@launch
+                            .firstOrNull { it is UserWallet.Cold && it.scanResponse.card.isVisa.not() }
+                            ?.requireColdWallet()?.scanResponse ?: return@launch
+
                         val cardInfo = getCardInfoUseCase(scanResponse).getOrNull() ?: return@launch
                         FeedbackEmailType.DirectUserRequest(cardInfo)
                     }
@@ -182,7 +205,8 @@ internal class DetailsModel @Inject constructor(
                         FeedbackEmailType.Visa.DirectUserRequest(selectedCardInfo)
                     } else {
                         val scanResponse = getWalletsUseCase.invokeSync()
-                            .firstOrNull { it.scanResponse.card.isVisa }?.scanResponse ?: return@launch
+                            .firstOrNull { it is UserWallet.Cold && it.scanResponse.card.isVisa }
+                            ?.requireColdWallet()?.scanResponse ?: return@launch
                         val cardInfo = getCardInfoUseCase(scanResponse).getOrNull() ?: return@launch
                         FeedbackEmailType.Visa.DirectUserRequest(cardInfo)
                     }
