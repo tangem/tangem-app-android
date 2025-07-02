@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import okio.ByteString.Companion.decodeBase64
 
+@Suppress("LongParameterList")
 internal class WcSolanaSignTransactionUseCase @AssistedInject constructor(
     override val respondService: WcRespondService,
     override val analytics: AnalyticsEventHandler,
@@ -29,6 +30,7 @@ internal class WcSolanaSignTransactionUseCase @AssistedInject constructor(
     @Assisted override val context: WcMethodUseCaseContext,
     @Assisted override val method: WcSolanaMethod.SignTransaction,
     blockAidDelegate: BlockAidVerificationDelegate,
+    addressConverter: SolanaBlockAidAddressConverter,
 ) : BaseWcSignUseCase<Nothing, TransactionData>(),
     WcTransactionUseCase {
 
@@ -37,7 +39,7 @@ internal class WcSolanaSignTransactionUseCase @AssistedInject constructor(
         method = method,
         rawSdkRequest = rawSdkRequest,
         session = session,
-        accountAddress = context.accountAddress,
+        accountAddress = addressConverter.convert(context.accountAddress),
     ).map { lce -> lce.map { result -> BlockAidTransactionCheck.Result.Plain(result) } }
 
     override suspend fun SignCollector<TransactionData>.onSign(state: WcSignState<TransactionData>) {
