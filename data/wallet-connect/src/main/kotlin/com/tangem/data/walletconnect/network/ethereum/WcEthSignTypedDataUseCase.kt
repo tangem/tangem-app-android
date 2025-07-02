@@ -2,6 +2,7 @@ package com.tangem.data.walletconnect.network.ethereum
 
 import arrow.core.left
 import com.tangem.blockchain.blockchains.ethereum.EthereumUtils
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.data.walletconnect.network.ethereum.LegacySdkHelper.prepareToSendMessageData
 import com.tangem.data.walletconnect.respond.WcRespondService
 import com.tangem.data.walletconnect.sign.BaseWcSignUseCase
@@ -21,8 +22,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 
+@Suppress("LongParameterList")
 internal class WcEthSignTypedDataUseCase @AssistedInject constructor(
     override val respondService: WcRespondService,
+    override val analytics: AnalyticsEventHandler,
     @Assisted override val context: WcMethodUseCaseContext,
     @Assisted override val method: WcEthMethod.SignTypedData,
     private val walletManagersFacade: WalletManagersFacade,
