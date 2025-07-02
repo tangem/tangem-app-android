@@ -157,7 +157,7 @@ internal class DefaultNFTSendComponent @AssistedInject constructor(
 
     private fun getFeeComponent(factoryContext: AppComponentContext): ComposableContentComponent {
         val state = model.uiState.value
-        val destinationAddress = (state.destinationUM as? DestinationUM.Content)?.addressTextField?.value
+        val destinationAddress = (state.destinationUM as? DestinationUM.Content)?.addressTextField?.actualAddress
         return if (destinationAddress != null) {
             SendFeeComponent(
                 appComponentContext = factoryContext,

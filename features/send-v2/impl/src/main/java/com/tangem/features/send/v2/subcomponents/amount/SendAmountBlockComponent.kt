@@ -6,6 +6,7 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.ui.AmountBlock
+import com.tangem.common.ui.amountScreen.ui.AmountBlockV2
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
@@ -37,11 +38,21 @@ internal class SendAmountBlockComponent(
         val state by model.uiState.collectAsStateWithLifecycle()
         val isClickEnabled by params.blockClickEnableFlow.collectAsStateWithLifecycle()
 
-        AmountBlock(
-            amountState = state,
-            isClickDisabled = !isClickEnabled,
-            isEditingDisabled = params.predefinedValues is PredefinedValues.Content.Deeplink,
-            onClick = onClick,
-        )
+        if (params.isRedesignEnabled) {
+            AmountBlockV2(
+                amountState = state,
+                isClickDisabled = !isClickEnabled,
+                isEditingDisabled = params.predefinedValues is PredefinedValues.Content.Deeplink,
+                onClick = onClick,
+                modifier = modifier,
+            )
+        } else {
+            AmountBlock(
+                amountState = state,
+                isClickDisabled = !isClickEnabled,
+                isEditingDisabled = params.predefinedValues is PredefinedValues.Content.Deeplink,
+                onClick = onClick,
+            )
+        }
     }
 }
