@@ -7,6 +7,7 @@ import com.tangem.domain.common.util.getCardsCount
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.tokens.model.TotalFiatBalance
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
 import com.tangem.utils.converter.Converter
@@ -47,6 +48,8 @@ internal class MultiWalletCardStateConverter(
     }
 
     private fun WalletCardState.toWalletCardState(fiatBalance: TotalFiatBalance.Loaded): WalletCardState {
+        selectedWallet.requireColdWallet()
+
         return WalletCardState.Content(
             id = id,
             title = title,
