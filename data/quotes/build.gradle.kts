@@ -9,29 +9,50 @@ android {
     namespace = "com.tangem.data.quotes"
 }
 
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+}
+
 dependencies {
+    // region Project - Core
     implementation(projects.core.datasource)
-    implementation(projects.core.utils)
+    api(projects.core.utils)
+    // endregion
 
+    // region Project - Data
     implementation(projects.data.common)
-    implementation(projects.data.tokens)
+    // endregion
 
-    implementation(projects.domain.appCurrency.models)
-    implementation(projects.domain.models)
-    implementation(projects.domain.tokens.models)
-    implementation(projects.domain.quotes)
-    implementation(projects.domain.wallets.models)
+    // region Project - Domain
+    api(projects.domain.models)
+    api(projects.domain.quotes)
+    // endregion
 
+    // region Project - Libs
+    implementation(projects.libs.blockchainSdk)
+    // endregion
+
+    // region DI
+    implementation(deps.hilt.android)
+    kapt(deps.hilt.kapt)
+    // endregion
+
+    // region Tangem SDKs
+    implementation(tangemDeps.blockchain)
+    // endregion
+
+    // region Other libraries
     implementation(deps.androidx.datastore)
     implementation(deps.moshi.kotlin)
     implementation(deps.timber)
+    // endregion
 
-    implementation(deps.hilt.android)
-    kapt(deps.hilt.kapt)
-
+    // region Tests
     testImplementation(deps.test.coroutine)
-    testImplementation(deps.test.junit)
+    testImplementation(deps.test.junit5)
+    testRuntimeOnly(deps.test.junit5.engine)
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)
     testImplementation(projects.common.test)
+    // endregion
 }

@@ -12,7 +12,6 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.BalanceHidingSettings
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.core.lce.Lce
-import com.tangem.feature.wallet.impl.R
 import com.tangem.domain.core.lce.lce
 import com.tangem.domain.core.utils.getOrElse
 import com.tangem.domain.core.utils.toLce
@@ -22,9 +21,11 @@ import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.TotalFiatBalance
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.models.isMultiCurrency
 import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.domain.wallets.usecase.GetCardImageUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
+import com.tangem.feature.wallet.impl.R
 import com.tangem.features.wallet.utils.UserWalletsFetcher
 import com.tangem.operations.attestation.ArtworkSize
 import dagger.assisted.Assisted
@@ -43,13 +44,16 @@ internal class DefaultUserWalletsFetcher @AssistedInject constructor(
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     @Assisted private val onWalletClick: (UserWalletId) -> Unit,
     @Assisted private val messageSender: UiMessageSender,
+    @Assisted private val onlyMultiCurrency: Boolean,
     private val getCardImageUseCase: GetCardImageUseCase,
 ) : UserWalletsFetcher {
 
     private var loadedArtworks: HashMap<UserWalletId, ArtworkModel> = hashMapOf()
+    private val walletsFlow =
+        if (onlyMultiCurrency) getWalletsUseCase().map { it.filter { it.isMultiCurrency } } else getWalletsUseCase()
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    override val userWallets: Flow<ImmutableList<UserWalletItemUM>> = getWalletsUseCase().transformLatest { wallets ->
+    override val userWallets: Flow<ImmutableList<UserWalletItemUM>> = walletsFlow.transformLatest { wallets ->
         val uiModels = UserWalletItemUMConverter(onClick = { onWalletClick(it) }).convertList(wallets)
             .toImmutableList()
 
@@ -145,6 +149,7 @@ internal class DefaultUserWalletsFetcher @AssistedInject constructor(
     interface Factory : UserWalletsFetcher.Factory {
         override fun create(
             messageSender: UiMessageSender,
+            onlyMultiCurrency: Boolean,
             onWalletClick: (UserWalletId) -> Unit,
         ): DefaultUserWalletsFetcher
     }
