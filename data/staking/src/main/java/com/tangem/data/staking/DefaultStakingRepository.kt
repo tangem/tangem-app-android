@@ -502,7 +502,7 @@ internal class DefaultStakingRepository(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
     ): YieldBalance {
-        val stakingId = stakingIdFactory.createForDefault(
+        val stakingId = stakingIdFactory.create(
             userWalletId = userWalletId,
             currencyId = cryptoCurrency.id,
             network = cryptoCurrency.network,
@@ -639,7 +639,7 @@ internal class DefaultStakingRepository(
         userWalletId: UserWalletId,
         cryptoCurrencies: List<CryptoCurrency>,
     ): YieldBalanceList {
-        val stakingIds = cryptoCurrencies.flatMap {
+        val stakingIds = cryptoCurrencies.mapNotNull {
             stakingIdFactory.create(userWalletId = userWalletId, currencyId = it.id, network = it.network)
         }
 
