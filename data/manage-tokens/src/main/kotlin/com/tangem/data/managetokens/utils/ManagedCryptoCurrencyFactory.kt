@@ -178,7 +178,7 @@ internal class ManagedCryptoCurrencyFactory(
             derivationStyleProvider = scanResponse?.derivationStyleProvider,
             canHandleTokens = scanResponse?.let {
                 it.card.canHandleToken(blockchain, it.cardTypesResolver, excludedBlockchains)
-            } ?: true,
+            } ?: false, // use card specific check if available
         ) ?: return null
 
         return when {
@@ -187,7 +187,8 @@ internal class ManagedCryptoCurrencyFactory(
                 decimals = blockchain.decimals(),
                 isL2Network = l2BlockchainsList.contains(blockchain),
             )
-            network.canHandleTokens -> {
+            // use general check from blockchain, check availability for card in place of use
+            blockchain.canHandleTokens() -> {
                 val formattedContractAddress = blockchain.reformatContractAddress(contractAddress)
                 if (formattedContractAddress == null) {
                     Timber.w("Couldn't reformat $contractAddress")
