@@ -5,6 +5,7 @@ internal enum class EnterAddressSource {
     PasteButton,
     RecentAddress,
     InputField,
+    MyWallets,
     ;
 
     val isPasted: Boolean

@@ -2,6 +2,7 @@ package com.tangem.domain.notifications
 
 import arrow.core.Either
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.notifications.models.ApplicationId
 import com.tangem.domain.notifications.repository.NotificationsRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -20,7 +21,7 @@ class GetApplicationIdUseCaseTest {
     @Test
     fun `GIVEN local application ID exists WHEN invoke THEN return local application ID`() = runTest {
         // GIVEN
-        val expectedApplicationId = "test-app-id"
+        val expectedApplicationId = ApplicationId("test-app-id")
         coEvery { notificationsRepository.getApplicationId() } returns expectedApplicationId
 
         // WHEN
@@ -39,7 +40,7 @@ class GetApplicationIdUseCaseTest {
     @Test
     fun `GIVEN local application ID does not exist WHEN invoke THEN create and save new application ID`() = runTest {
         // GIVEN
-        val newApplicationId = "new-app-id"
+        val newApplicationId = ApplicationId("new-app-id")
         coEvery { notificationsRepository.getApplicationId() } returns null
         coEvery { notificationsRepository.createApplicationId() } returns newApplicationId
         coEvery { notificationsRepository.saveApplicationId(newApplicationId) } returns Unit
@@ -81,7 +82,7 @@ class GetApplicationIdUseCaseTest {
     fun `GIVEN no local application ID WHEN multiple concurrent invokes THEN create only one application ID`() =
         runTest {
             // GIVEN
-            val newApplicationId = "new-app-id"
+            val newApplicationId = ApplicationId("new-app-id")
             var isIdCreated = false
 
             coEvery { notificationsRepository.getApplicationId() } answers {
@@ -115,7 +116,7 @@ class GetApplicationIdUseCaseTest {
     @Test
     fun `GIVEN no local application ID WHEN multiple concurrent invokes with delay THEN create only one application ID`() = runTest {
         // GIVEN
-        val newApplicationId = "new-app-id"
+        val newApplicationId = ApplicationId("new-app-id")
         var isIdCreated = false
 
         coEvery { notificationsRepository.getApplicationId() } answers {

@@ -22,6 +22,7 @@ dependencies {
     implementation(projects.core.utils)
     implementation(projects.core.ui)
     implementation(projects.core.decompose)
+    implementation(projects.core.deepLinks)
     implementation(projects.libs.crypto)
     implementation(projects.common.routing)
 
@@ -39,12 +40,15 @@ dependencies {
     /** Domain */
     implementation(projects.domain.demo)
     implementation(projects.domain.wallets)
+    implementation(projects.domain.legacy)
     implementation(projects.domain.wallets.models)
+    implementation(projects.domain.notifications.models)
     implementation(projects.features.referral.domain)
 
     /** Other libraries */
     implementation(deps.compose.shimmer)
     implementation(deps.compose.accompanist.systemUiController)
+    implementation(deps.timber)
 
     /** DI */
     implementation(deps.hilt.android)

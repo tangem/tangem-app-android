@@ -3,6 +3,7 @@ package com.tangem.feature.wallet.presentation.wallet.loaders
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.models.isLocked
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.CoroutineScope

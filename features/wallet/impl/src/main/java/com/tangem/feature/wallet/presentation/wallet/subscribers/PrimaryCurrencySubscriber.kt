@@ -8,7 +8,7 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.settings.SetWalletWithFundsFoundUseCase
-import com.tangem.domain.tokens.GetPrimaryCurrencyStatusUpdatesUseCase
+import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
@@ -23,7 +23,7 @@ import java.math.BigDecimal
 internal class PrimaryCurrencySubscriber(
     private val userWallet: UserWallet,
     private val stateHolder: WalletStateController,
-    private val getPrimaryCurrencyStatusUpdatesUseCase: GetPrimaryCurrencyStatusUpdatesUseCase,
+    private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
     private val setWalletWithFundsFoundUseCase: SetWalletWithFundsFoundUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
@@ -33,7 +33,7 @@ internal class PrimaryCurrencySubscriber(
         coroutineScope: CoroutineScope,
     ): Flow<Pair<Either<CurrencyStatusError, CryptoCurrencyStatus>, AppCurrency>> {
         return combine(
-            flow = getPrimaryCurrencyStatusUpdatesUseCase(userWallet.walletId)
+            flow = getSingleCryptoCurrencyStatusUseCase.invokeSingleWallet(userWallet.walletId)
                 .conflate()
                 .distinctUntilChanged(),
             flow2 = getSelectedAppCurrencyUseCase()

@@ -1,9 +1,9 @@
 package com.tangem.domain.txhistory.repository
 
 import androidx.paging.PagingData
-import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.Network
-import com.tangem.domain.txhistory.models.TxHistoryItem
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.txhistory.models.TxHistoryListError
 import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.domain.wallets.models.UserWalletId
@@ -20,7 +20,7 @@ interface TxHistoryRepository {
         currency: CryptoCurrency,
         pageSize: Int,
         refresh: Boolean,
-    ): Flow<PagingData<TxHistoryItem>>
+    ): Flow<PagingData<TxInfo>>
 
     fun getTxExploreUrl(txHash: String, networkId: Network.ID): String
 
@@ -33,5 +33,5 @@ interface TxHistoryRepository {
         currency: CryptoCurrency,
         pageSize: Int,
         refresh: Boolean,
-    ): List<TxHistoryItem>
+    ): List<TxInfo>
 }
