@@ -1,6 +1,6 @@
 package com.tangem.features.send.v2.subcomponents.notifications
 
-import com.tangem.features.send.v2.subcomponents.notifications.model.NotificationData
+import com.tangem.features.send.v2.api.SendNotificationsComponent.Params.NotificationData
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow

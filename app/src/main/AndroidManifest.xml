@@ -45,7 +45,14 @@
         android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="true"
         tools:ignore="GoogleAppIndexingWarning"
-        tools:replace="android:allowBackup, android:fullBackupContent, android:label">
+        tools:replace="android:allowBackup, android:fullBackupContent, android:label, android:largeHeap">
+
+        <!--
+            property to make the "android:screenOrientation" work on API <37
+            https://developer.android.com/about/versions/16/behavior-changes-16
+         -->
+        <property android:name="android.window.PROPERTY_COMPAT_ALLOW_RESTRICTED_RESIZABILITY"
+            android:value="true" />
 
         <meta-data
             android:name="com.google.android.gms.wallet.api.enabled"
