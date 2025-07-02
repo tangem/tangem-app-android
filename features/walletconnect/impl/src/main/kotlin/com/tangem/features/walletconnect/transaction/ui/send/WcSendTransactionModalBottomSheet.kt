@@ -47,7 +47,7 @@ import kotlinx.collections.immutable.persistentListOf
 @Composable
 internal fun WcSendTransactionModalBottomSheet(
     state: WcSendTransactionItemUM,
-    feeSelectorBlockComponent: FeeSelectorBlockComponent,
+    feeSelectorBlockComponent: FeeSelectorBlockComponent?,
     onClickTransactionRequest: () -> Unit,
     onBack: () -> Unit,
     onDismiss: () -> Unit,
