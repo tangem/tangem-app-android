@@ -26,7 +26,7 @@ sealed class VisaActivationRemoteState {
         val status: Status,
     ) : VisaActivationRemoteState() {
         enum class Status {
-            WaitingForPinCode, InProgress, WasError
+            WaitingForPinCode, WasError
         }
     }
 
@@ -71,7 +71,7 @@ enum class VisaActivationRemoteState_Type {
 @Suppress("ClassNaming")
 @JsonClass(generateAdapter = false)
 enum class AwaitingPinCodeStatus_Type {
-    WaitingForPinCode, InProgress, WasError
+    WaitingForPinCode, WasError
 }
 
 @Suppress("ClassNaming")
@@ -91,8 +91,6 @@ class VisaActivationRemoteState_JsonAdapter {
                     status = when (value.awaitingPinCodeStatus!!) {
                         AwaitingPinCodeStatus_Type.WaitingForPinCode ->
                             AwaitingPinCode.Status.WaitingForPinCode
-                        AwaitingPinCodeStatus_Type.InProgress ->
-                            AwaitingPinCode.Status.InProgress
                         AwaitingPinCodeStatus_Type.WasError ->
                             AwaitingPinCode.Status.WasError
                     },
@@ -127,8 +125,6 @@ class VisaActivationRemoteState_JsonAdapter {
                     awaitingPinCodeStatus = when (value.status) {
                         AwaitingPinCode.Status.WaitingForPinCode ->
                             AwaitingPinCodeStatus_Type.WaitingForPinCode
-                        AwaitingPinCode.Status.InProgress ->
-                            AwaitingPinCodeStatus_Type.InProgress
                         AwaitingPinCode.Status.WasError ->
                             AwaitingPinCodeStatus_Type.WasError
                     },

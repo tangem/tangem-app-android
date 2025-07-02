@@ -15,7 +15,9 @@ dependencies {
     /* Project - API */
     api(projects.features.markets.api)
     api(projects.features.onramp.api)
-    implementation(projects.core.navigation)
+
+    /* Data */
+    implementation(projects.data.common)
 
     /* Domain */
     implementation(projects.domain.appCurrency)
@@ -25,6 +27,7 @@ dependencies {
     implementation(projects.domain.card)
     implementation(projects.domain.demo)
     implementation(projects.domain.feedback)
+    implementation(projects.domain.feedback.models)
     implementation(projects.domain.manageTokens)
     implementation(projects.domain.markets)
     implementation(projects.domain.onramp.models)
@@ -34,6 +37,7 @@ dependencies {
     implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.settings)
+    implementation(projects.domain.notifications.models)
 
     // FIXME [REDACTED_TASK_KEY]
     // Remove the "Buy" and "Sell" actions from the redux middleware.
@@ -69,6 +73,8 @@ dependencies {
     implementation(projects.core.configToggles)
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
+    implementation(projects.core.navigation)
+    implementation(projects.core.deepLinks)
 
     /* Common */
     implementation(projects.common.ui)
