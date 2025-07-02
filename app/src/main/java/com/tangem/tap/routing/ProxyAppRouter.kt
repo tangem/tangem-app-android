@@ -82,7 +82,6 @@ internal class ProxyAppRouter(
 
     override fun defaultCompletionHandler(isSuccess: Boolean, errorMessage: String) {
         if (!isSuccess) {
-            Timber.tag("ASDASD").d(errorMessage)
             analyticsExceptionHandler.sendException(ExceptionAnalyticsEvent(RuntimeException(errorMessage)))
             Timber.w(errorMessage)
 
