@@ -12,6 +12,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.demo.IsDemoCardUseCase
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.referral.analytics.ReferralEvents
 import com.tangem.feature.referral.api.ReferralComponent
@@ -84,7 +85,7 @@ internal class ReferralModel @Inject constructor(
     private fun participate() {
         val userWallet = getUserWalletUseCase(params.userWalletId).getOrNull() ?: error("User wallet not found")
 
-        if (isDemoCardUseCase(cardId = userWallet.cardId)) {
+        if (userWallet is UserWallet.Cold && isDemoCardUseCase(cardId = userWallet.cardId)) {
             showErrorSnackbar(DemoModeException())
         } else {
             analyticsEventHandler.send(ReferralEvents.ClickParticipate)

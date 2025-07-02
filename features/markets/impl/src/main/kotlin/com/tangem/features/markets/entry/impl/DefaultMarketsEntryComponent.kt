@@ -10,14 +10,13 @@ import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
-import com.arkivanov.decompose.router.stack.pushNew
+import com.arkivanov.decompose.router.stack.popWhile
 import com.arkivanov.decompose.value.Value
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
-import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.markets.TokenMarket
-import com.tangem.domain.markets.toSerializableParam
+import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.features.markets.details.MarketsTokenDetailsComponent
 import com.tangem.features.markets.entry.BottomSheetState
 import com.tangem.features.markets.entry.MarketsEntryComponent
@@ -35,7 +34,12 @@ internal class DefaultMarketsEntryComponent @AssistedInject constructor(
 
     private val stackNavigation = StackNavigation<Child>()
 
-    val stack: Value<ChildStack<Child, Any>> = childStack(
+    private val innerRouter = InnerRouter<Child>(
+        stackNavigation = stackNavigation,
+        popCallback = { onChildBack() },
+    )
+
+    private val stack: Value<ChildStack<Child, Any>> = childStack(
         key = "main",
         source = stackNavigation,
         serializer = Child.serializer(),
@@ -46,9 +50,9 @@ internal class DefaultMarketsEntryComponent @AssistedInject constructor(
                 child = configuration,
                 appComponentContext = childByContext(
                     componentContext = factoryContext,
-                    router = createRouter(configuration),
+                    router = innerRouter,
                 ),
-                onTokenSelected = ::marketsListTokenSelected,
+                onTokenClick = ::marketsListTokenSelected,
             )
         },
     )
@@ -69,11 +73,11 @@ internal class DefaultMarketsEntryComponent @AssistedInject constructor(
     }
 
     @OptIn(ExperimentalDecomposeApi::class)
-    private fun marketsListTokenSelected(token: TokenMarket, appCurrency: AppCurrency) {
-        stackNavigation.pushNew(
-            configuration = Child.TokenDetails(
+    private fun marketsListTokenSelected(token: TokenMarketParams, appCurrency: AppCurrency) {
+        innerRouter.push(
+            route = Child.TokenDetails(
                 params = MarketsTokenDetailsComponent.Params(
-                    token = token.toSerializableParam(),
+                    token = token,
                     appCurrency = appCurrency,
                     showPortfolio = true,
                     analyticsParams = MarketsTokenDetailsComponent.AnalyticsParams(
@@ -85,15 +89,9 @@ internal class DefaultMarketsEntryComponent @AssistedInject constructor(
         )
     }
 
-    private fun AppComponentContext.createRouter(child: Child): Router {
-        return when (child) {
-            is Child.TokenDetails -> {
-                MarketTokenDetailsRouter(
-                    contextRouter = this.router,
-                    stackNavigation = stackNavigation,
-                )
-            }
-            else -> this.router
+    private fun onChildBack() {
+        if (stack.value.active.configuration !is Child.TokenList) {
+            stackNavigation.popWhile { it != Child.TokenList }
         }
     }
 

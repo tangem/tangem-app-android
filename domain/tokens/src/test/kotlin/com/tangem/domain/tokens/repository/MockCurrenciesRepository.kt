@@ -3,10 +3,10 @@ package com.tangem.domain.tokens.repository
 import arrow.core.Either
 import arrow.core.getOrElse
 import com.tangem.domain.core.error.DataError
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.FeePaidCurrency
-import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
@@ -161,5 +161,9 @@ internal class MockCurrenciesRepository(
 
     override fun isNetworkFeeZero(userWalletId: UserWalletId, network: Network): Boolean {
         return false
+    }
+
+    override suspend fun syncTokens(userWalletId: UserWalletId) {
+        return Unit
     }
 }

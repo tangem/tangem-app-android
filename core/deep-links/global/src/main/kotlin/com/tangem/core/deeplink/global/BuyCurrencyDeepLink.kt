@@ -2,6 +2,7 @@ package com.tangem.core.deeplink.global
 
 import com.tangem.core.deeplink.DeepLink
 
+@Deprecated("Use BuyDeepLinkHandler")
 class BuyCurrencyDeepLink(
     val onReceive: () -> Unit,
 ) : DeepLink() {

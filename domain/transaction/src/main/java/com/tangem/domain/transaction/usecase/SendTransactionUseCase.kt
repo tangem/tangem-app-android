@@ -18,14 +18,14 @@ import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.demo.DemoTransactionSender
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
-import com.tangem.domain.tokens.TokensFeatureToggles
-import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.transaction.TransactionRepository
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.error.parseWrappedError
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.requireColdWallet
 
 class SendTransactionUseCase(
     private val demoConfig: DemoConfig,
@@ -33,7 +33,6 @@ class SendTransactionUseCase(
     private val transactionRepository: TransactionRepository,
     private val walletManagersFacade: WalletManagersFacade,
     private val singleNetworkStatusFetcher: SingleNetworkStatusFetcher,
-    private val tokensFeatureToggles: TokensFeatureToggles,
 ) {
     suspend operator fun invoke(
         txsData: List<TransactionData>,
@@ -41,6 +40,8 @@ class SendTransactionUseCase(
         network: Network,
         sendMode: TransactionSender.MultipleTransactionSendMode,
     ): Either<SendTransactionError?, List<String>> {
+        userWallet.requireColdWallet() // TODO [REDACTED_TASK_KEY]
+
         val card = userWallet.scanResponse.card
         val isCardNotBackedUp = card.backupStatus?.isActive != true && !card.isTangemTwins
 
@@ -80,16 +81,15 @@ class SendTransactionUseCase(
         }
 
         cardSdkConfigRepository.setLinkedTerminal(linkedTerminal)
+
         return sendResult
             .onRight {
-                if (tokensFeatureToggles.isNetworksLoadingRefactoringEnabled) {
-                    singleNetworkStatusFetcher(
-                        params = SingleNetworkStatusFetcher.Params.Simple(
-                            userWalletId = userWallet.walletId,
-                            network = network,
-                        ),
-                    )
-                }
+                singleNetworkStatusFetcher(
+                    params = SingleNetworkStatusFetcher.Params(
+                        userWalletId = userWallet.walletId,
+                        network = network,
+                    ),
+                )
             }
             .fold(
                 ifRight = { result -> result.hashes.right() },
