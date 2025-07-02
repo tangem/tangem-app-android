@@ -138,6 +138,10 @@ private fun BottomSheetIcon(icon: MessageBottomSheetUMV2.Icon, modifier: Modifie
     val backgroundColor = when (icon.backgroundType) {
         MessageBottomSheetUMV2.Icon.BackgroundType.Unspecified -> TangemTheme.colors.icon.informative
         MessageBottomSheetUMV2.Icon.BackgroundType.SameAsTint -> tint
+        MessageBottomSheetUMV2.Icon.BackgroundType.Accent -> TangemTheme.colors.icon.accent
+        MessageBottomSheetUMV2.Icon.BackgroundType.Informative -> TangemTheme.colors.icon.informative
+        MessageBottomSheetUMV2.Icon.BackgroundType.Attention -> TangemTheme.colors.icon.attention
+        MessageBottomSheetUMV2.Icon.BackgroundType.Warning -> TangemTheme.colors.icon.warning
     }
 
     Box(
