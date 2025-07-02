@@ -5,7 +5,7 @@ import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)
 data class Trace(
-    @Json(name = "exposed") val exposed: Exposed,
+    @Json(name = "exposed") val exposed: Exposed?,
     @Json(name = "asset") val asset: NftAsset,
 )
 

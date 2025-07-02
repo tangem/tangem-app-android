@@ -82,6 +82,7 @@ fun InputRowEnterAmount(
                         decimals = decimals,
                         symbol = symbol,
                         decimalFormat = rememberDecimalFormat(),
+                        symbolColor = textColor,
                     ),
                     onValueChange = onValueChange,
                     color = textColor,
