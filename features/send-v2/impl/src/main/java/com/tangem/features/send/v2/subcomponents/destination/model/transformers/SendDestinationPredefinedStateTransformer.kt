@@ -13,7 +13,7 @@ internal class SendDestinationPredefinedStateTransformer(
 
         return state.copy(
             addressTextField = state.addressTextField.copy(value = address, isValuePasted = false),
-            memoTextField = memo?.let { state.memoTextField?.copy(value = it, isValuePasted = false) },
+            memoTextField = state.memoTextField?.copy(value = memo.orEmpty(), isValuePasted = false),
         )
     }
 }
