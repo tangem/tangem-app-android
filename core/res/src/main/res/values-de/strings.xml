@@ -580,7 +580,7 @@
   <string name="nft_untitled_collection">Unbetitelte Sammlung</string>
   <string name="nft_wallet_count">%1$d NFTs in der %2$d Sammlung</string>
   <plurals name="nft_wallet_count_android">
-    <item quantity="one"></item>
+    <item quantity="one">%1$d NFT in der %2$d Sammlung</item>
     <item quantity="other">%1$d NFTs in der %2$d Sammlung</item>
   </plurals>
   <string name="nft_wallet_receive_nft">Tippe hier, um das erste NFT zu erhalten</string>
@@ -1320,7 +1320,7 @@
   <string name="wc_alert_unsupported_method_title">Wir haben einen unbekannten Fehler festgestellt.</string>
   <string name="wc_alert_unsupported_networks_description">Tangem unterstützt derzeit das erforderliches Netzwerk von %s nicht.</string>
   <string name="wc_alert_unsupported_networks_title">Nicht unterstützte Netzwerke</string>
-  <string name="wc_alert_verified_domain_description">Tangem unterstützt ein erforderliches Netzwerk um %s.</string>
+  <string name="wc_alert_verified_domain_description">Tangem unterstützt ein erforderliches Netzwerk um %s</string>
   <string name="wc_alert_verified_domain_title">Verifizierte Domain</string>
   <string name="wc_alert_wrong_card_description">Falsche Karte oder falscher Ring in der App ausgewählt</string>
   <string name="wc_alert_wrong_card_title">Wir haben eine Art Problem</string>
