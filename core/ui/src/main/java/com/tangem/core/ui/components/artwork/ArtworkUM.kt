@@ -1,17 +1,10 @@
 package com.tangem.core.ui.components.artwork
 
 import androidx.compose.runtime.Immutable
-import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.toImmutableList
+import androidx.compose.ui.graphics.ImageBitmap
 
 @Immutable
 data class ArtworkUM(
-    val verifiedArtwork: ImmutableList<Byte>? = null,
+    val verifiedArtwork: ImageBitmap? = null,
     val defaultUrl: String,
-) {
-
-    constructor(bytes: ByteArray?, defaultUrl: String) : this(
-        verifiedArtwork = bytes?.toList()?.toImmutableList(),
-        defaultUrl = defaultUrl,
-    )
-}
+)

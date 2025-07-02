@@ -1,7 +1,6 @@
 package com.tangem.datasource.local.logs
 
 import android.content.Context
-import com.tangem.datasource.BuildConfig
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.*
@@ -34,12 +33,14 @@ class AppLogsStore @Inject constructor(
         context = SupervisorJob() + dispatchers.io +
             CoroutineExceptionHandler { _, error -> Timber.e("AppLogsStore.scope is failed $error") },
     )
+
     private val mutex = Mutex()
     private val zipMutex = Mutex()
 
     private val logFile by lazy {
         File(applicationContext.filesDir, PERMITTED_FILE_NAME)
     }
+
     private val logFileZip by lazy {
         File(applicationContext.filesDir, PERMITTED_FILE_NAME_ZIP)
     }
@@ -64,7 +65,7 @@ class AppLogsStore @Inject constructor(
     suspend fun getZipFile(): File? {
         return zipMutex.withLock {
             if (logFile.exists()) {
-                zip(listOf(logFile), logFileZip)
+                zip(filesToCompress = listOf(logFile), outputZipFile = logFileZip)
             } else {
                 null
             }
@@ -73,11 +74,6 @@ class AppLogsStore @Inject constructor(
 
     /** Save log [message] */
     fun saveLogMessage(tag: String, message: String) {
-        // Temporally logs are not saved in prod environment
-        if (!BuildConfig.TESTER_MENU_ENABLED) {
-            return
-        }
-
         launchWithLock {
             createFileIfNotExist()
 
@@ -87,11 +83,6 @@ class AppLogsStore @Inject constructor(
 
     /** Save log that consists from [messages] */
     fun saveLogMessage(tag: String, vararg messages: String) {
-        // Temporally logs are not saved in prod environment
-        if (!BuildConfig.TESTER_MENU_ENABLED) {
-            return
-        }
-
         launchWithLock {
             createFileIfNotExist()
 
@@ -124,7 +115,8 @@ class AppLogsStore @Inject constructor(
         BufferedWriter(FileWriter(logFile, true)).use { writer ->
             writer.append(formatter.print(DateTime.now()))
             writer.append(": $tag ")
-            messages.forEach(writer::append)
+            messages.map(LogsSanitizer::sanitize)
+                .forEach(writer::append)
             writer.newLine()
         }
     }
@@ -139,9 +131,8 @@ class AppLogsStore @Inject constructor(
     private fun launchWithLock(callback: () -> Unit) {
         scope.launch {
             mutex.withLock {
-                runCatching {
-                    callback()
-                }.onFailure(Timber::e)
+                runCatching { callback() }
+                    .onFailure(Timber::e)
             }
         }
     }
