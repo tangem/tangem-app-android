@@ -3,7 +3,7 @@ package com.tangem.features.managetokens.utils.ui
 import androidx.annotation.DrawableRes
 import com.tangem.core.ui.extensions.getActiveIconRes
 import com.tangem.core.ui.extensions.getGreyedOutIconRes
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.network.Network
 import com.tangem.features.managetokens.entity.item.CurrencyNetworkUM
 
 internal fun CurrencyNetworkUM.select(isSelected: Boolean): CurrencyNetworkUM {
@@ -15,7 +15,7 @@ internal fun CurrencyNetworkUM.select(isSelected: Boolean): CurrencyNetworkUM {
 
 @DrawableRes
 internal fun Network.ID.getIconRes(isColored: Boolean): Int = if (isColored) {
-    getActiveIconRes(value)
+    getActiveIconRes(rawId.value)
 } else {
-    getGreyedOutIconRes(value)
+    getGreyedOutIconRes(rawId.value)
 }
