@@ -38,9 +38,15 @@ internal object YieldBalanceSupplierModule {
     fun provideSingleYieldBalanceSupplier(factory: SingleYieldBalanceProducer.Factory): SingleYieldBalanceSupplier {
         return object : SingleYieldBalanceSupplier(
             factory = factory,
-            keyCreator = {
-                "single_yield_balance_${it.userWalletId.stringValue}_${it.network.id.value}_" +
-                    it.network.derivationPath.value
+            keyCreator = { params ->
+                listOf(
+                    "single_yield_balance",
+                    params.userWalletId.stringValue,
+                    params.currencyId.value,
+                    params.network.id.rawId,
+                    params.network.id.derivationPath,
+                )
+                    .joinToString(separator = "_")
             },
         ) {}
     }

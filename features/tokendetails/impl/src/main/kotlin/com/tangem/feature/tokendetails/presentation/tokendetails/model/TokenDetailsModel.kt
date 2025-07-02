@@ -34,6 +34,8 @@ import com.tangem.domain.card.GetExtendedPublicKeyForCurrencyUseCase
 import com.tangem.domain.card.NetworkHasDerivationUseCase
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.promo.ShouldShowPromoTokenUseCase
 import com.tangem.domain.promo.models.PromoId
@@ -45,7 +47,9 @@ import com.tangem.domain.staking.GetYieldUseCase
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
-import com.tangem.domain.tokens.model.*
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
+import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.tokens.model.analytics.TokenReceiveAnalyticsEvent
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent.Companion.toReasonAnalyticsText
@@ -61,6 +65,7 @@ import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.tokendetails.presentation.router.InnerTokenDetailsRouter
@@ -73,7 +78,6 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.e
 import com.tangem.features.onramp.OnrampFeatureToggles
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.tokendetails.impl.R
-import com.tangem.features.txhistory.TxHistoryFeatureToggles
 import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
@@ -91,7 +95,7 @@ import javax.inject.Inject
 @ModelScoped
 internal class TokenDetailsModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
-    private val getCurrencyStatusUpdatesUseCase: GetCurrencyStatusUpdatesUseCase,
+    private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
     private val txHistoryItemsCountUseCase: GetTxHistoryItemsCountUseCase,
@@ -117,11 +121,9 @@ internal class TokenDetailsModel @Inject constructor(
     private val analyticsEventsHandler: AnalyticsEventHandler,
     private val vibratorHapticManager: VibratorHapticManager,
     private val clipboardManager: ClipboardManager,
-    private val getCryptoCurrencySyncUseCase: GetCryptoCurrencyStatusSyncUseCase,
     private val onrampFeatureToggles: OnrampFeatureToggles,
     private val shareManager: ShareManager,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
-    private val txHistoryFeatureToggles: TxHistoryFeatureToggles,
     private val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter,
     paramsContainer: ParamsContainer,
     expressStatusFactory: ExpressStatusFactory.Factory,
@@ -219,7 +221,7 @@ internal class TokenDetailsModel @Inject constructor(
     private fun initButtons() {
         // we need also init buttons before start all loading to avoid buttons blocking
         modelScope.launch {
-            val currentCryptoCurrencyStatus = getCryptoCurrencySyncUseCase.invoke(
+            val currentCryptoCurrencyStatus = getSingleCryptoCurrencyStatusUseCase.invokeMultiWalletSync(
                 userWalletId = userWalletId,
                 cryptoCurrencyId = cryptoCurrency.id,
                 isSingleWalletWithTokens = false,
@@ -285,7 +287,8 @@ internal class TokenDetailsModel @Inject constructor(
                 userWalletId = userWalletId,
                 currencyStatus = cryptoCurrencyStatus,
                 derivationPath = cryptoCurrency.network.derivationPath,
-                isSingleWalletWithTokens = userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
+                isSingleWalletWithTokens = userWallet is UserWallet.Cold &&
+                    userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
             )
                 .distinctUntilChanged()
                 .onEach {
@@ -300,10 +303,11 @@ internal class TokenDetailsModel @Inject constructor(
 
     private fun subscribeOnCurrencyStatusUpdates() {
         modelScope.launch(dispatchers.main) {
-            getCurrencyStatusUpdatesUseCase(
+            getSingleCryptoCurrencyStatusUseCase.invokeMultiWallet(
                 userWalletId = userWalletId,
                 currencyId = cryptoCurrency.id,
-                isSingleWalletWithTokens = userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
+                isSingleWalletWithTokens = userWallet is UserWallet.Cold &&
+                    userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
             )
                 .distinctUntilChanged()
                 .onEach { maybeCurrencyStatus ->
@@ -364,7 +368,6 @@ internal class TokenDetailsModel @Inject constructor(
             updateDelayedCurrencyStatusUseCase(
                 userWalletId = userWalletId,
                 network = toCryptoCurrency.network,
-                refresh = true,
             )
         }
     }
@@ -374,10 +377,10 @@ internal class TokenDetailsModel @Inject constructor(
      * @param showItemsLoading - show loading items placeholder.
      */
     private fun updateTxHistory(refresh: Boolean, showItemsLoading: Boolean, initialUpdating: Boolean = false) {
-        if (txHistoryFeatureToggles.isFeatureEnabled && !initialUpdating) {
-            modelScope.launch { txHistoryContentUpdateEmitter.triggerUpdate() }
-        } else {
-            modelScope.launch(dispatchers.main) {
+        modelScope.launch {
+            if (!initialUpdating) {
+                txHistoryContentUpdateEmitter.triggerUpdate()
+            } else {
                 val txHistoryItemsCountEither = txHistoryItemsCountUseCase(
                     userWalletId = userWalletId,
                     currency = cryptoCurrency,
@@ -438,7 +441,10 @@ internal class TokenDetailsModel @Inject constructor(
     private fun updateTopBarMenu() {
         modelScope.launch(dispatchers.main) {
             val hasDerivations =
-                networkHasDerivationUseCase(userWallet.scanResponse, cryptoCurrency.network).getOrElse { false }
+                networkHasDerivationUseCase(
+                    scanResponse = userWallet.requireColdWallet().scanResponse, // TODO [REDACTED_TASK_KEY]
+                    network = cryptoCurrency.network,
+                ).getOrElse { false }
 
             val isSupported = getExtendedPublicKeyForCurrencyUseCase.isSupported(userWalletId, cryptoCurrency.network)
 
@@ -718,7 +724,7 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     private fun showErrorIfDemoModeOrElse(action: () -> Unit) {
-        if (isDemoCardUseCase(cardId = userWallet.cardId)) {
+        if (userWallet is UserWallet.Cold && isDemoCardUseCase(cardId = userWallet.cardId)) {
             internalUiState.value = stateFactory.getStateWithClosedBottomSheet()
 
             uiMessageSender.send(
