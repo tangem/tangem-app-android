@@ -1,5 +1,6 @@
 package com.tangem.data.markets
 
+import arrow.core.getOrElse
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.compatibility.applyL2Compatibility
 import com.tangem.blockchainsdk.compatibility.getTokenIdIfL2Network
@@ -9,6 +10,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.common.currency.CryptoCurrencyFactory
 import com.tangem.data.common.network.NetworkFactory
+import com.tangem.data.common.quote.QuotesFetcher
 import com.tangem.data.common.utils.retryOnError
 import com.tangem.data.markets.analytics.MarketsDataAnalyticsEvent
 import com.tangem.data.markets.converters.*
@@ -16,8 +18,6 @@ import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.markets.TangemTechMarketsApi
 import com.tangem.datasource.api.markets.models.response.TokenMarketExchangesResponse
-import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.datasource.api.tangemTech.TangemTechApi.Companion.marketsQuoteFields
 import com.tangem.datasource.local.datastore.RuntimeStateStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.markets.*
@@ -37,7 +37,7 @@ import java.util.concurrent.atomic.AtomicLong
 @Suppress("LongParameterList")
 internal class DefaultMarketsTokenRepository(
     private val marketsApi: TangemTechMarketsApi,
-    private val tangemTechApi: TangemTechApi,
+    private val quotesFetcher: QuotesFetcher,
     private val userWalletsStore: UserWalletsStore,
     private val dispatcherProvider: CoroutineDispatcherProvider,
     private val analyticsEventHandler: AnalyticsEventHandler,
@@ -112,7 +112,7 @@ internal class DefaultMarketsTokenRepository(
         nextBatchSize: Int,
     ): BatchFlow<Int, List<TokenMarket>, TokenMarketUpdateRequest> {
         val tokenMarketsUpdateFetcher = MarketsBatchUpdateFetcher(
-            tangemTechApi = tangemTechApi,
+            quotesFetcher = quotesFetcher,
             marketsApi = marketsApi,
             analyticsEventHandler = analyticsEventHandler,
             onApiResponseError = {
@@ -225,16 +225,24 @@ internal class DefaultMarketsTokenRepository(
         withContext(dispatcherProvider.io) {
             // for second markets iteration we should use extended api method with all required fields
 
-            val result = catchDetailsErrorAndSendEvent(
-                request = MarketsDataAnalyticsEvent.Details.Error.Request.Info,
-                tokenSymbol = tokenSymbol,
-            ) {
-                tangemTechApi.getQuotes(
-                    currencyId = fiatCurrencyCode,
-                    coinIds = tokenId.value,
-                    fields = marketsQuoteFields.joinToString(separator = ","),
-                ).getOrThrow()
-            }
+            val result = quotesFetcher.fetch(
+                fiatCurrencyId = fiatCurrencyCode,
+                currencyId = tokenId.value,
+                field = QuotesFetcher.Field.ALL_PRICES,
+            )
+                .getOrElse {
+                    val error = it as QuotesFetcher.Error.ApiOperationError
+
+                    val errorEvent = createDetailsErrorEvent(
+                        error = error.apiError,
+                        request = MarketsDataAnalyticsEvent.Details.Error.Request.Info,
+                        tokenSymbol = tokenSymbol,
+                    )
+
+                    analyticsEventHandler.send(errorEvent.toEvent())
+
+                    throw error.apiError
+                }
 
             return@withContext TokenQuotesShortConverter.convert(tokenId, result).toFull()
         }
