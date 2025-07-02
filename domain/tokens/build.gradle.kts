@@ -31,7 +31,6 @@ dependencies {
     implementation(projects.domain.quotes)
 
     /** Project - Api */
-    implementation(projects.features.send.api)
     implementation(projects.features.staking.api)
     implementation(projects.features.markets.api)
     implementation(projects.features.swap.api)

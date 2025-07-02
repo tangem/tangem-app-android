@@ -3,8 +3,10 @@ package com.tangem.tap.network.exchangeServices
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
+import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.data.common.currency.CryptoCurrencyFactory
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.domain.model.Currency
 import com.tangem.tap.proxy.redux.DaggerGraphState
@@ -25,6 +27,7 @@ internal class CryptoCurrencyConverter(
                     extraDerivationPath = value.derivationPath,
                     scanResponse = requireNotNull(
                         store.inject(DaggerGraphState::generalUserWalletsListManager).selectedUserWalletSync
+                            ?.requireColdWallet() // TODO [REDACTED_TASK_KEY]
                             ?.scanResponse,
                     ),
                 ),
@@ -36,6 +39,7 @@ internal class CryptoCurrencyConverter(
                     extraDerivationPath = value.derivationPath,
                     scanResponse = requireNotNull(
                         store.inject(DaggerGraphState::generalUserWalletsListManager).selectedUserWalletSync
+                            ?.requireColdWallet() // TODO [REDACTED_TASK_KEY]
                             ?.scanResponse,
                     ),
                 ),
@@ -44,7 +48,7 @@ internal class CryptoCurrencyConverter(
     }
 
     override fun convertBack(value: CryptoCurrency): Currency {
-        val blockchain = Blockchain.fromId(value.network.id.value)
+        val blockchain = value.network.toBlockchain()
         if (blockchain == Blockchain.Unknown) error("CryptoCurrencyConverter convertBack Unknown blockchain")
         return when (value) {
             is CryptoCurrency.Coin -> Currency.Blockchain(

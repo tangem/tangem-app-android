@@ -45,7 +45,7 @@ internal class ProxyAppRouter(
             runCatching {
                 innerRouter.replaceAll(*routes, onComplete = onComplete)
             }.getOrElse {
-                Timber.tag("ASDASD").e(it)
+                Timber.e(it)
             }
         }
     }
