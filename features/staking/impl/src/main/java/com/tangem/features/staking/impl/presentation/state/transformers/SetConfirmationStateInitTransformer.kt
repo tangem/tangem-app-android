@@ -30,7 +30,7 @@ internal class SetConfirmationStateInitTransformer(
 ) : Transformer<StakingUiState> {
 
     private val networkId
-        get() = cryptoCurrencyStatus.currency.network.id.value
+        get() = cryptoCurrencyStatus.currency.network.rawId
 
     private val isComposePendingActions
         get() = isCompositePendingActions(networkId, pendingActions)

@@ -12,7 +12,7 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.datasource.local.nft.converter.NFTSdkAssetConverter
 import com.tangem.domain.feedback.GetCardInfoUseCase
 import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
@@ -24,6 +24,8 @@ import com.tangem.domain.settings.NeverShowTapHelpUseCase
 import com.tangem.domain.transaction.usecase.CreateNFTTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
+import com.tangem.domain.wallets.models.requireColdWallet
+import com.tangem.features.nft.entity.NFTSendSuccessTrigger
 import com.tangem.features.send.v2.common.CommonSendRoute
 import com.tangem.features.send.v2.common.SendBalanceUpdater
 import com.tangem.features.send.v2.common.SendConfirmAlertFactory
@@ -78,6 +80,7 @@ internal class NFTSendConfirmModel @Inject constructor(
     private val shareManager: ShareManager,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val nftSendAnalyticHelper: NFTSendAnalyticHelper,
+    private val nftSendSuccessTrigger: NFTSendSuccessTrigger,
     sendBalanceUpdaterFactory: SendBalanceUpdater.Factory,
 ) : Model(), NFTSendConfirmClickIntents {
 
@@ -201,7 +204,7 @@ internal class NFTSendConfirmModel @Inject constructor(
         saveBlockchainErrorUseCase(
             error = BlockchainErrorInfo(
                 errorMessage = errorMessage,
-                blockchainId = cryptoCurrency.network.id.value,
+                blockchainId = cryptoCurrency.network.rawId,
                 derivationPath = cryptoCurrency.network.derivationPath.value,
                 destinationAddress = confirmData.enteredDestination.orEmpty(),
                 tokenSymbol = null,
@@ -210,7 +213,8 @@ internal class NFTSendConfirmModel @Inject constructor(
             ),
         )
 
-        val cardInfo = getCardInfoUseCase(userWallet.scanResponse).getOrNull() ?: return
+        val cardInfo =
+            getCardInfoUseCase(userWallet.requireColdWallet().scanResponse).getOrNull() ?: return // TODO [REDACTED_TASK_KEY]
 
         modelScope.launch {
             sendFeedbackEmailUseCase(type = FeedbackEmailType.TransactionSendingProblem(cardInfo = cardInfo))
@@ -228,6 +232,7 @@ internal class NFTSendConfirmModel @Inject constructor(
                     it.copy(
                         confirmUM = NFTSendConfirmInitialStateTransformer(
                             isShowTapHelp = isShowTapHelp,
+                            walletName = stringReference(userWallet.name),
                         ).transform(uiState.value.confirmUM),
                     )
                 }
@@ -357,6 +362,7 @@ internal class NFTSendConfirmModel @Inject constructor(
                     analyticsEventHandler = analyticsEventHandler,
                     cryptoCurrency = cryptoCurrencyStatus.currency,
                     analyticsCategoryName = analyticsCategoryName,
+                    appCurrency = params.appCurrency,
                 ).transform(uiState.value.confirmUM),
             )
         }
@@ -369,15 +375,13 @@ internal class NFTSendConfirmModel @Inject constructor(
             transform = { state, route -> state to route },
         ).onEach { (state, _) ->
             val confirmUM = state.confirmUM
-            val isReadyToSend = confirmUM is ConfirmUM.Content && !confirmUM.isSending
+            val confirmUMContent = confirmUM as? ConfirmUM.Content
+            val isReadyToSend = confirmUMContent != null && !confirmUM.isSending
             params.callback.onResult(
                 state.copy(
                     navigationUM = NavigationUM.Content(
-                        title = resourceReference(
-                            id = R.string.send_summary_title,
-                            formatArgs = wrappedList(params.cryptoCurrencyStatus.currency.name),
-                        ),
-                        subtitle = null,
+                        title = resourceReference(R.string.nft_send),
+                        subtitle = confirmUMContent?.walletName,
                         backIconRes = R.drawable.ic_close_24,
                         backIconClick = {
                             analyticsEventHandler.send(
@@ -404,15 +408,7 @@ internal class NFTSendConfirmModel @Inject constructor(
                             isEnabled = confirmUM.isPrimaryButtonEnabled,
                             isHapticClick = isReadyToSend,
                             onClick = {
-                                when (confirmUM) {
-                                    is ConfirmUM.Success -> appRouter.pop()
-                                    is ConfirmUM.Content -> if (confirmUM.isSending) {
-                                        return@PrimaryButtonUM
-                                    } else {
-                                        onSendClick()
-                                    }
-                                    else -> return@PrimaryButtonUM
-                                }
+                                onNextClick(confirmUM)
                             },
                         ),
                         prevButton = null,
@@ -428,6 +424,23 @@ internal class NFTSendConfirmModel @Inject constructor(
                 ),
             )
         }.launchIn(modelScope)
+    }
+
+    private fun onNextClick(confirmUM: ConfirmUM) {
+        when (confirmUM) {
+            is ConfirmUM.Success -> {
+                modelScope.launch {
+                    nftSendSuccessTrigger.triggerSuccessNFTSend()
+                }
+                appRouter.pop()
+            }
+            is ConfirmUM.Content -> if (confirmUM.isSending) {
+                return
+            } else {
+                onSendClick()
+            }
+            else -> return
+        }
     }
 
     private companion object {

@@ -49,11 +49,15 @@ internal class WcRoutingModel @Inject constructor(
                     WcEthMethodName.SignTypeDataV4,
                     WcSolanaMethodName.SignMessage,
                     -> WcInnerRoute.SignMessage(rawRequest)
-                    WcEthMethodName.SignTransaction -> TODO()
-                    WcEthMethodName.SendTransaction -> TODO()
-                    WcSolanaMethodName.SignTransaction -> TODO()
-                    WcSolanaMethodName.SendAllTransaction -> TODO()
-                    is WcMethodName.Unsupported -> TODO()
+                    WcEthMethodName.AddEthereumChain,
+                    -> WcInnerRoute.AddNetwork(rawRequest)
+                    WcEthMethodName.SignTransaction,
+                    WcEthMethodName.SendTransaction,
+                    WcSolanaMethodName.SignTransaction,
+                    WcSolanaMethodName.SendAllTransaction,
+                    -> WcInnerRoute.Send(rawRequest)
+                    is WcMethodName.Unsupported,
+                    -> WcInnerRoute.UnsupportedMethodAlert(rawRequest)
                 }
             }
 

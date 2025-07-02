@@ -25,6 +25,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.features.walletconnect.connections.entity.VerifiedDAppState
 import com.tangem.features.walletconnect.connections.entity.WcConnectedAppInfoUM
 import com.tangem.features.walletconnect.connections.entity.WcNetworkInfoItem
 import com.tangem.features.walletconnect.connections.entity.WcPrimaryButtonConfig
@@ -97,7 +98,7 @@ private fun AppInfoFirstBlock(state: WcConnectedAppInfoUM, modifier: Modifier = 
             iconUrl = state.appIcon,
             title = state.appName,
             subtitle = state.appSubtitle,
-            isVerified = state.isVerified,
+            verifiedDAppState = state.verifiedDAppState,
         )
         HorizontalDivider(thickness = 1.dp, color = TangemTheme.colors.stroke.primary)
         Row(
@@ -134,7 +135,7 @@ private fun AppInfoFirstBlock(state: WcConnectedAppInfoUM, modifier: Modifier = 
 }
 
 @Composable
-private fun NetworksBlock(networks: ImmutableList<WcNetworkInfoItem>, modifier: Modifier = Modifier) {
+private fun NetworksBlock(networks: ImmutableList<WcNetworkInfoItem.Required>, modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
         Text(
             modifier = Modifier
@@ -159,18 +160,24 @@ private fun WcConnectedAppInfoBS_Preview() {
             state = WcConnectedAppInfoUM(
                 appName = "React App",
                 appIcon = "",
+                verifiedDAppState = VerifiedDAppState.Verified {},
                 isVerified = true,
                 appSubtitle = "react-app.walletconnect.com",
                 walletName = "Tangem 2.0",
                 networks = persistentListOf(
-                    WcNetworkInfoItem(
+                    WcNetworkInfoItem.Required(
                         id = "1",
                         icon = R.drawable.img_optimism_22,
                         name = "img_optimism_22img_optimism_22",
                         symbol = "optimism",
                     ),
-                    WcNetworkInfoItem(id = "2", icon = R.drawable.img_bsc_22, name = "img_bsc_22", symbol = "bsc"),
-                    WcNetworkInfoItem(
+                    WcNetworkInfoItem.Required(
+                        id = "2",
+                        icon = R.drawable.img_bsc_22,
+                        name = "img_bsc_22",
+                        symbol = "bsc",
+                    ),
+                    WcNetworkInfoItem.Required(
                         id = "3",
                         icon = R.drawable.img_solana_22,
                         name = "img_solana_22",

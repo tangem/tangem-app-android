@@ -2,10 +2,11 @@ package com.tangem.domain.exchange
 
 import arrow.core.Either
 import com.tangem.domain.core.lce.Lce
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
 
@@ -23,11 +24,11 @@ interface RampStateManager {
     /**
      * Check if [CryptoCurrency] is available for sell
      *
-     * @param userWalletId      id of multi-currency wallet
-     * @param status            crypto currency status
+     * @param userWallet user wallet
+     * @param status     crypto currency status
      */
     suspend fun availableForSell(
-        userWalletId: UserWalletId,
+        userWallet: UserWallet,
         status: CryptoCurrencyStatus,
     ): Either<ScenarioUnavailabilityReason, Unit>
 

@@ -9,6 +9,8 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.util.getCardsCount
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.isLocked
+import com.tangem.domain.wallets.models.isMultiCurrency
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletAdditionalInfo
 import java.math.BigDecimal
@@ -29,14 +31,19 @@ internal object WalletAdditionalInfoFactory {
      * @param currencyAmount    amount of currency
      */
     fun resolve(wallet: UserWallet, currencyAmount: BigDecimal? = null): WalletAdditionalInfo {
-        return if (wallet.isMultiCurrency) {
-            wallet.resolveMultiCurrencyInfo()
-        } else {
-            wallet.resolveSingleCurrencyInfo(currencyAmount)
+        return when (wallet) {
+            is UserWallet.Cold -> {
+                if (wallet.isMultiCurrency) {
+                    wallet.resolveMultiCurrencyInfo()
+                } else {
+                    wallet.resolveSingleCurrencyInfo(currencyAmount)
+                }
+            }
+            is UserWallet.Hot -> TODO("[REDACTED_TASK_KEY]")
         }
     }
 
-    private fun UserWallet.resolveMultiCurrencyInfo(): WalletAdditionalInfo {
+    private fun UserWallet.Cold.resolveMultiCurrencyInfo(): WalletAdditionalInfo {
         return if (isLocked) {
             WalletAdditionalInfo(
                 hideable = false,
@@ -54,7 +61,7 @@ internal object WalletAdditionalInfoFactory {
         }
     }
 
-    private fun UserWallet.resolveWallet2Info(): WalletAdditionalInfo {
+    private fun UserWallet.Cold.resolveWallet2Info(): WalletAdditionalInfo {
         return if (isImported) {
             WalletAdditionalInfo(
                 hideable = false,
@@ -93,7 +100,7 @@ internal object WalletAdditionalInfoFactory {
         )
     }
 
-    private fun UserWallet.resolveSingleCurrencyInfo(currencyAmount: BigDecimal?): WalletAdditionalInfo {
+    private fun UserWallet.Cold.resolveSingleCurrencyInfo(currencyAmount: BigDecimal?): WalletAdditionalInfo {
         return if (isLocked) {
             WalletAdditionalInfo(hideable = false, content = TextReference.Res(R.string.common_locked))
         } else {

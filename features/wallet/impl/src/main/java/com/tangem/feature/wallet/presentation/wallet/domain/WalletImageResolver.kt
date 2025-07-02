@@ -24,7 +24,7 @@ internal class WalletImageResolver @Inject constructor(
     /** Get a specified wallet [userWallet] image */
     @Suppress("CyclomaticComplexMethod")
     @DrawableRes
-    fun resolve(userWallet: UserWallet): Int? {
+    fun resolve(userWallet: UserWallet.Cold): Int? {
         val cardTypesResolver = userWallet.scanResponse.cardTypesResolver
 
         val cobrandImage = Wallet2CobrandImage.entries.firstOrNull {
@@ -52,30 +52,30 @@ internal class WalletImageResolver @Inject constructor(
         }
     }
 
-    private fun UserWallet.isRing(): Boolean {
+    private fun UserWallet.Cold.isRing(): Boolean {
         return scanResponse.cardTypesResolver.isRing() ||
             runBlocking { walletsRepository.isWalletWithRing(userWalletId = this@isRing.walletId) }
     }
 
-    private fun UserWallet.resolveWalletWithRing(): Int? {
+    private fun UserWallet.Cold.resolveWalletWithRing(): Int? {
         return resolveWallet2(
             oneBackupResId = R.drawable.ill_card_with_ring_120_106,
             twoBackupResId = R.drawable.ill_card2_with_ring_120_106,
         )
     }
 
-    private fun UserWallet.resolveWallet2Cobrand(image: Wallet2CobrandImage): Int? {
+    private fun UserWallet.Cold.resolveWallet2Cobrand(image: Wallet2CobrandImage): Int? {
         return resolveWallet2(oneBackupResId = image.cards2ResId, twoBackupResId = image.cards3ResId)
     }
 
-    private fun UserWallet.resolveShibaWallet(): Int? {
+    private fun UserWallet.Cold.resolveShibaWallet(): Int? {
         return resolveWallet2(
             oneBackupResId = R.drawable.ill_shiba_card2_120_106,
             twoBackupResId = R.drawable.ill_shiba_card3_120_106,
         )
     }
 
-    private fun UserWallet.resolveWallet2(
+    private fun UserWallet.Cold.resolveWallet2(
         @DrawableRes oneBackupResId: Int = R.drawable.ill_wallet2_cards2_120_106,
         @DrawableRes twoBackupResId: Int = R.drawable.ill_wallet2_cards3_120_106,
     ): Int? {
@@ -90,7 +90,7 @@ internal class WalletImageResolver @Inject constructor(
         }
     }
 
-    private fun UserWallet.resolveWallet1(): Int? {
+    private fun UserWallet.Cold.resolveWallet1(): Int? {
         return resolveWalletWithBackups { count ->
             when (count) {
                 WALLET_WITHOUT_BACKUP_COUNT -> R.drawable.ill_wallet1_cards1_120_106
@@ -101,7 +101,7 @@ internal class WalletImageResolver @Inject constructor(
         }
     }
 
-    private fun UserWallet.resolveWalletWithBackups(resolve: (Int) -> Int?): Int? {
+    private fun UserWallet.Cold.resolveWalletWithBackups(resolve: (Int) -> Int?): Int? {
         val count = getCardsCount()
 
         return if (count != null) resolve(count) else null
