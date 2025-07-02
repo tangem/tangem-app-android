@@ -3,31 +3,29 @@ package com.tangem.data.walletconnect.network.ethereum
 import com.squareup.moshi.Moshi
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
+import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.data.walletconnect.model.CAIP2
 import com.tangem.data.walletconnect.model.NamespaceKey
 import com.tangem.data.walletconnect.request.WcRequestToUseCaseConverter
 import com.tangem.data.walletconnect.request.WcRequestToUseCaseConverter.Companion.fromJson
 import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
 import com.tangem.data.walletconnect.utils.WcNamespaceConverter
-import com.tangem.domain.tokens.model.Network
-import com.tangem.domain.walletconnect.model.WcEthMethod
-import com.tangem.domain.walletconnect.model.WcEthMethodName
-import com.tangem.domain.walletconnect.model.WcEthSignTypedDataParams
-import com.tangem.domain.walletconnect.model.WcEthTransactionParams
+import com.tangem.domain.models.network.Network
+import com.tangem.domain.walletconnect.model.*
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
 import com.tangem.domain.walletconnect.repository.WcSessionsManager
 import com.tangem.domain.walletconnect.usecase.method.WcMethodUseCase
+import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWallet
 import jakarta.inject.Inject
 
 internal class WcEthNetwork(
     private val moshi: Moshi,
-    private val excludedBlockchains: ExcludedBlockchains,
     private val sessionsManager: WcSessionsManager,
     private val factories: Factories,
-) : WcRequestToUseCaseConverter, WcNamespaceConverter {
-
-    override val namespaceKey: NamespaceKey = NamespaceKey("eip155")
+    private val namespaceConverter: NamespaceConverter,
+    private val walletManagersFacade: WalletManagersFacade,
+) : WcRequestToUseCaseConverter {
 
     override fun toWcMethodName(request: WcSdkSessionRequest): WcEthMethodName? {
         val methodKey = request.request.method
@@ -35,16 +33,19 @@ internal class WcEthNetwork(
         return name
     }
 
+    @Suppress("CyclomaticComplexMethod")
     override suspend fun toUseCase(request: WcSdkSessionRequest): WcMethodUseCase? {
         val name = toWcMethodName(request) ?: return null
-        val method: WcEthMethod = name.toMethod(request) ?: return null
         val session = sessionsManager.findSessionByTopic(request.topic) ?: return null
-        val network = toNetwork(request.chainId.orEmpty(), session.wallet) ?: return null
+        val method: WcEthMethod = name.toMethod(request, session.wallet) ?: return null
+        val network = namespaceConverter.toNetwork(request.chainId.orEmpty(), session.wallet) ?: return null
+        val walletManagerAddress = walletManagersFacade.getDefaultAddress(session.wallet.walletId, network).orEmpty()
         val accountAddress = when (method) {
             is WcEthMethod.MessageSign -> method.account
             is WcEthMethod.SendTransaction -> method.transaction.from
             is WcEthMethod.SignTransaction -> method.transaction.from
             is WcEthMethod.SignTypedData -> method.account
+            is WcEthMethod.AddEthereumChain -> walletManagerAddress
         }
         val context = WcMethodUseCaseContext(
             session = session,
@@ -57,10 +58,11 @@ internal class WcEthNetwork(
             is WcEthMethod.SendTransaction -> factories.sendTransaction.create(context, method)
             is WcEthMethod.SignTransaction -> factories.signTransaction.create(context, method)
             is WcEthMethod.SignTypedData -> factories.signTypedData.create(context, method)
+            is WcEthMethod.AddEthereumChain -> factories.addNetwork.create(context, method)
         }
     }
 
-    private fun WcEthMethodName.toMethod(request: WcSdkSessionRequest): WcEthMethod? {
+    private fun WcEthMethodName.toMethod(request: WcSdkSessionRequest, wallet: UserWallet): WcEthMethod? {
         val rawParams = request.request.params
         return when (this) {
             WcEthMethodName.EthSign,
@@ -80,6 +82,13 @@ internal class WcEthNetwork(
                         WcEthMethod.SendTransaction(transaction = it)
                     }
                 }
+            WcEthMethodName.AddEthereumChain -> moshi.fromJson<List<WcEthAddChain>>(rawParams)
+                ?.firstOrNull()
+                ?.let {
+                    val newNetwork = namespaceConverter
+                        .toNetwork(it.chainId, wallet) ?: return null
+                    WcEthMethod.AddEthereumChain(rawChain = it, network = newNetwork)
+                }
         }
     }
 
@@ -96,28 +105,35 @@ internal class WcEthNetwork(
     private fun parseTypeData(params: String): WcEthMethod.SignTypedData? {
         val account = params.substring(params.indexOf("\"") + 1, params.indexOf("\"", startIndex = 2))
         val data = params.substring(params.indexOfFirst { it == '{' }, params.indexOfLast { it == '}' } + 1)
-        val params = moshi.fromJson<WcEthSignTypedDataParams>(data) ?: return null
-        return WcEthMethod.SignTypedData(params = params, account = account, dataForSign = data)
+        val parsedParams = moshi.fromJson<WcEthSignTypedDataParams>(data) ?: return null
+        return WcEthMethod.SignTypedData(params = parsedParams, account = account, dataForSign = data)
     }
 
-    override fun toNetwork(chainId: String, wallet: UserWallet): Network? {
-        return toNetwork(chainId, wallet, excludedBlockchains)
-    }
+    internal class NamespaceConverter(
+        private val excludedBlockchains: ExcludedBlockchains,
+    ) : WcNamespaceConverter {
 
-    override fun toBlockchain(chainId: CAIP2): Blockchain? {
-        if (chainId.namespace != namespaceKey.key) return null
-        val ethChainId = chainId.reference.toIntOrNull() ?: return null
-        return Blockchain.fromChainId(ethChainId)
-    }
+        override val namespaceKey: NamespaceKey = NamespaceKey("eip155")
 
-    override fun toCAIP2(network: Network): CAIP2? {
-        val blockchain = Blockchain.fromId(network.id.value)
-        if (!blockchain.isEvm()) return null
-        val chainId = blockchain.getChainId() ?: return null
-        return CAIP2(
-            namespace = namespaceKey.key,
-            reference = chainId.toString(),
-        )
+        override fun toNetwork(chainId: String, wallet: UserWallet): Network? {
+            return toNetwork(chainId, wallet, excludedBlockchains)
+        }
+
+        override fun toBlockchain(chainId: CAIP2): Blockchain? {
+            if (chainId.namespace != namespaceKey.key) return null
+            val ethChainId = chainId.reference.toIntOrNull() ?: return null
+            return Blockchain.fromChainId(ethChainId)
+        }
+
+        override fun toCAIP2(network: Network): CAIP2? {
+            val blockchain = network.toBlockchain()
+            if (!blockchain.isEvm()) return null
+            val chainId = blockchain.getChainId() ?: return null
+            return CAIP2(
+                namespace = namespaceKey.key,
+                reference = chainId.toString(),
+            )
+        }
     }
 
     internal class Factories @Inject constructor(
@@ -125,5 +141,6 @@ internal class WcEthNetwork(
         val signTypedData: WcEthSignTypedDataUseCase.Factory,
         val sendTransaction: WcEthSendTransactionUseCase.Factory,
         val signTransaction: WcEthSignTransactionUseCase.Factory,
+        val addNetwork: WcEthAddNetworkUseCase.Factory,
     )
 }

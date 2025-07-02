@@ -1,6 +1,6 @@
 package com.tangem.feature.swap.domain.models.domain
 
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 
 sealed class SwapFeeState {
     data object Enough : SwapFeeState()

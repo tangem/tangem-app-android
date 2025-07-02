@@ -38,6 +38,7 @@ dependencies {
 
     /** Domain module */
     implementation(projects.domain.settings)
+    implementation(projects.domain.notifications.toggles)
 
     /** Feature modules */
     implementation(projects.features.pushNotifications.api)
