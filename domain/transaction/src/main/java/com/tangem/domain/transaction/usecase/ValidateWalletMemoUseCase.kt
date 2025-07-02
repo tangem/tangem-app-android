@@ -3,7 +3,7 @@ package com.tangem.domain.transaction.usecase
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.transaction.WalletAddressServiceRepository
 import com.tangem.domain.transaction.error.ValidateMemoError
 

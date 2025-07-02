@@ -1,7 +1,7 @@
 package com.tangem.domain.transaction.usecase
 
 import arrow.core.Either
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.transaction.WalletAddressServiceRepository
 import com.tangem.domain.wallets.models.ParsedQrCode
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider

@@ -1,8 +1,8 @@
 package com.tangem.domain.txhistory.usecase
 
 import arrow.core.Either
-import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.txhistory.models.TxHistoryItem
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.txhistory.models.TxHistoryListError
 import com.tangem.domain.txhistory.repository.TxHistoryRepository
 import com.tangem.domain.wallets.models.UserWalletId
@@ -26,7 +26,7 @@ class GetFixedTxHistoryItemsUseCase(
         currency: CryptoCurrency,
         pageSize: Int = DEFAULT_PAGE_SIZE,
         refresh: Boolean = false,
-    ): Either<TxHistoryListError, Flow<List<TxHistoryItem>>> {
+    ): Either<TxHistoryListError, Flow<List<TxInfo>>> {
         return Either.catch {
             flow {
                 emit(repository.getFixedSizeTxHistoryItems(userWalletId, currency, pageSize, refresh))
@@ -39,7 +39,7 @@ class GetFixedTxHistoryItemsUseCase(
         currency: CryptoCurrency,
         pageSize: Int = DEFAULT_PAGE_SIZE,
         refresh: Boolean = false,
-    ): Either<TxHistoryListError, List<TxHistoryItem>> {
+    ): Either<TxHistoryListError, List<TxInfo>> {
         return Either.catch {
             repository.getFixedSizeTxHistoryItems(userWalletId, currency, pageSize, refresh)
         }.mapLeft { TxHistoryListError.DataError(it) }

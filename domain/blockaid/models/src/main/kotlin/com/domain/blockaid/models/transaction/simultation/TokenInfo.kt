@@ -4,4 +4,5 @@ data class TokenInfo(
     val chainId: Int?,
     val logoUrl: String?,
     val symbol: String,
+    val decimals: Int,
 )
