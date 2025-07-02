@@ -32,6 +32,7 @@ import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.wallets.models.requireColdWallet
+import com.tangem.features.send.v2.api.SendNotificationsComponent.Params.NotificationData
 import com.tangem.features.send.v2.common.CommonSendRoute
 import com.tangem.features.send.v2.common.SendBalanceUpdater
 import com.tangem.features.send.v2.common.SendConfirmAlertFactory
@@ -55,7 +56,6 @@ import com.tangem.features.send.v2.subcomponents.fee.model.checkAndCalculateSubt
 import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeSelectorUM
 import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeUM
 import com.tangem.features.send.v2.subcomponents.notifications.NotificationsUpdateTrigger
-import com.tangem.features.send.v2.subcomponents.notifications.model.NotificationData
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.orZero
 import com.tangem.utils.extensions.stripZeroPlainString
@@ -122,7 +122,7 @@ internal class SendConfirmModel @Inject constructor(
             enteredMemo = destinationUM?.memoTextField?.value,
             reduceAmountBy = amountState?.reduceAmountBy.orZero(),
             isIgnoreReduce = amountState?.isIgnoreReduce == true,
-            enteredDestination = destinationUM?.addressTextField?.value,
+            enteredDestination = destinationUM?.addressTextField?.actualAddress,
             fee = feeSelectorUM?.selectedFee,
             feeError = (feeUM?.feeSelectorUM as? FeeSelectorUM.Error)?.error,
         )
@@ -316,10 +316,11 @@ internal class SendConfirmModel @Inject constructor(
 
     private fun verifyAndSendTransaction() {
         val amountValue = amountState?.amountTextField?.cryptoAmount?.value ?: return
-        val destination = destinationUM?.addressTextField?.value ?: return
+        val destination = destinationUM?.addressTextField?.actualAddress ?: return
         val memo = destinationUM?.memoTextField?.value
         val fee = feeSelectorUM?.selectedFee
         val feeValue = fee?.amount?.value ?: return
+        val nonce = feeSelectorUM?.nonce
 
         val receivingAmount = checkAndCalculateSubtractedAmount(
             isAmountSubtractAvailable = isAmountSubtractAvailable,
@@ -334,6 +335,7 @@ internal class SendConfirmModel @Inject constructor(
                 amount = receivingAmount.convertToSdkAmount(cryptoCurrency),
                 fee = fee,
                 memo = memo,
+                nonce = nonce,
                 destination = destination,
                 userWalletId = userWallet.walletId,
                 network = cryptoCurrency.network,
@@ -454,6 +456,7 @@ internal class SendConfirmModel @Inject constructor(
         }
     }
 
+    @Suppress("LongMethod")
     private fun configConfirmNavigation() {
         combine(
             flow = uiState,
@@ -470,7 +473,11 @@ internal class SendConfirmModel @Inject constructor(
                             id = R.string.send_summary_title,
                             formatArgs = wrappedList(params.cryptoCurrencyStatus.currency.name),
                         ),
-                        subtitle = amountUM?.title,
+                        subtitle = if (uiState.value.isRedesignEnabled) {
+                            null
+                        } else {
+                            amountUM?.title
+                        },
                         backIconRes = R.drawable.ic_close_24,
                         backIconClick = {
                             analyticsEventHandler.send(
