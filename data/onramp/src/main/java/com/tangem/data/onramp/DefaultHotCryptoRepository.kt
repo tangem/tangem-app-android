@@ -26,6 +26,7 @@ import com.tangem.domain.onramp.model.HotCryptoCurrency
 import com.tangem.domain.onramp.repositories.HotCryptoRepository
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.runCatching
@@ -90,7 +91,7 @@ internal class DefaultHotCryptoRepository(
                     ?: error("UserWalletId [$userWalletId] not found")
 
                 HotCryptoCurrencyConverter(
-                    scanResponse = userWallet.scanResponse,
+                    scanResponse = userWallet.requireColdWallet().scanResponse, // TODO [REDACTED_TASK_KEY]
                     imageHost = it.imageHost,
                     excludedBlockchains = excludedBlockchains,
                 )
@@ -170,6 +171,10 @@ internal class DefaultHotCryptoRepository(
 
     // TODO: [REDACTED_JIRA]
     private fun UserWallet.canHandleHotCrypto(hotToken: HotCryptoResponse.Token): Boolean {
+        if (this !is UserWallet.Cold) {
+            return true // TODO [REDACTED_TASK_KEY]
+        }
+
         val isToken = hotToken.contractAddress != null && hotToken.decimalCount != null
         val blockchain = hotToken.networkId?.let { Blockchain.fromNetworkId(it) } ?: return false
 

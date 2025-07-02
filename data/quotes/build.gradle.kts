@@ -23,6 +23,7 @@ dependencies {
     implementation(projects.domain.wallets.models)
 
     implementation(deps.androidx.datastore)
+    implementation(deps.moshi.kotlin)
     implementation(deps.timber)
 
     implementation(deps.hilt.android)

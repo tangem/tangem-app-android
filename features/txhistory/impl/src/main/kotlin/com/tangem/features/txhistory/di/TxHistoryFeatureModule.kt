@@ -1,7 +1,5 @@
 package com.tangem.features.txhistory.di
 
-import com.tangem.features.txhistory.DefaultTxHistoryFeatureToggles
-import com.tangem.features.txhistory.TxHistoryFeatureToggles
 import com.tangem.features.txhistory.component.DefaultTxHistoryComponent
 import com.tangem.features.txhistory.component.TxHistoryComponent
 import dagger.Binds
@@ -13,9 +11,6 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 internal interface TxHistoryFeatureModule {
-    @Binds
-    @Singleton
-    fun provideFeatureToggles(featureToggles: DefaultTxHistoryFeatureToggles): TxHistoryFeatureToggles
 
     @Binds
     @Singleton

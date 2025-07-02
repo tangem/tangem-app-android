@@ -2,8 +2,8 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.model
 
 import com.tangem.common.ui.bottomsheet.receive.AddressModel
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.promo.models.PromoId
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenBalanceSegmentedButtonConfig
 
