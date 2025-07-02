@@ -21,7 +21,13 @@ internal sealed class DestinationTextFieldUM {
         val isError: Boolean = false,
         val error: TextReference? = null,
         val isValuePasted: Boolean,
-    ) : DestinationTextFieldUM()
+        // if value is human-readable address, this field contains the actual blockchain address
+        val blockchainAddress: String? = null,
+    ) : DestinationTextFieldUM() {
+
+        val actualAddress: String
+            get() = blockchainAddress ?: value
+    }
 
     data class RecipientMemo(
         override val value: String,
