@@ -26,7 +26,8 @@ internal class WcSessionsTransformer(
                                 name = appMetaData.name,
                                 iconUrl = appMetaData.icons.firstOrNull().orEmpty(),
                                 subtitle = stringReference(appMetaData.description),
-                                isVerified = false,
+                                verifiedState = WcDAppVerifiedStateConverter {}
+                                    .convert(session.securityStatus to appMetaData.name),
                                 onClick = { openAppInfoModal(session) },
                             )
                         }

@@ -1,6 +1,6 @@
 package com.tangem.domain.transaction.error
 
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 
 sealed class AssociateAssetError {
     data class NotEnoughBalance(val feeCurrency: CryptoCurrency) : AssociateAssetError()

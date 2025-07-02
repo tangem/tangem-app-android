@@ -22,7 +22,6 @@ import com.tangem.features.onboarding.v2.common.ui.RefreshButton
 import com.tangem.features.onboarding.v2.common.ui.WalletCard
 import com.tangem.features.onboarding.v2.impl.R
 import com.valentinilk.shimmer.shimmer
-import kotlinx.collections.immutable.ImmutableList
 
 @Composable
 fun OnboardingNoteTopUpHeader(
@@ -95,7 +94,7 @@ private fun OnboardinNoteTopUpHeaderPreview() {
     TangemThemePreview {
         OnboardingNoteTopUpHeader(
             balance = "0.00000001 BTC",
-            cardArtwork = ArtworkUM(null as ImmutableList<Byte>?, ""),
+            cardArtwork = ArtworkUM(null, ""),
             onRefreshBalanceClick = {},
             isRefreshing = false,
         )

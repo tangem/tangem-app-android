@@ -14,7 +14,11 @@ dependencies {
     implementation(projects.core.ui)
 
     /** Domain models */
+    api(projects.domain.models)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.nft.models)
+
+    /* Compose */
+    implementation(deps.compose.runtime)
 }
