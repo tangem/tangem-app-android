@@ -1,13 +1,14 @@
 package com.tangem.features.send.v2.subcomponents.fee.model.transformers
 
+import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.features.send.v2.subcomponents.fee.model.SendFeeClickIntents
+import com.tangem.features.send.v2.subcomponents.fee.model.converters.FeeConverter
+import com.tangem.features.send.v2.subcomponents.fee.model.converters.SendFeeCustomFieldConverter
 import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeSelectorUM
 import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeUM
-import com.tangem.features.send.v2.subcomponents.fee.model.converters.FeeConverter
-import com.tangem.features.send.v2.subcomponents.fee.model.SendFeeClickIntents
-import com.tangem.features.send.v2.subcomponents.fee.model.converters.SendFeeCustomFieldConverter
 import com.tangem.utils.transformer.Transformer
 
 internal class SendFeeLoadedTransformer(
@@ -41,6 +42,7 @@ internal class SendFeeLoadedTransformer(
                 fees = fees,
                 customValues = customFeeFieldConverter.convert(fees.normal),
                 selectedFee = fees.normal,
+                nonce = prevState.nonce,
             )
         } else {
             FeeSelectorUM.Content(
@@ -53,12 +55,15 @@ internal class SendFeeLoadedTransformer(
                         customValues = feeSelectorUM.customValues,
                     ),
                 ),
+                nonce = prevState.nonce,
             )
         }
 
         return state.copy(
             feeSelectorUM = updatedFeeSelector,
             isFeeApproximate = isFeeApproximate,
+            displayNonceInput = fees.normal is Fee.Ethereum,
+            nonce = prevState.nonce,
         )
     }
 }
