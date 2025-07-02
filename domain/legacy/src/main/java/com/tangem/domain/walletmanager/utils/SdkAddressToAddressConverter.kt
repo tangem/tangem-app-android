@@ -1,7 +1,7 @@
 package com.tangem.domain.walletmanager.utils
 
 import com.tangem.blockchain.common.address.AddressType
-import com.tangem.domain.walletmanager.model.Address
+import com.tangem.blockchainsdk.models.UpdateWalletManagerResult.Address
 import com.tangem.utils.converter.Converter
 import com.tangem.blockchain.common.address.Address as SdkAddress
 
