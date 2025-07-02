@@ -232,6 +232,7 @@ internal class DefaultWcPairUseCaseTest {
         val error = WcPairError.ApprovalFailed("error").left()
         coEvery { sdkDelegate.pair(url) } returns sdkProposal.right()
         coEvery { sdkDelegate.approve(sdkApprove) } returns error
+        coEvery { sdkDelegate.rejectSession(sdkApprove.proposerPublicKey) } returns Unit
         coEvery { blockAidVerifier.verifyDApp(any()) } returns Either.catch { CheckDAppResult.SAFE }
 
         val errorResult = WcPairState.Approving.Result(sessionForApprove, error)
@@ -250,8 +251,8 @@ internal class DefaultWcPairUseCaseTest {
             assertEquals(approveLoading, awaitItem())
             coVerifyOrder {
                 sdkDelegate.approve(sdkApprove)
+                sdkDelegate.rejectSession(sdkApprove.proposerPublicKey)
             }
-
             assertEquals(errorResult, awaitItem())
             awaitComplete()
         }
