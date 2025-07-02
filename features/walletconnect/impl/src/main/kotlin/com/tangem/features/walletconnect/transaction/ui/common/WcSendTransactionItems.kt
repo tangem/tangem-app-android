@@ -23,7 +23,7 @@ internal fun WcSendTransactionItems(
     walletName: String,
     networkInfo: WcNetworkInfoUM,
     feeState: WcTransactionFeeState,
-    feeSelectorBlockComponent: FeeSelectorBlockComponent,
+    feeSelectorBlockComponent: FeeSelectorBlockComponent?,
     modifier: Modifier = Modifier,
     address: String? = null,
 ) {
@@ -63,7 +63,7 @@ internal fun WcSendTransactionItems(
         }
         DividerWithPadding(start = 40.dp, end = 12.dp)
         if (feeState != WcTransactionFeeState.None) {
-            feeSelectorBlockComponent.Content(
+            feeSelectorBlockComponent?.Content(
                 modifier = if (onFeeBlockClicked != null) {
                     Modifier.clickableSingle(onClick = onFeeBlockClicked)
                 } else {
