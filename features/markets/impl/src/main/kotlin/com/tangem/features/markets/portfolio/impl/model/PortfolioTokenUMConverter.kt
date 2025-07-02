@@ -63,6 +63,10 @@ internal class PortfolioTokenUMConverter(
                         action = TokenActionsBSContentUM.Action.Receive,
                         cryptoCurrencyData = cryptoData,
                     )
+                    QuickActionUM.Stake -> tokenActionsHandler.handle(
+                        action = TokenActionsBSContentUM.Action.Stake,
+                        cryptoCurrencyData = cryptoData,
+                    )
                 }
             },
             onQuickActionLongClick = {
@@ -83,6 +87,7 @@ internal class PortfolioTokenUMConverter(
                     is TokenActionsState.ActionState.Buy -> QuickActionUM.Buy
                     is TokenActionsState.ActionState.Swap -> QuickActionUM.Exchange(showBadge = action.showBadge)
                     is TokenActionsState.ActionState.Receive -> QuickActionUM.Receive
+                    is TokenActionsState.ActionState.Stake -> QuickActionUM.Stake
                     else -> null
                 }?.let(::add)
             }
