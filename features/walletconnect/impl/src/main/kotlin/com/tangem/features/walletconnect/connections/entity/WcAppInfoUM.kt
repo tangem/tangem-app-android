@@ -22,14 +22,22 @@ internal sealed class WcAppInfoUM : TangemBottomSheetConfigContent {
     data class Content(
         val appName: String,
         val appIcon: String,
-        val isVerified: Boolean,
+        val verifiedDAppState: VerifiedDAppState,
         val appSubtitle: String,
         val notification: WcAppInfoSecurityNotification?,
         val walletName: String,
+        val onWalletClick: () -> Unit,
         val networksInfo: WcNetworksInfo,
+        val onNetworksClick: () -> Unit,
         override val connectButtonConfig: WcPrimaryButtonConfig,
         override val onDismiss: () -> Unit,
     ) : WcAppInfoUM()
+}
+
+@Immutable
+sealed class VerifiedDAppState {
+    data class Verified(val onVerifiedClick: () -> Unit) : VerifiedDAppState()
+    data object Unknown : VerifiedDAppState()
 }
 
 sealed class WcAppInfoSecurityNotification(

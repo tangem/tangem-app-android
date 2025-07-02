@@ -9,8 +9,8 @@ import com.tangem.domain.managetokens.ValidateTokenFormUseCase
 import com.tangem.domain.managetokens.model.AddCustomTokenForm
 import com.tangem.domain.managetokens.model.exceptoin.CustomTokenFormValidationException
 import com.tangem.domain.managetokens.model.exceptoin.FindTokenException
-import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveInAndJoin

@@ -2,8 +2,10 @@ package com.tangem.feature.walletsettings.di
 
 import com.tangem.feature.walletsettings.component.RenameWalletComponent
 import com.tangem.feature.walletsettings.component.WalletSettingsComponent
+import com.tangem.feature.walletsettings.component.impl.DefaultNetworksAvailableForNotificationsComponent
 import com.tangem.feature.walletsettings.component.impl.DefaultRenameWalletComponent
 import com.tangem.feature.walletsettings.component.impl.DefaultWalletSettingsComponent
+import com.tangem.feature.walletsettings.component.NetworksAvailableForNotificationsComponent
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -23,4 +25,10 @@ internal interface WalletSettingsComponentModule {
     @Binds
     @Singleton
     fun bindRenameWalletComponentFactory(factory: DefaultRenameWalletComponent.Factory): RenameWalletComponent.Factory
+
+    @Binds
+    @Singleton
+    fun bindNetworksComponentFactory(
+        factory: DefaultNetworksAvailableForNotificationsComponent.Factory,
+    ): NetworksAvailableForNotificationsComponent.Factory
 }

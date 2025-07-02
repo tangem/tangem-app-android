@@ -40,17 +40,12 @@ class VisaCustomerWalletApproveTask(
         }
 
         if (VisaUtilities.isVisaCard(card.firmwareVersion.doubleValue, card.batchId)) {
-            // TODO TVF-21
-            callback(CompletionResult.Failure(TangemSdkError.Underlying("Can't use Visa card for approve")))
+            callback(CompletionResult.Failure(VisaActivationError.VisaCardForApproval.tangemError))
             return
         }
 
         if (visaDataForApprove.customerWalletCardId != null && card.cardId != visaDataForApprove.customerWalletCardId) {
-            callback(
-                CompletionResult.Failure(
-                    TangemSdkError.Underlying("Use tangem wallet specified during visa registration"), // TODO TVF-21
-                ),
-            )
+            callback(CompletionResult.Failure(VisaActivationError.CardIdNotMatched.tangemError))
             return
         }
 
