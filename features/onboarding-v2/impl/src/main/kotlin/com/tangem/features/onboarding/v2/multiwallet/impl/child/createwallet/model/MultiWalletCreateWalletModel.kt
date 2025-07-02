@@ -13,7 +13,7 @@ import com.tangem.domain.feedback.GetCardInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.wallets.builder.UserWalletBuilder
+import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.features.onboarding.v2.common.analytics.OnboardingEvent
@@ -42,7 +42,7 @@ internal class MultiWalletCreateWalletModel @Inject constructor(
     private val getCardInfoUseCase: GetCardInfoUseCase,
     private val cardRepository: CardRepository,
     private val analyticsHandler: AnalyticsEventHandler,
-    private val userWalletBuilderFactory: UserWalletBuilder.Factory,
+    private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory,
     private val saveWalletUseCase: SaveWalletUseCase,
 ) : Model() {
 
@@ -143,9 +143,9 @@ internal class MultiWalletCreateWalletModel @Inject constructor(
         }
     }
 
-    private suspend fun createUserWallet(scanResponse: ScanResponse): UserWallet {
+    private suspend fun createUserWallet(scanResponse: ScanResponse): UserWallet.Cold {
         return requireNotNull(
-            value = userWalletBuilderFactory.create(scanResponse = scanResponse).build(),
+            value = coldUserWalletBuilderFactory.create(scanResponse = scanResponse).build(),
             lazyMessage = { "User wallet not created" },
         )
     }
