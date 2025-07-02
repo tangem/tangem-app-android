@@ -24,4 +24,9 @@ interface PermissionRepository {
      * Permanently deny [permission] and never request again
      */
     suspend fun neverAskPermission(permission: String)
+
+    /**
+     * Return is [permission] granted or not.
+     */
+    fun hasRuntimePermission(permission: String): Boolean
 }
