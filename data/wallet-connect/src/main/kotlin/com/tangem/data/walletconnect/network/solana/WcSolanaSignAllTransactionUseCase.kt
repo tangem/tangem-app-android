@@ -24,6 +24,7 @@ import okio.ByteString.Companion.decodeBase64
 import org.json.JSONArray
 import org.json.JSONObject
 
+@Suppress("LongParameterList")
 internal class WcSolanaSignAllTransactionUseCase @AssistedInject constructor(
     override val respondService: WcRespondService,
     override val analytics: AnalyticsEventHandler,
@@ -31,6 +32,7 @@ internal class WcSolanaSignAllTransactionUseCase @AssistedInject constructor(
     @Assisted override val context: WcMethodUseCaseContext,
     @Assisted override val method: WcSolanaMethod.SignAllTransaction,
     blockAidDelegate: BlockAidVerificationDelegate,
+    addressConverter: SolanaBlockAidAddressConverter,
 ) : BaseWcSignUseCase<Nothing, List<TransactionData>>(),
     WcListTransactionUseCase {
 
@@ -39,7 +41,7 @@ internal class WcSolanaSignAllTransactionUseCase @AssistedInject constructor(
         method = method,
         rawSdkRequest = rawSdkRequest,
         session = session,
-        accountAddress = context.accountAddress,
+        accountAddress = addressConverter.convert(context.accountAddress),
     ).map { lce -> lce.map { result -> BlockAidTransactionCheck.Result.Plain(result) } }
 
     override suspend fun SignCollector<List<TransactionData>>.onSign(state: WcSignState<List<TransactionData>>) {
