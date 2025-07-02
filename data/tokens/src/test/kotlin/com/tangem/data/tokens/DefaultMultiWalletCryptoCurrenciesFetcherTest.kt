@@ -86,7 +86,9 @@ internal class DefaultMultiWalletCryptoCurrenciesFetcherTest {
         val actual = fetcher(params)
 
         // Assert
-        val expected = IllegalStateException("${this::class.simpleName} supports only multi-currency wallet").left()
+        val expected = IllegalStateException(
+            "${DefaultMultiWalletCryptoCurrenciesFetcher::class.simpleName} supports only multi-currency wallet",
+        ).left()
         assertEither(actual, expected)
 
         verifyOrder { userWalletsStore.getSyncStrict(key = params.userWalletId) }
