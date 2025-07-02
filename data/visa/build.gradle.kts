@@ -16,6 +16,7 @@ dependencies {
 
     /** Project - Data */
     implementation(projects.core.datasource)
+    implementation(projects.core.error)
     implementation(projects.data.common)
 
     /** Project - Domain */
