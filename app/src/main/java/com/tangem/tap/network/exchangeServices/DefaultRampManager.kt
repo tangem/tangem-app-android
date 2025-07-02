@@ -12,12 +12,13 @@ import com.tangem.datasource.exchangeservice.swap.ExpressServiceLoader
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.exchange.ExpressAvailabilityState
 import com.tangem.domain.exchange.RampStateManager
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.tokens.GetNetworkCoinStatusUseCase
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.onramp.OnrampFeatureToggles
 import com.tangem.utils.Provider
@@ -55,7 +56,7 @@ internal class DefaultRampManager(
     }
 
     override suspend fun availableForSell(
-        userWalletId: UserWalletId,
+        userWallet: UserWallet,
         status: CryptoCurrencyStatus,
     ): Either<ScenarioUnavailabilityReason, Unit> {
         return either {
@@ -68,7 +69,7 @@ internal class DefaultRampManager(
                 catch = { raise(ScenarioUnavailabilityReason.NotSupportedBySellService(status.currency.name)) },
             )
 
-            val reason = getSendUnavailabilityReason(userWalletId, status)
+            val reason = getSendUnavailabilityReason(userWallet = userWallet, cryptoCurrencyStatus = status)
 
             ensure(condition = reason is ScenarioUnavailabilityReason.None) {
                 when (reason) {
@@ -205,14 +206,13 @@ internal class DefaultRampManager(
     }
 
     private suspend fun getSendUnavailabilityReason(
-        userWalletId: UserWalletId,
+        userWallet: UserWallet,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
     ): ScenarioUnavailabilityReason {
         val coinStatus = getNetworkCoinStatusUseCase.invokeSync(
-            userWalletId = userWalletId,
+            userWallet = userWallet,
             networkId = cryptoCurrencyStatus.currency.network.id,
             derivationPath = cryptoCurrencyStatus.currency.network.derivationPath,
-            isSingleWalletWithTokens = false,
         ).getOrNull()
 
         return when {

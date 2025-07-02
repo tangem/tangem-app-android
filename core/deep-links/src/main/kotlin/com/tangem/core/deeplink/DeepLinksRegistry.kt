@@ -6,6 +6,7 @@ import android.content.Intent
  * Key to pass deeplink via intent
  */
 const val DEEPLINK_KEY = "deeplink"
+const val WEBLINK_KEY = "link"
 // [REDACTED_TODO_COMMENT]
 /**
  * Provides functionality to handle deep links.

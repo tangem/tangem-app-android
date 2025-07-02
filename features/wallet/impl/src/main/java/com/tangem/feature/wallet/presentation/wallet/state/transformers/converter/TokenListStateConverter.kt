@@ -95,6 +95,7 @@ internal class TokenListStateConverter(
     }
 
     private fun isSingleCurrencyWalletWithToken(): Boolean {
-        return selectedWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()
+        return selectedWallet is UserWallet.Cold &&
+            selectedWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()
     }
 }

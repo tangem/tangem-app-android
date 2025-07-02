@@ -11,6 +11,7 @@ import com.tangem.domain.tokens.FetchCardTokenListUseCase
 import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
 import com.tangem.domain.tokens.FetchTokenListUseCase
 import com.tangem.domain.tokens.FetchTokenListUseCase.RefreshMode
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.domain.wallets.usecase.SelectWalletUseCase
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
@@ -126,7 +127,10 @@ internal class WalletClickIntents @Inject constructor(
         )
 
         modelScope.launch {
-            val maybeFetchResult = if (userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()) {
+            val maybeFetchResult = if (
+                userWallet is UserWallet.Cold &&
+                userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()
+            ) {
                 fetchCardTokenListUseCase(userWalletId = userWallet.walletId, refresh = true)
             } else {
                 fetchTokenListUseCase(userWalletId = userWallet.walletId, mode = RefreshMode.FULL)

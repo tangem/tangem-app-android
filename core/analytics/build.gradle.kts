@@ -22,4 +22,7 @@ dependencies {
 
     /** Core shouldn't depend on core, but in case with utils and logging its necessary */
     implementation(projects.core.utils)
+
+    /** For calculating user id hash */
+    implementation(tangemDeps.card.core)
 }

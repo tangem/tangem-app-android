@@ -69,17 +69,14 @@ internal fun NFTDetailsBlocksGroup(
                             NFTDetailsGroupBlock(
                                 modifier = Modifier
                                     .weight(1f)
-                                    .padding(paddingValues)
-                                    .clickable(
-                                        interactionSource = remember { MutableInteractionSource() },
-                                        indication = null,
-                                        onClick = item1.onClick,
-                                    ),
+                                    .padding(paddingValues),
                                 title = item1.title,
                                 value = stringReference(item1.value),
                                 titleEllipsis = item1.titleTextEllipsis,
                                 valueEllipsis = item1.valueTextEllipsis,
                                 showInfoButton = item1.showInfoButton,
+                                onBlockClick = item1.onBlockClick,
+                                onValueClick = item1.onValueClick,
                             )
                             if (item2 == null) {
                                 Box(
@@ -91,17 +88,14 @@ internal fun NFTDetailsBlocksGroup(
                                 NFTDetailsGroupBlock(
                                     modifier = Modifier
                                         .weight(1f)
-                                        .padding(paddingValues)
-                                        .clickable(
-                                            interactionSource = remember { MutableInteractionSource() },
-                                            indication = null,
-                                            onClick = item2.onClick,
-                                        ),
+                                        .padding(paddingValues),
                                     title = item2.title,
                                     value = stringReference(item2.value),
                                     titleEllipsis = item2.titleTextEllipsis,
                                     valueEllipsis = item2.valueTextEllipsis,
                                     showInfoButton = item2.showInfoButton,
+                                    onBlockClick = item2.onBlockClick,
+                                    onValueClick = item2.onValueClick,
                                 )
                             }
                         }
@@ -128,6 +122,8 @@ internal fun NFTDetailsGroupBlock(
     value: TextReference,
     showInfoButton: Boolean,
     modifier: Modifier = Modifier,
+    onBlockClick: (() -> Unit)? = null,
+    onValueClick: (() -> Unit)? = null,
     titleEllipsis: TextEllipsis = TextEllipsis.End,
     valueEllipsis: TextEllipsis = TextEllipsis.End,
 ) {
@@ -136,7 +132,14 @@ internal fun NFTDetailsGroupBlock(
     ) {
         Row(
             modifier = Modifier
-                .fillMaxWidth(),
+                .fillMaxWidth()
+                .clickable(
+                    enabled = onBlockClick != null,
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                ) {
+                    onBlockClick?.invoke()
+                },
         ) {
             EllipsisText(
                 modifier = Modifier
@@ -159,6 +162,18 @@ internal fun NFTDetailsGroupBlock(
         }
         EllipsisText(
             modifier = Modifier
+                .fillMaxWidth()
+                .clickable(
+                    enabled = onValueClick != null || onBlockClick != null,
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                ) {
+                    if (onValueClick != null) {
+                        onValueClick.invoke()
+                    } else {
+                        onBlockClick?.invoke()
+                    }
+                }
                 .padding(top = TangemTheme.dimens.spacing4),
             text = value.resolveReference(),
             style = TangemTheme.typography.body1,
@@ -255,27 +270,27 @@ private class NFTAssetBlocksProvider : CollectionPreviewParameterProvider<Immuta
             NFTAssetUM.BlockItem(
                 title = stringReference("Tier"),
                 value = "Infinite",
-                showInfoButton = false,
+                showInfoButton = true,
             ),
             NFTAssetUM.BlockItem(
                 title = stringReference("Phygital Toy"),
                 value = "None",
-                showInfoButton = false,
+                showInfoButton = true,
             ),
             NFTAssetUM.BlockItem(
                 title = stringReference("Class"),
                 value = "CYBER",
-                showInfoButton = false,
+                showInfoButton = true,
             ),
             NFTAssetUM.BlockItem(
                 title = stringReference("Accessory"),
                 value = "No accessory",
-                showInfoButton = false,
+                showInfoButton = true,
             ),
             NFTAssetUM.BlockItem(
                 title = stringReference("Sneakers"),
                 value = "Boots",
-                showInfoButton = false,
+                showInfoButton = true,
             ),
         ),
     ),

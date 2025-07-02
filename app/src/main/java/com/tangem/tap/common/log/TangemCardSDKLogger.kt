@@ -22,9 +22,11 @@ internal class TangemCardSDKLogger(
 ) : TangemSdkLogger {
 
     override fun log(message: () -> String, level: Log.Level) {
-        // Disabled for now in https://tangem.atlassian.net/browse/AND-9614
-        // if (!levels.contains(level)) return
-        //
-        // appLogsStore.saveLogMessage(message = messageFormatter.format(message, level))
+        if (!levels.contains(level)) return
+
+        appLogsStore.saveLogMessage(
+            tag = "CardSDK_${level.name}",
+            message = messageFormatter.format(message = message, level = level),
+        )
     }
 }

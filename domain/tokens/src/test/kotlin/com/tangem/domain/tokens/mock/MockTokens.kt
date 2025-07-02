@@ -1,7 +1,7 @@
 package com.tangem.domain.tokens.mock
 
-import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.CryptoCurrency.ID
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency.ID
 
 internal object MockTokens {
 
@@ -9,7 +9,7 @@ internal object MockTokens {
         get() = CryptoCurrency.Coin(
             id = ID(
                 ID.Prefix.COIN_PREFIX,
-                ID.Body.NetworkId(MockNetworks.network1.id.value),
+                ID.Body.NetworkId(MockNetworks.network1.rawId),
                 ID.Suffix.RawID("token1"),
             ),
             network = MockNetworks.network1,
@@ -23,7 +23,7 @@ internal object MockTokens {
         get() = CryptoCurrency.Token(
             id = ID(
                 ID.Prefix.TOKEN_PREFIX,
-                ID.Body.NetworkId(MockNetworks.network1.id.value),
+                ID.Body.NetworkId(MockNetworks.network1.rawId),
                 ID.Suffix.RawID("token2"),
             ),
             network = MockNetworks.network1,
@@ -38,7 +38,7 @@ internal object MockTokens {
         get() = CryptoCurrency.Token(
             id = ID(
                 ID.Prefix.TOKEN_PREFIX,
-                ID.Body.NetworkId(MockNetworks.network1.id.value),
+                ID.Body.NetworkId(MockNetworks.network1.rawId),
                 ID.Suffix.RawID("token3"),
             ),
             network = MockNetworks.network1,
@@ -53,7 +53,7 @@ internal object MockTokens {
         get() = CryptoCurrency.Coin(
             id = ID(
                 ID.Prefix.COIN_PREFIX,
-                ID.Body.NetworkId(MockNetworks.network2.id.value),
+                ID.Body.NetworkId(MockNetworks.network2.rawId),
                 ID.Suffix.RawID("token4"),
             ),
             network = MockNetworks.network2,
@@ -67,7 +67,7 @@ internal object MockTokens {
         get() = CryptoCurrency.Token(
             id = ID(
                 ID.Prefix.TOKEN_PREFIX,
-                ID.Body.NetworkId(MockNetworks.network2.id.value),
+                ID.Body.NetworkId(MockNetworks.network2.rawId),
                 ID.Suffix.RawID("token5"),
             ),
             network = MockNetworks.network2,
@@ -82,7 +82,7 @@ internal object MockTokens {
         get() = CryptoCurrency.Token(
             id = ID(
                 ID.Prefix.TOKEN_PREFIX,
-                ID.Body.NetworkId(MockNetworks.network2.id.value),
+                ID.Body.NetworkId(MockNetworks.network2.rawId),
                 ID.Suffix.RawID("token6"),
             ),
             network = MockNetworks.network2,
@@ -97,7 +97,7 @@ internal object MockTokens {
         get() = CryptoCurrency.Coin(
             id = ID(
                 ID.Prefix.COIN_PREFIX,
-                ID.Body.NetworkId(MockNetworks.network3.id.value),
+                ID.Body.NetworkId(MockNetworks.network3.rawId),
                 ID.Suffix.RawID("token7"),
             ),
             network = MockNetworks.network3,
@@ -111,7 +111,7 @@ internal object MockTokens {
         get() = CryptoCurrency.Token(
             id = ID(
                 ID.Prefix.TOKEN_PREFIX,
-                ID.Body.NetworkId(MockNetworks.network3.id.value),
+                ID.Body.NetworkId(MockNetworks.network3.rawId),
                 ID.Suffix.RawID("token8"),
             ),
             network = MockNetworks.network3,
@@ -126,7 +126,7 @@ internal object MockTokens {
         get() = CryptoCurrency.Token(
             id = ID(
                 ID.Prefix.TOKEN_PREFIX,
-                ID.Body.NetworkId(MockNetworks.network3.id.value),
+                ID.Body.NetworkId(MockNetworks.network3.rawId),
                 ID.Suffix.RawID("token9"),
             ),
             network = MockNetworks.network3,
@@ -141,7 +141,7 @@ internal object MockTokens {
         get() = CryptoCurrency.Token(
             id = ID(
                 ID.Prefix.TOKEN_PREFIX,
-                ID.Body.NetworkId(MockNetworks.network3.id.value),
+                ID.Body.NetworkId(MockNetworks.network3.rawId),
                 ID.Suffix.RawID("token10"),
             ),
             network = MockNetworks.network3,

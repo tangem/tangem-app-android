@@ -3,6 +3,7 @@ package com.tangem.data.markets.di
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.data.common.cache.CacheRegistry
+import com.tangem.data.common.network.NetworkFactory
 import com.tangem.data.markets.DefaultMarketsTokenRepository
 import com.tangem.datasource.api.markets.TangemTechMarketsApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
@@ -30,6 +31,7 @@ internal object MarketsDataModule {
         analyticsEventHandler: AnalyticsEventHandler,
         cacheRegistry: CacheRegistry,
         excludedBlockchains: ExcludedBlockchains,
+        networkFactory: NetworkFactory,
     ): MarketsTokenRepository {
         return DefaultMarketsTokenRepository(
             marketsApi = marketsApi,
@@ -41,6 +43,7 @@ internal object MarketsDataModule {
             tokenExchangesStore = RuntimeStateStore(defaultValue = emptyList()),
             excludedBlockchains = excludedBlockchains,
             maxApyStore = RuntimeStateStore(defaultValue = null),
+            networkFactory = networkFactory,
         )
     }
 }

@@ -4,6 +4,9 @@ import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
 import com.tangem.core.decompose.ui.UiMessage
 import com.tangem.core.ui.R
+import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUMV2
+import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetV2Dsl
+import com.tangem.core.ui.components.bottomsheets.message.messageBottomSheetUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage.Duration
@@ -15,6 +18,27 @@ import com.tangem.core.ui.message.SnackbarMessage.Duration
  * */
 @Immutable
 sealed interface EventMessage : UiMessage
+
+data class ToastMessage(
+    val message: TextReference,
+    val duration: Duration = ToastMessage.Duration.Short,
+) : EventMessage {
+    /**
+     * The duration of the snackbar.
+     * */
+    enum class Duration {
+
+        /**
+         * Shows the toast for a short period of time.
+         * */
+        Short,
+
+        /**
+         * Shows the toast for a long period of time.
+         * */
+        Long,
+    }
+}
 
 /**
  * Shows a snackbar.
@@ -176,6 +200,13 @@ data class BottomSheetMessage(
         }
     }
 }
+
+data class BottomSheetMessageV2(
+    val messageBottomSheetUMV2: MessageBottomSheetUMV2,
+) : EventMessage
+
+fun bottomSheetMessage(init: @MessageBottomSheetV2Dsl MessageBottomSheetUMV2.() -> Unit) =
+    BottomSheetMessageV2(messageBottomSheetUM(init))
 
 /**
  * Represents an action button in the dialog.

@@ -1,5 +1,8 @@
 package com.tangem.data.wallets
 
+import com.tangem.data.wallets.converters.UserWalletRemoteInfoConverter
+import com.tangem.data.wallets.converters.WalletIdBodyConverter
+import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.api.common.response.ApiResponseError.HttpException
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
@@ -17,7 +20,9 @@ import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
 import com.tangem.datasource.local.preferences.utils.store
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.wallets.models.SeedPhraseNotificationsStatus
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.models.UserWalletRemoteInfo
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.utils.WEEK_MILLIS
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -28,12 +33,14 @@ import kotlinx.coroutines.withContext
 
 typealias SeedPhraseNotificationsStatuses = Map<UserWalletId, SeedPhraseNotificationsStatus>
 
+@Suppress("TooManyFunctions")
 internal class DefaultWalletsRepository(
     private val appPreferencesStore: AppPreferencesStore,
     private val tangemTechApi: TangemTechApi,
     private val userWalletsStore: UserWalletsStore,
     private val seedPhraseNotificationVisibilityStore: RuntimeStateStore<SeedPhraseNotificationsStatuses>,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val authProvider: AuthProvider,
 ) : WalletsRepository {
 
     override suspend fun shouldSaveUserWalletsSync(): Boolean {
@@ -81,6 +88,11 @@ internal class DefaultWalletsRepository(
 
     private suspend fun fetchSeedPhraseNotificationStatus(userWalletId: UserWalletId) {
         val userWallet = userWalletsStore.getSyncOrNull(key = userWalletId)
+
+        if (userWallet != null && userWallet !is UserWallet.Cold) {
+            updateNotificationVisibility(id = userWalletId, value = SeedPhraseNotificationsStatus.NOT_NEEDED)
+            return
+        }
 
         val status = if (userWallet?.isImported == false) {
             Status.NOT_NEEDED
@@ -231,37 +243,16 @@ internal class DefaultWalletsRepository(
         }
     }
 
-    override suspend fun isNotificationsEnabled(userWalletId: UserWalletId, force: Boolean): Boolean =
-        withContext(dispatchers.io) {
-            if (force) {
-                return@withContext loadAndSaveNotificationsEnabled(userWalletId)
-            }
+    override fun notificationsEnabledStatus(userWalletId: UserWalletId): Flow<Boolean> = appPreferencesStore
+        .getObjectMap<Boolean>(PreferencesKeys.NOTIFICATIONS_ENABLED_STATES_KEY)
+        .map { it[userWalletId.stringValue] == true }
 
-            val localValue = appPreferencesStore.getObjectMap<Boolean>(PreferencesKeys.NOTIFICATIONS_ENABLED_STATES_KEY)
-                .map { it[userWalletId.stringValue] }
-                .firstOrNull()
-
-            localValue ?: loadAndSaveNotificationsEnabled(userWalletId)
-        }
+    override suspend fun isNotificationsEnabled(userWalletId: UserWalletId): Boolean =
+        appPreferencesStore.getObjectMap<Boolean>(PreferencesKeys.NOTIFICATIONS_ENABLED_STATES_KEY)
+            .map { it[userWalletId.stringValue] == true }
+            .firstOrNull() ?: false
 
     override suspend fun setNotificationsEnabled(userWalletId: UserWalletId, isEnabled: Boolean) {
-        withContext(dispatchers.io) {
-            tangemTechApi.setNotificationsEnabled(
-                walletId = userWalletId.stringValue,
-                body = WalletBody(notifyStatus = isEnabled),
-            ).getOrThrow()
-            setNotificationsEnabledLocally(userWalletId, isEnabled)
-        }
-    }
-
-    private suspend fun loadAndSaveNotificationsEnabled(userWalletId: UserWalletId): Boolean {
-        val walletResponse = tangemTechApi.getWalletById(walletId = userWalletId.stringValue).getOrThrow()
-        val isEnabled = walletResponse.notifyStatus
-        setNotificationsEnabledLocally(userWalletId, isEnabled)
-        return isEnabled
-    }
-
-    private suspend fun setNotificationsEnabledLocally(userWalletId: UserWalletId, isEnabled: Boolean) {
         appPreferencesStore.editData {
             it.setObjectMap(
                 key = PreferencesKeys.NOTIFICATIONS_ENABLED_STATES_KEY,
@@ -270,4 +261,51 @@ internal class DefaultWalletsRepository(
             )
         }
     }
+
+    override suspend fun setWalletName(walletId: String, walletName: String) = withContext(dispatchers.io) {
+        tangemTechApi.updateWallet(
+            walletId = walletId,
+            body = WalletBody(name = walletName),
+        ).getOrThrow()
+    }
+
+    override suspend fun getWalletInfo(walletId: String): UserWalletRemoteInfo = withContext(dispatchers.io) {
+        UserWalletRemoteInfoConverter.convert(
+            value = tangemTechApi.getWalletById(walletId).getOrThrow(),
+        )
+    }
+
+    override suspend fun getWalletsInfo(applicationId: String, updateCache: Boolean): List<UserWalletRemoteInfo> =
+        withContext(dispatchers.io) {
+            tangemTechApi.getWallets(applicationId)
+                .getOrThrow()
+                .map { walletInfo ->
+                    val userWallet = UserWalletRemoteInfoConverter.convert(
+                        value = walletInfo,
+                    )
+                    if (updateCache) {
+                        setNotificationsEnabled(
+                            userWalletId = userWallet.walletId,
+                            isEnabled = userWallet.isNotificationsEnabled,
+                        )
+                    }
+                    userWallet
+                }
+        }
+
+    override suspend fun associateWallets(applicationId: String, wallets: List<UserWallet>) =
+        withContext(dispatchers.io) {
+            val publicKeys = authProvider.getCardsPublicKeys()
+            val walletsBody = wallets.filterIsInstance<UserWallet.Cold>().map { userWallet ->
+                WalletIdBodyConverter.convert(
+                    userWallet = userWallet,
+                    publicKeys = publicKeys.filterKeys { userWallet.cardsInWallet.contains(it) },
+                )
+            }
+
+            tangemTechApi.associateApplicationIdWithWallets(
+                applicationId = applicationId,
+                body = walletsBody,
+            ).getOrThrow()
+        }
 }

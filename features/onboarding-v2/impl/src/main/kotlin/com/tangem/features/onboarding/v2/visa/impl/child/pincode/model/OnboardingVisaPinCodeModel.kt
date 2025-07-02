@@ -10,12 +10,13 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.utils.showErrorDialog
 import com.tangem.domain.visa.SetVisaPinCodeUseCase
-import com.tangem.domain.visa.error.VisaAuthorizationAPIError
+import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.model.VisaCardId
 import com.tangem.features.onboarding.v2.impl.R
 import com.tangem.features.onboarding.v2.visa.impl.child.pincode.OnboardingVisaPinCodeComponent
 import com.tangem.features.onboarding.v2.visa.impl.child.pincode.ui.state.OnboardingVisaPinCodeUM
 import com.tangem.features.onboarding.v2.visa.impl.child.welcome.model.analytics.OnboardingVisaAnalyticsEvent
+import com.tangem.features.onboarding.v2.visa.impl.common.unexpectedErrorAlertBS
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -93,9 +94,12 @@ internal class OnboardingVisaPinCodeModel @Inject constructor(
                 pinCode = pinCode,
                 visaCardId = visaCardId,
                 activationOrderId = params.activationOrderInfo.orderId,
-            ).onLeft {
-                loading(false)
-                uiMessageSender.showErrorDialog(VisaAuthorizationAPIError)
+            ).onLeft { error ->
+                if (error is VisaApiError && error.isUnknown()) {
+                    uiMessageSender.send(unexpectedErrorAlertBS)
+                } else {
+                    uiMessageSender.showErrorDialog(error)
+                }
                 return@launch
             }
 

@@ -1,7 +1,7 @@
 package com.tangem.domain.quotes.single
 
 import com.tangem.domain.core.flow.FlowProducer
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.tokens.model.Quote
 
 /**
