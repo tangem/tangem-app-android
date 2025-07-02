@@ -1,13 +1,22 @@
 package com.tangem.tap.common.analytics.handlers.amplitude
 
 import com.tangem.core.analytics.api.AnalyticsHandler
+import com.tangem.core.analytics.api.AnalyticsUserIdHandler
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
 
 class AmplitudeAnalyticsHandler(
     private val client: AmplitudeAnalyticsClient,
-) : AnalyticsHandler {
+) : AnalyticsHandler, AnalyticsUserIdHandler {
 
     override fun id(): String = ID
+
+    override fun setUserId(userId: String) {
+        client.setUserId(userId)
+    }
+
+    override fun clearUserId() {
+        client.clearUserId()
+    }
 
     override fun send(eventId: String, params: Map<String, String>) {
         client.logEvent(eventId, params)

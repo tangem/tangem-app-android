@@ -3,7 +3,7 @@ package com.tangem.domain.managetokens
 import arrow.core.Either
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
 import com.tangem.domain.managetokens.repository.ManageTokensRepository
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.wallets.models.UserWalletId
 
 class CheckHasLinkedTokensUseCase(
