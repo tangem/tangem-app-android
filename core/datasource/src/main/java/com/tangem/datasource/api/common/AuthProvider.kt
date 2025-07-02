@@ -11,4 +11,9 @@ interface AuthProvider {
     fun getCardPublicKey(): String
 
     fun getCardId(): String
+
+    /**
+     * Returns map where keys(cardId) associated with cardPublicKey
+     */
+    fun getCardsPublicKeys(): Map<String, String>
 }
