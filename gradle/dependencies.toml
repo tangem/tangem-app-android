@@ -107,8 +107,9 @@ junitAndroidExt = "1.1.5"
 mockk = "1.13.4"
 turbine = "1.2.0"
 truth = "1.1.3"
-kaspresso = "1.5.4"
-kaspresso-compose = "1.5.4"
+kaspresso = "1.6.0"
+kaspresso-compose = "1.6.0"
+kaspresso-allure = "1.6.0"
 compose-junit = "1.6.2"
 hamcrest = "2.2"
 orchestrator = "1.5.1"
@@ -209,6 +210,7 @@ test-mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 test-turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 test-kaspresso = { module = "com.kaspersky.android-components:kaspresso", version.ref = "kaspresso" }
 test-kaspresso-compose = { module = "com.kaspersky.android-components:kaspresso-compose-support", version.ref = "kaspresso-compose" }
+test-kaspresso-allure = { module = "com.kaspersky.android-components:kaspresso-allure-support", version.ref = "kaspresso-allure" }
 test-compose-junit = { module = "androidx.compose.ui:ui-test-junit4", version.ref = "compose-junit" }
 test-hamcrest = { module = "org.hamcrest:hamcrest", version.ref = "hamcrest" }
 test-hilt = { module = "com.google.dagger:hilt-android-testing", version.ref = "hilt" }
