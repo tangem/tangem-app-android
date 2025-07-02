@@ -18,7 +18,6 @@ import com.tangem.domain.walletconnect.model.WcSolanaMethodName
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
 import com.tangem.domain.walletconnect.repository.WcSessionsManager
 import com.tangem.domain.walletconnect.usecase.method.WcMethodUseCase
-import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.lib.crypto.UserWalletManager
 import jakarta.inject.Inject
 import timber.log.Timber
@@ -66,7 +65,7 @@ internal class WcSolanaNetwork(
     }
 
     internal class NamespaceConverter @Inject constructor(
-        private val excludedBlockchains: ExcludedBlockchains,
+        override val excludedBlockchains: ExcludedBlockchains,
     ) : WcNamespaceConverter {
 
         override val namespaceKey: NamespaceKey = NamespaceKey("solana")
@@ -78,10 +77,6 @@ internal class WcSolanaNetwork(
                 TESTNET_CHAIN_ID -> Blockchain.SolanaTestnet
                 else -> null
             }
-        }
-
-        override fun toNetwork(chainId: String, wallet: UserWallet): Network? {
-            return toNetwork(chainId, wallet, excludedBlockchains)
         }
 
         override fun toCAIP2(network: Network): CAIP2? {
