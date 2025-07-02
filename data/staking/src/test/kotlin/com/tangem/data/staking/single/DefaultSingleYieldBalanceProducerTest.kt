@@ -54,7 +54,7 @@ internal class DefaultSingleYieldBalanceProducerTest {
 
         val multiParams = MultiYieldBalanceProducer.Params(userWalletId = params.userWalletId)
         every { multiNetworkStatusSupplier(multiParams) } returns expected
-        coEvery { stakingIdFactory.create(params.userWalletId, params.currencyId, params.network) } returns stakingIds
+        coEvery { stakingIdFactory.create(params.userWalletId, params.currencyId, params.network) } returns tonId
 
         val actual = producer.produce()
 
@@ -74,7 +74,7 @@ internal class DefaultSingleYieldBalanceProducerTest {
 
         val multiParams = MultiYieldBalanceProducer.Params(userWalletId = params.userWalletId)
         every { multiNetworkStatusSupplier(multiParams) } returns expected
-        coEvery { stakingIdFactory.create(params.userWalletId, params.currencyId, params.network) } returns stakingIds
+        coEvery { stakingIdFactory.create(params.userWalletId, params.currencyId, params.network) } returns tonId
 
         val actual = producer.produceWithFallback()
 
@@ -109,7 +109,7 @@ internal class DefaultSingleYieldBalanceProducerTest {
 
         val multiParams = MultiYieldBalanceProducer.Params(userWalletId = params.userWalletId)
         every { multiNetworkStatusSupplier(multiParams) } returns expected
-        coEvery { stakingIdFactory.create(params.userWalletId, params.currencyId, params.network) } returns stakingIds
+        coEvery { stakingIdFactory.create(params.userWalletId, params.currencyId, params.network) } returns tonId
 
         val actual = producer.produceWithFallback()
 
@@ -168,7 +168,7 @@ internal class DefaultSingleYieldBalanceProducerTest {
         val fallbackStatus = YieldBalance.Error(integrationId = tonId.integrationId, address = null)
         Truth.assertThat(values1).isEqualTo(listOf(fallbackStatus))
 
-        coEvery { stakingIdFactory.create(params.userWalletId, params.currencyId, params.network) } returns stakingIds
+        coEvery { stakingIdFactory.create(params.userWalletId, params.currencyId, params.network) } returns tonId
 
         innerFlow.emit(value = true)
 
@@ -188,7 +188,7 @@ internal class DefaultSingleYieldBalanceProducerTest {
 
         val multiParams = MultiYieldBalanceProducer.Params(userWalletId = params.userWalletId)
         every { multiNetworkStatusSupplier(multiParams) } returns yieldBalancesFlow
-        coEvery { stakingIdFactory.create(params.userWalletId, params.currencyId, params.network) } returns stakingIds
+        coEvery { stakingIdFactory.create(params.userWalletId, params.currencyId, params.network) } returns tonId
 
         val actual = producer.produce()
 
@@ -203,14 +203,14 @@ internal class DefaultSingleYieldBalanceProducerTest {
     }
 
     @Test
-    fun `test if wallet manager facade returns empty set`() = runTest {
+    fun `test if wallet manager facade returns null`() = runTest {
         val balance = MockYieldBalanceWrapperDTOFactory.createWithBalance(tonId).toDomain()
 
         val yieldBalancesFlow = flowOf(setOf(balance))
 
         val multiParams = MultiYieldBalanceProducer.Params(userWalletId = params.userWalletId)
         every { multiNetworkStatusSupplier(multiParams) } returns yieldBalancesFlow
-        coEvery { stakingIdFactory.create(params.userWalletId, params.currencyId, params.network) } returns emptySet()
+        coEvery { stakingIdFactory.create(params.userWalletId, params.currencyId, params.network) } returns null
 
         val actual = producer.produce()
 
@@ -235,7 +235,5 @@ internal class DefaultSingleYieldBalanceProducerTest {
             integrationId = "solana-sol-native-multivalidator-staking",
             address = "0x1",
         )
-
-        val stakingIds = setOf(tonId)
     }
 }
