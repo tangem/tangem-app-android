@@ -2,11 +2,11 @@ package com.tangem.datasource.local.nft
 
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.nft.models.NFTAsset
 import com.tangem.domain.nft.models.NFTCollection
 import com.tangem.domain.nft.models.NFTCollections
 import com.tangem.domain.nft.models.NFTSalePrice
-import com.tangem.domain.tokens.model.Network
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
@@ -71,6 +71,16 @@ internal class DefaultNFTRuntimeStore(
         }
     }
 
+    override suspend fun clear() {
+        collectionsRuntimeStore.store(
+            NFTCollections(
+                network = network,
+                content = NFTCollections.Content.Collections(null, StatusSource.ONLY_CACHE),
+            ),
+        )
+        pricesRuntimeStore.store(emptyMap())
+    }
+
     private fun NFTCollections.getCollection(collectionId: NFTCollection.Identifier): NFTCollection? =
         (content as? NFTCollections.Content.Collections)
             ?.collections
@@ -105,7 +115,6 @@ internal class DefaultNFTRuntimeStore(
                         -> assets
                         is NFTCollection.Assets.Value -> assets.copy(
                             items = assets.items
-                                .filter { !it.name.isNullOrEmpty() }
                                 .sortedBy { it.name }
                                 .map { asset ->
                                     asset.mergeWithPrice(prices[asset.id] ?: NFTSalePrice.Empty(asset.id))
@@ -122,7 +131,7 @@ internal class DefaultNFTRuntimeStore(
                     )
                 }
                 ?.filter { it.count > 0 }
-                ?.sortedBy { it.name },
+                ?.sortedBy { it.name?.lowercase() },
             source = this.source,
         )
 

@@ -20,7 +20,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.markets.details.MarketsTokenDetailsComponent
 import com.tangem.features.markets.entry.BottomSheetState
 import com.tangem.features.markets.entry.impl.MarketsEntryChildFactory
-import com.tangem.features.markets.tokenlist.api.MarketsTokenListComponent
+import com.tangem.features.markets.tokenlist.MarketsTokenListComponent
 
 @Composable
 internal fun EntryBottomSheetContent(
@@ -46,7 +46,7 @@ internal fun EntryBottomSheetContent(
                     modifier = modifier,
                 )
             }
-            MarketsEntryChildFactory.Child.TokenList -> {
+            is MarketsEntryChildFactory.Child.TokenList -> {
                 (it.instance as MarketsTokenListComponent).BottomSheetContent(
                     bottomSheetState = bottomSheetState,
                     onHeaderSizeChange = onHeaderSizeChange,
@@ -84,7 +84,7 @@ private fun BackgroundColorEffects(
                     animationSpec = tween(durationMillis = 500),
                 )
             }
-            MarketsEntryChildFactory.Child.TokenList -> {
+            is MarketsEntryChildFactory.Child.TokenList -> {
                 backgroundColor.animateTo(
                     primary,
                     animationSpec = tween(durationMillis = 500),
@@ -119,7 +119,7 @@ private fun BackgroundColorEffects(
             is MarketsEntryChildFactory.Child.TokenDetails -> {
                 backgroundColor.snapTo(tertiary)
             }
-            MarketsEntryChildFactory.Child.TokenList -> {
+            is MarketsEntryChildFactory.Child.TokenList -> {
                 backgroundColor.snapTo(primary)
             }
         }

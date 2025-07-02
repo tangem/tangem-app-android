@@ -6,8 +6,10 @@ import arrow.core.right
 import com.domain.blockaid.models.dapp.CheckDAppResult
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
+import com.tangem.data.walletconnect.pair.AssociateNetworksDelegate
 import com.tangem.data.walletconnect.utils.WcSdkObserver
 import com.tangem.data.walletconnect.utils.WcSdkSessionConverter
+import com.tangem.data.walletconnect.utils.WC_TAG
 import com.tangem.datasource.local.walletconnect.WalletConnectStore
 import com.tangem.domain.walletconnect.model.WcSession
 import com.tangem.domain.walletconnect.model.WcSessionDTO
@@ -29,6 +31,7 @@ internal class DefaultWcSessionsManager(
     private val legacyStore: WalletConnectSessionsRepository,
     private val getWallets: GetWalletsUseCase,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val associateNetworks: AssociateNetworksDelegate,
     private val scope: CoroutineScope,
 ) : WcSessionsManager, WcSdkObserver {
 
@@ -76,10 +79,12 @@ internal class DefaultWcSessionsManager(
             ?: return@withContext null
         val sdkSession = WalletKit.getActiveSessionByTopic(topic) ?: return@withContext null
         val wallet = storedSession.wallet
+        val networks = associateNetworks.associate(wallet, sdkSession.namespaces)
         WcSession(
             wallet = wallet,
             sdkModel = WcSdkSessionConverter.convert(sdkSession),
             securityStatus = storedSession.securityStatus,
+            networks = networks,
         )
     }
 
@@ -114,7 +119,7 @@ internal class DefaultWcSessionsManager(
         return mustSaveInNewStore.isNotEmpty()
     }
 
-    private fun associate(
+    private suspend fun associate(
         inSdk: List<Wallet.Model.Session>,
         inStore: Set<WcSessionDTO>,
         wallets: List<UserWallet>,
@@ -122,7 +127,13 @@ internal class DefaultWcSessionsManager(
         val wcSessions = inStore.mapNotNull { session ->
             val wallet = wallets.find { it.walletId == session.walletId } ?: return@mapNotNull null
             val sdkSession = inSdk.find { it.topic == session.topic } ?: return@mapNotNull null
-            WcSession(wallet = wallet, sdkModel = WcSdkSessionConverter.convert(sdkSession), session.securityStatus)
+            val networks = associateNetworks.associate(wallet, sdkSession.namespaces)
+            WcSession(
+                wallet = wallet,
+                sdkModel = WcSdkSessionConverter.convert(sdkSession),
+                securityStatus = session.securityStatus,
+                networks = networks,
+            )
         }
         return wcSessions
     }
@@ -133,6 +144,7 @@ internal class DefaultWcSessionsManager(
         val haveSomeUnknown = unknownStoredSessions.isNotEmpty()
 
         if (haveSomeUnknown) {
+            Timber.tag(WC_TAG).i("removeUnknownSessions $unknownStoredSessions")
             store.removeSessions(unknownStoredSessions.toSet())
         }
         return haveSomeUnknown

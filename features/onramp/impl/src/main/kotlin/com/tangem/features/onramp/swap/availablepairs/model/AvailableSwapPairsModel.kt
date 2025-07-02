@@ -15,8 +15,8 @@ import com.tangem.domain.core.utils.getOrElse
 import com.tangem.domain.core.utils.lceContent
 import com.tangem.domain.core.utils.lceError
 import com.tangem.domain.core.utils.lceLoading
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.tokens.GetTokenListUseCase
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase

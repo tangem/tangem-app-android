@@ -2,7 +2,7 @@ package com.tangem.domain.wallets.usecase
 
 import arrow.core.raise.catch
 import com.tangem.blockchain.common.address.AddressType
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWalletId
 
