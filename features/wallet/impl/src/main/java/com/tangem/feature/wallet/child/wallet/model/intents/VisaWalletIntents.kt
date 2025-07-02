@@ -10,6 +10,7 @@ import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.visa.GetVisaCurrencyUseCase
 import com.tangem.domain.visa.GetVisaTxDetailsUseCase
 import com.tangem.domain.visa.model.VisaTxDetails
+import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.BalancesAndLimitsBottomSheetConverter
@@ -100,7 +101,9 @@ internal class VisaWalletIntentsImplementor @Inject constructor(
             val userWalletId = stateController.getSelectedWalletId()
             val userWallet = getUserWalletsUseCase.invokeSync()
                 .firstOrNull { it.walletId == userWalletId } ?: return@launch
-            val cardInfo = getCardInfoUseCase.invoke(userWallet.scanResponse).getOrNull() ?: return@launch
+            val cardInfo = getCardInfoUseCase.invoke(
+                userWallet.requireColdWallet().scanResponse,
+            ).getOrNull() ?: return@launch
 
             sendFeedbackEmailUseCase(
                 FeedbackEmailType.Visa.Dispute(

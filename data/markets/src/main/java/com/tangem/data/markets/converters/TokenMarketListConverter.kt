@@ -4,7 +4,7 @@ import com.tangem.datasource.api.markets.models.response.TokenMarketListResponse
 import com.tangem.domain.markets.TokenMarket
 import com.tangem.domain.markets.TokenMarketListWithMaxApy
 import com.tangem.domain.markets.TokenQuotesShort
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.isPositive
 

@@ -3,6 +3,7 @@ package com.tangem.data.walletconnect.di
 import android.app.Application
 import com.squareup.moshi.Moshi
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.data.walletconnect.DefaultWalletConnectRepository
 import com.tangem.data.walletconnect.initialize.DefaultWcInitializeUseCase
 import com.tangem.data.walletconnect.network.ethereum.WcEthNetwork
@@ -42,6 +43,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
+@Suppress("TooManyFunctions")
 internal object WalletConnectDataModule {
 
     @Provides
@@ -86,6 +88,7 @@ internal object WalletConnectDataModule {
         dispatchers: CoroutineDispatcherProvider,
         legacyStore: WalletConnectSessionsRepository,
         getWallets: GetWalletsUseCase,
+        associateNetworks: AssociateNetworksDelegate,
     ): DefaultWcSessionsManager {
         val scope = CoroutineScope(SupervisorJob() + dispatchers.io)
         return DefaultWcSessionsManager(
@@ -93,6 +96,7 @@ internal object WalletConnectDataModule {
             dispatchers = dispatchers,
             legacyStore = legacyStore,
             getWallets = getWallets,
+            associateNetworks = associateNetworks,
             scope = scope,
         )
     }
@@ -121,21 +125,23 @@ internal object WalletConnectDataModule {
     @Singleton
     fun wcEthNetwork(
         @SdkMoshi moshi: Moshi,
-        excludedBlockchains: ExcludedBlockchains,
         sessionsManager: WcSessionsManager,
         factories: WcEthNetwork.Factories,
+        namespaceConverter: WcEthNetwork.NamespaceConverter,
+        walletManagersFacade: WalletManagersFacade,
     ): WcEthNetwork = WcEthNetwork(
         moshi = moshi,
-        excludedBlockchains = excludedBlockchains,
+        namespaceConverter = namespaceConverter,
         sessionsManager = sessionsManager,
         factories = factories,
+        walletManagersFacade = walletManagersFacade,
     )
 
     @Provides
     @Singleton
     fun wcSolanaNetwork(
         @SdkMoshi moshi: Moshi,
-        excludedBlockchains: ExcludedBlockchains,
+        namespaceConverter: WcSolanaNetwork.NamespaceConverter,
         sessionsManager: WcSessionsManager,
         factories: WcSolanaNetwork.Factories,
         walletManager: UserWalletManager,
@@ -143,28 +149,28 @@ internal object WalletConnectDataModule {
         moshi = moshi,
         sessionsManager = sessionsManager,
         factories = factories,
-        excludedBlockchains = excludedBlockchains,
+        namespaceConverter = namespaceConverter,
         walletManager = walletManager,
     )
 
     @Provides
     @Singleton
     fun caipNamespaceDelegate(
-        diHelperBox: DiHelperBox,
+        namespaceConverters: Set<@JvmSuppressWildcards WcNamespaceConverter>,
         walletManagersFacade: WalletManagersFacade,
     ): CaipNamespaceDelegate = CaipNamespaceDelegate(
-        namespaceConverters = diHelperBox.converters,
+        namespaceConverters = namespaceConverters,
         walletManagersFacade = walletManagersFacade,
     )
 
     @Provides
     @Singleton
     fun associateNetworksDelegate(
-        diHelperBox: DiHelperBox,
+        namespaceConverters: Set<@JvmSuppressWildcards WcNamespaceConverter>,
         getWallets: GetWalletsUseCase,
         currenciesRepository: CurrenciesRepository,
     ): AssociateNetworksDelegate = AssociateNetworksDelegate(
-        namespaceConverters = diHelperBox.converters,
+        namespaceConverters = namespaceConverters,
         getWallets = getWallets,
         currenciesRepository = currenciesRepository,
     )
@@ -176,10 +182,16 @@ internal object WalletConnectDataModule {
             ethNetwork,
             solanaNetwork,
         ),
-        converters = setOf(
-            ethNetwork,
-            solanaNetwork,
-        ),
+    )
+
+    @Provides
+    @Singleton
+    fun namespaceConverters(
+        ethNamespaceConverter: WcEthNetwork.NamespaceConverter,
+        solanaNamespaceConverter: WcSolanaNetwork.NamespaceConverter,
+    ): Set<@JvmSuppressWildcards WcNamespaceConverter> = setOf(
+        ethNamespaceConverter,
+        solanaNamespaceConverter,
     )
 
     @Provides
@@ -190,12 +202,28 @@ internal object WalletConnectDataModule {
 
     @Provides
     @Singleton
-    fun providesWcDisconnectUseCase(sessionsManager: WcSessionsManager): WcDisconnectUseCase {
-        return WcDisconnectUseCase(sessionsManager)
+    fun wcEthNetworkNamespaceConverter(excludedBlockchains: ExcludedBlockchains): WcEthNetwork.NamespaceConverter {
+        return WcEthNetwork.NamespaceConverter(excludedBlockchains)
+    }
+
+    @Provides
+    @Singleton
+    fun wcSolanaNetworkNamespaceConverter(
+        excludedBlockchains: ExcludedBlockchains,
+    ): WcSolanaNetwork.NamespaceConverter {
+        return WcSolanaNetwork.NamespaceConverter(excludedBlockchains)
+    }
+
+    @Provides
+    @Singleton
+    fun providesWcDisconnectUseCase(
+        sessionsManager: WcSessionsManager,
+        analytics: AnalyticsEventHandler,
+    ): WcDisconnectUseCase {
+        return WcDisconnectUseCase(sessionsManager, analytics)
     }
 
     internal class DiHelperBox(
-        val converters: Set<WcNamespaceConverter>,
         val handlers: Set<WcRequestToUseCaseConverter>,
     )
 }

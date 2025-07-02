@@ -4,6 +4,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.rows.model.BlockchainRowUM
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.markets.impl.R
@@ -25,7 +26,7 @@ internal class PreviewAddToPortfolioBSContentProvider : PreviewParameterProvider
     val userWallet = UserWalletItemUM(
         id = UserWalletId("1"),
         name = stringReference("Wallet 1"),
-        information = stringReference("3 cards"),
+        information = UserWalletItemUM.Information.Loaded(TextReference.Str("3 cards")),
         balance = UserWalletItemUM.Balance.Loading,
         isEnabled = true,
         endIcon = UserWalletItemUM.EndIcon.Arrow,
