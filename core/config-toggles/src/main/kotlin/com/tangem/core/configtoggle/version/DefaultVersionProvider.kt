@@ -28,9 +28,9 @@ internal class DefaultVersionProvider @Inject constructor(
                     context.packageName,
                     PackageManager.PackageInfoFlags.of(0),
                 )
-                .versionName
+                .versionName!!
         } else {
-            context.packageManager.getPackageInfo(context.packageName, 0).versionName
+            context.packageManager.getPackageInfo(context.packageName, 0).versionName!!
         }
     }
 
