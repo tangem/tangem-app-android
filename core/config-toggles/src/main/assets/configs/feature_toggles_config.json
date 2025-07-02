@@ -17,23 +17,23 @@
     },
     {
         "name": "NFT_ENABLED",
-        "version": "undefined"
+        "version": "5.25.0"
     },
     {
         "name": "NFT_EVM_ENABLED",
-        "version": "undefined"
+        "version": "5.25.0"
     },
     {
         "name": "NFT_SOLANA_ENABLED",
+        "version": "5.25.0"
+    },
+    {
+        "name": "NFT_MEDIA_CONTENT_ENABLED",
         "version": "undefined"
     },
     {
         "name": "STAKING_CARDANO_ENABLED",
         "version": "undefined"
-    },
-    {
-        "name": "TX_HISTORY_REFACTORING_ENABLED",
-        "version": "5.22.0"
     },
     {
         "name": "NEW_ARTWORK_LOADING",
@@ -44,23 +44,23 @@
         "version": "5.24.0"
     },
     {
-        "name": "SEND_V2_ENABLED",
-        "version": "5.23.0"
-    },
-    {
         "name": "WALLET_CONNECT_REDESIGN_ENABLED",
         "version": "undefined"
     },
     {
-        "name": "NETWORKS_LOADING_REFACTORING_ENABLED",
-        "version": "5.23.0"
-    },
-    {
-        "name": "QUOTES_LOADING_REFACTORING_ENABLED",
-        "version": "5.24.0"
-    },
-    {
         "name": "STAKING_LOADING_REFACTORING_ENABLED",
         "version": "5.25.0"
+    },
+    {
+        "name": "DEEPLINK_NAVIGATION_ENABLED",
+        "version": "5.25.0"
+    },
+    {
+        "name": "PUSH_NOTIFICATIONS_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "USEDESK_ENABLED",
+        "version": "undefined"
     }
 ]

@@ -2,7 +2,6 @@ package com.tangem.common.ui.userwallet.converter
 
 import com.tangem.common.ui.R
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
-import com.tangem.core.ui.components.artwork.ArtworkUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -15,6 +14,8 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.tokens.model.TotalFiatBalance
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.models.isLocked
+import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.utils.converter.Converter
 
 /**
@@ -36,6 +37,8 @@ class UserWalletItemUMConverter(
     private val artwork: ArtworkModel? = null,
 ) : Converter<UserWallet, UserWalletItemUM> {
 
+    private val artworkUMConverter = ArtworkUMConverter()
+
     override fun convert(value: UserWallet): UserWalletItemUM {
         return with(value) {
             UserWalletItemUM(
@@ -47,19 +50,21 @@ class UserWalletItemUMConverter(
                 endIcon = endIcon,
                 onClick = { onClick(value.walletId) },
                 imageState = artwork?.let {
-                    UserWalletItemUM.ImageState.Image(ArtworkUM(it.verifiedArtwork, it.defaultUrl))
+                    UserWalletItemUM.ImageState.Image(artworkUMConverter.convert(it))
                 } ?: UserWalletItemUM.ImageState.Loading,
             )
         }
     }
 
-    private fun getInfo(userWallet: UserWallet): TextReference {
+    private fun getInfo(userWallet: UserWallet): UserWalletItemUM.Information.Loaded {
+        userWallet.requireColdWallet()
         val cardCount = userWallet.getCardsCount() ?: 1
-        return TextReference.PluralRes(
+        val text = TextReference.PluralRes(
             id = R.plurals.card_label_card_count,
             count = cardCount,
             formatArgs = wrappedList(cardCount),
         )
+        return UserWalletItemUM.Information.Loaded(text)
     }
 
     private fun getBalanceInfo(userWallet: UserWallet): UserWalletItemUM.Balance {
