@@ -4,17 +4,15 @@ import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.common.tokens.UserTokensBackwardCompatibility
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
-import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.preferences.PreferencesKeys
-import com.tangem.datasource.local.preferences.utils.storeObject
+import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 
-class UserTokensSaver constructor(
+class UserTokensSaver(
     private val tangemTechApi: TangemTechApi,
-    private val appPreferencesStore: AppPreferencesStore,
+    private val userTokensResponseStore: UserTokensResponseStore,
     private val dispatchers: CoroutineDispatcherProvider,
     private val userTokensResponseAddressesEnricher: UserTokensResponseAddressesEnricher,
 ) {
@@ -31,10 +29,8 @@ class UserTokensSaver constructor(
             } else {
                 compatibleUserTokensResponse
             }
-            appPreferencesStore.storeObject(
-                key = PreferencesKeys.getUserTokensKey(userWalletId = userWalletId.stringValue),
-                value = enrichedUserTokensResponse,
-            )
+
+            userTokensResponseStore.store(userWalletId = userWalletId, response = enrichedUserTokensResponse)
         }
 
     suspend fun storeAndPush(userWalletId: UserWalletId, response: UserTokensResponse) {

@@ -58,10 +58,11 @@ class AmountStateConverter(
         return AmountState.Data(
             title = value.title,
             availableBalance = resourceReference(R.string.common_crypto_fiat_format, wrappedList(crypto, fiat)),
+            tokenName = stringReference(status.currency.name),
             tokenIconState = iconStateConverter.convert(status),
             amountTextField = amountFieldConverter.convert(value.value),
             isPrimaryButtonEnabled = false,
-            appCurrencyCode = appCurrency.code,
+            appCurrency = appCurrency,
             segmentedButtonConfig = persistentListOf(
                 AmountSegmentedButtonsConfig(
                     title = stringReference(status.currency.symbol),
@@ -80,6 +81,7 @@ class AmountStateConverter(
             ),
             isSegmentedButtonsEnabled = !noFeeRate,
             selectedButton = 0,
+            isRedesignEnabled = false,
         )
     }
 }
@@ -99,6 +101,7 @@ class AmountStateConverterV2(
     private val cryptoCurrencyStatus: CryptoCurrencyStatus,
     private val maxEnterAmount: EnterAmountBoundary,
     private val iconStateConverter: CryptoCurrencyToIconStateConverter,
+    private val isRedesignEnabled: Boolean,
 ) : Converter<AmountParameters, AmountState> {
 
     private val amountFieldConverter by lazy(LazyThreadSafetyMode.NONE) {
@@ -116,11 +119,16 @@ class AmountStateConverterV2(
 
         return AmountState.Data(
             title = value.title,
-            availableBalance = resourceReference(R.string.common_crypto_fiat_format, wrappedList(crypto, fiat)),
+            availableBalance = if (isRedesignEnabled) {
+                resourceReference(R.string.common_balance, wrappedList(crypto))
+            } else {
+                resourceReference(R.string.common_crypto_fiat_format, wrappedList(crypto, fiat))
+            },
+            tokenName = stringReference(cryptoCurrencyStatus.currency.name),
             tokenIconState = iconStateConverter.convert(cryptoCurrencyStatus),
             amountTextField = amountFieldConverter.convert(value.value),
             isPrimaryButtonEnabled = false,
-            appCurrencyCode = appCurrency.code,
+            appCurrency = appCurrency,
             segmentedButtonConfig = persistentListOf(
                 AmountSegmentedButtonsConfig(
                     title = stringReference(cryptoCurrencyStatus.currency.symbol),
@@ -139,6 +147,7 @@ class AmountStateConverterV2(
             ),
             isSegmentedButtonsEnabled = !noFeeRate,
             selectedButton = 0,
+            isRedesignEnabled = isRedesignEnabled,
         )
     }
 }

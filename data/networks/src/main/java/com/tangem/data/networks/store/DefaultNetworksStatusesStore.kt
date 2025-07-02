@@ -80,7 +80,7 @@ internal class DefaultNetworksStatusesStore(
         ifNotFound: (Network.ID) -> SimpleNetworkStatus?,
     ) {
         if (networks.isEmpty()) {
-            Timber.d("Nothing to update: networks is empty")
+            Timber.d("Nothing to update: networks are empty")
             return
         }
 
