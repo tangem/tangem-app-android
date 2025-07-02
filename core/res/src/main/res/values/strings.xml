@@ -413,6 +413,10 @@
   <string name="home_button_scan">Scan Tangem</string>
   <string name="hot_crypto_add_token_subtitle">to %s</string>
   <string name="hot_crypto_token_network">On %s network</string>
+  <string name="hw_activation_need_backup">Backup Now</string>
+  <string name="hw_activation_need_description">To complete setup, back up your wallet and secure app access with a Access Code.</string>
+  <string name="hw_activation_need_finish">Finish Now</string>
+  <string name="hw_activation_need_title">Finish Wallet Activation</string>
   <string name="hw_backup_icloud_description">Recover an existing wallet stored in your iCloud backup</string>
   <string name="hw_backup_icloud_title">iCloud backup</string>
   <string name="hw_backup_need_action">Go to backup</string>
@@ -1424,6 +1428,7 @@
   <string name="warning_token_trustline_button_title">Enable Trustline</string>
   <string name="warning_token_trustline_subtitle">A Trustline must be enabled to receive this token. The network requires a %1$s %2$s reserve.</string>
   <string name="warning_token_trustline_title">Trustline Required</string>
+  <string name="wc_alert_audit_malicious_domain">Malicious domain</string>
   <string name="wc_alert_audit_unknown_domain">Unknown domain</string>
   <string name="wc_alert_connect_anyway">Connect anyway</string>
   <string name="wc_alert_connection_timeout_description">Timeout error. Please, try again later.</string>
