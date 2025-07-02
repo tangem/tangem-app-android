@@ -7,6 +7,7 @@ plugins {
 dependencies {
 
     /* Domain */
+    implementation(projects.domain.models)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.blockaid.models)

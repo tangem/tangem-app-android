@@ -34,6 +34,12 @@ dependencies {
     implementation(projects.domain.appTheme.models)
     implementation(projects.domain.card)
     implementation(projects.domain.feedback)
+    implementation(projects.domain.markets.models)
+    implementation(projects.domain.markets)
+    implementation(projects.domain.manageTokens.models)
+    implementation(projects.domain.manageTokens)
+    implementation(projects.domain.wallets.models)
+    implementation(projects.domain.wallets)
 
     /** Other libraries */
     implementation(deps.arrow.core)
@@ -46,9 +52,12 @@ dependencies {
     implementation(projects.core.ui)
     implementation(projects.core.utils)
     implementation(projects.core.navigation)
+    implementation(projects.core.deepLinks)
+    implementation(projects.core.pagination)
 
     /** Feature Apis */
     implementation(projects.features.tester.api)
+    implementation(projects.features.pushNotifications.api)
 
     /* SDK */
     implementation(tangemDeps.blockchain)
