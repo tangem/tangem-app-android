@@ -50,8 +50,10 @@ internal class EmailMessageBodyResolver(
         addCardInfo(cardInfo)
         addDelimiter()
 
-        if (cardInfo.userWalletId != null) {
-            val blockchainInfoList = feedbackRepository.getBlockchainInfoList(cardInfo.userWalletId)
+        val userWalletId = cardInfo.userWalletId
+
+        if (userWalletId != null) {
+            val blockchainInfoList = feedbackRepository.getBlockchainInfoList(userWalletId)
 
             if (blockchainInfoList.isNotEmpty()) {
                 addBlockchainInfoList(blockchainInfoList = blockchainInfoList)
