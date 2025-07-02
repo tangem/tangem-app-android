@@ -8,6 +8,7 @@ import com.tangem.domain.staking.model.stakekit.action.StakingActionType
 import com.tangem.features.staking.impl.presentation.state.BalanceState
 import com.tangem.lib.crypto.BlockchainUtils.isBSC
 import com.tangem.lib.crypto.BlockchainUtils.isCardano
+import com.tangem.lib.crypto.BlockchainUtils.isCosmos
 import com.tangem.lib.crypto.BlockchainUtils.isSolana
 import com.tangem.lib.crypto.BlockchainUtils.isTron
 import kotlinx.collections.immutable.ImmutableList
@@ -67,5 +68,5 @@ internal fun isCompositePendingActions(networkId: String, pendingActions: Immuta
 }
 
 private fun isStubUnstakeAction(networkId: String): Boolean {
-    return isBSC(networkId) || isCardano(networkId)
+    return isBSC(networkId) || isCardano(networkId) || isCosmos(networkId)
 }
