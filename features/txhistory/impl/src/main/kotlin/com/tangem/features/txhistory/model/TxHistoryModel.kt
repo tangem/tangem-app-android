@@ -8,7 +8,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.common.util.cardTypesResolver
-import com.tangem.domain.tokens.GetCurrencyStatusUpdatesUseCase
+import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.txhistory.models.TxHistoryStateError
@@ -40,7 +40,7 @@ internal class TxHistoryModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val txHistoryItemsCountUseCase: GetTxHistoryItemsCountUseCase,
-    private val getCurrencyStatusUpdatesUseCase: GetCurrencyStatusUpdatesUseCase,
+    private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val urlOpener: UrlOpener,
@@ -187,10 +187,11 @@ internal class TxHistoryModel @Inject constructor(
         val userWallet: UserWallet = requireNotNull(getUserWalletUseCase(params.userWalletId).getOrNull()) {
             "User wallet not found"
         }
-        getCurrencyStatusUpdatesUseCase(
+        getSingleCryptoCurrencyStatusUseCase.invokeMultiWallet(
             userWalletId = params.userWalletId,
             currencyId = params.currency.id,
-            isSingleWalletWithTokens = userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
+            isSingleWalletWithTokens = userWallet is UserWallet.Cold &&
+                userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
         )
             .distinctUntilChanged()
             .onEach(::handlePendingTxsChanges)

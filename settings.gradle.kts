@@ -134,6 +134,7 @@ dependencyResolutionManagement {
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 include(":app")
+include(":plugins:detekt-rules")
 
 // region Core modules
 include(":core:analytics")
@@ -194,8 +195,6 @@ include(":features:wallet:impl")
 include(":features:tokendetails:api")
 include(":features:tokendetails:impl")
 
-include(":features:send:api")
-include(":features:send:impl")
 include(":features:send-v2:api")
 include(":features:send-v2:impl")
 
@@ -213,6 +212,9 @@ include(":features:details:impl")
 
 include(":features:disclaimer:api")
 include(":features:disclaimer:impl")
+
+include(":features:usedesk:api")
+include(":features:usedesk:impl")
 
 include(":features:push-notifications:api")
 include(":features:push-notifications:impl")
@@ -240,6 +242,9 @@ include(":features:nft:impl")
 
 include(":features:walletconnect:api")
 include(":features:walletconnect:impl")
+
+include(":features:fee-selector:api")
+include(":features:fee-selector:impl")
 // endregion Feature modules
 
 // region Domain modules
@@ -270,6 +275,7 @@ include(":domain:visa")
 include(":domain:visa:models")
 include(":domain:onboarding")
 include(":domain:feedback")
+include(":domain:feedback:models")
 include(":domain:qr-scanning")
 include(":domain:qr-scanning:models")
 include(":domain:staking")
@@ -292,6 +298,7 @@ include(":domain:blockaid")
 include(":domain:blockaid:models")
 include(":domain:notifications")
 include(":domain:notifications:models")
+include(":domain:notifications:toggles")
 // endregion Domain modules
 
 // region Data modules

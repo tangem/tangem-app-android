@@ -1,7 +1,7 @@
 package com.tangem.domain.networks.multi
 
 import com.tangem.domain.core.flow.FlowCachingSupplier
-import com.tangem.domain.tokens.model.NetworkStatus
+import com.tangem.domain.models.network.NetworkStatus
 
 /**
  * Supplier of all networks statuses for selected wallet [MultiNetworkStatusProducer.Params]
