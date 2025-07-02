@@ -43,6 +43,7 @@ internal object WalletConnectInteractorModule {
         currenciesRepository: CurrenciesRepository,
         walletManagersFacade: WalletManagersFacade,
         userWalletsListManager: UserWalletsListManager,
+        walletConnectFeatureToggles: WalletConnectFeatureToggles,
         coroutineDispatcherProvider: CoroutineDispatcherProvider,
     ): WalletConnectInteractor {
         return WalletConnectInteractor(
@@ -55,6 +56,7 @@ internal object WalletConnectInteractorModule {
             walletManagersFacade = walletManagersFacade,
             userWalletsListManager = userWalletsListManager,
             dispatchers = coroutineDispatcherProvider,
+            walletConnectFeatureToggles = walletConnectFeatureToggles,
         )
     }
 }
