@@ -518,40 +518,56 @@ internal class DefaultCurrenciesRepository(
         currencyRawId: CryptoCurrency.RawID,
     ): Flow<Map<UserWallet, List<CryptoCurrency>>> {
         return userWalletsStore.userWallets.flatMapLatest { userWallets ->
+
             userWallets.filter { it.isMultiCurrency }
                 .forEach { fetchTokensIfCacheExpired(userWallet = it, refresh = false) }
 
             val userWalletsWithCurrencies = userWallets
                 .filterNot(UserWallet::isLocked)
                 .map { userWallet ->
-                    if (userWallet.isMultiCurrency) {
-                        getSavedUserTokensResponse(userWallet.walletId).map { storedTokens ->
-                            val filterResponse = storedTokens.tokens.filter {
-                                getL2CompatibilityTokenComparison(it, currencyRawId.value)
-                            }
-
-                            responseCryptoCurrenciesFactory.createCurrencies(
-                                response = storedTokens.copy(tokens = filterResponse),
-                                scanResponse = userWallet.requireColdWallet().scanResponse,
-                            )
-                        }
-                    } else {
-                        flow {
-                            val currency = getSingleCurrencyWalletPrimaryCurrency(userWalletId = userWallet.walletId)
-
-                            val currencies = if (currency.id.rawCurrencyId == currencyRawId) {
-                                listOf(currency)
-                            } else {
-                                emptyList()
-                            }
-
-                            emit(currencies)
-                        }
-                    }.map { userWallet to it }
+                    getCurrenciesForWallet(userWallet, currencyRawId).map { userWallet to it }
                 }
 
             combine(userWalletsWithCurrencies) { it.toMap() }
                 .onEmpty { emit(value = emptyMap()) }
+        }
+    }
+
+    private suspend fun getCurrenciesForWallet(
+        userWallet: UserWallet,
+        currencyRawId: CryptoCurrency.RawID,
+    ): Flow<List<CryptoCurrency>> {
+        userWallet.requireColdWallet() // TODO [REDACTED_TASK_KEY]
+        return when {
+            userWallet.isMultiCurrency -> {
+                getSavedUserTokensResponse(userWallet.walletId).map { storedTokens ->
+                    val filterResponse = storedTokens.tokens.filter {
+                        getL2CompatibilityTokenComparison(it, currencyRawId.value)
+                    }
+
+                    responseCryptoCurrenciesFactory.createCurrencies(
+                        response = storedTokens.copy(tokens = filterResponse),
+                        scanResponse = userWallet.requireColdWallet().scanResponse,
+                    )
+                }
+            }
+            else -> {
+                val currencies = if (userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()) {
+                    getSingleCurrencyWalletWithCardCurrencies(userWallet.walletId)
+                } else {
+                    val currency =
+                        getSingleCurrencyWalletPrimaryCurrency(userWalletId = userWallet.walletId)
+
+                    if (currency.id.rawCurrencyId == currencyRawId) {
+                        listOf(currency)
+                    } else {
+                        emptyList()
+                    }
+                }
+                flow {
+                    emit(currencies)
+                }
+            }
         }
     }
 
