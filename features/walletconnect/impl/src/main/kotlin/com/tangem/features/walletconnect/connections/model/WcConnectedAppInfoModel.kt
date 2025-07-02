@@ -17,6 +17,7 @@ import com.tangem.features.walletconnect.connections.entity.VerifiedDAppState
 import com.tangem.features.walletconnect.connections.entity.WcConnectedAppInfoUM
 import com.tangem.features.walletconnect.connections.entity.WcNetworkInfoItem
 import com.tangem.features.walletconnect.connections.entity.WcPrimaryButtonConfig
+import com.tangem.features.walletconnect.connections.entity.WcAppInfoSecurityNotification
 import com.tangem.features.walletconnect.connections.model.transformers.WcAppSubtitleConverter
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.toImmutableList
@@ -75,10 +76,19 @@ internal class WcConnectedAppInfoModel @Inject constructor(
                             enabled = true,
                             onClick = { disconnect(session) },
                         ),
+                        notification = extractNotificationInfo(session),
                         onDismiss = ::dismiss,
                     )
                 }
             }
+        }
+    }
+
+    private fun extractNotificationInfo(session: WcSession): WcAppInfoSecurityNotification? {
+        return when (session.securityStatus) {
+            CheckDAppResult.SAFE -> null
+            CheckDAppResult.UNSAFE -> WcAppInfoSecurityNotification.SecurityRisk
+            CheckDAppResult.FAILED_TO_VERIFY -> WcAppInfoSecurityNotification.UnknownDomain
         }
     }
 
