@@ -13,12 +13,18 @@ fun getFiatReference(value: BigDecimal?, rate: BigDecimal?, appCurrency: AppCurr
     return stringReference(formattedFiat)
 }
 
-fun getFiatString(value: BigDecimal?, rate: BigDecimal?, appCurrency: AppCurrency): String {
+fun getFiatString(
+    value: BigDecimal?,
+    rate: BigDecimal?,
+    appCurrency: AppCurrency,
+    approximate: Boolean = false,
+): String {
     if (value == null || rate == null) return EMPTY_BALANCE_SIGN
     val feeValue = value.multiply(rate)
     return BigDecimalFormatter.formatFiatAmount(
         fiatAmount = feeValue,
         fiatCurrencyCode = appCurrency.code,
         fiatCurrencySymbol = appCurrency.symbol,
+        withApproximateSign = approximate,
     )
 }
