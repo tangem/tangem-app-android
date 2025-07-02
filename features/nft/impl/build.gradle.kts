@@ -28,6 +28,7 @@ dependencies {
 
     /** Domain modules */
     implementation(projects.domain.appCurrency.models)
+    implementation(projects.domain.appCurrency)
     implementation(projects.domain.models)
     implementation(projects.domain.nft)
     implementation(projects.domain.nft.models)
@@ -40,6 +41,7 @@ dependencies {
 
     /** Tangem libraries */
     implementation(projects.libs.tangemSdkApi)
+    implementation(projects.libs.crypto)
     implementation(tangemDeps.card.core)
     implementation(tangemDeps.card.android) {
         exclude(module = "joda-time")

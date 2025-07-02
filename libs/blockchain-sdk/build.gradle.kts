@@ -22,6 +22,8 @@ dependencies {
     implementation(projects.core.analytics)
     // endregion
 
+    api(projects.domain.models)
+
     // region AndroidX libraries
     implementation(deps.androidx.datastore)
     // endregion
