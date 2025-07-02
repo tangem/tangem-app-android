@@ -4,14 +4,13 @@ import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.common.ui.R
 import com.tangem.common.ui.amountScreen.models.AmountFieldModel
 import com.tangem.common.ui.amountScreen.utils.getFiatString
-import com.tangem.common.ui.notifications.NotificationUM.Warning
 import com.tangem.core.ui.extensions.networkIconResId
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.uncapped
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
@@ -354,9 +353,7 @@ object NotificationsFactory {
                 error = validationError,
                 onReduceClick = onReduceClick,
             )
-            is BlockchainSdkError.XRP -> addXRPTransactionValidationError(
-                error = validationError,
-            )
+            is BlockchainSdkError.DestinationTagRequired -> addRequireDestinationTagErrorNotification()
             null -> minAdaValue?.let {
                 add(
                     NotificationUM.Cardano.MinAdaValueCharged(
@@ -437,12 +434,6 @@ object NotificationsFactory {
         }
     }
 
-    private fun MutableList<NotificationUM>.addXRPTransactionValidationError(error: BlockchainSdkError.XRP) {
-        when (error) {
-            is BlockchainSdkError.XRP.DestinationMemoRequired -> addRequireDestinationFlagErrorNotification()
-        }
-    }
-
     fun MutableList<NotificationUM>.addRentExemptionNotification(rentWarning: CryptoCurrencyWarning.Rent?) {
         if (rentWarning == null) return
         add(NotificationUM.Solana.RentInfo(rentWarning))
@@ -460,7 +451,7 @@ object NotificationsFactory {
         onCloseClick: (Class<out NotificationUM>) -> Unit,
     ) {
         val balance = cryptoCurrencyStatus.value.amount ?: BigDecimal.ZERO
-        val isTezos = isTezos(cryptoCurrencyStatus.currency.network.id.value)
+        val isTezos = isTezos(cryptoCurrencyStatus.currency.network.rawId)
         val threshold = getTezosThreshold()
         val isTotalBalance = enteredAmountValue >= balance && balance > threshold
         if (!ignoreAmountReduce && isTotalBalance && isTezos) {
@@ -513,7 +504,7 @@ object NotificationsFactory {
         }
     }
 
-    private fun MutableList<NotificationUM>.addRequireDestinationFlagErrorNotification() {
-        add(NotificationUM.Error.DestinationMemoRequired)
+    private fun MutableList<NotificationUM>.addRequireDestinationTagErrorNotification() {
+        add(NotificationUM.Error.DestinationTagRequired)
     }
 }

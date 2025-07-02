@@ -85,11 +85,13 @@ internal class DefaultNFTSendComponent @AssistedInject constructor(
         ) { stack ->
             componentScope.launch {
                 when (val activeComponent = stack.active.instance) {
-                    is NFTSendConfirmComponent -> if (currentRouteFlow.value.isEditMode) {
+                    is NFTSendConfirmComponent -> {
                         analyticsEventHandler.send(
                             CommonSendAnalyticEvents.ConfirmationScreenOpened(categoryName = analyticsCategoryName),
                         )
-                        activeComponent.updateState(model.uiState.value)
+                        if (currentRouteFlow.value.isEditMode) {
+                            activeComponent.updateState(model.uiState.value)
+                        }
                     }
                     is SendDestinationComponent -> {
                         analyticsEventHandler.send(
