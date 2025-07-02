@@ -1,12 +1,14 @@
 package com.tangem.domain.tokens.model
 
+import com.tangem.domain.models.quote.QuoteStatus
+
 /**
  * Represents a domain model for a token (as part of a general list of tokens).
  *
  * @property id             The unique identifier of the token.
  * @property networks       List of networks associated with the token.
  * @property isAvailable    Indicates whether this token is supported in Tangem app.
- * @property quote          Equivalent prices for the token.
+ * @property quoteStatus    Equivalent prices for the token.
  * @property name           The name of the token.
  * @property symbol         The brief name of the token, e.g., "BTC".
  * @property iconUrl        URL of the token's icon.
@@ -15,7 +17,7 @@ data class Token(
     val id: String,
     val networks: List<Network>,
     val isAvailable: Boolean,
-    val quote: Quote?,
+    val quoteStatus: QuoteStatus?,
     val name: String,
     val symbol: String,
     val iconUrl: String,
