@@ -112,7 +112,7 @@ internal class NFTSendModel @Inject constructor(
         val destinationUM = uiState.value.destinationUM as? DestinationUM.Content ?: error("Invalid destination")
         val ownerAddress = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
             ?: error("Invalid owner address")
-        val enteredDestinationAddress = destinationUM.addressTextField.value
+        val enteredDestinationAddress = destinationUM.addressTextField.actualAddress
         val enteredMemo = destinationUM.memoTextField?.value
         val nftAsset = NFTSdkAssetConverter.convertBack(params.nftAsset).second
 
