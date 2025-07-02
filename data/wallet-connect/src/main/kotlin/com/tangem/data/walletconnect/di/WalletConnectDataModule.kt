@@ -111,9 +111,10 @@ internal object WalletConnectDataModule {
 
     @Provides
     @Singleton
-    fun defaultWcRequestService(diHelperBox: DiHelperBox): DefaultWcRequestService {
+    fun defaultWcRequestService(diHelperBox: DiHelperBox, respondService: WcRespondService): DefaultWcRequestService {
         return DefaultWcRequestService(
             requestConverters = diHelperBox.handlers,
+            respondService = respondService,
         )
     }
 
