@@ -3,13 +3,14 @@ package com.tangem.datasource.local.nft
 import androidx.datastore.core.DataStore
 import com.tangem.blockchain.nft.models.NFTAsset
 import com.tangem.blockchain.nft.models.NFTCollection
+import com.tangem.datasource.local.nft.custom.NFTPriceId
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 
 internal class DefaultNFTPersistenceStore(
     private val collectionsPersistenceStore: DataStore<List<NFTCollection>>,
-    private val pricesPersistenceStore: DataStore<Map<NFTAsset.Identifier, NFTAsset.SalePrice>>,
+    private val pricesPersistenceStore: DataStore<List<NFTPriceId>>,
 ) : NFTPersistenceStore {
 
     override fun getCollections(): Flow<List<NFTCollection>?> = collectionsPersistenceStore.data
@@ -27,11 +28,12 @@ internal class DefaultNFTPersistenceStore(
             }
 
     override fun getSalePrice(assetId: NFTAsset.Identifier): Flow<NFTAsset.SalePrice?> = pricesPersistenceStore.data
-        .map { it[assetId] }
+        .map { data -> data.associate { it.assetId to it.price }[assetId] }
 
     override suspend fun getSalePricesSync(): Map<NFTAsset.Identifier, NFTAsset.SalePrice>? = pricesPersistenceStore
         .data
         .firstOrNull()
+        ?.associate { it.assetId to it.price }
 
     override suspend fun saveCollections(collections: List<NFTCollection>) {
         collectionsPersistenceStore.updateData {
@@ -41,8 +43,13 @@ internal class DefaultNFTPersistenceStore(
 
     override suspend fun saveSalePrice(assetId: NFTAsset.Identifier, salePrice: NFTAsset.SalePrice) {
         pricesPersistenceStore.updateData {
-            it.toMutableMap().apply { this[assetId] = salePrice }
+            it.toMutableList() + NFTPriceId(assetId = assetId, price = salePrice)
         }
+    }
+
+    override suspend fun clear() {
+        collectionsPersistenceStore.updateData { emptyList() }
+        pricesPersistenceStore.updateData { emptyList() }
     }
 
     private fun NFTCollection.getAsset(assetId: NFTAsset.Identifier) = assets.firstOrNull { it.identifier == assetId }

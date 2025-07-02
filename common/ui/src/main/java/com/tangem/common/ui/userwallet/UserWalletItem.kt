@@ -7,15 +7,16 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -30,10 +31,7 @@ import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.block.BlockCard
 import com.tangem.core.ui.components.block.TangemBlockCardColors
 import com.tangem.core.ui.components.text.applyBladeBrush
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.domain.wallets.models.UserWalletId
@@ -93,7 +91,7 @@ fun UserWalletItem(
 @Composable
 private fun NameAndInfo(
     name: TextReference,
-    information: TextReference,
+    information: UserWalletItemUM.Information,
     balance: UserWalletItemUM.Balance,
     modifier: Modifier = Modifier,
 ) {
@@ -113,8 +111,28 @@ private fun NameAndInfo(
         Row(
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            AnimatedContent(
+                targetState = information,
+                label = "Information content",
+            ) { information ->
+                val informationValue = getInformationValue(information)
+
+                if (informationValue == null) {
+                    TextShimmer(
+                        style = TangemTheme.typography.caption2,
+                        text = "aaaaa",
+                    )
+                } else {
+                    Text(
+                        text = informationValue,
+                        style = TangemTheme.typography.caption2,
+                        color = TangemTheme.colors.text.tertiary,
+                        maxLines = 1,
+                    )
+                }
+            }
             Text(
-                text = information.resolveReference() + " $DOT ",
+                text = " $DOT ",
                 style = TangemTheme.typography.caption2,
                 color = TangemTheme.colors.text.tertiary,
                 maxLines = 1,
@@ -162,32 +180,42 @@ private fun CardImage(imageState: UserWalletItemUM.ImageState, modifier: Modifie
             )
         }
         is UserWalletItemUM.ImageState.Image -> {
-            SubcomposeAsyncImage(
-                modifier = imageModifier,
-                model = ImageRequest.Builder(LocalContext.current)
-                    .size(
-                        width = with(LocalDensity.current) { TangemTheme.dimens.size36.roundToPx() },
-                        height = with(LocalDensity.current) { TangemTheme.dimens.size24.roundToPx() },
-                    )
-                    .data(imageState.artwork.verifiedArtwork?.toByteArray() ?: imageState.artwork.defaultUrl)
-                    .crossfade(enable = true)
-                    .allowHardware(enable = false)
-                    .build(),
-                loading = {
-                    RectangleShimmer(
-                        modifier = imageModifier,
-                        radius = TangemTheme.dimens.size2,
-                    )
-                },
-                error = {
-                    Image(
-                        modifier = imageModifier.then(Modifier.rotate(90F)),
-                        imageVector = ImageVector.vectorResource(R.drawable.img_card_wallet_2_gray_22_36),
-                        contentDescription = null,
-                    )
-                },
-                contentDescription = null,
-            )
+            val verifiedArtwork = imageState.artwork.verifiedArtwork
+            if (verifiedArtwork != null) {
+                Image(
+                    modifier = imageModifier,
+                    painter = BitmapPainter(verifiedArtwork),
+                    contentScale = ContentScale.Fit,
+                    contentDescription = null,
+                )
+            } else {
+                SubcomposeAsyncImage(
+                    modifier = imageModifier,
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .size(
+                            width = with(LocalDensity.current) { TangemTheme.dimens.size36.roundToPx() },
+                            height = with(LocalDensity.current) { TangemTheme.dimens.size24.roundToPx() },
+                        )
+                        .data(imageState.artwork.defaultUrl)
+                        .crossfade(enable = true)
+                        .allowHardware(enable = false)
+                        .build(),
+                    loading = {
+                        RectangleShimmer(
+                            modifier = imageModifier,
+                            radius = TangemTheme.dimens.size2,
+                        )
+                    },
+                    error = {
+                        Image(
+                            modifier = imageModifier.then(Modifier.rotate(90F)),
+                            imageVector = ImageVector.vectorResource(R.drawable.img_card_wallet_2_gray_22_36),
+                            contentDescription = null,
+                        )
+                    },
+                    contentDescription = null,
+                )
+            }
         }
     }
 }
@@ -198,8 +226,17 @@ fun getBalanceValueAndFlickerState(balance: UserWalletItemUM.Balance): Pair<Stri
         is UserWalletItemUM.Balance.Failed -> DASH_SIGN to false
         is UserWalletItemUM.Balance.Hidden -> THREE_STARS to false
         is UserWalletItemUM.Balance.Loading -> null to false
-        is UserWalletItemUM.Balance.Locked -> stringResource(R.string.common_locked) to false
+        is UserWalletItemUM.Balance.Locked -> stringResourceSafe(R.string.common_locked) to false
         is UserWalletItemUM.Balance.Loaded -> balance.value to balance.isFlickering
+    }
+}
+
+@Composable
+fun getInformationValue(information: UserWalletItemUM.Information): String? {
+    return when (information) {
+        UserWalletItemUM.Information.Failed -> DASH_SIGN
+        UserWalletItemUM.Information.Loading -> null
+        is UserWalletItemUM.Information.Loaded -> information.value.resolveReference()
     }
 }
 
@@ -258,6 +295,15 @@ private class UserWalletItemUMPreviewProvider : PreviewParameterProvider<UserWal
             UserWalletItemUM(
                 id = UserWalletId("user_wallet_3".encodeToByteArray()),
                 name = stringReference("Multi Card"),
+                information = UserWalletItemUM.Information.Loading,
+                balance = UserWalletItemUM.Balance.Loading,
+                isEnabled = false,
+                endIcon = UserWalletItemUM.EndIcon.Checkmark,
+                onClick = {},
+            ),
+            UserWalletItemUM(
+                id = UserWalletId("user_wallet_3".encodeToByteArray()),
+                name = stringReference("Multi Card"),
                 information = getInformation(cardCount = 3),
                 balance = UserWalletItemUM.Balance.Loaded(
                     value = "1.2345 BTC",
@@ -279,14 +325,37 @@ private class UserWalletItemUMPreviewProvider : PreviewParameterProvider<UserWal
                 endIcon = UserWalletItemUM.EndIcon.Checkmark,
                 onClick = {},
             ),
+            UserWalletItemUM(
+                id = UserWalletId("user_wallet_3".encodeToByteArray()),
+                name = stringReference("Multi Card"),
+                information = UserWalletItemUM.Information.Loading,
+                balance = UserWalletItemUM.Balance.Loaded(
+                    value = "1.2345 BTC",
+                    isFlickering = false,
+                ),
+                isEnabled = true,
+                onClick = {},
+            ),
+            UserWalletItemUM(
+                id = UserWalletId("user_wallet_3".encodeToByteArray()),
+                name = stringReference("Multi Card"),
+                information = UserWalletItemUM.Information.Failed,
+                balance = UserWalletItemUM.Balance.Loaded(
+                    value = "1.2345 BTC",
+                    isFlickering = false,
+                ),
+                isEnabled = true,
+                onClick = {},
+            ),
         )
 
-    private fun getInformation(cardCount: Int): TextReference {
-        return TextReference.PluralRes(
+    private fun getInformation(cardCount: Int): UserWalletItemUM.Information.Loaded {
+        val text = TextReference.PluralRes(
             id = R.plurals.card_label_card_count,
             count = cardCount,
             formatArgs = wrappedList(cardCount),
         )
+        return UserWalletItemUM.Information.Loaded(text)
     }
 }
 // endregion Preview

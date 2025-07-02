@@ -12,9 +12,9 @@ import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.card.DerivePublicKeysUseCase
 import com.tangem.domain.card.HasMissedDerivationsUseCase
 import com.tangem.domain.managetokens.model.exceptoin.CustomTokenFormValidationException
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
-import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.Network
 import com.tangem.features.managetokens.analytics.CustomTokenAnalyticsEvent
 import com.tangem.features.managetokens.component.CustomTokenFormComponent
 import com.tangem.features.managetokens.entity.customtoken.ClickableFieldUM
