@@ -9,17 +9,19 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.models.network.CryptoCurrencyAddress
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
 import com.tangem.domain.qrscanning.usecases.ParseQrCodeUseCase
 import com.tangem.domain.tokens.GetCryptoCurrencyUseCase
 import com.tangem.domain.tokens.GetNetworkAddressesUseCase
-import com.tangem.domain.tokens.model.CryptoCurrencyAddress
 import com.tangem.domain.transaction.usecase.IsUtxoConsolidationAvailableUseCase
 import com.tangem.domain.transaction.usecase.ValidateWalletAddressUseCase
 import com.tangem.domain.transaction.usecase.ValidateWalletMemoUseCase
 import com.tangem.domain.txhistory.usecase.GetFixedTxHistoryItemsUseCase
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.isLocked
+import com.tangem.domain.wallets.models.isMultiCurrency
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.send.v2.common.PredefinedValues
 import com.tangem.features.send.v2.common.analytics.CommonSendAnalyticEvents
@@ -142,8 +144,10 @@ internal class SendDestinationModel @Inject constructor(
 
     private fun initSenderAddress() {
         modelScope.launch {
-            senderAddresses.value = getNetworkAddressesUseCase.invokeSync(userWalletId, cryptoCurrency.network)
-                .filter { cryptoCurrency.id == it.cryptoCurrency.id }
+            senderAddresses.value = getNetworkAddressesUseCase.invokeSync(
+                userWalletId = userWalletId,
+                networkRawId = cryptoCurrency.network.id.rawId,
+            ).filter { cryptoCurrency.id == it.cryptoCurrency.id }
         }
         senderAddresses.onEach {
             getWalletsAndRecent()
@@ -212,13 +216,19 @@ internal class SendDestinationModel @Inject constructor(
                         val addresses = if (!wallet.isMultiCurrency) {
                             getCryptoCurrencyUseCase(wallet.walletId).getOrNull()?.let {
                                 if (it.network.id == cryptoCurrencyNetwork.id) {
-                                    getNetworkAddressesUseCase.invokeSync(wallet.walletId, it.network)
+                                    getNetworkAddressesUseCase.invokeSync(
+                                        userWalletId = wallet.walletId,
+                                        networkRawId = it.network.id.rawId,
+                                    )
                                 } else {
                                     null
                                 }
                             }
                         } else {
-                            getNetworkAddressesUseCase.invokeSync(wallet.walletId, cryptoCurrencyNetwork)
+                            getNetworkAddressesUseCase.invokeSync(
+                                userWalletId = wallet.walletId,
+                                networkRawId = cryptoCurrencyNetwork.id.rawId,
+                            )
                         }
                         wallet to addresses
                     }
