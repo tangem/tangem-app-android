@@ -19,7 +19,8 @@ sealed class WalletNFTItemUM {
     data class Content(
         val previews: ImmutableList<CollectionPreview>,
         val collectionsCount: Int,
-        val assetsCount: Int,
+        val allAssetsCount: Int,
+        val noCollectionAssetsCount: Int,
         val isFlickering: Boolean,
         val onItemClick: () -> Unit,
     ) : WalletNFTItemUM() {

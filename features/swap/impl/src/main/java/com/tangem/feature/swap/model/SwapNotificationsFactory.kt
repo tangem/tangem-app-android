@@ -10,7 +10,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.utils.parseBigDecimal
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.SwapAmount
@@ -154,7 +154,7 @@ internal class SwapNotificationsFactory(
             }
             is TxFeeState.SingleFeeState -> feeState.fee
         }
-        val isCardano = BlockchainUtils.isCardano(fromCurrencyStatus.currency.network.id.value)
+        val isCardano = BlockchainUtils.isCardano(fromCurrencyStatus.currency.network.rawId)
         // blockchain specific
 
         addExistentialWarningNotification(
@@ -305,7 +305,7 @@ internal class SwapNotificationsFactory(
         fromAmount: SwapAmount,
         onReduceByAmount: (SwapAmount, BigDecimal) -> Unit,
     ) {
-        val isTezos = isTezos(cryptoCurrencyStatus.currency.network.id.value)
+        val isTezos = isTezos(cryptoCurrencyStatus.currency.network.rawId)
         val balance = cryptoCurrencyStatus.value.amount ?: BigDecimal.ZERO
         val threshold = getTezosThreshold()
         val isTotalBalance = fromAmount.value >= balance && balance > threshold

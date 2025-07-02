@@ -6,6 +6,7 @@ import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.routing.RoutingFeatureToggle
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
@@ -15,11 +16,13 @@ import com.tangem.core.deeplink.DeepLinksRegistry
 import com.tangem.core.deeplink.global.ReferralDeepLink
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.nft.ObserveAndClearNFTCacheIfNeedUseCase
 import com.tangem.domain.settings.*
 import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
 import com.tangem.domain.tokens.RefreshMultiCurrencyWalletQuotesUseCase
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.models.isMultiCurrency
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
@@ -81,6 +84,8 @@ internal class WalletModel @Inject constructor(
     private val deepLinksRegistry: DeepLinksRegistry,
     private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
     private val appRouter: AppRouter,
+    private val routingFeatureToggle: RoutingFeatureToggle,
+    private val observeAndClearNFTCacheIfNeedUseCase: ObserveAndClearNFTCacheIfNeedUseCase,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
 ) : Model() {
@@ -91,6 +96,7 @@ internal class WalletModel @Inject constructor(
     private val walletsUpdateJobHolder = JobHolder()
     private val refreshWalletJobHolder = JobHolder()
     private var needToRefreshWallet = false
+    private val clearNFTCacheJobHolder = JobHolder()
 
     private var expressTxStatusTaskScheduler = SingleTaskScheduler<Unit>()
 
@@ -219,11 +225,15 @@ internal class WalletModel @Inject constructor(
                     if (selectedWallet.isMultiCurrency) {
                         selectedWalletAnalyticsSender.send(selectedWallet)
                     }
-                    // Registering here, because `WalletDeepLinksHandler` unregisters deeplink when scope is cancelled
-                    // This is temporary solution, will be removed with complete deeplink navigation overhaul
-                    addReferralDeepLink(selectedWallet)
-                    walletDeepLinksHandler.registerForWallet(scope = modelScope, userWallet = selectedWallet)
+
+                    if (!routingFeatureToggle.isDeepLinkNavigationEnabled) {
+                        // Registering here, because `WalletDeepLinksHandler` unregisters deeplink when scope is cancelled
+                        // This is temporary solution, will be removed with complete deeplink navigation overhaul
+                        addReferralDeepLink(selectedWallet)
+                        walletDeepLinksHandler.registerForWallet(scope = modelScope, userWallet = selectedWallet)
+                    }
                     subscribeOnExpressTransactionsUpdates(selectedWallet)
+                    observeAndClearNFTCacheIfNeedUseCase(selectedWallet)
                 }
                 .flowOn(dispatchers.main)
                 .launchIn(modelScope)
@@ -234,7 +244,7 @@ internal class WalletModel @Inject constructor(
         deepLinksRegistry.register(
             ReferralDeepLink(
                 onReceive = {
-                    if (userWallet.cardTypesResolver.isTangemWallet()) {
+                    if (userWallet !is UserWallet.Cold || userWallet.cardTypesResolver.isTangemWallet()) {
                         appRouter.push(
                             AppRoute.ReferralProgram(userWalletId = userWallet.walletId),
                         )
@@ -278,6 +288,13 @@ internal class WalletModel @Inject constructor(
                 ),
             )
         }
+    }
+
+    private fun observeAndClearNFTCacheIfNeedUseCase(selectedWallet: UserWallet) {
+        observeAndClearNFTCacheIfNeedUseCase
+            .invoke(selectedWallet.walletId)
+            .launchIn(modelScope)
+            .saveIn(clearNFTCacheJobHolder)
     }
 
     private fun needToRefreshTimer() {
@@ -501,7 +518,7 @@ internal class WalletModel @Inject constructor(
     }
 
     private fun fetchIfSingleWallet(userWallet: UserWallet) {
-        if (userWallet.scanResponse.cardTypesResolver.isSingleWallet()) {
+        if (userWallet is UserWallet.Cold && userWallet.scanResponse.cardTypesResolver.isSingleWallet()) {
             modelScope.launch {
                 fetchCurrencyStatusUseCase(userWalletId = userWallet.walletId)
                     .onLeft { Timber.e(it.toString()) }
