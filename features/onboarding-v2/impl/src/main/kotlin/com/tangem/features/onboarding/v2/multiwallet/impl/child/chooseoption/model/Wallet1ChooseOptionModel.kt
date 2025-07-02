@@ -8,7 +8,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.common.TapWorkarounds.canSkipBackup
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.wallets.builder.UserWalletBuilder
+import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.features.onboarding.v2.common.analytics.OnboardingEvent
@@ -24,7 +24,7 @@ import javax.inject.Inject
 internal class Wallet1ChooseOptionModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     paramsContainer: ParamsContainer,
-    private val userWalletBuilderFactory: UserWalletBuilder.Factory,
+    private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory,
     private val cardRepository: CardRepository,
     private val saveWalletUseCase: SaveWalletUseCase,
     private val analyticsHandler: AnalyticsEventHandler,
@@ -64,9 +64,9 @@ internal class Wallet1ChooseOptionModel @Inject constructor(
         }
     }
 
-    private suspend fun createUserWallet(scanResponse: ScanResponse): UserWallet {
+    private fun createUserWallet(scanResponse: ScanResponse): UserWallet.Cold {
         return requireNotNull(
-            value = userWalletBuilderFactory.create(scanResponse = scanResponse).build(),
+            value = coldUserWalletBuilderFactory.create(scanResponse = scanResponse).build(),
             lazyMessage = { "User wallet not created" },
         )
     }
