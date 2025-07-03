@@ -291,6 +291,7 @@ internal class SendConfirmModel @Inject constructor(
                             isShowTapHelp = isShowTapHelp,
                             walletName = stringReference(userWallet.name),
                         ).transform(uiState.value.confirmUM),
+                        confirmData = confirmData,
                     )
                 }
                 updateConfirmNotifications()
@@ -384,6 +385,10 @@ internal class SendConfirmModel @Inject constructor(
                 addTokenToWalletIfNeeded()
                 sendBalanceUpdater.scheduleUpdates()
                 sendAnalyticHelper.sendSuccessAnalytics(cryptoCurrency, uiState.value)
+                if (uiState.value.isRedesignEnabled) {
+                    params.callback.onResult(uiState.value)
+                    params.onSendTransaction()
+                }
             },
         )
     }
@@ -462,23 +467,35 @@ internal class SendConfirmModel @Inject constructor(
             flow = uiState,
             flow2 = params.currentRoute,
             transform = { state, route -> state to route },
-        ).filter { it.second is CommonSendRoute.Confirm }.onEach { (state, _) ->
+        ).filter {
+            it.second is CommonSendRoute.Confirm
+        }.onEach { (state, _) ->
             val amountUM = state.amountUM as? AmountState.Data
             val confirmUM = state.confirmUM
-            val isReadyToSend = confirmUM is ConfirmUM.Content && !confirmUM.isSending
             params.callback.onResult(
                 state.copy(
                     navigationUM = NavigationUM.Content(
-                        title = resourceReference(
-                            id = R.string.send_summary_title,
-                            formatArgs = wrappedList(params.cryptoCurrencyStatus.currency.name),
-                        ),
+                        title = if (state.isRedesignEnabled) {
+                            stringReference("")
+                        } else {
+                            resourceReference(
+                                id = R.string.send_summary_title,
+                                formatArgs = wrappedList(params.cryptoCurrencyStatus.currency.name),
+                            )
+                        },
                         subtitle = if (uiState.value.isRedesignEnabled) {
                             null
                         } else {
                             amountUM?.title
                         },
-                        backIconRes = R.drawable.ic_close_24,
+                        backIconRes = if (state.isRedesignEnabled) {
+                            when (confirmUM) {
+                                is ConfirmUM.Success -> R.drawable.ic_close_24
+                                else -> R.drawable.ic_back_24
+                            }
+                        } else {
+                            R.drawable.ic_close_24
+                        },
                         backIconClick = {
                             analyticsEventHandler.send(
                                 CommonSendAnalyticEvents.CloseButtonClicked(
@@ -490,31 +507,7 @@ internal class SendConfirmModel @Inject constructor(
                             )
                             appRouter.pop()
                         },
-                        primaryButton = NavigationButton(
-                            textReference = when (confirmUM) {
-                                is ConfirmUM.Success -> resourceReference(R.string.common_close)
-                                is ConfirmUM.Content -> if (confirmUM.isSending) {
-                                    resourceReference(R.string.send_sending)
-                                } else {
-                                    resourceReference(R.string.common_send)
-                                }
-                                else -> resourceReference(R.string.common_send)
-                            },
-                            iconRes = R.drawable.ic_tangem_24.takeIf { isReadyToSend },
-                            isEnabled = confirmUM.isPrimaryButtonEnabled,
-                            isHapticClick = isReadyToSend,
-                            onClick = {
-                                when (confirmUM) {
-                                    is ConfirmUM.Success -> appRouter.pop()
-                                    is ConfirmUM.Content -> if (confirmUM.isSending) {
-                                        return@NavigationButton
-                                    } else {
-                                        onSendClick()
-                                    }
-                                    else -> return@NavigationButton
-                                }
-                            },
-                        ),
+                        primaryButton = primaryButtonUM(),
                         prevButton = null,
                         secondaryPairButtonsUM = (
                             NavigationButton(
@@ -531,6 +524,36 @@ internal class SendConfirmModel @Inject constructor(
                 ),
             )
         }.launchIn(modelScope)
+    }
+
+    private fun primaryButtonUM(): NavigationButton {
+        val confirmUM = uiState.value.confirmUM
+        val isReadyToSend = confirmUM is ConfirmUM.Content && !confirmUM.isSending
+        return NavigationButton(
+            textReference = when (confirmUM) {
+                is ConfirmUM.Success -> resourceReference(R.string.common_close)
+                is ConfirmUM.Content -> if (confirmUM.isSending) {
+                    resourceReference(R.string.send_sending)
+                } else {
+                    resourceReference(R.string.common_send)
+                }
+                else -> resourceReference(R.string.common_send)
+            },
+            iconRes = R.drawable.ic_tangem_24.takeIf { isReadyToSend },
+            isEnabled = confirmUM.isPrimaryButtonEnabled,
+            isHapticClick = isReadyToSend,
+            onClick = {
+                when (confirmUM) {
+                    is ConfirmUM.Success -> appRouter.pop()
+                    is ConfirmUM.Content -> if (confirmUM.isSending) {
+                        return@NavigationButton
+                    } else {
+                        onSendClick()
+                    }
+                    else -> return@NavigationButton
+                }
+            },
+        )
     }
 
     private companion object {
