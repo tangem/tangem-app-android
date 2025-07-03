@@ -30,6 +30,7 @@ import com.tangem.domain.tokens.GetMinimumTransactionAmountSyncUseCase
 import com.tangem.domain.tokens.GetMultiCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.transaction.usecase.GetAllowanceUseCase
+import com.tangem.features.swap.v2.api.choosetoken.SwapChooseTokenNetworkListener
 import com.tangem.features.swap.v2.impl.R
 import com.tangem.features.swap.v2.impl.amount.SwapAmountBlockComponent.SwapChooseProviderConfig
 import com.tangem.features.swap.v2.impl.amount.SwapAmountComponentParams
@@ -40,7 +41,6 @@ import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
 import com.tangem.features.swap.v2.impl.amount.model.converter.SwapAmountReadyStateConverter
 import com.tangem.features.swap.v2.impl.amount.model.transformers.*
 import com.tangem.features.swap.v2.impl.chooseprovider.SwapChooseProviderComponent
-import com.tangem.features.swap.v2.impl.choosetoken.fromSupported.SwapChooseTokenNetworkListener
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM.Content.DifferencePercent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
