@@ -155,6 +155,7 @@ internal class SendConfirmComponent(
         val isBalanceHidingFlow: StateFlow<Boolean>,
         val predefinedValues: PredefinedValues,
         val onLoadFee: suspend () -> Either<GetFeeError, TransactionFee>,
+        val onSendTransaction: () -> Unit,
     )
 
     interface ModelCallback {
