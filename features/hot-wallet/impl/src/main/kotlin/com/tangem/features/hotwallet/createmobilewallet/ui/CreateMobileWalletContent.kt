@@ -84,7 +84,7 @@ internal fun CreateMobileWalletContent(state: CreateMobileWalletUM, modifier: Mo
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            text = "Create",
+            text = stringResourceSafe(R.string.common_create),
             showProgress = false,
             enabled = true,
             onClick = state.onCreateClick,
