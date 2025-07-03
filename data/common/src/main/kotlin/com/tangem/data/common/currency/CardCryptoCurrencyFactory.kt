@@ -20,7 +20,18 @@ interface CardCryptoCurrencyFactory {
      * @param network      network
      */
     @Throws
-    suspend fun create(userWalletId: UserWalletId, network: Network): List<CryptoCurrency>
+    suspend fun create(userWalletId: UserWalletId, network: Network): List<CryptoCurrency> {
+        return create(userWalletId = userWalletId, networks = setOf(network))[network].orEmpty()
+    }
+
+    /**
+     * Universal method for creating list of [CryptoCurrency] in [networks] for any card
+     *
+     * @param userWalletId user wallet id that determines type of card
+     * @param networks     networks
+     */
+    @Throws
+    suspend fun create(userWalletId: UserWalletId, networks: Set<Network>): Map<Network, List<CryptoCurrency>>
 
     /**
      * Universal method for creating list of [CryptoCurrency] in [network] for any card
