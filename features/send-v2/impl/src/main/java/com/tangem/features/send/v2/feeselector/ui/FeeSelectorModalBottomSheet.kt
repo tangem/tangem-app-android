@@ -31,6 +31,7 @@ import androidx.compose.ui.util.fastForEachIndexed
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.transaction.Fee
+import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.ui.amountScreen.utils.getFiatReference
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.atoms.text.EllipsisText
@@ -111,7 +112,7 @@ private fun FeeSelectorItems(
     Column(modifier = modifier) {
         val feeFiatRateUM = state.feeFiatRateUM
         state.feeItems.fastForEachIndexed { index, item ->
-            val isSelected = item.isSame(state.selectedFeeItem)
+            val isSelected = item.isSameClass(state.selectedFeeItem)
             val lastItem = index == state.feeItems.size - 1
             val iconTint by animateColorAsState(
                 targetValue = if (isSelected) TangemTheme.colors.icon.accent else TangemTheme.colors.text.tertiary,
@@ -255,6 +256,7 @@ private fun FeeSelectorItems(
                     isSelected = isSelected,
                     iconBackgroundColor = iconBackgroundColor,
                     iconTint = iconTint,
+                    onValueChange = feeSelectorIntents::onCustomFeeValueChange,
                     displayNonceInput = state.displayNonceInput,
                     nonce = state.nonce,
                     onNonceChange = state.onNonceChange,
@@ -271,6 +273,7 @@ private fun CustomFeeBlock(
     isSelected: Boolean,
     iconBackgroundColor: Color,
     iconTint: Color,
+    onValueChange: (Int, String) -> Unit,
     displayNonceInput: Boolean,
     nonce: BigInteger?,
     onNonceChange: (String) -> Unit,
@@ -305,7 +308,7 @@ private fun CustomFeeBlock(
         ) {
             ExpandedCustomFeeItems(
                 customFeeFields = customFee.customValues,
-                onValueChange = { _, _ -> },
+                onValueChange = onValueChange,
                 displayNonceInput = displayNonceInput,
                 nonce = nonce,
                 onNonceChange = onNonceChange,
@@ -503,6 +506,7 @@ private class FeeSelectorUMContentProvider : CollectionPreviewParameterProvider<
             displayNonceInput = true,
             onNonceChange = {},
             nonce = null,
+            fees = TransactionFee.Single(customFeeItem.fee),
         ),
     ),
 )
