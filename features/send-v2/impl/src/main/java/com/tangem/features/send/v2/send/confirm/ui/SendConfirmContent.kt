@@ -82,31 +82,36 @@ private fun LazyListScope.blocks(
 ) {
     item(key = BLOCKS_KEY) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            AnimatedVisibility(
-                visible = uiState.confirmUM is ConfirmUM.Success,
-                modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing12),
-            ) {
-                val wrappedConfirmUM = remember(this) { uiState.confirmUM as ConfirmUM.Success }
-                TransactionDoneTitle(
-                    title = resourceReference(R.string.sent_transaction_sent_title),
-                    subtitle = resourceReference(
-                        R.string.send_date_format,
-                        wrappedList(
-                            wrappedConfirmUM.transactionDate.toTimeFormat(DateTimeFormatters.dateFormatter),
-                            wrappedConfirmUM.transactionDate.toTimeFormat(),
-                        ),
-                    ),
-                    modifier = Modifier.padding(vertical = 12.dp),
-                )
-            }
             if (uiState.isRedesignEnabled) {
                 amountBlockComponent.Content(modifier = Modifier)
                 destinationBlockComponent.Content(modifier = Modifier)
             } else {
+                TransactionDoneTitleAnimated(uiState)
                 destinationBlockComponent.Content(modifier = Modifier)
                 amountBlockComponent.Content(modifier = Modifier)
             }
             feeBlockComponent.Content(modifier = Modifier)
         }
+    }
+}
+
+@Composable
+internal fun TransactionDoneTitleAnimated(uiState: SendUM) {
+    AnimatedVisibility(
+        visible = uiState.confirmUM is ConfirmUM.Success,
+        modifier = Modifier.padding(vertical = 12.dp),
+    ) {
+        val wrappedConfirmUM = remember(this) { uiState.confirmUM as ConfirmUM.Success }
+        TransactionDoneTitle(
+            title = resourceReference(R.string.sent_transaction_sent_title),
+            subtitle = resourceReference(
+                R.string.send_date_format,
+                wrappedList(
+                    wrappedConfirmUM.transactionDate.toTimeFormat(DateTimeFormatters.dateFormatter),
+                    wrappedConfirmUM.transactionDate.toTimeFormat(),
+                ),
+            ),
+            modifier = Modifier.padding(vertical = 12.dp),
+        )
     }
 }
