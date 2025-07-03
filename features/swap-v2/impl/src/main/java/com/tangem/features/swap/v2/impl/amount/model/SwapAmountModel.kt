@@ -8,6 +8,7 @@ import com.tangem.common.ui.amountScreen.converters.MaxEnterAmountConverter
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
 import com.tangem.common.ui.navigationButtons.NavigationButton
+import com.tangem.common.ui.navigationButtons.NavigationUM
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -32,6 +33,7 @@ import com.tangem.domain.transaction.usecase.GetAllowanceUseCase
 import com.tangem.features.swap.v2.impl.R
 import com.tangem.features.swap.v2.impl.amount.SwapAmountBlockComponent.SwapChooseProviderConfig
 import com.tangem.features.swap.v2.impl.amount.SwapAmountComponentParams
+import com.tangem.features.swap.v2.impl.amount.SwapAmountUpdateListener
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountFieldUM
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountType
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
@@ -39,7 +41,6 @@ import com.tangem.features.swap.v2.impl.amount.model.converter.SwapAmountReadySt
 import com.tangem.features.swap.v2.impl.amount.model.transformers.*
 import com.tangem.features.swap.v2.impl.chooseprovider.SwapChooseProviderComponent
 import com.tangem.features.swap.v2.impl.choosetoken.fromSupported.SwapChooseTokenNetworkListener
-import com.tangem.common.ui.navigationButtons.NavigationUM
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM.Content.DifferencePercent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -67,6 +68,7 @@ internal class SwapAmountModel @Inject constructor(
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val appRouter: AppRouter,
     private val swapAlertFactory: SwapAlertFactory,
+    private val swapAmountUpdateListener: SwapAmountUpdateListener,
 ) : Model(), SwapAmountClickIntents, SwapChooseProviderComponent.ModelCallback {
 
     private val params: SwapAmountComponentParams = paramsContainer.require()
@@ -99,6 +101,7 @@ internal class SwapAmountModel @Inject constructor(
         }
         configAmountNavigation()
         subscribeOnCryptoCurrencyStatusFlow()
+        subscribeOnAmountUpdateTriggerUpdates()
         observeChooseSelectToken()
         // todo observe balance hiding flow
     }
@@ -189,6 +192,14 @@ internal class SwapAmountModel @Inject constructor(
         )
     }
 
+    override fun onSeparatorClick() {
+        // todo send with swap make swap types
+        val amountFieldData = uiState.value.primaryAmount.amountField as? AmountState.Data
+        val callback = (params as? SwapAmountComponentParams.AmountParams)?.callback ?: return
+
+        callback.onSeparatorClick(lastAmount = amountFieldData?.amountTextField?.value.orEmpty())
+    }
+
     private fun subscribeOnCryptoCurrencyStatusFlow() {
         params.primaryCryptoCurrencyStatusFlow.onEach { primaryCurrencyStatus ->
             primaryCryptoCurrencyStatus = primaryCurrencyStatus
@@ -208,6 +219,16 @@ internal class SwapAmountModel @Inject constructor(
                 )
             }
         }.launchIn(modelScope)
+    }
+
+    private fun subscribeOnAmountUpdateTriggerUpdates() {
+        swapAmountUpdateListener.updateAmountTriggerFlow
+            .onEach {
+                if (uiState.value is SwapAmountUM.Content) {
+                    onAmountValueChange(it)
+                }
+            }
+            .launchIn(modelScope)
     }
 
     private fun observeChooseSelectToken() {
