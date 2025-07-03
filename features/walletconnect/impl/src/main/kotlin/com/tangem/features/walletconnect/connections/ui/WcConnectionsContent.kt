@@ -28,6 +28,7 @@ import com.tangem.core.ui.components.BottomFade
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownItem
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenu
+import com.tangem.core.ui.components.snackbar.TangemSnackbarHost
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
@@ -41,10 +42,20 @@ import com.tangem.features.walletconnect.impl.R
 import kotlinx.collections.immutable.ImmutableList
 
 @Composable
-internal fun WcConnectionsContent(state: WcConnectionsState, modifier: Modifier = Modifier) {
+internal fun WcConnectionsContent(
+    state: WcConnectionsState,
+    modifier: Modifier = Modifier,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+) {
     Scaffold(
         modifier = modifier,
         containerColor = TangemTheme.colors.background.secondary,
+        snackbarHost = {
+            TangemSnackbarHost(
+                modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+                hostState = snackbarHostState,
+            )
+        },
         topBar = {
             ConnectionsTopBar(
                 modifier = Modifier.statusBarsPadding(),
