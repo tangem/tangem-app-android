@@ -46,6 +46,7 @@ import com.tangem.features.send.v2.common.CommonSendRoute
 import com.tangem.features.send.v2.common.SendConfirmAlertFactory
 import com.tangem.features.send.v2.common.ui.state.ConfirmUM
 import com.tangem.features.send.v2.send.confirm.SendConfirmComponent
+import com.tangem.features.send.v2.send.success.SendConfirmSuccessComponent
 import com.tangem.features.send.v2.send.ui.state.SendUM
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponent
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountUpdateQRTrigger
@@ -65,7 +66,8 @@ internal interface SendComponentCallback :
     SendAmountComponent.ModelCallback,
     SendFeeComponent.ModelCallback,
     SendDestinationComponent.ModelCallback,
-    SendConfirmComponent.ModelCallback
+    SendConfirmComponent.ModelCallback,
+    SendConfirmSuccessComponent.ModelCallback
 
 @Stable
 @ModelScoped
@@ -382,5 +384,6 @@ internal class SendModel @Inject constructor(
         confirmUM = ConfirmUM.Empty,
         navigationUM = NavigationUM.Empty,
         isRedesignEnabled = sendFeatureToggles.isSendRedesignEnabled,
+        confirmData = null,
     )
 }
