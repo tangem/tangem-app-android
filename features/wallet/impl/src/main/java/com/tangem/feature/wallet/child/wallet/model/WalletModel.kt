@@ -20,6 +20,8 @@ import com.tangem.domain.nft.ObserveAndClearNFTCacheIfNeedUseCase
 import com.tangem.domain.settings.*
 import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
 import com.tangem.domain.tokens.RefreshMultiCurrencyWalletQuotesUseCase
+import com.tangem.domain.tokens.TokensFeatureToggles
+import com.tangem.domain.tokens.wallet.WalletBalanceFetcher
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.models.isMultiCurrency
@@ -83,6 +85,8 @@ internal class WalletModel @Inject constructor(
     private val analyticsEventsHandler: AnalyticsEventHandler,
     private val deepLinksRegistry: DeepLinksRegistry,
     private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
+    private val walletBalanceFetcher: WalletBalanceFetcher,
+    private val tokensFeatureToggles: TokensFeatureToggles,
     private val appRouter: AppRouter,
     private val routingFeatureToggle: RoutingFeatureToggle,
     private val observeAndClearNFTCacheIfNeedUseCase: ObserveAndClearNFTCacheIfNeedUseCase,
@@ -518,10 +522,15 @@ internal class WalletModel @Inject constructor(
     }
 
     private fun fetchIfSingleWallet(userWallet: UserWallet) {
-        if (userWallet is UserWallet.Cold && userWallet.scanResponse.cardTypesResolver.isSingleWallet()) {
-            modelScope.launch {
-                fetchCurrencyStatusUseCase(userWalletId = userWallet.walletId)
-                    .onLeft { Timber.e(it.toString()) }
+        modelScope.launch {
+            if (tokensFeatureToggles.isWalletBalanceFetcherEnabled) {
+                walletBalanceFetcher(params = WalletBalanceFetcher.Params(userWalletId = userWallet.walletId))
+                    .onLeft(Timber::e)
+            } else {
+                if (userWallet is UserWallet.Cold && userWallet.scanResponse.cardTypesResolver.isSingleWallet()) {
+                    fetchCurrencyStatusUseCase(userWalletId = userWallet.walletId)
+                        .onLeft { Timber.e(it.toString()) }
+                }
             }
         }
     }
