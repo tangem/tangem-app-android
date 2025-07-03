@@ -18,6 +18,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.transaction.Fee
+import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.ui.amountScreen.utils.getFiatString
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -189,6 +190,7 @@ private fun FeeSelectorBlockContent_Preview() {
                 displayNonceInput = false,
                 nonce = null,
                 onNonceChange = {},
+                fees = TransactionFee.Single(feeItem.fee),
             ),
         )
     }
