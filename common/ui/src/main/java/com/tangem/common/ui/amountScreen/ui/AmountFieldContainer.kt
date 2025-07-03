@@ -101,7 +101,7 @@ internal fun LazyListScope.amountFieldV2(
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = modifier
                     .padding(top = 48.dp, bottom = 28.dp),
             ) {
