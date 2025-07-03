@@ -14,6 +14,7 @@ import com.tangem.features.send.v2.api.entity.FeeItem
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.features.send.v2.api.params.FeeSelectorParams
 import com.tangem.features.send.v2.feeselector.model.transformers.FeeItemSelectedTransformer
+import com.tangem.features.send.v2.feeselector.model.transformers.FeeSelectorCustomValueChangedTransformer
 import com.tangem.features.send.v2.feeselector.model.transformers.FeeSelectorErrorTransformer
 import com.tangem.features.send.v2.feeselector.model.transformers.FeeSelectorLoadedTransformer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -89,11 +90,15 @@ internal class FeeSelectorModel @Inject constructor(
     }
 
     override fun onCustomFeeValueChange(index: Int, value: String) {
-        // TODO: [REDACTED_JIRA]
-    }
-
-    override fun onCustomFeeNextClick() {
-        // TODO: [REDACTED_JIRA]
+        uiState.update(
+            FeeSelectorCustomValueChangedTransformer(
+                index = index,
+                value = value,
+                intents = this,
+                appCurrency = appCurrency,
+                feeCryptoCurrencyStatus = params.cryptoCurrencyStatus,
+            ),
+        )
     }
 
     override fun onDoneClick() {
