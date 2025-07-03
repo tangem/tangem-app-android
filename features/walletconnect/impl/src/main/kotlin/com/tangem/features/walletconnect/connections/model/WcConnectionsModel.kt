@@ -22,7 +22,7 @@ import com.tangem.domain.walletconnect.model.WcPairRequest
 import com.tangem.domain.walletconnect.model.WcSession
 import com.tangem.domain.walletconnect.usecase.WcSessionsUseCase
 import com.tangem.domain.walletconnect.usecase.disconnect.WcDisconnectUseCase
-import com.tangem.features.walletconnect.connections.components.ConnectionsComponent
+import com.tangem.features.walletconnect.connections.components.WcConnectionsComponent
 import com.tangem.features.walletconnect.connections.entity.WcConnectionsState
 import com.tangem.features.walletconnect.connections.entity.WcConnectionsTopAppBarConfig
 import com.tangem.features.walletconnect.connections.model.transformers.WcSessionsTransformer
@@ -48,7 +48,7 @@ internal class WcConnectionsModel @Inject constructor(
     paramsContainer: ParamsContainer,
 ) : Model() {
 
-    private val params = paramsContainer.require<ConnectionsComponent.Params>()
+    private val params = paramsContainer.require<WcConnectionsComponent.Params>()
     val uiState: StateFlow<WcConnectionsState>
     field = MutableStateFlow<WcConnectionsState>(getInitialState())
     val bottomSheetNavigation: SlotNavigation<WcConnectionsBottomSheetConfig> = SlotNavigation()
