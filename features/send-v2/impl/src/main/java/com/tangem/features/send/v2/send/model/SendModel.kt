@@ -49,7 +49,7 @@ import com.tangem.features.send.v2.send.confirm.SendConfirmComponent
 import com.tangem.features.send.v2.send.success.SendConfirmSuccessComponent
 import com.tangem.features.send.v2.send.ui.state.SendUM
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponent
-import com.tangem.features.send.v2.subcomponents.amount.SendAmountUpdateQRTrigger
+import com.tangem.features.send.v2.subcomponents.amount.SendAmountUpdateTrigger
 import com.tangem.features.send.v2.subcomponents.destination.model.transformers.SendDestinationInitialStateTransformer
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeComponent
 import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeUM
@@ -89,7 +89,7 @@ internal class SendModel @Inject constructor(
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val createTransferTransactionUseCase: CreateTransferTransactionUseCase,
     private val getFeeUseCase: GetFeeUseCase,
-    private val sendAmountUpdateQRTrigger: SendAmountUpdateQRTrigger,
+    private val sendAmountUpdateTrigger: SendAmountUpdateTrigger,
     private val sendFeatureToggles: SendFeatureToggles,
 ) : Model(), SendComponentCallback {
 
@@ -151,6 +151,10 @@ internal class SendModel @Inject constructor(
 
     override fun onResult(sendUM: SendUM) {
         _uiState.update { sendUM }
+    }
+
+    override fun onConvertToAnotherToken(lastAmount: String) {
+        params.callback?.onConvertToAnotherToken(lastAmount = lastAmount)
     }
 
     suspend fun loadFee(): Either<GetFeeError, TransactionFee> {
@@ -349,7 +353,7 @@ internal class SendModel @Inject constructor(
         )
         // If it is in active state use flow to update value in amount component
         modelScope.launch {
-            amount?.let { sendAmountUpdateQRTrigger.triggerUpdateAmount(it) }
+            amount?.let { sendAmountUpdateTrigger.triggerUpdateAmount(it) }
         }
     }
 
