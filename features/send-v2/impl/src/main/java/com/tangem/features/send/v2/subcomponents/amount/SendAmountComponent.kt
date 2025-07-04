@@ -1,19 +1,17 @@
 package com.tangem.features.send.v2.subcomponents.amount
 
-import androidx.compose.foundation.background
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.tangem.common.ui.amountScreen.AmountScreenContent
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.navigationButtons.NavigationModelCallback
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponentParams.AmountParams
 import com.tangem.features.send.v2.subcomponents.amount.model.SendAmountModel
+import com.tangem.features.send.v2.subcomponents.amount.ui.SendAmountContent
 
 internal class SendAmountComponent(
     appComponentContext: AppComponentContext,
@@ -29,15 +27,17 @@ internal class SendAmountComponent(
         val state by model.uiState.collectAsStateWithLifecycle()
         val isBalanceHidden by params.isBalanceHidingFlow.collectAsStateWithLifecycle()
 
-        AmountScreenContent(
+        SendAmountContent(
             amountState = state,
             isBalanceHidden = isBalanceHidden,
             clickIntents = model,
-            modifier = Modifier.background(TangemTheme.colors.background.tertiary),
+            isSendWithSwapEnabled = model.isSendWithSwapEnabled,
+            modifier = modifier,
         )
     }
 
     interface ModelCallback : NavigationModelCallback {
         fun onAmountResult(amountUM: AmountState, isResetPredefined: Boolean)
+        fun onConvertToAnotherToken(lastAmount: String)
     }
 }
