@@ -54,9 +54,9 @@ internal class WcConnectionsComponent(
     ): ComposableBottomSheetComponent {
         val context = childByContext(componentContext = componentContext, messageHandler = messageHandler)
         return when (config) {
-            is WcConnectionsBottomSheetConfig.ConnectedApp -> WcConnectedAppInfoComponent(
+            is WcConnectionsBottomSheetConfig.ConnectedApp -> WcConnectedAppInfoContainerComponent(
                 appComponentContext = context,
-                params = WcConnectedAppInfoComponent.Params(
+                params = WcConnectedAppInfoContainerComponent.Params(
                     topic = config.topic,
                     onDismiss = model.bottomSheetNavigation::dismiss,
                 ),
