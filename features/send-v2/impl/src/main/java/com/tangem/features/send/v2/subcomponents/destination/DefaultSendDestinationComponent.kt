@@ -22,7 +22,7 @@ internal class DefaultSendDestinationComponent @AssistedInject constructor(
 
     private val model: SendDestinationModel = getOrCreateModel(params = params)
 
-    fun updateState(state: DestinationUM) = model.updateState(state)
+    override fun updateState(destinationUM: DestinationUM) = model.updateState(destinationUM)
 
     @Composable
     override fun Content(modifier: Modifier) {
