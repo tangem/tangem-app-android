@@ -1,10 +1,13 @@
 package com.tangem.features.walletconnect.connections.model
 
 import androidx.compose.runtime.Stable
+import com.arkivanov.decompose.router.stack.StackNavigation
+import com.arkivanov.decompose.router.stack.pushNew
 import com.domain.blockaid.models.dapp.CheckDAppResult
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.iconResId
 import com.tangem.core.ui.extensions.stringReference
@@ -12,13 +15,14 @@ import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.walletconnect.model.WcSession
 import com.tangem.domain.walletconnect.usecase.WcSessionsUseCase
 import com.tangem.domain.walletconnect.usecase.disconnect.WcDisconnectUseCase
-import com.tangem.features.walletconnect.connections.components.WcConnectedAppInfoComponent
+import com.tangem.features.walletconnect.connections.components.WcConnectedAppInfoContainerComponent
 import com.tangem.features.walletconnect.connections.entity.VerifiedDAppState
 import com.tangem.features.walletconnect.connections.entity.WcConnectedAppInfoUM
 import com.tangem.features.walletconnect.connections.entity.WcNetworkInfoItem
 import com.tangem.features.walletconnect.connections.entity.WcPrimaryButtonConfig
 import com.tangem.features.walletconnect.connections.entity.WcAppInfoSecurityNotification
 import com.tangem.features.walletconnect.connections.model.transformers.WcAppSubtitleConverter
+import com.tangem.features.walletconnect.connections.routes.ConnectedAppInfoRoutes
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,6 +35,7 @@ import javax.inject.Inject
 @Stable
 @ModelScoped
 internal class WcConnectedAppInfoModel @Inject constructor(
+    private val router: Router,
     private val wcSessionsUseCase: WcSessionsUseCase,
     private val messageSender: UiMessageSender,
     private val disconnectUseCase: WcDisconnectUseCase,
@@ -38,9 +43,11 @@ internal class WcConnectedAppInfoModel @Inject constructor(
     paramsContainer: ParamsContainer,
 ) : Model() {
 
-    private val params = paramsContainer.require<WcConnectedAppInfoComponent.Params>()
+    private val params = paramsContainer.require<WcConnectedAppInfoContainerComponent.Params>()
     val uiState: StateFlow<WcConnectedAppInfoUM?>
     field = MutableStateFlow<WcConnectedAppInfoUM?>(null)
+
+    val stackNavigation = StackNavigation<ConnectedAppInfoRoutes>()
 
     init {
         loadDAppInfo(params.topic)
@@ -94,7 +101,11 @@ internal class WcConnectedAppInfoModel @Inject constructor(
 
     private fun extractVerifiedState(session: WcSession): VerifiedDAppState {
         return if (session.securityStatus == CheckDAppResult.SAFE) {
-            VerifiedDAppState.Verified(onVerifiedClick = {})
+            VerifiedDAppState.Verified(
+                onVerifiedClick = {
+                    stackNavigation.pushNew(ConnectedAppInfoRoutes.VerifiedAlert(session.sdkModel.appMetaData.name))
+                },
+            )
         } else {
             VerifiedDAppState.Unknown
         }
