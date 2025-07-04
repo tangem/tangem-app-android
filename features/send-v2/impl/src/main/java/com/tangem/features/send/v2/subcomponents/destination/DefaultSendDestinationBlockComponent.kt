@@ -21,8 +21,8 @@ import kotlinx.coroutines.flow.onEach
 internal class DefaultSendDestinationBlockComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted private val params: SendDestinationComponentParams.DestinationBlockParams,
-    val onClick: () -> Unit,
-    val onResult: (DestinationUM) -> Unit,
+    @Assisted val onClick: () -> Unit,
+    @Assisted val onResult: (DestinationUM) -> Unit,
 ) : SendDestinationBlockComponent, AppComponentContext by appComponentContext {
 
     private val model: SendDestinationModel = getOrCreateModel(params = params)
@@ -54,6 +54,8 @@ internal class DefaultSendDestinationBlockComponent @AssistedInject constructor(
         override fun create(
             context: AppComponentContext,
             params: SendDestinationComponentParams.DestinationBlockParams,
+            onClick: () -> Unit,
+            onResult: (DestinationUM) -> Unit,
         ): DefaultSendDestinationBlockComponent
     }
 }
