@@ -193,11 +193,13 @@ private fun ConnectionRequestDescription(modifier: Modifier = Modifier) {
             iconPainter = painterResource(R.drawable.ic_check_24),
             tint = TangemTheme.colors.icon.accent,
             text = stringResourceSafe(R.string.wc_connection_reqeust_can_view_balance),
+            backgroundColor = TangemTheme.colors.icon.accent,
         )
         ConnectionRequestDescriptionRow(
             iconPainter = painterResource(R.drawable.ic_check_24),
             tint = TangemTheme.colors.icon.accent,
             text = stringResourceSafe(R.string.wc_connection_reqeust_request_approval),
+            backgroundColor = TangemTheme.colors.icon.accent,
         )
         HorizontalDivider(
             modifier = Modifier.padding(top = TangemTheme.dimens.spacing12),
@@ -214,6 +216,7 @@ private fun ConnectionRequestDescription(modifier: Modifier = Modifier) {
             iconPainter = painterResource(R.drawable.ic_close_24),
             tint = TangemTheme.colors.icon.warning,
             text = stringResourceSafe(R.string.wc_connection_reqeust_cant_sign),
+            backgroundColor = TangemTheme.colors.icon.warning,
         )
     }
 }
@@ -221,6 +224,7 @@ private fun ConnectionRequestDescription(modifier: Modifier = Modifier) {
 @Composable
 private fun ConnectionRequestDescriptionRow(
     iconPainter: Painter,
+    backgroundColor: Color,
     tint: Color,
     text: String,
     modifier: Modifier = Modifier,
@@ -232,11 +236,20 @@ private fun ConnectionRequestDescriptionRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
     ) {
-        Icon(
-            modifier = Modifier.size(TangemTheme.dimens.size24),
-            painter = iconPainter,
-            contentDescription = null,
-            tint = tint,
+        Box(
+            modifier = Modifier
+                .size(TangemTheme.dimens.size24)
+                .clip(CircleShape)
+                .background(backgroundColor.copy(alpha = 0.1F)),
+            contentAlignment = Alignment.Center,
+            content = {
+                Icon(
+                    modifier = Modifier.size(TangemTheme.dimens.size20),
+                    painter = iconPainter,
+                    contentDescription = null,
+                    tint = tint,
+                )
+            },
         )
         Text(
             modifier = Modifier.fillMaxWidth(),
