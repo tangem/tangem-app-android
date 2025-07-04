@@ -1,10 +1,17 @@
 package com.tangem.features.send.v2.api.subcomponents.destination
 
-import com.tangem.core.decompose.factory.ComponentFactory
+import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
 
 interface SendDestinationBlockComponent : ComposableContentComponent {
 
-    interface Factory :
-        ComponentFactory<SendDestinationComponentParams.DestinationBlockParams, SendDestinationBlockComponent>
+    interface Factory {
+        fun create(
+            context: AppComponentContext,
+            params: SendDestinationComponentParams.DestinationBlockParams,
+            onClick: () -> Unit,
+            onResult: (DestinationUM) -> Unit,
+        ): SendDestinationBlockComponent
+    }
 }
