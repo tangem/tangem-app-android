@@ -33,6 +33,7 @@ class FetchCurrencyStatusUseCase(
     private val singleNetworkStatusFetcher: SingleNetworkStatusFetcher,
     private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
     private val singleYieldBalanceFetcher: SingleYieldBalanceFetcher,
+    private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
     private val tokensFeatureToggles: TokensFeatureToggles,
 ) {
 
@@ -99,7 +100,17 @@ class FetchCurrencyStatusUseCase(
         id: CryptoCurrency.ID,
     ): CryptoCurrency {
         return catch(
-            block = { currenciesRepository.getMultiCurrencyWalletCurrency(userWalletId = userWalletId, id = id) },
+            block = {
+                if (tokensFeatureToggles.isWalletBalanceFetcherEnabled) {
+                    multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
+                        params = MultiWalletCryptoCurrenciesProducer.Params(userWalletId),
+                    )
+                        ?.firstOrNull { it.id == id }
+                        ?: error("Unable to find currency with ID: $id")
+                } else {
+                    currenciesRepository.getMultiCurrencyWalletCurrency(userWalletId = userWalletId, id = id)
+                }
+            },
         ) {
             raise(CurrencyStatusError.DataError(it))
         }
