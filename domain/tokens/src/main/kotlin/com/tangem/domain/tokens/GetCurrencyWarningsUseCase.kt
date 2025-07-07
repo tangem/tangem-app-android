@@ -28,6 +28,8 @@ class GetCurrencyWarningsUseCase(
     private val dispatchers: CoroutineDispatcherProvider,
     private val currencyChecksRepository: CurrencyChecksRepository,
     private val currencyStatusOperations: BaseCurrencyStatusOperations,
+    private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
+    private val tokensFeatureToggles: TokensFeatureToggles,
 ) {
 
     suspend operator fun invoke(
@@ -150,13 +152,21 @@ class GetCurrencyWarningsUseCase(
         tokenStatus: CryptoCurrencyStatus,
         feePaidToken: FeePaidCurrency.Token,
     ): CryptoCurrencyWarning {
-        val token = currenciesRepository
-            .getMultiCurrencyWalletCurrenciesSync(userWalletId)
-            .find {
-                it is CryptoCurrency.Token &&
-                    it.contractAddress.equals(feePaidToken.contractAddress, ignoreCase = true) &&
-                    it.network.derivationPath == tokenStatus.currency.network.derivationPath
-            }
+        val tokens = if (tokensFeatureToggles.isWalletBalanceFetcherEnabled) {
+            multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
+                params = MultiWalletCryptoCurrenciesProducer.Params(userWalletId),
+            )
+                .orEmpty()
+        } else {
+            currenciesRepository.getMultiCurrencyWalletCurrenciesSync(userWalletId)
+        }
+
+        val token = tokens.find {
+            it is CryptoCurrency.Token &&
+                it.contractAddress.equals(feePaidToken.contractAddress, ignoreCase = true) &&
+                it.network.derivationPath == tokenStatus.currency.network.derivationPath
+        }
+
         return if (token != null) {
             CryptoCurrencyWarning.CustomTokenNotEnoughForFee(
                 currency = tokenStatus.currency,
