@@ -12,13 +12,12 @@ import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
 import com.tangem.domain.tokens.FetchTokenListUseCase
 import com.tangem.domain.tokens.FetchTokenListUseCase.RefreshMode
 import com.tangem.domain.tokens.TokensFeatureToggles
-import com.tangem.domain.tokens.error.TokenListError
-import com.tangem.domain.tokens.wallet.WalletBalanceFetcher
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.domain.wallets.usecase.SelectWalletUseCase
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
 import com.tangem.feature.wallet.presentation.wallet.domain.OnrampStatusFactory
+import com.tangem.feature.wallet.presentation.wallet.domain.WalletContentFetcher
 import com.tangem.feature.wallet.presentation.wallet.domain.unwrap
 import com.tangem.feature.wallet.presentation.wallet.loaders.WalletScreenContentLoader
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
@@ -30,7 +29,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -47,7 +45,7 @@ internal class WalletClickIntents @Inject constructor(
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val selectWalletUseCase: SelectWalletUseCase,
     private val fetchTokenListUseCase: FetchTokenListUseCase,
-    private val walletBalanceFetcher: WalletBalanceFetcher,
+    private val walletContentFetcher: WalletContentFetcher,
     private val tokensFeatureToggles: TokensFeatureToggles,
     private val fetchCardTokenListUseCase: FetchCardTokenListUseCase,
     private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
@@ -92,6 +90,10 @@ internal class WalletClickIntents @Inject constructor(
             stateHolder.update { it.copy(selectedWalletIndex = index) }
 
             maybeUserWallet.onRight {
+                if (tokensFeatureToggles.isWalletBalanceFetcherEnabled) {
+                    launch { walletContentFetcher(userWalletId = it.walletId) }
+                }
+
                 walletScreenContentLoader.load(
                     userWallet = it,
                     clickIntents = this@WalletClickIntents,
@@ -131,20 +133,26 @@ internal class WalletClickIntents @Inject constructor(
         )
 
         modelScope.launch {
-            val maybeFetchResult = if (tokensFeatureToggles.isWalletBalanceFetcherEnabled) {
-                walletBalanceFetcher.invoke(params = WalletBalanceFetcher.Params(userWalletId = userWallet.walletId))
-                    .mapLeft {
-                        Timber.e(it)
-                        TokenListError.DataError(it)
-                    }
+            if (tokensFeatureToggles.isWalletBalanceFetcherEnabled) {
+                walletContentFetcher(userWalletId = userWallet.walletId, forceUpdate = true)
             } else {
                 val isSingleWalletWithToken = userWallet is UserWallet.Cold &&
                     userWallet.cardTypesResolver.isSingleWalletWithToken()
 
-                if (isSingleWalletWithToken) {
+                val maybeFetchResult = if (isSingleWalletWithToken) {
                     fetchCardTokenListUseCase(userWalletId = userWallet.walletId, refresh = true)
                 } else {
                     fetchTokenListUseCase(userWalletId = userWallet.walletId, mode = RefreshMode.FULL)
+                }
+
+                maybeFetchResult.onLeft {
+                    stateHolder.update(
+                        SetTokenListErrorTransformer(
+                            selectedWallet = userWallet,
+                            error = it,
+                            appCurrency = getSelectedAppCurrencyUseCase.unwrap(),
+                        ),
+                    )
                 }
             }
 
@@ -158,16 +166,6 @@ internal class WalletClickIntents @Inject constructor(
                 async { fetchHotCryptoUseCase() }.let(::add)
             }
                 .awaitAll()
-
-            maybeFetchResult.onLeft {
-                stateHolder.update(
-                    SetTokenListErrorTransformer(
-                        selectedWallet = userWallet,
-                        error = it,
-                        appCurrency = getSelectedAppCurrencyUseCase.unwrap(),
-                    ),
-                )
-            }
 
             stateHolder.update(
                 SetRefreshStateTransformer(userWalletId = userWallet.walletId, isRefreshing = false),
@@ -186,11 +184,11 @@ internal class WalletClickIntents @Inject constructor(
 
         modelScope.launch {
             if (tokensFeatureToggles.isWalletBalanceFetcherEnabled) {
-                walletBalanceFetcher(params = WalletBalanceFetcher.Params(userWalletId = userWallet.walletId))
-                    .onLeft(Timber::e)
+                walletContentFetcher(userWalletId = userWallet.walletId, forceUpdate = true)
             } else {
                 fetchCurrencyStatusUseCase(userWallet.walletId, refresh = true)
             }
+
             onrampStatusFactory.updateOnrmapTransactionStatuses(userWallet)
             walletScreenContentLoader.load(
                 userWallet = userWallet,
