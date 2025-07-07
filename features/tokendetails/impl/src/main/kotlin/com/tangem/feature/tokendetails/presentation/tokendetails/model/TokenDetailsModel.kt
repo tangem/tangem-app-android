@@ -78,7 +78,6 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenBala
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsStateFactory
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.express.ExpressStatusFactory
-import com.tangem.features.onramp.OnrampFeatureToggles
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
@@ -125,7 +124,6 @@ internal class TokenDetailsModel @Inject constructor(
     private val analyticsEventsHandler: AnalyticsEventHandler,
     private val vibratorHapticManager: VibratorHapticManager,
     private val clipboardManager: ClipboardManager,
-    private val onrampFeatureToggles: OnrampFeatureToggles,
     private val shareManager: ShareManager,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
     private val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter,
@@ -205,11 +203,6 @@ internal class TokenDetailsModel @Inject constructor(
         updateContent()
         handleBalanceHiding()
         checkForActionUpdates()
-    }
-
-    fun onBuyCurrencyDeepLink() {
-        val currency = cryptoCurrencyStatus?.currency ?: return
-        analyticsEventsHandler.send(TokenScreenAnalyticsEvent.Bought(currency.symbol))
     }
 
     fun onPause() {
@@ -496,30 +489,14 @@ internal class TokenDetailsModel @Inject constructor(
         }
 
         val status = cryptoCurrencyStatus ?: return
-        if (onrampFeatureToggles.isFeatureEnabled) {
-            modelScope.launch(dispatchers.main) {
-                reduxStateHolder.dispatch(
-                    TradeCryptoAction.Buy(
-                        userWallet = userWallet,
-                        source = OnrampSource.TOKEN_DETAILS,
-                        cryptoCurrencyStatus = status,
-                        appCurrencyCode = selectedAppCurrencyFlow.value.code,
-                    ),
-                )
-            }
-        } else {
-            showErrorIfDemoModeOrElse {
-                modelScope.launch(dispatchers.main) {
-                    reduxStateHolder.dispatch(
-                        TradeCryptoAction.Buy(
-                            userWallet = userWallet,
-                            source = OnrampSource.TOKEN_DETAILS,
-                            cryptoCurrencyStatus = status,
-                            appCurrencyCode = selectedAppCurrencyFlow.value.code,
-                        ),
-                    )
-                }
-            }
+        modelScope.launch {
+            appRouter.push(
+                AppRoute.Onramp(
+                    userWalletId = userWallet.walletId,
+                    currency = status.currency,
+                    source = OnrampSource.TOKEN_DETAILS,
+                ),
+            )
         }
     }
 
