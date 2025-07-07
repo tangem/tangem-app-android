@@ -394,13 +394,13 @@ internal class WalletModel @Inject constructor(
             ),
         )
 
-        fetchWalletContent(userWallet = action.selectedWallet)
-
         walletScreenContentLoader.load(
             userWallet = action.selectedWallet,
             clickIntents = clickIntents,
             coroutineScope = modelScope,
         )
+
+        fetchWalletContent(userWallet = action.selectedWallet)
 
         val otherWallets = action.wallets.minus(action.selectedWallet)
 
@@ -423,13 +423,13 @@ internal class WalletModel @Inject constructor(
         walletScreenContentLoader.cancel(action.prevWalletId)
         tokenListStore.remove(action.prevWalletId)
 
-        fetchWalletContent(userWallet = action.selectedWallet)
-
         walletScreenContentLoader.load(
             userWallet = action.selectedWallet,
             clickIntents = clickIntents,
             coroutineScope = modelScope,
         )
+
+        fetchWalletContent(userWallet = action.selectedWallet)
 
         stateHolder.update(
             ReinitializeWalletTransformer(
@@ -442,13 +442,13 @@ internal class WalletModel @Inject constructor(
     }
 
     private suspend fun addWallet(action: WalletsUpdateActionResolver.Action.AddWallet) {
-        fetchWalletContent(userWallet = action.selectedWallet)
-
         walletScreenContentLoader.load(
             userWallet = action.selectedWallet,
             clickIntents = clickIntents,
             coroutineScope = modelScope,
         )
+
+        fetchWalletContent(userWallet = action.selectedWallet)
 
         stateHolder.update(
             AddWalletTransformer(
