@@ -39,7 +39,6 @@ import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
-import com.tangem.features.onramp.OnrampFeatureToggles
 import com.tangem.operations.attestation.OnlineCardVerifier
 import com.tangem.tap.common.analytics.handlers.BlockchainExceptionHandler
 import com.tangem.tap.common.log.TangemAppLoggerInitializer
@@ -117,8 +116,6 @@ interface ApplicationEntryPoint {
     fun getTangemAppLogger(): TangemAppLoggerInitializer
 
     fun getTransactionSignerFactory(): TransactionSignerFactory
-
-    fun getOnrampFeatureToggles(): OnrampFeatureToggles
 
     fun getOnboardingV2FeatureToggles(): OnboardingV2FeatureToggles
 
