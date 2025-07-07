@@ -77,6 +77,6 @@
     },
     {
         "name": "WALLET_BALANCE_FETCHER_ENABLED",
-        "version": "undefined"
+        "version": "5.27.0"
     }
 ]
