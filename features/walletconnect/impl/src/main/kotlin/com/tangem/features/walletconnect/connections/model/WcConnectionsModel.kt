@@ -12,8 +12,10 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenuItem
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
+import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
@@ -112,7 +114,10 @@ internal class WcConnectionsModel @Inject constructor(
     }
 
     private fun disconnectAllSessions() {
-        modelScope.launch { wcDisconnectUseCase.disconnectAll() }
+        modelScope.launch {
+            wcDisconnectUseCase.disconnectAll()
+            uiMessageSender.send(SnackbarMessage(message = stringReference("All dApps disconnected")))
+        }
     }
 
     private fun getInitialState(): WcConnectionsState {
