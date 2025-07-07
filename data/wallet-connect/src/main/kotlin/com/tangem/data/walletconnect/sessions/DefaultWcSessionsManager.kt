@@ -35,7 +35,6 @@ internal class DefaultWcSessionsManager(
 
     private val onSessionDelete = Channel<Wallet.Model.SessionDelete>(capacity = Channel.BUFFERED)
     private val oneTimeMigration = MutableStateFlow(true)
-    private val oneTimeSessionExtend = MutableStateFlow(true)
 
     override val sessions: Flow<Map<UserWallet, List<WcSession>>>
         get() = combine(getWallets(), store.sessions) { wallets, inStore -> wallets to inStore }
@@ -50,10 +49,6 @@ internal class DefaultWcSessionsManager(
                 val associatedSessions: List<WcSession> = associate(inSdk, inStore, wallets)
                 val someRemove = removeUnknownSessions(inStore, associatedSessions)
                 if (someRemove) return@transform // ignore emit, wait next one
-                if (oneTimeSessionExtend.value) {
-                    oneTimeSessionExtend.value = false
-                    scope.launch { extendAliveSessions(associatedSessions) }
-                }
                 emit(associatedSessions.groupBy { it.wallet })
             }
             .distinctUntilChanged()
@@ -61,8 +56,8 @@ internal class DefaultWcSessionsManager(
 
     override fun onWcSdkInit() {
         oneTimeMigration.value = true
-        oneTimeSessionExtend.value = true
         listenOnSessionDelete()
+        extendSessions()
     }
 
     override suspend fun saveSession(session: WcSession) {
@@ -154,17 +149,20 @@ internal class DefaultWcSessionsManager(
         return haveSomeUnknown
     }
 
-    private suspend fun extendAliveSessions(sessions: List<WcSession>) = coroutineScope {
-        val jobs = sessions.map { launch { sdkSessionExtend(it.sdkModel.topic) } }
-        jobs.joinAll()
+    private fun extendSessions() {
+        scope.launch(dispatchers.io) {
+            val topics: List<String> = WalletKit.getListOfActiveSessions().map { it.topic }
+            val jobs = topics.map { topic -> launch { sdkSessionExtend(topic) } }
+            jobs.joinAll()
+        }
     }
 
     private suspend fun sdkDisconnectSession(topic: String): Either<Throwable, Unit> {
         return suspendCancellableCoroutine { continuation ->
             WalletKit.disconnectSession(
                 params = Wallet.Params.SessionDisconnect(topic),
-                onSuccess = { continuation.resume(Unit.right()) },
-                onError = { continuation.resume(it.throwable.left()) },
+                onSuccess = { if (continuation.isActive) continuation.resume(Unit.right()) },
+                onError = { if (continuation.isActive) continuation.resume(it.throwable.left()) },
             )
         }
     }
@@ -173,8 +171,8 @@ internal class DefaultWcSessionsManager(
         return suspendCancellableCoroutine { continuation ->
             WalletKit.extendSession(
                 params = Wallet.Params.SessionExtend(topic),
-                onSuccess = { continuation.resume(Unit.right()) },
-                onError = { continuation.resume(it.throwable.left()) },
+                onSuccess = { if (continuation.isActive) continuation.resume(Unit.right()) },
+                onError = { if (continuation.isActive) continuation.resume(it.throwable.left()) },
             )
         }
     }
