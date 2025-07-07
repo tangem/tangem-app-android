@@ -196,7 +196,7 @@ internal class DefaultWcPairUseCaseTest {
     @Test
     fun `success pair and reject unsupported dApp`() = runTest {
         coEvery { sdkDelegate.pair(url) } returns unsupportedSdkProposal.right()
-        val unsupportedDAppError = WcPairState.Error(WcPairError.UnsupportedDomain)
+        val unsupportedDAppError = WcPairState.Error(WcPairError.UnsupportedDApp)
 
         val useCase = useCaseFactory()
         useCase.invoke().test {

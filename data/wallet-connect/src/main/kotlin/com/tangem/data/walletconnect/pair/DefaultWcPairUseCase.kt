@@ -56,7 +56,7 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
             // check unsupported dApps, just local constant for now, finish if unsupported
             if (sdkSessionProposal.name in unsupportedDApps) {
                 Timber.tag(WC_TAG).i("Unsupported DApp ${sdkSessionProposal.name}")
-                val error = WcPairState.Error(WcPairError.UnsupportedDomain)
+                val error = WcPairState.Error(WcPairError.UnsupportedDApp)
                 emit(error)
                 return@flow
             }
