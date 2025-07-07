@@ -18,11 +18,15 @@ import com.tangem.core.ui.message.BottomSheetMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
+import com.tangem.datasource.local.config.environment.EnvironmentConfig
+import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
 import com.tangem.domain.appcurrency.FetchAppCurrenciesUseCase
 import com.tangem.domain.balancehiding.BalanceHidingSettings
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.balancehiding.ListenToFlipsUseCase
 import com.tangem.domain.balancehiding.UpdateBalanceHidingSettingsUseCase
+import com.tangem.domain.common.LogConfig
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.notifications.GetApplicationIdUseCase
 import com.tangem.domain.notifications.SendPushTokenUseCase
 import com.tangem.domain.notifications.models.ApplicationId
@@ -46,6 +50,9 @@ import com.tangem.features.onramp.deeplink.OnrampDeepLink
 import com.tangem.tap.common.extensions.setContext
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupDialog
+import com.tangem.tap.network.exchangeServices.ExchangeService
+import com.tangem.tap.network.exchangeServices.moonpay.MoonPayService
+import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.store
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.wallet.BuildConfig
@@ -58,7 +65,7 @@ import timber.log.Timber
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 @HiltViewModel
 internal class MainViewModel @Inject constructor(
     private val updateBalanceHidingSettingsUseCase: UpdateBalanceHidingSettingsUseCase,
@@ -88,6 +95,8 @@ internal class MainViewModel @Inject constructor(
     private val sendPushTokenUseCase: SendPushTokenUseCase,
     private val apiConfigsManager: ApiConfigsManager,
     private val multiQuoteUpdater: MultiQuoteUpdater,
+    private val appStateHolder: AppStateHolder,
+    private val environmentConfigStorage: EnvironmentConfigStorage,
     routingFeatureToggle: RoutingFeatureToggle,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
 ) : ViewModel() {
@@ -119,6 +128,8 @@ internal class MainViewModel @Inject constructor(
         viewModelScope.launch { incrementAppLaunchCounterUseCase() }
 
         multiQuoteUpdater.subscribe()
+
+        initializeOffRamp()
 
         observeFlips()
         displayBalancesHidingStatusToast()
@@ -199,6 +210,28 @@ internal class MainViewModel @Inject constructor(
         fetchStakingTokensUseCase()
             .onLeft { Timber.e(it.toString(), "Unable to fetch the staking tokens list") }
             .onRight { Timber.d("Staking token list was fetched successfully") }
+    }
+
+    private fun initializeOffRamp() {
+        viewModelScope.launch {
+            val sellService = makeSellExchangeService(environmentConfig = environmentConfigStorage.getConfigSync())
+            appStateHolder.sellService = sellService
+
+            sellService.update()
+        }
+    }
+
+    private fun makeSellExchangeService(environmentConfig: EnvironmentConfig): ExchangeService {
+        val cardProvider: () -> ScanResponse? = {
+            userWalletsListManager.selectedUserWalletSync?.requireColdWallet()?.scanResponse // TODO [REDACTED_TASK_KEY]
+        }
+
+        return MoonPayService(
+            apiKey = environmentConfig.moonPayApiKey,
+            secretKey = environmentConfig.moonPayApiSecretKey,
+            logEnabled = LogConfig.network.moonPayService,
+            cardProvider = { cardProvider.invoke()?.card },
+        )
     }
 
     private fun observeFlips() {
