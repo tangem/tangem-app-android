@@ -13,6 +13,7 @@ import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
+import com.tangem.core.decompose.ui.DefaultUiMessageSender
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.message.EventMessageEffect
@@ -27,8 +28,9 @@ internal class WcConnectionsComponent(
     params: Params,
 ) : AppComponentContext by appComponentContext, ComposableContentComponent {
 
-    private val messageHandler = EventMessageHandler()
-    private val model: WcConnectionsModel = getOrCreateModel(params)
+    private val messageHandler: EventMessageHandler = EventMessageHandler()
+    override val messageSender = DefaultUiMessageSender(messageHandler)
+    private val model: WcConnectionsModel = getOrCreateModel(params, messageSender = messageSender)
     private val bottomSheetSlot = childSlot(
         source = model.bottomSheetNavigation,
         serializer = null,
