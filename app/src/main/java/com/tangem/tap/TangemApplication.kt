@@ -58,7 +58,6 @@ import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
-import com.tangem.features.onramp.OnrampFeatureToggles
 import com.tangem.operations.attestation.OnlineCardVerifier
 import com.tangem.operations.attestation.api.TangemApiServiceSettings
 import com.tangem.tap.common.analytics.AnalyticsFactory
@@ -185,9 +184,6 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
 
     private val transactionSignerFactory: TransactionSignerFactory
         get() = entryPoint.getTransactionSignerFactory()
-
-    private val onrampFeatureToggles: OnrampFeatureToggles
-        get() = entryPoint.getOnrampFeatureToggles()
 
     private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles
         get() = entryPoint.getOnboardingV2FeatureToggles()
@@ -363,7 +359,6 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
                     shareManager = shareManager,
                     appRouter = appRouter,
                     transactionSignerFactory = transactionSignerFactory,
-                    onrampFeatureToggles = onrampFeatureToggles,
                     environmentConfigStorage = environmentConfigStorage,
                     onboardingV2FeatureToggles = onboardingV2FeatureToggles,
                     onboardingRepository = onboardingRepository,
