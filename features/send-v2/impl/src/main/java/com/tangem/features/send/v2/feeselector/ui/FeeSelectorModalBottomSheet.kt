@@ -4,10 +4,8 @@ import android.content.res.Configuration
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.HorizontalDivider
@@ -17,7 +15,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
@@ -52,6 +49,7 @@ import com.tangem.features.send.v2.api.entity.CustomFeeFieldUM
 import com.tangem.features.send.v2.api.entity.FeeFiatRateUM
 import com.tangem.features.send.v2.api.entity.FeeItem
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
+import com.tangem.features.send.v2.api.params.FeeSelectorParams
 import com.tangem.features.send.v2.feeselector.model.FeeSelectorIntents
 import com.tangem.features.send.v2.feeselector.model.StubFeeSelectorIntents
 import com.tangem.features.send.v2.impl.R
@@ -65,6 +63,7 @@ import java.math.BigInteger
 internal fun FeeSelectorModalBottomSheet(
     state: FeeSelectorUM,
     feeSelectorIntents: FeeSelectorIntents,
+    feeDisplaySource: FeeSelectorParams.FeeDisplaySource,
     onDismiss: () -> Unit,
 ) {
     if (state !is FeeSelectorUM.Content) return
@@ -77,17 +76,13 @@ internal fun FeeSelectorModalBottomSheet(
         ),
         containerColor = TangemTheme.colors.background.primary,
         title = {
-            TangemModalBottomSheetTitle(
-                title = resourceReference(R.string.common_network_fee_title),
-                startIconRes = R.drawable.ic_back_24,
-                onStartClick = onDismiss,
-            )
+            FeeTitle(feeDisplaySource = feeDisplaySource, onDismiss = onDismiss)
         },
         content = {
             FeeSelectorItems(
                 state = state,
                 feeSelectorIntents = feeSelectorIntents,
-                modifier = Modifier.padding(vertical = 4.dp, horizontal = 16.dp),
+                modifier = Modifier.padding(vertical = 4.dp, horizontal = 13.dp),
             )
         },
         footer = {
@@ -100,6 +95,26 @@ internal fun FeeSelectorModalBottomSheet(
             )
         },
     )
+}
+
+@Composable
+private fun FeeTitle(feeDisplaySource: FeeSelectorParams.FeeDisplaySource, onDismiss: () -> Unit) {
+    when (feeDisplaySource) {
+        FeeSelectorParams.FeeDisplaySource.Screen -> {
+            TangemModalBottomSheetTitle(
+                title = resourceReference(R.string.common_network_fee_title),
+                endIconRes = R.drawable.ic_close_24,
+                onEndClick = onDismiss,
+            )
+        }
+        FeeSelectorParams.FeeDisplaySource.BottomSheet -> {
+            TangemModalBottomSheetTitle(
+                title = resourceReference(R.string.common_network_fee_title),
+                startIconRes = R.drawable.ic_back_24,
+                onStartClick = onDismiss,
+            )
+        }
+    }
 }
 
 @Suppress("LongMethod", "CyclomaticComplexMethod")
@@ -129,21 +144,7 @@ private fun FeeSelectorItems(
             val itemModifier = Modifier
                 .fillMaxWidth()
                 .background(TangemTheme.colors.background.primary)
-                .then(
-                    if (isSelected) {
-                        Modifier
-                            .border(
-                                width = 2.5.dp,
-                                color = iconTint.copy(alpha = 0.2F),
-                                shape = RoundedCornerShape(16.dp),
-                            )
-                            .padding(2.5.dp)
-                            .border(width = 1.dp, color = iconTint, shape = RoundedCornerShape(14.dp))
-                            .clip(RoundedCornerShape(14.dp))
-                    } else {
-                        Modifier
-                    },
-                )
+                .selectedBorder(isSelected = isSelected)
                 .clickableSingle(onClick = { feeSelectorIntents.onFeeItemSelected(item) })
             when (item) {
                 is FeeItem.Suggested -> RegularFeeItemContent(
@@ -477,7 +478,12 @@ private fun FeeSelectorBS_Preview(
     state: FeeSelectorUM.Content,
 ) {
     TangemThemePreview {
-        FeeSelectorModalBottomSheet(onDismiss = {}, state = state, feeSelectorIntents = StubFeeSelectorIntents())
+        FeeSelectorModalBottomSheet(
+            onDismiss = {},
+            state = state,
+            feeSelectorIntents = StubFeeSelectorIntents(),
+            feeDisplaySource = FeeSelectorParams.FeeDisplaySource.BottomSheet,
+        )
     }
 }
 
