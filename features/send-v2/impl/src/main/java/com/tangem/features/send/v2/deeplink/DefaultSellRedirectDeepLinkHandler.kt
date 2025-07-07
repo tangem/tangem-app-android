@@ -3,6 +3,8 @@ package com.tangem.features.send.v2.deeplink
 import arrow.core.getOrElse
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.core.ui.utils.parseBigDecimal
+import com.tangem.core.ui.utils.parseBigDecimalOrNull
 import com.tangem.domain.tokens.GetCryptoCurrencyUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.features.send.v2.api.deeplink.SellRedirectDeepLinkHandler
@@ -53,14 +55,15 @@ internal class DefaultSellRedirectDeepLinkHandler @AssistedInject constructor(
                             Timber.e("Error on getting cryptoCurrency: $it")
                             return@launch
                         }
-
+                        // Convert using universal parser to account for regional separators
+                        val amountValue = amount.parseBigDecimalOrNull()?.parseBigDecimal(cryptoCurrency.decimals)
                         appRouter.push(
                             AppRoute.Send(
                                 currency = cryptoCurrency,
                                 userWalletId = userWallet.walletId,
                                 transactionId = transactionId,
                                 destinationAddress = destinationAddress,
-                                amount = amount,
+                                amount = amountValue,
                                 tag = memo,
                             ),
                         )
