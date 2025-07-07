@@ -85,7 +85,9 @@ class CachedCurrenciesStatusesOperations(
 
         val nonEmptyCurrencies = currenciesFlow.mapNotNull { it.getOrNull() }.firstOrNull()?.toNonEmptyListOrNull()
 
-        if (!isFetchingStarted(userWalletId) && nonEmptyCurrencies != null) {
+        if (!tokensFeatureToggles.isWalletBalanceFetcherEnabled && !isFetchingStarted(userWalletId) &&
+            nonEmptyCurrencies != null
+        ) {
             launch {
                 setFetchStarted(userWalletId)
 
@@ -145,7 +147,7 @@ class CachedCurrenciesStatusesOperations(
                 )
             }
 
-            if (!isFetchingStarted(userWalletId)) {
+            if (!tokensFeatureToggles.isWalletBalanceFetcherEnabled && !isFetchingStarted(userWalletId)) {
                 launch {
                     setFetchStarted(userWalletId)
 
