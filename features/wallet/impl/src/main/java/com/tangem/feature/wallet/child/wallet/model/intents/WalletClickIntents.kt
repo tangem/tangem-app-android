@@ -24,7 +24,6 @@ import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetRefreshStateTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetTokenListErrorTransformer
-import com.tangem.features.onramp.OnrampFeatureToggles
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -52,7 +51,6 @@ internal class WalletClickIntents @Inject constructor(
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val neverToShowWalletsScrollPreview: NeverToShowWalletsScrollPreview,
     private val rampStateManager: RampStateManager,
-    private val onrampFeatureToggles: OnrampFeatureToggles,
     private val fetchHotCryptoUseCase: FetchHotCryptoUseCase,
     private val onrampStatusFactory: OnrampStatusFactory,
 ) : BaseWalletClickIntents(),
@@ -157,10 +155,6 @@ internal class WalletClickIntents @Inject constructor(
             }
 
             buildList {
-                if (!onrampFeatureToggles.isFeatureEnabled) {
-                    async { rampStateManager.fetchBuyServiceData() }.let(::add)
-                }
-
                 async { rampStateManager.fetchSellServiceData() }.let(::add)
 
                 async { fetchHotCryptoUseCase() }.let(::add)
