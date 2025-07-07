@@ -29,6 +29,7 @@ import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.staking.single.SingleYieldBalanceProducer
 import com.tangem.domain.staking.single.SingleYieldBalanceSupplier
+import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
 import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -54,6 +55,7 @@ class CachedCurrenciesStatusesOperations(
     private val singleQuoteStatusSupplier: SingleQuoteStatusSupplier,
     private val singleYieldBalanceSupplier: SingleYieldBalanceSupplier,
     private val multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
+    multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
     private val tokensFeatureToggles: TokensFeatureToggles,
 ) : BaseCurrenciesStatusesOperations,
     BaseCurrencyStatusOperations(
@@ -64,6 +66,7 @@ class CachedCurrenciesStatusesOperations(
         singleNetworkStatusSupplier = singleNetworkStatusSupplier,
         singleQuoteStatusSupplier = singleQuoteStatusSupplier,
         singleYieldBalanceSupplier = singleYieldBalanceSupplier,
+        multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
         tokensFeatureToggles = tokensFeatureToggles,
     ) {
 
