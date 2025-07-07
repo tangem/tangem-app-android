@@ -260,6 +260,7 @@ private fun WcAppInfoSecondBlock(state: WcAppInfoUM.Content, modifier: Modifier 
                 Modifier
             }.then(itemsModifier),
             walletName = state.walletName,
+            showEndIcon = state.onWalletClick != null,
         )
         HorizontalDivider(thickness = 1.dp, color = TangemTheme.colors.stroke.primary)
         SelectNetworksBlock(
@@ -290,7 +291,7 @@ private fun WcAppInfoSecondBlock(state: WcAppInfoUM.Content, modifier: Modifier 
 }
 
 @Composable
-private fun WalletRowItem(walletName: String, modifier: Modifier = Modifier) {
+private fun WalletRowItem(walletName: String, showEndIcon: Boolean, modifier: Modifier = Modifier) {
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
         Icon(
             modifier = Modifier.size(24.dp),
@@ -315,14 +316,16 @@ private fun WalletRowItem(walletName: String, modifier: Modifier = Modifier) {
             style = TangemTheme.typography.body1,
             color = TangemTheme.colors.text.tertiary,
         )
-        Icon(
-            modifier = Modifier
-                .padding(start = TangemTheme.dimens.spacing12)
-                .size(width = 18.dp, height = 24.dp),
-            painter = painterResource(R.drawable.ic_select_18_24),
-            contentDescription = null,
-            tint = TangemTheme.colors.icon.informative,
-        )
+        if (showEndIcon) {
+            Icon(
+                modifier = Modifier
+                    .padding(start = TangemTheme.dimens.spacing12)
+                    .size(width = 18.dp, height = 24.dp),
+                painter = painterResource(R.drawable.ic_select_18_24),
+                contentDescription = null,
+                tint = TangemTheme.colors.icon.informative,
+            )
+        }
     }
 }
 
@@ -597,7 +600,7 @@ private class WcAppInfoStateProvider : CollectionPreviewParameterProvider<WcAppI
             appSubtitle = "react-app.walletconnect.com",
             notification = WcAppInfoSecurityNotification.SecurityRisk,
             walletName = "Tangem 2.0",
-            onWalletClick = {},
+            onWalletClick = null,
             networksInfo = WcNetworksInfo.ContainsAllRequiredNetworks(
                 items = persistentListOf(
                     WcNetworkInfoItem.Required(
