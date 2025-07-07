@@ -43,9 +43,6 @@ object DemoHelper {
     }
 
     private fun getScanResponse(appState: () -> AppState?): ScanResponse? {
-        val state = appState() ?: return null
-
-        return state.globalState.onboardingState.onboardingManager?.scanResponse
-            ?: state.globalState.scanResponse
+        return appState()?.globalState?.scanResponse
     }
 }
