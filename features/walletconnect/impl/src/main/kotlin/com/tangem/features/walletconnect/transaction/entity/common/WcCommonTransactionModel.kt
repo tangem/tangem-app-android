@@ -7,4 +7,6 @@ internal interface WcCommonTransactionModel {
     val uiState: StateFlow<WcCommonTransactionUM?>
 
     fun dismiss()
+
+    fun popBack()
 }
