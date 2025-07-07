@@ -9,6 +9,7 @@ import com.tangem.feature.qrscanning.impl.R
 import com.tangem.feature.qrscanning.model.QrScanningClickIntents
 import com.tangem.feature.qrscanning.presentation.PasteAction
 import com.tangem.feature.qrscanning.presentation.QrScanningState
+import com.tangem.feature.qrscanning.presentation.TopBarConfig
 
 private const val WC_SCHEME = "wc"
 
@@ -26,12 +27,23 @@ internal class InitializeQrScanningStateTransformer(
         }
 
         return QrScanningState(
+            topBarConfig = constructTopBarConfig(),
             message = message,
             onBackClick = clickIntents::onBackClick,
             onQrScanned = clickIntents::onQrScanned,
             onGalleryClick = clickIntents::onGalleryClicked,
             pasteAction = constructPasteAction(),
         )
+    }
+
+    private fun constructTopBarConfig(): TopBarConfig {
+        return when (source) {
+            SourceType.SEND -> TopBarConfig(title = null, startIcon = R.drawable.ic_back_24)
+            SourceType.WALLET_CONNECT -> TopBarConfig(
+                title = resourceReference(R.string.wc_new_connection),
+                startIcon = R.drawable.ic_close_24,
+            )
+        }
     }
 
     private fun constructPasteAction(): PasteAction {
