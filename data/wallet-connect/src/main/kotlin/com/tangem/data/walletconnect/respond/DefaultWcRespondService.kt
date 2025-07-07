@@ -24,10 +24,12 @@ internal class DefaultWcRespondService : WcRespondService {
                     ),
                 ),
                 onSuccess = {
+                    if (continuation.isCompleted) return@respondSessionRequest
                     Timber.tag(WC_TAG).i("Successful respond for request $request")
                     continuation.resume(Unit.right())
                 },
                 onError = {
+                    if (continuation.isCompleted) return@respondSessionRequest
                     Timber.tag(WC_TAG).e(it.throwable, "Failed respond for request $request")
                     continuation.resume(it.throwable.left())
                 },
