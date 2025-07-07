@@ -299,6 +299,7 @@ dependencies {
     implementation(deps.zxing.qrCore)
     implementation(deps.coil)
     implementation(deps.coil.gif)
+    implementation(deps.coil.svg)
     implementation(deps.amplitude)
     implementation(deps.kotsonGson)
     implementation(deps.spongecastle.core)
