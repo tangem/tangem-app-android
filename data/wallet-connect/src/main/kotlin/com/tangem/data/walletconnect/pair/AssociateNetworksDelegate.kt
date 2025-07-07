@@ -2,6 +2,7 @@ package com.tangem.data.walletconnect.pair
 
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.Wallet.Model.Namespace
+import com.tangem.data.common.currency.isCustomCoin
 import com.tangem.data.walletconnect.utils.WcNamespaceConverter
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
@@ -33,6 +34,8 @@ internal class AssociateNetworksDelegate(
         val userWallets = getWallets.invokeSync().filter { it.isMultiCurrency }
         val requiredNamespaces: Set<String> = sessionProposal.requiredNamespaces.setOfChainId()
         val optionalNamespaces: Set<String> = sessionProposal.optionalNamespaces.setOfChainId()
+            // remove duplicates
+            .subtract(requiredNamespaces)
 
         return userWallets
             .associateWith { wallet -> mapNetworksForWallet(wallet, requiredNamespaces, optionalNamespaces) }
@@ -58,7 +61,8 @@ internal class AssociateNetworksDelegate(
                 return@forEach
             }
             val walletNetwork = walletNetworks.find { network -> wcNetwork.id == network.id }
-            if (walletNetwork == null) {
+
+            if (walletNetwork == null || isCustomCoin(walletNetwork)) {
                 missingRequired.add(wcNetwork)
             } else {
                 required.add(walletNetwork)
@@ -68,7 +72,7 @@ internal class AssociateNetworksDelegate(
             val wcNetwork = namespaceConverters.firstNotNullOfOrNull { it.toNetwork(chainId, wallet) }
                 ?: return@forEach
             val walletNetwork = walletNetworks.find { network -> wcNetwork.id == network.id }
-            if (walletNetwork != null) {
+            if (walletNetwork != null && !isCustomCoin(walletNetwork)) {
                 available.add(walletNetwork)
             } else {
                 notAdded.add(wcNetwork)
