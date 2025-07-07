@@ -20,9 +20,7 @@ import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.tokens.GetCryptoCurrenciesUseCase
-import com.tangem.domain.tokens.GetFeePaidCryptoCurrencyStatusSyncUseCase
-import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
+import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.CreateNFTTransferTransactionUseCase
@@ -61,6 +59,8 @@ internal class NFTSendModel @Inject constructor(
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val getCryptoCurrenciesUseCase: GetCryptoCurrenciesUseCase,
+    private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
+    private val tokensFeatureToggles: TokensFeatureToggles,
     private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
     private val createNFTTransferTransactionUseCase: CreateNFTTransferTransactionUseCase,
@@ -146,9 +146,16 @@ internal class NFTSendModel @Inject constructor(
                 ifRight = { wallet ->
                     userWallet = wallet
 
-                    cryptoCurrency = getCryptoCurrenciesUseCase(userWalletId).getOrNull()
-                        ?.filterIsInstance<CryptoCurrency.Coin>()
-                        ?.firstOrNull { it.network == nftAsset.network }
+                    cryptoCurrency = if (tokensFeatureToggles.isWalletBalanceFetcherEnabled) {
+                        multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
+                            params = MultiWalletCryptoCurrenciesProducer.Params(userWalletId),
+                        )
+                            ?.firstOrNull { it is CryptoCurrency.Coin && it.network == nftAsset.network }
+                    } else {
+                        getCryptoCurrenciesUseCase(userWalletId).getOrNull()
+                            ?.filterIsInstance<CryptoCurrency.Coin>()
+                            ?.firstOrNull { it.network == nftAsset.network }
+                    }
                         ?: return@launch
 
                     getCurrenciesStatusUpdates(
