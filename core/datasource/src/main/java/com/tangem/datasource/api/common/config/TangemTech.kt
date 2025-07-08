@@ -16,18 +16,25 @@ internal class TangemTech(
 
     override val environmentConfigs = listOf(
         createDevEnvironment(),
+        createStageEnvironment(),
         createProdEnvironment(),
-    )
-
-    private fun createProdEnvironment(): ApiEnvironmentConfig = ApiEnvironmentConfig(
-        environment = ApiEnvironment.PROD,
-        baseUrl = "https://api.tangem.org/v1/",
-        headers = createHeaders(),
     )
 
     private fun createDevEnvironment(): ApiEnvironmentConfig = ApiEnvironmentConfig(
         environment = ApiEnvironment.DEV,
         baseUrl = "[REDACTED_ENV_URL]",
+        headers = createHeaders(),
+    )
+
+    private fun createStageEnvironment(): ApiEnvironmentConfig = ApiEnvironmentConfig(
+        environment = ApiEnvironment.STAGE,
+        baseUrl = "[REDACTED_ENV_URL]",
+        headers = createHeaders(),
+    )
+
+    private fun createProdEnvironment(): ApiEnvironmentConfig = ApiEnvironmentConfig(
+        environment = ApiEnvironment.PROD,
+        baseUrl = "https://api.tangem.org/v1/",
         headers = createHeaders(),
     )
 
