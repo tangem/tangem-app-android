@@ -70,6 +70,7 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.feature.tokendetails.deeplink.TokenDetailsDeepLinkActionListener
 import com.tangem.feature.tokendetails.presentation.router.InnerTokenDetailsRouter
 import com.tangem.feature.tokendetails.presentation.tokendetails.analytics.TokenDetailsCurrencyStatusAnalyticsSender
 import com.tangem.feature.tokendetails.presentation.tokendetails.analytics.TokenDetailsNotificationsAnalyticsSender
@@ -134,6 +135,7 @@ internal class TokenDetailsModel @Inject constructor(
     getStakingIntegrationIdUseCase: GetStakingIntegrationIdUseCase,
     private val appRouter: AppRouter,
     private val router: InnerTokenDetailsRouter,
+    private val tokenDetailsDeepLinkActionListener: TokenDetailsDeepLinkActionListener,
 ) : Model(), TokenDetailsClickIntents {
 
     private val params = paramsContainer.require<TokenDetailsComponent.Params>()
@@ -152,6 +154,9 @@ internal class TokenDetailsModel @Inject constructor(
 
     private var cryptoCurrencyStatus: CryptoCurrencyStatus? = null
     private var expressTxStatusTaskScheduler = SingleTaskScheduler<PersistentList<ExpressTransactionStateUM>>()
+
+    /** Transaction id to check for status */
+    private val waitForFirstExpressStatusEmmit = MutableStateFlow(false)
 
     private val stateFactory = TokenDetailsStateFactory(
         currentStateProvider = Provider { uiState.value },
@@ -199,6 +204,7 @@ internal class TokenDetailsModel @Inject constructor(
         initButtons()
         updateContent()
         handleBalanceHiding()
+        checkForActionUpdates()
     }
 
     fun onBuyCurrencyDeepLink() {
@@ -335,6 +341,7 @@ internal class TokenDetailsModel @Inject constructor(
             expressStatusFactory
                 .getExpressStatuses()
                 .distinctUntilChanged()
+                .onEach { waitForFirstExpressStatusEmmit.value = true }
                 .onEach { expressTxs ->
                     internalUiState.value = expressStatusFactory.getStateWithUpdatedExpressTxs(
                         expressTxs,
@@ -801,7 +808,8 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     override fun onExpressTransactionClick(txId: String) {
-        val expressTxState = internalUiState.value.expressTxsToDisplay.first { it.info.txId == txId }
+        val expressTxState = internalUiState.value.expressTxsToDisplay.firstOrNull { it.info.txId == txId }
+            ?: return
         internalUiState.value = expressStatusFactory.getStateWithExpressStatusBottomSheet(expressTxState)
     }
 
@@ -1040,6 +1048,15 @@ internal class TokenDetailsModel @Inject constructor(
 
             router.openStaking(userWalletId, cryptoCurrency, yield.id)
         }
+    }
+
+    private fun checkForActionUpdates() {
+        combine(
+            tokenDetailsDeepLinkActionListener.tokenDetailsActionFlow,
+            waitForFirstExpressStatusEmmit.filter { it },
+        ) { transactionId, _ -> transactionId }
+            .onEach(::onExpressTransactionClick)
+            .launchIn(modelScope)
     }
 
     private companion object {
