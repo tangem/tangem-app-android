@@ -45,9 +45,11 @@ import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvid
 import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.features.pushnotifications.api.utils.getPushPermissionOrNull
+import com.tangem.features.wallet.deeplink.WalletDeepLinkActionListener
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
 import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
 import timber.log.Timber
 import javax.inject.Inject
@@ -86,6 +88,7 @@ internal class WalletModel @Inject constructor(
     private val appRouter: AppRouter,
     private val routingFeatureToggle: RoutingFeatureToggle,
     private val observeAndClearNFTCacheIfNeedUseCase: ObserveAndClearNFTCacheIfNeedUseCase,
+    private val walletDeepLinkActionListener: WalletDeepLinkActionListener,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
 ) : Model() {
@@ -167,7 +170,16 @@ internal class WalletModel @Inject constructor(
         return innerWalletRouter.isWalletLastScreen() && shouldShowSaveWalletScreenUseCase() && canUseBiometryUseCase()
     }
 
-    private fun subscribeToUserWalletsUpdates() {
+    private fun subscribeToUserWalletsUpdates() = channelFlow<Unit> {
+        val firstWalletsUseCaseEmit = MutableStateFlow(false)
+        suspend fun waitFirstWalletsUseCaseEmit() = firstWalletsUseCaseEmit.filter { it }.first()
+
+        // deepLinkActionFlow must wait for fist getWalletsUseCase() emit to correct handle Action.InitializeWallets
+        walletDeepLinkActionListener.selectWalletFlow
+            .onEach { waitFirstWalletsUseCaseEmit() }
+            .onEach(::selectWalletById)
+            .launchIn(this)
+
         getWalletsUseCase()
             .conflate()
             .distinctUntilChanged()
@@ -178,10 +190,13 @@ internal class WalletModel @Inject constructor(
                 )
             }
             .onEach(::updateWallets)
-            .flowOn(dispatchers.default)
-            .launchIn(modelScope)
-            .saveIn(walletsUpdateJobHolder)
+            .onEach { firstWalletsUseCaseEmit.update { true } }
+            .launchIn(this)
+        awaitClose()
     }
+        .flowOn(dispatchers.default)
+        .launchIn(modelScope)
+        .saveIn(walletsUpdateJobHolder)
 
     private fun subscribeOnBalanceHiding() {
         getBalanceHidingSettingsUseCase()
@@ -237,6 +252,19 @@ internal class WalletModel @Inject constructor(
                 }
                 .flowOn(dispatchers.main)
                 .launchIn(modelScope)
+        }
+    }
+
+    private fun selectWalletById(selectedWalletId: UserWalletId) {
+        val currentWalletId = stateHolder.getSelectedWalletId()
+
+        if (currentWalletId == selectedWalletId) return
+
+        val currentIndex = stateHolder.getWalletIndexByWalletId(userWalletId = currentWalletId) ?: return
+        val newIndex = stateHolder.getWalletIndexByWalletId(userWalletId = selectedWalletId) ?: return
+
+        scrollToWallet(prevIndex = currentIndex, newIndex = newIndex) {
+            stateHolder.update { it.copy(selectedWalletIndex = newIndex) }
         }
     }
 
