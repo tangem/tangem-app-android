@@ -43,6 +43,7 @@ import com.tangem.features.send.v2.api.entity.PredefinedValues
 import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationComponent
 import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.features.send.v2.common.CommonSendRoute
+import com.tangem.domain.wallets.models.GetUserWalletError
 import com.tangem.features.send.v2.common.SendConfirmAlertFactory
 import com.tangem.features.send.v2.common.ui.state.ConfirmUM
 import com.tangem.features.send.v2.send.confirm.SendConfirmComponent
@@ -155,6 +156,11 @@ internal class SendModel @Inject constructor(
 
     override fun onConvertToAnotherToken(lastAmount: String) {
         params.callback?.onConvertToAnotherToken(lastAmount = lastAmount)
+    }
+
+    override fun onError(error: GetUserWalletError) {
+        Timber.w(error.toString())
+        showAlertError()
     }
 
     suspend fun loadFee(): Either<GetFeeError, TransactionFee> {
