@@ -73,7 +73,7 @@ internal class DefaultCardSdkProvider @Inject constructor(
         if (BuildConfig.TESTER_MENU_ENABLED) {
             appPreferencesStore.getObjectMap<ApiEnvironment>(PreferencesKeys.apiConfigsEnvironmentKey)
                 .map {
-                    when (it[ApiConfig.ID.Attestation.name]) {
+                    when (it[ApiConfig.ID.TangemTech.name]) {
                         ApiEnvironment.DEV,
                         ApiEnvironment.STAGE,
                         -> false
@@ -189,7 +189,7 @@ internal class DefaultCardSdkProvider @Inject constructor(
             config = config.apply {
                 isNewOnlineAttestationEnabled = cardSdkFeatureToggles.isNewAttestationEnabled
 
-                val apiConfig = apiConfigsManager.getEnvironmentConfig(id = ApiConfig.ID.Attestation)
+                val apiConfig = apiConfigsManager.getEnvironmentConfig(id = ApiConfig.ID.TangemTech)
                 isTangemAttestationProdEnv = apiConfig.environment == ApiEnvironment.PROD
             },
         )
