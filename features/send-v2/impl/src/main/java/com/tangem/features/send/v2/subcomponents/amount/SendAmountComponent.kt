@@ -9,6 +9,7 @@ import com.tangem.common.ui.navigationButtons.NavigationModelCallback
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.domain.wallets.models.GetUserWalletError
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponentParams.AmountParams
 import com.tangem.features.send.v2.subcomponents.amount.model.SendAmountModel
 import com.tangem.features.send.v2.subcomponents.amount.ui.SendAmountContent
@@ -39,5 +40,6 @@ internal class SendAmountComponent(
     interface ModelCallback : NavigationModelCallback {
         fun onAmountResult(amountUM: AmountState, isResetPredefined: Boolean)
         fun onConvertToAnotherToken(lastAmount: String)
+        fun onError(error: GetUserWalletError)
     }
 }
