@@ -85,10 +85,19 @@ internal class SendAmountModel @Inject constructor(
     }
 
     private fun initAppCurrency() {
-        modelScope.launch {
-            userWallet = getUserWalletUseCase(params.userWalletId).getOrNull()
-            appCurrency = getSelectedAppCurrencyUseCase.invokeSync().getOrElse { AppCurrency.Default }
-        }
+        getUserWalletUseCase.invokeFlow(params.userWalletId)
+            .onEach { either ->
+                either.fold(
+                    ifLeft = { error ->
+                        val amountParams = params as? SendAmountComponentParams.AmountParams
+                        amountParams?.callback?.onError(error)
+                    },
+                    ifRight = { wallet ->
+                        userWallet = wallet
+                        appCurrency = getSelectedAppCurrencyUseCase.invokeSync().getOrElse { AppCurrency.Default }
+                    },
+                )
+            }.launchIn(modelScope)
     }
 
     private fun subscribeOnCryptoCurrencyStatusFlow() {
