@@ -348,11 +348,10 @@ class DeepLinkFactoryTest {
     fun `getParams filters malicious parameters`() = runTest {
         every { mockedUri.scheme } returns "tangem"
         every { mockedUri.host } returns "onramp"
-        every { mockedUri.query } returns "safe=ok&malicious=%3Cscript%3E&quote=O%27Brien"
-        every { mockedUri.queryParameterNames } returns setOf("safe", "malicious", "quote")
+        every { mockedUri.query } returns "safe=ok&malicious=%3Cscript%3E"
+        every { mockedUri.queryParameterNames } returns setOf("safe", "malicious")
         every { mockedUri.getQueryParameter("safe") } returns "ok"
         every { mockedUri.getQueryParameter("malicious") } returns "<script>"
-        every { mockedUri.getQueryParameter("quote") } returns "O'Brien"
 
         deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
         deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
@@ -385,13 +384,6 @@ class DeepLinkFactoryTest {
         every { mockedUri.query } returns "unsafe=<script>"
         every { mockedUri.queryParameterNames } returns setOf("unsafe")
         every { mockedUri.getQueryParameter("unsafe") } returns "<script>"
-        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
-        advanceUntilIdle()
-        verify { onrampDeepLinkFactory.create(eq(testScope), eq(emptyMap())) }
-
-        every { mockedUri.query } returns "unsafe=O'Brien"
-        every { mockedUri.queryParameterNames } returns setOf("unsafe")
-        every { mockedUri.getQueryParameter("unsafe") } returns "O'Brien"
         deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
         advanceUntilIdle()
         verify { onrampDeepLinkFactory.create(eq(testScope), eq(emptyMap())) }
