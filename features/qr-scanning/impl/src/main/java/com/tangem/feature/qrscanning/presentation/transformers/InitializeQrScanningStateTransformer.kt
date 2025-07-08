@@ -11,8 +11,6 @@ import com.tangem.feature.qrscanning.presentation.PasteAction
 import com.tangem.feature.qrscanning.presentation.QrScanningState
 import com.tangem.feature.qrscanning.presentation.TopBarConfig
 
-private const val WC_SCHEME = "wc"
-
 internal class InitializeQrScanningStateTransformer(
     private val clickIntents: QrScanningClickIntents,
     private val clipboardManager: ClipboardManager,
@@ -38,7 +36,10 @@ internal class InitializeQrScanningStateTransformer(
 
     private fun constructTopBarConfig(): TopBarConfig {
         return when (source) {
-            SourceType.SEND -> TopBarConfig(title = null, startIcon = R.drawable.ic_back_24)
+            SourceType.SEND -> TopBarConfig(
+                title = resourceReference(R.string.common_send),
+                startIcon = R.drawable.ic_back_24,
+            )
             SourceType.WALLET_CONNECT -> TopBarConfig(
                 title = resourceReference(R.string.wc_new_connection),
                 startIcon = R.drawable.ic_close_24,
@@ -48,14 +49,10 @@ internal class InitializeQrScanningStateTransformer(
 
     private fun constructPasteAction(): PasteAction {
         val uri = clipboardManager.getText()
-        return if (source == SourceType.WALLET_CONNECT && uri != null && isWalletConnectUri(uri)) {
+        return if (uri != null) {
             PasteAction.Perform { clickIntents.onQrScanned(uri) }
         } else {
             PasteAction.None
         }
-    }
-
-    private fun isWalletConnectUri(uri: String): Boolean {
-        return uri.lowercase().startsWith(WC_SCHEME)
     }
 }
