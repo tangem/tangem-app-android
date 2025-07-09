@@ -72,6 +72,40 @@ internal object WcAlertsFactory {
         }
     }
 
+    fun createUnsupportedDomainAlert(appName: String): MessageBottomSheetUMV2 {
+        return messageBottomSheetUM {
+            infoBlock {
+                icon(R.drawable.ic_wallet_connect_24) {
+                    type = MessageBottomSheetUMV2.Icon.Type.Informative
+                    backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.SameAsTint
+                }
+                title = resourceReference(R.string.wc_alert_unsupported_dapps_title)
+                body = resourceReference(R.string.wc_alert_unsupported_dapps_description, wrappedList(appName))
+            }
+            primaryButton {
+                text = resourceReference(R.string.common_got_it)
+                onClick { closeBs() }
+            }
+        }
+    }
+
+    fun createUnsupportedChainAlert(appName: String): MessageBottomSheetUMV2 {
+        return messageBottomSheetUM {
+            infoBlock {
+                icon(R.drawable.ic_network_new_24) {
+                    type = MessageBottomSheetUMV2.Icon.Type.Informative
+                    backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.SameAsTint
+                }
+                title = resourceReference(R.string.wc_alert_unsupported_networks_title)
+                body = resourceReference(R.string.wc_alert_unsupported_networks_description, wrappedList(appName))
+            }
+            primaryButton {
+                text = resourceReference(R.string.common_got_it)
+                onClick { closeBs() }
+            }
+        }
+    }
+
     private fun createUnknownErrorAlert(errorMessage: String?, onDismiss: () -> Unit): MessageBottomSheetUMV2 {
         return messageBottomSheetUM {
             infoBlock {
