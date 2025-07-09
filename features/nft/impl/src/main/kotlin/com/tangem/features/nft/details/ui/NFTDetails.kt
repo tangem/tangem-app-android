@@ -1,13 +1,10 @@
 package com.tangem.features.nft.details.ui
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.material3.FabPosition
-import androidx.compose.material3.Scaffold
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
@@ -22,25 +19,25 @@ import com.tangem.features.nft.impl.R
 internal fun NFTDetails(state: NFTDetailsUM, modifier: Modifier = Modifier) {
     BackHandler(onBack = state.onBackClick)
 
-    Scaffold(
-        modifier = modifier,
-        containerColor = TangemTheme.colors.background.secondary,
-        topBar = {
+    Box(
+        modifier = modifier
+            .background(TangemTheme.colors.background.secondary),
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+        ) {
             TangemTopAppBar(
-                modifier = Modifier.statusBarsPadding(),
+                modifier = Modifier,
                 startButton = TopAppBarButtonUM(
                     iconRes = R.drawable.ic_back_24,
                     onIconClicked = state.onBackClick,
                 ),
                 title = state.nftAsset.name,
             )
-        },
-        content = { innerPadding ->
+
             TangemPullToRefreshContainer(
                 config = state.pullToRefreshConfig,
-                modifier = Modifier
-                    .padding(innerPadding)
-                    .fillMaxSize(),
+                modifier = Modifier.fillMaxSize(),
             ) {
                 NFTDetailsAsset(
                     state = state.nftAsset,
@@ -49,16 +46,19 @@ internal fun NFTDetails(state: NFTDetailsUM, modifier: Modifier = Modifier) {
                     onExploreClick = state.onExploreClick,
                 )
             }
-        },
-        floatingActionButtonPosition = FabPosition.Center,
-        floatingActionButton = {
-            PrimaryButton(
-                modifier = Modifier
-                    .padding(horizontal = TangemTheme.dimens.spacing16)
-                    .fillMaxWidth(),
-                text = stringResourceSafe(id = R.string.common_send),
-                onClick = state.onSendClick,
-            )
-        },
-    )
+        }
+
+        PrimaryButton(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(
+                    start = TangemTheme.dimens.spacing16,
+                    end = TangemTheme.dimens.spacing16,
+                    bottom = TangemTheme.dimens.spacing16,
+                )
+                .fillMaxWidth(),
+            text = stringResourceSafe(id = R.string.common_send),
+            onClick = state.onSendClick,
+        )
+    }
 }
