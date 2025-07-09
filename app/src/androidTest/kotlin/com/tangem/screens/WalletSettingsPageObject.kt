@@ -1,19 +1,21 @@
 package com.tangem.screens
 
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
-import com.tangem.core.ui.test.TestTags
+import com.tangem.common.BaseTestCase
+import com.tangem.core.ui.test.WalletSettingsScreenTestTags
 import com.tangem.wallet.R
 import io.github.kakaocup.compose.node.element.ComposeScreen
+import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 
-class WalletSettingsTestScreen(semanticsProvider: SemanticsNodeInteractionsProvider) :
-    ComposeScreen<WalletSettingsTestScreen>(
+class WalletSettingsPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
+    ComposeScreen<WalletSettingsPageObject>(
         semanticsProvider = semanticsProvider,
-        viewBuilderAction = { hasTestTag(TestTags.WALLET_SETTINGS_SCREEN) }
+        viewBuilderAction = { hasTestTag(WalletSettingsScreenTestTags.SCREEN_CONTAINER) }
     ) {
     private val walletSettingsItem: KNode = child {
-        hasTestTag(TestTags.WALLET_SETTINGS_SCREEN_ITEM)
+        hasTestTag(WalletSettingsScreenTestTags.SCREEN_ITEM)
     }
 
     val linkMoreCardsButton: KNode = walletSettingsItem.child {
@@ -29,3 +31,6 @@ class WalletSettingsTestScreen(semanticsProvider: SemanticsNodeInteractionsProvi
         hasText(getResourceString(R.string.settings_forget_wallet))
     }
 }
+
+internal fun BaseTestCase.onWalletSettingsScreen(function: WalletSettingsPageObject.() -> Unit) =
+    onComposeScreen(composeTestRule, function)
