@@ -1,9 +1,8 @@
 package com.tangem.features.nft.traits.ui
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.material3.Scaffold
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
@@ -17,25 +16,21 @@ import com.tangem.features.nft.traits.entity.NFTAssetTraitsUM
 internal fun NFTAssetTraits(state: NFTAssetTraitsUM, modifier: Modifier = Modifier) {
     BackHandler(onBack = state.onBackClick)
 
-    Scaffold(
-        modifier = modifier,
-        containerColor = TangemTheme.colors.background.secondary,
-        topBar = {
-            TangemTopAppBar(
-                modifier = Modifier.statusBarsPadding(),
-                startButton = TopAppBarButtonUM(
-                    iconRes = R.drawable.ic_back_24,
-                    onIconClicked = state.onBackClick,
-                ),
-                title = stringResourceSafe(R.string.nft_traits_title),
-            )
-        },
-        content = { innerPadding ->
-            NFTAssetTraitsContent(
-                modifier = Modifier
-                    .padding(innerPadding),
-                state = state,
-            )
-        },
-    )
+    Column(
+        modifier = modifier
+            .background(TangemTheme.colors.background.secondary),
+    ) {
+        TangemTopAppBar(
+            modifier = Modifier,
+            startButton = TopAppBarButtonUM(
+                iconRes = R.drawable.ic_back_24,
+                onIconClicked = state.onBackClick,
+            ),
+            title = stringResourceSafe(R.string.nft_traits_title),
+        )
+
+        NFTAssetTraitsContent(
+            state = state,
+        )
+    }
 }
