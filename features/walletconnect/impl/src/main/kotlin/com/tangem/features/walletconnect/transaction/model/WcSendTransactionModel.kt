@@ -118,7 +118,20 @@ internal class WcSendTransactionModel @Inject constructor(
         }
     }
 
+    /**
+     * Handles callback with updated [feeSelectorUM] from click FeeSelectorComponent.
+     * We need to trigger navigation to dismiss fee selector component
+     */
     override fun onFeeResult(feeSelectorUM: FeeSelectorUM) {
+        updateFee(feeSelectorUM)
+        popBack()
+    }
+
+    /**
+     * Handles fee updates.
+     * Also handles fee results from FeeSelectorBlockComponent
+     */
+    fun updateFee(feeSelectorUM: FeeSelectorUM) {
         _uiState.update { it?.copy(feeSelectorUM = feeSelectorUM) }
         val fee = (feeSelectorUM as? FeeSelectorUM.Content)?.selectedFeeItem?.fee ?: return
         (useCase as? WcMutableFee)?.updateFee(fee)
@@ -184,6 +197,10 @@ internal class WcSendTransactionModel @Inject constructor(
 
     override fun dismiss() {
         _uiState.value?.transaction?.onDismiss?.invoke() ?: router.pop()
+    }
+
+    override fun popBack() {
+        stackNavigation.pop()
     }
 
     fun showTransactionRequest() {
