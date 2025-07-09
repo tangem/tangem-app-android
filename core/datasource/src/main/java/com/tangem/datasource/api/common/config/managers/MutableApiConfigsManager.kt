@@ -16,4 +16,7 @@ interface MutableApiConfigsManager : ApiConfigsManager {
 
     /** Change api environment [environment] by [id] */
     suspend fun changeEnvironment(id: String, environment: ApiEnvironment)
+
+    /** Change api environment [environment] for all configs */
+    suspend fun changeEnvironment(environment: ApiEnvironment)
 }
