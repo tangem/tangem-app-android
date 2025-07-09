@@ -1,25 +1,27 @@
 package com.tangem.screens
 
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
-import com.tangem.core.ui.test.TestTags
+import com.tangem.common.BaseTestCase
+import com.tangem.core.ui.test.StoriesScreenTestTags
 import com.tangem.wallet.R
 import io.github.kakaocup.compose.node.element.ComposeScreen
+import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.kakao.common.views.KView
 import io.github.kakaocup.kakao.text.KButton
 
-class StoriesTestScreen(semanticsProvider: SemanticsNodeInteractionsProvider) :
-    ComposeScreen<StoriesTestScreen>(
+class StoriesPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
+    ComposeScreen<StoriesPageObject>(
         semanticsProvider = semanticsProvider,
-        viewBuilderAction = { hasTestTag(TestTags.STORIES_SCREEN) }
+        viewBuilderAction = { hasTestTag(StoriesScreenTestTags.SCREEN_CONTAINER) }
     ) {
 
     val scanButton: KNode = child {
-        hasTestTag(TestTags.STORIES_SCREEN_SCAN_BUTTON)
+        hasTestTag(StoriesScreenTestTags.SCAN_BUTTON)
     }
 
     val orderButton: KNode = child {
-        hasTestTag(TestTags.STORIES_SCREEN_ORDER_BUTTON)
+        hasTestTag(StoriesScreenTestTags.ORDER_BUTTON)
     }
 
     val enableNFCAlert: KView = KView {
@@ -30,3 +32,6 @@ class StoriesTestScreen(semanticsProvider: SemanticsNodeInteractionsProvider) :
         withId(android.R.id.button2)
     }
 }
+
+internal fun BaseTestCase.onStoriesScreen(function: StoriesPageObject.() -> Unit) =
+    onComposeScreen(composeTestRule, function)
