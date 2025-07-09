@@ -24,8 +24,6 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import timber.log.Timber
 
-val unsupportedDApps = listOf("dYdX", "dYdX v4", "Apex Pro", "The Sandbox")
-
 @Suppress("LongParameterList")
 internal class DefaultWcPairUseCase @AssistedInject constructor(
     private val sessionsManager: WcSessionsManager,
@@ -54,9 +52,9 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
                 .getOrNull() ?: return@flow
 
             // check unsupported dApps, just local constant for now, finish if unsupported
-            if (sdkSessionProposal.name in unsupportedDApps) {
+            if (UnsupportedDApps.list.any { sdkSessionProposal.url.contains(it, ignoreCase = true) }) {
                 Timber.tag(WC_TAG).i("Unsupported DApp ${sdkSessionProposal.name}")
-                val error = WcPairState.Error(WcPairError.UnsupportedDApp)
+                val error = WcPairState.Error(WcPairError.UnsupportedDApp(sdkSessionProposal.name))
                 emit(error)
                 return@flow
             }
