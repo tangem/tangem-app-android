@@ -58,8 +58,8 @@ internal class DefaultWcPairUseCaseTest {
             relayData = "",
         )
 
-    private val unsupportedDApp = "Apex Pro"
-    private val unsupportedSdkProposal get() = sdkProposal.copy(name = unsupportedDApp)
+    private val unsupportedDAppUrl = "dydx.trade"
+    private val unsupportedSdkProposal get() = sdkProposal.copy(url = unsupportedDAppUrl)
 
     private val sessionForApprove: WcSessionApprove
         get() = WcSessionApprove(
@@ -196,7 +196,7 @@ internal class DefaultWcPairUseCaseTest {
     @Test
     fun `success pair and reject unsupported dApp`() = runTest {
         coEvery { sdkDelegate.pair(url) } returns unsupportedSdkProposal.right()
-        val unsupportedDAppError = WcPairState.Error(WcPairError.UnsupportedDApp)
+        val unsupportedDAppError = WcPairState.Error(WcPairError.UnsupportedDApp(unsupportedSdkProposal.name))
 
         val useCase = useCaseFactory()
         useCase.invoke().test {
