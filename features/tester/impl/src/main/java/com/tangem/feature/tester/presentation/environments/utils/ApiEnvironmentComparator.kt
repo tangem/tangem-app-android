@@ -14,7 +14,8 @@ internal object ApiEnvironmentComparator : Comparator<ApiEnvironmentConfig> {
         when (it) {
             ApiEnvironment.DEV -> 0
             ApiEnvironment.STAGE -> 1
-            ApiEnvironment.PROD -> 2
+            ApiEnvironment.MOCK -> 2
+            ApiEnvironment.PROD -> 3
         }
     }
 

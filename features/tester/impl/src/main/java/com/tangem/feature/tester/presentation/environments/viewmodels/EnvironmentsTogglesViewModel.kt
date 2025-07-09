@@ -111,8 +111,10 @@ internal class EnvironmentsTogglesViewModel @Inject constructor(
         cardSdkConfigRepository.setTangemApiProdEnvFlag(
             flag = when (environment) {
                 ApiEnvironment.PROD -> true
-                ApiEnvironment.DEV -> false
-                ApiEnvironment.STAGE -> false
+                ApiEnvironment.DEV,
+                ApiEnvironment.STAGE,
+                ApiEnvironment.MOCK,
+                -> false
             },
         )
     }
