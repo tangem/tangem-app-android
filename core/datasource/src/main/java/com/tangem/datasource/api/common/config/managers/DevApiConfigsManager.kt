@@ -20,28 +20,26 @@ import kotlinx.coroutines.flow.*
  * @property dispatchers         coroutine dispatcher provider
  */
 internal class DevApiConfigsManager(
-    apiConfigs: ApiConfigs,
+    private val apiConfigs: ApiConfigs,
     private val appPreferencesStore: AppPreferencesStore,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : MutableApiConfigsManager {
 
-    override val configs: Flow<Map<ApiConfig, ApiEnvironment>> get() = _apiConfigs
+    override val configs: StateFlow<Map<ApiConfig, ApiEnvironment>>
+    field = MutableStateFlow(value = getInitialConfigs())
 
-    private val _apiConfigs = MutableStateFlow(value = apiConfigs.associateWith { it.defaultEnvironment })
-
-    override val isInitialized: StateFlow<Boolean> get() = _isInitialized.asStateFlow()
-
-    private val _isInitialized = MutableStateFlow(value = false)
+    override val isInitialized: StateFlow<Boolean>
+    field = MutableStateFlow(value = false)
 
     override fun initialize() {
-        _isInitialized.value = false
+        isInitialized.value = false
 
         // We can't use appPreferencesStore.getObjectMap as base flow,
         // because we should keep possibility to work with configs synchronous.
         // See [getBaseUrl]
         appPreferencesStore.getObjectMap<ApiEnvironment>(PreferencesKeys.apiConfigsEnvironmentKey)
             .onEach { savedEnvironments ->
-                _apiConfigs.update { apiConfigs ->
+                configs.update { apiConfigs ->
                     apiConfigs.mapValues {
                         val (config, currentEnvironment) = it
 
@@ -49,15 +47,15 @@ internal class DevApiConfigsManager(
                     }
                 }
 
-                if (!_isInitialized.value) {
-                    _isInitialized.value = true
+                if (!isInitialized.value) {
+                    isInitialized.value = true
                 }
             }
             .launchIn(CoroutineScope(SupervisorJob() + dispatchers.default))
     }
 
     override fun getEnvironmentConfig(id: ApiConfig.ID): ApiEnvironmentConfig {
-        val apiConfigs = _apiConfigs.value
+        val apiConfigs = configs.value
 
         val config = apiConfigs.map { it }.firstOrNull { it.key.id == id }?.key
             ?: error("Api config with id [$id] not found")
@@ -77,5 +75,28 @@ internal class DevApiConfigsManager(
 
             mutablePreferences.setObjectMap(PreferencesKeys.apiConfigsEnvironmentKey, updatedMap)
         }
+    }
+
+    override suspend fun changeEnvironment(environment: ApiEnvironment) {
+        val supportedConfigs = apiConfigs
+            .filter { config ->
+                config.environmentConfigs.any { it.environment == environment }
+            }
+            .map { it.id.name }
+
+        appPreferencesStore.editData { mutablePreferences ->
+            val updatedMap = mutablePreferences.getObjectMap<ApiEnvironment>(PreferencesKeys.apiConfigsEnvironmentKey)
+                .mapValues { (configName, currentEnvironment) ->
+                    val isEnvSupported = supportedConfigs.contains(configName)
+
+                    if (isEnvSupported) environment else currentEnvironment
+                }
+
+            mutablePreferences.setObjectMap(key = PreferencesKeys.apiConfigsEnvironmentKey, value = updatedMap)
+        }
+    }
+
+    private fun getInitialConfigs(): Map<ApiConfig, ApiEnvironment> {
+        return apiConfigs.associateWith(ApiConfig::defaultEnvironment)
     }
 }
