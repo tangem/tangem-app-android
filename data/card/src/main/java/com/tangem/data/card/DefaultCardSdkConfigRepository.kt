@@ -72,6 +72,6 @@ internal class DefaultCardSdkConfigRepository(
     }
 
     override fun setTangemApiProdEnvFlag(flag: Boolean) {
-        sdk.config.isTangemAttestationProdEnv = flag
+        // TODO: [REDACTED_TASK_KEY] Change API's base URL in CardSDK if API environment is changed
     }
 }
