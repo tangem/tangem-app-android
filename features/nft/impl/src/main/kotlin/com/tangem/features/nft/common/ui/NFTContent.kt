@@ -19,8 +19,8 @@ import com.tangem.features.nft.common.NFTRoute
 @Composable
 internal fun NFTContent(stackState: ChildStack<NFTRoute, ComposableContentComponent>) {
     Column(
-        modifier = Modifier.Companion
-            .background(color = TangemTheme.colors.background.tertiary)
+        modifier = Modifier
+            .background(color = TangemTheme.colors.background.secondary)
             .fillMaxSize()
             .imePadding()
             .systemBarsPadding(),
