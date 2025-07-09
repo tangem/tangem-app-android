@@ -76,6 +76,7 @@ internal class DefaultCardSdkProvider @Inject constructor(
                     when (it[ApiConfig.ID.TangemTech.name]) {
                         ApiEnvironment.DEV,
                         ApiEnvironment.STAGE,
+                        ApiEnvironment.MOCK,
                         -> false
                         ApiEnvironment.PROD,
                         null,
