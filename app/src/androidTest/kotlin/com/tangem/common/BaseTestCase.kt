@@ -1,7 +1,8 @@
 package com.tangem.common
 
 import android.Manifest
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.junit4.createEmptyComposeRule
+import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.intent.Intents
 import androidx.test.rule.GrantPermissionRule
 import com.kaspersky.components.alluresupport.interceptors.step.ScreenshotStepInterceptor
@@ -10,8 +11,8 @@ import com.kaspersky.components.composesupport.config.addComposeSupport
 import com.kaspersky.kaspresso.kaspresso.Kaspresso
 import com.kaspersky.kaspresso.testcases.api.testcase.TestCase
 import com.tangem.common.allure.FailedStepScreenshotInterceptor
-import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.sdk.api.TangemSdkManager
+import com.tangem.common.rules.ApiEnvironmentRule
+import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.tap.MainActivity
 import dagger.hilt.android.testing.HiltAndroidRule
 import org.junit.Rule
@@ -35,17 +36,20 @@ abstract class BaseTestCase : TestCase(
 ) {
 
     @Inject
-    lateinit var tangemSdkManager: TangemSdkManager
-
-    @Inject
-    lateinit var appPreferencesStore: AppPreferencesStore
+    lateinit var apiConfigsManager: ApiConfigsManager
 
     private val hiltRule = HiltAndroidRule(this)
-    private val permissionRule =  GrantPermissionRule.grant(
+    private val apiEnvironmentRule = ApiEnvironmentRule()
+    private val permissionRule = GrantPermissionRule.grant(
         Manifest.permission.POST_NOTIFICATIONS,
         Manifest.permission.CAMERA,
     )
-    val composeTestRule = createAndroidComposeRule<MainActivity>()
+
+    /**
+     * It is important to use `ComposeRule` without specifying an activity to ensure that the initialization order of
+     * all test rules is fully controlled.
+     */
+    val composeTestRule = createEmptyComposeRule()
 
     @Rule
     @JvmField
@@ -53,18 +57,26 @@ abstract class BaseTestCase : TestCase(
         .outerRule(hiltRule)
         .around(ApplicationInjectionExecutionRule())
         .around(permissionRule)
+        .around(apiEnvironmentRule)
         .around(composeTestRule)
 
+    /**
+     * Initialization order is important:
+     * – DI dependencies must be injected first,
+     * – then the API environment should be set up,
+     * – and only after that the activity should be launched.
+     */
     protected fun setupHooks(
         additionalBeforeSection: () -> Unit = {},
         additionalAfterSection: () -> Unit = {},
     ) = before {
         hiltRule.inject()
+        apiEnvironmentRule.setup(apiConfigsManager)
+        ActivityScenario.launch(MainActivity::class.java)
         Intents.init()
         additionalBeforeSection()
     }.after {
         additionalAfterSection()
         Intents.release()
     }
-
 }
