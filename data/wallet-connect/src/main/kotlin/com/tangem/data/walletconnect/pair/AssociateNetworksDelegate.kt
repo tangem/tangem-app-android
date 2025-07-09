@@ -37,14 +37,16 @@ internal class AssociateNetworksDelegate(
             // remove duplicates
             .subtract(requiredNamespaces)
 
-        return userWallets
-            .associateWith { wallet -> mapNetworksForWallet(wallet, requiredNamespaces, optionalNamespaces) }
+        return userWallets.associateWith { wallet ->
+            mapNetworksForWallet(wallet, requiredNamespaces, optionalNamespaces, sessionProposal)
+        }
     }
 
     private suspend fun mapNetworksForWallet(
         wallet: UserWallet,
         requiredNamespaces: Set<String>,
         optionalNamespaces: Set<String>,
+        sessionProposal: Wallet.Model.SessionProposal,
     ): ProposalNetwork {
         val walletNetworks = getWalletNetworks(wallet)
 
@@ -78,7 +80,9 @@ internal class AssociateNetworksDelegate(
                 notAdded.add(wcNetwork)
             }
         }
-        if (unknownRequired.isNotEmpty()) throw WcPairError.UnsupportedBlockchains(unknownRequired)
+        if (unknownRequired.isNotEmpty()) {
+            throw WcPairError.UnsupportedBlockchains(unknownRequired, sessionProposal.name)
+        }
         return ProposalNetwork(
             wallet = wallet,
             missingRequired = missingRequired,
