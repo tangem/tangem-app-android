@@ -59,11 +59,12 @@ internal class WcSelectNetworksModel @Inject constructor(
     }
 
     private fun getInitialState(): WcSelectNetworksUM {
+        val editEnabled = params.missingRequiredNetworks.isEmpty()
         return WcSelectNetworksUM(
             missing = params.missingRequiredNetworks.map { network ->
                 WcNetworkInfoItem.Required(
                     id = network.rawId,
-                    icon = network.iconResId,
+                    icon = getGreyedOutIconRes(network.rawId),
                     name = network.name,
                     symbol = network.currencySymbol,
                 )
@@ -74,6 +75,7 @@ internal class WcSelectNetworksModel @Inject constructor(
                     icon = network.iconResId,
                     name = network.name,
                     symbol = network.currencySymbol,
+                    enabled = editEnabled,
                 )
             }.toImmutableList(),
             available = params.availableNetworks.map { network ->
@@ -84,6 +86,7 @@ internal class WcSelectNetworksModel @Inject constructor(
                     symbol = network.currencySymbol,
                     checked = network in additionallyEnabledNetworks.value,
                     onCheckedChange = { onCheckedChange(it, network) },
+                    enabled = editEnabled,
                 )
             }.toImmutableList(),
             notAdded = params.notAddedNetworks.map { network ->
@@ -95,6 +98,7 @@ internal class WcSelectNetworksModel @Inject constructor(
                 )
             }.toImmutableList(),
             onDone = ::onDone,
+            doneButtonEnabled = editEnabled,
         )
     }
 }
