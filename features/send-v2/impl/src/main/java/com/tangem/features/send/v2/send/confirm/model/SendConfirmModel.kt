@@ -35,6 +35,9 @@ import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.features.send.v2.api.SendNotificationsComponent.Params.NotificationData
+import com.tangem.features.send.v2.api.callbacks.FeeSelectorModelCallback
+import com.tangem.features.send.v2.api.params.FeeSelectorParams
+import com.tangem.features.send.v2.api.entity.FeeSelectorUM as FeeSelectorUMRedesigned
 import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.features.send.v2.common.CommonSendRoute
 import com.tangem.features.send.v2.common.SendBalanceUpdater
@@ -92,7 +95,7 @@ internal class SendConfirmModel @Inject constructor(
     private val urlOpener: UrlOpener,
     private val shareManager: ShareManager,
     sendBalanceUpdaterFactory: SendBalanceUpdater.Factory,
-) : Model(), SendConfirmClickIntents {
+) : Model(), SendConfirmClickIntents, FeeSelectorModelCallback {
 
     private val params: SendConfirmComponent.Params = paramsContainer.require()
 
@@ -115,6 +118,8 @@ internal class SendConfirmModel @Inject constructor(
         get() = uiState.value.feeUM as? FeeUM.Content
     private val feeSelectorUM
         get() = feeUM?.feeSelectorUM as? FeeSelectorUM.Content
+    private val feeUMV2
+        get() = uiState.value.feeSelectorUM as? FeeSelectorUMRedesigned.Content
 
     val confirmData: ConfirmData
         get() = ConfirmData(
@@ -129,6 +134,7 @@ internal class SendConfirmModel @Inject constructor(
 
     private var sendIdleTimer: Long = 0L
     private var isAmountSubtractAvailable = false
+    internal var suggestedFeeState: FeeSelectorParams.SuggestedFeeState = FeeSelectorParams.SuggestedFeeState.None
 
     init {
         modelScope.launch {
@@ -303,13 +309,22 @@ internal class SendConfirmModel @Inject constructor(
         notificationsUpdateTrigger.hasErrorFlow
             .onEach { hasError ->
                 _uiState.update {
-                    val feeUM = it.feeUM as? FeeUM.Content
-                    val feeSelectorUM = feeUM?.feeSelectorUM as? FeeSelectorUM.Content
-                    it.copy(
-                        confirmUM = (it.confirmUM as? ConfirmUM.Content)?.copy(
-                            isPrimaryButtonEnabled = !hasError && feeSelectorUM != null,
-                        ) ?: it.confirmUM,
-                    )
+                    if (_uiState.value.isRedesignEnabled) {
+                        val feeUM = it.feeSelectorUM as? FeeSelectorUMRedesigned.Content
+                        it.copy(
+                            confirmUM = (it.confirmUM as? ConfirmUM.Content)?.copy(
+                                isPrimaryButtonEnabled = !hasError && feeUM != null,
+                            ) ?: it.confirmUM,
+                        )
+                    } else {
+                        val feeUM = it.feeUM as? FeeUM.Content
+                        val feeSelectorUM = feeUM?.feeSelectorUM as? FeeSelectorUM.Content
+                        it.copy(
+                            confirmUM = (it.confirmUM as? ConfirmUM.Content)?.copy(
+                                isPrimaryButtonEnabled = !hasError && feeSelectorUM != null,
+                            ) ?: it.confirmUM,
+                        )
+                    }
                 }
             }
             .launchIn(modelScope)
@@ -319,9 +334,18 @@ internal class SendConfirmModel @Inject constructor(
         val amountValue = amountState?.amountTextField?.cryptoAmount?.value ?: return
         val destination = destinationUM?.addressTextField?.actualAddress ?: return
         val memo = destinationUM?.memoTextField?.value
-        val fee = feeSelectorUM?.selectedFee
+        val isRedesignEnabled = uiState.value.isRedesignEnabled
+        val fee = if (isRedesignEnabled) {
+            feeUMV2?.selectedFeeItem?.fee
+        } else {
+            feeSelectorUM?.selectedFee
+        }
+        val nonce = if (isRedesignEnabled) {
+            feeUMV2?.nonce
+        } else {
+            feeSelectorUM?.nonce
+        }
         val feeValue = fee?.amount?.value ?: return
-        val nonce = feeSelectorUM?.nonce
 
         val receivingAmount = checkAndCalculateSubtractedAmount(
             isAmountSubtractAvailable = isAmountSubtractAvailable,
@@ -554,6 +578,12 @@ internal class SendConfirmModel @Inject constructor(
                 }
             },
         )
+    }
+
+    override fun onFeeResult(feeSelectorUM: FeeSelectorUMRedesigned) {
+        sendIdleTimer = SystemClock.elapsedRealtime()
+        _uiState.update { it.copy(feeSelectorUM = feeSelectorUM) }
+        updateConfirmNotifications()
     }
 
     private companion object {
