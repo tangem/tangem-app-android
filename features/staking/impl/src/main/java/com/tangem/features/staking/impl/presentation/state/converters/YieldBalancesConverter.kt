@@ -50,6 +50,7 @@ internal class YieldBalancesConverter(
                 ?.firstOrNull { it.type == StakingActionType.CLAIM_REWARDS }
 
             InnerYieldBalanceState.Data(
+                integrationId = yieldBalance?.integrationId,
                 reward = YieldReward(
                     rewardsCrypto = cryptoRewardsValue.format { crypto(cryptoCurrency) },
                     rewardsFiat = fiatRewardsValue.format {
