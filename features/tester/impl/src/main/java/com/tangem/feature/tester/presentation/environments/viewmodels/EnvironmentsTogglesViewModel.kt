@@ -6,7 +6,6 @@ import com.tangem.datasource.api.common.config.ApiConfig
 import com.tangem.datasource.api.common.config.ApiEnvironment
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.api.common.config.managers.MutableApiConfigsManager
-import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.feature.tester.impl.BuildConfig
 import com.tangem.feature.tester.impl.R
 import com.tangem.feature.tester.presentation.environments.state.EnvironmentTogglesScreenUM
@@ -30,7 +29,6 @@ import javax.inject.Inject
 @HiltViewModel
 internal class EnvironmentsTogglesViewModel @Inject constructor(
     apiConfigsManager: ApiConfigsManager,
-    private val cardSdkConfigRepository: CardSdkConfigRepository,
 ) : ViewModel() {
 
     /** Current ui state */
@@ -98,24 +96,7 @@ internal class EnvironmentsTogglesViewModel @Inject constructor(
         viewModelScope.launch {
             val environment = ApiEnvironment.valueOf(name)
 
-            if (id == ApiConfig.ID.TangemTech.name) {
-                handleTangemTechConfig(environment = environment)
-            }
-
             mutableApiConfigsManager.changeEnvironment(id = id, environment = environment)
         }
-    }
-
-    /** Special logic for [ApiConfig.ID.TangemTech] */
-    private fun handleTangemTechConfig(environment: ApiEnvironment) {
-        cardSdkConfigRepository.setTangemApiProdEnvFlag(
-            flag = when (environment) {
-                ApiEnvironment.PROD -> true
-                ApiEnvironment.DEV,
-                ApiEnvironment.STAGE,
-                ApiEnvironment.MOCK,
-                -> false
-            },
-        )
     }
 }
