@@ -37,6 +37,7 @@ import com.tangem.domain.staking.model.StakingApproval
 import com.tangem.domain.staking.model.stakekit.*
 import com.tangem.domain.staking.model.stakekit.action.StakingAction
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
+import com.tangem.domain.staking.model.stakekit.action.StakingActionType
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
 import com.tangem.domain.staking.utils.getValidatorsCount
 import com.tangem.domain.tokens.*
@@ -120,6 +121,7 @@ internal class StakingModel @Inject constructor(
     private val getActionsUseCase: GetActionsUseCase,
     private val getYieldUseCase: GetYieldUseCase,
     private val checkAccountInitializedUseCase: CheckAccountInitializedUseCase,
+    private val getActionRequirementAmountUseCase: GetActionRequirementAmountUseCase,
     private val paramsInterceptorHolder: ParamsInterceptorHolder,
     private val shareManager: ShareManager,
     @DelayedWork private val coroutineScope: CoroutineScope,
@@ -527,9 +529,20 @@ internal class StakingModel @Inject constructor(
         val rewardPendingActionConstraints = yieldBalance?.reward?.rewardConstraints
 
         if (rewardBlockType == RewardBlockType.RewardsRequirementsError) {
+            val minimumAmount = rewardPendingActionConstraints?.amountArg?.minimum
+            // Temporary fix, until StakeKit adds minimum requirement amount to balance response
+            val minimumAmountValue = if (minimumAmount == null && yieldBalance.integrationId != null) {
+                getActionRequirementAmountUseCase.invoke(
+                    integrationId = yieldBalance.integrationId,
+                    actionType = StakingActionType.CLAIM_REWARDS,
+                ).getOrNull()
+            } else {
+                minimumAmount
+            }
+
             stakingEventFactory.createStakingRewardsMinimumRequirementsErrorAlert(
                 cryptoCurrencyName = cryptoCurrencyStatus.currency.name,
-                cryptoAmountValue = rewardPendingActionConstraints?.amountArg?.minimum?.format {
+                cryptoAmountValue = minimumAmountValue?.format {
                     crypto(cryptoCurrencyStatus.currency)
                 }.orEmpty(),
             )

@@ -72,6 +72,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import timber.log.Timber
+import java.math.BigDecimal
 import kotlin.time.Duration.Companion.seconds
 
 @Suppress("LargeClass", "LongParameterList", "TooManyFunctions")
@@ -659,6 +660,14 @@ internal class DefaultStakingRepository(
                         }
                 }
                 ?: false
+        }
+    }
+
+    override fun getActionRequirementAmount(integrationId: String, stakingActionType: StakingActionType): BigDecimal? {
+        return when {
+            stakingIdFactory.isPolygonIntegrationId(integrationId) &&
+                stakingActionType == StakingActionType.CLAIM_REWARDS -> BigDecimal.ONE
+            else -> null
         }
     }
 
