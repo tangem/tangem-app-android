@@ -206,13 +206,13 @@ internal class TokenDetailsModel @Inject constructor(
         analyticsEventsHandler.send(TokenScreenAnalyticsEvent.Bought(currency.symbol))
     }
 
+    fun onResume() {
+        subscribeOnExpressTransactionsUpdates()
+    }
+
     fun onPause() {
         expressTxStatusTaskScheduler.cancelTask()
         expressTxJobHolder.cancel()
-    }
-
-    fun onResume() {
-        subscribeOnExpressTransactionsUpdates()
     }
 
     override fun onDestroy() {
@@ -305,65 +305,60 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     private fun subscribeOnCurrencyStatusUpdates() {
-        modelScope.launch(dispatchers.main) {
-            getSingleCryptoCurrencyStatusUseCase.invokeMultiWallet(
-                userWalletId = userWalletId,
-                currencyId = cryptoCurrency.id,
-                isSingleWalletWithTokens = userWallet is UserWallet.Cold &&
-                    userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
-            )
-                .distinctUntilChanged()
-                .onEach { maybeCurrencyStatus ->
-                    internalUiState.value = stateFactory.getCurrencyLoadedBalanceState(maybeCurrencyStatus)
-                    maybeCurrencyStatus.onRight { status ->
-                        cryptoCurrencyStatus = status
-                        updateButtons(currencyStatus = status)
-                        updateWarnings(status)
-                        subscribeOnUpdateStakingInfo(status)
-                    }
-                    currencyStatusAnalyticsSender.send(maybeCurrencyStatus)
+        getSingleCryptoCurrencyStatusUseCase.invokeMultiWallet(
+            userWalletId = userWalletId,
+            currencyId = cryptoCurrency.id,
+            isSingleWalletWithTokens = userWallet is UserWallet.Cold &&
+                userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
+        )
+            .distinctUntilChanged()
+            .onEach { maybeCurrencyStatus ->
+                internalUiState.value = stateFactory.getCurrencyLoadedBalanceState(maybeCurrencyStatus)
+                maybeCurrencyStatus.onRight { status ->
+                    cryptoCurrencyStatus = status
+                    updateButtons(currencyStatus = status)
+                    updateWarnings(status)
+                    subscribeOnUpdateStakingInfo(status)
                 }
-                .flowOn(dispatchers.main)
-                .launchIn(modelScope)
-                .saveIn(marketPriceJobHolder)
-        }
+                currencyStatusAnalyticsSender.send(maybeCurrencyStatus)
+            }
+            .flowOn(dispatchers.main)
+            .launchIn(modelScope)
+            .saveIn(marketPriceJobHolder)
     }
 
     private fun subscribeOnExpressTransactionsUpdates() {
-        modelScope.launch(dispatchers.main) {
-            expressTxStatusTaskScheduler.cancelTask()
-            expressStatusFactory
-                .getExpressStatuses()
-                .distinctUntilChanged()
-                .onEach { expressTxs ->
-                    internalUiState.value = expressStatusFactory.getStateWithUpdatedExpressTxs(
-                        expressTxs,
-                        ::updateNetworkToSwapBalance,
-                    )
-                    expressTxStatusTaskScheduler.scheduleTask(
-                        modelScope,
-                        PeriodicTask(
-                            isDelayFirst = false,
-                            delay = EXPRESS_STATUS_UPDATE_DELAY,
-                            task = {
-                                runCatching {
-                                    expressStatusFactory.getUpdatedExpressStatuses(internalUiState.value.expressTxs)
-                                }
-                            },
-                            onSuccess = { updatedTxs ->
-                                internalUiState.value = expressStatusFactory.getStateWithUpdatedExpressTxs(
-                                    updatedTxs,
-                                    ::updateNetworkToSwapBalance,
-                                )
-                            },
-                            onError = { /* no-op */ },
-                        ),
-                    )
-                }
-                .flowOn(dispatchers.main)
-                .launchIn(modelScope)
-                .saveIn(expressTxJobHolder)
-        }
+        expressTxStatusTaskScheduler.cancelTask()
+        expressStatusFactory.getExpressStatuses()
+            .distinctUntilChanged()
+            .onEach { expressTxs ->
+                internalUiState.value = expressStatusFactory.getStateWithUpdatedExpressTxs(
+                    expressTxs = expressTxs,
+                    updateBalance = ::updateNetworkToSwapBalance,
+                )
+                expressTxStatusTaskScheduler.scheduleTask(
+                    scope = modelScope,
+                    task = PeriodicTask(
+                        isDelayFirst = false,
+                        delay = EXPRESS_STATUS_UPDATE_DELAY,
+                        task = {
+                            runCatching {
+                                expressStatusFactory.getUpdatedExpressStatuses(internalUiState.value.expressTxs)
+                            }
+                        },
+                        onSuccess = { updatedTxs ->
+                            internalUiState.value = expressStatusFactory.getStateWithUpdatedExpressTxs(
+                                updatedTxs,
+                                ::updateNetworkToSwapBalance,
+                            )
+                        },
+                        onError = { /* no-op */ },
+                    ),
+                )
+            }
+            .flowOn(dispatchers.main)
+            .launchIn(modelScope)
+            .saveIn(expressTxJobHolder)
     }
 
     private fun updateNetworkToSwapBalance(toCryptoCurrency: CryptoCurrency) {

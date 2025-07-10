@@ -17,7 +17,7 @@ interface SwapTransactionRepository {
         transaction: SavedSwapTransactionModel,
     )
 
-    suspend fun getTransactions(
+    fun getTransactions(
         userWallet: UserWallet,
         cryptoCurrencyId: CryptoCurrency.ID,
     ): Flow<List<SavedSwapTransactionListModel>?>
