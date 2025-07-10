@@ -94,7 +94,6 @@ internal class SendAmountModel @Inject constructor(
                     },
                     ifRight = { wallet ->
                         userWallet = wallet
-                        appCurrency = getSelectedAppCurrencyUseCase.invokeSync().getOrElse { AppCurrency.Default }
                     },
                 )
             }.launchIn(modelScope)
@@ -127,6 +126,8 @@ internal class SendAmountModel @Inject constructor(
                     fiatRate = cryptoCurrencyStatus.value.fiatRate.orZero(),
                 )
             }
+
+            appCurrency = getSelectedAppCurrencyUseCase.invokeSync().getOrElse { AppCurrency.Default }
 
             if (uiState.value is AmountState.Data) {
                 _uiState.update(
