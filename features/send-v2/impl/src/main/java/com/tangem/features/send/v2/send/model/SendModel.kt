@@ -39,6 +39,7 @@ import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.v2.api.SendComponent
 import com.tangem.features.send.v2.api.SendFeatureToggles
+import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.features.send.v2.api.entity.PredefinedValues
 import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationComponent
 import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
@@ -395,5 +396,6 @@ internal class SendModel @Inject constructor(
         navigationUM = NavigationUM.Empty,
         isRedesignEnabled = sendFeatureToggles.isSendRedesignEnabled,
         confirmData = null,
+        feeSelectorUM = FeeSelectorUM.Loading,
     )
 }
