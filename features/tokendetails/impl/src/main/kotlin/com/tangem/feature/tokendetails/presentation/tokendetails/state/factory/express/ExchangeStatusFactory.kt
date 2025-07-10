@@ -52,7 +52,7 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
         )
     }
 
-    suspend operator fun invoke(): Flow<PersistentList<ExchangeUM>> {
+    operator fun invoke(): Flow<PersistentList<ExchangeUM>> {
         return swapTransactionRepository.getTransactions(
             userWallet = userWallet,
             cryptoCurrencyId = cryptoCurrency.id,
