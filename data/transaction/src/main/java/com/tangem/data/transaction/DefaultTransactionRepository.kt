@@ -366,13 +366,9 @@ internal class DefaultTransactionRepository(
         signer: TransactionSigner,
         userWalletId: UserWalletId,
         network: Network,
-    ): Result<ByteArray> = withContext(coroutineDispatcherProvider.io) {
+    ) = withContext(coroutineDispatcherProvider.io) {
         val preparer = getPreparer(network, userWalletId)
-
-        when (val prepareForSend = preparer.prepareForSend(transactionData, signer)) {
-            is com.tangem.blockchain.extensions.Result.Failure -> Result.failure(prepareForSend.error)
-            is com.tangem.blockchain.extensions.Result.Success -> Result.success(prepareForSend.data)
-        }
+        preparer.prepareForSend(transactionData, signer)
     }
 
     override suspend fun prepareForSendMultiple(
@@ -380,13 +376,9 @@ internal class DefaultTransactionRepository(
         signer: TransactionSigner,
         userWalletId: UserWalletId,
         network: Network,
-    ): Result<List<ByteArray>> = withContext(coroutineDispatcherProvider.io) {
+    ) = withContext(coroutineDispatcherProvider.io) {
         val preparer = getPreparer(network, userWalletId)
-
-        when (val prepareForSend = preparer.prepareForSendMultiple(transactionData, signer)) {
-            is com.tangem.blockchain.extensions.Result.Failure -> Result.failure(prepareForSend.error)
-            is com.tangem.blockchain.extensions.Result.Success -> Result.success(prepareForSend.data)
-        }
+        preparer.prepareForSendMultiple(transactionData, signer)
     }
 
     private suspend fun getPreparer(network: Network, userWalletId: UserWalletId): TransactionPreparer {
