@@ -55,7 +55,7 @@ internal class TangemTech(
 
     private fun createProdEnvironment(): ApiEnvironmentConfig = ApiEnvironmentConfig(
         environment = ApiEnvironment.PROD,
-        baseUrl = "https://api.tangem.org/v1/",
+        baseUrl = "https://api.tangem.org/",
         headers = createHeaders(),
     )
 
