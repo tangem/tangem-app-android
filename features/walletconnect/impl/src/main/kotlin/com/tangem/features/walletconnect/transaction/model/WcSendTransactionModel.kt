@@ -22,6 +22,8 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.walletconnect.WcRequestUseCaseFactory
+import com.tangem.domain.walletconnect.model.WcRequestError
+import com.tangem.domain.walletconnect.model.WcRequestError.Companion.message
 import com.tangem.domain.walletconnect.usecase.method.*
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.send.v2.api.callbacks.FeeSelectorModelCallback
@@ -252,10 +254,10 @@ internal class WcSendTransactionModel @Inject constructor(
         return false
     }
 
-    private fun handleSigningError(result: Either<Throwable, Unit>, useCase: WcSignUseCase<*>) {
+    private fun handleSigningError(result: Either<WcRequestError, String>, useCase: WcSignUseCase<*>) {
         if (result.isLeft()) {
             val error = WcTransactionRoutes.Alert.Type.UnknownError(
-                errorMessage = result.leftOrNull()?.message,
+                errorMessage = result.leftOrNull()?.message(),
                 onDismiss = { cancel(useCase) },
             )
             stackNavigation.pushNew(WcTransactionRoutes.Alert(error))
