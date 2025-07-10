@@ -17,6 +17,7 @@ import com.tangem.data.walletconnect.utils.BlockAidVerificationDelegate
 import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.tokens.model.Amount
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
+import com.tangem.domain.walletconnect.error.parseSendError
 import com.tangem.domain.walletconnect.model.WcApprovedAmount
 import com.tangem.domain.walletconnect.model.WcEthMethod
 import com.tangem.domain.walletconnect.usecase.method.*
@@ -80,8 +81,7 @@ internal class WcEthSendTransactionUseCase @AssistedInject constructor(
     override suspend fun SignCollector<TransactionData>.onSign(state: WcSignState<TransactionData>) {
         val hash = sendTransaction(state.signModel, wallet, network)
             .onLeft { error ->
-                val sendError = IllegalArgumentException(error.toString()) // todo(wc) use domain error
-                emit(state.toResult(sendError.left()))
+                emit(state.toResult(parseSendError(error).left()))
             }
             .getOrNull() ?: return
         val respondResult = respondService.respond(rawSdkRequest, hash.formatHex())
