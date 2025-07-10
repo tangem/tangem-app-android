@@ -16,7 +16,9 @@ import com.tangem.crypto.bip39.Wordlist
 import com.tangem.data.card.sdk.CardSdkOwner
 import com.tangem.data.card.sdk.CardSdkProvider
 import com.tangem.datasource.api.common.config.ApiConfig
+import com.tangem.datasource.api.common.config.ApiEnvironmentConfig
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
+import com.tangem.datasource.api.common.config.managers.MutableApiConfigsManager
 import com.tangem.datasource.utils.AddHeadersInterceptor
 import com.tangem.datasource.utils.RequestHeader
 import com.tangem.operations.attestation.api.TangemApiServiceSettings
@@ -56,28 +58,15 @@ internal class DefaultCardSdkProvider @Inject constructor(
         get() = holder?.sdk ?: tryToRegisterWithForegroundActivity()
 
     init {
-        // TODO: [REDACTED_TASK_KEY] Change API's base URL in CardSDK if API environment is changed
-        // if (BuildConfig.TESTER_MENU_ENABLED) {
-        //     appPreferencesStore.getObjectMap<ApiEnvironment>(PreferencesKeys.apiConfigsEnvironmentKey)
-        //         .map {
-        //             when (it[ApiConfig.ID.TangemTech.name]) {
-        //                 ApiEnvironment.DEV,
-        //                 ApiEnvironment.STAGE,
-        //                 ApiEnvironment.MOCK,
-        //                 -> false
-        //                 ApiEnvironment.PROD,
-        //                 null,
-        //                 -> true
-        //             }
-        //         }
-        //         .distinctUntilChanged()
-        //         .onEach { isProd ->
-        //             holder?.let {
-        //                 it.sdk.config.isTangemAttestationProdEnv = isProd
-        //             }
-        //         }
-        //         .launchIn(CoroutineScope(SupervisorJob() + dispatchers.main))
-        // }
+        val mutableManager = apiConfigsManager as? MutableApiConfigsManager
+
+        mutableManager?.addListener(
+            object : MutableApiConfigsManager.ApiConfigEnvChangeListener(id = ApiConfig.ID.TangemTech) {
+                override fun onChange(environmentConfig: ApiEnvironmentConfig) {
+                    holder?.sdk?.config?.tangemApiBaseUrl = environmentConfig.baseUrl
+                }
+            },
+        )
 
         TangemApiServiceSettings.addInterceptors(
             AddHeadersInterceptor(
