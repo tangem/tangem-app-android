@@ -23,7 +23,7 @@ internal class DevApiConfigsManager(
     private val apiConfigs: ApiConfigs,
     private val appPreferencesStore: AppPreferencesStore,
     private val dispatchers: CoroutineDispatcherProvider,
-) : MutableApiConfigsManager {
+) : MutableApiConfigsManager() {
 
     override val configs: StateFlow<Map<ApiConfig, ApiEnvironment>>
     field = MutableStateFlow(value = getInitialConfigs())
@@ -34,22 +34,22 @@ internal class DevApiConfigsManager(
     override fun initialize() {
         isInitialized.value = false
 
-        // We can't use appPreferencesStore.getObjectMap as base flow,
-        // because we should keep possibility to work with configs synchronous.
-        // See [getBaseUrl]
         appPreferencesStore.getObjectMap<ApiEnvironment>(PreferencesKeys.apiConfigsEnvironmentKey)
+            .distinctUntilChanged()
             .onEach { savedEnvironments ->
-                configs.update { apiConfigs ->
-                    apiConfigs.mapValues {
-                        val (config, currentEnvironment) = it
+                val apiConfigs = configs.value
 
-                        savedEnvironments[config.id.name] ?: currentEnvironment
-                    }
+                configs.value = apiConfigs.mapValues {
+                    val (config, currentEnvironment) = it
+
+                    savedEnvironments[config.id.name] ?: currentEnvironment
                 }
 
                 if (!isInitialized.value) {
                     isInitialized.value = true
                 }
+
+                notifyListeners(apiConfigs = apiConfigs, savedEnvironments = savedEnvironments)
             }
             .launchIn(CoroutineScope(SupervisorJob() + dispatchers.default))
     }
@@ -93,6 +93,35 @@ internal class DevApiConfigsManager(
                 }
 
             mutablePreferences.setObjectMap(key = PreferencesKeys.apiConfigsEnvironmentKey, value = updatedMap)
+        }
+    }
+
+    private fun notifyListeners(
+        apiConfigs: Map<ApiConfig, ApiEnvironment>,
+        savedEnvironments: Map<String, ApiEnvironment>,
+    ) {
+        if (registerListeners.isNotEmpty()) {
+            val changedConfigs = apiConfigs.mapNotNull { (config, prevEnvironment) ->
+                val newEnvironment = savedEnvironments[config.id.name] ?: config.defaultEnvironment
+
+                if (prevEnvironment == newEnvironment) return@mapNotNull null
+
+                val environmentConfig = config.environmentConfigs
+                    .firstOrNull { it.environment == newEnvironment }
+                    ?: return@mapNotNull null
+
+                config.id to environmentConfig
+            }
+
+            if (changedConfigs.isNotEmpty()) {
+                registerListeners.forEach { listener ->
+                    val changedConfig = changedConfigs.firstOrNull { it.first == listener.id }?.second
+
+                    if (changedConfig != null) {
+                        listener.onChange(changedConfig)
+                    }
+                }
+            }
         }
     }
 
