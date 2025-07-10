@@ -75,6 +75,8 @@ internal class CardSettingsModel @Inject constructor(
 
     override fun onDestroy() {
         super.onDestroy()
+        // Reset card scanned data
+        cardSettingsInteractor.clear()
         // Restore the previous value of access code request policy
         cardSdkConfigRepository.isBiometricsRequestPolicy = previousBiometricsRequestPolicy
     }
