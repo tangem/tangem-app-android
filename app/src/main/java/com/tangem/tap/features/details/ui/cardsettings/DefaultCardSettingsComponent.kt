@@ -22,7 +22,6 @@ internal class DefaultCardSettingsComponent @AssistedInject constructor(
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.screenState.collectAsStateWithLifecycle()
-
         CardSettingsScreen(modifier = modifier, state = state)
     }
 
