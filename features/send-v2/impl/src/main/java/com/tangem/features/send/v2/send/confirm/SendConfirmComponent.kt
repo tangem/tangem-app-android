@@ -14,9 +14,11 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.features.send.v2.api.FeeSelectorBlockComponent
 import com.tangem.features.send.v2.api.SendNotificationsComponent
 import com.tangem.features.send.v2.api.SendNotificationsComponent.Params.NotificationData
 import com.tangem.features.send.v2.api.entity.PredefinedValues
+import com.tangem.features.send.v2.api.params.FeeSelectorParams
 import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationComponentParams.DestinationBlockParams
 import com.tangem.features.send.v2.common.CommonSendRoute
 import com.tangem.features.send.v2.common.ui.state.ConfirmUM
@@ -35,6 +37,7 @@ import kotlinx.coroutines.flow.*
 internal class SendConfirmComponent(
     appComponentContext: AppComponentContext,
     params: Params,
+    private val feeSelectorComponentFactory: FeeSelectorBlockComponent.Factory,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
     private val model: SendConfirmModel = getOrCreateModel(params = params)
@@ -92,6 +95,18 @@ internal class SendConfirmComponent(
         onClick = model::showEditFee,
     )
 
+    private val feeSelectorBlockComponent = feeSelectorComponentFactory.create(
+        context = appComponentContext,
+        params = FeeSelectorParams.FeeSelectorBlockParams(
+            state = model.uiState.value.feeSelectorUM,
+            onLoadFee = params.onLoadFee,
+            cryptoCurrencyStatus = params.cryptoCurrencyStatus,
+            suggestedFeeState = model.suggestedFeeState,
+            feeDisplaySource = FeeSelectorParams.FeeDisplaySource.Screen,
+        ),
+        onResult = model::onFeeResult,
+    )
+
     private val notificationsComponent = DefaultSendNotificationsComponent(
         appComponentContext = child("sendConfirmNotifications"),
         params = SendNotificationsComponent.Params(
@@ -136,6 +151,7 @@ internal class SendConfirmComponent(
             destinationBlockComponent = destinationBlockComponent,
             amountBlockComponent = amountBlockComponent,
             feeBlockComponent = feeBlockComponent,
+            feeSelectorBlockComponent = feeSelectorBlockComponent,
             notificationsComponent = notificationsComponent,
             notificationsUM = notificationState,
         )
