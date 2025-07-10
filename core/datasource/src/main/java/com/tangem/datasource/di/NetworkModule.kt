@@ -58,7 +58,7 @@ internal object NetworkModule {
         dispatchers: CoroutineDispatcherProvider,
     ): ApiConfigsManager {
         return when {
-            BuildConfig.BUILD_TYPE == MOCKED_BUILD_TYPE -> MockApiConfigsManager(apiConfigs)
+            BuildConfig.BUILD_TYPE == MOCKED_BUILD_TYPE -> MockApiConfigsManager(apiConfigs, dispatchers)
             BuildConfig.TESTER_MENU_ENABLED -> DevApiConfigsManager(apiConfigs, appPreferencesStore, dispatchers)
             else -> ProdApiConfigsManager(apiConfigs)
         }
