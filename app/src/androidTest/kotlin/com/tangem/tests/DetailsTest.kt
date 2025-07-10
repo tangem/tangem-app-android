@@ -38,7 +38,7 @@ class DetailsTest : BaseTestCase() {
                 step("Assert 'Contact support' button is visible") {
                     contactSupportButton.assertIsDisplayed()
                 }
-                step("Assert 'Terms or service' button is visible") {
+                step("Assert 'Terms of service' button is visible") {
                     toSButton.assertIsDisplayed()
                 }
                 step("Open 'Wallet settings' screen") {
