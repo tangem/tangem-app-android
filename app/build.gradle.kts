@@ -280,6 +280,8 @@ dependencies {
     implementation(tangemDeps.card.android) {
         exclude(module = "joda-time")
     }
+    implementation(tangemDeps.hot.core)
+    implementation(tangemDeps.hot.android)
 
     /** DI */
     implementation(deps.hilt.android)
