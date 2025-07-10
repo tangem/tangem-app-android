@@ -16,6 +16,7 @@ import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
 import com.tangem.data.walletconnect.utils.BlockAidVerificationDelegate
 import com.tangem.domain.tokens.model.Amount
 import com.tangem.domain.transaction.usecase.PrepareForSendUseCase
+import com.tangem.domain.walletconnect.error.parseSendError
 import com.tangem.domain.walletconnect.model.WcApprovedAmount
 import com.tangem.domain.walletconnect.model.WcEthMethod
 import com.tangem.domain.walletconnect.usecase.method.*
@@ -77,7 +78,7 @@ internal class WcEthSignTransactionUseCase @AssistedInject constructor(
         val hash = prepareForSend(state.signModel, wallet, network)
             .map { it.toHexString().formatHex() }
             .onLeft { error ->
-                emit(state.toResult(error.left()))
+                emit(state.toResult(parseSendError(error).left()))
             }
             .getOrNull()
             ?: return
