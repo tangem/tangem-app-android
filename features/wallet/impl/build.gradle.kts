@@ -99,6 +99,7 @@ dependencies {
 
     /** Feature Apis */
     implementation(projects.features.details.api)
+    implementation(projects.features.hotWallet.api)
     implementation(projects.features.manageTokens.api)
     implementation(projects.features.markets.api)
     implementation(projects.features.onboardingV2.api)
