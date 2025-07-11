@@ -6,11 +6,13 @@ import arrow.core.right
 import com.domain.blockaid.models.dapp.CheckDAppResult
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.data.walletconnect.pair.AssociateNetworksDelegate
 import com.tangem.data.walletconnect.utils.WC_TAG
 import com.tangem.data.walletconnect.utils.WcSdkObserver
 import com.tangem.data.walletconnect.utils.WcSdkSessionConverter
 import com.tangem.datasource.local.walletconnect.WalletConnectStore
+import com.tangem.domain.walletconnect.WcAnalyticEvents
 import com.tangem.domain.walletconnect.model.WcSession
 import com.tangem.domain.walletconnect.model.WcSessionDTO
 import com.tangem.domain.walletconnect.model.legacy.WalletConnectSessionsRepository
@@ -24,12 +26,14 @@ import kotlinx.coroutines.flow.*
 import timber.log.Timber
 import kotlin.coroutines.resume
 
+@Suppress("LongParameterList")
 internal class DefaultWcSessionsManager(
     private val store: WalletConnectStore,
     private val legacyStore: WalletConnectSessionsRepository,
     private val getWallets: GetWalletsUseCase,
     private val dispatchers: CoroutineDispatcherProvider,
     private val associateNetworks: AssociateNetworksDelegate,
+    private val analytics: AnalyticsEventHandler,
     private val scope: CoroutineScope,
 ) : WcSessionsManager, WcSdkObserver {
 
@@ -68,6 +72,7 @@ internal class DefaultWcSessionsManager(
         val topic = session.sdkModel.topic
         val sdkCall = sdkDisconnectSession(topic)
             .onRight { onSessionDelete.trySend(Wallet.Model.SessionDelete.Success(topic = topic, reason = "")) }
+        analytics.send(WcAnalyticEvents.SessionDisconnected(session.sdkModel.appMetaData))
         return sdkCall
     }
 
