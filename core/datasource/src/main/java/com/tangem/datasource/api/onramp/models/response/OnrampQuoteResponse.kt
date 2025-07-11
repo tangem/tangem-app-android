@@ -33,10 +33,10 @@ data class OnrampQuoteResponse(
     val providerId: String,
 
     @Json(name = "minFromAmount")
-    val minFromAmount: String,
+    val minFromAmount: String?,
 
     @Json(name = "maxFromAmount")
-    val maxFromAmount: String,
+    val maxFromAmount: String?,
 
     @Json(name = "minToAmount")
     val minToAmount: String?,
