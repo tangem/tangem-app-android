@@ -8,10 +8,10 @@ import com.domain.blockaid.models.dapp.CheckDAppResult
 import com.domain.blockaid.models.dapp.DAppData
 import com.reown.walletkit.client.Wallet
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.domain.walletconnect.WcAnalyticEvents
 import com.tangem.data.walletconnect.utils.WC_TAG
 import com.tangem.data.walletconnect.utils.WcSdkSessionConverter
 import com.tangem.domain.blockaid.BlockAidVerifier
+import com.tangem.domain.walletconnect.WcAnalyticEvents
 import com.tangem.domain.walletconnect.model.*
 import com.tangem.domain.walletconnect.model.sdkcopy.WcAppMetaData
 import com.tangem.domain.walletconnect.repository.WcSessionsManager
@@ -37,6 +37,7 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
 
     private val onCallTerminalAction = Channel<TerminalAction>()
 
+    @Suppress("LongMethod")
     override operator fun invoke(): Flow<WcPairState> {
         val (uri: String, source: WcPairRequest.Source) = pairRequest
         return flow {
@@ -47,6 +48,7 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
             val sdkSessionProposal = sdkDelegate.pair(uri)
                 .onLeft {
                     Timber.tag(WC_TAG).e(it, "Failed to call pair $pairRequest")
+                    analytics.send(WcAnalyticEvents.PairFailed)
                     emit(WcPairState.Error(it))
                 }
                 .getOrNull() ?: return@flow
@@ -76,7 +78,7 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
             }
             // finish flow if rejected above
             if (sessionForApprove == null) {
-                analytics.send(WcAnalyticEvents.SessionDisconnected(proposalState.dAppSession))
+                analytics.send(WcAnalyticEvents.SessionDisconnected(proposalState.dAppSession.dAppMetaData))
                 sdkDelegate.rejectSession(sdkSessionProposal.proposerPublicKey)
                 return@flow
             }
@@ -155,7 +157,7 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
         analytics.send(
             WcAnalyticEvents.PairRequested(
                 network = requestedNetworks,
-                verificationInfo.name,
+                verificationInfo,
             ),
         )
         val appMetaData = WcAppMetaData(
