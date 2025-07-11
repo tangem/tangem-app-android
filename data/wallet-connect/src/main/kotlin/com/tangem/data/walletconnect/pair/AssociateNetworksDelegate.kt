@@ -48,6 +48,7 @@ internal class AssociateNetworksDelegate(
         }
     }
 
+    @Suppress("ComplexCondition")
     private suspend fun mapNetworksForWallet(
         wallet: UserWallet,
         requiredNamespaces: Set<String>,
@@ -57,6 +58,7 @@ internal class AssociateNetworksDelegate(
         val walletNetworks = getWalletNetworks(userWalletId = wallet.walletId)
 
         val unknownRequired = mutableSetOf<String>()
+        val unknownOptional = mutableSetOf<String>()
         val missingRequired = mutableSetOf<Network>()
         val required = mutableSetOf<Network>()
         val available = mutableSetOf<Network>()
@@ -78,7 +80,10 @@ internal class AssociateNetworksDelegate(
         }
         optionalNamespaces.forEach { chainId ->
             val wcNetwork = namespaceConverters.firstNotNullOfOrNull { it.toNetwork(chainId, wallet) }
-                ?: return@forEach
+            if (wcNetwork == null) {
+                unknownOptional.add(missingNetworkName(chainId))
+                return@forEach
+            }
             val walletNetwork = walletNetworks.find { network -> wcNetwork.id == network.id }
             if (walletNetwork != null && !isCustomCoin(walletNetwork)) {
                 available.add(walletNetwork)
@@ -88,6 +93,9 @@ internal class AssociateNetworksDelegate(
         }
         if (unknownRequired.isNotEmpty()) {
             throw WcPairError.UnsupportedBlockchains(unknownRequired, sessionProposal.name)
+        }
+        if (unknownOptional.isNotEmpty() && required.isEmpty() && available.isEmpty() && missingRequired.isEmpty()) {
+            throw WcPairError.UnsupportedBlockchains(unknownOptional, sessionProposal.name)
         }
         return ProposalNetwork(
             wallet = wallet,
