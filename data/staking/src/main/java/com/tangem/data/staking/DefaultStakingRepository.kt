@@ -235,7 +235,7 @@ internal class DefaultStakingRepository(
                     )
                     when {
                         prefetchedYield != null && isSupportedInMobileApp -> {
-                            send(StakingAvailability.Available(prefetchedYield.id))
+                            send(StakingAvailability.Available(prefetchedYield))
                         }
                         prefetchedYield == null && isSupportedInMobileApp -> {
                             send(StakingAvailability.TemporaryUnavailable)
@@ -279,7 +279,7 @@ internal class DefaultStakingRepository(
 
         return when {
             prefetchedYield != null && isSupportedInMobileApp -> {
-                StakingAvailability.Available(prefetchedYield.id)
+                StakingAvailability.Available(prefetchedYield)
             }
             prefetchedYield == null && isSupportedInMobileApp -> {
                 StakingAvailability.TemporaryUnavailable
