@@ -1,28 +1,17 @@
 package com.tangem.features.send.v2.subcomponents.notifications
 
 import com.tangem.features.send.v2.api.SendNotificationsComponent.Params.NotificationData
-import kotlinx.coroutines.flow.Flow
+import com.tangem.features.send.v2.api.subcomponents.notifications.SendNotificationsUpdateListener
+import com.tangem.features.send.v2.api.subcomponents.notifications.SendNotificationsUpdateTrigger
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import javax.inject.Inject
 import javax.inject.Singleton
 
-interface NotificationsUpdateTrigger {
-    /** Flow triggers notifications update */
-    val updateTriggerFlow: Flow<NotificationData>
-
-    /** Flow returns whether there is error notifications */
-    val hasErrorFlow: Flow<Boolean>
-
-    /** Trigger return callback with check result */
-    suspend fun callbackHasError(hasError: Boolean)
-
-    /** Trigger fee check reload */
-    suspend fun triggerUpdate(data: NotificationData)
-}
-
 @Singleton
-internal class DefaultNotificationsUpdateTrigger @Inject constructor() : NotificationsUpdateTrigger {
+internal class DefaultNotificationsUpdateTrigger @Inject constructor() :
+    SendNotificationsUpdateListener,
+    SendNotificationsUpdateTrigger {
 
     private val _updateTriggerFlow = MutableSharedFlow<NotificationData>()
     override val updateTriggerFlow = _updateTriggerFlow.asSharedFlow()
