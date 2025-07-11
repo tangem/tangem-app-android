@@ -81,6 +81,8 @@ internal interface WalletWarningsClickIntents {
     fun onSeedPhraseSecondNotificationAccept()
 
     fun onSeedPhraseSecondNotificationReject()
+
+    fun onFinishWalletActivationClick()
 }
 
 @Suppress("LongParameterList")
@@ -367,6 +369,10 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         modelScope.launch {
             seedPhraseNotificationUseCase.rejectSecond(userWalletId = userWallet.walletId)
         }
+    }
+
+    override fun onFinishWalletActivationClick() {
+        // TODO implement wallet activation process
     }
 
     private fun getSelectedUserWallet(): UserWallet? {
