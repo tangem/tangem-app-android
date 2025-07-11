@@ -1,5 +1,7 @@
 package com.tangem.domain.walletconnect
 
+import com.domain.blockaid.models.dapp.CheckDAppResult
+import com.domain.blockaid.models.dapp.CheckDAppResult.*
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.domain.models.network.Network
@@ -7,6 +9,7 @@ import com.tangem.domain.walletconnect.model.WcPairRequest
 import com.tangem.domain.walletconnect.model.WcSession
 import com.tangem.domain.walletconnect.model.WcSessionApprove
 import com.tangem.domain.walletconnect.model.WcSessionProposal
+import com.tangem.domain.walletconnect.model.sdkcopy.WcAppMetaData
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
 
 sealed class WcAnalyticEvents(
@@ -14,6 +17,7 @@ sealed class WcAnalyticEvents(
     params: Map<String, String> = mapOf(),
 ) : AnalyticsEvent(category = "Wallet Connect", event = event, params = params) {
 
+    object ScreenOpened : WcAnalyticEvents(event = "WC Screen Opened")
     class NewPairInitiated(source: WcPairRequest.Source) : WcAnalyticEvents(
         event = "Session Initiated",
         params = mapOf(
@@ -32,12 +36,16 @@ sealed class WcAnalyticEvents(
 
     class PairRequested(
         network: Set<Network>,
-        domainVerification: String,
+        domainVerification: CheckDAppResult,
     ) : WcAnalyticEvents(
         event = "dApp Connection Requested",
         params = mapOf(
             NETWORKS to network.joinToString(",") { it.name },
-            DOMAIN_VERIFICATION to domainVerification,
+            DOMAIN_VERIFICATION to when (domainVerification) {
+                SAFE -> "Verified"
+                UNSAFE -> "Risky"
+                FAILED_TO_VERIFY -> "Unknown"
+            },
         ),
     )
 
@@ -66,11 +74,11 @@ sealed class WcAnalyticEvents(
         ),
     )
 
-    class SessionDisconnected(sessionProposal: WcSessionProposal) : WcAnalyticEvents(
+    class SessionDisconnected(dAppMetaData: WcAppMetaData) : WcAnalyticEvents(
         event = "dApp Disconnected",
         params = mapOf(
-            AnalyticsParam.Key.DAPP_NAME to sessionProposal.dAppMetaData.name,
-            AnalyticsParam.Key.DAPP_URL to sessionProposal.dAppMetaData.url,
+            AnalyticsParam.Key.DAPP_NAME to dAppMetaData.name,
+            AnalyticsParam.Key.DAPP_URL to dAppMetaData.url,
         ),
     )
 
@@ -154,6 +162,30 @@ sealed class WcAnalyticEvents(
             AnalyticsParam.Key.DAPP_URL to session.sdkModel.appMetaData.url,
         ),
     )
+
+    class NoticeSecurityAlert(
+        dAppMetaData: WcAppMetaData,
+        securityStatus: CheckDAppResult,
+        source: Source,
+    ) : WcAnalyticEvents(
+        event = "Notice - Security Alert",
+        params = mapOf(
+            AnalyticsParam.Key.DAPP_NAME to dAppMetaData.name,
+            AnalyticsParam.Key.DAPP_URL to dAppMetaData.url,
+            AnalyticsParam.Key.SOURCE to when (source) {
+                Source.Domain -> "Domain"
+                Source.SmartContract -> "Smart Contract"
+            },
+            AnalyticsParam.Key.TYPE to when (securityStatus) {
+                SAFE -> "Verified"
+                UNSAFE -> "Risky"
+                FAILED_TO_VERIFY -> "Unknown"
+            },
+
+        ),
+    ) {
+        enum class Source { Domain, SmartContract }
+    }
 
     companion object {
         const val NETWORKS = "Networks"

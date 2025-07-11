@@ -8,6 +8,7 @@ import com.arkivanov.decompose.router.stack.pushNew
 import com.domain.blockaid.models.transaction.ValidationResult
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -21,6 +22,7 @@ import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
+import com.tangem.domain.walletconnect.WcAnalyticEvents
 import com.tangem.domain.walletconnect.WcRequestUseCaseFactory
 import com.tangem.domain.walletconnect.model.WcRequestError
 import com.tangem.domain.walletconnect.model.WcRequestError.Companion.message
@@ -58,6 +60,7 @@ internal class WcSendTransactionModel @Inject constructor(
     private val blockAidUiConverter: WcSendAndReceiveBlockAidUiConverter,
     private val getFeeUseCase: GetFeeUseCase,
     private val getNetworkCoinUseCase: GetNetworkCoinStatusUseCase,
+    private val analytics: AnalyticsEventHandler,
 ) : Model(), WcCommonTransactionModel, FeeSelectorModelCallback {
 
     private val params = paramsContainer.require<WcTransactionModelParams>()
@@ -218,6 +221,19 @@ internal class WcSendTransactionModel @Inject constructor(
             showMaliciousAlert(securityCheck.result.description)
         } else {
             sign()
+        }
+        securityCheck?.result?.validation?.let { securityStatus ->
+            val event = WcAnalyticEvents.NoticeSecurityAlert(
+                dAppMetaData = useCase.session.sdkModel.appMetaData,
+                securityStatus = useCase.session.securityStatus,
+                source = WcAnalyticEvents.NoticeSecurityAlert.Source.SmartContract,
+            )
+            when (securityStatus) {
+                ValidationResult.SAFE -> Unit
+                ValidationResult.UNSAFE,
+                ValidationResult.FAILED_TO_VALIDATE,
+                -> analytics.send(event)
+            }
         }
     }
 
