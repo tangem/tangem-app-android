@@ -3,6 +3,7 @@ package com.tangem.features.walletconnect.connections.model
 import androidx.compose.runtime.Stable
 import com.arkivanov.decompose.router.stack.*
 import com.domain.blockaid.models.dapp.CheckDAppResult
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -11,6 +12,7 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.ToastMessage
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.walletconnect.WcAnalyticEvents
 import com.tangem.domain.walletconnect.model.WcPairError
 import com.tangem.domain.walletconnect.model.WcPairRequest
 import com.tangem.domain.walletconnect.model.WcSessionApprove
@@ -42,10 +44,12 @@ private const val WC_WALLETS_SELECTOR_MIN_COUNT = 2
 
 @Stable
 @ModelScoped
+@Suppress("LongParameterList")
 internal class WcPairModel @Inject constructor(
     private val router: Router,
     private val messageSender: UiMessageSender,
     override val dispatchers: CoroutineDispatcherProvider,
+    private val analytics: AnalyticsEventHandler,
     wcPairUseCaseFactory: WcPairUseCase.Factory,
     getWalletsUseCase: GetWalletsUseCase,
     paramsContainer: ParamsContainer,
@@ -165,10 +169,22 @@ internal class WcPairModel @Inject constructor(
     }
 
     private fun showUnknownDomainAlert() {
+        val event = WcAnalyticEvents.NoticeSecurityAlert(
+            dAppMetaData = sessionProposal.dAppMetaData,
+            securityStatus = sessionProposal.securityStatus,
+            source = WcAnalyticEvents.NoticeSecurityAlert.Source.Domain,
+        )
+        analytics.send(event)
         stackNavigation.pushNew(WcAppInfoRoutes.Alert(WcAppInfoRoutes.Alert.Type.UnknownDomain))
     }
 
     private fun showSecurityRiskAlert() {
+        val event = WcAnalyticEvents.NoticeSecurityAlert(
+            dAppMetaData = sessionProposal.dAppMetaData,
+            securityStatus = sessionProposal.securityStatus,
+            source = WcAnalyticEvents.NoticeSecurityAlert.Source.Domain,
+        )
+        analytics.send(event)
         stackNavigation.pushNew(WcAppInfoRoutes.Alert(WcAppInfoRoutes.Alert.Type.UnsafeDomain))
     }
 
