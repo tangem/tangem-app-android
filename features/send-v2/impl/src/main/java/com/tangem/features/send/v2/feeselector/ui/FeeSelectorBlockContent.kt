@@ -32,9 +32,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.transaction.error.GetFeeError
-import com.tangem.features.send.v2.api.entity.FeeFiatRateUM
-import com.tangem.features.send.v2.api.entity.FeeItem
-import com.tangem.features.send.v2.api.entity.FeeSelectorUM
+import com.tangem.features.send.v2.api.entity.*
 import com.tangem.features.send.v2.impl.R
 import kotlinx.collections.immutable.persistentListOf
 import java.math.BigDecimal
@@ -121,14 +119,14 @@ private fun FeeContent(state: FeeSelectorUM.Content, modifier: Modifier = Modifi
                     value = state.selectedFeeItem.fee.amount.value,
                     rate = fiatRate.rate,
                     appCurrency = fiatRate.appCurrency,
-                    approximate = state.isFeeApproximate,
+                    approximate = state.feeExtraInfo.isFeeApproximate,
                 )
             } else {
                 state.selectedFeeItem.fee.amount.value.format {
                     crypto(
                         symbol = state.selectedFeeItem.fee.amount.currencySymbol,
                         decimals = state.selectedFeeItem.fee.amount.decimals,
-                    ).fee(canBeLower = state.isFeeApproximate)
+                    ).fee(canBeLower = state.feeExtraInfo.isFeeApproximate)
                 }
             },
             style = TangemTheme.typography.body1,
@@ -165,27 +163,31 @@ private class FeeSelectorUMProvider : PreviewParameterProvider<FeeSelectorUM> {
         FeeSelectorUM.Content(
             feeItems = persistentListOf(lowFeeItem),
             selectedFeeItem = lowFeeItem,
-            isFeeApproximate = false,
+            feeExtraInfo = FeeExtraInfo(
+                isFeeApproximate = false,
+                isFeeConvertibleToFiat = true,
+                isTronToken = false,
+            ),
+            feeNonce = FeeNonce.None,
             feeFiatRateUM = FeeFiatRateUM(
                 rate = BigDecimal("2500"),
                 appCurrency = AppCurrency.Default,
             ),
-            displayNonceInput = false,
-            nonce = null,
-            onNonceChange = {},
             fees = TransactionFee.Single(lowFeeItem.fee),
         ),
         FeeSelectorUM.Content(
             feeItems = persistentListOf(maxFeeItem),
             selectedFeeItem = maxFeeItem,
-            isFeeApproximate = false,
+            feeExtraInfo = FeeExtraInfo(
+                isFeeApproximate = false,
+                isFeeConvertibleToFiat = true,
+                isTronToken = false,
+            ),
+            feeNonce = FeeNonce.None,
             feeFiatRateUM = FeeFiatRateUM(
                 rate = BigDecimal("2500000000000"),
                 appCurrency = AppCurrency.Default,
             ),
-            displayNonceInput = false,
-            nonce = null,
-            onNonceChange = {},
             fees = TransactionFee.Single(maxFeeItem.fee),
         ),
         FeeSelectorUM.Error(GetFeeError.UnknownError),
