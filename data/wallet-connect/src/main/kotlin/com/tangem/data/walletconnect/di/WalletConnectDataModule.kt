@@ -72,7 +72,9 @@ internal object WalletConnectDataModule {
 
     @Provides
     @Singleton
-    fun defaultWcPairUseCase(): WcPairService = DefaultWcPairService()
+    fun defaultWcPairUseCase(sessionsManager: DefaultWcSessionsManager): WcPairService = DefaultWcPairService(
+        sessionsManager,
+    )
 
     @Provides
     @Singleton
@@ -90,6 +92,7 @@ internal object WalletConnectDataModule {
         legacyStore: WalletConnectSessionsRepository,
         getWallets: GetWalletsUseCase,
         associateNetworks: AssociateNetworksDelegate,
+        analytics: AnalyticsEventHandler,
     ): DefaultWcSessionsManager {
         val scope = CoroutineScope(SupervisorJob() + dispatchers.io)
         return DefaultWcSessionsManager(
@@ -98,6 +101,7 @@ internal object WalletConnectDataModule {
             legacyStore = legacyStore,
             getWallets = getWallets,
             associateNetworks = associateNetworks,
+            analytics = analytics,
             scope = scope,
         )
     }
