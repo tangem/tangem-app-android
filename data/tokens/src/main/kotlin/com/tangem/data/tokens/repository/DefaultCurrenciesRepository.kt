@@ -1,6 +1,7 @@
 package com.tangem.data.tokens.repository
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.TransactionStatus
 import com.tangem.blockchainsdk.compatibility.getL2CompatibilityTokenComparison
 import com.tangem.blockchainsdk.utils.*
 import com.tangem.data.common.api.safeApiCall
@@ -432,9 +433,9 @@ internal class DefaultCurrenciesRepository(
         }
     }
 
-    override fun isSendBlockedByPendingTransactions(
+    override suspend fun isSendBlockedByPendingTransactions(
+        userWalletId: UserWalletId,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
-        coinStatus: CryptoCurrencyStatus?,
     ): Boolean {
         val blockchain = cryptoCurrencyStatus.currency.network.toBlockchain()
         val isBitcoinBlockchain = blockchain == Blockchain.Bitcoin || blockchain == Blockchain.BitcoinTestnet
@@ -445,7 +446,14 @@ internal class DefaultCurrenciesRepository(
             }
             blockchain.isEvm() -> false
             blockchain == Blockchain.Tron || blockchain == Blockchain.TronTestnet -> false
-            else -> coinStatus?.value?.hasCurrentNetworkTransactions == true
+            else -> {
+                val walletManager = walletManagersFacade.getOrCreateWalletManager(
+                    userWalletId = userWalletId,
+                    network = cryptoCurrencyStatus.currency.network,
+                ) ?: return false
+
+                walletManager.wallet.recentTransactions.any { it.status == TransactionStatus.Unconfirmed }
+            }
         }
     }
 
