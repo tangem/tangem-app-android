@@ -117,6 +117,7 @@ internal object WalletScreenPreviewData {
             buttons = persistentListOf(buyButton),
             warnings = persistentListOf(
                 WalletNotification.Warning.SomeNetworksUnreachable,
+                WalletNotification.FinishWalletActivation { },
             ),
             bottomSheetConfig = null,
             tokensListState = textContentTokensState,
