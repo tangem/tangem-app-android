@@ -100,6 +100,7 @@ internal class SendConfirmComponent(
         params = FeeSelectorParams.FeeSelectorBlockParams(
             state = model.uiState.value.feeSelectorUM,
             onLoadFee = params.onLoadFee,
+            feeCryptoCurrencyStatus = params.feeCryptoCurrencyStatus,
             cryptoCurrencyStatus = params.cryptoCurrencyStatus,
             suggestedFeeState = model.suggestedFeeState,
             feeDisplaySource = FeeSelectorParams.FeeDisplaySource.Screen,
