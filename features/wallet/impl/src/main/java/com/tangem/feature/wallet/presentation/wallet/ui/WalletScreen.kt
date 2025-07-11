@@ -62,7 +62,7 @@ import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.LocalWindowSize
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.test.TestTags
+import com.tangem.core.ui.test.MainScreenTestTags
 import com.tangem.core.ui.utils.lineTo
 import com.tangem.core.ui.utils.moveTo
 import com.tangem.core.ui.utils.toPx
@@ -178,7 +178,7 @@ private fun WalletContent(
         } ?: PaddingValues(bottom = TangemTheme.dimens.spacing92 + bottomBarHeight)
 
         LazyColumn(
-            modifier = Modifier.testTag(TestTags.MAIN_SCREEN),
+            modifier = Modifier.testTag(MainScreenTestTags.SCREEN_CONTAINER),
             state = listState,
             contentPadding = contentPadding,
             horizontalAlignment = Alignment.CenterHorizontally,
