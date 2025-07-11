@@ -4,6 +4,7 @@ import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.domain.qrscanning.models.QrResultSource
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.feature.qrscanning.impl.R
 import com.tangem.feature.qrscanning.model.QrScanningClickIntents
@@ -28,7 +29,7 @@ internal class InitializeQrScanningStateTransformer(
             topBarConfig = constructTopBarConfig(),
             message = message,
             onBackClick = clickIntents::onBackClick,
-            onQrScanned = clickIntents::onQrScanned,
+            onQrScanned = { qrCode -> clickIntents.onQrScanned(qrCode, QrResultSource.CAMERA) },
             onGalleryClick = clickIntents::onGalleryClicked,
             pasteAction = constructPasteAction(),
         )
@@ -50,7 +51,7 @@ internal class InitializeQrScanningStateTransformer(
     private fun constructPasteAction(): PasteAction {
         val uri = clipboardManager.getText()
         return if (uri != null) {
-            PasteAction.Perform { clickIntents.onQrScanned(uri) }
+            PasteAction.Perform { clickIntents.onQrScanned(uri, QrResultSource.CLIPBOARD) }
         } else {
             PasteAction.None
         }
