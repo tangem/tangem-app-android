@@ -21,11 +21,9 @@ sealed class FeeSelectorUM {
         val fees: TransactionFee,
         val feeItems: ImmutableList<FeeItem>,
         val selectedFeeItem: FeeItem,
-        val isFeeApproximate: Boolean,
+        val feeExtraInfo: FeeExtraInfo,
         val feeFiatRateUM: FeeFiatRateUM?,
-        val displayNonceInput: Boolean,
-        val nonce: BigInteger?,
-        val onNonceChange: (String) -> Unit,
+        val feeNonce: FeeNonce,
     ) : FeeSelectorUM()
 }
 
@@ -34,6 +32,21 @@ data class FeeFiatRateUM(
     val rate: BigDecimal,
     val appCurrency: AppCurrency,
 )
+
+@Immutable
+data class FeeExtraInfo(
+    val isFeeApproximate: Boolean,
+    val isFeeConvertibleToFiat: Boolean,
+    val isTronToken: Boolean,
+)
+
+sealed class FeeNonce {
+    data object None : FeeNonce()
+    data class Nonce(
+        val nonce: BigInteger?,
+        val onNonceChange: (String) -> Unit,
+    ) : FeeNonce()
+}
 
 @Immutable
 sealed class FeeItem {
