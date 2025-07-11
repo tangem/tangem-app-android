@@ -223,12 +223,12 @@ interface CurrenciesRepository {
     /**
      * Determines whether the currency sending is blocked by network pending transaction
      *
+     * @param userWalletId         the unique identifier of the user wallet
      * @param cryptoCurrencyStatus currency status
-     * @param coinStatus main currency status in [cryptoCurrencyStatus] network
      */
-    fun isSendBlockedByPendingTransactions(
+    suspend fun isSendBlockedByPendingTransactions(
+        userWalletId: UserWalletId,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
-        coinStatus: CryptoCurrencyStatus?,
     ): Boolean
 
     /**
