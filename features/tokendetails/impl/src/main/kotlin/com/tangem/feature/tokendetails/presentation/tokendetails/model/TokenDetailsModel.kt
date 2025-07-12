@@ -448,31 +448,7 @@ internal class TokenDetailsModel @Inject constructor(
                     network = cryptoCurrency.network,
                 ).getOrElse { false }
 
-            val isSupported = getExtendedPublicKeyForCurrencyUseCase.isSupported(
-                userWalletId = userWalletId,
-                network = cryptoCurrency.network,
-            )
-                .mapLeft {
-                    analyticsExceptionHandler.sendException(
-                        event = ExceptionAnalyticsEvent(
-                            exception = it,
-                            params = mapOf(
-                                "blockchainId" to cryptoCurrency.network.id.rawId.value,
-                                "networkId" to cryptoCurrency.network.backendId,
-                            ),
-                        ),
-                    )
-
-                    Timber.e(
-                        /* t = */ it,
-                        /* message = */ "Unable to get wallet manager for user wallet %s and network %s",
-                        /* ...args = */ userWalletId,
-                        cryptoCurrency.network,
-                    )
-
-                    false
-                }
-                .merge()
+            val isSupported = isXPUBSupported()
 
             internalUiState.value = stateFactory.getStateWithUpdatedMenu(
                 cardTypesResolver = userWallet.scanResponse.cardTypesResolver,
@@ -480,6 +456,34 @@ internal class TokenDetailsModel @Inject constructor(
                 isSupported = isSupported,
             )
         }
+    }
+
+    private suspend fun isXPUBSupported(): Boolean {
+        return getExtendedPublicKeyForCurrencyUseCase.isSupported(
+            userWalletId = userWalletId,
+            network = cryptoCurrency.network,
+        )
+            .mapLeft {
+                analyticsExceptionHandler.sendException(
+                    event = ExceptionAnalyticsEvent(
+                        exception = it,
+                        params = mapOf(
+                            "blockchainId" to cryptoCurrency.network.id.rawId.value,
+                            "networkId" to cryptoCurrency.network.backendId,
+                        ),
+                    ),
+                )
+
+                Timber.e(
+                    /* t = */ it,
+                    /* message = */ "Unable to get wallet manager for user wallet %s and network %s",
+                    /* ...args = */ userWalletId,
+                    cryptoCurrency.network,
+                )
+
+                false
+            }
+            .merge()
     }
 
     private fun createSelectedAppCurrencyFlow(): StateFlow<AppCurrency> {
