@@ -27,7 +27,7 @@ class GetExtendedPublicKeyForCurrencyUseCase(
     suspend operator fun invoke(userWalletId: UserWalletId, network: Network): Either<Throwable, String> {
         return Either.catch {
             val walletManager = walletManagersFacade.getOrCreateWalletManager(userWalletId, network)
-                ?: error("Wallet not found")
+                ?: error("Wallet not found for userWalletId=$userWalletId and network=$network")
 
             val blockchain = network.toBlockchain()
             val isSecp256k1Blockchain = Blockchain.secp256k1Blockchains(network.isTestnet).contains(blockchain)
