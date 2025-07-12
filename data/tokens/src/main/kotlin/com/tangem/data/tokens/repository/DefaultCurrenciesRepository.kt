@@ -97,31 +97,35 @@ internal class DefaultCurrenciesRepository(
         }
     }
 
-    override suspend fun addCurrencies(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
-        withContext(dispatchers.io) {
-            val savedCurrencies = requireNotNull(
-                value = getSavedUserTokensResponseSync(key = userWalletId),
-                lazyMessage = { "Saved tokens empty. Can not perform add currencies action" },
-            )
+    override suspend fun addCurrencies(
+        userWalletId: UserWalletId,
+        currencies: List<CryptoCurrency>,
+    ): List<CryptoCurrency> = withContext(dispatchers.io) {
+        val savedCurrencies = requireNotNull(
+            value = getSavedUserTokensResponseSync(key = userWalletId),
+            lazyMessage = { "Saved tokens empty. Can not perform add currencies action" },
+        )
 
-            val currenciesToAdd = populateCurrenciesWithMissedCoins(
-                currencies = currencies,
-            ).let {
-                filterAlreadyAddedCurrencies(savedCurrencies.tokens, it)
-            }
-            val updatedResponse = savedCurrencies.copy(
-                tokens = savedCurrencies.tokens + currenciesToAdd.map(userTokensResponseFactory::createResponseToken),
-            )
-            userTokensSaver.storeAndPush(
-                userWalletId = userWalletId,
-                response = updatedResponse,
-            )
+        val currenciesToAdd = filterAlreadyAddedCurrencies(
+            savedCurrencies = savedCurrencies.tokens,
+            currenciesToAdd = populateCurrenciesWithMissedCoins(currencies = currencies),
+        )
 
-            fetchExpressAssetsByNetworkIds(
-                userWallet = userWalletsStore.getSyncStrict(key = userWalletId),
-                userTokens = updatedResponse,
-            )
-        }
+        val updatedResponse = savedCurrencies.copy(
+            tokens = savedCurrencies.tokens + currenciesToAdd.map(userTokensResponseFactory::createResponseToken),
+        )
+
+        userTokensSaver.storeAndPush(
+            userWalletId = userWalletId,
+            response = updatedResponse,
+        )
+
+        fetchExpressAssetsByNetworkIds(
+            userWallet = userWalletsStore.getSyncStrict(key = userWalletId),
+            userTokens = updatedResponse,
+        )
+
+        currenciesToAdd
     }
 
     private fun filterAlreadyAddedCurrencies(
@@ -573,7 +577,7 @@ internal class DefaultCurrenciesRepository(
 
     override fun isNetworkFeeZero(userWalletId: UserWalletId, network: Network): Boolean {
         val blockchain = Blockchain.fromNetworkId(network.backendId)
-        return blockchain?.isNetworkFeeZero() ?: false
+        return blockchain?.isNetworkFeeZero() == true
     }
 
     override suspend fun syncTokens(userWalletId: UserWalletId) {
