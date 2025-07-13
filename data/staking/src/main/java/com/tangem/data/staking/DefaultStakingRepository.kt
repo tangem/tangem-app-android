@@ -120,7 +120,7 @@ internal class DefaultStakingRepository(
             when (val stakingTokensWithYields = stakeKitApi.getEnabledYields(preferredValidatorsOnly = false)) {
                 is ApiResponse.Success -> stakingYieldsStore.store(
                     stakingTokensWithYields.data.data.filter {
-                        it.isAvailable ?: false
+                        it.isAvailable == true
                     },
                 )
                 else -> {
@@ -651,15 +651,16 @@ internal class DefaultStakingRepository(
     }
 
     override suspend fun isAnyTokenStaked(userWalletId: UserWalletId): Boolean {
-        return withContext(dispatchers.io) {
-            stakingBalanceStore.getSyncOrNull(userWalletId)
-                ?.let {
-                    it.isNotEmpty() &&
-                        it.any { yieldBalance ->
-                            (yieldBalance as? YieldBalance.Data)?.balance?.items?.isNotEmpty() == true
-                        }
+        return withContext(dispatchers.default) {
+            val balances = stakingBalanceStoreV2.getAllSyncOrNull(userWalletId) ?: return@withContext false
+
+            val hasDataYieldBalance by lazy {
+                balances.any { yieldBalance ->
+                    (yieldBalance as? YieldBalance.Data)?.balance?.items?.isNotEmpty() == true
                 }
-                ?: false
+            }
+
+            balances.isNotEmpty() && hasDataYieldBalance
         }
     }
 
