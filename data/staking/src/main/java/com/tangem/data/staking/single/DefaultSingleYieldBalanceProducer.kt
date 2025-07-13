@@ -1,5 +1,7 @@
 package com.tangem.data.staking.single
 
+import com.tangem.core.analytics.api.AnalyticsExceptionHandler
+import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.data.staking.utils.StakingIdFactory
 import com.tangem.domain.staking.model.StakingID
 import com.tangem.domain.staking.model.stakekit.YieldBalance
@@ -7,6 +9,7 @@ import com.tangem.domain.staking.multi.MultiYieldBalanceProducer
 import com.tangem.domain.staking.multi.MultiYieldBalanceSupplier
 import com.tangem.domain.staking.single.SingleYieldBalanceProducer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.extensions.indexOfFirstOrNull
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -14,6 +17,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.mapNotNull
+import timber.log.Timber
 
 /**
  * Default implementation of [SingleYieldBalanceProducer]
@@ -29,6 +33,7 @@ internal class DefaultSingleYieldBalanceProducer @AssistedInject constructor(
     @Assisted private val params: SingleYieldBalanceProducer.Params,
     private val multiYieldBalanceSupplier: MultiYieldBalanceSupplier,
     private val stakingIdFactory: StakingIdFactory,
+    private val analyticsExceptionHandler: AnalyticsExceptionHandler,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : SingleYieldBalanceProducer {
 
@@ -48,8 +53,34 @@ internal class DefaultSingleYieldBalanceProducer @AssistedInject constructor(
             .mapNotNull { balances ->
                 val currentStakingId = getStakingId() ?: return@mapNotNull YieldBalance.Unsupported
 
-                balances.firstOrNull { it.getStakingId() == currentStakingId }
-                    ?: YieldBalance.Unsupported
+                val currentBalances = balances.filter { it.getStakingId() == currentStakingId }
+
+                if (currentBalances.size > 1) {
+                    analyticsExceptionHandler.sendException(
+                        event = ExceptionAnalyticsEvent(
+                            exception = IllegalStateException("Multiple balances found for staking ID"),
+                            params = mapOf(
+                                "stakingId" to currentStakingId.toString(),
+                                "balances" to currentBalances.joinToString(",") { it.toString() },
+                            ),
+                        ),
+                    )
+
+                    Timber.w(
+                        "Multiple balances found for staking ID $currentStakingId:\n%s",
+                        currentBalances.joinToString("\n"),
+                    )
+
+                    val dataIndex = currentBalances.indexOfFirstOrNull { it is YieldBalance.Data }
+
+                    if (dataIndex != null) {
+                        currentBalances[dataIndex]
+                    } else {
+                        currentBalances.first()
+                    }
+                } else {
+                    currentBalances.firstOrNull() ?: YieldBalance.Unsupported
+                }
             }
             .distinctUntilChanged()
             .flowOn(dispatchers.default)
