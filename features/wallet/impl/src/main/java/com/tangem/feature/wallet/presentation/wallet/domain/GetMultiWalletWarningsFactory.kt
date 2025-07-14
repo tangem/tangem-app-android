@@ -55,6 +55,8 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
 
                 addCriticalNotifications(userWallet, seedPhraseIssueStatus, clickIntents)
 
+                addFinishWalletActivationNotification(userWallet, clickIntents)
+
                 addReferralPromoNotification(cardTypesResolver, clickIntents, shouldShowReferralPromo)
 
                 addInformationalNotifications(cardTypesResolver, maybeTokenList, clickIntents)
@@ -257,6 +259,23 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
 
     private fun MutableList<WalletNotification>.addIf(element: WalletNotification, condition: Boolean) {
         if (condition) add(element = element)
+    }
+
+    private fun MutableList<WalletNotification>.addFinishWalletActivationNotification(
+        userWallet: UserWallet,
+        clickIntents: WalletClickIntents,
+    ) {
+        if (userWallet !is UserWallet.Hot) return
+
+        // TODO [REDACTED_TASK_KEY] set an actual value
+        val shouldShowFinishActivation = false
+
+        addIf(
+            element = WalletNotification.FinishWalletActivation(
+                onFinishClick = clickIntents::onFinishWalletActivationClick,
+            ),
+            condition = shouldShowFinishActivation,
+        )
     }
 
     private companion object {
