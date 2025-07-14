@@ -10,7 +10,7 @@ internal object SwapChooseTokenFactory {
     fun getErrorMessage(tokenName: String, onDismiss: () -> Unit): MessageBottomSheetUMV2 {
         return messageBottomSheetUM {
             infoBlock {
-                icon(R.drawable.img_attention_20) {
+                icon(R.drawable.ic_alert_triangle_20) {
                     type = MessageBottomSheetUMV2.Icon.Type.Attention
                     backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.SameAsTint
                 }
