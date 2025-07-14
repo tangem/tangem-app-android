@@ -50,7 +50,7 @@ interface CurrenciesRepository {
      * @throws DataError.UserWalletError.WrongUserWallet If single-currency user wallet
      * ID provided.
      */
-    suspend fun addCurrencies(userWalletId: UserWalletId, currencies: List<CryptoCurrency>)
+    suspend fun addCurrencies(userWalletId: UserWalletId, currencies: List<CryptoCurrency>): List<CryptoCurrency>
 
     /**
      * Removes currency from a specific user wallet.
