@@ -173,8 +173,7 @@ internal fun NFTDetailsGroupBlock(
                     } else {
                         onBlockClick?.invoke()
                     }
-                }
-                .padding(top = TangemTheme.dimens.spacing4),
+                },
             text = value.resolveReference(),
             style = TangemTheme.typography.body1,
             color = TangemTheme.colors.text.primary1,
