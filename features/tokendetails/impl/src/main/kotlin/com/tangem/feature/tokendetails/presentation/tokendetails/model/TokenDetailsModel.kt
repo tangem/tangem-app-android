@@ -3,6 +3,7 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.model
 import androidx.compose.runtime.Stable
 import androidx.paging.cachedIn
 import arrow.core.getOrElse
+import arrow.core.merge
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
@@ -11,7 +12,9 @@ import com.tangem.common.ui.bottomsheet.receive.mapToAddressModels
 import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheetConfig
 import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -134,6 +137,7 @@ internal class TokenDetailsModel @Inject constructor(
     private val appRouter: AppRouter,
     private val router: InnerTokenDetailsRouter,
     private val tokenDetailsDeepLinkActionListener: TokenDetailsDeepLinkActionListener,
+    private val analyticsExceptionHandler: AnalyticsExceptionHandler,
 ) : Model(), TokenDetailsClickIntents {
 
     private val params = paramsContainer.require<TokenDetailsComponent.Params>()
@@ -205,13 +209,13 @@ internal class TokenDetailsModel @Inject constructor(
         checkForActionUpdates()
     }
 
+    fun onResume() {
+        subscribeOnExpressTransactionsUpdates()
+    }
+
     fun onPause() {
         expressTxStatusTaskScheduler.cancelTask()
         expressTxJobHolder.cancel()
-    }
-
-    fun onResume() {
-        subscribeOnExpressTransactionsUpdates()
     }
 
     override fun onDestroy() {
@@ -304,66 +308,61 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     private fun subscribeOnCurrencyStatusUpdates() {
-        modelScope.launch(dispatchers.main) {
-            getSingleCryptoCurrencyStatusUseCase.invokeMultiWallet(
-                userWalletId = userWalletId,
-                currencyId = cryptoCurrency.id,
-                isSingleWalletWithTokens = userWallet is UserWallet.Cold &&
-                    userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
-            )
-                .distinctUntilChanged()
-                .onEach { maybeCurrencyStatus ->
-                    internalUiState.value = stateFactory.getCurrencyLoadedBalanceState(maybeCurrencyStatus)
-                    maybeCurrencyStatus.onRight { status ->
-                        cryptoCurrencyStatus = status
-                        updateButtons(currencyStatus = status)
-                        updateWarnings(status)
-                        subscribeOnUpdateStakingInfo(status)
-                    }
-                    currencyStatusAnalyticsSender.send(maybeCurrencyStatus)
+        getSingleCryptoCurrencyStatusUseCase.invokeMultiWallet(
+            userWalletId = userWalletId,
+            currencyId = cryptoCurrency.id,
+            isSingleWalletWithTokens = userWallet is UserWallet.Cold &&
+                userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
+        )
+            .distinctUntilChanged()
+            .onEach { maybeCurrencyStatus ->
+                internalUiState.value = stateFactory.getCurrencyLoadedBalanceState(maybeCurrencyStatus)
+                maybeCurrencyStatus.onRight { status ->
+                    cryptoCurrencyStatus = status
+                    updateButtons(currencyStatus = status)
+                    updateWarnings(status)
+                    subscribeOnUpdateStakingInfo(status)
                 }
-                .flowOn(dispatchers.main)
-                .launchIn(modelScope)
-                .saveIn(marketPriceJobHolder)
-        }
+                currencyStatusAnalyticsSender.send(maybeCurrencyStatus)
+            }
+            .flowOn(dispatchers.main)
+            .launchIn(modelScope)
+            .saveIn(marketPriceJobHolder)
     }
 
     private fun subscribeOnExpressTransactionsUpdates() {
-        modelScope.launch(dispatchers.main) {
-            expressTxStatusTaskScheduler.cancelTask()
-            expressStatusFactory
-                .getExpressStatuses()
-                .distinctUntilChanged()
-                .onEach { waitForFirstExpressStatusEmmit.value = true }
-                .onEach { expressTxs ->
-                    internalUiState.value = expressStatusFactory.getStateWithUpdatedExpressTxs(
-                        expressTxs,
-                        ::updateNetworkToSwapBalance,
-                    )
-                    expressTxStatusTaskScheduler.scheduleTask(
-                        modelScope,
-                        PeriodicTask(
-                            isDelayFirst = false,
-                            delay = EXPRESS_STATUS_UPDATE_DELAY,
-                            task = {
-                                runCatching {
-                                    expressStatusFactory.getUpdatedExpressStatuses(internalUiState.value.expressTxs)
-                                }
-                            },
-                            onSuccess = { updatedTxs ->
-                                internalUiState.value = expressStatusFactory.getStateWithUpdatedExpressTxs(
-                                    updatedTxs,
-                                    ::updateNetworkToSwapBalance,
-                                )
-                            },
-                            onError = { /* no-op */ },
-                        ),
-                    )
-                }
-                .flowOn(dispatchers.main)
-                .launchIn(modelScope)
-                .saveIn(expressTxJobHolder)
-        }
+        expressTxStatusTaskScheduler.cancelTask()
+        expressStatusFactory.getExpressStatuses()
+            .distinctUntilChanged()
+            .onEach { waitForFirstExpressStatusEmmit.value = true }
+            .onEach { expressTxs ->
+                internalUiState.value = expressStatusFactory.getStateWithUpdatedExpressTxs(
+                    expressTxs = expressTxs,
+                    updateBalance = ::updateNetworkToSwapBalance,
+                )
+                expressTxStatusTaskScheduler.scheduleTask(
+                    scope = modelScope,
+                    task = PeriodicTask(
+                        isDelayFirst = false,
+                        delay = EXPRESS_STATUS_UPDATE_DELAY,
+                        task = {
+                            runCatching {
+                                expressStatusFactory.getUpdatedExpressStatuses(internalUiState.value.expressTxs)
+                            }
+                        },
+                        onSuccess = { updatedTxs ->
+                            internalUiState.value = expressStatusFactory.getStateWithUpdatedExpressTxs(
+                                updatedTxs,
+                                ::updateNetworkToSwapBalance,
+                            )
+                        },
+                        onError = { /* no-op */ },
+                    ),
+                )
+            }
+            .flowOn(dispatchers.main)
+            .launchIn(modelScope)
+            .saveIn(expressTxJobHolder)
     }
 
     private fun updateNetworkToSwapBalance(toCryptoCurrency: CryptoCurrency) {
@@ -449,7 +448,7 @@ internal class TokenDetailsModel @Inject constructor(
                     network = cryptoCurrency.network,
                 ).getOrElse { false }
 
-            val isSupported = getExtendedPublicKeyForCurrencyUseCase.isSupported(userWalletId, cryptoCurrency.network)
+            val isSupported = isXPUBSupported()
 
             internalUiState.value = stateFactory.getStateWithUpdatedMenu(
                 cardTypesResolver = userWallet.scanResponse.cardTypesResolver,
@@ -457,6 +456,34 @@ internal class TokenDetailsModel @Inject constructor(
                 isSupported = isSupported,
             )
         }
+    }
+
+    private suspend fun isXPUBSupported(): Boolean {
+        return getExtendedPublicKeyForCurrencyUseCase.isSupported(
+            userWalletId = userWalletId,
+            network = cryptoCurrency.network,
+        )
+            .mapLeft {
+                analyticsExceptionHandler.sendException(
+                    event = ExceptionAnalyticsEvent(
+                        exception = it,
+                        params = mapOf(
+                            "blockchainId" to cryptoCurrency.network.id.rawId.value,
+                            "networkId" to cryptoCurrency.network.backendId,
+                        ),
+                    ),
+                )
+
+                Timber.e(
+                    /* t = */ it,
+                    /* message = */ "Unable to get wallet manager for user wallet %s and network %s",
+                    /* ...args = */ userWalletId,
+                    cryptoCurrency.network,
+                )
+
+                false
+            }
+            .merge()
     }
 
     private fun createSelectedAppCurrencyFlow(): StateFlow<AppCurrency> {
