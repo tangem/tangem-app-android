@@ -59,6 +59,7 @@
   <string name="app_settings_theme_selector_title">テーマ</string>
   <string name="app_settings_title">アプリ設定</string>
   <string name="backup_complete_description">ウォレットのバックアップが正常に完了しました。</string>
+  <string name="backup_complete_seed_description">これらの単語は紛失した場合、復元できません。必ず安全な場所に保管してください。</string>
   <string name="backup_complete_title">バックアップが完了しました</string>
   <string name="backup_info_description">シークレットリカバリーフレーズは、ウォレットへのアクセスと復元のために使用される%sのランダムな単語のセットです。</string>
   <string name="backup_info_keep_description">これらの単語は紛失した場合、復元できません。必ず安全な場所に保管してください。</string>
@@ -408,6 +409,10 @@
   <string name="home_button_scan">Tangemをスキャン</string>
   <string name="hot_crypto_add_token_subtitle">%sへ</string>
   <string name="hot_crypto_token_network">%sネットワーク</string>
+  <string name="hw_activation_need_backup">今すぐバックアップ</string>
+  <string name="hw_activation_need_description">セットアップを完了するには、ウォレットをバックアップし、アクセスコードを使用してアプリへのアクセスを保護します。</string>
+  <string name="hw_activation_need_finish">今すぐ実施</string>
+  <string name="hw_activation_need_title">ウォレットのアクティベーションを完了する</string>
   <string name="hw_backup_icloud_description">iCloudバックアップに保存されている既存のウォレットを復元する</string>
   <string name="hw_backup_icloud_title">iCloudバックアップ</string>
   <string name="hw_backup_need_action">バックアップへ移動</string>
@@ -1156,6 +1161,7 @@
   <string name="twins_recreate_toolbar">Tangemツイン</string>
   <string name="twins_recreate_warning">この操作は元に戻せません。古いウォレットにはアクセスできなくなります。</string>
   <string name="twins_scan_twin_with_number">番号%sのツインカードをタップし、操作が終了するまで取り外さないでください。</string>
+  <string name="unexpected_error_description">しばらくしてからもう一度お試しください。問題が解決しない場合は、サポートにお問い合わせください。</string>
   <string name="unexpected_error_title">問題が発生しました。</string>
   <string name="universal_error">エラーが発生しました。エラー コード：%s。サポートにお問い合わせください。</string>
   <string name="unlock_wallet_description_full">%sを使用するか、カード / リングをスキャンしてウォレットにアクセスしてください</string>
@@ -1349,17 +1355,15 @@
   <string name="warning_some_networks_unreachable_message">下にスワイプして更新するか、後でもう一度お試しください。</string>
   <string name="warning_some_networks_unreachable_title">一部のネットワークにアクセスできません</string>
   <string name="warning_some_token_balances_not_updated">一部のトークン残高を更新できませんでした</string>
-  <string name="warning_stellar_token_trustline_button_title">トラストラインを有効にする</string>
   <string name="warning_stellar_token_trustline_not_enough_xlm">%sが足りません。このトークンを関連付けるには、XLMアカウントに資金を追加してください。</string>
-  <string name="warning_stellar_token_trustline_subtitle">このトークンを受け取るには、トラストラインを有効にする必要があります。ネットワークには 0.5 XLMの準備金が必要です。</string>
-  <string name="warning_stellar_token_trustline_title">トラストラインが必要</string>
   <string name="warning_testnet_card_message">これはテストネットカードです。取引処理はできませんので、テストおよび開発目的でのみご利用ください。</string>
   <string name="warning_testnet_card_title">テスト目的のみ</string>
   <string name="warning_token_balance_not_updated">残高が古い可能性があります。ページを更新してください。</string>
-  <string name="warning_token_required_min_coin_reserve">%1$sが足りません。このトークンを関連付けるには、XLMアカウントにチャージしてください。</string>
+  <string name="warning_token_required_min_coin_reserve">%1$sが足りません。このトークンを関連付けるには、 %2$sアカウントにチャージしてください。</string>
   <string name="warning_token_trustline_button_title">トラストラインを有効にする</string>
   <string name="warning_token_trustline_subtitle">このトークンを受け取るには、トラストラインを有効にする必要があります。ネットワークには%1$s %2$s予備金が必要です。</string>
   <string name="warning_token_trustline_title">トラストラインが必要</string>
+  <string name="wc_alert_audit_malicious_domain">悪意のあるドメイン</string>
   <string name="wc_alert_audit_unknown_domain">不明なドメイン</string>
   <string name="wc_alert_connect_anyway">とにかく接続する</string>
   <string name="wc_alert_connection_timeout_description">タイムアウトエラーが発生しました。しばらくしてからもう一度お試しください。</string>
