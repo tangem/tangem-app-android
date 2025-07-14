@@ -91,7 +91,7 @@ private fun WcSelectWalletModalBS(
         containerColor = TangemTheme.colors.background.primary,
         title = {
             TangemModalBottomSheetTitle(
-                title = stringReference("Choose networks"),
+                title = stringReference("Choose wallet"),
                 startIconRes = R.drawable.ic_back_24,
                 onStartClick = onBack,
             )
