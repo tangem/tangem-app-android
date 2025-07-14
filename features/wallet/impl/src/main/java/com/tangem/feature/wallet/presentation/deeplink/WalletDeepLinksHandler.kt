@@ -2,17 +2,12 @@ package com.tangem.feature.wallet.presentation.deeplink
 
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
-import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.deeplink.DeepLink
 import com.tangem.core.deeplink.DeepLinksRegistry
-import com.tangem.core.deeplink.global.BuyCurrencyDeepLink
 import com.tangem.core.deeplink.global.SellCurrencyDeepLink
 import com.tangem.domain.tokens.GetCryptoCurrencyUseCase
-import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.domain.wallets.models.isMultiCurrency
-import com.tangem.features.onramp.OnrampFeatureToggles
 import com.tangem.utils.coroutines.launchOnCancellation
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -22,9 +17,7 @@ import javax.inject.Inject
 @Suppress("LongParameterList")
 internal class WalletDeepLinksHandler @Inject constructor(
     private val deepLinksRegistry: DeepLinksRegistry,
-    private val analyticsEventHandler: AnalyticsEventHandler,
     private val getCryptoCurrencyUseCase: GetCryptoCurrencyUseCase,
-    private val onrampFeatureToggles: OnrampFeatureToggles,
     private val router: AppRouter,
 ) {
 
@@ -55,15 +48,6 @@ internal class WalletDeepLinksHandler @Inject constructor(
 
         return buildList {
             add(sellCurrencyDeepLink)
-            if (!onrampFeatureToggles.isFeatureEnabled && !userWallet.isMultiCurrency) {
-                add(
-                    BuyCurrencyDeepLink(
-                        onReceive = {
-                            scope.launch { onBuyCurrencyDeepLink(userWallet) }
-                        },
-                    ),
-                )
-            }
         }
     }
 
@@ -85,10 +69,5 @@ internal class WalletDeepLinksHandler @Inject constructor(
         )
 
         router.push(route)
-    }
-
-    private suspend fun onBuyCurrencyDeepLink(userWallet: UserWallet) {
-        val cryptoCurrency = getCryptoCurrencyUseCase(userWallet.walletId).getOrNull() ?: return
-        analyticsEventHandler.send(TokenScreenAnalyticsEvent.Bought(cryptoCurrency.symbol))
     }
 }
