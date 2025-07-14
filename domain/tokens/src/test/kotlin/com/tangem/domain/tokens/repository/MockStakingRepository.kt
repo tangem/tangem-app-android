@@ -188,6 +188,8 @@ class MockStakingRepository : StakingRepository {
     override fun getStakingApproval(cryptoCurrency: CryptoCurrency): StakingApproval = StakingApproval.Empty
 
     override suspend fun isAnyTokenStaked(userWalletId: UserWalletId): Boolean = false
+    override fun getActionRequirementAmount(integrationId: String, stakingActionType: StakingActionType): BigDecimal? =
+        null
 
     private companion object {
         val yield = Yield(
