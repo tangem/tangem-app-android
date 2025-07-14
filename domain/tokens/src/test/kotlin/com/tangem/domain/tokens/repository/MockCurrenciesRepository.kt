@@ -48,7 +48,10 @@ internal class MockCurrenciesRepository(
 
     override suspend fun saveNewCurrenciesList(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) = Unit
 
-    override suspend fun addCurrencies(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) = Unit
+    override suspend fun addCurrencies(
+        userWalletId: UserWalletId,
+        currencies: List<CryptoCurrency>,
+    ): List<CryptoCurrency> = emptyList()
 
     override suspend fun removeCurrency(userWalletId: UserWalletId, currency: CryptoCurrency) {
         removeCurrencyResult.onLeft { throw it }
