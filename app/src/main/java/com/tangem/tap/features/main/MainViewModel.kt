@@ -41,6 +41,7 @@ import com.tangem.domain.settings.IncrementAppLaunchCounterUseCase
 import com.tangem.domain.settings.usercountry.FetchUserCountryUseCase
 import com.tangem.domain.staking.FetchStakingTokensUseCase
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.domain.wallets.usecase.AssociateWalletsWithApplicationIdUseCase
 import com.tangem.domain.wallets.usecase.GetSavedWalletChangesUseCase
@@ -200,7 +201,12 @@ internal class MainViewModel @Inject constructor(
         userWalletsListManager.selectedUserWallet
             .distinctUntilChanged()
             .onEach { userWallet ->
-                Analytics.setContext(userWallet.requireColdWallet().scanResponse) // TODO [REDACTED_TASK_KEY]
+                when (userWallet) {
+                    is UserWallet.Cold -> Analytics.setContext(userWallet.scanResponse)
+                    is UserWallet.Hot -> {
+                        // TODO [REDACTED_TASK_KEY]
+                    }
+                }
             }
             .flowOn(dispatchers.io)
             .launchIn(viewModelScope)
