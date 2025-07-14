@@ -4,6 +4,9 @@
   <string name="access_code_alert_skip_ok">Skip anyway</string>
   <string name="access_code_alert_skip_title">Access Code not set</string>
   <string name="access_code_check_title">Enter Access Code</string>
+  <string name="access_code_check_warining_delete">Wrong access code. Your hot wallet will be deleted after %s more incorrect attempts.</string>
+  <string name="access_code_check_warining_lock">Wrong access code. App will be locked with %s more input errors</string>
+  <string name="access_code_check_warining_wait">Wrong access code.\nPlease wait %s seconds and try again.</string>
   <string name="access_code_confirm_description">Confirm your previously entered code to continue</string>
   <string name="access_code_confirm_title">Re-enter Access Code</string>
   <string name="access_code_create_description">Set a %s-digit Access Code to unlock your wallet.</string>
@@ -58,6 +61,9 @@
   <string name="app_settings_theme_mode_system">System default</string>
   <string name="app_settings_theme_selector_title">Theme</string>
   <string name="app_settings_title">App settings</string>
+  <string name="auth_info_add_wallet_title">Add Wallet</string>
+  <string name="auth_info_subtitle">Select a wallet to log in</string>
+  <string name="auth_info_title">Welcome back!</string>
   <string name="backup_complete_description">You successfully backed up your wallet.</string>
   <string name="backup_complete_seed_description">These words can’t be recovered if lost. Make sure to keep it somewhere secure.</string>
   <string name="backup_complete_title">Backup Completed</string>
@@ -432,6 +438,7 @@
   <string name="hw_create_seed_description">Stay up to date with the latest features and news</string>
   <string name="hw_create_seed_title">Seed phrase backup</string>
   <string name="hw_create_title">Create Mobile Wallet</string>
+  <string name="hw_mobile_wallet">Mobile Wallet</string>
   <string name="information_generated_with_ai">This information was generated with AI.\nTap here, if you find any errors.</string>
   <string name="initial_message_change_access_code_body">To change the access code tap the card or ring as shown above and do not remove until the end of the operation</string>
   <string name="initial_message_change_passcode_body">To change the passcode tap the card as shown above and do not remove until the end of the operation</string>
@@ -666,7 +673,7 @@
   <string name="onboarding_button_continue_wallet">Continue to my wallet</string>
   <string name="onboarding_button_finalize_backup">Finalize backup</string>
   <string name="onboarding_button_receive_crypto">Receive crypto</string>
-  <string name="onboarding_button_scan_origin_card">Scan primary card</string>
+  <string name="onboarding_button_scan_origin_card">Scan primary card or ring</string>
   <string name="onboarding_button_skip_backup">Skip for later</string>
   <string name="onboarding_button_what_does_it_mean">How does it work?</string>
   <string name="onboarding_create_wallet_body">Let\'s generate all the keys on your card or ring and create a secure wallet</string>
@@ -719,7 +726,7 @@
   <string name="onboarding_title_no_backup_cards">No backup devices</string>
   <string name="onboarding_title_notifications">Notifications</string>
   <string name="onboarding_title_one_backup_card">One backup device added</string>
-  <string name="onboarding_title_scan_origin_card">Prepare your card</string>
+  <string name="onboarding_title_scan_origin_card">Prepare your card or ring</string>
   <string name="onboarding_title_two_backup_cards">Two backup devices added</string>
   <string name="onboarding_top_up_body">To get started, simply top up the wallet with any amount</string>
   <string name="onboarding_top_up_body_no_account_error">To get started, simply top up the wallet with more than %1$s %2$s</string>
@@ -1360,8 +1367,8 @@
   <string name="warning_express_approval_in_progress_message">Swap approval is underway and will be completed shortly</string>
   <string name="warning_express_approval_in_progress_title">Approval in progress</string>
   <string name="warning_express_dust_message">The minimum swapping amount is %1$s. Please ensure that the remaining balance after the swap will not be less than %2$s.</string>
-  <string name="warning_express_no_exchangeable_coins_description">You do not have any %s exchangeable coins in your list</string>
-  <string name="warning_express_no_exchangeable_coins_title">No available tokens to swap</string>
+  <string name="warning_express_no_exchangeable_coins_description">You don’t have any tokens in your portfolio that %s can be swapped to. Please add another token to enable the exchange.</string>
+  <string name="warning_express_no_exchangeable_coins_title">No compatible tokens added</string>
   <string name="warning_express_not_enough_fee_for_token_tx_description">To make a transaction you need to deposit some %1$s %2$s</string>
   <string name="warning_express_not_enough_fee_for_token_tx_title">Unable to cover %s fee</string>
   <string name="warning_express_notification_invalid_reserve_amount_title">The amount to receive must be at least %s</string>
