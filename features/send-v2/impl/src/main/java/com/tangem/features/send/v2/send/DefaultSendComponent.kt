@@ -14,12 +14,14 @@ import com.arkivanov.decompose.value.subscribe
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.context.AppComponentContext
+import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.features.send.v2.api.FeeSelectorBlockComponent
 import com.tangem.features.send.v2.api.SendComponent
 import com.tangem.features.send.v2.common.CommonSendRoute
 import com.tangem.features.send.v2.common.analytics.CommonSendAnalyticEvents
@@ -30,11 +32,14 @@ import com.tangem.features.send.v2.common.utils.safeNextClick
 import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.send.confirm.SendConfirmComponent
 import com.tangem.features.send.v2.send.model.SendModel
+import com.tangem.features.send.v2.send.success.SendConfirmSuccessComponent
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponent
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponentParams
+import com.tangem.features.send.v2.subcomponents.fee.SendFeeBlockComponent
 import com.tangem.features.send.v2.subcomponents.destination.DefaultSendDestinationComponent
 import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationComponentParams
 import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
+import com.tangem.features.send.v2.subcomponents.destination.DefaultSendDestinationBlockComponent
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeComponent
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeComponentParams
 import dagger.assisted.Assisted
@@ -44,10 +49,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.launch
 
+@Suppress("LargeClass")
 internal class DefaultSendComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted private val params: SendComponent.Params,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val feeSelectorComponentFactory: FeeSelectorBlockComponent.Factory,
 ) : SendComponent, AppComponentContext by appComponentContext {
 
     private val stackNavigation = StackNavigation<CommonSendRoute>()
@@ -142,7 +149,8 @@ internal class DefaultSendComponent @AssistedInject constructor(
         is CommonSendRoute.Destination -> getDestinationComponent(factoryContext, route)
         is CommonSendRoute.Amount -> getAmountComponent(factoryContext, route)
         is CommonSendRoute.Fee -> getFeeComponent(factoryContext)
-        CommonSendRoute.Confirm -> getConfirmComponent(factoryContext)
+        is CommonSendRoute.Confirm -> getConfirmComponent(factoryContext)
+        is CommonSendRoute.ConfirmSuccess -> getConfirmSuccessComponent(factoryContext)
     }
 
     private fun getDestinationComponent(
@@ -288,12 +296,79 @@ internal class DefaultSendComponent @AssistedInject constructor(
                     callback = model,
                     predefinedValues = model.predefinedValues,
                     onLoadFee = model::loadFee,
+                    onSendTransaction = {
+                        innerRouter.replaceAll(CommonSendRoute.ConfirmSuccess)
+                    },
                 ),
+                feeSelectorComponentFactory = feeSelectorComponentFactory,
             )
         } else {
             model.showAlertError()
             getStubComponent()
         }
+    }
+
+    private fun getConfirmSuccessComponent(factoryContext: AppComponentContext): ComposableContentComponent {
+        val state = model.uiState.value
+        val sendAmount = (state.amountUM as? AmountState.Data)?.amountTextField?.cryptoAmount?.value
+        val destinationAddress = (state.destinationUM as? DestinationUM.Content)?.addressTextField?.value
+        val txUrl = (state.confirmUM as? ConfirmUM.Success)?.txUrl
+        val cryptoCurrencyStatus = model.cryptoCurrencyStatusFlow.value
+        val feeCryptoCurrencyStatus = model.feeCryptoCurrencyStatusFlow.value
+
+        if (sendAmount == null ||
+            destinationAddress == null ||
+            txUrl == null
+        ) {
+            model.showAlertError()
+            return getStubComponent()
+        }
+
+        val destinationBlockComponent =
+            DefaultSendDestinationBlockComponent(
+                appComponentContext = child("sendConfirmDestinationBlock"),
+                params = SendDestinationComponentParams.DestinationBlockParams(
+                    state = model.uiState.value.destinationUM,
+                    analyticsCategoryName = analyticCategoryName,
+                    userWalletId = model.userWallet.walletId,
+                    cryptoCurrency = cryptoCurrencyStatus.currency,
+                    blockClickEnableFlow = MutableStateFlow(true),
+                    predefinedValues = model.predefinedValues,
+                ),
+                onResult = { },
+                onClick = {},
+            )
+
+        val feeBlockComponent = SendFeeBlockComponent(
+            appComponentContext = child("sendConfirmFeeBlock"),
+            params = SendFeeComponentParams.FeeBlockParams(
+                state = model.uiState.value.feeUM,
+                analyticsCategoryName = analyticCategoryName,
+                userWallet = model.userWallet,
+                cryptoCurrencyStatus = cryptoCurrencyStatus,
+                feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
+                appCurrency = model.appCurrency,
+                sendAmount = sendAmount,
+                destinationAddress = destinationAddress,
+                blockClickEnableFlow = MutableStateFlow(true),
+                onLoadFee = model::loadFee,
+            ),
+            onResult = { },
+            onClick = {},
+        )
+
+        return SendConfirmSuccessComponent(
+            appComponentContext = factoryContext,
+            params = SendConfirmSuccessComponent.Params(
+                sendUMFlow = model.uiState,
+                feeBlockComponent = feeBlockComponent,
+                destinationBlockComponent = destinationBlockComponent,
+                analyticsCategoryName = analyticCategoryName,
+                currentRoute = currentRoute,
+                txUrl = txUrl,
+                callback = model,
+            ),
+        )
     }
 
     private fun getStubComponent() = StubComponent()
