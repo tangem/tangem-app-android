@@ -47,9 +47,9 @@ internal class DefaultWalletConnectEntryComponent @AssistedInject constructor(
         config: ConnectionsInnerRoute,
         componentContext: ComponentContext,
     ): ComposableContentComponent = when (config) {
-        ConnectionsInnerRoute.Connections -> ConnectionsComponent(
+        ConnectionsInnerRoute.Connections -> WcConnectionsComponent(
             appComponentContext = childByContext(componentContext),
-            params = ConnectionsComponent.Params(params.userWalletId),
+            params = WcConnectionsComponent.Params(params.userWalletId),
         )
         ConnectionsInnerRoute.QrScan -> TODO("[REDACTED_JIRA]")
     }
