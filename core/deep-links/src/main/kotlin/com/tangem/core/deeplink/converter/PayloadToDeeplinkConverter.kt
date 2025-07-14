@@ -11,10 +11,12 @@ import com.tangem.core.deeplink.DeeplinkConst.TRANSACTION_ID_KEY
 import com.tangem.core.deeplink.DeeplinkConst.TYPE_KEY
 import com.tangem.core.deeplink.DeeplinkConst.WALLET_ID_KEY
 import com.tangem.utils.converter.Converter
+import timber.log.Timber
 
 object PayloadToDeeplinkConverter : Converter<Map<String, String>, String?> {
 
     override fun convert(value: Map<String, String>): String? {
+        Timber.d(value.toString())
         return when {
             value[DEEPLINK_KEY] != null -> value[DEEPLINK_KEY]
             isTangemPushNotificationPayload(value) -> buildNotificationDeeplink(value)
@@ -31,7 +33,16 @@ object PayloadToDeeplinkConverter : Converter<Map<String, String>, String?> {
         val derivationPath = payload[DERIVATION_PATH_KEY] ?: return null
         val transactionId = payload[TRANSACTION_ID_KEY]
         val name = payload[NAME_KEY]
-
+        Timber.d(
+            "buildNotificationDeeplink" +
+            "type $type " +
+            "networkId $networkId " +
+            "tokenId $tokenId " +
+            "walletId $walletId " +
+            "derivationPath $derivationPath " +
+            "transactionId $transactionId " +
+            "name $name" +
+            "")
         return DeepLinkBuilder().setScheme(DeepLinkScheme.Tangem.scheme).apply {
             setAction(DeepLinkRoute.TokenDetails.host)
             addQueryParam(NETWORK_ID_KEY, networkId)
