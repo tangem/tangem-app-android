@@ -3,8 +3,7 @@ package com.tangem.core.ui.components.inputrow
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -15,6 +14,7 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.components.fields.AmountTextField
 import com.tangem.core.ui.components.fields.visualtransformations.AmountVisualTransformation
 import com.tangem.core.ui.components.inputrow.inner.DividerContainer
+import com.tangem.core.ui.components.tooltip.TangemTooltip
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
@@ -118,6 +118,7 @@ fun InputRowEnterInfoAmountV2(
     modifier: Modifier = Modifier,
     symbol: String? = null,
     info: TextReference? = null,
+    description: TextReference? = null,
     titleColor: Color = TangemTheme.colors.text.secondary,
     textColor: Color = TangemTheme.colors.text.primary1,
     infoColor: Color = TangemTheme.colors.text.tertiary,
@@ -133,7 +134,9 @@ fun InputRowEnterInfoAmountV2(
         paddingValues = PaddingValues(horizontal = 12.dp),
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
@@ -141,12 +144,20 @@ fun InputRowEnterInfoAmountV2(
                     style = TangemTheme.typography.subtitle2,
                     color = titleColor,
                 )
-                Icon(
-                    modifier = Modifier.size(16.dp),
-                    painter = painterResource(R.drawable.ic_token_info_24),
-                    tint = TangemTheme.colors.icon.informative,
-                    contentDescription = null,
-                )
+                if (description != null) {
+                    TangemTooltip(
+                        modifier = Modifier.size(16.dp),
+                        text = description.resolveReference(),
+                        content = { contentModifier ->
+                            Icon(
+                                modifier = contentModifier.size(16.dp),
+                                painter = painterResource(R.drawable.ic_token_info_24),
+                                tint = TangemTheme.colors.icon.informative,
+                                contentDescription = null,
+                            )
+                        },
+                    )
+                }
             }
             Row {
                 AmountTextField(
