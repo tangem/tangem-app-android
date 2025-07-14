@@ -12,18 +12,6 @@
         "version": "undefined"
     },
     {
-        "name": "NFT_ENABLED",
-        "version": "5.25.0"
-    },
-    {
-        "name": "NFT_EVM_ENABLED",
-        "version": "5.25.0"
-    },
-    {
-        "name": "NFT_SOLANA_ENABLED",
-        "version": "5.25.0"
-    },
-    {
         "name": "NFT_MEDIA_CONTENT_ENABLED",
         "version": "undefined"
     },
