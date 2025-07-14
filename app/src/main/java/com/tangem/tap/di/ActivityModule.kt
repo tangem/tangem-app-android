@@ -10,7 +10,6 @@ import com.tangem.domain.tokens.GetPolkadotCheckHasImmortalUseCase
 import com.tangem.domain.tokens.GetPolkadotCheckHasResetUseCase
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.PolkadotAccountHealthCheckRepository
-import com.tangem.features.onramp.OnrampFeatureToggles
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.domain.scanCard.repository.DefaultScanCardRepository
 import com.tangem.tap.network.exchangeServices.DefaultRampManager
@@ -53,18 +52,14 @@ internal object ActivityModule {
         getNetworkCoinStatusUseCase: GetNetworkCoinStatusUseCase,
         excludedBlockchains: ExcludedBlockchains,
         dispatchers: CoroutineDispatcherProvider,
-        onrampFeatureToggles: OnrampFeatureToggles,
     ): RampStateManager {
         return DefaultRampManager(
-            exchangeService = appStateHolder.exchangeService,
-            buyService = Provider { requireNotNull(appStateHolder.buyService) },
             sellService = Provider { requireNotNull(appStateHolder.sellService) },
             expressServiceLoader = expressServiceLoader,
             currenciesRepository = currenciesRepository,
             getNetworkCoinStatusUseCase = getNetworkCoinStatusUseCase,
-            excludedBlockchains = excludedBlockchains,
             dispatchers = dispatchers,
-            onrampFeatureToggles = onrampFeatureToggles,
+            excludedBlockchains = excludedBlockchains,
         )
     }
 
