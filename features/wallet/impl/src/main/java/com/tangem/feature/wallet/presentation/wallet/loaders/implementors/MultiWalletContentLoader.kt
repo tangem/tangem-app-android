@@ -21,11 +21,6 @@ import com.tangem.feature.wallet.presentation.wallet.domain.MultiWalletTokenList
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletWithFundsChecker
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.subscribers.*
-import com.tangem.feature.wallet.presentation.wallet.subscribers.MultiWalletActionButtonsSubscriber
-import com.tangem.feature.wallet.presentation.wallet.subscribers.MultiWalletTokenListSubscriber
-import com.tangem.feature.wallet.presentation.wallet.subscribers.MultiWalletWarningsSubscriber
-import com.tangem.feature.wallet.presentation.wallet.subscribers.WalletSubscriber
-import com.tangem.features.nft.NFTFeatureToggles
 
 @Suppress("LongParameterList")
 @ModelScoped
@@ -46,7 +41,6 @@ internal class MultiWalletContentLoader(
     private val shouldSaveUserWalletsUseCase: ShouldSaveUserWalletsUseCase,
     private val getStoryContentUseCase: GetStoryContentUseCase,
     private val deepLinksRegistry: DeepLinksRegistry,
-    private val nftFeatureToggles: NFTFeatureToggles,
     private val walletsRepository: WalletsRepository,
     private val currenciesRepository: CurrenciesRepository,
     private val routingFeatureToggle: RoutingFeatureToggle,
@@ -67,16 +61,16 @@ internal class MultiWalletContentLoader(
                 deepLinksRegistry = deepLinksRegistry,
                 routingFeatureToggle = routingFeatureToggle,
             ).let(::add)
-            if (nftFeatureToggles.isNFTEnabled) {
-                WalletNFTListSubscriber(
-                    userWallet = userWallet,
-                    getNFTCollectionsUseCase = getNFTCollectionsUseCase,
-                    stateHolder = stateHolder,
-                    walletsRepository = walletsRepository,
-                    clickIntents = clickIntents,
-                    currenciesRepository = currenciesRepository,
-                ).let(::add)
-            }
+
+            WalletNFTListSubscriber(
+                userWallet = userWallet,
+                getNFTCollectionsUseCase = getNFTCollectionsUseCase,
+                stateHolder = stateHolder,
+                walletsRepository = walletsRepository,
+                clickIntents = clickIntents,
+                currenciesRepository = currenciesRepository,
+            ).let(::add)
+
             MultiWalletWarningsSubscriber(
                 userWallet = userWallet,
                 stateHolder = stateHolder,
@@ -85,11 +79,13 @@ internal class MultiWalletContentLoader(
                 walletWarningsAnalyticsSender = walletWarningsAnalyticsSender,
                 walletWarningsSingleEventSender = walletWarningsSingleEventSender,
             ).let(::add)
+
             MultiWalletActionButtonsSubscriber(
                 userWallet = userWallet,
                 stateHolder = stateHolder,
                 getStoryContentUseCase = getStoryContentUseCase,
             ).let(::add)
+
             WalletDropDownItemsSubscriber(
                 stateHolder = stateHolder,
                 shouldSaveUserWalletsUseCase = shouldSaveUserWalletsUseCase,
