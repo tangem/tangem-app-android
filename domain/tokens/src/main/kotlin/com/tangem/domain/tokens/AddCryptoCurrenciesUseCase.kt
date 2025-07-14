@@ -30,6 +30,7 @@ class AddCryptoCurrenciesUseCase(
     private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
     private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
     private val singleYieldBalanceFetcher: SingleYieldBalanceFetcher,
+    private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
     private val tokensFeatureToggles: TokensFeatureToggles,
 ) {
 
@@ -87,10 +88,21 @@ class AddCryptoCurrenciesUseCase(
         contractAddress: String,
         networkId: String,
     ): Either<Throwable, CryptoCurrency> = either {
-        val existingCurrencies =
-            catch({ currenciesRepository.getMultiCurrencyWalletCurrenciesSync(userWalletId) }) {
-                raise(it)
-            }
+        val existingCurrencies = catch(
+            block = {
+                if (tokensFeatureToggles.isWalletBalanceFetcherEnabled) {
+                    multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
+                        params = MultiWalletCryptoCurrenciesProducer.Params(userWalletId),
+                    )
+                        .orEmpty()
+                        .toList()
+                } else {
+                    currenciesRepository.getMultiCurrencyWalletCurrenciesSync(userWalletId)
+                }
+            },
+            catch = ::raise,
+        )
+
         val foundToken = existingCurrencies
             .filterIsInstance<CryptoCurrency.Token>()
             .firstOrNull {

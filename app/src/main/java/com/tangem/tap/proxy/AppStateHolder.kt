@@ -19,8 +19,6 @@ import javax.inject.Inject
 class AppStateHolder @Inject constructor() : ReduxStateHolder {
 
     var mainStore: Store<AppState>? = null
-    var exchangeService: ExchangeService? = null
-    var buyService: ExchangeService? = null
     var sellService: ExchangeService? = null
 
     override fun dispatch(action: Action) {

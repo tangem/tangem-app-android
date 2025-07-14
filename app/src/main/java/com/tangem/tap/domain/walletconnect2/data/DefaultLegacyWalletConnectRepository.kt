@@ -8,7 +8,7 @@ import com.reown.android.relay.ConnectionType
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.data.walletconnect.pair.unsupportedDApps
+import com.tangem.data.walletconnect.pair.UnsupportedDApps
 import com.tangem.domain.walletconnect.WcPairService
 import com.tangem.domain.walletconnect.model.WcPairRequest
 import com.tangem.domain.walletconnect.model.legacy.Account
@@ -216,7 +216,7 @@ internal class DefaultLegacyWalletConnectRepository(
                 Timber.i("sessionProposal: $sessionProposal")
                 this@DefaultLegacyWalletConnectRepository.sessionProposal = sessionProposal
 
-                if (sessionProposal.name in unsupportedDApps) {
+                if (sessionProposal.name in UnsupportedDApps.list) {
                     Timber.i("Unsupported DApp")
                     scope.launch {
                         _events.emit(
