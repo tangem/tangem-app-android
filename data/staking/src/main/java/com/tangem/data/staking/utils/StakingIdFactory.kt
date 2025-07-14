@@ -35,6 +35,8 @@ internal class StakingIdFactory @Inject constructor(
         return integrationIdMap[integrationKey]
     }
 
+    fun isPolygonIntegrationId(integrationId: String): Boolean = integrationId == ETHEREUM_POLYGON_INTEGRATION_ID
+
     @Suppress("UnusedPrivateMember", "unused")
     companion object {
 
