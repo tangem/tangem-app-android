@@ -52,7 +52,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.withContext
 import org.joda.time.DateTime
 import timber.log.Timber
@@ -303,8 +302,12 @@ internal class DefaultOnrampRepository(
                                     OnrampQuote.Data(
                                         fromAmount = fromOnrampAmount,
                                         toAmount = convertToAmount(response.toAmount, cryptoCurrency),
-                                        minFromAmount = convertToAmount(response.minFromAmount, cryptoCurrency),
-                                        maxFromAmount = convertToAmount(response.maxFromAmount, cryptoCurrency),
+                                        minFromAmount = response.minFromAmount?.let {
+                                            convertToAmount(it, cryptoCurrency)
+                                        },
+                                        maxFromAmount = response.maxFromAmount?.let {
+                                            convertToAmount(it, cryptoCurrency)
+                                        },
                                         paymentMethod = paymentMethod,
                                         provider = provider,
                                         countryCode = response.countryCode,
