@@ -34,6 +34,9 @@ dependencies {
     implementation(projects.common.ui)
     implementation(projects.common.routing)
 
+    /** Libs */
+    implementation(projects.libs.crypto)
+
     implementation(tangemDeps.blockchain) {
         exclude(module = "joda-time")
     }
@@ -54,6 +57,9 @@ dependencies {
     implementation(projects.domain.transaction.models)
     implementation(projects.domain.transaction)
     implementation(projects.domain.legacy)
+    implementation(projects.domain.balanceHiding.models)
+    implementation(projects.domain.balanceHiding)
+    implementation(projects.domain.settings)
 
     /** Compose */
     implementation(deps.compose.foundation)
