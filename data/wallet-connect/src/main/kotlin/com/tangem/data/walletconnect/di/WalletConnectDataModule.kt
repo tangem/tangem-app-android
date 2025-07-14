@@ -19,6 +19,8 @@ import com.tangem.data.walletconnect.utils.WcNamespaceConverter
 import com.tangem.datasource.di.SdkMoshi
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.datasource.local.walletconnect.WalletConnectStore
+import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
+import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletconnect.WcPairService
 import com.tangem.domain.walletconnect.WcRequestService
@@ -70,7 +72,9 @@ internal object WalletConnectDataModule {
 
     @Provides
     @Singleton
-    fun defaultWcPairUseCase(): WcPairService = DefaultWcPairService()
+    fun defaultWcPairUseCase(sessionsManager: DefaultWcSessionsManager): WcPairService = DefaultWcPairService(
+        sessionsManager,
+    )
 
     @Provides
     @Singleton
@@ -88,6 +92,7 @@ internal object WalletConnectDataModule {
         legacyStore: WalletConnectSessionsRepository,
         getWallets: GetWalletsUseCase,
         associateNetworks: AssociateNetworksDelegate,
+        analytics: AnalyticsEventHandler,
     ): DefaultWcSessionsManager {
         val scope = CoroutineScope(SupervisorJob() + dispatchers.io)
         return DefaultWcSessionsManager(
@@ -96,6 +101,7 @@ internal object WalletConnectDataModule {
             legacyStore = legacyStore,
             getWallets = getWallets,
             associateNetworks = associateNetworks,
+            analytics = analytics,
             scope = scope,
         )
     }
@@ -169,10 +175,14 @@ internal object WalletConnectDataModule {
         namespaceConverters: Set<@JvmSuppressWildcards WcNamespaceConverter>,
         getWallets: GetWalletsUseCase,
         currenciesRepository: CurrenciesRepository,
+        multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
+        tokensFeatureToggles: TokensFeatureToggles,
     ): AssociateNetworksDelegate = AssociateNetworksDelegate(
         namespaceConverters = namespaceConverters,
         getWallets = getWallets,
         currenciesRepository = currenciesRepository,
+        multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
+        tokensFeatureToggles = tokensFeatureToggles,
     )
 
     @Provides
