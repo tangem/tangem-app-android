@@ -15,7 +15,6 @@ import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.*
 import com.tangem.feature.wallet.presentation.wallet.domain.IsWalletNFTEnabledSyncUseCase
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletNameMigrationUseCase
-import com.tangem.features.nft.NFTFeatureToggles
 import com.tangem.operations.attestation.CardArtworksProvider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -195,14 +194,8 @@ internal object WalletsDomainModule {
 
     @Provides
     @Singleton
-    fun providesIsWalletNFTEnabledSyncUseCase(
-        walletsRepository: WalletsRepository,
-        nftFeatureToggles: NFTFeatureToggles,
-    ): IsWalletNFTEnabledSyncUseCase {
-        return IsWalletNFTEnabledSyncUseCase(
-            walletsRepository = walletsRepository,
-            nftFeatureToggles = nftFeatureToggles,
-        )
+    fun providesIsWalletNFTEnabledSyncUseCase(walletsRepository: WalletsRepository): IsWalletNFTEnabledSyncUseCase {
+        return IsWalletNFTEnabledSyncUseCase(walletsRepository = walletsRepository)
     }
 
     @Provides
