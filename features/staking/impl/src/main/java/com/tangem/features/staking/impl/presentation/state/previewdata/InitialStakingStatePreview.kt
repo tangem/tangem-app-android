@@ -64,6 +64,7 @@ internal object InitialStakingStatePreview {
 
     val stateWithYield = defaultState.copy(
         yieldBalance = InnerYieldBalanceState.Data(
+            integrationId = null,
             reward = YieldReward(
                 rewardsFiat = "100 $",
                 rewardsCrypto = "100 SOL",
