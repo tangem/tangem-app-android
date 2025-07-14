@@ -11,18 +11,18 @@ internal class SwapAmountChangeCurrencyTransformer(
     override fun transform(prevState: SwapAmountUM): SwapAmountUM {
         if (prevState !is SwapAmountUM.Content) return prevState
         return prevState.updateAmount(
-            onPrimaryAmount = {
+            onPrimaryAmount = { primaryStatus ->
                 copy(
                     amountField = AmountCurrencyTransformer(
-                        cryptoCurrencyStatus = prevState.primaryCryptoCurrencyStatus,
+                        cryptoCurrencyStatus = primaryStatus,
                         value = isFiatSelected,
                     ).transform(prevState.primaryAmount.amountField),
                 )
             },
-            onSecondaryAmount = {
+            onSecondaryAmount = { secondaryStatus ->
                 copy(
                     amountField = AmountCurrencyTransformer(
-                        cryptoCurrencyStatus = prevState.secondaryCryptoCurrencyStatus,
+                        cryptoCurrencyStatus = secondaryStatus,
                         value = isFiatSelected,
                     ).transform(prevState.secondaryAmount.amountField),
                 )
