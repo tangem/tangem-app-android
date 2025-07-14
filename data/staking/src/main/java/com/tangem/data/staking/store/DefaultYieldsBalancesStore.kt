@@ -109,8 +109,15 @@ internal class DefaultYieldsBalancesStore(
     private suspend fun storeInPersistence(userWalletId: UserWalletId, values: Set<YieldBalanceWrapperDTO>) {
         persistenceStore.updateData { current ->
             current.toMutableMap().apply {
-                this[userWalletId.stringValue] = current[userWalletId.stringValue]
-                    ?.addOrReplace(items = values) { old, new -> old.getStakingId() == new.getStakingId() }
+                this[userWalletId.stringValue] = this[userWalletId.stringValue]
+                    ?.addOrReplace(items = values) { old, new ->
+                        val oldId = old.getStakingId()
+                        val newId = new.getStakingId()
+
+                        if (oldId == null || newId == null) return@addOrReplace false
+
+                        oldId == newId
+                    }
                     ?: values
             }
         }
