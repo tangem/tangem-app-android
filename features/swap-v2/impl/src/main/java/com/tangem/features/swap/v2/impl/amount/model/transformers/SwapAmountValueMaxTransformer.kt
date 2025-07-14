@@ -9,9 +9,9 @@ import com.tangem.utils.transformer.Transformer
 
 internal class SwapAmountValueMaxTransformer(
     private val primaryMaximumAmountBoundary: EnterAmountBoundary,
-    private val secondaryMaximumAmountBoundary: EnterAmountBoundary,
     private val primaryMinimumAmountBoundary: EnterAmountBoundary,
-    private val secondaryMinimumAmountBoundary: EnterAmountBoundary,
+    private val secondaryMaximumAmountBoundary: EnterAmountBoundary?,
+    private val secondaryMinimumAmountBoundary: EnterAmountBoundary?,
 ) : Transformer<SwapAmountUM> {
     override fun transform(prevState: SwapAmountUM): SwapAmountUM {
         if (prevState !is SwapAmountUM.Content) return prevState
@@ -19,25 +19,28 @@ internal class SwapAmountValueMaxTransformer(
         return prevState
             .copy(selectedQuote = SwapQuoteUM.Loading)
             .updateAmount(
-                onPrimaryAmount = {
+                onPrimaryAmount = { primaryStatus ->
                     copy(
                         amountField = AmountFieldSetMaxAmountTransformer(
-                            cryptoCurrencyStatus = prevState.primaryCryptoCurrencyStatus,
+                            cryptoCurrencyStatus = primaryStatus,
                             maxAmount = primaryMaximumAmountBoundary,
                             minAmount = primaryMinimumAmountBoundary,
                         ).transform(prevState.primaryAmount.amountField),
                     )
                 },
-                onSecondaryAmount = {
-                    copy(
-                        amountField = AmountFieldSetMaxAmountTransformer(
-                            cryptoCurrencyStatus = prevState.secondaryCryptoCurrencyStatus,
-                            maxAmount = secondaryMaximumAmountBoundary,
-                            minAmount = secondaryMinimumAmountBoundary,
-                        ).transform(prevState.secondaryAmount.amountField),
-                    )
+                onSecondaryAmount = { secondaryStatus ->
+                    if (secondaryMaximumAmountBoundary != null) {
+                        copy(
+                            amountField = AmountFieldSetMaxAmountTransformer(
+                                cryptoCurrencyStatus = secondaryStatus,
+                                maxAmount = secondaryMaximumAmountBoundary,
+                                minAmount = secondaryMinimumAmountBoundary,
+                            ).transform(prevState.secondaryAmount.amountField),
+                        )
+                    } else {
+                        this
+                    }
                 },
-
             )
     }
 }
