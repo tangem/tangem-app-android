@@ -54,6 +54,7 @@ import com.tangem.features.send.v2.send.confirm.model.transformers.SendConfirmIn
 import com.tangem.features.send.v2.send.confirm.model.transformers.SendConfirmSendingStateTransformer
 import com.tangem.features.send.v2.send.confirm.model.transformers.SendConfirmSentStateTransformer
 import com.tangem.features.send.v2.send.confirm.model.transformers.SendConfirmationNotificationsTransformer
+import com.tangem.features.send.v2.send.confirm.model.transformers.SendConfirmationNotificationsTransformerV2
 import com.tangem.features.send.v2.send.ui.state.SendUM
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeCheckReloadListener
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeCheckReloadTrigger
@@ -474,14 +475,25 @@ internal class SendConfirmModel @Inject constructor(
             )
             _uiState.update {
                 it.copy(
-                    confirmUM = SendConfirmationNotificationsTransformer(
-                        feeUM = uiState.value.feeUM,
-                        amountUM = uiState.value.amountUM,
-                        analyticsEventHandler = analyticsEventHandler,
-                        cryptoCurrency = cryptoCurrencyStatus.currency,
-                        appCurrency = appCurrency,
-                        analyticsCategoryName = params.analyticsCategoryName,
-                    ).transform(uiState.value.confirmUM),
+                    confirmUM = if (uiState.value.isRedesignEnabled) {
+                        SendConfirmationNotificationsTransformerV2(
+                            feeSelectorUM = uiState.value.feeSelectorUM,
+                            amountUM = uiState.value.amountUM,
+                            analyticsEventHandler = analyticsEventHandler,
+                            cryptoCurrency = cryptoCurrencyStatus.currency,
+                            appCurrency = appCurrency,
+                            analyticsCategoryName = params.analyticsCategoryName,
+                        ).transform(uiState.value.confirmUM)
+                    } else {
+                        SendConfirmationNotificationsTransformer(
+                            feeUM = uiState.value.feeUM,
+                            amountUM = uiState.value.amountUM,
+                            analyticsEventHandler = analyticsEventHandler,
+                            cryptoCurrency = cryptoCurrencyStatus.currency,
+                            appCurrency = appCurrency,
+                            analyticsCategoryName = params.analyticsCategoryName,
+                        ).transform(uiState.value.confirmUM)
+                    },
                 )
             }
         }
