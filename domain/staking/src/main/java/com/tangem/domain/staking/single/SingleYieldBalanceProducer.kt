@@ -17,7 +17,18 @@ interface SingleYieldBalanceProducer : FlowProducer<YieldBalance> {
         val userWalletId: UserWalletId,
         val currencyId: CryptoCurrency.ID,
         val network: Network,
-    )
+    ) {
+
+        override fun toString(): String {
+            return """
+                SingleYieldBalanceProducer.Params(
+                    userWalletId = $userWalletId,
+                    currencyId = $currencyId,
+                    network = $network
+                )
+            """.trimIndent()
+        }
+    }
 
     interface Factory : FlowProducer.Factory<Params, SingleYieldBalanceProducer>
 }
