@@ -404,6 +404,7 @@ internal class SendConfirmModel @Inject constructor(
                     CommonSendAnalyticEvents.TransactionError(
                         categoryName = analyticsCategoryName,
                         token = cryptoCurrency.symbol,
+                        blockchain = cryptoCurrency.network.name,
                     ),
                 )
             },
