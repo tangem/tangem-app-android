@@ -15,6 +15,7 @@ internal class MockEnvironmentConfigStorage : EnvironmentConfigStorage {
     private val environmentConfig = EnvironmentConfig(
         express = ExpressModel(apiKey = EXPRESS_API_KEY, signVerifierPublicKey = "vocibus"),
         devExpress = ExpressModel(apiKey = EXPRESS_DEV_API_KEY, signVerifierPublicKey = "pellentesque"),
+        blockAidApiKey = BLOCK_AID_API_KEY,
     )
 
     override suspend fun initialize() = environmentConfig
@@ -24,5 +25,6 @@ internal class MockEnvironmentConfigStorage : EnvironmentConfigStorage {
     companion object {
         const val EXPRESS_API_KEY = "express_api_key"
         const val EXPRESS_DEV_API_KEY = "express_dev_api_key"
+        const val BLOCK_AID_API_KEY = "block_aid_api_key"
     }
 }
