@@ -23,7 +23,6 @@ import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.markets.impl.R
 import com.tangem.features.markets.portfolio.impl.loader.PortfolioData
 import com.tangem.features.markets.portfolio.impl.ui.state.TokenActionsBSContentUM
-import com.tangem.features.onramp.OnrampFeatureToggles
 import com.tangem.utils.Provider
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -41,14 +40,10 @@ internal class TokenActionsHandler @AssistedInject constructor(
     @Assisted private val onHandleQuickAction: (HandledQuickAction) -> Unit,
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val messageSender: UiMessageSender,
-    private val onrampFeatureToggles: OnrampFeatureToggles,
     private val shareManager: ShareManager,
 ) {
 
     private val disabledActionsInDemoMode = buildSet {
-        if (!onrampFeatureToggles.isFeatureEnabled) {
-            add(TokenActionsBSContentUM.Action.Buy)
-        }
         add(TokenActionsBSContentUM.Action.Sell)
     }
 
@@ -132,12 +127,11 @@ internal class TokenActionsHandler @AssistedInject constructor(
     }
 
     private fun onBuyClick(cryptoCurrencyData: PortfolioData.CryptoCurrencyData) {
-        reduxStateHolder.dispatch(
-            TradeCryptoAction.Buy(
-                userWallet = cryptoCurrencyData.userWallet,
+        router.push(
+            AppRoute.Onramp(
+                userWalletId = cryptoCurrencyData.userWallet.walletId,
+                currency = cryptoCurrencyData.status.currency,
                 source = OnrampSource.MARKETS,
-                cryptoCurrencyStatus = cryptoCurrencyData.status,
-                appCurrencyCode = currentAppCurrency().code,
             ),
         )
     }
