@@ -14,6 +14,7 @@ import com.tangem.utils.version.AppVersionProvider
  * @property environmentConfigStorage  environment config storage
  * @property expressAuthProvider       express auth provider
  * @property appVersionProvider        app version provider
+ * @property appInfoProvider           app info provider
  */
 internal class Express(
     private val environmentConfigStorage: EnvironmentConfigStorage,
@@ -27,8 +28,24 @@ internal class Express(
     override val environmentConfigs: List<ApiEnvironmentConfig> = listOf(
         createDevEnvironment(),
         createStageEnvironment(),
+        createMockedEnvironment(),
         createProdEnvironment(),
     )
+
+    private fun getInitialEnvironment(): ApiEnvironment {
+        return when (BuildConfig.BUILD_TYPE) {
+            DEBUG_BUILD_TYPE,
+            -> ApiEnvironment.DEV
+            INTERNAL_BUILD_TYPE,
+            -> ApiEnvironment.STAGE
+            MOCKED_BUILD_TYPE,
+            -> ApiEnvironment.MOCK
+            EXTERNAL_BUILD_TYPE,
+            RELEASE_BUILD_TYPE,
+            -> ApiEnvironment.PROD
+            else -> error("Unknown build type [${BuildConfig.BUILD_TYPE}]")
+        }
+    }
 
     private fun createDevEnvironment(): ApiEnvironmentConfig = ApiEnvironmentConfig(
         environment = ApiEnvironment.DEV,
@@ -38,6 +55,12 @@ internal class Express(
 
     private fun createStageEnvironment(): ApiEnvironmentConfig = ApiEnvironmentConfig(
         environment = ApiEnvironment.STAGE,
+        baseUrl = "[REDACTED_ENV_URL]",
+        headers = createHeaders(isProd = false),
+    )
+
+    private fun createMockedEnvironment(): ApiEnvironmentConfig = ApiEnvironmentConfig(
+        environment = ApiEnvironment.MOCK,
         baseUrl = "[REDACTED_ENV_URL]",
         headers = createHeaders(isProd = false),
     )
@@ -62,22 +85,5 @@ internal class Express(
         }
             ?.apiKey
             ?: error("No express config provided")
-    }
-
-    private companion object {
-
-        fun getInitialEnvironment(): ApiEnvironment {
-            return when (BuildConfig.BUILD_TYPE) {
-                DEBUG_BUILD_TYPE,
-                -> ApiEnvironment.DEV
-                INTERNAL_BUILD_TYPE,
-                MOCKED_BUILD_TYPE,
-                -> ApiEnvironment.STAGE
-                EXTERNAL_BUILD_TYPE,
-                RELEASE_BUILD_TYPE,
-                -> ApiEnvironment.PROD
-                else -> error("Unknown build type [${BuildConfig.BUILD_TYPE}]")
-            }
-        }
     }
 }

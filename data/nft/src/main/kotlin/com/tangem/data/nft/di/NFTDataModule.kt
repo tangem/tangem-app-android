@@ -9,7 +9,6 @@ import com.tangem.datasource.local.nft.NFTRuntimeStoreFactory
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.nft.repository.NFTRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.features.nft.NFTFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -32,7 +31,6 @@ internal object NFTDataModule {
         dispatchers: CoroutineDispatcherProvider,
         excludedBlockchains: ExcludedBlockchains,
         userWalletsStore: UserWalletsStore,
-        nftFeatureToggles: NFTFeatureToggles,
         networkFactory: NetworkFactory,
     ): NFTRepository = DefaultNFTRepository(
         nftPersistenceStoreFactory = nftPersistenceStoreFactory,
@@ -41,7 +39,6 @@ internal object NFTDataModule {
         dispatchers = dispatchers,
         excludedBlockchains = excludedBlockchains,
         userWalletsStore = userWalletsStore,
-        nftFeatureToggles = nftFeatureToggles,
         networkFactory = networkFactory,
         resources = context.resources,
     )

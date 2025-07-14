@@ -20,6 +20,7 @@ import com.tangem.domain.nft.ObserveAndClearNFTCacheIfNeedUseCase
 import com.tangem.domain.settings.*
 import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
 import com.tangem.domain.tokens.RefreshMultiCurrencyWalletQuotesUseCase
+import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.models.isMultiCurrency
@@ -30,10 +31,7 @@ import com.tangem.feature.wallet.presentation.deeplink.WalletDeepLinksHandler
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.SelectedWalletAnalyticsSender
-import com.tangem.feature.wallet.presentation.wallet.domain.MultiWalletTokenListStore
-import com.tangem.feature.wallet.presentation.wallet.domain.OnrampStatusFactory
-import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
-import com.tangem.feature.wallet.presentation.wallet.domain.WalletNameMigrationUseCase
+import com.tangem.feature.wallet.presentation.wallet.domain.*
 import com.tangem.feature.wallet.presentation.wallet.loaders.WalletScreenContentLoader
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.model.PushNotificationsBottomSheetConfig
@@ -47,9 +45,11 @@ import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvid
 import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.features.pushnotifications.api.utils.getPushPermissionOrNull
+import com.tangem.features.wallet.deeplink.WalletDeepLinkActionListener
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
 import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
 import timber.log.Timber
 import javax.inject.Inject
@@ -83,9 +83,12 @@ internal class WalletModel @Inject constructor(
     private val analyticsEventsHandler: AnalyticsEventHandler,
     private val deepLinksRegistry: DeepLinksRegistry,
     private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
+    private val walletContentFetcher: WalletContentFetcher,
+    private val tokensFeatureToggles: TokensFeatureToggles,
     private val appRouter: AppRouter,
     private val routingFeatureToggle: RoutingFeatureToggle,
     private val observeAndClearNFTCacheIfNeedUseCase: ObserveAndClearNFTCacheIfNeedUseCase,
+    private val walletDeepLinkActionListener: WalletDeepLinkActionListener,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
 ) : Model() {
@@ -167,7 +170,16 @@ internal class WalletModel @Inject constructor(
         return innerWalletRouter.isWalletLastScreen() && shouldShowSaveWalletScreenUseCase() && canUseBiometryUseCase()
     }
 
-    private fun subscribeToUserWalletsUpdates() {
+    private fun subscribeToUserWalletsUpdates() = channelFlow<Unit> {
+        val firstWalletsUseCaseEmit = MutableStateFlow(false)
+        suspend fun waitFirstWalletsUseCaseEmit() = firstWalletsUseCaseEmit.filter { it }.first()
+
+        // deepLinkActionFlow must wait for fist getWalletsUseCase() emit to correct handle Action.InitializeWallets
+        walletDeepLinkActionListener.selectWalletFlow
+            .onEach { waitFirstWalletsUseCaseEmit() }
+            .onEach(::selectWalletById)
+            .launchIn(this)
+
         getWalletsUseCase()
             .conflate()
             .distinctUntilChanged()
@@ -178,10 +190,13 @@ internal class WalletModel @Inject constructor(
                 )
             }
             .onEach(::updateWallets)
-            .flowOn(dispatchers.main)
-            .launchIn(modelScope)
-            .saveIn(walletsUpdateJobHolder)
+            .onEach { firstWalletsUseCaseEmit.update { true } }
+            .launchIn(this)
+        awaitClose()
     }
+        .flowOn(dispatchers.default)
+        .launchIn(modelScope)
+        .saveIn(walletsUpdateJobHolder)
 
     private fun subscribeOnBalanceHiding() {
         getBalanceHidingSettingsUseCase()
@@ -237,6 +252,19 @@ internal class WalletModel @Inject constructor(
                 }
                 .flowOn(dispatchers.main)
                 .launchIn(modelScope)
+        }
+    }
+
+    private fun selectWalletById(selectedWalletId: UserWalletId) {
+        val currentWalletId = stateHolder.getSelectedWalletId()
+
+        if (currentWalletId == selectedWalletId) return
+
+        val currentIndex = stateHolder.getWalletIndexByWalletId(userWalletId = currentWalletId) ?: return
+        val newIndex = stateHolder.getWalletIndexByWalletId(userWalletId = selectedWalletId) ?: return
+
+        scrollToWallet(prevIndex = currentIndex, newIndex = newIndex) {
+            stateHolder.update { it.copy(selectedWalletIndex = newIndex) }
         }
     }
 
@@ -372,24 +400,26 @@ internal class WalletModel @Inject constructor(
             coroutineScope = modelScope,
         )
 
-        fetchIfSingleWallet(action.selectedWallet)
+        fetchWalletContent(userWallet = action.selectedWallet)
+
+        val otherWallets = action.wallets.minus(action.selectedWallet)
+
+        otherWallets.onEach { userWallet ->
+            modelScope.launch { walletContentFetcher(userWalletId = userWallet.walletId) }
+        }
 
         if (action.wallets.size > 1 && isWalletsScrollPreviewEnabled()) {
-            withContext(dispatchers.io) { delay(timeMillis = 1_800) }
+            val direction = if (action.selectedWalletIndex == action.wallets.lastIndex) {
+                Direction.RIGHT
+            } else {
+                Direction.LEFT
+            }
 
-            walletEventSender.send(
-                event = WalletEvent.DemonstrateWalletsScrollPreview(
-                    direction = if (action.selectedWalletIndex == action.wallets.lastIndex) {
-                        Direction.RIGHT
-                    } else {
-                        Direction.LEFT
-                    },
-                ),
-            )
+            demonstrateWalletsScrollPreview(direction = direction)
         }
     }
 
-    private fun reinitializeWallet(action: WalletsUpdateActionResolver.Action.ReinitializeWallet) {
+    private suspend fun reinitializeWallet(action: WalletsUpdateActionResolver.Action.ReinitializeWallet) {
         walletScreenContentLoader.cancel(action.prevWalletId)
         tokenListStore.remove(action.prevWalletId)
 
@@ -399,7 +429,7 @@ internal class WalletModel @Inject constructor(
             coroutineScope = modelScope,
         )
 
-        fetchIfSingleWallet(userWallet = action.selectedWallet)
+        fetchWalletContent(userWallet = action.selectedWallet)
 
         stateHolder.update(
             ReinitializeWalletTransformer(
@@ -411,14 +441,14 @@ internal class WalletModel @Inject constructor(
         )
     }
 
-    private fun addWallet(action: WalletsUpdateActionResolver.Action.AddWallet) {
+    private suspend fun addWallet(action: WalletsUpdateActionResolver.Action.AddWallet) {
         walletScreenContentLoader.load(
             userWallet = action.selectedWallet,
             clickIntents = clickIntents,
             coroutineScope = modelScope,
         )
 
-        fetchIfSingleWallet(userWallet = action.selectedWallet)
+        fetchWalletContent(userWallet = action.selectedWallet)
 
         stateHolder.update(
             AddWalletTransformer(
@@ -490,6 +520,16 @@ internal class WalletModel @Inject constructor(
         )
     }
 
+    private fun demonstrateWalletsScrollPreview(direction: Direction) {
+        modelScope.launch(dispatchers.mainImmediate) {
+            delay(timeMillis = 1_800)
+
+            walletEventSender.send(
+                event = WalletEvent.DemonstrateWalletsScrollPreview(direction = direction),
+            )
+        }
+    }
+
     private fun scrollToWallet(prevIndex: Int, newIndex: Int, onConsume: () -> Unit = {}) {
         // Should not show scroll animation if WalletScreen isn't in the background.
         if (screenLifecycleProvider.isBackgroundState.value) {
@@ -514,6 +554,20 @@ internal class WalletModel @Inject constructor(
                     onConsume = onConsume,
                 ),
             )
+        }
+    }
+
+    private suspend fun fetchWalletContent(userWallet: UserWallet) {
+        if (tokensFeatureToggles.isWalletBalanceFetcherEnabled) {
+            /*
+             * Updating the balance of the current wallet is an essential part of InitializationWallets,
+             * so the coroutine is launched in the current context
+             */
+            supervisorScope {
+                launch { walletContentFetcher(userWalletId = userWallet.walletId) }
+            }
+        } else {
+            fetchIfSingleWallet(userWallet = userWallet)
         }
     }
 

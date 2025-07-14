@@ -5,59 +5,94 @@ import arrow.core.left
 import arrow.core.right
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
+import com.tangem.data.walletconnect.utils.WC_TAG
 import com.tangem.data.walletconnect.utils.WcSdkObserver
 import com.tangem.domain.walletconnect.model.WcPairError
-import kotlinx.coroutines.async
+import com.tangem.domain.walletconnect.model.WcPairError.ApprovalFailed
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlinx.coroutines.withTimeout
+import timber.log.Timber
 import kotlin.coroutines.resume
 import kotlin.time.Duration.Companion.seconds
 
 internal class WcPairSdkDelegate : WcSdkObserver {
 
     private val onSessionProposal = Channel<Wallet.Model.SessionProposal>()
+    private val onSdkErrorCallback = Channel<Wallet.Model.Error>()
     private val onSessionSettleResponse = Channel<Wallet.Model.SettledSessionResponse>()
 
     suspend fun pair(url: String): Either<WcPairError, Wallet.Model.SessionProposal> = coroutineScope {
-        suspend fun proposalCallback() = onSessionProposal
-            .receiveAsFlow()
-            .first()
-
+        val proposalCallback = async { withTimeout(CALLBACK_TIMEOUT.seconds) { proposalCallback() } }
         val pairCall = async { sdkPair(url) }
-        val proposal = async { withTimeout(20.seconds) { proposalCallback() } }
         pairCall.await().onLeft {
-            proposal.cancel()
+            proposalCallback.cancel()
             return@coroutineScope it.left()
         }
-        proposal.await().right()
+        proposalCallback.await()
     }
+
+    private suspend fun proposalCallback() = callbackFlow {
+        // wait first onSessionProposal callback
+        launch {
+            val sessionProposal = onSessionProposal.receiveAsFlow().first()
+            trySend(sessionProposal.right())
+            channel.close()
+        }
+        // OR
+        // wait first onError callback
+        launch {
+            val error = onSdkErrorCallback.receiveAsFlow().first()
+            trySend(error.throwable.toPairError().left())
+            channel.close()
+        }
+        awaitClose()
+    }.first()
 
     suspend fun approve(
         sessionApprove: Wallet.Params.SessionApprove,
     ): Either<WcPairError, Wallet.Model.SettledSessionResponse.Result> = coroutineScope {
-        suspend fun approveCallback() = onSessionSettleResponse
-            .receiveAsFlow()
-            .first()
-
+        val approveCallback = async { withTimeout(CALLBACK_TIMEOUT.seconds) { approveCallback() } }
         val approveCall = async { sdkApprove(sessionApprove) }
-        val approveCallback = async { withTimeout(20.seconds) { approveCallback() } }
         approveCall.await()
             .onLeft {
                 approveCallback.cancel()
                 return@coroutineScope it.left()
             }
-        when (val result = approveCallback.await()) {
-            is Wallet.Model.SettledSessionResponse.Result -> result.right()
-            is Wallet.Model.SettledSessionResponse.Error ->
-                WcPairError.ApprovalFailed(result.errorMessage).left()
-        }
+        return@coroutineScope approveCallback.await().fold(
+            ifLeft = { it.left() },
+            ifRight = { result ->
+                when (result) {
+                    is Wallet.Model.SettledSessionResponse.Result -> result.right()
+                    is Wallet.Model.SettledSessionResponse.Error ->
+                        ApprovalFailed(result.errorMessage).left()
+                }
+            },
+        )
     }
 
+    private suspend fun approveCallback() = callbackFlow<Either<WcPairError, Wallet.Model.SettledSessionResponse>> {
+        // wait first onSessionSettleResponse callback
+        launch {
+            val settledSessionResponse = onSessionSettleResponse.receiveAsFlow().first()
+            trySend(settledSessionResponse.right())
+            channel.close()
+        }
+        // OR
+        // wait first onError callback
+        launch {
+            val error = onSdkErrorCallback.receiveAsFlow().first()
+            trySend(error.throwable.toApproveError())
+            channel.close()
+        }
+        awaitClose()
+    }.first()
+
     fun rejectSession(proposerPublicKey: String) {
+        Timber.tag(WC_TAG).i("reject session proposerPublicKey = $proposerPublicKey")
         WalletKit.rejectSession(
             params = Wallet.Params.SessionReject(
                 proposerPublicKey = proposerPublicKey,
@@ -66,6 +101,10 @@ internal class WcPairSdkDelegate : WcSdkObserver {
             onSuccess = {},
             onError = {},
         )
+    }
+
+    override fun onError(error: Wallet.Model.Error) {
+        onSdkErrorCallback.trySend(error)
     }
 
     override fun onSessionProposal(
@@ -85,8 +124,8 @@ internal class WcPairSdkDelegate : WcSdkObserver {
         return suspendCancellableCoroutine { continuation ->
             WalletKit.approveSession(
                 params = sessionApprove,
-                onSuccess = { continuation.resume(Unit.right()) },
-                onError = { continuation.resume(it.throwable.toApproveError()) },
+                onSuccess = { if (continuation.isActive) continuation.resume(Unit.right()) },
+                onError = { if (continuation.isActive) continuation.resume(it.throwable.toApproveError()) },
             )
         }
     }
@@ -95,8 +134,8 @@ internal class WcPairSdkDelegate : WcSdkObserver {
         return suspendCancellableCoroutine { continuation ->
             WalletKit.pair(
                 params = Wallet.Params.Pair(uri),
-                onSuccess = { continuation.resume(Unit.right()) },
-                onError = { continuation.resume(it.throwable.toPairError().left()) },
+                onSuccess = { if (continuation.isActive) continuation.resume(Unit.right()) },
+                onError = { if (continuation.isActive) continuation.resume(it.throwable.toPairError().left()) },
             )
         }
     }
@@ -109,7 +148,12 @@ internal class WcPairSdkDelegate : WcSdkObserver {
     private fun Throwable.toApproveError() = WcPairError.ApprovalFailed(this.localizedMessage.orEmpty()).left()
 
     companion object {
+        private const val CALLBACK_TIMEOUT = 30
         // com.reown.android.pairing.engine.domain.PairingEngine.pair
-        private val pairingExpiredMessages = listOf("Pairing URI expired", "Pairing expired")
+        private val pairingExpiredMessages = listOf(
+            "Pairing URI expired",
+            "Pairing expired",
+            "No proposal or pending session authenticate request for pairing topic",
+        )
     }
 }
