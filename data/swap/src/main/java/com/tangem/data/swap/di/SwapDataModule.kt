@@ -8,6 +8,7 @@ import com.tangem.data.swap.DefaultSwapRepositoryV2
 import com.tangem.data.swap.DefaultSwapTransactionRepository
 import com.tangem.datasource.api.express.TangemExpressApi
 import com.tangem.datasource.api.express.models.response.ExpressErrorResponse
+import com.tangem.datasource.crypto.DataSignatureVerifier
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.express.ExpressRepository
@@ -43,6 +44,8 @@ internal object SwapDataModule {
         coroutineDispatcher: CoroutineDispatcherProvider,
         appPreferencesStore: AppPreferencesStore,
         currencyStatusOperations: BaseCurrencyStatusOperations,
+        dataSignatureVerifier: DataSignatureVerifier,
+        @NetworkMoshi moshi: Moshi,
     ): SwapRepositoryV2 {
         return DefaultSwapRepositoryV2(
             tangemExpressApi = tangemExpressApi,
@@ -50,6 +53,8 @@ internal object SwapDataModule {
             coroutineDispatcher = coroutineDispatcher,
             appPreferencesStore = appPreferencesStore,
             currencyStatusOperations = currencyStatusOperations,
+            dataSignatureVerifier = dataSignatureVerifier,
+            moshi = moshi,
         )
     }
 
