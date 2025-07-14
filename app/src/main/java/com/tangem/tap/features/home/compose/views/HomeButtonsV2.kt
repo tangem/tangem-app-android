@@ -18,7 +18,7 @@ import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.test.TestTags
+import com.tangem.core.ui.test.StoriesScreenTestTags
 import com.tangem.wallet.R
 
 @Composable
@@ -37,19 +37,19 @@ internal fun HomeButtonsV2(
         CreateNewWalletButton(
             modifier = Modifier
                 .fillMaxWidth()
-                .testTag(TestTags.STORIES_SCREEN_CREATE_NEW_WALLET_BUTTON),
+                .testTag(StoriesScreenTestTags.CREATE_NEW_WALLET_BUTTON),
             onClick = onCreateNewWalletButtonClick,
         )
         AddExistingWalletButton(
             modifier = Modifier
                 .fillMaxWidth()
-                .testTag(TestTags.STORIES_SCREEN_ADD_EXISTING_WALLET_BUTTON),
+                .testTag(StoriesScreenTestTags.ADD_EXISTING_WALLET_BUTTON),
             onClick = onAddExistingWalletButtonClick,
         )
         ScanCardButton(
             modifier = Modifier
                 .fillMaxWidth()
-                .testTag(TestTags.STORIES_SCREEN_SCAN_BUTTON),
+                .testTag(StoriesScreenTestTags.SCAN_BUTTON),
             showProgress = btnScanStateInProgress,
             onClick = onScanButtonClick,
         )
