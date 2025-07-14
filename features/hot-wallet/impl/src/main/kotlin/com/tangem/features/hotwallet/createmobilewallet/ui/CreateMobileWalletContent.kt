@@ -85,7 +85,7 @@ internal fun CreateMobileWalletContent(state: CreateMobileWalletUM, modifier: Mo
                 .fillMaxWidth()
                 .padding(16.dp),
             text = stringResourceSafe(R.string.common_create),
-            showProgress = false,
+            showProgress = state.createButtonLoading,
             enabled = true,
             onClick = state.onCreateClick,
         )
@@ -133,6 +133,7 @@ private fun PreviewCreateWalletContent() {
         CreateMobileWalletContent(
             state = CreateMobileWalletUM(
                 onBackClick = {},
+                createButtonLoading = false,
                 onCreateClick = {},
             ),
         )
