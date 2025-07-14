@@ -30,16 +30,22 @@ internal class FeeSelectorLoadedTransformer(
     )
 
     override fun transform(prevState: FeeSelectorUM): FeeSelectorUM {
-        val feeItems: ImmutableList<FeeItem> = feeItemsConverter.convert(fees)
+        val prevCustomFee = if (prevState is FeeSelectorUM.Content) {
+            prevState.feeItems.find { it is FeeItem.Custom } as? FeeItem.Custom
+        } else {
+            null
+        }
+        val feeItems: ImmutableList<FeeItem> = feeItemsConverter.convert(FeeItemConverter.Input(fees, prevCustomFee))
 
         val selectedFee = when (prevState) {
-            is FeeSelectorUM.Content -> feeItems.first { it.isSame(prevState.selectedFeeItem) }
+            is FeeSelectorUM.Content -> feeItems.first { it.isSameClass(prevState.selectedFeeItem) }
             is FeeSelectorUM.Error,
             FeeSelectorUM.Loading,
             -> feeItems.find { it is FeeItem.Suggested } ?: feeItems.first { it is FeeItem.Market }
         }
 
         return FeeSelectorUM.Content(
+            fees = fees,
             feeItems = feeItems,
             selectedFeeItem = selectedFee,
             isFeeApproximate = isFeeApproximate,
