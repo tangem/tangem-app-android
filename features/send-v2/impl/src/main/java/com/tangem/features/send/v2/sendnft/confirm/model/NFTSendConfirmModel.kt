@@ -312,6 +312,7 @@ internal class NFTSendConfirmModel @Inject constructor(
                     CommonSendAnalyticEvents.TransactionError(
                         categoryName = analyticsCategoryName,
                         token = cryptoCurrency.symbol,
+                        blockchain = cryptoCurrency.network.name,
                     ),
                 )
             },

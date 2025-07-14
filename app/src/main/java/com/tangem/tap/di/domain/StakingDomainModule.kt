@@ -224,4 +224,12 @@ internal object StakingDomainModule {
     ): CheckAccountInitializedUseCase {
         return CheckAccountInitializedUseCase(walletManagersFacade)
     }
+
+    @Provides
+    @Singleton
+    fun provideGetActionRequirementAmountUseCase(
+        stakingRepository: StakingRepository,
+    ): GetActionRequirementAmountUseCase {
+        return GetActionRequirementAmountUseCase(stakingRepository)
+    }
 }

@@ -41,16 +41,15 @@ class SaveMarketTokensUseCase(
         removedNetworks: Set<TokenMarketInfo.Network>,
     ): Either<Throwable, Unit> = Either.catch {
         if (removedNetworks.isNotEmpty()) {
-            currenciesRepository.removeCurrencies(
-                userWalletId = userWalletId,
-                currencies = removedNetworks.mapNotNull {
-                    marketsTokenRepository.createCryptoCurrency(
-                        userWalletId = userWalletId,
-                        token = tokenMarketParams,
-                        network = it,
-                    )
-                },
-            )
+            val removedCurrencies = removedNetworks.mapNotNull {
+                marketsTokenRepository.createCryptoCurrency(
+                    userWalletId = userWalletId,
+                    token = tokenMarketParams,
+                    network = it,
+                )
+            }
+
+            currenciesRepository.removeCurrencies(userWalletId = userWalletId, currencies = removedCurrencies)
         }
 
         if (addedNetworks.isNotEmpty()) {
@@ -67,13 +66,16 @@ class SaveMarketTokensUseCase(
                 )
             }
 
-            currenciesRepository.addCurrencies(userWalletId = userWalletId, currencies = addedCurrencies)
+            val savedCurrencies = currenciesRepository.addCurrencies(
+                userWalletId = userWalletId,
+                currencies = addedCurrencies,
+            )
 
-            refreshUpdatedNetworks(userWalletId, addedCurrencies)
+            refreshUpdatedNetworks(userWalletId, savedCurrencies)
 
-            refreshUpdatedYieldBalances(userWalletId, addedCurrencies)
+            refreshUpdatedYieldBalances(userWalletId, savedCurrencies)
 
-            refreshUpdatedQuotes(addedCurrencies)
+            refreshUpdatedQuotes(savedCurrencies)
         }
     }
 
