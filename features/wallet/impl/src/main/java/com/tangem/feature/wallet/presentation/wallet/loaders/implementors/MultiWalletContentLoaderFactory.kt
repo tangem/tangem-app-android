@@ -20,7 +20,6 @@ import com.tangem.feature.wallet.presentation.wallet.domain.GetMultiWalletWarnin
 import com.tangem.feature.wallet.presentation.wallet.domain.MultiWalletTokenListStore
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletWithFundsChecker
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
-import com.tangem.features.nft.NFTFeatureToggles
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -39,7 +38,6 @@ internal class MultiWalletContentLoaderFactory @Inject constructor(
     private val shouldSaveUserWalletsUseCase: ShouldSaveUserWalletsUseCase,
     private val getStoryContentUseCase: GetStoryContentUseCase,
     private val deepLinksRegistry: DeepLinksRegistry,
-    private val nftFeatureToggles: NFTFeatureToggles,
     private val walletsRepository: WalletsRepository,
     private val getNFTCollectionsUseCase: GetNFTCollectionsUseCase,
     private val routingFeatureToggle: RoutingFeatureToggle,
@@ -63,7 +61,6 @@ internal class MultiWalletContentLoaderFactory @Inject constructor(
             getStoryContentUseCase = getStoryContentUseCase,
             shouldSaveUserWalletsUseCase = shouldSaveUserWalletsUseCase,
             deepLinksRegistry = deepLinksRegistry,
-            nftFeatureToggles = nftFeatureToggles,
             walletsRepository = walletsRepository,
             getNFTCollectionsUseCase = getNFTCollectionsUseCase,
             routingFeatureToggle = routingFeatureToggle,
