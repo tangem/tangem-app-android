@@ -56,8 +56,6 @@ dependencies {
     implementation(projects.core.utils)
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
-    implementation(projects.core.deepLinks)
-    implementation(projects.core.deepLinks.global)
     implementation(projects.core.decompose)
     implementation(projects.core.datasource)
     implementation(projects.core.res)
