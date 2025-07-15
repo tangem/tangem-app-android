@@ -38,10 +38,6 @@ interface RampStateManager {
         cryptoCurrency: CryptoCurrency,
     ): ScenarioUnavailabilityReason
 
-    suspend fun fetchBuyServiceData()
-
-    fun getBuyInitializationStatus(): Flow<Lce<Throwable, Any>>
-
     suspend fun fetchSellServiceData()
 
     fun getSellInitializationStatus(): Flow<Lce<Throwable, Any>>
