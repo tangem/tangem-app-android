@@ -10,7 +10,6 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
-import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesProducer
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
 import com.tangem.domain.tokens.TokensFeatureToggles
@@ -24,7 +23,6 @@ class SaveManagedTokensUseCase(
     private val walletManagersFacade: WalletManagersFacade,
     private val currenciesRepository: CurrenciesRepository,
     private val derivationsRepository: DerivationsRepository,
-    private val stakingRepository: StakingRepository,
     private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
     private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
     private val multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
@@ -119,20 +117,12 @@ class SaveManagedTokensUseCase(
         userWalletId: UserWalletId,
         existingCurrencies: List<CryptoCurrency>,
     ) {
-        if (tokensFeatureToggles.isStakingLoadingRefactoringEnabled) {
-            multiYieldBalanceFetcher(
-                params = MultiYieldBalanceFetcher.Params(
-                    userWalletId = userWalletId,
-                    currencyIdWithNetworkMap = existingCurrencies.associateTo(hashMapOf()) { it.id to it.network },
-                ),
-            )
-        } else {
-            stakingRepository.fetchMultiYieldBalance(
+        multiYieldBalanceFetcher(
+            params = MultiYieldBalanceFetcher.Params(
                 userWalletId = userWalletId,
-                cryptoCurrencies = existingCurrencies,
-                refresh = true,
-            )
-        }
+                currencyIdWithNetworkMap = existingCurrencies.associateTo(hashMapOf()) { it.id to it.network },
+            ),
+        )
     }
 
     private suspend fun refreshUpdatedQuotes(addedCurrencies: List<CryptoCurrency>) {
