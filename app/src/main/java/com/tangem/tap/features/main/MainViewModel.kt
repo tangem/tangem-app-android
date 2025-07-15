@@ -4,13 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.common.keyboard.KeyboardValidator
-import com.tangem.common.routing.RoutingFeatureToggle
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.event.TechAnalyticsEvent
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.ui.UiMessageSender
-import com.tangem.core.deeplink.DeepLinksRegistry
 import com.tangem.core.ui.R
 import com.tangem.core.ui.coil.ImagePreloader
 import com.tangem.core.ui.extensions.resourceReference
@@ -47,7 +45,6 @@ import com.tangem.domain.wallets.usecase.AssociateWalletsWithApplicationIdUseCas
 import com.tangem.domain.wallets.usecase.GetSavedWalletChangesUseCase
 import com.tangem.domain.wallets.usecase.UpdateRemoteWalletsInfoUseCase
 import com.tangem.feature.swap.analytics.StoriesEvents
-import com.tangem.features.onramp.deeplink.OnrampDeepLink
 import com.tangem.tap.common.extensions.setContext
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupDialog
@@ -86,8 +83,6 @@ internal class MainViewModel @Inject constructor(
     private val imagePreloader: ImagePreloader,
     private val fetchHotCryptoUseCase: FetchHotCryptoUseCase,
     private val onboardingRepository: OnboardingRepository,
-    private val deepLinksRegistry: DeepLinksRegistry,
-    private val onrampDeepLinkFactory: OnrampDeepLink.Factory,
     private val notificationsToggles: NotificationsFeatureToggles,
     private val getApplicationIdUseCase: GetApplicationIdUseCase,
     private val subscribeOnWalletsUseCase: GetSavedWalletChangesUseCase,
@@ -98,7 +93,6 @@ internal class MainViewModel @Inject constructor(
     private val multiQuoteUpdater: MultiQuoteUpdater,
     private val appStateHolder: AppStateHolder,
     private val environmentConfigStorage: EnvironmentConfigStorage,
-    routingFeatureToggle: RoutingFeatureToggle,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
 ) : ViewModel() {
 
@@ -141,10 +135,6 @@ internal class MainViewModel @Inject constructor(
         sendKeyboardIdentifierEvent()
 
         preloadImages()
-
-        if (!routingFeatureToggle.isDeepLinkNavigationEnabled) {
-            initializeDeepLinks()
-        }
     }
 
     override fun onCleared() {
@@ -423,17 +413,13 @@ internal class MainViewModel @Inject constructor(
                 }
             }
         } catch (ex: Exception) {
-            Timber.e(ex.message)
+            Timber.e(ex)
             analyticsEventHandler.send(
                 StoriesEvents.Error(
                     type = StoryContentIds.STORY_FIRST_TIME_SWAP.analyticType,
                 ),
             )
         }
-    }
-
-    private fun initializeDeepLinks() {
-        deepLinksRegistry.register(onrampDeepLinkFactory.create(viewModelScope))
     }
 
     private suspend fun initPushNotifications() {
