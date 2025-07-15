@@ -324,14 +324,14 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             ifRight = { quotes ->
                 quotes.allowanceContract?.let {
                     isAllowedToSpend(networkId, fromToken.currency, amount, it)
-                } ?: true
+                } != false
             },
             ifLeft = { false },
         )
 
         if (isAllowedToSpend && allowPermissionsHandler.isAddressAllowanceInProgress(fromTokenAddress)) {
             allowPermissionsHandler.removeAddressFromProgress(fromTokenAddress)
-            fetchCurrencyStatusUseCase(userWalletId, fromToken.currency.id, true)
+            fetchCurrencyStatusUseCase(userWalletId = userWalletId, id = fromToken.currency.id)
         }
         return if (isAllowedToSpend && isBalanceWithoutFeeEnough) {
             provider to loadDexSwapData(
