@@ -1,8 +1,7 @@
 package com.tangem.feature.wallet.presentation.wallet.subscribers
 
-import com.tangem.common.routing.RoutingFeatureToggle
-import com.tangem.core.deeplink.DeepLinksRegistry
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
+import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.tokens.RunPolkadotAccountHealthCheckUseCase
 import com.tangem.domain.tokens.error.TokenListError
@@ -25,8 +24,6 @@ internal class SingleWalletWithTokenListSubscriber(
     walletWithFundsChecker: WalletWithFundsChecker,
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     runPolkadotAccountHealthCheckUseCase: RunPolkadotAccountHealthCheckUseCase,
-    deepLinksRegistry: DeepLinksRegistry,
-    routingFeatureToggle: RoutingFeatureToggle,
 ) : BasicTokenListSubscriber(
     userWallet = userWallet,
     stateHolder = stateHolder,
@@ -35,8 +32,6 @@ internal class SingleWalletWithTokenListSubscriber(
     walletWithFundsChecker = walletWithFundsChecker,
     getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
     runPolkadotAccountHealthCheckUseCase = runPolkadotAccountHealthCheckUseCase,
-    deepLinksRegistry = deepLinksRegistry,
-    routingFeatureToggle = routingFeatureToggle,
 ) {
 
     override fun tokenListFlow(coroutineScope: CoroutineScope): LceFlow<TokenListError, TokenList> {
@@ -44,4 +39,6 @@ internal class SingleWalletWithTokenListSubscriber(
 
         return tokenListStore.getOrThrow(userWallet.walletId)
     }
+
+    override suspend fun onTokenListReceived(maybeTokenList: Lce<TokenListError, TokenList>) = Unit
 }
