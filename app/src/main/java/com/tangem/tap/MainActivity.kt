@@ -30,9 +30,9 @@ import com.tangem.common.routing.entity.SerializableIntent
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.di.RootAppComponentContext
-import com.tangem.core.deeplink.DEEPLINK_KEY
 import com.tangem.core.deeplink.DeepLinksRegistry
 import com.tangem.core.deeplink.WEBLINK_KEY
+import com.tangem.core.deeplink.converter.PayloadToDeeplinkConverter
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.data.balancehiding.DefaultDeviceFlipDetector
 import com.tangem.data.card.sdk.CardSdkOwner
@@ -476,7 +476,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     }
 
     private fun handleDeepLink(intent: Intent, isFromOnNewIntent: Boolean) {
-        val deepLinkExtras = intent.getStringExtra(DEEPLINK_KEY)?.toUri()
+        val deepLinkExtras = PayloadToDeeplinkConverter.convertBundle(intent.extras)?.toUri()
         val webLink = intent.getStringExtra(WEBLINK_KEY)
 
         val receivedDeepLink = intent.data ?: deepLinkExtras
