@@ -125,7 +125,6 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
             isMultiCurrency -> fetchCurrencyStatusUseCase.invoke(
                 userWalletId = userWallet.walletId,
                 id = cryptoCurrency.id,
-                refresh = true,
             )
             !isMultiCurrency && tokensFeatureToggles.isWalletBalanceFetcherEnabled ->
                 walletBalanceFetcher(params = WalletBalanceFetcher.Params(userWalletId = userWallet.walletId))
