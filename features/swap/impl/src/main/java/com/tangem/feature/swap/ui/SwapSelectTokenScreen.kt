@@ -16,10 +16,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.SpacerH12
 import com.tangem.core.ui.components.SpacerW2
 import com.tangem.core.ui.components.appbar.ExpandableSearchView
+import com.tangem.core.ui.components.atoms.text.EllipsisText
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
@@ -222,10 +224,11 @@ private fun TokenItem(
 
         Column(
             modifier = Modifier
+                .weight(1f)
                 .align(Alignment.CenterVertically)
                 .padding(start = TangemTheme.dimens.spacing12),
         ) {
-            Text(
+            EllipsisText(
                 text = token.name,
                 style = TangemTheme.typography.subtitle1,
                 color = if (token.available) {
@@ -235,20 +238,19 @@ private fun TokenItem(
                 },
             )
             SpacerW2()
-            Text(
+            EllipsisText(
                 text = token.symbol,
                 style = TangemTheme.typography.caption2,
                 color = TangemTheme.colors.text.tertiary,
             )
         }
 
-        Spacer(modifier = Modifier.weight(1f))
-
         if (token.addedTokenBalanceData != null) {
             Column(
                 horizontalAlignment = Alignment.End,
                 verticalArrangement = Arrangement.Center,
-                modifier = Modifier.padding(start = TangemTheme.dimens.spacing8),
+                modifier = Modifier
+                    .padding(start = TangemTheme.dimens.spacing8),
             ) {
                 Text(
                     text = token.addedTokenBalanceData.amountEquivalent.orEmpty().orMaskWithStars(
@@ -256,6 +258,9 @@ private fun TokenItem(
                             !token.addedTokenBalanceData.amountEquivalent.isNullOrEmpty(),
                     ),
                     style = TangemTheme.typography.subtitle1,
+                    maxLines = 1,
+                    softWrap = false,
+                    overflow = TextOverflow.Visible,
                     color = if (token.available) {
                         TangemTheme.colors.text.primary1
                     } else {
@@ -268,6 +273,7 @@ private fun TokenItem(
                         maskWithStars = token.addedTokenBalanceData.isBalanceHidden &&
                             !token.addedTokenBalanceData.amount.isNullOrEmpty(),
                     ),
+                    maxLines = 1,
                     style = TangemTheme.typography.caption2,
                     color = TangemTheme.colors.text.tertiary,
                 )
@@ -284,12 +290,11 @@ private val token = TokenToSelectState.TokenToSelect(
         showCustomBadge = false,
     ),
     id = "",
-    name = "USDC",
+    name = "Optimistic Ethereum (ETH)",
     symbol = "USDC",
     addedTokenBalanceData = TokenBalanceData(
         amount = "15 000 $",
-        amountEquivalent = "15 000 " +
-            "USDT",
+        amountEquivalent = "15 000 USDT",
         isBalanceHidden = false,
     ),
 )
