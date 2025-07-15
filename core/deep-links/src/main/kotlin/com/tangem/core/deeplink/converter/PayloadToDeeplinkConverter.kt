@@ -1,5 +1,6 @@
 package com.tangem.core.deeplink.converter
 
+import android.os.Bundle
 import com.tangem.common.routing.DeepLinkRoute
 import com.tangem.common.routing.DeepLinkScheme
 import com.tangem.core.deeplink.DEEPLINK_KEY
@@ -20,6 +21,18 @@ object PayloadToDeeplinkConverter : Converter<Map<String, String>, String?> {
             isTangemPushNotificationPayload(value) -> buildNotificationDeeplink(value)
             else -> null
         }
+    }
+
+    fun convertBundle(bundle: Bundle?): String? {
+        if (bundle == null) return null
+        val bundleDataMap = mutableMapOf<String, String>()
+        for (key in bundle.keySet()) {
+            val value = bundle.getString(key)
+            if (value != null) {
+                bundleDataMap[key] = value
+            }
+        }
+        return convert(bundleDataMap)
     }
 
     @Suppress("ReturnCount")
