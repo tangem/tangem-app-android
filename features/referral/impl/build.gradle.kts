@@ -22,7 +22,6 @@ dependencies {
     implementation(projects.core.utils)
     implementation(projects.core.ui)
     implementation(projects.core.decompose)
-    implementation(projects.core.deepLinks)
     implementation(projects.libs.crypto)
     implementation(projects.common.routing)
 
