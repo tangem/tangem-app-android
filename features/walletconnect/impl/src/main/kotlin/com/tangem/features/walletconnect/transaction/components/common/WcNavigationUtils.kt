@@ -41,12 +41,15 @@ internal fun getWcCommonScreen(
             val state = model.uiState.value ?: error("in this step state should be not null")
             feeSelectorComponentFactory.create(
                 context = appComponentContext,
+                onDismiss = model::popBack,
                 params = FeeSelectorParams.FeeSelectorDetailsParams(
                     state = state.feeSelectorUM,
                     onLoadFee = model::loadFee,
+                    feeCryptoCurrencyStatus = model.cryptoCurrencyStatus,
                     cryptoCurrencyStatus = model.cryptoCurrencyStatus,
                     callback = model,
                     suggestedFeeState = model.suggestedFeeState,
+                    feeDisplaySource = FeeSelectorParams.FeeDisplaySource.BottomSheet,
                 ),
             )
         }
