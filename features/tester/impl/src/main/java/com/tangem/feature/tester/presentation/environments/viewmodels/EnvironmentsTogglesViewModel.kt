@@ -6,10 +6,10 @@ import com.tangem.datasource.api.common.config.ApiConfig
 import com.tangem.datasource.api.common.config.ApiEnvironment
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.api.common.config.managers.MutableApiConfigsManager
-import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.feature.tester.impl.BuildConfig
 import com.tangem.feature.tester.impl.R
 import com.tangem.feature.tester.presentation.environments.state.EnvironmentTogglesScreenUM
+import com.tangem.feature.tester.presentation.environments.utils.ApiEnvironmentComparator
 import com.tangem.feature.tester.presentation.navigation.InnerTesterRouter
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableSet
@@ -29,7 +29,6 @@ import javax.inject.Inject
 @HiltViewModel
 internal class EnvironmentsTogglesViewModel @Inject constructor(
     apiConfigsManager: ApiConfigsManager,
-    private val cardSdkConfigRepository: CardSdkConfigRepository,
 ) : ViewModel() {
 
     /** Current ui state */
@@ -76,6 +75,7 @@ internal class EnvironmentsTogglesViewModel @Inject constructor(
                 url = config.environmentConfigs.firstOrNull { it.environment == currentEnvironment }?.baseUrl
                     ?: error("Current environment's url isn't found"),
                 environments = config.environmentConfigs
+                    .sortedWith(ApiEnvironmentComparator)
                     .map { environmentConfig -> environmentConfig.environment.name }
                     .toImmutableSet(),
             )
@@ -96,22 +96,7 @@ internal class EnvironmentsTogglesViewModel @Inject constructor(
         viewModelScope.launch {
             val environment = ApiEnvironment.valueOf(name)
 
-            handleIfAttestationConfig(id = id, environment = environment)
-
             mutableApiConfigsManager.changeEnvironment(id = id, environment = environment)
-        }
-    }
-
-    /** Special logic for [ApiConfig.ID.Attestation] */
-    private fun handleIfAttestationConfig(id: String, environment: ApiEnvironment) {
-        if (id == ApiConfig.ID.Attestation.name) {
-            cardSdkConfigRepository.setTangemApiProdEnvFlag(
-                flag = when (environment) {
-                    ApiEnvironment.PROD -> true
-                    ApiEnvironment.DEV -> false
-                    else -> false
-                },
-            )
         }
     }
 }
