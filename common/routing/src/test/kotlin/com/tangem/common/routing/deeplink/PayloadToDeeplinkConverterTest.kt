@@ -1,12 +1,12 @@
-package com.tangem.core.deeplink.converter
+package com.tangem.common.routing.deeplink
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.core.deeplink.DEEPLINK_KEY
-import com.tangem.core.deeplink.DeeplinkConst.DERIVATION_PATH_KEY
-import com.tangem.core.deeplink.DeeplinkConst.NETWORK_ID_KEY
-import com.tangem.core.deeplink.DeeplinkConst.TOKEN_ID_KEY
-import com.tangem.core.deeplink.DeeplinkConst.TYPE_KEY
-import com.tangem.core.deeplink.DeeplinkConst.WALLET_ID_KEY
+import com.tangem.common.routing.deeplink.DeeplinkConst.DEEPLINK_KEY
+import com.tangem.common.routing.deeplink.DeeplinkConst.DERIVATION_PATH_KEY
+import com.tangem.common.routing.deeplink.DeeplinkConst.NETWORK_ID_KEY
+import com.tangem.common.routing.deeplink.DeeplinkConst.TOKEN_ID_KEY
+import com.tangem.common.routing.deeplink.DeeplinkConst.TYPE_KEY
+import com.tangem.common.routing.deeplink.DeeplinkConst.WALLET_ID_KEY
 import org.junit.Test
 
 internal class PayloadToDeeplinkConverterTest {
