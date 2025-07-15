@@ -4,6 +4,8 @@ import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
+import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
+import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.transaction.FeeRepository
 import com.tangem.domain.transaction.TransactionRepository
@@ -58,12 +60,16 @@ internal object TransactionDomainModule {
         walletManagersFacade: WalletManagersFacade,
         currenciesRepository: CurrenciesRepository,
         singleNetworkStatusSupplier: SingleNetworkStatusSupplier,
+        multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
+        tokensFeatureToggles: TokensFeatureToggles,
     ): AssociateAssetUseCase {
         return AssociateAssetUseCase(
             cardSdkConfigRepository = cardSdkConfigRepository,
             walletManagersFacade = walletManagersFacade,
             currenciesRepository = currenciesRepository,
             singleNetworkStatusSupplier = singleNetworkStatusSupplier,
+            multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
+            tokensFeatureToggles = tokensFeatureToggles,
         )
     }
 
