@@ -11,6 +11,8 @@ import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
 import com.tangem.domain.staking.repositories.StakingRepository
+import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesProducer
+import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
 import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -26,6 +28,7 @@ class SaveManagedTokensUseCase(
     private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
     private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
     private val multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
+    private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
     private val tokensFeatureToggles: TokensFeatureToggles,
 ) {
 
@@ -42,7 +45,14 @@ class SaveManagedTokensUseCase(
             networks = currenciesToAdd.values.flatten(),
         )
 
-        val existingCurrencies = currenciesRepository.getMultiCurrencyWalletCurrenciesSync(userWalletId)
+        val existingCurrencies = if (tokensFeatureToggles.isWalletBalanceFetcherEnabled) {
+            multiWalletCryptoCurrenciesSupplier
+                .getSyncOrNull(params = MultiWalletCryptoCurrenciesProducer.Params(userWalletId))
+                .orEmpty()
+                .toList()
+        } else {
+            currenciesRepository.getMultiCurrencyWalletCurrenciesSync(userWalletId)
+        }
 
         val newCurrenciesList = existingCurrencies
             .filterNot(removingCurrencies::contains)

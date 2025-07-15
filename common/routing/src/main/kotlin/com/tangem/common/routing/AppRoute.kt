@@ -30,10 +30,6 @@ sealed class AppRoute(val path: String) : Route {
     ) : AppRoute(path = "/welcome"), RouteBundleParams {
 
         override fun getBundle(): Bundle = bundle(serializer())
-
-        companion object {
-            const val INITIAL_INTENT_KEY = "intent"
-        }
     }
 
     @Serializable
@@ -176,9 +172,6 @@ sealed class AppRoute(val path: String) : Route {
             "/${userWalletId.stringValue}" +
             "/$isInitialReverseOrder",
     )
-
-    @Serializable
-    data object TesterMenu : AppRoute(path = "/tester_menu")
 
     @Serializable
     data object AppCurrencySelector : AppRoute(path = "/app_currency_selector")
