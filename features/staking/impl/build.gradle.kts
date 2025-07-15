@@ -47,8 +47,6 @@ dependencies {
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
     implementation(projects.core.decompose)
-    implementation(projects.core.deepLinks)
-
 
     /** Domain */
     implementation(projects.domain.tokens)
