@@ -1,12 +1,15 @@
 package com.tangem.core.ui.components.inputrow
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -146,7 +149,9 @@ fun InputRowEnterInfoAmountV2(
                 )
                 if (description != null) {
                     TangemTooltip(
-                        modifier = Modifier.size(16.dp),
+                        modifier = Modifier
+                            .size(16.dp)
+                            .clip(CircleShape),
                         text = description.resolveReference(),
                         content = { contentModifier ->
                             Icon(
