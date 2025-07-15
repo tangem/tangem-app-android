@@ -23,6 +23,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
+import org.joda.time.DateTime
 import timber.log.Timber
 import kotlin.coroutines.resume
 
@@ -65,7 +66,14 @@ internal class DefaultWcSessionsManager(
     }
 
     override suspend fun saveSession(session: WcSession) {
-        store.saveSession(WcSessionDTO(session.sdkModel.topic, session.wallet.walletId, session.securityStatus))
+        store.saveSession(
+            WcSessionDTO(
+                topic = session.sdkModel.topic,
+                walletId = session.wallet.walletId,
+                securityStatus = session.securityStatus,
+                connectingTime = session.connectingTime ?: DateTime.now().millis,
+            ),
+        )
     }
 
     override suspend fun removeSession(session: WcSession): Either<Throwable, Unit> {
@@ -89,6 +97,7 @@ internal class DefaultWcSessionsManager(
             sdkModel = WcSdkSessionConverter.convert(sdkSession),
             securityStatus = storedSession.securityStatus,
             networks = networks,
+            connectingTime = storedSession.connectingTime,
         )
     }
 
@@ -137,6 +146,7 @@ internal class DefaultWcSessionsManager(
                 sdkModel = WcSdkSessionConverter.convert(sdkSession),
                 securityStatus = session.securityStatus,
                 networks = networks,
+                connectingTime = session.connectingTime,
             )
         }
         return wcSessions
