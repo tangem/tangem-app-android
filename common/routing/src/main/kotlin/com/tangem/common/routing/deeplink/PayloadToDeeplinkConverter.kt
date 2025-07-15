@@ -1,16 +1,16 @@
-package com.tangem.core.deeplink.converter
+package com.tangem.common.routing.deeplink
 
 import android.os.Bundle
 import com.tangem.common.routing.DeepLinkRoute
 import com.tangem.common.routing.DeepLinkScheme
-import com.tangem.core.deeplink.DEEPLINK_KEY
-import com.tangem.core.deeplink.DeeplinkConst.DERIVATION_PATH_KEY
-import com.tangem.core.deeplink.DeeplinkConst.NAME_KEY
-import com.tangem.core.deeplink.DeeplinkConst.NETWORK_ID_KEY
-import com.tangem.core.deeplink.DeeplinkConst.TOKEN_ID_KEY
-import com.tangem.core.deeplink.DeeplinkConst.TRANSACTION_ID_KEY
-import com.tangem.core.deeplink.DeeplinkConst.TYPE_KEY
-import com.tangem.core.deeplink.DeeplinkConst.WALLET_ID_KEY
+import com.tangem.common.routing.deeplink.DeeplinkConst.DEEPLINK_KEY
+import com.tangem.common.routing.deeplink.DeeplinkConst.DERIVATION_PATH_KEY
+import com.tangem.common.routing.deeplink.DeeplinkConst.NAME_KEY
+import com.tangem.common.routing.deeplink.DeeplinkConst.NETWORK_ID_KEY
+import com.tangem.common.routing.deeplink.DeeplinkConst.TOKEN_ID_KEY
+import com.tangem.common.routing.deeplink.DeeplinkConst.TRANSACTION_ID_KEY
+import com.tangem.common.routing.deeplink.DeeplinkConst.TYPE_KEY
+import com.tangem.common.routing.deeplink.DeeplinkConst.WALLET_ID_KEY
 import com.tangem.utils.converter.Converter
 
 object PayloadToDeeplinkConverter : Converter<Map<String, String>, String?> {
