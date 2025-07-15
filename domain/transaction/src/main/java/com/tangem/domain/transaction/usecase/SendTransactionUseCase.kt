@@ -39,7 +39,7 @@ class SendTransactionUseCase(
         userWallet: UserWallet,
         network: Network,
         sendMode: TransactionSender.MultipleTransactionSendMode,
-    ): Either<SendTransactionError?, List<String>> {
+    ): Either<SendTransactionError, List<String>> {
         userWallet.requireColdWallet() // TODO [REDACTED_TASK_KEY]
 
         val card = userWallet.scanResponse.card
@@ -101,7 +101,7 @@ class SendTransactionUseCase(
         txData: TransactionData,
         userWallet: UserWallet,
         network: Network,
-    ): Either<SendTransactionError?, String> {
+    ): Either<SendTransactionError, String> {
         return invoke(listOf(txData), userWallet, network, TransactionSender.MultipleTransactionSendMode.DEFAULT)
             .map { it.first() }
     }
@@ -127,26 +127,28 @@ class SendTransactionUseCase(
         }
     }
 
-    private fun handleError(result: Result.Failure): SendTransactionError {
-        if (ResultChecker.isNetworkError(result)) {
-            return SendTransactionError.NetworkError(
-                code = result.error.message,
-                message = result.error.customMessage,
-            )
-        }
-        val error = result.error as? BlockchainSdkError ?: return SendTransactionError.UnknownError()
-        return when (error) {
-            is BlockchainSdkError.WrappedTangemError -> parseWrappedError(error)
-            is BlockchainSdkError.CreateAccountUnderfunded -> {
-                val minAmount = error.minReserve
-                val minValue = minAmount.value?.format { simple(minAmount.decimals) }.orEmpty()
-                SendTransactionError.CreateAccountUnderfunded(minValue)
-            }
-            else -> {
-                SendTransactionError.BlockchainSdkError(
-                    code = error.code,
-                    message = error.customMessage,
+    companion object {
+        internal fun handleError(result: Result.Failure): SendTransactionError {
+            if (ResultChecker.isNetworkError(result)) {
+                return SendTransactionError.NetworkError(
+                    code = result.error.message,
+                    message = result.error.customMessage,
                 )
+            }
+            val error = result.error as? BlockchainSdkError ?: return SendTransactionError.UnknownError()
+            return when (error) {
+                is BlockchainSdkError.WrappedTangemError -> parseWrappedError(error)
+                is BlockchainSdkError.CreateAccountUnderfunded -> {
+                    val minAmount = error.minReserve
+                    val minValue = minAmount.value?.format { simple(minAmount.decimals) }.orEmpty()
+                    SendTransactionError.CreateAccountUnderfunded(minValue)
+                }
+                else -> {
+                    SendTransactionError.BlockchainSdkError(
+                        code = error.code,
+                        message = error.customMessage,
+                    )
+                }
             }
         }
     }
