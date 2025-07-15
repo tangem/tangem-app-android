@@ -37,6 +37,7 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetWithFooter
+import com.tangem.core.ui.components.inputrow.InputRowEnter
 import com.tangem.core.ui.components.inputrow.InputRowEnterInfoAmountV2
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.crypto
@@ -45,10 +46,7 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.features.send.v2.api.entity.CustomFeeFieldUM
-import com.tangem.features.send.v2.api.entity.FeeFiatRateUM
-import com.tangem.features.send.v2.api.entity.FeeItem
-import com.tangem.features.send.v2.api.entity.FeeSelectorUM
+import com.tangem.features.send.v2.api.entity.*
 import com.tangem.features.send.v2.api.params.FeeSelectorParams
 import com.tangem.features.send.v2.feeselector.model.FeeSelectorIntents
 import com.tangem.features.send.v2.feeselector.model.StubFeeSelectorIntents
@@ -57,7 +55,6 @@ import com.tangem.utils.StringsSigns
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import java.math.BigDecimal
-import java.math.BigInteger
 
 @Composable
 internal fun FeeSelectorModalBottomSheet(
@@ -158,7 +155,7 @@ private fun FeeSelectorItems(
                             crypto(
                                 symbol = item.fee.amount.currencySymbol,
                                 decimals = item.fee.amount.decimals,
-                            ).fee(canBeLower = state.isFeeApproximate)
+                            ).fee(canBeLower = state.feeExtraInfo.isFeeApproximate)
                         },
                     ),
                     postDot = if (feeFiatRateUM != null) {
@@ -184,7 +181,7 @@ private fun FeeSelectorItems(
                             crypto(
                                 symbol = item.fee.amount.currencySymbol,
                                 decimals = item.fee.amount.decimals,
-                            ).fee(canBeLower = state.isFeeApproximate)
+                            ).fee(canBeLower = state.feeExtraInfo.isFeeApproximate)
                         },
                     ),
                     postDot = if (feeFiatRateUM != null) {
@@ -210,7 +207,7 @@ private fun FeeSelectorItems(
                             crypto(
                                 symbol = item.fee.amount.currencySymbol,
                                 decimals = item.fee.amount.decimals,
-                            ).fee(canBeLower = state.isFeeApproximate)
+                            ).fee(canBeLower = state.feeExtraInfo.isFeeApproximate)
                         },
                     ),
                     postDot = if (feeFiatRateUM != null) {
@@ -236,7 +233,7 @@ private fun FeeSelectorItems(
                             crypto(
                                 symbol = item.fee.amount.currencySymbol,
                                 decimals = item.fee.amount.decimals,
-                            ).fee(canBeLower = state.isFeeApproximate)
+                            ).fee(canBeLower = state.feeExtraInfo.isFeeApproximate)
                         },
                     ),
                     postDot = if (feeFiatRateUM != null) {
@@ -258,9 +255,7 @@ private fun FeeSelectorItems(
                     iconBackgroundColor = iconBackgroundColor,
                     iconTint = iconTint,
                     onValueChange = feeSelectorIntents::onCustomFeeValueChange,
-                    displayNonceInput = state.displayNonceInput,
-                    nonce = state.nonce,
-                    onNonceChange = state.onNonceChange,
+                    nonce = state.feeNonce,
                 )
             }
         }
@@ -275,9 +270,7 @@ private fun CustomFeeBlock(
     iconBackgroundColor: Color,
     iconTint: Color,
     onValueChange: (Int, String) -> Unit,
-    displayNonceInput: Boolean,
-    nonce: BigInteger?,
-    onNonceChange: (String) -> Unit,
+    nonce: FeeNonce,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
@@ -310,9 +303,7 @@ private fun CustomFeeBlock(
             ExpandedCustomFeeItems(
                 customFeeFields = customFee.customValues,
                 onValueChange = onValueChange,
-                displayNonceInput = displayNonceInput,
                 nonce = nonce,
-                onNonceChange = onNonceChange,
             )
         }
     }
@@ -322,14 +313,12 @@ private fun CustomFeeBlock(
 private fun ExpandedCustomFeeItems(
     customFeeFields: ImmutableList<CustomFeeFieldUM>,
     onValueChange: (Int, String) -> Unit,
-    displayNonceInput: Boolean,
-    nonce: BigInteger?,
-    onNonceChange: (String) -> Unit,
+    nonce: FeeNonce,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
         customFeeFields.fastForEachIndexed { index, field ->
-            val showDivider = index != customFeeFields.size - 1 || displayNonceInput
+            val showDivider = index != customFeeFields.size - 1 || nonce is FeeNonce.Nonce
             if (field.label != null) {
                 InputRowEnterInfoAmountV2(
                     text = field.value,
@@ -361,18 +350,21 @@ private fun ExpandedCustomFeeItems(
             }
         }
 
-        if (displayNonceInput) {
-            // TODO implement v2 input without binding to amount
-            InputRowEnterInfoAmountV2(
-                text = nonce?.toString() ?: "",
-                decimals = 0,
+        if (nonce is FeeNonce.Nonce) {
+            InputRowEnter(
+                text = nonce.nonce?.toString().orEmpty(),
                 title = resourceReference(R.string.send_nonce),
-                titleColor = TangemTheme.colors.text.tertiary,
-                symbol = null,
-                onValueChange = onNonceChange,
+                description = resourceReference(R.string.send_nonce_footer),
+                onValueChange = nonce.onNonceChange,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                keyboardActions = KeyboardActions(),
+                placeholder = resourceReference(R.string.send_nonce_hint),
+                titleColor = TangemTheme.colors.text.secondary,
                 showDivider = false,
+                modifier = Modifier
+                    .background(
+                        color = TangemTheme.colors.background.action,
+                        shape = TangemTheme.shapes.roundedCornersXMedium,
+                    ),
             )
         }
     }
@@ -506,14 +498,16 @@ private class FeeSelectorUMContentProvider : CollectionPreviewParameterProvider<
             //     amount = Amount(value = BigDecimal("0.02"), blockchain = Blockchain.Ethereum),
             // ),
             selectedFeeItem = customFeeItem,
-            isFeeApproximate = true,
+            feeExtraInfo = FeeExtraInfo(
+                isFeeApproximate = true,
+                isFeeConvertibleToFiat = true,
+                isTronToken = false,
+            ),
             feeFiatRateUM = FeeFiatRateUM(
                 rate = BigDecimal.TEN,
                 appCurrency = AppCurrency.Default,
             ),
-            displayNonceInput = true,
-            onNonceChange = {},
-            nonce = null,
+            feeNonce = FeeNonce.None,
             fees = TransactionFee.Single(customFeeItem.fee),
         ),
     ),
