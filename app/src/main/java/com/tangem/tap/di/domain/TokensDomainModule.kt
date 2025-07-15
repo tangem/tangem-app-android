@@ -256,20 +256,16 @@ internal object TokensDomainModule {
     fun provideGetCryptoCurrencyActionsUseCase(
         rampStateManager: RampStateManager,
         walletManagersFacade: WalletManagersFacade,
-        currenciesRepository: CurrenciesRepository,
         stakingRepository: StakingRepository,
         promoRepository: PromoRepository,
         dispatchers: CoroutineDispatcherProvider,
-        currencyStatusOperations: BaseCurrencyStatusOperations,
     ): GetCryptoCurrencyActionsUseCase {
         return GetCryptoCurrencyActionsUseCase(
             rampManager = rampStateManager,
             walletManagersFacade = walletManagersFacade,
-            currenciesRepository = currenciesRepository,
             stakingRepository = stakingRepository,
             promoRepository = promoRepository,
             dispatchers = dispatchers,
-            currencyStatusOperations = currencyStatusOperations,
         )
     }
 
