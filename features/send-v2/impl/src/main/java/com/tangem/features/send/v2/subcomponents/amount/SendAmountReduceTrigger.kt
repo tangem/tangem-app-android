@@ -29,7 +29,7 @@ interface SendAmountReduceListener {
  * Trigger amount change from another component.
  * Different from another triggers because it takes raw string instead of BigDecimal
  */
-interface SendAmountUpdateQRTrigger {
+interface SendAmountUpdateTrigger {
     suspend fun triggerUpdateAmount(amountValue: String)
 }
 
@@ -37,7 +37,7 @@ interface SendAmountUpdateQRTrigger {
  * Trigger amount change from another component.
  * Different from another triggers because it takes raw string instead of BigDecimal
  */
-interface SendAmountUpdateQRListener {
+interface SendAmountUpdateListener {
     val updateAmountTriggerFlow: Flow<String>
 }
 
@@ -45,8 +45,8 @@ interface SendAmountUpdateQRListener {
 internal class DefaultSendAmountReduceTrigger @Inject constructor() :
     SendAmountReduceTrigger,
     SendAmountReduceListener,
-    SendAmountUpdateQRTrigger,
-    SendAmountUpdateQRListener {
+    SendAmountUpdateTrigger,
+    SendAmountUpdateListener {
 
     override val reduceToTriggerFlow = MutableSharedFlow<BigDecimal>()
     override val reduceByTriggerFlow = MutableSharedFlow<ReduceByData>()
