@@ -55,7 +55,7 @@ internal class StakingIdFactory @Inject constructor(
         private const val CARDANO_INTEGRATION_ID = "cardano-ada-native-staking"
 
         // uncomment items as implementation is ready
-        val integrationIdMap = mapOf(
+        private val integrationIdMap = mapOf(
             Blockchain.TON.toDefaultKey() to TON_INTEGRATION_ID,
             Blockchain.Solana.toDefaultKey() to SOLANA_INTEGRATION_ID,
             Blockchain.Cosmos.toDefaultKey() to COSMOS_INTEGRATION_ID,
