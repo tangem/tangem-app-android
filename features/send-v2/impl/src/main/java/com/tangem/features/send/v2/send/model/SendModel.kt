@@ -39,16 +39,19 @@ import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.v2.api.SendComponent
 import com.tangem.features.send.v2.api.SendFeatureToggles
+import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.features.send.v2.api.entity.PredefinedValues
 import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationComponent
 import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.features.send.v2.common.CommonSendRoute
+import com.tangem.domain.wallets.models.GetUserWalletError
 import com.tangem.features.send.v2.common.SendConfirmAlertFactory
 import com.tangem.features.send.v2.common.ui.state.ConfirmUM
 import com.tangem.features.send.v2.send.confirm.SendConfirmComponent
+import com.tangem.features.send.v2.send.success.SendConfirmSuccessComponent
 import com.tangem.features.send.v2.send.ui.state.SendUM
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponent
-import com.tangem.features.send.v2.subcomponents.amount.SendAmountUpdateQRTrigger
+import com.tangem.features.send.v2.subcomponents.amount.SendAmountUpdateTrigger
 import com.tangem.features.send.v2.subcomponents.destination.model.transformers.SendDestinationInitialStateTransformer
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeComponent
 import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeUM
@@ -65,7 +68,8 @@ internal interface SendComponentCallback :
     SendAmountComponent.ModelCallback,
     SendFeeComponent.ModelCallback,
     SendDestinationComponent.ModelCallback,
-    SendConfirmComponent.ModelCallback
+    SendConfirmComponent.ModelCallback,
+    SendConfirmSuccessComponent.ModelCallback
 
 @Stable
 @ModelScoped
@@ -87,7 +91,7 @@ internal class SendModel @Inject constructor(
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val createTransferTransactionUseCase: CreateTransferTransactionUseCase,
     private val getFeeUseCase: GetFeeUseCase,
-    private val sendAmountUpdateQRTrigger: SendAmountUpdateQRTrigger,
+    private val sendAmountUpdateTrigger: SendAmountUpdateTrigger,
     private val sendFeatureToggles: SendFeatureToggles,
 ) : Model(), SendComponentCallback {
 
@@ -149,6 +153,15 @@ internal class SendModel @Inject constructor(
 
     override fun onResult(sendUM: SendUM) {
         _uiState.update { sendUM }
+    }
+
+    override fun onConvertToAnotherToken(lastAmount: String) {
+        params.callback?.onConvertToAnotherToken(lastAmount = lastAmount)
+    }
+
+    override fun onError(error: GetUserWalletError) {
+        Timber.w(error.toString())
+        showAlertError()
     }
 
     suspend fun loadFee(): Either<GetFeeError, TransactionFee> {
@@ -347,7 +360,7 @@ internal class SendModel @Inject constructor(
         )
         // If it is in active state use flow to update value in amount component
         modelScope.launch {
-            amount?.let { sendAmountUpdateQRTrigger.triggerUpdateAmount(it) }
+            amount?.let { sendAmountUpdateTrigger.triggerUpdateAmount(it) }
         }
     }
 
@@ -382,5 +395,7 @@ internal class SendModel @Inject constructor(
         confirmUM = ConfirmUM.Empty,
         navigationUM = NavigationUM.Empty,
         isRedesignEnabled = sendFeatureToggles.isSendRedesignEnabled,
+        confirmData = null,
+        feeSelectorUM = FeeSelectorUM.Loading,
     )
 }
