@@ -45,6 +45,7 @@ internal fun getWcCommonScreen(
                 params = FeeSelectorParams.FeeSelectorDetailsParams(
                     state = state.feeSelectorUM,
                     onLoadFee = model::loadFee,
+                    feeCryptoCurrencyStatus = model.cryptoCurrencyStatus,
                     cryptoCurrencyStatus = model.cryptoCurrencyStatus,
                     callback = model,
                     suggestedFeeState = model.suggestedFeeState,
