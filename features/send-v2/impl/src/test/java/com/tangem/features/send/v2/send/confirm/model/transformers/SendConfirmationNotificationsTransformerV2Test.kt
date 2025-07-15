@@ -4,27 +4,24 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
-import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.models.AmountFieldModel
+import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.tokens.model.Amount as DomainAmount
-import com.tangem.features.send.v2.api.entity.FeeSelectorUM
-import com.tangem.features.send.v2.api.entity.FeeItem
-import com.tangem.features.send.v2.api.entity.FeeFiatRateUM
-import com.tangem.features.send.v2.api.entity.CustomFeeFieldUM
+import com.tangem.features.send.v2.api.entity.*
 import com.tangem.features.send.v2.common.ui.state.ConfirmUM
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.Test
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.util.Locale
-import org.junit.jupiter.api.BeforeAll
+import com.tangem.domain.tokens.model.Amount as DomainAmount
 
 class SendConfirmationNotificationsTransformerV2Test {
 
@@ -248,14 +245,19 @@ class SendConfirmationNotificationsTransformerV2Test {
             fees = transactionFee,
             feeItems = persistentListOf(FeeItem.Market(fee)),
             selectedFeeItem = FeeItem.Market(fee),
-            isFeeApproximate = false,
+            feeExtraInfo = FeeExtraInfo(
+                isFeeApproximate = false,
+                isFeeConvertibleToFiat = false,
+                isTronToken = false,
+            ),
             feeFiatRateUM = FeeFiatRateUM(
                 rate = BigDecimal("50000"),
                 appCurrency = appCurrency,
             ),
-            displayNonceInput = false,
-            nonce = BigInteger.ZERO,
-            onNonceChange = {},
+            feeNonce = FeeNonce.Nonce(
+                nonce = BigInteger.ZERO,
+                onNonceChange = {},
+            ),
         )
     }
 
@@ -325,14 +327,19 @@ class SendConfirmationNotificationsTransformerV2Test {
                     ),
                 ),
             ),
-            isFeeApproximate = false,
+            feeExtraInfo = FeeExtraInfo(
+                isFeeApproximate = false,
+                isFeeConvertibleToFiat = false,
+                isTronToken = false,
+            ),
             feeFiatRateUM = FeeFiatRateUM(
                 rate = BigDecimal("50000"),
                 appCurrency = appCurrency,
             ),
-            displayNonceInput = false,
-            nonce = BigInteger.ZERO,
-            onNonceChange = {},
+            feeNonce = FeeNonce.Nonce(
+                nonce = BigInteger.ZERO,
+                onNonceChange = {},
+            ),
         )
     }
 
@@ -390,14 +397,19 @@ class SendConfirmationNotificationsTransformerV2Test {
                     ),
                 ),
             ),
-            isFeeApproximate = false,
+            feeExtraInfo = FeeExtraInfo(
+                isFeeApproximate = false,
+                isFeeConvertibleToFiat = false,
+                isTronToken = false,
+            ),
             feeFiatRateUM = FeeFiatRateUM(
                 rate = BigDecimal("50000"),
                 appCurrency = appCurrency,
             ),
-            displayNonceInput = false,
-            nonce = BigInteger.ZERO,
-            onNonceChange = {},
+            feeNonce = FeeNonce.Nonce(
+                nonce = BigInteger.ZERO,
+                onNonceChange = {},
+            ),
         )
     }
 
@@ -467,14 +479,19 @@ class SendConfirmationNotificationsTransformerV2Test {
                     ),
                 ),
             ),
-            isFeeApproximate = false,
+            feeExtraInfo = FeeExtraInfo(
+                isFeeApproximate = false,
+                isFeeConvertibleToFiat = false,
+                isTronToken = false,
+            ),
             feeFiatRateUM = FeeFiatRateUM(
                 rate = BigDecimal("50000"),
                 appCurrency = appCurrency,
             ),
-            displayNonceInput = false,
-            nonce = BigInteger.ZERO,
-            onNonceChange = {},
+            feeNonce = FeeNonce.Nonce(
+                nonce = BigInteger.ZERO,
+                onNonceChange = {},
+            ),
         )
     }
 
