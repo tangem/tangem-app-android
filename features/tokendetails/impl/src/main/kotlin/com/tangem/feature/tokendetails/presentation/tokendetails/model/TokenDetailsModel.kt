@@ -256,7 +256,7 @@ internal class TokenDetailsModel @Inject constructor(
             .launchIn(modelScope)
     }
 
-    private suspend fun updateButtons(currencyStatus: CryptoCurrencyStatus) {
+    private fun updateButtons(currencyStatus: CryptoCurrencyStatus) {
         getCryptoCurrencyActionsUseCase(
             userWallet = userWallet,
             cryptoCurrencyStatus = currencyStatus,
