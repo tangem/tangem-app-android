@@ -1,7 +1,6 @@
-package com.tangem.core.deeplink.converter
+package com.tangem.common.routing.deeplink
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.core.deeplink.DeeplinkConst
 import org.junit.Before
 import org.junit.Test
 

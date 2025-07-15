@@ -30,4 +30,10 @@ dependencies {
     api(deps.kotlin.serialization)
     implementation(deps.androidx.core.ktx)
     implementation(deps.timber)
+
+    /* Tests */
+    testImplementation(deps.test.junit)
+    testImplementation(deps.test.coroutine)
+    testImplementation(deps.test.truth)
+    testImplementation(deps.test.mockk)
 }
