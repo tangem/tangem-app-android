@@ -51,7 +51,9 @@ object PayloadToDeeplinkConverter : Converter<Map<String, String>, String?> {
             addQueryParam(TOKEN_ID_KEY, tokenId)
             addQueryParam(TYPE_KEY, type)
             addQueryParam(WALLET_ID_KEY, walletId)
-            addQueryParam(DERIVATION_PATH_KEY, derivationPath)
+            if (derivationPath.isNotBlank()) {
+                addQueryParam(DERIVATION_PATH_KEY, derivationPath)
+            }
 
             transactionId?.let { addQueryParam(TRANSACTION_ID_KEY, it) }
             name?.let { addQueryParam(NAME_KEY, it) }
@@ -62,7 +64,6 @@ object PayloadToDeeplinkConverter : Converter<Map<String, String>, String?> {
         return payload.containsKey(TYPE_KEY) &&
             payload.containsKey(NETWORK_ID_KEY) &&
             payload.containsKey(TOKEN_ID_KEY) &&
-            payload.containsKey(WALLET_ID_KEY) &&
-            payload.containsKey(DERIVATION_PATH_KEY)
+            payload.containsKey(WALLET_ID_KEY)
     }
 }
