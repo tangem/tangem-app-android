@@ -33,7 +33,7 @@ internal class DefaultSendDestinationBlockComponent @AssistedInject constructor(
         }.launchIn(componentScope)
     }
 
-    fun updateState(destinationUM: DestinationUM) = model.updateState(destinationUM)
+    override fun updateState(destinationUM: DestinationUM) = model.updateState(destinationUM)
 
     @Composable
     override fun Content(modifier: Modifier) {
