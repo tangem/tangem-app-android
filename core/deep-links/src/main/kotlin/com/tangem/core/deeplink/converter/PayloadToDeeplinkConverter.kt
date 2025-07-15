@@ -41,7 +41,7 @@ object PayloadToDeeplinkConverter : Converter<Map<String, String>, String?> {
         val networkId = payload[NETWORK_ID_KEY] ?: return null
         val tokenId = payload[TOKEN_ID_KEY] ?: return null
         val walletId = payload[WALLET_ID_KEY] ?: return null
-        val derivationPath = payload[DERIVATION_PATH_KEY] ?: return null
+        val derivationPath = payload[DERIVATION_PATH_KEY].orEmpty()
         val transactionId = payload[TRANSACTION_ID_KEY]
         val name = payload[NAME_KEY]
 
