@@ -234,8 +234,7 @@ abstract class BaseCurrencyStatusOperations(
             userWalletId = userWalletId,
             currency = currency,
             includeQuotes = includeQuotes,
-            // If toggle is off, then subscribe on yield balance. If toggle is on, then don't
-            subscribeOnYieldBalance = !tokensFeatureToggles.isStakingLoadingRefactoringEnabled,
+            subscribeOnYieldBalance = false,
         )
     }
 
@@ -340,17 +339,13 @@ abstract class BaseCurrencyStatusOperations(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
     ): EitherFlow<Error, YieldBalance> {
-        return if (tokensFeatureToggles.isStakingLoadingRefactoringEnabled) {
-            singleYieldBalanceSupplier(
-                params = SingleYieldBalanceProducer.Params(
-                    userWalletId = userWalletId,
-                    currencyId = cryptoCurrency.id,
-                    network = cryptoCurrency.network,
-                ),
-            )
-        } else {
-            stakingRepository.getSingleYieldBalanceFlow(userWalletId = userWalletId, cryptoCurrency = cryptoCurrency)
-        }
+        return singleYieldBalanceSupplier(
+            params = SingleYieldBalanceProducer.Params(
+                userWalletId = userWalletId,
+                currencyId = cryptoCurrency.id,
+                network = cryptoCurrency.network,
+            ),
+        )
             .map<YieldBalance, Either<Error, YieldBalance>> { it.right() }
             .catch { emit(Error.DataError(it).left()) }
             .onEmpty { emit(Error.EmptyYieldBalances.left()) }
@@ -404,18 +399,10 @@ abstract class BaseCurrencyStatusOperations(
     ): Either<Error.EmptyYieldBalances, YieldBalanceList> {
         return catch(
             block = {
-                if (tokensFeatureToggles.isStakingLoadingRefactoringEnabled) {
-                    stakingRepository.getMultiYieldBalanceSync(
-                        userWalletId = userWalletId,
-                        cryptoCurrencies = cryptoCurrencies,
-                    )
-                } else {
-                    stakingRepository.getMultiYieldBalanceSyncLegacy(
-                        userWalletId = userWalletId,
-                        cryptoCurrencies = cryptoCurrencies,
-                    )
-                }
-                    .right()
+                stakingRepository.getMultiYieldBalanceSync(
+                    userWalletId = userWalletId,
+                    cryptoCurrencies = cryptoCurrencies,
+                ).right()
             },
             catch = {
                 Error.EmptyYieldBalances.left()
@@ -428,14 +415,7 @@ abstract class BaseCurrencyStatusOperations(
         cryptoCurrency: CryptoCurrency,
     ): Either<Error.EmptyYieldBalances, YieldBalance> {
         return catch(
-            block = {
-                if (tokensFeatureToggles.isStakingLoadingRefactoringEnabled) {
-                    stakingRepository.getSingleYieldBalanceSync(userWalletId, cryptoCurrency)
-                } else {
-                    stakingRepository.getSingleYieldBalanceSyncLegacy(userWalletId, cryptoCurrency)
-                }
-                    .right()
-            },
+            block = { stakingRepository.getSingleYieldBalanceSync(userWalletId, cryptoCurrency).right() },
             catch = {
                 Error.EmptyYieldBalances.left()
             },
