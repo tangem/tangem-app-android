@@ -36,6 +36,7 @@ import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.features.send.v2.api.SendNotificationsComponent.Params.NotificationData
 import com.tangem.features.send.v2.api.callbacks.FeeSelectorModelCallback
+import com.tangem.features.send.v2.api.entity.FeeNonce
 import com.tangem.features.send.v2.api.params.FeeSelectorParams
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM as FeeSelectorUMRedesigned
 import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
@@ -344,7 +345,7 @@ internal class SendConfirmModel @Inject constructor(
             feeSelectorUM?.selectedFee
         }
         val nonce = if (isRedesignEnabled) {
-            feeUMV2?.nonce
+            (feeUMV2?.feeNonce as? FeeNonce.Nonce)?.nonce
         } else {
             feeSelectorUM?.nonce
         }
