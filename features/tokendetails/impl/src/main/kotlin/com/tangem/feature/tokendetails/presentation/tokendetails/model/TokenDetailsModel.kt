@@ -777,13 +777,7 @@ internal class TokenDetailsModel @Inject constructor(
 
         modelScope.launch(dispatchers.main) {
             listOf(
-                async {
-                    fetchCurrencyStatusUseCase(
-                        userWalletId = userWalletId,
-                        id = cryptoCurrency.id,
-                        refresh = true,
-                    )
-                },
+                async { fetchCurrencyStatusUseCase(userWalletId = userWalletId, id = cryptoCurrency.id) },
                 async {
                     updateTxHistory(
                         refresh = true,
