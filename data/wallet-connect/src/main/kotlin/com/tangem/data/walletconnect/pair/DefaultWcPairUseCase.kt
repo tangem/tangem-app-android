@@ -22,6 +22,7 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
+import org.joda.time.DateTime
 import timber.log.Timber
 
 @Suppress("LongParameterList")
@@ -94,6 +95,7 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
                     sdkModel = WcSdkSessionConverter.convert(settledSession.session),
                     securityStatus = proposalState.dAppSession.securityStatus,
                     networks = sessionForApprove.network.toSet(),
+                    connectingTime = DateTime.now().millis,
                 )
                 sessionsManager.saveSession(newSession)
                 analytics.send(
