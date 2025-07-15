@@ -166,7 +166,7 @@
   <string name="common_locked">Заблокирован</string>
   <string name="common_main_network">Основная сеть</string>
   <string name="common_month">месяц</string>
-  <string name="common_network_fee_title">Сетевая комиссия</string>
+  <string name="common_network_fee_title">Комиссия сети</string>
   <string name="common_network_fee_warning_content">Сумма отправки будет уменьшена на %1$s (%2$s) для покрытия выбранного уровня комиссии</string>
   <string name="common_next">Далее</string>
   <string name="common_nft">NFT</string>
@@ -532,7 +532,7 @@
   <string name="markets_tooltip_message">Потяните вверх или коснитесь поисковой строки, чтобы добавить токены напрямую из рынка</string>
   <string name="markets_tooltip_title">Добавить токены</string>
   <string name="nfc_error_unavailable">Функция NFC недоступна на вашем устройстве</string>
-  <string name="nft_about_title">Об NFT</string>
+  <string name="nft_about_title">О NFT</string>
   <string name="nft_asset">NFT</string>
   <plurals name="nft_collections_count">
     <item quantity="one">%d NFT</item>
@@ -1261,9 +1261,6 @@
   <string name="warning_some_networks_unreachable_message">Свайпните вниз для обновления или попробуйте позже.</string>
   <string name="warning_some_networks_unreachable_title">Некоторые сети недоступны</string>
   <string name="warning_some_token_balances_not_updated">Некоторые балансы токенов не удалось обновить</string>
-  <string name="warning_stellar_token_trustline_button_title">Открыть Trustline</string>
-  <string name="warning_stellar_token_trustline_subtitle">Чтобы получить этот токен, необходимо открыть Trustline. Сеть удержит резерв в размере 0.5 XLM.</string>
-  <string name="warning_stellar_token_trustline_title">Откройте Trustline</string>
   <string name="warning_testnet_card_message">Это Testnet карта. Он не может обрабатывать транзакции и используется только в целях тестирования и разработки.</string>
   <string name="warning_testnet_card_title">Только для целей тестирования</string>
   <string name="warning_token_balance_not_updated">Возможно, баланс устарел. Обновите страницу.</string>
