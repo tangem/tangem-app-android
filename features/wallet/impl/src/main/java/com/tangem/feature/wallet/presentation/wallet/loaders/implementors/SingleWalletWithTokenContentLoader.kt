@@ -1,7 +1,5 @@
 package com.tangem.feature.wallet.presentation.wallet.loaders.implementors
 
-import com.tangem.common.routing.RoutingFeatureToggle
-import com.tangem.core.deeplink.DeepLinksRegistry
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.promo.GetStoryContentUseCase
 import com.tangem.domain.tokens.RunPolkadotAccountHealthCheckUseCase
@@ -32,8 +30,6 @@ internal class SingleWalletWithTokenContentLoader(
     private val runPolkadotAccountHealthCheckUseCase: RunPolkadotAccountHealthCheckUseCase,
     private val shouldSaveUserWalletsUseCase: ShouldSaveUserWalletsUseCase,
     private val getStoryContentUseCase: GetStoryContentUseCase,
-    private val deepLinksRegistry: DeepLinksRegistry,
-    private val routingFeatureToggle: RoutingFeatureToggle,
 ) : WalletContentLoader(id = userWallet.walletId) {
 
     override fun create(): List<WalletSubscriber> {
@@ -47,8 +43,6 @@ internal class SingleWalletWithTokenContentLoader(
                 tokenListStore = tokenListStore,
                 getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
                 runPolkadotAccountHealthCheckUseCase = runPolkadotAccountHealthCheckUseCase,
-                deepLinksRegistry = deepLinksRegistry,
-                routingFeatureToggle = routingFeatureToggle,
             ).let(::add)
             MultiWalletWarningsSubscriber(
                 userWallet = userWallet,
