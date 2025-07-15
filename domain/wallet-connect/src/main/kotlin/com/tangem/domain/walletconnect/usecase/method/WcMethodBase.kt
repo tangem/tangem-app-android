@@ -3,6 +3,7 @@ package com.tangem.domain.walletconnect.usecase.method
 import arrow.core.Either
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.walletconnect.model.WcMethod
+import com.tangem.domain.walletconnect.model.WcRequestError
 import com.tangem.domain.walletconnect.model.WcSession
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
 import com.tangem.domain.wallets.models.UserWallet
@@ -38,5 +39,5 @@ data class WcSignState<SignModel>(
 sealed interface WcSignStep {
     data object PreSign : WcSignStep
     data object Signing : WcSignStep
-    data class Result(val result: Either<Throwable, Unit>) : WcSignStep
+    data class Result(val result: Either<WcRequestError, String>) : WcSignStep
 }

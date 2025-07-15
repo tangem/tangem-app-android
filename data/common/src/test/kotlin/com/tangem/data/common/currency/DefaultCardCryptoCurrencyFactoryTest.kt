@@ -266,7 +266,9 @@ internal class DefaultCardCryptoCurrencyFactoryTest {
             CreateCurrenciesForMultiWalletModel(
                 multiWallet = createMultiWallet(),
                 userTokensResponse = createUserTokensResponse(),
-                expected = Result.success(emptyMap()),
+                expected = Result.success(
+                    setOf(ethereum.network, bitcoin.network).associateWith { emptyList() },
+                ),
             ),
             CreateCurrenciesForMultiWalletModel(
                 multiWallet = createMultiWallet(),
