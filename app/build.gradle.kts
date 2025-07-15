@@ -134,7 +134,6 @@ dependencies {
     implementation(projects.core.datasource)
     implementation(projects.core.utils)
     implementation(projects.core.decompose)
-    implementation(projects.core.deepLinks)
     implementation(projects.core.error.ext)
     implementation(projects.libs.crypto)
     implementation(projects.libs.auth)
