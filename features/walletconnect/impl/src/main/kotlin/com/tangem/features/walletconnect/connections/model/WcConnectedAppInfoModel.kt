@@ -69,6 +69,7 @@ internal class WcConnectedAppInfoModel @Inject constructor(
                         verifiedDAppState = extractVerifiedState(session),
                         appSubtitle = WcAppSubtitleConverter.convert(session.sdkModel.appMetaData),
                         walletName = session.wallet.name,
+                        connectingTime = session.connectingTime,
                         networks = session.networks
                             .map {
                                 WcNetworkInfoItem.Required(
