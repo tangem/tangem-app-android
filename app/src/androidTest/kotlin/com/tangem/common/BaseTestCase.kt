@@ -2,6 +2,8 @@ package com.tangem.common
 
 import android.Manifest
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
+import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.printToLog
 import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.intent.Intents
 import androidx.test.rule.GrantPermissionRule
@@ -78,5 +80,23 @@ abstract class BaseTestCase : TestCase(
     }.after {
         additionalAfterSection()
         Intents.release()
+    }
+
+    /**
+     * Prints the Compose semantics tree to logcat for debugging UI tests.
+     *
+     * @param useUnmergedTree When true, shows unmerged tree with all individual nodes.
+     *                        Use for accessing inner elements of compound components.
+     *                        Default: false (merged tree - accessibility view).
+     * @param tag             Log tag for filtering in logcat. Default: "SEMANTIC_TREE".
+     * @param maxDepth        Maximum nesting level to print. Use to avoid log overflow.
+     *                        Default: Int.MAX_VALUE (unlimited depth).
+     */
+    fun printSemanticTree(
+        useUnmergedTree: Boolean = false,
+        tag: String = "SEMANTIC_TREE",
+        maxDepth: Int = Int.MAX_VALUE)
+    {
+        composeTestRule.onRoot(useUnmergedTree = useUnmergedTree).printToLog(tag, maxDepth)
     }
 }
