@@ -13,6 +13,7 @@ sealed class FeeSelectorParams {
     abstract val state: FeeSelectorUM
     abstract val onLoadFee: suspend () -> Either<GetFeeError, TransactionFee>
     abstract val cryptoCurrencyStatus: CryptoCurrencyStatus
+    abstract val feeCryptoCurrencyStatus: CryptoCurrencyStatus
     abstract val suggestedFeeState: SuggestedFeeState
     abstract val feeDisplaySource: FeeDisplaySource
 
@@ -20,6 +21,7 @@ sealed class FeeSelectorParams {
         override val state: FeeSelectorUM,
         override val onLoadFee: suspend () -> Either<GetFeeError, TransactionFee>,
         override val cryptoCurrencyStatus: CryptoCurrencyStatus,
+        override val feeCryptoCurrencyStatus: CryptoCurrencyStatus,
         override val suggestedFeeState: SuggestedFeeState,
         override val feeDisplaySource: FeeDisplaySource,
     ) : FeeSelectorParams()
@@ -28,6 +30,7 @@ sealed class FeeSelectorParams {
         override val state: FeeSelectorUM,
         override val onLoadFee: suspend () -> Either<GetFeeError, TransactionFee>,
         override val cryptoCurrencyStatus: CryptoCurrencyStatus,
+        override val feeCryptoCurrencyStatus: CryptoCurrencyStatus,
         override val suggestedFeeState: SuggestedFeeState,
         override val feeDisplaySource: FeeDisplaySource,
         val callback: FeeSelectorModelCallback,
