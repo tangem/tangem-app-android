@@ -10,13 +10,17 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import com.tangem.core.ui.components.tokenlist.TokenListItem
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.test.MainScreenTestTags
+import com.tangem.core.ui.utils.lazyListItemPosition
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState
 import kotlinx.collections.immutable.ImmutableList
@@ -65,7 +69,8 @@ private fun LazyListScope.contentItems(
                     currentIndex = index,
                     lastIndex = items.lastIndex,
                     backgroundColor = TangemTheme.colors.background.primary,
-                ),
+                ).testTag(MainScreenTestTags.TOKEN_LIST_ITEM)
+                .semantics { lazyListItemPosition = index },
             )
         },
     )
