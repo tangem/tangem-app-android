@@ -26,7 +26,6 @@ import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import arrow.core.getOrElse
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.RoutingFeatureToggle
 import com.tangem.common.routing.entity.SerializableIntent
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.context.AppComponentContext
@@ -170,9 +169,6 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     internal lateinit var defaultDeviceFlipDetector: DefaultDeviceFlipDetector
 
     @Inject
-    internal lateinit var routingFeatureToggle: RoutingFeatureToggle
-
-    @Inject
     internal lateinit var deeplinkFactory: DeepLinkFactory
 
     @Inject
@@ -235,11 +231,6 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         observePolkadotAccountHealthCheck()
         sendStakingUnsubmittedHashes()
         checkGoogleServicesAvailability()
-
-        if (routingFeatureToggle.isDeepLinkNavigationEnabled.not() && intent != null && savedInstanceState == null) {
-            // handle intent only on start, not on recreate
-            handleDeepLink(intent = intent, isFromOnNewIntent = false)
-        }
 
         lifecycle.addObserver(WindowObscurationObserver)
         lifecycle.addObserver(defaultDeviceFlipDetector)
@@ -477,7 +468,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
             }
         }
 
-        if (routingFeatureToggle.isDeepLinkNavigationEnabled && intent != null) {
+        if (intent != null) {
             handleDeepLink(intent = intent, isFromOnNewIntent = false)
         }
 
@@ -485,26 +476,22 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     }
 
     private fun handleDeepLink(intent: Intent, isFromOnNewIntent: Boolean) {
-        if (routingFeatureToggle.isDeepLinkNavigationEnabled) {
-            val deepLinkExtras = intent.getStringExtra(DEEPLINK_KEY)?.toUri()
-            val webLink = intent.getStringExtra(WEBLINK_KEY)
+        val deepLinkExtras = intent.getStringExtra(DEEPLINK_KEY)?.toUri()
+        val webLink = intent.getStringExtra(WEBLINK_KEY)
 
-            val receivedDeepLink = intent.data ?: deepLinkExtras
+        val receivedDeepLink = intent.data ?: deepLinkExtras
 
-            when {
-                receivedDeepLink != null -> {
-                    deeplinkFactory.handleDeeplink(
-                        deeplinkUri = receivedDeepLink,
-                        coroutineScope = lifecycleScope,
-                        isFromOnNewIntent = isFromOnNewIntent,
-                    )
-                }
-                webLink?.uriValidate() == true -> {
-                    urlOpener.openUrl(webLink)
-                }
+        when {
+            receivedDeepLink != null -> {
+                deeplinkFactory.handleDeeplink(
+                    deeplinkUri = receivedDeepLink,
+                    coroutineScope = lifecycleScope,
+                    isFromOnNewIntent = isFromOnNewIntent,
+                )
             }
-        } else {
-            deepLinksRegistry.launch(intent)
+            webLink?.uriValidate() == true -> {
+                urlOpener.openUrl(webLink)
+            }
         }
     }
 
