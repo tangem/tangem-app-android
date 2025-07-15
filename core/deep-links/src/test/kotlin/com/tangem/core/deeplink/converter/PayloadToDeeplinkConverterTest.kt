@@ -49,6 +49,25 @@ internal class PayloadToDeeplinkConverterTest {
     }
 
     @Test
+    fun `GIVEN push notification payload without derivationPath WHEN convert THEN should return correct deeplink without derivation_path`() {
+        // GIVEN
+        val payload = mapOf(
+            TYPE_KEY to "token",
+            NETWORK_ID_KEY to "ethereum",
+            TOKEN_ID_KEY to "0x123",
+            WALLET_ID_KEY to "wallet123",
+        )
+
+        // WHEN
+        val result = PayloadToDeeplinkConverter.convert(payload)
+
+        // THEN
+        assertThat(result).isEqualTo(
+            "tangem://token?network_id=ethereum&token_id=0x123&type=token&user_wallet_id=wallet123",
+        )
+    }
+
+    @Test
     fun `GIVEN push notification payload with missing type WHEN convert THEN should return null`() {
         // GIVEN
         val payload = mapOf(
