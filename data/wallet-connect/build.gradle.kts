@@ -51,6 +51,7 @@ dependencies {
     /* Other */
     implementation(deps.kotlin.coroutines)
     implementation(deps.arrow.core)
+    implementation(deps.jodatime)
     implementation(projects.domain.blockaid)
     implementation(projects.domain.blockaid.models)
     implementation(projects.libs.crypto)
