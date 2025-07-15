@@ -2,7 +2,6 @@ package com.tangem.data.common.currency
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
-import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.datasource.local.token.UserTokensResponseStore
@@ -36,40 +35,45 @@ internal class DefaultCardCryptoCurrencyFactory(
 
     private val cryptoCurrencyFactory by lazy { CryptoCurrencyFactory(excludedBlockchains) }
 
-    override suspend fun create(userWalletId: UserWalletId, network: Network): List<CryptoCurrency> {
+    override suspend fun create(
+        userWalletId: UserWalletId,
+        networks: Set<Network>,
+    ): Map<Network, List<CryptoCurrency>> {
         val userWallet = userWalletsStore.getSyncStrict(key = userWalletId)
-
-        val blockchain = Blockchain.fromNetworkId(networkId = network.backendId)
 
         // multi-currency wallet
         if (userWallet !is UserWallet.Cold || userWallet.isMultiCurrency) {
-            return getMultiWalletCurrencies(userWallet = userWallet, networks = setOf(network))[network].orEmpty()
+            return getMultiWalletCurrencies(userWallet = userWallet, networks = networks)
         }
 
         // check if the blockchain of single-currency wallet is the same as network
-        val cardBlockchain = userWallet.scanResponse.cardTypesResolver.getBlockchain()
-        if (cardBlockchain != blockchain) return emptyList()
+        val cardNetworkId = userWallet.scanResponse.cardTypesResolver.getBlockchain().toNetworkId()
+        val cardNetwork = networks.firstOrNull { it.backendId == cardNetworkId }
+
+        if (cardNetwork == null) return emptyMap()
 
         // single-currency wallet with token (NODL)
         if (userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()) {
-            return createCurrenciesForSingleCurrencyCardWithToken(userWallet.scanResponse)
+            val currencies = createCurrenciesForSingleCurrencyCardWithToken(userWallet.scanResponse)
+            return mapOf(cardNetwork to currencies)
         }
 
         // single-currency wallet
-        return createPrimaryCurrencyForSingleCurrencyCard(userWallet.scanResponse).let(::listOf)
+        val primaryCurrency = createPrimaryCurrencyForSingleCurrencyCard(userWallet.scanResponse)
+        return mapOf(cardNetwork to listOf(primaryCurrency))
     }
 
-    override suspend fun createByRawId(userWalletId: UserWalletId, networkRawId: Network.RawID): List<CryptoCurrency> {
+    override suspend fun createByRawId(userWalletId: UserWalletId, network: Network.RawID): List<CryptoCurrency> {
         val userWallet = userWalletsStore.getSyncStrict(key = userWalletId)
 
-        val blockchain = networkRawId.toBlockchain()
+        val blockchain = network.toBlockchain()
 
         // multi-currency wallet
         if (userWallet.isMultiCurrency || userWallet !is UserWallet.Cold) {
             return getMultiWalletCurrenciesByRawId(
                 userWallet = userWallet,
-                rawIds = setOf(networkRawId),
-            )[networkRawId].orEmpty()
+                rawIds = setOf(network),
+            )[network].orEmpty()
         }
 
         // check if the blockchain of single-currency wallet is the same as network
@@ -143,13 +147,15 @@ internal class DefaultCardCryptoCurrencyFactory(
         val response = userTokensResponseStore.getSyncOrNull(userWalletId = userWallet.walletId)
             ?: return emptyMap()
 
-        return responseCryptoCurrenciesFactory.createCurrencies(
+        val existingNetworkWithCurrencies = responseCryptoCurrenciesFactory.createCurrencies(
             tokens = response.tokens.filter { token ->
                 networks.any { it.backendId == token.networkId && it.derivationPath.value == token.derivationPath }
             },
             scanResponse = userWallet.requireColdWallet().scanResponse, // TODO [REDACTED_TASK_KEY]
         )
             .groupBy(CryptoCurrency::network)
+
+        return networks.associateWith { emptyList<CryptoCurrency>() } + existingNetworkWithCurrencies
     }
 
     private suspend fun getMultiWalletCurrenciesByRawId(

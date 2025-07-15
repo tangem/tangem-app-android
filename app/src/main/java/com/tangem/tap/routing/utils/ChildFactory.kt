@@ -26,7 +26,6 @@ import com.tangem.features.send.v2.api.NFTSendComponent
 import com.tangem.features.send.v2.api.SendComponent
 import com.tangem.features.staking.api.StakingComponent
 import com.tangem.features.swap.SwapComponent
-import com.tangem.features.tester.api.TesterRouter
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.wallet.WalletEntryComponent
 import com.tangem.features.walletconnect.components.WalletConnectEntryComponent
@@ -86,7 +85,6 @@ internal class ChildFactory @Inject constructor(
     private val createWalletSelectionComponentFactory: CreateWalletSelectionComponent.Factory,
     private val createMobileWalletComponentFactory: CreateMobileWalletComponent.Factory,
     private val addExistingWalletComponentFactory: AddExistingWalletComponent.Factory,
-    private val testerRouter: TesterRouter,
     private val walletConnectFeatureToggles: WalletConnectFeatureToggles,
 ) {
 
@@ -131,9 +129,6 @@ internal class ChildFactory @Inject constructor(
                     ),
                     componentFactory = welcomeComponentFactory,
                 )
-            }
-            is AppRoute.TesterMenu -> {
-                Child.LegacyIntent(testerRouter.getEntryIntent())
             }
             is AppRoute.WalletSettings -> {
                 createComponentChild(
