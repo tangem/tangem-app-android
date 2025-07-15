@@ -47,11 +47,18 @@ internal class DefaultSingleYieldBalanceProducer @AssistedInject constructor(
     private var stakingId: StakingID? = null
 
     override fun produce(): Flow<YieldBalance> {
+        Timber.i("Producing yield balance for params:\n$params")
+
         return multiYieldBalanceSupplier(
             params = MultiYieldBalanceProducer.Params(userWalletId = params.userWalletId),
         )
             .mapNotNull { balances ->
-                val currentStakingId = getStakingId() ?: return@mapNotNull YieldBalance.Unsupported
+                val currentStakingId = getStakingId()
+
+                if (currentStakingId == null) {
+                    Timber.i("Staking ID is null for params: $params")
+                    return@mapNotNull YieldBalance.Unsupported
+                }
 
                 val currentBalances = balances.filter { it.getStakingId() == currentStakingId }
 
@@ -66,7 +73,7 @@ internal class DefaultSingleYieldBalanceProducer @AssistedInject constructor(
                         ),
                     )
 
-                    Timber.w(
+                    Timber.e(
                         "Multiple balances found for staking ID $currentStakingId:\n%s",
                         currentBalances.joinToString("\n"),
                     )
@@ -79,7 +86,15 @@ internal class DefaultSingleYieldBalanceProducer @AssistedInject constructor(
                         currentBalances.first()
                     }
                 } else {
-                    currentBalances.firstOrNull() ?: YieldBalance.Unsupported
+                    val balance = currentBalances.firstOrNull()
+
+                    if (balance != null) {
+                        Timber.i("Yield balance found for $currentStakingId:\n$balance")
+                        balance
+                    } else {
+                        Timber.i("No yield balance found for $currentStakingId:\n${YieldBalance.Unsupported}")
+                        YieldBalance.Unsupported
+                    }
                 }
             }
             .distinctUntilChanged()
