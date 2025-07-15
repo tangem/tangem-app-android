@@ -32,9 +32,9 @@ class OpenMainScreenScenario(
                 assertIsDisplayed()
             }
         }
-        ComposeScreen.onComposeScreen<TopBarPageObject>(testRule) {
+        ComposeScreen.onComposeScreen<MarketsTooltipPageObject>(testRule) {
             step("Close Markets tooltip"){
-                performClick()
+                contentContainer.performClick()
             }
         }
     }
