@@ -6,6 +6,8 @@ import com.tangem.features.send.v2.api.subcomponents.destination.entity.Destinat
 
 interface SendDestinationBlockComponent : ComposableContentComponent {
 
+    fun updateState(destinationUM: DestinationUM)
+
     interface Factory {
         fun create(
             context: AppComponentContext,
