@@ -17,11 +17,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.*
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupPositionProvider
 import androidx.compose.ui.window.PopupProperties
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.test.PopUpMenuTestTags
 import kotlin.math.max
 import kotlin.math.min
 
@@ -138,7 +140,8 @@ private fun DropdownMenuContent(
         Column(
             modifier = modifier
                 .width(IntrinsicSize.Max)
-                .verticalScroll(rememberScrollState()),
+                .verticalScroll(rememberScrollState())
+                .testTag(PopUpMenuTestTags.CONTAINER),
             content = content,
         )
     }
