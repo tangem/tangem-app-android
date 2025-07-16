@@ -14,6 +14,7 @@ android {
 dependencies {
     /** Api */
     implementation(projects.features.hotWallet.api)
+    implementation(projects.features.pushNotifications.api)
 
     /** Core modules */
     implementation(projects.core.configToggles)
