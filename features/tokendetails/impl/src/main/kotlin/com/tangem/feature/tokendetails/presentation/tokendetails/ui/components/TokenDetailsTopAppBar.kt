@@ -34,7 +34,7 @@ internal fun TokenDetailsTopAppBar(config: TokenDetailsTopAppBarConfig) {
                     painter = painterResource(id = R.drawable.ic_back_24),
                     tint = TangemTheme.colors.icon.primary1,
                     contentDescription = "Back",
-                    modifier = Modifier.testTag(TokenDetailsTopBarTestTags.BACK_BUTTON)
+                    modifier = Modifier.testTag(TokenDetailsTopBarTestTags.BACK_BUTTON),
                 )
             }
         },
@@ -49,7 +49,7 @@ internal fun TokenDetailsTopAppBar(config: TokenDetailsTopAppBarConfig) {
                         painter = painterResource(id = R.drawable.ic_more_vertical_24),
                         tint = TangemTheme.colors.icon.primary1,
                         contentDescription = "More",
-                        modifier = Modifier.testTag(TokenDetailsTopBarTestTags.MORE_BUTTON)
+                        modifier = Modifier.testTag(TokenDetailsTopBarTestTags.MORE_BUTTON),
                     )
                 }
             }
