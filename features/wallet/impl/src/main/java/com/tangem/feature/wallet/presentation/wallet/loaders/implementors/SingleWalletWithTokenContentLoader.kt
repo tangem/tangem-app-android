@@ -17,7 +17,7 @@ import com.tangem.feature.wallet.presentation.wallet.subscribers.*
 
 @Suppress("LongParameterList")
 internal class SingleWalletWithTokenContentLoader(
-    private val userWallet: UserWallet,
+    private val userWallet: UserWallet.Cold,
     private val clickIntents: WalletClickIntents,
     private val stateHolder: WalletStateController,
     private val tokenListAnalyticsSender: TokenListAnalyticsSender,
