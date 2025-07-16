@@ -6,7 +6,6 @@ import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.data.common.currency.CryptoCurrencyFactory
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.domain.model.Currency
 import com.tangem.tap.proxy.redux.DaggerGraphState
@@ -25,10 +24,8 @@ internal class CryptoCurrencyConverter(
                 cryptoCurrencyFactory.createCoin(
                     blockchain = value.blockchain,
                     extraDerivationPath = value.derivationPath,
-                    scanResponse = requireNotNull(
-                        store.inject(DaggerGraphState::generalUserWalletsListManager).selectedUserWalletSync
-                            ?.requireColdWallet() // TODO [REDACTED_TASK_KEY]
-                            ?.scanResponse,
+                    userWallet = requireNotNull(
+                        store.inject(DaggerGraphState::generalUserWalletsListManager).selectedUserWalletSync,
                     ),
                 ),
             )
@@ -37,10 +34,8 @@ internal class CryptoCurrencyConverter(
                     sdkToken = value.token,
                     blockchain = value.blockchain,
                     extraDerivationPath = value.derivationPath,
-                    scanResponse = requireNotNull(
-                        store.inject(DaggerGraphState::generalUserWalletsListManager).selectedUserWalletSync
-                            ?.requireColdWallet() // TODO [REDACTED_TASK_KEY]
-                            ?.scanResponse,
+                    userWallet = requireNotNull(
+                        store.inject(DaggerGraphState::generalUserWalletsListManager).selectedUserWalletSync,
                     ),
                 ),
             )
