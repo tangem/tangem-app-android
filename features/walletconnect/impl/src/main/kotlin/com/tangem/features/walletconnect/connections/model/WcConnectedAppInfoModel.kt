@@ -71,6 +71,7 @@ internal class WcConnectedAppInfoModel @Inject constructor(
                         walletName = session.wallet.name,
                         connectingTime = session.connectingTime,
                         networks = session.networks
+                            .distinctBy { network -> network.rawId }
                             .map {
                                 WcNetworkInfoItem.Required(
                                     id = it.rawId,

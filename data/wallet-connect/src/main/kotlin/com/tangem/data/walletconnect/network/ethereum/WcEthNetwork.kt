@@ -10,6 +10,7 @@ import com.tangem.data.walletconnect.request.WcRequestToUseCaseConverter
 import com.tangem.data.walletconnect.request.WcRequestToUseCaseConverter.Companion.fromJson
 import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
 import com.tangem.data.walletconnect.utils.WcNamespaceConverter
+import com.tangem.data.walletconnect.utils.WcNetworksConverter
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.walletconnect.model.*
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
@@ -23,7 +24,7 @@ internal class WcEthNetwork(
     private val moshi: Moshi,
     private val sessionsManager: WcSessionsManager,
     private val factories: Factories,
-    private val namespaceConverter: NamespaceConverter,
+    private val networksConverter: WcNetworksConverter,
     private val walletManagersFacade: WalletManagersFacade,
 ) : WcRequestToUseCaseConverter {
 
@@ -37,20 +38,34 @@ internal class WcEthNetwork(
     override suspend fun toUseCase(request: WcSdkSessionRequest): WcMethodUseCase? {
         val name = toWcMethodName(request) ?: return null
         val session = sessionsManager.findSessionByTopic(request.topic) ?: return null
-        val method: WcEthMethod = name.toMethod(request, session.wallet) ?: return null
-        val network = namespaceConverter.toNetwork(request.chainId.orEmpty(), session.wallet) ?: return null
-        val walletManagerAddress = walletManagersFacade.getDefaultAddress(session.wallet.walletId, network).orEmpty()
+        val wallet = session.wallet
+        val chainId = request.chainId.orEmpty()
+        val method: WcEthMethod = name.toMethod(request, wallet) ?: return null
+        suspend fun anyExistNetwork() = networksConverter.mainOrAnyWalletNetworkForRequest(chainId, wallet)
+
         val accountAddress = when (method) {
             is WcEthMethod.MessageSign -> method.account
             is WcEthMethod.SendTransaction -> method.transaction.from
             is WcEthMethod.SignTransaction -> method.transaction.from
             is WcEthMethod.SignTypedData -> method.account
-            is WcEthMethod.AddEthereumChain -> walletManagerAddress
+            is WcEthMethod.AddEthereumChain ->
+                anyExistNetwork()
+                    ?.let { network -> walletManagersFacade.getDefaultAddress(wallet.walletId, network).orEmpty() }
+                    .orEmpty()
         }
+        val walletNetwork = when (method) {
+            is WcEthMethod.SignTypedData,
+            is WcEthMethod.MessageSign,
+            is WcEthMethod.SendTransaction,
+            is WcEthMethod.SignTransaction,
+            -> networksConverter.findWalletNetworkForRequest(request, session, accountAddress)
+            is WcEthMethod.AddEthereumChain -> anyExistNetwork()
+        } ?: return null
+
         val context = WcMethodUseCaseContext(
             session = session,
             rawSdkRequest = request,
-            network = network,
+            network = walletNetwork,
             accountAddress = accountAddress,
         )
         return when (method) {
@@ -62,7 +77,7 @@ internal class WcEthNetwork(
         }
     }
 
-    private fun WcEthMethodName.toMethod(request: WcSdkSessionRequest, wallet: UserWallet): WcEthMethod? {
+    private suspend fun WcEthMethodName.toMethod(request: WcSdkSessionRequest, wallet: UserWallet): WcEthMethod? {
         val rawParams = request.request.params
         return when (this) {
             WcEthMethodName.EthSign,
@@ -85,8 +100,8 @@ internal class WcEthNetwork(
             WcEthMethodName.AddEthereumChain -> moshi.fromJson<List<WcEthAddChain>>(rawParams)
                 ?.firstOrNull()
                 ?.let {
-                    val newNetwork = namespaceConverter
-                        .toNetwork(it.chainId, wallet) ?: return null
+                    val newNetwork = networksConverter.mainOrAnyWalletNetworkForRequest(it.chainId, wallet)
+                        ?: return null
                     WcEthMethod.AddEthereumChain(rawChain = it, network = newNetwork)
                 }
         }
