@@ -308,7 +308,7 @@ internal class DefaultCardCryptoCurrencyFactoryTest {
             val multiWallet = model.multiWallet
 
             // Act
-            val actual = factory.createDefaultCoinsForMultiCurrencyCard(scanResponse = multiWallet.scanResponse)
+            val actual = factory.createDefaultCoinsForMultiCurrencyWallet(multiWallet)
 
             // Assert
             val expected = model.expected
@@ -355,7 +355,7 @@ internal class DefaultCardCryptoCurrencyFactoryTest {
 
                 // Act
                 val actual = runCatching {
-                    factory.createPrimaryCurrencyForSingleCurrencyCard(scanResponse = singleWallet.scanResponse)
+                    factory.createPrimaryCurrencyForSingleCurrencyCard(singleWallet)
                 }
 
                 // Assert
@@ -405,7 +405,7 @@ internal class DefaultCardCryptoCurrencyFactoryTest {
 
                 // Act
                 val actual = runCatching {
-                    factory.createCurrenciesForSingleCurrencyCardWithToken(scanResponse = userWallet.scanResponse)
+                    factory.createCurrenciesForSingleCurrencyCardWithToken(userWallet)
                 }
 
                 // Assert
@@ -554,7 +554,7 @@ internal class DefaultCardCryptoCurrencyFactoryTest {
             sdkToken = userWallet.scanResponse.cardTypesResolver.getPrimaryToken()!!,
             blockchain = blockchain,
             extraDerivationPath = null,
-            scanResponse = userWallet.scanResponse,
+            userWallet = userWallet,
         )!!
     }
 

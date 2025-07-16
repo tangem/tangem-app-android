@@ -16,7 +16,7 @@ import kotlinx.coroutines.CoroutineScope
 
 @Suppress("LongParameterList")
 internal class SingleWalletWithTokenListSubscriber(
-    private val userWallet: UserWallet,
+    private val userWallet: UserWallet.Cold,
     private val tokenListStore: MultiWalletTokenListStore,
     stateHolder: WalletStateController,
     clickIntents: WalletClickIntents,
