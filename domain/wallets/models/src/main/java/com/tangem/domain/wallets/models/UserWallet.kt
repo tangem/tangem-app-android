@@ -59,6 +59,7 @@ sealed interface UserWallet {
         override val walletId: UserWalletId,
         val hotWalletId: HotWalletId,
         val wallets: List<MobileWallet>?,
+        val backedUp: Boolean,
     ) : UserWallet {
 
         val isLocked: Boolean get() = wallets == null

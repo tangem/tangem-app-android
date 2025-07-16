@@ -33,7 +33,7 @@ internal class SingleWalletWithTokenContentLoaderFactory @Inject constructor(
     private val getStoryContentUseCase: GetStoryContentUseCase,
 ) {
 
-    fun create(userWallet: UserWallet, clickIntents: WalletClickIntents): SingleWalletWithTokenContentLoader {
+    fun create(userWallet: UserWallet.Cold, clickIntents: WalletClickIntents): SingleWalletWithTokenContentLoader {
         return SingleWalletWithTokenContentLoader(
             userWallet = userWallet,
             clickIntents = clickIntents,
