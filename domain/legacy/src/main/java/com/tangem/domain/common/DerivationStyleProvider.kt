@@ -24,3 +24,7 @@ internal class TangemDerivationStyleProvider(
         return card.batchId == "AC01" || card.batchId == "AC02" || card.batchId == "CB95"
     }
 }
+
+internal class TangemHotDerivationStyleProvider : DerivationStyleProvider {
+    override fun getDerivationStyle(): DerivationStyle? = DerivationStyle.V3
+}
