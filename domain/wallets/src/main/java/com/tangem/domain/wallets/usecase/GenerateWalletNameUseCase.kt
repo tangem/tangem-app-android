@@ -22,7 +22,7 @@ class GenerateWalletNameUseCase(
     }
 
     fun invokeForHot(): String {
-        val defaultName = "Mobile Wallet"
+        val defaultName = "Wallet"
         val existingNames = userWalletsListManager.userWalletsSync.map { it.name }.toSet()
         return suggestedWalletName(defaultName, existingNames)
     }
