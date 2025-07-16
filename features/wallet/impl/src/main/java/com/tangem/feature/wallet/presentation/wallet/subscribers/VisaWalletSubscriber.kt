@@ -26,7 +26,7 @@ import kotlinx.coroutines.flow.map
 import timber.log.Timber
 
 internal class VisaWalletSubscriber(
-    private val userWallet: UserWallet,
+    private val userWallet: UserWallet.Cold,
     private val stateController: WalletStateController,
     private val isRefresh: Boolean,
     private val getVisaCurrencyUseCase: GetVisaCurrencyUseCase,

@@ -107,7 +107,7 @@ internal class DefaultDerivationsRepositoryTest {
         runCatching {
             repository.derivePublicKeys(
                 userWalletId = defaultUserWalletId,
-                currencies = MockCryptoCurrencyFactory(userWallet.scanResponse).ethereum.let(::listOf),
+                currencies = MockCryptoCurrencyFactory(userWallet).ethereum.let(::listOf),
             )
         }
             .onSuccess { Truth.assertThat(it) }
@@ -129,7 +129,7 @@ internal class DefaultDerivationsRepositoryTest {
         runCatching {
             repository.derivePublicKeys(
                 userWalletId = defaultUserWalletId,
-                currencies = MockCryptoCurrencyFactory(userWallet.scanResponse).ethereum.let(::listOf),
+                currencies = MockCryptoCurrencyFactory(userWallet).ethereum.let(::listOf),
             )
         }
             .onSuccess { error("Should throws exception") }
@@ -155,7 +155,7 @@ internal class DefaultDerivationsRepositoryTest {
         runCatching {
             repository.derivePublicKeys(
                 userWalletId = defaultUserWalletId,
-                currencies = MockCryptoCurrencyFactory(userWallet.scanResponse).ethereum.let(::listOf),
+                currencies = MockCryptoCurrencyFactory(userWallet).ethereum.let(::listOf),
             )
         }
             .onSuccess { Truth.assertThat(it) }
