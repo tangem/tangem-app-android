@@ -2,7 +2,6 @@ package com.tangem.data.common.currency
 
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 
@@ -57,23 +56,23 @@ interface CardCryptoCurrencyFactory {
     /**
      * Create default coins for multi currency card
      *
-     * @param scanResponse scan response
+     * @param userWallet user wallet
      */
-    fun createDefaultCoinsForMultiCurrencyCard(scanResponse: ScanResponse): List<CryptoCurrency.Coin>
+    fun createDefaultCoinsForMultiCurrencyWallet(userWallet: UserWallet): List<CryptoCurrency.Coin>
 
     /**
      * Create primary currency for single currency card
      *
-     * @param scanResponse scan response
+     * @param userWallet user wallet
      */
     @Throws
-    fun createPrimaryCurrencyForSingleCurrencyCard(scanResponse: ScanResponse): CryptoCurrency
+    fun createPrimaryCurrencyForSingleCurrencyCard(userWallet: UserWallet.Cold): CryptoCurrency
 
     /**
      * Create currencies for single currency card with token (like, NODL)
      *
-     * @param scanResponse scan response
+     * @param userWallet user wallet
      */
     @Throws
-    fun createCurrenciesForSingleCurrencyCardWithToken(scanResponse: ScanResponse): List<CryptoCurrency>
+    fun createCurrenciesForSingleCurrencyCardWithToken(userWallet: UserWallet.Cold): List<CryptoCurrency>
 }
