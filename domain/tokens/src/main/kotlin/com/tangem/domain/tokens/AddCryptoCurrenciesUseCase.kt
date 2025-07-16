@@ -119,7 +119,7 @@ class AddCryptoCurrenciesUseCase(
      * Refreshes the network statuses for tokens that have corresponding coins in the
      * [existingCurrencies] list.
      */
-    private suspend fun Raise<Throwable>.refreshUpdatedNetworks(
+    private suspend fun refreshUpdatedNetworks(
         userWalletId: UserWalletId,
         currencyToAdd: CryptoCurrency,
         existingCurrencies: List<CryptoCurrency>,
@@ -140,7 +140,8 @@ class AddCryptoCurrenciesUseCase(
                 networks = setOfNotNull(networksToUpdate, networkToUpdate),
             ),
         )
-            .bind()
+
+        currenciesRepository.syncTokens(userWalletId)
     }
 
     private suspend fun refreshUpdatedYieldBalances(userWalletId: UserWalletId, addedCurrency: CryptoCurrency) {
@@ -191,7 +192,7 @@ class AddCryptoCurrenciesUseCase(
 
     private suspend fun Raise<Throwable>.addCurrencies(userWalletId: UserWalletId, currency: CryptoCurrency) {
         catch(
-            { currenciesRepository.addCurrencies(userWalletId, listOf(currency)) },
+            { currenciesRepository.addCurrenciesCache(userWalletId, listOf(currency)) },
         ) {
             raise(it)
         }
