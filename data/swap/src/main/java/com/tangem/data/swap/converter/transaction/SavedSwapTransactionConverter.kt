@@ -3,8 +3,8 @@ package com.tangem.data.swap.converter.transaction
 import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
 import com.tangem.data.swap.models.SwapStatusDTO
 import com.tangem.data.swap.models.SwapTransactionDTO
-import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.swap.models.SwapTransactionModel
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.utils.converter.TwoWayConverter
 
 internal class SavedSwapTransactionConverter(
@@ -35,14 +35,14 @@ internal class SavedSwapTransactionConverter(
 
     fun convertBack(
         value: SwapTransactionDTO,
-        scanResponse: ScanResponse,
+        userWallet: UserWallet,
         txStatuses: Map<String, SwapStatusDTO>,
     ): SwapTransactionModel {
         val status = txStatuses[value.txId]
         val refundCurrency = status?.refundTokensResponse?.let { id ->
             responseCryptoCurrenciesFactory.createCurrency(
                 responseToken = id,
-                scanResponse = scanResponse,
+                userWallet = userWallet,
             )
         }
         val statusWithRefundCurrency = status?.copy(refundCurrency = refundCurrency)
