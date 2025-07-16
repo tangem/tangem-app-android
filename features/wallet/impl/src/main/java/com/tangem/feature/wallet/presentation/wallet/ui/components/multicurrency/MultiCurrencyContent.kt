@@ -65,12 +65,14 @@ private fun LazyListScope.contentItems(
             TokenListItem(
                 state = item,
                 isBalanceHidden = isBalanceHidden,
-                modifier = modifier.roundedShapeItemDecoration(
-                    currentIndex = index,
-                    lastIndex = items.lastIndex,
-                    backgroundColor = TangemTheme.colors.background.primary,
-                ).testTag(MainScreenTestTags.TOKEN_LIST_ITEM)
-                .semantics { lazyListItemPosition = index },
+                modifier = modifier
+                    .roundedShapeItemDecoration(
+                        currentIndex = index,
+                        lastIndex = items.lastIndex,
+                        backgroundColor = TangemTheme.colors.background.primary,
+                    )
+                    .testTag(MainScreenTestTags.TOKEN_LIST_ITEM)
+                    .semantics { lazyListItemPosition = index },
             )
         },
     )
