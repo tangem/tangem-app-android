@@ -136,8 +136,7 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
     ): Either<WcPairError, Wallet.Model.SettledSessionResponse.Result> {
         val namespaces = caipNamespaceDelegate.associate(
             sdkSessionProposal,
-            sessionForApprove.wallet,
-            sessionForApprove.network,
+            sessionForApprove,
         )
         val sessionApprove = Wallet.Params.SessionApprove(
             proposerPublicKey = sdkSessionProposal.proposerPublicKey,
