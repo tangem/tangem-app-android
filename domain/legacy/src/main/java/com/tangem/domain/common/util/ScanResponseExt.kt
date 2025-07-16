@@ -8,6 +8,7 @@ import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.DerivationStyleProvider
 import com.tangem.domain.common.TangemCardTypesResolver
 import com.tangem.domain.common.TangemDerivationStyleProvider
+import com.tangem.domain.common.TangemHotDerivationStyleProvider
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.domain.common.configs.CardConfig
@@ -22,6 +23,12 @@ val ScanResponse.cardTypesResolver: CardTypesResolver
         productType = productType,
         walletData = walletData,
     )
+
+val UserWallet.derivationStyleProvider: DerivationStyleProvider
+    get() = when (this) {
+        is UserWallet.Cold -> this.scanResponse.derivationStyleProvider
+        is UserWallet.Hot -> TangemHotDerivationStyleProvider()
+    }
 
 val ScanResponse.derivationStyleProvider: DerivationStyleProvider
     get() = card.derivationStyleProvider

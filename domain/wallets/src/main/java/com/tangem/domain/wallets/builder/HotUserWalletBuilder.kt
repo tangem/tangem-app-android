@@ -11,29 +11,31 @@ import com.tangem.hot.sdk.model.DeriveWalletRequest
 import com.tangem.hot.sdk.model.HotAuth
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.hot.sdk.model.UnlockHotWallet
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.withContext
 
 class HotUserWalletBuilder @AssistedInject constructor(
     @Assisted private val hotWalletId: HotWalletId,
     private val hotSdk: TangemHotSdk,
     private val generateWalletNameUseCase: GenerateWalletNameUseCase,
+    private val dispatcherProvider: CoroutineDispatcherProvider,
 ) {
 
-    suspend fun build(): UserWallet.Hot {
+    suspend fun build(): UserWallet.Hot = withContext(dispatcherProvider.default) {
         val allNetworks = Blockchain.entries // TODO use HotDerivationsRepository to get supported networks
-        val requests = allNetworks.map {
-            val curves = it.getSupportedCurves()
-            val derivationPath = it.derivationPath(DerivationStyle.V3)
+        val curves = allNetworks.map { it.getSupportedCurves() }.flatten().toSet()
+        val requests = curves.sortedBy { it.ordinal }.map { curve ->
+            val derivationPaths = allNetworks.filter { curve in it.getSupportedCurves() }
+                .mapNotNull { it.derivationPath(DerivationStyle.V3) }
 
-            curves.map {
-                DeriveWalletRequest.Request(
-                    curve = it,
-                    paths = listOfNotNull(derivationPath),
-                )
-            }
-        }.flatten()
+            DeriveWalletRequest.Request(
+                curve = curve,
+                paths = derivationPaths,
+            )
+        }
 
         val derivationResult = hotSdk.derivePublicKey(
             unlockHotWallet = UnlockHotWallet(
@@ -54,11 +56,12 @@ class HotUserWalletBuilder @AssistedInject constructor(
             )
         }
 
-        return UserWallet.Hot(
+        UserWallet.Hot(
             name = generateWalletNameUseCase.invokeForHot(),
             walletId = UserWalletId(wallets.first().publicKey),
             hotWalletId = hotWalletId,
             wallets = wallets,
+            backedUp = false,
         )
     }
 
