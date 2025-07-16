@@ -10,7 +10,7 @@ import com.tangem.domain.tokens.operations.BaseCurrencyStatusOperations
 import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.domain.wallets.models.requireColdWallet
+import com.tangem.domain.wallets.models.isMultiCurrency
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
 
@@ -44,11 +44,10 @@ class GetNetworkCoinStatusUseCase(
         derivationPath: Network.DerivationPath,
     ): Either<CurrencyStatusError, CryptoCurrencyStatus> {
         val userWalletId = userWallet.walletId
-        val cardTypesResolver = userWallet.requireColdWallet().cardTypesResolver // TODO [REDACTED_TASK_KEY]
 
         val maybeCurrency = if (userWallet.isMultiCurrency) {
             currencyStatusOperations.getNetworkCoinSync(userWalletId, networkId, derivationPath)
-        } else if (cardTypesResolver.isSingleWalletWithToken()) {
+        } else if (userWallet is UserWallet.Cold && userWallet.cardTypesResolver.isSingleWalletWithToken()) {
             currencyStatusOperations.getNetworkCoinForSingleWalletWithTokenSync(userWalletId, networkId)
         } else {
             currencyStatusOperations.getPrimaryCurrencyStatusSync(userWalletId)
