@@ -15,13 +15,12 @@ import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.local.config.testnet.models.TestnetTokensConfig
 import com.tangem.domain.common.DerivationStyleProvider
 import com.tangem.domain.common.extensions.canHandleToken
-import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency.SourceNetwork
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.wallets.models.UserWallet
 import timber.log.Timber
 
 internal class ManagedCryptoCurrencyFactory(
@@ -32,20 +31,20 @@ internal class ManagedCryptoCurrencyFactory(
     fun create(
         coinsResponse: CoinsResponse,
         tokensResponse: UserTokensResponse?,
-        scanResponse: ScanResponse?,
+        userWallet: UserWallet?,
     ): List<ManagedCryptoCurrency> {
         return coinsResponse.coins.mapNotNull { coin ->
-            createToken(coin, tokensResponse, coinsResponse.imageHost, scanResponse)
+            createToken(coin, tokensResponse, coinsResponse.imageHost, userWallet)
         }
     }
 
     fun createWithCustomTokens(
         coinsResponse: CoinsResponse,
         tokensResponse: UserTokensResponse,
-        scanResponse: ScanResponse,
+        userWallet: UserWallet,
     ): List<ManagedCryptoCurrency> {
-        val customTokens = createCustomTokens(tokensResponse, scanResponse)
-        val tokens = create(coinsResponse, tokensResponse, scanResponse)
+        val customTokens = createCustomTokens(tokensResponse, userWallet)
+        val tokens = create(coinsResponse, tokensResponse, userWallet)
 
         return customTokens + tokens
     }
@@ -53,10 +52,10 @@ internal class ManagedCryptoCurrencyFactory(
     fun createTestnetWithCustomTokens(
         testnetTokensConfig: TestnetTokensConfig,
         tokensResponse: UserTokensResponse?,
-        scanResponse: ScanResponse,
+        userWallet: UserWallet,
     ): List<ManagedCryptoCurrency> {
         val customTokens = tokensResponse
-            ?.let { createCustomTokens(it, scanResponse) }
+            ?.let { createCustomTokens(it, userWallet) }
             ?: emptyList()
         val testnetTokens = testnetTokensConfig.tokens.map { testnetToken ->
             ManagedCryptoCurrency.Token(
@@ -69,10 +68,10 @@ internal class ManagedCryptoCurrencyFactory(
                         networkId = network.id,
                         contractAddress = network.address,
                         decimals = network.decimalCount,
-                        scanResponse = scanResponse,
+                        userWallet = userWallet,
                     )
                 } ?: emptyList(),
-                addedIn = findAddedInNetworks(testnetToken.id, tokensResponse, scanResponse),
+                addedIn = findAddedInNetworks(testnetToken.id, tokensResponse, userWallet),
             )
         }
 
@@ -81,28 +80,28 @@ internal class ManagedCryptoCurrencyFactory(
 
     private fun createCustomTokens(
         tokensResponse: UserTokensResponse,
-        scanResponse: ScanResponse,
+        userWallet: UserWallet,
     ): List<ManagedCryptoCurrency> = tokensResponse.tokens
         .mapNotNull { token ->
-            maybeCreateCustomToken(token, scanResponse)
+            maybeCreateCustomToken(token, userWallet)
         }
 
     private fun maybeCreateCustomToken(
         token: UserTokensResponse.Token,
-        scanResponse: ScanResponse,
+        userWallet: UserWallet,
     ): ManagedCryptoCurrency? {
         val blockchain = Blockchain.fromNetworkId(token.networkId)
             ?.takeUnless { it in excludedBlockchains }
             ?: return null
 
-        if (!checkIsCustomToken(token, blockchain, scanResponse.derivationStyleProvider)) {
+        if (!checkIsCustomToken(token, blockchain, userWallet.derivationStyleProvider)) {
             return null
         }
 
         val network = networkFactory.create(
             blockchain = blockchain,
             extraDerivationPath = token.derivationPath,
-            scanResponse = scanResponse,
+            userWallet = userWallet,
         ) ?: return null
         val contractAddress = token.contractAddress
 
@@ -135,7 +134,7 @@ internal class ManagedCryptoCurrencyFactory(
         coinResponse: CoinsResponse.Coin,
         tokensResponse: UserTokensResponse?,
         imageHost: String?,
-        scanResponse: ScanResponse?,
+        userWallet: UserWallet?,
     ): ManagedCryptoCurrency? {
         if (coinResponse.networks.isEmpty() || !coinResponse.active) return null
 
@@ -146,7 +145,7 @@ internal class ManagedCryptoCurrencyFactory(
                     networkId = network.networkId,
                     contractAddress = network.contractAddress,
                     decimals = network.decimalCount?.toInt(),
-                    scanResponse = scanResponse,
+                    userWallet = userWallet,
                 )
             }
             .ifEmpty { return null }
@@ -157,7 +156,7 @@ internal class ManagedCryptoCurrencyFactory(
             symbol = coinResponse.symbol,
             iconUrl = getIconUrl(coinResponse.id, imageHost),
             availableNetworks = availableNetworks,
-            addedIn = findAddedInNetworks(coinResponse.id, tokensResponse, scanResponse),
+            addedIn = findAddedInNetworks(coinResponse.id, tokensResponse, userWallet),
         )
     }
 
@@ -165,7 +164,7 @@ internal class ManagedCryptoCurrencyFactory(
         networkId: String,
         contractAddress: String?,
         decimals: Int?,
-        scanResponse: ScanResponse?,
+        userWallet: UserWallet?,
         extraDerivationPath: String? = null,
     ): SourceNetwork? {
         val blockchain = Blockchain.fromNetworkId(networkId)
@@ -175,10 +174,8 @@ internal class ManagedCryptoCurrencyFactory(
         val network = networkFactory.create(
             blockchain = blockchain,
             extraDerivationPath = extraDerivationPath,
-            derivationStyleProvider = scanResponse?.derivationStyleProvider,
-            canHandleTokens = scanResponse?.let {
-                it.card.canHandleToken(blockchain, it.cardTypesResolver, excludedBlockchains)
-            } ?: false, // use card specific check if available
+            derivationStyleProvider = userWallet?.derivationStyleProvider,
+            canHandleTokens = userWallet?.canHandleToken(blockchain, excludedBlockchains) ?: false,
         ) ?: return null
 
         return when {
@@ -207,7 +204,7 @@ internal class ManagedCryptoCurrencyFactory(
     private fun findAddedInNetworks(
         currencyId: String,
         tokensResponse: UserTokensResponse?,
-        scanResponse: ScanResponse?,
+        userWallet: UserWallet?,
     ): Set<Network> {
         if (tokensResponse == null) return emptySet()
 
@@ -220,10 +217,8 @@ internal class ManagedCryptoCurrencyFactory(
                     networkFactory.create(
                         blockchain = blockchain,
                         extraDerivationPath = token.derivationPath,
-                        derivationStyleProvider = scanResponse?.derivationStyleProvider,
-                        canHandleTokens = scanResponse?.let {
-                            it.card.canHandleToken(blockchain, it.cardTypesResolver, excludedBlockchains)
-                        } ?: true,
+                        derivationStyleProvider = userWallet?.derivationStyleProvider,
+                        canHandleTokens = userWallet?.canHandleToken(blockchain, excludedBlockchains) ?: true,
                     )
                 } else {
                     null

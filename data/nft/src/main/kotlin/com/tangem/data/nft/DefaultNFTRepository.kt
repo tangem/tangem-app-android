@@ -208,7 +208,7 @@ internal class DefaultNFTRepository @Inject constructor(
                 networkFactory.create(
                     blockchain = it,
                     extraDerivationPath = null,
-                    scanResponse = userWallet.requireColdWallet().scanResponse, // TODO [REDACTED_TASK_KEY]
+                    userWallet = userWallet,
                 )
             }
             .filter { it.canHandleNFTs(userWalletId) }
