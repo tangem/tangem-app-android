@@ -4,6 +4,9 @@
   <string name="access_code_alert_skip_ok">とにかくスキップ</string>
   <string name="access_code_alert_skip_title">アクセスコードが設定されていません</string>
   <string name="access_code_check_title">アクセスコードを入力</string>
+  <string name="access_code_check_warining_delete">アクセスコードが間違っています。あと%s回間違えるとホットウォレットが削除されます。</string>
+  <string name="access_code_check_warining_lock">アクセスコードが間違っています。あと%s回入力エラーが発生するとアプリがロックされます。</string>
+  <string name="access_code_check_warining_wait">アクセスコードが間違っています。 \n %s秒待ってから再試行してください。</string>
   <string name="access_code_confirm_description">続行するには、以前に入力したコードを確認してください</string>
   <string name="access_code_confirm_title">アクセスコードを再入力</string>
   <string name="access_code_create_description">ウォレットのロックを解除するには、 %s桁のアクセスコードを設定します。</string>
@@ -655,7 +658,7 @@
   <string name="onboarding_button_continue_wallet">ウォレットへ進む</string>
   <string name="onboarding_button_finalize_backup">バックアップを完了する</string>
   <string name="onboarding_button_receive_crypto">暗号資産を受け取る</string>
-  <string name="onboarding_button_scan_origin_card">プライマリカードをスキャン</string>
+  <string name="onboarding_button_scan_origin_card">メインカードまたはリングをスキャン</string>
   <string name="onboarding_button_skip_backup">スキップする</string>
   <string name="onboarding_button_what_does_it_mean">どのように機能しますか?</string>
   <string name="onboarding_create_wallet_body">すべての秘密鍵をカードまたはリング内で生成し、安全なウォレットを作成しましょう</string>
@@ -706,7 +709,7 @@
   <string name="onboarding_title_no_backup_cards">バックアップデバイスなし</string>
   <string name="onboarding_title_notifications">通知</string>
   <string name="onboarding_title_one_backup_card">バックアップデバイスが1つ追加されました</string>
-  <string name="onboarding_title_scan_origin_card">カードを準備してください</string>
+  <string name="onboarding_title_scan_origin_card">カードまたはリングを用意してください</string>
   <string name="onboarding_title_two_backup_cards">バックアップデバイス2つが追加されました</string>
   <string name="onboarding_top_up_body">始めるには、ウォレットに任意の金額を入金するだけです</string>
   <string name="onboarding_top_up_body_no_account_error">始めるには、ウォレットに%1$s %2$s以上入金するだけです</string>
@@ -924,6 +927,7 @@
   <string name="send_validation_invalid_amount">無効な金額</string>
   <string name="send_validation_invalid_fee">手数料が残高を超えています</string>
   <string name="send_validation_invalid_total">合計金額が残高を超えています</string>
+  <string name="send_with_swap_confirm_title">スワップして送信</string>
   <string name="send_with_swap_notification_text">トークンを送信すれば、送信中に変換されます。受信者は必要なものをシームレスに受け取ります。</string>
   <string name="send_with_swap_recipient_amount_text">受信者に送信されます</string>
   <string name="send_with_swap_recipient_amount_title">受取金額</string>
@@ -1296,8 +1300,8 @@
   <string name="warning_express_approval_in_progress_message">スワップ承認は現在進行中で、まもなく完了する予定です。</string>
   <string name="warning_express_approval_in_progress_title">承認が進行中</string>
   <string name="warning_express_dust_message">最低のスワップ金額は%1$s です。スワップ後の残金が%2$s を下回らないようにしてください。</string>
-  <string name="warning_express_no_exchangeable_coins_description">あなたのリストには、交換可能な %s トークンがありません。</string>
-  <string name="warning_express_no_exchangeable_coins_title">スワップ可能なトークンがありません</string>
+  <string name="warning_express_no_exchangeable_coins_description">ポートフォリオ内に%sとスワップ可能なトークンがありません。交換を有効にするには、別のトークンを追加してください。</string>
+  <string name="warning_express_no_exchangeable_coins_title">互換性のあるトークンが追加されていません</string>
   <string name="warning_express_not_enough_fee_for_token_tx_description">取引を行うには、 %1$s %2$sを入金する必要があります。</string>
   <string name="warning_express_not_enough_fee_for_token_tx_title">%s 手数料を支払えません</string>
   <string name="warning_express_notification_invalid_reserve_amount_title">受け取る金額は、 %s 以上である必要があります。</string>
@@ -1375,6 +1379,8 @@
   <string name="wc_alert_unknown_error_description">エラーコード: %s 。問題が解決しない場合は、お気軽にサポートまでお問い合わせください。</string>
   <string name="wc_alert_unknown_error_description_no_error_code">問題が解決しない場合は、お気軽にサポートまでお問い合わせください。</string>
   <string name="wc_alert_unknown_error_title">不明なエラーが発生しました</string>
+  <string name="wc_alert_unsupported_dapps_description">Tangemウォレットは、現在%sをサポートしていません。</string>
+  <string name="wc_alert_unsupported_dapps_title">サポートされていないdApp</string>
   <string name="wc_alert_unsupported_method_description">エラーコード: 8 005。問題が解決しない場合は、お気軽にサポートまでお問い合わせください。</string>
   <string name="wc_alert_unsupported_method_title">不明なエラーが発生しました</string>
   <string name="wc_alert_unsupported_networks_description">Tangemは現在%sで必要なネットワークをサポートしていません。</string>
