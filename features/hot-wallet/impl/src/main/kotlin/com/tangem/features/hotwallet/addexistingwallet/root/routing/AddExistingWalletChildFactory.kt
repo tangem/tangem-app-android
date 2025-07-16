@@ -5,9 +5,12 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.hotwallet.addexistingwallet.root.AddExistingWalletModel
 import com.tangem.features.hotwallet.addexistingwallet.start.AddExistingWalletStartComponent
 import com.tangem.features.hotwallet.addexistingwallet.im.port.AddExistingWalletImportComponent
+import com.tangem.features.pushnotifications.api.PushNotificationsComponent
 import javax.inject.Inject
 
-internal class AddExistingWalletChildFactory @Inject constructor() {
+internal class AddExistingWalletChildFactory @Inject constructor(
+    private val pushNotificationsComponent: PushNotificationsComponent.Factory,
+) {
 
     fun createChild(
         route: AddExistingWalletRoute,
@@ -25,6 +28,12 @@ internal class AddExistingWalletChildFactory @Inject constructor() {
                 context = childContext,
                 params = AddExistingWalletImportComponent.Params(
                     callbacks = model.addExistingWalletImportModelCallbacks,
+                ),
+            )
+            is AddExistingWalletRoute.PushNotifications -> pushNotificationsComponent.create(
+                context = childContext,
+                params = PushNotificationsComponent.Params.Callbacks(
+                    callbacks = model.pushNotificationsComponentModelCallbacks,
                 ),
             )
         }
