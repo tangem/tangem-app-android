@@ -70,7 +70,6 @@ import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.tokendetails.deeplink.TokenDetailsDeepLinkActionListener
@@ -442,16 +441,15 @@ internal class TokenDetailsModel @Inject constructor(
 
     private fun updateTopBarMenu() {
         modelScope.launch(dispatchers.main) {
-            val hasDerivations =
-                networkHasDerivationUseCase(
-                    scanResponse = userWallet.requireColdWallet().scanResponse, // TODO [REDACTED_TASK_KEY]
-                    network = cryptoCurrency.network,
-                ).getOrElse { false }
+            val hasDerivations = networkHasDerivationUseCase(
+                userWallet = userWallet,
+                network = cryptoCurrency.network,
+            ).getOrElse { false }
 
             val isSupported = isXPUBSupported()
 
             internalUiState.value = stateFactory.getStateWithUpdatedMenu(
-                cardTypesResolver = userWallet.scanResponse.cardTypesResolver,
+                userWallet = userWallet,
                 hasDerivations = hasDerivations,
                 isSupported = isSupported,
             )
