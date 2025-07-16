@@ -62,8 +62,7 @@ internal open class BaseActionsFactory(
         currency: CryptoCurrency,
     ): ScenarioUnavailabilityReason {
         return rampStateManager.availableForBuy(
-            userWalletId = userWallet.walletId,
-            scanResponse = userWallet.scanResponse,
+            userWallet = userWallet,
             cryptoCurrency = currency,
         )
     }
