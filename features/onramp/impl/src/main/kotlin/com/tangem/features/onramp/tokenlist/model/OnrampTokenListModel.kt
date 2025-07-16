@@ -229,8 +229,7 @@ internal class OnrampTokenListModel @Inject constructor(
         return when (params.filterOperation) {
             OnrampOperation.BUY -> {
                 rampStateManager.availableForBuy(
-                    scanResponse = userWallet.scanResponse,
-                    userWalletId = params.userWalletId,
+                    userWallet = userWallet,
                     cryptoCurrency = status.currency,
                 ).isAvailable()
             }
