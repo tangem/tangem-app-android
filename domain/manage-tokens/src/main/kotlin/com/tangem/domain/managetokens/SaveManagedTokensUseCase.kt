@@ -50,7 +50,7 @@ class SaveManagedTokensUseCase(
 
             val addingCurrencies = currenciesToAdd.mapToCryptoCurrencies(userWalletId)
 
-            val savedCurrencies = currenciesRepository.addCurrencies(
+            val savedCurrencies = currenciesRepository.addCurrenciesCache(
                 userWalletId = userWalletId,
                 currencies = addingCurrencies,
             )
@@ -87,6 +87,8 @@ class SaveManagedTokensUseCase(
                 networks = addedCurrencies.map(CryptoCurrency::network).toSet(),
             ),
         )
+
+        currenciesRepository.syncTokens(userWalletId)
     }
 
     private suspend fun refreshUpdatedYieldBalances(
