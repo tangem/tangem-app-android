@@ -38,7 +38,6 @@ class UserTokensSaver(
             userWalletId = userWalletId,
             response = response,
         )
-
         store(userWalletId, enrichedUserTokensResponse, false)
         push(userWalletId, enrichedUserTokensResponse, false)
     }
