@@ -10,7 +10,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable(with = MobileWalletAsStringSerializer::class)
 @JsonClass(generateAdapter = true)
-class MobileWallet(
+data class MobileWallet(
     @Json(name = "publicKey")
     val publicKey: ByteArray,
     @Json(name = "chainCode")
