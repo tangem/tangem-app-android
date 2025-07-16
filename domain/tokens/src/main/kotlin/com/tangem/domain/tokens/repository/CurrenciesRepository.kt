@@ -53,6 +53,26 @@ interface CurrenciesRepository {
     suspend fun addCurrencies(userWalletId: UserWalletId, currencies: List<CryptoCurrency>): List<CryptoCurrency>
 
     /**
+     * Saves the given list of cryptocurrencies for a specific multi-currency user wallet.
+     *
+     * @param userWalletId The unique identifier of the user wallet.
+     * @param currencies The list of cryptocurrencies to be saved.
+     */
+    @Deprecated("Tech debt")
+    suspend fun saveNewCurrenciesListCache(userWalletId: UserWalletId, currencies: List<CryptoCurrency>)
+
+    /**
+     * Add currencies to a specific user wallet.
+     *
+     * @param userWalletId The unique identifier of the user wallet.
+     * @param currencies The currencies which must be added.
+     * @throws DataError.UserWalletError.WrongUserWallet If single-currency user wallet
+     * ID provided.
+     */
+    @Deprecated("Tech debt")
+    suspend fun addCurrenciesCache(userWalletId: UserWalletId, currencies: List<CryptoCurrency>): List<CryptoCurrency>
+
+    /**
      * Removes currency from a specific user wallet.
      *
      * @param userWalletId The unique identifier of the user wallet.
