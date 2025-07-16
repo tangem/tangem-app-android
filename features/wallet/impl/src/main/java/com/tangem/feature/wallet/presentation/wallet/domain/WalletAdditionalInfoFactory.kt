@@ -39,8 +39,20 @@ internal object WalletAdditionalInfoFactory {
                     wallet.resolveSingleCurrencyInfo(currencyAmount)
                 }
             }
-            is UserWallet.Hot -> TODO("[REDACTED_TASK_KEY]")
+            is UserWallet.Hot -> wallet.resolveAdditionalInfo()
         }
+    }
+
+    private fun UserWallet.Hot.resolveAdditionalInfo(): WalletAdditionalInfo {
+        return WalletAdditionalInfo(
+            hideable = false,
+            content = TextReference.Res(R.string.hw_mobile_wallet) +
+                when {
+                    isLocked -> DIVIDER + TextReference.Res(R.string.common_locked)
+                    backedUp.not() -> DIVIDER + TextReference.Res(R.string.hw_backup_no_backup)
+                    else -> TextReference.Str("")
+                },
+        )
     }
 
     private fun UserWallet.Cold.resolveMultiCurrencyInfo(): WalletAdditionalInfo {
