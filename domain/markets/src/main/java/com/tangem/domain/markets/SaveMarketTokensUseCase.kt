@@ -66,7 +66,7 @@ class SaveMarketTokensUseCase(
                 )
             }
 
-            val savedCurrencies = currenciesRepository.addCurrencies(
+            val savedCurrencies = currenciesRepository.addCurrenciesCache(
                 userWalletId = userWalletId,
                 currencies = addedCurrencies,
             )
@@ -86,6 +86,7 @@ class SaveMarketTokensUseCase(
                 networks = addedCurrencies.map(CryptoCurrency::network).toSet(),
             ),
         )
+        currenciesRepository.syncTokens(userWalletId)
     }
 
     private suspend fun refreshUpdatedYieldBalances(
