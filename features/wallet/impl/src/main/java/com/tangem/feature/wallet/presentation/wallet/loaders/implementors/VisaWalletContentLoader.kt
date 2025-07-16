@@ -9,7 +9,7 @@ import com.tangem.feature.wallet.presentation.wallet.subscribers.WalletSubscribe
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 
 internal class VisaWalletContentLoader(
-    private val userWallet: UserWallet,
+    private val userWallet: UserWallet.Cold,
     private val clickIntents: WalletClickIntents,
     private val isRefresh: Boolean,
     private val stateController: WalletStateController,
