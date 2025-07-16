@@ -95,7 +95,7 @@ internal class DefaultCustomTokensRepository(
             networkFactory.create(
                 networkId = networkId,
                 derivationPath = derivationPath,
-                scanResponse = userWallet.requireColdWallet().scanResponse, // TODO [REDACTED_TASK_KEY]
+                userWallet = userWallet,
             ),
         ) {
             "Network [$networkId] not found while finding token"
@@ -106,8 +106,8 @@ internal class DefaultCustomTokensRepository(
             symbol = null,
         )
 
-        val supportedTokenNetworkIds = userWallet.scanResponse.card
-            .supportedBlockchains(userWallet.scanResponse.cardTypesResolver, excludedBlockchains)
+        val supportedTokenNetworkIds = userWallet
+            .supportedBlockchains(excludedBlockchains = excludedBlockchains)
             .filter(Blockchain::canHandleTokens)
             .map(Blockchain::toNetworkId)
 
@@ -151,7 +151,7 @@ internal class DefaultCustomTokensRepository(
             networkFactory.create(
                 networkId = networkId,
                 derivationPath = derivationPath,
-                scanResponse = userWallet.requireColdWallet().scanResponse, // TODO [REDACTED_TASK_KEY]
+                userWallet = userWallet,
             ),
         ) {
             "Network [$networkId] not found while creating coin"
@@ -188,7 +188,7 @@ internal class DefaultCustomTokensRepository(
             networkFactory.create(
                 networkId = networkId,
                 derivationPath = derivationPath,
-                scanResponse = userWallet.requireColdWallet().scanResponse, // TODO [REDACTED_TASK_KEY]
+                userWallet = userWallet,
             ),
         ) {
             "Network [$networkId] not found while creating custom token"
@@ -261,7 +261,7 @@ internal class DefaultCustomTokensRepository(
                     networkFactory.create(
                         blockchain = blockchain,
                         extraDerivationPath = null,
-                        scanResponse = scanResponse,
+                        userWallet = userWallet,
                     )
                 } else {
                     null
