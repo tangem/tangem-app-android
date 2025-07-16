@@ -36,7 +36,7 @@ internal class SingleWalletContentLoaderFactory @Inject constructor(
     private val walletWarningsAnalyticsSender: WalletWarningsAnalyticsSender,
 ) {
 
-    fun create(userWallet: UserWallet, clickIntents: WalletClickIntents, isRefresh: Boolean): WalletContentLoader {
+    fun create(userWallet: UserWallet.Cold, clickIntents: WalletClickIntents, isRefresh: Boolean): WalletContentLoader {
         return SingleWalletContentLoader(
             userWallet = userWallet,
             clickIntents = clickIntents,

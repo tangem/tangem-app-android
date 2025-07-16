@@ -50,7 +50,7 @@ internal class DefaultDerivationsRepository(
                 networkFactory.create(
                     blockchain = Blockchain.fromNetworkId(it.value) ?: return@mapNotNull null,
                     extraDerivationPath = null,
-                    scanResponse = userWallet.requireColdWallet().scanResponse, // TODO [REDACTED_TASK_KEY]
+                    userWallet = userWallet,
                 )
             },
         )
@@ -91,7 +91,7 @@ internal class DefaultDerivationsRepository(
                         networkFactory.create(
                             blockchain = Blockchain.fromNetworkId(backendId) ?: return@mapNotNull null,
                             extraDerivationPath = extraDerivationPath,
-                            scanResponse = userWallet.requireColdWallet().scanResponse, // TODO [REDACTED_TASK_KEY]
+                            userWallet = userWallet,
                         )
                     },
                 )
