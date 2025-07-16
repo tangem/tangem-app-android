@@ -365,7 +365,7 @@ internal class ChildFactory @Inject constructor(
             is AppRoute.PushNotification -> {
                 createComponentChild(
                     context = context,
-                    params = Unit,
+                    params = PushNotificationsComponent.Params.Route(AppRoute.Home),
                     componentFactory = pushNotificationsComponentFactory,
                 )
             }
