@@ -14,7 +14,6 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.staking.GetStakingIntegrationIdUseCase
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.*
@@ -101,7 +100,7 @@ internal class TokenDetailsSkeletonStateConverter(
 
         val isBitcoin = isBitcoin(cryptoCurrency.network.rawId)
         val hasDerivations = networkHasDerivationUseCase(
-            scanResponse = userWallet.requireColdWallet().scanResponse, // TODO [REDACTED_TASK_KEY]
+            userWallet = userWallet,
             network = cryptoCurrency.network,
         ).getOrElse { false }
 

@@ -83,8 +83,7 @@ internal class OnrampOperationModel @Inject constructor(
     fun onHotTokenClick(status: CryptoCurrencyStatus) {
         modelScope.launch {
             val unavailabilityReason = rampStateManager.availableForBuy(
-                scanResponse = selectedUserWallet.scanResponse,
-                userWalletId = params.userWalletId,
+                userWallet = selectedUserWallet,
                 cryptoCurrency = status.currency,
             )
 
