@@ -71,7 +71,7 @@ internal class DefaultCurrenciesRepository(
             isGroupedByNetwork = isGroupedByNetwork,
             isSortedByBalance = isSortedByBalance,
         )
-        userTokensSaver.store(userWalletId, response)
+        userTokensSaver.storeAndPush(userWalletId, response)
     }
 
     override suspend fun saveNewCurrenciesList(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
