@@ -114,8 +114,7 @@ internal class DefaultWcPairUseCaseTest {
         coEvery {
             caipNamespaceDelegate.associate(
                 sessionProposal = sdkProposal,
-                userWallet = sessionForApprove.wallet,
-                networks = sessionForApprove.network,
+                sessionForApprove = sessionForApprove,
             )
         } returns mapOf()
     }
