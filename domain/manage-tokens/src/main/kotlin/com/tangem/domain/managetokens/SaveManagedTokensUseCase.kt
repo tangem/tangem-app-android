@@ -34,36 +34,33 @@ class SaveManagedTokensUseCase(
         currenciesToAdd: Map<ManagedCryptoCurrency.Token, Set<Network>>,
         currenciesToRemove: Map<ManagedCryptoCurrency.Token, Set<Network>>,
     ): Either<Throwable, Unit> = Either.catch {
-        val removingCurrencies = currenciesToRemove.mapToCryptoCurrencies(userWalletId)
-        val addingCurrencies = currenciesToAdd.mapToCryptoCurrencies(userWalletId)
+        if (currenciesToRemove.isNotEmpty()) {
+            val removingCurrencies = currenciesToRemove.mapToCryptoCurrencies(userWalletId)
 
-        derivationsRepository.derivePublicKeysByNetworks(
-            userWalletId = userWalletId,
-            networks = currenciesToAdd.values.flatten(),
-        )
+            currenciesRepository.removeCurrencies(userWalletId = userWalletId, currencies = removingCurrencies)
 
-        val existingCurrencies = currenciesRepository.getMultiCurrencyWalletCurrenciesSync(userWalletId)
+            removeCurrenciesFromWalletManager(userWalletId = userWalletId, currencies = removingCurrencies)
+        }
 
-        val newCurrenciesList = existingCurrencies
-            .filterNot(removingCurrencies::contains)
-            .toMutableList()
-            .also { it.addAll(addingCurrencies) }
+        if (currenciesToAdd.isNotEmpty()) {
+            derivationsRepository.derivePublicKeysByNetworks(
+                userWalletId = userWalletId,
+                networks = currenciesToAdd.values.flatten(),
+            )
 
-        currenciesRepository.saveNewCurrenciesList(userWalletId, newCurrenciesList)
+            val addingCurrencies = currenciesToAdd.mapToCryptoCurrencies(userWalletId)
 
-        removeCurrenciesFromWalletManager(
-            userWalletId = userWalletId,
-            currencies = removingCurrencies.filterNot(existingCurrencies::contains),
-        )
-        refreshUpdatedNetworks(
-            userWalletId = userWalletId,
-            existingCurrencies = existingCurrencies,
-            currenciesToAdd = addingCurrencies,
-        )
+            val savedCurrencies = currenciesRepository.addCurrencies(
+                userWalletId = userWalletId,
+                currencies = addingCurrencies,
+            )
 
-        refreshUpdatedYieldBalances(userWalletId, existingCurrencies)
+            refreshUpdatedNetworks(userWalletId = userWalletId, addedCurrencies = savedCurrencies)
 
-        refreshUpdatedQuotes(addingCurrencies)
+            refreshUpdatedYieldBalances(userWalletId = userWalletId, addedCurrencies = savedCurrencies)
+
+            refreshUpdatedQuotes(addedCurrencies = savedCurrencies)
+        }
     }
 
     private suspend fun removeCurrenciesFromWalletManager(
@@ -83,43 +80,30 @@ class SaveManagedTokensUseCase(
         )
     }
 
-    private suspend fun refreshUpdatedNetworks(
-        userWalletId: UserWalletId,
-        currenciesToAdd: List<CryptoCurrency>,
-        existingCurrencies: List<CryptoCurrency>,
-    ) {
-        val networksToUpdate = currenciesToAdd
-            .asSequence()
-            .filterIsInstance<CryptoCurrency.Token>()
-            .map(CryptoCurrency.Token::network)
-            .filterTo(hashSetOf()) { hasCoinForNetwork(existingCurrencies, it) }
-
-        val networkToUpdate = currenciesToAdd.map { it.network }
-            .subtract(existingCurrencies.map { it.network }.toSet())
-
+    private suspend fun refreshUpdatedNetworks(userWalletId: UserWalletId, addedCurrencies: List<CryptoCurrency>) {
         multiNetworkStatusFetcher(
             MultiNetworkStatusFetcher.Params(
                 userWalletId = userWalletId,
-                networks = networksToUpdate + networkToUpdate,
+                networks = addedCurrencies.map(CryptoCurrency::network).toSet(),
             ),
         )
     }
 
     private suspend fun refreshUpdatedYieldBalances(
         userWalletId: UserWalletId,
-        existingCurrencies: List<CryptoCurrency>,
+        addedCurrencies: List<CryptoCurrency>,
     ) {
         if (tokensFeatureToggles.isStakingLoadingRefactoringEnabled) {
             multiYieldBalanceFetcher(
                 params = MultiYieldBalanceFetcher.Params(
                     userWalletId = userWalletId,
-                    currencyIdWithNetworkMap = existingCurrencies.associateTo(hashMapOf()) { it.id to it.network },
+                    currencyIdWithNetworkMap = addedCurrencies.associateTo(hashMapOf()) { it.id to it.network },
                 ),
             )
         } else {
             stakingRepository.fetchMultiYieldBalance(
                 userWalletId = userWalletId,
-                cryptoCurrencies = existingCurrencies,
+                cryptoCurrencies = addedCurrencies,
                 refresh = true,
             )
         }
@@ -132,16 +116,6 @@ class SaveManagedTokensUseCase(
                 appCurrencyId = null,
             ),
         )
-    }
-
-    /**
-     * Determines if the [existingCurrencies] list contains a coin that corresponds
-     * to the given [network].
-     */
-    private fun hasCoinForNetwork(existingCurrencies: List<CryptoCurrency>, network: Network): Boolean {
-        return existingCurrencies.any { currency ->
-            currency is CryptoCurrency.Coin && currency.network == network
-        }
     }
 
     private suspend fun Map<ManagedCryptoCurrency.Token, Set<Network>>.mapToCryptoCurrencies(
