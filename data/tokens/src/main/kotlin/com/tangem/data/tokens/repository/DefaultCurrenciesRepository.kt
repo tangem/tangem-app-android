@@ -564,7 +564,6 @@ internal class DefaultCurrenciesRepository(
         userWallet: UserWallet,
         currencyRawId: CryptoCurrency.RawID,
     ): Flow<List<CryptoCurrency>> {
-        userWallet.requireColdWallet() // TODO [REDACTED_TASK_KEY]
         return when {
             userWallet.isMultiCurrency -> {
                 getSavedUserTokensResponse(userWallet.walletId).map { storedTokens ->
@@ -581,7 +580,7 @@ internal class DefaultCurrenciesRepository(
 
             else -> {
                 val currencies =
-                    if (userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()) {
+                    if (userWallet.requireColdWallet().scanResponse.cardTypesResolver.isSingleWalletWithToken()) {
                         getSingleCurrencyWalletWithCardCurrencies(userWallet.walletId)
                     } else {
                         val currency =
@@ -619,9 +618,8 @@ internal class DefaultCurrenciesRepository(
         )
     }
 
-    override fun getCardTypesResolver(userWalletId: UserWalletId): CardTypesResolver {
-        return userWalletsStore.getSyncStrict(userWalletId)
-            .requireColdWallet().cardTypesResolver // TODO [REDACTED_TASK_KEY]
+    override fun getCardTypesResolver(userWalletId: UserWalletId): CardTypesResolver? {
+        return (userWalletsStore.getSyncStrict(userWalletId) as? UserWallet.Cold)?.cardTypesResolver
     }
 
     private fun getMultiCurrencyWalletCurrencies(userWallet: UserWallet): Flow<List<CryptoCurrency>> {
