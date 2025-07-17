@@ -20,6 +20,11 @@ internal class RuntimeUserWalletsListManager : UserWalletsListManager {
             .mapLatest { listOfNotNull(it.userWallet) }
             .distinctUntilChanged()
 
+    override val savedWalletsCount: Flow<Int>
+        get() = state
+            .mapLatest { walletsCount }
+            .distinctUntilChanged()
+
     override val selectedUserWallet: Flow<UserWallet>
         get() = state
             .mapLatest { it.userWallet }
