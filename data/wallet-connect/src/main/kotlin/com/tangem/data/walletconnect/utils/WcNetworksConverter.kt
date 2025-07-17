@@ -2,13 +2,13 @@ package com.tangem.data.walletconnect.utils
 
 import com.reown.walletkit.client.Wallet
 import com.tangem.data.common.currency.isCustomCoin
+import com.tangem.data.walletconnect.model.CAIP10
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesProducer
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
 import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.tokens.repository.CurrenciesRepository
-import com.tangem.data.walletconnect.model.CAIP10
 import com.tangem.domain.walletconnect.model.WcSession
 import com.tangem.domain.walletconnect.model.WcSessionApprove
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
@@ -35,7 +35,7 @@ internal class WcNetworksConverter @Inject constructor(
 
         val requestNetwork = allCoinNetwork.find { network ->
             val address = walletManagersFacade.getDefaultAddress(wallet.walletId, network)
-            requestAddress == address
+            requestAddress.lowercase() == address?.lowercase()
         }
         return requestNetwork
     }
@@ -76,7 +76,7 @@ internal class WcNetworksConverter @Inject constructor(
                     // find equal address
                     .firstOrNull {
                         val walletAddress = walletManagersFacade.getDefaultAddress(wallet.walletId, it)
-                        walletAddress == caip10.accountAddress
+                        walletAddress?.lowercase() == caip10.accountAddress.lowercase()
                     }
             }
 
