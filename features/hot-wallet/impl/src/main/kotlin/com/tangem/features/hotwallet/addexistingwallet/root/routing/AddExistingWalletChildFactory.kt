@@ -2,6 +2,7 @@ package com.tangem.features.hotwallet.addexistingwallet.root.routing
 
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.features.hotwallet.setaccesscode.SetAccessCodeComponent
 import com.tangem.features.hotwallet.addexistingwallet.root.AddExistingWalletModel
 import com.tangem.features.hotwallet.addexistingwallet.start.AddExistingWalletStartComponent
 import com.tangem.features.hotwallet.addexistingwallet.im.port.AddExistingWalletImportComponent
@@ -34,6 +35,12 @@ internal class AddExistingWalletChildFactory @Inject constructor(
                 context = childContext,
                 params = PushNotificationsComponent.Params.Callbacks(
                     callbacks = model.pushNotificationsComponentModelCallbacks,
+                ),
+            )
+            is AddExistingWalletRoute.AccessCode -> SetAccessCodeComponent(
+                context = childContext,
+                params = SetAccessCodeComponent.Params(
+                    callbacks = model.accessCodeModelCallbacks,
                 ),
             )
         }
