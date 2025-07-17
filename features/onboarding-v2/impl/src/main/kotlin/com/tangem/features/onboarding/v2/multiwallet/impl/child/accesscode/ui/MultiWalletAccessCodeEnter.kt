@@ -71,13 +71,11 @@ internal fun MultiWalletAccessCodeEnter(
                 state.onAccessCodeFirstChange
             },
             label = stringResourceSafe(id = R.string.onboarding_wallet_info_title_third),
-            isError = state.codesNotMatchError || state.atLeast4CharError,
+            isError = state.codesNotMatchError,
             visualTransformation = PasswordVisualTransformation(),
             caption = when {
                 state.codesNotMatchError && reEnterAccessCodeState ->
                     stringResourceSafe(R.string.onboarding_access_codes_doesnt_match)
-                state.atLeast4CharError && !reEnterAccessCodeState ->
-                    stringResourceSafe(R.string.onboarding_access_code_too_short)
                 else -> null
             },
         )
