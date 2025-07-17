@@ -4,23 +4,21 @@ import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.legacy.asLockable
 import com.tangem.domain.wallets.legacy.isLockedSync
 import com.tangem.domain.wallets.models.UserWallet
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.*
 
-class GetSavedWalletChangesUseCase(
+class GetSavedWalletsCountUseCase(
     private val userWalletsListManager: UserWalletsListManager,
 ) {
 
     operator fun invoke(): Flow<List<UserWallet>> {
-        return userWalletsListManager.userWallets
-            .filter {
+        return userWalletsListManager.savedWalletsCount
+            .filter { count ->
+                if (count == 0) return@filter true
                 userWalletsListManager.asLockable() ?: return@filter false
-                return@filter if (userWalletsListManager.isLockedSync.not()) {
-                    it.isNotEmpty()
-                } else {
-                    false
-                }
+                return@filter userWalletsListManager.isLockedSync.not()
+            }
+            .map {
+                userWalletsListManager.userWalletsSync
             }
             .distinctUntilChanged()
     }
