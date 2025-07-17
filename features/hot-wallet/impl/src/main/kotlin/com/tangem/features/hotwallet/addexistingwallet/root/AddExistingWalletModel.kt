@@ -6,6 +6,7 @@ import com.arkivanov.decompose.router.stack.push
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.features.hotwallet.setaccesscode.SetAccessCodeComponent
 import com.tangem.features.hotwallet.addexistingwallet.start.AddExistingWalletStartComponent
 import com.tangem.features.hotwallet.addexistingwallet.im.port.AddExistingWalletImportComponent
 import com.tangem.features.hotwallet.addexistingwallet.root.routing.AddExistingWalletRoute
@@ -22,6 +23,7 @@ internal class AddExistingWalletModel @Inject constructor(
     val addExistingWalletStartModelCallbacks = AddExistingWalletStartModelCallbacks()
     val addExistingWalletImportModelCallbacks = AddExistingWalletImportModelCallbacks()
     val pushNotificationsComponentModelCallbacks = PushNotificationsComponentModelCallbacks()
+    val accessCodeModelCallbacks = AccessCodeModelCallbacks()
 
     val stackNavigation = StackNavigation<AddExistingWalletRoute>()
 
@@ -43,6 +45,16 @@ internal class AddExistingWalletModel @Inject constructor(
 
     inner class PushNotificationsComponentModelCallbacks : PushNotificationsComponent.ModelCallbacks {
         override fun onResult() {
+            // TODO [REDACTED_TASK_KEY]
+        }
+    }
+
+    inner class AccessCodeModelCallbacks : SetAccessCodeComponent.ModelCallbacks {
+        override fun onBackClick() {
+            // TODO [REDACTED_TASK_KEY]
+        }
+
+        override fun onAccessCodeSet() {
             // TODO [REDACTED_TASK_KEY]
         }
     }
