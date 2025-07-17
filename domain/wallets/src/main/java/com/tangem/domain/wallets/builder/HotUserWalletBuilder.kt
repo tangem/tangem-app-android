@@ -4,7 +4,6 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.domain.models.MobileWallet
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
 import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.hot.sdk.model.DeriveWalletRequest
@@ -58,7 +57,7 @@ class HotUserWalletBuilder @AssistedInject constructor(
 
         UserWallet.Hot(
             name = generateWalletNameUseCase.invokeForHot(),
-            walletId = UserWalletId(wallets.first().publicKey),
+            walletId = UserWalletIdBuilder.walletPublicKey(wallets.first().publicKey),
             hotWalletId = hotWalletId,
             wallets = wallets,
             backedUp = false,
