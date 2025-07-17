@@ -13,4 +13,7 @@ internal sealed class AddExistingWalletRoute : Route {
 
     @Serializable
     object PushNotifications : AddExistingWalletRoute()
+
+    @Serializable
+    object AccessCode : AddExistingWalletRoute()
 }
