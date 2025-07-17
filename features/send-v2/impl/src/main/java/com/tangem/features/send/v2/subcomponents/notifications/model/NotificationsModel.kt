@@ -302,7 +302,7 @@ internal class NotificationsModel @Inject constructor(
     ) {
         val validationError = validateTransactionUseCase(
             userWalletId = userWalletId,
-            amount = enteredAmount.convertToSdkAmount(currency),
+            amount = sendingAmount.convertToSdkAmount(currency),
             fee = fee,
             memo = memo,
             destination = destinationAddress,
