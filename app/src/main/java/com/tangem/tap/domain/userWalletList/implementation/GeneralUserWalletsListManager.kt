@@ -60,6 +60,14 @@ internal class GeneralUserWalletsListManager(
             // As a result subscription occurs on empty flow, than will not change if user wallets are available
             .filter { requireImplementation.hasUserWallets }
 
+    override val savedWalletsCount: Flow<Int>
+        get() = implementation
+            .transformLatest { impl ->
+                if (impl != null) {
+                    emitAll(impl.savedWalletsCount)
+                }
+            }
+
     override val userWalletsSync: List<UserWallet>
         get() = requireImplementation.userWalletsSync
 
