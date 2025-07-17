@@ -231,8 +231,8 @@ internal object WalletsDomainModule {
     @Singleton
     fun providesGetSavedWalletChangesIdUseCase(
         userWalletsListManager: UserWalletsListManager,
-    ): GetSavedWalletChangesUseCase {
-        return GetSavedWalletChangesUseCase(
+    ): GetSavedWalletsCountUseCase {
+        return GetSavedWalletsCountUseCase(
             userWalletsListManager = userWalletsListManager,
         )
     }
