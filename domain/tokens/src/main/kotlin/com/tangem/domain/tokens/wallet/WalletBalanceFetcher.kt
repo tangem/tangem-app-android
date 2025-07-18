@@ -76,7 +76,7 @@ class WalletBalanceFetcher internal constructor(
         val cardTypesResolver = currenciesRepository.getCardTypesResolver(userWalletId = userWalletId)
 
         val fetcher = when {
-            cardTypesResolver.isMultiwalletAllowed() -> multiWalletBalanceFetcher
+            cardTypesResolver == null || cardTypesResolver.isMultiwalletAllowed() -> multiWalletBalanceFetcher
             cardTypesResolver.isSingleWalletWithToken() -> singleWalletWithTokenBalanceFetcher
             cardTypesResolver.isSingleWallet() -> singleWalletBalanceFetcher
             else -> error("Unknown type of wallet: $userWalletId")

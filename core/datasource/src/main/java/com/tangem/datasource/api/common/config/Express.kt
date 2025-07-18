@@ -27,6 +27,7 @@ internal class Express(
 
     override val environmentConfigs: List<ApiEnvironmentConfig> = listOf(
         createDevEnvironment(),
+        createDev2Environment(),
         createStageEnvironment(),
         createMockedEnvironment(),
         createProdEnvironment(),
@@ -49,6 +50,12 @@ internal class Express(
 
     private fun createDevEnvironment(): ApiEnvironmentConfig = ApiEnvironmentConfig(
         environment = ApiEnvironment.DEV,
+        baseUrl = "[REDACTED_ENV_URL]",
+        headers = createHeaders(isProd = false),
+    )
+
+    private fun createDev2Environment(): ApiEnvironmentConfig = ApiEnvironmentConfig(
+        environment = ApiEnvironment.DEV_2,
         baseUrl = "[REDACTED_ENV_URL]",
         headers = createHeaders(isProd = false),
     )

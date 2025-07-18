@@ -50,7 +50,7 @@ internal class DefaultDerivationsRepository(
                 networkFactory.create(
                     blockchain = Blockchain.fromNetworkId(it.value) ?: return@mapNotNull null,
                     extraDerivationPath = null,
-                    scanResponse = userWallet.requireColdWallet().scanResponse, // TODO [REDACTED_TASK_KEY]
+                    userWallet = userWallet,
                 )
             },
         )
@@ -61,7 +61,11 @@ internal class DefaultDerivationsRepository(
             userWalletsStore.getSyncOrNull(userWalletId) ?: error("User wallet not found")
         }
 
-        userWallet.requireColdWallet() // TODO [REDACTED_TASK_KEY]
+        if (userWallet is UserWallet.Hot) {
+            return
+        }
+
+        userWallet.requireColdWallet()
 
         if (!userWallet.scanResponse.card.settings.isHDWalletAllowed) {
             Timber.d("Nothing to derive")
@@ -84,14 +88,18 @@ internal class DefaultDerivationsRepository(
     ): Boolean {
         val userWallet = userWalletsStore.getSyncOrNull(userWalletId) ?: error("User wallet not found")
 
+        if (userWallet is UserWallet.Hot) {
+            return false
+        }
+
         val derivations =
-            MissedDerivationsFinder(scanResponse = userWallet.requireColdWallet().scanResponse) // TODO [REDACTED_TASK_KEY]
+            MissedDerivationsFinder(scanResponse = userWallet.requireColdWallet().scanResponse)
                 .findByNetworks(
                     networksWithDerivationPath.mapNotNull { (backendId, extraDerivationPath) ->
                         networkFactory.create(
                             blockchain = Blockchain.fromNetworkId(backendId) ?: return@mapNotNull null,
                             extraDerivationPath = extraDerivationPath,
-                            scanResponse = userWallet.requireColdWallet().scanResponse, // TODO [REDACTED_TASK_KEY]
+                            userWallet = userWallet,
                         )
                     },
                 )
