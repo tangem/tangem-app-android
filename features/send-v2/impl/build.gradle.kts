@@ -20,6 +20,7 @@ dependencies {
     implementation(projects.features.sendV2.api)
     implementation(projects.features.txhistory.api)
     implementation(projects.features.nft.api)
+    implementation(projects.features.swapV2.api)
 
     /** Libs */
     implementation(projects.libs.crypto)
@@ -64,6 +65,7 @@ dependencies {
     implementation(projects.domain.nft.models)
     implementation(projects.domain.nft)
     implementation(projects.domain.notifications)
+    implementation(projects.domain.swap.models)
 
 
     /** Compose libraries */
