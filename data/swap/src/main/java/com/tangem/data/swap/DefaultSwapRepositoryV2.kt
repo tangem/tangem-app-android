@@ -203,7 +203,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
             fromDecimals = fromCryptoCurrency.decimals,
             toDecimals = toCryptoCurrency.decimals,
             fromAmount = fromAmount,
-            providerId = expressProvider.name,
+            providerId = expressProvider.providerId,
             rateType = rateType.name.lowercase(),
             requestId = requestId,
             refundAddress = refundData?.refundAddress,

@@ -23,12 +23,12 @@ internal fun SendContent(
     stackState: ChildStack<CommonSendRoute, ComposableContentComponent>,
 ) {
     Column(
-        modifier = Modifier.Companion
+        modifier = Modifier
             .background(color = TangemTheme.colors.background.tertiary)
             .fillMaxSize()
             .imePadding()
             .systemBarsPadding(),
-        horizontalAlignment = Alignment.Companion.CenterHorizontally,
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         SendAppBar(navigationUM = navigationUM)
         Children(
