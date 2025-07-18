@@ -250,6 +250,7 @@ internal class SwapAmountModel @Inject constructor(
             .onEach { currency ->
                 uiState.update { amountUM ->
                     if (amountUM is SwapAmountUM.Content) {
+                        initPairs(currency)
                         amountUM.copy(
                             isPrimaryButtonEnabled = false,
                             secondaryAmount = SwapAmountFieldUM.Loading(
@@ -260,7 +261,6 @@ internal class SwapAmountModel @Inject constructor(
                         amountUM
                     }
                 }
-                initPairs(currency)
             }
             .launchIn(modelScope)
     }
@@ -400,6 +400,7 @@ internal class SwapAmountModel @Inject constructor(
                                 swapDirection = swapDirection,
                                 allowanceContract = quote.allowanceContract,
                                 isApprovalNeeded = checkAllowance(state, quote),
+                                fromAmount = fromAmountValue,
                             ).convert(
                                 SwapQuoteUMConverter.Data(
                                     quote = quote,
