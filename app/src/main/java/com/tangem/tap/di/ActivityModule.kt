@@ -5,7 +5,6 @@ import com.tangem.datasource.exchangeservice.swap.ExpressServiceLoader
 import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.exchange.RampStateManager
-import com.tangem.domain.tokens.GetNetworkCoinStatusUseCase
 import com.tangem.domain.tokens.GetPolkadotCheckHasImmortalUseCase
 import com.tangem.domain.tokens.GetPolkadotCheckHasResetUseCase
 import com.tangem.domain.tokens.repository.CurrenciesRepository
@@ -49,7 +48,6 @@ internal object ActivityModule {
         appStateHolder: AppStateHolder,
         expressServiceLoader: ExpressServiceLoader,
         currenciesRepository: CurrenciesRepository,
-        getNetworkCoinStatusUseCase: GetNetworkCoinStatusUseCase,
         excludedBlockchains: ExcludedBlockchains,
         dispatchers: CoroutineDispatcherProvider,
     ): RampStateManager {
@@ -57,7 +55,6 @@ internal object ActivityModule {
             sellService = Provider { requireNotNull(appStateHolder.sellService) },
             expressServiceLoader = expressServiceLoader,
             currenciesRepository = currenciesRepository,
-            getNetworkCoinStatusUseCase = getNetworkCoinStatusUseCase,
             dispatchers = dispatchers,
             excludedBlockchains = excludedBlockchains,
         )

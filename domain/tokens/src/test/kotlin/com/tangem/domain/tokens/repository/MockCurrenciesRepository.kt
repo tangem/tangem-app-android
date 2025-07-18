@@ -48,7 +48,10 @@ internal class MockCurrenciesRepository(
 
     override suspend fun saveNewCurrenciesList(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) = Unit
 
-    override suspend fun addCurrencies(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) = Unit
+    override suspend fun addCurrencies(
+        userWalletId: UserWalletId,
+        currencies: List<CryptoCurrency>,
+    ): List<CryptoCurrency> = emptyList()
 
     override suspend fun removeCurrency(userWalletId: UserWalletId, currency: CryptoCurrency) {
         removeCurrencyResult.onLeft { throw it }
@@ -131,9 +134,9 @@ internal class MockCurrenciesRepository(
         return isSortedByBalance.map { it.getOrElse { e -> throw e } }
     }
 
-    override fun isSendBlockedByPendingTransactions(
+    override suspend fun isSendBlockedByPendingTransactions(
+        userWalletId: UserWalletId,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
-        coinStatus: CryptoCurrencyStatus?,
     ): Boolean {
         return false
     }
