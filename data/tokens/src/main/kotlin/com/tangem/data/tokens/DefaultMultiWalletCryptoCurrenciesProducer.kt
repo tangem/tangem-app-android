@@ -48,7 +48,7 @@ internal class DefaultMultiWalletCryptoCurrenciesProducer @AssistedInject constr
 
                 responseCryptoCurrenciesFactory.createCurrencies(
                     response = response,
-                    scanResponse = userWallet.scanResponse,
+                    userWallet = userWallet,
                 ).toSet()
             }
             .onEmpty { emit(fallback) }
