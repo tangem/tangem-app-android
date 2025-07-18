@@ -204,12 +204,9 @@ internal class OnboardingNoteTopUpModel @Inject constructor(
     }
 
     private fun loadAvailableForBuy(cryptoCurrencyStatus: CryptoCurrencyStatus) {
-        val userWalletId = userWallet?.walletId ?: return
-
         modelScope.launch {
             val availableForBuy = rampStateManager.availableForBuy(
-                scanResponse = scanResponse,
-                userWalletId = userWalletId,
+                userWallet = userWallet ?: return@launch,
                 cryptoCurrency = cryptoCurrencyStatus.currency,
             )
             _uiState.update {

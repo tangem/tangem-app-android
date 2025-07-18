@@ -38,6 +38,7 @@ dependencyResolutionManagement {
         mavenLocal {
             content {
                 includeGroupAndSubgroups("com.tangem.tangem-sdk-kotlin")
+                includeGroupAndSubgroups("com.tangem.tangem-hot-sdk-kotlin")
                 includeGroupAndSubgroups("com.tangem.vico")
                 includeModule("com.tangem", "blstlib")
                 includeModule("com.tangem", "blockchain")
@@ -53,6 +54,15 @@ dependencyResolutionManagement {
                 password = properties.getProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
             }
             content { includeGroupAndSubgroups("com.tangem.tangem-sdk-kotlin") }
+        }
+        maven {
+            // setting any repository from tangem project allows maven search all packages in the project
+            url = uri("https://maven.pkg.github.com/tangem/tangem-hot-sdk-kotlin")
+            credentials {
+                username = properties.getProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")
+                password = properties.getProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
+            }
+            content { includeGroupAndSubgroups("com.tangem.tangem-hot-sdk-kotlin") }
         }
         maven {
             // setting any repository from tangem project allows maven search all packages in the project
@@ -146,8 +156,6 @@ include(":core:navigation")
 include(":core:res")
 include(":core:ui")
 include(":core:utils")
-include(":core:deep-links")
-include(":core:deep-links:global")
 include(":core:decompose")
 include(":core:pagination")
 include(":core:error")
