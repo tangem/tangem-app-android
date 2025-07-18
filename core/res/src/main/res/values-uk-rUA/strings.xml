@@ -722,6 +722,9 @@
   <string name="organize_tokens_title">Сортування токенів</string>
   <string name="organize_tokens_ungroup">Список</string>
   <string name="push_notifications_more_info">Більше</string>
+  <string name="push_notifications_permission_alert_description">Ви можете ввімкнути сповіщення у налаштуваннях</string>
+  <string name="push_notifications_permission_alert_negative_button">Увімкнути пізніше</string>
+  <string name="push_notifications_permission_alert_positive_button">Налаштування</string>
   <string name="push_notifications_permission_alert_title">Увімкнути сповіщення</string>
   <string name="push_transactions_notifications_description">Отримуйте сповіщення про вхідні транзакції в підтримуваних мережах.</string>
   <string name="qr_scanner_camera_denied_gallery_button">Виберіть з галереї</string>
