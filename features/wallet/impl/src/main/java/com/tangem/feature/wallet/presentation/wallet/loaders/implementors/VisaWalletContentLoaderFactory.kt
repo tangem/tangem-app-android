@@ -15,7 +15,7 @@ internal class VisaWalletContentLoaderFactory @Inject constructor(
     private val getVisaTxHistoryUseCase: GetVisaTxHistoryUseCase,
 ) {
 
-    fun create(userWallet: UserWallet, clickIntents: WalletClickIntents, isRefresh: Boolean): WalletContentLoader {
+    fun create(userWallet: UserWallet.Cold, clickIntents: WalletClickIntents, isRefresh: Boolean): WalletContentLoader {
         return VisaWalletContentLoader(
             userWallet = userWallet,
             clickIntents = clickIntents,

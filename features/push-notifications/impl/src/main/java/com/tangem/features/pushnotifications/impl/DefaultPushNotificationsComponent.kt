@@ -19,7 +19,7 @@ import dagger.assisted.AssistedInject
 
 internal class DefaultPushNotificationsComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
-    @Assisted params: Unit,
+    @Assisted params: PushNotificationsComponent.Params,
 ) : PushNotificationsComponent, AppComponentContext by appComponentContext {
 
     private val model: PushNotificationsModel = getOrCreateModel(params)
@@ -41,6 +41,9 @@ internal class DefaultPushNotificationsComponent @AssistedInject constructor(
 
     @AssistedFactory
     interface Factory : PushNotificationsComponent.Factory {
-        override fun create(context: AppComponentContext, params: Unit): DefaultPushNotificationsComponent
+        override fun create(
+            context: AppComponentContext,
+            params: PushNotificationsComponent.Params,
+        ): DefaultPushNotificationsComponent
     }
 }
