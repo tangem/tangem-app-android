@@ -10,15 +10,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.ui.amountScreen.utils.getFiatString
-import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.atoms.text.EllipsisText
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -29,9 +31,8 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.features.send.v2.api.entity.FeeFiatRateUM
-import com.tangem.features.send.v2.api.entity.FeeItem
-import com.tangem.features.send.v2.api.entity.FeeSelectorUM
+import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.features.send.v2.api.entity.*
 import com.tangem.features.send.v2.impl.R
 import kotlinx.collections.immutable.persistentListOf
 import java.math.BigDecimal
@@ -50,21 +51,14 @@ internal fun FeeSelectorBlockContent(state: FeeSelectorUM, modifier: Modifier = 
             contentDescription = null,
             tint = TangemTheme.colors.icon.accent,
         )
-        Text(
-            modifier = Modifier.padding(start = TangemTheme.dimens.spacing4),
-            text = stringResourceSafe(R.string.common_network_fee_title),
-            style = TangemTheme.typography.body1,
-            color = TangemTheme.colors.text.primary1,
-        )
-        Icon(
-            modifier = Modifier
-                .padding(start = TangemTheme.dimens.spacing6)
-                .size(TangemTheme.dimens.size16),
-            painter = painterResource(id = R.drawable.ic_token_info_24),
-            contentDescription = null,
-            tint = TangemTheme.colors.icon.informative,
-        )
-        SpacerWMax()
+        FeeSelectorDescription(state = state)
+    }
+}
+
+@Composable
+private fun FeeSelectorDescription(state: FeeSelectorUM, modifier: Modifier = Modifier) {
+    Row(modifier = modifier, horizontalArrangement = Arrangement.SpaceBetween) {
+        FeeSelectorStaticPart(modifier = Modifier.weight(1f))
         when (state) {
             is FeeSelectorUM.Content -> FeeContent(state)
             is FeeSelectorUM.Loading -> FeeLoading()
@@ -74,7 +68,31 @@ internal fun FeeSelectorBlockContent(state: FeeSelectorUM, modifier: Modifier = 
 }
 
 @Composable
-private fun RowScope.FeeError() {
+private fun FeeSelectorStaticPart(modifier: Modifier = Modifier) {
+    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            modifier = Modifier
+                .padding(start = TangemTheme.dimens.spacing4)
+                .weight(1f, fill = false),
+            text = stringResourceSafe(R.string.common_network_fee_title),
+            style = TangemTheme.typography.body1,
+            color = TangemTheme.colors.text.primary1,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Icon(
+            modifier = Modifier
+                .padding(start = TangemTheme.dimens.spacing6)
+                .size(TangemTheme.dimens.size16),
+            painter = painterResource(id = R.drawable.ic_token_info_24),
+            contentDescription = null,
+            tint = TangemTheme.colors.icon.informative,
+        )
+    }
+}
+
+@Composable
+private fun FeeError() {
     Text(
         text = EMPTY_BALANCE_SIGN,
         color = TangemTheme.colors.text.primary1,
@@ -83,7 +101,7 @@ private fun RowScope.FeeError() {
 }
 
 @Composable
-private fun RowScope.FeeLoading() {
+private fun FeeLoading() {
     TextShimmer(
         radius = TangemTheme.dimens.radius3,
         style = TangemTheme.typography.body1,
@@ -92,62 +110,87 @@ private fun RowScope.FeeLoading() {
 }
 
 @Composable
-private fun RowScope.FeeContent(state: FeeSelectorUM.Content) {
+private fun FeeContent(state: FeeSelectorUM.Content, modifier: Modifier = Modifier) {
     val fiatRate = state.feeFiatRateUM
-    EllipsisText(
-        text = if (fiatRate != null) {
-            getFiatString(
-                value = state.selectedFeeItem.fee.amount.value,
-                rate = fiatRate.rate,
-                appCurrency = fiatRate.appCurrency,
-                approximate = state.isFeeApproximate,
-            )
-        } else {
-            state.selectedFeeItem.fee.amount.value.format {
-                crypto(
-                    symbol = state.selectedFeeItem.fee.amount.currencySymbol,
-                    decimals = state.selectedFeeItem.fee.amount.decimals,
-                ).fee(canBeLower = state.isFeeApproximate)
-            }
-        },
-        style = TangemTheme.typography.body1,
-        color = TangemTheme.colors.text.tertiary,
-        textAlign = TextAlign.End,
-        modifier = Modifier
-            .weight(1f)
-            .padding(start = TangemTheme.dimens.spacing4),
-    )
-    Icon(
-        modifier = Modifier.size(width = 18.dp, height = 24.dp),
-        painter = painterResource(id = R.drawable.ic_select_18_24),
-        contentDescription = null,
-        tint = TangemTheme.colors.icon.informative,
-    )
+    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
+        EllipsisText(
+            text = if (fiatRate != null) {
+                getFiatString(
+                    value = state.selectedFeeItem.fee.amount.value,
+                    rate = fiatRate.rate,
+                    appCurrency = fiatRate.appCurrency,
+                    approximate = state.feeExtraInfo.isFeeApproximate,
+                )
+            } else {
+                state.selectedFeeItem.fee.amount.value.format {
+                    crypto(
+                        symbol = state.selectedFeeItem.fee.amount.currencySymbol,
+                        decimals = state.selectedFeeItem.fee.amount.decimals,
+                    ).fee(canBeLower = state.feeExtraInfo.isFeeApproximate)
+                }
+            },
+            style = TangemTheme.typography.body1,
+            color = TangemTheme.colors.text.tertiary,
+            textAlign = TextAlign.End,
+            modifier = Modifier.padding(start = TangemTheme.dimens.spacing4),
+        )
+        Icon(
+            modifier = Modifier.size(width = 18.dp, height = 24.dp),
+            painter = painterResource(id = R.drawable.ic_select_18_24),
+            contentDescription = null,
+            tint = TangemTheme.colors.icon.informative,
+        )
+    }
 }
 
 @Preview(showBackground = true, device = Devices.PIXEL_7_PRO)
 @Preview(showBackground = true, device = Devices.PIXEL_7_PRO, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun FeeSelectorBlockContent_Preview() {
+private fun FeeSelectorBlockContent_Preview(@PreviewParameter(FeeSelectorUMProvider::class) state: FeeSelectorUM) {
     TangemThemePreview {
-        val feeItem = FeeItem.Market(
-            Fee.Common(amount = Amount(value = BigDecimal("0.0002876"), blockchain = Blockchain.Ethereum)),
-        )
-        FeeSelectorBlockContent(
-            modifier = Modifier.fillMaxWidth(),
-            state = FeeSelectorUM.Content(
-                feeItems = persistentListOf(feeItem),
-                selectedFeeItem = feeItem,
-                isFeeApproximate = false,
-                feeFiatRateUM = FeeFiatRateUM(
-                    rate = BigDecimal("2500"),
-                    appCurrency = AppCurrency.Default,
-                ),
-                displayNonceInput = false,
-                nonce = null,
-                onNonceChange = {},
-                fees = TransactionFee.Single(feeItem.fee),
-            ),
-        )
+        FeeSelectorBlockContent(modifier = Modifier.fillMaxWidth(), state = state)
     }
+}
+
+private class FeeSelectorUMProvider : PreviewParameterProvider<FeeSelectorUM> {
+    private val maxFeeItem = FeeItem.Market(
+        fee = Fee.Common(amount = Amount(value = BigDecimal("100000000"), blockchain = Blockchain.Ethereum)),
+    )
+    private val lowFeeItem =
+        FeeItem.Market(Fee.Common(amount = Amount(value = BigDecimal("0.0002876"), blockchain = Blockchain.Ethereum)))
+
+    override val values: Sequence<FeeSelectorUM> = sequenceOf(
+        FeeSelectorUM.Content(
+            feeItems = persistentListOf(lowFeeItem),
+            selectedFeeItem = lowFeeItem,
+            feeExtraInfo = FeeExtraInfo(
+                isFeeApproximate = false,
+                isFeeConvertibleToFiat = true,
+                isTronToken = false,
+            ),
+            feeNonce = FeeNonce.None,
+            feeFiatRateUM = FeeFiatRateUM(
+                rate = BigDecimal("2500"),
+                appCurrency = AppCurrency.Default,
+            ),
+            fees = TransactionFee.Single(lowFeeItem.fee),
+        ),
+        FeeSelectorUM.Content(
+            feeItems = persistentListOf(maxFeeItem),
+            selectedFeeItem = maxFeeItem,
+            feeExtraInfo = FeeExtraInfo(
+                isFeeApproximate = false,
+                isFeeConvertibleToFiat = true,
+                isTronToken = false,
+            ),
+            feeNonce = FeeNonce.None,
+            feeFiatRateUM = FeeFiatRateUM(
+                rate = BigDecimal("2500000000000"),
+                appCurrency = AppCurrency.Default,
+            ),
+            fees = TransactionFee.Single(maxFeeItem.fee),
+        ),
+        FeeSelectorUM.Error(GetFeeError.UnknownError),
+        FeeSelectorUM.Loading,
+    )
 }

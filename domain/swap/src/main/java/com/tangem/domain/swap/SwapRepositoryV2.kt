@@ -3,8 +3,10 @@ package com.tangem.domain.swap
 import com.tangem.domain.express.models.ExpressProvider
 import com.tangem.domain.express.models.ExpressRateType
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.swap.models.SwapDataModel
 import com.tangem.domain.swap.models.SwapPairModel
 import com.tangem.domain.swap.models.SwapQuoteModel
+import com.tangem.domain.swap.models.SwapStatusModel
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
 import java.math.BigDecimal
@@ -12,6 +14,7 @@ import java.math.BigDecimal
 /**
  * Swap repository
  */
+@Suppress("LongParameterList")
 interface SwapRepositoryV2 {
 
     /**
@@ -44,7 +47,6 @@ interface SwapRepositoryV2 {
      * @param provider selected express provider
      * @param rateType rate type
      */
-    @Suppress("LongParameterList")
     suspend fun getSwapQuote(
         userWallet: UserWallet,
         fromCryptoCurrency: CryptoCurrency,
@@ -53,4 +55,52 @@ interface SwapRepositoryV2 {
         provider: ExpressProvider,
         rateType: ExpressRateType,
     ): SwapQuoteModel
+
+    /**
+     * Returns swap data [SwapDataModel] ready to sign and send on selected quote
+     *
+     * @param userWallet selected user wallet
+     * @param fromCryptoCurrencyStatus currency status being swapped from
+     * @param toCryptoCurrencyStatus currency status being swapped to
+     * @param fromAmount swap amount
+     * @param toAddress destination address (optional, if null send to self)
+     * @param expressProvider selected swap provider
+     * @param rateType selected provider rate type
+     */
+    suspend fun getSwapData(
+        userWallet: UserWallet,
+        fromCryptoCurrencyStatus: CryptoCurrencyStatus,
+        toCryptoCurrencyStatus: CryptoCurrencyStatus,
+        fromAmount: String,
+        toAddress: String?,
+        expressProvider: ExpressProvider,
+        rateType: ExpressRateType,
+    ): SwapDataModel
+
+    /**
+     * Send ExpressApi info that swap transaction occurred
+     *
+     * @param userWallet selected user wallet
+     * @param fromCryptoCurrencyStatus currency status being swapped from
+     * @param toAddress swap destination address
+     * @param txId transaction id in ExpressApi
+     * @param txHash transaction hash in blockchain
+     * @param txExtraId extra transaction id in ExpressApi
+     */
+    suspend fun swapTransactionSent(
+        userWallet: UserWallet,
+        fromCryptoCurrencyStatus: CryptoCurrencyStatus,
+        toAddress: String,
+        txId: String,
+        txHash: String,
+        txExtraId: String?,
+    )
+
+    /**
+     * Returns status [SwapStatusModel] on active swap
+     *
+     * @param userWallet selected user wallet
+     * @param txId transaction id in ExpressApi
+     */
+    suspend fun getExchangeStatus(userWallet: UserWallet, txId: String): SwapStatusModel
 }
