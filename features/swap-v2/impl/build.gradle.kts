@@ -60,6 +60,8 @@ dependencies {
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.balanceHiding)
     implementation(projects.domain.settings)
+    implementation(projects.domain.txhistory.models)
+    implementation(projects.domain.txhistory)
 
     /** Compose */
     implementation(deps.compose.foundation)
