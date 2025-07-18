@@ -620,7 +620,7 @@
   <string name="onboarding_button_continue_wallet">Перейти к моему кошельку</string>
   <string name="onboarding_button_finalize_backup">Завершение бэкапа</string>
   <string name="onboarding_button_receive_crypto">Получить криптовалюту</string>
-  <string name="onboarding_button_scan_origin_card">Сканировать основную карту</string>
+  <string name="onboarding_button_scan_origin_card">Сканировать основную карту или кольцо</string>
   <string name="onboarding_button_skip_backup">Пропустить</string>
   <string name="onboarding_button_what_does_it_mean">Как это работает?</string>
   <string name="onboarding_create_wallet_body">Давайте сгенерируем все ключи на вашей карте или кольце и создадим безопасный кошелек</string>
@@ -676,7 +676,7 @@
   <string name="onboarding_title_no_backup_cards">Нет резервных устройств</string>
   <string name="onboarding_title_notifications">Уведомления</string>
   <string name="onboarding_title_one_backup_card">Добавлено одно резервное устройство</string>
-  <string name="onboarding_title_scan_origin_card">Подготовьте свою карту</string>
+  <string name="onboarding_title_scan_origin_card">Подготовьте свою карту или кольцо</string>
   <string name="onboarding_title_two_backup_cards">Добавлены два резервных девайса</string>
   <string name="onboarding_top_up_body">Пополните кошелек на любую сумму, чтобы начать пользоваться картой</string>
   <string name="onboarding_top_up_body_no_account_error">Пополните кошелек более чем на %1$s %2$s, чтобы начать пользоваться картой</string>
@@ -723,7 +723,12 @@
   <string name="organize_tokens_title">Упорядочить токены</string>
   <string name="organize_tokens_ungroup">Список</string>
   <string name="push_notifications_more_info">Подробнее</string>
+  <string name="push_notifications_permission_alert_description">Вы можете включить нотификации в настройках</string>
+  <string name="push_notifications_permission_alert_negative_button">Включить позже</string>
+  <string name="push_notifications_permission_alert_positive_button">Настройки</string>
   <string name="push_notifications_permission_alert_title">Подключить нотификации</string>
+  <string name="push_transactions_notifications_description">Получайте уведомления о входящих транзакциях в поддерживаемых сетях.</string>
+  <string name="push_transactions_notifications_title">Уведомления о транзакциях</string>
   <string name="qr_scanner_camera_denied_gallery_button">Выбрать из галереи</string>
   <string name="qr_scanner_camera_denied_settings_button">Настройки</string>
   <string name="qr_scanner_camera_denied_text">Вы не предоставили доступ к вашей камере</string>
@@ -1119,6 +1124,7 @@
   <string name="unlock_wallet_description_full">Используйте %s или отсканируйте карту/кольцо, чтобы получить доступ к своему кошельку</string>
   <string name="unsupported_wc_version">Соединение не удалось: это dApp использует Wallet Connect версии 1.0, которая не поддерживается. Убедитесь, что dApp поддерживает Wallet Connect версии 2.0 для успешного подключения.</string>
   <string name="user_push_notification_agreement_argument_one">Будьте в курсе новых функций и новостей</string>
+  <string name="user_push_notification_agreement_argument_three">Получайте уведомления о входящих транзакциях</string>
   <string name="user_push_notification_agreement_argument_two">Узнавайте первым о новых акциях</string>
   <string name="user_push_notification_agreement_header">Хотите использовать Push-уведомления?</string>
   <string name="user_wallet_list_add_button">Добавить новый кошелек</string>
@@ -1174,6 +1180,7 @@
   <string name="wallet_promo_banner_button_title">Получить с 10% скидкой</string>
   <string name="wallet_promo_banner_description">Получите доступ к более чем 13 000 криптовалют. Покупайте, продавайте, обменивайте и стейкайте в один клик. Свяжите до трех карт для резервного копирования. </string>
   <string name="wallet_promo_banner_title">Откройте Tangem Wallet</string>
+  <string name="wallet_settings_push_notifications_description">Получайте уведомления о входящих транзакциях в кошельке и обновлениях Tangem.</string>
   <string name="wallet_settings_push_notifications_title">Уведомления о транзакциях</string>
   <string name="wallet_settings_title">Настройки кошелька</string>
   <string name="wallet_title">Tangem</string>
@@ -1202,7 +1209,7 @@
   <string name="warning_express_approval_in_progress_message">Разрешение обмена в процессе и будет скоро завершено</string>
   <string name="warning_express_approval_in_progress_title">Разрешение в процессе</string>
   <string name="warning_express_dust_message">Минимальная сумма обмена - %1$s. Пожалуйста, убедитесь, что остаток после обмена также не будет меньше %2$s.</string>
-  <string name="warning_express_no_exchangeable_coins_description">У вас в списке нет монет доступных для обмена с %s</string>
+  <string name="warning_express_no_exchangeable_coins_description">У вас нет токенов в портфеле, на которые можно обменять %s. Пожалуйста, добавьте другой токен, чтобы выполнить обмен.</string>
   <string name="warning_express_no_exchangeable_coins_title">Нет доступных для обмена токенов</string>
   <string name="warning_express_not_enough_fee_for_token_tx_description">Чтобы совершить транзакцию, вам необходимо внести немного %1$s %2$s</string>
   <string name="warning_express_not_enough_fee_for_token_tx_title">Невозможно покрыть комиссию %s</string>
@@ -1268,6 +1275,7 @@
   <string name="warning_token_trustline_subtitle">Согласно правилам сети, чтобы пополнить этот токен, необходимо сначала открыть Trustline — это позволит вашему кошельку принимать и хранить этот актив.</string>
   <string name="warning_token_trustline_title">Откройте Trustline</string>
   <string name="wc_alert_session_disconnected_description">Пожалуйста, вернитесь в браузер и выполните повторное подключение через WalletConnect.</string>
+  <string name="wc_alert_unsupported_dapps_title">Неподдерживаемый dApp</string>
   <string name="wc_alert_wrong_card_description">Выбрана не верная карта или кольцо</string>
   <string name="wc_common_address">Адрес</string>
   <string name="wc_common_connect">Подключение</string>
