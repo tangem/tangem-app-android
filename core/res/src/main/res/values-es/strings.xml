@@ -1236,7 +1236,7 @@
   <string name="warning_express_approval_in_progress_message">La aprobación del intercambio está en progreso y se completará en breve</string>
   <string name="warning_express_approval_in_progress_title">Aprobación en proceso</string>
   <string name="warning_express_dust_message">El monto mínimo de transacción es %1$s. Asegúrese de que el saldo restante después del canje no sea inferior a %2$s.</string>
-  <string name="warning_express_no_exchangeable_coins_description">No tiene %s monedas negociables en su lista</string>
+  <string name="warning_express_no_exchangeable_coins_description">No tienes tokens en tu portafolio a los que puedas intercambiar %s. Por favor, añade otro token para realizar el intercambio.</string>
   <string name="warning_express_no_exchangeable_coins_title">No hay tokens disponibles para intercambiar</string>
   <string name="warning_express_not_enough_fee_for_token_tx_description">Para realizar una transacción necesita depositar %1$s %2$s</string>
   <string name="warning_express_not_enough_fee_for_token_tx_title">No se pueden cubrir %s tarifa</string>

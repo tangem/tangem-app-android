@@ -2,7 +2,6 @@ package com.tangem.data.walletconnect.pair
 
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.Wallet.Model.Namespace
-import com.tangem.data.common.currency.isCustomCoin
 import com.tangem.data.walletconnect.utils.WcNamespaceConverter
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
@@ -25,16 +24,6 @@ internal class AssociateNetworksDelegate(
     private val tokensFeatureToggles: TokensFeatureToggles,
 ) {
 
-    suspend fun associate(wallet: UserWallet, namespaces: Map<String, Namespace.Session>): Set<Network> {
-        val walletNetworks = getWalletNetworks(userWalletId = wallet.walletId)
-        val namespacesSet = namespaces.values.flatMap { proposal -> proposal.chains ?: listOf() }.toSet()
-        return namespacesSet.mapNotNullTo(mutableSetOf()) { chainId ->
-            val wcNetwork = namespaceConverters
-                .firstNotNullOfOrNull { it.toNetwork(chainId, wallet) } ?: return@mapNotNullTo null
-            walletNetworks.find { network -> wcNetwork.id == network.id }
-        }
-    }
-
     @Throws(WcPairError.UnsupportedBlockchains::class)
     suspend fun associate(sessionProposal: Wallet.Model.SessionProposal): Map<UserWallet, ProposalNetwork> {
         val userWallets = getWallets.invokeSync().filter { it.isMultiCurrency }
@@ -48,6 +37,7 @@ internal class AssociateNetworksDelegate(
         }
     }
 
+    @Suppress("ComplexCondition")
     private suspend fun mapNetworksForWallet(
         wallet: UserWallet,
         requiredNamespaces: Set<String>,
@@ -57,6 +47,7 @@ internal class AssociateNetworksDelegate(
         val walletNetworks = getWalletNetworks(userWalletId = wallet.walletId)
 
         val unknownRequired = mutableSetOf<String>()
+        val unknownOptional = mutableSetOf<String>()
         val missingRequired = mutableSetOf<Network>()
         val required = mutableSetOf<Network>()
         val available = mutableSetOf<Network>()
@@ -68,9 +59,9 @@ internal class AssociateNetworksDelegate(
                 unknownRequired.add(missingNetworkName(chainId))
                 return@forEach
             }
-            val walletNetwork = walletNetworks.find { network -> wcNetwork.id == network.id }
+            val walletNetwork = walletNetworks.find { network -> wcNetwork.rawId == network.rawId }
 
-            if (walletNetwork == null || isCustomCoin(walletNetwork)) {
+            if (walletNetwork == null) {
                 missingRequired.add(wcNetwork)
             } else {
                 required.add(walletNetwork)
@@ -78,9 +69,12 @@ internal class AssociateNetworksDelegate(
         }
         optionalNamespaces.forEach { chainId ->
             val wcNetwork = namespaceConverters.firstNotNullOfOrNull { it.toNetwork(chainId, wallet) }
-                ?: return@forEach
-            val walletNetwork = walletNetworks.find { network -> wcNetwork.id == network.id }
-            if (walletNetwork != null && !isCustomCoin(walletNetwork)) {
+            if (wcNetwork == null) {
+                unknownOptional.add(missingNetworkName(chainId))
+                return@forEach
+            }
+            val walletNetwork = walletNetworks.find { network -> wcNetwork.rawId == network.rawId }
+            if (walletNetwork != null) {
                 available.add(walletNetwork)
             } else {
                 notAdded.add(wcNetwork)
@@ -88,6 +82,9 @@ internal class AssociateNetworksDelegate(
         }
         if (unknownRequired.isNotEmpty()) {
             throw WcPairError.UnsupportedBlockchains(unknownRequired, sessionProposal.name)
+        }
+        if (unknownOptional.isNotEmpty() && required.isEmpty() && available.isEmpty() && missingRequired.isEmpty()) {
+            throw WcPairError.UnsupportedBlockchains(unknownOptional, sessionProposal.name)
         }
         return ProposalNetwork(
             wallet = wallet,
@@ -109,6 +106,8 @@ internal class AssociateNetworksDelegate(
         }
             .filterIsInstance<CryptoCurrency.Coin>()
             .map(CryptoCurrency.Coin::network)
+            // flatten all derivation
+            .distinctBy { it.rawId }
     }
 
     private fun Map<String, Namespace.Proposal>.setOfChainId(): Set<String> =

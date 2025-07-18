@@ -45,6 +45,7 @@ internal class DefaultFeeSelectorBlockComponent @AssistedInject constructor(
                 params = FeeSelectorParams.FeeSelectorDetailsParams(
                     state = model.uiState.value,
                     onLoadFee = params.onLoadFee,
+                    feeCryptoCurrencyStatus = params.feeCryptoCurrencyStatus,
                     cryptoCurrencyStatus = params.cryptoCurrencyStatus,
                     callback = model,
                     suggestedFeeState = FeeSelectorParams.SuggestedFeeState.None,
