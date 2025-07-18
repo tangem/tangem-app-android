@@ -13,8 +13,6 @@ import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.exchange.ExpressAvailabilityState
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.tokens.GetNetworkCoinStatusUseCase
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.repository.CurrenciesRepository
@@ -32,7 +30,6 @@ internal class DefaultRampManager(
     private val sellService: Provider<ExchangeService>,
     private val expressServiceLoader: ExpressServiceLoader,
     private val currenciesRepository: CurrenciesRepository,
-    private val getNetworkCoinStatusUseCase: GetNetworkCoinStatusUseCase,
     private val dispatchers: CoroutineDispatcherProvider,
     excludedBlockchains: ExcludedBlockchains,
 ) : RampStateManager {
@@ -40,11 +37,10 @@ internal class DefaultRampManager(
     private val cryptoCurrencyConverter = CryptoCurrencyConverter(excludedBlockchains)
 
     override suspend fun availableForBuy(
-        scanResponse: ScanResponse,
-        userWalletId: UserWalletId,
+        userWallet: UserWallet,
         cryptoCurrency: CryptoCurrency,
     ): ScenarioUnavailabilityReason {
-        val availabilityState = runCatching { getOnrampAvailableState(userWalletId, cryptoCurrency) }
+        val availabilityState = runCatching { getOnrampAvailableState(userWallet.walletId, cryptoCurrency) }
             .getOrNull()
             ?: ExpressAvailabilityState.Error
 
@@ -52,8 +48,9 @@ internal class DefaultRampManager(
     }
 
     override suspend fun availableForSell(
-        userWallet: UserWallet,
+        userWalletId: UserWalletId,
         status: CryptoCurrencyStatus,
+        sendUnavailabilityReason: ScenarioUnavailabilityReason?,
     ): Either<ScenarioUnavailabilityReason, Unit> {
         return either {
             val sellSupportedByService = catch(
@@ -65,7 +62,8 @@ internal class DefaultRampManager(
                 catch = { raise(ScenarioUnavailabilityReason.NotSupportedBySellService(status.currency.name)) },
             )
 
-            val reason = getSendUnavailabilityReason(userWallet = userWallet, cryptoCurrencyStatus = status)
+            val reason = sendUnavailabilityReason
+                ?: getSendUnavailabilityReason(userWalletId = userWalletId, cryptoCurrencyStatus = status)
 
             ensure(condition = reason is ScenarioUnavailabilityReason.None) {
                 when (reason) {
@@ -109,6 +107,27 @@ internal class DefaultRampManager(
 
     override fun getExpressInitializationStatus(userWalletId: UserWalletId): Flow<ExchangeServiceInitializationStatus> {
         return expressServiceLoader.getInitializationStatus(userWalletId)
+    }
+
+    override suspend fun getSendUnavailabilityReason(
+        userWalletId: UserWalletId,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+    ): ScenarioUnavailabilityReason {
+        return when {
+            cryptoCurrencyStatus.value.amount.isNullOrZero() -> {
+                ScenarioUnavailabilityReason.EmptyBalance(ScenarioUnavailabilityReason.WithdrawalScenario.SEND)
+            }
+            currenciesRepository.isSendBlockedByPendingTransactions(
+                userWalletId = userWalletId,
+                cryptoCurrencyStatus = cryptoCurrencyStatus,
+            ) -> {
+                ScenarioUnavailabilityReason.PendingTransaction(
+                    withdrawalScenario = ScenarioUnavailabilityReason.WithdrawalScenario.SEND,
+                    networkName = cryptoCurrencyStatus.currency.network.name,
+                )
+            }
+            else -> ScenarioUnavailabilityReason.None
+        }
     }
 
     private suspend fun getExchangeableState(
@@ -178,34 +197,5 @@ internal class DefaultRampManager(
     private fun CryptoCurrency.findAssetPredicate(asset: Asset): Boolean {
         val contractAddress = (this as? CryptoCurrency.Token)?.contractAddress ?: EMPTY_CONTRACT_ADDRESS_VALUE
         return asset.network == network.backendId && asset.contractAddress.equals(contractAddress, ignoreCase = true)
-    }
-
-    private suspend fun getSendUnavailabilityReason(
-        userWallet: UserWallet,
-        cryptoCurrencyStatus: CryptoCurrencyStatus,
-    ): ScenarioUnavailabilityReason {
-        val coinStatus = getNetworkCoinStatusUseCase.invokeSync(
-            userWallet = userWallet,
-            networkId = cryptoCurrencyStatus.currency.network.id,
-            derivationPath = cryptoCurrencyStatus.currency.network.derivationPath,
-        ).getOrNull()
-
-        return when {
-            cryptoCurrencyStatus.value.amount.isNullOrZero() -> {
-                ScenarioUnavailabilityReason.EmptyBalance(ScenarioUnavailabilityReason.WithdrawalScenario.SEND)
-            }
-            currenciesRepository.isSendBlockedByPendingTransactions(
-                cryptoCurrencyStatus = cryptoCurrencyStatus,
-                coinStatus = coinStatus,
-            ) -> {
-                ScenarioUnavailabilityReason.PendingTransaction(
-                    withdrawalScenario = ScenarioUnavailabilityReason.WithdrawalScenario.SEND,
-                    networkName = coinStatus?.currency?.network?.name.orEmpty(),
-                )
-            }
-            else -> {
-                ScenarioUnavailabilityReason.None
-            }
-        }
     }
 }
