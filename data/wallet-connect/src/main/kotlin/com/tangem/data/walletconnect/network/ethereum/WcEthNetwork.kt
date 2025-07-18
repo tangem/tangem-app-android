@@ -1,5 +1,9 @@
 package com.tangem.data.walletconnect.network.ethereum
 
+import arrow.core.Either
+import arrow.core.getOrElse
+import arrow.core.left
+import arrow.core.right
 import com.squareup.moshi.Moshi
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
@@ -35,12 +39,18 @@ internal class WcEthNetwork(
     }
 
     @Suppress("CyclomaticComplexMethod")
-    override suspend fun toUseCase(request: WcSdkSessionRequest): WcMethodUseCase? {
-        val name = toWcMethodName(request) ?: return null
-        val session = sessionsManager.findSessionByTopic(request.topic) ?: return null
+    override suspend fun toUseCase(
+        request: WcSdkSessionRequest,
+    ): Either<WcRequestError.HandleMethodError, WcMethodUseCase> {
+        fun error(message: String) = WcRequestError.HandleMethodError(message).left()
+        val name = toWcMethodName(request) ?: return error("Unknown method name")
+        val session = sessionsManager.findSessionByTopic(request.topic)
+            ?: return error("Failed to find session for topic ${request.topic}")
         val wallet = session.wallet
         val chainId = request.chainId.orEmpty()
-        val method: WcEthMethod = name.toMethod(request, wallet) ?: return null
+        val method: WcEthMethod = name.toMethod(request, wallet)
+            .getOrElse { return error(it.message.orEmpty()) }
+            ?: return error("Failed to parse $name")
         suspend fun anyExistNetwork() = networksConverter.mainOrAnyWalletNetworkForRequest(chainId, wallet)
 
         val accountAddress = when (method) {
@@ -60,7 +70,7 @@ internal class WcEthNetwork(
             is WcEthMethod.SignTransaction,
             -> networksConverter.findWalletNetworkForRequest(request, session, accountAddress)
             is WcEthMethod.AddEthereumChain -> anyExistNetwork()
-        } ?: return null
+        } ?: return error("Failed to find walletNetwork for accountAddress $accountAddress")
 
         val context = WcMethodUseCaseContext(
             session = session,
@@ -74,10 +84,13 @@ internal class WcEthNetwork(
             is WcEthMethod.SignTransaction -> factories.signTransaction.create(context, method)
             is WcEthMethod.SignTypedData -> factories.signTypedData.create(context, method)
             is WcEthMethod.AddEthereumChain -> factories.addNetwork.create(context, method)
-        }
+        }.right()
     }
 
-    private suspend fun WcEthMethodName.toMethod(request: WcSdkSessionRequest, wallet: UserWallet): WcEthMethod? {
+    private suspend fun WcEthMethodName.toMethod(
+        request: WcSdkSessionRequest,
+        wallet: UserWallet,
+    ): Either<Throwable, WcEthMethod?> {
         val rawParams = request.request.params
         return when (this) {
             WcEthMethodName.EthSign,
@@ -89,39 +102,48 @@ internal class WcEthNetwork(
             WcEthMethodName.SignTransaction,
             WcEthMethodName.SendTransaction,
             -> moshi.fromJson<List<WcEthTransactionParams>>(rawParams)
+                .getOrElse { return it.left() }
                 ?.firstOrNull()
                 ?.let {
                     if (this == WcEthMethodName.SignTransaction) {
-                        WcEthMethod.SignTransaction(transaction = it)
+                        WcEthMethod.SignTransaction(transaction = it).right()
                     } else {
-                        WcEthMethod.SendTransaction(transaction = it)
+                        WcEthMethod.SendTransaction(transaction = it).right()
                     }
                 }
+                ?: return null.right()
             WcEthMethodName.AddEthereumChain -> moshi.fromJson<List<WcEthAddChain>>(rawParams)
+                .getOrElse { return it.left() }
                 ?.firstOrNull()
                 ?.let {
-                    val newNetwork = networksConverter.mainOrAnyWalletNetworkForRequest(it.chainId, wallet)
-                        ?: return null
-                    WcEthMethod.AddEthereumChain(rawChain = it, network = newNetwork)
+                    val newNetwork = networksConverter
+                        .mainOrAnyWalletNetworkForRequest(it.chainId, wallet)
+                        ?: return null.right()
+                    WcEthMethod.AddEthereumChain(rawChain = it, network = newNetwork).right()
                 }
+                ?: null.right()
         }
     }
 
-    private fun WcEthMethodName.parseMessageSign(rawParams: String): WcEthMethod.MessageSign? {
-        val list = moshi.fromJson<List<String>>(rawParams) ?: return null
+    private fun WcEthMethodName.parseMessageSign(rawParams: String): Either<Throwable, WcEthMethod.MessageSign?> {
+        val list = moshi.fromJson<List<String>>(rawParams)
+            .getOrElse { return it.left() }
+            ?: return null.right()
         val accountIndex = if (this == WcEthMethodName.EthSign) 0 else 1
         val messageIndex = if (this == WcEthMethodName.EthSign) 1 else 0
-        val account = list.getOrNull(accountIndex) ?: return null
-        val message = list.getOrNull(messageIndex) ?: return null
+        val account = list.getOrNull(accountIndex) ?: return null.right()
+        val message = list.getOrNull(messageIndex) ?: return null.right()
         val humanMsg = LegacySdkHelper.hexToAscii(message).orEmpty()
-        return WcEthMethod.MessageSign(account = account, rawMessage = message, humanMsg = humanMsg)
+        return WcEthMethod.MessageSign(account = account, rawMessage = message, humanMsg = humanMsg).right()
     }
 
-    private fun parseTypeData(params: String): WcEthMethod.SignTypedData? {
+    private fun parseTypeData(params: String): Either<Throwable, WcEthMethod.SignTypedData?> {
         val account = params.substring(params.indexOf("\"") + 1, params.indexOf("\"", startIndex = 2))
         val data = params.substring(params.indexOfFirst { it == '{' }, params.indexOfLast { it == '}' } + 1)
-        val parsedParams = moshi.fromJson<WcEthSignTypedDataParams>(data) ?: return null
-        return WcEthMethod.SignTypedData(params = parsedParams, account = account, dataForSign = data)
+        val parsedParams = moshi.fromJson<WcEthSignTypedDataParams>(data)
+            .getOrElse { return it.left() }
+            ?: return null.right()
+        return WcEthMethod.SignTypedData(params = parsedParams, account = account, dataForSign = data).right()
     }
 
     internal class NamespaceConverter(
