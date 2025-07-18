@@ -42,8 +42,8 @@ internal object SwapAmountQuoteUtils {
     }
 
     fun SwapAmountUM.updateAmount(
-        onPrimaryAmount: SwapAmountFieldUM.Content.() -> SwapAmountFieldUM,
-        onSecondaryAmount: SwapAmountFieldUM.Content.() -> SwapAmountFieldUM,
+        onPrimaryAmount: SwapAmountFieldUM.Content.(CryptoCurrencyStatus) -> SwapAmountFieldUM,
+        onSecondaryAmount: SwapAmountFieldUM.Content.(CryptoCurrencyStatus) -> SwapAmountFieldUM,
     ): SwapAmountUM {
         if (this !is SwapAmountUM.Content) return this
 
@@ -51,10 +51,11 @@ internal object SwapAmountQuoteUtils {
             selectedAmountType == SwapAmountType.From && swapDirection == SwapDirection.Direct
         ) {
             val amountFieldUM = primaryAmount as? SwapAmountFieldUM.Content ?: return this
-            copy(primaryAmount = amountFieldUM.onPrimaryAmount())
+            copy(primaryAmount = amountFieldUM.onPrimaryAmount(primaryCryptoCurrencyStatus))
         } else {
+            if (secondaryCryptoCurrencyStatus == null) return this
             val amountFieldUM = secondaryAmount as? SwapAmountFieldUM.Content ?: return this
-            copy(secondaryAmount = amountFieldUM.onSecondaryAmount())
+            copy(secondaryAmount = amountFieldUM.onSecondaryAmount(secondaryCryptoCurrencyStatus))
         }
     }
 }
