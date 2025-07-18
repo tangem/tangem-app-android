@@ -27,6 +27,7 @@ class SwapTransactionSentUseCase(
         swapDataTransactionModel: SwapDataTransactionModel,
         provider: ExpressProvider,
         txHash: String,
+        timestamp: Long,
     ) = Either.catch {
         swapRepositoryV2.swapTransactionSent(
             userWallet = userWallet,
@@ -37,7 +38,6 @@ class SwapTransactionSentUseCase(
             txExtraId = swapDataTransactionModel.txExtraId,
         )
         if (provider.type.shouldStoreSwapTransaction()) {
-            val timestamp = System.currentTimeMillis()
             swapTransactionRepository.storeTransaction(
                 userWalletId = userWallet.walletId,
                 fromCryptoCurrency = fromCryptoCurrencyStatus.currency,
