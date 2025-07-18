@@ -63,6 +63,7 @@ import com.tangem.core.ui.res.LocalWindowSize
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.MainScreenTestTags
+import com.tangem.core.ui.test.MarketTooltipTestTags
 import com.tangem.core.ui.utils.lineTo
 import com.tangem.core.ui.utils.moveTo
 import com.tangem.core.ui.utils.toPx
@@ -490,7 +491,9 @@ private fun MarketsTooltip(
 
     val slideOffset = 40.dp.toPx()
     AnimatedVisibility(
-        modifier = modifier.offset { IntOffset(x = 0, y = tooltipOffset.roundToPx()) },
+        modifier = modifier
+            .offset { IntOffset(x = 0, y = tooltipOffset.roundToPx()) }
+            .testTag(MarketTooltipTestTags.CONTAINER),
         visible = visible,
         enter = slideIn(
             animationSpec = spring(
