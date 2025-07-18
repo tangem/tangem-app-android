@@ -29,6 +29,7 @@ internal fun SendCustomFee(
     hasNotifications: Boolean,
     onValueChange: (Int, String) -> Unit,
     onNonceChange: (String) -> Unit,
+    displayNonceInput: Boolean,
     nonce: String?,
     modifier: Modifier = Modifier,
 ) {
@@ -85,10 +86,12 @@ internal fun SendCustomFee(
                     }
                 }
             }
-            Nonce(
-                onNonceChange = onNonceChange,
-                nonce = nonce,
-            )
+            if (displayNonceInput) {
+                Nonce(
+                    onNonceChange = onNonceChange,
+                    nonce = nonce,
+                )
+            }
         }
     }
 }
