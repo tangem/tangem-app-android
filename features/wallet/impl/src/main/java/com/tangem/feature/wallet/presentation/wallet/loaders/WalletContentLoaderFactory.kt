@@ -31,7 +31,7 @@ internal class WalletContentLoaderFactory @Inject constructor(
             userWallet is UserWallet.Cold && userWallet.scanResponse.cardTypesResolver.isVisaWallet() -> {
                 visaWalletContentLoaderFactory.create(userWallet, clickIntents, isRefresh)
             }
-            !userWallet.isMultiCurrency -> {
+            userWallet is UserWallet.Cold && !userWallet.isMultiCurrency -> {
                 singleWalletContentLoaderFactory.create(userWallet, clickIntents, isRefresh)
             }
             else -> null
