@@ -10,7 +10,6 @@ import com.tangem.domain.settings.NeverToShowWalletsScrollPreview
 import com.tangem.domain.tokens.FetchCardTokenListUseCase
 import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
 import com.tangem.domain.tokens.FetchTokenListUseCase
-import com.tangem.domain.tokens.FetchTokenListUseCase.RefreshMode
 import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
@@ -140,7 +139,7 @@ internal class WalletClickIntents @Inject constructor(
                 val maybeFetchResult = if (isSingleWalletWithToken) {
                     fetchCardTokenListUseCase(userWalletId = userWallet.walletId, refresh = true)
                 } else {
-                    fetchTokenListUseCase(userWalletId = userWallet.walletId, mode = RefreshMode.FULL)
+                    fetchTokenListUseCase(userWalletId = userWallet.walletId)
                 }
 
                 maybeFetchResult.onLeft {
