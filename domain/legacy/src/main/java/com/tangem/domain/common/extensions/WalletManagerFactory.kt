@@ -74,7 +74,7 @@ fun WalletManagerFactory.makeWalletManagerForApp(
     }
 }
 
-private fun makePublicKey(
+fun makePublicKey(
     seedKey: ByteArray,
     blockchain: Blockchain,
     derivationPath: DerivationPath,
