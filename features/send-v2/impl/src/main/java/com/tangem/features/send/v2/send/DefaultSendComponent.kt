@@ -21,6 +21,7 @@ import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.features.send.v2.api.FeeSelectorBlockComponent
 import com.tangem.features.send.v2.api.SendComponent
 import com.tangem.features.send.v2.common.CommonSendRoute
 import com.tangem.features.send.v2.common.analytics.CommonSendAnalyticEvents
@@ -53,6 +54,7 @@ internal class DefaultSendComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted private val params: SendComponent.Params,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val feeSelectorComponentFactory: FeeSelectorBlockComponent.Factory,
 ) : SendComponent, AppComponentContext by appComponentContext {
 
     private val stackNavigation = StackNavigation<CommonSendRoute>()
@@ -298,6 +300,7 @@ internal class DefaultSendComponent @AssistedInject constructor(
                         innerRouter.replaceAll(CommonSendRoute.ConfirmSuccess)
                     },
                 ),
+                feeSelectorComponentFactory = feeSelectorComponentFactory,
             )
         } else {
             model.showAlertError()

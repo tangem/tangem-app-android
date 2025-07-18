@@ -165,12 +165,12 @@ private fun AmountInfo(amountUM: AmountState, onMaxAmountClick: () -> Unit, modi
                 .padding(end = 16.dp)
                 .clip(RoundedCornerShape(16.dp))
                 .background(TangemTheme.colors.background.secondary)
-                .padding(horizontal = 12.dp, vertical = 4.dp)
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = ripple(),
                     onClick = onMaxAmountClick,
-                ),
+                )
+                .padding(horizontal = 12.dp, vertical = 4.dp),
         )
     }
 }
