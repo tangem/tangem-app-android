@@ -113,7 +113,6 @@ private fun WcSignTransactionItems(state: WcSignTransactionItemUM, modifier: Mod
             .fillMaxWidth()
             .padding(12.dp)
 
-        DividerWithPadding(start = 0.dp, end = 0.dp)
         WcWalletItem(
             modifier = itemsModifier,
             walletName = state.walletName,
@@ -130,7 +129,6 @@ private fun WcSignTransactionItems(state: WcSignTransactionItemUM, modifier: Mod
                 addressText = state.addressText,
             )
         }
-        DividerWithPadding(start = 40.dp, end = 12.dp)
     }
 }
 
