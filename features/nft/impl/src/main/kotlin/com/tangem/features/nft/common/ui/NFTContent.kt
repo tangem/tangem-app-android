@@ -24,7 +24,7 @@ internal fun NFTContent(stackState: ChildStack<NFTRoute, ComposableContentCompon
             .fillMaxSize()
             .imePadding()
             .systemBarsPadding(),
-        horizontalAlignment = Alignment.Companion.CenterHorizontally,
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Children(
             stack = stackState,
