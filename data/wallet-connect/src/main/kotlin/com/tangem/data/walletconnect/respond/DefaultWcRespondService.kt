@@ -6,6 +6,7 @@ import arrow.core.right
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import com.tangem.data.walletconnect.utils.WC_TAG
+import com.tangem.domain.walletconnect.model.WcRequestError
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
 import kotlinx.coroutines.suspendCancellableCoroutine
 import timber.log.Timber
@@ -13,7 +14,7 @@ import kotlin.coroutines.resume
 
 internal class DefaultWcRespondService : WcRespondService {
 
-    override suspend fun respond(request: WcSdkSessionRequest, response: String): Either<Throwable, Unit> =
+    override suspend fun respond(request: WcSdkSessionRequest, response: String): Either<WcRequestError, String> =
         suspendCancellableCoroutine { continuation ->
             WalletKit.respondSessionRequest(
                 params = Wallet.Params.SessionRequestResponse(
@@ -26,12 +27,19 @@ internal class DefaultWcRespondService : WcRespondService {
                 onSuccess = {
                     if (continuation.isCompleted) return@respondSessionRequest
                     Timber.tag(WC_TAG).i("Successful respond for request $request")
-                    continuation.resume(Unit.right())
+                    val result = when (val response = it.jsonRpcResponse) {
+                        is Wallet.Model.JsonRpcResponse.JsonRpcError -> WcRequestError.WcRespondError(
+                            code = response.code,
+                            message = response.message,
+                        ).left()
+                        is Wallet.Model.JsonRpcResponse.JsonRpcResult -> response.result.right()
+                    }
+                    continuation.resume(result)
                 },
                 onError = {
                     if (continuation.isCompleted) return@respondSessionRequest
                     Timber.tag(WC_TAG).e(it.throwable, "Failed respond for request $request")
-                    continuation.resume(it.throwable.left())
+                    continuation.resume(WcRequestError.UnknownError(it.throwable).left())
                 },
             )
         }

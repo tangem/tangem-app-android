@@ -13,9 +13,10 @@ internal object ApiEnvironmentComparator : Comparator<ApiEnvironmentConfig> {
     private val apiEnvironmentPriorityMap = ApiEnvironment.entries.associateWith {
         when (it) {
             ApiEnvironment.DEV -> 0
-            ApiEnvironment.STAGE -> 1
-            ApiEnvironment.MOCK -> 2
-            ApiEnvironment.PROD -> 3
+            ApiEnvironment.DEV_2 -> 1
+            ApiEnvironment.STAGE -> 2
+            ApiEnvironment.MOCK -> 3
+            ApiEnvironment.PROD -> 4
         }
     }
 

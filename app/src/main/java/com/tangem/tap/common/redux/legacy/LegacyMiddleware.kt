@@ -2,7 +2,7 @@ package com.tangem.tap.common.redux.legacy
 
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.redux.LegacyAction
-import com.tangem.domain.wallets.models.requireColdWallet
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.redux.AppState
@@ -37,8 +37,7 @@ internal object LegacyMiddleware {
                                 )
                                 store.dispatchWithMain(
                                     DetailsAction.PrepareScreen(
-                                        // TODO [REDACTED_TASK_KEY]
-                                        scanResponse = selectedUserWallet.requireColdWallet().scanResponse,
+                                        scanResponse = (selectedUserWallet as? UserWallet.Cold)?.scanResponse,
                                         initializedAppSettingsState = initializedAppSettingsStateContent,
                                     ),
                                 )
