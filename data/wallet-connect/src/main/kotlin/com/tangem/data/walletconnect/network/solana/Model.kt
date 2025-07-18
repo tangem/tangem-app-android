@@ -16,4 +16,7 @@ internal data class WcSolanaSignMessageRequest(
 internal data class WcSolanaSignTransactionRequest(
     @Json(name = "transaction")
     val transaction: String,
+
+    @Json(name = "feePayer")
+    val feePayer: String?,
 )
