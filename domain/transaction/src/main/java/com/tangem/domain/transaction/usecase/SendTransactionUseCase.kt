@@ -25,7 +25,6 @@ import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.error.parseWrappedError
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.requireColdWallet
 
 class SendTransactionUseCase(
     private val demoConfig: DemoConfig,
@@ -33,29 +32,38 @@ class SendTransactionUseCase(
     private val transactionRepository: TransactionRepository,
     private val walletManagersFacade: WalletManagersFacade,
     private val singleNetworkStatusFetcher: SingleNetworkStatusFetcher,
+    private val getHotSigner: (UserWallet.Hot) -> TransactionSigner,
 ) {
     suspend operator fun invoke(
         txsData: List<TransactionData>,
         userWallet: UserWallet,
         network: Network,
         sendMode: TransactionSender.MultipleTransactionSendMode,
-    ): Either<SendTransactionError?, List<String>> {
-        userWallet.requireColdWallet() // TODO [REDACTED_TASK_KEY]
+    ): Either<SendTransactionError, List<String>> {
+        val signer = when (userWallet) {
+            is UserWallet.Cold -> {
+                val card = userWallet.scanResponse.card
+                val isCardNotBackedUp = card.backupStatus?.isActive != true && !card.isTangemTwins
 
-        val card = userWallet.scanResponse.card
-        val isCardNotBackedUp = card.backupStatus?.isActive != true && !card.isTangemTwins
+                val coldSigner = cardSdkConfigRepository.getCommonSigner(
+                    cardId = card.cardId.takeIf { isCardNotBackedUp },
+                    twinKey = TwinKey.getOrNull(scanResponse = userWallet.scanResponse),
+                )
 
-        val signer = cardSdkConfigRepository.getCommonSigner(
-            cardId = card.cardId.takeIf { isCardNotBackedUp },
-            twinKey = TwinKey.getOrNull(scanResponse = userWallet.scanResponse),
-        )
+                coldSigner
+            }
+            is UserWallet.Hot -> {
+                getHotSigner(userWallet)
+            }
+        }
 
         val linkedTerminal = cardSdkConfigRepository.isLinkedTerminal()
-        if (userWallet.scanResponse.card.isStart2Coin) {
+        if (userWallet is UserWallet.Cold && userWallet.scanResponse.card.isStart2Coin) {
             cardSdkConfigRepository.setLinkedTerminal(false)
         }
+
         val sendResult = try {
-            if (demoConfig.isDemoCardId(cardId = userWallet.cardId)) {
+            if (userWallet is UserWallet.Cold && demoConfig.isDemoCardId(cardId = userWallet.cardId)) {
                 sendDemo(
                     userWallet = userWallet,
                     network = network,
@@ -101,7 +109,7 @@ class SendTransactionUseCase(
         txData: TransactionData,
         userWallet: UserWallet,
         network: Network,
-    ): Either<SendTransactionError?, String> {
+    ): Either<SendTransactionError, String> {
         return invoke(listOf(txData), userWallet, network, TransactionSender.MultipleTransactionSendMode.DEFAULT)
             .map { it.first() }
     }
@@ -127,26 +135,28 @@ class SendTransactionUseCase(
         }
     }
 
-    private fun handleError(result: Result.Failure): SendTransactionError {
-        if (ResultChecker.isNetworkError(result)) {
-            return SendTransactionError.NetworkError(
-                code = result.error.message,
-                message = result.error.customMessage,
-            )
-        }
-        val error = result.error as? BlockchainSdkError ?: return SendTransactionError.UnknownError()
-        return when (error) {
-            is BlockchainSdkError.WrappedTangemError -> parseWrappedError(error)
-            is BlockchainSdkError.CreateAccountUnderfunded -> {
-                val minAmount = error.minReserve
-                val minValue = minAmount.value?.format { simple(minAmount.decimals) }.orEmpty()
-                SendTransactionError.CreateAccountUnderfunded(minValue)
-            }
-            else -> {
-                SendTransactionError.BlockchainSdkError(
-                    code = error.code,
-                    message = error.customMessage,
+    companion object {
+        internal fun handleError(result: Result.Failure): SendTransactionError {
+            if (ResultChecker.isNetworkError(result)) {
+                return SendTransactionError.NetworkError(
+                    code = result.error.message,
+                    message = result.error.customMessage,
                 )
+            }
+            val error = result.error as? BlockchainSdkError ?: return SendTransactionError.UnknownError()
+            return when (error) {
+                is BlockchainSdkError.WrappedTangemError -> parseWrappedError(error)
+                is BlockchainSdkError.CreateAccountUnderfunded -> {
+                    val minAmount = error.minReserve
+                    val minValue = minAmount.value?.format { simple(minAmount.decimals) }.orEmpty()
+                    SendTransactionError.CreateAccountUnderfunded(minValue)
+                }
+                else -> {
+                    SendTransactionError.BlockchainSdkError(
+                        code = error.code,
+                        message = error.customMessage,
+                    )
+                }
             }
         }
     }
