@@ -26,13 +26,18 @@ internal class DefaultWcRespondService : WcRespondService {
                 ),
                 onSuccess = {
                     if (continuation.isCompleted) return@respondSessionRequest
-                    Timber.tag(WC_TAG).i("Successful respond for request $request")
                     val result = when (val response = it.jsonRpcResponse) {
-                        is Wallet.Model.JsonRpcResponse.JsonRpcError -> WcRequestError.WcRespondError(
-                            code = response.code,
-                            message = response.message,
-                        ).left()
-                        is Wallet.Model.JsonRpcResponse.JsonRpcResult -> response.result.right()
+                        is Wallet.Model.JsonRpcResponse.JsonRpcError -> {
+                            Timber.tag(WC_TAG).e("Failed respond $response for request $request")
+                            WcRequestError.WcRespondError(
+                                code = response.code,
+                                message = response.message,
+                            ).left()
+                        }
+                        is Wallet.Model.JsonRpcResponse.JsonRpcResult -> {
+                            Timber.tag(WC_TAG).i("Successful respond $response for request $request")
+                            response.result.right()
+                        }
                     }
                     continuation.resume(result)
                 },
