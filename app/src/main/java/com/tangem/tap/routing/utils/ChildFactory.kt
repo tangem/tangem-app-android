@@ -24,8 +24,10 @@ import com.tangem.features.onramp.component.*
 import com.tangem.features.pushnotifications.api.PushNotificationsComponent
 import com.tangem.features.send.v2.api.NFTSendComponent
 import com.tangem.features.send.v2.api.SendComponent
+import com.tangem.features.send.v2.api.SendEntryPointComponent
 import com.tangem.features.staking.api.StakingComponent
 import com.tangem.features.swap.SwapComponent
+import com.tangem.features.swap.v2.api.SendWithSwapComponent
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.wallet.WalletEntryComponent
 import com.tangem.features.walletconnect.components.WalletConnectEntryComponent
@@ -85,6 +87,8 @@ internal class ChildFactory @Inject constructor(
     private val createWalletSelectionComponentFactory: CreateWalletSelectionComponent.Factory,
     private val createMobileWalletComponentFactory: CreateMobileWalletComponent.Factory,
     private val addExistingWalletComponentFactory: AddExistingWalletComponent.Factory,
+    private val sendWithSwapComponentFactory: SendWithSwapComponent.Factory,
+    private val sendEntryPointComponentFactory: SendEntryPointComponent.Factory,
     private val walletConnectFeatureToggles: WalletConnectFeatureToggles,
 ) {
 
@@ -440,6 +444,26 @@ internal class ChildFactory @Inject constructor(
                     context = context,
                     params = Unit,
                     componentFactory = addExistingWalletComponentFactory,
+                )
+            }
+            is AppRoute.SendEntryPoint -> {
+                createComponentChild(
+                    context = context,
+                    params = SendEntryPointComponent.Params(
+                        userWalletId = route.userWalletId,
+                        cryptoCurrency = route.currency,
+                    ),
+                    componentFactory = sendEntryPointComponentFactory,
+                )
+            }
+            is AppRoute.SendWithSwap -> {
+                createComponentChild(
+                    context = context,
+                    params = SendWithSwapComponent.Params(
+                        userWalletId = route.userWalletId,
+                        currency = route.currency,
+                    ),
+                    componentFactory = sendWithSwapComponentFactory,
                 )
             }
         }
