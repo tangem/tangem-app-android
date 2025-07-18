@@ -6,8 +6,8 @@ import com.tangem.data.swap.models.SwapStatusDTO
 import com.tangem.data.swap.models.SwapTransactionDTO
 import com.tangem.data.swap.models.SwapTransactionListDTO
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.swap.models.SwapTransactionListModel
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.converter.Converter
 
@@ -35,7 +35,7 @@ internal class SavedSwapTransactionListConverter(
 
     fun convertBack(
         value: SwapTransactionListDTO,
-        scanResponse: ScanResponse,
+        userWallet: UserWallet,
         txStatuses: Map<String, SwapStatusDTO>,
     ): SwapTransactionListModel? {
         val fromToken = value.fromTokensResponse
@@ -45,16 +45,16 @@ internal class SavedSwapTransactionListConverter(
         } else {
             val fromCryptoCurrency = responseCryptoCurrenciesFactory.createCurrency(
                 responseToken = fromToken,
-                scanResponse = scanResponse,
+                userWallet = userWallet,
             ) ?: return null
             val toCryptoCurrency = responseCryptoCurrenciesFactory.createCurrency(
                 responseToken = toToken,
-                scanResponse = scanResponse,
+                userWallet = userWallet,
             ) ?: return null
 
             return SwapTransactionListModel(
                 transactions = value.transactions.map { tx ->
-                    savedSwapTransactionConverter.convertBack(tx, scanResponse, txStatuses)
+                    savedSwapTransactionConverter.convertBack(tx, userWallet, txStatuses)
                 },
                 userWalletId = value.userWalletId,
                 fromCryptoCurrencyId = value.fromCryptoCurrencyId,

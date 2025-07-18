@@ -5,6 +5,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.test.data.staking.MockYieldBalanceWrapperDTOFactory
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.test.utils.getEmittedValues
+import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.data.staking.toDomain
 import com.tangem.data.staking.utils.StakingIdFactory
 import com.tangem.domain.staking.model.StakingID
@@ -32,12 +33,14 @@ internal class DefaultSingleYieldBalanceProducerTest {
 
     private val multiNetworkStatusSupplier = mockk<MultiYieldBalanceSupplier>()
     private val stakingIdFactory = mockk<StakingIdFactory>()
+    private val analyticsExceptionHandler = mockk<AnalyticsExceptionHandler>(relaxUnitFun = true)
     private val dispatchers = TestingCoroutineDispatcherProvider()
 
     private val producer = DefaultSingleYieldBalanceProducer(
         params = params,
         stakingIdFactory = stakingIdFactory,
         multiYieldBalanceSupplier = multiNetworkStatusSupplier,
+        analyticsExceptionHandler = analyticsExceptionHandler,
         dispatchers = dispatchers,
     )
 

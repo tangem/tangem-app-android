@@ -15,7 +15,6 @@ import com.tangem.domain.tokens.model.TotalFiatBalance
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.models.isLocked
-import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.utils.converter.Converter
 
 /**
@@ -57,13 +56,19 @@ class UserWalletItemUMConverter(
     }
 
     private fun getInfo(userWallet: UserWallet): UserWalletItemUM.Information.Loaded {
-        userWallet.requireColdWallet()
-        val cardCount = userWallet.getCardsCount() ?: 1
-        val text = TextReference.PluralRes(
-            id = R.plurals.card_label_card_count,
-            count = cardCount,
-            formatArgs = wrappedList(cardCount),
-        )
+        val text = when (userWallet) {
+            is UserWallet.Cold -> {
+                val cardCount = userWallet.getCardsCount() ?: 1
+                TextReference.PluralRes(
+                    id = R.plurals.card_label_card_count,
+                    count = cardCount,
+                    formatArgs = wrappedList(cardCount),
+                )
+            }
+            is UserWallet.Hot -> {
+                TextReference.Res(R.string.hw_mobile_wallet)
+            }
+        }
         return UserWalletItemUM.Information.Loaded(text)
     }
 

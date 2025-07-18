@@ -27,7 +27,6 @@ import com.tangem.domain.onramp.model.HotCryptoCurrency
 import com.tangem.domain.onramp.repositories.HotCryptoRepository
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.runCatching
@@ -93,7 +92,7 @@ internal class DefaultHotCryptoRepository(
                     ?: error("UserWalletId [$userWalletId] not found")
 
                 HotCryptoCurrencyConverter(
-                    scanResponse = userWallet.requireColdWallet().scanResponse, // TODO [REDACTED_TASK_KEY]
+                    userWallet = userWallet,
                     imageHost = it.imageHost,
                     excludedBlockchains = excludedBlockchains,
                 )
