@@ -1316,7 +1316,7 @@
   <string name="warning_express_approval_in_progress_message">Die Genehmigung des Swaps ist im Gange und wird in Kürze abgeschlossen sein.</string>
   <string name="warning_express_approval_in_progress_title">Genehmigung in Arbeit</string>
   <string name="warning_express_dust_message">Der Mindestbetrag für den Tausch beträgt %1$s. Bitte stelle sicher, dass der Restsaldo nach dem Swap nicht unter %2$s liegt.</string>
-  <string name="warning_express_no_exchangeable_coins_description">Du hast keine %s austauschbaren Coins in Deiner Liste</string>
+  <string name="warning_express_no_exchangeable_coins_description">Sie haben keine Token in Ihrem Portfolio, gegen die %s getauscht werden kann. Bitte fügen Sie einen anderen Token hinzu, um den Tausch durchzuführen.</string>
   <string name="warning_express_no_exchangeable_coins_title">Keine Token zum Tauschen verfügbar</string>
   <string name="warning_express_not_enough_fee_for_token_tx_description">Um eine Transaktion durchzuführen, du etwas etwas einzahlen %1$s %2$s</string>
   <string name="warning_express_not_enough_fee_for_token_tx_title">Die Gebühr %s kann nicht gedeckt werden</string>

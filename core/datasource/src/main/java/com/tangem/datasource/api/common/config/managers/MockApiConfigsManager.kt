@@ -4,9 +4,10 @@ import com.tangem.datasource.api.common.config.ApiConfig
 import com.tangem.datasource.api.common.config.ApiConfigs
 import com.tangem.datasource.api.common.config.ApiEnvironment
 import com.tangem.datasource.api.common.config.ApiEnvironmentConfig
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.update
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.*
 
 /**
  * Implementation of [ApiConfigsManager] in MOCK environment
@@ -17,12 +18,15 @@ import kotlinx.coroutines.flow.update
  */
 internal class MockApiConfigsManager(
     private val apiConfigs: ApiConfigs,
-) : MutableApiConfigsManager {
+    dispatchers: CoroutineDispatcherProvider,
+) : MutableApiConfigsManager() {
 
     override val configs: StateFlow<Map<ApiConfig, ApiEnvironment>>
     field = MutableStateFlow(value = getInitialConfigs())
 
     override val isInitialized: StateFlow<Boolean> = MutableStateFlow(value = true)
+
+    private val coroutineScope = CoroutineScope(SupervisorJob() + dispatchers.default)
 
     override fun initialize() = Unit
 
@@ -53,6 +57,20 @@ internal class MockApiConfigsManager(
                 if (isEnvSupported) environment else currentEnvironment
             }
         }
+    }
+
+    override fun addListener(listener: ApiConfigEnvChangeListener) {
+        super.addListener(listener)
+
+        configs
+            .map { it.entries.firstOrNull { it.key.id == listener.id } }
+            .filterNotNull()
+            .onEach { (apiConfig, currentEnvironment) ->
+                listener.onChange(
+                    environmentConfig = apiConfig.environmentConfigs.first { it.environment == currentEnvironment },
+                )
+            }
+            .launchIn(coroutineScope)
     }
 
     private fun getInitialConfigs(): Map<ApiConfig, ApiEnvironment> {
