@@ -13,6 +13,10 @@ sealed class WcRequestError {
         val message: String,
     ) : WcRequestError()
 
+    data class HandleMethodError(
+        val message: String,
+    ) : WcRequestError()
+
     data class UnknownError(val ex: Throwable? = null) : WcRequestError()
 
     companion object {
@@ -21,10 +25,13 @@ sealed class WcRequestError {
             is UnknownError -> ex?.message
             is WcRespondError -> message
             is WrappedSendError -> sendTransactionError.message()
+            is HandleMethodError -> message
         }
 
         fun WcRequestError.code(): String? = when (this) {
-            is UnknownError -> null
+            is HandleMethodError,
+            is UnknownError,
+            -> null
             is WcRespondError -> this.code.toString()
             is WrappedSendError -> sendTransactionError.code()
         }
