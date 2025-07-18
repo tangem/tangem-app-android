@@ -15,10 +15,7 @@ import com.tangem.features.send.v2.api.callbacks.FeeSelectorModelCallback
 import com.tangem.features.send.v2.api.entity.FeeItem
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.features.send.v2.api.params.FeeSelectorParams
-import com.tangem.features.send.v2.feeselector.model.transformers.FeeItemSelectedTransformer
-import com.tangem.features.send.v2.feeselector.model.transformers.FeeSelectorCustomValueChangedTransformer
-import com.tangem.features.send.v2.feeselector.model.transformers.FeeSelectorErrorTransformer
-import com.tangem.features.send.v2.feeselector.model.transformers.FeeSelectorLoadedTransformer
+import com.tangem.features.send.v2.feeselector.model.transformers.*
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.transformer.update
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -67,6 +64,7 @@ internal class FeeSelectorModel @Inject constructor(
                         uiState.update(
                             FeeSelectorLoadedTransformer(
                                 cryptoCurrencyStatus = params.cryptoCurrencyStatus,
+                                feeCryptoCurrencyStatus = params.feeCryptoCurrencyStatus,
                                 appCurrency = appCurrency,
                                 fees = fee,
                                 suggestedFeeState = params.suggestedFeeState,
@@ -80,7 +78,7 @@ internal class FeeSelectorModel @Inject constructor(
     }
 
     private fun isFeeApproximate(amountType: AmountType): Boolean {
-        val networkId = params.cryptoCurrencyStatus.currency.network.id
+        val networkId = params.feeCryptoCurrencyStatus.currency.network.id
         return isFeeApproximateUseCase(networkId = networkId, amountType = amountType)
     }
 
@@ -95,9 +93,13 @@ internal class FeeSelectorModel @Inject constructor(
                 value = value,
                 intents = this,
                 appCurrency = appCurrency,
-                feeCryptoCurrencyStatus = params.cryptoCurrencyStatus,
+                feeCryptoCurrencyStatus = params.feeCryptoCurrencyStatus,
             ),
         )
+    }
+
+    override fun onNonceChange(value: String) {
+        uiState.update(FeeSelectorNonceChangeTransformer(value = value))
     }
 
     override fun onDoneClick() {
