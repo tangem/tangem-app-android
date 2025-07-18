@@ -52,6 +52,8 @@ internal class DefaultMultiYieldBalanceFetcher @Inject constructor(
 ) : MultiYieldBalanceFetcher {
 
     override suspend fun invoke(params: MultiYieldBalanceFetcher.Params): Either<Throwable, Unit> {
+        Timber.i("Start fetching yield balances for params:\n$params")
+
         checkIsSupportedByWalletOrElse(userWalletId = params.userWalletId) {
             return it.left()
         }
@@ -59,6 +61,8 @@ internal class DefaultMultiYieldBalanceFetcher @Inject constructor(
         val stakingIds = getStakingIds(params).getOrElse {
             return it.left()
         }
+
+        Timber.i("Staking IDs to fetch:\n${stakingIds.joinToString("\n")}")
 
         return Either.catchOn(dispatchers.default) {
             yieldsBalancesStore.refresh(userWalletId = params.userWalletId, stakingIds = stakingIds)
@@ -126,6 +130,13 @@ internal class DefaultMultiYieldBalanceFetcher @Inject constructor(
         val availableStakingIds = groupedStakingIds[true].orEmpty()
         val unavailableStakingIds = groupedStakingIds[false].orEmpty()
 
+        Timber.i(
+            """
+                Available staking IDs: ${availableStakingIds.joinToString()}
+                Unavailable staking IDs: ${unavailableStakingIds.joinToString()}
+            """.trimIndent(),
+        )
+
         if (unavailableStakingIds.isNotEmpty()) {
             yieldsBalancesStore.storeError(userWalletId = userWalletId, stakingIds = unavailableStakingIds.toSet())
         }
@@ -138,7 +149,7 @@ internal class DefaultMultiYieldBalanceFetcher @Inject constructor(
                      – stakingIds: ${stakingIds.joinToString()}
                 """.trimIndent(),
             )
-            Timber.d(exception)
+            Timber.i(exception)
             throw exception
         }
     }
@@ -174,6 +185,7 @@ internal class DefaultMultiYieldBalanceFetcher @Inject constructor(
                         .toSet()
                 }
 
+                Timber.i("Successfully fetched yield balances for $userWalletId:\n${yieldBalances.joinToString("\n")}")
                 yieldsBalancesStore.storeActual(userWalletId = userWalletId, values = yieldBalances)
 
                 if (!allResponsesReceived(requests, yieldBalances)) {

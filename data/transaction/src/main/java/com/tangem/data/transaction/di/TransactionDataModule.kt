@@ -24,12 +24,12 @@ internal object TransactionDataModule {
     fun providesTransactionRepository(
         walletManagersFacade: WalletManagersFacade,
         walletManagersStore: WalletManagersStore,
-        coroutineDispatcherProvider: CoroutineDispatcherProvider,
+        dispatchers: CoroutineDispatcherProvider,
     ): TransactionRepository {
         return DefaultTransactionRepository(
             walletManagersFacade = walletManagersFacade,
             walletManagersStore = walletManagersStore,
-            coroutineDispatcherProvider = coroutineDispatcherProvider,
+            dispatchers = dispatchers,
         )
     }
 
