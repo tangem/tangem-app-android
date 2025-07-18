@@ -52,14 +52,14 @@ internal fun NFTCollectionsEmpty(state: NFTCollectionsUM.Empty, modifier: Modifi
                 color = TangemTheme.colors.text.secondary,
                 textAlign = TextAlign.Center,
             )
-            PrimaryButton(
-                modifier = Modifier
-                    .padding(top = TangemTheme.dimens.spacing48)
-                    .widthIn(min = TangemTheme.dimens.size158),
-                text = stringResourceSafe(R.string.nft_collections_receive),
-                onClick = state.onReceiveClick,
-            )
         }
+        PrimaryButton(
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.BottomCenter),
+            text = stringResourceSafe(R.string.nft_collections_receive),
+            onClick = state.onReceiveClick,
+        )
     }
 }
 
