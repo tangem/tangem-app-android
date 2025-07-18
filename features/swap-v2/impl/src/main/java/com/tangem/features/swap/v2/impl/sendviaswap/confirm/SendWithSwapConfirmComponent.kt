@@ -22,15 +22,17 @@ import com.tangem.features.send.v2.api.subcomponents.destination.SendDestination
 import com.tangem.features.swap.v2.impl.amount.SwapAmountBlockComponent
 import com.tangem.features.swap.v2.impl.amount.SwapAmountComponentParams
 import com.tangem.features.swap.v2.impl.common.entity.ConfirmUM
+import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
+import com.tangem.features.swap.v2.impl.notifications.SwapNotificationsComponent
 import com.tangem.features.swap.v2.impl.sendviaswap.SendWithSwapRoute
 import com.tangem.features.swap.v2.impl.sendviaswap.confirm.model.SendWithSwapConfirmModel
 import com.tangem.features.swap.v2.impl.sendviaswap.confirm.ui.SendWithSwapConfirmContent
 import com.tangem.features.swap.v2.impl.sendviaswap.entity.SendWithSwapUM
+import com.tangem.utils.extensions.orZero
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.*
-import java.math.BigDecimal
 
 internal class SendWithSwapConfirmComponent @AssistedInject constructor(
     @Assisted private val appComponentContext: AppComponentContext,
@@ -88,7 +90,7 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
     )
 
     private val sendNotificationsComponent = sendNotificationsComponentFactory.create(
-        context = appComponentContext.childByContext(child("sendWithSwapConfirmNotifications")),
+        context = appComponentContext.childByContext(child("sendWithSwapConfirmSendNotifications")),
         params = SendNotificationsComponent.Params(
             analyticsCategoryName = params.analyticsCategoryName,
             userWalletId = params.userWallet.walletId,
@@ -96,14 +98,23 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
             feeCryptoCurrencyStatus = model.primaryFeePaidCurrencyStatus,
             appCurrency = params.appCurrency,
             notificationData = SendNotificationsComponent.Params.NotificationData(
-                // todo fill with data
-                destinationAddress = "",
-                memo = "",
-                amountValue = BigDecimal.ZERO,
-                reduceAmountBy = BigDecimal.ZERO,
-                isIgnoreReduce = false,
-                fee = null,
-                feeError = null,
+                destinationAddress = model.confirmData.enteredDestination.orEmpty(),
+                memo = null,
+                amountValue = model.confirmData.enteredAmount.orZero(),
+                reduceAmountBy = model.confirmData.reduceAmountBy.orZero(),
+                isIgnoreReduce = model.confirmData.isIgnoreReduce,
+                fee = model.confirmData.fee,
+                feeError = model.confirmData.feeError,
+            ),
+        ),
+    )
+
+    private val swapNotificationsComponent = SwapNotificationsComponent(
+        appComponentContext = appComponentContext.childByContext(child("sendWithSwapConfirmSwapNotifications")),
+        params = SwapNotificationsComponent.Params(
+            swapNotificationData = SwapNotificationsComponent.Params.SwapNotificationData(
+                expressError = (model.confirmData.quote as? SwapQuoteUM.Error)?.expressError,
+                fromCryptoCurrency = model.confirmData.fromCryptoCurrencyStatus?.currency,
             ),
         ),
     )
@@ -126,6 +137,7 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
     override fun Content(modifier: Modifier) {
         val sendWithSwapUM by model.uiState.collectAsStateWithLifecycle()
         val sendNotificationsUM by sendNotificationsComponent.state.collectAsStateWithLifecycle()
+        val swapNotificationsUM by swapNotificationsComponent.state.collectAsStateWithLifecycle()
 
         SendWithSwapConfirmContent(
             sendWithSwapUM = sendWithSwapUM,
@@ -134,6 +146,8 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
             feeSelectorBlockComponent = feeSelectorBlockComponent,
             sendNotificationsComponent = sendNotificationsComponent,
             sendNotificationsUM = sendNotificationsUM,
+            swapNotificationsComponent = swapNotificationsComponent,
+            swapNotificationsUM = swapNotificationsUM,
             modifier = modifier,
         )
     }
