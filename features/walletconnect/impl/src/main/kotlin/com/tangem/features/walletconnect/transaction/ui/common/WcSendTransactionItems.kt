@@ -44,7 +44,6 @@ internal fun WcSendTransactionItems(
             .fillMaxWidth()
             .padding(TangemTheme.dimens.spacing12)
 
-        DividerWithPadding(start = 0.dp, end = 0.dp)
         WcWalletItem(
             modifier = itemsModifier,
             walletName = walletName,
@@ -61,8 +60,8 @@ internal fun WcSendTransactionItems(
                 addressText = address,
             )
         }
-        DividerWithPadding(start = 40.dp, end = 12.dp)
         if (feeState != WcTransactionFeeState.None) {
+            DividerWithPadding(start = 40.dp, end = 12.dp)
             feeSelectorBlockComponent?.Content(
                 modifier = if (onFeeBlockClicked != null) {
                     Modifier.clickableSingle(onClick = onFeeBlockClicked)
