@@ -16,7 +16,9 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.settings.SettingsManager
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.message.*
+import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.EventMessageAction
+import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.models.scan.CardDTO
@@ -24,6 +26,7 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.nft.DisableWalletNFTUseCase
 import com.tangem.domain.nft.EnableWalletNFTUseCase
 import com.tangem.domain.nft.GetWalletNFTEnabledUseCase
+import com.tangem.domain.notifications.GetApplicationIdUseCase
 import com.tangem.domain.notifications.toggles.NotificationsFeatureToggles
 import com.tangem.domain.settings.repositories.PermissionRepository
 import com.tangem.domain.wallets.models.UserWallet
@@ -39,11 +42,11 @@ import com.tangem.feature.walletsettings.entity.WalletSettingsItemUM
 import com.tangem.feature.walletsettings.entity.WalletSettingsUM
 import com.tangem.feature.walletsettings.impl.R
 import com.tangem.feature.walletsettings.utils.ItemsBuilder
-import com.tangem.features.nft.NFTFeatureToggles
 import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -63,15 +66,16 @@ internal class WalletSettingsModel @Inject constructor(
     private val analyticsContextProxy: AnalyticsContextProxy,
     private val getShouldSaveUserWalletsSyncUseCase: ShouldSaveUserWalletsSyncUseCase,
     private val isDemoCardUseCase: IsDemoCardUseCase,
-    private val nftFeatureToggles: NFTFeatureToggles,
-    private val getWalletNFTEnabledUseCase: GetWalletNFTEnabledUseCase,
+    getWalletNFTEnabledUseCase: GetWalletNFTEnabledUseCase,
     private val enableWalletNFTUseCase: EnableWalletNFTUseCase,
     private val disableWalletNFTUseCase: DisableWalletNFTUseCase,
     private val notificationsToggles: NotificationsFeatureToggles,
-    private val getWalletNotificationsEnabledUseCase: GetWalletNotificationsEnabledUseCase,
+    getWalletNotificationsEnabledUseCase: GetWalletNotificationsEnabledUseCase,
     private val setNotificationsEnabledUseCase: SetNotificationsEnabledUseCase,
     private val settingsManager: SettingsManager,
     private val permissionsRepository: PermissionRepository,
+    private val getApplicationIdUseCase: GetApplicationIdUseCase,
+    private val associateWalletsWithApplicationIdUseCase: AssociateWalletsWithApplicationIdUseCase,
 ) : Model() {
 
     val params: WalletSettingsComponent.Params = paramsContainer.require()
@@ -101,7 +105,6 @@ internal class WalletSettingsModel @Inject constructor(
                         userWallet = wallet,
                         dialogNavigation = dialogNavigation,
                         isRenameWalletAvailable = isRenameWalletAvailable,
-                        isNFTFeatureEnabled = nftFeatureToggles.isNFTEnabled,
                         isNFTEnabled = nftEnabled,
                         isNotificationsEnabled = notificationsEnabled,
                         isNotificationsFeatureEnabled = notificationsToggles.isNotificationsEnabled,
@@ -127,7 +130,6 @@ internal class WalletSettingsModel @Inject constructor(
         userWallet: UserWallet,
         dialogNavigation: SlotNavigation<DialogConfig>,
         isRenameWalletAvailable: Boolean,
-        isNFTFeatureEnabled: Boolean,
         isNFTEnabled: Boolean,
         isNotificationsFeatureEnabled: Boolean,
         isNotificationsEnabled: Boolean,
@@ -141,7 +143,7 @@ internal class WalletSettingsModel @Inject constructor(
         isManageTokensAvailable = userWallet.isMultiCurrency,
         isRenameWalletAvailable = isRenameWalletAvailable,
         renameWallet = { openRenameWalletDialog(userWallet, dialogNavigation) },
-        isNFTFeatureEnabled = isNFTFeatureEnabled && userWallet.isMultiCurrency,
+        isNFTFeatureEnabled = userWallet.isMultiCurrency,
         isNFTEnabled = isNFTEnabled,
         onCheckedNFTChange = ::onCheckedNFTChange,
         forgetWallet = {
@@ -194,7 +196,17 @@ internal class WalletSettingsModel @Inject constructor(
         if (hasUserWallets) {
             router.pop()
         } else {
+            clearWalletsAssociatedWithApplicationId()
             router.replaceAll(AppRoute.Home)
+        }
+    }
+
+    private fun clearWalletsAssociatedWithApplicationId() = modelScope.launch(NonCancellable) {
+        getApplicationIdUseCase().onRight { applicationId ->
+            associateWalletsWithApplicationIdUseCase(applicationId, emptyList())
+                .onLeft {
+                    Timber.e("Unable to associate empty wallets with application ID: $it")
+                }
         }
     }
 
