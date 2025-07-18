@@ -56,8 +56,6 @@ dependencies {
     implementation(projects.core.utils)
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
-    implementation(projects.core.deepLinks)
-    implementation(projects.core.deepLinks.global)
     implementation(projects.core.decompose)
     implementation(projects.core.datasource)
     implementation(projects.core.res)
@@ -99,6 +97,7 @@ dependencies {
 
     /** Feature Apis */
     implementation(projects.features.details.api)
+    implementation(projects.features.hotWallet.api)
     implementation(projects.features.manageTokens.api)
     implementation(projects.features.markets.api)
     implementation(projects.features.onboardingV2.api)
