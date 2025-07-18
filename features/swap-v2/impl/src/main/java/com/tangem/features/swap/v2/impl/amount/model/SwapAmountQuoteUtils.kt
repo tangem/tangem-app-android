@@ -12,8 +12,12 @@ import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
 import com.tangem.utils.extensions.isZero
 import java.math.BigDecimal
 import java.math.RoundingMode
+import kotlin.math.min
 
 internal object SwapAmountQuoteUtils {
+
+    private const val MAX_DECIMALS = 8
+    private const val MIN_DECIMALS = 2
 
     fun calculatePriceImpact(
         fromTokenAmount: BigDecimal,
@@ -39,6 +43,11 @@ internal object SwapAmountQuoteUtils {
         return stringReference("$(-${value.format { percent(withoutSign = false) }})").takeIf {
             value > 0.1.toBigDecimal()
         }
+    }
+
+    fun calculateRate(fromAmount: BigDecimal, toAmount: BigDecimal, toAmountDecimals: Int): BigDecimal {
+        val rateDecimals = if (toAmountDecimals == 0) MIN_DECIMALS else toAmountDecimals
+        return toAmount.divide(fromAmount, min(rateDecimals, MAX_DECIMALS), RoundingMode.HALF_UP)
     }
 
     fun SwapAmountUM.updateAmount(
