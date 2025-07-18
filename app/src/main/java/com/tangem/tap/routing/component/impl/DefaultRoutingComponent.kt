@@ -6,6 +6,7 @@ import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.decompose.value.subscribe
+import com.arkivanov.essenty.lifecycle.subscribe
 import com.google.android.material.snackbar.Snackbar
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.context.AppComponentContext
@@ -16,7 +17,10 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.features.walletconnect.components.WcRoutingComponent
+import com.tangem.hot.sdk.TangemHotSdk
+import com.tangem.hot.sdk.android.create
 import com.tangem.tap.common.SnackbarHandler
+import com.tangem.tap.features.hot.TangemHotSDKProxy
 import com.tangem.tap.routing.RootContent
 import com.tangem.tap.routing.component.RoutingComponent
 import com.tangem.tap.routing.component.RoutingComponent.Child
@@ -36,6 +40,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     private val uiDependencies: UiDependencies,
     private val wcRoutingComponentFactory: WcRoutingComponent.Factory,
     private val deeplinkFactory: DeepLinkFactory,
+    private val tangemHotSDKProxy: TangemHotSDKProxy,
 ) : RoutingComponent,
     AppComponentContext by context,
     SnackbarHandler {
@@ -70,6 +75,8 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
                 appRouterConfig.stack = stackItems
             }
         }
+
+        configureHotSdk()
     }
 
     @Composable
@@ -118,6 +125,17 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
         listOf(AppRoute.Initial)
     } else {
         initialStack
+    }
+
+    private fun configureHotSdk() {
+        lifecycle.subscribe(
+            onCreate = {
+                tangemHotSDKProxy.sdkState.value = TangemHotSdk.create(activity)
+            },
+            onDestroy = {
+                tangemHotSDKProxy.sdkState.value = null
+            },
+        )
     }
 
     @AssistedFactory
