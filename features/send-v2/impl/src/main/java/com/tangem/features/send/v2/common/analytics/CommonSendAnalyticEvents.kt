@@ -48,10 +48,14 @@ internal sealed class CommonSendAnalyticEvents(
     data class TransactionError(
         val categoryName: String,
         val token: String,
+        val blockchain: String,
     ) : CommonSendAnalyticEvents(
         category = categoryName,
         event = "Error - Transaction Rejected",
-        params = mapOf(TOKEN_PARAM to token),
+        params = mapOf(
+            TOKEN_PARAM to token,
+            BLOCKCHAIN to blockchain,
+        ),
     )
 
     /** Close button clicked */
