@@ -4,16 +4,11 @@ import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
-import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
-import com.tangem.common.routing.RoutingFeatureToggle
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
-import com.tangem.core.deeplink.DeepLinksRegistry
-import com.tangem.core.deeplink.global.ReferralDeepLink
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.nft.ObserveAndClearNFTCacheIfNeedUseCase
@@ -27,7 +22,6 @@ import com.tangem.domain.wallets.models.isMultiCurrency
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
-import com.tangem.feature.wallet.presentation.deeplink.WalletDeepLinksHandler
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.SelectedWalletAnalyticsSender
@@ -73,7 +67,6 @@ internal class WalletModel @Inject constructor(
     private val isWalletsScrollPreviewEnabled: IsWalletsScrollPreviewEnabled,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val selectedWalletAnalyticsSender: SelectedWalletAnalyticsSender,
-    private val walletDeepLinksHandler: WalletDeepLinksHandler,
     private val walletNameMigrationUseCase: WalletNameMigrationUseCase,
     private val refreshMultiCurrencyWalletQuotesUseCase: RefreshMultiCurrencyWalletQuotesUseCase,
     private val shouldAskPermissionUseCase: ShouldAskPermissionUseCase,
@@ -81,12 +74,9 @@ internal class WalletModel @Inject constructor(
     private val tokenListStore: MultiWalletTokenListStore,
     private val onrampStatusFactory: OnrampStatusFactory,
     private val analyticsEventsHandler: AnalyticsEventHandler,
-    private val deepLinksRegistry: DeepLinksRegistry,
     private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
     private val walletContentFetcher: WalletContentFetcher,
     private val tokensFeatureToggles: TokensFeatureToggles,
-    private val appRouter: AppRouter,
-    private val routingFeatureToggle: RoutingFeatureToggle,
     private val observeAndClearNFTCacheIfNeedUseCase: ObserveAndClearNFTCacheIfNeedUseCase,
     private val walletDeepLinkActionListener: WalletDeepLinkActionListener,
     val screenLifecycleProvider: ScreenLifecycleProvider,
@@ -241,12 +231,6 @@ internal class WalletModel @Inject constructor(
                         selectedWalletAnalyticsSender.send(selectedWallet)
                     }
 
-                    if (!routingFeatureToggle.isDeepLinkNavigationEnabled) {
-                        // Registering here, because `WalletDeepLinksHandler` unregisters deeplink when scope is cancelled
-                        // This is temporary solution, will be removed with complete deeplink navigation overhaul
-                        addReferralDeepLink(selectedWallet)
-                        walletDeepLinksHandler.registerForWallet(scope = modelScope, userWallet = selectedWallet)
-                    }
                     subscribeOnExpressTransactionsUpdates(selectedWallet)
                     observeAndClearNFTCacheIfNeedUseCase(selectedWallet)
                 }
@@ -266,20 +250,6 @@ internal class WalletModel @Inject constructor(
         scrollToWallet(prevIndex = currentIndex, newIndex = newIndex) {
             stateHolder.update { it.copy(selectedWalletIndex = newIndex) }
         }
-    }
-
-    private fun addReferralDeepLink(userWallet: UserWallet) {
-        deepLinksRegistry.register(
-            ReferralDeepLink(
-                onReceive = {
-                    if (userWallet !is UserWallet.Cold || userWallet.cardTypesResolver.isTangemWallet()) {
-                        appRouter.push(
-                            AppRoute.ReferralProgram(userWalletId = userWallet.walletId),
-                        )
-                    }
-                },
-            ),
-        )
     }
 
     // We need to update the current wallet quotes if the application was in the background for more than 10 seconds
