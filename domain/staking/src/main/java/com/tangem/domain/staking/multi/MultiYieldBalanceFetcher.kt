@@ -21,5 +21,19 @@ interface MultiYieldBalanceFetcher : FlowFetcher<MultiYieldBalanceFetcher.Params
     data class Params(
         val userWalletId: UserWalletId,
         val currencyIdWithNetworkMap: Map<CryptoCurrency.ID, Network>,
-    )
+    ) {
+
+        override fun toString(): String {
+            val currencyIdWithNetworkMap = currencyIdWithNetworkMap.entries.joinToString {
+                "${it.key.value} - ${it.value}"
+            }
+
+            return """
+                MultiYieldBalanceFetcher.Params(
+                    userWalletId = $userWalletId,
+                    currencyIdWithNetworkMap: $currencyIdWithNetworkMap
+                )
+            """.trimIndent()
+        }
+    }
 }
