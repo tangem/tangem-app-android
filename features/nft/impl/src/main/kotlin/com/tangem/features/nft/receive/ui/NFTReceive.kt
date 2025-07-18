@@ -1,8 +1,8 @@
 package com.tangem.features.nft.receive.ui
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.tangem.common.ui.bottomsheet.receive.TokenReceiveBottomSheet
@@ -22,41 +22,33 @@ import com.tangem.features.nft.receive.entity.NFTReceiveUM
 internal fun NFTReceive(state: NFTReceiveUM, modifier: Modifier = Modifier) {
     BackHandler(onBack = state.onBackClick)
 
-    Scaffold(
-        modifier = modifier,
-        containerColor = TangemTheme.colors.background.secondary,
-        topBar = {
-            TangemTopAppBar(
-                modifier = Modifier.statusBarsPadding(),
-                startButton = TopAppBarButtonUM(
-                    iconRes = R.drawable.ic_close_24,
-                    onIconClicked = state.onBackClick,
-                ),
-                title = stringResourceSafe(id = R.string.nft_receive_title),
-                subtitle = state.appBarSubtitle.resolveReference(),
-            )
-        },
-        content = { innerPadding ->
-            Column(
-                modifier = Modifier
-                    .padding(innerPadding)
-                    .fillMaxSize(),
-            ) {
-                SearchBar(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = TangemTheme.dimens.spacing16),
-                    state = state.search,
-                    colors = TangemSearchBarDefaults.secondaryTextFieldColors,
-                )
+    Column(
+        modifier = modifier
+            .background(TangemTheme.colors.background.secondary),
+    ) {
+        TangemTopAppBar(
+            modifier = Modifier,
+            startButton = TopAppBarButtonUM(
+                iconRes = R.drawable.ic_close_24,
+                onIconClicked = state.onBackClick,
+            ),
+            title = stringResourceSafe(id = R.string.nft_receive_title),
+            subtitle = state.appBarSubtitle.resolveReference(),
+        )
 
-                when (val networks = state.networks) {
-                    is NFTReceiveUM.Networks.Content -> NFTReceiveNetworksContent(networks)
-                    is NFTReceiveUM.Networks.Empty -> NFTReceiveNetworksEmpty()
-                }
-            }
-        },
-    )
+        SearchBar(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = TangemTheme.dimens.spacing16),
+            state = state.search,
+            colors = TangemSearchBarDefaults.secondaryTextFieldColors,
+        )
+
+        when (val networks = state.networks) {
+            is NFTReceiveUM.Networks.Content -> NFTReceiveNetworksContent(networks)
+            is NFTReceiveUM.Networks.Empty -> NFTReceiveNetworksEmpty()
+        }
+    }
 
     ShowBottomSheet(state.bottomSheetConfig)
 }
