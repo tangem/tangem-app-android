@@ -43,7 +43,6 @@ internal class StakingBalanceUpdater @AssistedInject constructor(
                     fetchStakingYieldBalanceUseCase(
                         userWalletId = userWallet.walletId,
                         cryptoCurrency = cryptoCurrencyStatus.currency,
-                        isRefactoringEnabled = true,
                     )
                 },
                 // we should update tx history and network for new balances
@@ -64,7 +63,11 @@ internal class StakingBalanceUpdater @AssistedInject constructor(
         coroutineScope {
             listOf(
                 async {
-                    fetchCurrencyStatus()
+                    /*
+                     * It is important to use NonCancellable here to ensure the update is not interrupted midway.
+                     * For example, this can happen if the user enters and immediately leaves the screen.
+                     */
+                    withContext(NonCancellable) { fetchCurrencyStatus() }
                 },
                 async {
                     updateStakingActions()
@@ -78,7 +81,6 @@ internal class StakingBalanceUpdater @AssistedInject constructor(
         fetchCurrencyStatusUseCase(
             userWalletId = userWallet.walletId,
             id = cryptoCurrencyStatus.currency.id,
-            refresh = true,
         )
     }
 
