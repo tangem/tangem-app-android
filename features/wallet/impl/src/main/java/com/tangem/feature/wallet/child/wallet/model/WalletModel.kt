@@ -374,8 +374,10 @@ internal class WalletModel @Inject constructor(
 
         val otherWallets = action.wallets.minus(action.selectedWallet)
 
-        otherWallets.onEach { userWallet ->
-            modelScope.launch { walletContentFetcher(userWalletId = userWallet.walletId) }
+        if (tokensFeatureToggles.isWalletBalanceFetcherEnabled) {
+            otherWallets.onEach { userWallet ->
+                modelScope.launch { walletContentFetcher(userWalletId = userWallet.walletId) }
+            }
         }
 
         if (action.wallets.size > 1 && isWalletsScrollPreviewEnabled()) {
