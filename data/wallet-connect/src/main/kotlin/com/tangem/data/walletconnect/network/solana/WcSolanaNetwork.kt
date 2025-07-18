@@ -1,11 +1,16 @@
 package com.tangem.data.walletconnect.network.solana
 
+import arrow.core.Either
+import arrow.core.getOrElse
+import arrow.core.left
+import arrow.core.right
 import com.squareup.moshi.Moshi
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.extensions.decodeBase58
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.common.extensions.toHexString
+import com.tangem.data.walletconnect.model.CAIP2
 import com.tangem.data.walletconnect.model.NamespaceKey
 import com.tangem.data.walletconnect.request.WcRequestToUseCaseConverter
 import com.tangem.data.walletconnect.request.WcRequestToUseCaseConverter.Companion.fromJson
@@ -13,7 +18,7 @@ import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
 import com.tangem.data.walletconnect.utils.WcNamespaceConverter
 import com.tangem.data.walletconnect.utils.WcNetworksConverter
 import com.tangem.domain.models.network.Network
-import com.tangem.data.walletconnect.model.CAIP2
+import com.tangem.domain.walletconnect.model.WcRequestError
 import com.tangem.domain.walletconnect.model.WcSolanaMethod
 import com.tangem.domain.walletconnect.model.WcSolanaMethodName
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
@@ -37,10 +42,16 @@ internal class WcSolanaNetwork(
     }
 
     @Suppress("CyclomaticComplexMethod")
-    override suspend fun toUseCase(request: WcSdkSessionRequest): WcMethodUseCase? {
-        val name = toWcMethodName(request) ?: return null
-        val method: WcSolanaMethod = name.toMethod(request) ?: return null
-        val session = sessionsManager.findSessionByTopic(request.topic) ?: return null
+    override suspend fun toUseCase(
+        request: WcSdkSessionRequest,
+    ): Either<WcRequestError.HandleMethodError, WcMethodUseCase> {
+        fun error(message: String) = WcRequestError.HandleMethodError(message).left()
+        val name = toWcMethodName(request) ?: return error("Unknown method name")
+        val method: WcSolanaMethod = name.toMethod(request)
+            .getOrElse { return error(it.message.orEmpty()) }
+            ?: return error("Failed to parse $name")
+        val session = sessionsManager.findSessionByTopic(request.topic)
+            ?: return error("Failed to find session for topic ${request.topic}")
         val wallet = session.wallet
         val chainId = request.chainId.orEmpty()
         suspend fun anyExistNetwork() = networksConverter.mainOrAnyWalletNetworkForRequest(chainId, wallet)
@@ -56,7 +67,7 @@ internal class WcSolanaNetwork(
         val walletNetwork = networksConverter
             .findWalletNetworkForRequest(request, session, accountAddress)
             ?: anyExistNetwork()
-            ?: return null
+            ?: return error("Failed to find walletNetwork for accountAddress $accountAddress")
 
         val context = WcMethodUseCaseContext(
             session = session,
@@ -68,7 +79,7 @@ internal class WcSolanaNetwork(
             is WcSolanaMethod.SignMessage -> factories.messageSign.create(context, method)
             is WcSolanaMethod.SignTransaction -> factories.signTransaction.create(context, method)
             is WcSolanaMethod.SignAllTransaction -> factories.signAllTransaction.create(context, method)
-        }
+        }.right()
     }
 
     internal class NamespaceConverter @Inject constructor(
@@ -101,23 +112,26 @@ internal class WcSolanaNetwork(
         }
     }
 
-    private fun WcSolanaMethodName.toMethod(request: WcSdkSessionRequest): WcSolanaMethod? {
+    private fun WcSolanaMethodName.toMethod(request: WcSdkSessionRequest): Either<Throwable, WcSolanaMethod?> {
         val rawParams = request.request.params
         return when (this) {
-            WcSolanaMethodName.SignMessage -> moshi.fromJson<WcSolanaSignMessageRequest>(rawParams)?.let { request ->
-                val humanMsg = request.message.decodeBase58()?.toHexString().orEmpty()
-                WcSolanaMethod.SignMessage(
-                    pubKey = request.publicKey,
-                    rawMessage = request.message,
-                    humanMsg = humanMsg,
-                )
-            }
+            WcSolanaMethodName.SignMessage -> moshi.fromJson<WcSolanaSignMessageRequest>(rawParams)
+                .getOrElse { return it.left() }
+                ?.let { request ->
+                    val humanMsg = request.message.decodeBase58()?.toHexString().orEmpty()
+                    WcSolanaMethod.SignMessage(
+                        pubKey = request.publicKey,
+                        rawMessage = request.message,
+                        humanMsg = humanMsg,
+                    )
+                }
             WcSolanaMethodName.SignTransaction -> moshi.fromJson<WcSolanaSignTransactionRequest>(rawParams)
+                .getOrElse { return it.left() }
                 ?.let { request -> WcSolanaMethod.SignTransaction(request.transaction, request.feePayer) }
-            WcSolanaMethodName.SendAllTransaction -> moshi.fromJson<List<String>>(rawParams)?.let { list ->
-                WcSolanaMethod.SignAllTransaction(list)
-            }
-        }
+            WcSolanaMethodName.SendAllTransaction -> moshi.fromJson<List<String>>(rawParams)
+                .getOrElse { return it.left() }
+                ?.let { list -> WcSolanaMethod.SignAllTransaction(list) }
+        }.right()
     }
 
     internal class Factories @Inject constructor(
