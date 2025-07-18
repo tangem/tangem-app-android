@@ -94,12 +94,10 @@ internal object StakingDomainModule {
     @Provides
     @Singleton
     fun provideFetchStakingYieldBalanceUseCase(
-        stakingRepository: StakingRepository,
         stakingErrorResolver: StakingErrorResolver,
         singleYieldBalanceFetcher: SingleYieldBalanceFetcher,
     ): FetchStakingYieldBalanceUseCase {
         return FetchStakingYieldBalanceUseCase(
-            stakingRepository = stakingRepository,
             stakingErrorResolver = stakingErrorResolver,
             singleYieldBalanceFetcher = singleYieldBalanceFetcher,
         )
@@ -223,5 +221,13 @@ internal object StakingDomainModule {
         walletManagersFacade: WalletManagersFacade,
     ): CheckAccountInitializedUseCase {
         return CheckAccountInitializedUseCase(walletManagersFacade)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetActionRequirementAmountUseCase(
+        stakingRepository: StakingRepository,
+    ): GetActionRequirementAmountUseCase {
+        return GetActionRequirementAmountUseCase(stakingRepository)
     }
 }
