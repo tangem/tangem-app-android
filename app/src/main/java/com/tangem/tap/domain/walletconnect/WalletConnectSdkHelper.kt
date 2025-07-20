@@ -4,6 +4,7 @@ import com.tangem.Message
 import com.tangem.blockchain.blockchains.ethereum.EthereumGasLoader
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.blockchains.ethereum.EthereumUtils
+import com.tangem.blockchain.blockchains.solana.SolanaWalletManager
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.smartcontract.CompiledSmartContractCallData
 import com.tangem.blockchain.common.transaction.Fee
@@ -16,6 +17,9 @@ import com.tangem.common.extensions.toHexString
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.models.Basic
 import com.tangem.core.analytics.models.Basic.TransactionSent.MemoType
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.GlobalLoadingMessage
 import com.tangem.data.walletconnect.network.ethereum.LegacySdkHelper
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.operations.sign.SignHashCommand
@@ -38,6 +42,8 @@ import com.tangem.tap.features.details.ui.walletconnect.dialogs.TransactionReque
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
+import com.tangem.wallet.R
+import kotlinx.coroutines.delay
 import org.json.JSONArray
 import org.json.JSONObject
 import timber.log.Timber
@@ -394,7 +400,8 @@ class WalletConnectSdkHelper {
                         signature = signedHash,
                         hash = hashToSign,
                         publicKey = wallet.publicKey.blockchainKey.toDecompressedPublicKey(),
-                    ).asRSVLegacyEVM().toHexString().formatHex().lowercase() // use lowercase because some dapps cant handle UPPERCASE
+                    ).asRSVLegacyEVM().toHexString().formatHex()
+                        .lowercase() // use lowercase because some dapps cant handle UPPERCASE
                 }
             }
             is CompletionResult.Failure -> {
@@ -415,8 +422,37 @@ class WalletConnectSdkHelper {
         cardId: String?,
     ): String? {
         val blockchain = Blockchain.fromNetworkId(networkId) ?: return null
-        val wallet = getWalletManager(blockchain, derivationPath)?.wallet ?: return null
+        val walletManager = getWalletManager(blockchain, derivationPath) ?: return null
+        val wallet = walletManager.wallet
 
+        val hashSize = hashToSign.size
+        if (blockchain == Blockchain.Solana && hashSize > MAX_HASH_TO_SIGN_SIZE) {
+            store.inject(DaggerGraphState::uiMessageSender).send(GlobalLoadingMessage(true))
+            Timber.w(
+                "Solana transaction hash size is too large: $hashSize bytes, " +
+                    "max allowed is $MAX_HASH_TO_SIGN_SIZE bytes"
+            )
+            val sdk = store.inject(DaggerGraphState::cardSdkConfigRepository).sdk
+            val signer = store.inject(DaggerGraphState::transactionSignerFactory).createTransactionSigner(
+                cardId = cardId,
+                sdk = sdk,
+                twinKey = null,
+            )
+            val solanaWalletManager = walletManager as SolanaWalletManager
+            val result = solanaWalletManager.handleLargeLegacyTransaction(
+                signer = signer,
+                legacyTransaction = hashToSign,
+            )
+            val uiMessageSender = store.inject(DaggerGraphState::uiMessageSender)
+            uiMessageSender.send(GlobalLoadingMessage(false))
+            delay(500)
+            uiMessageSender.send(
+                DialogMessage(
+                    message = resourceReference(R.string.wallet_connect_alert_sign_message_result_explorer)
+                )
+            )
+            return getSolanaResultString(result)
+        }
         val command = SignHashCommand(
             hash = hashToSign,
             walletPublicKey = wallet.publicKey.seedKey,
@@ -455,6 +491,7 @@ class WalletConnectSdkHelper {
         derivationPath: String?,
         cardId: String?,
     ): String? {
+        Timber.i("signTransactions")
         val blockchain = Blockchain.fromNetworkId(networkId) ?: return null
         val wallet = getWalletManager(blockchain, derivationPath)?.wallet ?: return null
         val sdk = store.inject(DaggerGraphState::cardSdkConfigRepository).sdk
@@ -509,9 +546,12 @@ class WalletConnectSdkHelper {
     private fun getBnbResultString(publicKey: String, signature: String) =
         "{\"signature\":\"$signature\",\"publicKey\":\"$publicKey\"}"
 
-    private companion object {
-        const val HEX_PREFIX = "0x"
-        const val DEFAULT_MAX_GASLIMIT = 350000
+    companion object {
+
+        const val MAX_HASH_TO_SIGN_SIZE = 910
+
+        private const val HEX_PREFIX = "0x"
+        private const val DEFAULT_MAX_GASLIMIT = 350000
         // TODO remove after [REDACTED_JIRA]
         private val MANTLE_FEE_ESTIMATE_MULTIPLIER = BigDecimal("1.8")
     }

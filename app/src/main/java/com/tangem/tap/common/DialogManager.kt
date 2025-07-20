@@ -5,7 +5,10 @@ import android.content.Context
 import com.tangem.domain.redux.StateDialog
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.global.GlobalState
-import com.tangem.tap.common.ui.*
+import com.tangem.tap.common.ui.ScanFailsDialog
+import com.tangem.tap.common.ui.SimpleAlertDialog
+import com.tangem.tap.common.ui.SimpleCancelableAlertDialog
+import com.tangem.tap.common.ui.SimpleOkDialog
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectDialog
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.*
 import com.tangem.tap.features.onboarding.OnboardingDialog

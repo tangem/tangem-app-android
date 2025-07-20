@@ -3,6 +3,7 @@ package com.tangem.tap.domain.walletconnect2.domain
 import arrow.core.flatten
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.blockchainsdk.utils.toNetworkId
+import com.tangem.core.ui.message.GlobalLoadingMessage
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.tokens.repository.CurrenciesRepository
@@ -19,10 +20,12 @@ import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.features.walletconnect.components.WalletConnectFeatureToggles
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.filterNotNull
+import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.domain.walletconnect.WalletConnectSdkHelper
 import com.tangem.tap.domain.walletconnect2.domain.models.*
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
 import com.tangem.tap.features.details.ui.walletconnect.WcSessionForScreen
+import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.*

@@ -1135,6 +1135,8 @@
   <string name="wallet_balance_missing_derivation">Отсканируйте карту или кольцо</string>
   <string name="wallet_been_activated_message">Этот кошелек уже был активирован ранее.\nЕсли это сделали не вы, свяжитесь со службой поддержки.\nTangem никогда не продает кошелек вместе с предустановленным кодом доступа.</string>
   <string name="wallet_connect_alert_sign_message">Запрос на подпись сообщения.\n\n%s</string>
+  <string name="wallet_connect_alert_sign_message_large_hash">Из-за размера транзакции потребуется несколько прикладываний карты для подписи в течение нескольких минут.\nДождитесь завершения всех операций.\nФинальный статус можно проверить в блокчейн-эксплорере — DApp может отразить результат некорректно.</string>
+  <string name="wallet_connect_alert_sign_message_result_explorer">Результат транзакции появится в эксплорере</string>
   <string name="wallet_connect_bnb_sign_message">Dapp %1$s, запрос на\nподпись транзакции с BNB.\n\n%2$s</string>
   <string name="wallet_connect_bnb_trade_order_message">Торговый ордер на %1$s\nЦена: %2$s\nСумма к получению: %3$s\nСумма к оплате: %4$s</string>
   <string name="wallet_connect_bnb_transaction_message">Детали транзакции:\nОт: %1$s\nК: %2$s\nСумма: %3$s</string>

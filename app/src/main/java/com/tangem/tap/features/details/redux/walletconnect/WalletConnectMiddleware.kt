@@ -3,6 +3,7 @@ package com.tangem.tap.features.details.redux.walletconnect
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.ui.message.GlobalLoadingMessage
 import com.tangem.tap.common.extensions.dispatchNavigationAction
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.inject
