@@ -1264,6 +1264,8 @@
   <string name="wallet_balance_missing_derivation">Scan card or ring</string>
   <string name="wallet_been_activated_message">This wallet has already been activated earlier.\nIf it was not done by you, please contact support.\nTangem never sells wallets along with pre-generated access codes.</string>
   <string name="wallet_connect_alert_sign_message">Requesting to sign a message.\n\n%s</string>
+  <string name="wallet_connect_alert_sign_message_large_hash">Due to the size of the transaction, multiple card taps will be required for signing over the course of a few minutes.\nPlease wait until all signing steps are completed.\nThe final status can be checked in a blockchain explorer — the DApp may not display the result correctly.</string>
+  <string name="wallet_connect_alert_sign_message_result_explorer">The transaction result will appear in the explorer</string>
   <string name="wallet_connect_bnb_sign_message">Dapp %1$s, requesting to\nsign BNB transaction.\n\n%2$s</string>
   <string name="wallet_connect_bnb_trade_order_message">Trade order for %1$s\nPrice: %2$s\nAmount to receive: %3$s\nAmount to pay: %4$s</string>
   <string name="wallet_connect_bnb_transaction_message">Transaction details:\nFrom: %1$s\nTo: %2$s\nAmount: %3$s</string>
