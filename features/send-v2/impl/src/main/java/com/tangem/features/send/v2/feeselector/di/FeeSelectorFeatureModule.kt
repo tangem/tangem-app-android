@@ -2,11 +2,13 @@ package com.tangem.features.send.v2.feeselector.di
 
 import com.tangem.features.send.v2.api.FeeSelectorBlockComponent
 import com.tangem.features.send.v2.api.FeeSelectorComponent
-import com.tangem.features.send.v2.api.feeselector.FeeSelectorReloadListener
-import com.tangem.features.send.v2.api.feeselector.FeeSelectorReloadTrigger
+import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorCheckReloadListener
+import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorCheckReloadTrigger
+import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorReloadListener
+import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
 import com.tangem.features.send.v2.feeselector.DefaultFeeSelectorBlockComponent
 import com.tangem.features.send.v2.feeselector.DefaultFeeSelectorComponent
-import com.tangem.features.send.v2.feeselector.DefaultFeeSelectorReload
+import com.tangem.features.send.v2.feeselector.DefaultFeeSelectorReloadTrigger
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -27,9 +29,17 @@ internal interface FeeSelectorFeatureModule {
 
     @Binds
     @Singleton
-    fun provideFeeSelectorReloadTrigger(impl: DefaultFeeSelectorReload): FeeSelectorReloadTrigger
+    fun provideFeeSelectorReloadTrigger(impl: DefaultFeeSelectorReloadTrigger): FeeSelectorReloadTrigger
 
     @Binds
     @Singleton
-    fun provideFeeSelectorReloadListener(impl: DefaultFeeSelectorReload): FeeSelectorReloadListener
+    fun provideFeeSelectorReloadListener(impl: DefaultFeeSelectorReloadTrigger): FeeSelectorReloadListener
+
+    @Binds
+    @Singleton
+    fun provideFeeSelectorCheckReloadTrigger(impl: DefaultFeeSelectorReloadTrigger): FeeSelectorCheckReloadTrigger
+
+    @Binds
+    @Singleton
+    fun provideFeeSelectorCheckReloadListener(impl: DefaultFeeSelectorReloadTrigger): FeeSelectorCheckReloadListener
 }
