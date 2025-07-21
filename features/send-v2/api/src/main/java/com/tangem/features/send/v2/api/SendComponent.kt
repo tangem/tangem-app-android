@@ -14,7 +14,12 @@ interface SendComponent : ComposableContentComponent {
         val amount: String? = null,
         val tag: String? = null,
         val destinationAddress: String? = null,
+        val callback: ModelCallback? = null,
     )
 
     interface Factory : ComponentFactory<Params, SendComponent>
+
+    interface ModelCallback {
+        fun onConvertToAnotherToken(lastAmount: String)
+    }
 }

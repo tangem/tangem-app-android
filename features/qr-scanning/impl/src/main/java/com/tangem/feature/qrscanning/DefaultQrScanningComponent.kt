@@ -18,6 +18,7 @@ import com.google.mlkit.vision.common.InputImage
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.SystemBarsIconsDisposable
+import com.tangem.domain.qrscanning.models.QrResultSource
 import com.tangem.feature.qrscanning.inner.MLKitBarcodeAnalyzer
 import com.tangem.feature.qrscanning.model.QrScanningModel
 import com.tangem.feature.qrscanning.presentation.QrScanningContent
@@ -41,10 +42,10 @@ class DefaultQrScanningComponent @AssistedInject constructor(
     // Camera requires its own analyzer instance due to flow of frames needed to be analyzed.
     // Each new frame can cancel previous analysis e.i. image from the gallery can be skipped.
     private val cameraAnalyzer: MLKitBarcodeAnalyzer by lazy(LazyThreadSafetyMode.NONE) {
-        MLKitBarcodeAnalyzer(model::onQrScanned)
+        MLKitBarcodeAnalyzer { qrCode -> model.onQrScanned(qrCode, QrResultSource.CAMERA) }
     }
     private val analyzer: MLKitBarcodeAnalyzer by lazy(LazyThreadSafetyMode.NONE) {
-        MLKitBarcodeAnalyzer(model::onQrScanned)
+        MLKitBarcodeAnalyzer { qrCode -> model.onQrScanned(qrCode, QrResultSource.GALLERY) }
     }
 
     init {

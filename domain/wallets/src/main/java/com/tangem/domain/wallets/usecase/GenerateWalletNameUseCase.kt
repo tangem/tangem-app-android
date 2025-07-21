@@ -21,6 +21,12 @@ class GenerateWalletNameUseCase(
         return suggestedWalletName(defaultName, existingNames)
     }
 
+    fun invokeForHot(): String {
+        val defaultName = "Wallet"
+        val existingNames = userWalletsListManager.userWalletsSync.map { it.name }.toSet()
+        return suggestedWalletName(defaultName, existingNames)
+    }
+
     private fun suggestedWalletName(defaultName: String, existingNames: Set<String>): String {
         val startIndex = 2
         if (!existingNames.contains(defaultName)) {
