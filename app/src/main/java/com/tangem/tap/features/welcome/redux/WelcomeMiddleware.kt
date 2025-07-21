@@ -15,7 +15,7 @@ import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.legacy.UserWalletsListManager.Lockable.UnlockType
 import com.tangem.domain.wallets.legacy.unlockIfLockable
-import com.tangem.domain.wallets.models.requireColdWallet
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.tap.backupService
 import com.tangem.tap.common.analytics.converters.ParamCardCurrencyConverter
 import com.tangem.tap.common.extensions.*
@@ -95,7 +95,7 @@ internal class WelcomeMiddleware {
             }
             .doOnSuccess { selectedUserWallet ->
                 sendSignedInAnalyticsEvent(
-                    scanResponse = selectedUserWallet.requireColdWallet().scanResponse, // TODO [REDACTED_TASK_KEY]
+                    userWallet = selectedUserWallet,
                     signInType = Basic.SignedIn.SignInType.Biometric,
                 )
 
@@ -129,7 +129,7 @@ internal class WelcomeMiddleware {
                     store.dispatchWithMain(WelcomeAction.ProceedWithCard.Error(error))
                 }
                 .doOnSuccess {
-                    sendSignedInAnalyticsEvent(scanResponse = scanResponse, signInType = Basic.SignedIn.SignInType.Card)
+                    sendSignedInAnalyticsEvent(userWallet, signInType = Basic.SignedIn.SignInType.Card)
 
                     store.dispatchNavigationAction { replaceAll(AppRoute.Wallet) }
                     store.dispatchWithMain(WelcomeAction.ProceedWithCard.Success)
@@ -142,7 +142,14 @@ internal class WelcomeMiddleware {
         }
     }
 
-    private fun sendSignedInAnalyticsEvent(scanResponse: ScanResponse, signInType: Basic.SignedIn.SignInType) {
+    private fun sendSignedInAnalyticsEvent(userWallet: UserWallet, signInType: Basic.SignedIn.SignInType) {
+        // TODO [REDACTED_TASK_KEY]
+
+        if (userWallet !is UserWallet.Cold) {
+            return
+        }
+
+        val scanResponse = userWallet.scanResponse
         val currency = ParamCardCurrencyConverter().convert(
             value = scanResponse.cardTypesResolver,
         )

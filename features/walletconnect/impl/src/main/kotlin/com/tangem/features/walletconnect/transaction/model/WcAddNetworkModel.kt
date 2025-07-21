@@ -67,6 +67,10 @@ internal class WcAddNetworkModel @Inject constructor(
         _uiState.value?.transaction?.onDismiss?.invoke() ?: router.pop()
     }
 
+    override fun popBack() {
+        router.pop()
+    }
+
     fun showTransactionRequest() {
         stackNavigation.pushNew(WcTransactionRoutes.TransactionRequestInfo)
     }

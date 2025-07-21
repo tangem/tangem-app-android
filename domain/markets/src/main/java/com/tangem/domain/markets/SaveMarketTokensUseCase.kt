@@ -8,8 +8,6 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
-import com.tangem.domain.staking.repositories.StakingRepository
-import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.wallets.models.UserWalletId
 
@@ -27,11 +25,9 @@ class SaveMarketTokensUseCase(
     private val derivationsRepository: DerivationsRepository,
     private val marketsTokenRepository: MarketsTokenRepository,
     private val currenciesRepository: CurrenciesRepository,
-    private val stakingRepository: StakingRepository,
     private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
     private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
     private val multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
-    private val tokensFeatureToggles: TokensFeatureToggles,
 ) {
 
     suspend operator fun invoke(
@@ -93,20 +89,12 @@ class SaveMarketTokensUseCase(
         userWalletId: UserWalletId,
         existingCurrencies: List<CryptoCurrency>,
     ) {
-        if (tokensFeatureToggles.isStakingLoadingRefactoringEnabled) {
-            multiYieldBalanceFetcher(
-                params = MultiYieldBalanceFetcher.Params(
-                    userWalletId = userWalletId,
-                    currencyIdWithNetworkMap = existingCurrencies.associateTo(hashMapOf()) { it.id to it.network },
-                ),
-            )
-        } else {
-            stakingRepository.fetchMultiYieldBalance(
+        multiYieldBalanceFetcher(
+            params = MultiYieldBalanceFetcher.Params(
                 userWalletId = userWalletId,
-                cryptoCurrencies = existingCurrencies,
-                refresh = true,
-            )
-        }
+                currencyIdWithNetworkMap = existingCurrencies.associateTo(hashMapOf()) { it.id to it.network },
+            ),
+        )
     }
 
     private suspend fun refreshUpdatedQuotes(addedCurrencies: List<CryptoCurrency>) {
