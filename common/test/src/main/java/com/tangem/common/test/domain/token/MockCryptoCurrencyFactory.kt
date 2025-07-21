@@ -6,18 +6,19 @@ import com.tangem.blockchain.common.Token
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.common.test.domain.card.MockScanResponseFactory
+import com.tangem.common.test.domain.wallet.MockUserWalletFactory
 import com.tangem.data.common.currency.CryptoCurrencyFactory
 import com.tangem.domain.common.DerivationStyleProvider
 import com.tangem.domain.common.configs.GenericCardConfig
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.wallets.models.UserWallet
 
 /**
 [REDACTED_AUTHOR]
  */
-class MockCryptoCurrencyFactory(private val scanResponse: ScanResponse = defaultScanResponse) {
+class MockCryptoCurrencyFactory(private val userWallet: UserWallet.Cold = defaultUserWallet) {
 
     private val factory = CryptoCurrencyFactory(excludedBlockchains = ExcludedBlockchains())
 
@@ -49,7 +50,7 @@ class MockCryptoCurrencyFactory(private val scanResponse: ScanResponse = default
         val derivationPath = createDerivationPath(
             blockchain = blockchain,
             extraDerivationPath = null,
-            cardDerivationStyleProvider = scanResponse.derivationStyleProvider,
+            cardDerivationStyleProvider = userWallet.scanResponse.derivationStyleProvider,
         )
 
         val network = Network(
@@ -72,7 +73,7 @@ class MockCryptoCurrencyFactory(private val scanResponse: ScanResponse = default
     fun createCustomToken(blockchain: Blockchain, derivationBlockchain: Blockchain): CryptoCurrency {
         val derivationPath = Network.DerivationPath.Custom(
             value = derivationBlockchain.derivationPath(
-                scanResponse.derivationStyleProvider.getDerivationStyle(),
+                userWallet.scanResponse.derivationStyleProvider.getDerivationStyle(),
             )!!.rawPath,
         )
 
@@ -114,7 +115,7 @@ class MockCryptoCurrencyFactory(private val scanResponse: ScanResponse = default
             ),
             blockchain = blockchain,
             extraDerivationPath = null,
-            scanResponse = scanResponse,
+            userWallet = userWallet,
         )!!
     }
 
@@ -161,9 +162,11 @@ class MockCryptoCurrencyFactory(private val scanResponse: ScanResponse = default
 
     private companion object {
 
-        val defaultScanResponse = MockScanResponseFactory.create(
-            cardConfig = GenericCardConfig(2),
-            derivedKeys = emptyMap(),
+        val defaultUserWallet = MockUserWalletFactory.create(
+            scanResponse = MockScanResponseFactory.create(
+                cardConfig = GenericCardConfig(2),
+                derivedKeys = emptyMap(),
+            ),
         )
     }
 }

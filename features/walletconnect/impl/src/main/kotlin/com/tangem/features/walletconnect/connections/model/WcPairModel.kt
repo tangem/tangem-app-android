@@ -1,10 +1,9 @@
 package com.tangem.features.walletconnect.connections.model
 
 import androidx.compose.runtime.Stable
-import com.arkivanov.decompose.router.stack.StackNavigation
-import com.arkivanov.decompose.router.stack.pop
-import com.arkivanov.decompose.router.stack.pushNew
+import com.arkivanov.decompose.router.stack.*
 import com.domain.blockaid.models.dapp.CheckDAppResult
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -13,6 +12,7 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.ToastMessage
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.walletconnect.WcAnalyticEvents
 import com.tangem.domain.walletconnect.model.WcPairError
 import com.tangem.domain.walletconnect.model.WcPairRequest
 import com.tangem.domain.walletconnect.model.WcSessionApprove
@@ -44,10 +44,12 @@ private const val WC_WALLETS_SELECTOR_MIN_COUNT = 2
 
 @Stable
 @ModelScoped
+@Suppress("LongParameterList")
 internal class WcPairModel @Inject constructor(
     private val router: Router,
     private val messageSender: UiMessageSender,
     override val dispatchers: CoroutineDispatcherProvider,
+    private val analytics: AnalyticsEventHandler,
     wcPairUseCaseFactory: WcPairUseCase.Factory,
     getWalletsUseCase: GetWalletsUseCase,
     paramsContainer: ParamsContainer,
@@ -79,7 +81,6 @@ internal class WcPairModel @Inject constructor(
     }
 
     private fun loadDAppInfo() {
-        fun errorToast(error: WcPairError) = messageSender.send(ToastMessage(message = stringReference(error.message)))
         wcPairUseCase()
             .onEach { pairState ->
                 when (pairState) {
@@ -90,14 +91,14 @@ internal class WcPairModel @Inject constructor(
                         appInfoUiState.transformerUpdate(
                             WcConnectButtonProgressTransformer(showProgress = false),
                         )
-                        pairState.result.onLeft(::errorToast)
+                        pairState.result.onLeft(::processError)
                         router.pop()
                     }
                     is WcPairState.Error -> {
                         appInfoUiState.transformerUpdate(
                             WcConnectButtonProgressTransformer(showProgress = false),
                         )
-                        errorToast(pairState.error)
+                        processError(pairState.error)
                     }
                     is WcPairState.Loading -> appInfoUiState.update { createLoadingState() }
                     is WcPairState.Proposal -> {
@@ -168,15 +169,40 @@ internal class WcPairModel @Inject constructor(
     }
 
     private fun showUnknownDomainAlert() {
+        val event = WcAnalyticEvents.NoticeSecurityAlert(
+            dAppMetaData = sessionProposal.dAppMetaData,
+            securityStatus = sessionProposal.securityStatus,
+            source = WcAnalyticEvents.NoticeSecurityAlert.Source.Domain,
+        )
+        analytics.send(event)
         stackNavigation.pushNew(WcAppInfoRoutes.Alert(WcAppInfoRoutes.Alert.Type.UnknownDomain))
     }
 
     private fun showSecurityRiskAlert() {
+        val event = WcAnalyticEvents.NoticeSecurityAlert(
+            dAppMetaData = sessionProposal.dAppMetaData,
+            securityStatus = sessionProposal.securityStatus,
+            source = WcAnalyticEvents.NoticeSecurityAlert.Source.Domain,
+        )
+        analytics.send(event)
         stackNavigation.pushNew(WcAppInfoRoutes.Alert(WcAppInfoRoutes.Alert.Type.UnsafeDomain))
     }
 
     private fun showVerifiedAlert(appName: String) {
         stackNavigation.pushNew(WcAppInfoRoutes.Alert(WcAppInfoRoutes.Alert.Type.Verified(appName)))
+    }
+
+    private fun processError(error: WcPairError) {
+        when (error) {
+            is WcPairError.UnsupportedDApp -> {
+                WcAppInfoRoutes.Alert.Type.UnsupportedDApp(error.appName)
+            }
+            is WcPairError.UnsupportedBlockchains -> {
+                WcAppInfoRoutes.Alert.Type.UnsupportedNetwork(error.appName)
+            }
+            else -> null
+        }?.let { stackNavigation.pushNew(WcAppInfoRoutes.Alert(it)) }
+            ?: run { messageSender.send(ToastMessage(message = stringReference(error.message))) }
     }
 
     override fun onWalletSelected(userWalletId: UserWalletId) {
