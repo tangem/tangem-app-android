@@ -13,7 +13,8 @@ android {
 
 dependencies {
     /** Api */
-    implementation(projects.features.kyc.api)
+    //TODO disable for release because of the permissions
+    // implementation(projects.features.kyc.api)
 
     /** Domain */
     implementation(projects.domain.visa)
