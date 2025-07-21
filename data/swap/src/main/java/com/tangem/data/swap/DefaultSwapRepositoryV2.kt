@@ -58,6 +58,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
         userWallet: UserWallet,
         initialCurrency: CryptoCurrency,
         cryptoCurrencyStatusList: List<CryptoCurrencyStatus>,
+        filterProviderTypes: List<ExpressProviderType>,
     ): List<SwapPairModel> = withContext(coroutineDispatcher.io) {
         val cryptoCurrencyList = cryptoCurrencyStatusList.map { it.currency }
 
@@ -67,7 +68,10 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
             cryptoCurrencyList = cryptoCurrencyList,
         )
 
-        val providers = expressRepository.getProviders(userWallet = userWallet)
+        val providers = expressRepository.getProviders(
+            userWallet = userWallet,
+            filterProviderTypes = filterProviderTypes,
+        )
         val mappedProviders = providers.associateBy(ExpressProvider::providerId)
 
         allPairs.map { pair ->
