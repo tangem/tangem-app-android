@@ -41,7 +41,7 @@ import com.tangem.domain.staking.FetchStakingTokensUseCase
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.domain.wallets.usecase.AssociateWalletsWithApplicationIdUseCase
-import com.tangem.domain.wallets.usecase.GetSavedWalletChangesUseCase
+import com.tangem.domain.wallets.usecase.GetSavedWalletsCountUseCase
 import com.tangem.domain.wallets.usecase.UpdateRemoteWalletsInfoUseCase
 import com.tangem.feature.swap.analytics.StoriesEvents
 import com.tangem.tap.common.extensions.setContext
@@ -84,7 +84,7 @@ internal class MainViewModel @Inject constructor(
     private val onboardingRepository: OnboardingRepository,
     private val notificationsToggles: NotificationsFeatureToggles,
     private val getApplicationIdUseCase: GetApplicationIdUseCase,
-    private val subscribeOnWalletsUseCase: GetSavedWalletChangesUseCase,
+    private val subscribeOnWalletsUseCase: GetSavedWalletsCountUseCase,
     private val associateWalletsWithApplicationIdUseCase: AssociateWalletsWithApplicationIdUseCase,
     private val updateRemoteWalletsInfoUseCase: UpdateRemoteWalletsInfoUseCase,
     private val sendPushTokenUseCase: SendPushTokenUseCase,
