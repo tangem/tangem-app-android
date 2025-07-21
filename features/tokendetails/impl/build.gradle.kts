@@ -101,5 +101,6 @@ dependencies {
     implementation(projects.features.pushNotifications.api)
     implementation(projects.features.swap.api)
     implementation(projects.features.txhistory.api)
+    implementation(projects.features.sendV2.api)
 
 }
