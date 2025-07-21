@@ -288,4 +288,18 @@ sealed class AppRoute(val path: String) : Route {
 
     @Serializable
     object AddExistingWallet : AppRoute(path = "/add_existing_wallet")
+
+    @Serializable
+    data class SendEntryPoint(
+        val userWalletId: UserWalletId,
+        val currency: CryptoCurrency,
+    ) : AppRoute(
+        path = "/send_entry_point/${userWalletId.stringValue}/${currency.id.value}?",
+    )
+
+    @Serializable
+    data class SendWithSwap(
+        val userWalletId: UserWalletId,
+        val currency: CryptoCurrency,
+    ) : AppRoute(path = "/send_with_swap/${userWalletId.stringValue}/${currency.symbol}")
 }
