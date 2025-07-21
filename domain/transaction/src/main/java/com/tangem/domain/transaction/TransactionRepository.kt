@@ -101,12 +101,12 @@ interface TransactionRepository {
         signer: TransactionSigner,
         userWalletId: UserWalletId,
         network: Network,
-    ): Result<ByteArray>
+    ): com.tangem.blockchain.extensions.Result<ByteArray>
 
     suspend fun prepareForSendMultiple(
         transactionData: List<TransactionData>,
         signer: TransactionSigner,
         userWalletId: UserWalletId,
         network: Network,
-    ): Result<List<ByteArray>>
+    ): com.tangem.blockchain.extensions.Result<List<ByteArray>>
 }
