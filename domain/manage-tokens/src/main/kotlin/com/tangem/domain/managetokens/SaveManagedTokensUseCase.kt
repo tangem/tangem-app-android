@@ -10,7 +10,7 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
-import com.tangem.domain.staking.repositories.StakingRepository
+import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
 import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -22,10 +22,10 @@ class SaveManagedTokensUseCase(
     private val walletManagersFacade: WalletManagersFacade,
     private val currenciesRepository: CurrenciesRepository,
     private val derivationsRepository: DerivationsRepository,
-    private val stakingRepository: StakingRepository,
     private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
     private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
     private val multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
+    private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
     private val tokensFeatureToggles: TokensFeatureToggles,
 ) {
 
@@ -95,20 +95,12 @@ class SaveManagedTokensUseCase(
         userWalletId: UserWalletId,
         addedCurrencies: List<CryptoCurrency>,
     ) {
-        if (tokensFeatureToggles.isStakingLoadingRefactoringEnabled) {
-            multiYieldBalanceFetcher(
-                params = MultiYieldBalanceFetcher.Params(
-                    userWalletId = userWalletId,
-                    currencyIdWithNetworkMap = addedCurrencies.associateTo(hashMapOf()) { it.id to it.network },
-                ),
-            )
-        } else {
-            stakingRepository.fetchMultiYieldBalance(
+        multiYieldBalanceFetcher(
+            params = MultiYieldBalanceFetcher.Params(
                 userWalletId = userWalletId,
-                cryptoCurrencies = addedCurrencies,
-                refresh = true,
-            )
-        }
+                currencyIdWithNetworkMap = addedCurrencies.associateTo(hashMapOf()) { it.id to it.network },
+            ),
+        )
     }
 
     private suspend fun refreshUpdatedQuotes(addedCurrencies: List<CryptoCurrency>) {
