@@ -21,4 +21,16 @@ enum class ExpressProviderType(val typeName: String) {
 
     @Json(name = "onramp")
     ONRAMP(typeName = "ONRAMP"),
+    ;
+
+    companion object {
+        fun ExpressProviderType.shouldStoreSwapTransaction() = when (this) {
+            CEX,
+            DEX_BRIDGE,
+            -> true
+            DEX,
+            ONRAMP,
+            -> false
+        }
+    }
 }
