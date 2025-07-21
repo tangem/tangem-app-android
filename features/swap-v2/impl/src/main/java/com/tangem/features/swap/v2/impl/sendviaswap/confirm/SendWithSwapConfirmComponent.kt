@@ -24,6 +24,7 @@ import com.tangem.features.swap.v2.impl.amount.SwapAmountComponentParams
 import com.tangem.features.swap.v2.impl.common.entity.ConfirmUM
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
 import com.tangem.features.swap.v2.impl.notifications.SwapNotificationsComponent
+import com.tangem.features.swap.v2.impl.sendviaswap.DefaultSendWithSwapComponent.Companion.SEND_WITH_SWAP_PROVIDER_TYPES
 import com.tangem.features.swap.v2.impl.sendviaswap.SendWithSwapRoute
 import com.tangem.features.swap.v2.impl.sendviaswap.confirm.model.SendWithSwapConfirmModel
 import com.tangem.features.swap.v2.impl.sendviaswap.confirm.ui.SendWithSwapConfirmContent
@@ -57,6 +58,7 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
             secondaryCryptoCurrency = model.secondaryCurrency,
             isBalanceHidingFlow = params.isBalanceHidingFlow,
             swapDirection = params.swapDirection,
+            filterProviderTypes = SEND_WITH_SWAP_PROVIDER_TYPES,
         ),
         onResult = model::onAmountResult,
         onClick = model::showEditAmount,
