@@ -5,7 +5,6 @@ import com.tangem.blockchain.common.Wallet
 import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.tap.common.extensions.setContext
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.store
@@ -35,14 +34,15 @@ class TapWalletManager(
     }
 
     private suspend fun loadUserWalletData(userWallet: UserWallet) {
-        Analytics.setContext(userWallet.requireColdWallet().scanResponse) // [REDACTED_TASK_KEY]
-        val scanResponse = userWallet.scanResponse
+        Analytics.setContext(userWallet)
 
-        tangemSdkManager.changeDisplayedCardIdNumbersCount(scanResponse)
-
-        withMainContext {
-            // Order is important
-            store.dispatch(GlobalAction.SaveScanResponse(scanResponse))
+        if (userWallet is UserWallet.Cold) {
+            val scanResponse = userWallet.scanResponse
+            tangemSdkManager.changeDisplayedCardIdNumbersCount(scanResponse)
+            withMainContext {
+                // Order is important
+                store.dispatch(GlobalAction.SaveScanResponse(scanResponse))
+            }
         }
     }
 }
