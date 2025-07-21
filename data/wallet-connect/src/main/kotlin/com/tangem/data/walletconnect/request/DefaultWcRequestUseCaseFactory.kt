@@ -3,10 +3,13 @@ package com.tangem.data.walletconnect.request
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
+import com.tangem.data.walletconnect.utils.WC_TAG
 import com.tangem.domain.walletconnect.WcRequestUseCaseFactory
 import com.tangem.domain.walletconnect.model.WcMethod
+import com.tangem.domain.walletconnect.model.WcRequestError
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
 import com.tangem.domain.walletconnect.usecase.method.WcMethodUseCase
+import timber.log.Timber
 import javax.inject.Inject
 
 internal class DefaultWcRequestUseCaseFactory @Inject constructor(
@@ -17,7 +20,17 @@ internal class DefaultWcRequestUseCaseFactory @Inject constructor(
     override suspend fun <T : WcMethodUseCase> createUseCase(
         request: WcSdkSessionRequest,
     ): Either<WcMethod.Unsupported, T> {
-        val useCase = requestConverters.firstNotNullOfOrNull { converter -> converter.toUseCase(request) }
-        return (useCase as? T)?.let { useCase.right() } ?: WcMethod.Unsupported(request).left()
+        val useCase = requestConverters
+            .find { it.toWcMethodName(request) != null }
+            ?.toUseCase(request)
+            ?: WcRequestError.HandleMethodError("Failed to create WcUseCase").left()
+
+        return useCase.fold(
+            ifLeft = {
+                Timber.tag(WC_TAG).e("$it")
+                WcMethod.Unsupported(request).left()
+            },
+            ifRight = { (it as? T)?.right() ?: WcMethod.Unsupported(request).left() },
+        )
     }
 }

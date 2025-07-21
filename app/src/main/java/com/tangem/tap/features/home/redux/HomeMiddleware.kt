@@ -61,7 +61,6 @@ private fun handleHomeAction(action: Action) {
             Analytics.send(IntroductionProcess.ScreenOpened())
 
             store.dispatch(GlobalAction.RestoreAppCurrency)
-            store.dispatch(GlobalAction.ExchangeManager.Init)
         }
         is HomeAction.ReadCard -> {
             action.scope.launch {

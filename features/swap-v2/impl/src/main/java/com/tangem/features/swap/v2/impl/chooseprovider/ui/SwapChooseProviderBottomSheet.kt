@@ -58,12 +58,18 @@ internal fun SwapChooseProviderContent(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.padding(horizontal = 13.dp),
     ) {
+        Text(
+            text = stringResourceSafe(id = R.string.onramp_choose_provider_title_hint),
+            style = TangemTheme.typography.caption2,
+            color = TangemTheme.colors.text.secondary,
+            textAlign = TextAlign.Center,
+        )
         providerList.fastForEachIndexed { index, provider ->
             ProviderChooseCrypto(
                 providerChooseUM = provider.providerUM,
                 onClick = { onProviderClick(provider.quote) },
                 modifier = modifier
-                    .conditional(index == 0) { padding(top = 6.dp) },
+                    .conditional(index == 0) { padding(top = 24.dp) },
             )
         }
         Icon(
