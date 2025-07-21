@@ -1,7 +1,6 @@
 package com.tangem.features.swap.v2.impl.sendviaswap.confirm.ui
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -41,20 +40,15 @@ internal fun SendWithSwapConfirmContent(
 
     Column(modifier = modifier) {
         LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.padding(horizontal = 12.dp),
         ) {
-            item(key = "SendWithSwapAmountBlock") {
-                amountBlockComponent.Content(Modifier)
-            }
-            item(key = "SendWithSwapDestinationBlock") {
-                sendDestinationBlockComponent.Content(Modifier)
-            }
-            item(key = "SendWithSwapFeeBLock") {
-                Box(
-                    modifier = Modifier.clip(RoundedCornerShape(16.dp)),
+            item(key = "SendWithSwapBlocks") {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    feeSelectorBlockComponent.Content(Modifier)
+                    amountBlockComponent.Content(Modifier)
+                    sendDestinationBlockComponent.Content(Modifier)
+                    feeSelectorBlockComponent.Content(Modifier.clip(RoundedCornerShape(16.dp)))
                 }
             }
             if (confirmUM != null) {
