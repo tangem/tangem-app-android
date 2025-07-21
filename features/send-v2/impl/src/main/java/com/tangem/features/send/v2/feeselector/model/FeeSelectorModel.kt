@@ -14,8 +14,10 @@ import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
 import com.tangem.features.send.v2.api.callbacks.FeeSelectorModelCallback
 import com.tangem.features.send.v2.api.entity.FeeItem
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
-import com.tangem.features.send.v2.api.feeselector.FeeSelectorReloadListener
 import com.tangem.features.send.v2.api.params.FeeSelectorParams
+import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorCheckReloadListener
+import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorCheckReloadTrigger
+import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorReloadListener
 import com.tangem.features.send.v2.feeselector.model.transformers.*
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.transformer.update
@@ -26,14 +28,18 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @Stable
 @ModelScoped
 internal class FeeSelectorModel @Inject constructor(
     paramsContainer: ParamsContainer,
-    private val feeSelectorReloadListener: FeeSelectorReloadListener,
     private val isFeeApproximateUseCase: IsFeeApproximateUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     override val dispatchers: CoroutineDispatcherProvider,
+    private val feeSelectorReloadListener: FeeSelectorReloadListener,
+    private val feeSelectorCheckReloadListener: FeeSelectorCheckReloadListener,
+    private val feeSelectorCheckReloadTrigger: FeeSelectorCheckReloadTrigger,
+    private val feeSelectorAlertFactory: FeeSelectorAlertFactory,
 ) : Model(), FeeSelectorIntents, FeeSelectorModelCallback {
 
     private val params = paramsContainer.require<FeeSelectorParams>()
@@ -46,23 +52,13 @@ internal class FeeSelectorModel @Inject constructor(
 
     init {
         initAppCurrency()
+        subscribeOnFeeReloadTriggerUpdates()
+        subscribeOnFeeCheckReloadTriggerUpdates()
         loadFee()
-        listenReloadTrigger()
     }
 
     fun updateState(feeSelectorUM: FeeSelectorUM) {
         uiState.value = feeSelectorUM
-    }
-
-    private fun listenReloadTrigger() {
-        feeSelectorReloadListener.reloadTriggerFlow
-            .onEach { data ->
-                if (data.removeSuggestedFee) {
-                    uiState.update(FeeSelectorRemoveSuggestedTransformer)
-                }
-                loadFee()
-            }
-            .launchIn(modelScope)
     }
 
     private fun initAppCurrency() {
@@ -126,5 +122,49 @@ internal class FeeSelectorModel @Inject constructor(
     override fun onFeeResult(feeSelectorUM: FeeSelectorUM) {
         uiState.value = feeSelectorUM
         feeSelectorBottomSheet.dismiss()
+    }
+
+    private fun subscribeOnFeeReloadTriggerUpdates() {
+        feeSelectorReloadListener.reloadTriggerFlow
+            .onEach { data ->
+                if (data.removeSuggestedFee) {
+                    uiState.update(FeeSelectorRemoveSuggestedTransformer)
+                }
+                loadFee()
+            }
+            .launchIn(modelScope)
+    }
+
+    private fun subscribeOnFeeCheckReloadTriggerUpdates() {
+        feeSelectorCheckReloadListener.checkReloadTriggerFlow
+            .onEach { checkLoadFee() }
+            .launchIn(modelScope)
+    }
+
+    private fun checkLoadFee() {
+        modelScope.launch {
+            params.onLoadFee().fold(
+                ifRight = {
+                    feeSelectorAlertFactory.getFeeUpdatedAlert(
+                        newFee = it,
+                        feeSelectorUM = uiState.value,
+                        proceedAction = {
+                            modelScope.launch {
+                                feeSelectorCheckReloadTrigger.callbackCheckResult(true)
+                            }
+                        },
+                        stopAction = {
+                            modelScope.launch {
+                                feeSelectorCheckReloadTrigger.callbackCheckResult(false)
+                            }
+                        },
+                    )
+                },
+                ifLeft = { feeError ->
+                    feeSelectorCheckReloadTrigger.callbackCheckResult(false)
+                    feeSelectorAlertFactory.getFeeUnreachableErrorState(::loadFee)
+                },
+            )
+        }
     }
 }
