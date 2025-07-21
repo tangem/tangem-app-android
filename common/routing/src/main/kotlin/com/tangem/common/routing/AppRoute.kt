@@ -30,10 +30,6 @@ sealed class AppRoute(val path: String) : Route {
     ) : AppRoute(path = "/welcome"), RouteBundleParams {
 
         override fun getBundle(): Bundle = bundle(serializer())
-
-        companion object {
-            const val INITIAL_INTENT_KEY = "intent"
-        }
     }
 
     @Serializable
@@ -178,9 +174,6 @@ sealed class AppRoute(val path: String) : Route {
     )
 
     @Serializable
-    data object TesterMenu : AppRoute(path = "/tester_menu")
-
-    @Serializable
     data object AppCurrencySelector : AppRoute(path = "/app_currency_selector")
 
     @Serializable
@@ -295,4 +288,18 @@ sealed class AppRoute(val path: String) : Route {
 
     @Serializable
     object AddExistingWallet : AppRoute(path = "/add_existing_wallet")
+
+    @Serializable
+    data class SendEntryPoint(
+        val userWalletId: UserWalletId,
+        val currency: CryptoCurrency,
+    ) : AppRoute(
+        path = "/send_entry_point/${userWalletId.stringValue}/${currency.id.value}?",
+    )
+
+    @Serializable
+    data class SendWithSwap(
+        val userWalletId: UserWalletId,
+        val currency: CryptoCurrency,
+    ) : AppRoute(path = "/send_with_swap/${userWalletId.stringValue}/${currency.symbol}")
 }
