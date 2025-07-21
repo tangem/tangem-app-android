@@ -65,8 +65,12 @@ internal fun QrScanningContent(
 
         TangemTopAppBar(
             modifier = Modifier.statusBarsPadding(),
-            title = null,
-            startButton = TopAppBarButtonUM.Back(uiState.onBackClick),
+            title = uiState.topBarConfig.title?.resolveReference(),
+            startButton = TopAppBarButtonUM(
+                iconRes = uiState.topBarConfig.startIcon,
+                onIconClicked = uiState.onBackClick,
+            ),
+            textColor = TangemTheme.colors.text.constantWhite,
             iconTint = TangemColorPalette.White,
             containerColor = Color.Transparent,
             endContent = {
