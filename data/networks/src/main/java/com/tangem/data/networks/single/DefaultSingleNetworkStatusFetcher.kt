@@ -1,47 +1,27 @@
 package com.tangem.data.networks.single
 
 import arrow.core.Either
-import com.tangem.data.common.currency.CardCryptoCurrencyFactory
-import com.tangem.data.networks.fetcher.CommonNetworkStatusFetcher
-import com.tangem.data.networks.store.NetworksStatusesStore
-import com.tangem.data.networks.store.setSourceAsCache
-import com.tangem.domain.core.utils.catchOn
+import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import javax.inject.Inject
 
 /**
  * Default implementation of [SingleNetworkStatusFetcher]
  *
- * @property commonNetworkStatusFetcher common network status fetcher
- * @property networksStatusesStore      networks statuses store
- * @property cardCryptoCurrencyFactory  card crypto currency factory
- * @property dispatchers                dispatchers
+ * @property multiNetworkStatusFetcher multi network status fetcher
  *
 [REDACTED_AUTHOR]
  */
 internal class DefaultSingleNetworkStatusFetcher @Inject constructor(
-    private val commonNetworkStatusFetcher: CommonNetworkStatusFetcher,
-    private val networksStatusesStore: NetworksStatusesStore,
-    private val cardCryptoCurrencyFactory: CardCryptoCurrencyFactory,
-    private val dispatchers: CoroutineDispatcherProvider,
+    private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
 ) : SingleNetworkStatusFetcher {
 
     override suspend fun invoke(params: SingleNetworkStatusFetcher.Params): Either<Throwable, Unit> {
-        return Either.catchOn(dispatchers.default) {
-            networksStatusesStore.setSourceAsCache(userWalletId = params.userWalletId, network = params.network)
-
-            val networkCurrencies = cardCryptoCurrencyFactory.create(
+        return multiNetworkStatusFetcher(
+            params = MultiNetworkStatusFetcher.Params(
                 userWalletId = params.userWalletId,
-                network = params.network,
-            )
-
-            commonNetworkStatusFetcher.fetch(
-                userWalletId = params.userWalletId,
-                network = params.network,
-                networkCurrencies = networkCurrencies.toSet(),
-            )
-                .onLeft { throw it }
-        }
+                networks = setOf(params.network),
+            ),
+        )
     }
 }

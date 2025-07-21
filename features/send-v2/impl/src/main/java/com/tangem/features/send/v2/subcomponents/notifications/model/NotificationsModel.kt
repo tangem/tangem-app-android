@@ -37,12 +37,13 @@ import com.tangem.domain.transaction.usecase.ValidateTransactionUseCase
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.features.send.v2.api.SendNotificationsComponent
 import com.tangem.features.send.v2.api.SendNotificationsComponent.Params.NotificationData
+import com.tangem.features.send.v2.api.subcomponents.notifications.SendNotificationsUpdateListener
+import com.tangem.features.send.v2.api.subcomponents.notifications.SendNotificationsUpdateTrigger
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountReduceTrigger
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeData
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeReloadTrigger
 import com.tangem.features.send.v2.subcomponents.fee.model.checkAndCalculateSubtractedAmount
 import com.tangem.features.send.v2.subcomponents.fee.model.checkFeeCoverage
-import com.tangem.features.send.v2.subcomponents.notifications.NotificationsUpdateTrigger
 import com.tangem.features.send.v2.subcomponents.notifications.analytics.NotificationsAnalyticEvents
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.lib.crypto.BlockchainUtils.isTron
@@ -74,7 +75,8 @@ internal class NotificationsModel @Inject constructor(
     private val incrementNotificationsShowCountUseCase: IncrementNotificationsShowCountUseCase,
     private val sendFeeReloadTrigger: SendFeeReloadTrigger,
     private val sendAmountReduceTrigger: SendAmountReduceTrigger,
-    private val notificationsUpdateTrigger: NotificationsUpdateTrigger,
+    private val notificationsUpdateTrigger: SendNotificationsUpdateTrigger,
+    private val notificationsUpdateListener: SendNotificationsUpdateListener,
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
@@ -101,7 +103,7 @@ internal class NotificationsModel @Inject constructor(
     }
 
     private fun subscribeToNotificationUpdateTrigger() {
-        notificationsUpdateTrigger.updateTriggerFlow
+        notificationsUpdateListener.updateTriggerFlow
             .onEach { updateState(it) }
             .launchIn(modelScope)
     }
