@@ -82,6 +82,10 @@ internal class SendAmountModel @Inject constructor(
         configAmountNavigation()
         initAppCurrency()
         subscribeOnCryptoCurrencyStatusFlow()
+        subscribeOnAmountReduceByTriggerUpdates()
+        subscribeOnAmountReduceToTriggerUpdates()
+        subscribeOnAmountIgnoreReduceTriggerUpdates()
+        subscribeOnAmountUpdateTriggerUpdates()
     }
 
     private fun initAppCurrency() {
@@ -104,12 +108,6 @@ internal class SendAmountModel @Inject constructor(
             .onEach { newCryptoCurrencyStatus ->
                 cryptoCurrencyStatus = newCryptoCurrencyStatus
                 maxAmountBoundary = MaxEnterAmountConverter().convert(cryptoCurrencyStatus)
-                if (uiState.value is AmountState.Empty) {
-                    subscribeOnAmountReduceByTriggerUpdates()
-                    subscribeOnAmountReduceToTriggerUpdates()
-                    subscribeOnAmountIgnoreReduceTriggerUpdates()
-                    subscribeOnAmountUpdateTriggerUpdates()
-                }
                 initMinBoundary()
             }
             .launchIn(modelScope)
