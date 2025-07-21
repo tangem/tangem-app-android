@@ -6,6 +6,7 @@ import arrow.core.getOrElse
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.ui.amountScreen.converters.AmountReduceByTransformer
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.navigationButtons.NavigationButton
 import com.tangem.common.ui.navigationButtons.NavigationUM
@@ -34,12 +35,13 @@ import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.models.wallet.requireColdWallet
+import com.tangem.features.send.v2.api.SendNotificationsComponent
 import com.tangem.features.send.v2.api.SendNotificationsComponent.Params.NotificationData
 import com.tangem.features.send.v2.api.callbacks.FeeSelectorModelCallback
 import com.tangem.features.send.v2.api.entity.FeeNonce
 import com.tangem.features.send.v2.api.params.FeeSelectorParams
-import com.tangem.features.send.v2.api.entity.FeeSelectorUM as FeeSelectorUMRedesigned
 import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
+import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
 import com.tangem.features.send.v2.api.subcomponents.notifications.SendNotificationsUpdateListener
 import com.tangem.features.send.v2.api.subcomponents.notifications.SendNotificationsUpdateTrigger
 import com.tangem.features.send.v2.common.CommonSendRoute
@@ -51,14 +53,13 @@ import com.tangem.features.send.v2.common.ui.state.ConfirmUM
 import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.send.analytics.SendAnalyticHelper
 import com.tangem.features.send.v2.send.confirm.SendConfirmComponent
-import com.tangem.features.send.v2.send.confirm.model.transformers.SendConfirmInitialStateTransformer
-import com.tangem.features.send.v2.send.confirm.model.transformers.SendConfirmSendingStateTransformer
-import com.tangem.features.send.v2.send.confirm.model.transformers.SendConfirmSentStateTransformer
-import com.tangem.features.send.v2.send.confirm.model.transformers.SendConfirmationNotificationsTransformer
-import com.tangem.features.send.v2.send.confirm.model.transformers.SendConfirmationNotificationsTransformerV2
+import com.tangem.features.send.v2.send.confirm.model.transformers.*
 import com.tangem.features.send.v2.send.ui.state.SendUM
+import com.tangem.features.send.v2.subcomponents.amount.SendAmountReduceTrigger
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeCheckReloadListener
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeCheckReloadTrigger
+import com.tangem.features.send.v2.subcomponents.fee.SendFeeData
+import com.tangem.features.send.v2.subcomponents.fee.SendFeeReloadTrigger
 import com.tangem.features.send.v2.subcomponents.fee.model.checkAndCalculateSubtractedAmount
 import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeSelectorUM
 import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeUM
@@ -69,7 +70,9 @@ import com.tangem.utils.transformer.update
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.math.BigDecimal
 import javax.inject.Inject
+import com.tangem.features.send.v2.api.entity.FeeSelectorUM as FeeSelectorUMRedesigned
 
 @Suppress("LongParameterList", "LargeClass")
 @Stable
@@ -98,8 +101,11 @@ internal class SendConfirmModel @Inject constructor(
     private val sendAnalyticHelper: SendAnalyticHelper,
     private val urlOpener: UrlOpener,
     private val shareManager: ShareManager,
+    private val feeSelectorReloadTrigger: FeeSelectorReloadTrigger,
+    private val feeReloadTrigger: SendFeeReloadTrigger,
+    private val sendAmountReduceTrigger: SendAmountReduceTrigger,
     sendBalanceUpdaterFactory: SendBalanceUpdater.Factory,
-) : Model(), SendConfirmClickIntents, FeeSelectorModelCallback {
+) : Model(), SendConfirmClickIntents, FeeSelectorModelCallback, SendNotificationsComponent.ModelCallback {
 
     private val params: SendConfirmComponent.Params = paramsContainer.require()
 
@@ -170,6 +176,44 @@ internal class SendConfirmModel @Inject constructor(
     fun onDestinationResult(destinationUM: DestinationUM) {
         _uiState.update { it.copy(destinationUM = destinationUM) }
         updateConfirmNotifications()
+    }
+
+    override fun onFeeReload() {
+        modelScope.launch {
+            if (uiState.value.isRedesignEnabled) {
+                feeSelectorReloadTrigger.triggerUpdate()
+            } else {
+                feeReloadTrigger.triggerUpdate(
+                    feeData = SendFeeData(
+                        amount = confirmData.enteredAmount,
+                        destinationAddress = confirmData.enteredDestination,
+                    ),
+                )
+            }
+        }
+    }
+
+    override fun onAmountReduceTo(reduceTo: BigDecimal) {
+        modelScope.launch {
+            sendAmountReduceTrigger.triggerReduceTo(reduceTo)
+        }
+    }
+
+    override fun onAmountReduceBy(reduceBy: BigDecimal, reduceByDiff: BigDecimal) {
+        modelScope.launch {
+            sendAmountReduceTrigger.triggerReduceBy(
+                AmountReduceByTransformer.ReduceByData(
+                    reduceAmountBy = reduceBy,
+                    reduceAmountByDiff = reduceByDiff,
+                ),
+            )
+        }
+    }
+
+    override fun onAmountIgnore() {
+        modelScope.launch {
+            sendAmountReduceTrigger.triggerIgnoreReduce()
+        }
     }
 
     override fun showEditDestination() {
