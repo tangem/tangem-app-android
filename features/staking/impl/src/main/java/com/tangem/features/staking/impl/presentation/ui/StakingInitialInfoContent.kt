@@ -240,6 +240,7 @@ private fun StakingRewardBlock(
         title = resourceReference(R.string.staking_rewards),
         text = text,
         iconRes = R.drawable.ic_chevron_right_24.takeIf { isShowIcon },
+        onIconClick = onRewardsClick,
         textColor = textColor,
         modifier = Modifier
             .clip(TangemTheme.shapes.roundedCornersXMedium)
