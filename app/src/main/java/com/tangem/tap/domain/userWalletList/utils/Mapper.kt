@@ -2,6 +2,7 @@ package com.tangem.tap.domain.userWalletList.utils
 
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.models.isMultiCurrency
 import com.tangem.tap.domain.userWalletList.model.UserWalletPublicInformation
 import com.tangem.tap.domain.userWalletList.model.UserWalletSensitiveInformation
 
@@ -10,8 +11,12 @@ internal val UserWallet.sensitiveInformation: UserWalletSensitiveInformation
         is UserWallet.Cold -> UserWalletSensitiveInformation(
             wallets = scanResponse.card.wallets,
             visaCardActivationStatus = scanResponse.visaCardActivationStatus,
+            mobileWallets = null,
         )
-        is UserWallet.Hot -> TODO("[REDACTED_TASK_KEY]")
+        is UserWallet.Hot -> UserWalletSensitiveInformation(
+            wallets = null,
+            mobileWallets = this.wallets,
+        )
     }
 
 internal val UserWallet.publicInformation: UserWalletPublicInformation
@@ -28,19 +33,39 @@ internal val UserWallet.publicInformation: UserWalletPublicInformation
                 visaCardActivationStatus = null,
             ),
             hasBackupError = hasBackupError,
+            hotWalletId = null,
+            backedUp = null,
         )
-        is UserWallet.Hot -> TODO("[REDACTED_TASK_KEY]")
+        is UserWallet.Hot -> UserWalletPublicInformation(
+            name = name,
+            walletId = walletId,
+            isMultiCurrency = isMultiCurrency,
+            cardsInWallet = emptySet(),
+            scanResponse = null,
+            hotWalletId = hotWalletId,
+            backedUp = backedUp,
+        )
     }
 
 internal fun UserWalletPublicInformation.toUserWallet(): UserWallet {
-    return UserWallet.Cold(
-        name = name,
-        walletId = walletId,
-        cardsInWallet = cardsInWallet,
-        scanResponse = scanResponse,
-        isMultiCurrency = isMultiCurrency,
-        hasBackupError = hasBackupError,
-    )
+    return if (hotWalletId != null) {
+        UserWallet.Hot(
+            name = name,
+            walletId = walletId,
+            hotWalletId = hotWalletId,
+            wallets = null,
+            backedUp = backedUp!!,
+        )
+    } else {
+        UserWallet.Cold(
+            name = name,
+            walletId = walletId,
+            cardsInWallet = cardsInWallet,
+            scanResponse = scanResponse!!,
+            isMultiCurrency = isMultiCurrency,
+            hasBackupError = hasBackupError,
+        )
+    }
 }
 
 internal fun List<UserWalletPublicInformation>.toUserWallets(): List<UserWallet> {
@@ -53,13 +78,15 @@ internal fun UserWallet.updateWith(sensitiveInformation: UserWalletSensitiveInfo
             copy(
                 scanResponse = scanResponse.copy(
                     card = scanResponse.card.copy(
-                        wallets = sensitiveInformation.wallets,
+                        wallets = sensitiveInformation.wallets!!,
                     ),
                     visaCardActivationStatus = sensitiveInformation.visaCardActivationStatus,
                 ),
             )
         }
-        is UserWallet.Hot -> TODO("[REDACTED_TASK_KEY]")
+        is UserWallet.Hot -> copy(
+            wallets = sensitiveInformation.mobileWallets,
+        )
     }
 }
 

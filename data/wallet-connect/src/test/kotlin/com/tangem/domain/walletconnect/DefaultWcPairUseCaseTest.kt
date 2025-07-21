@@ -58,8 +58,8 @@ internal class DefaultWcPairUseCaseTest {
             relayData = "",
         )
 
-    private val unsupportedDApp = "Apex Pro"
-    private val unsupportedSdkProposal get() = sdkProposal.copy(name = unsupportedDApp)
+    private val unsupportedDAppUrl = "dydx.trade"
+    private val unsupportedSdkProposal get() = sdkProposal.copy(url = unsupportedDAppUrl)
 
     private val sessionForApprove: WcSessionApprove
         get() = WcSessionApprove(
@@ -95,6 +95,8 @@ internal class DefaultWcPairUseCaseTest {
             sdkModel = WcSdkSessionConverter.convert(this),
             securityStatus = CheckDAppResult.SAFE,
             networks = setOf(),
+            connectingTime = null,
+            showWalletInfo = false,
         )
 
     private fun useCaseFactory() = DefaultWcPairUseCase(
@@ -113,8 +115,7 @@ internal class DefaultWcPairUseCaseTest {
         coEvery {
             caipNamespaceDelegate.associate(
                 sessionProposal = sdkProposal,
-                userWallet = sessionForApprove.wallet,
-                networks = sessionForApprove.network,
+                sessionForApprove = sessionForApprove,
             )
         } returns mapOf()
     }
@@ -144,7 +145,7 @@ internal class DefaultWcPairUseCaseTest {
 
         coEvery { sdkDelegate.pair(url) } returns sdkProposal.right()
         coEvery { sdkDelegate.approve(sdkApprove) } returns sdkApproveSuccess.right()
-        coEvery { sessionsManager.saveSession(sessionForSave) } returns Unit
+        coEvery { sessionsManager.saveSession(any()) } returns Unit
         coEvery { blockAidVerifier.verifyDApp(any()) } returns Either.catch { CheckDAppResult.SAFE }
 
         val useCase = useCaseFactory()
@@ -162,9 +163,12 @@ internal class DefaultWcPairUseCaseTest {
             assertEquals(approveLoading, awaitItem())
             coVerifyOrder {
                 sdkDelegate.approve(sdkApprove)
-                sessionsManager.saveSession(sessionForSave)
+                sessionsManager.saveSession(any())
             }
-            assertEquals(result, awaitItem())
+            val actual: WcPairState = awaitItem()
+            assert(actual is WcPairState.Approving.Result)
+            actual as WcPairState.Approving.Result
+            assertEquals(result.session, actual.session)
             awaitComplete()
         }
     }
@@ -196,7 +200,7 @@ internal class DefaultWcPairUseCaseTest {
     @Test
     fun `success pair and reject unsupported dApp`() = runTest {
         coEvery { sdkDelegate.pair(url) } returns unsupportedSdkProposal.right()
-        val unsupportedDAppError = WcPairState.Error(WcPairError.UnsupportedDomain)
+        val unsupportedDAppError = WcPairState.Error(WcPairError.UnsupportedDApp(unsupportedSdkProposal.name))
 
         val useCase = useCaseFactory()
         useCase.invoke().test {
