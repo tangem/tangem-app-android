@@ -107,7 +107,7 @@ private fun CellDecoration(
             Box(
                 modifier = Modifier
                     .background(
-                        color = TangemTheme.colors.background.tertiary,
+                        color = TangemTheme.colors.field.primary,
                         shape = RoundedCornerShape(8.dp),
                     ),
                 contentAlignment = Alignment.Center,
