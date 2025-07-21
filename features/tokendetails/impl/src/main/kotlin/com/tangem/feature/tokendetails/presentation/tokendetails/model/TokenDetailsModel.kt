@@ -80,6 +80,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenBala
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsStateFactory
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.express.ExpressStatusFactory
+import com.tangem.features.send.v2.api.SendFeatureToggles
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
@@ -137,6 +138,7 @@ internal class TokenDetailsModel @Inject constructor(
     private val router: InnerTokenDetailsRouter,
     private val tokenDetailsDeepLinkActionListener: TokenDetailsDeepLinkActionListener,
     private val analyticsExceptionHandler: AnalyticsExceptionHandler,
+    private val sendFeatureToggles: SendFeatureToggles,
 ) : Model(), TokenDetailsClickIntents {
 
     private val params = paramsContainer.require<TokenDetailsComponent.Params>()
@@ -564,10 +566,17 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     private fun sendCurrency() {
-        val route = AppRoute.Send(
-            currency = cryptoCurrency,
-            userWalletId = userWallet.walletId,
-        )
+        val route = if (sendFeatureToggles.isSendWithSwapEnabled) {
+            AppRoute.SendEntryPoint(
+                currency = cryptoCurrency,
+                userWalletId = userWallet.walletId,
+            )
+        } else {
+            AppRoute.Send(
+                currency = cryptoCurrency,
+                userWalletId = userWallet.walletId,
+            )
+        }
 
         appRouter.push(route)
     }
