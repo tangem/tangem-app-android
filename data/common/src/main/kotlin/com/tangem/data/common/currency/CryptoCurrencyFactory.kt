@@ -8,7 +8,7 @@ import com.tangem.blockchainsdk.utils.toCoinId
 import com.tangem.data.common.network.NetworkFactory
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.wallets.models.UserWallet
 import timber.log.Timber
 import com.tangem.blockchain.common.Token as SdkToken
 
@@ -46,7 +46,7 @@ class CryptoCurrencyFactory(
         sdkToken: SdkToken,
         blockchain: Blockchain,
         extraDerivationPath: String?,
-        scanResponse: ScanResponse,
+        userWallet: UserWallet,
     ): CryptoCurrency.Token? {
         if (blockchain == Blockchain.Unknown) {
             Timber.e("Unable to map the SDK token to the domain token with Unknown blockchain")
@@ -56,7 +56,7 @@ class CryptoCurrencyFactory(
         val network = networkFactory.create(
             blockchain = blockchain,
             extraDerivationPath = extraDerivationPath,
-            scanResponse = scanResponse,
+            userWallet = userWallet,
         ) ?: return null
 
         val id = getTokenId(network, sdkToken)
@@ -76,7 +76,7 @@ class CryptoCurrencyFactory(
     fun createCoin(
         blockchain: Blockchain,
         extraDerivationPath: String?,
-        scanResponse: ScanResponse,
+        userWallet: UserWallet,
     ): CryptoCurrency.Coin? {
         if (blockchain == Blockchain.Unknown) {
             Timber.e("Unable to map the SDK token to the domain token with Unknown blockchain")
@@ -86,15 +86,15 @@ class CryptoCurrencyFactory(
         val network = networkFactory.create(
             blockchain = blockchain,
             extraDerivationPath = extraDerivationPath,
-            scanResponse = scanResponse,
+            userWallet = userWallet,
         ) ?: return null
 
         return createCoin(network)
     }
 
-    fun createCoin(networkId: String, extraDerivationPath: String?, scanResponse: ScanResponse): CryptoCurrency.Coin? {
+    fun createCoin(networkId: String, extraDerivationPath: String?, userWallet: UserWallet): CryptoCurrency.Coin? {
         val blockchain = Blockchain.fromNetworkId(networkId) ?: Blockchain.Unknown
-        return createCoin(blockchain, extraDerivationPath, scanResponse)
+        return createCoin(blockchain, extraDerivationPath, userWallet)
     }
 
     fun createCoin(network: Network): CryptoCurrency.Coin {
@@ -115,7 +115,7 @@ class CryptoCurrencyFactory(
         token: Token,
         networkId: String,
         extraDerivationPath: String?,
-        scanResponse: ScanResponse,
+        userWallet: UserWallet,
     ): CryptoCurrency.Token? {
         val sdkToken = SdkToken(
             name = token.name,
@@ -129,7 +129,7 @@ class CryptoCurrencyFactory(
             sdkToken = sdkToken,
             blockchain = blockchain,
             extraDerivationPath = extraDerivationPath,
-            scanResponse = scanResponse,
+            userWallet = userWallet,
         )
     }
 
@@ -141,7 +141,8 @@ class CryptoCurrencyFactory(
             decimals = cryptoCurrency.decimals,
             id = cryptoCurrency.id.rawCurrencyId?.value,
         )
-        val blockchain = Blockchain.fromNetworkId(cryptoCurrency.network.backendId) ?: Blockchain.Unknown
+        val blockchain =
+            Blockchain.fromNetworkId(cryptoCurrency.network.backendId) ?: Blockchain.Unknown
         val id = getTokenId(network, sdkToken)
         return CryptoCurrency.Token(
             id = id,
