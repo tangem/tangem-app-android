@@ -3,7 +3,7 @@ package com.tangem.feature.swap.converters
 import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
 import com.tangem.data.common.currency.UserTokensResponseFactory
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatusModel
 import com.tangem.feature.swap.domain.models.domain.SavedSwapTransactionListModel
@@ -32,7 +32,7 @@ internal class SavedSwapTransactionListConverter(
 
     fun convertBack(
         value: SavedSwapTransactionListModelInner,
-        scanResponse: ScanResponse,
+        userWallet: UserWallet,
         txStatuses: Map<String, ExchangeStatusModel>,
     ): SavedSwapTransactionListModel? {
         val fromToken = value.fromTokensResponse
@@ -42,11 +42,11 @@ internal class SavedSwapTransactionListConverter(
         } else {
             val fromCryptoCurrency = responseCryptoCurrenciesFactory.createCurrency(
                 responseToken = fromToken,
-                scanResponse = scanResponse,
+                userWallet = userWallet,
             ) ?: return null
             val toCryptoCurrency = responseCryptoCurrenciesFactory.createCurrency(
                 responseToken = toToken,
-                scanResponse = scanResponse,
+                userWallet = userWallet,
             ) ?: return null
 
             return SavedSwapTransactionListModel(
@@ -55,7 +55,7 @@ internal class SavedSwapTransactionListConverter(
                     val refundCurrency = status?.refundTokensResponse?.let { id ->
                         responseCryptoCurrenciesFactory.createCurrency(
                             responseToken = id,
-                            scanResponse = scanResponse,
+                            userWallet = userWallet,
                         )
                     }
                     val statusWithRefundCurrency = status?.copy(refundCurrency = refundCurrency)
