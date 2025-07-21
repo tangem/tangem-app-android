@@ -134,7 +134,6 @@ dependencies {
     implementation(projects.core.datasource)
     implementation(projects.core.utils)
     implementation(projects.core.decompose)
-    implementation(projects.core.deepLinks)
     implementation(projects.core.error.ext)
     implementation(projects.libs.crypto)
     implementation(projects.libs.auth)
@@ -280,6 +279,8 @@ dependencies {
     implementation(tangemDeps.card.android) {
         exclude(module = "joda-time")
     }
+    implementation(tangemDeps.hot.core)
+    implementation(tangemDeps.hot.android)
 
     /** DI */
     implementation(deps.hilt.android)
@@ -299,6 +300,7 @@ dependencies {
     implementation(deps.zxing.qrCore)
     implementation(deps.coil)
     implementation(deps.coil.gif)
+    implementation(deps.coil.svg)
     implementation(deps.amplitude)
     implementation(deps.kotsonGson)
     implementation(deps.spongecastle.core)
