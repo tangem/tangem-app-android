@@ -2,6 +2,7 @@ package com.tangem.features.walletconnect.transaction.model
 
 import androidx.compose.runtime.Stable
 import com.arkivanov.decompose.router.stack.StackNavigation
+import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.pushNew
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -74,6 +75,10 @@ internal class WcSignTransactionModel @Inject constructor(
 
     override fun dismiss() {
         _uiState.value?.transaction?.onDismiss?.invoke() ?: router.pop()
+    }
+
+    override fun popBack() {
+        stackNavigation.pop()
     }
 
     fun showTransactionRequest() {

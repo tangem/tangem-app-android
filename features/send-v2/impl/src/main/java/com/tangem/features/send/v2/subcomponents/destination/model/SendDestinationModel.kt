@@ -347,7 +347,7 @@ internal class SendDestinationModel @Inject constructor(
                             params.onNextClick()
                         },
                     ),
-                    prevButton = if (!route.isEditMode && isRedesignEnabled) {
+                    prevButton = if (!route.isEditMode && !isRedesignEnabled) {
                         NavigationButton(
                             textReference = TextReference.EMPTY,
                             iconRes = R.drawable.ic_back_24,
