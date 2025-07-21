@@ -8,6 +8,7 @@ import com.arkivanov.decompose.router.stack.pushNew
 import com.domain.blockaid.models.transaction.ValidationResult
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -21,11 +22,16 @@ import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
+import com.tangem.domain.walletconnect.WcAnalyticEvents
 import com.tangem.domain.walletconnect.WcRequestUseCaseFactory
+import com.tangem.domain.walletconnect.model.WcRequestError
+import com.tangem.domain.walletconnect.model.WcRequestError.Companion.message
 import com.tangem.domain.walletconnect.usecase.method.*
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.send.v2.api.callbacks.FeeSelectorModelCallback
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
+import com.tangem.features.send.v2.api.feeselector.FeeSelectorReloadData
+import com.tangem.features.send.v2.api.feeselector.FeeSelectorReloadTrigger
 import com.tangem.features.send.v2.api.params.FeeSelectorParams
 import com.tangem.features.walletconnect.connections.routing.WcInnerRoute
 import com.tangem.features.walletconnect.transaction.components.common.WcTransactionModelParams
@@ -49,6 +55,7 @@ import kotlin.properties.Delegates
 internal class WcSendTransactionModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
+    private val feeSelectorReloadTrigger: FeeSelectorReloadTrigger,
     private val router: Router,
     private val clipboardManager: ClipboardManager,
     private val useCaseFactory: WcRequestUseCaseFactory,
@@ -56,6 +63,7 @@ internal class WcSendTransactionModel @Inject constructor(
     private val blockAidUiConverter: WcSendAndReceiveBlockAidUiConverter,
     private val getFeeUseCase: GetFeeUseCase,
     private val getNetworkCoinUseCase: GetNetworkCoinStatusUseCase,
+    private val analytics: AnalyticsEventHandler,
 ) : Model(), WcCommonTransactionModel, FeeSelectorModelCallback {
 
     private val params = paramsContainer.require<WcTransactionModelParams>()
@@ -71,6 +79,7 @@ internal class WcSendTransactionModel @Inject constructor(
     private var signState: WcSignState<*> by Delegates.notNull()
     private var wcApproval: WcApproval? = null
     private var sign: () -> Unit = {}
+    private val feeReloadState = MutableStateFlow(false)
 
     init {
         @Suppress("UnusedPrivateMember")
@@ -111,6 +120,9 @@ internal class WcSendTransactionModel @Inject constructor(
                             wcApproval = useCase as? WcApproval
                             sign = { useCase.sign() }
                             buildUiState(securityCheck, useCase, signState, isApprovalMethod)
+                            if (feeReloadState.value) {
+                                triggerFeeReload()
+                            }
                         }
                 }
                 else -> unknownMethodRunnable()
@@ -118,7 +130,27 @@ internal class WcSendTransactionModel @Inject constructor(
         }
     }
 
+    private fun triggerFeeReload() {
+        feeReloadState.value = false
+        modelScope.launch {
+            feeSelectorReloadTrigger.triggerUpdate(data = FeeSelectorReloadData(removeSuggestedFee = true))
+        }
+    }
+
+    /**
+     * Handles callback with updated [feeSelectorUM] from click FeeSelectorComponent.
+     * We need to trigger navigation to dismiss fee selector component
+     */
     override fun onFeeResult(feeSelectorUM: FeeSelectorUM) {
+        updateFee(feeSelectorUM)
+        popBack()
+    }
+
+    /**
+     * Handles fee updates.
+     * Also handles fee results from FeeSelectorBlockComponent
+     */
+    fun updateFee(feeSelectorUM: FeeSelectorUM) {
         _uiState.update { it?.copy(feeSelectorUM = feeSelectorUM) }
         val fee = (feeSelectorUM as? FeeSelectorUM.Content)?.selectedFeeItem?.fee ?: return
         (useCase as? WcMutableFee)?.updateFee(fee)
@@ -186,6 +218,10 @@ internal class WcSendTransactionModel @Inject constructor(
         _uiState.value?.transaction?.onDismiss?.invoke() ?: router.pop()
     }
 
+    override fun popBack() {
+        stackNavigation.pop()
+    }
+
     fun showTransactionRequest() {
         stackNavigation.pushNew(WcTransactionRoutes.TransactionRequestInfo)
     }
@@ -200,6 +236,19 @@ internal class WcSendTransactionModel @Inject constructor(
         } else {
             sign()
         }
+        securityCheck?.result?.validation?.let { securityStatus ->
+            val event = WcAnalyticEvents.NoticeSecurityAlert(
+                dAppMetaData = useCase.session.sdkModel.appMetaData,
+                securityStatus = useCase.session.securityStatus,
+                source = WcAnalyticEvents.NoticeSecurityAlert.Source.SmartContract,
+            )
+            when (securityStatus) {
+                ValidationResult.SAFE -> Unit
+                ValidationResult.UNSAFE,
+                ValidationResult.FAILED_TO_VALIDATE,
+                -> analytics.send(event)
+            }
+        }
     }
 
     fun onClickDoneCustomAllowance(value: BigDecimal, isUnlimited: Boolean) {
@@ -207,6 +256,7 @@ internal class WcSendTransactionModel @Inject constructor(
         wcApproval?.getAmount()?.let { currentAmount ->
             wcApproval?.updateAmount(currentAmount.copy(amount = currentAmount.amount?.copy(value = newValue)))
         }
+        feeReloadState.value = true
     }
 
     fun onClickAllowToSpend() {
@@ -235,10 +285,10 @@ internal class WcSendTransactionModel @Inject constructor(
         return false
     }
 
-    private fun handleSigningError(result: Either<Throwable, Unit>, useCase: WcSignUseCase<*>) {
+    private fun handleSigningError(result: Either<WcRequestError, String>, useCase: WcSignUseCase<*>) {
         if (result.isLeft()) {
             val error = WcTransactionRoutes.Alert.Type.UnknownError(
-                errorMessage = result.leftOrNull()?.message,
+                errorMessage = result.leftOrNull()?.message(),
                 onDismiss = { cancel(useCase) },
             )
             stackNavigation.pushNew(WcTransactionRoutes.Alert(error))

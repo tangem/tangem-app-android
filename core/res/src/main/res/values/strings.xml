@@ -4,6 +4,9 @@
   <string name="access_code_alert_skip_ok">Skip anyway</string>
   <string name="access_code_alert_skip_title">Access Code not set</string>
   <string name="access_code_check_title">Enter Access Code</string>
+  <string name="access_code_check_warining_delete">Wrong access code. Your hot wallet will be deleted after %s more incorrect attempts.</string>
+  <string name="access_code_check_warining_lock">Wrong access code. App will be locked with %s more input errors</string>
+  <string name="access_code_check_warining_wait">Wrong access code.\nPlease wait %s seconds and try again.</string>
   <string name="access_code_confirm_description">Confirm your previously entered code to continue</string>
   <string name="access_code_confirm_title">Re-enter Access Code</string>
   <string name="access_code_create_description">Set a %s-digit Access Code to unlock your wallet.</string>
@@ -58,14 +61,19 @@
   <string name="app_settings_theme_mode_system">System default</string>
   <string name="app_settings_theme_selector_title">Theme</string>
   <string name="app_settings_title">App settings</string>
+  <string name="auth_info_add_wallet_title">Add Wallet</string>
+  <string name="auth_info_subtitle">Select a wallet to log in</string>
+  <string name="auth_info_title">Welcome back!</string>
   <string name="backup_complete_description">You successfully backed up your wallet.</string>
+  <string name="backup_complete_seed_description">These words can’t be recovered if lost. Make sure to keep it somewhere secure.</string>
   <string name="backup_complete_title">Backup Completed</string>
   <string name="backup_info_description">Your Secret Recovery Phrase is a fixed set of %s random words used to access and recover your wallet.</string>
-  <string name="backup_info_keep_description">These words can’t be recovered if lost. Make sure to keep it somewhere secure.</string>
+  <string name="backup_info_keep_description">These words can’t be recovered if lost. Make sure to keep it somewhere secure.</string>
   <string name="backup_info_keep_title">Keep It Safe</string>
   <string name="backup_info_save_description">Save these %s words in a secure location, such as a password manager, and never share them with anyone.</string>
   <string name="backup_info_save_title">No Recovery Possible</string>
   <string name="backup_info_title">Recovery phrase</string>
+  <string name="backup_seed_caution">Never share these words. Anyone who learns them can steal all of your crypto. Tangem will never ask you for them. The %s words below are your wallet\'s recovery phrase. This phrase lets you recover your wallet if you lose your device.</string>
   <string name="backup_seed_description">Write down these %s words in order and keep them safe and private</string>
   <string name="backup_seed_responsibility">Full responsibility for the security and backup of the wallet and recovery phrase lies with the user, not with Tangem.</string>
   <string name="backup_seed_title">Recovery phrase</string>
@@ -430,6 +438,7 @@
   <string name="hw_create_seed_description">Stay up to date with the latest features and news</string>
   <string name="hw_create_seed_title">Seed phrase backup</string>
   <string name="hw_create_title">Create Mobile Wallet</string>
+  <string name="hw_mobile_wallet">Mobile Wallet</string>
   <string name="information_generated_with_ai">This information was generated with AI.\nTap here, if you find any errors.</string>
   <string name="initial_message_change_access_code_body">To change the access code tap the card or ring as shown above and do not remove until the end of the operation</string>
   <string name="initial_message_change_passcode_body">To change the passcode tap the card as shown above and do not remove until the end of the operation</string>
@@ -664,7 +673,7 @@
   <string name="onboarding_button_continue_wallet">Continue to my wallet</string>
   <string name="onboarding_button_finalize_backup">Finalize backup</string>
   <string name="onboarding_button_receive_crypto">Receive crypto</string>
-  <string name="onboarding_button_scan_origin_card">Scan primary card</string>
+  <string name="onboarding_button_scan_origin_card">Scan primary card or ring</string>
   <string name="onboarding_button_skip_backup">Skip for later</string>
   <string name="onboarding_button_what_does_it_mean">How does it work?</string>
   <string name="onboarding_create_wallet_body">Let\'s generate all the keys on your card or ring and create a secure wallet</string>
@@ -717,7 +726,7 @@
   <string name="onboarding_title_no_backup_cards">No backup devices</string>
   <string name="onboarding_title_notifications">Notifications</string>
   <string name="onboarding_title_one_backup_card">One backup device added</string>
-  <string name="onboarding_title_scan_origin_card">Prepare your card</string>
+  <string name="onboarding_title_scan_origin_card">Prepare your card or ring</string>
   <string name="onboarding_title_two_backup_cards">Two backup devices added</string>
   <string name="onboarding_top_up_body">To get started, simply top up the wallet with any amount</string>
   <string name="onboarding_top_up_body_no_account_error">To get started, simply top up the wallet with more than %1$s %2$s</string>
@@ -937,7 +946,9 @@
   <string name="send_validation_invalid_amount">Invalid amount</string>
   <string name="send_validation_invalid_fee">Fee exceeds balance</string>
   <string name="send_validation_invalid_total">Total amount exceeds balance</string>
+  <string name="send_with_swap_confirm_title">Swap and send</string>
   <string name="send_with_swap_notification_text">Send any token, and we’ll convert it on the way. Your recipient gets exactly what they need—seamlessly.</string>
+  <string name="send_with_swap_recipient_amount_success_title">Recipient will receive</string>
   <string name="send_with_swap_recipient_amount_text">Will be sent a recipient</string>
   <string name="send_with_swap_recipient_amount_title">Amount to receive</string>
   <string name="send_with_swap_title">Send with swap</string>
@@ -1357,8 +1368,8 @@
   <string name="warning_express_approval_in_progress_message">Swap approval is underway and will be completed shortly</string>
   <string name="warning_express_approval_in_progress_title">Approval in progress</string>
   <string name="warning_express_dust_message">The minimum swapping amount is %1$s. Please ensure that the remaining balance after the swap will not be less than %2$s.</string>
-  <string name="warning_express_no_exchangeable_coins_description">You do not have any %s exchangeable coins in your list</string>
-  <string name="warning_express_no_exchangeable_coins_title">No available tokens to swap</string>
+  <string name="warning_express_no_exchangeable_coins_description">You don’t have any tokens in your portfolio that %s can be swapped to. Please add another token to enable the exchange.</string>
+  <string name="warning_express_no_exchangeable_coins_title">No compatible tokens added</string>
   <string name="warning_express_not_enough_fee_for_token_tx_description">To make a transaction you need to deposit some %1$s %2$s</string>
   <string name="warning_express_not_enough_fee_for_token_tx_title">Unable to cover %s fee</string>
   <string name="warning_express_notification_invalid_reserve_amount_title">The amount to receive must be at least %s</string>
@@ -1417,10 +1428,7 @@
   <string name="warning_some_networks_unreachable_message">Swipe down to refresh or try again later.</string>
   <string name="warning_some_networks_unreachable_title">Some networks are unreachable</string>
   <string name="warning_some_token_balances_not_updated">Some token balances could not be updated</string>
-  <string name="warning_stellar_token_trustline_button_title">Enable Trustline</string>
-  <string name="warning_stellar_token_trustline_not_enough_xlm">Not enough %s. Top up your XLM account to associate this token</string>
-  <string name="warning_stellar_token_trustline_subtitle">A Trustline must be enabled to receive this token. The network requires a 0.5 XLM reserve.</string>
-  <string name="warning_stellar_token_trustline_title">Trustline Required</string>
+  <string name="warning_stellar_token_trustline_not_enough_xlm">Not enough %s. Top up your XLM account to open trustline.</string>
   <string name="warning_testnet_card_message">This is a Testnet card. It cannot process transactions and should only be used for testing and development purposes.</string>
   <string name="warning_testnet_card_title">For testing purposes only</string>
   <string name="warning_token_balance_not_updated">Balance may be outdated. Refresh the page.</string>
@@ -1440,6 +1448,8 @@
   <string name="wc_alert_unknown_error_description">Error code: %s. If the problem persists — feel free to contact our support.</string>
   <string name="wc_alert_unknown_error_description_no_error_code">If the problem persists — feel free to contact our support.</string>
   <string name="wc_alert_unknown_error_title">We\'ve encountered unknown error</string>
+  <string name="wc_alert_unsupported_dapps_description">Tangem Wallet currently doesn’t support %s.</string>
+  <string name="wc_alert_unsupported_dapps_title">Unsupported dApp</string>
   <string name="wc_alert_unsupported_method_description">Error code: 8 005. If the problem persists — feel free to contact our support.</string>
   <string name="wc_alert_unsupported_method_title">We\'ve encountered unknown error</string>
   <string name="wc_alert_unsupported_networks_description">Tangem does not currently support a required network by %s.</string>
@@ -1473,7 +1483,7 @@
   <string name="wc_estimated_wallet_changes">Estimated wallet changes</string>
   <string name="wc_estimated_wallet_changes_not_simulated">The transaction couldn\'t be simulated. Please proceed with caution.</string>
   <string name="wc_malicious_transaction">Malicious transaction</string>
-  <string name="wc_missing_required_network_description">Add the %s network to your profile for this wallet</string>
+  <string name="wc_missing_required_network_description">Add the %s network to your portfolio for this wallet</string>
   <string name="wc_missing_required_network_title">The wallet has no required networks</string>
   <string name="wc_new_connection">New connection</string>
   <string name="wc_no_sessions_desc">Connect your wallet to a different dApps</string>

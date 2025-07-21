@@ -25,8 +25,6 @@ import java.math.BigDecimal
 @Suppress("TooManyFunctions")
 interface StakingRepository {
 
-    fun getIntegrationKey(cryptoCurrencyId: CryptoCurrency.ID): String
-
     fun getSupportedIntegrationId(cryptoCurrencyId: CryptoCurrency.ID): String?
 
     suspend fun fetchEnabledYields()
@@ -51,36 +49,7 @@ interface StakingRepository {
         stakingActionStatus: StakingActionStatus,
     ): List<StakingAction>
 
-    suspend fun fetchSingleYieldBalance(
-        userWalletId: UserWalletId,
-        cryptoCurrency: CryptoCurrency,
-        refresh: Boolean = false,
-    )
-
-    fun getSingleYieldBalanceFlow(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): Flow<YieldBalance>
-
-    suspend fun getSingleYieldBalanceSyncLegacy(
-        userWalletId: UserWalletId,
-        cryptoCurrency: CryptoCurrency,
-    ): YieldBalance
-
     suspend fun getSingleYieldBalanceSync(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): YieldBalance
-
-    suspend fun fetchMultiYieldBalance(
-        userWalletId: UserWalletId,
-        cryptoCurrencies: List<CryptoCurrency>,
-        refresh: Boolean = false,
-    )
-
-    fun getMultiYieldBalanceUpdates(
-        userWalletId: UserWalletId,
-        cryptoCurrencies: List<CryptoCurrency>,
-    ): Flow<YieldBalanceList>
-
-    suspend fun getMultiYieldBalanceSyncLegacy(
-        userWalletId: UserWalletId,
-        cryptoCurrencies: List<CryptoCurrency>,
-    ): YieldBalanceList
 
     suspend fun getMultiYieldBalanceSync(
         userWalletId: UserWalletId,

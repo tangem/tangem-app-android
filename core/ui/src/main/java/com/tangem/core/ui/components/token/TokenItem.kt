@@ -12,6 +12,7 @@ import androidx.compose.ui.layout.Measurable
 import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
@@ -30,6 +31,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.MainScreenTestTags
 import kotlinx.collections.immutable.persistentListOf
 import org.burnoutcrew.reorderable.ReorderableLazyListState
 import java.util.UUID
@@ -100,7 +102,8 @@ fun TokenItem(
             state = state.iconState,
             modifier = Modifier
                 .layoutId(layoutId = LayoutId.ICON)
-                .padding(end = TangemTheme.dimens.spacing8),
+                .padding(end = TangemTheme.dimens.spacing8)
+                .testTag(MainScreenTestTags.TOKEN_ICON),
         )
 
         TokenTitle(
@@ -108,7 +111,8 @@ fun TokenItem(
             modifier = Modifier
                 .layoutId(layoutId = LayoutId.TITLE)
                 .padding(end = TangemTheme.dimens.spacing8)
-                .padding(bottom = betweenRowsMargin),
+                .padding(bottom = betweenRowsMargin)
+                .testTag(MainScreenTestTags.TOKEN_TITLE),
         )
 
         TokenFiatAmount(
@@ -116,26 +120,32 @@ fun TokenItem(
             isBalanceHidden = isBalanceHidden,
             modifier = Modifier
                 .layoutId(layoutId = LayoutId.FIAT_AMOUNT)
-                .padding(bottom = betweenRowsMargin),
+                .padding(bottom = betweenRowsMargin)
+                .testTag(MainScreenTestTags.TOKEN_FIAT_AMOUNT),
         )
 
         TokenPrice(
             state = state.subtitleState,
             modifier = Modifier
                 .layoutId(layoutId = LayoutId.CRYPTO_PRICE)
-                .padding(end = TangemTheme.dimens.spacing8),
+                .padding(end = TangemTheme.dimens.spacing8)
+                .testTag(MainScreenTestTags.TOKEN_PRICE),
         )
 
         TokenCryptoAmount(
             state = state.subtitle2State,
             isBalanceHidden = isBalanceHidden,
-            modifier = Modifier.layoutId(layoutId = LayoutId.CRYPTO_AMOUNT),
+            modifier = Modifier
+                .layoutId(layoutId = LayoutId.CRYPTO_AMOUNT)
+                .testTag(MainScreenTestTags.TOKEN_CRYPTO_AMOUNT),
         )
 
         NonFiatContentBlock(
             state = state,
             reorderableTokenListState = reorderableTokenListState,
-            modifier = Modifier.layoutId(layoutId = LayoutId.NON_FIAT_CONTENT),
+            modifier = Modifier
+                .layoutId(layoutId = LayoutId.NON_FIAT_CONTENT)
+                .testTag(MainScreenTestTags.TOKEN_NO_ADDRESS),
         )
     }
 }
