@@ -31,7 +31,6 @@ import com.tangem.domain.managetokens.repository.ManageTokensRepository
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.BatchListSource
 import com.tangem.pagination.fetcher.LimitOffsetBatchFetcher
@@ -142,13 +141,13 @@ internal class DefaultManageTokensRepository(
             managedCryptoCurrencyFactory.createWithCustomTokens(
                 coinsResponse = updatedCoinsResponse,
                 tokensResponse = tokensResponse,
-                scanResponse = userWallet.requireColdWallet().scanResponse, // TODO [REDACTED_TASK_KEY]
+                userWallet = userWallet,
             )
         } else {
             managedCryptoCurrencyFactory.create(
                 coinsResponse = updatedCoinsResponse,
                 tokensResponse = tokensResponse,
-                scanResponse = userWallet?.requireColdWallet()?.scanResponse, // TODO [REDACTED_TASK_KEY]
+                userWallet = userWallet,
             )
         }
 
@@ -178,7 +177,7 @@ internal class DefaultManageTokensRepository(
                 testnetTokensConfig
             },
             tokensResponse = getSavedUserTokensResponseSync(userWallet.walletId),
-            scanResponse = userWallet.requireColdWallet().scanResponse, // TODO [REDACTED_TASK_KEY]
+            userWallet = userWallet,
         )
 
         return BatchFetchResult.Success(
@@ -190,8 +189,8 @@ internal class DefaultManageTokensRepository(
 
     private fun createDefaultUserTokensResponse(userWallet: UserWallet) =
         userTokensResponseFactory.createUserTokensResponse(
-            currencies = cardCryptoCurrencyFactory.createDefaultCoinsForMultiCurrencyCard(
-                userWallet.requireColdWallet().scanResponse, // TODO [REDACTED_TASK_KEY]
+            currencies = cardCryptoCurrencyFactory.createDefaultCoinsForMultiCurrencyWallet(
+                userWallet = userWallet,
             ),
             isGroupedByNetwork = false,
             isSortedByBalance = false,

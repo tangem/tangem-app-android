@@ -72,7 +72,7 @@ internal class DefaultMultiWalletCryptoCurrenciesProducerTest {
         }
 
         verify(inverse = true) {
-            responseCryptoCurrenciesFactory.createCurrencies(response = any(), scanResponse = any())
+            responseCryptoCurrenciesFactory.createCurrencies(response = any(), userWallet = any())
         }
     }
 
@@ -114,14 +114,14 @@ internal class DefaultMultiWalletCryptoCurrenciesProducerTest {
         every {
             responseCryptoCurrenciesFactory.createCurrencies(
                 response = userTokensResponse,
-                scanResponse = userWallet.scanResponse,
+                userWallet = userWallet,
             )
         } returns cryptoCurrencies.toList()
 
         every {
             responseCryptoCurrenciesFactory.createCurrencies(
                 response = updatedUserTokensResponse,
-                scanResponse = userWallet.scanResponse,
+                userWallet = userWallet,
             )
         } returns updatedCryptoCurrencies.toList()
 
@@ -143,7 +143,7 @@ internal class DefaultMultiWalletCryptoCurrenciesProducerTest {
             userTokensResponseStore.get(params.userWalletId)
             responseCryptoCurrenciesFactory.createCurrencies(
                 response = userTokensResponse,
-                scanResponse = userWallet.scanResponse,
+                userWallet = userWallet,
             )
         }
 
@@ -161,7 +161,7 @@ internal class DefaultMultiWalletCryptoCurrenciesProducerTest {
         verifyOrder {
             responseCryptoCurrenciesFactory.createCurrencies(
                 response = updatedUserTokensResponse,
-                scanResponse = userWallet.scanResponse,
+                userWallet = userWallet,
             )
         }
     }
@@ -185,7 +185,7 @@ internal class DefaultMultiWalletCryptoCurrenciesProducerTest {
         every {
             responseCryptoCurrenciesFactory.createCurrencies(
                 response = userTokensResponse,
-                scanResponse = userWallet.scanResponse,
+                userWallet = userWallet,
             )
         } returns cryptoCurrencies.toList()
 
@@ -207,7 +207,7 @@ internal class DefaultMultiWalletCryptoCurrenciesProducerTest {
             userTokensResponseStore.get(params.userWalletId)
             responseCryptoCurrenciesFactory.createCurrencies(
                 response = userTokensResponse,
-                scanResponse = userWallet.scanResponse,
+                userWallet = userWallet,
             )
         }
 
@@ -251,7 +251,7 @@ internal class DefaultMultiWalletCryptoCurrenciesProducerTest {
         every {
             responseCryptoCurrenciesFactory.createCurrencies(
                 response = userTokensResponse,
-                scanResponse = userWallet.scanResponse,
+                userWallet = userWallet,
             )
         } returns cryptoCurrencies.toList()
 
@@ -282,7 +282,7 @@ internal class DefaultMultiWalletCryptoCurrenciesProducerTest {
         verifyOrder {
             responseCryptoCurrenciesFactory.createCurrencies(
                 response = userTokensResponse,
-                scanResponse = userWallet.scanResponse,
+                userWallet = userWallet,
             )
         }
     }
@@ -307,7 +307,7 @@ internal class DefaultMultiWalletCryptoCurrenciesProducerTest {
         }
 
         verify(inverse = true) {
-            responseCryptoCurrenciesFactory.createCurrencies(response = any(), scanResponse = any())
+            responseCryptoCurrenciesFactory.createCurrencies(response = any(), userWallet = any())
         }
     }
 
@@ -335,7 +335,7 @@ internal class DefaultMultiWalletCryptoCurrenciesProducerTest {
 
         verify(inverse = true) {
             userTokensResponseStore.get(any())
-            responseCryptoCurrenciesFactory.createCurrencies(response = any(), scanResponse = any())
+            responseCryptoCurrenciesFactory.createCurrencies(response = any(), userWallet = any())
         }
     }
 
