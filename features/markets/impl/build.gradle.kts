@@ -15,6 +15,7 @@ dependencies {
     /* Project - API */
     api(projects.features.markets.api)
     api(projects.features.onramp.api)
+    api(projects.features.sendV2.api)
 
     /* Data */
     implementation(projects.data.common)
