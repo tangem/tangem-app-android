@@ -52,4 +52,6 @@ data class ProviderChooseUM(
             val text: TextReference,
         ) : ExtraUM()
     }
+
+    fun hasError(): Boolean = extraUM is ExtraUM.Error
 }
