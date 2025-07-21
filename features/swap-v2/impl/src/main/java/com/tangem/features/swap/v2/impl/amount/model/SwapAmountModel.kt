@@ -8,17 +8,14 @@ import com.tangem.common.ui.amountScreen.converters.MaxEnterAmountConverter
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
 import com.tangem.common.ui.navigationButtons.NavigationButton
+import com.tangem.common.ui.navigationButtons.NavigationUM
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.format.bigdecimal.crypto
-import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.express.models.ExpressError
-import com.tangem.domain.express.models.ExpressProvider
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.swap.models.SwapDirection
 import com.tangem.domain.swap.models.SwapQuoteModel
@@ -29,25 +26,25 @@ import com.tangem.domain.tokens.GetMinimumTransactionAmountSyncUseCase
 import com.tangem.domain.tokens.GetMultiCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.transaction.usecase.GetAllowanceUseCase
+import com.tangem.features.swap.v2.api.choosetoken.SwapChooseTokenNetworkListener
 import com.tangem.features.swap.v2.impl.R
 import com.tangem.features.swap.v2.impl.amount.SwapAmountBlockComponent.SwapChooseProviderConfig
 import com.tangem.features.swap.v2.impl.amount.SwapAmountComponentParams
+import com.tangem.features.swap.v2.impl.amount.SwapAmountUpdateListener
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountFieldUM
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountType
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
-import com.tangem.features.swap.v2.impl.amount.model.converter.SwapAmountReadyStateConverter
+import com.tangem.features.swap.v2.impl.amount.model.converter.SwapQuoteUMConverter
 import com.tangem.features.swap.v2.impl.amount.model.transformers.*
 import com.tangem.features.swap.v2.impl.chooseprovider.SwapChooseProviderComponent
-import com.tangem.features.swap.v2.impl.choosetoken.fromSupported.SwapChooseTokenNetworkListener
-import com.tangem.common.ui.navigationButtons.NavigationUM
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
-import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM.Content.DifferencePercent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.orZero
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.math.BigDecimal
 import javax.inject.Inject
 import kotlin.properties.Delegates
 import com.tangem.utils.transformer.update as transformerUpdate
@@ -67,6 +64,7 @@ internal class SwapAmountModel @Inject constructor(
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val appRouter: AppRouter,
     private val swapAlertFactory: SwapAlertFactory,
+    private val swapAmountUpdateListener: SwapAmountUpdateListener,
 ) : Model(), SwapAmountClickIntents, SwapChooseProviderComponent.ModelCallback {
 
     private val params: SwapAmountComponentParams = paramsContainer.require()
@@ -75,18 +73,11 @@ internal class SwapAmountModel @Inject constructor(
     private var userWallet = params.userWallet
 
     private var primaryCryptoCurrency: CryptoCurrency = params.primaryCryptoCurrencyStatusFlow.value.currency
-    private var secondaryCryptoCurrency: CryptoCurrency? = params.secondaryCryptoCurrency
-
-    private var primaryCryptoCurrencyStatus: CryptoCurrencyStatus = params.primaryCryptoCurrencyStatusFlow.value
-    private var secondaryCryptoCurrencyStatus: CryptoCurrencyStatus = CryptoCurrencyStatus(
-        currency = primaryCryptoCurrencyStatus.currency,
-        value = CryptoCurrencyStatus.Loading,
-    )
 
     private var primaryMaximumAmountBoundary: EnterAmountBoundary by Delegates.notNull()
-    private var secondaryMaximumAmountBoundary: EnterAmountBoundary by Delegates.notNull()
     private var primaryMinimumAmountBoundary: EnterAmountBoundary by Delegates.notNull()
-    private var secondaryMinimumAmountBoundary: EnterAmountBoundary by Delegates.notNull()
+    private var secondaryMaximumAmountBoundary: EnterAmountBoundary? = null
+    private var secondaryMinimumAmountBoundary: EnterAmountBoundary? = null
 
     val bottomSheetNavigation: SlotNavigation<SwapChooseProviderConfig> = SlotNavigation()
 
@@ -99,8 +90,8 @@ internal class SwapAmountModel @Inject constructor(
         }
         configAmountNavigation()
         subscribeOnCryptoCurrencyStatusFlow()
+        subscribeOnAmountUpdateTriggerUpdates()
         observeChooseSelectToken()
-        // todo observe balance hiding flow
     }
 
     fun updateState(amountUM: SwapAmountUM) {
@@ -129,11 +120,10 @@ internal class SwapAmountModel @Inject constructor(
     override fun onInfoClick() {
         val amountUM = uiState.value as? SwapAmountUM.Content ?: return
         val selectedProvider = amountUM.selectedQuote.provider ?: return
-        val cryptoCurrency = secondaryCryptoCurrency ?: return
 
         swapAlertFactory.priceImpactAlert(
             hasPriceImpact = (amountUM.secondaryAmount as? SwapAmountFieldUM.Content)?.priceImpact != null,
-            currencySymbol = cryptoCurrency.symbol,
+            currencySymbol = amountUM.primaryCryptoCurrencyStatus.currency.symbol,
             provider = selectedProvider,
         )
     }
@@ -189,25 +179,70 @@ internal class SwapAmountModel @Inject constructor(
         )
     }
 
-    private fun subscribeOnCryptoCurrencyStatusFlow() {
-        params.primaryCryptoCurrencyStatusFlow.onEach { primaryCurrencyStatus ->
-            primaryCryptoCurrencyStatus = primaryCurrencyStatus
+    override fun onSeparatorClick() {
+        // todo handle reverse pair click with swap redesign
+        val amountFieldData = uiState.value.primaryAmount.amountField as? AmountState.Data
+        val callback = (params as? SwapAmountComponentParams.AmountParams)?.callback ?: return
 
-            val state = uiState.value
-            if (state is SwapAmountUM.Content) {
-                secondaryCryptoCurrency = state.primaryCryptoCurrencyStatus.currency
-                secondaryCryptoCurrencyStatus = state.primaryCryptoCurrencyStatus
+        val primaryCryptoCurrencyStatus = (uiState.value as? SwapAmountUM.Content)?.primaryCryptoCurrencyStatus
+        if (primaryCryptoCurrencyStatus != null) {
+            uiState.transformerUpdate(
+                SwapAmountPrimaryReadyStateTransformer(
+                    userWallet = userWallet,
+                    primaryCryptoCurrencyStatus = primaryCryptoCurrencyStatus,
+                    appCurrency = appCurrency,
+                    swapDirection = swapDirection,
+                    clickIntents = this,
+                    isBalanceHidden = params.isBalanceHidingFlow.value,
+                ),
+            )
+        }
+
+        callback.onSeparatorClick(lastAmount = amountFieldData?.amountTextField?.value.orEmpty())
+        callback.onAmountResult(uiState.value)
+    }
+
+    private fun subscribeOnCryptoCurrencyStatusFlow() {
+        params.primaryCryptoCurrencyStatusFlow
+            .distinctUntilChanged { old, new -> old.value.amount == new.value.amount } // Check only balance changes
+            .onEach { primaryCurrencyStatus ->
+                val secondaryStatus = (uiState.value as? SwapAmountUM.Content)?.secondaryCryptoCurrencyStatus
                 initCurrencies(
-                    primaryStatus = state.primaryCryptoCurrencyStatus,
-                    secondaryStatus = state.secondaryCryptoCurrencyStatus,
+                    primaryStatus = primaryCurrencyStatus,
+                    secondaryStatus = secondaryStatus,
                 )
-            } else {
-                initPairs(
-                    primaryCryptoCurrency = primaryCryptoCurrency,
-                    secondaryCryptoCurrency = secondaryCryptoCurrency,
-                )
+                if (secondaryStatus != null) {
+                    uiState.transformerUpdate(
+                        SwapAmountUpdateBalanceTransformer(
+                            cryptoCurrencyStatus = primaryCurrencyStatus,
+                            primaryMaximumAmountBoundary = primaryMaximumAmountBoundary,
+                            primaryMinimumAmountBoundary = primaryMinimumAmountBoundary,
+                        ),
+                    )
+                } else {
+                    uiState.transformerUpdate(
+                        SwapAmountPrimaryReadyStateTransformer(
+                            userWallet = userWallet,
+                            primaryCryptoCurrencyStatus = primaryCurrencyStatus,
+                            appCurrency = appCurrency,
+                            swapDirection = swapDirection,
+                            clickIntents = this,
+                            isBalanceHidden = params.isBalanceHidingFlow.value,
+                        ),
+                    )
+                }
+            }.launchIn(modelScope)
+    }
+
+    private fun subscribeOnAmountUpdateTriggerUpdates() {
+        swapAmountUpdateListener.updateAmountTriggerFlow
+            .onEach {
+                if (uiState.value is SwapAmountUM.Content) {
+                    onAmountValueChange(it)
+                    saveResult()
+                }
             }
-        }.launchIn(modelScope)
+            .launchIn(modelScope)
     }
 
     private fun observeChooseSelectToken() {
@@ -215,6 +250,7 @@ internal class SwapAmountModel @Inject constructor(
             .onEach { currency ->
                 uiState.update { amountUM ->
                     if (amountUM is SwapAmountUM.Content) {
+                        initPairs(currency)
                         amountUM.copy(
                             isPrimaryButtonEnabled = false,
                             secondaryAmount = SwapAmountFieldUM.Loading(
@@ -225,12 +261,11 @@ internal class SwapAmountModel @Inject constructor(
                         amountUM
                     }
                 }
-                initPairs(primaryCryptoCurrency, currency)
             }
             .launchIn(modelScope)
     }
 
-    private fun initPairs(primaryCryptoCurrency: CryptoCurrency, secondaryCryptoCurrency: CryptoCurrency?) {
+    private fun initPairs(secondaryCryptoCurrency: CryptoCurrency?) {
         modelScope.launch {
             val cryptoCurrencyStatusList = getMultiCryptoCurrencyStatusUseCase
                 .invokeMultiWalletSync(userWallet.walletId)
@@ -256,22 +291,22 @@ internal class SwapAmountModel @Inject constructor(
                         swapDirection = params.swapDirection,
                     )
 
-                    if (secondaryStatus != null) {
-                        initCurrencies(primaryCryptoCurrencyStatus, secondaryStatus)
-                        this@SwapAmountModel.secondaryCryptoCurrency = secondaryCryptoCurrency
-                        secondaryCryptoCurrencyStatus = secondaryStatus
-                        uiState.update {
-                            SwapAmountReadyStateConverter(
-                                swapCurrencies = swapCurrencies,
+                    val primaryStatus = (uiState.value as? SwapAmountUM.Content)?.primaryCryptoCurrencyStatus
+                    if (secondaryStatus != null && primaryStatus != null) {
+                        initCurrencies(primaryStatus, secondaryStatus)
+                        uiState.transformerUpdate(
+                            SwapAmountSecondaryReadyStateTransformer(
                                 userWallet = userWallet,
-                                primaryCryptoCurrencyStatus = primaryCryptoCurrencyStatus,
-                                secondaryCryptoCurrencyStatus = secondaryCryptoCurrencyStatus,
+                                swapCurrencies = swapCurrencies,
+                                primaryCryptoCurrencyStatus = primaryStatus,
+                                secondaryCryptoCurrencyStatus = secondaryStatus,
                                 appCurrency = appCurrency,
                                 swapDirection = swapDirection,
                                 clickIntents = this@SwapAmountModel,
                                 isBalanceHidden = params.isBalanceHidingFlow.value,
-                            ).convert(Unit)
-                        }
+                            ),
+                        )
+                        loadQuotes()
                     } else {
                         // todo not available currency to swap
                     }
@@ -283,7 +318,7 @@ internal class SwapAmountModel @Inject constructor(
         }
     }
 
-    private suspend fun initCurrencies(primaryStatus: CryptoCurrencyStatus, secondaryStatus: CryptoCurrencyStatus) {
+    private suspend fun initCurrencies(primaryStatus: CryptoCurrencyStatus, secondaryStatus: CryptoCurrencyStatus?) {
         primaryMinimumAmountBoundary = EnterAmountBoundary(
             amount = getMinimumTransactionAmountSyncUseCase
                 .invoke(
@@ -293,21 +328,25 @@ internal class SwapAmountModel @Inject constructor(
             fiatRate = primaryStatus.value.fiatRate,
             fiatAmount = primaryStatus.value.fiatAmount,
         )
-        secondaryMinimumAmountBoundary = EnterAmountBoundary(
-            amount = getMinimumTransactionAmountSyncUseCase
-                .invoke(
-                    userWalletId = userWallet.walletId,
-                    cryptoCurrencyStatus = secondaryStatus,
-                ).getOrNull().orZero(),
-            fiatRate = secondaryStatus.value.fiatRate,
-            fiatAmount = secondaryStatus.value.fiatAmount,
-        )
         primaryMaximumAmountBoundary = MaxEnterAmountConverter().convert(primaryStatus)
-        secondaryMaximumAmountBoundary = MaxEnterAmountConverter().convert(secondaryStatus)
+
+        if (secondaryStatus != null) {
+            secondaryMinimumAmountBoundary = EnterAmountBoundary(
+                amount = getMinimumTransactionAmountSyncUseCase
+                    .invoke(
+                        userWalletId = userWallet.walletId,
+                        cryptoCurrencyStatus = secondaryStatus,
+                    ).getOrNull().orZero(),
+                fiatRate = secondaryStatus.value.fiatRate,
+                fiatAmount = secondaryStatus.value.fiatAmount,
+            )
+            secondaryMaximumAmountBoundary = MaxEnterAmountConverter().convert(secondaryStatus)
+        }
     }
 
     private fun loadQuotes() {
         val state = uiState.value as? SwapAmountUM.Content ?: return
+        if (state.secondaryCryptoCurrencyStatus == null) return
 
         val (fromCryptoCurrency, toCryptoCurrency) = when (state.swapDirection) {
             SwapDirection.Direct -> {
@@ -355,11 +394,18 @@ internal class SwapAmountModel @Inject constructor(
                             ).takeIf { error is ExpressError.AmountError }
                         },
                         ifRight = { quote: SwapQuoteModel ->
-                            convertToSwapProviderUM(
-                                quote = quote,
-                                provider = provider,
-                                differencePercent = DifferencePercent.Empty,
+                            SwapQuoteUMConverter(
+                                primaryCurrency = fromCryptoCurrency,
+                                secondaryCurrency = toCryptoCurrency,
                                 swapDirection = swapDirection,
+                                allowanceContract = quote.allowanceContract,
+                                isApprovalNeeded = checkAllowance(state, quote),
+                                fromAmount = fromAmountValue,
+                            ).convert(
+                                SwapQuoteUMConverter.Data(
+                                    quote = quote,
+                                    provider = provider,
+                                ),
                             )
                         },
                     )
@@ -376,61 +422,19 @@ internal class SwapAmountModel @Inject constructor(
         }
     }
 
-    private suspend fun convertToSwapProviderUM(
-        quote: SwapQuoteModel,
-        provider: ExpressProvider,
-        differencePercent: DifferencePercent,
-        swapDirection: SwapDirection,
-    ): SwapQuoteUM {
-        // todo swap allowance
+    private suspend fun checkAllowance(state: SwapAmountUM.Content, quote: SwapQuoteModel): Boolean {
         val allowanceContract = quote.allowanceContract
-        return if (allowanceContract != null) {
-            val allowance = getAllowanceUseCase(
+        val allowance = if (allowanceContract != null) {
+            getAllowanceUseCase(
                 userWalletId = userWallet.walletId,
-                cryptoCurrency = primaryCryptoCurrencyStatus.currency,
+                cryptoCurrency = state.primaryCryptoCurrencyStatus.currency,
                 spenderAddress = allowanceContract,
-            ).getOrNull().orZero()
-            val isApprovalNeeded = allowance < primaryCryptoCurrencyStatus.value.amount.orZero()
-
-            if (isApprovalNeeded) {
-                SwapQuoteUM.Allowance(
-                    provider = provider,
-                    allowanceContract = allowanceContract,
-                )
-            } else {
-                SwapQuoteUM.Content(
-                    provider = provider,
-                    quoteAmount = quote.toTokenAmount,
-                    diffPercent = differencePercent,
-                    quoteAmountValue = stringReference(
-                        quote.toTokenAmount.format {
-                            crypto(
-                                when (swapDirection) {
-                                    SwapDirection.Direct -> secondaryCryptoCurrencyStatus.currency
-                                    SwapDirection.Reverse -> primaryCryptoCurrencyStatus.currency
-                                },
-                            )
-                        },
-                    ),
-                )
-            }
+            ).getOrNull()
         } else {
-            SwapQuoteUM.Content(
-                provider = provider,
-                quoteAmount = quote.toTokenAmount,
-                diffPercent = differencePercent,
-                quoteAmountValue = stringReference(
-                    quote.toTokenAmount.format {
-                        crypto(
-                            when (swapDirection) {
-                                SwapDirection.Direct -> secondaryCryptoCurrencyStatus.currency
-                                SwapDirection.Reverse -> primaryCryptoCurrencyStatus.currency
-                            },
-                        )
-                    },
-                ),
-            )
+            BigDecimal.ZERO
         }
+
+        return allowance.orZero() < state.primaryCryptoCurrencyStatus.value.amount.orZero()
     }
 
     private fun saveResult() {
@@ -454,20 +458,7 @@ internal class SwapAmountModel @Inject constructor(
                     } else {
                         R.drawable.ic_close_24
                     },
-                    backIconClick = {
-                        // if (!route.isEditMode) {
-                        //     todo analytics
-                        //     analyticsEventHandler.send(
-                        //         CommonSendAnalyticEvents.CloseButtonClicked(
-                        //             categoryName = params.analyticsCategoryName,
-                        //             source = SendScreenSource.Address,
-                        //             isFromSummary = false,
-                        //             isValid = state.isPrimaryButtonEnabled,
-                        //         ),
-                        //     )
-                        // }
-                        params.callback.onBackClick()
-                    },
+                    backIconClick = params.callback::onBackClick,
                     primaryButton = NavigationButton(
                         textReference = if (route.isEditMode) {
                             resourceReference(R.string.common_continue)
