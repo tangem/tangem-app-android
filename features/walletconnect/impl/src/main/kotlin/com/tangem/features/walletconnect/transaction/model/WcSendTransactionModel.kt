@@ -30,6 +30,8 @@ import com.tangem.domain.walletconnect.usecase.method.*
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.send.v2.api.callbacks.FeeSelectorModelCallback
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
+import com.tangem.features.send.v2.api.feeselector.FeeSelectorReloadData
+import com.tangem.features.send.v2.api.feeselector.FeeSelectorReloadTrigger
 import com.tangem.features.send.v2.api.params.FeeSelectorParams
 import com.tangem.features.walletconnect.connections.routing.WcInnerRoute
 import com.tangem.features.walletconnect.transaction.components.common.WcTransactionModelParams
@@ -53,6 +55,7 @@ import kotlin.properties.Delegates
 internal class WcSendTransactionModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
+    private val feeSelectorReloadTrigger: FeeSelectorReloadTrigger,
     private val router: Router,
     private val clipboardManager: ClipboardManager,
     private val useCaseFactory: WcRequestUseCaseFactory,
@@ -76,6 +79,7 @@ internal class WcSendTransactionModel @Inject constructor(
     private var signState: WcSignState<*> by Delegates.notNull()
     private var wcApproval: WcApproval? = null
     private var sign: () -> Unit = {}
+    private val feeReloadState = MutableStateFlow(false)
 
     init {
         @Suppress("UnusedPrivateMember")
@@ -116,10 +120,20 @@ internal class WcSendTransactionModel @Inject constructor(
                             wcApproval = useCase as? WcApproval
                             sign = { useCase.sign() }
                             buildUiState(securityCheck, useCase, signState, isApprovalMethod)
+                            if (feeReloadState.value) {
+                                triggerFeeReload()
+                            }
                         }
                 }
                 else -> unknownMethodRunnable()
             }
+        }
+    }
+
+    private fun triggerFeeReload() {
+        feeReloadState.value = false
+        modelScope.launch {
+            feeSelectorReloadTrigger.triggerUpdate(data = FeeSelectorReloadData(removeSuggestedFee = true))
         }
     }
 
@@ -242,6 +256,7 @@ internal class WcSendTransactionModel @Inject constructor(
         wcApproval?.getAmount()?.let { currentAmount ->
             wcApproval?.updateAmount(currentAmount.copy(amount = currentAmount.amount?.copy(value = newValue)))
         }
+        feeReloadState.value = true
     }
 
     fun onClickAllowToSpend() {
