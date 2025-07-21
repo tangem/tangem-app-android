@@ -13,7 +13,6 @@ import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.domain.collectLatest
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
@@ -32,7 +31,7 @@ typealias MaybeTxHistoryItems = Either<TxHistoryListError, Flow<PagingData<TxInf
 
 @Suppress("LongParameterList")
 internal class TxHistorySubscriber(
-    private val userWallet: UserWallet,
+    private val userWallet: UserWallet.Cold,
     private val isRefresh: Boolean,
     private val stateHolder: WalletStateController,
     private val clickIntents: WalletClickIntents,
@@ -97,7 +96,7 @@ internal class TxHistorySubscriber(
                     )
                 },
                 ifRight = { itemsFlow ->
-                    val blockchain = userWallet.requireColdWallet().scanResponse.cardTypesResolver.getBlockchain()
+                    val blockchain = userWallet.scanResponse.cardTypesResolver.getBlockchain()
                     val itemConverter = TxHistoryItemStateConverter(
                         symbol = blockchain.currency,
                         decimals = blockchain.decimals(),

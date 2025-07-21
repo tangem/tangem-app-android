@@ -3,7 +3,6 @@ package com.tangem.feature.wallet.presentation.wallet.state.transformers
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.isLocked
-import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
@@ -55,8 +54,6 @@ internal class InitializeWalletsTransformer(
     }
 
     private fun createLockedState(userWallet: UserWallet): WalletState {
-        userWallet.requireColdWallet()
-
         return userWallet.createStateByWalletType(
             multiCurrencyCreator = {
                 WalletState.MultiCurrency.Locked(
@@ -87,7 +84,7 @@ internal class InitializeWalletsTransformer(
         )
     }
 
-    private fun UserWallet.Cold.toLockedWalletCardState(): WalletCardState {
+    private fun UserWallet.toLockedWalletCardState(): WalletCardState {
         return WalletCardState.LockedContent(
             id = walletId,
             title = name,
