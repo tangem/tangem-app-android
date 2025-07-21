@@ -43,7 +43,6 @@ internal class StakingBalanceUpdater @AssistedInject constructor(
                     fetchStakingYieldBalanceUseCase(
                         userWalletId = userWallet.walletId,
                         cryptoCurrency = cryptoCurrencyStatus.currency,
-                        isRefactoringEnabled = true,
                     )
                 },
                 // we should update tx history and network for new balances
@@ -82,7 +81,6 @@ internal class StakingBalanceUpdater @AssistedInject constructor(
         fetchCurrencyStatusUseCase(
             userWalletId = userWallet.walletId,
             id = cryptoCurrencyStatus.currency.id,
-            refresh = true,
         )
     }
 
