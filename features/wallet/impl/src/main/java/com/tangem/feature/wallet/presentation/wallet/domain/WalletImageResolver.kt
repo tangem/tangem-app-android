@@ -24,7 +24,11 @@ internal class WalletImageResolver @Inject constructor(
     /** Get a specified wallet [userWallet] image */
     @Suppress("CyclomaticComplexMethod")
     @DrawableRes
-    fun resolve(userWallet: UserWallet.Cold): Int? {
+    fun resolve(userWallet: UserWallet): Int? {
+        if (userWallet !is UserWallet.Cold) {
+            return null
+        }
+
         val cardTypesResolver = userWallet.scanResponse.cardTypesResolver
 
         val cobrandImage = Wallet2CobrandImage.entries.firstOrNull {
