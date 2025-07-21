@@ -30,7 +30,6 @@ import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.feature.swap.converters.*
 import com.tangem.feature.swap.domain.api.SwapRepository
 import com.tangem.feature.swap.domain.models.ExpressDataError
@@ -404,12 +403,7 @@ internal class DefaultSwapRepository(
             cryptoCurrencyFactory.createCoin(
                 blockchain = blockchain,
                 extraDerivationPath = null,
-                scanResponse = requireNotNull(
-                    userWalletsListManager
-                        .selectedUserWalletSync
-                        ?.requireColdWallet() // TODO [REDACTED_TASK_KEY]
-                        ?.scanResponse,
-                ),
+                userWallet = requireNotNull(userWalletsListManager.selectedUserWalletSync),
             ),
         )
     }
