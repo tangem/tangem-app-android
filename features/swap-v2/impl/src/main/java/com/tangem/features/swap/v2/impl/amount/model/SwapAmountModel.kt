@@ -281,6 +281,7 @@ internal class SwapAmountModel @Inject constructor(
                 userWallet = userWallet,
                 initialCurrency = primaryCryptoCurrency,
                 cryptoCurrencyStatusList = cryptoCurrencyStatusListExceptPrimary,
+                filterProviderTypes = params.filterProviderTypes,
             ).fold(
                 ifRight = { swapCurrencies ->
                     val secondaryStatus = selectInitialPairUseCase(
