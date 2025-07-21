@@ -13,4 +13,12 @@ import com.tangem.domain.swap.models.SwapDirection.Reverse
 enum class SwapDirection {
     Direct,
     Reverse,
+    ;
+
+    companion object {
+        inline fun <T> SwapDirection.withSwapDirection(onDirect: () -> T, onReverse: () -> T): T = when (this) {
+            Direct -> onDirect()
+            Reverse -> onReverse()
+        }
+    }
 }

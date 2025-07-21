@@ -8,10 +8,10 @@ import com.domain.blockaid.models.dapp.CheckDAppResult
 import com.domain.blockaid.models.dapp.DAppData
 import com.reown.walletkit.client.Wallet
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.domain.walletconnect.WcAnalyticEvents
 import com.tangem.data.walletconnect.utils.WC_TAG
 import com.tangem.data.walletconnect.utils.WcSdkSessionConverter
 import com.tangem.domain.blockaid.BlockAidVerifier
+import com.tangem.domain.walletconnect.WcAnalyticEvents
 import com.tangem.domain.walletconnect.model.*
 import com.tangem.domain.walletconnect.model.sdkcopy.WcAppMetaData
 import com.tangem.domain.walletconnect.repository.WcSessionsManager
@@ -22,9 +22,8 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
+import org.joda.time.DateTime
 import timber.log.Timber
-
-val unsupportedDApps = listOf("dYdX", "dYdX v4", "Apex Pro", "The Sandbox")
 
 @Suppress("LongParameterList")
 internal class DefaultWcPairUseCase @AssistedInject constructor(
@@ -39,6 +38,7 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
 
     private val onCallTerminalAction = Channel<TerminalAction>()
 
+    @Suppress("LongMethod")
     override operator fun invoke(): Flow<WcPairState> {
         val (uri: String, source: WcPairRequest.Source) = pairRequest
         return flow {
@@ -49,14 +49,15 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
             val sdkSessionProposal = sdkDelegate.pair(uri)
                 .onLeft {
                     Timber.tag(WC_TAG).e(it, "Failed to call pair $pairRequest")
+                    analytics.send(WcAnalyticEvents.PairFailed)
                     emit(WcPairState.Error(it))
                 }
                 .getOrNull() ?: return@flow
 
             // check unsupported dApps, just local constant for now, finish if unsupported
-            if (sdkSessionProposal.name in unsupportedDApps) {
+            if (UnsupportedDApps.list.any { sdkSessionProposal.url.contains(it, ignoreCase = true) }) {
                 Timber.tag(WC_TAG).i("Unsupported DApp ${sdkSessionProposal.name}")
-                val error = WcPairState.Error(WcPairError.UnsupportedDomain)
+                val error = WcPairState.Error(WcPairError.UnsupportedDApp(sdkSessionProposal.name))
                 emit(error)
                 return@flow
             }
@@ -78,7 +79,7 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
             }
             // finish flow if rejected above
             if (sessionForApprove == null) {
-                analytics.send(WcAnalyticEvents.SessionDisconnected(proposalState.dAppSession))
+                analytics.send(WcAnalyticEvents.SessionDisconnected(proposalState.dAppSession.dAppMetaData))
                 sdkDelegate.rejectSession(sdkSessionProposal.proposerPublicKey)
                 return@flow
             }
@@ -94,6 +95,8 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
                     sdkModel = WcSdkSessionConverter.convert(settledSession.session),
                     securityStatus = proposalState.dAppSession.securityStatus,
                     networks = sessionForApprove.network.toSet(),
+                    connectingTime = DateTime.now().millis,
+                    showWalletInfo = proposalState.dAppSession.proposalNetwork.keys.size > 1,
                 )
                 sessionsManager.saveSession(newSession)
                 analytics.send(
@@ -134,8 +137,7 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
     ): Either<WcPairError, Wallet.Model.SettledSessionResponse.Result> {
         val namespaces = caipNamespaceDelegate.associate(
             sdkSessionProposal,
-            sessionForApprove.wallet,
-            sessionForApprove.network,
+            sessionForApprove,
         )
         val sessionApprove = Wallet.Params.SessionApprove(
             proposerPublicKey = sdkSessionProposal.proposerPublicKey,
@@ -157,7 +159,7 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
         analytics.send(
             WcAnalyticEvents.PairRequested(
                 network = requestedNetworks,
-                verificationInfo.name,
+                verificationInfo,
             ),
         )
         val appMetaData = WcAppMetaData(
