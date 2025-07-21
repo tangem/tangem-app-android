@@ -54,6 +54,7 @@ internal class FeeSelectorModel @Inject constructor(
         initAppCurrency()
         subscribeOnFeeReloadTriggerUpdates()
         subscribeOnFeeCheckReloadTriggerUpdates()
+        subscribeOnFeeLoadingStateTriggerUpdates()
         loadFee()
     }
 
@@ -68,7 +69,7 @@ internal class FeeSelectorModel @Inject constructor(
     }
 
     private fun loadFee() {
-        uiState.update(FeeSelectorLoadingTransformers)
+        uiState.update(FeeSelectorLoadingTransformer)
         modelScope.launch {
             params.onLoadFee()
                 .fold(
@@ -132,6 +133,12 @@ internal class FeeSelectorModel @Inject constructor(
                 }
                 loadFee()
             }
+            .launchIn(modelScope)
+    }
+
+    private fun subscribeOnFeeLoadingStateTriggerUpdates() {
+        feeSelectorReloadListener.loadingStateTriggerFlow
+            .onEach { uiState.update(FeeSelectorLoadingTransformer) }
             .launchIn(modelScope)
     }
 
