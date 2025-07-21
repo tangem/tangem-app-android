@@ -2,6 +2,7 @@ package com.tangem.features.send.v2.api.entity
 
 import androidx.compose.runtime.Immutable
 import com.tangem.blockchain.common.transaction.Fee
+import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.transaction.error.GetFeeError
@@ -17,13 +18,12 @@ sealed class FeeSelectorUM {
     data class Error(val error: GetFeeError) : FeeSelectorUM()
 
     data class Content(
+        val fees: TransactionFee,
         val feeItems: ImmutableList<FeeItem>,
         val selectedFeeItem: FeeItem,
-        val isFeeApproximate: Boolean,
+        val feeExtraInfo: FeeExtraInfo,
         val feeFiatRateUM: FeeFiatRateUM?,
-        val displayNonceInput: Boolean,
-        val nonce: BigInteger?,
-        val onNonceChange: (String) -> Unit,
+        val feeNonce: FeeNonce,
     ) : FeeSelectorUM()
 }
 
@@ -34,10 +34,25 @@ data class FeeFiatRateUM(
 )
 
 @Immutable
+data class FeeExtraInfo(
+    val isFeeApproximate: Boolean,
+    val isFeeConvertibleToFiat: Boolean,
+    val isTronToken: Boolean,
+)
+
+sealed class FeeNonce {
+    data object None : FeeNonce()
+    data class Nonce(
+        val nonce: BigInteger?,
+        val onNonceChange: (String) -> Unit,
+    ) : FeeNonce()
+}
+
+@Immutable
 sealed class FeeItem {
     abstract val fee: Fee
 
-    fun isSame(other: FeeItem): Boolean {
+    fun isSameClass(other: FeeItem): Boolean {
         return this::class == other::class
     }
 
