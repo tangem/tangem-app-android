@@ -285,5 +285,5 @@ interface CurrenciesRepository {
     suspend fun syncTokens(userWalletId: UserWalletId)
 
     @Throws
-    fun getCardTypesResolver(userWalletId: UserWalletId): CardTypesResolver
+    fun getCardTypesResolver(userWalletId: UserWalletId): CardTypesResolver?
 }
