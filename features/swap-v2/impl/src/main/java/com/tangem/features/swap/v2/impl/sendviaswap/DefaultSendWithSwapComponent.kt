@@ -18,6 +18,7 @@ import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.decompose.getEmptyComposableContentComponent
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.express.models.ExpressProviderType
 import com.tangem.domain.swap.models.R
 import com.tangem.domain.swap.models.SwapDirection
 import com.tangem.features.send.v2.api.subcomponents.destination.DestinationRoute
@@ -125,6 +126,7 @@ internal class DefaultSendWithSwapComponent @AssistedInject constructor(
                 swapDirection = SwapDirection.Direct,
                 callback = model,
                 userWallet = model.userWallet,
+                filterProviderTypes = SEND_WITH_SWAP_PROVIDER_TYPES,
             ),
         )
     }
@@ -198,5 +200,10 @@ internal class DefaultSendWithSwapComponent @AssistedInject constructor(
             context: AppComponentContext,
             params: SendWithSwapComponent.Params,
         ): DefaultSendWithSwapComponent
+    }
+
+    companion object {
+        /** List of supported provider types in Send with Swap */
+        internal val SEND_WITH_SWAP_PROVIDER_TYPES = listOf(ExpressProviderType.CEX)
     }
 }
