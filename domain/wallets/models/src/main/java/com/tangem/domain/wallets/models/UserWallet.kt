@@ -1,8 +1,9 @@
 package com.tangem.domain.wallets.models
 
+import com.tangem.domain.models.MobileWallet
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.wallets.models.UserWallet.Cold
+import com.tangem.hot.sdk.model.HotWalletId
 import kotlinx.serialization.Serializable
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
@@ -56,17 +57,22 @@ sealed interface UserWallet {
     data class Hot(
         override val name: String,
         override val walletId: UserWalletId,
-        val isLocked: Boolean,
-    ) : UserWallet
+        val hotWalletId: HotWalletId,
+        val wallets: List<MobileWallet>?,
+        val backedUp: Boolean,
+    ) : UserWallet {
+
+        val isLocked: Boolean get() = wallets == null
+    }
 }
 
 @OptIn(ExperimentalContracts::class)
-fun UserWallet.requireColdWallet(): Cold {
+fun UserWallet.requireColdWallet(): UserWallet.Cold {
     contract {
-        returns() implies (this@requireColdWallet is Cold)
+        returns() implies (this@requireColdWallet is UserWallet.Cold)
     }
 
-    return this as? Cold
+    return this as? UserWallet.Cold
         ?: error("This user wallet is not a cold wallet")
 }
 

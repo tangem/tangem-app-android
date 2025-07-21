@@ -3,9 +3,9 @@ package com.tangem.domain.exchange
 import arrow.core.Either
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
 
@@ -14,11 +14,7 @@ import kotlinx.coroutines.flow.Flow
  */
 interface RampStateManager {
 
-    suspend fun availableForBuy(
-        scanResponse: ScanResponse,
-        userWalletId: UserWalletId,
-        cryptoCurrency: CryptoCurrency,
-    ): ScenarioUnavailabilityReason
+    suspend fun availableForBuy(userWallet: UserWallet, cryptoCurrency: CryptoCurrency): ScenarioUnavailabilityReason
 
     /**
      * Check if [CryptoCurrency] is available for sell
@@ -37,10 +33,6 @@ interface RampStateManager {
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
     ): ScenarioUnavailabilityReason
-
-    suspend fun fetchBuyServiceData()
-
-    fun getBuyInitializationStatus(): Flow<Lce<Throwable, Any>>
 
     suspend fun fetchSellServiceData()
 

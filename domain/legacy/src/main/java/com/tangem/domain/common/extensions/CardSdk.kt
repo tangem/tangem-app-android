@@ -7,7 +7,9 @@ import com.tangem.common.card.FirmwareVersion
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.domain.common.configs.CardConfig
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.wallets.models.UserWallet
 
 // TODO: refactor [REDACTED_JIRA]
 
@@ -16,6 +18,20 @@ import com.tangem.domain.models.scan.CardDTO
  */
 val FirmwareVersion.Companion.SolanaTokensAvailable
     get() = FirmwareVersion(4, 52)
+
+fun UserWallet.supportedBlockchains(excludedBlockchains: ExcludedBlockchains): List<Blockchain> {
+    return when (this) {
+        is UserWallet.Cold -> {
+            scanResponse.card.supportedBlockchains(
+                excludedBlockchains = excludedBlockchains,
+                cardTypesResolver = this.cardTypesResolver,
+            )
+        }
+        is UserWallet.Hot -> {
+            Blockchain.entries.filter { it !in excludedBlockchains }
+        }
+    }
+}
 
 fun CardDTO.supportedBlockchains(
     cardTypesResolver: CardTypesResolver,
@@ -53,6 +69,33 @@ fun CardDTO.supportedTokens(
     }
 
     return tokensSupportedByCard.filter { isTestCard == it.isTestnet() }
+}
+
+fun UserWallet.canHandleToken(supportedTokens: List<Blockchain>, blockchain: Blockchain): Boolean {
+    return when (this) {
+        is UserWallet.Cold -> {
+            scanResponse.card.canHandleToken(
+                supportedTokens = supportedTokens,
+                blockchain = blockchain,
+                cardTypesResolver = scanResponse.cardTypesResolver,
+            )
+        }
+        is UserWallet.Hot -> blockchain in supportedTokens
+    }
+}
+
+fun UserWallet.canHandleToken(blockchain: Blockchain, excludedBlockchains: ExcludedBlockchains): Boolean {
+    return when (this) {
+        is UserWallet.Cold -> {
+            scanResponse.card.canHandleToken(
+                blockchain = blockchain,
+                excludedBlockchains = excludedBlockchains,
+                cardTypesResolver = scanResponse.cardTypesResolver,
+            )
+        }
+
+        is UserWallet.Hot -> blockchain !in excludedBlockchains
+    }
 }
 
 /**
@@ -101,7 +144,8 @@ fun CardDTO.canHandleBlockchain(
 ): Boolean {
     val cardConfig = CardConfig.createConfig(this)
     val primaryCurveForBlockchain = cardConfig.primaryCurve(blockchain)
-    val isContainsBlockchain = blockchain in supportedBlockchains(cardTypesResolver, excludedBlockchains)
+    val isContainsBlockchain =
+        blockchain in supportedBlockchains(cardTypesResolver, excludedBlockchains)
     val isWalletForCurveExists = wallets.any { it.curve == primaryCurveForBlockchain }
     // fixme: check for first wallets with 1 curve and remove condition
     return if (cardTypesResolver.isTangemWallet() || cardTypesResolver.isWallet2()) {

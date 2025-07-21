@@ -22,9 +22,7 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.quotes.QuotesRepository
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
-import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
-import com.tangem.domain.tokens.GetCurrencyCheckUseCase
-import com.tangem.domain.tokens.GetMultiCryptoCurrencyStatusUseCase
+import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.FeePaidCurrency
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
@@ -72,6 +70,8 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     private val currencyChecksRepository: CurrencyChecksRepository,
     private val appCurrencyRepository: AppCurrencyRepository,
     private val currenciesRepository: CurrenciesRepository,
+    private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
+    private val tokensFeatureToggles: TokensFeatureToggles,
     private val initialToCurrencyResolver: InitialToCurrencyResolver,
     private val validateTransactionUseCase: ValidateTransactionUseCase,
     private val estimateFeeUseCase: EstimateFeeUseCase,
@@ -333,7 +333,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
 
         if (isAllowedToSpend && allowPermissionsHandler.isAddressAllowanceInProgress(fromTokenAddress)) {
             allowPermissionsHandler.removeAddressFromProgress(fromTokenAddress)
-            fetchCurrencyStatusUseCase(userWalletId, fromToken.currency.id, true)
+            fetchCurrencyStatusUseCase(userWalletId = userWalletId, id = fromToken.currency.id)
         }
         return if (isAllowedToSpend && isBalanceWithoutFeeEnough) {
             provider to loadDexSwapData(
@@ -1754,13 +1754,22 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 if (feePaidCurrency.balance > fee.multiply(percentsToFeeIncrease)) {
                     SwapFeeState.Enough
                 } else {
-                    val token = currenciesRepository
-                        .getMultiCurrencyWalletCurrenciesSync(userWalletId)
+                    val tokens = if (tokensFeatureToggles.isWalletBalanceFetcherEnabled) {
+                        multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
+                            params = MultiWalletCryptoCurrenciesProducer.Params(userWalletId),
+                        )
+                            .orEmpty()
+                    } else {
+                        currenciesRepository.getMultiCurrencyWalletCurrenciesSync(userWalletId)
+                    }
+
+                    val token = tokens
                         .filterIsInstance<CryptoCurrency.Token>()
                         .find {
                             it.contractAddress.equals(feePaidCurrency.contractAddress, ignoreCase = true) &&
                                 it.network.derivationPath == fromTokenStatus.currency.network.derivationPath
                         }
+
                     SwapFeeState.NotEnough(
                         feeCurrency = token,
                         currencyName = feePaidCurrency.name,
