@@ -10,8 +10,6 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
-import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
-import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWalletId
@@ -25,8 +23,6 @@ class SaveManagedTokensUseCase(
     private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
     private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
     private val multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
-    private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
-    private val tokensFeatureToggles: TokensFeatureToggles,
 ) {
 
     suspend operator fun invoke(
