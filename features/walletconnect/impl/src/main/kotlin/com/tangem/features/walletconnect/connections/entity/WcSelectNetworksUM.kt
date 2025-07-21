@@ -8,4 +8,5 @@ internal data class WcSelectNetworksUM(
     val available: ImmutableList<WcNetworkInfoItem.Checkable>,
     val notAdded: ImmutableList<WcNetworkInfoItem.ReadOnly>,
     val onDone: () -> Unit,
+    val doneButtonEnabled: Boolean = true,
 )

@@ -6,11 +6,10 @@ import arrow.core.right
 import com.domain.blockaid.models.dapp.CheckDAppResult
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
-import com.tangem.data.walletconnect.pair.AssociateNetworksDelegate
-import com.tangem.data.walletconnect.utils.WC_TAG
-import com.tangem.data.walletconnect.utils.WcSdkObserver
-import com.tangem.data.walletconnect.utils.WcSdkSessionConverter
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.data.walletconnect.utils.*
 import com.tangem.datasource.local.walletconnect.WalletConnectStore
+import com.tangem.domain.walletconnect.WcAnalyticEvents
 import com.tangem.domain.walletconnect.model.WcSession
 import com.tangem.domain.walletconnect.model.WcSessionDTO
 import com.tangem.domain.walletconnect.model.legacy.WalletConnectSessionsRepository
@@ -21,21 +20,23 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
+import org.joda.time.DateTime
 import timber.log.Timber
 import kotlin.coroutines.resume
 
+@Suppress("LongParameterList")
 internal class DefaultWcSessionsManager(
     private val store: WalletConnectStore,
     private val legacyStore: WalletConnectSessionsRepository,
     private val getWallets: GetWalletsUseCase,
     private val dispatchers: CoroutineDispatcherProvider,
-    private val associateNetworks: AssociateNetworksDelegate,
+    private val wcNetworksConverter: WcNetworksConverter,
+    private val analytics: AnalyticsEventHandler,
     private val scope: CoroutineScope,
 ) : WcSessionsManager, WcSdkObserver {
 
     private val onSessionDelete = Channel<Wallet.Model.SessionDelete>(capacity = Channel.BUFFERED)
     private val oneTimeMigration = MutableStateFlow(true)
-    private val oneTimeSessionExtend = MutableStateFlow(true)
 
     override val sessions: Flow<Map<UserWallet, List<WcSession>>>
         get() = combine(getWallets(), store.sessions) { wallets, inStore -> wallets to inStore }
@@ -50,10 +51,6 @@ internal class DefaultWcSessionsManager(
                 val associatedSessions: List<WcSession> = associate(inSdk, inStore, wallets)
                 val someRemove = removeUnknownSessions(inStore, associatedSessions)
                 if (someRemove) return@transform // ignore emit, wait next one
-                if (oneTimeSessionExtend.value) {
-                    oneTimeSessionExtend.value = false
-                    scope.launch { extendAliveSessions(associatedSessions) }
-                }
                 emit(associatedSessions.groupBy { it.wallet })
             }
             .distinctUntilChanged()
@@ -61,35 +58,33 @@ internal class DefaultWcSessionsManager(
 
     override fun onWcSdkInit() {
         oneTimeMigration.value = true
-        oneTimeSessionExtend.value = true
         listenOnSessionDelete()
+        extendSessions()
     }
 
     override suspend fun saveSession(session: WcSession) {
-        store.saveSession(WcSessionDTO(session.sdkModel.topic, session.wallet.walletId, session.securityStatus))
+        store.saveSession(
+            WcSessionDTO(
+                topic = session.sdkModel.topic,
+                walletId = session.wallet.walletId,
+                securityStatus = session.securityStatus,
+                connectingTime = session.connectingTime ?: DateTime.now().millis,
+            ),
+        )
     }
 
     override suspend fun removeSession(session: WcSession): Either<Throwable, Unit> {
         val topic = session.sdkModel.topic
         val sdkCall = sdkDisconnectSession(topic)
             .onRight { onSessionDelete.trySend(Wallet.Model.SessionDelete.Success(topic = topic, reason = "")) }
+        analytics.send(WcAnalyticEvents.SessionDisconnected(session.sdkModel.appMetaData))
         return sdkCall
     }
 
     override suspend fun findSessionByTopic(topic: String): WcSession? = withContext(dispatchers.io) {
-        val storedSession = sessions.firstOrNull()
+        sessions.firstOrNull()
             ?.values?.flatten()
             ?.firstOrNull { it.sdkModel.topic == topic }
-            ?: return@withContext null
-        val sdkSession = WalletKit.getActiveSessionByTopic(topic) ?: return@withContext null
-        val wallet = storedSession.wallet
-        val networks = associateNetworks.associate(wallet, sdkSession.namespaces)
-        WcSession(
-            wallet = wallet,
-            sdkModel = WcSdkSessionConverter.convert(sdkSession),
-            securityStatus = storedSession.securityStatus,
-            networks = networks,
-        )
     }
 
     override fun onSessionDelete(sessionDelete: Wallet.Model.SessionDelete) {
@@ -128,15 +123,17 @@ internal class DefaultWcSessionsManager(
         inStore: Set<WcSessionDTO>,
         wallets: List<UserWallet>,
     ): List<WcSession> {
-        val wcSessions = inStore.mapNotNull { session ->
-            val wallet = wallets.find { it.walletId == session.walletId } ?: return@mapNotNull null
-            val sdkSession = inSdk.find { it.topic == session.topic } ?: return@mapNotNull null
-            val networks = associateNetworks.associate(wallet, sdkSession.namespaces)
+        val wcSessions = inStore.mapNotNull { storeSession ->
+            val wallet = wallets.find { it.walletId == storeSession.walletId } ?: return@mapNotNull null
+            val sdkSession = inSdk.find { it.topic == storeSession.topic } ?: return@mapNotNull null
+            val networks = wcNetworksConverter.findWalletNetworks(wallet, sdkSession)
             WcSession(
                 wallet = wallet,
                 sdkModel = WcSdkSessionConverter.convert(sdkSession),
-                securityStatus = session.securityStatus,
+                securityStatus = storeSession.securityStatus,
                 networks = networks,
+                connectingTime = storeSession.connectingTime,
+                showWalletInfo = wallets.size > 1,
             )
         }
         return wcSessions
@@ -154,17 +151,20 @@ internal class DefaultWcSessionsManager(
         return haveSomeUnknown
     }
 
-    private suspend fun extendAliveSessions(sessions: List<WcSession>) = coroutineScope {
-        val jobs = sessions.map { launch { sdkSessionExtend(it.sdkModel.topic) } }
-        jobs.joinAll()
+    private fun extendSessions() {
+        scope.launch(dispatchers.io) {
+            val topics: List<String> = WalletKit.getListOfActiveSessions().map { it.topic }
+            val jobs = topics.map { topic -> launch { sdkSessionExtend(topic) } }
+            jobs.joinAll()
+        }
     }
 
     private suspend fun sdkDisconnectSession(topic: String): Either<Throwable, Unit> {
         return suspendCancellableCoroutine { continuation ->
             WalletKit.disconnectSession(
                 params = Wallet.Params.SessionDisconnect(topic),
-                onSuccess = { continuation.resume(Unit.right()) },
-                onError = { continuation.resume(it.throwable.left()) },
+                onSuccess = { if (continuation.isActive) continuation.resume(Unit.right()) },
+                onError = { if (continuation.isActive) continuation.resume(it.throwable.left()) },
             )
         }
     }
@@ -173,8 +173,8 @@ internal class DefaultWcSessionsManager(
         return suspendCancellableCoroutine { continuation ->
             WalletKit.extendSession(
                 params = Wallet.Params.SessionExtend(topic),
-                onSuccess = { continuation.resume(Unit.right()) },
-                onError = { continuation.resume(it.throwable.left()) },
+                onSuccess = { if (continuation.isActive) continuation.resume(Unit.right()) },
+                onError = { if (continuation.isActive) continuation.resume(it.throwable.left()) },
             )
         }
     }

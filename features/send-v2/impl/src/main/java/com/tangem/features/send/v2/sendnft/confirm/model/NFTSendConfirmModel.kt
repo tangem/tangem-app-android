@@ -30,6 +30,8 @@ import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.features.nft.entity.NFTSendSuccessTrigger
 import com.tangem.features.send.v2.api.SendNotificationsComponent.Params.NotificationData
 import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
+import com.tangem.features.send.v2.api.subcomponents.notifications.SendNotificationsUpdateListener
+import com.tangem.features.send.v2.api.subcomponents.notifications.SendNotificationsUpdateTrigger
 import com.tangem.features.send.v2.common.CommonSendRoute
 import com.tangem.features.send.v2.common.SendBalanceUpdater
 import com.tangem.features.send.v2.common.SendConfirmAlertFactory
@@ -47,7 +49,6 @@ import com.tangem.features.send.v2.subcomponents.fee.SendFeeCheckReloadListener
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeCheckReloadTrigger
 import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeSelectorUM
 import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeUM
-import com.tangem.features.send.v2.subcomponents.notifications.NotificationsUpdateTrigger
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.stripZeroPlainString
 import com.tangem.utils.transformer.update
@@ -72,7 +73,8 @@ internal class NFTSendConfirmModel @Inject constructor(
     private val saveBlockchainErrorUseCase: SaveBlockchainErrorUseCase,
     private val getCardInfoUseCase: GetCardInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
-    private val notificationsUpdateTrigger: NotificationsUpdateTrigger,
+    private val notificationsUpdateTrigger: SendNotificationsUpdateTrigger,
+    private val notificationsUpdateListener: SendNotificationsUpdateListener,
     private val sendFeeCheckReloadTrigger: SendFeeCheckReloadTrigger,
     private val sendFeeCheckReloadListener: SendFeeCheckReloadListener,
     private val alertFactory: SendConfirmAlertFactory,
@@ -242,7 +244,7 @@ internal class NFTSendConfirmModel @Inject constructor(
     }
 
     private fun subscribeOnNotificationsUpdateTrigger() {
-        notificationsUpdateTrigger.hasErrorFlow
+        notificationsUpdateListener.hasErrorFlow
             .onEach { hasError ->
                 _uiState.update {
                     val feeUM = it.feeUM as? FeeUM.Content

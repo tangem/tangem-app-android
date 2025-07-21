@@ -55,9 +55,14 @@ internal class WcPairComponent(
     }
 
     private fun onChildBack() {
-        when (contentStack.value.active.configuration) {
-            WcAppInfoRoutes.AppInfo -> dismiss()
-            is WcAppInfoRoutes.Alert,
+        when (val config = contentStack.value.active.configuration) {
+            is WcAppInfoRoutes.AppInfo -> dismiss()
+            is Alert -> when (config.type) {
+                is Alert.Type.UnsupportedDApp,
+                is Alert.Type.UnsupportedNetwork,
+                -> dismiss()
+                else -> model.stackNavigation.pop()
+            }
             is WcAppInfoRoutes.SelectNetworks,
             is WcAppInfoRoutes.SelectWallet,
             -> model.stackNavigation.pop()
@@ -108,8 +113,10 @@ internal class WcPairComponent(
     private fun createBottomSheetMessageUM(alertType: Alert.Type): MessageBottomSheetUMV2 {
         return when (alertType) {
             is Alert.Type.Verified -> WcAlertsFactory.createVerifiedDomainAlert(alertType.appName)
-            Alert.Type.UnknownDomain -> WcAlertsFactory.createUnknownDomainAlert(model::connectFromAlert)
-            Alert.Type.UnsafeDomain -> WcAlertsFactory.createUnsafeDomainAlert(model::connectFromAlert)
+            is Alert.Type.UnknownDomain -> WcAlertsFactory.createUnknownDomainAlert(model::connectFromAlert)
+            is Alert.Type.UnsafeDomain -> WcAlertsFactory.createUnsafeDomainAlert(model::connectFromAlert)
+            is Alert.Type.UnsupportedDApp -> WcAlertsFactory.createUnsupportedDomainAlert(alertType.appName)
+            is Alert.Type.UnsupportedNetwork -> WcAlertsFactory.createUnsupportedChainAlert(alertType.appName)
         }
     }
 
