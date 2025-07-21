@@ -133,6 +133,7 @@ internal class DefaultWcSessionsManager(
                 securityStatus = storeSession.securityStatus,
                 networks = networks,
                 connectingTime = storeSession.connectingTime,
+                showWalletInfo = wallets.size > 1,
             )
         }
         return wcSessions
