@@ -20,6 +20,9 @@ internal class DefaultFeeSelectorReloadTrigger @Inject constructor() :
     override val reloadTriggerFlow: SharedFlow<FeeSelectorData>
     field = MutableSharedFlow()
 
+    override val loadingStateTriggerFlow: SharedFlow<Unit>
+    field = MutableSharedFlow()
+
     override val checkReloadTriggerFlow: SharedFlow<Unit>
     field = MutableSharedFlow()
 
@@ -28,6 +31,10 @@ internal class DefaultFeeSelectorReloadTrigger @Inject constructor() :
 
     override suspend fun triggerUpdate(feeData: FeeSelectorData) {
         reloadTriggerFlow.emit(feeData)
+    }
+
+    override suspend fun triggerLoadingState() {
+        loadingStateTriggerFlow.emit(Unit)
     }
 
     override suspend fun triggerCheckUpdate() {
