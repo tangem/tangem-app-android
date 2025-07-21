@@ -26,7 +26,6 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.nft.DisableWalletNFTUseCase
 import com.tangem.domain.nft.EnableWalletNFTUseCase
 import com.tangem.domain.nft.GetWalletNFTEnabledUseCase
-import com.tangem.domain.notifications.GetApplicationIdUseCase
 import com.tangem.domain.notifications.toggles.NotificationsFeatureToggles
 import com.tangem.domain.settings.repositories.PermissionRepository
 import com.tangem.domain.wallets.models.UserWallet
@@ -46,7 +45,6 @@ import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnaly
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -74,8 +72,6 @@ internal class WalletSettingsModel @Inject constructor(
     private val setNotificationsEnabledUseCase: SetNotificationsEnabledUseCase,
     private val settingsManager: SettingsManager,
     private val permissionsRepository: PermissionRepository,
-    private val getApplicationIdUseCase: GetApplicationIdUseCase,
-    private val associateWalletsWithApplicationIdUseCase: AssociateWalletsWithApplicationIdUseCase,
 ) : Model() {
 
     val params: WalletSettingsComponent.Params = paramsContainer.require()
@@ -196,17 +192,7 @@ internal class WalletSettingsModel @Inject constructor(
         if (hasUserWallets) {
             router.pop()
         } else {
-            clearWalletsAssociatedWithApplicationId()
             router.replaceAll(AppRoute.Home)
-        }
-    }
-
-    private fun clearWalletsAssociatedWithApplicationId() = modelScope.launch(NonCancellable) {
-        getApplicationIdUseCase().onRight { applicationId ->
-            associateWalletsWithApplicationIdUseCase(applicationId, emptyList())
-                .onLeft {
-                    Timber.e("Unable to associate empty wallets with application ID: $it")
-                }
         }
     }
 
