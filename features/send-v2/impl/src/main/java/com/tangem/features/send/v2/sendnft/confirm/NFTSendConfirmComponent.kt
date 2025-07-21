@@ -91,6 +91,7 @@ internal class NFTSendConfirmComponent(
             cryptoCurrencyStatus = params.cryptoCurrencyStatus,
             feeCryptoCurrencyStatus = params.feeCryptoCurrencyStatus,
             appCurrency = params.appCurrency,
+            callback = model,
             notificationData = SendNotificationsComponent.Params.NotificationData(
                 destinationAddress = model.confirmData.enteredDestination.orEmpty(),
                 memo = model.confirmData.enteredMemo,
