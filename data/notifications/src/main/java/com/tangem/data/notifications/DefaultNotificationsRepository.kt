@@ -68,6 +68,10 @@ internal class DefaultNotificationsRepository @Inject constructor(
                 appId.value,
                 NotificationApplicationCreateBody(
                     pushToken = pushToken,
+                    systemVersion = appInfoProvider.osVersion,
+                    language = appInfoProvider.language,
+                    timezone = appInfoProvider.timezone,
+                    version = appInfoProvider.appVersion,
                 ),
             ).getOrThrow()
         }

@@ -21,6 +21,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.quotes.QuotesRepository
+import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.FeePaidCurrency
@@ -64,6 +65,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     private val createApprovalTransactionUseCase: CreateApprovalTransactionUseCase,
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val quotesRepository: QuotesRepository,
+    private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
     private val swapTransactionRepository: SwapTransactionRepository,
     private val currencyChecksRepository: CurrencyChecksRepository,
     private val appCurrencyRepository: AppCurrencyRepository,
@@ -1279,7 +1281,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 network = network,
                 userWallet = userWallet,
             ).getOrNull() ?: error("unable to calculate fee")
-        } catch (e: IllegalStateException) {
+        } catch (_: IllegalStateException) {
             getEthSpecificFeeUseCase(
                 userWallet = userWallet,
                 cryptoCurrency = fromToken,
@@ -1805,20 +1807,41 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     }
 
     private suspend fun getQuotes(vararg ids: CryptoCurrency.ID): Map<CryptoCurrency.ID, BigDecimal> {
-        val set = ids.mapNotNull { it.rawCurrencyId }
-            .toSet()
+        val set = ids.mapNotNullTo(destination = hashSetOf(), transform = CryptoCurrency.ID::rawCurrencyId)
             .getQuotesOrEmpty()
 
         return ids
             .mapNotNull { id ->
-                set.find { it.rawCurrencyId == id.rawCurrencyId && it.value is QuoteStatus.Data }
-                    ?.let { id to (it.value as QuoteStatus.Data).fiatRate }
+                val found = set.find { it.rawCurrencyId == id.rawCurrencyId && it.value is QuoteStatus.Data }
+                    ?: return@mapNotNull null
+
+                id to (found.value as QuoteStatus.Data).fiatRate
             }
             .toMap()
     }
 
     private suspend fun Set<CryptoCurrency.RawID>.getQuotesOrEmpty(): Set<QuoteStatus> {
-        return runCatching { quotesRepository.getMultiQuoteSyncOrNull(currenciesIds = this) }
+        return runCatching {
+            val cachedQuotes = quotesRepository.getMultiQuoteSyncOrNull(currenciesIds = this)
+
+            val allQuotesFound = cachedQuotes?.all { it.value !is QuoteStatus.Empty } == true
+
+            if (allQuotesFound) return@runCatching cachedQuotes
+
+            val currenciesIds = if (cachedQuotes.isNullOrEmpty()) {
+                this
+            } else {
+                cachedQuotes.mapNotNullTo(hashSetOf()) {
+                    if (it.value is QuoteStatus.Empty) it.rawCurrencyId else null
+                }
+            }
+
+            multiQuoteStatusFetcher(
+                params = MultiQuoteStatusFetcher.Params(currenciesIds = currenciesIds, appCurrencyId = null),
+            )
+
+            quotesRepository.getMultiQuoteSyncOrNull(currenciesIds = this)
+        }
             .getOrNull()
             .orEmpty()
     }
