@@ -16,6 +16,8 @@ import kotlinx.coroutines.coroutineScope
 class RefreshMultiCurrencyWalletQuotesUseCase(
     private val currenciesRepository: CurrenciesRepository,
     private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
+    private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
+    private val tokensFeatureToggles: TokensFeatureToggles,
 ) {
 
     suspend operator fun invoke(userWalletId: UserWalletId): Either<QuotesError, Unit> {
@@ -38,8 +40,18 @@ class RefreshMultiCurrencyWalletQuotesUseCase(
     private suspend fun getCurrencies(userWalletId: UserWalletId): Either<Throwable, List<CryptoCurrency>> {
         return either {
             catch(
-                block = { currenciesRepository.getMultiCurrencyWalletCachedCurrenciesSync(userWalletId) },
-                catch = { raise(it) },
+                block = {
+                    if (tokensFeatureToggles.isWalletBalanceFetcherEnabled) {
+                        multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
+                            params = MultiWalletCryptoCurrenciesProducer.Params(userWalletId),
+                        )
+                            .orEmpty()
+                            .toList()
+                    } else {
+                        currenciesRepository.getMultiCurrencyWalletCachedCurrenciesSync(userWalletId)
+                    }
+                },
+                catch = ::raise,
             )
         }
     }
