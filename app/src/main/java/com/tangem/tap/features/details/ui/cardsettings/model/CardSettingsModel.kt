@@ -27,7 +27,6 @@ import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchNavigationAction
 import com.tangem.tap.common.redux.AppDialog
-import com.tangem.tap.domain.extensions.signedHashesCount
 import com.tangem.tap.features.details.ui.cardsettings.CardInfo
 import com.tangem.tap.features.details.ui.cardsettings.CardSettingsScreenState
 import com.tangem.tap.features.details.ui.cardsettings.api.CardSettingsComponent
@@ -170,6 +169,8 @@ internal class CardSettingsModel @Inject constructor(
             state.copy(cardDetails = cardDetails)
         }
     }
+
+    private fun CardDTO.signedHashesCount(): Int = wallets.sumOf { it.totalSignedHashes ?: 0 }
 
     private fun handleClickingItem(item: CardInfo) {
         when (item) {
