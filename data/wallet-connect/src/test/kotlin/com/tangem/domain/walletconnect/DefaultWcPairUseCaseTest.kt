@@ -96,6 +96,7 @@ internal class DefaultWcPairUseCaseTest {
             securityStatus = CheckDAppResult.SAFE,
             networks = setOf(),
             connectingTime = null,
+            showWalletInfo = false,
         )
 
     private fun useCaseFactory() = DefaultWcPairUseCase(

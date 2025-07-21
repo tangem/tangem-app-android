@@ -96,6 +96,7 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
                     securityStatus = proposalState.dAppSession.securityStatus,
                     networks = sessionForApprove.network.toSet(),
                     connectingTime = DateTime.now().millis,
+                    showWalletInfo = proposalState.dAppSession.proposalNetwork.keys.size > 1,
                 )
                 sessionsManager.saveSession(newSession)
                 analytics.send(
