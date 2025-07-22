@@ -33,8 +33,11 @@ internal class UserWalletListModel @Inject constructor(
 ) : Model() {
 
     private val isWalletSavingInProgress: MutableStateFlow<Boolean> = MutableStateFlow(value = false)
-    private val userWalletsFetcher = userWalletsFetcherFactory
-        .create(messageSender) { userWalletId -> router.push(AppRoute.WalletSettings(userWalletId)) }
+    private val userWalletsFetcher = userWalletsFetcherFactory.create(
+        messageSender = messageSender,
+        onlyMultiCurrency = false,
+        onWalletClick = { userWalletId -> router.push(AppRoute.WalletSettings(userWalletId)) },
+    )
 
     val state: MutableStateFlow<UserWalletListUM> = MutableStateFlow(
         value = UserWalletListUM(
