@@ -219,6 +219,7 @@ sealed class AnalyticsParam {
         const val ACTION = "Action"
         const val COLLECTIONS = "Collections"
         const val NFT = "Nft"
+        const val NONCE = "Nonce"
         const val STANDARD = "Standard"
         const val NO_COLLECTION = "No collection"
     }

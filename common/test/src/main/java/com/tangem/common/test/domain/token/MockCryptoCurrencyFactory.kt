@@ -45,7 +45,7 @@ class MockCryptoCurrencyFactory(private val scanResponse: ScanResponse = default
         )
     }
 
-    fun createCoin(blockchain: Blockchain): CryptoCurrency {
+    fun createCoin(blockchain: Blockchain): CryptoCurrency.Coin {
         val derivationPath = createDerivationPath(
             blockchain = blockchain,
             extraDerivationPath = null,

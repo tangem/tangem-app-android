@@ -11,6 +11,10 @@ interface UserWalletsFetcher {
     val userWallets: Flow<ImmutableList<UserWalletItemUM>>
 
     interface Factory {
-        fun create(messageSender: UiMessageSender, onWalletClick: (UserWalletId) -> Unit): UserWalletsFetcher
+        fun create(
+            messageSender: UiMessageSender,
+            onlyMultiCurrency: Boolean,
+            onWalletClick: (UserWalletId) -> Unit,
+        ): UserWalletsFetcher
     }
 }
