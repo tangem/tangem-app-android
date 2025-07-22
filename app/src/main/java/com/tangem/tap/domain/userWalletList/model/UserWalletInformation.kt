@@ -5,8 +5,8 @@ import com.squareup.moshi.JsonClass
 import com.tangem.domain.models.MobileWallet
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.visa.model.VisaCardActivationStatus
-import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.hot.sdk.model.HotWalletId
 
 @JsonClass(generateAdapter = true)
