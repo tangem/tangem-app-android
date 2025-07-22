@@ -15,7 +15,7 @@ import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.nft.models.NFTAsset
 import com.tangem.domain.nft.models.NFTCollection
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.nft.details.entity.NFTDetailsBottomSheetConfig
 import com.tangem.features.nft.details.info.NFTDetailsInfoComponent
 import com.tangem.features.nft.details.model.NFTDetailsModel

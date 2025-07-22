@@ -13,7 +13,7 @@ import com.tangem.domain.tokens.GetCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesProducer
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
 import com.tangem.domain.tokens.TokensFeatureToggles
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.features.staking.api.deeplink.StakingDeepLinkHandler
 import dagger.assisted.Assisted
