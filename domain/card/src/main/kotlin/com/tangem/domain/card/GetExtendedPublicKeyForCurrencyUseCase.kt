@@ -1,6 +1,7 @@
 package com.tangem.domain.card
 
 import arrow.core.Either
+import arrow.core.right
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.common.extensions.ByteArrayKey
@@ -22,16 +23,17 @@ class GetExtendedPublicKeyForCurrencyUseCase(
     private val derivationsRepository: DerivationsRepository,
     private val walletManagersFacade: WalletManagersFacade,
 ) {
+
     suspend operator fun invoke(userWalletId: UserWalletId, network: Network): Either<Throwable, String> {
         return Either.catch {
-            val userWallet = walletManagersFacade.getOrCreateWalletManager(userWalletId, network)
-                ?: error("Wallet not found")
+            val walletManager = walletManagersFacade.getOrCreateWalletManager(userWalletId, network)
+                ?: error("Wallet not found for userWalletId=$userWalletId and network=$network")
 
             val blockchain = network.toBlockchain()
             val isSecp256k1Blockchain = Blockchain.secp256k1Blockchains(network.isTestnet).contains(blockchain)
 
             val hdKey = if (isSecp256k1Blockchain) {
-                userWallet.wallet.publicKey.derivationType?.hdKey ?: error("No derivation found")
+                walletManager.wallet.publicKey.derivationType?.hdKey ?: error("No derivation found")
             } else {
                 error("No derivation found")
             }
@@ -50,7 +52,7 @@ class GetExtendedPublicKeyForCurrencyUseCase(
             val pendingDerivations = getPendingDerivations(childKey, parentKey)
             val derivedKeys = deriveKeys(
                 userWalletId = userWalletId,
-                seedKey = userWallet.wallet.publicKey.seedKey,
+                seedKey = walletManager.wallet.publicKey.seedKey,
                 paths = pendingDerivations,
             )
 
@@ -73,15 +75,17 @@ class GetExtendedPublicKeyForCurrencyUseCase(
     /**
      * @return true if xpub generation is supported, false otherwise
      */
-    suspend fun isSupported(userWalletId: UserWalletId, network: Network): Boolean {
-        val userWallet = walletManagersFacade.getOrCreateWalletManager(userWalletId, network)
-            ?: error("Wallet not found")
+    suspend fun isSupported(userWalletId: UserWalletId, network: Network): Either<Throwable, Boolean> = Either.catch {
+        val walletManager = walletManagersFacade.getOrCreateWalletManager(userWalletId, network)
+            ?: error("Wallet not found for user wallet $userWalletId and network ${network.id}")
 
         val blockchain = network.toBlockchain()
         val isSecp256k1Blockchain = Blockchain.secp256k1Blockchains(network.isTestnet).contains(blockchain)
-        val isHdKey = userWallet.wallet.publicKey.derivationType?.hdKey
+        val isHdKey = walletManager.wallet.publicKey.derivationType?.hdKey
 
-        return isSecp256k1Blockchain && isHdKey != null
+        val isSupported = isSecp256k1Blockchain && isHdKey != null
+
+        return isSupported.right()
     }
 
     private suspend fun deriveKeys(

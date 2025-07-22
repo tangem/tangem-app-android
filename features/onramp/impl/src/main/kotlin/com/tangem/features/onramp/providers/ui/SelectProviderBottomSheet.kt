@@ -26,13 +26,10 @@ import androidx.compose.ui.util.fastForEach
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.tangem.core.ui.components.RectangleShimmer
-import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.domain.onramp.model.OnrampPaymentMethod
@@ -41,7 +38,6 @@ import com.tangem.features.onramp.paymentmethod.ui.PaymentMethodIcon
 import com.tangem.features.onramp.providers.entity.ProviderListItemUM
 import com.tangem.features.onramp.providers.entity.SelectPaymentAndProviderUM
 import com.tangem.features.onramp.providers.model.previewData.SelectProviderPreviewData
-import com.tangem.features.onramp.utils.selectedBorder
 
 @Composable
 internal fun SelectProviderBottomSheet(config: TangemBottomSheetConfig, content: @Composable () -> Unit) {
@@ -151,13 +147,7 @@ private fun ProviderItem(state: ProviderListItemUM, modifier: Modifier = Modifie
 private fun AvailableProviderItem(state: ProviderListItemUM.Available.Content, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
-            .then(
-                if (state.isSelected) {
-                    Modifier.selectedBorder()
-                } else {
-                    Modifier.clip(RoundedCornerShape(16.dp))
-                },
-            )
+            .selectedBorder(isSelected = state.isSelected)
             .clickable(onClick = state.onClick)
             .padding(all = TangemTheme.dimens.spacing12),
         verticalAlignment = Alignment.CenterVertically,
@@ -227,13 +217,7 @@ private fun UnavailableProviderItem(
 ) {
     Row(
         modifier = modifier
-            .then(
-                if (isSelected) {
-                    Modifier.selectedBorder()
-                } else {
-                    Modifier.clip(RoundedCornerShape(16.dp))
-                },
-            )
+            .selectedBorder(isSelected = isSelected)
             .padding(all = TangemTheme.dimens.spacing12),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),

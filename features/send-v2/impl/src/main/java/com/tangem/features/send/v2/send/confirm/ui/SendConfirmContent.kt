@@ -6,7 +6,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.notifications.NotificationUM
@@ -24,10 +25,10 @@ import com.tangem.features.send.v2.common.ui.tapHelp
 import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.send.ui.state.SendUM
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountBlockComponent
-import com.tangem.features.send.v2.subcomponents.destination.SendDestinationBlockComponent
+import com.tangem.features.send.v2.subcomponents.destination.DefaultSendDestinationBlockComponent
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeBlockComponent
 import com.tangem.features.send.v2.subcomponents.notifications
-import com.tangem.features.send.v2.subcomponents.notifications.NotificationsComponent
+import com.tangem.features.send.v2.subcomponents.notifications.DefaultSendNotificationsComponent
 import kotlinx.collections.immutable.ImmutableList
 
 private const val BLOCKS_KEY = "BLOCKS_KEY"
@@ -36,10 +37,10 @@ private const val BLOCKS_KEY = "BLOCKS_KEY"
 @Composable
 internal fun SendConfirmContent(
     sendUM: SendUM,
-    destinationBlockComponent: SendDestinationBlockComponent,
+    destinationBlockComponent: DefaultSendDestinationBlockComponent,
     amountBlockComponent: SendAmountBlockComponent,
     feeBlockComponent: SendFeeBlockComponent,
-    notificationsComponent: NotificationsComponent,
+    notificationsComponent: DefaultSendNotificationsComponent,
     notificationsUM: ImmutableList<NotificationUM>,
 ) {
     val confirmUM = sendUM.confirmUM as? ConfirmUM.Content
@@ -75,7 +76,7 @@ internal fun SendConfirmContent(
 
 private fun LazyListScope.blocks(
     uiState: SendUM,
-    destinationBlockComponent: SendDestinationBlockComponent,
+    destinationBlockComponent: DefaultSendDestinationBlockComponent,
     amountBlockComponent: SendAmountBlockComponent,
     feeBlockComponent: SendFeeBlockComponent,
 ) {
@@ -98,8 +99,13 @@ private fun LazyListScope.blocks(
                     modifier = Modifier.padding(vertical = 12.dp),
                 )
             }
-            destinationBlockComponent.Content(modifier = Modifier)
-            amountBlockComponent.Content(modifier = Modifier)
+            if (uiState.isRedesignEnabled) {
+                amountBlockComponent.Content(modifier = Modifier)
+                destinationBlockComponent.Content(modifier = Modifier)
+            } else {
+                destinationBlockComponent.Content(modifier = Modifier)
+                amountBlockComponent.Content(modifier = Modifier)
+            }
             feeBlockComponent.Content(modifier = Modifier)
         }
     }

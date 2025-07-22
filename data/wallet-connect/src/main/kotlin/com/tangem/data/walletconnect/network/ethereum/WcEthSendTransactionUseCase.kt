@@ -3,7 +3,7 @@ package com.tangem.data.walletconnect.network.ethereum
 import arrow.core.left
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.blockchains.ethereum.tokenmethods.ApprovalERC20TokenCallData
-import com.tangem.blockchain.common.Amount
+import com.tangem.blockchain.common.Amount as BlockchainAmount
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.extensions.formatHex
@@ -15,7 +15,9 @@ import com.tangem.data.walletconnect.sign.SignStateConverter.toResult
 import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
 import com.tangem.data.walletconnect.utils.BlockAidVerificationDelegate
 import com.tangem.domain.core.lce.LceFlow
+import com.tangem.domain.tokens.model.Amount
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
+import com.tangem.domain.walletconnect.model.WcApprovedAmount
 import com.tangem.domain.walletconnect.model.WcEthMethod
 import com.tangem.domain.walletconnect.usecase.method.*
 import dagger.assisted.Assisted
@@ -35,7 +37,7 @@ internal class WcEthSendTransactionUseCase @AssistedInject constructor(
     WcApproval,
     WcMutableFee {
 
-    private var approvalAmount: Amount? = null
+    private var approvalAmount: WcApprovedAmount? = null
     private var dAppFee = WcEthTxHelper.getDAppFee(
         network = context.network,
         txParams = method.transaction,
@@ -53,13 +55,19 @@ internal class WcEthSendTransactionUseCase @AssistedInject constructor(
                 val amount = WcEthTxHelper.getApprovedAmount(method.transaction.data, result)
                     ?: return@map BlockAidTransactionCheck.Result.Plain(result)
                 val tokenInfo = amount.tokenInfo
-                if (!amount.isUnlimited) {
-                    this@WcEthSendTransactionUseCase.approvalAmount = Amount(
-                        currencySymbol = tokenInfo.symbol,
-                        decimals = tokenInfo.decimals,
-                        value = amount.approvedAmount,
-                    )
-                }
+                this@WcEthSendTransactionUseCase.approvalAmount = WcApprovedAmount(
+                    amount = if (!amount.isUnlimited) {
+                        Amount(
+                            currencySymbol = tokenInfo.symbol,
+                            decimals = tokenInfo.decimals,
+                            value = amount.approvedAmount,
+                        )
+                    } else {
+                        null
+                    },
+                    logoUrl = tokenInfo.logoUrl,
+                    chainId = tokenInfo.chainId,
+                )
                 BlockAidTransactionCheck.Result.Approval(
                     result = result,
                     approval = this,
@@ -90,7 +98,9 @@ internal class WcEthSendTransactionUseCase @AssistedInject constructor(
                 val extras = uncompiled.extras as EthereumTransactionExtras
                 val callData = ApprovalERC20TokenCallData(
                     spenderAddress = uncompiled.sourceAddress,
-                    amount = action.amount,
+                    amount = action.amount?.amount?.let {
+                        BlockchainAmount(currencySymbol = it.currencySymbol, decimals = it.decimals, value = it.value)
+                    },
                 )
                 approvalAmount = action.amount
                 dAppFee = null
@@ -102,7 +112,7 @@ internal class WcEthSendTransactionUseCase @AssistedInject constructor(
         emit(newState)
     }
 
-    override suspend fun dAppFee(): Fee.Ethereum.Legacy? {
+    override fun dAppFee(): Fee.Ethereum.Legacy? {
         return dAppFee
     }
 
@@ -119,11 +129,11 @@ internal class WcEthSendTransactionUseCase @AssistedInject constructor(
         emitAll(delegate.invoke(transactionData))
     }
 
-    override suspend fun getAmount(): Amount? {
+    override fun getAmount(): WcApprovedAmount? {
         return approvalAmount
     }
 
-    override fun updateAmount(amount: Amount?) {
+    override fun updateAmount(amount: WcApprovedAmount?) {
         middleAction(WcEthTxAction.UpdateApprovalAmount(amount))
     }
 

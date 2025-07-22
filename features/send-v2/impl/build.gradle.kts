@@ -16,7 +16,6 @@ dependencies {
     implementation(projects.features.sendV2.api)
     implementation(projects.features.txhistory.api)
     implementation(projects.features.nft.api)
-    implementation(projects.features.feeSelector.api)
 
     /** Libs */
     implementation(projects.libs.crypto)

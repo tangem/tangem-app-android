@@ -2,6 +2,7 @@ package com.tangem.core.ui.components.audits
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -11,6 +12,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
@@ -30,41 +32,59 @@ import com.tangem.core.ui.res.TangemThemePreview
 fun AuditLabel(state: AuditLabelUM, modifier: Modifier = Modifier) {
     AuditLabelInternal(
         textReference = state.text,
-        textColor = getColorByType(state.type),
-        backgroundColor = getColorByType(state.type).copy(alpha = 0.1f),
+        type = state.type,
         modifier = modifier,
     )
 }
 
 @Composable
-private fun AuditLabelInternal(
-    textReference: TextReference,
-    textColor: Color,
-    backgroundColor: Color,
-    modifier: Modifier = Modifier,
-) {
+private fun AuditLabelInternal(textReference: TextReference, type: AuditLabelUM.Type, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier.background(
-            color = backgroundColor,
+            color = getBackgroundColorByType(type),
             shape = TangemTheme.shapes.roundedCornersSmall2,
         ),
     ) {
         Text(
             text = textReference.resolveReference(),
             style = TangemTheme.typography.caption1,
-            color = textColor,
-            modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing4),
+            color = getTextColorByType(type),
+            modifier = Modifier.padding(getPaddingByType(type)),
         )
     }
 }
 
 @ReadOnlyComposable
 @Composable
-private fun getColorByType(type: AuditLabelUM.Type): Color {
+private fun getTextColorByType(type: AuditLabelUM.Type): Color {
     return when (type) {
         AuditLabelUM.Type.Prohibition -> TangemTheme.colors.text.warning
         AuditLabelUM.Type.Warning -> TangemTheme.colors.text.attention
         AuditLabelUM.Type.Permit -> TangemTheme.colors.text.accent
+        AuditLabelUM.Type.Info -> TangemTheme.colors.text.primary2
+    }
+}
+
+@ReadOnlyComposable
+@Composable
+private fun getBackgroundColorByType(type: AuditLabelUM.Type): Color {
+    return when (type) {
+        AuditLabelUM.Type.Prohibition -> TangemTheme.colors.text.warning.copy(alpha = 0.1f)
+        AuditLabelUM.Type.Warning -> TangemTheme.colors.text.attention.copy(alpha = 0.1f)
+        AuditLabelUM.Type.Permit -> TangemTheme.colors.text.accent.copy(alpha = 0.1f)
+        AuditLabelUM.Type.Info -> TangemTheme.colors.text.accent
+    }
+}
+
+@ReadOnlyComposable
+@Composable
+private fun getPaddingByType(type: AuditLabelUM.Type): PaddingValues {
+    return when (type) {
+        AuditLabelUM.Type.Prohibition,
+        AuditLabelUM.Type.Warning,
+        AuditLabelUM.Type.Permit,
+        -> PaddingValues(horizontal = 4.dp)
+        AuditLabelUM.Type.Info -> PaddingValues(horizontal = 6.dp, vertical = 1.dp)
     }
 }
 

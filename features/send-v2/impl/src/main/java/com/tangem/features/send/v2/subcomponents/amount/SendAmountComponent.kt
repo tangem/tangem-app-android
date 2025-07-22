@@ -7,11 +7,11 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.common.ui.amountScreen.AmountScreenContent
 import com.tangem.common.ui.amountScreen.models.AmountState
+import com.tangem.common.ui.navigationButtons.NavigationModelCallback
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.features.send.v2.common.SendNavigationModelCallback
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponentParams.AmountParams
 import com.tangem.features.send.v2.subcomponents.amount.model.SendAmountModel
 
@@ -37,7 +37,7 @@ internal class SendAmountComponent(
         )
     }
 
-    interface ModelCallback : SendNavigationModelCallback {
+    interface ModelCallback : NavigationModelCallback {
         fun onAmountResult(amountUM: AmountState, isResetPredefined: Boolean)
     }
 }

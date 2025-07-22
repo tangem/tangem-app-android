@@ -6,11 +6,11 @@ import arrow.core.raise.either
 import arrow.core.toNonEmptySetOrNull
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.NetworkStatus
+import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.staking.model.stakekit.YieldBalanceList
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.model.Quote
 import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations.Error
 import com.tangem.domain.tokens.operations.CurrencyStatusOperations
 
@@ -27,14 +27,14 @@ class CurrencyStatusProxyCreator(
 
     fun createCurrencyStatus(
         currency: CryptoCurrency,
-        maybeQuote: Either<Error, Quote?>,
+        maybeQuoteStatus: Either<Error, QuoteStatus?>,
         maybeNetworkStatus: Either<Error, NetworkStatus?>,
         maybeYieldBalance: Either<Error, YieldBalance>?,
     ): Either<Error, CryptoCurrencyStatus> = either {
         var quoteRetrievingFailed = false
 
         val networkStatus = maybeNetworkStatus.bind()
-        val quote = arrow.core.raise.recover({ maybeQuote.bind() }) {
+        val quote = arrow.core.raise.recover({ maybeQuoteStatus.bind() }) {
             quoteRetrievingFailed = true
             null
         }
@@ -42,7 +42,7 @@ class CurrencyStatusProxyCreator(
 
         createCurrencyStatus(
             currency = currency,
-            quote = quote,
+            quoteStatus = quote,
             networkStatus = networkStatus,
             ignoreQuote = quoteRetrievingFailed,
             yieldBalance = yieldBalance,
@@ -51,14 +51,14 @@ class CurrencyStatusProxyCreator(
 
     fun createCurrenciesStatuses(
         currencies: NonEmptyList<CryptoCurrency>,
-        maybeQuotes: Either<Error, Set<Quote>>?,
+        maybeQuotes: Either<Error, Set<QuoteStatus>>?,
         maybeNetworkStatuses: Either<Error, Set<NetworkStatus>>?,
         maybeYieldBalances: Either<Error, YieldBalanceList>?,
     ): Either<Error, List<CryptoCurrencyStatus>> = either {
         var quotesRetrievingFailed = false
 
         val networksStatuses = maybeNetworkStatuses?.bind()?.toNonEmptySetOrNull()
-        val quotes: Set<Quote>? = maybeQuotes?.fold(
+        val quoteStatuses: Set<QuoteStatus>? = maybeQuotes?.fold(
             ifLeft = {
                 quotesRetrievingFailed = true
                 null
@@ -74,7 +74,7 @@ class CurrencyStatusProxyCreator(
         val yieldBalances = maybeYieldBalances?.getOrNull()
 
         currencies.map { currency ->
-            val quote = quotes?.firstOrNull { it.rawCurrencyId == currency.id.rawCurrencyId }
+            val quote = quoteStatuses?.firstOrNull { it.rawCurrencyId == currency.id.rawCurrencyId }
             val networkStatus = networksStatuses?.firstOrNull { it.network == currency.network }
             val address = extractAddress(networkStatus)
 
@@ -89,7 +89,7 @@ class CurrencyStatusProxyCreator(
             }
             createCurrencyStatus(
                 currency = currency,
-                quote = quote,
+                quoteStatus = quote,
                 networkStatus = networkStatus,
                 ignoreQuote = quotesRetrievingFailed,
                 yieldBalance = yieldBalance,
@@ -99,14 +99,14 @@ class CurrencyStatusProxyCreator(
 
     fun createCurrencyStatus(
         currency: CryptoCurrency,
-        quote: Quote?,
+        quoteStatus: QuoteStatus?,
         networkStatus: NetworkStatus?,
         ignoreQuote: Boolean,
         yieldBalance: YieldBalance?,
     ): CryptoCurrencyStatus {
         val currencyStatusOperations = CurrencyStatusOperations(
             currency = currency,
-            quote = quote,
+            quoteStatus = quoteStatus,
             networkStatus = networkStatus,
             ignoreQuote = ignoreQuote,
             yieldBalance = yieldBalance,

@@ -3,6 +3,7 @@ package com.tangem.data.tokens.di
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.common.currency.CardCryptoCurrencyFactory
+import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
 import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.data.tokens.repository.DefaultCurrenciesRepository
 import com.tangem.data.tokens.repository.DefaultCurrencyChecksRepository
@@ -10,6 +11,7 @@ import com.tangem.data.tokens.repository.DefaultPolkadotAccountHealthCheckReposi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.exchangeservice.swap.ExpressServiceLoader
 import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
@@ -30,7 +32,7 @@ internal object TokensDataModule {
     @Singleton
     fun provideCurrenciesRepository(
         tangemTechApi: TangemTechApi,
-        appPreferencesStore: AppPreferencesStore,
+        userTokensResponseStore: UserTokensResponseStore,
         userWalletsStore: UserWalletsStore,
         walletManagersFacade: WalletManagersFacade,
         cacheRegistry: CacheRegistry,
@@ -39,18 +41,20 @@ internal object TokensDataModule {
         excludedBlockchains: ExcludedBlockchains,
         cardCryptoCurrencyFactory: CardCryptoCurrencyFactory,
         tokensSaver: UserTokensSaver,
+        responseCryptoCurrenciesFactory: ResponseCryptoCurrenciesFactory,
     ): CurrenciesRepository {
         return DefaultCurrenciesRepository(
             tangemTechApi = tangemTechApi,
             userWalletsStore = userWalletsStore,
             walletManagersFacade = walletManagersFacade,
             cacheRegistry = cacheRegistry,
-            appPreferencesStore = appPreferencesStore,
+            userTokensResponseStore = userTokensResponseStore,
             expressServiceLoader = expressServiceLoader,
             dispatchers = dispatchers,
             excludedBlockchains = excludedBlockchains,
             cardCryptoCurrencyFactory = cardCryptoCurrencyFactory,
             userTokensSaver = tokensSaver,
+            responseCryptoCurrenciesFactory = responseCryptoCurrenciesFactory,
         )
     }
 

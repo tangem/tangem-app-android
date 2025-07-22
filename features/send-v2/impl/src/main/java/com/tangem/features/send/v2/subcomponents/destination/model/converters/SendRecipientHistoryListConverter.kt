@@ -15,7 +15,7 @@ import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.subcomponents.destination.model.transformers.RECENT_DEFAULT_COUNT
 import com.tangem.features.send.v2.subcomponents.destination.model.transformers.RECENT_KEY_TAG
 import com.tangem.features.send.v2.subcomponents.destination.model.transformers.emptyListState
-import com.tangem.features.send.v2.subcomponents.destination.ui.state.DestinationRecipientListUM
+import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationRecipientListUM
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.isZero
 import kotlinx.collections.immutable.ImmutableList

@@ -72,6 +72,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import timber.log.Timber
+import java.math.BigDecimal
 import kotlin.time.Duration.Companion.seconds
 
 @Suppress("LargeClass", "LongParameterList", "TooManyFunctions")
@@ -119,7 +120,7 @@ internal class DefaultStakingRepository(
             when (val stakingTokensWithYields = stakeKitApi.getEnabledYields(preferredValidatorsOnly = false)) {
                 is ApiResponse.Success -> stakingYieldsStore.store(
                     stakingTokensWithYields.data.data.filter {
-                        it.isAvailable ?: false
+                        it.isAvailable == true
                     },
                 )
                 else -> {
@@ -234,7 +235,7 @@ internal class DefaultStakingRepository(
                     )
                     when {
                         prefetchedYield != null && isSupportedInMobileApp -> {
-                            send(StakingAvailability.Available(prefetchedYield.id))
+                            send(StakingAvailability.Available(prefetchedYield))
                         }
                         prefetchedYield == null && isSupportedInMobileApp -> {
                             send(StakingAvailability.TemporaryUnavailable)
@@ -278,7 +279,7 @@ internal class DefaultStakingRepository(
 
         return when {
             prefetchedYield != null && isSupportedInMobileApp -> {
-                StakingAvailability.Available(prefetchedYield.id)
+                StakingAvailability.Available(prefetchedYield)
             }
             prefetchedYield == null && isSupportedInMobileApp -> {
                 StakingAvailability.TemporaryUnavailable
@@ -502,7 +503,7 @@ internal class DefaultStakingRepository(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
     ): YieldBalance {
-        val stakingId = stakingIdFactory.createForDefault(
+        val stakingId = stakingIdFactory.create(
             userWalletId = userWalletId,
             currencyId = cryptoCurrency.id,
             network = cryptoCurrency.network,
@@ -639,7 +640,7 @@ internal class DefaultStakingRepository(
         userWalletId: UserWalletId,
         cryptoCurrencies: List<CryptoCurrency>,
     ): YieldBalanceList {
-        val stakingIds = cryptoCurrencies.flatMap {
+        val stakingIds = cryptoCurrencies.mapNotNull {
             stakingIdFactory.create(userWalletId = userWalletId, currencyId = it.id, network = it.network)
         }
 
@@ -650,15 +651,24 @@ internal class DefaultStakingRepository(
     }
 
     override suspend fun isAnyTokenStaked(userWalletId: UserWalletId): Boolean {
-        return withContext(dispatchers.io) {
-            stakingBalanceStore.getSyncOrNull(userWalletId)
-                ?.let {
-                    it.isNotEmpty() &&
-                        it.any { yieldBalance ->
-                            (yieldBalance as? YieldBalance.Data)?.balance?.items?.isNotEmpty() == true
-                        }
+        return withContext(dispatchers.default) {
+            val balances = stakingBalanceStoreV2.getAllSyncOrNull(userWalletId) ?: return@withContext false
+
+            val hasDataYieldBalance by lazy {
+                balances.any { yieldBalance ->
+                    (yieldBalance as? YieldBalance.Data)?.balance?.items?.isNotEmpty() == true
                 }
-                ?: false
+            }
+
+            balances.isNotEmpty() && hasDataYieldBalance
+        }
+    }
+
+    override fun getActionRequirementAmount(integrationId: String, stakingActionType: StakingActionType): BigDecimal? {
+        return when {
+            stakingIdFactory.isPolygonIntegrationId(integrationId) &&
+                stakingActionType == StakingActionType.CLAIM_REWARDS -> BigDecimal.ONE
+            else -> null
         }
     }
 
