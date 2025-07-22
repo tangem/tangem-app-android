@@ -1,6 +1,7 @@
 package com.tangem.domain.swap
 
 import com.tangem.domain.express.models.ExpressProvider
+import com.tangem.domain.express.models.ExpressProviderType
 import com.tangem.domain.express.models.ExpressRateType
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.swap.models.SwapDataModel
@@ -23,11 +24,13 @@ interface SwapRepositoryV2 {
      * @param userWallet selected user wallet
      * @param initialCurrency currency being swapped (either to or from)
      * @param cryptoCurrencyStatusList list of currencies might be swapped
+     * @param filterProviderTypes filters only specified provider types, if empty returns providers as is
      */
     suspend fun getPairs(
         userWallet: UserWallet,
         initialCurrency: CryptoCurrency,
         cryptoCurrencyStatusList: List<CryptoCurrencyStatus>,
+        filterProviderTypes: List<ExpressProviderType>,
     ): List<SwapPairModel>
 
     /** Express getPairs request variant without providers request */
