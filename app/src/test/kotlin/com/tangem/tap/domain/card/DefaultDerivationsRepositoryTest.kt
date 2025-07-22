@@ -11,8 +11,8 @@ import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.card.ScanCardException
 import com.tangem.domain.common.configs.GenericCardConfig
 import com.tangem.domain.common.configs.MultiWalletCardConfig
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.operations.derivation.DerivationTaskResponse
 import com.tangem.tap.domain.sdk.impl.DefaultTangemSdkManager
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
