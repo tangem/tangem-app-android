@@ -8,7 +8,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.tokens.error.QuotesError
 import com.tangem.domain.tokens.repository.CurrenciesRepository
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope

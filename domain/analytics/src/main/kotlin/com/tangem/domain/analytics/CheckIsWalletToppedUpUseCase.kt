@@ -6,7 +6,7 @@ import arrow.core.raise.catch
 import arrow.core.raise.either
 import com.tangem.domain.analytics.model.WalletBalanceState
 import com.tangem.domain.analytics.repository.AnalyticsRepository
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 
 /**
  * Check if wallet has been topped up now.

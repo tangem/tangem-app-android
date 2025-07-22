@@ -12,7 +12,7 @@ import com.tangem.domain.tokens.GetWalletTotalBalanceUseCase
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.TotalFiatBalance
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import timber.log.Timber
