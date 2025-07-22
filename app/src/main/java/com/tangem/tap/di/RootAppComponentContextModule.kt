@@ -30,8 +30,10 @@ internal object RootAppComponentContextModule {
         componentBuilder: ModelComponent.Builder,
         @GlobalUiMessageSender messageSender: UiMessageSender,
     ): AppComponentContext {
+        val activity = context as AppCompatActivity
         return DefaultAppComponentContext(
-            componentContext = (context as AppCompatActivity).defaultComponentContext(),
+            componentContext = activity.defaultComponentContext(),
+            activity = activity,
             dispatchers = dispatchers,
             hiltComponentBuilder = componentBuilder,
             messageSender = messageSender,

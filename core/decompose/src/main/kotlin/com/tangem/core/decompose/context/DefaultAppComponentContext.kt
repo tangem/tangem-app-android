@@ -1,5 +1,6 @@
 package com.tangem.core.decompose.context
 
+import androidx.appcompat.app.AppCompatActivity
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.essenty.instancekeeper.getOrCreate
 import com.tangem.core.decompose.di.ModelComponent
@@ -17,6 +18,7 @@ class DefaultAppComponentContext(
     override val dispatchers: CoroutineDispatcherProvider,
     override val hiltComponentBuilder: ModelComponent.Builder,
     override val messageSender: UiMessageSender,
+    override val activity: AppCompatActivity,
     private val replaceRouter: Router? = null,
 ) : AppComponentContext, ComponentContext by componentContext {
 
