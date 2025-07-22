@@ -7,6 +7,10 @@ plugins {
     id("configuration")
 }
 
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+}
+
 dependencies {
     api(projects.domain.visa.models)
     api(projects.core.utils)
@@ -17,4 +21,9 @@ dependencies {
     implementation(deps.kotlin.serialization)
     ksp(deps.moshi.kotlin.codegen)
     implementation(deps.arrow.core)
+
+    testImplementation(deps.test.junit5)
+    testRuntimeOnly(deps.test.junit5.engine)
+    testImplementation(deps.test.truth)
+    testImplementation(deps.test.mockk)
 }
