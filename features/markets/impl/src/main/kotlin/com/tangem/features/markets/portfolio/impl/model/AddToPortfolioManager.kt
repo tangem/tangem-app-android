@@ -1,5 +1,6 @@
 package com.tangem.features.markets.portfolio.impl.model
 
+import com.tangem.domain.markets.FilterAvailableNetworksForWalletUseCase
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
@@ -16,7 +17,9 @@ internal typealias WalletsWithNetworks = Map<UserWalletId, Set<TokenMarketInfo.N
  *
 [REDACTED_AUTHOR]
  */
-internal class AddToPortfolioManager @Inject constructor() {
+internal class AddToPortfolioManager @Inject constructor(
+    private val filterAvailableNetworksForWalletUseCase: FilterAvailableNetworksForWalletUseCase,
+) {
 
     val availableNetworks = MutableStateFlow<Set<TokenMarketInfo.Network>?>(value = null)
     private val addedNetworks = MutableStateFlow<WalletsWithNetworks>(value = emptyMap())
@@ -62,6 +65,31 @@ internal class AddToPortfolioManager @Inject constructor() {
 
         removedNetworks.update {
             it.toMutableMap().apply { remove(userWalletId) }
+        }
+    }
+
+    fun associateWithToggle(
+        userWalletId: UserWalletId,
+        alreadyAddedNetworkIds: Set<String>,
+        addToPortfolioData: AddToPortfolioData,
+    ): Map<TokenMarketInfo.Network, Boolean> {
+        val filteredNetworks = filterAvailableNetworksForWalletUseCase(
+            userWalletId = userWalletId,
+            networks = addToPortfolioData.availableNetworks.orEmpty(),
+        )
+        // Use user choice or check already added networks
+        return filteredNetworks.associateWith { availableNetwork ->
+            val isAddedByUser = addToPortfolioData.addedNetworks[userWalletId]?.contains(availableNetwork)
+
+            if (isAddedByUser == true) return@associateWith true
+
+            val isRemovedByUser = addToPortfolioData.removedNetworks[userWalletId]?.contains(availableNetwork)
+
+            if (isRemovedByUser == true) return@associateWith false
+
+            val isAddedBefore = alreadyAddedNetworkIds.any { it == availableNetwork.networkId }
+
+            isAddedBefore
         }
     }
 
@@ -121,36 +149,8 @@ internal class AddToPortfolioManager @Inject constructor() {
     data class AddToPortfolioData(
         val availableNetworks: Set<TokenMarketInfo.Network>?,
         val addedNetworks: WalletsWithNetworks,
-        private val removedNetworks: WalletsWithNetworks,
+        val removedNetworks: WalletsWithNetworks,
     ) {
-
-        /**
-         * Associate network with toggle. If user changed toggle state then use it, otherwise check state by already
-         * added networks.
-         *
-         * @param userWalletId           user wallet id
-         * @param alreadyAddedNetworkIds already added network ids
-         */
-        fun associateWithToggle(
-            userWalletId: UserWalletId,
-            alreadyAddedNetworkIds: Set<String>,
-        ): Map<TokenMarketInfo.Network, Boolean> {
-            // Use user choice or check already added networks
-            return availableNetworks?.associateWith { availableNetwork ->
-                val isAddedByUser = addedNetworks[userWalletId]?.contains(availableNetwork)
-
-                if (isAddedByUser == true) return@associateWith true
-
-                val isRemovedByUser = removedNetworks[userWalletId]?.contains(availableNetwork)
-
-                if (isRemovedByUser == true) return@associateWith false
-
-                val isAddedBefore = alreadyAddedNetworkIds.any { it == availableNetwork.networkId }
-
-                isAddedBefore
-            }
-                .orEmpty()
-        }
 
         fun isUserAddedNetworks(userWalletId: UserWalletId): Boolean {
             return addedNetworks[userWalletId].orEmpty().isNotEmpty()

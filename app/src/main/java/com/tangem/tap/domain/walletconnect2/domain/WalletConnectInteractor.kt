@@ -16,6 +16,7 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.models.isMultiCurrency
 import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
+import com.tangem.features.walletconnect.components.WalletConnectFeatureToggles
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.filterNotNull
 import com.tangem.tap.domain.walletconnect.WalletConnectSdkHelper
@@ -39,8 +40,10 @@ class WalletConnectInteractor(
     private val walletManagersFacade: WalletManagersFacade,
     private val currenciesRepository: CurrenciesRepository,
     private val userWalletsListManager: UserWalletsListManager,
+    private val walletConnectFeatureToggles: WalletConnectFeatureToggles,
     val blockchainHelper: WcBlockchainHelper,
 ) {
+    private val isNewWc by lazy { walletConnectFeatureToggles.isRedesignedWalletConnectEnabled }
 
     private var isWalletConnectReadyForDeepLinks = false
 
@@ -88,6 +91,7 @@ class WalletConnectInteractor(
     }
 
     private fun initWithWallet(userWallet: UserWallet) {
+        if (isNewWc) return
         if (userWallet.isMultiCurrency) {
             Timber.i("WalletConnect: initialize and setup networks for ${userWallet.walletId}")
             startListeningWc(userWallet.walletId.stringValue, getCardId(userWallet))
@@ -243,6 +247,7 @@ class WalletConnectInteractor(
     }
 
     fun approveSessionProposal(accounts: List<Account>) {
+        if (isNewWc) return
         Timber.i("Approve session proposal: $accounts")
         val userNamespaces: Map<NetworkNamespace, List<Account>> = accounts
             .groupBy { account ->
@@ -259,16 +264,19 @@ class WalletConnectInteractor(
     }
 
     fun rejectSessionProposal() {
+        if (isNewWc) return
         Timber.i("Reject session proposal")
         walletConnectRepository.reject()
     }
 
     fun disconnectSession(topic: String) {
+        if (isNewWc) return
         Timber.i("Disconnect session: $topic")
         walletConnectRepository.disconnect(topic)
     }
 
     fun cancelRequest(topic: String, id: Long) {
+        if (isNewWc) return
         Timber.i("Cancel request: $topic, $id")
         walletConnectRepository.cancelRequest(topic, id)
     }
@@ -323,6 +331,7 @@ class WalletConnectInteractor(
     }
 
     suspend fun continueWithRequest(request: WcPreparedRequest) {
+        if (isNewWc) return
         val currentRequest = this.currentRequest
         if (currentRequest == null || request.topic != currentRequest.topic) return
 
@@ -386,6 +395,7 @@ class WalletConnectInteractor(
      * @param deeplink deeplink to handle
      */
     fun addDeeplink(deeplink: String) {
+        if (isNewWc) return
         val deeplinkRegex = Regex(WC_PARAM_REGEX)
         val matched = deeplinkRegex.findAll(deeplink)
         val sessionTopic = matched.firstOrNull { it.value.contains(WC_TOPIC_QUERY_NAME) }?.groupValues?.lastOrNull()
