@@ -41,6 +41,7 @@ import com.tangem.feature.walletsettings.entity.WalletSettingsItemUM
 import com.tangem.feature.walletsettings.entity.WalletSettingsUM
 import com.tangem.feature.walletsettings.impl.R
 import com.tangem.feature.walletsettings.utils.ItemsBuilder
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.PersistentList
@@ -72,6 +73,7 @@ internal class WalletSettingsModel @Inject constructor(
     private val setNotificationsEnabledUseCase: SetNotificationsEnabledUseCase,
     private val settingsManager: SettingsManager,
     private val permissionsRepository: PermissionRepository,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
 ) : Model() {
 
     val params: WalletSettingsComponent.Params = paramsContainer.require()
@@ -105,6 +107,7 @@ internal class WalletSettingsModel @Inject constructor(
                         isNotificationsEnabled = notificationsEnabled,
                         isNotificationsFeatureEnabled = notificationsToggles.isNotificationsEnabled,
                         isNotificationsPermissionGranted = isNotificationsPermissionGranted(),
+                        isHotWalletEnabled = hotWalletFeatureToggles.isHotWalletEnabled,
                     ),
                 )
             }
@@ -130,6 +133,7 @@ internal class WalletSettingsModel @Inject constructor(
         isNotificationsFeatureEnabled: Boolean,
         isNotificationsEnabled: Boolean,
         isNotificationsPermissionGranted: Boolean,
+        isHotWalletEnabled: Boolean,
     ): PersistentList<WalletSettingsItemUM> = itemsBuilder.buildItems(
         userWalletId = userWallet.walletId,
         userWalletName = userWallet.name,
@@ -167,6 +171,7 @@ internal class WalletSettingsModel @Inject constructor(
         isNotificationsPermissionGranted = isNotificationsPermissionGranted,
         onCheckedNotificationsChanged = ::onCheckedNotificationsChange,
         onNotificationsDescriptionClick = ::onNotificationsDescriptionClick,
+        isHotWalletEnabled = isHotWalletEnabled,
     )
 
     private fun openRenameWalletDialog(userWallet: UserWallet, dialogNavigation: SlotNavigation<DialogConfig>) {
