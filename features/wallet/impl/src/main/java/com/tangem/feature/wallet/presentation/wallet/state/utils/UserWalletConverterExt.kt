@@ -1,7 +1,7 @@
 package com.tangem.feature.wallet.presentation.wallet.state.utils
 
 import com.tangem.domain.common.util.cardTypesResolver
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 
 internal inline fun UserWallet.createStateByWalletType(
