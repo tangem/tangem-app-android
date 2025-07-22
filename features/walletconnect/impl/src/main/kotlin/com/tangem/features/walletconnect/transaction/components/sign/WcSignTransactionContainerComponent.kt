@@ -40,6 +40,9 @@ internal class WcSignTransactionContainerComponent(
     }
 
     private fun createTransactionComponent(appComponentContext: AppComponentContext): WcSignTransactionComponent {
-        return WcSignTransactionComponent(appComponentContext = appComponentContext, model = model)
+        return WcSignTransactionComponent(
+            appComponentContext = appComponentContext,
+            model = model,
+        )
     }
 }

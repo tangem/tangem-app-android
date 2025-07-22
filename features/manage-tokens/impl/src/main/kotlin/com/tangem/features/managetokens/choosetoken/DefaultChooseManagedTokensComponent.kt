@@ -7,20 +7,27 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.slot.childSlot
+import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.core.decompose.context.AppComponentContext
+import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.features.managetokens.choosetoken.entity.ChooseManageTokensBottomSheetConfig
 import com.tangem.features.managetokens.choosetoken.model.ChooseManagedTokensModel
 import com.tangem.features.managetokens.choosetoken.ui.ChooseManagedTokenContent
 import com.tangem.features.managetokens.component.ChooseManagedTokensComponent
+import com.tangem.features.swap.v2.api.choosetoken.SwapChooseTokenNetworkComponent
+import com.tangem.features.swap.v2.api.choosetoken.SwapChooseTokenNetworkTrigger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.launch
 
 internal class DefaultChooseManagedTokensComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
     @Assisted private val params: ChooseManagedTokensComponent.Params,
+    private val swapChooseTokenNetworkFactory: SwapChooseTokenNetworkComponent.Factory,
+    private val swapChooseTokenNetworkTrigger: SwapChooseTokenNetworkTrigger,
 ) : ChooseManagedTokensComponent, AppComponentContext by context {
 
     private val model: ChooseManagedTokensModel = getOrCreateModel(params)
@@ -48,18 +55,21 @@ internal class DefaultChooseManagedTokensComponent @AssistedInject constructor(
         config: ChooseManageTokensBottomSheetConfig,
         componentContext: ComponentContext,
     ): ComposableBottomSheetComponent = when (config) {
-        else -> getStubComponent()
-    }
-
-    private fun getStubComponent() = StubComponent()
-
-    class StubComponent : ComposableBottomSheetComponent {
-        override fun dismiss() {}
-
-        @Composable
-        override fun BottomSheet() {
-            /* no-op */
-        }
+        is ChooseManageTokensBottomSheetConfig.SwapTokensBottomSheetConfig -> swapChooseTokenNetworkFactory.create(
+            context = childByContext(componentContext),
+            params = SwapChooseTokenNetworkComponent.Params(
+                userWalletId = config.userWalletId,
+                initialCurrency = config.initialCurrency,
+                token = config.token,
+                onDismiss = model.bottomSheetNavigation::dismiss,
+                onResult = {
+                    componentScope.launch {
+                        swapChooseTokenNetworkTrigger.trigger(it)
+                    }
+                    router.pop()
+                },
+            ),
+        )
     }
 
     @AssistedFactory

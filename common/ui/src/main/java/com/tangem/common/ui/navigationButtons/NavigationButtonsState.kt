@@ -35,5 +35,6 @@ data class NavigationButton(
     val showProgress: Boolean = false,
     val isEnabled: Boolean = true,
     val isDimmed: Boolean = false,
+    val isHapticClick: Boolean = false,
     val onClick: () -> Unit,
 )
