@@ -13,7 +13,7 @@ import com.tangem.domain.common.configs.GenericCardConfig
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 
 /**
 [REDACTED_AUTHOR]

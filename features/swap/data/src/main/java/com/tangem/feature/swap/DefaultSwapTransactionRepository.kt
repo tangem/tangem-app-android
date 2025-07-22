@@ -8,7 +8,7 @@ import com.tangem.datasource.local.preferences.utils.getObjectList
 import com.tangem.datasource.local.preferences.utils.getObjectListSync
 import com.tangem.datasource.local.preferences.utils.getObjectMap
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.swap.converters.SavedSwapTransactionListConverter
 import com.tangem.feature.swap.domain.SwapTransactionRepository
