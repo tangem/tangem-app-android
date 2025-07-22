@@ -16,6 +16,7 @@ enum class TangemButtonSize {
     RoundedAction,
     WideAction,
     TwoLines,
+    Small,
 }
 
 @Composable
@@ -28,6 +29,7 @@ internal fun TangemButtonSize.toHeightDp(): Dp = when (this) {
     TangemButtonSize.RoundedAction,
     -> TangemTheme.dimens.size36
     TangemButtonSize.WideAction -> TangemTheme.dimens.size40
+    TangemButtonSize.Small -> 24.dp
 }
 
 @Composable
@@ -40,6 +42,7 @@ internal fun TangemButtonSize.toShape(): Shape = when (this) {
     TangemButtonSize.Action -> TangemTheme.shapes.roundedCornersMedium
     TangemButtonSize.TwoLines -> TangemTheme.shapes.roundedCornersXMedium
     TangemButtonSize.RoundedAction -> TangemTheme.shapes.roundedCornersLarge
+    TangemButtonSize.Small -> TangemTheme.shapes.roundedCornersXMedium
 }
 
 @Composable
@@ -48,6 +51,7 @@ internal fun TangemButtonSize.toIconPadding(): Dp = when (this) {
     TangemButtonSize.Default,
     TangemButtonSize.WideAction,
     TangemButtonSize.TwoLines,
+    TangemButtonSize.Small,
     -> TangemTheme.dimens.spacing4
     TangemButtonSize.Text -> TangemTheme.dimens.spacing8
     TangemButtonSize.Selector -> 0.dp
@@ -100,11 +104,18 @@ internal fun TangemButtonSize.toContentPadding(icon: TangemButtonIconPosition): 
             start = horizontalPadding.first,
             end = horizontalPadding.second,
         )
+        TangemButtonSize.Small -> PaddingValues(
+            top = TangemTheme.dimens.spacing4,
+            bottom = TangemTheme.dimens.spacing4,
+            start = horizontalPadding.first,
+            end = horizontalPadding.second,
+        )
     }
 }
 
 @Composable
 @ReadOnlyComposable
+@Suppress("CyclomaticComplexMethod")
 internal fun TangemButtonSize.toHorizontalContentPadding(icon: TangemButtonIconPosition): Pair<Dp, Dp> {
     return when (this) {
         TangemButtonSize.Default,
@@ -123,6 +134,11 @@ internal fun TangemButtonSize.toHorizontalContentPadding(icon: TangemButtonIconP
             is TangemButtonIconPosition.None -> TangemTheme.dimens.spacing24 to TangemTheme.dimens.spacing24
             is TangemButtonIconPosition.Start -> TangemTheme.dimens.spacing16 to TangemTheme.dimens.spacing24
             is TangemButtonIconPosition.End -> TangemTheme.dimens.spacing24 to TangemTheme.dimens.spacing16
+        }
+        TangemButtonSize.Small -> when (icon) {
+            is TangemButtonIconPosition.None -> TangemTheme.dimens.spacing12 to TangemTheme.dimens.spacing12
+            is TangemButtonIconPosition.Start -> TangemTheme.dimens.spacing8 to TangemTheme.dimens.spacing12
+            is TangemButtonIconPosition.End -> TangemTheme.dimens.spacing12 to TangemTheme.dimens.spacing8
         }
     }
 }

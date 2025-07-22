@@ -1,5 +1,6 @@
 package com.tangem.core.deeplink.converter
 
+import android.os.Bundle
 import com.tangem.common.routing.DeepLinkRoute
 import com.tangem.common.routing.DeepLinkScheme
 import com.tangem.core.deeplink.DEEPLINK_KEY
@@ -22,13 +23,25 @@ object PayloadToDeeplinkConverter : Converter<Map<String, String>, String?> {
         }
     }
 
+    fun convertBundle(bundle: Bundle?): String? {
+        if (bundle == null) return null
+        val bundleDataMap = mutableMapOf<String, String>()
+        for (key in bundle.keySet()) {
+            val value = bundle.getString(key)
+            if (value != null) {
+                bundleDataMap[key] = value
+            }
+        }
+        return convert(bundleDataMap)
+    }
+
     @Suppress("ReturnCount")
     private fun buildNotificationDeeplink(payload: Map<String, String>): String? {
         val type = payload[TYPE_KEY] ?: return null
         val networkId = payload[NETWORK_ID_KEY] ?: return null
         val tokenId = payload[TOKEN_ID_KEY] ?: return null
         val walletId = payload[WALLET_ID_KEY] ?: return null
-        val derivationPath = payload[DERIVATION_PATH_KEY] ?: return null
+        val derivationPath = payload[DERIVATION_PATH_KEY].orEmpty()
         val transactionId = payload[TRANSACTION_ID_KEY]
         val name = payload[NAME_KEY]
 
@@ -38,7 +51,9 @@ object PayloadToDeeplinkConverter : Converter<Map<String, String>, String?> {
             addQueryParam(TOKEN_ID_KEY, tokenId)
             addQueryParam(TYPE_KEY, type)
             addQueryParam(WALLET_ID_KEY, walletId)
-            addQueryParam(DERIVATION_PATH_KEY, derivationPath)
+            if (derivationPath.isNotBlank()) {
+                addQueryParam(DERIVATION_PATH_KEY, derivationPath)
+            }
 
             transactionId?.let { addQueryParam(TRANSACTION_ID_KEY, it) }
             name?.let { addQueryParam(NAME_KEY, it) }
@@ -49,7 +64,6 @@ object PayloadToDeeplinkConverter : Converter<Map<String, String>, String?> {
         return payload.containsKey(TYPE_KEY) &&
             payload.containsKey(NETWORK_ID_KEY) &&
             payload.containsKey(TOKEN_ID_KEY) &&
-            payload.containsKey(WALLET_ID_KEY) &&
-            payload.containsKey(DERIVATION_PATH_KEY)
+            payload.containsKey(WALLET_ID_KEY)
     }
 }

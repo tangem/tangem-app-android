@@ -11,5 +11,6 @@ sealed class VisaAuthSignedChallenge {
     data class ByWallet(
         val challenge: VisaAuthChallenge.Wallet,
         val signature: String,
+        val salt: String,
     ) : VisaAuthSignedChallenge()
 }

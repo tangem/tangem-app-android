@@ -108,6 +108,7 @@ internal class DeepLinkFactory @Inject constructor(
         }
     }
 
+    @Suppress("CyclomaticComplexMethod")
     private fun handleTangemDeepLinks(deeplinkUri: Uri, coroutineScope: CoroutineScope, isFromOnNewIntent: Boolean) {
         val queryParams = getQueryParams(deeplinkUri)
         when (deeplinkUri.host) {
@@ -127,6 +128,7 @@ internal class DeepLinkFactory @Inject constructor(
             DeepLinkRoute.Buy.host -> buyDeepLink.create()
             DeepLinkRoute.Sell.host -> sellDeepLink.create()
             DeepLinkRoute.Swap.host -> swapDeepLink.create()
+            DeepLinkRoute.WalletConnect.host -> walletConnectDeepLink.create(deeplinkUri)
             else -> {
                 Timber.i(
                     """
