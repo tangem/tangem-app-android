@@ -2,10 +2,10 @@ package com.tangem.common
 
 import android.app.Application
 import android.content.Context
-import androidx.test.runner.AndroidJUnitRunner
+import com.kaspersky.kaspresso.runner.KaspressoRunner
 import com.tangem.common.di.TangemMockedApplication_Application
 
-class HiltTestRunner : AndroidJUnitRunner() {
+class HiltTestRunner : KaspressoRunner() {
 
     override fun newApplication(
         cl: ClassLoader?,
