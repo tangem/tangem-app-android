@@ -8,7 +8,7 @@ import com.tangem.blockchainsdk.utils.toCoinId
 import com.tangem.data.common.network.NetworkFactory
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 import timber.log.Timber
 import com.tangem.blockchain.common.Token as SdkToken
 
