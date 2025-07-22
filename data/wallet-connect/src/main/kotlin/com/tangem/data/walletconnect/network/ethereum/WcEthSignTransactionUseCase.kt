@@ -3,7 +3,7 @@ package com.tangem.data.walletconnect.network.ethereum
 import arrow.core.left
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.blockchains.ethereum.tokenmethods.ApprovalERC20TokenCallData
-import com.tangem.blockchain.common.Amount
+import com.tangem.blockchain.common.Amount as BlockchainAmount
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.extensions.formatHex
@@ -15,13 +15,11 @@ import com.tangem.data.walletconnect.sign.SignCollector
 import com.tangem.data.walletconnect.sign.SignStateConverter.toResult
 import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
 import com.tangem.data.walletconnect.utils.BlockAidVerificationDelegate
+import com.tangem.domain.tokens.model.Amount
 import com.tangem.domain.transaction.usecase.PrepareForSendUseCase
+import com.tangem.domain.walletconnect.model.WcApprovedAmount
 import com.tangem.domain.walletconnect.model.WcEthMethod
-import com.tangem.domain.walletconnect.usecase.method.BlockAidTransactionCheck
-import com.tangem.domain.walletconnect.usecase.method.WcApproval
-import com.tangem.domain.walletconnect.usecase.method.WcMutableFee
-import com.tangem.domain.walletconnect.usecase.method.WcSignState
-import com.tangem.domain.walletconnect.usecase.method.WcTransactionUseCase
+import com.tangem.domain.walletconnect.usecase.method.*
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -43,7 +41,7 @@ internal class WcEthSignTransactionUseCase @AssistedInject constructor(
     WcApproval,
     WcMutableFee {
 
-    private var approvalAmount: Amount? = null
+    private var approvalAmount: WcApprovedAmount? = null
     private var dAppFee = WcEthTxHelper.getDAppFee(
         network = context.network,
         txParams = method.transaction,
@@ -61,10 +59,14 @@ internal class WcEthSignTransactionUseCase @AssistedInject constructor(
                 ?: return@map BlockAidTransactionCheck.Result.Plain(result)
             val tokenInfo = amount.tokenInfo
             if (!amount.isUnlimited) {
-                approvalAmount = Amount(
-                    currencySymbol = tokenInfo.symbol,
-                    decimals = tokenInfo.decimals,
-                    value = amount.approvedAmount,
+                approvalAmount = WcApprovedAmount(
+                    amount = Amount(
+                        currencySymbol = tokenInfo.symbol,
+                        decimals = tokenInfo.decimals,
+                        value = amount.approvedAmount,
+                    ),
+                    logoUrl = tokenInfo.logoUrl,
+                    chainId = tokenInfo.chainId,
                 )
             }
             BlockAidTransactionCheck.Result.Approval(
@@ -98,7 +100,9 @@ internal class WcEthSignTransactionUseCase @AssistedInject constructor(
                 val extras = uncompiled.extras as EthereumTransactionExtras
                 val callData = ApprovalERC20TokenCallData(
                     spenderAddress = uncompiled.sourceAddress,
-                    amount = action.amount,
+                    amount = action.amount?.amount?.let {
+                        BlockchainAmount(currencySymbol = it.currencySymbol, decimals = it.decimals, value = it.value)
+                    },
                 )
                 approvalAmount = action.amount
                 dAppFee = null
@@ -123,15 +127,15 @@ internal class WcEthSignTransactionUseCase @AssistedInject constructor(
         emitAll(delegate.invoke(transactionData))
     }
 
-    override suspend fun dAppFee(): Fee.Ethereum.Legacy? {
+    override fun dAppFee(): Fee.Ethereum.Legacy? {
         return dAppFee
     }
 
-    override suspend fun getAmount(): Amount? {
+    override fun getAmount(): WcApprovedAmount? {
         return approvalAmount
     }
 
-    override fun updateAmount(amount: Amount?) {
+    override fun updateAmount(amount: WcApprovedAmount?) {
         middleAction(WcEthTxAction.UpdateApprovalAmount(amount))
     }
 
