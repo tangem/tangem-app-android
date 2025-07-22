@@ -1,13 +1,13 @@
 package com.tangem.data.walletconnect.pair
 
 import com.reown.walletkit.client.Wallet
+import com.tangem.data.walletconnect.model.CAIP10
 import com.tangem.data.walletconnect.utils.WcNamespaceConverter
 import com.tangem.data.walletconnect.utils.WcNetworksConverter
 import com.tangem.domain.models.network.Network
-import com.tangem.data.walletconnect.model.CAIP10
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.walletconnect.model.WcSessionApprove
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.models.UserWalletId
 
 internal class CaipNamespaceDelegate(
     private val namespaceConverters: Set<WcNamespaceConverter>,
