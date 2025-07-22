@@ -12,7 +12,7 @@ import com.tangem.domain.common.util.getCardsCount
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.visa.exception.RefreshTokenExpiredException
 import com.tangem.domain.visa.model.VisaCurrency
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.state.model.BalancesAndLimitsBlockState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletAdditionalInfo
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
