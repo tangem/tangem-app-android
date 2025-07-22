@@ -1,12 +1,10 @@
 package com.tangem.data.common.di
 
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
-import com.tangem.data.common.currency.CardCryptoCurrencyFactory
-import com.tangem.data.common.currency.DefaultCardCryptoCurrencyFactory
-import com.tangem.data.common.currency.UserTokensResponseAddressesEnricher
-import com.tangem.data.common.currency.UserTokensSaver
+import com.tangem.data.common.currency.*
+import com.tangem.data.common.quote.DefaultQuotesFetcher
+import com.tangem.data.common.quote.QuotesFetcher
 import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.demo.DemoConfig
@@ -30,12 +28,14 @@ internal object DataCommonModule {
         excludedBlockchains: ExcludedBlockchains,
         userWalletsStore: UserWalletsStore,
         userTokensResponseStore: UserTokensResponseStore,
+        responseCryptoCurrenciesFactory: ResponseCryptoCurrenciesFactory,
     ): CardCryptoCurrencyFactory {
         return DefaultCardCryptoCurrencyFactory(
             demoConfig = DemoConfig(),
             excludedBlockchains = excludedBlockchains,
             userWalletsStore = userWalletsStore,
             userTokensResponseStore = userTokensResponseStore,
+            responseCryptoCurrenciesFactory = responseCryptoCurrenciesFactory,
         )
     }
 
@@ -59,15 +59,21 @@ internal object DataCommonModule {
     @Singleton
     fun provideUserTokensSaver(
         tangemTechApi: TangemTechApi,
-        appPreferencesStore: AppPreferencesStore,
+        userTokensResponseStore: UserTokensResponseStore,
         dispatchers: CoroutineDispatcherProvider,
         enricher: UserTokensResponseAddressesEnricher,
     ): UserTokensSaver {
         return UserTokensSaver(
             tangemTechApi = tangemTechApi,
-            appPreferencesStore = appPreferencesStore,
+            userTokensResponseStore = userTokensResponseStore,
             dispatchers = dispatchers,
             userTokensResponseAddressesEnricher = enricher,
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideQuotesFetcher(tangemTechApi: TangemTechApi, dispatchers: CoroutineDispatcherProvider): QuotesFetcher {
+        return DefaultQuotesFetcher(tangemTechApi = tangemTechApi, dispatchers = dispatchers)
     }
 }

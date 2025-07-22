@@ -8,4 +8,5 @@ internal data class WcTransactionActionsUM(
     val onDismiss: () -> Unit,
     val onSign: () -> Unit,
     val onCopy: () -> Unit,
+    val onShowFeeBottomSheet: () -> Unit = {},
 )

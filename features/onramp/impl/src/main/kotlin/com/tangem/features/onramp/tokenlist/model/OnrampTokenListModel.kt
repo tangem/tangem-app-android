@@ -147,7 +147,7 @@ internal class OnrampTokenListModel @Inject constructor(
     private fun Lce<TokenListError, TokenList>.isInsufficientBalanceForSell(): Boolean {
         return if (params.filterOperation == OnrampOperation.SELL) {
             isContent {
-                (it.totalFiatBalance as? TotalFiatBalance.Loaded)?.amount?.isZero() ?: false
+                (it.totalFiatBalance as? TotalFiatBalance.Loaded)?.amount?.isZero() == true
             }
         } else {
             false
@@ -235,7 +235,11 @@ internal class OnrampTokenListModel @Inject constructor(
                 ).isAvailable()
             }
             OnrampOperation.SELL -> {
-                rampStateManager.availableForSell(userWallet = userWallet, status = status).isRight()
+                rampStateManager.availableForSell(
+                    userWalletId = userWallet.walletId,
+                    status = status,
+                    sendUnavailabilityReason = null,
+                ).isRight()
             }
             OnrampOperation.SWAP -> {
                 val isAvailable = rampStateManager.availableForSwap(

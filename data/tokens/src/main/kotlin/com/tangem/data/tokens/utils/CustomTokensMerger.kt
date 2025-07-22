@@ -4,6 +4,7 @@ import arrow.atomic.AtomicBoolean
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.datasource.api.tangemTech.TangemTechApi
+import com.tangem.datasource.api.tangemTech.models.CoinsResponse
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -15,11 +16,15 @@ import timber.log.Timber
 /**
  * Responsible for merging custom tokens into a user's token response.
  * It handles the logic to update tokens with additional details if necessary.
+ *
+ * @property tangemTechApi   Tangem Tech API
+ * @property userTokensSaver user tokens saver
+ * @property dispatchers     dispatchers
  */
 internal class CustomTokensMerger(
     private val tangemTechApi: TangemTechApi,
-    private val dispatchers: CoroutineDispatcherProvider,
     private val userTokensSaver: UserTokensSaver,
+    private val dispatchers: CoroutineDispatcherProvider,
 ) {
 
     /**
@@ -29,21 +34,17 @@ internal class CustomTokensMerger(
      * is needed, and if so, updating the token from [TangemTechApi.getCoins] response. It then pushes to the backend
      * and returns an updated UserTokensResponse.
      *
-     * @param userWalletId The identifier for the user's wallet, used when pushing updates.
-     * @param response The original user tokens response that may need to be updated.
-     * @return A potentially updated UserTokensResponse, with custom tokens merged if necessary.
+     * @param userWalletId the identifier for the user's wallet, used when pushing updates
+     * @param response     the original user tokens response that may need to be updated
+     *
+     * @return a potentially updated UserTokensResponse, with custom tokens merged if necessary
      */
     suspend fun mergeIfPresented(userWalletId: UserWalletId, response: UserTokensResponse): UserTokensResponse {
         // use flag to check: we can't compare two token list after merge because Token equals don't include some fields
         val wasMerged = AtomicBoolean(false)
 
-        val mergedTokens = withContext(dispatchers.default) {
-            response.tokens
-                .map { token ->
-                    async { mergeIfPresented(token, wasMerged) }
-                }
-                .awaitAll()
-        }
+        val mergedTokens = mergeTokens(response = response, wasMerged = wasMerged)
+
         val updatedResponse = response.copy(tokens = mergedTokens)
 
         // previously here was used compare response.tokens, but it's not working correctly
@@ -55,33 +56,48 @@ internal class CustomTokensMerger(
         return updatedResponse
     }
 
-    private suspend fun mergeIfPresented(
-        token: UserTokensResponse.Token,
+    private suspend fun mergeTokens(
+        response: UserTokensResponse,
         wasMerged: AtomicBoolean,
-    ): UserTokensResponse.Token {
-        if (isCoinOrNonCustomToken(token)) return token
+    ): List<UserTokensResponse.Token> {
+        return withContext(dispatchers.default) {
+            response.tokens
+                .map { token ->
+                    async {
+                        if (isCoinOrNonCustomToken(token)) return@async token
 
-        return merge(token, wasMerged)
-    }
-
-    private suspend fun merge(
-        customToken: UserTokensResponse.Token,
-        wasMerged: AtomicBoolean,
-    ): UserTokensResponse.Token {
-        val foundToken = fetchToken(customToken)
-        if (foundToken != null) {
-            wasMerged.set(true)
+                        mergeToken(customToken = token, wasMerged = wasMerged)
+                    }
+                }
+                .awaitAll()
         }
-        return foundToken ?: customToken
     }
 
     private fun isCoinOrNonCustomToken(token: UserTokensResponse.Token): Boolean {
         return token.contractAddress.isNullOrEmpty() || token.id != null
     }
 
-    private suspend fun fetchToken(token: UserTokensResponse.Token): UserTokensResponse.Token? {
-        val response = withContext(dispatchers.io) {
-            safeApiCall(
+    private suspend fun mergeToken(
+        customToken: UserTokensResponse.Token,
+        wasMerged: AtomicBoolean,
+    ): UserTokensResponse.Token {
+        val foundToken = findToken(token = customToken)
+
+        return if (foundToken != null) {
+            wasMerged.set(true)
+            customToken.mergeWith(foundToken)
+        } else {
+            customToken
+        }
+    }
+
+    /**
+     * Find a [token] among the cryptocurrencies available for application.
+     * If result is not null, then the token is available and should not be custom.
+     */
+    private suspend fun findToken(token: UserTokensResponse.Token): CoinsResponse.Coin? {
+        return withContext(dispatchers.io) {
+            val response = safeApiCall(
                 call = {
                     tangemTechApi.getCoins(
                         contractAddress = token.contractAddress,
@@ -89,19 +105,20 @@ internal class CustomTokensMerger(
                     ).bind()
                 },
                 onError = {
-                    Timber.w(it, "Unable to fetch token")
+                    Timber.e(it, "Unable to fetch token:\n$token")
                     null
                 },
             )
-        }
-        val foundToken = response?.coins?.firstOrNull() ?: return null
 
-        return token.copy(
-            id = foundToken.id,
-            name = foundToken.name,
-            symbol = foundToken.symbol.ifEmpty {
-                token.symbol
-            },
+            response?.coins?.firstOrNull()
+        }
+    }
+
+    private fun UserTokensResponse.Token.mergeWith(coin: CoinsResponse.Coin): UserTokensResponse.Token {
+        return copy(
+            id = coin.id,
+            name = coin.name,
+            symbol = coin.symbol.ifEmpty { symbol },
         )
     }
 }

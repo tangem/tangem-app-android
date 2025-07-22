@@ -14,6 +14,7 @@ android {
 dependencies {
     /* Project - API */
     implementation(projects.features.manageTokens.api)
+    implementation(projects.features.swapV2.api)
 
     /* Project - Core */
     implementation(projects.core.decompose)
