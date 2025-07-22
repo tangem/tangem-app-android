@@ -11,7 +11,7 @@ import com.tangem.domain.swap.models.SwapStatus
 import com.tangem.domain.swap.models.SwapStatusModel
 import com.tangem.domain.swap.models.SwapTransactionModel
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 
 @Suppress("LongParameterList")
 class SwapTransactionSentUseCase(

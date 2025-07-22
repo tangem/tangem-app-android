@@ -4,18 +4,14 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.extensions.toMapKey
 import com.tangem.crypto.hdWallet.DerivationPath
-import com.tangem.domain.common.CardTypesResolver
-import com.tangem.domain.common.DerivationStyleProvider
-import com.tangem.domain.common.TangemCardTypesResolver
-import com.tangem.domain.common.TangemDerivationStyleProvider
-import com.tangem.domain.common.TangemHotDerivationStyleProvider
+import com.tangem.domain.common.*
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.domain.common.configs.CardConfig
 import com.tangem.domain.common.configs.Wallet2CardConfig
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 
 val ScanResponse.cardTypesResolver: CardTypesResolver
     get() = TangemCardTypesResolver(
@@ -51,7 +47,7 @@ private fun ScanResponse.hasDerivation(blockchain: Blockchain, derivationPath: D
     return if (config is Wallet2CardConfig) {
         // new logic for wallet2
         val primaryCurve = config.primaryCurve(blockchain)
-        primaryCurve?.let { hasDerivation(it, derivationPath) } ?: false
+        primaryCurve?.let { hasDerivation(it, derivationPath) } == true
     } else {
         // leave logic for legacy wallets
         when {
