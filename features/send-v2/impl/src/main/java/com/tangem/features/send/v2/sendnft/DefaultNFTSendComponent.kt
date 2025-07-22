@@ -28,9 +28,9 @@ import com.tangem.features.send.v2.common.utils.safeNextClick
 import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.sendnft.confirm.NFTSendConfirmComponent
 import com.tangem.features.send.v2.sendnft.model.NFTSendModel
-import com.tangem.features.send.v2.subcomponents.destination.SendDestinationComponent
-import com.tangem.features.send.v2.subcomponents.destination.SendDestinationComponentParams
-import com.tangem.features.send.v2.subcomponents.destination.ui.state.DestinationUM
+import com.tangem.features.send.v2.subcomponents.destination.DefaultSendDestinationComponent
+import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationComponentParams
+import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeComponent
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeComponentParams
 import dagger.assisted.Assisted
@@ -93,7 +93,7 @@ internal class DefaultNFTSendComponent @AssistedInject constructor(
                             activeComponent.updateState(model.uiState.value)
                         }
                     }
-                    is SendDestinationComponent -> {
+                    is DefaultSendDestinationComponent -> {
                         analyticsEventHandler.send(
                             CommonSendAnalyticEvents.AddressScreenOpened(categoryName = analyticsCategoryName),
                         )
@@ -132,7 +132,7 @@ internal class DefaultNFTSendComponent @AssistedInject constructor(
     private fun getDestinationComponent(
         factoryContext: AppComponentContext,
         route: CommonSendRoute,
-    ): SendDestinationComponent = SendDestinationComponent(
+    ): DefaultSendDestinationComponent = DefaultSendDestinationComponent(
         appComponentContext = factoryContext,
         params = SendDestinationComponentParams.DestinationParams(
             state = model.uiState.value.destinationUM,
@@ -157,7 +157,7 @@ internal class DefaultNFTSendComponent @AssistedInject constructor(
 
     private fun getFeeComponent(factoryContext: AppComponentContext): ComposableContentComponent {
         val state = model.uiState.value
-        val destinationAddress = (state.destinationUM as? DestinationUM.Content)?.addressTextField?.value
+        val destinationAddress = (state.destinationUM as? DestinationUM.Content)?.addressTextField?.actualAddress
         return if (destinationAddress != null) {
             SendFeeComponent(
                 appComponentContext = factoryContext,

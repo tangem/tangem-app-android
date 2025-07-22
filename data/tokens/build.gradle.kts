@@ -12,6 +12,10 @@ android {
     namespace = "com.tangem.data.tokens"
 }
 
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+}
+
 dependencies {
 
     // region Project - Data
@@ -61,5 +65,14 @@ dependencies {
     implementation(deps.timber)
     ksp(deps.moshi.kotlin.codegen)
     kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
+    // endregion
+
+    // region Tests
+    testImplementation(deps.test.coroutine)
+    testImplementation(deps.test.junit5)
+    testRuntimeOnly(deps.test.junit5.engine)
+    testImplementation(deps.test.mockk)
+    testImplementation(deps.test.truth)
+    testImplementation(projects.common.test)
     // endregion
 }
