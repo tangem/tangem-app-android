@@ -31,9 +31,9 @@ import com.tangem.common.routing.entity.SerializableIntent
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.di.RootAppComponentContext
-import com.tangem.core.deeplink.DEEPLINK_KEY
 import com.tangem.core.deeplink.DeepLinksRegistry
 import com.tangem.core.deeplink.WEBLINK_KEY
+import com.tangem.core.deeplink.converter.PayloadToDeeplinkConverter
 import com.tangem.core.navigation.email.EmailSender
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.UiDependencies
@@ -77,6 +77,7 @@ import com.tangem.tap.routing.utils.DeepLinkFactory
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.FeatureCoroutineExceptionHandler
 import com.tangem.utils.extensions.uriValidate
+import com.tangem.wallet.BuildConfig
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -353,7 +354,9 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         intentProcessor.removeAll()
         // workaround: kill process when activity destroy to avoid state when lock() wallets
         // and navigation to unlock screen was skipped because system kills activity but not process
-        android.os.Process.killProcess(android.os.Process.myPid())
+        if (BuildConfig.BUILD_TYPE != MOCKED_BUILD_TYPE) {
+            android.os.Process.killProcess(android.os.Process.myPid())
+        }
         super.onDestroy()
     }
 
@@ -487,7 +490,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
     private fun handleDeepLink(intent: Intent, isFromOnNewIntent: Boolean) {
         if (routingFeatureToggle.isDeepLinkNavigationEnabled) {
-            val deepLinkExtras = intent.getStringExtra(DEEPLINK_KEY)?.toUri()
+            val deepLinkExtras = PayloadToDeeplinkConverter.convertBundle(intent.extras)?.toUri()
             val webLink = intent.getStringExtra(WEBLINK_KEY)
 
             val receivedDeepLink = intent.data ?: deepLinkExtras
@@ -556,5 +559,6 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
     companion object {
         private const val APP_THEME_LOAD_TIMEOUT = 2
+        private const val MOCKED_BUILD_TYPE = "mocked"
     }
 }
