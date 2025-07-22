@@ -1,6 +1,6 @@
 package com.tangem.features.send.v2.subcomponents.destination.model.transformers
 
-import com.tangem.features.send.v2.subcomponents.destination.ui.state.DestinationRecipientListUM
+import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationRecipientListUM
 import kotlinx.collections.immutable.toPersistentList
 
 internal const val WALLET_DEFAULT_COUNT = 1

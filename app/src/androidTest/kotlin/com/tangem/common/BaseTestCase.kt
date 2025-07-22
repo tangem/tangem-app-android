@@ -1,66 +1,70 @@
 package com.tangem.common
 
 import android.Manifest
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.test.espresso.intent.Intents
 import androidx.test.rule.GrantPermissionRule
-import com.atiurin.ultron.core.compose.config.UltronComposeConfig
-import com.atiurin.ultron.core.compose.createUltronComposeRule
-import com.atiurin.ultron.core.compose.listeners.ComposDebugListener
-import com.atiurin.ultron.core.config.UltronCommonConfig
-import com.atiurin.ultron.core.config.UltronConfig
-import com.atiurin.ultron.core.test.UltronTest
+import com.kaspersky.components.alluresupport.interceptors.step.ScreenshotStepInterceptor
+import com.kaspersky.components.alluresupport.withForcedAllureSupport
+import com.kaspersky.components.composesupport.config.addComposeSupport
+import com.kaspersky.kaspresso.kaspresso.Kaspresso
+import com.kaspersky.kaspresso.testcases.api.testcase.TestCase
+import com.tangem.common.allure.FailedStepScreenshotInterceptor
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.MainActivity
 import dagger.hilt.android.testing.HiltAndroidRule
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
-import org.junit.BeforeClass
 import org.junit.Rule
+import org.junit.rules.RuleChain
+import org.junit.rules.TestRule
 import javax.inject.Inject
 
-abstract class BaseTestCase : UltronTest() {
+abstract class BaseTestCase : TestCase(
+    kaspressoBuilder = Kaspresso.Builder.withForcedAllureSupport(
+        shouldRecordVideo = false
+    ).apply {
+        stepWatcherInterceptors = stepWatcherInterceptors.filter {
+            it !is ScreenshotStepInterceptor
+        }.toMutableList()
+        stepWatcherInterceptors.addAll(
+            listOf(
+                FailedStepScreenshotInterceptor(screenshots)
+            )
+        )
+    }.addComposeSupport()
+) {
+
     @Inject
     lateinit var tangemSdkManager: TangemSdkManager
 
     @Inject
     lateinit var appPreferencesStore: AppPreferencesStore
 
-    @get:Rule(order = 0)
-    val grantPermissionRule: GrantPermissionRule = GrantPermissionRule.grant(
+    private val hiltRule = HiltAndroidRule(this)
+    private val permissionRule =  GrantPermissionRule.grant(
         Manifest.permission.POST_NOTIFICATIONS,
-        Manifest.permission.CAMERA
+        Manifest.permission.CAMERA,
     )
-    @get:Rule(order = 1)
-    val hiltRule = HiltAndroidRule(this)
+    val composeTestRule = createAndroidComposeRule<MainActivity>()
 
-    @get:Rule (order = 2)
-    val injectionRule = ApplicationInjectionExecutionRule()
+    @Rule
+    @JvmField
+    val ruleChain: TestRule = RuleChain
+        .outerRule(hiltRule)
+        .around(ApplicationInjectionExecutionRule())
+        .around(permissionRule)
+        .around(composeTestRule)
 
-    @get:Rule(order = 3)
-    val composeRule = createUltronComposeRule<MainActivity>()
-
-    override val beforeTest: () -> Unit = {
+    protected fun setupHooks(
+        additionalBeforeSection: () -> Unit = {},
+        additionalAfterSection: () -> Unit = {},
+    ) = before {
         hiltRule.inject()
-        runBlocking {
-            delay(INIT_DELAY)
-        }
+        Intents.init()
+        additionalBeforeSection()
+    }.after {
+        additionalAfterSection()
+        Intents.release()
     }
 
-    override val afterTest: () -> Unit = {
-        runBlocking {
-            appPreferencesStore.editData { prefs -> prefs.clear() }
-        }
-    }
-
-    companion object {
-        @BeforeClass
-        @JvmStatic
-        fun config() {
-            UltronConfig.applyRecommended()
-            UltronComposeConfig.applyRecommended()
-            UltronCommonConfig.addListener(ComposDebugListener())
-        }
-
-        private const val INIT_DELAY = 2000L
-    }
 }
