@@ -110,14 +110,10 @@ internal class WcEthNetwork(
     }
 
     internal class NamespaceConverter(
-        private val excludedBlockchains: ExcludedBlockchains,
+        override val excludedBlockchains: ExcludedBlockchains,
     ) : WcNamespaceConverter {
 
         override val namespaceKey: NamespaceKey = NamespaceKey("eip155")
-
-        override fun toNetwork(chainId: String, wallet: UserWallet): Network? {
-            return toNetwork(chainId, wallet, excludedBlockchains)
-        }
 
         override fun toBlockchain(chainId: CAIP2): Blockchain? {
             if (chainId.namespace != namespaceKey.key) return null
