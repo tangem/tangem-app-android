@@ -10,7 +10,7 @@ import com.tangem.domain.common.DerivationStyleProvider
 import com.tangem.domain.common.extensions.canHandleToken
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 import timber.log.Timber
 import javax.inject.Inject
 

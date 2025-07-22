@@ -3,7 +3,7 @@ package com.tangem.feature.wallet.presentation.wallet.loaders.implementors
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.domain.visa.GetVisaCurrencyUseCase
 import com.tangem.domain.visa.GetVisaTxHistoryUseCase
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import javax.inject.Inject

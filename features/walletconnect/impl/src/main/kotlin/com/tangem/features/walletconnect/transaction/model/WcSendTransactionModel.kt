@@ -27,7 +27,7 @@ import com.tangem.domain.walletconnect.WcRequestUseCaseFactory
 import com.tangem.domain.walletconnect.model.WcRequestError
 import com.tangem.domain.walletconnect.model.WcRequestError.Companion.message
 import com.tangem.domain.walletconnect.usecase.method.*
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.features.send.v2.api.callbacks.FeeSelectorModelCallback
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.features.send.v2.api.feeselector.FeeSelectorReloadData
