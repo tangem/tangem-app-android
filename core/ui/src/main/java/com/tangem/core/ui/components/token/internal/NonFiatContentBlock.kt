@@ -9,12 +9,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.test.OrganizeTokensScreenTestTags
 import org.burnoutcrew.reorderable.ReorderableLazyListState
 import org.burnoutcrew.reorderable.detectReorder
 
@@ -53,7 +55,8 @@ private fun DraggableImage(reorderableTokenListState: ReorderableLazyListState?)
                 } else {
                     Modifier
                 },
-            ),
+            )
+            .testTag(OrganizeTokensScreenTestTags.DRAGGABLE_IMAGE),
         contentAlignment = Alignment.Center,
     ) {
         Icon(
