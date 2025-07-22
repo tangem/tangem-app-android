@@ -29,7 +29,9 @@ import kotlinx.collections.immutable.toImmutableList
  *
 [REDACTED_AUTHOR]
  */
+@Suppress("LongParameterList")
 internal class AddToPortfolioBSContentUMFactory(
+    private val addToPortfolioManager: AddToPortfolioManager,
     private val token: TokenMarketParams,
     private val onAddToPortfolioVisibilityChange: (Boolean) -> Unit,
     private val onWalletSelectorVisibilityChange: (Boolean) -> Unit,
@@ -67,9 +69,10 @@ internal class AddToPortfolioBSContentUMFactory(
                         artwork = artworks[selectedWallet.walletId],
                     ),
                     selectNetworkUM = SelectNetworkUMConverter(
-                        networksWithToggle = portfolioUIData.addToPortfolioData.associateWithToggle(
+                        networksWithToggle = addToPortfolioManager.associateWithToggle(
                             userWalletId = selectedWallet.walletId,
                             alreadyAddedNetworkIds = alreadyAddedNetworks,
+                            addToPortfolioData = portfolioUIData.addToPortfolioData,
                         ),
                         alreadyAddedNetworks = alreadyAddedNetworks,
                         onNetworkSwitchClick = onNetworkSwitchClick,
@@ -91,7 +94,7 @@ internal class AddToPortfolioBSContentUMFactory(
                             ),
                         )
                     },
-                    walletSelectorConfig = crateWalletSelectorBSConfig(
+                    walletSelectorConfig = createWalletSelectorBSConfig(
                         isShow = portfolioUIData.portfolioBSVisibilityModel.walletSelectorBSVisibility,
                         portfolioData = portfolioData,
                         selectedWalletId = selectedWallet.walletId,
@@ -121,7 +124,7 @@ internal class AddToPortfolioBSContentUMFactory(
         ).convert(value = this)
     }
 
-    private fun crateWalletSelectorBSConfig(
+    private fun createWalletSelectorBSConfig(
         isShow: Boolean,
         portfolioData: PortfolioData,
         selectedWalletId: UserWalletId,
