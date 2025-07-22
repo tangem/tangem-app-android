@@ -60,7 +60,10 @@ fun AmountTextField(
     modifier: Modifier = Modifier,
     color: Color = TangemTheme.colors.text.primary1,
     backgroundColor: Color = TangemTheme.colors.background.action,
-    visualTransformation: VisualTransformation = AmountVisualTransformation(decimals),
+    visualTransformation: VisualTransformation = AmountVisualTransformation(
+        decimals = decimals,
+        symbolColor = if (value.isBlank()) TangemTheme.colors.text.disabled else color,
+    ),
     keyboardOptions: KeyboardOptions = KeyboardOptions(
         keyboardType = KeyboardType.Number,
     ),

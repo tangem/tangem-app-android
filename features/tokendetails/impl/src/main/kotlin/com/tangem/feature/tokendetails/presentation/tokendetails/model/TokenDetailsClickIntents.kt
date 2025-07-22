@@ -62,6 +62,8 @@ interface TokenDetailsClickIntents {
 
     fun onRetryIncompleteTransactionClick()
 
+    fun onOpenTrustlineClick()
+
     fun onDismissIncompleteTransactionClick()
 
     fun onConfirmDismissIncompleteTransactionClick()

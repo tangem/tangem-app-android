@@ -42,6 +42,12 @@ internal class TokenDetailsNotificationConverter(
         return newNotifications.toImmutableList()
     }
 
+    fun removeRequiredTrustlineWarning(currentState: TokenDetailsState): ImmutableList<TokenDetailsNotification> {
+        val newNotifications = currentState.notifications.toMutableList()
+        newNotifications.removeBy { it is RequiredTrustlineWarning }
+        return newNotifications.toImmutableList()
+    }
+
     fun removeKaspaIncompleteTransactionWarning(
         currentState: TokenDetailsState,
     ): ImmutableList<TokenDetailsNotification> {
@@ -117,6 +123,12 @@ internal class TokenDetailsNotificationConverter(
                 fee = warning.fee.format { crypto(symbol = "", decimals = warning.feeCurrencyDecimals) },
                 feeCurrencySymbol = warning.feeCurrencySymbol,
                 onAssociateClick = clickIntents::onAssociateClick,
+            )
+            is CryptoCurrencyWarning.RequiredTrustline -> RequiredTrustlineWarning(
+                currency = warning.currency,
+                amount = warning.requiredAmount.format { crypto(symbol = "", warning.currencyDecimals) },
+                currencySymbol = warning.currencySymbol,
+                onOpenClick = clickIntents::onOpenTrustlineClick,
             )
             is KaspaWarnings.IncompleteTransaction -> KaspaIncompleteTransactionWarning(
                 currency = warning.currency,
