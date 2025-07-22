@@ -2,8 +2,8 @@ package com.tangem.tap.network.auth
 
 import com.tangem.common.extensions.toHexString
 import com.tangem.datasource.api.common.AuthProvider
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
-import com.tangem.domain.wallets.models.UserWallet
 
 internal class DefaultAuthProvider(private val userWalletsListManager: UserWalletsListManager) : AuthProvider {
 

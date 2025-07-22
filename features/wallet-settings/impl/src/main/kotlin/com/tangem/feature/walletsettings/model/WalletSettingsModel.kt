@@ -28,9 +28,9 @@ import com.tangem.domain.nft.EnableWalletNFTUseCase
 import com.tangem.domain.nft.GetWalletNFTEnabledUseCase
 import com.tangem.domain.notifications.toggles.NotificationsFeatureToggles
 import com.tangem.domain.settings.repositories.PermissionRepository
-import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.isMultiCurrency
-import com.tangem.domain.wallets.models.requireColdWallet
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.isMultiCurrency
+import com.tangem.domain.models.wallet.requireColdWallet
 import com.tangem.domain.wallets.usecase.*
 import com.tangem.feature.walletsettings.analytics.Settings
 import com.tangem.feature.walletsettings.analytics.WalletSettingsAnalyticEvents
