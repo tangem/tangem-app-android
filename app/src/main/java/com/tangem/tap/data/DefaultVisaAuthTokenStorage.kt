@@ -21,6 +21,7 @@ internal class DefaultVisaAuthTokenStorage @Inject constructor(
     private val secureStorage by lazy {
         AndroidSecureStorageV2(
             appContext = applicationContext,
+            useStrongBox = false,
             name = "visa_auth_storage",
         )
     }
