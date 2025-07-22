@@ -8,5 +8,6 @@ package com.domain.blockaid.models.transaction
  */
 data class CheckTransactionResult(
     val validation: ValidationResult,
+    val description: String? = null,
     val simulation: SimulationResult,
 )

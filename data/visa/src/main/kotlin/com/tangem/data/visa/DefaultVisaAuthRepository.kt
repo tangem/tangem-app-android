@@ -4,9 +4,9 @@ import arrow.core.Either
 import com.squareup.moshi.Moshi
 import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
-import com.tangem.datasource.api.visa.TangemVisaApi
-import com.tangem.datasource.api.visa.models.request.*
-import com.tangem.datasource.api.visa.models.response.VisaErrorResponseJsonAdapter
+import com.tangem.datasource.api.pay.TangemPayApi
+import com.tangem.datasource.api.pay.models.request.*
+import com.tangem.datasource.api.pay.models.response.VisaErrorResponseJsonAdapter
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.model.VisaAuthChallenge
@@ -21,7 +21,7 @@ import javax.inject.Inject
 @Suppress("UnusedPrivateMember")
 internal class DefaultVisaAuthRepository @Inject constructor(
     @NetworkMoshi private val moshi: Moshi,
-    private val visaAuthApi: TangemVisaApi,
+    private val visaAuthApi: TangemPayApi,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : VisaAuthRepository {
 
@@ -47,12 +47,14 @@ internal class DefaultVisaAuthRepository @Inject constructor(
     }
 
     override suspend fun getCardWalletAuthChallenge(
+        cardId: String,
         cardWalletAddress: String,
     ): Either<VisaApiError, VisaAuthChallenge.Wallet> = withContext(dispatchers.io) {
         request {
             visaAuthApi.generateNonceByCardWallet(
                 GenerateNoneByCardWalletRequest(
                     cardWalletAddress = cardWalletAddress,
+                    cardId = cardId,
                 ),
             ).getOrThrow()
         }.map { response ->
@@ -82,6 +84,7 @@ internal class DefaultVisaAuthRepository @Inject constructor(
                         GetAccessTokenByCardWalletRequest(
                             sessionId = signedChallenge.challenge.session.sessionId,
                             signature = signedChallenge.signature,
+                            salt = signedChallenge.salt,
                         ),
                     ).getOrThrow()
                 }
