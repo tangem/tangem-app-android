@@ -9,7 +9,7 @@ import com.tangem.data.managetokens.DefaultManageTokensRepository
 import com.tangem.data.managetokens.utils.ManageTokensUpdateFetcher
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.config.testnet.TestnetTokensStorage
-import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.managetokens.repository.CustomTokensRepository
 import com.tangem.domain.managetokens.repository.ManageTokensRepository
@@ -31,7 +31,7 @@ internal object ManageTokensDataModule {
         tangemTechApi: TangemTechApi,
         userWalletsStore: UserWalletsStore,
         manageTokensUpdateFetcher: ManageTokensUpdateFetcher,
-        appPreferencesStore: AppPreferencesStore,
+        userTokensResponseStore: UserTokensResponseStore,
         testnetTokensStorage: TestnetTokensStorage,
         dispatchers: CoroutineDispatcherProvider,
         excludedBlockchains: ExcludedBlockchains,
@@ -42,7 +42,7 @@ internal object ManageTokensDataModule {
             tangemTechApi = tangemTechApi,
             userWalletsStore = userWalletsStore,
             manageTokensUpdateFetcher = manageTokensUpdateFetcher,
-            appPreferencesStore = appPreferencesStore,
+            userTokensResponseStore = userTokensResponseStore,
             testnetTokensStorage = testnetTokensStorage,
             excludedBlockchains = excludedBlockchains,
             cardCryptoCurrencyFactory = cardCryptoCurrencyFactory,
@@ -56,7 +56,7 @@ internal object ManageTokensDataModule {
     fun provideCustomTokensRepository(
         tangemTechApi: TangemTechApi,
         userWalletsStore: UserWalletsStore,
-        appPreferencesStore: AppPreferencesStore,
+        userTokensResponseStore: UserTokensResponseStore,
         walletManagersFacade: WalletManagersFacade,
         dispatchers: CoroutineDispatcherProvider,
         excludedBlockchains: ExcludedBlockchains,
@@ -66,7 +66,7 @@ internal object ManageTokensDataModule {
         return DefaultCustomTokensRepository(
             tangemTechApi = tangemTechApi,
             userWalletsStore = userWalletsStore,
-            appPreferencesStore = appPreferencesStore,
+            userTokensResponseStore = userTokensResponseStore,
             walletManagersFacade = walletManagersFacade,
             excludedBlockchains = excludedBlockchains,
             dispatchers = dispatchers,

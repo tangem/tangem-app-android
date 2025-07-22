@@ -35,12 +35,13 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
 import com.tangem.domain.transaction.usecase.ValidateTransactionUseCase
 import com.tangem.domain.utils.convertToSdkAmount
+import com.tangem.features.send.v2.api.SendNotificationsComponent
+import com.tangem.features.send.v2.api.SendNotificationsComponent.Params.NotificationData
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountReduceTrigger
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeData
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeReloadTrigger
 import com.tangem.features.send.v2.subcomponents.fee.model.checkAndCalculateSubtractedAmount
 import com.tangem.features.send.v2.subcomponents.fee.model.checkFeeCoverage
-import com.tangem.features.send.v2.subcomponents.notifications.NotificationsComponent
 import com.tangem.features.send.v2.subcomponents.notifications.NotificationsUpdateTrigger
 import com.tangem.features.send.v2.subcomponents.notifications.analytics.NotificationsAnalyticEvents
 import com.tangem.lib.crypto.BlockchainUtils
@@ -77,7 +78,7 @@ internal class NotificationsModel @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
-    private val params: NotificationsComponent.Params = paramsContainer.require()
+    private val params: SendNotificationsComponent.Params = paramsContainer.require()
 
     private val analyticsCategoryName = params.analyticsCategoryName
     private val userWalletId = params.userWalletId
@@ -301,7 +302,7 @@ internal class NotificationsModel @Inject constructor(
     ) {
         val validationError = validateTransactionUseCase(
             userWalletId = userWalletId,
-            amount = enteredAmount.convertToSdkAmount(currency),
+            amount = sendingAmount.convertToSdkAmount(currency),
             fee = fee,
             memo = memo,
             destination = destinationAddress,
