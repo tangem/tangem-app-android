@@ -3,7 +3,7 @@ package com.tangem.domain.wallets.builder
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.domain.models.MobileWallet
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
 import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.hot.sdk.model.DeriveWalletRequest
