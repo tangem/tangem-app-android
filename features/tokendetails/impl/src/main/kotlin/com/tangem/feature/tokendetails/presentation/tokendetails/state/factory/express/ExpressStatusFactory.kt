@@ -65,14 +65,12 @@ internal class ExpressStatusFactory @AssistedInject constructor(
         )
     }
 
-    suspend fun getExpressStatuses(): Flow<PersistentList<ExpressTransactionStateUM>> = combine(
+    fun getExpressStatuses(): Flow<PersistentList<ExpressTransactionStateUM>> = combine(
         flow = exchangeStatusFactory(),
         flow2 = onrampStatusFactory(),
     ) { maybeExchange, maybeOnramp ->
-        persistentListOf(
-            maybeOnramp,
-            maybeExchange,
-        ).flatten()
+        persistentListOf(maybeOnramp, maybeExchange)
+            .flatten()
             .sortedByDescending { it.info.timestamp }
             .toPersistentList()
     }

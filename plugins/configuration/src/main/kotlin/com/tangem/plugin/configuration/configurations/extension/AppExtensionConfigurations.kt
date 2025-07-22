@@ -38,6 +38,7 @@ private fun AppExtension.configureDefaultConfig(project: Project) {
         buildFeatures.buildConfig = true
 
         testInstrumentationRunner = "com.tangem.common.HiltTestRunner"
+        testInstrumentationRunnerArguments["clearPackageData"] = "true"
     }
 }
 
