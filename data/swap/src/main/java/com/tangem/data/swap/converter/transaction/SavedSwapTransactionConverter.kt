@@ -3,8 +3,8 @@ package com.tangem.data.swap.converter.transaction
 import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
 import com.tangem.data.swap.models.SwapStatusDTO
 import com.tangem.data.swap.models.SwapTransactionDTO
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.models.SwapTransactionModel
-import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.utils.converter.TwoWayConverter
 
 internal class SavedSwapTransactionConverter(

@@ -17,7 +17,7 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.models.Basic
 import com.tangem.core.analytics.models.Basic.TransactionSent.MemoType
 import com.tangem.data.walletconnect.network.ethereum.LegacySdkHelper
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.operations.sign.SignHashCommand
 import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.extensions.safeUpdate
