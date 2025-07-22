@@ -3,8 +3,8 @@ package com.tangem.tap.domain.userWalletList.implementation
 import com.google.common.truth.Truth
 import com.tangem.common.test.domain.card.MockScanResponseFactory
 import com.tangem.domain.common.configs.GenericCardConfig
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.wallets.models.UserWallet
 import io.mockk.mockk
 import org.junit.Test
 import org.junit.runner.RunWith

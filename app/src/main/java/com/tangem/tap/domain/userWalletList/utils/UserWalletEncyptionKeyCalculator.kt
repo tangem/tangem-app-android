@@ -4,7 +4,7 @@ import com.tangem.common.extensions.calculateSha256
 import com.tangem.domain.common.extensions.calculateHmacSha256
 import com.tangem.domain.models.MobileWallet
 import com.tangem.domain.models.scan.CardDTO
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 
 internal val UserWallet.encryptionKey: ByteArray?
     get() = when (this) {
