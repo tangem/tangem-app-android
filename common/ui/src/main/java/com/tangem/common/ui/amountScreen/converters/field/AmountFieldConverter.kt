@@ -100,8 +100,8 @@ class AmountFieldConverterV2(
         val cryptoAmount = cryptoDecimal.convertToAmount(cryptoCurrencyStatus.currency)
         val fiatRate = cryptoCurrencyStatus.value.fiatRate
         val (fiatValue, fiatDecimal) = when {
-            fiatRate.isNullOrZero() -> "" to null
             value.isEmpty() -> "" to BigDecimal.ZERO
+            fiatRate.isNullOrZero() -> "" to null
             else -> {
                 val fiatDecimal = fiatRate?.multiply(cryptoDecimal)
                 val fiatValue = fiatDecimal?.parseBigDecimal(FIAT_DECIMALS).orEmpty()

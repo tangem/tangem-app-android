@@ -33,4 +33,5 @@ dependencies {
     implementation(tangemDeps.card.core)
 
     implementation(deps.test.junit5)
+    implementation(deps.test.truth)
 }
