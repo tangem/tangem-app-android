@@ -1,22 +1,24 @@
-package com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.model
+package com.tangem.features.hotwallet.common.repository
 
 import android.content.Context
 import com.tangem.crypto.bip39.DefaultMnemonic
 import com.tangem.crypto.bip39.EntropyLength
 import com.tangem.crypto.bip39.Mnemonic
 import com.tangem.crypto.bip39.Wordlist
+import com.tangem.features.hotwallet.MnemonicRepository
+import com.tangem.features.hotwallet.MnemonicRepository.MnemonicType
 import com.tangem.sdk.extensions.getWordlist
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 
-internal class MnemonicRepository @Inject constructor(
+internal class DefaultMnemonicRepository @Inject constructor(
     @ApplicationContext private val context: Context,
-) {
+) : MnemonicRepository {
     private val wordlist = Wordlist.getWordlist(context)
 
-    val words: Set<String> = wordlist.words.toHashSet()
+    override val words: Set<String> = wordlist.words.toHashSet()
 
-    fun generateMnemonic(type: MnemonicType = MnemonicType.Words12): Mnemonic = DefaultMnemonic(
+    override fun generateMnemonic(type: MnemonicType): Mnemonic = DefaultMnemonic(
         entropy = when (type) {
             MnemonicType.Words12 -> EntropyLength.Bits128Length
             MnemonicType.Words24 -> EntropyLength.Bits256Length
@@ -24,12 +26,8 @@ internal class MnemonicRepository @Inject constructor(
         wordlist = wordlist,
     )
 
-    fun generateMnemonic(mnemonicString: String): Mnemonic = DefaultMnemonic(
+    override fun generateMnemonic(mnemonicString: String): Mnemonic = DefaultMnemonic(
         mnemonic = mnemonicString,
         wordlist = wordlist,
     )
-
-    enum class MnemonicType {
-        Words12, Words24,
-    }
 }
