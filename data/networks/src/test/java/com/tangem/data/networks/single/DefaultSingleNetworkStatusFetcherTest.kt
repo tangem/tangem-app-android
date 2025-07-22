@@ -4,9 +4,9 @@ import arrow.core.Either
 import arrow.core.left
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.test.utils.assertEither
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
-import com.tangem.domain.wallets.models.UserWalletId
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
