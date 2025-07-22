@@ -18,11 +18,11 @@ import com.tangem.blockchainsdk.utils.toCoinId
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.data.common.currency.getCoinId
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.transaction.usecase.GetEthSpecificFeeUseCase
 import com.tangem.domain.walletconnect.model.WcApprovedAmount
 import com.tangem.domain.walletconnect.model.WcEthTransactionParams
-import com.tangem.domain.wallets.models.UserWallet
 import javax.inject.Inject
 
 internal class WcEthTxHelper @Inject constructor(
