@@ -15,4 +15,5 @@ object StringsSigns {
     const val THREE_STARS = "\u2217\u2217\u2217"
     const val PASSWORD_VISUAL_CHAR = '\u2022'
     const val APPROXIMATE = "≈"
+    const val WHITE_SPACE = " "
 }
