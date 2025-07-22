@@ -23,9 +23,9 @@ import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.datasource.local.walletmanager.WalletManagersStore
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.TransactionRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 import timber.log.Timber
