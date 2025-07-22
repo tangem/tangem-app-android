@@ -21,7 +21,7 @@ internal sealed class WcAppInfoRoutes : TangemBottomSheetConfigContent, Route {
         val missingRequiredNetworks: Set<Network>,
         val requiredNetworks: Set<Network>,
         val availableNetworks: Set<Network>,
-        val enabledAvailableNetworks: Set<Network.RawID>,
+        val enabledAvailableNetworks: Set<Network>,
         val notAddedNetworks: Set<Network>,
     ) : WcAppInfoRoutes()
 

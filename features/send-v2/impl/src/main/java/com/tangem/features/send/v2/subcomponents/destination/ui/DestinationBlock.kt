@@ -1,26 +1,38 @@
 package com.tangem.features.send.v2.subcomponents.destination.ui
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.core.ui.components.icons.identicon.IdentIcon
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.features.send.v2.subcomponents.destination.ui.state.DestinationTextFieldUM
-import com.tangem.features.send.v2.subcomponents.destination.ui.state.DestinationUM
+import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.features.send.v2.impl.R
+import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationRecipientListUM
+import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationTextFieldUM
+import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
+import kotlinx.collections.immutable.toImmutableList
 
 @Composable
 internal fun DestinationBlock(
     destinationUM: DestinationUM,
     isClickDisabled: Boolean,
     isEditingDisabled: Boolean,
+    isRedesignEnabled: Boolean,
     onClick: () -> Unit,
 ) {
     if (destinationUM !is DestinationUM.Content) return
@@ -33,8 +45,15 @@ internal fun DestinationBlock(
             .clickable(enabled = !isClickDisabled && !isEditingDisabled, onClick = onClick)
             .padding(TangemTheme.dimens.spacing12),
     ) {
-        AddressBlock(destinationUM.addressTextField)
-        MemoBlock(destinationUM.memoTextField)
+        if (isRedesignEnabled) {
+            AddressWithMemoBlock(
+                address = destinationUM.addressTextField,
+                memo = destinationUM.memoTextField,
+            )
+        } else {
+            AddressBlock(destinationUM.addressTextField)
+            MemoBlock(destinationUM.memoTextField)
+        }
     }
 }
 
@@ -84,4 +103,124 @@ private fun MemoBlock(memo: DestinationTextFieldUM.RecipientMemo?) {
             modifier = Modifier.padding(top = TangemTheme.dimens.spacing8),
         )
     }
+}
+
+@Composable
+private fun AddressWithMemoBlock(
+    address: DestinationTextFieldUM.RecipientAddress,
+    memo: DestinationTextFieldUM.RecipientMemo?,
+) {
+    Text(
+        text = stringResourceSafe(R.string.send_to_address),
+        style = TangemTheme.typography.subtitle2,
+        color = TangemTheme.colors.text.tertiary,
+    )
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing24),
+        modifier = Modifier.padding(top = TangemTheme.dimens.spacing8),
+    ) {
+        Text(
+            modifier = Modifier.weight(1f),
+            text = address.value,
+            style = TangemTheme.typography.body2,
+            color = TangemTheme.colors.text.primary1,
+        )
+        IdentIcon(
+            address = address.value,
+            modifier = Modifier
+                .size(TangemTheme.dimens.size36)
+                .clip(RoundedCornerShape(TangemTheme.dimens.radius18))
+                .background(TangemTheme.colors.background.tertiary),
+        )
+    }
+    if (memo != null && memo.value.isNotBlank()) {
+        Text(
+            text = stringResourceSafe(R.string.send_memo, memo.value),
+            style = TangemTheme.typography.caption2,
+            color = TangemTheme.colors.text.tertiary,
+            modifier = Modifier.padding(top = TangemTheme.dimens.spacing8),
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun DestinationBlockPreview(
+    @PreviewParameter(DestinationBlockPreviewProvider::class) state: DestinationUM.Content,
+) {
+    TangemThemePreview {
+        DestinationBlock(
+            destinationUM = state,
+            isClickDisabled = false,
+            isEditingDisabled = false,
+            isRedesignEnabled = state.isRedesignEnabled,
+            onClick = {},
+        )
+    }
+}
+
+private class DestinationBlockPreviewProvider : PreviewParameterProvider<DestinationUM.Content> {
+    override val values: Sequence<DestinationUM.Content>
+        get() = sequenceOf(
+            DestinationUM.Content(
+                isPrimaryButtonEnabled = true,
+                addressTextField = DestinationTextFieldUM.RecipientAddress(
+                    value = "0x34B4492A412D84A6E606288f3Bd714b89135D4dE",
+                    keyboardOptions = KeyboardOptions.Default,
+                    placeholder = TextReference.Str("Enter address"),
+                    label = TextReference.Str("Recipient Address"),
+                    isError = false,
+                    error = null,
+                    isValuePasted = false,
+                ),
+                memoTextField = DestinationTextFieldUM.RecipientMemo(
+                    value = "Test memo for transaction",
+                    keyboardOptions = KeyboardOptions.Default,
+                    placeholder = TextReference.Str("Enter memo (optional)"),
+                    label = TextReference.Str("Memo"),
+                    isError = false,
+                    error = null,
+                    disabledText = TextReference.Str("Memo disabled"),
+                    isEnabled = true,
+                    isValuePasted = false,
+                ),
+                recent = emptyList<DestinationRecipientListUM>().toImmutableList(),
+                wallets = emptyList<DestinationRecipientListUM>().toImmutableList(),
+                networkName = "Ethereum",
+                isValidating = false,
+                isInitialized = true,
+                isRedesignEnabled = false,
+            ),
+            DestinationUM.Content(
+                isPrimaryButtonEnabled = true,
+                addressTextField = DestinationTextFieldUM.RecipientAddress(
+                    value = "0x34B4492A412D84A6E606288f3Bd714b89135D4dE",
+                    keyboardOptions = KeyboardOptions.Default,
+                    placeholder = TextReference.Str("Enter address"),
+                    label = TextReference.Str("Recipient Address"),
+                    isError = false,
+                    error = null,
+                    isValuePasted = false,
+                ),
+                memoTextField = DestinationTextFieldUM.RecipientMemo(
+                    value = "Test memo for transaction",
+                    keyboardOptions = KeyboardOptions.Default,
+                    placeholder = TextReference.Str("Enter memo (optional)"),
+                    label = TextReference.Str("Memo"),
+                    isError = false,
+                    error = null,
+                    disabledText = TextReference.Str("Memo disabled"),
+                    isEnabled = true,
+                    isValuePasted = false,
+                ),
+                recent = emptyList<DestinationRecipientListUM>().toImmutableList(),
+                wallets = emptyList<DestinationRecipientListUM>().toImmutableList(),
+                networkName = "Ethereum",
+                isValidating = false,
+                isInitialized = true,
+                isRedesignEnabled = true,
+            ),
+        )
 }
