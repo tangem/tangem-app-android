@@ -4,8 +4,8 @@ import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
 import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.wallet.requireColdWallet
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesProducer
-import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory

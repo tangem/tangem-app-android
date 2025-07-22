@@ -25,8 +25,8 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.CreateNFTTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
-import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.requireColdWallet
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.requireColdWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.v2.api.NFTSendComponent
 import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationComponent

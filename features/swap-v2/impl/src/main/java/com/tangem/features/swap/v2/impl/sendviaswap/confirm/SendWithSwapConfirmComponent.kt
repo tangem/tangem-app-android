@@ -12,7 +12,7 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.swap.models.SwapDirection
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.features.send.v2.api.FeeSelectorBlockComponent
 import com.tangem.features.send.v2.api.SendNotificationsComponent
 import com.tangem.features.send.v2.api.entity.PredefinedValues
