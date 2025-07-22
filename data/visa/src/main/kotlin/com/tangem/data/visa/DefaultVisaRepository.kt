@@ -18,12 +18,12 @@ import com.tangem.datasource.api.pay.TangemPayApi
 import com.tangem.datasource.api.pay.models.response.VisaTxHistoryResponse
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.visa.model.VisaCurrency
 import com.tangem.domain.visa.model.VisaTxDetails
 import com.tangem.domain.visa.model.VisaTxHistoryItem
 import com.tangem.domain.visa.repository.VisaRepository
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.Flow

@@ -15,7 +15,7 @@ dependencies {
     implementation(projects.common.routing)
 
     /** Domain models */
-    implementation(projects.domain.wallets.models)
+    implementation(projects.domain.models)
 
     /** Compose */
     implementation(deps.compose.runtime)

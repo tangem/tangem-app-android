@@ -7,7 +7,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.tokens.model.remove.RemoveCurrencyError
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 
 class RemoveCurrencyUseCase(
     private val currenciesRepository: CurrenciesRepository,
