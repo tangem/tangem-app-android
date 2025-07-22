@@ -2,7 +2,7 @@ package com.tangem.domain.tokens
 
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.tokens.repository.CurrenciesRepository
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 
 class IsCryptoCurrencyCoinCouldHideUseCase(
     private val currenciesRepository: CurrenciesRepository,
