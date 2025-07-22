@@ -5,7 +5,7 @@ import com.tangem.blockchain.common.Wallet
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.map
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.hot.sdk.model.DataToSign
 import com.tangem.operations.sign.SignData
 import dagger.assisted.Assisted
