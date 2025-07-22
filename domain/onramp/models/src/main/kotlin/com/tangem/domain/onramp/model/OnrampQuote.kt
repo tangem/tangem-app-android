@@ -15,8 +15,8 @@ sealed class OnrampQuote {
         override val fromAmount: OnrampAmount,
         override val countryCode: String,
         val toAmount: OnrampAmount,
-        val minFromAmount: OnrampAmount,
-        val maxFromAmount: OnrampAmount,
+        val minFromAmount: OnrampAmount?,
+        val maxFromAmount: OnrampAmount?,
     ) : OnrampQuote()
 
     data class AmountError(

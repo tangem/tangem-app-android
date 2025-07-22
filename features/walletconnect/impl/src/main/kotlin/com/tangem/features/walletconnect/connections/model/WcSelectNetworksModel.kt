@@ -29,7 +29,7 @@ internal class WcSelectNetworksModel @Inject constructor(
 ) : Model() {
 
     private val params = paramsContainer.require<WcSelectNetworksParams>()
-    private val additionallyEnabledNetworks = MutableStateFlow<Set<Network.RawID>>(
+    private val additionallyEnabledNetworks = MutableStateFlow<Set<Network>>(
         filterAdditionallyEnabledNetworks(
             availableNetworks = params.availableNetworks,
             additionallyEnabledNetworks = params.enabledAvailableNetworks,
@@ -39,11 +39,11 @@ internal class WcSelectNetworksModel @Inject constructor(
     val state: StateFlow<WcSelectNetworksUM>
     field = MutableStateFlow(getInitialState())
 
-    private fun onCheckedChange(isChecked: Boolean, networkId: String) {
+    private fun onCheckedChange(isChecked: Boolean, network: Network) {
         additionallyEnabledNetworks.update {
-            if (isChecked) it.plus(Network.RawID(networkId)) else it.minus(Network.RawID(networkId))
+            if (isChecked) it.plus(network) else it.minus(network)
         }
-        state.update(WcSelectNetworksCheckedTransformer(networkId, isChecked))
+        state.update(WcSelectNetworksCheckedTransformer(network = network, isChecked = isChecked))
     }
 
     private fun onDone() {
@@ -53,12 +53,9 @@ internal class WcSelectNetworksModel @Inject constructor(
 
     private fun filterAdditionallyEnabledNetworks(
         availableNetworks: Set<Network>,
-        additionallyEnabledNetworks: Set<Network.RawID>,
-    ): Set<Network.RawID> {
-        return availableNetworks
-            .asSequence()
-            .filter { it.id.rawId in additionallyEnabledNetworks }
-            .mapTo(hashSetOf()) { it.id.rawId }
+        additionallyEnabledNetworks: Set<Network>,
+    ): Set<Network> {
+        return availableNetworks.filterTo(hashSetOf()) { it in additionallyEnabledNetworks }
     }
 
     private fun getInitialState(): WcSelectNetworksUM {
@@ -85,8 +82,8 @@ internal class WcSelectNetworksModel @Inject constructor(
                     icon = network.iconResId,
                     name = network.name,
                     symbol = network.currencySymbol,
-                    checked = network.id.rawId in additionallyEnabledNetworks.value,
-                    onCheckedChange = { onCheckedChange(it, network.rawId) },
+                    checked = network in additionallyEnabledNetworks.value,
+                    onCheckedChange = { onCheckedChange(it, network) },
                 )
             }.toImmutableList(),
             notAdded = params.notAddedNetworks.map { network ->

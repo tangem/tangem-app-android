@@ -2,6 +2,8 @@ package com.tangem.features.send.v2.subcomponents.fee.model
 
 import androidx.compose.runtime.Stable
 import com.tangem.blockchain.common.AmountType
+import com.tangem.common.ui.navigationButtons.NavigationButton
+import com.tangem.common.ui.navigationButtons.NavigationUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -9,9 +11,8 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
-import com.tangem.features.send.v2.common.ui.state.NavigationUM
+import com.tangem.features.send.v2.common.analytics.CommonSendAnalyticEvents.NonceInserted
 import com.tangem.features.send.v2.impl.R
-import com.tangem.features.send.v2.send.ui.state.ButtonsUM
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeCheckReloadListener
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeCheckReloadTrigger
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeComponentParams
@@ -129,6 +130,12 @@ internal class SendFeeModel @Inject constructor(
         updateFeeNotifications()
     }
 
+    override fun onNonceChange(value: String) {
+        _uiState.update(
+            SendFeeNonceChangeTransformer(value = value),
+        )
+    }
+
     override fun onReadMoreClick() {
         val locale = if (Locale.getDefault().language == RU_LOCALE) RU_LOCALE else EN_LOCALE
         val url = buildString {
@@ -156,6 +163,16 @@ internal class SendFeeModel @Inject constructor(
                         feeType = feeSelectorUM.selectedType.toAnalyticType(feeSelectorUM),
                     ),
                 )
+
+                if (feeSelectorUM.nonce != null) {
+                    analyticsEventHandler.send(
+                        NonceInserted(
+                            categoryName = analyticsCategoryName,
+                            token = cryptoCurrencyStatus.currency.symbol,
+                            blockchain = cryptoCurrencyStatus.currency.network.name,
+                        ),
+                    )
+                }
 
                 saveResult()
             }
@@ -268,8 +285,8 @@ internal class SendFeeModel @Inject constructor(
                     subtitle = null,
                     backIconRes = R.drawable.ic_back_24,
                     backIconClick = params.onNextClick,
-                    primaryButton = ButtonsUM.PrimaryButtonUM(
-                        text = resourceReference(R.string.common_continue),
+                    primaryButton = NavigationButton(
+                        textReference = resourceReference(R.string.common_continue),
                         isEnabled = state.isPrimaryButtonEnabled,
                         onClick = ::onNextClick,
                     ),
