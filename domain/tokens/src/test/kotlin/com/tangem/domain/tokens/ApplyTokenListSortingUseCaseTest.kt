@@ -5,10 +5,10 @@ import arrow.core.left
 import arrow.core.right
 import com.tangem.domain.core.error.DataError
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.error.TokenListSortingError
 import com.tangem.domain.tokens.mock.MockTokens
 import com.tangem.domain.tokens.repository.MockCurrenciesRepository
-import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.mockk
 import junit.framework.TestCase.assertEquals

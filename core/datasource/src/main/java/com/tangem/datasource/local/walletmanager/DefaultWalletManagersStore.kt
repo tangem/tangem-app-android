@@ -4,7 +4,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.datasource.local.datastore.core.StringKeyDataStore
 import com.tangem.datasource.local.datastore.core.StringKeyDataStoreDecorator
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.extensions.addOrReplace
 import com.tangem.utils.extensions.removeBy
 import kotlinx.coroutines.flow.Flow
