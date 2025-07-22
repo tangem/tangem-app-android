@@ -3,11 +3,9 @@ package com.tangem.tap.data
 import android.content.Context
 import com.tangem.common.extensions.toByteArray
 import com.tangem.common.extensions.toInt
-import com.tangem.common.services.secure.SecureStorage
 import com.tangem.datasource.local.visa.VisaOTPStorage
 import com.tangem.datasource.local.visa.VisaOtpData
-import com.tangem.sdk.storage.AndroidSecureStorage
-import com.tangem.sdk.storage.createEncryptedSharedPreferences
+import com.tangem.sdk.storage.AndroidSecureStorageV2
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.withContext
@@ -21,11 +19,9 @@ class DefaultVisaOTPStorage @Inject constructor(
 ) : VisaOTPStorage {
 
     private val secureStorage by lazy {
-        AndroidSecureStorage(
-            preferences = SecureStorage.createEncryptedSharedPreferences(
-                context = applicationContext,
-                storageName = "visa_otp_storage",
-            ),
+        AndroidSecureStorageV2(
+            appContext = applicationContext,
+            name = "visa_otp_storage",
         )
     }
 
