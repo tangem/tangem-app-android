@@ -6,7 +6,7 @@ import com.tangem.features.hotwallet.setaccesscode.SetAccessCodeModel
 import com.tangem.features.hotwallet.addexistingwallet.root.AddExistingWalletModel
 import com.tangem.features.hotwallet.addexistingwallet.root.DefaultAddExistingWalletComponent
 import com.tangem.features.hotwallet.addexistingwallet.start.AddExistingWalletStartModel
-import com.tangem.features.hotwallet.addexistingwallet.im.port.AddExistingWalletImportModel
+import com.tangem.features.hotwallet.addexistingwallet.im.port.model.AddExistingWalletImportModel
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
