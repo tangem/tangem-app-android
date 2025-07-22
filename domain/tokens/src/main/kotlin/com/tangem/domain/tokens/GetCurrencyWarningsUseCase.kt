@@ -222,6 +222,12 @@ class GetCurrencyWarningsUseCase(
     ): CryptoCurrencyWarning? {
         return when (val requirements = walletManagersFacade.getAssetRequirements(userWalletId, currency)) {
             is AssetRequirementsCondition.PaidTransaction -> HederaWarnings.AssociateWarning(currency = currency)
+            is AssetRequirementsCondition.RequiredTrustline -> CryptoCurrencyWarning.RequiredTrustline(
+                currency = currency,
+                requiredAmount = requirements.requiredAmount,
+                currencyDecimals = requirements.decimals,
+                currencySymbol = requirements.currencySymbol,
+            )
             is AssetRequirementsCondition.PaidTransactionWithFee -> {
                 HederaWarnings.AssociateWarningWithFee(
                     currency = currency,
