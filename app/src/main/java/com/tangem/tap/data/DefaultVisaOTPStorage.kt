@@ -21,6 +21,7 @@ class DefaultVisaOTPStorage @Inject constructor(
     private val secureStorage by lazy {
         AndroidSecureStorageV2(
             appContext = applicationContext,
+            useStrongBox = false,
             name = "visa_otp_storage",
         )
     }
