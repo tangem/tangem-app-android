@@ -1,9 +1,12 @@
 package com.tangem.core.ui.components.fields.visualtransformations
 
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
+import com.tangem.core.ui.extensions.appendColored
 import com.tangem.core.ui.format.bigdecimal.BigDecimalFormatConstants
 import com.tangem.core.ui.format.bigdecimal.BigDecimalFormatConstants.CURRENCY_SPACE
 import com.tangem.core.ui.format.bigdecimal.getJavaCurrencyByCode
@@ -19,6 +22,7 @@ class AmountVisualTransformation(
     private val symbol: String? = null,
     private val currencyCode: String? = null,
     private val decimalFormat: DecimalFormat = DecimalFormat(),
+    private val symbolColor: Color,
 ) : VisualTransformation {
 
     override fun filter(text: AnnotatedString): TransformedText {
@@ -28,17 +32,22 @@ class AmountVisualTransformation(
         )
         formattedAmount = formattedAmount.ifEmpty { decimalFormat.defaultFormat() }
         val formattedText = if (formattedAmount.isNotEmpty() && symbol != null) {
-            AnnotatedString(
+            buildAnnotatedString {
                 if (currencyCode != null) {
-                    formatFiatEditableAmount(
-                        fiatAmount = formattedAmount,
-                        fiatCurrencyCode = currencyCode,
-                        fiatCurrencySymbol = symbol,
+                    append(
+                        formatFiatEditableAmount(
+                            fiatAmount = formattedAmount,
+                            fiatCurrencyCode = currencyCode,
+                            fiatCurrencySymbol = symbol,
+                            fiatCurrencySymbolColor = symbolColor,
+                        ),
                     )
                 } else {
-                    formatWithSymbol(formattedAmount, symbol)
-                },
-            )
+                    append(formattedAmount)
+                    append(CURRENCY_SPACE)
+                    appendColored(symbol, symbolColor)
+                }
+            }
         } else {
             AnnotatedString(decimalFormat.defaultFormat())
         }
@@ -54,9 +63,10 @@ class AmountVisualTransformation(
         fiatAmount: String?,
         fiatCurrencyCode: String,
         fiatCurrencySymbol: String,
+        fiatCurrencySymbolColor: Color,
         locale: Locale = Locale.getDefault(),
-    ): String {
-        if (fiatAmount == null) return BigDecimalFormatConstants.EMPTY_BALANCE_SIGN
+    ): AnnotatedString {
+        if (fiatAmount == null) return AnnotatedString(BigDecimalFormatConstants.EMPTY_BALANCE_SIGN)
 
         val formatterCurrency = getJavaCurrencyByCode(fiatCurrencyCode)
         val numberFormatter = NumberFormat.getCurrencyInstance(locale).apply {
@@ -64,13 +74,20 @@ class AmountVisualTransformation(
         }
         val formatter = requireNotNull(numberFormatter as? DecimalFormat) {
             Timber.e("NumberFormat is null")
-            return BigDecimalFormatConstants.EMPTY_BALANCE_SIGN
+            return AnnotatedString(BigDecimalFormatConstants.EMPTY_BALANCE_SIGN)
         }
-        return "${formatter.positivePrefix}$fiatAmount${formatter.positiveSuffix}"
-            .replace(formatterCurrency.getSymbol(locale), fiatCurrencySymbol)
+        return buildAnnotatedString {
+            appendColored(
+                formatter.positivePrefix.replace(formatterCurrency.getSymbol(locale), fiatCurrencySymbol),
+                fiatCurrencySymbolColor,
+            )
+            append(fiatAmount)
+            appendColored(
+                formatter.positiveSuffix.replace(formatterCurrency.getSymbol(locale), fiatCurrencySymbol),
+                fiatCurrencySymbolColor,
+            )
+        }
     }
-
-    private fun formatWithSymbol(amount: String, symbol: String) = "$amount$CURRENCY_SPACE$symbol"
 
     private class OffsetMappingImpl(
         private val text: String,
