@@ -49,8 +49,9 @@ internal object UserWalletsListManagerModule {
         return GeneralUserWalletsListManager(
             runtimeUserWalletsListManager = RuntimeUserWalletsListManager(),
             biometricUserWalletsListManager = createBiometricUserWalletsListManager(
-                applicationContext,
-                analyticsEventHandler,
+                applicationContext = applicationContext,
+                analyticsEventHandler = analyticsEventHandler,
+                dispatchers = dispatchers,
             ),
             appPreferencesStore = appPreferencesStore,
             dispatchers = dispatchers,
@@ -60,6 +61,7 @@ internal object UserWalletsListManagerModule {
     private fun createBiometricUserWalletsListManager(
         applicationContext: Context,
         analyticsEventHandler: AnalyticsEventHandler,
+        dispatchers: CoroutineDispatcherProvider,
     ): UserWalletsListManager {
         val moshi = Moshi.Builder()
             .add(WalletDerivedKeysMapAdapter())
@@ -83,7 +85,13 @@ internal object UserWalletsListManagerModule {
             ),
             androidSecureStorageV2 = AndroidSecureStorageV2(
                 appContext = applicationContext,
+                useStrongBox = true,
                 name = "user_wallets_storage2",
+            ),
+            androidSecureStorageV3 = AndroidSecureStorageV2(
+                appContext = applicationContext,
+                useStrongBox = false,
+                name = "user_wallets_storage3",
             ),
         )
 
@@ -114,7 +122,10 @@ internal object UserWalletsListManagerModule {
             secureStorage = secureStorage,
         )
 
-        val selectedUserWalletRepository = DefaultSelectedUserWalletRepository(secureStorage = secureStorage)
+        val selectedUserWalletRepository = DefaultSelectedUserWalletRepository(
+            secureStorage = secureStorage,
+            dispatchers = dispatchers,
+        )
 
         return BiometricUserWalletsListManager(
             keysRepository = keysRepository,
