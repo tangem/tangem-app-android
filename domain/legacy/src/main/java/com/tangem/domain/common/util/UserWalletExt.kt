@@ -1,6 +1,6 @@
 package com.tangem.domain.common.util
 
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 
 /**
  * Get total cards count in wallets set for a card that was saved in [UserWallet]
