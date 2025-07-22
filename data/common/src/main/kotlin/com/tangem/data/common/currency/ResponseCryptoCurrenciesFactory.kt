@@ -8,7 +8,7 @@ import com.tangem.data.common.network.NetworkFactory
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 import timber.log.Timber
 import javax.inject.Inject
 import com.tangem.blockchain.common.Token as SdkToken
