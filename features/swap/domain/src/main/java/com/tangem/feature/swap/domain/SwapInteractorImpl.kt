@@ -19,13 +19,14 @@ import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.quotes.QuotesRepositoryV2
+import com.tangem.domain.models.quote.QuoteStatus
+import com.tangem.domain.quotes.QuotesRepository
+import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
 import com.tangem.domain.tokens.GetCurrencyCheckUseCase
 import com.tangem.domain.tokens.GetMultiCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.FeePaidCurrency
-import com.tangem.domain.tokens.model.Quote
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
@@ -65,7 +66,8 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     private val createTransactionExtrasUseCase: CreateTransactionDataExtrasUseCase,
     private val createApprovalTransactionUseCase: CreateApprovalTransactionUseCase,
     private val isDemoCardUseCase: IsDemoCardUseCase,
-    private val quotesRepositoryV2: QuotesRepositoryV2,
+    private val quotesRepository: QuotesRepository,
+    private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
     private val swapTransactionRepository: SwapTransactionRepository,
     private val currencyChecksRepository: CurrencyChecksRepository,
     private val appCurrencyRepository: AppCurrencyRepository,
@@ -324,7 +326,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             ifRight = { quotes ->
                 quotes.allowanceContract?.let {
                     isAllowedToSpend(networkId, fromToken.currency, amount, it)
-                } ?: true
+                } != false
             },
             ifLeft = { false },
         )
@@ -1034,7 +1036,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         val rates = getQuotes(fromToken.currency.id)
         val fromTokenSwapInfo = TokenSwapInfo(
             tokenAmount = amount,
-            amountFiat = rates[fromToken.currency.id]?.fiatRate?.multiply(amount.value)
+            amountFiat = rates[fromToken.currency.id]?.multiply(amount.value)
                 ?: BigDecimal.ZERO,
             cryptoCurrencyStatus = fromToken,
         )
@@ -1130,7 +1132,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             else -> getNativeToken(networkId = fromToken.network.backendId).id
         }
         val rates = getQuotes(feeCurrencyId)
-        return rates[feeCurrencyId]?.fiatRate?.let { rate ->
+        return rates[feeCurrencyId]?.let { rate ->
             fees.map { fee ->
                 rate.multiply(fee).format {
                     fiat(
@@ -1233,7 +1235,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 val rates = getQuotes(fromToken.currency.id)
                 val fromTokenSwapInfo = TokenSwapInfo(
                     tokenAmount = amount,
-                    amountFiat = rates[fromToken.currency.id]?.fiatRate?.multiply(amount.value)
+                    amountFiat = rates[fromToken.currency.id]?.multiply(amount.value)
                         ?: BigDecimal.ZERO,
                     cryptoCurrencyStatus = fromToken,
                 )
@@ -1279,7 +1281,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 network = network,
                 userWallet = userWallet,
             ).getOrNull() ?: error("unable to calculate fee")
-        } catch (e: IllegalStateException) {
+        } catch (_: IllegalStateException) {
             getEthSpecificFeeUseCase(
                 userWallet = userWallet,
                 cryptoCurrency = fromToken,
@@ -1307,20 +1309,20 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             fromTokenInfo = TokenSwapInfo(
                 tokenAmount = fromTokenAmount,
                 cryptoCurrencyStatus = fromTokenStatus,
-                amountFiat = rates[fromToken.id]?.fiatRate?.multiply(fromTokenAmount.value)
+                amountFiat = rates[fromToken.id]?.multiply(fromTokenAmount.value)
                     ?: BigDecimal.ZERO,
             ),
             toTokenInfo = TokenSwapInfo(
                 tokenAmount = toTokenAmount,
                 cryptoCurrencyStatus = toTokenStatus,
-                amountFiat = rates[toToken.id]?.fiatRate?.multiply(toTokenAmount.value)
+                amountFiat = rates[toToken.id]?.multiply(toTokenAmount.value)
                     ?: BigDecimal.ZERO,
             ),
             priceImpact = calculatePriceImpact(
                 fromTokenAmount = fromTokenAmount.value,
-                fromRate = rates[fromToken.id]?.fiatRate?.toDouble() ?: 0.0,
+                fromRate = rates[fromToken.id]?.toDouble() ?: 0.0,
                 toTokenAmount = toTokenAmount.value,
-                toRate = rates[toToken.id]?.fiatRate?.toDouble() ?: 0.0,
+                toRate = rates[toToken.id]?.toDouble() ?: 0.0,
             ),
             swapDataModel = swapData,
             txFee = txFeeState,
@@ -1795,19 +1797,42 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         return PriceImpact.Value(value)
     }
 
-    private suspend fun getQuotes(vararg ids: CryptoCurrency.ID): Map<CryptoCurrency.ID, Quote.Value> {
-        val set = ids.mapNotNull { it.rawCurrencyId }
-            .toSet()
+    private suspend fun getQuotes(vararg ids: CryptoCurrency.ID): Map<CryptoCurrency.ID, BigDecimal> {
+        val set = ids.mapNotNullTo(destination = hashSetOf(), transform = CryptoCurrency.ID::rawCurrencyId)
             .getQuotesOrEmpty()
-            .filterIsInstance<Quote.Value>()
 
         return ids
-            .mapNotNull { id -> set.find { it.rawCurrencyId == id.rawCurrencyId }?.let { id to it } }
+            .mapNotNull { id ->
+                val found = set.find { it.rawCurrencyId == id.rawCurrencyId && it.value is QuoteStatus.Data }
+                    ?: return@mapNotNull null
+
+                id to (found.value as QuoteStatus.Data).fiatRate
+            }
             .toMap()
     }
 
-    private suspend fun Set<CryptoCurrency.RawID>.getQuotesOrEmpty(): Set<Quote> {
-        return runCatching { quotesRepositoryV2.getMultiQuoteSyncOrNull(currenciesIds = this) }
+    private suspend fun Set<CryptoCurrency.RawID>.getQuotesOrEmpty(): Set<QuoteStatus> {
+        return runCatching {
+            val cachedQuotes = quotesRepository.getMultiQuoteSyncOrNull(currenciesIds = this)
+
+            val allQuotesFound = cachedQuotes?.all { it.value !is QuoteStatus.Empty } == true
+
+            if (allQuotesFound) return@runCatching cachedQuotes
+
+            val currenciesIds = if (cachedQuotes.isNullOrEmpty()) {
+                this
+            } else {
+                cachedQuotes.mapNotNullTo(hashSetOf()) {
+                    if (it.value is QuoteStatus.Empty) it.rawCurrencyId else null
+                }
+            }
+
+            multiQuoteStatusFetcher(
+                params = MultiQuoteStatusFetcher.Params(currenciesIds = currenciesIds, appCurrencyId = null),
+            )
+
+            quotesRepository.getMultiQuoteSyncOrNull(currenciesIds = this)
+        }
             .getOrNull()
             .orEmpty()
     }

@@ -1,6 +1,7 @@
 package com.tangem.features.walletconnect.transaction.converter
 
 import com.tangem.domain.walletconnect.model.WcSession
+import com.tangem.features.walletconnect.connections.model.transformers.WcAppSubtitleConverter
 import com.tangem.features.walletconnect.connections.model.transformers.WcDAppVerifiedStateConverter
 import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionAppInfoContentUM
 import com.tangem.utils.converter.Converter
@@ -15,7 +16,7 @@ internal class WcTransactionAppInfoContentUMConverter @Inject constructor() :
         verifiedState = WcDAppVerifiedStateConverter(onVerifiedClick = value.onShowVerifiedAlert).convert(
             value.session.securityStatus to value.session.sdkModel.appMetaData.name,
         ),
-        appSubtitle = value.session.sdkModel.appMetaData.description,
+        appSubtitle = WcAppSubtitleConverter.convert(value.session.sdkModel.appMetaData),
     )
 
     data class Input(

@@ -7,6 +7,8 @@ import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.amountScreen.models.AmountState
+import com.tangem.common.ui.navigationButtons.NavigationButton
+import com.tangem.common.ui.navigationButtons.NavigationUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -32,13 +34,14 @@ import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.wallets.models.requireColdWallet
+import com.tangem.features.send.v2.api.SendNotificationsComponent.Params.NotificationData
+import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.features.send.v2.common.CommonSendRoute
 import com.tangem.features.send.v2.common.SendBalanceUpdater
 import com.tangem.features.send.v2.common.SendConfirmAlertFactory
 import com.tangem.features.send.v2.common.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.v2.common.analytics.CommonSendAnalyticEvents.SendScreenSource
 import com.tangem.features.send.v2.common.ui.state.ConfirmUM
-import com.tangem.features.send.v2.common.ui.state.NavigationUM
 import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.send.analytics.SendAnalyticHelper
 import com.tangem.features.send.v2.send.confirm.SendConfirmComponent
@@ -46,16 +49,13 @@ import com.tangem.features.send.v2.send.confirm.model.transformers.SendConfirmIn
 import com.tangem.features.send.v2.send.confirm.model.transformers.SendConfirmSendingStateTransformer
 import com.tangem.features.send.v2.send.confirm.model.transformers.SendConfirmSentStateTransformer
 import com.tangem.features.send.v2.send.confirm.model.transformers.SendConfirmationNotificationsTransformer
-import com.tangem.features.send.v2.send.ui.state.ButtonsUM
 import com.tangem.features.send.v2.send.ui.state.SendUM
-import com.tangem.features.send.v2.subcomponents.destination.ui.state.DestinationUM
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeCheckReloadListener
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeCheckReloadTrigger
 import com.tangem.features.send.v2.subcomponents.fee.model.checkAndCalculateSubtractedAmount
 import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeSelectorUM
 import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeUM
 import com.tangem.features.send.v2.subcomponents.notifications.NotificationsUpdateTrigger
-import com.tangem.features.send.v2.subcomponents.notifications.model.NotificationData
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.orZero
 import com.tangem.utils.extensions.stripZeroPlainString
@@ -122,7 +122,7 @@ internal class SendConfirmModel @Inject constructor(
             enteredMemo = destinationUM?.memoTextField?.value,
             reduceAmountBy = amountState?.reduceAmountBy.orZero(),
             isIgnoreReduce = amountState?.isIgnoreReduce == true,
-            enteredDestination = destinationUM?.addressTextField?.value,
+            enteredDestination = destinationUM?.addressTextField?.actualAddress,
             fee = feeSelectorUM?.selectedFee,
             feeError = (feeUM?.feeSelectorUM as? FeeSelectorUM.Error)?.error,
         )
@@ -316,10 +316,11 @@ internal class SendConfirmModel @Inject constructor(
 
     private fun verifyAndSendTransaction() {
         val amountValue = amountState?.amountTextField?.cryptoAmount?.value ?: return
-        val destination = destinationUM?.addressTextField?.value ?: return
+        val destination = destinationUM?.addressTextField?.actualAddress ?: return
         val memo = destinationUM?.memoTextField?.value
         val fee = feeSelectorUM?.selectedFee
         val feeValue = fee?.amount?.value ?: return
+        val nonce = feeSelectorUM?.nonce
 
         val receivingAmount = checkAndCalculateSubtractedAmount(
             isAmountSubtractAvailable = isAmountSubtractAvailable,
@@ -334,6 +335,7 @@ internal class SendConfirmModel @Inject constructor(
                 amount = receivingAmount.convertToSdkAmount(cryptoCurrency),
                 fee = fee,
                 memo = memo,
+                nonce = nonce,
                 destination = destination,
                 userWalletId = userWallet.walletId,
                 network = cryptoCurrency.network,
@@ -374,6 +376,7 @@ internal class SendConfirmModel @Inject constructor(
                     CommonSendAnalyticEvents.TransactionError(
                         categoryName = analyticsCategoryName,
                         token = cryptoCurrency.symbol,
+                        blockchain = cryptoCurrency.network.name,
                     ),
                 )
             },
@@ -454,6 +457,7 @@ internal class SendConfirmModel @Inject constructor(
         }
     }
 
+    @Suppress("LongMethod")
     private fun configConfirmNavigation() {
         combine(
             flow = uiState,
@@ -470,7 +474,11 @@ internal class SendConfirmModel @Inject constructor(
                             id = R.string.send_summary_title,
                             formatArgs = wrappedList(params.cryptoCurrencyStatus.currency.name),
                         ),
-                        subtitle = amountUM?.title,
+                        subtitle = if (uiState.value.isRedesignEnabled) {
+                            null
+                        } else {
+                            amountUM?.title
+                        },
                         backIconRes = R.drawable.ic_close_24,
                         backIconClick = {
                             analyticsEventHandler.send(
@@ -483,8 +491,8 @@ internal class SendConfirmModel @Inject constructor(
                             )
                             appRouter.pop()
                         },
-                        primaryButton = ButtonsUM.PrimaryButtonUM(
-                            text = when (confirmUM) {
+                        primaryButton = NavigationButton(
+                            textReference = when (confirmUM) {
                                 is ConfirmUM.Success -> resourceReference(R.string.common_close)
                                 is ConfirmUM.Content -> if (confirmUM.isSending) {
                                     resourceReference(R.string.send_sending)
@@ -493,30 +501,33 @@ internal class SendConfirmModel @Inject constructor(
                                 }
                                 else -> resourceReference(R.string.common_send)
                             },
-                            iconResId = R.drawable.ic_tangem_24.takeIf { isReadyToSend },
+                            iconRes = R.drawable.ic_tangem_24.takeIf { isReadyToSend },
                             isEnabled = confirmUM.isPrimaryButtonEnabled,
                             isHapticClick = isReadyToSend,
                             onClick = {
                                 when (confirmUM) {
                                     is ConfirmUM.Success -> appRouter.pop()
                                     is ConfirmUM.Content -> if (confirmUM.isSending) {
-                                        return@PrimaryButtonUM
+                                        return@NavigationButton
                                     } else {
                                         onSendClick()
                                     }
-                                    else -> return@PrimaryButtonUM
+                                    else -> return@NavigationButton
                                 }
                             },
                         ),
                         prevButton = null,
-                        secondaryPairButtonsUM = ButtonsUM.SecondaryPairButtonsUM(
-                            leftText = resourceReference(R.string.common_explore),
-                            leftIconResId = R.drawable.ic_web_24,
-                            onLeftClick = ::onExploreClick,
-                            rightText = resourceReference(R.string.common_share),
-                            rightIconResId = R.drawable.ic_share_24,
-                            onRightClick = ::onShareClick,
-                        ).takeIf { confirmUM is ConfirmUM.Success },
+                        secondaryPairButtonsUM = (
+                            NavigationButton(
+                                textReference = resourceReference(R.string.common_explore),
+                                iconRes = R.drawable.ic_web_24,
+                                onClick = ::onExploreClick,
+                            ) to NavigationButton(
+                                textReference = resourceReference(R.string.common_share),
+                                iconRes = R.drawable.ic_share_24,
+                                onClick = ::onShareClick,
+                            )
+                            ).takeIf { confirmUM is ConfirmUM.Success },
                     ),
                 ),
             )

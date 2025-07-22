@@ -10,6 +10,15 @@ sealed class AssetRequirementsCondition {
     data object PaidTransaction : AssetRequirementsCondition()
 
     /**
+     * Trustlines are an explicit opt-in for an account to hold a particular asset.
+     */
+    data class RequiredTrustline(
+        val requiredAmount: BigDecimal,
+        val currencySymbol: String,
+        val decimals: Int,
+    ) : AssetRequirementsCondition()
+
+    /**
      * The exact value of the fee for this type of condition is stored in `feeAmount`.
      */
     data class PaidTransactionWithFee(
