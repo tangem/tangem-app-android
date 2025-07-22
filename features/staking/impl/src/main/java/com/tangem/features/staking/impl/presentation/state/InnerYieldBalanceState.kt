@@ -9,6 +9,7 @@ import java.math.BigDecimal
 @Immutable
 internal sealed class InnerYieldBalanceState {
     data class Data(
+        val integrationId: String?,
         val reward: YieldReward,
         val isActionable: Boolean,
         val balances: ImmutableList<BalanceState>,

@@ -1,51 +1,35 @@
 package com.tangem.data.common.currency
 
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import com.squareup.moshi.Moshi
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
-import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
-import org.junit.After
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class UserTokensSaverTest {
 
     private val tangemTechApi: TangemTechApi = mockk()
-    private val dataStore: DataStore<Preferences> = mockk(relaxed = true)
-    private val appPreferenceStore = AppPreferencesStore(
-        moshi = Moshi.Builder().build(),
+    private val userTokensResponseStore: UserTokensResponseStore = mockk(relaxed = true)
+    private val enricher: UserTokensResponseAddressesEnricher = mockk()
+
+    private val userTokensSaver: UserTokensSaver = UserTokensSaver(
+        tangemTechApi = tangemTechApi,
+        userTokensResponseStore = userTokensResponseStore,
+        userTokensResponseAddressesEnricher = enricher,
         dispatchers = TestingCoroutineDispatcherProvider(),
-        preferencesDataStore = dataStore,
     )
-    private val dispatchers: CoroutineDispatcherProvider = TestingCoroutineDispatcherProvider()
-    private val userTokensResponseAddressesEnricher: UserTokensResponseAddressesEnricher = mockk()
 
-    private lateinit var userTokensSaver: UserTokensSaver
-
-    @Before
-    fun setup() {
-        coEvery { dataStore.data } returns flowOf(mockk(relaxed = true))
-        userTokensSaver = UserTokensSaver(
-            tangemTechApi = tangemTechApi,
-            appPreferencesStore = appPreferenceStore,
-            dispatchers = dispatchers,
-            userTokensResponseAddressesEnricher = userTokensResponseAddressesEnricher,
-        )
-    }
-
-    @After
-    fun tearDown() {
-        clearAllMocks()
+    @BeforeEach
+    fun resetMocks() {
+        clearMocks(tangemTechApi, userTokensResponseStore, enricher)
     }
 
     @Test
@@ -58,54 +42,27 @@ class UserTokensSaverTest {
             sort = UserTokensResponse.SortType.BALANCE,
             tokens = emptyList(),
         )
+
         val enrichedResponse = UserTokensResponse(
             version = 0,
             group = UserTokensResponse.GroupType.NETWORK,
-            sort = UserTokensResponse.SortType.BALANCE,
+            sort = UserTokensResponse.SortType.MANUAL,
             tokens = emptyList(),
         )
-        coEvery { userTokensResponseAddressesEnricher(userWalletId, response) } returns enrichedResponse
-        coEvery { dataStore.updateData(any()) } returns mockk(relaxed = true)
+
+        coEvery { enricher(userWalletId, response) } returns enrichedResponse
 
         // WHEN
         userTokensSaver.store(userWalletId, response)
 
         // THEN
-        coVerify {
-            dataStore.updateData(any())
+        coVerifyOrder {
+            enricher(userWalletId, response)
+            userTokensResponseStore.store(userWalletId, enrichedResponse)
         }
-        coVerify(exactly = 0) {
+
+        coVerify(inverse = true) {
             tangemTechApi.saveUserTokens(any(), any())
-        }
-    }
-
-    @Test
-    fun `GIVEN user wallet id and response WHEN storeAndPush THEN should store and push enriched response`() = runTest {
-        // GIVEN
-        val userWalletId = UserWalletId("1234567890abcdef")
-        val response = UserTokensResponse(
-            version = 0,
-            group = UserTokensResponse.GroupType.NETWORK,
-            sort = UserTokensResponse.SortType.BALANCE,
-            tokens = emptyList(),
-        )
-        val enrichedResponse = UserTokensResponse(
-            version = 0,
-            group = UserTokensResponse.GroupType.NETWORK,
-            sort = UserTokensResponse.SortType.BALANCE,
-            tokens = emptyList(),
-        )
-        coEvery { userTokensResponseAddressesEnricher(userWalletId, response) } returns enrichedResponse
-        coEvery { dataStore.updateData(any()) } returns mockk(relaxed = true)
-        coEvery { tangemTechApi.saveUserTokens(any(), any()) } returns ApiResponse.Success(Unit)
-
-        // WHEN
-        userTokensSaver.storeAndPush(userWalletId, response)
-
-        // THEN
-        coVerify {
-            dataStore.updateData(any())
-            tangemTechApi.saveUserTokens(userWalletId.stringValue, enrichedResponse)
         }
     }
 
@@ -123,14 +80,13 @@ class UserTokensSaverTest {
             val enrichedResponse = UserTokensResponse(
                 version = 0,
                 group = UserTokensResponse.GroupType.NETWORK,
-                sort = UserTokensResponse.SortType.BALANCE,
+                sort = UserTokensResponse.SortType.MANUAL,
                 tokens = emptyList(),
             )
             val error = ApiResponseError.UnknownException(Exception("API Error"))
             var onFailSendCalled = false
-            coEvery { userTokensResponseAddressesEnricher(userWalletId, response) } returns enrichedResponse
-            coEvery { tangemTechApi.saveUserTokens(any(), any()) } returns
-                ApiResponse.Error(error) as ApiResponse<Unit>
+            coEvery { enricher(userWalletId, response) } returns enrichedResponse
+            coEvery { tangemTechApi.saveUserTokens(any(), any()) } returns ApiResponse.Error(error) as ApiResponse<Unit>
 
             // WHEN
             userTokensSaver.push(
@@ -140,12 +96,42 @@ class UserTokensSaverTest {
             )
 
             // THEN
-            coVerify {
+            coVerifyOrder {
+                enricher(userWalletId, response)
                 tangemTechApi.saveUserTokens(userWalletId.stringValue, enrichedResponse)
             }
-            coVerify(exactly = 0) {
-                dataStore.updateData(any())
-            }
+
             assert(onFailSendCalled) { "onFailSend callback should be called when API call fails" }
         }
+
+    @Test
+    fun `GIVEN user wallet id and response WHEN storeAndPush THEN should store and push enriched response`() = runTest {
+        // GIVEN
+        val userWalletId = UserWalletId("1234567890abcdef")
+        val response = UserTokensResponse(
+            version = 0,
+            group = UserTokensResponse.GroupType.NETWORK,
+            sort = UserTokensResponse.SortType.BALANCE,
+            tokens = emptyList(),
+        )
+        val enrichedResponse = UserTokensResponse(
+            version = 0,
+            group = UserTokensResponse.GroupType.NETWORK,
+            sort = UserTokensResponse.SortType.BALANCE,
+            tokens = emptyList(),
+        )
+        coEvery { enricher(userWalletId, response) } returns enrichedResponse
+        coEvery {
+            tangemTechApi.saveUserTokens(userWalletId.stringValue, enrichedResponse)
+        } returns ApiResponse.Success(Unit)
+
+        // WHEN
+        userTokensSaver.storeAndPush(userWalletId, response)
+
+        // THEN
+        coVerifyOrder {
+            enricher(userWalletId, response)
+            tangemTechApi.saveUserTokens(userWalletId.stringValue, enrichedResponse)
+        }
+    }
 }
