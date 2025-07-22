@@ -5,6 +5,7 @@ import com.tangem.data.common.currency.isCustomCoin
 import com.tangem.data.walletconnect.model.CAIP10
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesProducer
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
@@ -14,7 +15,6 @@ import com.tangem.domain.walletconnect.model.WcSession
 import com.tangem.domain.walletconnect.model.WcSessionApprove
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.models.UserWallet
 import javax.inject.Inject
 
 internal class WcNetworksConverter @Inject constructor(
