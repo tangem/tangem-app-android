@@ -28,7 +28,7 @@ internal class AssociateNetworksDelegate(
         }
     }
 
-    @Throws(WcPairError.UnsupportedNetworks::class)
+    @Throws(WcPairError.UnsupportedBlockchains::class)
     suspend fun associate(sessionProposal: Wallet.Model.SessionProposal): Map<UserWallet, ProposalNetwork> {
         val userWallets = getWallets.invokeSync().filter { it.isMultiCurrency }
         val requiredNamespaces: Set<String> = sessionProposal.requiredNamespaces.setOfChainId()
@@ -74,7 +74,7 @@ internal class AssociateNetworksDelegate(
                 notAdded.add(wcNetwork)
             }
         }
-        if (unknownRequired.isNotEmpty()) throw WcPairError.UnsupportedNetworks(unknownRequired)
+        if (unknownRequired.isNotEmpty()) throw WcPairError.UnsupportedBlockchains(unknownRequired)
         return ProposalNetwork(
             wallet = wallet,
             missingRequired = missingRequired,

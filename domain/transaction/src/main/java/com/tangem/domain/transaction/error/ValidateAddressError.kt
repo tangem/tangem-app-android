@@ -8,6 +8,7 @@ sealed class AddressValidation {
     sealed class Success : AddressValidation() {
         data object Valid : Success()
         data object ValidXAddress : Success()
+        data class ValidNamedAddress(val blockchainAddress: String) : Success()
     }
 
     sealed class Error : AddressValidation() {
