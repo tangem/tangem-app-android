@@ -5,7 +5,7 @@ import com.tangem.domain.swap.models.SwapStatusModel
 import com.tangem.domain.swap.models.SwapTransactionListModel
 import com.tangem.domain.swap.models.SwapTransactionModel
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.coroutines.flow.Flow
 
 /**

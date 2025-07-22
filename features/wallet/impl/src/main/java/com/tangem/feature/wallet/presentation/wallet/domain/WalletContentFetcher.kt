@@ -1,7 +1,7 @@
 package com.tangem.feature.wallet.presentation.wallet.domain
 
 import com.tangem.domain.tokens.wallet.WalletBalanceFetcher
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveInAndJoin
