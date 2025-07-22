@@ -2,8 +2,8 @@ package com.tangem.data.walletconnect
 
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.walletconnect.repository.WalletConnectRepository
-import com.tangem.domain.wallets.models.isMultiCurrency
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 
