@@ -10,8 +10,8 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.quote.QuoteStatus
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.onramp.model.HotCryptoCurrency
-import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.utils.converter.Converter
 import java.math.BigDecimal
 

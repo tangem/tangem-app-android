@@ -4,7 +4,7 @@ import androidx.annotation.DrawableRes
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.util.getCardsCount
 import com.tangem.domain.demo.DemoConfig
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.feature.wallet.impl.R
 import kotlinx.coroutines.runBlocking
