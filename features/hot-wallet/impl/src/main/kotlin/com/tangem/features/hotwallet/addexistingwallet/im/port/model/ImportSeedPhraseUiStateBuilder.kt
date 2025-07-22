@@ -1,17 +1,18 @@
-package com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.model.builder
+package com.tangem.features.hotwallet.addexistingwallet.im.port.model
 
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import com.tangem.common.core.TangemSdkError
+import com.tangem.core.ui.R
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.crypto.bip39.Mnemonic
 import com.tangem.crypto.bip39.MnemonicErrorResult
 import com.tangem.features.hotwallet.MnemonicRepository
-import com.tangem.features.onboarding.v2.impl.R
-import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.ui.state.MultiWalletSeedPhraseUM
+import com.tangem.features.hotwallet.addexistingwallet.im.port.entity.AddExistingWalletImportUM
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
@@ -21,15 +22,22 @@ internal class ImportSeedPhraseUiStateBuilder(
     private val modelScope: CoroutineScope,
     private val mnemonicRepository: MnemonicRepository,
     private val readyToImport: (Boolean) -> Unit,
-    private val updateUiState: ((MultiWalletSeedPhraseUM.Import) -> MultiWalletSeedPhraseUM.Import) -> Unit,
+    private val updateUiState: ((AddExistingWalletImportUM) -> AddExistingWalletImportUM) -> Unit,
     private val importWallet: (mnemonic: Mnemonic, passphrase: String?) -> Unit,
 ) {
     private val wordsCheckJobHolder = JobHolder()
     private var importedMnemonic: Mnemonic? = null
     private var passphrase: String? = null
 
-    fun getState(): MultiWalletSeedPhraseUM {
-        return MultiWalletSeedPhraseUM.Import(
+    fun getState(): AddExistingWalletImportUM {
+        return AddExistingWalletImportUM(
+            words = TextFieldValue(""),
+            passPhrase = TextFieldValue(""),
+            wordsErrorText = null,
+            invalidWords = persistentListOf(),
+            createWalletEnabled = false,
+            createWalletProgress = false,
+            suggestionsList = persistentListOf(),
             wordsChange = {
                 launchInterceptWords(wordsField = it)
                 suggestNextWord(it)
@@ -44,6 +52,8 @@ internal class ImportSeedPhraseUiStateBuilder(
             onPassphraseInfoClick = ::showInfoBS,
             createWalletClick = ::onCreateWallet,
             onSuggestionClick = { word -> addSuggestedWord(word) },
+            readyToImport = false,
+            infoBottomSheetConfig = TangemBottomSheetConfig.Empty,
         )
     }
 
@@ -77,7 +87,7 @@ internal class ImportSeedPhraseUiStateBuilder(
         val text = wordsField.text
         val wordsFromText = text.split(" ").filter { it.isNotBlank() }.map { it.trim() }
         val lastWord = wordsFromText.lastOrNull() ?: return
-        if (lastWord.length < 2) return
+        if (lastWord.length < MINIMUM_WORD_LENGTH) return
 
         if (mnemonicRepository.words.contains(lastWord) && mnemonicRepository.words.none { it.startsWith(lastWord) }) {
             updateUiState { it.copy(suggestionsList = emptyList<String>().toImmutableList()) }
@@ -95,7 +105,7 @@ internal class ImportSeedPhraseUiStateBuilder(
 
     private fun launchInterceptWords(wordsField: TextFieldValue) {
         modelScope.launch {
-            delay(timeMillis = 500)
+            delay(timeMillis = WORDS_INTERCEPT_DELAY_MS)
             interceptWords(wordsField)
         }.saveIn(wordsCheckJobHolder)
     }
@@ -161,13 +171,18 @@ internal class ImportSeedPhraseUiStateBuilder(
     private fun showInfoBS() {
         updateUiState { state ->
             state.copy(
-                infoBottomSheetConfig = TangemBottomSheetConfig.Empty.copy(
+                infoBottomSheetConfig = TangemBottomSheetConfig.Companion.Empty.copy(
                     isShown = true,
                     onDismissRequest = {
-                        updateUiState { it.copy(infoBottomSheetConfig = TangemBottomSheetConfig.Empty) }
+                        updateUiState { it.copy(infoBottomSheetConfig = TangemBottomSheetConfig.Companion.Empty) }
                     },
                 ),
             )
         }
+    }
+
+    companion object {
+        private const val MINIMUM_WORD_LENGTH = 2
+        private const val WORDS_INTERCEPT_DELAY_MS = 500L
     }
 }
