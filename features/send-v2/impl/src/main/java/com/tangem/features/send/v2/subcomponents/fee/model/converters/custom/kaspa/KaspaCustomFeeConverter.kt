@@ -11,17 +11,16 @@ import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.features.feeselector.api.entity.CustomFeeFieldUM
 import com.tangem.features.send.v2.impl.R
-import com.tangem.features.send.v2.subcomponents.fee.model.SendFeeClickIntents
 import com.tangem.features.send.v2.subcomponents.fee.model.converters.custom.CustomFeeConverter
+import com.tangem.features.send.v2.api.entity.CustomFeeFieldUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import java.math.RoundingMode
 
 internal class KaspaCustomFeeConverter(
-    private val clickIntents: SendFeeClickIntents,
+    private val onCustomFeeValueChange: (Int, String) -> Unit,
     private val appCurrency: AppCurrency,
     feeCryptoCurrencyStatus: CryptoCurrencyStatus,
 ) : CustomFeeConverter<Fee.Kaspa> {
@@ -35,7 +34,7 @@ internal class KaspaCustomFeeConverter(
                 value = feeValue?.parseBigDecimal(value.amount.decimals).orEmpty(),
                 decimals = value.amount.decimals,
                 symbol = value.amount.currencySymbol,
-                onValueChange = { clickIntents.onCustomFeeValueChange(FEE_AMOUNT_INDEX, it) },
+                onValueChange = { onCustomFeeValueChange(FEE_AMOUNT_INDEX, it) },
                 keyboardOptions = KeyboardOptions(
                     imeAction = ImeAction.Companion.Next,
                     keyboardType = KeyboardType.Companion.Number,
