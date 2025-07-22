@@ -14,8 +14,8 @@ import com.tangem.domain.visa.model.VisaActivationRemoteState
 import com.tangem.domain.visa.model.VisaCardActivationStatus
 import com.tangem.domain.visa.model.VisaCardWalletDataToSignRequest
 import com.tangem.domain.visa.model.VisaCustomerWalletDataToSignRequest
-import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.isLocked
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.onboarding.v2.visa.api.OnboardingVisaComponent
 import com.tangem.features.onboarding.v2.visa.impl.OnboardingVisaInnerNavigationState

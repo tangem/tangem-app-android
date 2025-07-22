@@ -10,7 +10,7 @@ import com.tangem.domain.common.extensions.makePublicKey
 import com.tangem.domain.common.extensions.makeWalletManagerForApp
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 import timber.log.Timber
 
 internal class WalletManagerFactory(
