@@ -31,7 +31,7 @@ fun SendAmountContent(
     amountState: AmountState,
     isBalanceHidden: Boolean,
     clickIntents: SendAmountClickIntents,
-    isSendWithSwapEnabled: Boolean,
+    isSendWithSwapAvailable: Boolean,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.background(TangemTheme.colors.background.tertiary)) {
@@ -40,7 +40,7 @@ fun SendAmountContent(
             isBalanceHidden = isBalanceHidden,
             clickIntents = clickIntents,
         )
-        if (isSendWithSwapEnabled) {
+        if (isSendWithSwapAvailable) {
             SendConvertTokenButton(
                 onConvertToAnother = clickIntents::onConvertToAnotherToken,
             )
@@ -95,7 +95,7 @@ private fun SendAmountContent_Preview(@PreviewParameter(SendAmountContentPreview
             amountState = params,
             isBalanceHidden = true,
             clickIntents = SendAmountClickIntentsStub,
-            isSendWithSwapEnabled = true,
+            isSendWithSwapAvailable = true,
         )
     }
 }
