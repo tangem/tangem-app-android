@@ -5,7 +5,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.send.v2.subcomponents.destination.model.transformers.WALLET_DEFAULT_COUNT
 import com.tangem.features.send.v2.subcomponents.destination.model.transformers.WALLET_KEY_TAG
 import com.tangem.features.send.v2.subcomponents.destination.model.transformers.emptyListState
-import com.tangem.features.send.v2.subcomponents.destination.ui.state.DestinationRecipientListUM
+import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationRecipientListUM
 import com.tangem.features.send.v2.subcomponents.destination.ui.state.DestinationWalletUM
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.PersistentList

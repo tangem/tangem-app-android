@@ -6,8 +6,8 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.transaction.error.AddressValidation
 import com.tangem.domain.transaction.error.AddressValidationResult
 import com.tangem.domain.transaction.error.ValidateMemoError
+import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.features.send.v2.impl.R
-import com.tangem.features.send.v2.subcomponents.destination.ui.state.DestinationUM
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.toPersistentList
 
@@ -31,17 +31,21 @@ internal class SendDestinationValidationResultTransformer(
         }.leftOrNull()
 
         val shouldDisableMemo = shouldDisableMemo()
+        val blockchainAddress =
+            (addressValidationResult.getOrNull() as? AddressValidation.Success.ValidNamedAddress)?.blockchainAddress
 
+        val memoField = state.memoTextField
         return state.copy(
             isValidating = false,
             isPrimaryButtonEnabled = isValidAddress && isValidMemo,
             addressTextField = state.addressTextField.copy(
                 error = addressErrorText?.let(::resourceReference),
                 isError = state.addressTextField.value.isNotEmpty() && !isValidAddress,
+                blockchainAddress = blockchainAddress,
             ),
-            memoTextField = state.memoTextField?.copy(
-                value = state.memoTextField.value.takeIf { !shouldDisableMemo }.orEmpty(),
-                isError = state.memoTextField.value.isNotEmpty() && !isValidMemo,
+            memoTextField = memoField?.copy(
+                value = memoField.value.takeIf { !shouldDisableMemo }.orEmpty(),
+                isError = memoField.value.isNotEmpty() && !isValidMemo,
                 isEnabled = !shouldDisableMemo,
             ),
             recent = state.recent.map { recent ->
