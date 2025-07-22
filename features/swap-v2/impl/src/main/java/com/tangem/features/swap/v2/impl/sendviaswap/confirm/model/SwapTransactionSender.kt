@@ -14,7 +14,7 @@ import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.utils.convertToSdkAmount
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.features.send.v2.api.subcomponents.feeSelector.utils.FeeCalculationUtils
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory

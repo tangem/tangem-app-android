@@ -1,8 +1,8 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers
 
 import com.tangem.domain.common.util.cardTypesResolver
-import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.isLocked
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.isLocked
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
