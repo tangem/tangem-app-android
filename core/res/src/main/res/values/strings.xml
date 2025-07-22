@@ -425,8 +425,8 @@
   <string name="hw_activation_need_description">To complete setup, back up your wallet and secure app access with a Access Code.</string>
   <string name="hw_activation_need_finish">Finish Now</string>
   <string name="hw_activation_need_title">Finish Wallet Activation</string>
-  <string name="hw_backup_icloud_description">Recover an existing wallet stored in your iCloud backup</string>
-  <string name="hw_backup_icloud_title">iCloud backup</string>
+  <string name="hw_backup_google_drive_description">Recover an existing wallet stored in your Google Drive backup</string>
+  <string name="hw_backup_google_drive_title">Google Drive Backup</string>
   <string name="hw_backup_need_action">Go to backup</string>
   <string name="hw_backup_need_description">To secure your wallet with a Access Code, complete the backup first.</string>
   <string name="hw_backup_need_title">Finish Backup First</string>
