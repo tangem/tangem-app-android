@@ -14,11 +14,13 @@ import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.staking.model.stakekit.YieldBalanceList
 import com.tangem.domain.staking.model.stakekit.action.StakingAction
 import com.tangem.domain.staking.model.stakekit.action.StakingActionStatus
+import com.tangem.domain.staking.model.stakekit.action.StakingActionType
 import com.tangem.domain.staking.model.stakekit.transaction.ActionParams
 import com.tangem.domain.staking.model.stakekit.transaction.StakingGasEstimate
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
+import java.math.BigDecimal
 
 @Suppress("TooManyFunctions")
 interface StakingRepository {
@@ -100,4 +102,9 @@ interface StakingRepository {
     fun getStakingApproval(cryptoCurrency: CryptoCurrency): StakingApproval
 
     suspend fun isAnyTokenStaked(userWalletId: UserWalletId): Boolean
+
+    /**
+     * Return action requirement amount
+     */
+    fun getActionRequirementAmount(integrationId: String, stakingActionType: StakingActionType): BigDecimal?
 }

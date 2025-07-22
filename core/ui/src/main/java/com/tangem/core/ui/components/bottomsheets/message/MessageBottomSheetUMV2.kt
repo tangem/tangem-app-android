@@ -37,7 +37,7 @@ data class MessageBottomSheetUMV2(
         }
 
         enum class BackgroundType {
-            Unspecified, SameAsTint
+            Unspecified, SameAsTint, Accent, Informative, Attention, Warning,
         }
     }
 
