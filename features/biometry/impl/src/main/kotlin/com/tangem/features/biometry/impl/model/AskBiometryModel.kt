@@ -13,10 +13,10 @@ import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.card.repository.CardSdkConfigRepository
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.settings.SetSaveWalletScreenShownUseCase
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
-import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.biometry.impl.ui.state.AskBiometryUM

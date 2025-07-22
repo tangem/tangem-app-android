@@ -7,9 +7,9 @@ import arrow.core.raise.either
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.repository.CurrenciesRepository
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.wallets.models.isMultiCurrency
+import com.tangem.domain.models.wallet.isMultiCurrency
 
 class GetCryptoCurrencyUseCase(
     private val currenciesRepository: CurrenciesRepository,
