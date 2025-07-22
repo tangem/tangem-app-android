@@ -1,5 +1,6 @@
 package com.tangem.domain.common
 
+import com.tangem.blockchain.blockchains.stellar.StellarTransactionBuilder.Companion.TANGEM_BACKEND_CONTRACT_ADDRESS_SEPARATOR
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.common.card.EllipticCurve
@@ -82,10 +83,15 @@ internal class TangemCardTypesResolver(
 
     override fun getPrimaryToken(): Token? {
         val cardToken = walletData?.token ?: return null
+        val isNodl = cardToken.symbol == "NODL"
+        val contractAddress = when {
+            isNodl -> "${cardToken.symbol}$TANGEM_BACKEND_CONTRACT_ADDRESS_SEPARATOR${cardToken.contractAddress}"
+            else -> cardToken.contractAddress
+        }
         return Token(
             cardToken.name,
             cardToken.symbol,
-            cardToken.contractAddress,
+            contractAddress,
             cardToken.decimals,
         )
     }
