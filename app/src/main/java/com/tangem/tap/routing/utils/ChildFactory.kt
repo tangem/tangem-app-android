@@ -8,6 +8,7 @@ import com.tangem.feature.referral.api.ReferralComponent
 import com.tangem.feature.stories.api.StoriesComponent
 import com.tangem.feature.usedesk.api.UsedeskComponent
 import com.tangem.feature.walletsettings.component.WalletSettingsComponent
+import com.tangem.features.hotwallet.WalletBackupComponent
 import com.tangem.features.createwalletselection.CreateWalletSelectionComponent
 import com.tangem.features.details.component.DetailsComponent
 import com.tangem.features.disclaimer.api.components.DisclaimerComponent
@@ -51,6 +52,7 @@ import com.tangem.features.walletconnect.components.WalletConnectEntryComponent 
 internal class ChildFactory @Inject constructor(
     private val detailsComponentFactory: DetailsComponent.Factory,
     private val walletSettingsComponentFactory: WalletSettingsComponent.Factory,
+    private val walletBackupComponentFactory: WalletBackupComponent.Factory,
     private val disclaimerComponentFactory: DisclaimerComponent.Factory,
     private val manageTokensComponentFactory: ManageTokensComponent.Factory,
     private val marketsTokenDetailsComponentFactory: MarketsTokenDetailsComponent.Factory,
@@ -139,6 +141,15 @@ internal class ChildFactory @Inject constructor(
                     context = context,
                     params = WalletSettingsComponent.Params(route.userWalletId),
                     componentFactory = walletSettingsComponentFactory,
+                )
+            }
+            is AppRoute.WalletBackup -> {
+                createComponentChild(
+                    context = context,
+                    params = WalletBackupComponent.Params(
+                        userWalletId = route.userWalletId,
+                    ),
+                    componentFactory = walletBackupComponentFactory,
                 )
             }
             is AppRoute.MarketsTokenDetails -> {
