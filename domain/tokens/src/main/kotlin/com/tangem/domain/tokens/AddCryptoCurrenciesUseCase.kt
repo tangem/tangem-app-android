@@ -7,7 +7,7 @@ import arrow.core.raise.either
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
-import com.tangem.domain.quotes.multi.MultiQuoteFetcher
+import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.staking.single.SingleYieldBalanceFetcher
 import com.tangem.domain.tokens.repository.CurrenciesRepository
@@ -28,7 +28,7 @@ class AddCryptoCurrenciesUseCase(
     private val currenciesRepository: CurrenciesRepository,
     private val stakingRepository: StakingRepository,
     private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
-    private val multiQuoteFetcher: MultiQuoteFetcher,
+    private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
     private val singleYieldBalanceFetcher: SingleYieldBalanceFetcher,
     private val tokensFeatureToggles: TokensFeatureToggles,
 ) {
@@ -119,7 +119,7 @@ class AddCryptoCurrenciesUseCase(
      * Refreshes the network statuses for tokens that have corresponding coins in the
      * [existingCurrencies] list.
      */
-    private suspend fun Raise<Throwable>.refreshUpdatedNetworks(
+    private suspend fun refreshUpdatedNetworks(
         userWalletId: UserWalletId,
         currencyToAdd: CryptoCurrency,
         existingCurrencies: List<CryptoCurrency>,
@@ -140,7 +140,8 @@ class AddCryptoCurrenciesUseCase(
                 networks = setOfNotNull(networksToUpdate, networkToUpdate),
             ),
         )
-            .bind()
+
+        currenciesRepository.syncTokens(userWalletId)
     }
 
     private suspend fun refreshUpdatedYieldBalances(userWalletId: UserWalletId, addedCurrency: CryptoCurrency) {
@@ -162,8 +163,8 @@ class AddCryptoCurrenciesUseCase(
     }
 
     private suspend fun refreshUpdatedQuotes(currencyToAdd: CryptoCurrency) {
-        multiQuoteFetcher(
-            params = MultiQuoteFetcher.Params(
+        multiQuoteStatusFetcher(
+            params = MultiQuoteStatusFetcher.Params(
                 currenciesIds = setOfNotNull(currencyToAdd.id.rawCurrencyId),
                 appCurrencyId = null,
             ),
@@ -191,7 +192,7 @@ class AddCryptoCurrenciesUseCase(
 
     private suspend fun Raise<Throwable>.addCurrencies(userWalletId: UserWalletId, currency: CryptoCurrency) {
         catch(
-            { currenciesRepository.addCurrencies(userWalletId, listOf(currency)) },
+            { currenciesRepository.addCurrenciesCache(userWalletId, listOf(currency)) },
         ) {
             raise(it)
         }
