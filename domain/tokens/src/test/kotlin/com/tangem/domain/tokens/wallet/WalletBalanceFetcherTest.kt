@@ -14,7 +14,7 @@ import com.tangem.domain.tokens.wallet.FetchingSource.*
 import com.tangem.domain.tokens.wallet.implementor.MultiWalletBalanceFetcher
 import com.tangem.domain.tokens.wallet.implementor.SingleWalletBalanceFetcher
 import com.tangem.domain.tokens.wallet.implementor.SingleWalletWithTokenBalanceFetcher
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
 import kotlinx.coroutines.test.runTest

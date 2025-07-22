@@ -3,6 +3,7 @@ package com.tangem.domain.wallets.models
 import com.tangem.domain.models.MobileWallet
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.hot.sdk.model.HotWalletId
 import kotlinx.serialization.Serializable
 import kotlin.contracts.ExperimentalContracts
