@@ -4,6 +4,7 @@ import com.arkivanov.decompose.ComponentContext
 import com.tangem.core.decompose.di.HiltComponentBuilderOwner
 import com.tangem.core.decompose.navigation.NavigationOwner
 import com.tangem.core.decompose.ui.UiMessageSenderOwner
+import com.tangem.core.decompose.utils.ActivityHolder
 import com.tangem.core.decompose.utils.ComponentScopeOwner
 import com.tangem.core.decompose.utils.DispatchersOwner
 import com.tangem.core.decompose.utils.TagsOwner
@@ -20,4 +21,5 @@ interface AppComponentContext :
     DispatchersOwner,
     UiMessageSenderOwner,
     HiltComponentBuilderOwner,
-    TagsOwner
+    TagsOwner,
+    ActivityHolder
