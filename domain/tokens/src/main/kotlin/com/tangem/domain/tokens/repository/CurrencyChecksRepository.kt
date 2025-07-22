@@ -6,7 +6,7 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.CurrencyAmount
 import com.tangem.domain.tokens.model.blockchains.UtxoAmountLimit
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import java.math.BigDecimal
 
 interface CurrencyChecksRepository {

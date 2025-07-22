@@ -17,7 +17,7 @@ import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
 import com.tangem.domain.tokens.RefreshMultiCurrencyWalletQuotesUseCase
 import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.models.isMultiCurrency
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase

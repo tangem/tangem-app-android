@@ -18,7 +18,7 @@ import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.message.EventMessageEffect
 import com.tangem.core.ui.message.EventMessageHandler
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.walletconnect.connections.model.WcConnectionsModel
 import com.tangem.features.walletconnect.connections.routes.WcConnectionsBottomSheetConfig
 import com.tangem.features.walletconnect.connections.ui.WcConnectionsContent
