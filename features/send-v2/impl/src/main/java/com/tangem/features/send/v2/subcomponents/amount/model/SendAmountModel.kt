@@ -21,9 +21,12 @@ import com.tangem.core.ui.extensions.WrappedList
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.tokens.GetMinimumTransactionAmountSyncUseCase
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.isMultiCurrency
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.v2.api.SendFeatureToggles
 import com.tangem.features.send.v2.api.entity.PredefinedValues
@@ -58,6 +61,7 @@ internal class SendAmountModel @Inject constructor(
     private val sendFeatureToggles: SendFeatureToggles,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
+    private val rampStateManager: RampStateManager,
 ) : Model(), SendAmountClickIntents {
 
     private val params: SendAmountComponentParams = paramsContainer.require()
@@ -67,7 +71,9 @@ internal class SendAmountModel @Inject constructor(
     private val _uiState = MutableStateFlow(params.state)
     val uiState = _uiState.asStateFlow()
 
-    val isSendWithSwapEnabled = sendFeatureToggles.isSendWithSwapEnabled
+    private var isAvailableForSwap: Boolean = false
+    val isSendWithSwapAvailable: StateFlow<Boolean>
+    field = MutableStateFlow(false)
 
     private val analyticsCategoryName = params.analyticsCategoryName
     private var cryptoCurrencyStatus: CryptoCurrencyStatus = CryptoCurrencyStatus(
@@ -79,6 +85,12 @@ internal class SendAmountModel @Inject constructor(
     private var maxAmountBoundary: EnterAmountBoundary by Delegates.notNull()
 
     init {
+        modelScope.launch {
+            isAvailableForSwap = rampStateManager.availableForSwap(
+                userWalletId = params.userWalletId,
+                cryptoCurrency = params.cryptoCurrency,
+            ) == ScenarioUnavailabilityReason.None
+        }
         configAmountNavigation()
         initAppCurrency()
         subscribeOnCryptoCurrencyStatusFlow()
@@ -301,6 +313,10 @@ internal class SendAmountModel @Inject constructor(
             flow2 = params.currentRoute,
             transform = { state, route -> state to route },
         ).onEach { (state, route) ->
+            isSendWithSwapAvailable.update {
+                val isMultiCurrency = userWallet?.isMultiCurrency == true
+                isAvailableForSwap && isMultiCurrency && sendFeatureToggles.isSendWithSwapEnabled
+            }
             params.callback.onNavigationResult(
                 NavigationUM.Content(
                     title = resourceReference(R.string.send_amount_label),
