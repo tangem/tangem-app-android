@@ -15,13 +15,13 @@ import com.tangem.data.walletconnect.pair.DefaultWcPairUseCase
 import com.tangem.data.walletconnect.pair.WcPairSdkDelegate
 import com.tangem.data.walletconnect.utils.WcSdkSessionConverter
 import com.tangem.domain.blockaid.BlockAidVerifier
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.walletconnect.model.WcPairError
 import com.tangem.domain.walletconnect.model.WcPairRequest
 import com.tangem.domain.walletconnect.model.WcSession
 import com.tangem.domain.walletconnect.model.WcSessionApprove
 import com.tangem.domain.walletconnect.repository.WcSessionsManager
 import com.tangem.domain.walletconnect.usecase.pair.WcPairState
-import com.tangem.domain.wallets.models.UserWalletId
 import io.mockk.coEvery
 import io.mockk.coVerifyOrder
 import io.mockk.mockk

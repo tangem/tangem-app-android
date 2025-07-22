@@ -16,7 +16,7 @@ import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUMV2
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.walletconnect.model.WcPairRequest
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.walletconnect.connections.model.WcPairModel
 import com.tangem.features.walletconnect.connections.routes.WcAppInfoRoutes
 import com.tangem.features.walletconnect.connections.routes.WcAppInfoRoutes.Alert
