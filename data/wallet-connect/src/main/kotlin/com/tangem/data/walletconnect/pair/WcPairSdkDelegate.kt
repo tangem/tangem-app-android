@@ -13,7 +13,9 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeout
 import kotlin.coroutines.resume
+import kotlin.time.Duration.Companion.seconds
 
 internal class WcPairSdkDelegate : WcSdkObserver {
 
@@ -26,8 +28,12 @@ internal class WcPairSdkDelegate : WcSdkObserver {
             .first()
 
         val pairCall = async { sdkPair(url) }
-        val proposal = async { proposalCallback() }
-        pairCall.await().map { proposal.await() }
+        val proposal = async { withTimeout(20.seconds) { proposalCallback() } }
+        pairCall.await().onLeft {
+            proposal.cancel()
+            return@coroutineScope it.left()
+        }
+        proposal.await().right()
     }
 
     suspend fun approve(
@@ -38,13 +44,16 @@ internal class WcPairSdkDelegate : WcSdkObserver {
             .first()
 
         val approveCall = async { sdkApprove(sessionApprove) }
-        val approveCallback = async { approveCallback() }
+        val approveCallback = async { withTimeout(20.seconds) { approveCallback() } }
         approveCall.await()
-            .onLeft { return@coroutineScope it.left() }
+            .onLeft {
+                approveCallback.cancel()
+                return@coroutineScope it.left()
+            }
         when (val result = approveCallback.await()) {
             is Wallet.Model.SettledSessionResponse.Result -> result.right()
             is Wallet.Model.SettledSessionResponse.Error ->
-                WcPairError.ExternalApprovalError(result.errorMessage).left()
+                WcPairError.ApprovalFailed(result.errorMessage).left()
         }
     }
 
@@ -77,7 +86,7 @@ internal class WcPairSdkDelegate : WcSdkObserver {
             WalletKit.approveSession(
                 params = sessionApprove,
                 onSuccess = { continuation.resume(Unit.right()) },
-                onError = { continuation.resume(it.throwable.toPairError()) },
+                onError = { continuation.resume(it.throwable.toApproveError()) },
             )
         }
     }
@@ -87,10 +96,20 @@ internal class WcPairSdkDelegate : WcSdkObserver {
             WalletKit.pair(
                 params = Wallet.Params.Pair(uri),
                 onSuccess = { continuation.resume(Unit.right()) },
-                onError = { continuation.resume(it.throwable.toPairError()) },
+                onError = { continuation.resume(it.throwable.toPairError().left()) },
             )
         }
     }
 
-    private fun Throwable.toPairError() = WcPairError.ExternalApprovalError(this.localizedMessage.orEmpty()).left()
+    private fun Throwable.toPairError() = when {
+        pairingExpiredMessages.any { message.orEmpty().contains(it) } -> WcPairError.UriAlreadyUsed(message.orEmpty())
+        else -> WcPairError.PairingFailed(this.localizedMessage.orEmpty())
+    }
+
+    private fun Throwable.toApproveError() = WcPairError.ApprovalFailed(this.localizedMessage.orEmpty()).left()
+
+    companion object {
+        // com.reown.android.pairing.engine.domain.PairingEngine.pair
+        private val pairingExpiredMessages = listOf("Pairing URI expired", "Pairing expired")
+    }
 }
