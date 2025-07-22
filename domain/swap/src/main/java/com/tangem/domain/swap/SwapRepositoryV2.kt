@@ -9,7 +9,7 @@ import com.tangem.domain.swap.models.SwapPairModel
 import com.tangem.domain.swap.models.SwapQuoteModel
 import com.tangem.domain.swap.models.SwapStatusModel
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 import java.math.BigDecimal
 
 /**
