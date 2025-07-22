@@ -1,8 +1,8 @@
 package com.tangem.tap.proxy
 
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.redux.StateDialog
-import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.extensions.onUserWalletSelected

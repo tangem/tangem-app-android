@@ -26,8 +26,8 @@ import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
 import com.tangem.domain.tokens.model.analytics.TokenSwapPromoAnalyticsEvent
 import com.tangem.domain.wallets.legacy.UserWalletsListManager.Lockable.UnlockType
 import com.tangem.domain.wallets.models.UnlockWalletsError
-import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.requireColdWallet
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.requireColdWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.SeedPhraseNotificationUseCase
 import com.tangem.domain.wallets.usecase.UnlockWalletsUseCase

@@ -6,7 +6,7 @@ import com.tangem.domain.express.models.ExpressRateType
 import com.tangem.domain.swap.models.SwapCurrencies
 import com.tangem.domain.swap.models.SwapDirection
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountFieldUM
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountType
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
