@@ -23,9 +23,10 @@ fun VisaAuthChallenge.Card.toSignedChallenge(signedChallenge: String, salt: Stri
     )
 }
 
-fun VisaAuthChallenge.Wallet.toSignedChallenge(signedChallenge: String): VisaAuthSignedChallenge {
+fun VisaAuthChallenge.Wallet.toSignedChallenge(signedChallenge: String, salt: String): VisaAuthSignedChallenge {
     return VisaAuthSignedChallenge.ByWallet(
         challenge = this,
         signature = signedChallenge,
+        salt = salt,
     )
 }

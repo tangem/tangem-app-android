@@ -10,9 +10,9 @@ import com.tangem.datasource.api.common.config.ApiEnvironment
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
-import com.tangem.datasource.api.visa.TangemVisaApi
-import com.tangem.datasource.api.visa.models.request.*
-import com.tangem.datasource.api.visa.models.response.VisaErrorResponseJsonAdapter
+import com.tangem.datasource.api.pay.TangemPayApi
+import com.tangem.datasource.api.pay.models.request.*
+import com.tangem.datasource.api.pay.models.response.VisaErrorResponseJsonAdapter
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.visa.VisaAuthTokenStorage
 import com.tangem.domain.visa.error.VisaApiError
@@ -29,7 +29,7 @@ import kotlinx.coroutines.withContext
 internal class DefaultVisaActivationRepository @AssistedInject constructor(
     @Assisted private val visaCardId: VisaCardId,
     @NetworkMoshi private val moshi: Moshi,
-    private val visaApi: TangemVisaApi,
+    private val visaApi: TangemPayApi,
     private val dispatcherProvider: CoroutineDispatcherProvider,
     private val visaAuthTokenStorage: VisaAuthTokenStorage,
     private val visaAuthRepository: VisaAuthRepository,
@@ -162,7 +162,7 @@ internal class DefaultVisaActivationRepository @AssistedInject constructor(
     }
 
     override suspend fun getPinCodeRsaEncryptionPublicKey(): String {
-        val env = apiConfigsManager.getEnvironmentConfig(ApiConfig.ID.TangemVisa).environment
+        val env = apiConfigsManager.getEnvironmentConfig(ApiConfig.ID.TangemPay).environment
         val rsaPublicKey = visaLibLoader.getOrCreateConfig().rsaPublicKey
         return when (env) {
             ApiEnvironment.DEV,
