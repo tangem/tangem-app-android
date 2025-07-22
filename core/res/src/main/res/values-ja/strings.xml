@@ -408,9 +408,14 @@
   <string name="home_button_scan">Tangemをスキャン</string>
   <string name="hot_crypto_add_token_subtitle">%sへ</string>
   <string name="hot_crypto_token_network">%sネットワーク</string>
+  <string name="hw_backup_icloud_description">iCloudバックアップに保存されている既存のウォレットを復元する</string>
+  <string name="hw_backup_icloud_title">iCloudバックアップ</string>
   <string name="hw_backup_need_action">バックアップへ移動</string>
   <string name="hw_backup_need_description">アクセスコードを使用してウォレットを保護するには、まずバックアップを完了してください。</string>
   <string name="hw_backup_need_title">まずバックアップを完了する</string>
+  <string name="hw_backup_no_backup">バックアップなし</string>
+  <string name="hw_backup_seed_description">暗号資産をオフラインで安全に保管する物理カード</string>
+  <string name="hw_backup_seed_title">リカバリーフレーズ</string>
   <string name="hw_create_keys_description">受信取引の通知を受け取る</string>
   <string name="hw_create_keys_title">鍵はアプリに保存されます</string>
   <string name="hw_create_seed_description">最新の機能とニュースをお届けします</string>
@@ -1234,6 +1239,8 @@
   <string name="wallet_create_title">ウォレットの作成方法を選択してください</string>
   <string name="wallet_import_buy_question">Tangemウォレットを購入しますか？</string>
   <string name="wallet_import_buy_title">今すぐ購入</string>
+  <string name="wallet_import_google_drive_description">Googleドライブのバックアップに保存されている既存のウォレットを復元する</string>
+  <string name="wallet_import_google_drive_title">Googleドライブからインポート</string>
   <string name="wallet_import_navtitle">既存のウォレットを追加</string>
   <string name="wallet_import_scan_description">暗号資産をオフラインで安全に保管する物理カード。</string>
   <string name="wallet_import_scan_title">Tangemウォレットをスキャンする</string>
@@ -1368,7 +1375,7 @@
   <string name="wc_alert_unsupported_method_title">不明なエラーが発生しました</string>
   <string name="wc_alert_unsupported_networks_description">Tangemは現在%sで必要なネットワークをサポートしていません。</string>
   <string name="wc_alert_unsupported_networks_title">サポートされていないネットワーク</string>
-  <string name="wc_alert_verified_domain_description">Tangemは%sで必要なネットワークをサポートします。</string>
+  <string name="wc_alert_verified_domain_description">Tangemは%sで必要なネットワークをサポートします</string>
   <string name="wc_alert_verified_domain_title">検証済みドメイン</string>
   <string name="wc_alert_wrong_card_description">アプリで間違ったカードまたはリングが選択されました</string>
   <string name="wc_alert_wrong_card_title">問題が起きています</string>

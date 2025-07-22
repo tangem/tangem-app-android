@@ -38,6 +38,7 @@ import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
 import com.tangem.datasource.local.config.issuers.IssuersConfigStorage
 import com.tangem.datasource.local.logs.AppLogsStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.datasource.utils.NetworkLogsSaveInterceptor
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.domain.apptheme.GetAppThemeModeUseCase
@@ -232,6 +233,9 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
     private val apiConfigsManager: ApiConfigsManager
         get() = entryPoint.getApiConfigsManager()
 
+    private val userTokensResponseStore: UserTokensResponseStore
+        get() = entryPoint.getUserTokensResponseStore()
+
     // endregion
 
     private val appScope = MainScope()
@@ -320,7 +324,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
         }
 
         derivationsFinder = DerivationsFinder(
-            appPreferencesStore = appPreferencesStore,
+            userTokensResponseStore = userTokensResponseStore,
             dispatchers = dispatchers,
         )
 
@@ -370,6 +374,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
                     uiMessageSender = uiMessageSender,
                     onlineCardVerifier = onlineCardVerifier,
                     coldUserWalletBuilderFactory = coldUserWalletBuilderFactory,
+                    userTokensResponseStore = userTokensResponseStore,
                 ),
             ),
         )
