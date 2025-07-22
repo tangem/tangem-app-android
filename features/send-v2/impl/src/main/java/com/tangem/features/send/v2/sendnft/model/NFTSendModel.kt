@@ -5,6 +5,7 @@ import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.left
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.common.ui.navigationButtons.NavigationUM
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -30,14 +31,13 @@ import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.v2.api.NFTSendComponent
+import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationComponent
+import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.features.send.v2.common.CommonSendRoute
 import com.tangem.features.send.v2.common.SendConfirmAlertFactory
 import com.tangem.features.send.v2.common.ui.state.ConfirmUM
-import com.tangem.features.send.v2.common.ui.state.NavigationUM
 import com.tangem.features.send.v2.sendnft.confirm.NFTSendConfirmComponent
 import com.tangem.features.send.v2.sendnft.ui.state.NFTSendUM
-import com.tangem.features.send.v2.subcomponents.destination.SendDestinationComponent
-import com.tangem.features.send.v2.subcomponents.destination.ui.state.DestinationUM
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeComponent
 import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -112,7 +112,7 @@ internal class NFTSendModel @Inject constructor(
         val destinationUM = uiState.value.destinationUM as? DestinationUM.Content ?: error("Invalid destination")
         val ownerAddress = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
             ?: error("Invalid owner address")
-        val enteredDestinationAddress = destinationUM.addressTextField.value
+        val enteredDestinationAddress = destinationUM.addressTextField.actualAddress
         val enteredMemo = destinationUM.memoTextField?.value
         val nftAsset = NFTSdkAssetConverter.convertBack(params.nftAsset).second
 

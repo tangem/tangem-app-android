@@ -6,7 +6,6 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
-import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
 
@@ -24,12 +23,14 @@ interface RampStateManager {
     /**
      * Check if [CryptoCurrency] is available for sell
      *
-     * @param userWallet user wallet
-     * @param status     crypto currency status
+     * @param userWalletId             the ID of the user's wallet
+     * @param status                   crypto currency status
+     * @param sendUnavailabilityReason the reason why sending is unavailable or null
      */
     suspend fun availableForSell(
-        userWallet: UserWallet,
+        userWalletId: UserWalletId,
         status: CryptoCurrencyStatus,
+        sendUnavailabilityReason: ScenarioUnavailabilityReason?,
     ): Either<ScenarioUnavailabilityReason, Unit>
 
     suspend fun availableForSwap(
@@ -46,4 +47,15 @@ interface RampStateManager {
     fun getSellInitializationStatus(): Flow<Lce<Throwable, Any>>
 
     fun getExpressInitializationStatus(userWalletId: UserWalletId): Flow<Lce<Throwable, Any>>
+
+    /**
+     * Returns the reason why sending is unavailable for the given user wallet and cryptocurrency status
+     *
+     * @param userWalletId         the ID of the user's wallet
+     * @param cryptoCurrencyStatus the status of the cryptocurrency
+     */
+    suspend fun getSendUnavailabilityReason(
+        userWalletId: UserWalletId,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+    ): ScenarioUnavailabilityReason
 }
