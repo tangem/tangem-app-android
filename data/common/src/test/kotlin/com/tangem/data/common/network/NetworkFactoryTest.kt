@@ -13,7 +13,7 @@ import com.tangem.domain.common.configs.MultiWalletCardConfig
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Nested
