@@ -16,7 +16,7 @@ import com.tangem.domain.notifications.models.NotificationType
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.wallet.WalletBalanceFetcher
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.models.isLocked
 import com.tangem.domain.wallets.models.isMultiCurrency
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase

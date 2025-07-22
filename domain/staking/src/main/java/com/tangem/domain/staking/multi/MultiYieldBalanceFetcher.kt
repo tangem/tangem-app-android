@@ -3,7 +3,7 @@ package com.tangem.domain.staking.multi
 import com.tangem.domain.core.flow.FlowFetcher
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 
 /**
  * Fetcher of yields balances
