@@ -3,7 +3,7 @@ package com.tangem.domain.wallets.usecase
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
