@@ -4,7 +4,7 @@ import arrow.core.Either
 import com.tangem.domain.managetokens.model.CurrencyUnsupportedState
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
 import com.tangem.domain.managetokens.repository.ManageTokensRepository
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 
 class CheckCurrencyUnsupportedUseCase(
     private val repository: ManageTokensRepository,
