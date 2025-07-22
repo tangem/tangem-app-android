@@ -1,4 +1,4 @@
-package com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.ui.utils
+package com.tangem.features.hotwallet.addexistingwallet.im.port.ui.utils
 
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
