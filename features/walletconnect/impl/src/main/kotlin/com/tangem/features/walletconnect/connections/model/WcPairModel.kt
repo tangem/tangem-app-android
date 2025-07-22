@@ -19,7 +19,7 @@ import com.tangem.domain.walletconnect.model.WcSessionApprove
 import com.tangem.domain.walletconnect.model.WcSessionProposal
 import com.tangem.domain.walletconnect.usecase.pair.WcPairState
 import com.tangem.domain.walletconnect.usecase.pair.WcPairUseCase
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.models.isLocked
 import com.tangem.domain.wallets.models.isMultiCurrency
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
