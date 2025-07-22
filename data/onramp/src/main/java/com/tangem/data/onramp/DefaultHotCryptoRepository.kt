@@ -23,10 +23,10 @@ import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.common.extensions.canHandleBlockchain
 import com.tangem.domain.common.extensions.canHandleToken
 import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.onramp.model.HotCryptoCurrency
 import com.tangem.domain.onramp.repositories.HotCryptoRepository
-import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.runCatching

@@ -11,7 +11,7 @@ import com.tangem.domain.tokens.FetchCardTokenListUseCase
 import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
 import com.tangem.domain.tokens.FetchTokenListUseCase
 import com.tangem.domain.tokens.TokensFeatureToggles
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.domain.wallets.usecase.SelectWalletUseCase
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter

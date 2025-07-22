@@ -17,9 +17,9 @@ import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.util.getBackupCardsCount
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.models.wallet.requireColdWallet
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
-import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.common.analytics.events.AnalyticsParam

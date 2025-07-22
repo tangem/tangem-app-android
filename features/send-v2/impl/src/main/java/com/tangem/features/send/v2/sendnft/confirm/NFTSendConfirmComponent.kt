@@ -14,7 +14,7 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.nft.models.NFTAsset
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.features.nft.component.NFTDetailsBlockComponent
 import com.tangem.features.send.v2.api.SendNotificationsComponent
 import com.tangem.features.send.v2.common.CommonSendRoute
