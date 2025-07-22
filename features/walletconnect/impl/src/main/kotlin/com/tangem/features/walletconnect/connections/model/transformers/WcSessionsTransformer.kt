@@ -2,7 +2,7 @@ package com.tangem.features.walletconnect.connections.model.transformers
 
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.walletconnect.model.WcSession
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.features.walletconnect.connections.entity.WcConnectedAppInfo
 import com.tangem.features.walletconnect.connections.entity.WcConnectionsState
 import com.tangem.features.walletconnect.connections.entity.WcConnectionsUM

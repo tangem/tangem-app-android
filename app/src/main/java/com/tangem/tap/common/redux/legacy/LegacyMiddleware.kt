@@ -1,8 +1,8 @@
 package com.tangem.tap.common.redux.legacy
 
 import com.tangem.domain.apptheme.model.AppThemeMode
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.redux.LegacyAction
-import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.redux.AppState
@@ -66,7 +66,7 @@ internal object LegacyMiddleware {
                 ?: AppThemeMode.DEFAULT,
             isHidingEnabled = store.inject(DaggerGraphState::balanceHidingRepository)
                 .getBalanceHidingSettings().isHidingEnabledInSettings,
-            needEnrollBiometrics = runCatching(tangemSdkManager::needEnrollBiometrics).getOrNull() ?: false,
+            needEnrollBiometrics = runCatching(tangemSdkManager::needEnrollBiometrics).getOrNull() == true,
         )
     }
 }
