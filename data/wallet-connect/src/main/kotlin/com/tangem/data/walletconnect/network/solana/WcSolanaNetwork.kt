@@ -13,13 +13,13 @@ import com.tangem.data.walletconnect.request.WcRequestToUseCaseConverter.Compani
 import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
 import com.tangem.data.walletconnect.utils.WcNamespaceConverter
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.walletconnect.model.WcSession
 import com.tangem.domain.walletconnect.model.WcSolanaMethod
 import com.tangem.domain.walletconnect.model.WcSolanaMethodName
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
 import com.tangem.domain.walletconnect.repository.WcSessionsManager
 import com.tangem.domain.walletconnect.usecase.method.WcMethodUseCase
-import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.lib.crypto.UserWalletManager
+import com.tangem.domain.walletmanager.WalletManagersFacade
 import jakarta.inject.Inject
 import timber.log.Timber
 
@@ -28,7 +28,7 @@ internal class WcSolanaNetwork(
     private val sessionsManager: WcSessionsManager,
     private val factories: Factories,
     private val namespaceConverter: NamespaceConverter,
-    private val walletManager: UserWalletManager,
+    private val walletManagersFacade: WalletManagersFacade,
 ) : WcRequestToUseCaseConverter {
 
     override fun toWcMethodName(request: WcSdkSessionRequest): WcSolanaMethodName? {
@@ -42,7 +42,7 @@ internal class WcSolanaNetwork(
         val method: WcSolanaMethod = name.toMethod(request) ?: return null
         val session = sessionsManager.findSessionByTopic(request.topic) ?: return null
         val network = namespaceConverter.toNetwork(request.chainId.orEmpty(), session.wallet) ?: return null
-        val accountAddress = getAccountAddress(network)
+        val accountAddress = getAccountAddress(session, network)
         val context = WcMethodUseCaseContext(
             session = session,
             rawSdkRequest = request,
@@ -56,9 +56,9 @@ internal class WcSolanaNetwork(
         }
     }
 
-    private suspend fun getAccountAddress(network: Network): String? {
+    private suspend fun getAccountAddress(session: WcSession, network: Network): String? {
         return try {
-            walletManager.getWalletAddress(network.rawId, network.derivationPath.value)
+            walletManagersFacade.getDefaultAddress(session.wallet.walletId, network)
         } catch (exception: Exception) {
             Timber.e(exception)
             null
@@ -66,7 +66,7 @@ internal class WcSolanaNetwork(
     }
 
     internal class NamespaceConverter @Inject constructor(
-        private val excludedBlockchains: ExcludedBlockchains,
+        override val excludedBlockchains: ExcludedBlockchains,
     ) : WcNamespaceConverter {
 
         override val namespaceKey: NamespaceKey = NamespaceKey("solana")
@@ -78,10 +78,6 @@ internal class WcSolanaNetwork(
                 TESTNET_CHAIN_ID -> Blockchain.SolanaTestnet
                 else -> null
             }
-        }
-
-        override fun toNetwork(chainId: String, wallet: UserWallet): Network? {
-            return toNetwork(chainId, wallet, excludedBlockchains)
         }
 
         override fun toCAIP2(network: Network): CAIP2? {

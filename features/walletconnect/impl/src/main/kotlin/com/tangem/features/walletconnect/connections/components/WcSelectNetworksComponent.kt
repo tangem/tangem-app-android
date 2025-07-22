@@ -66,7 +66,7 @@ internal class WcSelectNetworksComponent(
     }
 
     interface ModelCallback {
-        fun onNetworksSelected(selectedNetworks: Set<Network.RawID>)
+        fun onNetworksSelected(selectedNetworks: Set<Network>)
     }
 
     data class WcSelectNetworksParams(
@@ -74,7 +74,7 @@ internal class WcSelectNetworksComponent(
         val requiredNetworks: Set<Network>,
         val availableNetworks: Set<Network>,
         val notAddedNetworks: Set<Network>,
-        val enabledAvailableNetworks: Set<Network.RawID>,
+        val enabledAvailableNetworks: Set<Network>,
         val onDismiss: () -> Unit,
         val callback: ModelCallback,
     )
@@ -87,8 +87,6 @@ private fun WcSelectNetworksBS(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    if (state.required.isEmpty()) return // required can/must not be empty
-
     TangemModalBottomSheetWithFooter<TangemBottomSheetConfigContent.Empty>(
         config = TangemBottomSheetConfig(
             isShown = true,
@@ -117,7 +115,6 @@ private fun WcSelectNetworksBS(
                     .fillMaxWidth(),
                 text = "Done",
                 onClick = state.onDone,
-                enabled = state.missing.isEmpty(),
             )
         },
     )

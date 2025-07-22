@@ -10,6 +10,8 @@ internal interface SendFeeClickIntents {
 
     fun onCustomFeeValueChange(index: Int, value: String)
 
+    fun onNonceChange(value: String)
+
     fun onReadMoreClick()
 
     fun onNextClick()
