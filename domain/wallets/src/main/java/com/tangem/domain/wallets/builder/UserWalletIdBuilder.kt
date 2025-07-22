@@ -8,7 +8,7 @@ import com.tangem.domain.common.extensions.calculateHmacSha256
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 
 class UserWalletIdBuilder private constructor(
     private val publicKey: ByteArray?,

@@ -1,6 +1,6 @@
 package com.tangem.features.wallet.deeplink
 
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.coroutines.flow.Flow
 
 interface WalletDeepLinkActionTrigger {
