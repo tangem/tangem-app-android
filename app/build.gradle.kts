@@ -222,8 +222,9 @@ dependencies {
     implementation(projects.features.usedesk.impl)
     implementation(projects.features.hotWallet.api)
     implementation(projects.features.hotWallet.impl)
-    implementation(projects.features.kyc.api)
-    implementation(projects.features.kyc.impl)
+// [REDACTED_TODO_COMMENT]
+    // implementation(projects.features.kyc.api)
+    // implementation(projects.features.kyc.impl)
     implementation(projects.features.welcome.api)
     implementation(projects.features.welcome.impl)
     implementation(projects.features.createWalletSelection.api)

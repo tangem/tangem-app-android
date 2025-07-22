@@ -13,7 +13,8 @@ android {
 
 dependencies {
     /** Api */
-    implementation(projects.features.kyc.api)
+// [REDACTED_TODO_COMMENT]
+    // implementation(projects.features.kyc.api)
 
     /** Domain */
     implementation(projects.domain.visa)

@@ -248,9 +248,9 @@ include(":features:walletconnect:impl")
 
 include(":features:hot-wallet:api")
 include(":features:hot-wallet:impl")
-
-include(":features:kyc:api")
-include(":features:kyc:impl")
+// [REDACTED_TODO_COMMENT]
+// include(":features:kyc:api")
+// include(":features:kyc:impl")
 
 include(":features:create-wallet-selection:api")
 include(":features:create-wallet-selection:impl")
