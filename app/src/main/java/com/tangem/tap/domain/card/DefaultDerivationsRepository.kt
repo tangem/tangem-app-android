@@ -17,9 +17,9 @@ import com.tangem.domain.card.repository.DerivationsRepository
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.requireColdWallet
+import com.tangem.domain.models.wallet.requireColdWallet
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.domain.tasks.UserWalletIdPreflightReadFilter

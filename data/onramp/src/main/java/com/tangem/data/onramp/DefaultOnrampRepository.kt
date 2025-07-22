@@ -36,6 +36,7 @@ import com.tangem.datasource.local.preferences.utils.getObject
 import com.tangem.datasource.local.preferences.utils.getObjectSyncOrNull
 import com.tangem.datasource.local.preferences.utils.storeObject
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.onramp.model.*
 import com.tangem.domain.onramp.model.cache.OnrampTransaction
@@ -45,7 +46,6 @@ import com.tangem.domain.onramp.model.error.OnrampRedirectError
 import com.tangem.domain.onramp.repositories.OnrampRepository
 import com.tangem.domain.tokens.model.Amount
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async

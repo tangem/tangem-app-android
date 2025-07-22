@@ -22,7 +22,7 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.models.SaveWalletError
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsSyncUseCase
 import com.tangem.features.details.impl.R

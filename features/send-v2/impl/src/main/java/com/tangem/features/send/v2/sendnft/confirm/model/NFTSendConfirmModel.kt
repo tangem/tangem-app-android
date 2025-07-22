@@ -26,7 +26,7 @@ import com.tangem.domain.settings.NeverShowTapHelpUseCase
 import com.tangem.domain.transaction.usecase.CreateNFTTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
-import com.tangem.domain.wallets.models.requireColdWallet
+import com.tangem.domain.models.wallet.requireColdWallet
 import com.tangem.features.nft.entity.NFTSendSuccessTrigger
 import com.tangem.features.send.v2.api.SendNotificationsComponent.Params.NotificationData
 import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
