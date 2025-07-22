@@ -9,11 +9,11 @@ import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.data.walletconnect.pair.UnsupportedDApps
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.walletconnect.WcPairService
 import com.tangem.domain.walletconnect.model.WcPairRequest
 import com.tangem.domain.walletconnect.model.legacy.Account
 import com.tangem.domain.walletconnect.usecase.initialize.WcInitializeUseCase
-import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.walletconnect.components.WalletConnectFeatureToggles
 import com.tangem.tap.common.analytics.events.WalletConnect
 import com.tangem.tap.domain.walletconnect2.app.TangemWcBlockchainHelper

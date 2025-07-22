@@ -2,8 +2,8 @@ package com.tangem.data.common.currency
 
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.UserWalletId
 
 /**
  * Factory for creating list of [CryptoCurrency] for selected card

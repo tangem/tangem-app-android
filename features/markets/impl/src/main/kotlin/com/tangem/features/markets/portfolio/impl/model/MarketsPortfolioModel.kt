@@ -23,7 +23,7 @@ import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.models.ArtworkModel
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.models.isMultiCurrency
 import com.tangem.domain.wallets.usecase.GetCardImageUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase

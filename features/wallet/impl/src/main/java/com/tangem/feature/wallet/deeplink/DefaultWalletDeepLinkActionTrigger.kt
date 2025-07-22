@@ -1,6 +1,6 @@
 package com.tangem.feature.wallet.deeplink
 
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.wallet.deeplink.WalletDeepLinkActionListener
 import com.tangem.features.wallet.deeplink.WalletDeepLinkActionTrigger
 import kotlinx.coroutines.channels.Channel
