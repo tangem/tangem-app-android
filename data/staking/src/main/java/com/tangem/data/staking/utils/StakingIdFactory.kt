@@ -21,21 +21,7 @@ internal class StakingIdFactory @Inject constructor(
     private val walletManagersFacade: WalletManagersFacade,
 ) {
 
-    suspend fun create(userWalletId: UserWalletId, currencyId: CryptoCurrency.ID, network: Network): Set<StakingID> {
-        val addresses = walletManagersFacade.getAddresses(userWalletId = userWalletId, network = network)
-
-        val integrationId = createIntegrationId(currencyId) ?: return emptySet()
-
-        return addresses.mapTo(hashSetOf()) { address ->
-            StakingID(integrationId = integrationId, address = address.value)
-        }
-    }
-
-    suspend fun createForDefault(
-        userWalletId: UserWalletId,
-        currencyId: CryptoCurrency.ID,
-        network: Network,
-    ): StakingID? {
+    suspend fun create(userWalletId: UserWalletId, currencyId: CryptoCurrency.ID, network: Network): StakingID? {
         val address = walletManagersFacade.getDefaultAddress(userWalletId = userWalletId, network = network)
         val integrationId = createIntegrationId(currencyId)
 
@@ -48,6 +34,8 @@ internal class StakingIdFactory @Inject constructor(
         val integrationKey = with(currencyId) { rawNetworkId.plus(rawCurrencyId) }
         return integrationIdMap[integrationKey]
     }
+
+    fun isPolygonIntegrationId(integrationId: String): Boolean = integrationId == ETHEREUM_POLYGON_INTEGRATION_ID
 
     @Suppress("UnusedPrivateMember", "unused")
     companion object {
