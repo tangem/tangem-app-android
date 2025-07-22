@@ -33,6 +33,7 @@ interface TransactionRepository {
         destination: String,
         userWalletId: UserWalletId,
         network: Network,
+        nonce: BigInteger? = null,
     ): TransactionData.Uncompiled
 
     @Suppress("LongParameterList")

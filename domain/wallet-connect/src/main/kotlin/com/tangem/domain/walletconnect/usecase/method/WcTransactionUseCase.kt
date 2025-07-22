@@ -1,8 +1,8 @@
 package com.tangem.domain.walletconnect.usecase.method
 
-import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
+import com.tangem.domain.walletconnect.model.WcApprovedAmount
 
 /**
  * Base UseCase for wc methods with single TransactionData
@@ -34,16 +34,16 @@ interface WcListTransactionUseCase :
  * [updateFee] triggered a new [TransactionData] emit
  */
 interface WcMutableFee {
-    suspend fun dAppFee(): Fee?
+    fun dAppFee(): Fee?
     fun updateFee(fee: Fee)
 }
 
 /**
  * Wc Approval Method
- * If [Amount] is null it means unlimited
+ * If [WcApprovedAmount.amount] is null it means unlimited
  * [updateAmount] triggered a new [TransactionData] emit
  */
 interface WcApproval {
-    suspend fun getAmount(): Amount?
-    fun updateAmount(amount: Amount?)
+    fun getAmount(): WcApprovedAmount?
+    fun updateAmount(amount: WcApprovedAmount?)
 }

@@ -31,7 +31,6 @@ import com.tangem.domain.walletconnect.usecase.initialize.WcInitializeUseCase
 import com.tangem.domain.walletconnect.usecase.pair.WcPairUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
-import com.tangem.lib.crypto.UserWalletManager
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -111,9 +110,10 @@ internal object WalletConnectDataModule {
 
     @Provides
     @Singleton
-    fun defaultWcRequestService(diHelperBox: DiHelperBox): DefaultWcRequestService {
+    fun defaultWcRequestService(diHelperBox: DiHelperBox, respondService: WcRespondService): DefaultWcRequestService {
         return DefaultWcRequestService(
             requestConverters = diHelperBox.handlers,
+            respondService = respondService,
         )
     }
 
@@ -144,13 +144,13 @@ internal object WalletConnectDataModule {
         namespaceConverter: WcSolanaNetwork.NamespaceConverter,
         sessionsManager: WcSessionsManager,
         factories: WcSolanaNetwork.Factories,
-        walletManager: UserWalletManager,
+        walletManagersFacade: WalletManagersFacade,
     ): WcSolanaNetwork = WcSolanaNetwork(
         moshi = moshi,
         sessionsManager = sessionsManager,
         factories = factories,
         namespaceConverter = namespaceConverter,
-        walletManager = walletManager,
+        walletManagersFacade = walletManagersFacade,
     )
 
     @Provides

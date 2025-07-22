@@ -4,7 +4,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.features.send.v2.subcomponents.destination.model.converters.SendRecipientHistoryListConverter
 import com.tangem.features.send.v2.subcomponents.destination.model.converters.SendRecipientWalletListConverter
-import com.tangem.features.send.v2.subcomponents.destination.ui.state.DestinationUM
+import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.features.send.v2.subcomponents.destination.ui.state.DestinationWalletUM
 import com.tangem.utils.transformer.Transformer
 
