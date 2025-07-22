@@ -10,7 +10,7 @@ import com.tangem.domain.settings.IsReadyToShowRateAppUseCase
 import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
@@ -186,7 +186,7 @@ internal class GetSingleWalletWarningsFactory @Inject constructor(
                 .conflate()
                 .distinctUntilChanged()
                 .firstOrNull()
-        } ?: false
+        } == true
     }
 
     private fun MutableList<WalletNotification>.addRateTheAppNotification(
