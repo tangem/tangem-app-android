@@ -9,7 +9,7 @@ import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.domain.common.configs.CardConfig
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.CardDTO
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 
 // TODO: refactor [REDACTED_JIRA]
 
