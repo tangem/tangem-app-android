@@ -64,7 +64,11 @@ internal class StakingBalanceUpdater @AssistedInject constructor(
         coroutineScope {
             listOf(
                 async {
-                    fetchCurrencyStatus()
+                    /*
+                     * It is important to use NonCancellable here to ensure the update is not interrupted midway.
+                     * For example, this can happen if the user enters and immediately leaves the screen.
+                     */
+                    withContext(NonCancellable) { fetchCurrencyStatus() }
                 },
                 async {
                     updateStakingActions()
