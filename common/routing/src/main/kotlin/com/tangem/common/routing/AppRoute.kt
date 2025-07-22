@@ -10,9 +10,9 @@ import com.tangem.domain.feedback.models.CardInfo
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.nft.models.NFTAsset
 import com.tangem.domain.onramp.model.OnrampSource
-import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.serialization.Serializable
 
 @Serializable

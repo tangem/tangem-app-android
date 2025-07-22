@@ -7,7 +7,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.repositories.StakingErrorResolver
 import com.tangem.domain.staking.single.SingleYieldBalanceFetcher
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 
 class FetchStakingYieldBalanceUseCase(
     private val stakingErrorResolver: StakingErrorResolver,
