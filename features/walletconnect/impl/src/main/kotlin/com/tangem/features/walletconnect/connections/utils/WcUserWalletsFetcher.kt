@@ -26,7 +26,11 @@ internal class WcUserWalletsFetcher(
     private val onWalletSelected: (UserWalletId) -> Unit,
 ) {
 
-    private val userWalletsFetcher = userWalletsFetcherFactory.create(messageSender) { onWalletSelected(it) }
+    private val userWalletsFetcher = userWalletsFetcherFactory.create(
+        messageSender = messageSender,
+        onlyMultiCurrency = true,
+        onWalletClick = { onWalletSelected(it) },
+    )
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val userWallets: Flow<ImmutableList<UserWalletItemUM>> = userWalletsFetcher.userWallets
