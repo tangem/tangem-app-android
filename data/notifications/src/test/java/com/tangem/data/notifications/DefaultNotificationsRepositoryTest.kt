@@ -111,16 +111,20 @@ class DefaultNotificationsRepositoryTest {
         // GIVEN
         val appId = ApplicationId("test-app-id")
         val pushToken = "test-push-token"
+        coEvery { appInfoProvider.device } returns "test-device"
+        coEvery { appInfoProvider.osVersion } returns "11"
+        coEvery { appInfoProvider.language } returns "en"
+        coEvery { appInfoProvider.appVersion } returns "5.21.1"
+        coEvery { appInfoProvider.timezone } returns "UTC"
         coEvery {
             tangemTechApi.updatePushTokenForApplicationId(
                 appId.value,
                 NotificationApplicationCreateBody(
                     pushToken = pushToken,
-                    platform = null,
-                    device = null,
-                    systemVersion = null,
-                    language = null,
-                    timezone = null,
+                    systemVersion = "11",
+                    language = "en",
+                    timezone = "UTC",
+                    version = "5.21.1",
                 ),
             )
         } returns ApiResponse.Success(Unit)
@@ -134,11 +138,10 @@ class DefaultNotificationsRepositoryTest {
                 appId.value,
                 NotificationApplicationCreateBody(
                     pushToken = pushToken,
-                    platform = null,
-                    device = null,
-                    systemVersion = null,
-                    language = null,
-                    timezone = null,
+                    systemVersion = "11",
+                    language = "en",
+                    timezone = "UTC",
+                    version = "5.21.1",
                 ),
             )
         }

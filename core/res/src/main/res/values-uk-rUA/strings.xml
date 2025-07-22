@@ -574,7 +574,7 @@
   <string name="nft_traits_title">Риси</string>
   <string name="nft_wallet_count">NFTs в %2$d колекціях%1$d</string>
   <plurals name="nft_wallet_count_android">
-    <item quantity="one"></item>
+    <item quantity="one">%1$d NFT в %2$d колекціi</item>
     <item quantity="few"></item>
     <item quantity="many"></item>
     <item quantity="other">%1$d NFTs в %2$d колекціях</item>
