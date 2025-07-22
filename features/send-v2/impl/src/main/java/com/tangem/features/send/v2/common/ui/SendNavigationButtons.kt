@@ -19,6 +19,8 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
+import com.tangem.common.ui.navigationButtons.NavigationButton
+import com.tangem.common.ui.navigationButtons.NavigationUM
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SecondaryButtonIconStart
 import com.tangem.core.ui.components.SpacerW12
@@ -29,8 +31,6 @@ import com.tangem.core.ui.extensions.clickableSingle
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.singleEvent
-import com.tangem.features.send.v2.common.ui.state.NavigationUM
-import com.tangem.features.send.v2.send.ui.state.ButtonsUM
 
 @Composable
 internal fun SendNavigationButtons(navigationUM: NavigationUM, modifier: Modifier = Modifier) {
@@ -79,8 +79,8 @@ private fun SendNavigationButton(navigationUM: NavigationUM, modifier: Modifier 
         }
         TangemButton(
             modifier = Modifier.fillMaxWidth(),
-            text = primaryButton.text.resolveReference(),
-            icon = primaryButton.iconResId?.let {
+            text = primaryButton.textReference.resolveReference(),
+            icon = primaryButton.iconRes?.let {
                 TangemButtonIconPosition.End(it)
             } ?: TangemButtonIconPosition.None,
             enabled = primaryButton.isEnabled,
@@ -96,7 +96,7 @@ private fun SendNavigationButton(navigationUM: NavigationUM, modifier: Modifier 
 }
 
 @Composable
-private fun SendDoneButtons(pairButtonsUM: ButtonsUM.SecondaryPairButtonsUM?, modifier: Modifier = Modifier) {
+private fun SendDoneButtons(pairButtonsUM: Pair<NavigationButton, NavigationButton>?, modifier: Modifier = Modifier) {
     val hapticFeedback = LocalHapticFeedback.current
 
     AnimatedVisibility(
@@ -106,26 +106,26 @@ private fun SendDoneButtons(pairButtonsUM: ButtonsUM.SecondaryPairButtonsUM?, mo
         exit = slideOutVertically().plus(fadeOut()),
         label = "Animate show sent state buttons",
     ) {
-        val wrappedPairButtonsUM = remember(this) { requireNotNull(pairButtonsUM) }
+        val (leftButton, rightButton) = remember(this) { requireNotNull(pairButtonsUM) }
         Row(modifier = Modifier.padding(bottom = 12.dp)) {
             SecondaryButtonIconStart(
-                text = wrappedPairButtonsUM.leftText.resolveReference(),
-                iconResId = wrappedPairButtonsUM.leftIconResId!!,
+                text = leftButton.textReference.resolveReference(),
+                iconResId = leftButton.iconRes!!,
                 onClick = {
                     singleEvent {
-                        wrappedPairButtonsUM.onLeftClick()
+                        leftButton.onClick()
                     }
                 },
                 modifier = Modifier.weight(1f),
             )
             SpacerW12()
             SecondaryButtonIconStart(
-                text = wrappedPairButtonsUM.rightText.resolveReference(),
-                iconResId = wrappedPairButtonsUM.rightIconResId!!,
+                text = rightButton.textReference.resolveReference(),
+                iconResId = rightButton.iconRes!!,
                 onClick = {
                     singleEvent {
                         hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                        wrappedPairButtonsUM.onRightClick()
+                        rightButton.onClick()
                     }
                 },
                 modifier = Modifier.weight(1f),

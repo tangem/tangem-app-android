@@ -3,11 +3,9 @@ package com.tangem.tap.data
 import android.content.Context
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
-import com.tangem.common.services.secure.SecureStorage
 import com.tangem.datasource.local.visa.VisaAuthTokenStorage
 import com.tangem.domain.visa.model.VisaAuthTokens
-import com.tangem.sdk.storage.AndroidSecureStorage
-import com.tangem.sdk.storage.createEncryptedSharedPreferences
+import com.tangem.sdk.storage.AndroidSecureStorageV2
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.withContext
@@ -21,11 +19,9 @@ internal class DefaultVisaAuthTokenStorage @Inject constructor(
 ) : VisaAuthTokenStorage {
 
     private val secureStorage by lazy {
-        AndroidSecureStorage(
-            preferences = SecureStorage.createEncryptedSharedPreferences(
-                context = applicationContext,
-                storageName = "visa_auth_storage",
-            ),
+        AndroidSecureStorageV2(
+            appContext = applicationContext,
+            name = "visa_auth_storage",
         )
     }
 
