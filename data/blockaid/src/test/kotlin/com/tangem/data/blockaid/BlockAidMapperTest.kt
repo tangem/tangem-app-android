@@ -46,7 +46,7 @@ class BlockAidMapperTest {
             spenders = mapOf("spender" to spenderDetails),
         )
         val response = TransactionScanResponse(
-            validation = ValidationResponse(status = "Success", resultType = "Benign"),
+            validation = ValidationResponse(status = "Success", resultType = "Benign", description = ""),
             simulation = SimulationResponse(
                 status = "Success",
                 accountSummary = AccountSummaryResponse(
@@ -79,7 +79,7 @@ class BlockAidMapperTest {
             outTransfer = listOf(Transfer(value = "1.5", rawValue = "0x2")),
         )
         val response = TransactionScanResponse(
-            validation = ValidationResponse(status = "Success", resultType = "Benign"),
+            validation = ValidationResponse(status = "Success", resultType = "Benign", description = ""),
             simulation = SimulationResponse(
                 status = "Success",
                 accountSummary = AccountSummaryResponse(
@@ -105,7 +105,7 @@ class BlockAidMapperTest {
     @Test
     fun `when response error validation rhen returns failed to validate`() {
         val response = TransactionScanResponse(
-            validation = ValidationResponse(status = "Error", resultType = "Benign"),
+            validation = ValidationResponse(status = "Error", resultType = "Benign", description = ""),
             simulation = SimulationResponse(
                 status = "Success",
                 accountSummary = AccountSummaryResponse(emptyList(), emptyList(), null),
@@ -120,7 +120,7 @@ class BlockAidMapperTest {
     @Test
     fun `when response not benign then returns validation unsafe`() {
         val response = TransactionScanResponse(
-            validation = ValidationResponse(status = "Success", resultType = "Phishing"),
+            validation = ValidationResponse(status = "Success", resultType = "Phishing", description = ""),
             simulation = SimulationResponse(
                 status = "Success",
                 accountSummary = AccountSummaryResponse(emptyList(), emptyList(), null),
@@ -134,7 +134,7 @@ class BlockAidMapperTest {
     @Test
     fun `when response simulation not success then returns simulation failed ro simulate`() {
         val response = TransactionScanResponse(
-            validation = ValidationResponse(status = "Success", resultType = "Benign"),
+            validation = ValidationResponse(status = "Success", resultType = "Benign", description = ""),
             simulation = SimulationResponse(
                 status = "Error",
                 accountSummary = AccountSummaryResponse(emptyList(), emptyList(), null),
@@ -148,7 +148,7 @@ class BlockAidMapperTest {
     @Test
     fun `when response simulation is empty then returns failed to simulate`() {
         val txResponse = TransactionScanResponse(
-            validation = ValidationResponse(status = "Success", resultType = "Benign"),
+            validation = ValidationResponse(status = "Success", resultType = "Benign", description = ""),
             simulation = SimulationResponse(
                 status = "Success",
                 accountSummary = AccountSummaryResponse(
