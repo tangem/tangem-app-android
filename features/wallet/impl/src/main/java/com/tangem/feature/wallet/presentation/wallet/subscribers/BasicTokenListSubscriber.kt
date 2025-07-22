@@ -58,11 +58,9 @@ internal abstract class BasicTokenListSubscriber(
                 }
                 .distinctUntilChanged()
                 .onEach { maybeTokenList ->
-                    if (!routingFeatureToggle.isDeepLinkNavigationEnabled) {
-                        coroutineScope.launch {
-                            onTokenListReceived(maybeTokenList)
-                        }.saveIn(onTokenListReceivedJobHolder)
-                    }
+                    coroutineScope.launch {
+                        onTokenListReceived(maybeTokenList)
+                    }.saveIn(onTokenListReceivedJobHolder)
 
                     coroutineScope.launch { startCheck(maybeTokenList) }
                 },
@@ -77,8 +75,7 @@ internal abstract class BasicTokenListSubscriber(
                     ifLoading = { maybeContent ->
                         val isRefreshing = stateHolder.getWalletState(userWallet.walletId)
                             ?.pullToRefreshConfig
-                            ?.isRefreshing
-                            ?: false
+                            ?.isRefreshing == true
 
                         maybeContent
                             ?.takeIf { !isRefreshing }
@@ -118,15 +115,17 @@ internal abstract class BasicTokenListSubscriber(
     }
 
     protected open suspend fun onTokenListReceived(maybeTokenList: Lce<TokenListError, TokenList>) {
-        /* no-op */
-        // Handling sell deeplink requires full content in order to correctly open Send screen
-        if (maybeTokenList.getOrNull(false) != null) {
-            deepLinksRegistry.triggerDelayedDeeplink(deepLinkClass = SellCurrencyDeepLink::class.java)
-        }
-        // Handling referral deeplink requires only selected wallet to be loaded
-        // This is temporary solution, will be removed with complete deeplink navigation overhaul
-        if (maybeTokenList.getOrNull(true) != null) {
-            deepLinksRegistry.triggerDelayedDeeplink(deepLinkClass = ReferralDeepLink::class.java)
+        if (!routingFeatureToggle.isDeepLinkNavigationEnabled) {
+            /* no-op */
+            // Handling sell deeplink requires full content in order to correctly open Send screen
+            if (maybeTokenList.getOrNull(false) != null) {
+                deepLinksRegistry.triggerDelayedDeeplink(deepLinkClass = SellCurrencyDeepLink::class.java)
+            }
+            // Handling referral deeplink requires only selected wallet to be loaded
+            // This is temporary solution, will be removed with complete deeplink navigation overhaul
+            if (maybeTokenList.getOrNull(true) != null) {
+                deepLinksRegistry.triggerDelayedDeeplink(deepLinkClass = ReferralDeepLink::class.java)
+            }
         }
     }
 
