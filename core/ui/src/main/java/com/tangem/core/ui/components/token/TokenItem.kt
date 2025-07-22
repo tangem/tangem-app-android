@@ -31,7 +31,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.test.MainScreenTestTags
+import com.tangem.core.ui.test.TokenElementsTestTags
 import kotlinx.collections.immutable.persistentListOf
 import org.burnoutcrew.reorderable.ReorderableLazyListState
 import java.util.UUID
@@ -103,7 +103,7 @@ fun TokenItem(
             modifier = Modifier
                 .layoutId(layoutId = LayoutId.ICON)
                 .padding(end = TangemTheme.dimens.spacing8)
-                .testTag(MainScreenTestTags.TOKEN_ICON),
+                .testTag(TokenElementsTestTags.TOKEN_ICON),
         )
 
         TokenTitle(
@@ -112,7 +112,7 @@ fun TokenItem(
                 .layoutId(layoutId = LayoutId.TITLE)
                 .padding(end = TangemTheme.dimens.spacing8)
                 .padding(bottom = betweenRowsMargin)
-                .testTag(MainScreenTestTags.TOKEN_TITLE),
+                .testTag(TokenElementsTestTags.TOKEN_TITLE),
         )
 
         TokenFiatAmount(
@@ -121,7 +121,7 @@ fun TokenItem(
             modifier = Modifier
                 .layoutId(layoutId = LayoutId.FIAT_AMOUNT)
                 .padding(bottom = betweenRowsMargin)
-                .testTag(MainScreenTestTags.TOKEN_FIAT_AMOUNT),
+                .testTag(TokenElementsTestTags.TOKEN_FIAT_AMOUNT),
         )
 
         TokenPrice(
@@ -129,7 +129,7 @@ fun TokenItem(
             modifier = Modifier
                 .layoutId(layoutId = LayoutId.CRYPTO_PRICE)
                 .padding(end = TangemTheme.dimens.spacing8)
-                .testTag(MainScreenTestTags.TOKEN_PRICE),
+                .testTag(TokenElementsTestTags.TOKEN_PRICE),
         )
 
         TokenCryptoAmount(
@@ -137,7 +137,7 @@ fun TokenItem(
             isBalanceHidden = isBalanceHidden,
             modifier = Modifier
                 .layoutId(layoutId = LayoutId.CRYPTO_AMOUNT)
-                .testTag(MainScreenTestTags.TOKEN_CRYPTO_AMOUNT),
+                .testTag(TokenElementsTestTags.TOKEN_CRYPTO_AMOUNT),
         )
 
         NonFiatContentBlock(
@@ -145,7 +145,7 @@ fun TokenItem(
             reorderableTokenListState = reorderableTokenListState,
             modifier = Modifier
                 .layoutId(layoutId = LayoutId.NON_FIAT_CONTENT)
-                .testTag(MainScreenTestTags.TOKEN_NO_ADDRESS),
+                .testTag(TokenElementsTestTags.TOKEN_NON_FIAT_BLOCK),
         )
     }
 }
