@@ -16,6 +16,7 @@ dependencies {
     api(projects.core.utils)
 
     implementation(tangemDeps.card.core)
+    implementation(tangemDeps.hot.core)
     implementation(deps.moshi.kotlin)
     implementation(deps.moshi.adapters)
     implementation(deps.kotlin.serialization)
