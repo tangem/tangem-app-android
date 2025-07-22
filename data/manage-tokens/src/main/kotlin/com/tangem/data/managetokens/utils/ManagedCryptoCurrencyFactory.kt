@@ -20,7 +20,7 @@ import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency.SourceNetwork
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 import timber.log.Timber
 
 internal class ManagedCryptoCurrencyFactory(
@@ -175,7 +175,7 @@ internal class ManagedCryptoCurrencyFactory(
             blockchain = blockchain,
             extraDerivationPath = extraDerivationPath,
             derivationStyleProvider = userWallet?.derivationStyleProvider,
-            canHandleTokens = userWallet?.canHandleToken(blockchain, excludedBlockchains) ?: false,
+            canHandleTokens = userWallet?.canHandleToken(blockchain, excludedBlockchains) == true,
         ) ?: return null
 
         return when {
@@ -218,7 +218,7 @@ internal class ManagedCryptoCurrencyFactory(
                         blockchain = blockchain,
                         extraDerivationPath = token.derivationPath,
                         derivationStyleProvider = userWallet?.derivationStyleProvider,
-                        canHandleTokens = userWallet?.canHandleToken(blockchain, excludedBlockchains) ?: true,
+                        canHandleTokens = userWallet?.canHandleToken(blockchain, excludedBlockchains) != false,
                     )
                 } else {
                     null

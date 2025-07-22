@@ -4,8 +4,8 @@ import com.tangem.common.test.domain.card.MockScanResponseFactory
 import com.tangem.domain.common.configs.GenericCardConfig
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
-import com.tangem.domain.wallets.models.UserWallet
 
 /**
 [REDACTED_AUTHOR]
