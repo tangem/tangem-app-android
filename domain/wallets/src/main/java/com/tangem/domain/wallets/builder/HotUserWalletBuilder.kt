@@ -1,5 +1,6 @@
 package com.tangem.domain.wallets.builder
 
+import com.tangem.blockchain.blockchains.cardano.CardanoUtils
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.domain.models.MobileWallet
@@ -24,11 +25,19 @@ class HotUserWalletBuilder @AssistedInject constructor(
 ) {
 
     suspend fun build(): UserWallet.Hot = withContext(dispatcherProvider.default) {
-        val allNetworks = Blockchain.entries // TODO use HotDerivationsRepository to get supported networks
+        val allNetworks = Blockchain.entries
         val curves = allNetworks.map { it.getSupportedCurves() }.flatten().toSet()
         val requests = curves.sortedBy { it.ordinal }.map { curve ->
             val derivationPaths = allNetworks.filter { curve in it.getSupportedCurves() }
-                .mapNotNull { it.derivationPath(DerivationStyle.V3) }
+                .mapNotNull {
+                    val derivationPath = it.derivationPath(DerivationStyle.V3) ?: return@mapNotNull null
+                    if (it == Blockchain.Cardano) {
+                        val extendedDerivationPath = CardanoUtils.extendedDerivationPath(derivationPath)
+                        listOf(derivationPath, extendedDerivationPath)
+                    } else {
+                        listOf(derivationPath)
+                    }
+                }.flatten()
 
             DeriveWalletRequest.Request(
                 curve = curve,
