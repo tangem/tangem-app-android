@@ -20,7 +20,7 @@ import com.tangem.features.walletconnect.transaction.entity.common.WcTransaction
 
 @Composable
 internal fun WcSendTransactionItems(
-    walletName: String,
+    walletName: String?,
     networkInfo: WcNetworkInfoUM,
     feeState: WcTransactionFeeState,
     feeSelectorBlockComponent: FeeSelectorBlockComponent?,
@@ -44,12 +44,13 @@ internal fun WcSendTransactionItems(
             .fillMaxWidth()
             .padding(TangemTheme.dimens.spacing12)
 
-        DividerWithPadding(start = 0.dp, end = 0.dp)
-        WcWalletItem(
-            modifier = itemsModifier,
-            walletName = walletName,
-        )
-        DividerWithPadding(start = TangemTheme.dimens.spacing40, end = TangemTheme.dimens.spacing12)
+        if (walletName != null) {
+            WcWalletItem(
+                modifier = itemsModifier,
+                walletName = walletName,
+            )
+            DividerWithPadding(start = TangemTheme.dimens.spacing40, end = TangemTheme.dimens.spacing12)
+        }
         WcNetworkItem(
             modifier = itemsModifier,
             networkInfo = networkInfo,
@@ -61,8 +62,8 @@ internal fun WcSendTransactionItems(
                 addressText = address,
             )
         }
-        DividerWithPadding(start = 40.dp, end = 12.dp)
         if (feeState != WcTransactionFeeState.None) {
+            DividerWithPadding(start = 40.dp, end = 12.dp)
             feeSelectorBlockComponent?.Content(
                 modifier = if (onFeeBlockClicked != null) {
                     Modifier.clickableSingle(onClick = onFeeBlockClicked)
