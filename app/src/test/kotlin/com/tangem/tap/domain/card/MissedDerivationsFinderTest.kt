@@ -8,6 +8,7 @@ import com.tangem.common.card.EllipticCurve
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.test.domain.card.MockScanResponseFactory
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
+import com.tangem.common.test.domain.wallet.MockUserWalletFactory
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.common.configs.GenericCardConfig
 import com.tangem.domain.common.configs.MultiWalletCardConfig
@@ -34,9 +35,10 @@ internal class MissedDerivationsFinderTest {
     fun `empty derivations for non supported blockchains`() {
         // Bls is not supported
         val scanResponse = MockScanResponseFactory.create(cardConfig = GenericCardConfig(2), derivedKeys = emptyMap())
+        val userWallet = MockUserWalletFactory.create(scanResponse)
         val finder = MissedDerivationsFinder(scanResponse)
 
-        val currencies = MockCryptoCurrencyFactory(scanResponse).chia.let(::listOf)
+        val currencies = MockCryptoCurrencyFactory(userWallet).chia.let(::listOf)
         val actual = finder.find(currencies)
 
         Truth.assertThat(actual).isEmpty()
@@ -55,9 +57,10 @@ internal class MissedDerivationsFinderTest {
                 ),
             )
         }
+        val userWallet = MockUserWalletFactory.create(scanResponse)
         val finder = MissedDerivationsFinder(scanResponse)
 
-        val currencies = MockCryptoCurrencyFactory(scanResponse).chiaAndEthereum
+        val currencies = MockCryptoCurrencyFactory(userWallet).chiaAndEthereum
         val actual = finder.find(currencies)
 
         Truth.assertThat(actual).containsExactly(
@@ -69,9 +72,10 @@ internal class MissedDerivationsFinderTest {
     @Test
     fun `derivations for custom token`() {
         val scanResponse = MockScanResponseFactory.create(cardConfig = MultiWalletCardConfig, derivedKeys = emptyMap())
+        val userWallet = MockUserWalletFactory.create(scanResponse)
         val finder = MissedDerivationsFinder(scanResponse)
 
-        val currencies = MockCryptoCurrencyFactory(scanResponse).ethereumTokenWithBinanceDerivation
+        val currencies = MockCryptoCurrencyFactory(userWallet).ethereumTokenWithBinanceDerivation
         val actual = finder.find(currencies)
 
         Truth.assertThat(actual).containsExactly(
@@ -86,9 +90,10 @@ internal class MissedDerivationsFinderTest {
     @Test
     fun `derivations for cardano`() {
         val scanResponse = MockScanResponseFactory.create(cardConfig = MultiWalletCardConfig, derivedKeys = emptyMap())
+        val userWallet = MockUserWalletFactory.create(scanResponse)
         val finder = MissedDerivationsFinder(scanResponse)
 
-        val currencies = MockCryptoCurrencyFactory(scanResponse).cardano.let(::listOf)
+        val currencies = MockCryptoCurrencyFactory(userWallet).cardano.let(::listOf)
         val actual = finder.find(currencies)
 
         Truth.assertThat(actual).containsExactly(
@@ -111,9 +116,10 @@ internal class MissedDerivationsFinderTest {
             cardConfig = Wallet2CardConfig,
             derivedKeys = DerivedKeysMocks.ethereumDerivedKeys,
         )
+        val userWallet = MockUserWalletFactory.create(scanResponse)
         val finder = MissedDerivationsFinder(scanResponse)
 
-        val currencies = MockCryptoCurrencyFactory(scanResponse).ethereum.let(::listOf)
+        val currencies = MockCryptoCurrencyFactory(userWallet).ethereum.let(::listOf)
         val actual = finder.find(currencies)
 
         Truth.assertThat(actual).isEmpty()
@@ -125,9 +131,10 @@ internal class MissedDerivationsFinderTest {
             cardConfig = MultiWalletCardConfig,
             derivedKeys = DerivedKeysMocks.ethereumDerivedKeys,
         )
+        val userWallet = MockUserWalletFactory.create(scanResponse)
         val finder = MissedDerivationsFinder(scanResponse)
 
-        val currencies = MockCryptoCurrencyFactory(scanResponse).ethereumAndStellar
+        val currencies = MockCryptoCurrencyFactory(userWallet).ethereumAndStellar
         val actual = finder.find(currencies)
 
         Truth.assertThat(actual).containsExactly(

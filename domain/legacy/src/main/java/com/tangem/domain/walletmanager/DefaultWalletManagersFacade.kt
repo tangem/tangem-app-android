@@ -31,6 +31,8 @@ import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.TxInfo
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.txhistory.models.PaginationWrapper
 import com.tangem.domain.txhistory.models.TxHistoryState
@@ -39,9 +41,6 @@ import com.tangem.domain.walletmanager.model.SmartContractMethod
 import com.tangem.domain.walletmanager.model.TokenInfo
 import com.tangem.domain.walletmanager.utils.*
 import com.tangem.domain.walletmanager.utils.WalletManagerFactory
-import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.sync.Mutex
@@ -371,21 +370,31 @@ class DefaultWalletManagersFacade(
         initMutex.withLock {
             val userWallet = getUserWallet(userWalletId)
 
-            userWallet.requireColdWallet() // TODO [REDACTED_TASK_KEY]
-
             var walletManager = walletManagersStore.getSyncOrNull(
                 userWalletId = userWalletId,
                 blockchain = blockchain,
                 derivationPath = derivationPath,
             )
-            if (walletManager == null) {
-                walletManager = walletManagerFactory.createWalletManager(
-                    scanResponse = userWallet.scanResponse,
-                    blockchain = blockchain,
-                    derivationPath = derivationPath?.let { DerivationPath(rawPath = it) },
-                )
-                walletManager ?: return null
+            val path = derivationPath?.let { DerivationPath(rawPath = it) }
 
+            if (walletManager == null) {
+                when (userWallet) {
+                    is UserWallet.Hot -> {
+                        walletManager = walletManagerFactory.createWalletManagerForHot(
+                            hotWallet = userWallet,
+                            blockchain = blockchain,
+                            derivationPath = path,
+                        )
+                    }
+                    is UserWallet.Cold -> {
+                        walletManager = walletManagerFactory.createWalletManager(
+                            scanResponse = userWallet.scanResponse,
+                            blockchain = blockchain,
+                            derivationPath = path,
+                        )
+                    }
+                }
+                walletManager ?: return null
                 walletManagersStore.store(userWalletId, walletManager)
             }
             return walletManager
