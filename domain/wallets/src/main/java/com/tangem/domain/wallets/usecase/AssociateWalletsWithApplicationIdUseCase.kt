@@ -1,8 +1,8 @@
 package com.tangem.domain.wallets.usecase
 
 import arrow.core.Either
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.notifications.models.ApplicationId
-import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.repository.WalletsRepository
 
 class AssociateWalletsWithApplicationIdUseCase(
