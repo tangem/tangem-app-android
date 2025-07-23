@@ -6,4 +6,6 @@ package com.tangem.features.swap.v2.api.subcomponents
  */
 interface SwapAmountUpdateTrigger {
     suspend fun triggerUpdateAmount(amountValue: String)
+
+    suspend fun triggerQuoteReload()
 }
