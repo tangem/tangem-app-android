@@ -21,10 +21,12 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.EstimateFeeUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
+import com.tangem.features.send.v2.api.SendNotificationsComponent
 import com.tangem.features.send.v2.api.SendNotificationsComponent.Params.NotificationData
 import com.tangem.features.send.v2.api.callbacks.FeeSelectorModelCallback
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
+import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
 import com.tangem.features.send.v2.api.subcomponents.notifications.SendNotificationsUpdateListener
 import com.tangem.features.send.v2.api.subcomponents.notifications.SendNotificationsUpdateTrigger
 import com.tangem.features.swap.v2.impl.R
@@ -61,9 +63,10 @@ internal class SendWithSwapConfirmModel @Inject constructor(
     private val swapNotificationsUpdateTrigger: SwapNotificationsUpdateTrigger,
     private val sendNotificationsUpdateListener: SendNotificationsUpdateListener,
     private val swapNotificationsUpdateListener: SwapNotificationsUpdateListener,
+    private val feeSelectorReloadTrigger: FeeSelectorReloadTrigger,
     swapTransactionSenderFactory: SwapTransactionSender.Factory,
     paramsContainer: ParamsContainer,
-) : Model(), FeeSelectorModelCallback {
+) : Model(), FeeSelectorModelCallback, SendNotificationsComponent.ModelCallback {
 
     private val params: SendWithSwapConfirmComponent.Params = paramsContainer.require()
 
@@ -141,6 +144,12 @@ internal class SendWithSwapConfirmModel @Inject constructor(
 
     fun updateState(sendWithSwapUM: SendWithSwapUM) {
         uiState.value = sendWithSwapUM
+    }
+
+    override fun onFeeReload() {
+        modelScope.launch {
+            feeSelectorReloadTrigger.triggerUpdate()
+        }
     }
 
     fun showEditAmount() {
