@@ -8,10 +8,10 @@ import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.pay.TangemPayApi
 import com.tangem.datasource.api.pay.models.response.VisaErrorResponseJsonAdapter
 import com.tangem.datasource.di.NetworkMoshi
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.KycStartInfo
 import com.tangem.domain.pay.repository.KycRepository
 import com.tangem.domain.visa.error.VisaApiError
-import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory

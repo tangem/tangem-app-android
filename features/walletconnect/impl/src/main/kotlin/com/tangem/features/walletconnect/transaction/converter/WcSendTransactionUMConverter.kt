@@ -39,7 +39,7 @@ internal class WcSendTransactionUMConverter @Inject constructor(
                     ),
                 ),
                 feeState = constructFeeState(useCase = value.useCase, actions = value.actions),
-                walletName = value.useCase.session.wallet.name,
+                walletName = value.useCase.session.wallet.name.takeIf { value.useCase.session.showWalletInfo },
                 networkInfo = networkInfoUMConverter.convert(value.useCase.network),
                 address = value.useCase.walletAddress.toShortAddressText(),
                 estimatedWalletChanges = WcSendReceiveTransactionCheckResultsUM(),
