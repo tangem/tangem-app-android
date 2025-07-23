@@ -20,11 +20,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.MainScreenTestTags
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
 import com.tangem.feature.wallet.presentation.wallet.ui.components.common.WalletCard
@@ -63,7 +65,9 @@ internal fun WalletsList(
             WalletCard(
                 state = state,
                 isBalanceHidden = isBalanceHidden,
-                modifier = Modifier.width(itemWidth),
+                modifier = Modifier
+                    .width(itemWidth)
+                    .testTag(MainScreenTestTags.WALLET_LIST_ITEM),
             )
         }
     }
