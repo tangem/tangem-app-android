@@ -6,16 +6,16 @@ import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.promo.ShouldShowPromoWalletUseCase
 import com.tangem.domain.promo.models.PromoId
 import com.tangem.domain.settings.IsReadyToShowRateAppUseCase
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TokenList
-import com.tangem.domain.tokens.model.TotalFiatBalance
 import com.tangem.domain.wallets.models.SeedPhraseNotificationsStatus
-import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
 import com.tangem.domain.wallets.usecase.SeedPhraseNotificationUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
@@ -25,7 +25,6 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import javax.inject.Inject
-import kotlin.collections.count
 
 @Suppress("LongParameterList")
 @ModelScoped
