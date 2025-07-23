@@ -79,7 +79,6 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
             }
             // finish flow if rejected above
             if (sessionForApprove == null) {
-                analytics.send(WcAnalyticEvents.SessionDisconnected(proposalState.dAppSession.dAppMetaData))
                 sdkDelegate.rejectSession(sdkSessionProposal.proposerPublicKey)
                 return@flow
             }
