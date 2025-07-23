@@ -6,8 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.extensions.compose.stack.Children
-import com.arkivanov.decompose.extensions.compose.stack.animation.slide
-import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
+import com.arkivanov.decompose.extensions.compose.stack.animation.*
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.tangem.common.ui.navigationButtons.NavigationUM
 import com.tangem.core.ui.components.appbar.AppBarWithBackButtonAndIcon
@@ -15,6 +14,8 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.send.v2.common.CommonSendRoute
+import com.tangem.features.send.v2.send.confirm.SendConfirmComponent
+import com.tangem.features.send.v2.send.success.SendConfirmSuccessComponent
 
 @Composable
 internal fun SendContent(
@@ -22,22 +23,30 @@ internal fun SendContent(
     stackState: ChildStack<CommonSendRoute, ComposableContentComponent>,
 ) {
     Column(
-        modifier = Modifier.Companion
+        modifier = Modifier
             .background(color = TangemTheme.colors.background.tertiary)
             .fillMaxSize()
             .imePadding()
             .systemBarsPadding(),
-        horizontalAlignment = Alignment.Companion.CenterHorizontally,
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         SendAppBar(navigationUM = navigationUM)
         Children(
             stack = stackState,
-            animation = stackAnimation(slide()),
+            animation = stackAnimation { child ->
+                when (child.instance) {
+                    is SendConfirmSuccessComponent -> fade(minAlpha = 1.0f)
+                    is SendConfirmComponent -> fade()
+                    else -> slide()
+                }
+            },
             modifier = Modifier.weight(1f),
         ) {
             it.instance.Content(Modifier.weight(1f))
         }
-        SendNavigationButtons(navigationUM = navigationUM)
+        if (stackState.active.configuration != CommonSendRoute.ConfirmSuccess) {
+            SendNavigationButtons(navigationUM = navigationUM)
+        }
     }
 }
 
