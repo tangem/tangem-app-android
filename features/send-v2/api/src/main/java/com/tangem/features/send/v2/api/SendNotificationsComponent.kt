@@ -31,6 +31,7 @@ interface SendNotificationsComponent {
         val feeCryptoCurrencyStatus: CryptoCurrencyStatus,
         val appCurrency: AppCurrency,
         val notificationData: NotificationData,
+        val callback: ModelCallback,
     ) {
         data class NotificationData(
             val destinationAddress: String,
@@ -44,4 +45,14 @@ interface SendNotificationsComponent {
     }
 
     interface Factory : ComponentFactory<Params, SendNotificationsComponent>
+
+    interface ModelCallback {
+        fun onFeeReload()
+
+        fun onAmountReduceTo(reduceTo: BigDecimal) {}
+
+        fun onAmountReduceBy(reduceBy: BigDecimal, reduceByDiff: BigDecimal) {}
+
+        fun onAmountIgnore() {}
+    }
 }
