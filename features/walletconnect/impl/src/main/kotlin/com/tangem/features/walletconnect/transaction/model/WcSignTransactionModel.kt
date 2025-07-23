@@ -14,9 +14,9 @@ import com.tangem.domain.walletconnect.usecase.method.WcMessageSignUseCase
 import com.tangem.domain.walletconnect.usecase.method.WcSignState
 import com.tangem.domain.walletconnect.usecase.method.WcSignStep
 import com.tangem.domain.walletconnect.usecase.method.WcSignUseCase
-import com.tangem.features.walletconnect.connections.routing.WcInnerRoute
 import com.tangem.features.walletconnect.transaction.components.common.WcTransactionModelParams
 import com.tangem.features.walletconnect.transaction.converter.WcCommonTransactionUMConverter
+import com.tangem.features.walletconnect.transaction.converter.WcHandleMethodErrorConverter
 import com.tangem.features.walletconnect.transaction.entity.common.WcCommonTransactionModel
 import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionActionsUM
 import com.tangem.features.walletconnect.transaction.entity.sign.WcSignTransactionUM
@@ -50,7 +50,7 @@ internal class WcSignTransactionModel @Inject constructor(
     init {
         modelScope.launch {
             val useCase = useCaseFactory.createUseCase<WcMessageSignUseCase>(params.rawRequest)
-                .onLeft { router.push(WcInnerRoute.UnsupportedMethodAlert(params.rawRequest)) }
+                .onLeft { router.push(WcHandleMethodErrorConverter.convert(it)) }
                 .getOrNull() ?: return@launch
             useCase.invoke()
                 .onEach { signState ->
