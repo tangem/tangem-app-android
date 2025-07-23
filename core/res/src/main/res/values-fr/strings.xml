@@ -49,6 +49,7 @@
   <string name="app_settings_theme_mode_system">Par défaut du système</string>
   <string name="app_settings_theme_selector_title">Thème</string>
   <string name="app_settings_title">Paramètres de l\'application</string>
+  <string name="backup_complete_seed_description">Ces mots ne peuvent pas être récupérés en cas de perte. Assurez-vous de les conserver en lieu sûr.</string>
   <string name="balance_hidden_description">Pour masquer ou afficher vos soldes, il suffit de retourner l\'écran de votre appareil vers le bas ou de le désactiver dans les paramètres</string>
   <string name="balance_hidden_do_not_show_button">Ne plus afficher</string>
   <string name="balance_hidden_got_it_button">Compris</string>
@@ -116,6 +117,7 @@
   <string name="common_close">Fermer</string>
   <string name="common_confirm">Confirmez</string>
   <string name="common_continue">Continuer</string>
+  <string name="common_convert">Convertir</string>
   <string name="common_copy">Copier</string>
   <string name="common_copy_address">Copier l\'adresse</string>
   <string name="common_create">Créer</string>
@@ -216,6 +218,7 @@
   <string name="common_unreachable">Inaccessible</string>
   <string name="common_unstake">Unstakez</string>
   <string name="common_utxo_validate_withdrawal_message_warning">En raison d\'une limitations sur les %1$s, seuls les %2$d UTXO peuvent s\'intégrer dans une seule transaction. Ce qui signifie vous ne pouvez envoyer que %3$s ou moins. Réduisez le montant.</string>
+  <string name="common_value_copied">Valeur copiée</string>
   <string name="common_week">semaine</string>
   <string name="common_with">avec</string>
   <string name="common_yes">Oui</string>
@@ -699,6 +702,12 @@
   <string name="organize_tokens_sort_by_balance">Par solde</string>
   <string name="organize_tokens_title">Organiser les jetons</string>
   <string name="organize_tokens_ungroup">Dégrouper</string>
+  <string name="push_notifications_more_info">Plus d\'infos</string>
+  <string name="push_notifications_permission_alert_description">Vous pouvez activer les notifications pour Tangem dans les paramètres.</string>
+  <string name="push_notifications_permission_alert_negative_button">Activer plus tard</string>
+  <string name="push_notifications_permission_alert_positive_button">Paramètres</string>
+  <string name="push_notifications_permission_alert_title">Activer les notifications</string>
+  <string name="push_transactions_notifications_description">Recevez des alertes pour les transactions entrantes sur les réseaux pris en charge.</string>
   <string name="qr_scanner_camera_denied_gallery_button">Sélectionnez dans la galerie</string>
   <string name="qr_scanner_camera_denied_settings_button">Paramètres</string>
   <string name="qr_scanner_camera_denied_text">Vous n\'avez pas donné accès à votre caméra</string>
@@ -771,7 +780,9 @@
   <string name="send_alert_fee_too_low_text">Vous avez spécifié une commission inférieure au montant recommandé, ce qui pourrait entraîner un retard dans votre transaction. Continuer?</string>
   <string name="send_alert_transaction_failed_text">Raison : %1$s\nCode : %2$s</string>
   <string name="send_alert_transaction_failed_title">La transaction est incomplète</string>
+  <string name="send_amount_convert_to_another_token">Convertir en un autre jeton</string>
   <string name="send_amount_label">Montant</string>
+  <string name="send_amount_receive_token_subtitle">Sera envoyé au destinataire</string>
   <string name="send_bitcoin_custom_fee_footer">Vous pouvez définir vos frais de transaction en ajustant la valeur dans le champ Satoshi par vByte.</string>
   <string name="send_custom_amount_fee_footer">Les frais qui seront facturés pour votre transaction. Vous pouvez définir votre propre valeur.</string>
   <string name="send_custom_evm_max_fee">Frais maximum</string>
@@ -795,6 +806,7 @@
   <string name="send_fee_unreachable_error_text">Vérifiez votre connexion réseau</string>
   <string name="send_fee_unreachable_error_title">Informations sur les frais de réseau inaccessibles</string>
   <string name="send_from_wallet_android">De</string>
+  <string name="send_from_wallet_name">De %s</string>
   <string name="send_gas_limit">Limite de gaz</string>
   <string name="send_gas_limit_footer">Il s\'agit du montant maximal de gaz qui sera dépensé pour effectuer une transaction ou un contrat. Une limite de gaz empêche des frais imprévus ou illimités lors de l\'exécution d\'une transaction.</string>
   <string name="send_gas_price">Prix ​​du gaz</string>
@@ -802,6 +814,7 @@
   <string name="send_max_amount">Max</string>
   <string name="send_max_amount_label">Somme maximale</string>
   <string name="send_max_fee">Frais jusqu\'à</string>
+  <string name="send_memo">Mémo : %s</string>
   <string name="send_memo_destination_tag_error">Mémo invalide</string>
   <string name="send_network_fee_warning_title">Couverture des frais de réseau</string>
   <string name="send_notification_exceed_balance_text">Fonds insuffisants pour le transfert, car le total des frais et du montant du transfert dépasse le solde existant</string>
@@ -812,6 +825,7 @@
   <string name="send_notification_fee_too_high_title">Les frais de douane sont élevés</string>
   <string name="send_notification_high_fee_text">En raison des particularités du réseau %1$s, les frais de transfert de la totalité du solde sont plus élevés. Pour réduire la commission, vous pouvez en laisser %2$s.</string>
   <string name="send_notification_high_fee_title">Les frais sont plus élevés</string>
+  <string name="send_notification_invalid_amount_rent_destination">Le compte du bénéficiaire n\'est pas activé. Le montant minimum du transfert doit être égal ou supérieur au solde exonéré de loyer : %1$s.</string>
   <string name="send_notification_invalid_amount_rent_fee">Le solde de votre compte ne peut pas être inférieur au montant du loyer. Veuillez conserver au moins %1$s sur votre compte ou retirer tous les fonds.</string>
   <string name="send_notification_invalid_amount_text">La commission incluse dépasse le montant du transfert, ce qui entraîne une valeur négative</string>
   <string name="send_notification_invalid_amount_title">Montant invalide</string>
@@ -831,6 +845,7 @@
   <string name="send_recipient">Destinataire</string>
   <string name="send_recipient_address_error">Adresse non valide</string>
   <string name="send_recipient_address_footer">Assurez-vous que l\'adresse du portefeuille de réception est sur le réseau %s pour éviter de perdre vos jetons</string>
+  <string name="send_recipient_address_footer_highlighted_part">envoyer à %s</string>
   <string name="send_recipient_label">Envoyer à</string>
   <string name="send_recipient_memo_footer">Un Memo/Destination Tag est un identifiant unique permettant de différencier les transactions envoyées au même destinataire sur le même réseau. Attention : L\'omission d\'un mémo peut entraîner des fonds mal placés</string>
   <string name="send_recipient_memo_footer_v2">Le Memo / Destination Tag est un code qui distingue les transactions envoyées à un destinataire partagé sur un réseau crypto.</string>
@@ -847,6 +862,7 @@
   <string name="send_summary_transaction_description_suffix_fee_covered">les frais de réseau seront couverts en utilisant %1$s énergie</string>
   <string name="send_summary_transaction_description_suffix_fee_reduced">les frais de réseau seront réduits en utilisant %1$s énergie</string>
   <string name="send_summary_transaction_description_suffix_including">y compris des frais de réseau de %1$s</string>
+  <string name="send_to_address">À l\'adresse</string>
   <string name="send_transaction_success">La transaction a été signée avec succès et envoyée au nœud de blockchain. Le solde du portefeuille sera mis à jour après un certain temps</string>
   <string name="send_tron_account_activation_error">%1$s est un actif du réseau Tron. Pour calculer les frais et effectuer une transaction, déposez du Tron (TRX) sur votre compte.</string>
   <string name="send_validation_amount_exceeds_balance">Le montant dépasse le solde</string>
@@ -855,6 +871,8 @@
   <string name="send_validation_invalid_amount">Montant invalide</string>
   <string name="send_validation_invalid_fee">Les frais de commissions dépassent le solde</string>
   <string name="send_validation_invalid_total">Le total dépasse le solde</string>
+  <string name="send_with_swap_confirm_title">Échanger et envoyer</string>
+  <string name="send_with_swap_recipient_amount_title">Montant à recevoir</string>
   <string name="sent_transaction_sent_title">Transaction envoyée</string>
   <string name="settings_card_settings_footer">Scannez la carte/ bague que vous souhaitez configurer.</string>
   <string name="settings_forget_wallet">Oublier le portefeuille</string>
@@ -1008,6 +1026,7 @@
   <string name="swap_story_second_title">Meilleurs Tarifs</string>
   <string name="swap_story_third_subtitle">Simple et intuitif, vous permettant d\'échanger des jetons en quelques clics</string>
   <string name="swap_story_third_title">Plus Simple Que Jamais</string>
+  <string name="swap_via_provider">Échange via le fournisseur</string>
   <string name="swapping_alert_cex_description">Le montant comprend :\n• les frais du fournisseur de services\n• les frais de réseau pour l\'envoi de %s depuis l\'échange vers l\'adresse de l\'utilisateur.</string>
   <string name="swapping_alert_cex_description_with_slippage">Le montant comprend :\n• les frais du fournisseur de services\n• les frais de réseau pour l\'envoi de %1$s depuis l\'échange vers l\'adresse de l\'utilisateur. \n\nLe slippage du fournisseur peut atteindre %2$s</string>
   <string name="swapping_alert_dex_description">Le montant comprend les frais du fournisseur de services.</string>
@@ -1085,6 +1104,7 @@
   <string name="unlock_wallet_description_full">Utilisez %s ou scannez une carte/bague pour avoir accès à votre portefeuille</string>
   <string name="unsupported_wc_version">Échec de la connexion : Cette dApp utilise Wallet Connect version1.0, qui n\'est pas prise en charge. Veuillez vous assurer que la dApp prend en charge Wallet Connect version2.0 pour réussir la connexion.</string>
   <string name="user_push_notification_agreement_argument_one">Restez à jour avec les dernières fonctionnalités et actualités</string>
+  <string name="user_push_notification_agreement_argument_three">Recevez des notifications des transactions entrantes</string>
   <string name="user_push_notification_agreement_argument_two">Soyez le premier informé des nouvelles promotions</string>
   <string name="user_push_notification_agreement_header">Souhaitez-vous utiliser les\nnotifications push?</string>
   <string name="user_wallet_list_add_button">Ajouter un nouveau portefeuille</string>
@@ -1157,6 +1177,8 @@
   <string name="wallet_promo_banner_button_title">Obtenez-le maintenant avec 10 % de réduction</string>
   <string name="wallet_promo_banner_description">Accédez à plus de 13 000 cryptomonnaies. Achetez, vendez, échangez et stakez en un seul clic.\nAssociez jusqu\'à trois cartes pour une sauvegarde.</string>
   <string name="wallet_promo_banner_title">Découvrez le Portefeuille Tangem</string>
+  <string name="wallet_settings_push_notifications_description">Recevez des notifications sur les transactions entrantes du portefeuille et les mises à jour de Tangem.</string>
+  <string name="wallet_settings_push_notifications_title">Notifications de transaction</string>
   <string name="wallet_settings_title">Paramètres du portefeuille</string>
   <string name="wallet_title">Tangem</string>
   <string name="warning_access_denied_message">Utilisez %s ou scannez une carte/bague pour déverrouiller l\'accès à votre portefeuille</string>
@@ -1184,7 +1206,7 @@
   <string name="warning_express_approval_in_progress_message">L\'approbation de l\'échange est en cours et sera achevée sous peu</string>
   <string name="warning_express_approval_in_progress_title">Approbation en cours</string>
   <string name="warning_express_dust_message">Le montant minimum d\'échange est de %1$s. Veuillez vous assurer que le solde restant après l\'échange ne sera pas inférieur à %2$s.</string>
-  <string name="warning_express_no_exchangeable_coins_description">Vous n\'avez pas de pièces échangeables %s dans votre liste</string>
+  <string name="warning_express_no_exchangeable_coins_description">Vous n’avez aucun jeton dans votre portefeuille pouvant recevoir %s en échange. Veuillez ajouter un autre jeton pour effectuer l’échange.</string>
   <string name="warning_express_no_exchangeable_coins_title">Aucun jeton disponible à échanger</string>
   <string name="warning_express_not_enough_fee_for_token_tx_description">Pour effectuer une transaction, vous devez déposer %1$s %2$s</string>
   <string name="warning_express_not_enough_fee_for_token_tx_title">Impossible de couvrir %s frais</string>
@@ -1243,9 +1265,14 @@
   <string name="warning_some_networks_unreachable_message">Certains réseaux sont actuellement inaccessibles. Veuillez réessayer plus tard.</string>
   <string name="warning_some_networks_unreachable_title">Certains réseaux sont inaccessibles</string>
   <string name="warning_some_token_balances_not_updated">Certains soldes de jetons n\'ont pas pu être mis à jour</string>
+  <string name="warning_stellar_token_trustline_not_enough_xlm">Pas assez de %s. Rechargez votre compte XLM pour associer ce jeton</string>
   <string name="warning_testnet_card_message">Il s\'agit d\'une carte Testnet. Elle ne peut pas traiter les transactions et ne doit être utilisée qu\'à des fins de test et de développement.</string>
   <string name="warning_testnet_card_title">À des fins de test uniquement</string>
   <string name="warning_token_balance_not_updated">Le solde peut être obsolète. Rafraîchissez la page.</string>
+  <string name="wc_alert_audit_malicious_domain">Domaine malveillant</string>
+  <string name="wc_alert_unknown_error_description_no_error_code">Si le problème persiste, n’hésitez pas à contacter notre support.</string>
+  <string name="wc_alert_unsupported_dapps_description">Le portefeuille Tangem ne prend actuellement pas en charge %ss</string>
+  <string name="wc_alert_unsupported_dapps_title">dApp non prise en charge</string>
   <string name="wc_connections">Connexions</string>
   <string name="wc_disconnect_all">Déconnecter tout</string>
   <string name="wc_disconnect_all_alert_desc">Texte sur la déconnexion de toutes les dApps</string>
