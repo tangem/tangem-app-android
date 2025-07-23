@@ -2,10 +2,11 @@ package com.tangem.features.hotwallet.addexistingwallet.root.di
 
 import com.tangem.core.decompose.model.Model
 import com.tangem.features.hotwallet.AddExistingWalletComponent
+import com.tangem.features.hotwallet.setaccesscode.SetAccessCodeModel
 import com.tangem.features.hotwallet.addexistingwallet.root.AddExistingWalletModel
 import com.tangem.features.hotwallet.addexistingwallet.root.DefaultAddExistingWalletComponent
 import com.tangem.features.hotwallet.addexistingwallet.start.AddExistingWalletStartModel
-import com.tangem.features.hotwallet.addexistingwallet.im.port.AddExistingWalletImportModel
+import com.tangem.features.hotwallet.addexistingwallet.im.port.model.AddExistingWalletImportModel
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -42,4 +43,9 @@ internal interface AddExistingWalletModuleBinds {
     @IntoMap
     @ClassKey(AddExistingWalletImportModel::class)
     fun bindAddExistingWalletImportModel(model: AddExistingWalletImportModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(SetAccessCodeModel::class)
+    fun bindAccessCodeModel(model: SetAccessCodeModel): Model
 }
