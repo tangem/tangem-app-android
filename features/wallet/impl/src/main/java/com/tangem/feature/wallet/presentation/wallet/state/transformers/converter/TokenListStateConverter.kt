@@ -6,14 +6,14 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.models.TotalFiatBalance
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.NetworkGroup
 import com.tangem.domain.tokens.model.TokenList
-import com.tangem.domain.tokens.model.TotalFiatBalance
-import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState
-import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.mutate
