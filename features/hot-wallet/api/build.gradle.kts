@@ -23,4 +23,7 @@ dependencies {
 
     /* Compose */
     implementation(deps.compose.runtime)
+
+    /* Tangem libs */
+    implementation(tangemDeps.hot.core)
 }
