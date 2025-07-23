@@ -8,6 +8,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
@@ -33,6 +34,8 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import kotlinx.collections.immutable.persistentListOf
 
+private const val DISABLED_ICON_ALPHA = 0.4f
+
 /**
  * Provider Row - Choose Crypto component
  *
@@ -43,14 +46,17 @@ import kotlinx.collections.immutable.persistentListOf
  * @see <a href="https://www.figma.com/design/JJuqr3gX9IC4WBv3C95uqj/Android--Copy-?node-id=3467-2643&t=Tg0OOJTQK9H4KBWL-4">Figma</a>
  */
 @Composable
-@Suppress("DestructuringDeclarationWithTooManyEntries")
+@Suppress("DestructuringDeclarationWithTooManyEntries", "LongMethod")
 fun ProviderChooseCrypto(providerChooseUM: ProviderChooseUM, onClick: () -> Unit, modifier: Modifier = Modifier) {
     ConstraintLayout(
         modifier = modifier
             .background(TangemTheme.colors.background.action)
             .clip(RoundedCornerShape(14.dp))
             .selectedBorder(isSelected = providerChooseUM.isSelected)
-            .clickable(enabled = true, onClick = onClick)
+            .clickable(
+                enabled = !providerChooseUM.hasError(),
+                onClick = onClick,
+            )
             .fillMaxWidth()
             .padding(all = 12.dp),
     ) {
@@ -60,6 +66,13 @@ fun ProviderChooseCrypto(providerChooseUM: ProviderChooseUM, onClick: () -> Unit
         IconContent(
             iconUrl = providerChooseUM.iconUrl,
             modifier = Modifier
+                .alpha(
+                    if (providerChooseUM.hasError()) {
+                        DISABLED_ICON_ALPHA
+                    } else {
+                        1.0f
+                    },
+                )
                 .constrainAs(iconRef) {
                     start.linkTo(parent.start)
                     top.linkTo(parent.top)
@@ -140,7 +153,11 @@ private fun TitleContent(providerChooseUM: ProviderChooseUM, modifier: Modifier 
         Text(
             text = providerChooseUM.title.resolveReference(),
             style = TangemTheme.typography.subtitle2,
-            color = TangemTheme.colors.text.primary1,
+            color = if (providerChooseUM.hasError()) {
+                TangemTheme.colors.text.secondary
+            } else {
+                TangemTheme.colors.text.primary1
+            },
             maxLines = 1,
         )
         Text(
