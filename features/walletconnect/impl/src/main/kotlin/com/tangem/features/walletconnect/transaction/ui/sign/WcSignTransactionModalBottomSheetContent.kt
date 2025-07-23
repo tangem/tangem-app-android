@@ -113,12 +113,13 @@ private fun WcSignTransactionItems(state: WcSignTransactionItemUM, modifier: Mod
             .fillMaxWidth()
             .padding(12.dp)
 
-        DividerWithPadding(start = 0.dp, end = 0.dp)
-        WcWalletItem(
-            modifier = itemsModifier,
-            walletName = state.walletName,
-        )
-        DividerWithPadding(start = 40.dp, end = 12.dp)
+        if (state.walletName != null) {
+            WcWalletItem(
+                modifier = itemsModifier,
+                walletName = state.walletName,
+            )
+            DividerWithPadding(start = 40.dp, end = 12.dp)
+        }
         WcNetworkItem(
             modifier = itemsModifier,
             networkInfo = state.networkInfo,
@@ -130,7 +131,6 @@ private fun WcSignTransactionItems(state: WcSignTransactionItemUM, modifier: Mod
                 addressText = state.addressText,
             )
         }
-        DividerWithPadding(start = 40.dp, end = 12.dp)
     }
 }
 
@@ -192,7 +192,7 @@ private class WcSignTransactionStateProvider : CollectionPreviewParameterProvide
                 verifiedState = VerifiedDAppState.Verified {},
                 appSubtitle = "react-app.walletconnect.com",
             ),
-            walletName = "Tangem 2.0",
+            walletName = null,
             addressText = "0x345FF...34FA",
             networkInfo = WcNetworkInfoUM(name = "Ethereum", iconRes = R.drawable.img_eth_22),
         ),
