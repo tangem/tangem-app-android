@@ -6,7 +6,7 @@ import arrow.core.raise.either
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.tokens.error.CurrencyStatusError
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.coroutines.delay
 
 /**
