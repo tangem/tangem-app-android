@@ -116,6 +116,7 @@ internal class SendConfirmComponent(
             cryptoCurrencyStatus = params.cryptoCurrencyStatus,
             feeCryptoCurrencyStatus = params.feeCryptoCurrencyStatus,
             appCurrency = params.appCurrency,
+            callback = model,
             notificationData = NotificationData(
                 destinationAddress = model.confirmData.enteredDestination.orEmpty(),
                 memo = model.confirmData.enteredMemo,
@@ -139,6 +140,7 @@ internal class SendConfirmComponent(
         destinationBlockComponent.updateState(state.destinationUM)
         amountBlockComponent.updateState(state.amountUM)
         feeBlockComponent.updateState(state.feeUM)
+        feeSelectorBlockComponent.updateState(state.feeSelectorUM)
         model.updateState(state)
     }
 
