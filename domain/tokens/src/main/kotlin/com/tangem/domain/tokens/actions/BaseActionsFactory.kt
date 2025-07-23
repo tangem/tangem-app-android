@@ -58,7 +58,7 @@ internal open class BaseActionsFactory(
      * @param currency   the cryptocurrency to check
      */
     protected suspend fun getOnrampUnavailabilityReason(
-        userWallet: UserWallet.Cold,
+        userWallet: UserWallet,
         currency: CryptoCurrency,
     ): ScenarioUnavailabilityReason {
         return rampStateManager.availableForBuy(
