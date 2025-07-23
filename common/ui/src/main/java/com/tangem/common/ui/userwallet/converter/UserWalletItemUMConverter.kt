@@ -11,10 +11,10 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.common.util.getCardsCount
 import com.tangem.domain.models.ArtworkModel
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
-import com.tangem.domain.tokens.model.TotalFiatBalance
 import com.tangem.utils.converter.Converter
 
 /**
