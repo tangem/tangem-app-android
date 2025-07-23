@@ -38,6 +38,7 @@ fun PinTextField(
     isPasswordVisual: Boolean,
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
+    wrongCode: Boolean = false,
 ) {
     val focusRequester = remember { FocusRequester() }
     val textFieldValue = remember(value) {
@@ -71,6 +72,7 @@ fun PinTextField(
             CellDecoration(
                 length = length,
                 isPasswordVisual = isPasswordVisual,
+                wrongCode = wrongCode,
                 value = value,
             )
         },
@@ -86,6 +88,7 @@ fun PinTextField(
 @Composable
 private fun CellDecoration(
     length: Int,
+    wrongCode: Boolean,
     value: String,
     modifier: Modifier = Modifier,
     isPasswordVisual: Boolean = false,
@@ -128,7 +131,11 @@ private fun CellDecoration(
                         modifier = Modifier.sizeIn(minWidth = width.size.width.dp + 8.dp, minHeight = 48.dp),
                         text = text,
                         style = TangemTheme.typography.h3,
-                        color = TangemTheme.colors.text.primary1,
+                        color = if (wrongCode) {
+                            TangemTheme.colors.text.warning
+                        } else {
+                            TangemTheme.colors.text.primary1
+                        },
                         textAlign = TextAlign.Center,
                         lineHeight = 48.sp,
                     )
