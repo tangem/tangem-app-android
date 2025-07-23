@@ -16,11 +16,12 @@ import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.components.list.InfiniteListHandler
 import com.tangem.core.ui.components.notifications.Notification
-import com.tangem.core.ui.components.rows.ChainRow
-import com.tangem.core.ui.components.rows.model.ChainRowUM
+import com.tangem.core.ui.components.token.TokenItem
+import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.event.EventEffect
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.WindowInsetsZero
@@ -137,24 +138,33 @@ private fun LazyListScope.contentItems(items: ImmutableList<CurrencyItemUM>) {
     ) { index, item ->
         when (item) {
             is CurrencyItemUM.Basic -> {
-                ChainRow(
-                    model = with(item) {
-                        ChainRowUM(
-                            name = name,
-                            type = symbol,
-                            icon = icon,
-                            showCustom = false,
-                        )
-                    },
-                    modifier = Modifier
-                        .roundedShapeItemDecoration(
-                            currentIndex = index,
-                            addDefaultPadding = false,
-                            lastIndex = items.lastIndex,
-                        )
-                        .clickable(onClick = item.onExpandClick)
-                        .background(TangemTheme.colors.background.action),
-                )
+                with(item) {
+                    TokenItem(
+                        modifier = Modifier
+                            .roundedShapeItemDecoration(
+                                currentIndex = index,
+                                addDefaultPadding = false,
+                                lastIndex = items.lastIndex,
+                            )
+                            .clickable(onClick = item.onExpandClick)
+                            .background(TangemTheme.colors.background.action),
+                        state = TokenItemState.Content(
+                            id = item.id.value,
+                            iconState = icon,
+                            titleState = TokenItemState.TitleState.Content(
+                                text = stringReference(value = name),
+                            ),
+                            subtitleState = TokenItemState.SubtitleState.TextContent(
+                                value = stringReference(value = symbol),
+                            ),
+                            onItemClick = null,
+                            onItemLongClick = {},
+                            fiatAmountState = null,
+                            subtitle2State = null,
+                        ),
+                        isBalanceHidden = false,
+                    )
+                }
             }
             is CurrencyItemUM.Loading -> {
                 LoadingItem(
