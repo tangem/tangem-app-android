@@ -1,4 +1,4 @@
-package com.tangem.features.swap.v2.impl.sendviaswap.confirm.model
+package com.tangem.features.swap.v2.impl.common
 
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.domain.express.models.ExpressRateType
