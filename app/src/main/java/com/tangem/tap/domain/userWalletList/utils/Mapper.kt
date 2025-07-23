@@ -117,5 +117,5 @@ internal fun UserWallet.lock(): UserWallet = when (this) {
             ),
         )
     }
-    is UserWallet.Hot -> TODO("[REDACTED_TASK_KEY]")
+    is UserWallet.Hot -> copy(wallets = null)
 }
