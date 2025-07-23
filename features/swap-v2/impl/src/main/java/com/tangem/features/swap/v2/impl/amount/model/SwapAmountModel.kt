@@ -18,6 +18,7 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.express.models.ExpressError
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.swap.models.SwapDirection
+import com.tangem.domain.swap.models.SwapDirection.Companion.withSwapDirection
 import com.tangem.domain.swap.models.SwapQuoteModel
 import com.tangem.domain.swap.usecase.GetSwapPairsUseCase
 import com.tangem.domain.swap.usecase.GetSwapQuoteUseCase
@@ -26,10 +27,12 @@ import com.tangem.domain.tokens.GetMinimumTransactionAmountSyncUseCase
 import com.tangem.domain.tokens.GetMultiCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.transaction.usecase.GetAllowanceUseCase
+import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
 import com.tangem.features.swap.v2.api.choosetoken.SwapChooseTokenNetworkListener
 import com.tangem.features.swap.v2.impl.R
 import com.tangem.features.swap.v2.impl.amount.SwapAmountBlockComponent.SwapChooseProviderConfig
 import com.tangem.features.swap.v2.impl.amount.SwapAmountComponentParams
+import com.tangem.features.swap.v2.impl.amount.SwapAmountReduceListener
 import com.tangem.features.swap.v2.impl.amount.SwapAmountUpdateListener
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountFieldUM
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountType
@@ -40,6 +43,7 @@ import com.tangem.features.swap.v2.impl.chooseprovider.SwapChooseProviderCompone
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.orZero
+import com.tangem.utils.transformer.update
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.*
@@ -65,6 +69,8 @@ internal class SwapAmountModel @Inject constructor(
     private val appRouter: AppRouter,
     private val swapAlertFactory: SwapAlertFactory,
     private val swapAmountUpdateListener: SwapAmountUpdateListener,
+    private val swapAmountReduceListener: SwapAmountReduceListener,
+    private val feeSelectorReloadTrigger: FeeSelectorReloadTrigger,
 ) : Model(), SwapAmountClickIntents, SwapChooseProviderComponent.ModelCallback {
 
     private val params: SwapAmountComponentParams = paramsContainer.require()
@@ -92,6 +98,9 @@ internal class SwapAmountModel @Inject constructor(
         subscribeOnCryptoCurrencyStatusFlow()
         subscribeOnAmountUpdateTriggerUpdates()
         observeChooseSelectToken()
+        subscribeOnAmountReduceToTriggerUpdates()
+        subscribeOnAmountReduceByTriggerUpdates()
+        subscribeOnAmountIgnoreReduceTriggerUpdates()
     }
 
     fun updateState(amountUM: SwapAmountUM) {
@@ -245,6 +254,44 @@ internal class SwapAmountModel @Inject constructor(
             .launchIn(modelScope)
     }
 
+    private fun subscribeOnAmountReduceToTriggerUpdates() {
+        swapAmountReduceListener.reduceToTriggerFlow
+            .onEach { reduceTo ->
+                uiState.update(
+                    SwapAmountReduceToTransformer(
+                        primaryMinimumAmountBoundary = primaryMinimumAmountBoundary,
+                        secondaryMinimumAmountBoundary = secondaryMinimumAmountBoundary,
+                        reduceToValue = reduceTo,
+                    ),
+                )
+                feeSelectorReloadTrigger.triggerLoadingState()
+                loadQuotes(reloadFees = true)
+            }
+            .launchIn(modelScope)
+    }
+
+    private fun subscribeOnAmountReduceByTriggerUpdates() {
+        swapAmountReduceListener.reduceByTriggerFlow
+            .onEach { reduceBy ->
+                uiState.update(
+                    SwapAmountReduceByTransformer(
+                        primaryMinimumAmountBoundary = primaryMinimumAmountBoundary,
+                        secondaryMinimumAmountBoundary = secondaryMinimumAmountBoundary,
+                        reduceByData = reduceBy,
+                    ),
+                )
+                feeSelectorReloadTrigger.triggerLoadingState()
+                loadQuotes(reloadFees = true)
+            }
+            .launchIn(modelScope)
+    }
+
+    private fun subscribeOnAmountIgnoreReduceTriggerUpdates() {
+        swapAmountReduceListener.ignoreReduceTriggerFlow
+            .onEach { uiState.update(SwapAmountIgnoreReduceTransformer) }
+            .launchIn(modelScope)
+    }
+
     private fun observeChooseSelectToken() {
         swapChooseTokenNetworkListener.swapChooseTokenNetworkResultFlow
             .onEach { currency ->
@@ -345,18 +392,14 @@ internal class SwapAmountModel @Inject constructor(
         }
     }
 
-    private fun loadQuotes() {
+    private fun loadQuotes(reloadFees: Boolean = false) {
         val state = uiState.value as? SwapAmountUM.Content ?: return
         if (state.secondaryCryptoCurrencyStatus == null) return
 
-        val (fromCryptoCurrency, toCryptoCurrency) = when (state.swapDirection) {
-            SwapDirection.Direct -> {
-                state.primaryCryptoCurrencyStatus.currency to state.secondaryCryptoCurrencyStatus.currency
-            }
-            SwapDirection.Reverse -> {
-                state.secondaryCryptoCurrencyStatus.currency to state.primaryCryptoCurrencyStatus.currency
-            }
-        }
+        val (fromCryptoCurrency, toCryptoCurrency) = state.swapDirection.withSwapDirection(
+            onDirect = { state.primaryCryptoCurrencyStatus.currency to state.secondaryCryptoCurrencyStatus.currency },
+            onReverse = { state.secondaryCryptoCurrencyStatus.currency to state.primaryCryptoCurrencyStatus.currency },
+        )
 
         val fromAmount = when (state.swapDirection) {
             SwapDirection.Direct -> state.primaryAmount.amountField
@@ -420,6 +463,10 @@ internal class SwapAmountModel @Inject constructor(
                     secondaryMinimumAmountBoundary = secondaryMinimumAmountBoundary,
                 ),
             )
+
+            if (reloadFees) {
+                feeSelectorReloadTrigger.triggerUpdate()
+            }
         }
     }
 
