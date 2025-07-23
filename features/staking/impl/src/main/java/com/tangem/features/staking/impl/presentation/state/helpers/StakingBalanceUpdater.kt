@@ -8,7 +8,7 @@ import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
 import com.tangem.domain.tokens.FetchPendingTransactionsUseCase
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
 import com.tangem.utils.coroutines.DelayedWork
 import dagger.assisted.Assisted
@@ -43,7 +43,6 @@ internal class StakingBalanceUpdater @AssistedInject constructor(
                     fetchStakingYieldBalanceUseCase(
                         userWalletId = userWallet.walletId,
                         cryptoCurrency = cryptoCurrencyStatus.currency,
-                        isRefactoringEnabled = true,
                     )
                 },
                 // we should update tx history and network for new balances
@@ -82,7 +81,6 @@ internal class StakingBalanceUpdater @AssistedInject constructor(
         fetchCurrencyStatusUseCase(
             userWalletId = userWallet.walletId,
             id = cryptoCurrencyStatus.currency.id,
-            refresh = true,
         )
     }
 
