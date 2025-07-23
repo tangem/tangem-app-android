@@ -30,7 +30,6 @@ import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownItem
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenu
 import com.tangem.core.ui.components.snackbar.TangemSnackbarHost
-import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -227,7 +226,7 @@ private fun AppInfoItem(appInfo: WcConnectedAppInfo, modifier: Modifier = Modifi
                 }
             }
             Text(
-                text = appInfo.subtitle.resolveReference(),
+                text = appInfo.subtitle,
                 color = TangemTheme.colors.text.tertiary,
                 style = TangemTheme.typography.caption2,
             )
