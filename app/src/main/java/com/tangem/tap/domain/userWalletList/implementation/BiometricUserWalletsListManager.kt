@@ -325,7 +325,7 @@ internal class BiometricUserWalletsListManager(
             }
     }
 
-    private fun findOrSetSelectedWallet(
+    private suspend fun findOrSetSelectedWallet(
         prevSelectedWalletId: UserWalletId?,
         prevSelectedWalletIndex: Int,
         userWallets: List<UserWallet>,
