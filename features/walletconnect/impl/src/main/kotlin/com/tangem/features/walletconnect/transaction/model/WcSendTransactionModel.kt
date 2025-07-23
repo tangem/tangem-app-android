@@ -30,9 +30,9 @@ import com.tangem.domain.walletconnect.usecase.method.*
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.features.send.v2.api.callbacks.FeeSelectorModelCallback
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
-import com.tangem.features.send.v2.api.feeselector.FeeSelectorReloadData
-import com.tangem.features.send.v2.api.feeselector.FeeSelectorReloadTrigger
 import com.tangem.features.send.v2.api.params.FeeSelectorParams
+import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
+import com.tangem.features.send.v2.api.subcomponents.feeSelector.entity.FeeSelectorData
 import com.tangem.features.walletconnect.connections.routing.WcInnerRoute
 import com.tangem.features.walletconnect.transaction.components.common.WcTransactionModelParams
 import com.tangem.features.walletconnect.transaction.converter.WcCommonTransactionUMConverter
@@ -134,7 +134,9 @@ internal class WcSendTransactionModel @Inject constructor(
     private fun triggerFeeReload() {
         feeReloadState.value = false
         modelScope.launch {
-            feeSelectorReloadTrigger.triggerUpdate(data = FeeSelectorReloadData(removeSuggestedFee = true))
+            feeSelectorReloadTrigger.triggerUpdate(
+                feeData = FeeSelectorData(removeSuggestedFee = true),
+            )
         }
     }
 
