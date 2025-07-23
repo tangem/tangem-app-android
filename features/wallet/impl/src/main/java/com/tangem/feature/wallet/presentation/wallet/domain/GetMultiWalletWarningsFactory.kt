@@ -15,7 +15,7 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.tokens.model.TotalFiatBalance
 import com.tangem.domain.wallets.models.SeedPhraseNotificationsStatus
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
 import com.tangem.domain.wallets.usecase.SeedPhraseNotificationUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
@@ -54,6 +54,8 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
                 addUsedOutdatedDataNotification(maybeTokenList)
 
                 addCriticalNotifications(userWallet, seedPhraseIssueStatus, clickIntents)
+
+                addFinishWalletActivationNotification(userWallet, clickIntents)
 
                 addReferralPromoNotification(cardTypesResolver, clickIntents, shouldShowReferralPromo)
 
@@ -257,6 +259,23 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
 
     private fun MutableList<WalletNotification>.addIf(element: WalletNotification, condition: Boolean) {
         if (condition) add(element = element)
+    }
+
+    private fun MutableList<WalletNotification>.addFinishWalletActivationNotification(
+        userWallet: UserWallet,
+        clickIntents: WalletClickIntents,
+    ) {
+        if (userWallet !is UserWallet.Hot) return
+
+        // TODO [REDACTED_TASK_KEY] set an actual value
+        val shouldShowFinishActivation = false
+
+        addIf(
+            element = WalletNotification.FinishWalletActivation(
+                onFinishClick = clickIntents::onFinishWalletActivationClick,
+            ),
+            condition = shouldShowFinishActivation,
+        )
     }
 
     private companion object {
