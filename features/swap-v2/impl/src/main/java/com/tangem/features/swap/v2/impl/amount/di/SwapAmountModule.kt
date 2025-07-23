@@ -4,6 +4,8 @@ import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
 import com.tangem.features.swap.v2.api.subcomponents.SwapAmountUpdateTrigger
 import com.tangem.features.swap.v2.impl.amount.DefaultSwapAmountUpdateTrigger
+import com.tangem.features.swap.v2.impl.amount.SwapAmountReduceListener
+import com.tangem.features.swap.v2.impl.amount.SwapAmountReduceTrigger
 import com.tangem.features.swap.v2.impl.amount.SwapAmountUpdateListener
 import com.tangem.features.swap.v2.impl.amount.model.SwapAmountModel
 import dagger.Binds
@@ -32,4 +34,10 @@ internal interface SwapAmountModuleBinds {
 
     @Binds
     fun provideSwapAmountUpdateListener(impl: DefaultSwapAmountUpdateTrigger): SwapAmountUpdateListener
+
+    @Binds
+    fun provideSwapAmountReduceTrigger(impl: DefaultSwapAmountUpdateTrigger): SwapAmountReduceTrigger
+
+    @Binds
+    fun provideSwapAmountReduceListener(impl: DefaultSwapAmountUpdateTrigger): SwapAmountReduceListener
 }
