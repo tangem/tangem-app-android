@@ -10,6 +10,7 @@ dependencies {
     /** Project - Domain */
     implementation(projects.core.utils)
     implementation(projects.domain.core)
+    implementation(projects.domain.models)
     implementation(projects.domain.wallets.models)
     implementation(deps.moshi.kotlin)
     implementation(deps.arrow.core)

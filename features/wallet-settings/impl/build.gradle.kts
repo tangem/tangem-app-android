@@ -19,6 +19,7 @@ dependencies {
     implementation(projects.features.nft.api)
     implementation(projects.features.onboardingV2.api)
     implementation(projects.features.pushNotifications.api)
+    implementation(projects.features.hotWallet.api)
 
     /* Project - Core */
     implementation(projects.core.decompose)
