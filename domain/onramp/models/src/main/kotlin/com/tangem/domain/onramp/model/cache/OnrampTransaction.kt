@@ -5,7 +5,7 @@ import com.squareup.moshi.JsonClass
 import com.tangem.domain.core.serialization.SerializedBigDecimal
 import com.tangem.domain.onramp.model.OnrampCurrency
 import com.tangem.domain.onramp.model.OnrampStatus
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 
 /**
  * Model for local storing onramp transaction
