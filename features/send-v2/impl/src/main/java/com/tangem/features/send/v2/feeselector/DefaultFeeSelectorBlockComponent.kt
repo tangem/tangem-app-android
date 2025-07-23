@@ -60,7 +60,7 @@ internal class DefaultFeeSelectorBlockComponent @AssistedInject constructor(
 
     init {
         model.uiState
-            .onEach(onResult)
+            .onEach { onResult(it) }
             .launchIn(componentScope)
     }
 
