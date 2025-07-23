@@ -32,7 +32,7 @@ class SendTransactionUseCase(
     private val transactionRepository: TransactionRepository,
     private val walletManagersFacade: WalletManagersFacade,
     private val singleNetworkStatusFetcher: SingleNetworkStatusFetcher,
-    private val getHotSigner: (UserWallet.Hot) -> TransactionSigner,
+    private val getHotWalletSigner: (UserWallet.Hot) -> TransactionSigner,
 ) {
     suspend operator fun invoke(
         txsData: List<TransactionData>,
@@ -53,7 +53,7 @@ class SendTransactionUseCase(
                 coldSigner
             }
             is UserWallet.Hot -> {
-                getHotSigner(userWallet)
+                getHotWalletSigner(userWallet)
             }
         }
 
