@@ -28,4 +28,27 @@ data class MobileWallet(
                 chainCode = it,
             )
         }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is MobileWallet) return false
+
+        if (!publicKey.contentEquals(other.publicKey)) return false
+        if (chainCode != null) {
+            if (other.chainCode == null || !chainCode.contentEquals(other.chainCode)) return false
+        } else if (other.chainCode != null) return false
+
+        if (curve != other.curve) return false
+        if (derivedKeys != other.derivedKeys) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = publicKey.contentHashCode()
+        result = 31 * result + (chainCode?.contentHashCode() ?: 0)
+        result = 31 * result + curve.hashCode()
+        result = 31 * result + derivedKeys.hashCode()
+        return result
+    }
 }
