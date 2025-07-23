@@ -17,7 +17,7 @@ import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.managetokens.component.AddCustomTokenComponent
 import com.tangem.features.managetokens.component.preview.PreviewAddCustomTokenComponent
 import com.tangem.features.managetokens.entity.customtoken.AddCustomTokenConfig
