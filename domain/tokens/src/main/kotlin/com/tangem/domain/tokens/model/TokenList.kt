@@ -1,6 +1,7 @@
 package com.tangem.domain.tokens.model
 
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.TokensSortType
 import java.math.BigDecimal
 
 /**
@@ -14,7 +15,7 @@ import java.math.BigDecimal
  */
 sealed class TokenList {
     open val totalFiatBalance: TotalFiatBalance = TotalFiatBalance.Loading
-    open val sortedBy: SortType = SortType.NONE
+    open val sortedBy: TokensSortType = TokensSortType.NONE
 
     /**
      * Represents tokens that are grouped by their network.
@@ -26,7 +27,7 @@ sealed class TokenList {
     data class GroupedByNetwork(
         val groups: List<NetworkGroup>,
         override val totalFiatBalance: TotalFiatBalance,
-        override val sortedBy: SortType,
+        override val sortedBy: TokensSortType,
     ) : TokenList()
 
     /**
@@ -39,7 +40,7 @@ sealed class TokenList {
     data class Ungrouped(
         val currencies: List<CryptoCurrencyStatus>,
         override val totalFiatBalance: TotalFiatBalance,
-        override val sortedBy: SortType,
+        override val sortedBy: TokensSortType,
     ) : TokenList()
 
     /** Represents a state where the token list is empty. */
@@ -50,11 +51,6 @@ sealed class TokenList {
             isAllAmountsSummarized = true,
             source = StatusSource.ACTUAL,
         )
-    }
-
-    /** Defines the possible sorting criteria for the tokens. */
-    enum class SortType {
-        NONE, BALANCE,
     }
 
     /** Get flatten list of cryptocurrency status [CryptoCurrencyStatus] */
