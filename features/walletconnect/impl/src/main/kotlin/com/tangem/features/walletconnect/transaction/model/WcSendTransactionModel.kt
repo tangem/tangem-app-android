@@ -36,6 +36,7 @@ import com.tangem.features.send.v2.api.params.FeeSelectorParams
 import com.tangem.features.walletconnect.connections.routing.WcInnerRoute
 import com.tangem.features.walletconnect.transaction.components.common.WcTransactionModelParams
 import com.tangem.features.walletconnect.transaction.converter.WcCommonTransactionUMConverter
+import com.tangem.features.walletconnect.transaction.converter.WcHandleMethodErrorConverter
 import com.tangem.features.walletconnect.transaction.entity.blockaid.WcSendReceiveTransactionCheckResultsUM
 import com.tangem.features.walletconnect.transaction.entity.common.WcCommonTransactionModel
 import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionActionsUM
@@ -84,9 +85,9 @@ internal class WcSendTransactionModel @Inject constructor(
     init {
         @Suppress("UnusedPrivateMember")
         modelScope.launch {
-            val unknownMethodRunnable = { router.push(WcInnerRoute.UnsupportedMethodAlert(params.rawRequest)) }
+            val unknownMethodRunnable = { router.push(WcInnerRoute.UnsupportedMethodAlert) }
             val useCase = useCaseFactory.createUseCase<WcSignUseCase<*>>(params.rawRequest)
-                .onLeft { unknownMethodRunnable() }
+                .onLeft { router.push(WcHandleMethodErrorConverter.convert(it)) }
                 .getOrNull() ?: return@launch
             when (useCase) {
                 is WcListTransactionUseCase,
