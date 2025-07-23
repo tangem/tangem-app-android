@@ -22,7 +22,7 @@ internal class UnreachableActionsFactory(
     rampStateManager: RampStateManager,
 ) : BaseActionsFactory(walletManagersFacade, rampStateManager) {
 
-    suspend fun create(userWallet: UserWallet.Cold, cryptoCurrencyStatus: CryptoCurrencyStatus): Set<ActionState> =
+    suspend fun create(userWallet: UserWallet, cryptoCurrencyStatus: CryptoCurrencyStatus): Set<ActionState> =
         coroutineScope {
             val isAddressAvailable = isAddressAvailable(cryptoCurrencyStatus.value.networkAddress)
 
