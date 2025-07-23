@@ -151,7 +151,22 @@ internal class DefaultWcSessionsManager(
             Timber.tag(WC_TAG).i("removeUnknownSessions $unknownStoredSessions")
             store.removeSessions(unknownStoredSessions.toSet())
         }
-        return haveSomeUnknown
+
+        val emptyNetworkSessions = wcSessions.filter { it.networks.isEmpty() }
+        val emptyNetworksDto = storeSessions
+            .filter { dto -> emptyNetworkSessions.find { it.sdkModel.topic == dto.topic } != null }
+            .toSet()
+        val haveEmptySessions = emptyNetworkSessions.isNotEmpty()
+        val haveEmptyDto = emptyNetworksDto.isNotEmpty()
+
+        if (haveEmptyDto) {
+            Timber.tag(WC_TAG).i("remove sessions without networks $emptyNetworksDto")
+            store.removeSessions(emptyNetworksDto)
+        }
+        if (haveEmptySessions) {
+            emptyNetworkSessions.map { scope.launch { sdkDisconnectSession(it.sdkModel.topic) } }
+        }
+        return haveSomeUnknown || haveEmptyDto
     }
 
     private fun extendSessions() {
