@@ -3,10 +3,10 @@ package com.tangem.features.swap.v2.impl.choosetoken.di
 import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
 import com.tangem.features.swap.v2.api.choosetoken.SwapChooseTokenNetworkComponent
+import com.tangem.features.swap.v2.api.choosetoken.SwapChooseTokenNetworkListener
 import com.tangem.features.swap.v2.api.choosetoken.SwapChooseTokenNetworkTrigger
 import com.tangem.features.swap.v2.impl.choosetoken.fromSupported.DefaultSwapChooseTokenNetworkComponent
 import com.tangem.features.swap.v2.impl.choosetoken.fromSupported.DefaultSwapChooseTokenNetworkTrigger
-import com.tangem.features.swap.v2.impl.choosetoken.fromSupported.SwapChooseTokenNetworkListener
 import com.tangem.features.swap.v2.impl.choosetoken.fromSupported.model.SwapChooseTokenNetworkModel
 import dagger.Binds
 import dagger.Module
