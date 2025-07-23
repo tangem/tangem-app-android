@@ -6,8 +6,8 @@ import com.tangem.domain.common.util.getBackupCardsCount
 import com.tangem.domain.feedback.models.CardInfo
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
-import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.converter.Converter
 
 /**

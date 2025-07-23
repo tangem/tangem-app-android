@@ -33,6 +33,7 @@ internal class SwapChooseProviderModel @Inject constructor(
 
     fun onProviderClick(quoteUM: SwapQuoteUM) {
         params.callback.onProviderResult(quoteUM)
+        params.onDismiss()
     }
 
     private fun getInitialState(): SwapChooseProviderBottomSheetContent {
