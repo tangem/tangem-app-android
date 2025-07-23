@@ -18,6 +18,7 @@ import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.domain.qrscanning.models.QrResultSource
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
 import com.tangem.domain.walletconnect.WcAnalyticEvents
@@ -65,14 +66,20 @@ internal class WcConnectionsModel @Inject constructor(
     }
 
     private fun listenQrUpdates() {
-        listenToQrScanningUseCase(SourceType.WALLET_CONNECT)
+        listenToQrScanningUseCase.listen(SourceType.WALLET_CONNECT)
             .getOrElse { emptyFlow() }
-            .onEach { wcUrl ->
+            .onEach { result ->
+                val source = when (result.resultSource) {
+                    QrResultSource.CLIPBOARD -> WcPairRequest.Source.CLIPBOARD
+                    QrResultSource.CAMERA,
+                    QrResultSource.GALLERY,
+                    -> WcPairRequest.Source.QR
+                }
                 wcPairService.pair(
                     WcPairRequest(
                         userWalletId = params.userWalletId,
-                        uri = wcUrl,
-                        source = WcPairRequest.Source.QR,
+                        uri = result.qrCode,
+                        source = source,
                     ),
                 )
             }
