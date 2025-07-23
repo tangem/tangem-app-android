@@ -6,7 +6,6 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.R
-import com.tangem.common.ui.amountScreen.converters.AmountReduceByTransformer.ReduceByData
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.notifications.NotificationsFactory.addDustWarningNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addExceedBalanceNotification
@@ -39,9 +38,6 @@ import com.tangem.features.send.v2.api.SendNotificationsComponent
 import com.tangem.features.send.v2.api.SendNotificationsComponent.Params.NotificationData
 import com.tangem.features.send.v2.api.subcomponents.notifications.SendNotificationsUpdateListener
 import com.tangem.features.send.v2.api.subcomponents.notifications.SendNotificationsUpdateTrigger
-import com.tangem.features.send.v2.subcomponents.amount.SendAmountReduceTrigger
-import com.tangem.features.send.v2.subcomponents.fee.SendFeeData
-import com.tangem.features.send.v2.subcomponents.fee.SendFeeReloadTrigger
 import com.tangem.features.send.v2.subcomponents.fee.model.checkAndCalculateSubtractedAmount
 import com.tangem.features.send.v2.subcomponents.fee.model.checkFeeCoverage
 import com.tangem.features.send.v2.subcomponents.notifications.analytics.NotificationsAnalyticEvents
@@ -73,8 +69,6 @@ internal class NotificationsModel @Inject constructor(
     private val validateTransactionUseCase: ValidateTransactionUseCase,
     private val getTronFeeNotificationShowCountUseCase: GetTronFeeNotificationShowCountUseCase,
     private val incrementNotificationsShowCountUseCase: IncrementNotificationsShowCountUseCase,
-    private val sendFeeReloadTrigger: SendFeeReloadTrigger,
-    private val sendAmountReduceTrigger: SendAmountReduceTrigger,
     private val notificationsUpdateTrigger: SendNotificationsUpdateTrigger,
     private val notificationsUpdateListener: SendNotificationsUpdateListener,
     private val analyticsEventHandler: AnalyticsEventHandler,
@@ -132,16 +126,7 @@ internal class NotificationsModel @Inject constructor(
                 tokenStatus = cryptoCurrencyStatus,
                 coinStatus = feeCryptoCurrencyStatus,
                 feeError = notificationData.feeError,
-                onReload = {
-                    modelScope.launch {
-                        sendFeeReloadTrigger.triggerUpdate(
-                            feeData = SendFeeData(
-                                amount = notificationData.amountValue,
-                                destinationAddress = notificationData.destinationAddress,
-                            ),
-                        )
-                    }
-                },
+                onReload = params.callback::onFeeReload,
                 onClick = ::showTokenDetails,
             )
             addDomainNotifications()
@@ -274,9 +259,7 @@ internal class NotificationsModel @Inject constructor(
             feeCurrencyStatus = feeCryptoCurrencyStatus,
             feeValue = feeValue,
             onReduceClick = { reduceTo, _ ->
-                modelScope.launch {
-                    sendAmountReduceTrigger.triggerReduceTo(reduceTo)
-                }
+                params.callback.onAmountReduceTo(reduceTo)
             },
         )
         addReserveAmountErrorNotification(
@@ -321,14 +304,10 @@ internal class NotificationsModel @Inject constructor(
             sendingAmount = sendingAmount,
             cryptoCurrencyStatus = cryptoCurrencyStatus,
             onReduceClick = { reduceBy, reduceByDiff, _ ->
-                modelScope.launch {
-                    sendAmountReduceTrigger.triggerReduceBy(
-                        ReduceByData(
-                            reduceAmountBy = reduceBy,
-                            reduceAmountByDiff = reduceByDiff,
-                        ),
-                    )
-                }
+                params.callback.onAmountReduceBy(
+                    reduceBy = reduceBy,
+                    reduceByDiff = reduceByDiff,
+                )
             },
         )
         addFeeCoverageNotification(
@@ -344,9 +323,7 @@ internal class NotificationsModel @Inject constructor(
             validationError = validationError,
             cryptoCurrency = currency,
             onReduceClick = { reduceTo, _ ->
-                modelScope.launch {
-                    sendAmountReduceTrigger.triggerReduceTo(reduceTo)
-                }
+                params.callback.onAmountReduceTo(reduceTo)
             },
         )
         addHighFeeWarningNotification(
@@ -354,19 +331,13 @@ internal class NotificationsModel @Inject constructor(
             cryptoCurrencyStatus = cryptoCurrencyStatus,
             ignoreAmountReduce = notificationData.isIgnoreReduce,
             onReduceClick = { reduceBy, reduceByDiff, _ ->
-                modelScope.launch {
-                    sendAmountReduceTrigger.triggerReduceBy(
-                        ReduceByData(
-                            reduceAmountBy = reduceBy,
-                            reduceAmountByDiff = reduceByDiff,
-                        ),
-                    )
-                }
+                params.callback.onAmountReduceBy(
+                    reduceBy = reduceBy,
+                    reduceByDiff = reduceByDiff,
+                )
             },
             onCloseClick = {
-                modelScope.launch {
-                    sendAmountReduceTrigger.triggerIgnoreReduce()
-                }
+                params.callback.onAmountIgnore()
             },
         )
     }
