@@ -39,13 +39,11 @@ internal class WcEthNetwork(
     }
 
     @Suppress("CyclomaticComplexMethod")
-    override suspend fun toUseCase(
-        request: WcSdkSessionRequest,
-    ): Either<WcRequestError.HandleMethodError, WcMethodUseCase> {
-        fun error(message: String) = WcRequestError.HandleMethodError(message).left()
+    override suspend fun toUseCase(request: WcSdkSessionRequest): Either<HandleMethodError, WcMethodUseCase> {
+        fun error(message: String) = HandleMethodError.UnknownError(message).left()
         val name = toWcMethodName(request) ?: return error("Unknown method name")
         val session = sessionsManager.findSessionByTopic(request.topic)
-            ?: return error("Failed to find session for topic ${request.topic}")
+            ?: return HandleMethodError.UnknownSession.left()
         val wallet = session.wallet
         val chainId = request.chainId.orEmpty()
         val method: WcEthMethod = name.toMethod(request, wallet)
