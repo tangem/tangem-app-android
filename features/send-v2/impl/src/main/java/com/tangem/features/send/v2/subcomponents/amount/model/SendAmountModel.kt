@@ -30,6 +30,7 @@ import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.v2.api.SendFeatureToggles
 import com.tangem.features.send.v2.api.entity.PredefinedValues
+import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
 import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponentParams
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountReduceListener
@@ -55,11 +56,12 @@ internal class SendAmountModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val getMinimumTransactionAmountSyncUseCase: GetMinimumTransactionAmountSyncUseCase,
     private val sendAmountReduceListener: SendAmountReduceListener,
-    private val feeReloadTrigger: SendFeeReloadTrigger,
     private val sendAmountUpdateListener: SendAmountUpdateListener,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val sendFeatureToggles: SendFeatureToggles,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
+    private val feeReloadTrigger: SendFeeReloadTrigger,
+    private val feeSelectorReloadTrigger: FeeSelectorReloadTrigger,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val rampStateManager: RampStateManager,
 ) : Model(), SendAmountClickIntents {
@@ -254,11 +256,14 @@ internal class SendAmountModel @Inject constructor(
                         value = reduceTo,
                     ),
                 )
-                feeReloadTrigger.triggerUpdate(
-                    feeData = SendFeeData(
-                        amount = (uiState.value as? AmountState.Data)?.amountTextField?.cryptoAmount?.value,
-                    ),
-                )
+                val amountValue = (uiState.value as? AmountState.Data)?.amountTextField?.cryptoAmount?.value
+                if (uiState.value.isRedesignEnabled) {
+                    feeSelectorReloadTrigger.triggerUpdate()
+                } else {
+                    feeReloadTrigger.triggerUpdate(
+                        feeData = SendFeeData(amount = amountValue),
+                    )
+                }
             }
             .launchIn(modelScope)
     }
@@ -273,11 +278,15 @@ internal class SendAmountModel @Inject constructor(
                         value = reduceByData,
                     ),
                 )
-                feeReloadTrigger.triggerUpdate(
-                    feeData = SendFeeData(
-                        amount = (uiState.value as? AmountState.Data)?.amountTextField?.cryptoAmount?.value,
-                    ),
-                )
+
+                val amountValue = (uiState.value as? AmountState.Data)?.amountTextField?.cryptoAmount?.value
+                if (uiState.value.isRedesignEnabled) {
+                    feeSelectorReloadTrigger.triggerUpdate()
+                } else {
+                    feeReloadTrigger.triggerUpdate(
+                        feeData = SendFeeData(amount = amountValue),
+                    )
+                }
             }
             .launchIn(modelScope)
     }
