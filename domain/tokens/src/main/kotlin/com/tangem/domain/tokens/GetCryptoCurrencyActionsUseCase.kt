@@ -53,18 +53,8 @@ class GetCryptoCurrencyActionsUseCase(
         rampStateManager = rampManager,
     )
 
-    operator fun invoke(userWallet: UserWallet, cryptoCurrencyStatus: CryptoCurrencyStatus): Flow<TokenActionsState> {
-        return when (userWallet) {
-            is UserWallet.Cold -> coldFlow(userWallet, cryptoCurrencyStatus)
-            is UserWallet.Hot -> TODO("[REDACTED_TASK_KEY]")
-        }
-    }
-
     @OptIn(ExperimentalCoroutinesApi::class)
-    private fun coldFlow(
-        userWallet: UserWallet.Cold,
-        cryptoCurrencyStatus: CryptoCurrencyStatus,
-    ): Flow<TokenActionsState> {
+    operator fun invoke(userWallet: UserWallet, cryptoCurrencyStatus: CryptoCurrencyStatus): Flow<TokenActionsState> {
         return when {
             cryptoCurrencyStatus.value is CryptoCurrencyStatus.MissedDerivation -> {
                 flowOf(value = MissedDerivationsActionsFactory.create())
