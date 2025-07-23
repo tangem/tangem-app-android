@@ -11,6 +11,7 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.express.models.ExpressError
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.swap.models.SwapDirection
 import com.tangem.domain.tokens.GetFeePaidCryptoCurrencyStatusSyncUseCase
@@ -27,6 +28,7 @@ import com.tangem.features.swap.v2.api.SendWithSwapComponent
 import com.tangem.features.swap.v2.impl.amount.SwapAmountComponent
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
 import com.tangem.features.swap.v2.impl.common.entity.ConfirmUM
+import com.tangem.features.swap.v2.impl.common.SwapAlertFactory
 import com.tangem.features.swap.v2.impl.sendviaswap.SendWithSwapRoute
 import com.tangem.features.swap.v2.impl.sendviaswap.confirm.SendWithSwapConfirmComponent
 import com.tangem.features.swap.v2.impl.sendviaswap.entity.SendWithSwapUM
@@ -47,6 +49,7 @@ internal class SendWithSwapModel @Inject constructor(
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
+    private val swapAlertFactory: SwapAlertFactory,
     paramsContainer: ParamsContainer,
 ) : Model(),
     SwapAmountComponent.ModelCallback,
@@ -133,7 +136,19 @@ internal class SendWithSwapModel @Inject constructor(
             },
             ifLeft = {
                 Timber.w(it.toString())
-                // todo send with swap error
+                swapAlertFactory.getGenericErrorState(
+                    expressError = ExpressError.UnknownError,
+                    onFailedTxEmailClick = {
+                        modelScope.launch {
+                            swapAlertFactory.onFailedTxEmailClick(
+                                userWallet = userWallet,
+                                cryptoCurrency = params.currency,
+                                errorMessage = it.toString(),
+                            )
+                        }
+                    },
+                    popBack = ::onBackClick,
+                )
             },
         )
     }
@@ -173,8 +188,20 @@ internal class SendWithSwapModel @Inject constructor(
                         cryptoCurrencyStatus = cryptoCurrencyStatus,
                     ).getOrNull() ?: cryptoCurrencyStatus
                 },
-                ifLeft = {
-                    // todo send with swap error
+                ifLeft = { error ->
+                    swapAlertFactory.getGenericErrorState(
+                        expressError = ExpressError.UnknownError,
+                        onFailedTxEmailClick = {
+                            modelScope.launch {
+                                swapAlertFactory.onFailedTxEmailClick(
+                                    userWallet = userWallet,
+                                    cryptoCurrency = params.currency,
+                                    errorMessage = error.toString(),
+                                )
+                            }
+                        },
+                        popBack = ::onBackClick,
+                    )
                 },
             )
         }.launchIn(modelScope)
