@@ -2,6 +2,7 @@ package com.tangem.domain.tokens.model
 
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TokensSortType
+import com.tangem.domain.models.TotalFiatBalance
 import java.math.BigDecimal
 
 /**
