@@ -2,6 +2,7 @@ package com.tangem.common.rules
 
 import androidx.test.platform.app.InstrumentationRegistry
 import com.tangem.common.annotations.ApiEnv
+import com.tangem.datasource.api.common.config.ApiConfig
 import com.tangem.datasource.api.common.config.ApiEnvironment
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.api.common.config.managers.MutableApiConfigsManager
@@ -15,15 +16,15 @@ import timber.log.Timber
 /**
  * A JUnit rule that sets up the API environment for tests based on annotations or instrumentation arguments.
  *
- * This rule allows tests to specify which API environment to use either through an annotation on the test method/class
+ * This rule allows tests to specify which API environment to use either through annotations on the test method/class
  * or via an instrumentation argument.
  *
- * This rule only finds and stores the required API environment. The actual environment setup is performed
- * by calling the [setup] method with an appropriate [ApiConfigsManager] instance.
+ * This rule supports @ApiEnv annotation with a map of API configs to configure different environments.
+ * For any ApiConfig.ID not specified in annotations, MOCK environment will be used by default.
  */
 class ApiEnvironmentRule : TestRule {
 
-    private var targetEnvironment: ApiEnvironment? = null
+    private var targetEnvironments: Map<ApiConfig.ID, ApiEnvironment> = emptyMap()
 
     /**
      * Sets up the API environment based on the provided [ApiConfigsManager].
@@ -36,43 +37,96 @@ class ApiEnvironmentRule : TestRule {
             "MutableApiConfigsManager isn't available in build type ${BuildConfig.BUILD_TYPE}."
         }
 
-        mutableManager.setupEnvironment()
+        mutableManager.setupEnvironments()
     }
 
     override fun apply(base: Statement, description: Description): Statement {
         return object : Statement() {
             override fun evaluate() {
-                targetEnvironment = determineEnvironment(description)
-
+                targetEnvironments = determineEnvironments(description)
                 base.evaluate()
             }
         }
     }
 
-    private fun determineEnvironment(description: Description): ApiEnvironment {
+    private fun determineEnvironments(description: Description): Map<ApiConfig.ID, ApiEnvironment> {
         val instrumentationArgs = InstrumentationRegistry.getArguments()
-        val envArg = instrumentationArgs.getString(ENV_ARGUMENT)
+        val envConfigArg = instrumentationArgs.getString(ENV_CONFIGS_ARGUMENT)
 
-        if (!envArg.isNullOrEmpty()) return ApiEnvironment.valueOf(envArg.uppercase())
+        if (!envConfigArg.isNullOrEmpty()) {
+            return parseEnvironmentConfigs(envConfigArg)
+        }
 
-        val methodAnnotation = description.getAnnotation(ApiEnv::class.java)
-        if (methodAnnotation != null) return methodAnnotation.environment
+        val methodEnvironments = collectApiEnvAnnotations(description)
+        if (methodEnvironments.isNotEmpty()) {
+            return DEFAULT_API_CONFIGS.associateWith { ApiEnvironment.MOCK } + methodEnvironments
+        }
 
-        val classAnnotation = description.testClass.getAnnotation(ApiEnv::class.java)
-        if (classAnnotation != null) return classAnnotation.environment
+        val classEnvironments = collectApiEnvAnnotations(description.testClass)
+        if (classEnvironments.isNotEmpty()) {
+            return DEFAULT_API_CONFIGS.associateWith { ApiEnvironment.MOCK } + classEnvironments
+        }
 
-        return ApiEnvironment.MOCK
+        return DEFAULT_API_CONFIGS.associateWith { ApiEnvironment.MOCK }
     }
 
-    private fun MutableApiConfigsManager.setupEnvironment() {
-        val environment = requireNotNull(targetEnvironment) { "Target environment is null" }
+    private fun parseEnvironmentConfigs(envConfigArg: String): Map<ApiConfig.ID, ApiEnvironment> {
+        return try {
+            val parsedConfigs = envConfigArg.split(",")
+                .map { it.trim() }
+                .mapNotNull { configPair ->
+                    val parts = configPair.split("=").map { it.trim() }
+                    if (parts.size == 2) {
+                        try {
+                            val apiConfigId = ApiConfig.ID.valueOf(parts[0])
+                            val environment = ApiEnvironment.valueOf(parts[1])
+                            apiConfigId to environment
+                        } catch (e: IllegalArgumentException) {
+                            Timber.w("Invalid config or environment: $configPair")
+                            null
+                        }
+                    } else {
+                        Timber.w("Invalid config format: $configPair. Expected format: 'ConfigId=Environment'")
+                        null
+                    }
+                }
+                .toMap()
 
-        runBlocking { changeEnvironment(environment) }
+            DEFAULT_API_CONFIGS.associateWith { ApiEnvironment.MOCK } + parsedConfigs
+        } catch (e: Exception) {
+            Timber.w("Failed to parse environment configs: $envConfigArg")
+            DEFAULT_API_CONFIGS.associateWith { ApiEnvironment.MOCK }
+        }
+    }
 
-        Timber.i("API environment set to: ${environment.name}")
+    private fun collectApiEnvAnnotations(description: Description): Map<ApiConfig.ID, ApiEnvironment> {
+        return description.getAnnotation(ApiEnv::class.java)?.value
+            ?.associate { it.apiConfigId to it.environment } ?: emptyMap()
+    }
+
+    private fun collectApiEnvAnnotations(testClass: Class<*>): Map<ApiConfig.ID, ApiEnvironment> {
+        return testClass.getAnnotation(ApiEnv::class.java)?.value
+            ?.associate { it.apiConfigId to it.environment } ?: emptyMap()
+    }
+
+    private fun MutableApiConfigsManager.setupEnvironments() {
+        require(targetEnvironments.isNotEmpty()) { "Target environments map is empty" }
+
+        runBlocking {
+            targetEnvironments.forEach { (apiConfigId, environment) ->
+                changeEnvironment(apiConfigId.name, environment)
+                Timber.i("$apiConfigId environment set to: ${environment.name}")
+            }
+        }
     }
 
     private companion object {
-        const val ENV_ARGUMENT = "testEnvironment"
+        const val ENV_CONFIGS_ARGUMENT = "testEnvironmentConfigs"
+
+        val DEFAULT_API_CONFIGS = listOf(
+            ApiConfig.ID.TangemTech,
+            ApiConfig.ID.Express,
+            ApiConfig.ID.TangemPay,
+        )
     }
 }
