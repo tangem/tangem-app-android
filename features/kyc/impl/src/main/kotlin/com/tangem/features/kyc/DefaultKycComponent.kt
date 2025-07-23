@@ -11,7 +11,7 @@ import com.sumsub.sns.core.theme.colors
 import com.sumsub.sns.core.theme.metrics
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.domain.pay.repository.KycRepository
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject

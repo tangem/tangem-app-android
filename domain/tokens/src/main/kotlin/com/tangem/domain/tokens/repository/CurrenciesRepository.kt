@@ -6,8 +6,8 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.FeePaidCurrency
-import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -285,5 +285,5 @@ interface CurrenciesRepository {
     suspend fun syncTokens(userWalletId: UserWalletId)
 
     @Throws
-    fun getCardTypesResolver(userWalletId: UserWalletId): CardTypesResolver
+    fun getCardTypesResolver(userWalletId: UserWalletId): CardTypesResolver?
 }
