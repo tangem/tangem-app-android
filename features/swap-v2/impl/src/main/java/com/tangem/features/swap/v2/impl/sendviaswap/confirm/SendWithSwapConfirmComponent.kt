@@ -99,6 +99,7 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
             cryptoCurrencyStatus = model.primaryCurrencyStatus,
             feeCryptoCurrencyStatus = model.primaryFeePaidCurrencyStatus,
             appCurrency = params.appCurrency,
+            callback = model,
             notificationData = SendNotificationsComponent.Params.NotificationData(
                 destinationAddress = model.confirmData.enteredDestination.orEmpty(),
                 memo = null,
