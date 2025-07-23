@@ -10,9 +10,9 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.domain.walletconnect.WcRequestUseCaseFactory
 import com.tangem.domain.walletconnect.usecase.method.WcAddNetworkUseCase
-import com.tangem.features.walletconnect.connections.routing.WcInnerRoute
 import com.tangem.features.walletconnect.transaction.components.common.WcTransactionModelParams
 import com.tangem.features.walletconnect.transaction.converter.WcAddEthereumChainUMConverter
+import com.tangem.features.walletconnect.transaction.converter.WcHandleMethodErrorConverter
 import com.tangem.features.walletconnect.transaction.entity.chain.WcAddEthereumChainUM
 import com.tangem.features.walletconnect.transaction.entity.common.WcCommonTransactionModel
 import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionActionsUM
@@ -45,7 +45,7 @@ internal class WcAddNetworkModel @Inject constructor(
     init {
         modelScope.launch {
             val useCase: WcAddNetworkUseCase = useCaseFactory.createUseCase<WcAddNetworkUseCase>(params.rawRequest)
-                .onLeft { router.push(WcInnerRoute.UnsupportedMethodAlert(params.rawRequest)) }
+                .onLeft { router.push(WcHandleMethodErrorConverter.convert(it)) }
                 .getOrNull() ?: return@launch
             _uiState.emit(
                 wcAddEthereumChainUMConverter.convert(
@@ -65,6 +65,10 @@ internal class WcAddNetworkModel @Inject constructor(
 
     override fun dismiss() {
         _uiState.value?.transaction?.onDismiss?.invoke() ?: router.pop()
+    }
+
+    override fun popBack() {
+        router.pop()
     }
 
     fun showTransactionRequest() {
