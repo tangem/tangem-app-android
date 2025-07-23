@@ -33,7 +33,7 @@ internal class OutdatedDataActionsFactory(
      * @param stakingAvailability   the staking availability for the cryptocurrency
      */
     suspend fun create(
-        userWallet: UserWallet.Cold,
+        userWallet: UserWallet,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
         stakingAvailability: StakingAvailability,
     ): Set<ActionState> = coroutineScope {
