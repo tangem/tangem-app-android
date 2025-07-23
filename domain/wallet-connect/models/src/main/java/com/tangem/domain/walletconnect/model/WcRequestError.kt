@@ -13,10 +13,6 @@ sealed class WcRequestError {
         val message: String,
     ) : WcRequestError()
 
-    data class HandleMethodError(
-        val message: String,
-    ) : WcRequestError()
-
     data class UnknownError(val ex: Throwable? = null) : WcRequestError()
 
     companion object {
@@ -60,4 +56,17 @@ sealed class WcRequestError {
             -> null
         }
     }
+}
+
+sealed class HandleMethodError(
+    open val message: String,
+) : WcRequestError() {
+
+    data class Unsupported(
+        val method: WcMethod.Unsupported,
+    ) : HandleMethodError(message = "Unsupported method ${method.request.request.method}")
+
+    data object UnknownSession : HandleMethodError(message = "WalletConnect session was disconnected")
+
+    data class UnknownError(override val message: String) : HandleMethodError(message)
 }
