@@ -6,9 +6,9 @@ import com.tangem.data.common.network.NetworkFactory
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.NetworkAddress
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.requireColdWallet
 import com.tangem.domain.visa.model.VisaCurrency
-import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.lib.visa.model.VisaContractInfo
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone

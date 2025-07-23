@@ -1,7 +1,7 @@
 package com.tangem.features.staking.impl.navigation
 
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 
 internal interface InnerStakingRouter {
 
