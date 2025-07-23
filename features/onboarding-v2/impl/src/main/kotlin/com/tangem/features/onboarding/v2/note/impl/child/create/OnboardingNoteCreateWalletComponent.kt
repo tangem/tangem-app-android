@@ -9,7 +9,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.features.onboarding.v2.note.impl.DefaultOnboardingNoteComponent
 import com.tangem.features.onboarding.v2.note.impl.child.create.model.OnboardingNoteCreateWalletModel
 import com.tangem.features.onboarding.v2.note.impl.child.create.ui.OnboardingNoteCreateWallet
