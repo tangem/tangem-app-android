@@ -11,6 +11,7 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.core.lce.Lce
+import com.tangem.domain.models.TokensSortType
 import com.tangem.domain.tokens.ApplyTokenListSortingUseCase
 import com.tangem.domain.tokens.GetTokenListUseCase
 import com.tangem.domain.tokens.ToggleTokenListGroupingUseCase
@@ -89,7 +90,7 @@ internal class OrganizeTokensModel @Inject constructor(
 
     override fun onSortClick() {
         val list = cachedTokenList ?: return
-        if (list.sortedBy == TokenList.SortType.BALANCE) return
+        if (list.sortedBy == TokensSortType.BALANCE) return
 
         analyticsEventsHandler.send(PortfolioOrganizeTokensAnalyticsEvent.ByBalance)
 
