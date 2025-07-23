@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.left
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.common.ui.amountScreen.converters.AmountReduceByTransformer
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.navigationButtons.NavigationButton
 import com.tangem.common.ui.navigationButtons.NavigationUM
@@ -30,6 +31,7 @@ import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorRelo
 import com.tangem.features.send.v2.api.subcomponents.notifications.SendNotificationsUpdateListener
 import com.tangem.features.send.v2.api.subcomponents.notifications.SendNotificationsUpdateTrigger
 import com.tangem.features.swap.v2.impl.R
+import com.tangem.features.swap.v2.impl.amount.SwapAmountReduceTrigger
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
 import com.tangem.features.swap.v2.impl.common.SwapUtils.INCREASE_GAS_LIMIT_FOR_CEX
 import com.tangem.features.swap.v2.impl.common.entity.ConfirmUM
@@ -48,6 +50,7 @@ import com.tangem.utils.extensions.orZero
 import jakarta.inject.Inject
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.math.BigDecimal
 import com.tangem.utils.transformer.update as transformerUpdate
 
 @Suppress("LongParameterList")
@@ -63,6 +66,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
     private val swapNotificationsUpdateTrigger: SwapNotificationsUpdateTrigger,
     private val sendNotificationsUpdateListener: SendNotificationsUpdateListener,
     private val swapNotificationsUpdateListener: SwapNotificationsUpdateListener,
+    private val swapAmountReduceTrigger: SwapAmountReduceTrigger,
     private val feeSelectorReloadTrigger: FeeSelectorReloadTrigger,
     swapTransactionSenderFactory: SwapTransactionSender.Factory,
     paramsContainer: ParamsContainer,
@@ -149,6 +153,29 @@ internal class SendWithSwapConfirmModel @Inject constructor(
     override fun onFeeReload() {
         modelScope.launch {
             feeSelectorReloadTrigger.triggerUpdate()
+        }
+    }
+
+    override fun onAmountIgnore() {
+        modelScope.launch {
+            swapAmountReduceTrigger.triggerIgnoreReduce()
+        }
+    }
+
+    override fun onAmountReduceBy(reduceBy: BigDecimal, reduceByDiff: BigDecimal) {
+        modelScope.launch {
+            swapAmountReduceTrigger.triggerReduceBy(
+                reduceBy = AmountReduceByTransformer.ReduceByData(
+                    reduceAmountBy = reduceBy,
+                    reduceAmountByDiff = reduceByDiff,
+                ),
+            )
+        }
+    }
+
+    override fun onAmountReduceTo(reduceTo: BigDecimal) {
+        modelScope.launch {
+            swapAmountReduceTrigger.triggerReduceTo(reduceTo = reduceTo)
         }
     }
 
