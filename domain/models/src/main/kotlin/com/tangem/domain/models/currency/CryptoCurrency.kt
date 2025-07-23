@@ -216,6 +216,7 @@ sealed class CryptoCurrency {
             private const val DERIVATION_PATH_DELIMITER = '\u2192' // →
 
             private const val ID_PARTS_COUNT = 3
+            const val MAIN_NETWORK_TYPE_NAME = "MAIN"
 
             /**
              * Creates an [ID] from a string [value].
