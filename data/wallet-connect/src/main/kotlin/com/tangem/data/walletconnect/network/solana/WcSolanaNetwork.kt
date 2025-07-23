@@ -18,7 +18,7 @@ import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
 import com.tangem.data.walletconnect.utils.WcNamespaceConverter
 import com.tangem.data.walletconnect.utils.WcNetworksConverter
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.walletconnect.model.WcRequestError
+import com.tangem.domain.walletconnect.model.HandleMethodError
 import com.tangem.domain.walletconnect.model.WcSolanaMethod
 import com.tangem.domain.walletconnect.model.WcSolanaMethodName
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
@@ -42,16 +42,14 @@ internal class WcSolanaNetwork(
     }
 
     @Suppress("CyclomaticComplexMethod")
-    override suspend fun toUseCase(
-        request: WcSdkSessionRequest,
-    ): Either<WcRequestError.HandleMethodError, WcMethodUseCase> {
-        fun error(message: String) = WcRequestError.HandleMethodError(message).left()
+    override suspend fun toUseCase(request: WcSdkSessionRequest): Either<HandleMethodError, WcMethodUseCase> {
+        fun error(message: String) = HandleMethodError.UnknownError(message).left()
         val name = toWcMethodName(request) ?: return error("Unknown method name")
         val method: WcSolanaMethod = name.toMethod(request)
             .getOrElse { return error(it.message.orEmpty()) }
             ?: return error("Failed to parse $name")
         val session = sessionsManager.findSessionByTopic(request.topic)
-            ?: return error("Failed to find session for topic ${request.topic}")
+            ?: return HandleMethodError.UnknownSession.left()
         val wallet = session.wallet
         val chainId = request.chainId.orEmpty()
         suspend fun anyExistNetwork() = networksConverter.mainOrAnyWalletNetworkForRequest(chainId, wallet)
