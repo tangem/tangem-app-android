@@ -30,7 +30,7 @@ class NetworkFactory @Inject constructor(
      *
      * @param blockchain          blockchain
      * @param extraDerivationPath extra derivation path
-     * @param userWallet        user wallet
+     * @param userWallet          user wallet
      */
     fun create(blockchain: Blockchain, extraDerivationPath: String?, userWallet: UserWallet): Network? {
         return create(
@@ -52,7 +52,7 @@ class NetworkFactory @Inject constructor(
      *
      * @param networkId      network id
      * @param derivationPath derivation path
-     * @param userWallet        user wallet
+     * @param userWallet     user wallet
      */
     fun create(networkId: Network.ID, derivationPath: Network.DerivationPath, userWallet: UserWallet): Network? {
         val blockchain = networkId.toBlockchain()
