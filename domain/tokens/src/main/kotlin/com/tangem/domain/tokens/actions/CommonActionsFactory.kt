@@ -35,7 +35,7 @@ internal class CommonActionsFactory(
      * @param shouldShowSwapStories a flag indicating whether to show swap stories
      */
     suspend fun create(
-        userWallet: UserWallet.Cold,
+        userWallet: UserWallet,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
         stakingAvailability: StakingAvailability,
         shouldShowSwapStories: Boolean,
