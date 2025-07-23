@@ -31,6 +31,7 @@ dependencies {
     implementation(projects.domain.models)
     implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
+    implementation(projects.domain.models)
 
     /** Common */
     implementation(projects.common.ui)

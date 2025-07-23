@@ -11,7 +11,7 @@ import com.tangem.domain.transaction.FeeRepository
 import com.tangem.domain.transaction.TransactionRepository
 import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.tap.domain.hot.TangemHotSigner
+import com.tangem.tap.domain.hot.TangemHotWalletSigner
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -44,7 +44,7 @@ internal object TransactionDomainModule {
         transactionRepository: TransactionRepository,
         walletManagersFacade: WalletManagersFacade,
         singleNetworkStatusFetcher: SingleNetworkStatusFetcher,
-        tangemHotSignerFactory: TangemHotSigner.Factory,
+        tangemHotWalletSignerFactory: TangemHotWalletSigner.Factory,
     ): SendTransactionUseCase {
         return SendTransactionUseCase(
             demoConfig = DemoConfig(),
@@ -52,7 +52,7 @@ internal object TransactionDomainModule {
             transactionRepository = transactionRepository,
             walletManagersFacade = walletManagersFacade,
             singleNetworkStatusFetcher = singleNetworkStatusFetcher,
-            getHotSigner = tangemHotSignerFactory::create,
+            getHotWalletSigner = tangemHotWalletSignerFactory::create,
         )
     }
 
