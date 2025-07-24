@@ -1,7 +1,7 @@
 package com.tangem.domain.tokens
 
 import arrow.core.Either
-import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.error.mapper.mapToCurrencyError
