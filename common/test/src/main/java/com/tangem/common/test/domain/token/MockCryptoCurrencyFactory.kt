@@ -8,9 +8,9 @@ import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.common.test.domain.card.MockScanResponseFactory
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
 import com.tangem.data.common.currency.CryptoCurrencyFactory
-import com.tangem.domain.common.DerivationStyleProvider
-import com.tangem.domain.common.configs.GenericCardConfig
-import com.tangem.domain.common.util.derivationStyleProvider
+import com.tangem.domain.card.DerivationStyleProvider
+import com.tangem.domain.card.common.util.derivationStyleProvider
+import com.tangem.domain.card.configs.GenericCardConfig
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
