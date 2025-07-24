@@ -8,6 +8,7 @@ import com.tangem.blockchain.common.AmountType
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
@@ -26,6 +27,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import java.util.Locale
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -33,13 +35,14 @@ import javax.inject.Inject
 @ModelScoped
 internal class FeeSelectorModel @Inject constructor(
     paramsContainer: ParamsContainer,
+    private val urlOpener: UrlOpener,
     private val isFeeApproximateUseCase: IsFeeApproximateUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
-    override val dispatchers: CoroutineDispatcherProvider,
     private val feeSelectorReloadListener: FeeSelectorReloadListener,
     private val feeSelectorCheckReloadListener: FeeSelectorCheckReloadListener,
     private val feeSelectorCheckReloadTrigger: FeeSelectorCheckReloadTrigger,
     private val feeSelectorAlertFactory: FeeSelectorAlertFactory,
+    override val dispatchers: CoroutineDispatcherProvider,
 ) : Model(), FeeSelectorIntents, FeeSelectorModelCallback {
 
     private val params = paramsContainer.require<FeeSelectorParams>()
@@ -60,6 +63,16 @@ internal class FeeSelectorModel @Inject constructor(
 
     fun updateState(feeSelectorUM: FeeSelectorUM) {
         uiState.value = feeSelectorUM
+    }
+
+    fun onReadMoreClicked() {
+        val locale = if (Locale.getDefault().language == RU_LOCALE) RU_LOCALE else EN_LOCALE
+        val url = buildString {
+            append(FEE_READ_MORE_URL_FIRST_PART)
+            append(locale)
+            append(FEE_READ_MORE_URL_SECOND_PART)
+        }
+        urlOpener.openUrl(url)
     }
 
     private fun initAppCurrency() {
@@ -173,5 +186,12 @@ internal class FeeSelectorModel @Inject constructor(
                 },
             )
         }
+    }
+
+    private companion object {
+        const val RU_LOCALE = "ru"
+        const val EN_LOCALE = "en"
+        const val FEE_READ_MORE_URL_FIRST_PART = "https://tangem.com/"
+        const val FEE_READ_MORE_URL_SECOND_PART = "/blog/post/what-is-a-transaction-fee-and-why-do-we-need-it/"
     }
 }
