@@ -4,7 +4,7 @@ import arrow.core.left
 import arrow.core.right
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.test.utils.assertEither
-import com.tangem.domain.common.CardTypesResolver
+import com.tangem.domain.card.CardTypesResolver
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
