@@ -21,11 +21,13 @@ import kotlin.time.Duration.Companion.seconds
 
 internal class WcPairSdkDelegate : WcSdkObserver {
 
-    private val onSessionProposal = Channel<Wallet.Model.SessionProposal>()
+    private val onSessionProposal = Channel<Pair<Wallet.Model.SessionProposal, Wallet.Model.VerifyContext>>()
     private val onSdkErrorCallback = Channel<Wallet.Model.Error>()
     private val onSessionSettleResponse = Channel<Wallet.Model.SettledSessionResponse>()
 
-    suspend fun pair(url: String): Either<WcPairError, Wallet.Model.SessionProposal> = coroutineScope {
+    suspend fun pair(
+        url: String,
+    ): Either<WcPairError, Pair<Wallet.Model.SessionProposal, Wallet.Model.VerifyContext>> = coroutineScope {
         val proposalCallback = async { withTimeout(CALLBACK_TIMEOUT.seconds) { proposalCallback() } }
         val pairCall = async { sdkPair(url) }
         pairCall.await().onLeft {
@@ -112,7 +114,7 @@ internal class WcPairSdkDelegate : WcSdkObserver {
         verifyContext: Wallet.Model.VerifyContext,
     ) {
         // Triggered when wallet receives the session proposal sent by a Dapp
-        onSessionProposal.trySend(sessionProposal)
+        onSessionProposal.trySend(sessionProposal to verifyContext)
     }
 
     override fun onSessionSettleResponse(settleSessionResponse: Wallet.Model.SettledSessionResponse) {
