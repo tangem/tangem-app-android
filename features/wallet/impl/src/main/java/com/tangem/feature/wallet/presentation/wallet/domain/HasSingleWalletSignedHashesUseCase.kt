@@ -2,8 +2,8 @@ package com.tangem.feature.wallet.presentation.wallet.domain
 
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.domain.card.repository.CardRepository
-import com.tangem.domain.common.util.cardTypesResolver
-import com.tangem.domain.demo.DemoConfig
+import com.tangem.domain.card.common.util.cardTypesResolver
+import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.models.wallet.UserWallet

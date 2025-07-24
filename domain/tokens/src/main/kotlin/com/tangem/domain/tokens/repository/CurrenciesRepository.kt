@@ -1,6 +1,6 @@
 package com.tangem.domain.tokens.repository
 
-import com.tangem.domain.common.CardTypesResolver
+import com.tangem.domain.card.CardTypesResolver
 import com.tangem.domain.core.error.DataError
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network

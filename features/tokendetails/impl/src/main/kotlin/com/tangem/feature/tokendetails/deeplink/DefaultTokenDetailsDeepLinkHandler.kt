@@ -9,7 +9,7 @@ import com.tangem.common.routing.deeplink.DeeplinkConst.TRANSACTION_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.TYPE_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.WALLET_ID_KEY
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.notifications.models.NotificationType
