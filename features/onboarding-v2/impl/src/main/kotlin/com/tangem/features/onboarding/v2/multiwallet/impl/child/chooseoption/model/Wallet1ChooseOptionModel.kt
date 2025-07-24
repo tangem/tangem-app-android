@@ -5,8 +5,8 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.domain.card.common.TapWorkarounds.canSkipBackup
 import com.tangem.domain.card.repository.CardRepository
-import com.tangem.domain.common.TapWorkarounds.canSkipBackup
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.models.wallet.UserWallet
