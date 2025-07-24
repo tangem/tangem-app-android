@@ -24,8 +24,6 @@ sealed class SendDestinationComponentParams {
         val isBalanceHidingFlow: StateFlow<Boolean>,
         val currentRoute: Flow<DestinationRoute>,
         val callback: SendDestinationComponent.ModelCallback,
-        val onBackClick: () -> Unit,
-        val onNextClick: () -> Unit,
     ) : SendDestinationComponentParams()
 
     data class DestinationBlockParams(
