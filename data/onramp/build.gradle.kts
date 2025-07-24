@@ -25,6 +25,8 @@ dependencies {
     /** Domain modules */
     implementation(projects.domain.onramp)
     implementation(projects.domain.legacy)
+    implementation(projects.domain.card)
+    implementation(projects.domain.walletManager)
     implementation(projects.domain.appTheme.models)
     implementation(projects.domain.models)
 

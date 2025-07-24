@@ -6,7 +6,7 @@ import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.common.services.Result
 import com.tangem.common.services.performRequest
 import com.tangem.datasource.api.common.createRetrofitInstance
-import com.tangem.domain.common.TapWorkarounds.isStart2Coin
+import com.tangem.domain.card.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.extensions.withIOContext
 import com.tangem.domain.core.utils.lceContent
 import com.tangem.domain.core.utils.lceError
