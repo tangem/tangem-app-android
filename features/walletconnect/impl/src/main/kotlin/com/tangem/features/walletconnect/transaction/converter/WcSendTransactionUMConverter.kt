@@ -3,10 +3,7 @@ package com.tangem.features.walletconnect.transaction.converter
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.walletconnect.model.WcEthMethod
 import com.tangem.domain.walletconnect.model.WcSolanaMethod
-import com.tangem.domain.walletconnect.usecase.method.WcMutableFee
-import com.tangem.domain.walletconnect.usecase.method.WcSignState
-import com.tangem.domain.walletconnect.usecase.method.WcSignStep
-import com.tangem.domain.walletconnect.usecase.method.WcTransactionUseCase
+import com.tangem.domain.walletconnect.usecase.method.*
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.features.walletconnect.impl.R
 import com.tangem.features.walletconnect.transaction.entity.blockaid.WcSendReceiveTransactionCheckResultsUM
@@ -41,9 +38,9 @@ internal class WcSendTransactionUMConverter @Inject constructor(
                 feeState = constructFeeState(useCase = value.useCase, actions = value.actions),
                 walletName = value.useCase.session.wallet.name.takeIf { value.useCase.session.showWalletInfo },
                 networkInfo = networkInfoUMConverter.convert(value.useCase.network),
-                address = value.useCase.walletAddress.toShortAddressText(),
                 estimatedWalletChanges = WcSendReceiveTransactionCheckResultsUM(),
                 isLoading = value.signState.domainStep == WcSignStep.Signing,
+                address = WcAddressConverter.convert(value.useCase.derivationState),
             ),
             feeSelectorUM = value.feeSelectorUM ?: FeeSelectorUM.Loading,
             transactionRequestInfo = WcTransactionRequestInfoUM(
