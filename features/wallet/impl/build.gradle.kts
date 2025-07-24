@@ -70,6 +70,7 @@ dependencies {
     implementation(projects.domain.balanceHiding)
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.card)
+    implementation(projects.domain.walletManager)
     implementation(projects.domain.demo)
     implementation(projects.domain.feedback)
     implementation(projects.domain.feedback.models)
