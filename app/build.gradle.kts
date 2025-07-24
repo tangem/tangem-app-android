@@ -84,6 +84,7 @@ dependencies {
     implementation(projects.domain.core)
     implementation(projects.domain.card)
     implementation(projects.domain.demo)
+    implementation(projects.domain.demo.models)
     implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.settings)
@@ -121,6 +122,8 @@ dependencies {
     implementation(projects.domain.notifications.toggles)
     implementation(projects.domain.swap.models)
     implementation(projects.domain.swap)
+    implementation(projects.domain.walletManager)
+    implementation(projects.domain.walletManager.models)
 
     implementation(projects.common)
     implementation(projects.common.routing)
@@ -167,6 +170,7 @@ dependencies {
     implementation(projects.data.blockaid)
     implementation(projects.data.notifications)
     implementation(projects.data.swap)
+    implementation(projects.data.walletManager)
 
     /** Features */
     implementation(projects.features.referral.impl)
