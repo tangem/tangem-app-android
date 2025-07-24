@@ -5,6 +5,7 @@ import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.swap.models.SwapCurrencies
 
 interface SwapChooseTokenNetworkComponent : ComposableBottomSheetComponent {
 
@@ -13,7 +14,7 @@ interface SwapChooseTokenNetworkComponent : ComposableBottomSheetComponent {
         val initialCurrency: CryptoCurrency,
         val token: ManagedCryptoCurrency.Token,
         val onDismiss: () -> Unit,
-        val onResult: (CryptoCurrency) -> Unit,
+        val onResult: (SwapCurrencies, CryptoCurrency) -> Unit,
     )
 
     interface Factory : ComponentFactory<Params, SwapChooseTokenNetworkComponent>
