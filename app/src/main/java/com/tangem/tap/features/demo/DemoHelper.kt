@@ -2,7 +2,7 @@ package com.tangem.tap.features.demo
 
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
-import com.tangem.domain.demo.DemoConfig
+import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.redux.AppState
