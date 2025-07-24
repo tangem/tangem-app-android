@@ -20,18 +20,19 @@ import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.requireColdWallet
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.CreateNFTTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
-import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.models.wallet.requireColdWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.v2.api.NFTSendComponent
 import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationComponent
 import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.features.send.v2.common.CommonSendRoute
+import com.tangem.features.send.v2.common.CommonSendRoute.*
 import com.tangem.features.send.v2.common.SendConfirmAlertFactory
 import com.tangem.features.send.v2.common.ui.state.ConfirmUM
 import com.tangem.features.send.v2.sendnft.confirm.NFTSendConfirmComponent
@@ -72,14 +73,19 @@ internal class NFTSendModel @Inject constructor(
 ) : Model(), SendNFTComponentCallback {
 
     val params: NFTSendComponent.Params = paramsContainer.require()
+
+    val initialRoute = Empty
+
+    val currentRouteFlow = MutableStateFlow<CommonSendRoute>(initialRoute)
+
     private val userWalletId = params.userWalletId
     private val nftAsset = params.nftAsset
 
-    private val _uiState = MutableStateFlow(initialState())
-    val uiState = _uiState.asStateFlow()
+    val uiState: StateFlow<NFTSendUM>
+    field = MutableStateFlow(initialState())
 
-    private val _isBalanceHiddenFlow = MutableStateFlow(false)
-    val isBalanceHiddenFlow = _isBalanceHiddenFlow.asStateFlow()
+    val isBalanceHiddenFlow: StateFlow<Boolean>
+    field = MutableStateFlow(false)
 
     var cryptoCurrency: CryptoCurrency by Delegates.notNull()
     var userWallet: UserWallet by Delegates.notNull()
@@ -93,19 +99,35 @@ internal class NFTSendModel @Inject constructor(
     }
 
     override fun onNavigationResult(navigationUM: NavigationUM) {
-        _uiState.update { it.copy(navigationUM = navigationUM) }
+        uiState.update { it.copy(navigationUM = navigationUM) }
     }
 
     override fun onResult(nftSendUM: NFTSendUM) {
-        _uiState.value = nftSendUM
+        uiState.value = nftSendUM
     }
 
     override fun onDestinationResult(destinationUM: DestinationUM) {
-        _uiState.update { it.copy(destinationUM = destinationUM) }
+        uiState.update { it.copy(destinationUM = destinationUM) }
     }
 
     override fun onFeeResult(feeUM: FeeUM) {
-        _uiState.update { it.copy(feeUM = feeUM) }
+        uiState.update { it.copy(feeUM = feeUM) }
+    }
+
+    override fun onBackClick() {
+        router.pop()
+    }
+
+    override fun onNextClick() {
+        if (currentRouteFlow.value.isEditMode) {
+            onBackClick()
+        } else {
+            when (currentRouteFlow.value) {
+                is Destination -> router.push(Confirm)
+                Confirm -> router.push(ConfirmSuccess)
+                else -> onBackClick()
+            }
+        }
     }
 
     suspend fun loadFee(): Either<GetFeeError, TransactionFee> {
