@@ -10,10 +10,10 @@ import com.tangem.common.test.domain.card.MockScanResponseFactory
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
 import com.tangem.crypto.hdWallet.DerivationPath
-import com.tangem.domain.common.configs.GenericCardConfig
-import com.tangem.domain.common.configs.MultiWalletCardConfig
-import com.tangem.domain.common.configs.Wallet2CardConfig
-import com.tangem.domain.common.util.derivationStyleProvider
+import com.tangem.domain.card.configs.GenericCardConfig
+import com.tangem.domain.card.configs.MultiWalletCardConfig
+import com.tangem.domain.card.configs.Wallet2CardConfig
+import com.tangem.domain.card.common.util.derivationStyleProvider
 import org.junit.Test
 
 /**
