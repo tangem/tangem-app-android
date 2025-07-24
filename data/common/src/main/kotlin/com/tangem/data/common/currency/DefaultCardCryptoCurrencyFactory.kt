@@ -6,9 +6,9 @@ import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
-import com.tangem.domain.common.TapWorkarounds.isTestCard
-import com.tangem.domain.common.util.cardTypesResolver
-import com.tangem.domain.demo.DemoConfig
+import com.tangem.domain.card.common.TapWorkarounds.isTestCard
+import com.tangem.domain.card.common.util.cardTypesResolver
+import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
