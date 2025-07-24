@@ -6,9 +6,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.*
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Devices
@@ -23,6 +25,7 @@ import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.ui.amountScreen.utils.getFiatString
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.atoms.text.EllipsisText
+import com.tangem.core.ui.components.tooltip.TangemTooltip
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.format.bigdecimal.BigDecimalFormatConstants.EMPTY_BALANCE_SIGN
 import com.tangem.core.ui.format.bigdecimal.crypto
@@ -37,8 +40,14 @@ import com.tangem.features.send.v2.impl.R
 import kotlinx.collections.immutable.persistentListOf
 import java.math.BigDecimal
 
+private const val READ_MORE_TAG = "READ_MORE"
+
 @Composable
-internal fun FeeSelectorBlockContent(state: FeeSelectorUM, modifier: Modifier = Modifier) {
+internal fun FeeSelectorBlockContent(
+    state: FeeSelectorUM,
+    onReadMoreClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Row(
         modifier = modifier
             .background(TangemTheme.colors.background.action)
@@ -51,14 +60,14 @@ internal fun FeeSelectorBlockContent(state: FeeSelectorUM, modifier: Modifier = 
             contentDescription = null,
             tint = TangemTheme.colors.icon.accent,
         )
-        FeeSelectorDescription(state = state)
+        FeeSelectorDescription(state = state, onReadMoreClick = onReadMoreClick)
     }
 }
 
 @Composable
-private fun FeeSelectorDescription(state: FeeSelectorUM, modifier: Modifier = Modifier) {
+private fun FeeSelectorDescription(state: FeeSelectorUM, onReadMoreClick: () -> Unit, modifier: Modifier = Modifier) {
     Row(modifier = modifier, horizontalArrangement = Arrangement.SpaceBetween) {
-        FeeSelectorStaticPart(modifier = Modifier.weight(1f))
+        FeeSelectorStaticPart(modifier = Modifier.weight(1f), onReadMoreClick = onReadMoreClick)
         when (state) {
             is FeeSelectorUM.Content -> FeeContent(state)
             is FeeSelectorUM.Loading -> FeeLoading()
@@ -68,7 +77,7 @@ private fun FeeSelectorDescription(state: FeeSelectorUM, modifier: Modifier = Mo
 }
 
 @Composable
-private fun FeeSelectorStaticPart(modifier: Modifier = Modifier) {
+private fun FeeSelectorStaticPart(onReadMoreClick: () -> Unit, modifier: Modifier = Modifier) {
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
         Text(
             modifier = Modifier
@@ -80,13 +89,42 @@ private fun FeeSelectorStaticPart(modifier: Modifier = Modifier) {
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
-        Icon(
+        val linkText = stringResourceSafe(R.string.common_read_more)
+        val fullString = stringResourceSafe(R.string.common_fee_selector_footer, linkText)
+        val linkTextPosition = fullString.length - linkText.length
+        val defaultStyle = TangemTheme.colors.text.primary2
+        val linkStyle = TangemTheme.colors.text.accent
+        val annotatedString = remember(defaultStyle, linkStyle) {
+            buildAnnotatedString {
+                withStyle(SpanStyle(defaultStyle)) {
+                    append(fullString.substring(0, linkTextPosition))
+                }
+                withLink(
+                    link = LinkAnnotation.Clickable(
+                        tag = READ_MORE_TAG,
+                        linkInteractionListener = { onReadMoreClick() },
+                    ),
+                    block = {
+                        withStyle(SpanStyle(linkStyle)) {
+                            append(fullString.substring(linkTextPosition, fullString.length))
+                        }
+                    },
+                )
+            }
+        }
+        TangemTooltip(
+            text = annotatedString,
             modifier = Modifier
                 .padding(start = TangemTheme.dimens.spacing6)
                 .size(TangemTheme.dimens.size16),
-            painter = painterResource(id = R.drawable.ic_token_info_24),
-            contentDescription = null,
-            tint = TangemTheme.colors.icon.informative,
+            content = { contentModifier ->
+                Icon(
+                    modifier = contentModifier.size(TangemTheme.dimens.size16),
+                    painter = painterResource(id = R.drawable.ic_token_info_24),
+                    contentDescription = null,
+                    tint = TangemTheme.colors.icon.informative,
+                )
+            },
         )
     }
 }
@@ -148,7 +186,7 @@ private fun FeeContent(state: FeeSelectorUM.Content, modifier: Modifier = Modifi
 @Composable
 private fun FeeSelectorBlockContent_Preview(@PreviewParameter(FeeSelectorUMProvider::class) state: FeeSelectorUM) {
     TangemThemePreview {
-        FeeSelectorBlockContent(modifier = Modifier.fillMaxWidth(), state = state)
+        FeeSelectorBlockContent(modifier = Modifier.fillMaxWidth(), state = state, onReadMoreClick = {})
     }
 }
 
