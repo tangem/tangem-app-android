@@ -148,8 +148,6 @@ internal class DefaultSendWithSwapComponent @AssistedInject constructor(
                 userWalletId = params.userWalletId,
                 cryptoCurrency = secondaryCryptoCurrency,
                 callback = model,
-                onBackClick = ::onChildBack,
-                onNextClick = model::onNextClick,
             ),
         )
     }
