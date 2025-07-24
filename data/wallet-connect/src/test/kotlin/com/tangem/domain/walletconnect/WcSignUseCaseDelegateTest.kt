@@ -47,6 +47,7 @@ internal class WcSignUseCaseDelegateTest {
         network = MockCryptoCurrencyFactory().ethereum.network,
         accountAddress = "",
         rawSdkRequest = rawRequestMock,
+        networkDerivationsCount = 1,
         session = WcSession(
             wallet = MockUserWalletFactory.create(),
             networks = setOf(),
