@@ -10,7 +10,7 @@ import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
-import com.tangem.domain.common.configs.GenericCardConfig
+import com.tangem.domain.card.configs.GenericCardConfig
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isMultiCurrency
