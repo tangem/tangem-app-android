@@ -72,6 +72,7 @@ internal class WcSolanaNetwork(
             rawSdkRequest = request,
             network = walletNetwork,
             accountAddress = accountAddress,
+            networkDerivationsCount = networksConverter.filterWalletNetworkForRequest(chainId, wallet).size,
         )
         return when (method) {
             is WcSolanaMethod.SignMessage -> factories.messageSign.create(context, method)
