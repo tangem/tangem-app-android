@@ -8,7 +8,7 @@ import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.extensions.Result
-import com.tangem.domain.demo.DemoConfig
+import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.demo.DemoTransactionSender
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.transaction.error.GetFeeError
