@@ -3,7 +3,7 @@ package com.tangem.data.visa.utils
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.data.common.currency.CryptoCurrencyFactory
 import com.tangem.data.common.network.NetworkFactory
-import com.tangem.domain.common.util.derivationStyleProvider
+import com.tangem.domain.card.common.util.derivationStyleProvider
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.wallet.UserWallet

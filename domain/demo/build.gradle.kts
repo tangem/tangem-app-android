@@ -9,6 +9,8 @@ android {
 }
 
 dependencies {
+    api(projects.domain.demo.models)
+
     implementation(tangemDeps.blockchain)
     implementation(tangemDeps.card.core)
 }
