@@ -62,6 +62,8 @@ dependencies {
     implementation(projects.domain.settings)
     implementation(projects.domain.txhistory.models)
     implementation(projects.domain.txhistory)
+    implementation(projects.domain.feedback.models)
+    implementation(projects.domain.feedback)
 
     /** Compose */
     implementation(deps.compose.foundation)

@@ -15,6 +15,8 @@ import javax.inject.Singleton
  */
 interface SwapAmountUpdateListener {
     val updateAmountTriggerFlow: Flow<String>
+
+    val reloadQuotesTriggerFlow: Flow<Unit>
 }
 
 /**
@@ -54,8 +56,15 @@ internal class DefaultSwapAmountUpdateTrigger @Inject constructor() :
     override val ignoreReduceTriggerFlow: SharedFlow<Unit>
     field = MutableSharedFlow<Unit>()
 
+    override val reloadQuotesTriggerFlow: Flow<Unit>
+    field = MutableSharedFlow<Unit>()
+
     override suspend fun triggerUpdateAmount(amountValue: String) {
         updateAmountTriggerFlow.emit(amountValue)
+    }
+
+    override suspend fun triggerQuoteReload() {
+        reloadQuotesTriggerFlow.emit(Unit)
     }
 
     override suspend fun triggerReduceBy(reduceBy: ReduceByData) {
