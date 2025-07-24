@@ -46,13 +46,14 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
             analytics.send(WcAnalyticEvents.NewPairInitiated(source))
             emit(WcPairState.Loading)
 
-            val sdkSessionProposal = sdkDelegate.pair(uri)
+            val pairResult = sdkDelegate.pair(uri)
                 .onLeft {
                     Timber.tag(WC_TAG).e(it, "Failed to call pair $pairRequest")
                     analytics.send(WcAnalyticEvents.PairFailed)
                     emit(WcPairState.Error(it))
                 }
                 .getOrNull() ?: return@flow
+            val (sdkSessionProposal, sdkVerifyContext) = pairResult
 
             // check unsupported dApps, just local constant for now, finish if unsupported
             if (UnsupportedDApps.list.any { sdkSessionProposal.url.contains(it, ignoreCase = true) }) {
@@ -62,7 +63,7 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
                 return@flow
             }
 
-            val proposalState = buildProposalState(sdkSessionProposal)
+            val proposalState = buildProposalState(sdkSessionProposal, sdkVerifyContext)
                 .onLeft {
                     analytics.send(WcAnalyticEvents.PairFailed)
                     emit(WcPairState.Error(it))
@@ -147,11 +148,16 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
 
     private suspend fun buildProposalState(
         sessionProposal: Wallet.Model.SessionProposal,
+        verifyContext: Wallet.Model.VerifyContext,
     ): Either<WcPairError, WcPairState.Proposal> = runCatching {
         val proposalNetwork = associateNetworksDelegate.associate(sessionProposal)
-        val verificationInfo = blockAidVerifier.verifyDApp(DAppData(sessionProposal.url)).getOrElse {
-            Timber.tag(WC_TAG).e(it, "Failed to verify DApp ${sessionProposal.name}")
-            CheckDAppResult.FAILED_TO_VERIFY
+        val verificationInfo = when {
+            verifyContext.validation == Wallet.Model.Validation.INVALID -> CheckDAppResult.UNSAFE
+            verifyContext.isScam == true -> CheckDAppResult.UNSAFE
+            else -> blockAidVerifier.verifyDApp(DAppData(sessionProposal.url)).getOrElse {
+                Timber.tag(WC_TAG).e(it, "Failed to verify DApp ${sessionProposal.name}")
+                CheckDAppResult.FAILED_TO_VERIFY
+            }
         }
         val requestedNetworks = proposalNetwork
             .values.map { it.available.plus(it.required) }.flatten().toSet()
@@ -174,12 +180,15 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
             securityStatus = verificationInfo,
         )
         WcPairState.Proposal(dAppSession)
-    }.fold(onSuccess = { it.right() }, onFailure = {
-        when (it) {
-            is WcPairError -> it.left()
-            else -> WcPairError.Unknown(it.localizedMessage.orEmpty()).left()
-        }
-    },)
+    }.fold(
+        onSuccess = { it.right() },
+        onFailure = {
+            when (it) {
+                is WcPairError -> it.left()
+                else -> WcPairError.Unknown(it.localizedMessage.orEmpty()).left()
+            }
+        },
+    )
 
     private sealed interface TerminalAction {
         data class Approve(val sessionForApprove: WcSessionApprove) : TerminalAction
