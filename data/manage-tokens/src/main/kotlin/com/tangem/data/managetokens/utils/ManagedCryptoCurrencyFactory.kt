@@ -13,9 +13,9 @@ import com.tangem.data.common.network.NetworkFactory
 import com.tangem.datasource.api.tangemTech.models.CoinsResponse
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.local.config.testnet.models.TestnetTokensConfig
-import com.tangem.domain.common.DerivationStyleProvider
-import com.tangem.domain.common.extensions.canHandleToken
-import com.tangem.domain.common.util.derivationStyleProvider
+import com.tangem.domain.card.DerivationStyleProvider
+import com.tangem.domain.card.common.extensions.canHandleToken
+import com.tangem.domain.card.common.util.derivationStyleProvider
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency.SourceNetwork
 import com.tangem.domain.models.currency.CryptoCurrency

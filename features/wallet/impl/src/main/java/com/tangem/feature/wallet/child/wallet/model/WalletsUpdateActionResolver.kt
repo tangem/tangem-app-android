@@ -2,7 +2,7 @@ package com.tangem.feature.wallet.child.wallet.model
 
 import arrow.core.getOrElse
 import com.tangem.core.decompose.di.ModelScoped
-import com.tangem.domain.common.util.getCardsCount
+import com.tangem.domain.card.common.util.getCardsCount
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
