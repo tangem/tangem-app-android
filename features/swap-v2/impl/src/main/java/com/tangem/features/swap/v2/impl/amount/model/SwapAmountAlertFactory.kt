@@ -12,7 +12,7 @@ import com.tangem.utils.StringsSigns.PERCENT
 import javax.inject.Inject
 
 @ModelScoped
-internal class SwapAlertFactory @Inject constructor(
+internal class SwapAmountAlertFactory @Inject constructor(
     private val uiMessageSender: UiMessageSender,
 ) {
 
