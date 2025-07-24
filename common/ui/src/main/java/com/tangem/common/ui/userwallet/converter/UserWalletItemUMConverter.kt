@@ -8,7 +8,7 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.common.util.getCardsCount
+import com.tangem.domain.card.common.util.getCardsCount
 import com.tangem.domain.models.ArtworkModel
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
