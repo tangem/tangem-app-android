@@ -8,6 +8,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.domain.walletconnect.WcRequestUseCaseFactory
 import com.tangem.domain.walletconnect.usecase.method.WcMessageSignUseCase
@@ -29,10 +30,12 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @Stable
 @ModelScoped
 internal class WcSignTransactionModel @Inject constructor(
     paramsContainer: ParamsContainer,
+    override val messageSender: UiMessageSender,
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
     private val clipboardManager: ClipboardManager,
@@ -91,6 +94,7 @@ internal class WcSignTransactionModel @Inject constructor(
 
     private fun signingIsDone(signState: WcSignState<*>): Boolean {
         (signState.domainStep as? WcSignStep.Result)?.result?.let {
+            showSuccessSignMessage()
             router.pop()
             return true
         }
