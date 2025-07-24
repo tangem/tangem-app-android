@@ -6,9 +6,9 @@ import arrow.core.right
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.TransactionSigner
 import com.tangem.blockchain.extensions.Result
+import com.tangem.domain.card.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.card.models.TwinKey
 import com.tangem.domain.card.repository.CardSdkConfigRepository
-import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.transaction.TransactionRepository
 import com.tangem.domain.transaction.error.SendTransactionError
