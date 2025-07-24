@@ -19,6 +19,7 @@ dependencies {
     implementation(deps.jodatime)
 
     implementation(projects.domain.legacy)
+    implementation(projects.domain.walletManager) // TODO refactor to use from data module
     implementation(projects.domain.models)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets.models)
