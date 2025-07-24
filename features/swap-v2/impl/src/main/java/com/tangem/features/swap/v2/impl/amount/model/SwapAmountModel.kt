@@ -40,6 +40,7 @@ import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
 import com.tangem.features.swap.v2.impl.amount.model.converter.SwapQuoteUMConverter
 import com.tangem.features.swap.v2.impl.amount.model.transformers.*
 import com.tangem.features.swap.v2.impl.chooseprovider.SwapChooseProviderComponent
+import com.tangem.features.swap.v2.impl.common.SwapAlertFactory
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.orZero
@@ -48,6 +49,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import java.math.BigDecimal
 import javax.inject.Inject
 import kotlin.properties.Delegates
@@ -67,6 +69,7 @@ internal class SwapAmountModel @Inject constructor(
     private val getAllowanceUseCase: GetAllowanceUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val appRouter: AppRouter,
+    private val swapAmountAlertFactory: SwapAmountAlertFactory,
     private val swapAlertFactory: SwapAlertFactory,
     private val swapAmountUpdateListener: SwapAmountUpdateListener,
     private val swapAmountReduceListener: SwapAmountReduceListener,
@@ -101,6 +104,7 @@ internal class SwapAmountModel @Inject constructor(
         subscribeOnAmountReduceToTriggerUpdates()
         subscribeOnAmountReduceByTriggerUpdates()
         subscribeOnAmountIgnoreReduceTriggerUpdates()
+        subscribeOnReloadQuotesTriggerUpdates()
     }
 
     fun updateState(amountUM: SwapAmountUM) {
@@ -130,7 +134,7 @@ internal class SwapAmountModel @Inject constructor(
         val amountUM = uiState.value as? SwapAmountUM.Content ?: return
         val selectedProvider = amountUM.selectedQuote.provider ?: return
 
-        swapAlertFactory.priceImpactAlert(
+        swapAmountAlertFactory.priceImpactAlert(
             hasPriceImpact = (amountUM.secondaryAmount as? SwapAmountFieldUM.Content)?.priceImpact != null,
             currencySymbol = amountUM.primaryCryptoCurrencyStatus.currency.symbol,
             provider = selectedProvider,
@@ -292,6 +296,12 @@ internal class SwapAmountModel @Inject constructor(
             .launchIn(modelScope)
     }
 
+    private fun subscribeOnReloadQuotesTriggerUpdates() {
+        swapAmountUpdateListener.reloadQuotesTriggerFlow
+            .onEach { loadQuotes(reloadFees = true) }
+            .launchIn(modelScope)
+    }
+
     private fun observeChooseSelectToken() {
         swapChooseTokenNetworkListener.swapChooseTokenNetworkResultFlow
             .onEach { currency ->
@@ -356,11 +366,19 @@ internal class SwapAmountModel @Inject constructor(
                         )
                         loadQuotes()
                     } else {
-                        // todo not available currency to swap
+                        Timber.e(
+                            """
+                                Invalid cryptocurrencies status: 
+                                | Primary -> $primaryStatus
+                                | Secondary -> $secondaryStatus
+                            """.trimIndent(),
+                        )
+                        showErrorAlert(errorMessage = null)
                     }
                 },
-                ifLeft = {
-                    // todo error
+                ifLeft = { error ->
+                    Timber.e(error)
+                    showErrorAlert(errorMessage = error.message)
                 },
             )
         }
@@ -435,7 +453,7 @@ internal class SwapAmountModel @Inject constructor(
                             SwapQuoteUM.Error(
                                 provider = provider,
                                 expressError = error,
-                            ).takeIf { error is ExpressError.AmountError }
+                            )
                         },
                         ifRight = { quote: SwapQuoteModel ->
                             SwapQuoteUMConverter(
@@ -454,7 +472,7 @@ internal class SwapAmountModel @Inject constructor(
                         },
                     )
                 }
-            }.awaitAll().filterNotNull()
+            }.awaitAll()
 
             uiState.transformerUpdate(
                 SwapAmountSetQuotesTransformer(
@@ -488,6 +506,22 @@ internal class SwapAmountModel @Inject constructor(
     private fun saveResult() {
         val params = params as? SwapAmountComponentParams.AmountParams ?: return
         params.callback.onAmountResult(uiState.value)
+    }
+
+    private fun showErrorAlert(errorMessage: String?) {
+        swapAlertFactory.getGenericErrorState(
+            expressError = ExpressError.UnknownError,
+            onFailedTxEmailClick = {
+                modelScope.launch {
+                    swapAlertFactory.onFailedTxEmailClick(
+                        userWallet = params.userWallet,
+                        cryptoCurrency = primaryCryptoCurrency,
+                        errorMessage = errorMessage,
+                    )
+                }
+            },
+            popBack = appRouter::pop,
+        )
     }
 
     private fun configAmountNavigation() {
