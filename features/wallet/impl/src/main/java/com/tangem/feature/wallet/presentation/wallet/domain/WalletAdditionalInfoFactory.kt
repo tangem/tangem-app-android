@@ -6,8 +6,8 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
-import com.tangem.domain.common.util.cardTypesResolver
-import com.tangem.domain.common.util.getCardsCount
+import com.tangem.domain.card.common.util.cardTypesResolver
+import com.tangem.domain.card.common.util.getCardsCount
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletAdditionalInfo

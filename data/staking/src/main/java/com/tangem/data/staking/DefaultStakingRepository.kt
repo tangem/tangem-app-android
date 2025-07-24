@@ -34,7 +34,7 @@ import com.tangem.datasource.api.stakekit.models.response.model.transaction.tron
 import com.tangem.datasource.local.token.StakingYieldsStore
 import com.tangem.datasource.local.token.converter.StakingNetworkTypeConverter
 import com.tangem.datasource.local.token.converter.TokenConverter
-import com.tangem.domain.common.TapWorkarounds.isWallet2
+import com.tangem.domain.card.common.TapWorkarounds.isWallet2
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
