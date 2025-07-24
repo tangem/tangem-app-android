@@ -18,7 +18,6 @@ import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.decompose.getEmptyComposableContentComponent
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.domain.express.models.ExpressProviderType
 import com.tangem.domain.swap.models.R
 import com.tangem.domain.swap.models.SwapDirection
 import com.tangem.features.send.v2.api.subcomponents.destination.DestinationRoute
@@ -28,6 +27,7 @@ import com.tangem.features.swap.v2.api.SendWithSwapComponent
 import com.tangem.features.swap.v2.impl.amount.SwapAmountComponent
 import com.tangem.features.swap.v2.impl.amount.SwapAmountComponentParams
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
+import com.tangem.features.swap.v2.impl.common.SwapUtils.SEND_WITH_SWAP_PROVIDER_TYPES
 import com.tangem.features.swap.v2.impl.sendviaswap.confirm.SendWithSwapConfirmComponent
 import com.tangem.features.swap.v2.impl.sendviaswap.model.SendWithSwapModel
 import com.tangem.features.swap.v2.impl.sendviaswap.success.SendWithSwapSuccessComponent
@@ -198,10 +198,5 @@ internal class DefaultSendWithSwapComponent @AssistedInject constructor(
             context: AppComponentContext,
             params: SendWithSwapComponent.Params,
         ): DefaultSendWithSwapComponent
-    }
-
-    companion object {
-        /** List of supported provider types in Send with Swap */
-        internal val SEND_WITH_SWAP_PROVIDER_TYPES = listOf(ExpressProviderType.CEX)
     }
 }
