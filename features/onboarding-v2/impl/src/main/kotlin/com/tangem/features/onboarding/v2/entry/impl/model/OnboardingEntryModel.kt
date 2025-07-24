@@ -12,7 +12,7 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
