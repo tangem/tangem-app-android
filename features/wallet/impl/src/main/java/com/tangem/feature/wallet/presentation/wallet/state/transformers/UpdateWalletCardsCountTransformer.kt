@@ -1,6 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers
 
-import com.tangem.domain.common.util.getCardsCount
+import com.tangem.domain.card.common.util.getCardsCount
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.requireColdWallet
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
