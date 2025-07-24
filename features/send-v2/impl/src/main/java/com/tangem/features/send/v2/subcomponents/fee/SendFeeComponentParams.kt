@@ -36,7 +36,6 @@ internal sealed class SendFeeComponentParams {
         override val onLoadFee: suspend () -> Either<GetFeeError, TransactionFee>,
         val currentRoute: Flow<CommonSendRoute.Fee>,
         val callback: SendFeeComponent.ModelCallback,
-        val onNextClick: () -> Unit,
     ) : SendFeeComponentParams()
 
     data class FeeBlockParams(
