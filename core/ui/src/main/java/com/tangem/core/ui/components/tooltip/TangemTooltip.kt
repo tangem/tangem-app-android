@@ -11,6 +11,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
@@ -20,9 +21,45 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TangemTooltip(text: String, content: @Composable (Modifier) -> Unit, modifier: Modifier = Modifier) {
+    InternalTangemTooltip(
+        modifier = modifier,
+        tooltipContent = {
+            Text(
+                modifier = Modifier.background(TangemTheme.colors.icon.secondary),
+                text = text,
+                style = TangemTheme.typography.body2,
+                color = TangemTheme.colors.text.primary2,
+            )
+        },
+        content = content,
+    )
+}
+
+@Composable
+fun TangemTooltip(text: AnnotatedString, content: @Composable (Modifier) -> Unit, modifier: Modifier = Modifier) {
+    InternalTangemTooltip(
+        modifier = modifier,
+        tooltipContent = {
+            Text(
+                modifier = Modifier.background(TangemTheme.colors.icon.secondary),
+                text = text,
+                style = TangemTheme.typography.body2,
+                color = TangemTheme.colors.text.primary2,
+            )
+        },
+        content = content,
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun InternalTangemTooltip(
+    tooltipContent: @Composable () -> Unit,
+    content: @Composable (Modifier) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val tooltipState = rememberTooltipState(isPersistent = true)
     val coroutineScope = rememberCoroutineScope()
     TooltipBox(
@@ -37,14 +74,7 @@ fun TangemTooltip(text: String, content: @Composable (Modifier) -> Unit, modifie
                 caretSize = DpSize(width = 14.dp, height = 8.dp),
                 contentColor = TangemTheme.colors.text.primary2,
                 containerColor = TangemTheme.colors.icon.secondary,
-                content = {
-                    Text(
-                        modifier = Modifier.background(TangemTheme.colors.icon.secondary),
-                        text = text,
-                        style = TangemTheme.typography.body2,
-                        color = TangemTheme.colors.text.primary2,
-                    )
-                },
+                content = { tooltipContent() },
             )
         },
         content = {
