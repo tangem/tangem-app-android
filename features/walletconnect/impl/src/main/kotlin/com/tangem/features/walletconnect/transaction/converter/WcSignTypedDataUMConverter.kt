@@ -17,9 +17,6 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import javax.inject.Inject
 
-private const val ADDRESS_FIRST_PART_LENGTH = 7
-private const val ADDRESS_SECOND_PART_LENGTH = 4
-
 internal class WcSignTypedDataUMConverter @Inject constructor(
     private val appInfoContentUMConverter: WcTransactionAppInfoContentUMConverter,
     private val networkInfoUMConverter: WcNetworkInfoUMConverter,
@@ -38,7 +35,7 @@ internal class WcSignTypedDataUMConverter @Inject constructor(
             ),
             walletName = value.useCase.session.wallet.name.takeIf { value.useCase.session.showWalletInfo },
             networkInfo = networkInfoUMConverter.convert(value.useCase.network),
-            addressText = value.useCase.walletAddress.toShortAddressText(),
+            address = WcAddressConverter.convert(value.useCase.derivationState),
             isLoading = value.signState.domainStep == WcSignStep.Signing,
         ),
         transactionRequestInfo = WcTransactionRequestInfoUM(
@@ -79,6 +76,3 @@ internal class WcSignTypedDataUMConverter @Inject constructor(
         val actions: WcTransactionActionsUM,
     )
 }
-
-internal fun String.toShortAddressText() =
-    "${take(ADDRESS_FIRST_PART_LENGTH)}...${takeLast(ADDRESS_SECOND_PART_LENGTH)}"
