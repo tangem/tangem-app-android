@@ -11,7 +11,7 @@ import com.tangem.common.routing.utils.popTo
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
-import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.legacy.UserWalletsListManager.Lockable.UnlockType
