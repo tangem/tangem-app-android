@@ -24,10 +24,10 @@ import com.tangem.core.ui.extensions.toWrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.datasource.local.config.issuers.IssuersConfigStorage
+import com.tangem.domain.card.common.util.twinsIsTwinned
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.common.TwinCardNumber
 import com.tangem.domain.common.getTwinCardNumber
-import com.tangem.domain.common.util.twinsIsTwinned
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.network.Network
