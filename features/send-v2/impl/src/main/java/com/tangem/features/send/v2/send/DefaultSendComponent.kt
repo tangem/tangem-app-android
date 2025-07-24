@@ -23,29 +23,28 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.send.v2.api.FeeSelectorBlockComponent
 import com.tangem.features.send.v2.api.SendComponent
+import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationComponentParams
+import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.features.send.v2.common.CommonSendRoute
 import com.tangem.features.send.v2.common.analytics.CommonSendAnalyticEvents
-import com.tangem.features.send.v2.common.analytics.CommonSendAnalyticEvents.SendScreenSource
 import com.tangem.features.send.v2.common.ui.SendContent
 import com.tangem.features.send.v2.common.ui.state.ConfirmUM
-import com.tangem.features.send.v2.common.utils.safeNextClick
 import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.send.confirm.SendConfirmComponent
 import com.tangem.features.send.v2.send.model.SendModel
 import com.tangem.features.send.v2.send.success.SendConfirmSuccessComponent
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponent
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponentParams
-import com.tangem.features.send.v2.subcomponents.fee.SendFeeBlockComponent
-import com.tangem.features.send.v2.subcomponents.destination.DefaultSendDestinationComponent
-import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationComponentParams
-import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.features.send.v2.subcomponents.destination.DefaultSendDestinationBlockComponent
+import com.tangem.features.send.v2.subcomponents.destination.DefaultSendDestinationComponent
+import com.tangem.features.send.v2.subcomponents.fee.SendFeeBlockComponent
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeComponent
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeComponentParams
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.launch
 
@@ -58,7 +57,6 @@ internal class DefaultSendComponent @AssistedInject constructor(
 ) : SendComponent, AppComponentContext by appComponentContext {
 
     private val stackNavigation = StackNavigation<CommonSendRoute>()
-    private val analyticCategoryName = CommonSendAnalyticEvents.SEND_CATEGORY
 
     private val innerRouter = InnerRouter<CommonSendRoute>(
         stackNavigation = stackNavigation,
@@ -67,23 +65,11 @@ internal class DefaultSendComponent @AssistedInject constructor(
 
     private val model: SendModel = getOrCreateModel(params = params, router = innerRouter)
 
-    private val initialRoute = if (params.amount == null) {
-        if (model.uiState.value.isRedesignEnabled) {
-            CommonSendRoute.Amount(isEditMode = false)
-        } else {
-            CommonSendRoute.Destination(isEditMode = false)
-        }
-    } else {
-        CommonSendRoute.Empty
-    }
-
-    private val currentRoute = MutableStateFlow(initialRoute)
-
     private val childStack = childStack(
         key = "sendInnerStack",
         source = stackNavigation,
         serializer = null,
-        initialConfiguration = initialRoute,
+        initialConfiguration = model.initialRoute,
         handleBackButton = true,
         childFactory = { configuration, factoryContext ->
             createChild(
@@ -103,31 +89,33 @@ internal class DefaultSendComponent @AssistedInject constructor(
         ) { stack ->
             componentScope.launch {
                 when (val activeComponent = stack.active.instance) {
-                    is SendConfirmComponent -> if (currentRoute.value.isEditMode) {
+                    is SendConfirmComponent -> if (model.currentRoute.value.isEditMode) {
                         analyticsEventHandler.send(
-                            CommonSendAnalyticEvents.ConfirmationScreenOpened(categoryName = analyticCategoryName),
+                            CommonSendAnalyticEvents.ConfirmationScreenOpened(
+                                categoryName = model.analyticCategoryName,
+                            ),
                         )
                         activeComponent.updateState(model.uiState.value)
                     }
                     is SendAmountComponent -> {
                         analyticsEventHandler.send(
-                            CommonSendAnalyticEvents.AmountScreenOpened(categoryName = analyticCategoryName),
+                            CommonSendAnalyticEvents.AmountScreenOpened(categoryName = model.analyticCategoryName),
                         )
                         activeComponent.updateState(model.uiState.value.amountUM)
                     }
                     is DefaultSendDestinationComponent -> {
                         analyticsEventHandler.send(
-                            CommonSendAnalyticEvents.AddressScreenOpened(categoryName = analyticCategoryName),
+                            CommonSendAnalyticEvents.AddressScreenOpened(categoryName = model.analyticCategoryName),
                         )
                         activeComponent.updateState(model.uiState.value.destinationUM)
                     }
                     is SendFeeComponent -> {
                         analyticsEventHandler.send(
-                            CommonSendAnalyticEvents.FeeScreenOpened(categoryName = analyticCategoryName),
+                            CommonSendAnalyticEvents.FeeScreenOpened(categoryName = model.analyticCategoryName),
                         )
                     }
                 }
-                currentRoute.emit(stack.active.configuration)
+                model.currentRoute.emit(stack.active.configuration)
             }
         }
     }
@@ -146,93 +134,42 @@ internal class DefaultSendComponent @AssistedInject constructor(
 
     private fun createChild(route: CommonSendRoute, factoryContext: AppComponentContext) = when (route) {
         CommonSendRoute.Empty -> getStubComponent()
-        is CommonSendRoute.Destination -> getDestinationComponent(factoryContext, route)
-        is CommonSendRoute.Amount -> getAmountComponent(factoryContext, route)
+        is CommonSendRoute.Destination -> getDestinationComponent(factoryContext)
+        is CommonSendRoute.Amount -> getAmountComponent(factoryContext)
         is CommonSendRoute.Fee -> getFeeComponent(factoryContext)
         is CommonSendRoute.Confirm -> getConfirmComponent(factoryContext)
         is CommonSendRoute.ConfirmSuccess -> getConfirmSuccessComponent(factoryContext)
     }
 
-    private fun getDestinationComponent(
-        factoryContext: AppComponentContext,
-        route: CommonSendRoute,
-    ): DefaultSendDestinationComponent = DefaultSendDestinationComponent(
-        appComponentContext = factoryContext,
-        params = SendDestinationComponentParams.DestinationParams(
-            state = model.uiState.value.destinationUM,
-            currentRoute = currentRoute.filterIsInstance<CommonSendRoute.Destination>(),
-            isBalanceHidingFlow = model.isBalanceHiddenFlow,
-            analyticsCategoryName = analyticCategoryName,
-            title = resourceReference(R.string.send_recipient_label),
-            userWalletId = params.userWalletId,
-            cryptoCurrency = params.currency,
-            callback = model,
-            onBackClick = ::onChildBack,
-            onNextClick = {
-                val nextRoute = if (model.uiState.value.isRedesignEnabled) {
-                    CommonSendRoute.Confirm
-                } else {
-                    CommonSendRoute.Amount(isEditMode = false)
-                }
-                innerRouter.safeNextClick(
-                    currentRoute = route,
-                    nextRoute = nextRoute,
-                    popBack = ::onChildBack,
-                    childStack = childStack,
-                )
-            },
-        ),
-    )
+    private fun getDestinationComponent(factoryContext: AppComponentContext): DefaultSendDestinationComponent =
+        DefaultSendDestinationComponent(
+            appComponentContext = factoryContext,
+            params = SendDestinationComponentParams.DestinationParams(
+                state = model.uiState.value.destinationUM,
+                currentRoute = model.currentRoute.filterIsInstance<CommonSendRoute.Destination>(),
+                isBalanceHidingFlow = model.isBalanceHiddenFlow,
+                analyticsCategoryName = model.analyticCategoryName,
+                title = resourceReference(R.string.send_recipient_label),
+                userWalletId = params.userWalletId,
+                cryptoCurrency = params.currency,
+                callback = model,
+            ),
+        )
 
-    private fun getAmountComponent(
-        factoryContext: AppComponentContext,
-        route: CommonSendRoute,
-    ): ComposableContentComponent {
+    private fun getAmountComponent(factoryContext: AppComponentContext): ComposableContentComponent {
         return SendAmountComponent(
             appComponentContext = factoryContext,
             params = SendAmountComponentParams.AmountParams(
                 state = model.uiState.value.amountUM,
-                currentRoute = currentRoute.filterIsInstance<CommonSendRoute.Amount>(),
+                currentRoute = model.currentRoute.asStateFlow(),
                 isBalanceHidingFlow = model.isBalanceHiddenFlow,
-                analyticsCategoryName = analyticCategoryName,
+                analyticsCategoryName = model.analyticCategoryName,
                 appCurrency = model.appCurrency,
                 userWalletId = params.userWalletId,
                 cryptoCurrency = params.currency,
                 cryptoCurrencyStatusFlow = model.cryptoCurrencyStatusFlow,
                 callback = model,
                 predefinedValues = model.predefinedValues,
-                onBackClick = {
-                    if (route.isEditMode) {
-                        onChildBack()
-                    } else {
-                        analyticsEventHandler.send(
-                            CommonSendAnalyticEvents.CloseButtonClicked(
-                                categoryName = analyticCategoryName,
-                                source = SendScreenSource.Amount,
-                                isFromSummary = false,
-                                isValid = model.uiState.value.amountUM.isPrimaryButtonEnabled,
-                            ),
-                        )
-                        if (model.uiState.value.isRedesignEnabled) {
-                            onChildBack()
-                        } else {
-                            router.pop()
-                        }
-                    }
-                },
-                onNextClick = {
-                    val nextRoute = if (model.uiState.value.isRedesignEnabled) {
-                        CommonSendRoute.Destination(isEditMode = false)
-                    } else {
-                        CommonSendRoute.Confirm
-                    }
-                    innerRouter.safeNextClick(
-                        currentRoute = route,
-                        nextRoute = nextRoute,
-                        popBack = ::onChildBack,
-                        childStack = childStack,
-                    )
-                },
                 isRedesignEnabled = model.uiState.value.isRedesignEnabled,
             ),
         )
@@ -246,16 +183,13 @@ internal class DefaultSendComponent @AssistedInject constructor(
         val cryptoCurrencyStatus = model.cryptoCurrencyStatusFlow.value
         val feeCryptoCurrencyStatus = model.feeCryptoCurrencyStatusFlow.value
 
-        return if (sendAmount != null && destinationAddress != null &&
-            feeCryptoCurrencyStatus != null && cryptoCurrencyStatus != null
-        ) {
-            // TODO Apply new component [REDACTED_TASK_KEY]
+        return if (sendAmount != null && destinationAddress != null) {
             SendFeeComponent(
                 appComponentContext = factoryContext,
                 params = SendFeeComponentParams.FeeParams(
                     state = model.uiState.value.feeUM,
-                    currentRoute = currentRoute.filterIsInstance<CommonSendRoute.Fee>(),
-                    analyticsCategoryName = analyticCategoryName,
+                    currentRoute = model.currentRoute.filterIsInstance<CommonSendRoute.Fee>(),
+                    analyticsCategoryName = model.analyticCategoryName,
                     userWallet = model.userWallet,
                     cryptoCurrencyStatus = cryptoCurrencyStatus,
                     feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
@@ -264,7 +198,6 @@ internal class DefaultSendComponent @AssistedInject constructor(
                     sendAmount = sendAmount,
                     destinationAddress = destinationAddress,
                     callback = model,
-                    onNextClick = ::onChildBack,
                 ),
             )
         } else {
@@ -285,9 +218,9 @@ internal class DefaultSendComponent @AssistedInject constructor(
                 params = SendConfirmComponent.Params(
                     state = model.uiState.value,
                     userWallet = model.userWallet,
-                    currentRoute = currentRoute,
+                    currentRoute = model.currentRoute,
                     isBalanceHidingFlow = model.isBalanceHiddenFlow,
-                    analyticsCategoryName = analyticCategoryName,
+                    analyticsCategoryName = model.analyticCategoryName,
                     cryptoCurrencyStatus = cryptoCurrencyStatus,
                     feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
                     cryptoCurrencyStatusFlow = model.cryptoCurrencyStatusFlow,
@@ -329,7 +262,7 @@ internal class DefaultSendComponent @AssistedInject constructor(
                 appComponentContext = child("sendConfirmDestinationBlock"),
                 params = SendDestinationComponentParams.DestinationBlockParams(
                     state = model.uiState.value.destinationUM,
-                    analyticsCategoryName = analyticCategoryName,
+                    analyticsCategoryName = model.analyticCategoryName,
                     userWalletId = model.userWallet.walletId,
                     cryptoCurrency = cryptoCurrencyStatus.currency,
                     blockClickEnableFlow = MutableStateFlow(true),
@@ -343,7 +276,7 @@ internal class DefaultSendComponent @AssistedInject constructor(
             appComponentContext = child("sendConfirmFeeBlock"),
             params = SendFeeComponentParams.FeeBlockParams(
                 state = model.uiState.value.feeUM,
-                analyticsCategoryName = analyticCategoryName,
+                analyticsCategoryName = model.analyticCategoryName,
                 userWallet = model.userWallet,
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
                 feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
@@ -363,8 +296,8 @@ internal class DefaultSendComponent @AssistedInject constructor(
                 sendUMFlow = model.uiState,
                 feeBlockComponent = feeBlockComponent,
                 destinationBlockComponent = destinationBlockComponent,
-                analyticsCategoryName = analyticCategoryName,
-                currentRoute = currentRoute,
+                analyticsCategoryName = model.analyticCategoryName,
+                currentRoute = model.currentRoute,
                 txUrl = txUrl,
                 callback = model,
             ),

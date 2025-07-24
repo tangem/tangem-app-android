@@ -31,6 +31,7 @@ import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.v2.api.SendFeatureToggles
 import com.tangem.features.send.v2.api.entity.PredefinedValues
 import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
+import com.tangem.features.send.v2.common.CommonSendRoute
 import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponentParams
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountReduceListener
@@ -48,7 +49,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.properties.Delegates
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 @Stable
 @ModelScoped
 internal class SendAmountModel @Inject constructor(
@@ -319,7 +320,7 @@ internal class SendAmountModel @Inject constructor(
         val params = params as? SendAmountComponentParams.AmountParams ?: return
         combine(
             flow = uiState,
-            flow2 = params.currentRoute,
+            flow2 = params.currentRoute.filterIsInstance<CommonSendRoute.Amount>(),
             transform = { state, route -> state to route },
         ).onEach { (state, route) ->
             isSendWithSwapAvailable.update {
@@ -335,7 +336,7 @@ internal class SendAmountModel @Inject constructor(
                     } else {
                         R.drawable.ic_close_24
                     },
-                    backIconClick = { params.onBackClick() },
+                    backIconClick = params.callback::onBackClick,
                     primaryButton = NavigationButton(
                         textReference = if (route.isEditMode) {
                             resourceReference(R.string.common_continue)
@@ -345,7 +346,7 @@ internal class SendAmountModel @Inject constructor(
                         isEnabled = state.isPrimaryButtonEnabled,
                         onClick = {
                             onAmountNext()
-                            params.onNextClick()
+                            params.callback.onNextClick()
                         },
                     ),
                     prevButton = if (params.isRedesignEnabled) {
@@ -357,7 +358,7 @@ internal class SendAmountModel @Inject constructor(
                             isEnabled = true,
                             onClick = {
                                 saveResult()
-                                params.onBackClick()
+                                params.callback.onBackClick()
                             },
                         ).takeIf { route.isEditMode.not() }
                     },
