@@ -3,8 +3,8 @@ package com.tangem.domain.markets
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.fromNetworkId
-import com.tangem.domain.common.extensions.supportedBlockchains
-import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.card.common.extensions.supportedBlockchains
+import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
