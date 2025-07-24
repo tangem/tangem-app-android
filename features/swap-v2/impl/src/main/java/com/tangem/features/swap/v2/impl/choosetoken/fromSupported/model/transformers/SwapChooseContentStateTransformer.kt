@@ -4,36 +4,48 @@ import com.tangem.core.ui.extensions.iconResId
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.express.models.ExpressRateType
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency.ID.Companion.MAIN_NETWORK_L2_TYPE_NAME
 import com.tangem.domain.models.currency.CryptoCurrency.ID.Companion.MAIN_NETWORK_TYPE_NAME
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.swap.models.SwapCurrencies
 import com.tangem.features.swap.v2.impl.choosetoken.fromSupported.entity.SwapChooseNetworkUM
 import com.tangem.features.swap.v2.impl.choosetoken.fromSupported.entity.SwapChooseTokenNetworkContentUM
 import com.tangem.features.swap.v2.impl.choosetoken.fromSupported.entity.SwapChooseTokenNetworkUM
 import com.tangem.features.swap.v2.impl.choosetoken.fromSupported.model.SwapChooseTokenFactory.getErrorMessage
+import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.toPersistentList
 
 internal class SwapChooseContentStateTransformer(
     private val pairs: SwapCurrencies,
     private val tokenName: String,
-    private val onNetworkClick: (CryptoCurrency) -> Unit,
+    private val onNetworkClick: (SwapCurrencies, CryptoCurrency) -> Unit,
     private val onDismiss: () -> Unit,
 ) : Transformer<SwapChooseTokenNetworkUM> {
     override fun transform(prevState: SwapChooseTokenNetworkUM): SwapChooseTokenNetworkUM {
-        val swapNetworks = pairs.fromGroup.available.map {
-            val network = it.currencyStatus.currency.network
-            val isMain = it.currencyStatus.currency is CryptoCurrency.Coin
+        val swapNetworks = pairs.fromGroup.available.map { availableCurrency ->
+            val cryptoCurrency = availableCurrency.currencyStatus.currency
+            val network = cryptoCurrency.network
+
+            val isMain = cryptoCurrency is CryptoCurrency.Coin
+            val subtitle = when {
+                BlockchainUtils.isL2Network(networkId = network.backendId) -> MAIN_NETWORK_L2_TYPE_NAME
+                isMain -> MAIN_NETWORK_TYPE_NAME
+                network.standardType !is Network.StandardType.Unspecified -> network.standardType.name
+                else -> ""
+            }
+
             SwapChooseNetworkUM(
                 title = stringReference(network.name),
-                subtitle = if (isMain) {
-                    stringReference(MAIN_NETWORK_TYPE_NAME)
-                } else {
-                    stringReference(network.standardType.name)
-                },
+                subtitle = stringReference(subtitle),
                 iconResId = network.iconResId,
                 isMainNetwork = isMain,
-                hasFixedRate = it.providers.any { it.rateTypes.any { it == ExpressRateType.Fixed } },
-                onNetworkClick = { onNetworkClick(it.currencyStatus.currency) },
+                hasFixedRate = availableCurrency.providers.any { provider ->
+                    provider.rateTypes.any { rateType ->
+                        rateType == ExpressRateType.Fixed
+                    }
+                },
+                onNetworkClick = { onNetworkClick(pairs, availableCurrency.currencyStatus.currency) },
             )
         }.toPersistentList()
 
