@@ -1,7 +1,7 @@
 package com.tangem.tap.di.domain
 
 import com.tangem.domain.card.repository.CardSdkConfigRepository
-import com.tangem.domain.demo.DemoConfig
+import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
