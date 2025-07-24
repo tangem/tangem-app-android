@@ -10,11 +10,11 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.domain.card.CardTypesResolver
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.card.repository.CardSdkConfigRepository
-import com.tangem.domain.common.CardTypesResolver
-import com.tangem.domain.common.util.cardTypesResolver
-import com.tangem.domain.common.util.getBackupCardsCount
+import com.tangem.domain.card.common.util.cardTypesResolver
+import com.tangem.domain.card.common.util.getBackupCardsCount
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.requireColdWallet
