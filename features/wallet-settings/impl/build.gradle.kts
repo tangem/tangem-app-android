@@ -32,6 +32,7 @@ dependencies {
 
     /* Project - Domain */
     implementation(projects.domain.legacy)
+    implementation(projects.domain.card)
     implementation(projects.domain.models)
     implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
