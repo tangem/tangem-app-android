@@ -12,11 +12,11 @@ import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.network.ResultChecker
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.simple
+import com.tangem.domain.card.common.TapWorkarounds.isStart2Coin
+import com.tangem.domain.card.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.card.models.TwinKey
 import com.tangem.domain.card.repository.CardSdkConfigRepository
-import com.tangem.domain.common.TapWorkarounds.isStart2Coin
-import com.tangem.domain.common.TapWorkarounds.isTangemTwins
-import com.tangem.domain.demo.DemoConfig
+import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.demo.DemoTransactionSender
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
