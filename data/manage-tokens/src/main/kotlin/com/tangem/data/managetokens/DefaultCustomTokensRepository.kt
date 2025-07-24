@@ -14,9 +14,9 @@ import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
-import com.tangem.domain.common.extensions.canHandleBlockchain
-import com.tangem.domain.common.extensions.supportedBlockchains
-import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.card.common.extensions.canHandleBlockchain
+import com.tangem.domain.card.common.extensions.supportedBlockchains
+import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.managetokens.model.AddCustomTokenForm
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
 import com.tangem.domain.managetokens.repository.CustomTokensRepository
