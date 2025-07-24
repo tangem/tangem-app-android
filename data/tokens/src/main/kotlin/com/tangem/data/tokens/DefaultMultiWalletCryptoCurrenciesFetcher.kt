@@ -15,7 +15,7 @@ import com.tangem.datasource.exchangeservice.swap.ExpressServiceLoader
 import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.core.utils.catchOn
-import com.tangem.domain.demo.DemoConfig
+import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.models.wallet.requireColdWallet
