@@ -1,8 +1,8 @@
 package com.tangem.data.feedback.converters
 
-import com.tangem.domain.common.TapWorkarounds.isStart2Coin
-import com.tangem.domain.common.TapWorkarounds.isVisa
-import com.tangem.domain.common.util.getBackupCardsCount
+import com.tangem.domain.card.common.TapWorkarounds.isStart2Coin
+import com.tangem.domain.card.common.TapWorkarounds.isVisa
+import com.tangem.domain.card.common.util.getBackupCardsCount
 import com.tangem.domain.feedback.models.CardInfo
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
