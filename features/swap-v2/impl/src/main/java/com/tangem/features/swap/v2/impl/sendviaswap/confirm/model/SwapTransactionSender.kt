@@ -5,6 +5,7 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.domain.express.models.ExpressError
 import com.tangem.domain.express.models.ExpressProvider
 import com.tangem.domain.express.models.ExpressProviderType
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.models.SwapDataModel
 import com.tangem.domain.swap.models.SwapDataTransactionModel
 import com.tangem.domain.swap.usecase.GetSwapDataUseCase
@@ -14,7 +15,6 @@ import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.utils.convertToSdkAmount
-import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.features.send.v2.api.subcomponents.feeSelector.utils.FeeCalculationUtils
 import com.tangem.features.swap.v2.impl.common.ConfirmData
 import dagger.assisted.Assisted
@@ -22,6 +22,7 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import timber.log.Timber
 import java.math.BigDecimal
+import java.math.RoundingMode
 
 @Suppress("LongParameterList")
 internal class SwapTransactionSender @AssistedInject constructor(
@@ -72,6 +73,7 @@ internal class SwapTransactionSender @AssistedInject constructor(
         val rateType = confirmData.rateType ?: return
         val amountValue = confirmData.enteredAmount ?: return
         val feeValue = confirmData.fee?.amount?.value ?: return
+        val destination = confirmData.enteredDestination ?: return
 
         val fromAmount = FeeCalculationUtils.checkAndCalculateSubtractedAmount(
             isAmountSubtractAvailable = isAmountSubtractAvailable,
@@ -85,8 +87,8 @@ internal class SwapTransactionSender @AssistedInject constructor(
             userWallet = userWallet,
             fromCryptoCurrencyStatus = fromStatus,
             fromAmount = fromAmount.toStringWithRightOffset(fromStatus.currency.decimals),
-            toCryptoCurrencyStatus = toStatus,
-            toAddress = confirmData.enteredDestination,
+            toCryptoCurrency = toStatus.currency,
+            toAddress = destination,
             expressProvider = provider,
             rateType = rateType,
         ).getOrElse { onExpressError(it); return }
@@ -163,7 +165,7 @@ internal class SwapTransactionSender @AssistedInject constructor(
     }
 
     private fun BigDecimal.toStringWithRightOffset(decimals: Int): String {
-        return movePointRight(decimals).toPlainString()
+        return setScale(decimals, RoundingMode.HALF_DOWN).movePointRight(decimals).toPlainString()
     }
 
     @AssistedFactory
