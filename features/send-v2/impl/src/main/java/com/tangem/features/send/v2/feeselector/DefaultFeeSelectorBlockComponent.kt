@@ -75,6 +75,7 @@ internal class DefaultFeeSelectorBlockComponent @AssistedInject constructor(
 
         FeeSelectorBlockContent(
             state = state,
+            onReadMoreClick = model::onReadMoreClicked,
             modifier = modifier
                 .conditional(params.feeDisplaySource == FeeSelectorParams.FeeDisplaySource.Screen) {
                     Modifier.clickable {
