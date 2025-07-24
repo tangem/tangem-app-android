@@ -2,11 +2,11 @@ package com.tangem.domain.walletconnect.usecase.method
 
 import arrow.core.Either
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.walletconnect.model.WcMethod
 import com.tangem.domain.walletconnect.model.WcRequestError
 import com.tangem.domain.walletconnect.model.WcSession
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
-import com.tangem.domain.models.wallet.UserWallet
 import kotlinx.coroutines.flow.Flow
 
 interface WcMethodUseCase
@@ -16,8 +16,13 @@ interface WcMethodContext {
     val rawSdkRequest: WcSdkSessionRequest
     val network: Network
     val method: WcMethod
-    val walletAddress: String
+    val derivationState: WcNetworkDerivationState
     val wallet: UserWallet get() = session.wallet
+}
+
+sealed class WcNetworkDerivationState {
+    data object Single : WcNetworkDerivationState()
+    data class Multiple(val walletAddress: String) : WcNetworkDerivationState()
 }
 
 /**
