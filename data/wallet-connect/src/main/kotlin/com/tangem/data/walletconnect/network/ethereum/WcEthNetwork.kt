@@ -75,6 +75,7 @@ internal class WcEthNetwork(
             rawSdkRequest = request,
             network = walletNetwork,
             accountAddress = accountAddress,
+            networkDerivationsCount = networksConverter.filterWalletNetworkForRequest(chainId, wallet).size,
         )
         return when (method) {
             is WcEthMethod.MessageSign -> factories.messageSign.create(context, method)
