@@ -20,10 +20,12 @@ dependencies {
     // region Domain modules
     api(projects.domain.core)
     implementation(projects.domain.legacy)
+    implementation(projects.domain.walletManager)
     implementation(projects.libs.blockchainSdk)
     implementation(projects.libs.tangemSdkApi)
     implementation(projects.domain.models)
     implementation(projects.domain.tokens)
+    implementation(projects.domain.card)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.notifications.models)
