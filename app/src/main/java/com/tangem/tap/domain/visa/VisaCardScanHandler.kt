@@ -9,7 +9,7 @@ import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toHexString
 import com.tangem.core.error.ext.tangemError
 import com.tangem.datasource.local.visa.VisaAuthTokenStorage
-import com.tangem.domain.common.visa.VisaWalletPublicKeyUtility
+import com.tangem.domain.card.common.visa.VisaWalletPublicKeyUtility
 import com.tangem.domain.visa.error.VisaActivationError
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.error.VisaCardScanError
