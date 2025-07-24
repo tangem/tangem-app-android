@@ -32,6 +32,7 @@ import com.tangem.features.walletconnect.transaction.components.PreviewFeeSelect
 import com.tangem.features.walletconnect.transaction.entity.blockaid.WcEstimatedWalletChangeUM
 import com.tangem.features.walletconnect.transaction.entity.blockaid.WcEstimatedWalletChangesUM
 import com.tangem.features.walletconnect.transaction.entity.blockaid.WcSendReceiveTransactionCheckResultsUM
+import com.tangem.features.walletconnect.transaction.entity.common.WcAddressUM
 import com.tangem.features.walletconnect.transaction.entity.common.WcNetworkInfoUM
 import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionAppInfoContentUM
 import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionFeeState
@@ -191,11 +192,47 @@ private class WcSendTransactionStateProvider : CollectionPreviewParameterProvide
                         ),
                     ),
                 ),
+                isLoading = false,
             ),
             walletName = "Tangem 2.0",
             networkInfo = WcNetworkInfoUM(name = "Ethereum", iconRes = R.drawable.img_eth_22),
             feeState = WcTransactionFeeState.Success(null, {}),
-            address = "0x345FF...34FA",
+            address = null,
+        ),
+        WcSendTransactionItemUM(
+            onDismiss = {},
+            onSend = {},
+            appInfo = WcTransactionAppInfoContentUM(
+                appName = "React App",
+                appIcon = "",
+                verifiedState = VerifiedDAppState.Verified {},
+                appSubtitle = "react-app.walletconnect.com",
+            ),
+            estimatedWalletChanges = WcSendReceiveTransactionCheckResultsUM(
+                notificationText = TextReference.Str(
+                    "The transaction approves erc20 tokens to a known malicious address",
+                ),
+                estimatedWalletChanges = WcEstimatedWalletChangesUM(
+                    items = persistentListOf(
+                        WcEstimatedWalletChangeUM(
+                            iconRes = R.drawable.ic_send_new_24,
+                            title = resourceReference(R.string.common_send),
+                            description = "- 42 USDT",
+                            tokenIconUrl = "https://tangem.com",
+                        ),
+                        WcEstimatedWalletChangeUM(
+                            iconRes = R.drawable.ic_receive_new_24,
+                            title = resourceReference(R.string.common_receive),
+                            description = "+ 1,131.46 MATIC",
+                            tokenIconUrl = "https://tangem.com",
+                        ),
+                    ),
+                ),
+            ),
+            walletName = "Tangem 2.0",
+            networkInfo = WcNetworkInfoUM(name = "Ethereum", iconRes = R.drawable.img_eth_22),
+            feeState = WcTransactionFeeState.Success(null, {}),
+            address = WcAddressUM("0xdac17f958d2ee523a2206206994597c13d831ec7", "0x345FF...34FA"),
         ),
         WcSendTransactionItemUM(
             onDismiss = {},
@@ -230,7 +267,7 @@ private class WcSendTransactionStateProvider : CollectionPreviewParameterProvide
             walletName = null,
             networkInfo = WcNetworkInfoUM(name = "Ethereum", iconRes = R.drawable.img_eth_22),
             feeState = WcTransactionFeeState.None,
-            address = "0x345FF...34FA",
+            address = null,
         ),
     ),
 )
