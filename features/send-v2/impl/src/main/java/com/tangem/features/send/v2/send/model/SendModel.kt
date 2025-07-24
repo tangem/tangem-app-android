@@ -7,6 +7,7 @@ import arrow.core.left
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.navigationButtons.NavigationUM
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -22,6 +23,9 @@ import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.isMultiCurrency
+import com.tangem.domain.models.wallet.requireColdWallet
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
 import com.tangem.domain.qrscanning.usecases.ParseQrCodeUseCase
@@ -33,9 +37,7 @@ import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.utils.convertToSdkAmount
-import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.models.wallet.isMultiCurrency
-import com.tangem.domain.models.wallet.requireColdWallet
+import com.tangem.domain.wallets.models.GetUserWalletError
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.v2.api.SendComponent
 import com.tangem.features.send.v2.api.SendFeatureToggles
@@ -44,8 +46,10 @@ import com.tangem.features.send.v2.api.entity.PredefinedValues
 import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationComponent
 import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.features.send.v2.common.CommonSendRoute
-import com.tangem.domain.wallets.models.GetUserWalletError
+import com.tangem.features.send.v2.common.CommonSendRoute.*
 import com.tangem.features.send.v2.common.SendConfirmAlertFactory
+import com.tangem.features.send.v2.common.analytics.CommonSendAnalyticEvents
+import com.tangem.features.send.v2.common.analytics.CommonSendAnalyticEvents.SendScreenSource
 import com.tangem.features.send.v2.common.ui.state.ConfirmUM
 import com.tangem.features.send.v2.send.confirm.SendConfirmComponent
 import com.tangem.features.send.v2.send.success.SendConfirmSuccessComponent
@@ -73,7 +77,7 @@ internal interface SendComponentCallback :
 
 @Stable
 @ModelScoped
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 internal class SendModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
@@ -93,16 +97,31 @@ internal class SendModel @Inject constructor(
     private val getFeeUseCase: GetFeeUseCase,
     private val sendAmountUpdateTrigger: SendAmountUpdateTrigger,
     private val sendFeatureToggles: SendFeatureToggles,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model(), SendComponentCallback {
 
     private val params: SendComponent.Params = paramsContainer.require()
     private val cryptoCurrency = params.currency
 
-    private val _uiState = MutableStateFlow(initialState())
-    val uiState = _uiState.asStateFlow()
+    val analyticCategoryName = CommonSendAnalyticEvents.SEND_CATEGORY
 
-    private val _isBalanceHiddenFlow = MutableStateFlow(false)
-    val isBalanceHiddenFlow = _isBalanceHiddenFlow.asStateFlow()
+    val uiState: StateFlow<SendUM>
+    field = MutableStateFlow(initialState())
+
+    val isBalanceHiddenFlow: StateFlow<Boolean>
+    field = MutableStateFlow(false)
+
+    val initialRoute = if (params.amount == null) {
+        if (uiState.value.isRedesignEnabled) {
+            Amount(isEditMode = false)
+        } else {
+            Destination(isEditMode = false)
+        }
+    } else {
+        Empty
+    }
+
+    val currentRoute = MutableStateFlow(initialRoute)
 
     private val _cryptoCurrencyStatusFlow = MutableStateFlow(
         CryptoCurrencyStatus(
@@ -135,24 +154,76 @@ internal class SendModel @Inject constructor(
     }
 
     override fun onNavigationResult(navigationUM: NavigationUM) {
-        _uiState.update { it.copy(navigationUM = navigationUM) }
+        uiState.update { it.copy(navigationUM = navigationUM) }
     }
 
     override fun onDestinationResult(destinationUM: DestinationUM) {
-        _uiState.update { it.copy(destinationUM = destinationUM) }
+        uiState.update { it.copy(destinationUM = destinationUM) }
     }
 
     override fun onAmountResult(amountUM: AmountState, isResetPredefined: Boolean) {
         if (isResetPredefined) resetPredefinedAmount()
-        _uiState.update { it.copy(amountUM = amountUM) }
+        uiState.update { it.copy(amountUM = amountUM) }
     }
 
     override fun onFeeResult(feeUM: FeeUM) {
-        _uiState.update { it.copy(feeUM = feeUM) }
+        uiState.update { it.copy(feeUM = feeUM) }
     }
 
     override fun onResult(sendUM: SendUM) {
-        _uiState.update { sendUM }
+        uiState.update { sendUM }
+    }
+
+    override fun onBackClick() {
+        val isRedesignEnabled = uiState.value.isRedesignEnabled
+
+        when (val route = currentRoute.value) {
+            is Amount -> if (isRedesignEnabled && !route.isEditMode) {
+                analyticsEventHandler.send(
+                    CommonSendAnalyticEvents.CloseButtonClicked(
+                        categoryName = analyticCategoryName,
+                        source = SendScreenSource.Amount,
+                        isFromSummary = false,
+                        isValid = uiState.value.amountUM.isPrimaryButtonEnabled,
+                    ),
+                )
+            }
+            is Destination -> if (isRedesignEnabled && !route.isEditMode) {
+                analyticsEventHandler.send(
+                    CommonSendAnalyticEvents.CloseButtonClicked(
+                        categoryName = analyticCategoryName,
+                        source = SendScreenSource.Address,
+                        isFromSummary = false,
+                        isValid = uiState.value.amountUM.isPrimaryButtonEnabled,
+                    ),
+                )
+            }
+            else -> Unit
+        }
+
+        router.pop()
+    }
+
+    override fun onNextClick() {
+        val isRedesignEnabled = uiState.value.isRedesignEnabled
+        if (currentRoute.value.isEditMode) {
+            onBackClick()
+        } else {
+            when (currentRoute.value) {
+                is Amount -> if (isRedesignEnabled) {
+                    router.push(Destination(isEditMode = false))
+                } else {
+                    router.push(Confirm)
+                }
+                is Destination -> if (isRedesignEnabled) {
+                    router.push(Confirm)
+                } else {
+                    router.push(Amount(isEditMode = false))
+                }
+                Confirm -> router.push(ConfirmSuccess)
+                else -> onBackClick()
+            }
+        }
     }
 
     override fun onConvertToAnotherToken(lastAmount: String) {
@@ -269,7 +340,7 @@ internal class SendModel @Inject constructor(
             .conflate()
             .distinctUntilChanged()
             .onEach {
-                _isBalanceHiddenFlow.value = it.isBalanceHidden
+                isBalanceHiddenFlow.value = it.isBalanceHidden
             }
             .launchIn(modelScope)
             .saveIn(balanceHidingJobHolder)
