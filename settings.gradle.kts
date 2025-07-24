@@ -276,6 +276,7 @@ include(":domain:legacy")
 include(":domain:card")
 include(":domain:core")
 include(":domain:demo")
+include(":domain:demo:models")
 include(":domain:settings")
 include(":domain:tokens")
 include(":domain:tokens:models")
@@ -324,6 +325,8 @@ include(":domain:express")
 include(":domain:express:models")
 include(":domain:swap")
 include(":domain:swap:models")
+include(":domain:wallet-manager")
+include(":domain:wallet-manager:models")
 // endregion Domain modules
 
 // region Data modules
@@ -355,4 +358,5 @@ include(":data:notifications")
 include(":data:blockaid")
 include(":data:swap")
 include(":data:express")
+include(":data:wallet-manager")
 // endregion Data modules

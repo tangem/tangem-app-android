@@ -9,8 +9,8 @@ import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.data.common.network.NetworkFactory
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.card.ScanCardException
-import com.tangem.domain.common.configs.GenericCardConfig
-import com.tangem.domain.common.configs.MultiWalletCardConfig
+import com.tangem.domain.card.configs.GenericCardConfig
+import com.tangem.domain.card.configs.MultiWalletCardConfig
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.operations.derivation.DerivationTaskResponse

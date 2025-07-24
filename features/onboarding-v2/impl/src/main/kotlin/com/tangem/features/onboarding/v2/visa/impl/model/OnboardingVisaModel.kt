@@ -8,8 +8,8 @@ import com.arkivanov.decompose.router.stack.replaceAll
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.domain.common.visa.VisaUtilities
-import com.tangem.domain.common.visa.VisaWalletPublicKeyUtility
+import com.tangem.domain.card.common.visa.VisaUtilities
+import com.tangem.domain.card.common.visa.VisaWalletPublicKeyUtility
 import com.tangem.domain.visa.model.VisaActivationRemoteState
 import com.tangem.domain.visa.model.VisaCardActivationStatus
 import com.tangem.domain.visa.model.VisaCardWalletDataToSignRequest
