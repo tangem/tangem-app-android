@@ -7,6 +7,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.express.models.ExpressError
+import com.tangem.features.swap.v2.api.subcomponents.SwapAmountUpdateTrigger
 import com.tangem.features.swap.v2.impl.notifications.DefaultSwapNotificationsUpdateTrigger
 import com.tangem.features.swap.v2.impl.notifications.SwapNotificationsComponent
 import com.tangem.features.swap.v2.impl.notifications.SwapNotificationsComponent.Params.SwapNotificationData
@@ -28,6 +29,7 @@ internal class SwapNotificationsModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val swapNotificationsUpdateListener: SwapNotificationsUpdateListener,
     private val swapNotificationsUpdateTrigger: DefaultSwapNotificationsUpdateTrigger,
+    private val swapAmountUpdateTrigger: SwapAmountUpdateTrigger,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
@@ -89,7 +91,9 @@ internal class SwapNotificationsModel @Inject constructor(
             else -> SwapNotificationUM.Warning.ExpressGeneralError(
                 expressError = expressError,
                 onConfirmClick = {
-                    // todo reload quotes
+                    modelScope.launch {
+                        swapAmountUpdateTrigger.triggerQuoteReload()
+                    }
                 },
             )
         }
