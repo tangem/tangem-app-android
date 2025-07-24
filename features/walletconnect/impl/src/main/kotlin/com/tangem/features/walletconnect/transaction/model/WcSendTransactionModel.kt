@@ -13,6 +13,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.core.lce.Lce
@@ -55,6 +56,7 @@ import kotlin.properties.Delegates
 @ModelScoped
 internal class WcSendTransactionModel @Inject constructor(
     paramsContainer: ParamsContainer,
+    override val messageSender: UiMessageSender,
     override val dispatchers: CoroutineDispatcherProvider,
     private val feeSelectorReloadTrigger: FeeSelectorReloadTrigger,
     private val router: Router,
@@ -296,6 +298,7 @@ internal class WcSendTransactionModel @Inject constructor(
             )
             stackNavigation.pushNew(WcTransactionRoutes.Alert(error))
         } else {
+            showSuccessSignMessage()
             router.pop()
         }
     }

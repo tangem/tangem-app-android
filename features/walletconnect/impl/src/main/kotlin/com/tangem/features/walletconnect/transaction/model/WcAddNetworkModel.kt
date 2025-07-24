@@ -7,6 +7,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.domain.walletconnect.WcRequestUseCaseFactory
 import com.tangem.domain.walletconnect.usecase.method.WcAddNetworkUseCase
@@ -24,10 +25,12 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @Stable
 @ModelScoped
 internal class WcAddNetworkModel @Inject constructor(
     paramsContainer: ParamsContainer,
+    override val messageSender: UiMessageSender,
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
     private val clipboardManager: ClipboardManager,
@@ -83,6 +86,7 @@ internal class WcAddNetworkModel @Inject constructor(
         modelScope.launch {
             _uiState.update { it?.copy(transaction = it.transaction.copy(isLoading = true)) }
             useCase.approve().getOrNull()?.let {
+                showSuccessSignMessage()
                 router.pop()
             } ?: run {
                 _uiState.update { it?.copy(transaction = it.transaction.copy(isLoading = false)) }
