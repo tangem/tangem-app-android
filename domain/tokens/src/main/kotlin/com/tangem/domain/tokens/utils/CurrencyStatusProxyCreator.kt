@@ -7,9 +7,8 @@ import arrow.core.toNonEmptySetOrNull
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.quote.QuoteStatus
+import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.domain.staking.model.stakekit.YieldBalance
-import com.tangem.domain.staking.model.stakekit.YieldBalance.Unsupported.integrationId
-import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations.Error
 import com.tangem.domain.tokens.operations.CurrencyStatusOperations
@@ -17,13 +16,9 @@ import com.tangem.domain.tokens.operations.CurrencyStatusOperations
 /**
  * Proxy creator of [CryptoCurrencyStatus]. Used [CurrencyStatusOperations] to create statuses.
  *
- * @property stakingRepository staking repository
- *
 [REDACTED_AUTHOR]
  */
-class CurrencyStatusProxyCreator(
-    private val stakingRepository: StakingRepository,
-) {
+class CurrencyStatusProxyCreator {
 
     fun createCurrencyStatus(
         currency: CryptoCurrency,
@@ -78,8 +73,8 @@ class CurrencyStatusProxyCreator(
             val networkStatus = networksStatuses?.firstOrNull { it.network == currency.network }
             val address = extractAddress(networkStatus)
 
-            val supportedIntegration = stakingRepository.getSupportedIntegrationId(currency.id)
-            val yieldBalance = if (supportedIntegration.isNullOrEmpty().not()) {
+            val supportedIntegration = StakingIntegrationID.create(currencyId = currency.id)?.value
+            val yieldBalance = if (supportedIntegration != null) {
                 yieldBalances?.firstOrNull { it.integrationId == supportedIntegration && it.address == address }
                     ?: YieldBalance.Error(integrationId = supportedIntegration, address = address)
             } else {
