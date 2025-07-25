@@ -94,12 +94,12 @@ internal object StakingDomainModule {
     @Provides
     @Singleton
     fun provideFetchStakingYieldBalanceUseCase(
-        stakingErrorResolver: StakingErrorResolver,
         singleYieldBalanceFetcher: SingleYieldBalanceFetcher,
+        stakingIdFactory: StakingIdFactory,
     ): FetchStakingYieldBalanceUseCase {
         return FetchStakingYieldBalanceUseCase(
-            stakingErrorResolver = stakingErrorResolver,
             singleYieldBalanceFetcher = singleYieldBalanceFetcher,
+            stakingIdFactory = stakingIdFactory,
         )
     }
 
