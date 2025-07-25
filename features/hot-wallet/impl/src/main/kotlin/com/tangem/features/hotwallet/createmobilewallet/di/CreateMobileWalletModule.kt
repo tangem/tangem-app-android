@@ -13,7 +13,7 @@ import dagger.multibindings.IntoMap
 
 @Module
 @InstallIn(SingletonComponent::class)
-internal interface CreateMobileWalletModuleBinds {
+internal interface CreateMobileWalletModule {
 
     @Binds
     fun bindCreateMobileWalletComponentFactory(
