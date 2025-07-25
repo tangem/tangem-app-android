@@ -10,6 +10,7 @@ interface ChooseManagedTokensComponent : ComposableContentComponent {
     data class Params(
         val userWalletId: UserWalletId,
         val initialCurrency: CryptoCurrency,
+        val selectedCurrency: CryptoCurrency?,
         val source: Source,
     )
 
