@@ -128,7 +128,6 @@ private fun WcAppInfoModalBottomSheetContent(state: WcAppInfoUM.Content, modifie
 private fun WcAppInfoFirstBlock(state: WcAppInfoUM.Content, modifier: Modifier = Modifier) {
     var connectionRequestExpanded by remember { mutableStateOf(false) }
     Column(modifier = modifier) {
-        val verifiedDAppState = state.verifiedDAppState
         WcAppInfoItem(
             iconUrl = state.appIcon,
             title = state.appName,
