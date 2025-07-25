@@ -14,7 +14,6 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.domain.express.models.ExpressError
 import com.tangem.domain.express.models.ExpressProviderType
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.settings.IsSendTapHelpEnabledUseCase
@@ -226,7 +225,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                 isAmountSubtractAvailable = isAmountSubtractAvailable,
                 onExpressError = { expressError ->
                     swapAlertFactory.getGenericErrorState(
-                        expressError = ExpressError.UnknownError,
+                        expressError = expressError,
                         onFailedTxEmailClick = {
                             modelScope.launch {
                                 swapAlertFactory.onFailedTxEmailClick(
