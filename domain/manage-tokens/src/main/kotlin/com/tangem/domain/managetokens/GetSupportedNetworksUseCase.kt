@@ -7,7 +7,7 @@ import arrow.core.raise.ensureNotNull
 import com.tangem.domain.managetokens.model.exceptoin.SupportedBlockchainException
 import com.tangem.domain.managetokens.repository.CustomTokensRepository
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 
 class GetSupportedNetworksUseCase(
     private val repository: CustomTokensRepository,
