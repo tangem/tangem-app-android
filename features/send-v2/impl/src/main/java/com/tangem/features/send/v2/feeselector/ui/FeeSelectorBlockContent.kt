@@ -3,12 +3,14 @@ package com.tangem.features.send.v2.feeselector.ui
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.*
 import androidx.compose.ui.text.style.TextAlign
@@ -119,7 +121,9 @@ private fun FeeSelectorStaticPart(onReadMoreClick: () -> Unit, modifier: Modifie
                 .size(TangemTheme.dimens.size16),
             content = { contentModifier ->
                 Icon(
-                    modifier = contentModifier.size(TangemTheme.dimens.size16),
+                    modifier = contentModifier
+                        .size(TangemTheme.dimens.size16)
+                        .clip(CircleShape),
                     painter = painterResource(id = R.drawable.ic_token_info_24),
                     contentDescription = null,
                     tint = TangemTheme.colors.icon.informative,
