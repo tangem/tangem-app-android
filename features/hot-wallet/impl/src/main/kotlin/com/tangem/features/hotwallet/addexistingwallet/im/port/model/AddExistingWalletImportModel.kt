@@ -2,8 +2,10 @@ package com.tangem.features.hotwallet.addexistingwallet.im.port.model
 
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
+import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.crypto.bip39.Mnemonic
 import com.tangem.features.hotwallet.MnemonicRepository
+import com.tangem.features.hotwallet.addexistingwallet.im.port.AddExistingWalletImportComponent
 import com.tangem.features.hotwallet.addexistingwallet.im.port.entity.AddExistingWalletImportUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,9 +15,12 @@ import javax.inject.Inject
 
 @ModelScoped
 internal class AddExistingWalletImportModel @Inject constructor(
+    paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val mnemonicRepository: MnemonicRepository,
 ) : Model() {
+
+    private val params: AddExistingWalletImportComponent.Params = paramsContainer.require()
 
     private val importSeedPhraseUiStateBuilder: ImportSeedPhraseUiStateBuilder
 
@@ -40,5 +45,6 @@ internal class AddExistingWalletImportModel @Inject constructor(
     @Suppress("UnusedPrivateMember")
     private fun importWallet(mnemonic: Mnemonic, passphrase: String?) {
         // TODO implement importing seed phrase
+        params.callbacks.onWalletImported()
     }
 }
