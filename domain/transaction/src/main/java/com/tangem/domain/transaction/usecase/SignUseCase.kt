@@ -5,13 +5,13 @@ import arrow.core.left
 import arrow.core.right
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemError
+import com.tangem.domain.card.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.card.models.TwinKey
 import com.tangem.domain.card.repository.CardSdkConfigRepository
-import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.requireColdWallet
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.requireColdWallet
 
 class SignUseCase(
     private val cardSdkConfigRepository: CardSdkConfigRepository,
