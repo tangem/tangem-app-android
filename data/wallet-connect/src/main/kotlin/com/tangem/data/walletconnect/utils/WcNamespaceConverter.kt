@@ -6,8 +6,7 @@ import com.tangem.data.common.network.NetworkFactory
 import com.tangem.data.walletconnect.model.CAIP2
 import com.tangem.data.walletconnect.model.NamespaceKey
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.requireColdWallet
+import com.tangem.domain.models.wallet.UserWallet
 
 internal interface WcNamespaceConverter {
 
@@ -27,7 +26,7 @@ internal interface WcNamespaceConverter {
         return NetworkFactory(excludedBlockchains).create(
             blockchain = blockchain,
             extraDerivationPath = null,
-            scanResponse = wallet.requireColdWallet().scanResponse, // TODO [REDACTED_TASK_KEY]
+            userWallet = wallet,
         )
     }
 }
