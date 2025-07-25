@@ -1,9 +1,8 @@
 package com.tangem.domain.staking.multi
 
 import com.tangem.domain.core.flow.FlowFetcher
-import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.staking.model.StakingID
 
 /**
  * Fetcher of yields balances
@@ -15,23 +14,19 @@ interface MultiYieldBalanceFetcher : FlowFetcher<MultiYieldBalanceFetcher.Params
     /**
      * Params for fetching multiple yield balances
      *
-     * @property userWalletId             user wallet ID
-     * @property currencyIdWithNetworkMap map of currency ID to network
+     * @property userWalletId user wallet ID
+     * @property stakingIds   map of currency ID to network
      */
     data class Params(
         val userWalletId: UserWalletId,
-        val currencyIdWithNetworkMap: Map<CryptoCurrency.ID, Network>,
+        val stakingIds: Set<StakingID>,
     ) {
 
         override fun toString(): String {
-            val currencyIdWithNetworkMap = currencyIdWithNetworkMap.entries.joinToString {
-                "${it.key.value} - ${it.value}"
-            }
-
             return """
                 MultiYieldBalanceFetcher.Params(
                     userWalletId = $userWalletId,
-                    currencyIdWithNetworkMap: $currencyIdWithNetworkMap
+                    stakingIds: ${stakingIds.joinToString()}
                 )
             """.trimIndent()
         }
