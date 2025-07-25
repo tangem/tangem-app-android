@@ -230,6 +230,23 @@ internal class SendModel @Inject constructor(
         params.callback?.onConvertToAnotherToken(lastAmount = lastAmount)
     }
 
+    override fun resetSendNavigation() {
+        uiState.update {
+            it.copy(
+                destinationUM = SendDestinationInitialStateTransformer(
+                    cryptoCurrency = cryptoCurrency,
+                    isRedesignEnabled = sendFeatureToggles.isSendRedesignEnabled,
+                ).transform(DestinationUM.Empty()),
+                feeUM = FeeUM.Empty(),
+                feeSelectorUM = FeeSelectorUM.Loading,
+                confirmUM = ConfirmUM.Empty,
+                confirmData = null,
+                navigationUM = NavigationUM.Empty,
+            )
+        }
+        router.popTo(Amount(isEditMode = false))
+    }
+
     override fun onError(error: GetUserWalletError) {
         Timber.w(error.toString())
         showAlertError()
