@@ -14,7 +14,6 @@ import com.tangem.blockchainsdk.utils.toCoinId
 import com.tangem.blockchainsdk.utils.toMigratedCoinId
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toCompressedPublicKey
-import com.tangem.data.staking.converters.YieldBalanceListConverter
 import com.tangem.data.staking.converters.YieldConverter
 import com.tangem.data.staking.converters.action.ActionStatusConverter
 import com.tangem.data.staking.converters.action.EnterActionResponseConverter
@@ -45,7 +44,6 @@ import com.tangem.domain.staking.model.StakingEntryInfo
 import com.tangem.domain.staking.model.stakekit.NetworkType
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.YieldBalance
-import com.tangem.domain.staking.model.stakekit.YieldBalanceList
 import com.tangem.domain.staking.model.stakekit.action.StakingAction
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.staking.model.stakekit.action.StakingActionStatus
@@ -401,15 +399,13 @@ internal class DefaultStakingRepository(
     override suspend fun getMultiYieldBalanceSync(
         userWalletId: UserWalletId,
         cryptoCurrencies: List<CryptoCurrency>,
-    ): YieldBalanceList {
+    ): List<YieldBalance>? {
         val stakingIds = cryptoCurrencies.mapNotNull {
             stakingIdFactory.create(userWalletId = userWalletId, currencyId = it.id, network = it.network)
         }
 
         return stakingBalanceStoreV2.getAllSyncOrNull(userWalletId)
             ?.filter { it.getStakingId() in stakingIds }
-            ?.let { YieldBalanceListConverter.convert(value = it.toSet()) }
-            ?: YieldBalanceList.Error
     }
 
     override suspend fun isAnyTokenStaked(userWalletId: UserWalletId): Boolean {
