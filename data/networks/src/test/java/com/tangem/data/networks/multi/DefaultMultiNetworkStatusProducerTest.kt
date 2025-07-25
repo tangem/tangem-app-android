@@ -11,7 +11,7 @@ import com.tangem.data.networks.models.SimpleNetworkStatus
 import com.tangem.data.networks.store.NetworksStatusesStore
 import com.tangem.data.networks.toSimple
 import com.tangem.datasource.local.userwallet.UserWalletsStore
-import com.tangem.domain.common.configs.GenericCardConfig
+import com.tangem.domain.card.configs.GenericCardConfig
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.networks.multi.MultiNetworkStatusProducer
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -67,7 +67,7 @@ internal class DefaultMultiNetworkStatusProducerTest {
             networkFactory.create(
                 networkId = simpleStatuses.first().id,
                 derivationPath = simpleStatuses.first().id.derivationPath,
-                scanResponse = userWallet.scanResponse,
+                userWallet = userWallet,
             )
         } returns statuses.first().network
 
@@ -75,7 +75,7 @@ internal class DefaultMultiNetworkStatusProducerTest {
             networkFactory.create(
                 networkId = simpleStatuses.last().id,
                 derivationPath = simpleStatuses.last().id.derivationPath,
-                scanResponse = userWallet.scanResponse,
+                userWallet = userWallet,
             )
         } returns statuses.last().network
 
@@ -94,12 +94,12 @@ internal class DefaultMultiNetworkStatusProducerTest {
             networkFactory.create(
                 networkId = simpleStatuses.first().id,
                 derivationPath = simpleStatuses.first().id.derivationPath,
-                scanResponse = userWallet.scanResponse,
+                userWallet = userWallet,
             )
             networkFactory.create(
                 networkId = simpleStatuses.last().id,
                 derivationPath = simpleStatuses.last().id.derivationPath,
-                scanResponse = userWallet.scanResponse,
+                userWallet = userWallet,
             )
         }
     }
@@ -130,7 +130,7 @@ internal class DefaultMultiNetworkStatusProducerTest {
             networkFactory.create(
                 networkId = simpleStatuses.first().id,
                 derivationPath = simpleStatuses.first().id.derivationPath,
-                scanResponse = userWallet.scanResponse,
+                userWallet = userWallet,
             )
         } returns statuses.first().network
 
@@ -138,7 +138,7 @@ internal class DefaultMultiNetworkStatusProducerTest {
             networkFactory.create(
                 networkId = simpleStatuses.last().id,
                 derivationPath = simpleStatuses.last().id.derivationPath,
-                scanResponse = userWallet.scanResponse,
+                userWallet = userWallet,
             )
         } returns statuses.last().network
 
@@ -146,7 +146,7 @@ internal class DefaultMultiNetworkStatusProducerTest {
             networkFactory.create(
                 networkId = updatedSimpleStatuses.first().id,
                 derivationPath = updatedSimpleStatuses.first().id.derivationPath,
-                scanResponse = userWallet.scanResponse,
+                userWallet = userWallet,
             )
         } returns updatedStatuses.first().network
 
@@ -154,7 +154,7 @@ internal class DefaultMultiNetworkStatusProducerTest {
             networkFactory.create(
                 networkId = updatedSimpleStatuses.last().id,
                 derivationPath = updatedSimpleStatuses.last().id.derivationPath,
-                scanResponse = userWallet.scanResponse,
+                userWallet = userWallet,
             )
         } returns updatedStatuses.last().network
         // endregion
@@ -177,12 +177,12 @@ internal class DefaultMultiNetworkStatusProducerTest {
             networkFactory.create(
                 networkId = simpleStatuses.first().id,
                 derivationPath = simpleStatuses.first().id.derivationPath,
-                scanResponse = userWallet.scanResponse,
+                userWallet = userWallet,
             )
             networkFactory.create(
                 networkId = simpleStatuses.last().id,
                 derivationPath = simpleStatuses.last().id.derivationPath,
-                scanResponse = userWallet.scanResponse,
+                userWallet = userWallet,
             )
         }
 
@@ -202,12 +202,12 @@ internal class DefaultMultiNetworkStatusProducerTest {
             networkFactory.create(
                 networkId = updatedSimpleStatuses.first().id,
                 derivationPath = updatedSimpleStatuses.first().id.derivationPath,
-                scanResponse = userWallet.scanResponse,
+                userWallet = userWallet,
             )
             networkFactory.create(
                 networkId = updatedSimpleStatuses.last().id,
                 derivationPath = updatedSimpleStatuses.last().id.derivationPath,
-                scanResponse = userWallet.scanResponse,
+                userWallet = userWallet,
             )
         }
     }
@@ -232,7 +232,7 @@ internal class DefaultMultiNetworkStatusProducerTest {
             networkFactory.create(
                 networkId = simpleStatuses.first().id,
                 derivationPath = simpleStatuses.first().id.derivationPath,
-                scanResponse = userWallet.scanResponse,
+                userWallet = userWallet,
             )
         } returns statuses.first().network
 
@@ -240,7 +240,7 @@ internal class DefaultMultiNetworkStatusProducerTest {
             networkFactory.create(
                 networkId = simpleStatuses.last().id,
                 derivationPath = simpleStatuses.last().id.derivationPath,
-                scanResponse = userWallet.scanResponse,
+                userWallet = userWallet,
             )
         } returns statuses.last().network
         // endregion
@@ -263,12 +263,12 @@ internal class DefaultMultiNetworkStatusProducerTest {
             networkFactory.create(
                 networkId = simpleStatuses.first().id,
                 derivationPath = simpleStatuses.first().id.derivationPath,
-                scanResponse = userWallet.scanResponse,
+                userWallet = userWallet,
             )
             networkFactory.create(
                 networkId = simpleStatuses.last().id,
                 derivationPath = simpleStatuses.last().id.derivationPath,
-                scanResponse = userWallet.scanResponse,
+                userWallet = userWallet,
             )
         }
 
@@ -312,14 +312,14 @@ internal class DefaultMultiNetworkStatusProducerTest {
             networkFactory.create(
                 networkId = simpleStatuses.first().id,
                 derivationPath = simpleStatuses.first().id.derivationPath,
-                scanResponse = userWallet.scanResponse,
+                userWallet = userWallet,
             )
         } returns statuses.first().network
         every {
             networkFactory.create(
                 networkId = simpleStatuses.last().id,
                 derivationPath = simpleStatuses.last().id.derivationPath,
-                scanResponse = userWallet.scanResponse,
+                userWallet = userWallet,
             )
         } returns statuses.last().network
         // endregion
@@ -336,7 +336,7 @@ internal class DefaultMultiNetworkStatusProducerTest {
 
         verifyOrder(inverse = true) {
             userWalletsStore.getSyncOrNull(any())
-            networkFactory.create(networkId = any(), derivationPath = any(), scanResponse = any())
+            networkFactory.create(networkId = any(), derivationPath = any(), userWallet = any())
         }
 
         // Act 2 (emit)
@@ -353,12 +353,12 @@ internal class DefaultMultiNetworkStatusProducerTest {
             networkFactory.create(
                 networkId = simpleStatuses.first().id,
                 derivationPath = simpleStatuses.first().id.derivationPath,
-                scanResponse = userWallet.scanResponse,
+                userWallet = userWallet,
             )
             networkFactory.create(
                 networkId = simpleStatuses.last().id,
                 derivationPath = simpleStatuses.last().id.derivationPath,
-                scanResponse = userWallet.scanResponse,
+                userWallet = userWallet,
             )
         }
     }
@@ -410,12 +410,12 @@ internal class DefaultMultiNetworkStatusProducerTest {
             networkFactory.create(
                 networkId = simpleStatuses.first().id,
                 derivationPath = simpleStatuses.first().id.derivationPath,
-                scanResponse = userWallet.scanResponse,
+                userWallet = userWallet,
             )
             networkFactory.create(
                 networkId = simpleStatuses.last().id,
                 derivationPath = simpleStatuses.last().id.derivationPath,
-                scanResponse = userWallet.scanResponse,
+                userWallet = userWallet,
             )
         }
     }
@@ -429,10 +429,10 @@ internal class DefaultMultiNetworkStatusProducerTest {
 
         val userWallet = MockUserWalletFactory.create(scanResponse = scanResponse)
 
-        val ethNetwork = MockCryptoCurrencyFactory(scanResponse = scanResponse).ethereum.network.copy(
+        val ethNetwork = MockCryptoCurrencyFactory(userWallet = userWallet).ethereum.network.copy(
             canHandleTokens = true,
         )
 
-        val cardanoNetwork = MockCryptoCurrencyFactory(scanResponse = scanResponse).cardano.network
+        val cardanoNetwork = MockCryptoCurrencyFactory(userWallet = userWallet).cardano.network
     }
 }
