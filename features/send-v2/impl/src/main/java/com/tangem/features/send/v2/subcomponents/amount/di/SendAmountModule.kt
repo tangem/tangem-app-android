@@ -1,7 +1,6 @@
 package com.tangem.features.send.v2.subcomponents.amount.di
 
 import com.tangem.features.send.v2.subcomponents.amount.*
-import com.tangem.features.send.v2.subcomponents.amount.DefaultSendAmountReduceTrigger
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -22,9 +21,9 @@ internal interface SendAmountModule {
 
     @Singleton
     @Binds
-    fun provideSendAmountUpdateQRListener(impl: DefaultSendAmountReduceTrigger): SendAmountUpdateQRListener
+    fun provideSendAmountUpdateListener(impl: DefaultSendAmountReduceTrigger): SendAmountUpdateListener
 
     @Singleton
     @Binds
-    fun provideSendAmountUpdateQRTrigger(impl: DefaultSendAmountReduceTrigger): SendAmountUpdateQRTrigger
+    fun provideSendAmountUpdateTrigger(impl: DefaultSendAmountReduceTrigger): SendAmountUpdateTrigger
 }
