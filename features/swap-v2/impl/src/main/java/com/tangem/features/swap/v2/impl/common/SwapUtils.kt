@@ -6,11 +6,15 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.simple
 import com.tangem.domain.express.models.ExpressError
+import com.tangem.domain.express.models.ExpressProviderType
 import com.tangem.features.swap.v2.impl.R
 
 internal object SwapUtils {
     const val INCREASE_GAS_LIMIT_FOR_DEX = 112 // 12%
     const val INCREASE_GAS_LIMIT_FOR_CEX = 105 // 5%
+
+    /** List of supported provider types in Send with Swap */
+    internal val SEND_WITH_SWAP_PROVIDER_TYPES = listOf(ExpressProviderType.CEX)
 
     fun getExpressErrorMessage(expressError: ExpressError): TextReference {
         return when (expressError) {
