@@ -52,7 +52,7 @@ abstract class BaseCurrencyStatusOperations(
     private val tokensFeatureToggles: TokensFeatureToggles,
 ) {
 
-    protected val currencyStatusProxyCreator = CurrencyStatusProxyCreator(stakingRepository)
+    protected val currencyStatusProxyCreator = CurrencyStatusProxyCreator()
 
     protected abstract fun getQuotes(id: CryptoCurrency.RawID): Flow<Either<Error, Set<QuoteStatus>>>
 
