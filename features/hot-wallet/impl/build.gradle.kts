@@ -32,6 +32,7 @@ dependencies {
     implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.models)
+    implementation(projects.domain.settings)
 
     /** Common */
     implementation(projects.common.ui)
