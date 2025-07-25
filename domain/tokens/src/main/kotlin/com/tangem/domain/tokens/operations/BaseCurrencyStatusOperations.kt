@@ -5,6 +5,7 @@ import arrow.core.raise.Raise
 import arrow.core.raise.catch
 import arrow.core.raise.either
 import arrow.core.raise.recover
+import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.domain.core.utils.EitherFlow
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
@@ -18,6 +19,9 @@ import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
 import com.tangem.domain.quotes.QuotesRepository
 import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
+import com.tangem.domain.staking.StakingIdFactory
+import com.tangem.domain.staking.model.StakingID
+import com.tangem.domain.staking.model.isStakingSupported
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.staking.single.SingleYieldBalanceProducer
@@ -49,6 +53,7 @@ abstract class BaseCurrencyStatusOperations(
     private val singleQuoteStatusSupplier: SingleQuoteStatusSupplier,
     private val singleYieldBalanceSupplier: SingleYieldBalanceSupplier,
     private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
+    private val stakingIdFactory: StakingIdFactory,
     private val tokensFeatureToggles: TokensFeatureToggles,
 ) {
 
@@ -82,7 +87,7 @@ abstract class BaseCurrencyStatusOperations(
         return getCurrencyStatusFlow(userWalletId = userWalletId, currency = currency)
     }
 
-    fun getCurrencyStatusFlow(
+    suspend fun getCurrencyStatusFlow(
         userWalletId: UserWalletId,
         currency: CryptoCurrency,
         includeQuotes: Boolean = true,
@@ -105,9 +110,24 @@ abstract class BaseCurrencyStatusOperations(
 
         val statusFlow = getNetworkStatus(userWalletId = userWalletId, network = currency.network)
 
-        val yieldBalanceFlow = getYieldBalance(userWalletId = userWalletId, cryptoCurrency = currency)
+        val isStakingSupported = currency.network.toBlockchain().isStakingSupported
 
-        return if (subscribeOnYieldBalance) {
+        val yieldBalanceFlow = if (isStakingSupported) {
+            val stakingId = stakingIdFactory.create(
+                userWalletId = userWalletId,
+                currencyId = currency.id,
+                network = currency.network,
+            )
+                .getOrNull()
+
+            stakingId?.let {
+                getYieldBalance(userWalletId = userWalletId, stakingId = it)
+            }
+        } else {
+            null
+        }
+
+        return if (subscribeOnYieldBalance && yieldBalanceFlow != null) {
             combine(quoteFlow, statusFlow, yieldBalanceFlow) { maybeQuote, maybeNetworkStatus, maybeYieldBalance ->
                 currencyStatusProxyCreator.createCurrencyStatus(
                     currency = currency,
@@ -334,15 +354,11 @@ abstract class BaseCurrencyStatusOperations(
             .bind()
     }
 
-    private fun getYieldBalance(
-        userWalletId: UserWalletId,
-        cryptoCurrency: CryptoCurrency,
-    ): EitherFlow<Error, YieldBalance> {
+    private fun getYieldBalance(userWalletId: UserWalletId, stakingId: StakingID): EitherFlow<Error, YieldBalance> {
         return singleYieldBalanceSupplier(
             params = SingleYieldBalanceProducer.Params(
                 userWalletId = userWalletId,
-                currencyId = cryptoCurrency.id,
-                network = cryptoCurrency.network,
+                stakingId = stakingId,
             ),
         )
             .map<YieldBalance, Either<Error, YieldBalance>> { it.right() }
