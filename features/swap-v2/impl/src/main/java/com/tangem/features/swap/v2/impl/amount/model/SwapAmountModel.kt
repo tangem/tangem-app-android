@@ -181,19 +181,40 @@ internal class SwapAmountModel @Inject constructor(
     }
 
     override fun onSelectTokenClick() {
-        appRouter.push(
-            AppRoute.ChooseManagedTokens(
-                userWalletId = userWallet.walletId,
-                initialCurrency = primaryCryptoCurrency,
-                source = AppRoute.ChooseManagedTokens.Source.SendViaSwap,
-            ),
-        )
+        val amountParams = params as? SwapAmountComponentParams.AmountParams ?: return
+        modelScope.launch {
+            val isEditMode = amountParams.currentRoute.firstOrNull()?.isEditMode == true
+            val selectedCurrency = (uiState.value as? SwapAmountUM.Content)?.secondaryCryptoCurrencyStatus?.currency
+            appRouter.push(
+                AppRoute.ChooseManagedTokens(
+                    userWalletId = userWallet.walletId,
+                    initialCurrency = primaryCryptoCurrency,
+                    selectedCurrency = selectedCurrency.takeIf { isEditMode },
+                    source = AppRoute.ChooseManagedTokens.Source.SendViaSwap,
+                ),
+            )
+        }
     }
 
     override fun onSeparatorClick() {
-        // todo handle reverse pair click with swap redesign
+        val amountParams = params as? SwapAmountComponentParams.AmountParams ?: return
+
+        modelScope.launch {
+            if (amountParams.currentRoute.firstOrNull()?.isEditMode == true) {
+                swapAmountAlertFactory.showCloseSendWithSwapAlert {
+                    params.callback.resetSendWithSwapNavigation(resetNavigation = true)
+                    confirmSendWithSwapClose()
+                }
+            } else {
+                confirmSendWithSwapClose()
+                amountParams.callback.onAmountResult(uiState.value)
+            }
+        }
+    }
+
+    private fun confirmSendWithSwapClose() {
+        val amountParams = params as? SwapAmountComponentParams.AmountParams ?: return
         val amountFieldData = uiState.value.primaryAmount.amountField as? AmountState.Data
-        val callback = (params as? SwapAmountComponentParams.AmountParams)?.callback ?: return
 
         val primaryCryptoCurrencyStatus = (uiState.value as? SwapAmountUM.Content)?.primaryCryptoCurrencyStatus
         if (primaryCryptoCurrencyStatus != null) {
@@ -209,8 +230,7 @@ internal class SwapAmountModel @Inject constructor(
             )
         }
 
-        callback.onSeparatorClick(lastAmount = amountFieldData?.amountTextField?.value.orEmpty())
-        callback.onAmountResult(uiState.value)
+        amountParams.callback.onSeparatorClick(lastAmount = amountFieldData?.amountTextField?.value.orEmpty())
     }
 
     private fun subscribeOnCryptoCurrencyStatusFlow() {
@@ -302,10 +322,13 @@ internal class SwapAmountModel @Inject constructor(
 
     private fun observeChooseSelectToken() {
         swapChooseTokenNetworkListener.swapChooseTokenNetworkResultFlow
-            .onEach { (swapCurrencies, currency) ->
+            .onEach { data ->
+                (params as? SwapAmountComponentParams.AmountParams)?.callback?.resetSendWithSwapNavigation(
+                    data.shouldResetNavigation,
+                )
                 uiState.update { amountUM ->
                     if (amountUM is SwapAmountUM.Content) {
-                        initPairs(swapCurrencies, currency)
+                        initPairs(data.swapCurrencies, data.cryptoCurrency)
                         amountUM.copy(
                             isPrimaryButtonEnabled = false,
                             secondaryAmount = SwapAmountFieldUM.Loading(
