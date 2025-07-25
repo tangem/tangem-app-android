@@ -14,6 +14,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.quote.QuoteStatus
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
@@ -24,7 +25,7 @@ import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.staking.model.stakekit.YieldBalance
-import com.tangem.domain.staking.model.stakekit.YieldBalanceList
+import com.tangem.domain.staking.model.stakekit.YieldBalance.Unsupported.integrationId
 import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.staking.single.SingleYieldBalanceProducer
@@ -36,7 +37,6 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations.Error
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.utils.extractAddress
-import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.extensions.addOrReplace
 import com.tangem.utils.extensions.isSingleItem
 import kotlinx.coroutines.*
@@ -128,9 +128,9 @@ class CachedCurrenciesStatusesOperations(
             val (networks, currenciesIds) = getIds(currencies)
 
             fun createCurrenciesStatuses(
-                maybeQuotes: Either<TokenListError, Set<QuoteStatus>>?,
-                maybeNetworkStatuses: Either<TokenListError, Set<NetworkStatus>>?,
-                maybeYieldBalances: Either<TokenListError, YieldBalanceList>?,
+                maybeQuotes: Either<TokenListError, Set<QuoteStatus>>,
+                maybeNetworkStatuses: Either<TokenListError, Set<NetworkStatus>>,
+                maybeYieldBalances: Either<TokenListError, List<YieldBalance>>,
                 isUpdating: Boolean,
             ) = createCurrenciesStatuses(
                 currencies = currencies,
@@ -229,7 +229,7 @@ class CachedCurrenciesStatusesOperations(
         currencies: NonEmptyList<CryptoCurrency>,
         maybeQuotes: Either<TokenListError, Set<QuoteStatus>>?,
         maybeNetworkStatuses: Either<TokenListError, Set<NetworkStatus>>?,
-        maybeYieldBalances: Either<TokenListError, YieldBalanceList>?,
+        maybeYieldBalances: Either<TokenListError, List<YieldBalance>>?,
         isUpdating: Boolean,
     ): Lce<TokenListError, List<CryptoCurrencyStatus>> = lce {
         isLoading.set(isUpdating)
@@ -264,20 +264,20 @@ class CachedCurrenciesStatusesOperations(
     }
 
     private fun findYieldBalanceOrNull(
-        yieldBalances: YieldBalanceList?,
+        yieldBalances: List<YieldBalance>?,
         currency: CryptoCurrency,
         networkStatus: NetworkStatus?,
     ): YieldBalance? {
-        if (yieldBalances !is YieldBalanceList.Data) return null
+        if (yieldBalances.isNullOrEmpty()) return null
 
         val supportedIntegration = stakingRepository.getSupportedIntegrationId(currency.id)
 
         if (supportedIntegration.isNullOrBlank()) return null
 
-        return yieldBalances.getBalance(
-            address = extractAddress(networkStatus),
-            integrationId = supportedIntegration,
-        )
+        val address = extractAddress(networkStatus)
+
+        return yieldBalances.firstOrNull { it.integrationId == supportedIntegration && it.address == address }
+            ?: YieldBalance.Error(integrationId = supportedIntegration, address = address)
     }
 
     private fun getCurrencies(userWalletId: UserWalletId): EitherFlow<TokenListError, List<CryptoCurrency>> {
@@ -369,7 +369,7 @@ class CachedCurrenciesStatusesOperations(
     private fun getYieldsBalancesUpdates(
         userWalletId: UserWalletId,
         cryptoCurrencies: List<CryptoCurrency>,
-    ): EitherFlow<TokenListError, YieldBalanceList> {
+    ): EitherFlow<TokenListError, List<YieldBalance>> {
         return channelFlow {
             val state = MutableStateFlow(emptyList<YieldBalance>())
 
@@ -394,18 +394,9 @@ class CachedCurrenciesStatusesOperations(
             }
 
             state
-                .onEach(::send)
+                .onEach { send(it.right()) }
                 .launchIn(scope = this)
         }
-            .map<List<YieldBalance>, Either<TokenListError, YieldBalanceList>> { balances ->
-                val yieldBalanceList = if (balances.isEmpty()) {
-                    YieldBalanceList.Empty
-                } else {
-                    YieldBalanceList.Data(balances)
-                }
-
-                yieldBalanceList.right()
-            }
             .distinctUntilChanged()
     }
 
