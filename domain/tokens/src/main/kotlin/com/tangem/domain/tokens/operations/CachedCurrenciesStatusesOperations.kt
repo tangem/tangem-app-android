@@ -24,6 +24,7 @@ import com.tangem.domain.quotes.QuotesRepository
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
+import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
@@ -56,6 +57,7 @@ class CachedCurrenciesStatusesOperations(
     private val singleYieldBalanceSupplier: SingleYieldBalanceSupplier,
     private val multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
     multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
+    private val stakingIdFactory: StakingIdFactory,
     private val tokensFeatureToggles: TokensFeatureToggles,
 ) : BaseCurrenciesStatusesOperations,
     BaseCurrencyStatusOperations(
@@ -67,6 +69,7 @@ class CachedCurrenciesStatusesOperations(
         singleQuoteStatusSupplier = singleQuoteStatusSupplier,
         singleYieldBalanceSupplier = singleYieldBalanceSupplier,
         multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
+        stakingIdFactory = stakingIdFactory,
         tokensFeatureToggles = tokensFeatureToggles,
     ) {
 
@@ -371,20 +374,19 @@ class CachedCurrenciesStatusesOperations(
         return channelFlow {
             val state = MutableStateFlow(emptyList<YieldBalance>())
 
-            cryptoCurrencies.onEach {
+            val stakingIds = cryptoCurrencies.mapNotNullTo(hashSetOf()) {
+                stakingIdFactory.create(userWalletId = userWalletId, currencyId = it.id, network = it.network)
+                    .getOrNull()
+            }
+
+            stakingIds.onEach {
                 launch {
                     singleYieldBalanceSupplier(
-                        params = SingleYieldBalanceProducer.Params(
-                            userWalletId = userWalletId,
-                            currencyId = it.id,
-                            network = it.network,
-                        ),
+                        params = SingleYieldBalanceProducer.Params(userWalletId = userWalletId, stakingId = it),
                     )
                         .onEach { balance ->
                             state.update { loadedBalances ->
-                                loadedBalances.addOrReplace(balance) {
-                                    it.integrationId == balance.integrationId && it.address == balance.address
-                                }
+                                loadedBalances.addOrReplace(balance) { balance.getStakingId() == it }
                             }
                         }
                         .launchIn(scope = this)
