@@ -1,6 +1,6 @@
 package com.tangem.domain.feedback.models
 
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.serialization.Serializable
 
 @Serializable
