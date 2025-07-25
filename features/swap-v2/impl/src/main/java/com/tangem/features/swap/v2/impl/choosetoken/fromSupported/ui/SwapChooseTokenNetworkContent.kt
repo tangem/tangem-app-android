@@ -98,7 +98,7 @@ private fun SwapChooseTokenNetworkContentList(swapNetworks: ImmutableList<SwapCh
         swapNetworks.fastForEach { network ->
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable(
@@ -117,14 +117,19 @@ private fun SwapChooseTokenNetworkContentList(swapNetworks: ImmutableList<SwapCh
                     contentDescription = null,
                 )
                 Text(
+                    modifier = Modifier.padding(start = 6.dp),
                     text = network.title.resolveReference(),
                     style = TangemTheme.typography.subtitle2,
                     color = TangemTheme.colors.text.primary1,
                 )
                 Text(
                     text = network.subtitle.resolveReference(),
-                    style = TangemTheme.typography.body2,
-                    color = TangemTheme.colors.text.tertiary,
+                    style = TangemTheme.typography.caption1,
+                    color = if (network.isMainNetwork) {
+                        TangemTheme.colors.text.accent
+                    } else {
+                        TangemTheme.colors.text.tertiary
+                    },
                 )
                 if (network.hasFixedRate) {
                     SpacerWMax()
@@ -218,6 +223,7 @@ private class PreviewProvider : PreviewParameterProvider<SwapChooseTokenNetworkC
                         iconResId = R.drawable.img_cardano_22,
                         hasFixedRate = false,
                         onNetworkClick = {},
+                        isMainNetwork = true,
                     ),
                 ),
             ),
@@ -243,6 +249,7 @@ private class PreviewProvider : PreviewParameterProvider<SwapChooseTokenNetworkC
                         iconResId = R.drawable.img_cardano_22,
                         hasFixedRate = false,
                         onNetworkClick = {},
+                        isMainNetwork = true,
                     ),
                     SwapChooseNetworkUM(
                         title = stringReference("BNB Smart Chain"),
@@ -250,6 +257,7 @@ private class PreviewProvider : PreviewParameterProvider<SwapChooseTokenNetworkC
                         iconResId = R.drawable.img_bsc_22,
                         hasFixedRate = false,
                         onNetworkClick = {},
+                        isMainNetwork = false,
                     ),
                     SwapChooseNetworkUM(
                         title = stringReference("BNB Smart Chain"),
@@ -257,6 +265,7 @@ private class PreviewProvider : PreviewParameterProvider<SwapChooseTokenNetworkC
                         iconResId = R.drawable.img_bsc_22,
                         hasFixedRate = true,
                         onNetworkClick = {},
+                        isMainNetwork = false,
                     ),
                     SwapChooseNetworkUM(
                         title = stringReference("BNB Smart Chain"),
@@ -264,6 +273,7 @@ private class PreviewProvider : PreviewParameterProvider<SwapChooseTokenNetworkC
                         iconResId = R.drawable.img_bsc_22,
                         hasFixedRate = false,
                         onNetworkClick = {},
+                        isMainNetwork = false,
                     ),
                 ),
             ),
@@ -291,6 +301,7 @@ private class PreviewProvider : PreviewParameterProvider<SwapChooseTokenNetworkC
                                 iconResId = R.drawable.img_cardano_22,
                                 hasFixedRate = false,
                                 onNetworkClick = {},
+                                isMainNetwork = true,
                             ),
                         )
                     }

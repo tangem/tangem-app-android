@@ -6,18 +6,20 @@ import com.tangem.core.analytics.api.AnalyticsErrorHandler
 import com.tangem.datasource.BuildConfig
 import com.tangem.datasource.api.common.blockaid.BlockAidApi
 import com.tangem.datasource.api.common.config.ApiConfig
+import com.tangem.datasource.api.common.config.ApiConfig.Companion.MOCKED_BUILD_TYPE
 import com.tangem.datasource.api.common.config.ApiConfigs
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.api.common.config.managers.DevApiConfigsManager
+import com.tangem.datasource.api.common.config.managers.MockApiConfigsManager
 import com.tangem.datasource.api.common.config.managers.ProdApiConfigsManager
 import com.tangem.datasource.api.common.response.ApiResponseCallAdapterFactory
 import com.tangem.datasource.api.express.TangemExpressApi
 import com.tangem.datasource.api.markets.TangemTechMarketsApi
 import com.tangem.datasource.api.onramp.OnrampApi
+import com.tangem.datasource.api.pay.TangemPayApi
 import com.tangem.datasource.api.stakekit.StakeKitApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.TangemTechApiV2
-import com.tangem.datasource.api.pay.TangemPayApi
 import com.tangem.datasource.local.logs.AppLogsStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.utils.*
@@ -45,7 +47,7 @@ internal object NetworkModule {
     private const val STAKE_KIT_API_TIMEOUT_SECONDS = 60L
 
     private val excludedApiForLogging: Set<ApiConfig.ID> = setOf(
-        // ApiConfig.ID.StakeKit,
+        ApiConfig.ID.StakeKit,
     )
 
     @Provides
@@ -55,10 +57,10 @@ internal object NetworkModule {
         appPreferencesStore: AppPreferencesStore,
         dispatchers: CoroutineDispatcherProvider,
     ): ApiConfigsManager {
-        return if (BuildConfig.TESTER_MENU_ENABLED) {
-            DevApiConfigsManager(apiConfigs, appPreferencesStore, dispatchers)
-        } else {
-            ProdApiConfigsManager(apiConfigs)
+        return when {
+            BuildConfig.BUILD_TYPE == MOCKED_BUILD_TYPE -> MockApiConfigsManager(apiConfigs, dispatchers)
+            BuildConfig.TESTER_MENU_ENABLED -> DevApiConfigsManager(apiConfigs, appPreferencesStore, dispatchers)
+            else -> ProdApiConfigsManager(apiConfigs)
         }
     }
 
