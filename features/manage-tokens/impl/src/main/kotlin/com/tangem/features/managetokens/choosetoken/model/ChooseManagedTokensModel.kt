@@ -55,6 +55,7 @@ internal class ChooseManagedTokensModel @Inject constructor(
                 ChooseManageTokensBottomSheetConfig.SwapTokensBottomSheetConfig(
                     userWalletId = params.userWalletId,
                     initialCurrency = params.initialCurrency,
+                    selectedCurrency = params.selectedCurrency,
                     token = token,
                 ),
             )
