@@ -22,11 +22,11 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.exchange.RampStateManager
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.tokens.GetMinimumTransactionAmountSyncUseCase
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
-import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.v2.api.SendFeatureToggles
 import com.tangem.features.send.v2.api.entity.PredefinedValues
@@ -65,6 +65,7 @@ internal class SendAmountModel @Inject constructor(
     private val feeSelectorReloadTrigger: FeeSelectorReloadTrigger,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val rampStateManager: RampStateManager,
+    private val sendAmountAlertFactory: SendAmountAlertFactory,
 ) : Model(), SendAmountClickIntents {
 
     private val params: SendAmountComponentParams = paramsContainer.require()
@@ -242,9 +243,21 @@ internal class SendAmountModel @Inject constructor(
     }
 
     override fun onConvertToAnotherToken() {
+        val amountParams = params as? SendAmountComponentParams.AmountParams ?: return
+        if (amountParams.currentRoute.value.isEditMode) {
+            sendAmountAlertFactory.showResetSendingAlert {
+                params.callback.resetSendNavigation()
+                confirmConvertToToken()
+            }
+        } else {
+            confirmConvertToToken()
+        }
+    }
+
+    private fun confirmConvertToToken() {
+        val amountParams = params as? SendAmountComponentParams.AmountParams ?: return
         val amountFieldData = uiState.value as? AmountState.Data
-        val amountParams = params as? SendAmountComponentParams.AmountParams
-        amountParams?.callback?.onConvertToAnotherToken(amountFieldData?.amountTextField?.value.orEmpty())
+        amountParams.callback.onConvertToAnotherToken(amountFieldData?.amountTextField?.value.orEmpty())
     }
 
     private fun subscribeOnAmountReduceToTriggerUpdates() {
