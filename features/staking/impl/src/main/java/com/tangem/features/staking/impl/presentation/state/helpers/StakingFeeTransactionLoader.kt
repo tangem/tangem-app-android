@@ -21,7 +21,7 @@ import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.CreateApprovalTransactionUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.features.staking.impl.presentation.state.StakingStateController
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.state.utils.isCompositePendingActions
