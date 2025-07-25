@@ -1,6 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers
 
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletManageButton
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import kotlinx.collections.immutable.PersistentList

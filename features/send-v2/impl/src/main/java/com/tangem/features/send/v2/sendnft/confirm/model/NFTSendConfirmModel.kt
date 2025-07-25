@@ -26,10 +26,13 @@ import com.tangem.domain.settings.NeverShowTapHelpUseCase
 import com.tangem.domain.transaction.usecase.CreateNFTTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
-import com.tangem.domain.wallets.models.requireColdWallet
+import com.tangem.domain.models.wallet.requireColdWallet
 import com.tangem.features.nft.entity.NFTSendSuccessTrigger
+import com.tangem.features.send.v2.api.SendNotificationsComponent
 import com.tangem.features.send.v2.api.SendNotificationsComponent.Params.NotificationData
 import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
+import com.tangem.features.send.v2.api.subcomponents.notifications.SendNotificationsUpdateListener
+import com.tangem.features.send.v2.api.subcomponents.notifications.SendNotificationsUpdateTrigger
 import com.tangem.features.send.v2.common.CommonSendRoute
 import com.tangem.features.send.v2.common.SendBalanceUpdater
 import com.tangem.features.send.v2.common.SendConfirmAlertFactory
@@ -45,9 +48,10 @@ import com.tangem.features.send.v2.sendnft.confirm.model.transformers.NFTSendCon
 import com.tangem.features.send.v2.sendnft.ui.state.NFTSendUM
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeCheckReloadListener
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeCheckReloadTrigger
+import com.tangem.features.send.v2.subcomponents.fee.SendFeeData
+import com.tangem.features.send.v2.subcomponents.fee.SendFeeReloadTrigger
 import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeSelectorUM
 import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeUM
-import com.tangem.features.send.v2.subcomponents.notifications.NotificationsUpdateTrigger
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.stripZeroPlainString
 import com.tangem.utils.transformer.update
@@ -72,7 +76,8 @@ internal class NFTSendConfirmModel @Inject constructor(
     private val saveBlockchainErrorUseCase: SaveBlockchainErrorUseCase,
     private val getCardInfoUseCase: GetCardInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
-    private val notificationsUpdateTrigger: NotificationsUpdateTrigger,
+    private val notificationsUpdateTrigger: SendNotificationsUpdateTrigger,
+    private val notificationsUpdateListener: SendNotificationsUpdateListener,
     private val sendFeeCheckReloadTrigger: SendFeeCheckReloadTrigger,
     private val sendFeeCheckReloadListener: SendFeeCheckReloadListener,
     private val alertFactory: SendConfirmAlertFactory,
@@ -81,8 +86,9 @@ internal class NFTSendConfirmModel @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val nftSendAnalyticHelper: NFTSendAnalyticHelper,
     private val nftSendSuccessTrigger: NFTSendSuccessTrigger,
+    private val sendFeeReloadTrigger: SendFeeReloadTrigger,
     sendBalanceUpdaterFactory: SendBalanceUpdater.Factory,
-) : Model(), NFTSendConfirmClickIntents {
+) : Model(), NFTSendConfirmClickIntents, SendNotificationsComponent.ModelCallback {
 
     private val params: NFTSendConfirmComponent.Params = paramsContainer.require()
 
@@ -137,6 +143,18 @@ internal class NFTSendConfirmModel @Inject constructor(
     fun onDestinationResult(destinationUM: DestinationUM) {
         _uiState.update { it.copy(destinationUM = destinationUM) }
         updateConfirmNotifications()
+    }
+
+    override fun onFeeReload() {
+        modelScope.launch {
+            sendFeeReloadTrigger.triggerUpdate(
+                // For now transfer one nft asset at a time
+                feeData = SendFeeData(
+                    amount = BigDecimal.ZERO,
+                    destinationAddress = confirmData.enteredDestination,
+                ),
+            )
+        }
     }
 
     override fun showEditDestination() {
@@ -242,7 +260,7 @@ internal class NFTSendConfirmModel @Inject constructor(
     }
 
     private fun subscribeOnNotificationsUpdateTrigger() {
-        notificationsUpdateTrigger.hasErrorFlow
+        notificationsUpdateListener.hasErrorFlow
             .onEach { hasError ->
                 _uiState.update {
                     val feeUM = it.feeUM as? FeeUM.Content
