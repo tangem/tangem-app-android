@@ -16,7 +16,7 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.send.v2.api.FeeSelectorBlockComponent
 import com.tangem.features.send.v2.api.SendNotificationsComponent
 import com.tangem.features.send.v2.api.entity.PredefinedValues
-import com.tangem.features.send.v2.api.params.FeeSelectorParams
+import com.tangem.features.send.v2.api.params.FeeSelectorParams.*
 import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationBlockComponent
 import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationComponentParams
 import com.tangem.features.swap.v2.impl.amount.SwapAmountBlockComponent
@@ -80,13 +80,13 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
 
     private val feeSelectorBlockComponent = feeSelectorBlockComponentFactory.create(
         context = child("sendWithSwapConfirmFeeBlock"),
-        params = FeeSelectorParams.FeeSelectorBlockParams(
+        params = FeeSelectorBlockParams(
             state = model.uiState.value.feeSelectorUM,
             onLoadFee = model::loadFee,
             feeCryptoCurrencyStatus = model.primaryFeePaidCurrencyStatus,
             cryptoCurrencyStatus = model.primaryCurrencyStatus,
-            suggestedFeeState = FeeSelectorParams.SuggestedFeeState.None,
-            feeDisplaySource = FeeSelectorParams.FeeDisplaySource.Screen,
+            feeStateConfiguration = FeeStateConfiguration.ExcludeLow,
+            feeDisplaySource = FeeDisplaySource.Screen,
         ),
         onResult = model::onFeeResult,
     )
