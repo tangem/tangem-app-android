@@ -4,6 +4,7 @@ import com.tangem.core.ui.extensions.iconResId
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.express.models.ExpressRateType
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrency.ID.Companion.MAIN_NETWORK_TYPE_NAME
 import com.tangem.domain.swap.models.SwapCurrencies
 import com.tangem.features.swap.v2.impl.choosetoken.fromSupported.entity.SwapChooseNetworkUM
 import com.tangem.features.swap.v2.impl.choosetoken.fromSupported.entity.SwapChooseTokenNetworkContentUM
@@ -21,10 +22,16 @@ internal class SwapChooseContentStateTransformer(
     override fun transform(prevState: SwapChooseTokenNetworkUM): SwapChooseTokenNetworkUM {
         val swapNetworks = pairs.fromGroup.available.map {
             val network = it.currencyStatus.currency.network
+            val isMain = it.currencyStatus.currency is CryptoCurrency.Coin
             SwapChooseNetworkUM(
                 title = stringReference(network.name),
-                subtitle = stringReference(network.standardType.name),
+                subtitle = if (isMain) {
+                    stringReference(MAIN_NETWORK_TYPE_NAME)
+                } else {
+                    stringReference(network.standardType.name)
+                },
                 iconResId = network.iconResId,
+                isMainNetwork = isMain,
                 hasFixedRate = it.providers.any { it.rateTypes.any { it == ExpressRateType.Fixed } },
                 onNetworkClick = { onNetworkClick(it.currencyStatus.currency) },
             )

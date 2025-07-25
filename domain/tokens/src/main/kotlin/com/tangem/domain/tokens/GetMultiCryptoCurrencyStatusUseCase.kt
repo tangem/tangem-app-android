@@ -6,7 +6,7 @@ import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.error.mapper.mapToTokenListError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.operations.BaseCurrencyStatusOperations
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.coroutines.flow.Flow
 
 class GetMultiCryptoCurrencyStatusUseCase(
