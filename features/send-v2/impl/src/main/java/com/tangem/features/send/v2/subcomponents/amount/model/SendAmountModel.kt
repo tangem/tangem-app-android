@@ -22,11 +22,11 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.exchange.RampStateManager
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.tokens.GetMinimumTransactionAmountSyncUseCase
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
-import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.v2.api.SendFeatureToggles
 import com.tangem.features.send.v2.api.entity.PredefinedValues
@@ -323,10 +323,7 @@ internal class SendAmountModel @Inject constructor(
             flow2 = params.currentRoute.filterIsInstance<CommonSendRoute.Amount>(),
             transform = { state, route -> state to route },
         ).onEach { (state, route) ->
-            isSendWithSwapAvailable.update {
-                val isMultiCurrency = userWallet?.isMultiCurrency == true
-                isAvailableForSwap && isMultiCurrency && sendFeatureToggles.isSendWithSwapEnabled
-            }
+            setSendWithSwapAvailability()
             params.callback.onNavigationResult(
                 NavigationUM.Content(
                     title = resourceReference(R.string.send_amount_label),
@@ -366,5 +363,16 @@ internal class SendAmountModel @Inject constructor(
                 ),
             )
         }.launchIn(modelScope)
+    }
+
+    private fun setSendWithSwapAvailability() {
+        // Allowed only in multicurrency wallets
+        val isMultiCurrency = userWallet?.isMultiCurrency == true
+
+        // Allowed only on networks without tx extras (e.i. memo and destination tag)
+        val isExtrasSupported = cryptoCurrencyStatus.currency.network.transactionExtrasType.isTxExtrasSupported()
+        isSendWithSwapAvailable.update {
+            isAvailableForSwap && isMultiCurrency && sendFeatureToggles.isSendWithSwapEnabled && !isExtrasSupported
+        }
     }
 }
