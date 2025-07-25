@@ -1,5 +1,6 @@
 package com.tangem.data.swap
 
+import arrow.core.right
 import com.squareup.moshi.Moshi
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.swap.converter.SwapDataConverter
@@ -21,12 +22,15 @@ import com.tangem.domain.express.models.ExpressProvider
 import com.tangem.domain.express.models.ExpressProviderType
 import com.tangem.domain.express.models.ExpressRateType
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.quotes.single.SingleQuoteStatusFetcher
+import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
+import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.swap.SwapRepositoryV2
 import com.tangem.domain.swap.models.*
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.operations.BaseCurrencyStatusOperations
+import com.tangem.domain.tokens.utils.CurrencyStatusProxyCreator
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
@@ -44,8 +48,10 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
     private val expressRepository: ExpressRepository,
     private val coroutineDispatcher: CoroutineDispatcherProvider,
     private val appPreferencesStore: AppPreferencesStore,
-    private val currencyStatusOperations: BaseCurrencyStatusOperations,
     private val dataSignatureVerifier: DataSignatureVerifier,
+    private val singleQuoteStatusSupplier: SingleQuoteStatusSupplier,
+    private val singleQuoteStatusFetcher: SingleQuoteStatusFetcher,
+    private val currencyStatusProxyCreator: CurrencyStatusProxyCreator,
     @NetworkMoshi moshi: Moshi,
 ) : SwapRepositoryV2 {
 
@@ -102,16 +108,23 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
         }.awaitAll().filterNotNull()
     }
 
-    override suspend fun getPairsOnly(
+    override suspend fun getSupportedPairs(
         userWallet: UserWallet,
         initialCurrency: CryptoCurrency,
         cryptoCurrencyList: List<CryptoCurrency>,
+        filterProviderTypes: List<ExpressProviderType>,
     ): List<SwapPairModel> = withContext(coroutineDispatcher.io) {
         val allPairs = getPairsInternal(
             userWallet = userWallet,
             initialCurrency = initialCurrency,
             cryptoCurrencyList = cryptoCurrencyList,
         )
+
+        val providers = expressRepository.getProviders(
+            userWallet = userWallet,
+            filterProviderTypes = filterProviderTypes,
+        )
+        val mappedProviders = providers.associateBy(ExpressProvider::providerId)
 
         allPairs.map { pair ->
             async {
@@ -130,11 +143,20 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
                         }
                 }
 
-                createPairModelOnly(
-                    currencyFrom = statusFromDeferred.await(),
-                    currencyTo = statusToDeferred.await(),
-                    userWalletId = userWallet.walletId,
-                )
+                val currencyStatusFrom = createSendWithSwapCryptoCurrencyStatus(statusFromDeferred.await())
+                val currencyStatusTo = createSendWithSwapCryptoCurrencyStatus(statusToDeferred.await())
+
+                if (currencyStatusFrom != null && currencyStatusTo != null) {
+                    SwapPairModel(
+                        from = currencyStatusFrom,
+                        to = currencyStatusTo,
+                        providers = pair.providers.mapNotNull {
+                            mappedProviders[it.providerId]
+                        },
+                    )
+                } else {
+                    null
+                }
             }
         }.awaitAll().filterNotNull()
     }
@@ -176,15 +198,14 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
     override suspend fun getSwapData(
         userWallet: UserWallet,
         fromCryptoCurrencyStatus: CryptoCurrencyStatus,
-        toCryptoCurrencyStatus: CryptoCurrencyStatus,
+        toCryptoCurrency: CryptoCurrency,
         fromAmount: String,
-        toAddress: String?,
+        toAddress: String,
         expressProvider: ExpressProvider,
         rateType: ExpressRateType,
     ): SwapDataModel = withContext(coroutineDispatcher.io) {
         val requestId = UUID.randomUUID().toString()
         val fromCryptoCurrency = fromCryptoCurrencyStatus.currency
-        val toCryptoCurrency = toCryptoCurrencyStatus.currency
 
         val refundData = when (expressProvider.type) {
             ExpressProviderType.CEX,
@@ -203,7 +224,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
             fromNetwork = fromCryptoCurrency.network.backendId,
             toNetwork = toCryptoCurrency.network.backendId,
             fromAddress = fromCryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value.orEmpty(),
-            toAddress = toAddress ?: toCryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value.orEmpty(),
+            toAddress = toAddress,
             fromDecimals = fromCryptoCurrency.decimals,
             toDecimals = toCryptoCurrency.decimals,
             fromAmount = fromAmount,
@@ -329,33 +350,38 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
         },
     )
 
-    private suspend fun createPairModelOnly(
-        currencyFrom: CryptoCurrency?,
-        currencyTo: CryptoCurrency?,
-        userWalletId: UserWalletId,
-    ): SwapPairModel? {
-        return if (currencyFrom != null && currencyTo != null) {
-            val statusFrom = currencyStatusOperations.getCurrencyStatusSync(
-                userWalletId = userWalletId,
-                cryptoCurrencyId = currencyFrom.id,
-            ).getOrNull()
-            val statusTo = currencyStatusOperations.getCurrencyStatusSync(
-                userWalletId = userWalletId,
-                cryptoCurrencyId = currencyTo.id,
-            ).getOrNull()
+    /**
+     * Send with swap specific currency status creation
+     * We support sending to any available to swap and supported network
+     * It is possible that currency not added to wallet so we ignore network status
+     */
+    private suspend fun createSendWithSwapCryptoCurrencyStatus(cryptoCurrency: CryptoCurrency?): CryptoCurrencyStatus? {
+        val rawCurrencyId = cryptoCurrency?.id?.rawCurrencyId ?: return null
 
-            if (statusFrom != null && statusTo != null) {
-                SwapPairModel(
-                    from = statusFrom,
-                    to = statusTo,
-                    providers = emptyList(),
-                )
-            } else {
-                null
-            }
-        } else {
-            null
+        val quote = singleQuoteStatusSupplier.getSyncOrNull(
+            params = SingleQuoteStatusProducer.Params(rawCurrencyId = rawCurrencyId),
+        )?.right()
+
+        if (quote == null) {
+            singleQuoteStatusFetcher.invoke(
+                params = SingleQuoteStatusFetcher.Params(
+                    rawCurrencyId = rawCurrencyId,
+                    appCurrencyId = null,
+                ),
+            )
         }
+
+        return currencyStatusProxyCreator.createCurrencyStatus(
+            currency = cryptoCurrency,
+            maybeQuoteStatus = quote ?: singleQuoteStatusSupplier.getSyncOrNull(
+                params = SingleQuoteStatusProducer.Params(rawCurrencyId = rawCurrencyId),
+            ).right(),
+            maybeNetworkStatus = NetworkStatus(
+                network = cryptoCurrency.network,
+                value = NetworkStatus.MissedDerivation, // Caution!!! Do not change this status
+            ).right(),
+            maybeYieldBalance = null,
+        ).getOrNull()
     }
 
     private fun parseTxDetails(txDetailsJson: String): TxDetails? {
