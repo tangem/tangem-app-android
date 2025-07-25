@@ -42,9 +42,8 @@ internal object YieldBalanceSupplierModule {
                 listOf(
                     "single_yield_balance",
                     params.userWalletId.stringValue,
-                    params.currencyId.value,
-                    params.network.id.rawId,
-                    params.network.id.derivationPath,
+                    params.stakingId.integrationId,
+                    params.stakingId.address,
                 )
                     .joinToString(separator = "_")
             },
