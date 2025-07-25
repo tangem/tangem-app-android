@@ -4,11 +4,12 @@ import arrow.core.Either
 import com.tangem.domain.express.models.ExpressError
 import com.tangem.domain.express.models.ExpressProvider
 import com.tangem.domain.express.models.ExpressRateType
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.SwapErrorResolver
 import com.tangem.domain.swap.SwapRepositoryV2
 import com.tangem.domain.swap.models.SwapDataModel
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.models.wallet.UserWallet
 
 @Suppress("LongParameterList")
 class GetSwapDataUseCase(
@@ -20,8 +21,8 @@ class GetSwapDataUseCase(
         userWallet: UserWallet,
         fromCryptoCurrencyStatus: CryptoCurrencyStatus,
         fromAmount: String,
-        toCryptoCurrencyStatus: CryptoCurrencyStatus,
-        toAddress: String?,
+        toCryptoCurrency: CryptoCurrency,
+        toAddress: String,
         expressProvider: ExpressProvider,
         rateType: ExpressRateType,
     ): Either<ExpressError, SwapDataModel> = Either.catch {
@@ -29,7 +30,7 @@ class GetSwapDataUseCase(
             userWallet = userWallet,
             fromCryptoCurrencyStatus = fromCryptoCurrencyStatus,
             fromAmount = fromAmount,
-            toCryptoCurrencyStatus = toCryptoCurrencyStatus,
+            toCryptoCurrency = toCryptoCurrency,
             toAddress = toAddress,
             expressProvider = expressProvider,
             rateType = rateType,
