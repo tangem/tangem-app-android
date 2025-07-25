@@ -12,7 +12,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
 internal class FeeItemConverter(
-    private val suggestedFeeState: FeeSelectorParams.SuggestedFeeState,
+    private val feeStateConfiguration: FeeSelectorParams.FeeStateConfiguration,
     private val normalFee: Fee,
     private val feeSelectorIntents: FeeSelectorIntents,
     private val appCurrency: AppCurrency,
@@ -29,30 +29,56 @@ internal class FeeItemConverter(
     override fun convert(value: Input): ImmutableList<FeeItem> {
         val fees = mutableListOf<FeeItem>()
 
-        when (suggestedFeeState) {
-            FeeSelectorParams.SuggestedFeeState.None -> Unit
-            is FeeSelectorParams.SuggestedFeeState.Suggestion -> fees.add(
-                FeeItem.Suggested(
-                    title = suggestedFeeState.title,
-                    fee = suggestedFeeState.fee,
-                ),
-            )
-        }
-        when (value.transactionFee) {
-            is TransactionFee.Choosable -> {
-                fees.add(FeeItem.Slow(fee = value.transactionFee.minimum))
-                fees.add(FeeItem.Market(fee = value.transactionFee.normal))
-                fees.add(FeeItem.Fast(fee = value.transactionFee.priority))
+        when (feeStateConfiguration) {
+            FeeSelectorParams.FeeStateConfiguration.None -> fees.addFeeItemsFull(value = value)
+            is FeeSelectorParams.FeeStateConfiguration.Suggestion -> {
+                fees.addFeeItemSuggested(feeStateConfiguration)
+                fees.addFeeItemsFull(value = value)
             }
-            is TransactionFee.Single -> {
-                fees.add(FeeItem.Market(fee = value.transactionFee.normal))
+            FeeSelectorParams.FeeStateConfiguration.ExcludeLow -> {
+                fees.addFeeItemsLimited(value = value)
             }
         }
-
-        val customFee = value.customFee ?: constructCustomFee()
-        customFee?.let(fees::add)
 
         return fees.toImmutableList()
+    }
+
+    private fun MutableList<FeeItem>.addFeeItemsFull(value: Input) {
+        when (value.transactionFee) {
+            is TransactionFee.Choosable -> {
+                add(FeeItem.Slow(fee = value.transactionFee.minimum))
+                add(FeeItem.Market(fee = value.transactionFee.normal))
+                add(FeeItem.Fast(fee = value.transactionFee.priority))
+            }
+            is TransactionFee.Single -> {
+                add(FeeItem.Market(fee = value.transactionFee.normal))
+            }
+        }
+        val customFee = value.customFee ?: constructCustomFee()
+        customFee?.let(::add)
+    }
+
+    private fun MutableList<FeeItem>.addFeeItemsLimited(value: Input) {
+        when (value.transactionFee) {
+            is TransactionFee.Choosable -> {
+                add(FeeItem.Market(fee = value.transactionFee.normal))
+                add(FeeItem.Fast(fee = value.transactionFee.priority))
+            }
+            is TransactionFee.Single -> {
+                add(FeeItem.Market(fee = value.transactionFee.normal))
+            }
+        }
+    }
+
+    private fun MutableList<FeeItem>.addFeeItemSuggested(
+        feeStateConfiguration: FeeSelectorParams.FeeStateConfiguration.Suggestion,
+    ) {
+        add(
+            FeeItem.Suggested(
+                title = feeStateConfiguration.title,
+                fee = feeStateConfiguration.fee,
+            ),
+        )
     }
 
     private fun constructCustomFee(): FeeItem.Custom? {
