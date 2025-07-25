@@ -2,7 +2,7 @@ package com.tangem.features.send.v2.subcomponents.destination.ui.state
 
 import androidx.compose.runtime.Immutable
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 
 /**
  * Available wallet to send

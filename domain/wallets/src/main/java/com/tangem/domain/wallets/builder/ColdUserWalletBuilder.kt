@@ -1,9 +1,9 @@
 package com.tangem.domain.wallets.builder
 
-import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
