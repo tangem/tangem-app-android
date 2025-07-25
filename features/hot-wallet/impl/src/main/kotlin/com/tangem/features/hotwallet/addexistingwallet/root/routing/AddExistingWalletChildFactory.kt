@@ -6,6 +6,8 @@ import com.tangem.features.hotwallet.setaccesscode.SetAccessCodeComponent
 import com.tangem.features.hotwallet.addexistingwallet.root.AddExistingWalletModel
 import com.tangem.features.hotwallet.addexistingwallet.start.AddExistingWalletStartComponent
 import com.tangem.features.hotwallet.addexistingwallet.im.port.AddExistingWalletImportComponent
+import com.tangem.features.hotwallet.manualbackup.completed.ManualBackupCompletedComponent
+import com.tangem.features.hotwallet.setupfinished.MobileWalletSetupFinishedComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsComponent
 import javax.inject.Inject
 
@@ -31,16 +33,28 @@ internal class AddExistingWalletChildFactory @Inject constructor(
                     callbacks = model.addExistingWalletImportModelCallbacks,
                 ),
             )
-            is AddExistingWalletRoute.PushNotifications -> pushNotificationsComponent.create(
+            is AddExistingWalletRoute.BackupCompleted -> ManualBackupCompletedComponent(
                 context = childContext,
-                params = PushNotificationsComponent.Params.Callbacks(
-                    callbacks = model.pushNotificationsComponentModelCallbacks,
+                params = ManualBackupCompletedComponent.Params(
+                    callbacks = model.manualBackupCompletedComponentModelCallbacks,
                 ),
             )
             is AddExistingWalletRoute.AccessCode -> SetAccessCodeComponent(
                 context = childContext,
                 params = SetAccessCodeComponent.Params(
                     callbacks = model.accessCodeModelCallbacks,
+                ),
+            )
+            is AddExistingWalletRoute.PushNotifications -> pushNotificationsComponent.create(
+                context = childContext,
+                params = PushNotificationsComponent.Params.Callbacks(
+                    callbacks = model.pushNotificationsComponentModelCallbacks,
+                ),
+            )
+            AddExistingWalletRoute.SetupFinished -> MobileWalletSetupFinishedComponent(
+                context = childContext,
+                params = MobileWalletSetupFinishedComponent.Params(
+                    callbacks = model.mobileWalletSetupFinishedComponentModelCallbacks,
                 ),
             )
         }
