@@ -431,6 +431,7 @@ internal class ChildFactory @Inject constructor(
                     params = ChooseManagedTokensComponent.Params(
                         userWalletId = route.userWalletId,
                         initialCurrency = route.initialCurrency,
+                        selectedCurrency = route.selectedCurrency,
                         source = ChooseManagedTokensComponent.Source.valueOf(route.source.name),
                     ),
                     componentFactory = chooseManagedTokensComponentFactory,
