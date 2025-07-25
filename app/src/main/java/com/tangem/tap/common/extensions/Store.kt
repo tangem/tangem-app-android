@@ -4,8 +4,8 @@ import com.tangem.common.routing.AppRouter
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.common.extensions.withMainContext
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.redux.StateDialog
-import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TapError

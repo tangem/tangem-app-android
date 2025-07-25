@@ -1,7 +1,7 @@
 package com.tangem.domain.wallets.usecase
 
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 import kotlinx.coroutines.flow.Flow
 
 /**
