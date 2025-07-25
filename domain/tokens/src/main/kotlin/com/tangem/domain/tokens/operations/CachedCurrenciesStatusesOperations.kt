@@ -216,10 +216,14 @@ class CachedCurrenciesStatusesOperations(
                     )
                 },
                 async {
+                    val stakingIds = currencies.mapNotNullTo(hashSetOf()) {
+                        stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = it).getOrNull()
+                    }
+
                     multiYieldBalanceFetcher(
                         params = MultiYieldBalanceFetcher.Params(
                             userWalletId = userWalletId,
-                            currencyIdWithNetworkMap = currencies.associateTo(hashMapOf()) { it.id to it.network },
+                            stakingIds = stakingIds,
                         ),
                     )
                 },
