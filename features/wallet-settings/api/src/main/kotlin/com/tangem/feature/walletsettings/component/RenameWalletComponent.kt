@@ -2,7 +2,7 @@ package com.tangem.feature.walletsettings.component
 
 import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.ui.decompose.ComposableDialogComponent
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 
 interface RenameWalletComponent : ComposableDialogComponent {
 

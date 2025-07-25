@@ -11,22 +11,18 @@ import com.tangem.common.routing.utils.popTo
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
-import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.legacy.UserWalletsListManager.Lockable.UnlockType
 import com.tangem.domain.wallets.legacy.unlockIfLockable
-import com.tangem.domain.wallets.models.requireColdWallet
-import com.tangem.tap.backupService
+import com.tangem.tap.*
 import com.tangem.tap.common.analytics.converters.ParamCardCurrencyConverter
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.intentHandler.handlers.BackgroundScanIntentHandler
 import com.tangem.tap.features.intentHandler.handlers.WalletConnectLinkIntentHandler
-import com.tangem.tap.mainScope
 import com.tangem.tap.proxy.redux.DaggerGraphState
-import com.tangem.tap.scope
-import com.tangem.tap.store
-import com.tangem.tap.tangemSdkManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
@@ -95,7 +91,7 @@ internal class WelcomeMiddleware {
             }
             .doOnSuccess { selectedUserWallet ->
                 sendSignedInAnalyticsEvent(
-                    scanResponse = selectedUserWallet.requireColdWallet().scanResponse, // TODO [REDACTED_TASK_KEY]
+                    userWallet = selectedUserWallet,
                     signInType = Basic.SignedIn.SignInType.Biometric,
                 )
 
@@ -129,7 +125,7 @@ internal class WelcomeMiddleware {
                     store.dispatchWithMain(WelcomeAction.ProceedWithCard.Error(error))
                 }
                 .doOnSuccess {
-                    sendSignedInAnalyticsEvent(scanResponse = scanResponse, signInType = Basic.SignedIn.SignInType.Card)
+                    sendSignedInAnalyticsEvent(userWallet, signInType = Basic.SignedIn.SignInType.Card)
 
                     store.dispatchNavigationAction { replaceAll(AppRoute.Wallet) }
                     store.dispatchWithMain(WelcomeAction.ProceedWithCard.Success)
@@ -142,7 +138,14 @@ internal class WelcomeMiddleware {
         }
     }
 
-    private fun sendSignedInAnalyticsEvent(scanResponse: ScanResponse, signInType: Basic.SignedIn.SignInType) {
+    private fun sendSignedInAnalyticsEvent(userWallet: UserWallet, signInType: Basic.SignedIn.SignInType) {
+        // TODO [REDACTED_TASK_KEY]
+
+        if (userWallet !is UserWallet.Cold) {
+            return
+        }
+
+        val scanResponse = userWallet.scanResponse
         val currency = ParamCardCurrencyConverter().convert(
             value = scanResponse.cardTypesResolver,
         )
