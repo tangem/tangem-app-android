@@ -82,7 +82,9 @@ internal class FeeSelectorModel @Inject constructor(
     }
 
     private fun loadFee() {
-        uiState.update(FeeSelectorLoadingTransformer)
+        if (uiState.value !is FeeSelectorUM.Content) {
+            uiState.update(FeeSelectorLoadingTransformer)
+        }
         modelScope.launch {
             params.onLoadFee()
                 .fold(
