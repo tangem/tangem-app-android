@@ -1,6 +1,7 @@
 package com.tangem.features.swap.v2.api.choosetoken
 
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.swap.models.SwapCurrencies
 import kotlinx.coroutines.flow.SharedFlow
 
 /**
@@ -8,12 +9,12 @@ import kotlinx.coroutines.flow.SharedFlow
  */
 interface SwapChooseTokenNetworkTrigger {
 
-    suspend fun trigger(cryptoCurrency: CryptoCurrency)
+    suspend fun trigger(swapCurrencies: SwapCurrencies, cryptoCurrency: CryptoCurrency)
 }
 
 /**
  * Listens to swap token selection
  */
 interface SwapChooseTokenNetworkListener {
-    val swapChooseTokenNetworkResultFlow: SharedFlow<CryptoCurrency>
+    val swapChooseTokenNetworkResultFlow: SharedFlow<Pair<SwapCurrencies, CryptoCurrency>>
 }
