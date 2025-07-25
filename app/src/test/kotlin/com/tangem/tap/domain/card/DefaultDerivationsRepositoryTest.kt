@@ -9,10 +9,10 @@ import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.data.common.network.NetworkFactory
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.card.ScanCardException
-import com.tangem.domain.common.configs.GenericCardConfig
-import com.tangem.domain.common.configs.MultiWalletCardConfig
-import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.card.configs.GenericCardConfig
+import com.tangem.domain.card.configs.MultiWalletCardConfig
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.operations.derivation.DerivationTaskResponse
 import com.tangem.tap.domain.sdk.impl.DefaultTangemSdkManager
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -107,7 +107,7 @@ internal class DefaultDerivationsRepositoryTest {
         runCatching {
             repository.derivePublicKeys(
                 userWalletId = defaultUserWalletId,
-                currencies = MockCryptoCurrencyFactory(userWallet.scanResponse).ethereum.let(::listOf),
+                currencies = MockCryptoCurrencyFactory(userWallet).ethereum.let(::listOf),
             )
         }
             .onSuccess { Truth.assertThat(it) }
@@ -129,7 +129,7 @@ internal class DefaultDerivationsRepositoryTest {
         runCatching {
             repository.derivePublicKeys(
                 userWalletId = defaultUserWalletId,
-                currencies = MockCryptoCurrencyFactory(userWallet.scanResponse).ethereum.let(::listOf),
+                currencies = MockCryptoCurrencyFactory(userWallet).ethereum.let(::listOf),
             )
         }
             .onSuccess { error("Should throws exception") }
@@ -155,7 +155,7 @@ internal class DefaultDerivationsRepositoryTest {
         runCatching {
             repository.derivePublicKeys(
                 userWalletId = defaultUserWalletId,
-                currencies = MockCryptoCurrencyFactory(userWallet.scanResponse).ethereum.let(::listOf),
+                currencies = MockCryptoCurrencyFactory(userWallet).ethereum.let(::listOf),
             )
         }
             .onSuccess { Truth.assertThat(it) }
