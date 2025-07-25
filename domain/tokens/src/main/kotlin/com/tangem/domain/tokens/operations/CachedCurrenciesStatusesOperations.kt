@@ -24,8 +24,8 @@ import com.tangem.domain.quotes.QuotesRepository
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
+import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.domain.staking.model.stakekit.YieldBalance
-import com.tangem.domain.staking.model.stakekit.YieldBalance.Unsupported.integrationId
 import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.staking.single.SingleYieldBalanceProducer
@@ -46,7 +46,7 @@ import kotlinx.coroutines.flow.*
 class CachedCurrenciesStatusesOperations(
     private val currenciesRepository: CurrenciesRepository,
     quotesRepository: QuotesRepository,
-    private val stakingRepository: StakingRepository,
+    stakingRepository: StakingRepository,
     private val singleNetworkStatusSupplier: SingleNetworkStatusSupplier,
     multiNetworkStatusSupplier: MultiNetworkStatusSupplier,
     private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
@@ -270,9 +270,7 @@ class CachedCurrenciesStatusesOperations(
     ): YieldBalance? {
         if (yieldBalances.isNullOrEmpty()) return null
 
-        val supportedIntegration = stakingRepository.getSupportedIntegrationId(currency.id)
-
-        if (supportedIntegration.isNullOrBlank()) return null
+        val supportedIntegration = StakingIntegrationID.create(currencyId = currency.id)?.value ?: return null
 
         val address = extractAddress(networkStatus)
 
