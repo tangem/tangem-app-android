@@ -2,7 +2,11 @@ package com.tangem.common.test.domain.card
 
 import com.tangem.common.card.CardWallet
 import com.tangem.common.card.FirmwareVersion
-import com.tangem.domain.common.configs.*
+import com.tangem.domain.card.configs.CardConfig
+import com.tangem.domain.card.configs.EdSingleCurrencyCardConfig
+import com.tangem.domain.card.configs.GenericCardConfig
+import com.tangem.domain.card.configs.MultiWalletCardConfig
+import com.tangem.domain.card.configs.Wallet2CardConfig
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.KeyWalletPublicKey
 import com.tangem.domain.models.scan.ProductType

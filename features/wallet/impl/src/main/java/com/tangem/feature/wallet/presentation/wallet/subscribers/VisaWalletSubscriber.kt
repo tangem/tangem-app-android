@@ -10,7 +10,7 @@ import com.tangem.domain.visa.GetVisaCurrencyUseCase
 import com.tangem.domain.visa.GetVisaTxHistoryUseCase
 import com.tangem.domain.visa.model.VisaCurrency
 import com.tangem.domain.visa.model.VisaTxHistoryItem
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetVisaInfoTransformer
@@ -26,7 +26,7 @@ import kotlinx.coroutines.flow.map
 import timber.log.Timber
 
 internal class VisaWalletSubscriber(
-    private val userWallet: UserWallet,
+    private val userWallet: UserWallet.Cold,
     private val stateController: WalletStateController,
     private val isRefresh: Boolean,
     private val getVisaCurrencyUseCase: GetVisaCurrencyUseCase,
