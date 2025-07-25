@@ -4,15 +4,13 @@ import arrow.core.getOrElse
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.managetokens.CreateCryptoCurrencyUseCase
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.swap.models.SwapCurrencies
 import com.tangem.domain.swap.usecase.GetSwapSupportedPairsUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.swap.v2.api.choosetoken.SwapChooseTokenNetworkComponent
-import com.tangem.features.swap.v2.impl.R
 import com.tangem.features.swap.v2.impl.choosetoken.fromSupported.entity.SwapChooseTokenNetworkContentUM
 import com.tangem.features.swap.v2.impl.choosetoken.fromSupported.entity.SwapChooseTokenNetworkUM
 import com.tangem.features.swap.v2.impl.choosetoken.fromSupported.model.SwapChooseTokenFactory.getErrorMessage
@@ -35,7 +33,7 @@ internal class SwapChooseTokenNetworkModel @Inject constructor(
     private val getSwapSupportedPairsUseCase: GetSwapSupportedPairsUseCase,
     private val createCryptoCurrencyUseCase: CreateCryptoCurrencyUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
-    private val uiMessageSender: UiMessageSender,
+    private val swapChooseTokenAlertFactory: SwapChooseTokenAlertFactory,
 ) : Model() {
 
     private val params: SwapChooseTokenNetworkComponent.Params = paramsContainer.require()
@@ -63,7 +61,7 @@ internal class SwapChooseTokenNetworkModel @Inject constructor(
     private fun initContent() {
         val userWallet = getUserWalletUseCase(params.userWalletId).getOrElse {
             Timber.e("Failed to get user wallet: $it")
-            getGenericErrorState()
+            swapChooseTokenAlertFactory.getGenericErrorState(params.onDismiss)
             return
         }
 
@@ -73,7 +71,7 @@ internal class SwapChooseTokenNetworkModel @Inject constructor(
                 userWalletId = params.userWalletId,
             ).getOrElse {
                 Timber.e("Failed to get crypto currency")
-                getGenericErrorState()
+                swapChooseTokenAlertFactory.getGenericErrorState(params.onDismiss)
                 return@launch
             }
             val pairs = getSwapSupportedPairsUseCase.invoke(
@@ -95,7 +93,7 @@ internal class SwapChooseTokenNetworkModel @Inject constructor(
             uiState.update(
                 SwapChooseContentStateTransformer(
                     pairs = pairs,
-                    onNetworkClick = params.onResult,
+                    onNetworkClick = ::onSwapTokenClick,
                     tokenName = params.token.name,
                     onDismiss = params.onDismiss,
                 ),
@@ -103,15 +101,18 @@ internal class SwapChooseTokenNetworkModel @Inject constructor(
         }
     }
 
-    private fun getGenericErrorState() {
-        uiMessageSender.send(
-            DialogMessage(
-                title = resourceReference(id = R.string.common_error),
-                message = resourceReference(id = R.string.common_unknown_error),
-                onDismissRequest = params.onDismiss,
-                firstActionBuilder = { okAction() },
-            ),
-        )
+    private fun onSwapTokenClick(swapCurrencies: SwapCurrencies, cryptoCurrency: CryptoCurrency) {
+        val prevSelectedCurrency = params.selectedCurrency?.network
+        if (prevSelectedCurrency == null || cryptoCurrency.network == prevSelectedCurrency) {
+            params.onResult(swapCurrencies, cryptoCurrency)
+        } else {
+            swapChooseTokenAlertFactory.showChangeTokenAlert(
+                onConfirm = {
+                    params.onResult(swapCurrencies, cryptoCurrency)
+                },
+                onDismiss = params.onDismiss,
+            )
+        }
     }
 
     private companion object {
