@@ -11,11 +11,16 @@ android {
     namespace = "com.tangem.features.send.v2.impl"
 }
 
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+}
+
 dependencies {
     /** Api */
     implementation(projects.features.sendV2.api)
     implementation(projects.features.txhistory.api)
     implementation(projects.features.nft.api)
+    implementation(projects.features.swapV2.api)
 
     /** Libs */
     implementation(projects.libs.crypto)
@@ -39,6 +44,7 @@ dependencies {
     /** Domain */
     implementation(projects.domain.models)
     implementation(projects.domain.legacy)
+    implementation(projects.domain.card)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.tokens)
     implementation(projects.domain.wallets.models)
@@ -60,6 +66,7 @@ dependencies {
     implementation(projects.domain.nft.models)
     implementation(projects.domain.nft)
     implementation(projects.domain.notifications)
+    implementation(projects.domain.swap.models)
 
 
     /** Compose libraries */
@@ -79,4 +86,13 @@ dependencies {
     /** DI */
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
+
+    // region Tests
+    testImplementation(deps.test.coroutine)
+    testImplementation(deps.test.junit5)
+    testRuntimeOnly(deps.test.junit5.engine)
+    testImplementation(deps.test.mockk)
+    testImplementation(deps.test.truth)
+    testImplementation(projects.common.test)
+    // endregion
 }

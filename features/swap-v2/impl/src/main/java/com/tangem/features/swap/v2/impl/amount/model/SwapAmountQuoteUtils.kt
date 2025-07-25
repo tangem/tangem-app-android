@@ -12,8 +12,12 @@ import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
 import com.tangem.utils.extensions.isZero
 import java.math.BigDecimal
 import java.math.RoundingMode
+import kotlin.math.min
 
 internal object SwapAmountQuoteUtils {
+
+    private const val MAX_DECIMALS = 8
+    private const val MIN_DECIMALS = 2
 
     fun calculatePriceImpact(
         fromTokenAmount: BigDecimal,
@@ -41,9 +45,14 @@ internal object SwapAmountQuoteUtils {
         }
     }
 
+    fun calculateRate(fromAmount: BigDecimal, toAmount: BigDecimal, toAmountDecimals: Int): BigDecimal {
+        val rateDecimals = if (toAmountDecimals == 0) MIN_DECIMALS else toAmountDecimals
+        return toAmount.divide(fromAmount, min(rateDecimals, MAX_DECIMALS), RoundingMode.HALF_UP)
+    }
+
     fun SwapAmountUM.updateAmount(
-        onPrimaryAmount: SwapAmountFieldUM.Content.() -> SwapAmountFieldUM,
-        onSecondaryAmount: SwapAmountFieldUM.Content.() -> SwapAmountFieldUM,
+        onPrimaryAmount: SwapAmountFieldUM.Content.(CryptoCurrencyStatus) -> SwapAmountFieldUM,
+        onSecondaryAmount: SwapAmountFieldUM.Content.(CryptoCurrencyStatus) -> SwapAmountFieldUM,
     ): SwapAmountUM {
         if (this !is SwapAmountUM.Content) return this
 
@@ -51,10 +60,11 @@ internal object SwapAmountQuoteUtils {
             selectedAmountType == SwapAmountType.From && swapDirection == SwapDirection.Direct
         ) {
             val amountFieldUM = primaryAmount as? SwapAmountFieldUM.Content ?: return this
-            copy(primaryAmount = amountFieldUM.onPrimaryAmount())
+            copy(primaryAmount = amountFieldUM.onPrimaryAmount(primaryCryptoCurrencyStatus))
         } else {
+            if (secondaryCryptoCurrencyStatus == null) return this
             val amountFieldUM = secondaryAmount as? SwapAmountFieldUM.Content ?: return this
-            copy(secondaryAmount = amountFieldUM.onSecondaryAmount())
+            copy(secondaryAmount = amountFieldUM.onSecondaryAmount(secondaryCryptoCurrencyStatus))
         }
     }
 }
