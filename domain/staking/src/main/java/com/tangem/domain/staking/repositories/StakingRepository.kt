@@ -6,7 +6,6 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.staking.model.StakingApproval
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
 import com.tangem.domain.staking.model.stakekit.NetworkType
@@ -23,8 +22,6 @@ import java.math.BigDecimal
 
 @Suppress("TooManyFunctions")
 interface StakingRepository {
-
-    fun getSupportedIntegrationId(cryptoCurrencyId: CryptoCurrency.ID): String?
 
     suspend fun fetchEnabledYields()
 
@@ -65,9 +62,6 @@ interface StakingRepository {
         amount: Amount,
         transactionId: String,
     ): Pair<StakingTransaction, TransactionData.Compiled>
-
-    /** Returns staking approval */
-    fun getStakingApproval(cryptoCurrency: CryptoCurrency): StakingApproval
 
     suspend fun isAnyTokenStaked(userWalletId: UserWalletId): Boolean
 
