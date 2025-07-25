@@ -40,6 +40,7 @@ internal class SendEntryPointModel @Inject constructor(
             AppRoute.ChooseManagedTokens(
                 userWalletId = params.userWalletId,
                 initialCurrency = params.cryptoCurrency,
+                selectedCurrency = null,
                 source = AppRoute.ChooseManagedTokens.Source.SendViaSwap,
             ),
         )
