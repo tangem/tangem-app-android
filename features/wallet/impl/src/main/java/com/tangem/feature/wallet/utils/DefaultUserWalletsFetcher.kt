@@ -13,21 +13,20 @@ import com.tangem.domain.balancehiding.BalanceHidingSettings
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.core.lce.lce
-import com.tangem.domain.core.utils.getOrElse
 import com.tangem.domain.core.utils.toLce
 import com.tangem.domain.models.ArtworkModel
+import com.tangem.domain.models.TotalFiatBalance
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.tokens.GetWalletTotalBalanceUseCase
 import com.tangem.domain.tokens.error.TokenListError
-import com.tangem.domain.tokens.model.TotalFiatBalance
-import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.domain.wallets.models.isMultiCurrency
-import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.domain.wallets.usecase.GetCardImageUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.feature.wallet.impl.R
 import com.tangem.features.wallet.utils.UserWalletsFetcher
 import com.tangem.operations.attestation.ArtworkSize
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -46,6 +45,7 @@ internal class DefaultUserWalletsFetcher @AssistedInject constructor(
     @Assisted private val messageSender: UiMessageSender,
     @Assisted private val onlyMultiCurrency: Boolean,
     private val getCardImageUseCase: GetCardImageUseCase,
+    dispatchers: CoroutineDispatcherProvider,
 ) : UserWalletsFetcher {
 
     private var loadedArtworks: HashMap<UserWalletId, ArtworkModel> = hashMapOf()
@@ -54,7 +54,7 @@ internal class DefaultUserWalletsFetcher @AssistedInject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override val userWallets: Flow<ImmutableList<UserWalletItemUM>> = walletsFlow.transformLatest { wallets ->
-        val uiModels = UserWalletItemUMConverter(onClick = { onWalletClick(it) }).convertList(wallets)
+        val uiModels = UserWalletItemUMConverter(onClick = onWalletClick).convertList(wallets)
             .toImmutableList()
 
         emit(uiModels)
@@ -65,31 +65,31 @@ internal class DefaultUserWalletsFetcher @AssistedInject constructor(
             flow3 = getWalletTotalBalanceUseCase(wallets.map(UserWallet::walletId)).distinctUntilChanged(),
             flow4 = loadArtworks(wallets),
         ) { maybeAppCurrency, balanceHidingSettings, maybeBalances, artworks ->
-            val models = createUiModels(
+            createUiModels(
                 wallets = wallets,
                 maybeAppCurrency = maybeAppCurrency,
                 maybeBalances = maybeBalances,
                 balanceHidingSettings = balanceHidingSettings,
                 artworks = artworks,
-            ).getOrElse(
-                ifLoading = { return@combine },
-                ifError = {
-                    val message = resourceReference(R.string.common_unknown_error)
-                    messageSender.send(SnackbarMessage(message))
-
-                    return@combine
-                },
             )
-
-            emit(models)
-        }.collect()
+        }
+            .collectLatest { lceItems: Lce<Error, ImmutableList<UserWalletItemUM>> ->
+                when (lceItems) {
+                    is Lce.Content<ImmutableList<UserWalletItemUM>> -> emit(lceItems.content)
+                    is Lce.Error<Error> -> {
+                        val message = resourceReference(R.string.common_unknown_error)
+                        messageSender.send(SnackbarMessage(message))
+                    }
+                    is Lce.Loading<*> -> Unit
+                }
+            }
     }
+        .flowOn(dispatchers.default)
 
     private fun loadArtworks(wallets: List<UserWallet>): Flow<HashMap<UserWalletId, ArtworkModel>> {
         return flow {
             emit(hashMapOf()) // emits right away so the transform doesn't wait for the images' loading to finish
-            wallets.forEach { wallet ->
-                wallet.requireColdWallet()
+            wallets.filterIsInstance<UserWallet.Cold>().forEach { wallet ->
                 val artwork = getCardImageUseCase(
                     cardId = wallet.cardId,
                     manufacturerName = wallet.scanResponse.card.manufacturer.name,
