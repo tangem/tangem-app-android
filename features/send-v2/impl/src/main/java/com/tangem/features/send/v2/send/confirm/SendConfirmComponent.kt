@@ -102,7 +102,7 @@ internal class SendConfirmComponent(
             onLoadFee = params.onLoadFee,
             feeCryptoCurrencyStatus = params.feeCryptoCurrencyStatus,
             cryptoCurrencyStatus = params.cryptoCurrencyStatus,
-            suggestedFeeState = model.suggestedFeeState,
+            feeStateConfiguration = model.feeStateConfiguration,
             feeDisplaySource = FeeSelectorParams.FeeDisplaySource.Screen,
         ),
         onResult = model::onFeeResult,
