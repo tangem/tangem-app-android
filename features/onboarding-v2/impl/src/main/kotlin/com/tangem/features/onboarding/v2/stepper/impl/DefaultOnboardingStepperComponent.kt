@@ -9,7 +9,7 @@ import com.arkivanov.essenty.instancekeeper.getOrCreateSimple
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.decompose.context.AppComponentContext
-import com.tangem.domain.common.TapWorkarounds.isVisa
+import com.tangem.domain.card.common.TapWorkarounds.isVisa
 import com.tangem.domain.feedback.GetCardInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
