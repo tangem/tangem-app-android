@@ -210,4 +210,10 @@ internal object StakingDomainModule {
     fun provideGetActionRequirementAmountUseCase(): GetActionRequirementAmountUseCase {
         return GetActionRequirementAmountUseCase()
     }
+
+    @Provides
+    @Singleton
+    fun provideStakingIdFactory(walletManagersFacade: WalletManagersFacade): StakingIdFactory {
+        return StakingIdFactory(walletManagersFacade = walletManagersFacade)
+    }
 }
