@@ -2,7 +2,7 @@ package com.tangem.features.managetokens.choosetoken.entity
 
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.serialization.Serializable
 
 @Serializable
