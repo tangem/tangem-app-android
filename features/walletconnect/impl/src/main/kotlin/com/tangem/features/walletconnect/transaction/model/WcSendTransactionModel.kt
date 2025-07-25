@@ -18,6 +18,7 @@ import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.tokens.GetNetworkCoinStatusUseCase
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -28,10 +29,9 @@ import com.tangem.domain.walletconnect.WcRequestUseCaseFactory
 import com.tangem.domain.walletconnect.model.WcRequestError
 import com.tangem.domain.walletconnect.model.WcRequestError.Companion.message
 import com.tangem.domain.walletconnect.usecase.method.*
-import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.features.send.v2.api.callbacks.FeeSelectorModelCallback
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
-import com.tangem.features.send.v2.api.params.FeeSelectorParams
+import com.tangem.features.send.v2.api.params.FeeSelectorParams.FeeStateConfiguration
 import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
 import com.tangem.features.send.v2.api.subcomponents.feeSelector.entity.FeeSelectorData
 import com.tangem.features.walletconnect.connections.routing.WcInnerRoute
@@ -77,7 +77,7 @@ internal class WcSendTransactionModel @Inject constructor(
     val stackNavigation = StackNavigation<WcTransactionRoutes>()
 
     internal var cryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
-    internal var suggestedFeeState: FeeSelectorParams.SuggestedFeeState = FeeSelectorParams.SuggestedFeeState.None
+    internal var feeStateConfiguration: FeeStateConfiguration = FeeStateConfiguration.None
     private var useCase: WcSignUseCase<*> by Delegates.notNull()
     private var signState: WcSignState<*> by Delegates.notNull()
     private var wcApproval: WcApproval? = null
@@ -103,7 +103,7 @@ internal class WcSendTransactionModel @Inject constructor(
                     (useCase as? WcMutableFee)
                         ?.dAppFee()
                         ?.let { dAppFee ->
-                            suggestedFeeState = FeeSelectorParams.SuggestedFeeState.Suggestion(
+                            feeStateConfiguration = FeeStateConfiguration.Suggestion(
                                 title = stringReference(useCase.session.sdkModel.appMetaData.name),
                                 fee = dAppFee,
                             )
