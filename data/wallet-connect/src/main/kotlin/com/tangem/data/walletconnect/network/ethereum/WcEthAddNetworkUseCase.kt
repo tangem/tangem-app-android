@@ -5,9 +5,11 @@ import com.tangem.data.walletconnect.respond.WcRespondService
 import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.walletconnect.model.WcEthMethod
+import com.tangem.domain.walletconnect.model.WcRequestError
 import com.tangem.domain.walletconnect.model.WcSession
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
 import com.tangem.domain.walletconnect.usecase.method.WcAddNetworkUseCase
+import com.tangem.domain.walletconnect.usecase.method.WcNetworkDerivationState
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -24,10 +26,12 @@ internal class WcEthAddNetworkUseCase @AssistedInject constructor(
         get() = context.rawSdkRequest
     override val network: Network
         get() = context.network
-    override val walletAddress: String
-        get() = context.accountAddress
+    override val derivationState: WcNetworkDerivationState = when {
+        context.networkDerivationsCount > 1 -> WcNetworkDerivationState.Multiple(walletAddress = context.accountAddress)
+        else -> WcNetworkDerivationState.Single
+    }
 
-    override suspend fun approve(): Either<Throwable, Unit> {
+    override suspend fun approve(): Either<WcRequestError, String> {
         return respondService.respond(rawSdkRequest, "")
     }
 
