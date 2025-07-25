@@ -4,8 +4,8 @@ import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.datasource.api.pay.models.response.VisaTxHistoryResponse
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.visa.model.VisaTxHistoryItem
-import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
