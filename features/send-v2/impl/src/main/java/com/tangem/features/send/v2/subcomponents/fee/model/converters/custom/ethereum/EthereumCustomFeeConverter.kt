@@ -18,7 +18,7 @@ import kotlinx.collections.immutable.toImmutableList
 
 internal class EthereumCustomFeeConverter(
     private val onCustomFeeValueChange: (Int, String) -> Unit,
-    private val onNextClick: () -> Unit,
+    private val onNextClick: (() -> Unit)?,
     private val appCurrency: AppCurrency,
     feeCryptoCurrencyStatus: CryptoCurrencyStatus,
 ) : BaseEthereumCustomFeeConverter<Fee.Ethereum> {
@@ -112,7 +112,11 @@ internal class EthereumCustomFeeConverter(
                 keyboardType = KeyboardType.Number,
             ),
             keyboardActions = KeyboardActions(
-                onDone = { onNextClick() },
+                onDone = if (onNextClick != null) {
+                    { onNextClick() }
+                } else {
+                    null
+                },
             ),
         )
     }

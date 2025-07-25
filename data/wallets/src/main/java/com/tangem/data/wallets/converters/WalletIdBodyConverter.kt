@@ -2,7 +2,7 @@ package com.tangem.data.wallets.converters
 
 import com.tangem.datasource.api.tangemTech.models.CardInfoBody
 import com.tangem.datasource.api.tangemTech.models.WalletIdBody
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 
 internal object WalletIdBodyConverter {
 

@@ -6,12 +6,11 @@ import com.tangem.blockchain.common.FeePaidCurrency
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.blockchainsdk.utils.toNetworkId
-import com.tangem.domain.common.DerivationStyleProvider
-import com.tangem.domain.common.extensions.canHandleToken
-import com.tangem.domain.common.util.cardTypesResolver
-import com.tangem.domain.common.util.derivationStyleProvider
+import com.tangem.domain.card.DerivationStyleProvider
+import com.tangem.domain.card.common.extensions.canHandleToken
+import com.tangem.domain.card.common.util.derivationStyleProvider
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.models.wallet.UserWallet
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -31,19 +30,18 @@ class NetworkFactory @Inject constructor(
      *
      * @param blockchain          blockchain
      * @param extraDerivationPath extra derivation path
-     * @param scanResponse        scan response
+     * @param userWallet          user wallet
      */
-    fun create(blockchain: Blockchain, extraDerivationPath: String?, scanResponse: ScanResponse): Network? {
+    fun create(blockchain: Blockchain, extraDerivationPath: String?, userWallet: UserWallet): Network? {
         return create(
             blockchain = blockchain,
             derivationPath = createDerivationPath(
                 blockchain = blockchain,
                 extraDerivationPath = extraDerivationPath,
-                cardDerivationStyleProvider = scanResponse.derivationStyleProvider,
+                cardDerivationStyleProvider = userWallet.derivationStyleProvider,
             ),
-            canHandleTokens = scanResponse.card.canHandleToken(
+            canHandleTokens = userWallet.canHandleToken(
                 blockchain = blockchain,
-                cardTypesResolver = scanResponse.cardTypesResolver,
                 excludedBlockchains = excludedBlockchains,
             ),
         )
@@ -54,17 +52,16 @@ class NetworkFactory @Inject constructor(
      *
      * @param networkId      network id
      * @param derivationPath derivation path
-     * @param scanResponse   scan response
+     * @param userWallet     user wallet
      */
-    fun create(networkId: Network.ID, derivationPath: Network.DerivationPath, scanResponse: ScanResponse): Network? {
+    fun create(networkId: Network.ID, derivationPath: Network.DerivationPath, userWallet: UserWallet): Network? {
         val blockchain = networkId.toBlockchain()
 
         return create(
             blockchain = blockchain,
             derivationPath = derivationPath,
-            canHandleTokens = scanResponse.card.canHandleToken(
+            canHandleTokens = userWallet.canHandleToken(
                 blockchain = blockchain,
-                cardTypesResolver = scanResponse.cardTypesResolver,
                 excludedBlockchains = excludedBlockchains,
             ),
         )
