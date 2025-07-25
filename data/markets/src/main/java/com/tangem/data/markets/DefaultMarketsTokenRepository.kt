@@ -23,8 +23,7 @@ import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.markets.*
 import com.tangem.domain.markets.repositories.MarketsTokenRepository
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.domain.wallets.models.requireColdWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.pagination.*
 import com.tangem.pagination.fetcher.LimitOffsetBatchFetcher
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -259,13 +258,13 @@ internal class DefaultMarketsTokenRepository(
             cryptoCurrencyFactory.createCoin(
                 blockchain = blockchain,
                 extraDerivationPath = null,
-                scanResponse = userWallet.requireColdWallet().scanResponse, // TODO [REDACTED_TASK_KEY]
+                userWallet = userWallet,
             )
         } else {
             val currencyNetwork = networkFactory.create(
                 blockchain = blockchain,
                 extraDerivationPath = null,
-                scanResponse = userWallet.requireColdWallet().scanResponse, // TODO [REDACTED_TASK_KEY]
+                userWallet = userWallet,
             ) ?: return null
 
             cryptoCurrencyFactory.createToken(

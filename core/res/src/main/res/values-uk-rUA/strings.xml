@@ -316,6 +316,7 @@
   <string name="express_exchange_status_receiving">Очікуємо на депозит</string>
   <string name="express_exchange_status_receiving_active">Очікуємо на депозит...</string>
   <string name="express_exchange_status_refunded">Повернено</string>
+  <string name="express_exchange_status_refunding">Повернення коштів</string>
   <string name="express_exchange_status_sending">Надсилаємо вам</string>
   <string name="express_exchange_status_sending_active">Надсилаємо вам...</string>
   <string name="express_exchange_status_sent">Надіслано</string>
@@ -370,6 +371,7 @@
   <string name="give_permission_swap_subtitle" formatted="false">Щоб продовжити, вам потрібно дозволити смарт-контракту %1s використовувати ваш %2s</string>
   <string name="give_permission_title">Надати дозвіл</string>
   <string name="give_permission_unlimited">Необмежено</string>
+  <string name="home_button_create_new_wallet">Створити новий гаманець</string>
   <string name="home_button_order">Купити</string>
   <string name="home_button_scan">Сканувати</string>
   <string name="hot_crypto_add_token_subtitle">в %s</string>
@@ -572,10 +574,11 @@
   <string name="nft_receive_unsupported_types_description">cNFT і pNFT наразі не підтримуються. Будь ласка, не надсилайте їх на свій гаманець.</string>
   <string name="nft_send">Надіслати NFT</string>
   <string name="nft_traits_title">Риси</string>
+  <string name="nft_untitled_collection">Безіменна колекція</string>
   <string name="nft_wallet_count">NFTs в %2$d колекціях%1$d</string>
   <plurals name="nft_wallet_count_android">
     <item quantity="one">%1$d NFT в %2$d колекціi</item>
-    <item quantity="few"></item>
+    <item quantity="few">%1$d NFTs в %2$d колекціях</item>
     <item quantity="many"></item>
     <item quantity="other">%1$d NFTs в %2$d колекціях</item>
   </plurals>
@@ -719,7 +722,11 @@
   <string name="organize_tokens_title">Сортування токенів</string>
   <string name="organize_tokens_ungroup">Список</string>
   <string name="push_notifications_more_info">Більше</string>
+  <string name="push_notifications_permission_alert_description">Ви можете ввімкнути сповіщення у налаштуваннях</string>
+  <string name="push_notifications_permission_alert_negative_button">Увімкнути пізніше</string>
+  <string name="push_notifications_permission_alert_positive_button">Налаштування</string>
   <string name="push_notifications_permission_alert_title">Увімкнути сповіщення</string>
+  <string name="push_transactions_notifications_description">Отримуйте сповіщення про вхідні транзакції в підтримуваних мережах.</string>
   <string name="qr_scanner_camera_denied_gallery_button">Виберіть з галереї</string>
   <string name="qr_scanner_camera_denied_settings_button">Налаштування</string>
   <string name="qr_scanner_camera_denied_text">Ви не надали доступ до своєї камери</string>
@@ -829,6 +836,9 @@
   <string name="send_max_fee">Комісія може сягати до</string>
   <string name="send_memo_destination_tag_error">Недопустимий Memo</string>
   <string name="send_network_fee_warning_title">Покриття мережевої комісії</string>
+  <string name="send_nonce">Nonce</string>
+  <string name="send_nonce_footer">Унікальний номер транзакції. Змініть його, щоб пришвидшити відправку або скасувати завислу операцію.</string>
+  <string name="send_nonce_hint">Введіть nonce…</string>
   <string name="send_notification_exceed_balance_text">Недостатньо коштів для здійснення переказу, оскільки загальна сума комісії та переказу перевищує наявний баланс</string>
   <string name="send_notification_exceed_balance_title">Сума перевищує баланс</string>
   <string name="send_notification_existential_deposit_text">Для збереження вашого акаунту у блокчейні та захисту від можливих ризиків необхідний баланс не менше %s. Ця сума залишиться на вашому рахунку та не може бути знята.</string>
@@ -837,6 +847,7 @@
   <string name="send_notification_fee_too_high_title">Встановлена комісія завелика</string>
   <string name="send_notification_high_fee_text">Через особливості мережі %1$s комісія за переказ всього балансу вища. Щоб зменшити комісію, Ви можете залишити %2$s.</string>
   <string name="send_notification_high_fee_title">Підвищена комісія</string>
+  <string name="send_notification_invalid_amount_rent_destination">Рахунок одержувача не активований. Мінімальна сума переказу повинна бути не менша балансу, необхідного для покриття арендної плати: %1$s.</string>
   <string name="send_notification_invalid_amount_rent_fee">Баланс вашого рахунку не може бути меншим за орендну плату. Будь ласка, залиште на рахунку не менше %1$s або виведіть всі кошти.</string>
   <string name="send_notification_invalid_amount_text">Включена комісія перевищує суму переказу, що призводить до від’ємного значення</string>
   <string name="send_notification_invalid_amount_title">Недопустима сума</string>
@@ -1095,6 +1106,8 @@
   <string name="transaction_history_transaction_validator">валідатор: %s</string>
   <string name="transfer_min_amount_error">Мінімум %s</string>
   <string name="transfer_notification_invalid_minimum_transaction_amount_text">Мінімальна сума транзакції становить %1$s.</string>
+  <string name="tron_will_be_send_token_fee_description">Комісії мережі Tron для популярних токенів можуть бути вищими. Стейкінг TRX може допомогти знизити транзакційні витрати.</string>
+  <string name="tron_will_be_send_token_fee_title">Заощаджуйте на Tron комісіях</string>
   <string name="try_to_load_data_again_button_title">Спробуйте знову</string>
   <string name="twin_error_same_card">Ви відсканували одну й ту саму картку. Для створення twin-гаманця вам потрібно відсканувати картку з номером %d</string>
   <string name="twin_error_wrong_twin">Ви відсканували не ту twin-картку. Будь ласка, спробуйте відсканувати іншу</string>
@@ -1111,6 +1124,7 @@
   <string name="unlock_wallet_description_full">Використовуйте %s або відскануйте картку/кільце, щоб отримати доступ до свого гаманця</string>
   <string name="unsupported_wc_version">Не вдалося встановити з\'єднання: Цей dApp використовує Wallet Connect версії 1.0, яка не підтримується. Будь ласка, переконайтеся, що dApp підтримує Wallet Connect версії 2.0 для успішного підключення.</string>
   <string name="user_push_notification_agreement_argument_one">Будьте в курсі останніх функцій та новин</string>
+  <string name="user_push_notification_agreement_argument_three">Отримуйте сповіщення про вхідні транзакції</string>
   <string name="user_push_notification_agreement_argument_two">Дізнавайтеся першими про нові акції</string>
   <string name="user_push_notification_agreement_header">Бажаєте використовувати Push-повідомлення?</string>
   <string name="user_wallet_list_add_button">Додати новий гаманець</string>
@@ -1122,6 +1136,7 @@
   <string name="user_wallet_list_rename_popup_title">Перейменування гаманця</string>
   <string name="user_wallet_list_unlock_all">Розблокувати все</string>
   <string name="user_wallet_list_unlock_all_with">Розблокувати все з %s</string>
+  <string name="visa_onboarding_pin_not_accepted">PIN-код не прийнятий. Спробуйте ще раз або введіть інший код.</string>
   <string name="wallet_balance_blockchain_unreachable_try_later">Блокчейн недоступний. Спробуйте пізніше</string>
   <string name="wallet_balance_missing_derivation">Відскануйте картку або кільце</string>
   <string name="wallet_been_activated_message">Цей гаманець вже був активований раніше.\nЯкщо це було зроблено не вами, зверніться до служби підтримки.\nTangem ніколи не продає гаманці разом з попередньо згенерованим кодом доступу.</string>
@@ -1165,6 +1180,7 @@
   <string name="wallet_promo_banner_button_title">Отримати з 10% знижкою</string>
   <string name="wallet_promo_banner_description">Доступ до 13,000+ криптовалют. Купуйте, продавайте, обмінюйте та стейкайте одним дотиком.\nЗ’єднайте до трьох карток для бекапу.</string>
   <string name="wallet_promo_banner_title">Відкрийте Tangem Wallet</string>
+  <string name="wallet_settings_push_notifications_description">Отримуйте сповіщення про вхідні транзакції в гаманці та оновлення Tangem.</string>
   <string name="wallet_settings_push_notifications_title">Сповіщення про транзакції</string>
   <string name="wallet_settings_title">Налаштування гаманця</string>
   <string name="wallet_title">Tangem</string>
@@ -1193,7 +1209,7 @@
   <string name="warning_express_approval_in_progress_message">Дозвіл обміну триває і незабаром буде завершено</string>
   <string name="warning_express_approval_in_progress_title">Затвердження в процесі</string>
   <string name="warning_express_dust_message">Мінімальна сума обміну становить - %1$s. Будь ласка, переконайтеся, що залишок на рахунку після обміну буде не менше за %2$s.</string>
-  <string name="warning_express_no_exchangeable_coins_description">У вашому списку немає доступних монет для обміну %s</string>
+  <string name="warning_express_no_exchangeable_coins_description">У вашому портфелі немає токенів, на які можна обміняти %s. Будь ласка, додайте інший токен, щоб виконати обмін.</string>
   <string name="warning_express_no_exchangeable_coins_title">Немає доступних токенів для обміну</string>
   <string name="warning_express_not_enough_fee_for_token_tx_description">Щоб здійснити транзакцію, вам потрібно внести трохи %1$s %2$s</string>
   <string name="warning_express_not_enough_fee_for_token_tx_title">Неможливо покрити комісію %s</string>
@@ -1257,8 +1273,23 @@
   <string name="warning_testnet_card_message">Це картка Testnet. Вона не може обробляти транзакції і повинна використовуватися лише для тестування та розробки.</string>
   <string name="warning_testnet_card_title">Лише для цілей тестування</string>
   <string name="warning_token_balance_not_updated">Баланс може бути застарілим. Оновіть сторінку.</string>
+  <string name="warning_token_trustline_button_title">Відкрити Trustline</string>
+  <string name="warning_token_trustline_subtitle">Відповідно до правил мережі, щоб поповнити цей токен, спочатку потрібно відкрити Trustline — це дозволить вашому гаманцю приймати та зберігати цей актив.</string>
+  <string name="warning_token_trustline_title">Відкрийте Trustline</string>
+  <string name="wc_alert_session_disconnected_description">Будь ласка, поверніться до браузеру і повторно підключіться через WalletConnect.</string>
+  <string name="wc_alert_wrong_card_description">Обрана не вірна картка або кільце</string>
   <string name="wc_common_address">Адреса</string>
+  <string name="wc_common_connect">Підключення</string>
+  <string name="wc_connection_reqeust_can_view_balance">Переглянути баланс гаманця та активність</string>
+  <string name="wc_connection_request">Запит на підключення</string>
   <string name="wc_contents">Вміст</string>
+  <string name="wc_copy_data_button_text">Копіювати дані</string>
+  <string name="wc_request_from">Запит від</string>
+  <string name="wc_signature_type">Тип підпису</string>
+  <string name="wc_transaction_info_to_title">До</string>
+  <string name="wc_transaction_request">Запит транзакції</string>
+  <string name="wc_transaction_request_title">Запит транзакції</string>
+  <string name="wc_wallet_connect">Підключення гаманця</string>
   <string name="welcome_interrupted_backup_alert_discard">Відмовитися</string>
   <string name="welcome_interrupted_backup_alert_message">Ви не завершили резервне копіювання. Бажаєте продовжити?</string>
   <string name="welcome_interrupted_backup_alert_resume">Так, поновити</string>
