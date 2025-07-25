@@ -1,0 +1,11 @@
+package com.tangem.core.ui.test
+
+object MainScreenTestTags {
+    const val SCREEN_CONTAINER = "MAIN_SCREEN_CONTAINER"
+    const val MORE_BUTTON = "MAIN_SCREEN_MORE_BUTTON"
+    const val TOP_BAR = "MAIN_SCREEN_TOP_BAR"
+    const val TOKEN_LIST_ITEM = "MAIN_SCREEN_TOKEN_LIST_ITEM"
+    const val WALLET_BALANCE = "MAIN_SCREEN_WALLET_BALANCE"
+    const val WALLET_LIST_ITEM = "MAIN_SCREEN_WALLET_LIST_ITEM"
+    const val ORGANIZE_TOKENS_BUTTON = "MAIN_SCREEN_ORGANIZE_TOKENS_BUTTON"
+}
