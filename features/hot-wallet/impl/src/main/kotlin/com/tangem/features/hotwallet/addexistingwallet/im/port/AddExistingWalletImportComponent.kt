@@ -28,7 +28,7 @@ internal class AddExistingWalletImportComponent @AssistedInject constructor(
     }
 
     interface ModelCallbacks {
-        fun onBackClick()
+        fun onWalletImported()
     }
 
     data class Params(
