@@ -25,6 +25,7 @@ class MockCryptoCurrencyFactory(private val userWallet: UserWallet.Cold = defaul
     val cardano by lazy { createCoin(blockchain = Blockchain.Cardano) }
     val chia by lazy { createCoin(Blockchain.Chia) }
     val ethereum by lazy { createCoin(Blockchain.Ethereum) }
+    val stellar by lazy { createCoin(Blockchain.Stellar) }
 
     val chiaAndEthereum by lazy {
         listOf(
