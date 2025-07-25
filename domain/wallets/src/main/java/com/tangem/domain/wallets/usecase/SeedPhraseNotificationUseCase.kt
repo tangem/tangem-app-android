@@ -1,7 +1,7 @@
 package com.tangem.domain.wallets.usecase
 
 import com.tangem.domain.wallets.models.SeedPhraseNotificationsStatus
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.repository.WalletsRepository
 import kotlinx.coroutines.flow.Flow
 
