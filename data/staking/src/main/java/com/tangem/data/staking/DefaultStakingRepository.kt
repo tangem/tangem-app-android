@@ -10,8 +10,6 @@ import com.tangem.blockchain.common.TransactionStatus
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.toBlockchain
-import com.tangem.blockchainsdk.utils.toCoinId
-import com.tangem.blockchainsdk.utils.toMigratedCoinId
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toCompressedPublicKey
 import com.tangem.data.staking.converters.YieldConverter
@@ -38,9 +36,9 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.staking.model.StakingApproval
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
+import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.domain.staking.model.stakekit.NetworkType
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.YieldBalance
@@ -63,7 +61,6 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.math.BigDecimal
-import kotlin.time.Duration.Companion.seconds
 
 @Suppress("LargeClass", "LongParameterList", "TooManyFunctions")
 internal class DefaultStakingRepository(
@@ -94,10 +91,6 @@ internal class DefaultStakingRepository(
     private val tronStakeKitTransactionAdapter by lazy { moshi.adapter(TronStakeKitTransaction::class.java) }
     private val networkTypeAdapter by lazy { moshi.adapter(NetworkTypeDTO::class.java) }
     private val stakingActionStatusAdapter by lazy { moshi.adapter(StakingActionStatusDTO::class.java) }
-
-    override fun getSupportedIntegrationId(cryptoCurrencyId: CryptoCurrency.ID): String? {
-        return stakingIdFactory.createIntegrationId(currencyId = cryptoCurrencyId)
-    }
 
     override suspend fun fetchEnabledYields() {
         withContext(dispatchers.io) {
@@ -202,7 +195,7 @@ internal class DefaultStakingRepository(
                 return@channelFlow
             }
 
-            val isSupportedInMobileApp = getSupportedIntegrationId(cryptoCurrency.id).isNullOrEmpty().not()
+            val isSupportedInMobileApp = StakingIntegrationID.create(currencyId = cryptoCurrency.id) != null
 
             getEnabledYields()
                 .distinctUntilChanged()
@@ -248,7 +241,7 @@ internal class DefaultStakingRepository(
             return StakingAvailability.Unavailable
         }
 
-        val isSupportedInMobileApp = getSupportedIntegrationId(cryptoCurrency.id).isNullOrEmpty().not()
+        val isSupportedInMobileApp = StakingIntegrationID.create(currencyId = cryptoCurrency.id) != null
 
         val yields = getEnabledYieldsSync()
         if (yields.isEmpty()) {
@@ -481,17 +474,6 @@ internal class DefaultStakingRepository(
         }
     }
 
-    override fun getStakingApproval(cryptoCurrency: CryptoCurrency): StakingApproval {
-        val integrationId = stakingIdFactory.createIntegrationId(currencyId = cryptoCurrency.id)
-
-        return when (integrationId) {
-            Blockchain.Ethereum.id + Blockchain.Polygon.toCoinId(),
-            Blockchain.Ethereum.id + Blockchain.Polygon.toMigratedCoinId(),
-            -> StakingApproval.Needed(ETHEREUM_POLYGON_APPROVE_SPENDER)
-            else -> StakingApproval.Empty
-        }
-    }
-
     private fun getTransactionDataType(networkId: String, unsignedTransaction: String): TransactionData.Compiled.Data {
         return when (Blockchain.fromId(networkId)) {
             Blockchain.Solana,
@@ -543,14 +525,7 @@ internal class DefaultStakingRepository(
         }
     }
 
-    @Suppress("unused")
     companion object {
-        private const val YIELDS_STORE_KEY = "yields"
-
-        private const val ETHEREUM_POLYGON_APPROVE_SPENDER = "0x5e3Ef299fDDf15eAa0432E6e66473ace8c13D908"
-
-        internal val YIELDS_WATITING_TIMEOUT = 15.seconds
-
         private val INVALID_BATCHES_FOR_SOLANA = listOf("AC01", "CB79")
     }
 }
