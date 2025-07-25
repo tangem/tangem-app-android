@@ -18,13 +18,13 @@ internal class FeeSelectorLoadedTransformer(
     private val feeCryptoCurrencyStatus: CryptoCurrencyStatus,
     private val appCurrency: AppCurrency,
     private val fees: TransactionFee,
-    private val suggestedFeeState: FeeSelectorParams.SuggestedFeeState,
+    private val feeStateConfiguration: FeeSelectorParams.FeeStateConfiguration,
     private val isFeeApproximate: Boolean,
     private val feeSelectorIntents: FeeSelectorIntents,
 ) : Transformer<FeeSelectorUM> {
 
     private val feeItemsConverter = FeeItemConverter(
-        suggestedFeeState = suggestedFeeState,
+        feeStateConfiguration = feeStateConfiguration,
         normalFee = fees.normal,
         feeSelectorIntents = feeSelectorIntents,
         appCurrency = appCurrency,
