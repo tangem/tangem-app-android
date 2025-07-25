@@ -34,10 +34,6 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.walletconnect.connections.entity.*
-import com.tangem.features.walletconnect.connections.entity.WcConnectedAppInfo
-import com.tangem.features.walletconnect.connections.entity.WcConnectionsState
-import com.tangem.features.walletconnect.connections.entity.WcConnectionsTopAppBarConfig
-import com.tangem.features.walletconnect.connections.entity.WcConnectionsUM
 import com.tangem.features.walletconnect.connections.ui.preview.WcConnectionsPreviewData
 import com.tangem.features.walletconnect.impl.R
 import kotlinx.collections.immutable.ImmutableList
@@ -201,6 +197,8 @@ private fun AppInfoItem(appInfo: WcConnectedAppInfo, modifier: Modifier = Modifi
                 .size(40.dp)
                 .clip(RoundedCornerShape(TangemTheme.dimens.radius8)),
             model = appInfo.iconUrl,
+            error = painterResource(R.drawable.img_wc_dapp_icon_placeholder_48),
+            fallback = painterResource(R.drawable.img_wc_dapp_icon_placeholder_48),
             contentDescription = appInfo.name,
         )
         Column(
