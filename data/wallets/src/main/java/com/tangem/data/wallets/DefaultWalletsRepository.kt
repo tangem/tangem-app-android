@@ -19,9 +19,9 @@ import com.tangem.datasource.local.preferences.utils.getObjectMap
 import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
 import com.tangem.datasource.local.preferences.utils.store
 import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.models.SeedPhraseNotificationsStatus
-import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.models.UserWalletRemoteInfo
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.utils.WEEK_MILLIS
@@ -250,7 +250,7 @@ internal class DefaultWalletsRepository(
     override suspend fun isNotificationsEnabled(userWalletId: UserWalletId): Boolean =
         appPreferencesStore.getObjectMap<Boolean>(PreferencesKeys.NOTIFICATIONS_ENABLED_STATES_KEY)
             .map { it[userWalletId.stringValue] == true }
-            .firstOrNull() ?: false
+            .firstOrNull() == true
 
     override suspend fun setNotificationsEnabled(userWalletId: UserWalletId, isEnabled: Boolean) {
         appPreferencesStore.editData {
