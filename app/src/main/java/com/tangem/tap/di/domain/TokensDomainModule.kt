@@ -11,6 +11,7 @@ import com.tangem.domain.promo.PromoRepository
 import com.tangem.domain.quotes.QuotesRepository
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
+import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.staking.single.SingleYieldBalanceFetcher
@@ -405,6 +406,7 @@ internal object TokensDomainModule {
         singleYieldBalanceSupplier: SingleYieldBalanceSupplier,
         multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
         multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
+        stakingIdFactory: StakingIdFactory,
     ): BaseCurrenciesStatusesOperations {
         return CachedCurrenciesStatusesOperations(
             currenciesRepository = currenciesRepository,
@@ -420,6 +422,7 @@ internal object TokensDomainModule {
             multiYieldBalanceFetcher = multiYieldBalanceFetcher,
             tokensFeatureToggles = tokensFeatureToggles,
             multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
+            stakingIdFactory = stakingIdFactory,
         )
     }
 
@@ -439,6 +442,7 @@ internal object TokensDomainModule {
         singleYieldBalanceSupplier: SingleYieldBalanceSupplier,
         multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
         multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
+        stakingIdFactory: StakingIdFactory,
     ): BaseCurrencyStatusOperations {
         return CachedCurrenciesStatusesOperations(
             currenciesRepository = currenciesRepository,
@@ -454,6 +458,7 @@ internal object TokensDomainModule {
             multiYieldBalanceFetcher = multiYieldBalanceFetcher,
             multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
             tokensFeatureToggles = tokensFeatureToggles,
+            stakingIdFactory = stakingIdFactory,
         )
     }
 
