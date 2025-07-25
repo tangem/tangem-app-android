@@ -2,7 +2,7 @@ package com.tangem.domain.card
 
 import arrow.core.Either
 import com.tangem.domain.card.models.ResetCardError
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 
 /**
  * Use case for resetting card to factory settings
