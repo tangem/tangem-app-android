@@ -18,6 +18,7 @@ import com.tangem.features.swap.v2.impl.choosetoken.fromSupported.entity.SwapCho
 import com.tangem.features.swap.v2.impl.choosetoken.fromSupported.model.SwapChooseTokenFactory.getErrorMessage
 import com.tangem.features.swap.v2.impl.choosetoken.fromSupported.model.transformers.SwapChooseContentStateTransformer
 import com.tangem.features.swap.v2.impl.choosetoken.fromSupported.model.transformers.SwapChooseErrorStateTransformer
+import com.tangem.features.swap.v2.impl.common.SwapUtils.SEND_WITH_SWAP_PROVIDER_TYPES
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.transformer.update
 import kotlinx.coroutines.delay
@@ -79,6 +80,7 @@ internal class SwapChooseTokenNetworkModel @Inject constructor(
                 userWallet = userWallet,
                 initialCurrency = params.initialCurrency,
                 cryptoCurrencyList = cryptoCurrencyList + params.initialCurrency,
+                filterProviderTypes = SEND_WITH_SWAP_PROVIDER_TYPES,
             ).getOrElse {
                 Timber.e(it.toString())
                 uiState.update(
