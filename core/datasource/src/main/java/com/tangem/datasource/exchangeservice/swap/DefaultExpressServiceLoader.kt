@@ -12,8 +12,8 @@ import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.core.utils.lceContent
 import com.tangem.domain.core.utils.lceError
 import com.tangem.domain.core.utils.lceLoading
-import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow

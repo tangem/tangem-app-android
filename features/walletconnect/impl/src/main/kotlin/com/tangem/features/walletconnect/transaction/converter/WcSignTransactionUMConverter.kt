@@ -27,9 +27,10 @@ internal class WcSignTransactionUMConverter @Inject constructor(
                     onShowVerifiedAlert = value.actions.onShowVerifiedAlert,
                 ),
             ),
-            walletName = value.useCase.session.wallet.name,
+            walletName = value.useCase.session.wallet.name.takeIf { value.useCase.session.showWalletInfo },
             networkInfo = networkInfoUMConverter.convert(value.useCase.network),
             isLoading = value.signState.domainStep == WcSignStep.Signing,
+            address = WcAddressConverter.convert(value.useCase.derivationState),
         ),
         transactionRequestInfo = WcTransactionRequestInfoUM(
             persistentListOf(
