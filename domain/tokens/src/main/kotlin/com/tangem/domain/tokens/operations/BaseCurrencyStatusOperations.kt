@@ -19,7 +19,6 @@ import com.tangem.domain.quotes.QuotesRepository
 import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.staking.model.stakekit.YieldBalance
-import com.tangem.domain.staking.model.stakekit.YieldBalanceList
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.staking.single.SingleYieldBalanceProducer
 import com.tangem.domain.staking.single.SingleYieldBalanceSupplier
@@ -396,17 +395,21 @@ abstract class BaseCurrencyStatusOperations(
     private suspend fun getYieldBalancesSync(
         userWalletId: UserWalletId,
         cryptoCurrencies: List<CryptoCurrency>,
-    ): Either<Error.EmptyYieldBalances, YieldBalanceList> {
+    ): Either<Error.EmptyYieldBalances, List<YieldBalance>> {
         return catch(
             block = {
-                stakingRepository.getMultiYieldBalanceSync(
+                val balances = stakingRepository.getMultiYieldBalanceSync(
                     userWalletId = userWalletId,
                     cryptoCurrencies = cryptoCurrencies,
-                ).right()
+                )
+
+                if (balances.isNullOrEmpty()) {
+                    Error.EmptyYieldBalances.left()
+                } else {
+                    balances.right()
+                }
             },
-            catch = {
-                Error.EmptyYieldBalances.left()
-            },
+            catch = { Error.EmptyYieldBalances.left() },
         )
     }
 
