@@ -15,7 +15,10 @@ internal sealed class AddExistingWalletRoute : Route {
     object BackupCompleted : AddExistingWalletRoute()
 
     @Serializable
-    object AccessCode : AddExistingWalletRoute()
+    object SetAccessCode : AddExistingWalletRoute()
+
+    @Serializable
+    data class ConfirmAccessCode(val accessCode: String) : AddExistingWalletRoute()
 
     @Serializable
     object PushNotifications : AddExistingWalletRoute()
