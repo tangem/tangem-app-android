@@ -1,4 +1,4 @@
-package com.tangem.features.hotwallet.setaccesscode.ui
+package com.tangem.features.hotwallet.accesscode.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
@@ -15,11 +15,12 @@ import com.tangem.core.ui.components.fields.PinTextField
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.features.hotwallet.setaccesscode.entity.SetAccessCodeUM
 
 @Composable
-internal fun SetAccessCodeEnter(
-    state: SetAccessCodeUM,
+internal fun AccessCodeEnter(
+    accessCode: String,
+    onAccessCodeChange: (String) -> Unit,
+    accessCodeLength: Int,
     reEnterAccessCodeState: Boolean,
     modifier: Modifier = Modifier,
 ) {
@@ -52,7 +53,7 @@ internal fun SetAccessCodeEnter(
             } else {
                 stringResourceSafe(
                     R.string.access_code_create_description,
-                    state.accessCodeLength,
+                    accessCodeLength,
                 )
             },
             style = TangemTheme.typography.body1,
@@ -67,18 +68,10 @@ internal fun SetAccessCodeEnter(
             contentAlignment = Alignment.Center,
         ) {
             PinTextField(
-                length = state.accessCodeLength,
+                length = accessCodeLength,
                 isPasswordVisual = true,
-                value = if (reEnterAccessCodeState) {
-                    state.accessCodeSecond
-                } else {
-                    state.accessCodeFirst
-                },
-                onValueChange = if (reEnterAccessCodeState) {
-                    state.onAccessCodeSecondChange
-                } else {
-                    state.onAccessCodeFirstChange
-                },
+                value = accessCode,
+                onValueChange = onAccessCodeChange,
             )
         }
     }
@@ -89,37 +82,25 @@ internal fun SetAccessCodeEnter(
 @Composable
 private fun Preview() {
     TangemThemePreview {
-        SetAccessCodeEnter(
+        AccessCodeEnter(
+            accessCode = "123456",
+            onAccessCodeChange = {},
+            accessCodeLength = 6,
             reEnterAccessCodeState = false,
-            state = SetAccessCodeUM(
-                step = SetAccessCodeUM.Step.AccessCode,
-                accessCodeFirst = "",
-                accessCodeSecond = "",
-                onAccessCodeFirstChange = {},
-                onAccessCodeSecondChange = {},
-                buttonEnabled = false,
-                onContinue = {},
-            ),
         )
     }
 }
 
-@Composable
 @Preview(showBackground = true, widthDp = 360)
 @Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
 private fun Preview2() {
     TangemThemePreview {
-        SetAccessCodeEnter(
+        AccessCodeEnter(
+            accessCode = "123456",
+            onAccessCodeChange = {},
+            accessCodeLength = 6,
             reEnterAccessCodeState = true,
-            state = SetAccessCodeUM(
-                step = SetAccessCodeUM.Step.ConfirmAccessCode,
-                accessCodeFirst = "",
-                accessCodeSecond = "",
-                onAccessCodeFirstChange = {},
-                onAccessCodeSecondChange = {},
-                buttonEnabled = false,
-                onContinue = {},
-            ),
         )
     }
 }
