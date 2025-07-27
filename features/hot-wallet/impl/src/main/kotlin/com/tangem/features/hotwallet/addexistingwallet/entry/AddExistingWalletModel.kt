@@ -9,11 +9,12 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.settings.ShouldAskPermissionUseCase
-import com.tangem.features.hotwallet.setaccesscode.SetAccessCodeComponent
-import com.tangem.features.hotwallet.addexistingwallet.start.AddExistingWalletStartComponent
 import com.tangem.features.hotwallet.addexistingwallet.im.port.AddExistingWalletImportComponent
 import com.tangem.features.hotwallet.addexistingwallet.root.routing.AddExistingWalletRoute
+import com.tangem.features.hotwallet.addexistingwallet.start.AddExistingWalletStartComponent
 import com.tangem.features.hotwallet.manualbackup.completed.ManualBackupCompletedComponent
+import com.tangem.features.hotwallet.accesscode.confirm.ConfirmAccessCodeComponent
+import com.tangem.features.hotwallet.accesscode.set.SetAccessCodeComponent
 import com.tangem.features.hotwallet.setupfinished.MobileWalletSetupFinishedComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsComponent
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
@@ -31,20 +32,22 @@ internal class AddExistingWalletModel @Inject constructor(
     val addExistingWalletStartModelCallbacks = AddExistingWalletStartModelCallbacks()
     val addExistingWalletImportModelCallbacks = AddExistingWalletImportModelCallbacks()
     val manualBackupCompletedComponentModelCallbacks = ManualBackupCompletedComponentModelCallbacks()
-    val accessCodeModelCallbacks = AccessCodeModelCallbacks()
     val pushNotificationsComponentModelCallbacks = PushNotificationsComponentModelCallbacks()
+    val setAccessCodeModelCallbacks = SetAccessCodeModelCallbacks()
+    val confirmAccessCodeModelCallbacks = ConfirmAccessCodeModelCallbacks()
     val mobileWalletSetupFinishedComponentModelCallbacks = MobileWalletSetupFinishedComponentModelCallbacks()
 
     val stackNavigation = StackNavigation<AddExistingWalletRoute>()
 
     fun onChildBack(currentRoute: AddExistingWalletRoute) {
         when (currentRoute) {
-            AddExistingWalletRoute.Import -> stackNavigation.pop()
-            AddExistingWalletRoute.BackupCompleted -> Unit
-            AddExistingWalletRoute.AccessCode -> stackNavigation.pop()
-            AddExistingWalletRoute.PushNotifications -> Unit
-            AddExistingWalletRoute.SetupFinished -> Unit
-            AddExistingWalletRoute.Start -> Unit
+            is AddExistingWalletRoute.Import -> stackNavigation.pop()
+            is AddExistingWalletRoute.BackupCompleted -> Unit
+            is AddExistingWalletRoute.ConfirmAccessCode -> stackNavigation.pop()
+            is AddExistingWalletRoute.SetAccessCode -> stackNavigation.pop()
+            is AddExistingWalletRoute.PushNotifications -> Unit
+            is AddExistingWalletRoute.SetupFinished -> Unit
+            is AddExistingWalletRoute.Start -> Unit
         }
     }
 
@@ -66,16 +69,18 @@ internal class AddExistingWalletModel @Inject constructor(
 
     inner class ManualBackupCompletedComponentModelCallbacks : ManualBackupCompletedComponent.ModelCallbacks {
         override fun onContinueClick() {
-            stackNavigation.push(AddExistingWalletRoute.AccessCode)
+            stackNavigation.push(AddExistingWalletRoute.SetAccessCode)
         }
     }
 
-    inner class AccessCodeModelCallbacks : SetAccessCodeComponent.ModelCallbacks {
-        override fun onBackClick() {
-            stackNavigation.pop()
+    inner class SetAccessCodeModelCallbacks : SetAccessCodeComponent.ModelCallbacks {
+        override fun onAccessCodeSet(accessCode: String) {
+            stackNavigation.push(AddExistingWalletRoute.ConfirmAccessCode(accessCode))
         }
+    }
 
-        override fun onAccessCodeSet() {
+    inner class ConfirmAccessCodeModelCallbacks : ConfirmAccessCodeComponent.ModelCallbacks {
+        override fun onAccessCodeConfirmed() {
             modelScope.launch {
                 val shouldRequestPush = shouldAskPermissionUseCase(PUSH_PERMISSION)
                 if (shouldRequestPush) {
@@ -95,7 +100,8 @@ internal class AddExistingWalletModel @Inject constructor(
         }
     }
 
-    inner class MobileWalletSetupFinishedComponentModelCallbacks : MobileWalletSetupFinishedComponent.ModelCallbacks {
+    inner class MobileWalletSetupFinishedComponentModelCallbacks :
+        MobileWalletSetupFinishedComponent.ModelCallbacks {
         override fun onContinueClick() {
             router.replaceAll(AppRoute.Wallet)
         }
