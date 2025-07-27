@@ -66,9 +66,8 @@ internal fun DisclaimerScreen(state: DisclaimerUM) {
         ) {
             TangemTopAppBar(
                 title = resourceReference(R.string.disclaimer_title),
-                startButton = TopAppBarButtonUM(
-                    iconRes = R.drawable.ic_back_24,
-                    onIconClicked = state.popBack,
+                startButton = TopAppBarButtonUM.Back(
+                    onBackClicked = state.popBack,
                 ).takeIf { state.isTosAccepted },
                 titleAlignment = Alignment.CenterHorizontally,
                 textColor = textColor,
