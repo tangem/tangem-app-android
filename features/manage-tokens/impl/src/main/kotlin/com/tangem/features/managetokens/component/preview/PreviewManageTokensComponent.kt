@@ -42,9 +42,9 @@ internal class PreviewManageTokensComponent(
                 ManageTokensTopBarUM.ManageContent(
                     title = resourceReference(id = R.string.main_manage_tokens),
                     onBackButtonClick = {},
-                    endButton = TopAppBarButtonUM(
+                    endButton = TopAppBarButtonUM.Icon(
                         iconRes = R.drawable.ic_plus_24,
-                        onIconClicked = {},
+                        onClicked = {},
                     ),
                 )
             } else {
