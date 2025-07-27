@@ -129,9 +129,9 @@ internal class ManageTokensModel @Inject constructor(
             topBar = ManageTokensTopBarUM.ManageContent(
                 title = resourceReference(id = R.string.main_manage_tokens),
                 onBackButtonClick = router::pop,
-                endButton = TopAppBarButtonUM(
+                endButton = TopAppBarButtonUM.Icon(
                     iconRes = R.drawable.ic_plus_24,
-                    onIconClicked = ::navigateToAddCustomToken,
+                    onClicked = ::navigateToAddCustomToken,
                 ),
             ),
             search = SearchBarUM(
