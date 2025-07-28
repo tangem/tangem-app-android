@@ -150,7 +150,7 @@ internal class WcPairSdkDelegate : WcSdkObserver {
     private fun Throwable.toApproveError() = WcPairError.ApprovalFailed(this.localizedMessage.orEmpty()).left()
 
     companion object {
-        private const val CALLBACK_TIMEOUT = 30
+        private const val CALLBACK_TIMEOUT = 60
         // com.reown.android.pairing.engine.domain.PairingEngine.pair
         private val pairingExpiredMessages = listOf(
             "Pairing URI expired",
