@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
@@ -24,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tangem.core.ui.components.ResizableText
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.test.DialogTestTags
 import com.tangem.core.ui.utils.MultipleClickPreventer
 
 @Suppress("LongParameterList")
@@ -47,7 +49,9 @@ fun TangemButton(
     val multipleClickPreventer = remember { MultipleClickPreventer.get() }
 
     Button(
-        modifier = modifier.heightIn(min = size.toHeightDp()),
+        modifier = modifier
+            .heightIn(min = size.toHeightDp())
+            .testTag(DialogTestTags.BUTTON),
         onClick = {
             multipleClickPreventer.processEvent { if (!showProgress) onClick() }
         },

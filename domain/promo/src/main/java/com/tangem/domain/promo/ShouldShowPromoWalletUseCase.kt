@@ -1,7 +1,7 @@
 package com.tangem.domain.promo
 
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.promo.models.PromoId
-import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
