@@ -1,8 +1,9 @@
-package com.tangem.features.hotwallet.addexistingwallet.root
+package com.tangem.features.hotwallet.addexistingwallet.entry
 
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.push
+import com.arkivanov.decompose.router.stack.replaceAll
 import com.arkivanov.decompose.router.stack.replaceCurrent
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.di.ModelScoped
@@ -10,7 +11,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.settings.ShouldAskPermissionUseCase
 import com.tangem.features.hotwallet.addexistingwallet.im.port.AddExistingWalletImportComponent
-import com.tangem.features.hotwallet.addexistingwallet.root.routing.AddExistingWalletRoute
+import com.tangem.features.hotwallet.addexistingwallet.entry.routing.AddExistingWalletRoute
 import com.tangem.features.hotwallet.addexistingwallet.start.AddExistingWalletStartComponent
 import com.tangem.features.hotwallet.manualbackup.completed.ManualBackupCompletedComponent
 import com.tangem.features.hotwallet.accesscode.confirm.ConfirmAccessCodeComponent
@@ -43,11 +44,28 @@ internal class AddExistingWalletModel @Inject constructor(
         when (currentRoute) {
             is AddExistingWalletRoute.Import -> stackNavigation.pop()
             is AddExistingWalletRoute.BackupCompleted -> Unit
+            is AddExistingWalletRoute.SetAccessCode -> Unit
             is AddExistingWalletRoute.ConfirmAccessCode -> stackNavigation.pop()
-            is AddExistingWalletRoute.SetAccessCode -> stackNavigation.pop()
             is AddExistingWalletRoute.PushNotifications -> Unit
             is AddExistingWalletRoute.SetupFinished -> Unit
             is AddExistingWalletRoute.Start -> Unit
+        }
+    }
+
+    fun onSkipAccessCode() {
+        navigateToPushNotificationsOrNext()
+    }
+
+    private fun navigateToPushNotificationsOrNext() {
+        modelScope.launch {
+            val shouldRequestPush = shouldAskPermissionUseCase(PUSH_PERMISSION)
+            if (shouldRequestPush) {
+                // is yet blocked by [REDACTED_TASK_KEY]
+                // stackNavigation.replaceAll(AddExistingWalletRoute.PushNotifications)
+                stackNavigation.replaceAll(AddExistingWalletRoute.SetupFinished)
+            } else {
+                stackNavigation.replaceAll(AddExistingWalletRoute.SetupFinished)
+            }
         }
     }
 
@@ -69,7 +87,7 @@ internal class AddExistingWalletModel @Inject constructor(
 
     inner class ManualBackupCompletedComponentModelCallbacks : ManualBackupCompletedComponent.ModelCallbacks {
         override fun onContinueClick() {
-            stackNavigation.push(AddExistingWalletRoute.SetAccessCode)
+            stackNavigation.replaceCurrent(AddExistingWalletRoute.SetAccessCode)
         }
     }
 
@@ -81,16 +99,7 @@ internal class AddExistingWalletModel @Inject constructor(
 
     inner class ConfirmAccessCodeModelCallbacks : ConfirmAccessCodeComponent.ModelCallbacks {
         override fun onAccessCodeConfirmed() {
-            modelScope.launch {
-                val shouldRequestPush = shouldAskPermissionUseCase(PUSH_PERMISSION)
-                if (shouldRequestPush) {
-                    // is yet blocked by [REDACTED_TASK_KEY]
-                    // stackNavigation.replaceCurrent(AddExistingWalletRoute.PushNotifications)
-                    stackNavigation.replaceCurrent(AddExistingWalletRoute.SetupFinished)
-                } else {
-                    stackNavigation.replaceCurrent(AddExistingWalletRoute.SetupFinished)
-                }
-            }
+            navigateToPushNotificationsOrNext()
         }
     }
 
