@@ -70,4 +70,8 @@ dependencies {
     implementation(deps.timber)
     implementation(tangemDeps.card.core)
     implementation(tangemDeps.blockchain)
+
+    /** Test libraries */
+    implementation(deps.test.junit)
+    implementation(deps.test.truth)
 }
