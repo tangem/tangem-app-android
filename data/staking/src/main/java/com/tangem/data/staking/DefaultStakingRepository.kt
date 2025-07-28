@@ -20,7 +20,6 @@ import com.tangem.data.staking.converters.transaction.StakingTransactionConverte
 import com.tangem.data.staking.converters.transaction.StakingTransactionStatusConverter
 import com.tangem.data.staking.converters.transaction.StakingTransactionTypeConverter
 import com.tangem.data.staking.store.YieldsBalancesStore
-import com.tangem.data.staking.utils.StakingIdFactory
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.stakekit.StakeKitApi
@@ -60,7 +59,6 @@ import com.tangem.utils.extensions.orZero
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withContext
 import timber.log.Timber
-import java.math.BigDecimal
 
 @Suppress("LargeClass", "LongParameterList", "TooManyFunctions")
 internal class DefaultStakingRepository(
@@ -71,7 +69,6 @@ internal class DefaultStakingRepository(
     private val walletManagersFacade: WalletManagersFacade,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val stakingFeatureToggles: StakingFeatureToggles,
-    private val stakingIdFactory: StakingIdFactory,
     moshi: Moshi,
 ) : StakingRepository {
 
@@ -375,32 +372,6 @@ internal class DefaultStakingRepository(
         }
     }
 
-    override suspend fun getSingleYieldBalanceSync(
-        userWalletId: UserWalletId,
-        cryptoCurrency: CryptoCurrency,
-    ): YieldBalance {
-        val stakingId = stakingIdFactory.create(
-            userWalletId = userWalletId,
-            currencyId = cryptoCurrency.id,
-            network = cryptoCurrency.network,
-        ) ?: error("Could not create stakingId")
-
-        return stakingBalanceStoreV2.getSyncOrNull(userWalletId = userWalletId, stakingId = stakingId)
-            ?: YieldBalance.Error(integrationId = stakingId.integrationId, address = stakingId.address)
-    }
-
-    override suspend fun getMultiYieldBalanceSync(
-        userWalletId: UserWalletId,
-        cryptoCurrencies: List<CryptoCurrency>,
-    ): List<YieldBalance>? {
-        val stakingIds = cryptoCurrencies.mapNotNull {
-            stakingIdFactory.create(userWalletId = userWalletId, currencyId = it.id, network = it.network)
-        }
-
-        return stakingBalanceStoreV2.getAllSyncOrNull(userWalletId)
-            ?.filter { it.getStakingId() in stakingIds }
-    }
-
     override suspend fun isAnyTokenStaked(userWalletId: UserWalletId): Boolean {
         return withContext(dispatchers.default) {
             val balances = stakingBalanceStoreV2.getAllSyncOrNull(userWalletId) ?: return@withContext false
@@ -412,14 +383,6 @@ internal class DefaultStakingRepository(
             }
 
             balances.isNotEmpty() && hasDataYieldBalance
-        }
-    }
-
-    override fun getActionRequirementAmount(integrationId: String, stakingActionType: StakingActionType): BigDecimal? {
-        return when {
-            stakingIdFactory.isPolygonIntegrationId(integrationId) &&
-                stakingActionType == StakingActionType.CLAIM_REWARDS -> BigDecimal.ONE
-            else -> null
         }
     }
 
