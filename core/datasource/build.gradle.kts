@@ -92,4 +92,5 @@ dependencies {
     testRuntimeOnly(deps.test.junit5.engine)
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)
+    testImplementation(projects.common.test)
 }
