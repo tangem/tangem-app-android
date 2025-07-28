@@ -81,10 +81,11 @@ data class CryptoPortfolioIcon private constructor(
         SweetDesire,
         PalatinateBlue,
         FuchsiaNebula,
+        MexicanPink,
         Pelati,
         Pattypan,
         UFOGreen,
-        SweetHoney,
+        VitalGreen,
         ;
     }
 
