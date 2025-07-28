@@ -22,11 +22,21 @@ internal class SwapProviderListItemConverter(
     private val cryptoCurrency: CryptoCurrency,
     private val selectedProvider: ExpressProvider,
     private val needApplyFCARestrictions: Boolean,
+    needBestRateBadge: Boolean,
 ) : Converter<SwapQuoteUM, SwapProviderListItem?> {
+
+    private val providerStateConverter = SwapProviderStateConverter(
+        cryptoCurrency = cryptoCurrency,
+        selectedProvider = selectedProvider,
+        needApplyFCARestrictions = needApplyFCARestrictions,
+        isNeedBestRateBadge = needBestRateBadge,
+    )
+
     override fun convert(value: SwapQuoteUM): SwapProviderListItem? {
         val provider = value.provider ?: return null
 
         return SwapProviderListItem(
+            swapProviderState = providerStateConverter.convert(value),
             providerUM = ProviderChooseUM(
                 title = stringReference(provider.name),
                 subtitle = stringReference(provider.type.typeName),
