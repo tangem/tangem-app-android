@@ -148,5 +148,17 @@ data class Network(
 
         /** Destination tag supported */
         DESTINATION_TAG,
+
+        ;
+
+        /**
+         * Indicated whether any tx extras are supported
+         */
+        fun isTxExtrasSupported() = when (this) {
+            NONE -> false
+            MEMO,
+            DESTINATION_TAG,
+            -> true
+        }
     }
 }
