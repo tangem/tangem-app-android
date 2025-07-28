@@ -1,10 +1,7 @@
 package com.tangem.domain.tokens.operations
 
 import arrow.core.*
-import arrow.core.raise.Raise
-import arrow.core.raise.catch
-import arrow.core.raise.either
-import arrow.core.raise.recover
+import arrow.core.raise.*
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.domain.core.utils.EitherFlow
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -23,7 +20,8 @@ import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.model.StakingID
 import com.tangem.domain.staking.model.isStakingSupported
 import com.tangem.domain.staking.model.stakekit.YieldBalance
-import com.tangem.domain.staking.repositories.StakingRepository
+import com.tangem.domain.staking.multi.MultiYieldBalanceProducer
+import com.tangem.domain.staking.multi.MultiYieldBalanceSupplier
 import com.tangem.domain.staking.single.SingleYieldBalanceProducer
 import com.tangem.domain.staking.single.SingleYieldBalanceSupplier
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesProducer
@@ -39,7 +37,6 @@ import kotlinx.coroutines.flow.*
  * Base operations for working with currency status
  *
  * @property currenciesRepository repository for currencies
- * @property stakingRepository    repository for staking
  *
 [REDACTED_AUTHOR]
  */
@@ -47,11 +44,11 @@ import kotlinx.coroutines.flow.*
 abstract class BaseCurrencyStatusOperations(
     private val currenciesRepository: CurrenciesRepository,
     private val quotesRepository: QuotesRepository,
-    private val stakingRepository: StakingRepository,
     private val multiNetworkStatusSupplier: MultiNetworkStatusSupplier,
     private val singleNetworkStatusSupplier: SingleNetworkStatusSupplier,
     private val singleQuoteStatusSupplier: SingleQuoteStatusSupplier,
     private val singleYieldBalanceSupplier: SingleYieldBalanceSupplier,
+    private val multiYieldBalanceSupplier: MultiYieldBalanceSupplier,
     private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
     private val stakingIdFactory: StakingIdFactory,
     private val tokensFeatureToggles: TokensFeatureToggles,
@@ -411,34 +408,44 @@ abstract class BaseCurrencyStatusOperations(
     private suspend fun getYieldBalancesSync(
         userWalletId: UserWalletId,
         cryptoCurrencies: List<CryptoCurrency>,
-    ): Either<Error.EmptyYieldBalances, List<YieldBalance>> {
-        return catch(
-            block = {
-                val balances = stakingRepository.getMultiYieldBalanceSync(
-                    userWalletId = userWalletId,
-                    cryptoCurrencies = cryptoCurrencies,
-                )
+    ): Either<Error.EmptyYieldBalances, List<YieldBalance>> = either {
+        val stakingIds = cryptoCurrencies.mapNotNull { cryptoCurrency ->
+            stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = cryptoCurrency)
+                .getOrNull()
+        }
 
-                if (balances.isNullOrEmpty()) {
-                    Error.EmptyYieldBalances.left()
-                } else {
-                    balances.right()
-                }
-            },
-            catch = { Error.EmptyYieldBalances.left() },
+        ensure(stakingIds.isNotEmpty()) { Error.EmptyYieldBalances }
+
+        val balances = multiYieldBalanceSupplier.getSyncOrNull(
+            params = MultiYieldBalanceProducer.Params(userWalletId = userWalletId),
         )
+            .orEmpty()
+            .filter { it.getStakingId() in stakingIds }
+
+        ensure(balances.isNotEmpty()) { Error.EmptyYieldBalances }
+
+        balances
     }
 
     private suspend fun getYieldBalanceSync(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
-    ): Either<Error.EmptyYieldBalances, YieldBalance> {
-        return catch(
-            block = { stakingRepository.getSingleYieldBalanceSync(userWalletId, cryptoCurrency).right() },
-            catch = {
-                Error.EmptyYieldBalances.left()
-            },
+    ): Either<Error, YieldBalance> = either {
+        val stakingId = stakingIdFactory.create(userWalletId, cryptoCurrency)
+            .mapLeft {
+                val exception = IllegalStateException("$it")
+                Error.DataError(exception)
+            }
+            .bind()
+
+        val yieldBalance = singleYieldBalanceSupplier.getSyncOrNull(
+            params = SingleYieldBalanceProducer.Params(
+                userWalletId = userWalletId,
+                stakingId = stakingId,
+            ),
         )
+
+        ensureNotNull(yieldBalance) { Error.EmptyYieldBalances }
     }
 
     private suspend fun Raise<Error>.getPrimaryCurrency(userWalletId: UserWalletId): CryptoCurrency {
