@@ -1,14 +1,13 @@
 package com.tangem.feature.tester.presentation.navigation
 
 import androidx.navigation.NavController
-import com.tangem.features.tester.api.TesterRouter
 
 /**
  * Inner feature router
  *
 [REDACTED_AUTHOR]
  */
-internal interface InnerTesterRouter : TesterRouter {
+internal interface InnerTesterRouter {
 
     /** Set up a navigation controller that bound to tester navigation graph */
     fun setNavController(navController: NavController)
