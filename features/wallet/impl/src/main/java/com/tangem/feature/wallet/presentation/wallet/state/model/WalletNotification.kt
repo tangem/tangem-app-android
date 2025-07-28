@@ -255,6 +255,20 @@ sealed class WalletNotification(val config: NotificationConfig) {
         ),
     )
 
+    data class FinishWalletActivation(
+        val onFinishClick: () -> Unit,
+    ) : WalletNotification(
+        config = NotificationConfig(
+            title = resourceReference(R.string.hw_activation_need_title),
+            subtitle = resourceReference(R.string.hw_activation_need_description),
+            iconResId = R.drawable.img_knight_shield_32,
+            buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
+                text = resourceReference(R.string.hw_activation_need_finish),
+                onClick = onFinishClick,
+            ),
+        ),
+    )
+
     data class ReferralPromo(
         val onCloseClick: () -> Unit,
         val onClick: () -> Unit,
