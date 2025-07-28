@@ -17,6 +17,8 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.express.models.ExpressError
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
+import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.domain.swap.models.SwapCurrencies
 import com.tangem.domain.swap.models.SwapDirection
 import com.tangem.domain.swap.models.SwapDirection.Companion.withSwapDirection
@@ -54,6 +56,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.math.BigDecimal
+import java.util.Locale
 import javax.inject.Inject
 import kotlin.properties.Delegates
 import com.tangem.utils.transformer.update as transformerUpdate
@@ -69,6 +72,7 @@ internal class SwapAmountModel @Inject constructor(
     private val swapChooseTokenNetworkListener: SwapChooseTokenNetworkListener,
     private val getAllowanceUseCase: GetAllowanceUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
+    private val getUserCountryUseCase: GetUserCountryUseCase,
     private val appRouter: AppRouter,
     private val swapAmountAlertFactory: SwapAmountAlertFactory,
     private val swapAlertFactory: SwapAlertFactory,
@@ -89,6 +93,7 @@ internal class SwapAmountModel @Inject constructor(
     private var secondaryMaximumAmountBoundary: EnterAmountBoundary? = null
     private var secondaryMinimumAmountBoundary: EnterAmountBoundary? = null
 
+    var userCountry: UserCountry = UserCountry.Other(Locale.getDefault().country)
     val bottomSheetNavigation: SlotNavigation<SwapChooseProviderConfig> = SlotNavigation()
 
     val uiState: StateFlow<SwapAmountUM>
@@ -100,6 +105,8 @@ internal class SwapAmountModel @Inject constructor(
     init {
         modelScope.launch {
             appCurrency = getSelectedAppCurrencyUseCase.invokeSync().getOrElse { AppCurrency.Default }
+            userCountry = getUserCountryUseCase.invokeSync().getOrNull()
+                ?: UserCountry.Other(Locale.getDefault().country)
         }
         configAmountNavigation()
         subscribeOnCryptoCurrencyStatusFlow()
