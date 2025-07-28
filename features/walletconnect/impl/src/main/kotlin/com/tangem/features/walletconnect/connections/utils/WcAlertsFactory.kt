@@ -2,6 +2,7 @@ package com.tangem.features.walletconnect.connections.utils
 
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.bottomsheets.message.*
+import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUMV2.Icon.Type
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -51,6 +52,7 @@ internal object WcAlertsFactory {
         return messageBottomSheetUM {
             infoBlock {
                 icon(R.drawable.img_knight_shield_32) {
+                    type = Type.Warning
                     backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.Warning
                 }
                 title = resourceReference(R.string.security_alert_title)
