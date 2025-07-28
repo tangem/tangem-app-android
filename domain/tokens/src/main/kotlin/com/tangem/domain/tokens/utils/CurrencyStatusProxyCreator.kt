@@ -8,7 +8,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.staking.model.stakekit.YieldBalance
-import com.tangem.domain.staking.model.stakekit.YieldBalanceList
+import com.tangem.domain.staking.model.stakekit.YieldBalance.Unsupported.integrationId
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations.Error
@@ -52,12 +52,12 @@ class CurrencyStatusProxyCreator(
     fun createCurrenciesStatuses(
         currencies: NonEmptyList<CryptoCurrency>,
         maybeQuotes: Either<Error, Set<QuoteStatus>>?,
-        maybeNetworkStatuses: Either<Error, Set<NetworkStatus>>?,
-        maybeYieldBalances: Either<Error, YieldBalanceList>?,
+        maybeNetworkStatuses: Either<Error, Set<NetworkStatus>>,
+        maybeYieldBalances: Either<Error, List<YieldBalance>>,
     ): Either<Error, List<CryptoCurrencyStatus>> = either {
         var quotesRetrievingFailed = false
 
-        val networksStatuses = maybeNetworkStatuses?.bind()?.toNonEmptySetOrNull()
+        val networksStatuses = maybeNetworkStatuses.bind().toNonEmptySetOrNull()
         val quoteStatuses: Set<QuoteStatus>? = maybeQuotes?.fold(
             ifLeft = {
                 quotesRetrievingFailed = true
@@ -71,7 +71,7 @@ class CurrencyStatusProxyCreator(
             },
         )
 
-        val yieldBalances = maybeYieldBalances?.getOrNull()
+        val yieldBalances = maybeYieldBalances.getOrNull()
 
         currencies.map { currency ->
             val quote = quoteStatuses?.firstOrNull { it.rawCurrencyId == currency.id.rawCurrencyId }
@@ -80,13 +80,12 @@ class CurrencyStatusProxyCreator(
 
             val supportedIntegration = stakingRepository.getSupportedIntegrationId(currency.id)
             val yieldBalance = if (supportedIntegration.isNullOrEmpty().not()) {
-                (yieldBalances as? YieldBalanceList.Data)?.getBalance(
-                    address = address,
-                    integrationId = supportedIntegration,
-                )
+                yieldBalances?.firstOrNull { it.integrationId == supportedIntegration && it.address == address }
+                    ?: YieldBalance.Error(integrationId = supportedIntegration, address = address)
             } else {
                 null
             }
+
             createCurrencyStatus(
                 currency = currency,
                 quoteStatus = quote,
