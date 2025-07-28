@@ -58,6 +58,7 @@ internal class SwapAmountSetQuotesTransformer(
                         val percent = quote.quoteAmount / bestQuote.quoteAmount - BigDecimal.ONE
                         quote.copy(
                             diffPercent = DifferencePercent.Diff(
+                                isPositive = percent.isPositive(),
                                 percent = stringReference(
                                     if (percent.isPositive()) {
                                         "${StringsSigns.PLUS}${percent.format { percent() }}"
