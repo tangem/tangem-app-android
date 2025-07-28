@@ -75,6 +75,7 @@ internal class ProxyAppRouter(
             try {
                 block()
             } catch (e: Throwable) {
+                Timber.e(e)
                 onComplete(false)
             }
         }

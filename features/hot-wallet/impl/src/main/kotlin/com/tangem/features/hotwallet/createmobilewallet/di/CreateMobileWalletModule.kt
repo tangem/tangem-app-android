@@ -10,18 +10,12 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.ClassKey
 import dagger.multibindings.IntoMap
-import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-internal object CreateMobileWalletModule
-
-@Module
-@InstallIn(SingletonComponent::class)
-internal interface CreateMobileWalletModuleBinds {
+internal interface CreateMobileWalletModule {
 
     @Binds
-    @Singleton
     fun bindCreateMobileWalletComponentFactory(
         impl: DefaultCreateMobileWalletComponent.Factory,
     ): CreateMobileWalletComponent.Factory
