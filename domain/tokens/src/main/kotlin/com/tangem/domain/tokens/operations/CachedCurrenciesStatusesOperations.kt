@@ -28,7 +28,7 @@ import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
-import com.tangem.domain.staking.repositories.StakingRepository
+import com.tangem.domain.staking.multi.MultiYieldBalanceSupplier
 import com.tangem.domain.staking.single.SingleYieldBalanceProducer
 import com.tangem.domain.staking.single.SingleYieldBalanceSupplier
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
@@ -47,7 +47,6 @@ import kotlinx.coroutines.flow.*
 class CachedCurrenciesStatusesOperations(
     private val currenciesRepository: CurrenciesRepository,
     quotesRepository: QuotesRepository,
-    stakingRepository: StakingRepository,
     private val singleNetworkStatusSupplier: SingleNetworkStatusSupplier,
     multiNetworkStatusSupplier: MultiNetworkStatusSupplier,
     private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
@@ -55,6 +54,7 @@ class CachedCurrenciesStatusesOperations(
     private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
     private val singleQuoteStatusSupplier: SingleQuoteStatusSupplier,
     private val singleYieldBalanceSupplier: SingleYieldBalanceSupplier,
+    multiYieldBalanceSupplier: MultiYieldBalanceSupplier,
     private val multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
     multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
     private val stakingIdFactory: StakingIdFactory,
@@ -63,11 +63,11 @@ class CachedCurrenciesStatusesOperations(
     BaseCurrencyStatusOperations(
         currenciesRepository = currenciesRepository,
         quotesRepository = quotesRepository,
-        stakingRepository = stakingRepository,
         multiNetworkStatusSupplier = multiNetworkStatusSupplier,
         singleNetworkStatusSupplier = singleNetworkStatusSupplier,
         singleQuoteStatusSupplier = singleQuoteStatusSupplier,
         singleYieldBalanceSupplier = singleYieldBalanceSupplier,
+        multiYieldBalanceSupplier = multiYieldBalanceSupplier,
         multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
         stakingIdFactory = stakingIdFactory,
         tokensFeatureToggles = tokensFeatureToggles,
