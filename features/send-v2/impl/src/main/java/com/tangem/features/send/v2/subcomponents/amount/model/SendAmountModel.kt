@@ -65,6 +65,7 @@ internal class SendAmountModel @Inject constructor(
     private val feeSelectorReloadTrigger: FeeSelectorReloadTrigger,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val rampStateManager: RampStateManager,
+    private val sendAmountAlertFactory: SendAmountAlertFactory,
 ) : Model(), SendAmountClickIntents {
 
     private val params: SendAmountComponentParams = paramsContainer.require()
@@ -242,9 +243,21 @@ internal class SendAmountModel @Inject constructor(
     }
 
     override fun onConvertToAnotherToken() {
+        val amountParams = params as? SendAmountComponentParams.AmountParams ?: return
+        if (amountParams.currentRoute.value.isEditMode) {
+            sendAmountAlertFactory.showResetSendingAlert {
+                params.callback.resetSendNavigation()
+                confirmConvertToToken()
+            }
+        } else {
+            confirmConvertToToken()
+        }
+    }
+
+    private fun confirmConvertToToken() {
+        val amountParams = params as? SendAmountComponentParams.AmountParams ?: return
         val amountFieldData = uiState.value as? AmountState.Data
-        val amountParams = params as? SendAmountComponentParams.AmountParams
-        amountParams?.callback?.onConvertToAnotherToken(amountFieldData?.amountTextField?.value.orEmpty())
+        amountParams.callback.onConvertToAnotherToken(amountFieldData?.amountTextField?.value.orEmpty())
     }
 
     private fun subscribeOnAmountReduceToTriggerUpdates() {
