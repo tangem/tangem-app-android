@@ -40,6 +40,7 @@ internal sealed class SwapQuoteUM {
             data object Empty : DifferencePercent()
             data object Best : DifferencePercent()
             data class Diff(
+                val isPositive: Boolean,
                 val percent: TextReference,
             ) : DifferencePercent()
         }
