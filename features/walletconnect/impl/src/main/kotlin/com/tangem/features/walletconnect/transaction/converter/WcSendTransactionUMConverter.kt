@@ -1,13 +1,13 @@
 package com.tangem.features.walletconnect.transaction.converter
 
-import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.walletconnect.model.WcEthMethod
 import com.tangem.domain.walletconnect.model.WcSolanaMethod
 import com.tangem.domain.walletconnect.usecase.method.*
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
-import com.tangem.features.walletconnect.impl.R
 import com.tangem.features.walletconnect.transaction.entity.blockaid.WcSendReceiveTransactionCheckResultsUM
-import com.tangem.features.walletconnect.transaction.entity.common.*
+import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionActionsUM
+import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionFeeState
+import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionRequestInfoUM
 import com.tangem.features.walletconnect.transaction.entity.send.WcSendTransactionItemUM
 import com.tangem.features.walletconnect.transaction.entity.send.WcSendTransactionUM
 import com.tangem.utils.converter.Converter
@@ -45,33 +45,11 @@ internal class WcSendTransactionUMConverter @Inject constructor(
             feeSelectorUM = value.feeSelectorUM ?: FeeSelectorUM.Loading,
             transactionRequestInfo = WcTransactionRequestInfoUM(
                 blocks = buildList {
-                    add(
+                    addAll(
                         requestBlockUMConverter.convert(
                             WcTransactionRequestBlockUMConverter.Input(value.useCase.rawSdkRequest),
                         ),
                     )
-                    (value.useCase.method as? WcEthMethod.SendTransaction)?.transaction?.let { transaction ->
-                        add(
-                            WcTransactionRequestBlockUM(
-                                info = buildList {
-                                    transaction.to?.let {
-                                        add(
-                                            WcTransactionRequestInfoItemUM(
-                                                title = resourceReference(R.string.wc_transaction_info_to_title),
-                                                description = it,
-                                            ),
-                                        )
-                                    }
-                                    add(
-                                        WcTransactionRequestInfoItemUM(
-                                            title = resourceReference(R.string.send_from_wallet_android),
-                                            description = transaction.from,
-                                        ),
-                                    )
-                                }.toImmutableList(),
-                            ),
-                        )
-                    }
                 }.toImmutableList(),
                 onCopy = value.actions.onCopy,
             ),
