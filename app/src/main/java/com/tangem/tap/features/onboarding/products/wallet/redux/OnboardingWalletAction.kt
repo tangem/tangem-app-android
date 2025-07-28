@@ -1,7 +1,7 @@
 package com.tangem.tap.features.onboarding.products.wallet.redux
 
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import org.rekotlin.Action
 
 sealed class OnboardingWalletAction : Action {
