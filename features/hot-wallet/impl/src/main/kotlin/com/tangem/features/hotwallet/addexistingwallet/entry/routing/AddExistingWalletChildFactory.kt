@@ -1,10 +1,10 @@
-package com.tangem.features.hotwallet.addexistingwallet.root.routing
+package com.tangem.features.hotwallet.addexistingwallet.entry.routing
 
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.hotwallet.accesscode.set.SetAccessCodeComponent
 import com.tangem.features.hotwallet.accesscode.confirm.ConfirmAccessCodeComponent
-import com.tangem.features.hotwallet.addexistingwallet.root.AddExistingWalletModel
+import com.tangem.features.hotwallet.addexistingwallet.entry.AddExistingWalletModel
 import com.tangem.features.hotwallet.addexistingwallet.start.AddExistingWalletStartComponent
 import com.tangem.features.hotwallet.addexistingwallet.im.port.AddExistingWalletImportComponent
 import com.tangem.features.hotwallet.manualbackup.completed.ManualBackupCompletedComponent

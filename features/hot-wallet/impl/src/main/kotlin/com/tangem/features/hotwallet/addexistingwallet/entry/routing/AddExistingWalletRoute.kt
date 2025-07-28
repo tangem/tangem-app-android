@@ -1,4 +1,4 @@
-package com.tangem.features.hotwallet.addexistingwallet.root.routing
+package com.tangem.features.hotwallet.addexistingwallet.entry.routing
 
 import com.tangem.core.decompose.navigation.Route
 import kotlinx.serialization.Serializable
