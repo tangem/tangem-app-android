@@ -213,7 +213,7 @@ internal class SendFeeModel @Inject constructor(
         )
         val params = params as? SendFeeComponentParams.FeeParams ?: return
         params.callback.onFeeResult(uiState.value)
-        params.onNextClick()
+        params.callback.onNextClick()
     }
 
     private fun checkLoadFee() {
@@ -284,7 +284,7 @@ internal class SendFeeModel @Inject constructor(
                     title = resourceReference(R.string.common_fee_selector_title),
                     subtitle = null,
                     backIconRes = R.drawable.ic_back_24,
-                    backIconClick = params.onNextClick,
+                    backIconClick = params.callback::onNextClick,
                     primaryButton = NavigationButton(
                         textReference = resourceReference(R.string.common_continue),
                         isEnabled = state.isPrimaryButtonEnabled,
