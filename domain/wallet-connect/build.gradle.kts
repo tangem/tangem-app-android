@@ -16,6 +16,8 @@ dependencies {
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.walletConnect.models)
+    implementation(projects.domain.transaction)
+    implementation(projects.domain.transaction.models)
 
     /* Project - Core */
     implementation(projects.core.analytics)
@@ -25,4 +27,5 @@ dependencies {
 
     /* Tangem libraries */
     implementation(tangemDeps.blockchain)
+    implementation(tangemDeps.card.core)
 }

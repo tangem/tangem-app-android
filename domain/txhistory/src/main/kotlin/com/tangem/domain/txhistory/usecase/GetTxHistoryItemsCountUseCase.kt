@@ -6,7 +6,7 @@ import arrow.core.raise.either
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.domain.txhistory.repository.TxHistoryRepository
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 
 // TODO: Add tests
 class GetTxHistoryItemsCountUseCase(private val repository: TxHistoryRepository) {
