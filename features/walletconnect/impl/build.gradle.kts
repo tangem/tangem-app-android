@@ -22,6 +22,7 @@ dependencies {
     implementation(projects.core.ui)
     implementation(projects.common.routing)
     implementation(projects.common.ui)
+    implementation(projects.core.analytics)
 
     /** Domain models */
     implementation(projects.domain.appCurrency.models)
@@ -69,4 +70,8 @@ dependencies {
     implementation(deps.timber)
     implementation(tangemDeps.card.core)
     implementation(tangemDeps.blockchain)
+
+    /** Test libraries */
+    implementation(deps.test.junit)
+    implementation(deps.test.truth)
 }

@@ -11,7 +11,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.managetokens.GetSupportedNetworksUseCase
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.managetokens.component.CustomTokenSelectorComponent
 import com.tangem.features.managetokens.component.CustomTokenSelectorComponent.Params.DerivationPathSelector
 import com.tangem.features.managetokens.component.CustomTokenSelectorComponent.Params.NetworkSelector
