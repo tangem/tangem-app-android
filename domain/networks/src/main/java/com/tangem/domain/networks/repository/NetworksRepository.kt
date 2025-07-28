@@ -2,7 +2,7 @@ package com.tangem.domain.networks.repository
 
 import com.tangem.domain.models.network.CryptoCurrencyAddress
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 
 /**
  * Repository for working with pending transactions
