@@ -126,6 +126,7 @@ sealed class AppRoute(val path: String) : Route {
     data class ChooseManagedTokens(
         val userWalletId: UserWalletId,
         val initialCurrency: CryptoCurrency,
+        val selectedCurrency: CryptoCurrency?,
         val source: Source,
     ) : AppRoute(path = "/$source/choose_managed_tokens/$userWalletId/${initialCurrency.id.value}") {
         enum class Source {
