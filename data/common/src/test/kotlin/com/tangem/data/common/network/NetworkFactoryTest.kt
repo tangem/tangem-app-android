@@ -5,13 +5,15 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.common.test.domain.card.MockScanResponseFactory
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
+import com.tangem.common.test.domain.wallet.MockUserWalletFactory
 import com.tangem.common.test.utils.ProvideTestModels
-import com.tangem.domain.common.DerivationStyleProvider
-import com.tangem.domain.common.configs.GenericCardConfig
-import com.tangem.domain.common.configs.MultiWalletCardConfig
-import com.tangem.domain.common.util.derivationStyleProvider
+import com.tangem.domain.card.DerivationStyleProvider
+import com.tangem.domain.card.configs.GenericCardConfig
+import com.tangem.domain.card.configs.MultiWalletCardConfig
+import com.tangem.domain.card.common.util.derivationStyleProvider
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.models.wallet.UserWallet
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Nested
@@ -43,7 +45,7 @@ class NetworkFactoryTest {
             val actual = networkFactory.create(
                 blockchain = Blockchain.Ethereum,
                 extraDerivationPath = null,
-                scanResponse = createMultiWalletScanResponse(),
+                userWallet = createUserWallet(),
             )
 
             // Assert
@@ -59,14 +61,14 @@ class NetworkFactoryTest {
                     networkFactory.create(
                         blockchain = model.blockchain,
                         extraDerivationPath = model.extraDerivationPath,
-                        scanResponse = model.scanResponse,
+                        userWallet = model.userWallet,
                     )
                 }
                 is CreateTestModel.Second -> {
                     networkFactory.create(
                         networkId = model.networkId,
                         derivationPath = model.derivationPath,
-                        scanResponse = model.scanResponse,
+                        userWallet = model.userWallet,
                     )
                 }
                 is CreateTestModel.Third -> {
@@ -89,27 +91,27 @@ class NetworkFactoryTest {
             CreateTestModel.First(
                 blockchain = Blockchain.Unknown,
                 extraDerivationPath = null, // never-mind
-                scanResponse = createMultiWalletScanResponse(), // never-mind
+                userWallet = createUserWallet(),
                 expected = null,
             ),
             createFirst(
                 extraDerivationPath = null,
-                scanResponse = createGenericScanResponse(), // default derivation path is null
+                userWallet = createUserWallet(createGenericScanResponse()), // default derivation path is null
                 expectedDerivationPath = Network.DerivationPath.None,
             ),
             createFirst(
                 extraDerivationPath = null,
-                scanResponse = createMultiWalletScanResponse(),
+                userWallet = createUserWallet(),
                 expectedDerivationPath = Network.DerivationPath.Card(value = "m/44'/60'/0'/0/0"), // use default
             ),
             createFirst(
                 extraDerivationPath = "m/44'/60'/0'/0/0", // as default
-                scanResponse = createMultiWalletScanResponse(),
+                userWallet = createUserWallet(),
                 expectedDerivationPath = Network.DerivationPath.Card(value = "m/44'/60'/0'/0/0"),
             ),
             createFirst(
                 extraDerivationPath = "m/84'/0'/0'/0/0",
-                scanResponse = createMultiWalletScanResponse(),
+                userWallet = createUserWallet(),
                 expectedDerivationPath = Network.DerivationPath.Custom(value = "m/84'/0'/0'/0/0"),
             ),
             // endregion
@@ -118,23 +120,23 @@ class NetworkFactoryTest {
             CreateTestModel.Second(
                 networkId = Network.ID(value = "1", derivationPath = Network.DerivationPath.None),
                 derivationPath = Network.DerivationPath.None, // never-mind
-                scanResponse = createMultiWalletScanResponse(), // never-mind
+                userWallet = createUserWallet(), // never-mind
                 expected = null,
             ),
             createSecond(
-                scanResponse = createGenericScanResponse(), // default derivation path is null
+                userWallet = createUserWallet(createGenericScanResponse()), // default derivation path is null
                 derivationPath = Network.DerivationPath.None,
             ),
             createSecond(
-                scanResponse = createMultiWalletScanResponse(),
+                userWallet = createUserWallet(),
                 derivationPath = Network.DerivationPath.None,
             ),
             createSecond(
-                scanResponse = createMultiWalletScanResponse(),
+                userWallet = createUserWallet(),
                 derivationPath = Network.DerivationPath.Card(value = "m/44'/60'/0'/0/0"),
             ),
             createSecond(
-                scanResponse = createMultiWalletScanResponse(),
+                userWallet = createUserWallet(),
                 derivationPath = Network.DerivationPath.Custom(value = "m/84'/0'/0'/0/0"),
             ),
             // endregion
@@ -176,13 +178,13 @@ class NetworkFactoryTest {
 
         private fun createFirst(
             extraDerivationPath: String?,
-            scanResponse: ScanResponse,
+            userWallet: UserWallet,
             expectedDerivationPath: Network.DerivationPath,
         ): CreateTestModel.First {
             return CreateTestModel.First(
                 blockchain = Blockchain.Ethereum,
                 extraDerivationPath = extraDerivationPath,
-                scanResponse = scanResponse,
+                userWallet = userWallet,
                 expected = MockCryptoCurrencyFactory().ethereum.network.copy(
                     id = Network.ID(
                         value = Blockchain.Ethereum.id,
@@ -195,13 +197,13 @@ class NetworkFactoryTest {
         }
 
         private fun createSecond(
-            scanResponse: ScanResponse,
+            userWallet: UserWallet,
             derivationPath: Network.DerivationPath,
         ): CreateTestModel.Second {
             return CreateTestModel.Second(
                 networkId = Network.ID(value = Blockchain.Ethereum.id, derivationPath = derivationPath),
                 derivationPath = derivationPath,
-                scanResponse = scanResponse,
+                userWallet = userWallet,
                 expected = MockCryptoCurrencyFactory().ethereum.network.copy(
                     id = Network.ID(
                         value = Blockchain.Ethereum.id,
@@ -232,6 +234,10 @@ class NetworkFactoryTest {
             )
         }
 
+        private fun createUserWallet(scanResponse: ScanResponse = createMultiWalletScanResponse()): UserWallet.Cold {
+            return MockUserWalletFactory.create(scanResponse)
+        }
+
         private fun createMultiWalletScanResponse(): ScanResponse {
             return MockScanResponseFactory.create(
                 cardConfig = MultiWalletCardConfig,
@@ -254,14 +260,14 @@ class NetworkFactoryTest {
         data class First(
             val blockchain: Blockchain,
             val extraDerivationPath: String?,
-            val scanResponse: ScanResponse,
+            val userWallet: UserWallet,
             override val expected: Network?,
         ) : CreateTestModel
 
         data class Second(
             val networkId: Network.ID,
             val derivationPath: Network.DerivationPath,
-            val scanResponse: ScanResponse,
+            val userWallet: UserWallet,
             override val expected: Network?,
         ) : CreateTestModel
 
