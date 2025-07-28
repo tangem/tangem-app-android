@@ -64,6 +64,7 @@
   <string name="auth_info_add_wallet_title">Add Wallet</string>
   <string name="auth_info_subtitle">Select a wallet to log in</string>
   <string name="auth_info_title">Welcome back!</string>
+  <string name="auth_wallet_mobile_description">Phone Wallet</string>
   <string name="backup_complete_description">You successfully backed up your wallet.</string>
   <string name="backup_complete_seed_description">These words can’t be recovered if lost. Make sure to keep it somewhere secure.</string>
   <string name="backup_complete_title">Backup Completed</string>
