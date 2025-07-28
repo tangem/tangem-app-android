@@ -10,15 +10,12 @@ import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
 import com.tangem.domain.staking.model.stakekit.NetworkType
 import com.tangem.domain.staking.model.stakekit.Yield
-import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.staking.model.stakekit.action.StakingAction
 import com.tangem.domain.staking.model.stakekit.action.StakingActionStatus
-import com.tangem.domain.staking.model.stakekit.action.StakingActionType
 import com.tangem.domain.staking.model.stakekit.transaction.ActionParams
 import com.tangem.domain.staking.model.stakekit.transaction.StakingGasEstimate
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
 import kotlinx.coroutines.flow.Flow
-import java.math.BigDecimal
 
 @Suppress("TooManyFunctions")
 interface StakingRepository {
@@ -45,13 +42,6 @@ interface StakingRepository {
         stakingActionStatus: StakingActionStatus,
     ): List<StakingAction>
 
-    suspend fun getSingleYieldBalanceSync(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): YieldBalance
-
-    suspend fun getMultiYieldBalanceSync(
-        userWalletId: UserWalletId,
-        cryptoCurrencies: List<CryptoCurrency>,
-    ): List<YieldBalance>?
-
     suspend fun createAction(userWalletId: UserWalletId, network: Network, params: ActionParams): StakingAction
 
     suspend fun estimateGas(userWalletId: UserWalletId, network: Network, params: ActionParams): StakingGasEstimate
@@ -64,9 +54,4 @@ interface StakingRepository {
     ): Pair<StakingTransaction, TransactionData.Compiled>
 
     suspend fun isAnyTokenStaked(userWalletId: UserWalletId): Boolean
-
-    /**
-     * Return action requirement amount
-     */
-    fun getActionRequirementAmount(integrationId: String, stakingActionType: StakingActionType): BigDecimal?
 }
