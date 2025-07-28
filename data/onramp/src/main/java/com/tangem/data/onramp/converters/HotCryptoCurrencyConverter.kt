@@ -10,7 +10,7 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.quote.QuoteStatus
-import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.onramp.model.HotCryptoCurrency
 import com.tangem.utils.converter.Converter
 import java.math.BigDecimal
@@ -18,14 +18,14 @@ import java.math.BigDecimal
 /**
  * Converter from [HotCryptoResponse.Token] to [HotCryptoCurrency]
  *
- * @property scanResponse        scan response
+ * @property userWallet        scan response
  * @property imageHost           image host
  * @param excludedBlockchains    excluded blockchains
  *
 [REDACTED_AUTHOR]
  */
 internal class HotCryptoCurrencyConverter(
-    private val scanResponse: ScanResponse,
+    private val userWallet: UserWallet,
     private val imageHost: String?,
     excludedBlockchains: ExcludedBlockchains,
 ) : Converter<HotCryptoResponse.Token, HotCryptoCurrency?> {
@@ -81,7 +81,7 @@ internal class HotCryptoCurrencyConverter(
         return networkFactory.create(
             blockchain = blockchain,
             extraDerivationPath = null,
-            scanResponse = scanResponse,
+            userWallet = userWallet,
         )
     }
 
