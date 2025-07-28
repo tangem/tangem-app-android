@@ -7,40 +7,44 @@ import com.tangem.features.walletconnect.impl.R
 import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionRequestBlockUM
 import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionRequestInfoItemUM
 import com.tangem.utils.converter.Converter
-import kotlinx.collections.immutable.persistentListOf
-import org.json.JSONArray
+import kotlinx.collections.immutable.toImmutableList
+import timber.log.Timber
 import javax.inject.Inject
 
-private const val DATA_FIELD = "data"
+internal class WcTransactionRequestBlockUMConverter @Inject constructor(
+    private val transactionParamsConverter: TransactionParamsConverter,
+) : Converter<WcTransactionRequestBlockUMConverter.Input, List<WcTransactionRequestBlockUM>> {
 
-internal class WcTransactionRequestBlockUMConverter @Inject constructor() :
-    Converter<WcTransactionRequestBlockUMConverter.Input, WcTransactionRequestBlockUM> {
-
-    override fun convert(value: Input): WcTransactionRequestBlockUM {
+    override fun convert(value: Input): List<WcTransactionRequestBlockUM> {
         val params = value.rawSdkRequest.request.params
-        return WcTransactionRequestBlockUM(
-            persistentListOf(
-                WcTransactionRequestInfoItemUM(
-                    title = resourceReference(R.string.wc_signature_type),
-                    description = value.rawSdkRequest.request.method,
+        val humanMsg = value.signModel?.humanMsg
+        return buildList {
+            add(
+                WcTransactionRequestBlockUM(
+                    buildList {
+                        add(
+                            WcTransactionRequestInfoItemUM(
+                                title = resourceReference(R.string.wc_signature_type),
+                                description = value.rawSdkRequest.request.method,
+                            ),
+                        )
+                        if (!humanMsg.isNullOrEmpty()) {
+                            add(
+                                WcTransactionRequestInfoItemUM(
+                                    title = resourceReference(R.string.wc_contents),
+                                    description = humanMsg,
+                                ),
+                            )
+                        }
+                    }.toImmutableList(),
                 ),
-                WcTransactionRequestInfoItemUM(
-                    title = resourceReference(R.string.wc_contents),
-                    description = value.signModel?.humanMsg ?: params.tryExtractData() ?: params,
-                ),
-            ),
-        )
-    }
-
-    private fun String.tryExtractData() = try {
-        val array = JSONArray(this)
-        if (array.length() > 0 && array.getJSONObject(0).has(DATA_FIELD)) {
-            array.getJSONObject(0).getString(DATA_FIELD)
-        } else {
-            null
+            )
+            try {
+                addAll(transactionParamsConverter.convert(params))
+            } catch (exception: Exception) {
+                Timber.e(exception, "Error while parsing transaction params - %s", params)
+            }
         }
-    } catch (ignore: Exception) {
-        null
     }
 
     data class Input(
