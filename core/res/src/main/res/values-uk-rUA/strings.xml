@@ -376,6 +376,7 @@
   <string name="home_button_scan">Сканувати</string>
   <string name="hot_crypto_add_token_subtitle">в %s</string>
   <string name="hot_crypto_token_network">В мережі %s</string>
+  <string name="hw_create_seed_description">Будьте в курсі нових можливостей і новин</string>
   <string name="information_generated_with_ai">Ця інформація була створена за допомогою ШІ.\nНатисніть тут, якщо знайшли помилку.</string>
   <string name="initial_message_change_access_code_body">Щоб змінити код доступу, прикладіть картку або кільце, як показано вище, і не прибирайте її до закінчення операції</string>
   <string name="initial_message_change_passcode_body">Щоб змінити пароль, прикладіть картку, як показано вище, і не прибирайте її до закінчення операції</string>
@@ -1273,6 +1274,7 @@
   <string name="warning_testnet_card_message">Це картка Testnet. Вона не може обробляти транзакції і повинна використовуватися лише для тестування та розробки.</string>
   <string name="warning_testnet_card_title">Лише для цілей тестування</string>
   <string name="warning_token_balance_not_updated">Баланс може бути застарілим. Оновіть сторінку.</string>
+  <string name="warning_token_required_min_coin_reserve">Недостатньо %1$s. Поповніть свій рахунок %2$s, щоб прив’язати цей токен.</string>
   <string name="warning_token_trustline_button_title">Відкрити Trustline</string>
   <string name="warning_token_trustline_subtitle">Відповідно до правил мережі, щоб поповнити цей токен, спочатку потрібно відкрити Trustline — це дозволить вашому гаманцю приймати та зберігати цей актив.</string>
   <string name="warning_token_trustline_title">Відкрийте Trustline</string>
