@@ -10,5 +10,6 @@ fun <B> assertEither(actual: Either<Throwable, B>, expected: Either<Throwable, B
             val expectedError = expected.leftOrNull() ?: error("Actual is Either.Left: $it")
 
             Truth.assertThat(it::class.java).isEqualTo(expectedError::class.java)
+            Truth.assertThat(it).hasMessageThat().isEqualTo(expectedError.message)
         }
 }
