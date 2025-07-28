@@ -1105,6 +1105,8 @@
   <string name="transaction_history_transaction_from_address">от: %s</string>
   <string name="transaction_history_transaction_to_address">на: %s</string>
   <string name="transaction_history_transaction_validator">валидатор: %s</string>
+  <string name="transaction_notifications_warning_description">Уведомления включены, но не будут работать, пока вы не разрешите их в настройках устройства.</string>
+  <string name="transaction_notifications_warning_title">Уведомления о транзакциях</string>
   <string name="transfer_min_amount_error">Минимум %s</string>
   <string name="transfer_notification_invalid_minimum_transaction_amount_text">Минимальная сумма транзакции равна %1$s.</string>
   <string name="tron_will_be_send_token_fee_description">Комиссии сети Tron для популярных токенов могут быть выше. Стейкинг TRX может помочь снизить расходы на транзакции.</string>
