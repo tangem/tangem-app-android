@@ -14,7 +14,7 @@ sealed class FeeSelectorParams {
     abstract val onLoadFee: suspend () -> Either<GetFeeError, TransactionFee>
     abstract val cryptoCurrencyStatus: CryptoCurrencyStatus
     abstract val feeCryptoCurrencyStatus: CryptoCurrencyStatus
-    abstract val suggestedFeeState: SuggestedFeeState
+    abstract val feeStateConfiguration: FeeStateConfiguration
     abstract val feeDisplaySource: FeeDisplaySource
 
     data class FeeSelectorBlockParams(
@@ -22,7 +22,7 @@ sealed class FeeSelectorParams {
         override val onLoadFee: suspend () -> Either<GetFeeError, TransactionFee>,
         override val cryptoCurrencyStatus: CryptoCurrencyStatus,
         override val feeCryptoCurrencyStatus: CryptoCurrencyStatus,
-        override val suggestedFeeState: SuggestedFeeState,
+        override val feeStateConfiguration: FeeStateConfiguration,
         override val feeDisplaySource: FeeDisplaySource,
     ) : FeeSelectorParams()
 
@@ -31,14 +31,16 @@ sealed class FeeSelectorParams {
         override val onLoadFee: suspend () -> Either<GetFeeError, TransactionFee>,
         override val cryptoCurrencyStatus: CryptoCurrencyStatus,
         override val feeCryptoCurrencyStatus: CryptoCurrencyStatus,
-        override val suggestedFeeState: SuggestedFeeState,
+        override val feeStateConfiguration: FeeStateConfiguration,
         override val feeDisplaySource: FeeDisplaySource,
         val callback: FeeSelectorModelCallback,
     ) : FeeSelectorParams()
 
-    sealed class SuggestedFeeState {
-        data object None : SuggestedFeeState()
-        data class Suggestion(val title: TextReference, val fee: Fee) : SuggestedFeeState()
+    sealed class FeeStateConfiguration {
+        data object None : FeeStateConfiguration()
+        data class Suggestion(val title: TextReference, val fee: Fee) : FeeStateConfiguration()
+
+        data object ExcludeLow : FeeStateConfiguration()
     }
 
     enum class FeeDisplaySource {
