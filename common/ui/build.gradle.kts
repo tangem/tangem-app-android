@@ -34,6 +34,7 @@ dependencies {
     implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.models)
     implementation(projects.domain.legacy)
+    implementation(projects.domain.card)
     implementation(projects.domain.staking.models)
     implementation(projects.domain.staking)
     implementation(projects.domain.tokens.models)
