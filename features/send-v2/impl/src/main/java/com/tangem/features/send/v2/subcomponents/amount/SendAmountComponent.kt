@@ -41,6 +41,7 @@ internal class SendAmountComponent(
     interface ModelCallback : NavigationModelCallback {
         fun onAmountResult(amountUM: AmountState, isResetPredefined: Boolean)
         fun onConvertToAnotherToken(lastAmount: String)
+        fun resetSendNavigation()
         fun onError(error: GetUserWalletError)
     }
 }
