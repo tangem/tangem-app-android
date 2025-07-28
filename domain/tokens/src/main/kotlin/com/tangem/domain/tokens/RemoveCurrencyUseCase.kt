@@ -7,11 +7,13 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.tokens.model.remove.RemoveCurrencyError
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 
 class RemoveCurrencyUseCase(
     private val currenciesRepository: CurrenciesRepository,
     private val walletManagersFacade: WalletManagersFacade,
+    private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
+    private val tokensFeatureToggles: TokensFeatureToggles,
 ) {
 
     suspend operator fun invoke(
@@ -44,10 +46,17 @@ class RemoveCurrencyUseCase(
     suspend fun hasLinkedTokens(userWalletId: UserWalletId, currency: CryptoCurrency): Boolean {
         return when (currency) {
             is CryptoCurrency.Coin -> {
-                val walletCurrencies = currenciesRepository.getMultiCurrencyWalletCurrenciesSync(
-                    userWalletId = userWalletId,
-                    refresh = false,
-                )
+                val walletCurrencies = if (tokensFeatureToggles.isWalletBalanceFetcherEnabled) {
+                    multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
+                        params = MultiWalletCryptoCurrenciesProducer.Params(userWalletId),
+                    )
+                        .orEmpty()
+                } else {
+                    currenciesRepository.getMultiCurrencyWalletCurrenciesSync(
+                        userWalletId = userWalletId,
+                        refresh = false,
+                    )
+                }
 
                 walletCurrencies.any { it is CryptoCurrency.Token && it.network == currency.network }
             }
