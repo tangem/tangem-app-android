@@ -60,11 +60,16 @@ internal class DefaultChooseManagedTokensComponent @AssistedInject constructor(
             params = SwapChooseTokenNetworkComponent.Params(
                 userWalletId = config.userWalletId,
                 initialCurrency = config.initialCurrency,
+                selectedCurrency = config.selectedCurrency,
                 token = config.token,
                 onDismiss = model.bottomSheetNavigation::dismiss,
                 onResult = { swapCurrencies, cryptoCurrency ->
                     componentScope.launch {
-                        swapChooseTokenNetworkTrigger.trigger(swapCurrencies, cryptoCurrency)
+                        swapChooseTokenNetworkTrigger.trigger(
+                            swapCurrencies = swapCurrencies,
+                            cryptoCurrency = cryptoCurrency,
+                            shouldResetNavigation = params.selectedCurrency != null,
+                        )
                         router.pop()
                     }
                 },
