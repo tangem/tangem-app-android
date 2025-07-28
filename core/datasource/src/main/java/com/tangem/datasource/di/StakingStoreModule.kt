@@ -8,8 +8,10 @@ import com.squareup.moshi.Moshi
 import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
 import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO
 import com.tangem.datasource.local.datastore.RuntimeDataStore
-import com.tangem.datasource.local.datastore.RuntimeSharedStore
-import com.tangem.datasource.local.token.*
+import com.tangem.datasource.local.token.DefaultStakingActionsStore
+import com.tangem.datasource.local.token.DefaultStakingYieldsStore
+import com.tangem.datasource.local.token.StakingActionsStore
+import com.tangem.datasource.local.token.StakingYieldsStore
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.listTypes
 import com.tangem.datasource.utils.mapWithStringKeyTypes
@@ -63,17 +65,6 @@ internal object StakingStoreModule {
             ),
             produceFile = { context.dataStoreFile(fileName = "yield_balances") },
             scope = CoroutineScope(context = dispatchers.io + SupervisorJob()),
-        )
-    }
-
-    @Provides
-    @Singleton
-    fun provideStakingBalanceStore(
-        persistenceStore: DataStore<Map<String, Set<YieldBalanceWrapperDTO>>>,
-    ): StakingBalanceStore {
-        return DefaultStakingBalanceStore(
-            persistenceStore = persistenceStore,
-            runtimeStore = RuntimeSharedStore(),
         )
     }
 
