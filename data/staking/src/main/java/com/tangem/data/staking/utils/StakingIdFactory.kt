@@ -5,9 +5,9 @@ import com.tangem.blockchainsdk.utils.toCoinId
 import com.tangem.blockchainsdk.utils.toMigratedCoinId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.model.StakingID
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.models.UserWalletId
 import javax.inject.Inject
 
 /**
@@ -55,7 +55,7 @@ internal class StakingIdFactory @Inject constructor(
         private const val CARDANO_INTEGRATION_ID = "cardano-ada-native-staking"
 
         // uncomment items as implementation is ready
-        val integrationIdMap = mapOf(
+        private val integrationIdMap = mapOf(
             Blockchain.TON.toDefaultKey() to TON_INTEGRATION_ID,
             Blockchain.Solana.toDefaultKey() to SOLANA_INTEGRATION_ID,
             Blockchain.Cosmos.toDefaultKey() to COSMOS_INTEGRATION_ID,
