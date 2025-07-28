@@ -1,7 +1,7 @@
 package com.tangem.feature.swap.domain
 
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.feature.swap.domain.api.SwapRepository
 import com.tangem.feature.swap.domain.models.domain.LeastTokenInfo
 import com.tangem.feature.swap.domain.models.domain.SwapPairLeast
