@@ -17,8 +17,8 @@ import java.math.BigDecimal
 
 internal class SwapAmountSetQuotesTransformer(
     private val quotes: List<SwapQuoteUM>,
-    private val secondaryMaximumAmountBoundary: EnterAmountBoundary,
-    private val secondaryMinimumAmountBoundary: EnterAmountBoundary,
+    private val secondaryMaximumAmountBoundary: EnterAmountBoundary?,
+    private val secondaryMinimumAmountBoundary: EnterAmountBoundary?,
 ) : Transformer<SwapAmountUM> {
     override fun transform(prevState: SwapAmountUM): SwapAmountUM {
         if (prevState !is SwapAmountUM.Content) return prevState
