@@ -13,13 +13,13 @@ import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.express.models.ExpressError
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.swap.models.SwapDirection
 import com.tangem.domain.tokens.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationComponent
@@ -27,8 +27,8 @@ import com.tangem.features.send.v2.api.subcomponents.destination.entity.Destinat
 import com.tangem.features.swap.v2.api.SendWithSwapComponent
 import com.tangem.features.swap.v2.impl.amount.SwapAmountComponent
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
-import com.tangem.features.swap.v2.impl.common.entity.ConfirmUM
 import com.tangem.features.swap.v2.impl.common.SwapAlertFactory
+import com.tangem.features.swap.v2.impl.common.entity.ConfirmUM
 import com.tangem.features.swap.v2.impl.sendviaswap.SendWithSwapRoute
 import com.tangem.features.swap.v2.impl.sendviaswap.confirm.SendWithSwapConfirmComponent
 import com.tangem.features.swap.v2.impl.sendviaswap.entity.SendWithSwapUM
@@ -111,6 +111,20 @@ internal class SendWithSwapModel @Inject constructor(
     override fun onSeparatorClick(lastAmount: String) {
         params.callback?.onCloseSwap(lastAmount)
         router.popTo(initialRoute)
+    }
+
+    override fun resetSendWithSwapNavigation(resetNavigation: Boolean) {
+        uiState.update {
+            it.copy(
+                destinationUM = DestinationUM.Empty(),
+                feeSelectorUM = FeeSelectorUM.Loading,
+                confirmUM = ConfirmUM.Empty,
+                navigationUM = NavigationUM.Empty,
+            )
+        }
+        if (resetNavigation) {
+            router.popTo(SendWithSwapRoute.Amount(false))
+        }
     }
 
     override fun onBackClick() = router.pop()
