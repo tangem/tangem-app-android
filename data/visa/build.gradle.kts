@@ -21,6 +21,7 @@ dependencies {
 
     /** Project - Domain */
     implementation(projects.domain.visa)
+    implementation(projects.domain.card)
     implementation(projects.domain.models)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.appCurrency.models)
