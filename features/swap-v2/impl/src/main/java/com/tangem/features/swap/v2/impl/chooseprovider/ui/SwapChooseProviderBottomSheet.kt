@@ -2,13 +2,16 @@ package com.tangem.features.swap.v2.impl.chooseprovider.ui
 
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -16,14 +19,14 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEachIndexed
+import com.tangem.core.ui.components.SpacerH12
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
 import com.tangem.core.ui.components.notifications.Notification
-import com.tangem.core.ui.components.provider.ProviderChooseCrypto
-import com.tangem.core.ui.extensions.conditional
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.selectedBorder
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -57,13 +60,14 @@ internal fun SwapChooseProviderContent(
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.padding(horizontal = 13.dp),
+        modifier = modifier.padding(horizontal = 13.dp),
     ) {
         Text(
             text = stringResourceSafe(id = R.string.onramp_choose_provider_title_hint),
             style = TangemTheme.typography.caption2,
             color = TangemTheme.colors.text.secondary,
             textAlign = TextAlign.Center,
+            modifier = Modifier.padding(bottom = 4.dp),
         )
         AnimatedVisibility(
             modifier = Modifier.padding(top = 12.dp),
@@ -75,12 +79,18 @@ internal fun SwapChooseProviderContent(
                 iconTint = TangemTheme.colors.icon.warning,
             )
         }
+        SpacerH12()
         contentUM.providerList.fastForEachIndexed { index, provider ->
-            ProviderChooseCrypto(
-                providerChooseUM = provider.providerUM,
-                onClick = { onProviderClick(provider.quote) },
-                modifier = modifier
-                    .conditional(index == 0) { padding(top = 24.dp) },
+            SwapProviderItem(
+                state = provider.swapProviderState,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(14.dp))
+                    .selectedBorder(isSelected = provider.swapProviderState.isSelected)
+                    .clickable(
+                        enabled = provider.quote !is SwapQuoteUM.Error,
+                        onClick = { onProviderClick(provider.quote) },
+                    )
+                    .padding(12.dp),
             )
         }
         Icon(
