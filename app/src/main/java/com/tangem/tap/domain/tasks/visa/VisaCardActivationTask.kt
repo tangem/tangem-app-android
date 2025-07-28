@@ -17,7 +17,7 @@ import com.tangem.datasource.local.visa.VisaAuthTokenStorage
 import com.tangem.datasource.local.visa.VisaOTPStorage
 import com.tangem.datasource.local.visa.VisaOtpData
 import com.tangem.datasource.local.visa.hasSavedOTP
-import com.tangem.domain.common.visa.VisaWalletPublicKeyUtility
+import com.tangem.domain.card.common.visa.VisaWalletPublicKeyUtility
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.visa.error.VisaActivationError
 import com.tangem.domain.visa.model.*

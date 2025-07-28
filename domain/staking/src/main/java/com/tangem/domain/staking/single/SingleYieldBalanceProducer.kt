@@ -4,7 +4,7 @@ import com.tangem.domain.core.flow.FlowProducer
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.staking.model.stakekit.YieldBalance
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 
 /**
  * Producer of yield balance for selected wallet [UserWalletId]
