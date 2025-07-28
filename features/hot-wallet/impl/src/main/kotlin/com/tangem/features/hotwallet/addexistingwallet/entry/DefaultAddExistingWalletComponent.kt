@@ -1,4 +1,4 @@
-package com.tangem.features.hotwallet.addexistingwallet.root
+package com.tangem.features.hotwallet.addexistingwallet.entry
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
@@ -6,14 +6,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.stack.childStack
-import com.arkivanov.decompose.router.stack.pop
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.features.hotwallet.AddExistingWalletComponent
-import com.tangem.features.hotwallet.addexistingwallet.root.routing.AddExistingWalletChildFactory
-import com.tangem.features.hotwallet.addexistingwallet.root.routing.AddExistingWalletRoute
-import com.tangem.features.hotwallet.addexistingwallet.root.ui.AddExistingWalletContent
+import com.tangem.features.hotwallet.addexistingwallet.entry.routing.AddExistingWalletChildFactory
+import com.tangem.features.hotwallet.addexistingwallet.entry.routing.AddExistingWalletRoute
+import com.tangem.features.hotwallet.addexistingwallet.entry.ui.AddExistingWalletContent
+import com.tangem.features.hotwallet.stepper.api.HotWalletStepperComponent
+import com.tangem.features.hotwallet.stepper.impl.DefaultHotWalletStepperComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -21,7 +23,9 @@ import dagger.assisted.AssistedInject
 internal class DefaultAddExistingWalletComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted private val params: Unit,
+    private val stepperStateManager: AddExistingWalletStepperStateManager,
     addExistingWalletChildFactory: AddExistingWalletChildFactory,
+    stepperComponentFactory: DefaultHotWalletStepperComponent.Factory,
 ) : AddExistingWalletComponent, AppComponentContext by appComponentContext {
 
     private val model: AddExistingWalletModel = getOrCreateModel(params)
@@ -43,13 +47,42 @@ internal class DefaultAddExistingWalletComponent @AssistedInject constructor(
         },
     )
 
+    private val stepperComponent = stepperComponentFactory.create(
+        context = this,
+        params = HotWalletStepperComponent.Params(
+            initState = HotWalletStepperComponent.StepperUM(
+                currentStep = 0,
+                steps = 0,
+                title = TextReference.EMPTY,
+                showBackButton = false,
+                showSkipButton = false,
+                showFeedbackButton = false,
+            ),
+            callback = object : HotWalletStepperComponent.ModelCallback {
+                override fun onBackClick() {
+                    onChildBack()
+                }
+
+                override fun onSkipClick() {
+                    model.onSkipAccessCode()
+                }
+            },
+        ),
+    )
+
     @Composable
     override fun Content(modifier: Modifier) {
         val stackState by innerStack.subscribeAsState()
+        val currentRoute = stackState.active.configuration
 
         BackHandler(onBack = ::onChildBack)
+
+        val stepperState = stepperStateManager.getStepperState(currentRoute)
+        stepperState?.let { stepperComponent.updateState(it) }
+
         AddExistingWalletContent(
             stackState = stackState,
+            stepperComponent = stepperComponent.takeIf { stepperState != null },
         )
     }
 
