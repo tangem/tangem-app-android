@@ -96,7 +96,7 @@ internal class FeeSelectorModel @Inject constructor(
                                 feeCryptoCurrencyStatus = params.feeCryptoCurrencyStatus,
                                 appCurrency = appCurrency,
                                 fees = fee,
-                                suggestedFeeState = params.suggestedFeeState,
+                                feeStateConfiguration = params.feeStateConfiguration,
                                 isFeeApproximate = isFeeApproximate(fee.normal.amount.type),
                                 feeSelectorIntents = this@FeeSelectorModel,
                             ),
