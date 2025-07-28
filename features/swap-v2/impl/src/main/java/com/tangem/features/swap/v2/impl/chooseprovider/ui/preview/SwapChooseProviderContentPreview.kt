@@ -16,7 +16,7 @@ import java.math.BigDecimal
 
 internal object SwapChooseProviderContentPreview {
 
-    private val provider1 = ExpressProvider(
+    val provider1 = ExpressProvider(
         providerId = "changenow",
         rateTypes = listOf(ExpressRateType.Float),
         name = "ChangeNow",
@@ -88,5 +88,6 @@ internal object SwapChooseProviderContentPreview {
             ),
         ),
         selectedProvider = provider1,
+        isApplyFCARestrictions = false,
     )
 }
