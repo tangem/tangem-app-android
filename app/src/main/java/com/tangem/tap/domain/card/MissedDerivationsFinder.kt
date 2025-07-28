@@ -7,8 +7,8 @@ import com.tangem.common.card.EllipticCurve
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.extensions.toMapKey
 import com.tangem.crypto.hdWallet.DerivationPath
-import com.tangem.domain.common.configs.CardConfig
-import com.tangem.domain.common.util.derivationStyleProvider
+import com.tangem.domain.card.configs.CardConfig
+import com.tangem.domain.card.common.util.derivationStyleProvider
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.scan.KeyWalletPublicKey
