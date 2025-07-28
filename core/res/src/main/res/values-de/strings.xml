@@ -418,8 +418,6 @@
   <string name="hw_activation_need_description">Um die Einrichtung abzuschließen, sicher Deine Wallet und sicher den App-Zugriff mit einem Access Code.</string>
   <string name="hw_activation_need_finish">Jetzt beenden</string>
   <string name="hw_activation_need_title">Wallet-Aktivierung abschließen</string>
-  <string name="hw_backup_icloud_description">Stelle eine vorhandene Wallet wieder her, die in Deinem iCloud-Backup gespeichert ist</string>
-  <string name="hw_backup_icloud_title">iCloud-Sicherung</string>
   <string name="hw_backup_need_action">Gehe zum Backup</string>
   <string name="hw_backup_need_description">Um Deine Wallet mit einem Zugangscode zu sichern, führe zuerst die Sicherung durch.</string>
   <string name="hw_backup_need_title">Sicherung zuerst beenden</string>
