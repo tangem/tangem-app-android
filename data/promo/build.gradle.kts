@@ -21,6 +21,7 @@ dependencies {
 
     implementation(projects.domain.promo)
     implementation(projects.domain.promo.models)
+    api(projects.domain.models)
     implementation(projects.domain.wallets.models)
     implementation(projects.features.referral.domain)
 

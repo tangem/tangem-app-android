@@ -5,10 +5,8 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.components.block.model.BlockUM
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.details.entity.DetailsItemUM
-import com.tangem.features.details.impl.BuildConfig
 import com.tangem.features.details.impl.R
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -76,17 +74,6 @@ internal class ItemsBuilder @Inject constructor(private val router: Router) {
                     onClick = { router.push(AppRoute.AppSettings) },
                 ),
             ).let(::add)
-
-            if (BuildConfig.TESTER_MENU_ENABLED) {
-                DetailsItemUM.Basic.Item(
-                    id = "tester_menu",
-                    block = BlockUM(
-                        text = stringReference(value = "Tester menu"),
-                        iconRes = R.drawable.ic_alert_24,
-                        onClick = { router.push(AppRoute.TesterMenu) },
-                    ),
-                ).let(::add)
-            }
         }.toImmutableList(),
     )
 

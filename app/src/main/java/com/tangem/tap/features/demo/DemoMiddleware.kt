@@ -1,6 +1,6 @@
 package com.tangem.tap.features.demo
 
-import com.tangem.domain.demo.DemoConfig
+import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.models.scan.ScanResponse
 import org.rekotlin.Action
 
