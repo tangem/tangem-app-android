@@ -12,6 +12,7 @@ internal sealed class ChooseManageTokensBottomSheetConfig {
     data class SwapTokensBottomSheetConfig(
         val userWalletId: UserWalletId,
         val initialCurrency: CryptoCurrency,
+        val selectedCurrency: CryptoCurrency?,
         val token: ManagedCryptoCurrency.Token,
     ) : ChooseManageTokensBottomSheetConfig()
 }

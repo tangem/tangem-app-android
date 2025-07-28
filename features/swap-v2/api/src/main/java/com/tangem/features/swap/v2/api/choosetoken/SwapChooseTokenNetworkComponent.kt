@@ -12,6 +12,7 @@ interface SwapChooseTokenNetworkComponent : ComposableBottomSheetComponent {
     data class Params(
         val userWalletId: UserWalletId,
         val initialCurrency: CryptoCurrency,
+        val selectedCurrency: CryptoCurrency?,
         val token: ManagedCryptoCurrency.Token,
         val onDismiss: () -> Unit,
         val onResult: (SwapCurrencies, CryptoCurrency) -> Unit,
