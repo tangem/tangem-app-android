@@ -18,6 +18,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -119,6 +120,7 @@ private fun EmptyConnectionsBlock(onNewConnectionClick: () -> Unit, modifier: Mo
             text = stringResourceSafe(R.string.wc_no_sessions_desc),
             color = TangemTheme.colors.text.secondary,
             style = TangemTheme.typography.body1,
+            textAlign = TextAlign.Center,
         )
         NewConnectionButton(
             modifier = Modifier.padding(top = TangemTheme.dimens.spacing48),
