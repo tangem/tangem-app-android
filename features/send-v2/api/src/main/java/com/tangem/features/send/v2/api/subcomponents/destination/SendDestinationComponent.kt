@@ -7,6 +7,8 @@ import com.tangem.features.send.v2.api.subcomponents.destination.entity.Destinat
 
 interface SendDestinationComponent : ComposableContentComponent {
 
+    fun updateState(destinationUM: DestinationUM)
+
     interface ModelCallback : NavigationModelCallback {
         fun onDestinationResult(destinationUM: DestinationUM)
     }

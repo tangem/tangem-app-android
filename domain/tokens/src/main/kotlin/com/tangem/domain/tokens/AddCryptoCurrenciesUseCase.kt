@@ -6,12 +6,11 @@ import arrow.core.raise.catch
 import arrow.core.raise.either
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
-import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.staking.single.SingleYieldBalanceFetcher
 import com.tangem.domain.tokens.repository.CurrenciesRepository
-import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -26,10 +25,10 @@ import kotlinx.coroutines.coroutineScope
 @Suppress("LongParameterList")
 class AddCryptoCurrenciesUseCase(
     private val currenciesRepository: CurrenciesRepository,
-    private val stakingRepository: StakingRepository,
     private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
     private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
     private val singleYieldBalanceFetcher: SingleYieldBalanceFetcher,
+    private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
     private val tokensFeatureToggles: TokensFeatureToggles,
 ) {
 
@@ -87,10 +86,21 @@ class AddCryptoCurrenciesUseCase(
         contractAddress: String,
         networkId: String,
     ): Either<Throwable, CryptoCurrency> = either {
-        val existingCurrencies =
-            catch({ currenciesRepository.getMultiCurrencyWalletCurrenciesSync(userWalletId) }) {
-                raise(it)
-            }
+        val existingCurrencies = catch(
+            block = {
+                if (tokensFeatureToggles.isWalletBalanceFetcherEnabled) {
+                    multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
+                        params = MultiWalletCryptoCurrenciesProducer.Params(userWalletId),
+                    )
+                        .orEmpty()
+                        .toList()
+                } else {
+                    currenciesRepository.getMultiCurrencyWalletCurrenciesSync(userWalletId)
+                }
+            },
+            catch = ::raise,
+        )
+
         val foundToken = existingCurrencies
             .filterIsInstance<CryptoCurrency.Token>()
             .firstOrNull {
@@ -145,21 +155,13 @@ class AddCryptoCurrenciesUseCase(
     }
 
     private suspend fun refreshUpdatedYieldBalances(userWalletId: UserWalletId, addedCurrency: CryptoCurrency) {
-        if (tokensFeatureToggles.isStakingLoadingRefactoringEnabled) {
-            singleYieldBalanceFetcher(
-                params = SingleYieldBalanceFetcher.Params(
-                    userWalletId = userWalletId,
-                    currencyId = addedCurrency.id,
-                    network = addedCurrency.network,
-                ),
-            )
-        } else {
-            stakingRepository.fetchSingleYieldBalance(
+        singleYieldBalanceFetcher(
+            params = SingleYieldBalanceFetcher.Params(
                 userWalletId = userWalletId,
-                cryptoCurrency = addedCurrency,
-                refresh = true,
-            )
-        }
+                currencyId = addedCurrency.id,
+                network = addedCurrency.network,
+            ),
+        )
     }
 
     private suspend fun refreshUpdatedQuotes(currencyToAdd: CryptoCurrency) {
