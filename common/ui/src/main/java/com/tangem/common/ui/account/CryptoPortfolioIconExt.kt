@@ -15,10 +15,11 @@ fun CryptoPortfolioIcon.Color.getUiColor(): Color {
         CryptoPortfolioIcon.Color.SweetDesire -> Color(color = 0xFFAF34E3)
         CryptoPortfolioIcon.Color.PalatinateBlue -> Color(color = 0xFF2D30EE)
         CryptoPortfolioIcon.Color.FuchsiaNebula -> Color(color = 0xFF7E28A3)
+        CryptoPortfolioIcon.Color.MexicanPink -> Color(color = 0xFFE6007A)
         CryptoPortfolioIcon.Color.Pelati -> Color(color = 0xFFFF2E32)
         CryptoPortfolioIcon.Color.Pattypan -> Color(color = 0xFFF0B90B)
         CryptoPortfolioIcon.Color.UFOGreen -> Color(color = 0xFF32CB77)
-        CryptoPortfolioIcon.Color.SweetHoney -> Color(color = 0xFFD1A657)
+        CryptoPortfolioIcon.Color.VitalGreen -> Color(color = 0xFF15865B)
     }
 }
 
