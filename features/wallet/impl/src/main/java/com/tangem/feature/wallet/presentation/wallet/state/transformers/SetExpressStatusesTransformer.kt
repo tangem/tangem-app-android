@@ -6,7 +6,7 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.onramp.model.cache.OnrampTransaction
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateUM
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.SingleWalletOnrampTransactionConverter
