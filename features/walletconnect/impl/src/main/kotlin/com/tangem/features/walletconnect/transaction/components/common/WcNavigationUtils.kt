@@ -48,7 +48,7 @@ internal fun getWcCommonScreen(
                     feeCryptoCurrencyStatus = model.cryptoCurrencyStatus,
                     cryptoCurrencyStatus = model.cryptoCurrencyStatus,
                     callback = model,
-                    suggestedFeeState = model.suggestedFeeState,
+                    feeStateConfiguration = model.feeStateConfiguration,
                     feeDisplaySource = FeeSelectorParams.FeeDisplaySource.BottomSheet,
                 ),
             )
