@@ -3,10 +3,12 @@ package com.tangem.features.swap.v2.impl.chooseprovider.model
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.domain.settings.usercountry.models.needApplyFCARestrictions
 import com.tangem.features.swap.v2.impl.chooseprovider.SwapChooseProviderComponent
 import com.tangem.features.swap.v2.impl.chooseprovider.entity.SwapChooseProviderBottomSheetContent
 import com.tangem.features.swap.v2.impl.chooseprovider.model.converter.SwapProviderListItemConverter
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
+import com.tangem.features.swap.v2.impl.common.isRestrictedByFCA
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,10 +23,13 @@ internal class SwapChooseProviderModel @Inject constructor(
 
     private val params: SwapChooseProviderComponent.Params = paramsContainer.require()
 
+    private val needApplyFCARestrictions = params.userCountry.needApplyFCARestrictions()
+
     private val swapProviderListItemConverter by lazy(LazyThreadSafetyMode.NONE) {
         SwapProviderListItemConverter(
             cryptoCurrency = params.cryptoCurrency,
             selectedProvider = params.selectedProvider,
+            needApplyFCARestrictions = needApplyFCARestrictions,
         )
     }
 
@@ -38,6 +43,7 @@ internal class SwapChooseProviderModel @Inject constructor(
 
     private fun getInitialState(): SwapChooseProviderBottomSheetContent {
         return SwapChooseProviderBottomSheetContent(
+            isApplyFCARestrictions = needApplyFCARestrictions && params.selectedProvider.isRestrictedByFCA(),
             providerList = swapProviderListItemConverter.convertList(params.providers)
                 .filterNotNull()
                 .toPersistentList(),
