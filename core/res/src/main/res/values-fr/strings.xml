@@ -371,6 +371,7 @@
   <string name="home_button_scan">Scannez</string>
   <string name="hot_crypto_add_token_subtitle">à %s</string>
   <string name="hot_crypto_token_network">Via %s</string>
+  <string name="hw_create_seed_description">Restez informé des dernières fonctionnalités et actualités</string>
   <string name="information_generated_with_ai">Ces informations ont été générées avec l\'IA.\nAppuyez ici si vous trouvez des erreurs.</string>
   <string name="initial_message_change_access_code_body">Touchez, pour modifier le code d\'accès</string>
   <string name="initial_message_change_passcode_body">Touchez, pour modifier le mot de passe</string>
@@ -1269,6 +1270,7 @@
   <string name="warning_testnet_card_message">Il s\'agit d\'une carte Testnet. Elle ne peut pas traiter les transactions et ne doit être utilisée qu\'à des fins de test et de développement.</string>
   <string name="warning_testnet_card_title">À des fins de test uniquement</string>
   <string name="warning_token_balance_not_updated">Le solde peut être obsolète. Rafraîchissez la page.</string>
+  <string name="warning_token_required_min_coin_reserve">Pas assez de %1$s. Rechargez votre compte %2$s pour associer ce jeton.</string>
   <string name="wc_alert_audit_malicious_domain">Domaine malveillant</string>
   <string name="wc_alert_unknown_error_description_no_error_code">Si le problème persiste, n’hésitez pas à contacter notre support.</string>
   <string name="wc_alert_unsupported_dapps_description">Le portefeuille Tangem ne prend actuellement pas en charge %ss</string>
