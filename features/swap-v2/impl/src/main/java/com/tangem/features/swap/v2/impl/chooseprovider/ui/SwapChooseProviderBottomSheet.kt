@@ -1,6 +1,7 @@
 package com.tangem.features.swap.v2.impl.chooseprovider.ui
 
 import android.content.res.Configuration
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
@@ -19,6 +20,7 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
+import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.provider.ProviderChooseCrypto
 import com.tangem.core.ui.extensions.conditional
 import com.tangem.core.ui.extensions.resourceReference
@@ -27,10 +29,9 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.swap.v2.impl.R
 import com.tangem.features.swap.v2.impl.chooseprovider.entity.SwapChooseProviderBottomSheetContent
-import com.tangem.features.swap.v2.impl.chooseprovider.entity.SwapProviderListItem
 import com.tangem.features.swap.v2.impl.chooseprovider.ui.preview.SwapChooseProviderContentPreview
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
-import kotlinx.collections.immutable.ImmutableList
+import com.tangem.features.swap.v2.impl.notifications.entity.SwapNotificationUM
 
 @Composable
 internal fun SwapChooseProviderBottomSheet(config: TangemBottomSheetConfig, content: @Composable () -> Unit) {
@@ -50,7 +51,7 @@ internal fun SwapChooseProviderBottomSheet(config: TangemBottomSheetConfig, cont
 
 @Composable
 internal fun SwapChooseProviderContent(
-    providerList: ImmutableList<SwapProviderListItem>,
+    contentUM: SwapChooseProviderBottomSheetContent,
     onProviderClick: (SwapQuoteUM) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -64,7 +65,17 @@ internal fun SwapChooseProviderContent(
             color = TangemTheme.colors.text.secondary,
             textAlign = TextAlign.Center,
         )
-        providerList.fastForEachIndexed { index, provider ->
+        AnimatedVisibility(
+            modifier = Modifier.padding(top = 12.dp),
+            visible = contentUM.isApplyFCARestrictions,
+        ) {
+            Notification(
+                config = SwapNotificationUM.Error.FCAWarningList.config,
+                containerColor = TangemTheme.colors.button.disabled,
+                iconTint = TangemTheme.colors.icon.warning,
+            )
+        }
+        contentUM.providerList.fastForEachIndexed { index, provider ->
             ProviderChooseCrypto(
                 providerChooseUM = provider.providerUM,
                 onClick = { onProviderClick(provider.quote) },
@@ -114,7 +125,11 @@ private fun SwapChooseProviderContent_Preview(
             ),
         ) {
             SwapChooseProviderContent(
-                providerList = params.providerList,
+                contentUM = SwapChooseProviderBottomSheetContent(
+                    providerList = params.providerList,
+                    isApplyFCARestrictions = true,
+                    selectedProvider = SwapChooseProviderContentPreview.provider1,
+                ),
                 onProviderClick = {},
             )
         }
