@@ -9,12 +9,18 @@ import kotlinx.coroutines.flow.SharedFlow
  */
 interface SwapChooseTokenNetworkTrigger {
 
-    suspend fun trigger(swapCurrencies: SwapCurrencies, cryptoCurrency: CryptoCurrency)
+    suspend fun trigger(swapCurrencies: SwapCurrencies, cryptoCurrency: CryptoCurrency, shouldResetNavigation: Boolean)
 }
 
 /**
  * Listens to swap token selection
  */
 interface SwapChooseTokenNetworkListener {
-    val swapChooseTokenNetworkResultFlow: SharedFlow<Pair<SwapCurrencies, CryptoCurrency>>
+    val swapChooseTokenNetworkResultFlow: SharedFlow<SwapChooseTokenTriggerData>
 }
+
+data class SwapChooseTokenTriggerData(
+    val swapCurrencies: SwapCurrencies,
+    val cryptoCurrency: CryptoCurrency,
+    val shouldResetNavigation: Boolean,
+)
