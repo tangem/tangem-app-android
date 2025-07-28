@@ -39,5 +39,6 @@ internal class SwapAmountComponent @AssistedInject constructor(
     interface ModelCallback : NavigationModelCallback {
         fun onAmountResult(amountUM: SwapAmountUM)
         fun onSeparatorClick(lastAmount: String)
+        fun resetSendWithSwapNavigation(resetNavigation: Boolean)
     }
 }
