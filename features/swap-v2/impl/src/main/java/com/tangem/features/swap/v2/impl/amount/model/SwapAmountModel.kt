@@ -43,6 +43,9 @@ import com.tangem.features.swap.v2.impl.chooseprovider.SwapChooseProviderCompone
 import com.tangem.features.swap.v2.impl.common.SwapAlertFactory
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.Debouncer
+import com.tangem.utils.coroutines.PeriodicTask
+import com.tangem.utils.coroutines.SingleTaskScheduler
 import com.tangem.utils.extensions.orZero
 import com.tangem.utils.transformer.update
 import kotlinx.coroutines.async
@@ -91,6 +94,9 @@ internal class SwapAmountModel @Inject constructor(
     val uiState: StateFlow<SwapAmountUM>
     field = MutableStateFlow(params.amountUM)
 
+    private val amountDebouncer = Debouncer()
+    private val quoteTaskScheduler = SingleTaskScheduler<Unit>()
+
     init {
         modelScope.launch {
             appCurrency = getSelectedAppCurrencyUseCase.invokeSync().getOrElse { AppCurrency.Default }
@@ -103,6 +109,19 @@ internal class SwapAmountModel @Inject constructor(
         subscribeOnAmountReduceByTriggerUpdates()
         subscribeOnAmountIgnoreReduceTriggerUpdates()
         subscribeOnReloadQuotesTriggerUpdates()
+    }
+
+    fun onStart() {
+        startLoadingQuotesTask(isSilentReload = false)
+    }
+
+    fun onStop() {
+        quoteTaskScheduler.cancelTask()
+    }
+
+    override fun onDestroy() {
+        quoteTaskScheduler.cancelTask()
+        super.onDestroy()
     }
 
     fun updateState(amountUM: SwapAmountUM) {
@@ -149,7 +168,14 @@ internal class SwapAmountModel @Inject constructor(
                 value = value,
             ),
         )
-        loadQuotes()
+        amountDebouncer.debounce(
+            coroutineScope = modelScope,
+            waitMs = DEBOUNCE_AMOUNT_DELAY,
+            forceUpdate = true,
+            destinationFunction = {
+                startLoadingQuotesTask(isSilentReload = false)
+            },
+        )
     }
 
     override fun onAmountPasteTriggerDismiss() {
@@ -165,7 +191,7 @@ internal class SwapAmountModel @Inject constructor(
                 secondaryMinimumAmountBoundary = secondaryMinimumAmountBoundary,
             ),
         )
-        loadQuotes()
+        startLoadingQuotesTask(isSilentReload = false)
     }
 
     override fun onCurrencyChangeClick(isFiat: Boolean) {
@@ -287,7 +313,7 @@ internal class SwapAmountModel @Inject constructor(
                     ),
                 )
                 feeSelectorReloadTrigger.triggerLoadingState()
-                loadQuotes(reloadFees = true)
+                startLoadingQuotesTask(isSilentReload = false)
             }
             .launchIn(modelScope)
     }
@@ -303,7 +329,7 @@ internal class SwapAmountModel @Inject constructor(
                     ),
                 )
                 feeSelectorReloadTrigger.triggerLoadingState()
-                loadQuotes(reloadFees = true)
+                startLoadingQuotesTask(isSilentReload = false)
             }
             .launchIn(modelScope)
     }
@@ -316,7 +342,7 @@ internal class SwapAmountModel @Inject constructor(
 
     private fun subscribeOnReloadQuotesTriggerUpdates() {
         swapAmountUpdateListener.reloadQuotesTriggerFlow
-            .onEach { loadQuotes(reloadFees = true) }
+            .onEach { startLoadingQuotesTask(isSilentReload = true) }
             .launchIn(modelScope)
     }
 
@@ -368,7 +394,7 @@ internal class SwapAmountModel @Inject constructor(
                         isBalanceHidden = params.isBalanceHidingFlow.value,
                     ),
                 )
-                loadQuotes()
+                startLoadingQuotesTask(isSilentReload = false)
             } else {
                 Timber.e(
                     """
@@ -408,7 +434,7 @@ internal class SwapAmountModel @Inject constructor(
         }
     }
 
-    private fun loadQuotes(reloadFees: Boolean = false) {
+    private fun loadQuotes(isSilentReload: Boolean) {
         val state = uiState.value as? SwapAmountUM.Content ?: return
         if (state.secondaryCryptoCurrencyStatus == null) return
 
@@ -474,13 +500,33 @@ internal class SwapAmountModel @Inject constructor(
                     quotes = quotes,
                     secondaryMaximumAmountBoundary = secondaryMaximumAmountBoundary,
                     secondaryMinimumAmountBoundary = secondaryMinimumAmountBoundary,
+                    isSilentReload = isSilentReload,
                 ),
             )
 
-            if (reloadFees) {
-                feeSelectorReloadTrigger.triggerUpdate()
-            }
+            feeSelectorReloadTrigger.triggerUpdate()
         }
+    }
+
+    private fun startLoadingQuotesTask(isSilentReload: Boolean) {
+        quoteTaskScheduler.cancelTask()
+        loadQuotes(isSilentReload = isSilentReload)
+        quoteTaskScheduler.scheduleTask(
+            scope = modelScope,
+            task = loadQuotesTask(),
+        )
+    }
+
+    private fun loadQuotesTask(): PeriodicTask<Unit> {
+        return PeriodicTask(
+            delay = QUOTES_UPDATE_DELAY,
+            isDelayFirst = true,
+            task = {
+                runCatching { loadQuotes(isSilentReload = true) }
+            },
+            onSuccess = { /* no-op */ },
+            onError = { /* no-op */ },
+        )
     }
 
     private suspend fun checkAllowance(state: SwapAmountUM.Content, quote: SwapQuoteModel): Boolean {
@@ -551,5 +597,10 @@ internal class SwapAmountModel @Inject constructor(
                 ),
             )
         }.launchIn(modelScope)
+    }
+
+    private companion object {
+        const val DEBOUNCE_AMOUNT_DELAY = 1000L
+        const val QUOTES_UPDATE_DELAY = 10000L
     }
 }
