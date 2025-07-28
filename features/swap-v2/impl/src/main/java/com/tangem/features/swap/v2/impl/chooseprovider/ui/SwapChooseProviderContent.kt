@@ -4,11 +4,7 @@ import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -27,6 +23,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
+import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemColorPalette
@@ -57,7 +54,7 @@ fun SwapChooseProviderContent(expressProvider: ExpressProvider?, onClick: () -> 
         ) {
             Icon(
                 painter = rememberVectorPainter(
-                    ImageVector.vectorResource(R.drawable.ic_exchange_horizontal_24),
+                    ImageVector.vectorResource(R.drawable.ic_stack_new_24),
                 ),
                 tint = TangemTheme.colors.icon.accent,
                 contentDescription = null,
@@ -72,13 +69,21 @@ fun SwapChooseProviderContent(expressProvider: ExpressProvider?, onClick: () -> 
             SubcomposeAsyncImage(
                 modifier = modifier
                     .size(20.dp)
-                    .clip(RoundedCornerShape(4.dp))
-                    .background(TangemColorPalette.Light1),
+                    .clip(RoundedCornerShape(4.dp)),
                 model = ImageRequest.Builder(context = LocalContext.current)
                     .data(expressProvider?.imageLarge)
                     .crossfade(enable = true)
                     .allowHardware(false)
                     .build(),
+                loading = { RectangleShimmer(radius = 4.dp) },
+                error = {
+                    Box(
+                        modifier = Modifier.background(
+                            color = TangemColorPalette.Light1,
+                            shape = RoundedCornerShape(4.dp),
+                        ),
+                    )
+                },
                 contentDescription = null,
             )
             Text(
