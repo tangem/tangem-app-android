@@ -12,7 +12,7 @@ data class WcEthSignTypedDataParams(
     @Json(name = "primaryType")
     val primaryType: String,
     @Json(name = "types")
-    val types: Types,
+    val types: Map<String, List<Types.Type>>,
 ) {
     @JsonClass(generateAdapter = true)
     data class Domain(
@@ -29,11 +29,11 @@ data class WcEthSignTypedDataParams(
     @JsonClass(generateAdapter = true)
     data class Message(
         @Json(name = "contents")
-        val contents: String,
+        val contents: String?,
         @Json(name = "from")
-        val from: Address,
+        val from: Address?,
         @Json(name = "to")
-        val to: Address,
+        val to: Address?,
     ) {
         @JsonClass(generateAdapter = true)
         data class Address(
