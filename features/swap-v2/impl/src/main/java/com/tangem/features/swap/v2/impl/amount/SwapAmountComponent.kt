@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.arkivanov.essenty.lifecycle.subscribe
 import com.tangem.common.ui.navigationButtons.NavigationModelCallback
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -22,6 +23,13 @@ internal class SwapAmountComponent @AssistedInject constructor(
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
     private val model: SwapAmountModel = getOrCreateModel(params = params)
+
+    init {
+        lifecycle.subscribe(
+            onStart = model::onStart,
+            onStop = model::onStop,
+        )
+    }
 
     fun updateState(amountUM: SwapAmountUM) = model.updateState(amountUM)
 
