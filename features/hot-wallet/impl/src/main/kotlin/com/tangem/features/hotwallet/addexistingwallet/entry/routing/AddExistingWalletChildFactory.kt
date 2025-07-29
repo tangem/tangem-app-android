@@ -2,8 +2,7 @@ package com.tangem.features.hotwallet.addexistingwallet.entry.routing
 
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.features.hotwallet.accesscode.set.SetAccessCodeComponent
-import com.tangem.features.hotwallet.accesscode.confirm.ConfirmAccessCodeComponent
+import com.tangem.features.hotwallet.setaccesscode.AccessCodeComponent
 import com.tangem.features.hotwallet.addexistingwallet.entry.AddExistingWalletModel
 import com.tangem.features.hotwallet.addexistingwallet.start.AddExistingWalletStartComponent
 import com.tangem.features.hotwallet.addexistingwallet.im.port.AddExistingWalletImportComponent
@@ -14,8 +13,7 @@ import javax.inject.Inject
 
 internal class AddExistingWalletChildFactory @Inject constructor(
     private val pushNotificationsComponent: PushNotificationsComponent.Factory,
-    private val setAccessCodeSetComponentFactory: SetAccessCodeComponent.Factory,
-    private val confirmAccessCodeComponentFactory: ConfirmAccessCodeComponent.Factory,
+    private val accessCodeComponentFactory: AccessCodeComponent.Factory,
 ) {
 
     fun createChild(
@@ -42,17 +40,19 @@ internal class AddExistingWalletChildFactory @Inject constructor(
                     callbacks = model.manualBackupCompletedComponentModelCallbacks,
                 ),
             )
-            is AddExistingWalletRoute.SetAccessCode -> setAccessCodeSetComponentFactory.create(
+            is AddExistingWalletRoute.SetAccessCode -> accessCodeComponentFactory.create(
                 context = childContext,
-                params = SetAccessCodeComponent.Params(
-                    callbacks = model.setAccessCodeModelCallbacks,
+                params = AccessCodeComponent.Params(
+                    isConfirmMode = false,
+                    callbacks = model.accessCodeModelCallbacks,
                 ),
             )
-            is AddExistingWalletRoute.ConfirmAccessCode -> confirmAccessCodeComponentFactory.create(
+            is AddExistingWalletRoute.ConfirmAccessCode -> accessCodeComponentFactory.create(
                 context = childContext,
-                params = ConfirmAccessCodeComponent.Params(
+                params = AccessCodeComponent.Params(
+                    isConfirmMode = true,
                     accessCodeToConfirm = route.accessCode,
-                    callbacks = model.confirmAccessCodeModelCallbacks,
+                    callbacks = model.accessCodeModelCallbacks,
                 ),
             )
             is AddExistingWalletRoute.PushNotifications -> pushNotificationsComponent.create(
