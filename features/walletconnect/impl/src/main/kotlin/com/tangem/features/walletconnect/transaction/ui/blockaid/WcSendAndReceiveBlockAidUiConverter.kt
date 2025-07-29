@@ -10,6 +10,7 @@ import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.walletconnect.model.WcApprovedAmount
 import com.tangem.features.walletconnect.impl.R
+import com.tangem.features.walletconnect.transaction.entity.blockaid.BlockAidNotificationUM
 import com.tangem.features.walletconnect.transaction.entity.blockaid.WcEstimatedWalletChangeUM
 import com.tangem.features.walletconnect.transaction.entity.blockaid.WcEstimatedWalletChangesUM
 import com.tangem.features.walletconnect.transaction.entity.blockaid.WcSendReceiveTransactionCheckResultsUM
@@ -22,18 +23,27 @@ import javax.inject.Inject
 
 internal const val DECIMALS_AMOUNT = 2
 
-@Suppress("CyclomaticComplexMethod")
+@Suppress("CyclomaticComplexMethod", "LongMethod")
 internal class WcSendAndReceiveBlockAidUiConverter @Inject constructor(
     private val estimatedWalletChangeUMConverter: WcEstimatedWalletChangeUMConverter,
     private val spendAllowanceUMConverter: WcSpendAllowanceUMConverter,
 ) : Converter<WcSendAndReceiveBlockAidUiConverter.Input, WcSendReceiveTransactionCheckResultsUM> {
     override fun convert(value: Input): WcSendReceiveTransactionCheckResultsUM {
-        val description = value.result.description
+        val description = value.result.description?.let { if (it.isNotEmpty()) TextReference.Str(it) else null }
         return WcSendReceiveTransactionCheckResultsUM(
             isLoading = false,
-            notificationText = when (value.result.validation) {
+            notification = when (value.result.validation) {
                 ValidationResult.SAFE, ValidationResult.FAILED_TO_VALIDATE -> null
-                ValidationResult.UNSAFE -> if (!description.isNullOrEmpty()) TextReference.Str(description) else null
+                ValidationResult.UNSAFE -> BlockAidNotificationUM(
+                    type = BlockAidNotificationUM.Type.ERROR,
+                    title = TextReference.Res(R.string.wc_malicious_transaction),
+                    text = description,
+                )
+                ValidationResult.WARNING -> BlockAidNotificationUM(
+                    type = BlockAidNotificationUM.Type.WARNING,
+                    title = TextReference.Res(R.string.wc_warning_transaction),
+                    text = description,
+                )
             },
             estimatedWalletChanges = (value.result.simulation as? SimulationResult.Success)?.data?.let { data ->
                 when (data) {
