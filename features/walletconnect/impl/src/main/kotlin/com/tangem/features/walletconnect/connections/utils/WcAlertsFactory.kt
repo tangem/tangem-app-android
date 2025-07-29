@@ -20,7 +20,7 @@ internal object WcAlertsFactory {
         is WcTransactionRoutes.Alert.Type.BlockAidErrorInfo ->
             createMaliciousDAppAlert(alertType.description, alertType.onClick, alertType.iconType, alertType.iconBgType)
         is WcTransactionRoutes.Alert.Type.UnknownError ->
-            createUnknownErrorAlert(alertType.errorMessage, alertType.onDismiss)
+            createUnknownErrorAlert(alertType.errorMessage, alertType.onDismiss, alertType.onRetry)
     }
 
     fun createUnknownDomainAlert(activeButtonOnClick: (() -> Unit)? = null): MessageBottomSheetUMV2 {
@@ -127,7 +127,11 @@ internal object WcAlertsFactory {
         }
     }
 
-    private fun createUnknownErrorAlert(errorMessage: String?, onDismiss: () -> Unit): MessageBottomSheetUMV2 {
+    private fun createUnknownErrorAlert(
+        errorMessage: String?,
+        onDismiss: () -> Unit,
+        onRetry: () -> Unit,
+    ): MessageBottomSheetUMV2 {
         return messageBottomSheetUM {
             infoBlock {
                 icon(R.drawable.img_attention_20) {
@@ -143,8 +147,12 @@ internal object WcAlertsFactory {
                     )
                 }
             }
+            primaryButton {
+                text = resourceReference(R.string.alert_button_try_again)
+                onClick { onRetry() }
+            }
             secondaryButton {
-                text = resourceReference(R.string.balance_hidden_got_it_button)
+                text = resourceReference(R.string.common_cancel)
                 onClick { onDismiss() }
             }
             onDismissRequest = onDismiss
