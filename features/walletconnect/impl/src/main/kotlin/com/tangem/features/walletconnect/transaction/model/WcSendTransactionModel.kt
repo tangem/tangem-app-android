@@ -36,11 +36,12 @@ import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorRelo
 import com.tangem.features.send.v2.api.subcomponents.feeSelector.entity.FeeSelectorData
 import com.tangem.features.walletconnect.connections.routing.WcInnerRoute
 import com.tangem.features.walletconnect.transaction.components.common.WcTransactionModelParams
-import com.tangem.features.walletconnect.transaction.converter.WcCommonTransactionUMConverter
 import com.tangem.features.walletconnect.transaction.converter.WcHandleMethodErrorConverter
+import com.tangem.features.walletconnect.transaction.converter.WcSendTransactionUMConverter
 import com.tangem.features.walletconnect.transaction.entity.blockaid.WcSendReceiveTransactionCheckResultsUM
 import com.tangem.features.walletconnect.transaction.entity.common.WcCommonTransactionModel
 import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionActionsUM
+import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionFeeState
 import com.tangem.features.walletconnect.transaction.entity.send.WcSendTransactionUM
 import com.tangem.features.walletconnect.transaction.routes.WcTransactionRoutes
 import com.tangem.features.walletconnect.transaction.ui.blockaid.WcSendAndReceiveBlockAidUiConverter
@@ -62,7 +63,7 @@ internal class WcSendTransactionModel @Inject constructor(
     private val router: Router,
     private val clipboardManager: ClipboardManager,
     private val useCaseFactory: WcRequestUseCaseFactory,
-    private val converter: WcCommonTransactionUMConverter,
+    private val converter: WcSendTransactionUMConverter,
     private val blockAidUiConverter: WcSendAndReceiveBlockAidUiConverter,
     private val getFeeUseCase: GetFeeUseCase,
     private val getNetworkCoinUseCase: GetNetworkCoinStatusUseCase,
@@ -198,20 +199,28 @@ internal class WcSendTransactionModel @Inject constructor(
             is Lce.Error -> WcSendReceiveTransactionCheckResultsUM(isLoading = false)
             is Lce.Loading -> WcSendReceiveTransactionCheckResultsUM(isLoading = true)
         }
+
+        val feeState = when {
+            useCase is WcMutableFee ->
+                WcTransactionFeeState
+                    .Success(dAppFee = useCase.dAppFee(), onClick = { onShowFeeBottomSheet() })
+            else -> WcTransactionFeeState.None
+        }
+        val actions = WcTransactionActionsUM(
+            onShowVerifiedAlert = ::showVerifiedAlert,
+            onDismiss = { cancel(useCase) },
+            onSign = { onSign(securityCheck.getOrNull()) },
+            onCopy = { copyData(useCase.rawSdkRequest.request.params) },
+        )
         var transactionUM = converter.convert(
-            WcCommonTransactionUMConverter.Input(
-                useCase = useCase,
+            WcSendTransactionUMConverter.Input(
+                context = useCase,
+                feeState = feeState,
                 signState = signState,
-                actions = WcTransactionActionsUM(
-                    onShowVerifiedAlert = ::showVerifiedAlert,
-                    onDismiss = { cancel(useCase) },
-                    onSign = { onSign(securityCheck.getOrNull()) },
-                    onCopy = { copyData(useCase.rawSdkRequest.request.params) },
-                    onShowFeeBottomSheet = ::onShowFeeBottomSheet,
-                ),
+                actions = actions,
                 feeSelectorUM = uiState.value?.feeSelectorUM,
             ),
-        ) as? WcSendTransactionUM
+        )
         transactionUM = transactionUM?.copy(
             transaction = transactionUM.transaction.copy(estimatedWalletChanges = blockAidState),
             spendAllowance = blockAidState.spendAllowance,

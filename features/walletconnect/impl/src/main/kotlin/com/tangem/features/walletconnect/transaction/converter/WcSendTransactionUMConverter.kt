@@ -2,7 +2,9 @@ package com.tangem.features.walletconnect.transaction.converter
 
 import com.tangem.domain.walletconnect.model.WcEthMethod
 import com.tangem.domain.walletconnect.model.WcSolanaMethod
-import com.tangem.domain.walletconnect.usecase.method.*
+import com.tangem.domain.walletconnect.usecase.method.WcMethodContext
+import com.tangem.domain.walletconnect.usecase.method.WcSignState
+import com.tangem.domain.walletconnect.usecase.method.WcSignStep
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.features.walletconnect.transaction.entity.blockaid.WcSendReceiveTransactionCheckResultsUM
 import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionActionsUM
@@ -20,7 +22,7 @@ internal class WcSendTransactionUMConverter @Inject constructor(
     private val requestBlockUMConverter: WcTransactionRequestBlockUMConverter,
 ) : Converter<WcSendTransactionUMConverter.Input, WcSendTransactionUM?> {
 
-    override fun convert(value: Input): WcSendTransactionUM? = when (value.useCase.method) {
+    override fun convert(value: Input): WcSendTransactionUM? = when (value.context.method) {
         is WcEthMethod.SendTransaction,
         is WcEthMethod.SignTransaction,
         is WcSolanaMethod.SignAllTransaction,
@@ -31,23 +33,23 @@ internal class WcSendTransactionUMConverter @Inject constructor(
                 onSend = value.actions.onSign,
                 appInfo = appInfoContentUMConverter.convert(
                     WcTransactionAppInfoContentUMConverter.Input(
-                        session = value.useCase.session,
+                        session = value.context.session,
                         onShowVerifiedAlert = value.actions.onShowVerifiedAlert,
                     ),
                 ),
-                feeState = constructFeeState(useCase = value.useCase, actions = value.actions),
-                walletName = value.useCase.session.wallet.name.takeIf { value.useCase.session.showWalletInfo },
-                networkInfo = networkInfoUMConverter.convert(value.useCase.network),
+                feeState = value.feeState,
+                walletName = value.context.session.wallet.name.takeIf { value.context.session.showWalletInfo },
+                networkInfo = networkInfoUMConverter.convert(value.context.network),
                 estimatedWalletChanges = WcSendReceiveTransactionCheckResultsUM(),
                 isLoading = value.signState.domainStep == WcSignStep.Signing,
-                address = WcAddressConverter.convert(value.useCase.derivationState),
+                address = WcAddressConverter.convert(value.context.derivationState),
             ),
             feeSelectorUM = value.feeSelectorUM ?: FeeSelectorUM.Loading,
             transactionRequestInfo = WcTransactionRequestInfoUM(
                 blocks = buildList {
                     addAll(
                         requestBlockUMConverter.convert(
-                            WcTransactionRequestBlockUMConverter.Input(value.useCase.rawSdkRequest),
+                            WcTransactionRequestBlockUMConverter.Input(value.context.rawSdkRequest),
                         ),
                     )
                 }.toImmutableList(),
@@ -57,17 +59,9 @@ internal class WcSendTransactionUMConverter @Inject constructor(
         else -> null
     }
 
-    private fun constructFeeState(
-        useCase: WcTransactionUseCase,
-        actions: WcTransactionActionsUM,
-    ): WcTransactionFeeState {
-        val mutableFee = useCase as? WcMutableFee ?: return WcTransactionFeeState.None
-        val dAppFee = mutableFee.dAppFee()
-        return WcTransactionFeeState.Success(dAppFee = dAppFee, onClick = actions.onShowFeeBottomSheet)
-    }
-
     data class Input(
-        val useCase: WcTransactionUseCase,
+        val context: WcMethodContext,
+        val feeState: WcTransactionFeeState,
         val signState: WcSignState<*>,
         val actions: WcTransactionActionsUM,
         val feeSelectorUM: FeeSelectorUM?,
