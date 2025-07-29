@@ -1440,6 +1440,8 @@
   <string name="wc_transaction_request">取引リクエスト</string>
   <string name="wc_transaction_request_title">取引リクエスト</string>
   <string name="wc_unlimited_amount">無制限</string>
+  <string name="wc_uri_already_used_description">各ペアリング試行で、新しくユニークなURIが使用されていることを確認します</string>
+  <string name="wc_uri_already_used_title">URIはすでに使用されています</string>
   <string name="wc_wallet_connect">ウォレットコネクト</string>
   <string name="welcome_interrupted_backup_alert_discard">破棄</string>
   <string name="welcome_interrupted_backup_alert_message">バックアップが中断されました。再開しますか?</string>
