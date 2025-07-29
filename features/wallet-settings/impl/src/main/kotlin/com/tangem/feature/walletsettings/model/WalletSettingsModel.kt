@@ -24,6 +24,7 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.nft.DisableWalletNFTUseCase
 import com.tangem.domain.nft.EnableWalletNFTUseCase
 import com.tangem.domain.nft.GetWalletNFTEnabledUseCase
+import com.tangem.domain.notifications.ShouldShowHuaweiWarningUseCase
 import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.notifications.toggles.NotificationsFeatureToggles
 import com.tangem.domain.settings.repositories.PermissionRepository
@@ -74,6 +75,7 @@ internal class WalletSettingsModel @Inject constructor(
     private val settingsManager: SettingsManager,
     private val permissionsRepository: PermissionRepository,
     private val notificationsRepository: NotificationsRepository,
+    private val shouldShowHuaweiWarningUseCase: ShouldShowHuaweiWarningUseCase,
 ) : Model() {
 
     val params: WalletSettingsComponent.Params = paramsContainer.require()
@@ -230,6 +232,10 @@ internal class WalletSettingsModel @Inject constructor(
     private fun onCheckedNotificationsChange(isChecked: Boolean) {
         modelScope.launch {
             if (isChecked) {
+                if (shouldShowHuaweiWarningUseCase()) {
+                    showHuaweiDialog()
+                    return@launch
+                }
                 state.update { value ->
                     value.copy(
                         requestPushNotificationsPermission = true,
@@ -240,6 +246,21 @@ internal class WalletSettingsModel @Inject constructor(
                 analyticsEventHandler.send(PushNotificationAnalyticEvents.NotificationsEnabled(false))
             }
         }
+    }
+
+    private fun showHuaweiDialog() {
+        val message = DialogMessage(
+            message = resourceReference(R.string.wallet_settings_push_notifications_huawei_warning),
+            firstActionBuilder = {
+                EventMessageAction(
+                    title = resourceReference(R.string.common_ok),
+                    warning = true,
+                    onClick = {},
+                )
+            },
+        )
+
+        messageSender.send(message)
     }
 
     private fun onNotificationsDescriptionClick() {
