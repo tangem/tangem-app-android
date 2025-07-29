@@ -15,7 +15,6 @@ import com.tangem.core.ui.components.divider.DividerWithPadding
 import com.tangem.core.ui.extensions.clickableSingle
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.send.v2.api.FeeSelectorBlockComponent
-import com.tangem.features.walletconnect.transaction.entity.common.WcAddressUM
 import com.tangem.features.walletconnect.transaction.entity.common.WcNetworkInfoUM
 import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionFeeState
 
@@ -25,7 +24,7 @@ internal fun WcSendTransactionItems(
     networkInfo: WcNetworkInfoUM,
     feeState: WcTransactionFeeState,
     feeSelectorBlockComponent: FeeSelectorBlockComponent?,
-    address: WcAddressUM?,
+    address: String?,
     modifier: Modifier = Modifier,
 ) {
     val onFeeBlockClicked = remember(feeState) {
