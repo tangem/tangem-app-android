@@ -11,11 +11,11 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.walletconnect.impl.R
+import com.tangem.features.walletconnect.transaction.entity.blockaid.BlockAidNotificationUM
 import com.tangem.features.walletconnect.transaction.entity.blockaid.WcEstimatedWalletChangeUM
 import com.tangem.features.walletconnect.transaction.entity.blockaid.WcEstimatedWalletChangesUM
 import com.tangem.features.walletconnect.transaction.entity.blockaid.WcSendReceiveTransactionCheckResultsUM
@@ -36,8 +36,8 @@ internal fun TransactionCheckResultsItem(
         if (item.isLoading) {
             WcEstimatedWalletChangesLoadingItem()
         } else {
-            if (item.notificationText != null) {
-                WcTransactionCheckErrorItem(item.notificationText.resolveReference())
+            if (item.notification != null) {
+                WcTransactionCheckErrorItem(item.notification)
             }
             if (item.estimatedWalletChanges != null) {
                 WcEstimatedWalletChangesItem(item.estimatedWalletChanges)
@@ -70,7 +70,11 @@ private class TransactionCheckResultsItemProvider : PreviewParameterProvider<WcS
     override val values = sequenceOf(
         WcSendReceiveTransactionCheckResultsUM(
             isLoading = false,
-            notificationText = TextReference.Str("The transaction approves erc20 tokens to a known malicious address"),
+            notification = BlockAidNotificationUM(
+                type = BlockAidNotificationUM.Type.ERROR,
+                title = TextReference.Res(R.string.wc_malicious_transaction),
+                text = TextReference.Str("The transaction approves erc20 tokens to a known malicious address"),
+            ),
             estimatedWalletChanges = WcEstimatedWalletChangesUM(
                 items = persistentListOf(
                     WcEstimatedWalletChangeUM(
