@@ -1,4 +1,4 @@
-package com.tangem.features.hotwallet.accesscode.confirm
+package com.tangem.features.hotwallet.setaccesscode
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -8,17 +8,19 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.security.DisableScreenshotsDisposableEffect
-import com.tangem.features.hotwallet.accesscode.confirm.ui.SetAccessCodeConfirmContent
+import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.features.hotwallet.setaccesscode.ui.AccessCodeLayout
+import com.tangem.core.res.R
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 
-internal class ConfirmAccessCodeComponent @AssistedInject constructor(
+internal class AccessCodeComponent @AssistedInject constructor(
     @Assisted private val context: AppComponentContext,
     @Assisted private val params: Params,
 ) : ComposableContentComponent, AppComponentContext by context {
 
-    private val model: ConfirmAccessCodeModel = getOrCreateModel(params)
+    private val model: AccessCodeModel = getOrCreateModel(params)
 
     @Composable
     override fun Content(modifier: Modifier) {
@@ -26,27 +28,37 @@ internal class ConfirmAccessCodeComponent @AssistedInject constructor(
 
         DisableScreenshotsDisposableEffect()
 
-        SetAccessCodeConfirmContent(
+        AccessCodeLayout(
+            modifier = modifier,
             accessCode = state.accessCode,
             onAccessCodeChange = state.onAccessCodeChange,
             accessCodeLength = state.accessCodeLength,
-            onConfirm = state.onConfirm,
+            reEnterAccessCodeState = params.isConfirmMode,
+            buttonText = stringResourceSafe(
+                if (params.isConfirmMode) {
+                    R.string.common_confirm
+                } else {
+                    R.string.common_continue
+                },
+            ),
+            onButtonClick = state.onButtonClick,
             buttonEnabled = state.buttonEnabled,
-            modifier = modifier,
         )
     }
 
     interface ModelCallbacks {
+        fun onAccessCodeSet(accessCode: String)
         fun onAccessCodeConfirmed()
     }
 
     data class Params(
-        val accessCodeToConfirm: String,
+        val isConfirmMode: Boolean,
+        val accessCodeToConfirm: String? = null,
         val callbacks: ModelCallbacks,
     )
 
     @AssistedFactory
     interface Factory {
-        fun create(context: AppComponentContext, params: Params): ConfirmAccessCodeComponent
+        fun create(context: AppComponentContext, params: Params): AccessCodeComponent
     }
 }
