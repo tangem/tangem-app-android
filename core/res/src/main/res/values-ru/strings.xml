@@ -1184,6 +1184,7 @@
   <string name="wallet_promo_banner_description">Получите доступ к более чем 13 000 криптовалют. Покупайте, продавайте, обменивайте и стейкайте в один клик. Свяжите до трех карт для резервного копирования. </string>
   <string name="wallet_promo_banner_title">Откройте Tangem Wallet</string>
   <string name="wallet_settings_push_notifications_description">Получайте уведомления о входящих транзакциях в кошельке и обновлениях Tangem.</string>
+  <string name="wallet_settings_push_notifications_huawei_warning">В настоящий момент push-уведомления могут не работать на устройствах Huawei. Мы уже работаем над решением этой проблемы и планируем исправление в ближайших обновлениях. Спасибо за понимание!</string>
   <string name="wallet_settings_push_notifications_title">Уведомления о транзакциях</string>
   <string name="wallet_settings_title">Настройки кошелька</string>
   <string name="wallet_title">Tangem</string>
