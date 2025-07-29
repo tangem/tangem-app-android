@@ -118,6 +118,7 @@ internal fun WcSendTransactionModalBottomSheet(
                 onClickActiveButton = state.onSend,
                 activeButtonText = resourceReference(R.string.common_send),
                 isLoading = state.isLoading,
+                enabled = state.sendEnabled,
             )
         },
     )
@@ -197,6 +198,7 @@ private class WcSendTransactionStateProvider : CollectionPreviewParameterProvide
             networkInfo = WcNetworkInfoUM(name = "Optimistic Ethereum Network", iconRes = R.drawable.img_eth_22),
             feeState = WcTransactionFeeState.Success(null, {}),
             address = null,
+            sendEnabled = true,
         ),
         WcSendTransactionItemUM(
             onDismiss = {},
@@ -232,6 +234,7 @@ private class WcSendTransactionStateProvider : CollectionPreviewParameterProvide
             networkInfo = WcNetworkInfoUM(name = "Ethereum", iconRes = R.drawable.img_eth_22),
             feeState = WcTransactionFeeState.Success(null, {}),
             address = "0xdac17f958d2ee523a2206206994597c13d831ec7",
+            sendEnabled = true,
         ),
         WcSendTransactionItemUM(
             onDismiss = {},
@@ -267,6 +270,7 @@ private class WcSendTransactionStateProvider : CollectionPreviewParameterProvide
             networkInfo = WcNetworkInfoUM(name = "Ethereum", iconRes = R.drawable.img_eth_22),
             feeState = WcTransactionFeeState.None,
             address = null,
+            sendEnabled = false,
         ),
     ),
 )
