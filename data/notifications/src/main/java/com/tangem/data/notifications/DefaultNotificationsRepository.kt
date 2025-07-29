@@ -82,4 +82,36 @@ internal class DefaultNotificationsRepository @Inject constructor(
             NotificationsEligibleNetworkConverter.convert(it)
         }
     }
+
+    override suspend fun shouldShowSubscribeOnNotificationsAfterUpdate(): Boolean {
+        return appPreferencesStore.getSyncOrNull(
+            key = PreferencesKeys.NOTIFICATIONS_USER_ALLOW_SEND_ADDRESSES_KEY,
+        ) == null
+    }
+
+    override suspend fun isUserAllowToSubscribeOnPushNotifications(): Boolean {
+        return appPreferencesStore.getSyncOrDefault(
+            key = PreferencesKeys.NOTIFICATIONS_USER_ALLOW_SEND_ADDRESSES_KEY,
+            default = false,
+        )
+    }
+
+    override suspend fun setUserAllowToSubscribeOnPushNotifications(value: Boolean) {
+        appPreferencesStore.store(PreferencesKeys.NOTIFICATIONS_USER_ALLOW_SEND_ADDRESSES_KEY, value)
+    }
+
+    override suspend fun getWalletAutomaticallyEnabledList(): List<String> = appPreferencesStore
+        .getObjectMapSync<Boolean>(PreferencesKeys.NOTIFICATIONS_AUTOMATICALLY_ENABLED_STATES_KEY).map {
+            it.key
+        }
+
+    override suspend fun setNotificationsWasEnabledAutomatically(userWalletId: String) {
+        appPreferencesStore.editData {
+            it.setObjectMap(
+                key = PreferencesKeys.NOTIFICATIONS_AUTOMATICALLY_ENABLED_STATES_KEY,
+                value = it.getObjectMap<Boolean>(PreferencesKeys.NOTIFICATIONS_AUTOMATICALLY_ENABLED_STATES_KEY)
+                    .plus(userWalletId to true),
+            )
+        }
+    }
 }
