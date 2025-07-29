@@ -3,7 +3,7 @@ package com.tangem.features.disclaimer.impl.entity
 internal data class DisclaimerUM(
     val url: String,
     val isTosAccepted: Boolean,
-    val onAccept: (Boolean) -> Unit,
+    val onAccept: () -> Unit,
     val popBack: () -> Unit,
 )
 
