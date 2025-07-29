@@ -29,6 +29,7 @@ dependencies {
     implementation(projects.core.ui)
     implementation(projects.core.navigation)
     implementation(projects.core.configToggles)
+    implementation(projects.core.datasource)
 
     /** Common */
     implementation(projects.common.ui)
