@@ -16,6 +16,7 @@ import org.json.JSONArray
 private const val SUCCESS_STATUS = "Success"
 private const val DOMAIN_CHECKED_STATUS = "hit"
 private const val VALIDATION_SAFE_STATUS = "Benign"
+private const val VALIDATION_WARNING_STATUS = "Warning"
 
 internal object BlockAidMapper {
 
@@ -32,6 +33,7 @@ internal object BlockAidMapper {
             validation = when {
                 from.validation.status != SUCCESS_STATUS -> ValidationResult.FAILED_TO_VALIDATE
                 from.validation.resultType == VALIDATION_SAFE_STATUS -> ValidationResult.SAFE
+                from.validation.resultType == VALIDATION_WARNING_STATUS -> ValidationResult.WARNING
                 else -> ValidationResult.UNSAFE
             },
             simulation = if (from.simulation.status != SUCCESS_STATUS) {
