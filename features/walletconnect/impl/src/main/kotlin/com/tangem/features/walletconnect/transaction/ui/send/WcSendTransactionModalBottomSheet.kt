@@ -29,6 +29,7 @@ import com.tangem.features.walletconnect.connections.entity.VerifiedDAppState
 import com.tangem.features.walletconnect.connections.ui.WcAppInfoItem
 import com.tangem.features.walletconnect.impl.R
 import com.tangem.features.walletconnect.transaction.components.PreviewFeeSelectorBlockComponent
+import com.tangem.features.walletconnect.transaction.entity.blockaid.BlockAidNotificationUM
 import com.tangem.features.walletconnect.transaction.entity.blockaid.WcEstimatedWalletChangeUM
 import com.tangem.features.walletconnect.transaction.entity.blockaid.WcEstimatedWalletChangesUM
 import com.tangem.features.walletconnect.transaction.entity.blockaid.WcSendReceiveTransactionCheckResultsUM
@@ -173,8 +174,10 @@ private class WcSendTransactionStateProvider : CollectionPreviewParameterProvide
                 appSubtitle = "react-app.walletconnect.com",
             ),
             estimatedWalletChanges = WcSendReceiveTransactionCheckResultsUM(
-                notificationText = TextReference.Str(
-                    "The transaction approves erc20 tokens to a known malicious address",
+                notification = BlockAidNotificationUM(
+                    type = BlockAidNotificationUM.Type.ERROR,
+                    title = TextReference.Res(R.string.wc_malicious_transaction),
+                    text = TextReference.Str("The transaction approves erc20 tokens to a known malicious address"),
                 ),
                 estimatedWalletChanges = WcEstimatedWalletChangesUM(
                     items = persistentListOf(
@@ -210,8 +213,10 @@ private class WcSendTransactionStateProvider : CollectionPreviewParameterProvide
                 appSubtitle = "react-app.walletconnect.com",
             ),
             estimatedWalletChanges = WcSendReceiveTransactionCheckResultsUM(
-                notificationText = TextReference.Str(
-                    "The transaction approves erc20 tokens to a known malicious address",
+                notification = BlockAidNotificationUM(
+                    type = BlockAidNotificationUM.Type.ERROR,
+                    title = TextReference.Res(R.string.wc_malicious_transaction),
+                    text = TextReference.Str("The transaction approves erc20 tokens to a known malicious address"),
                 ),
                 estimatedWalletChanges = WcEstimatedWalletChangesUM(
                     items = persistentListOf(
@@ -246,8 +251,10 @@ private class WcSendTransactionStateProvider : CollectionPreviewParameterProvide
                 appSubtitle = "react-app.walletconnect.com",
             ),
             estimatedWalletChanges = WcSendReceiveTransactionCheckResultsUM(
-                notificationText = TextReference.Str(
-                    "The transaction approves erc20 tokens to a known malicious address",
+                notification = BlockAidNotificationUM(
+                    type = BlockAidNotificationUM.Type.ERROR,
+                    title = TextReference.Res(R.string.wc_malicious_transaction),
+                    text = TextReference.Str("The transaction approves erc20 tokens to a known malicious address"),
                 ),
                 estimatedWalletChanges = WcEstimatedWalletChangesUM(
                     items = persistentListOf(
