@@ -24,6 +24,7 @@ internal class SwapAmountSecondaryReadyStateTransformer(
     private val clickIntents: AmountScreenClickIntents,
     private val swapDirection: SwapDirection,
     private val isBalanceHidden: Boolean,
+    private val showBestRateAnimation: Boolean,
 ) : Transformer<SwapAmountUM> {
 
     private val amountFieldConverter = SwapAmountFieldConverter(
@@ -51,6 +52,7 @@ internal class SwapAmountSecondaryReadyStateTransformer(
             swapQuotes = persistentListOf(),
             selectedQuote = SwapQuoteUM.Empty,
             appCurrency = appCurrency,
+            showBestRateAnimation = showBestRateAnimation,
         )
     }
 }

@@ -51,6 +51,7 @@ internal sealed class SwapAmountUM {
 
         // extra data
         val appCurrency: AppCurrency?,
+        val showBestRateAnimation: Boolean,
     ) : SwapAmountUM()
 }
 
