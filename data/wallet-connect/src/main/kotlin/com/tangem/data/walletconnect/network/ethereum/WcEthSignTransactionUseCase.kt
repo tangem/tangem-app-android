@@ -41,6 +41,9 @@ internal class WcEthSignTransactionUseCase @AssistedInject constructor(
     WcMutableFee {
 
     private var approvalAmount: WcApprovedAmount? = null
+    // in case of change TransactionExtras
+    // change approvalAmount for example
+    private var isIgnoreDAppFee: Boolean = false
     private var dAppFee: Fee? = null
 
     override val securityStatus = blockAidDelegate.getSecurityStatus(
@@ -101,7 +104,7 @@ internal class WcEthSignTransactionUseCase @AssistedInject constructor(
                     },
                 )
                 approvalAmount = action.amount
-                dAppFee = null
+                isIgnoreDAppFee = true
                 uncompiled.copy(extras = extras.copy(callData = callData))
             }
             is WcEthTxAction.UpdateFee -> uncompiled.copy(fee = action.fee)
@@ -115,17 +118,19 @@ internal class WcEthSignTransactionUseCase @AssistedInject constructor(
     }
 
     override fun invoke(): Flow<WcSignState<TransactionData>> = flow {
-        dAppFee = ethTxHelper.getDAppFee(method.transaction, wallet, network)
         val transactionData = ethTxHelper.createTransactionData(
-            dAppFee = dAppFee,
+            dAppFee = dAppFee(),
             network = context.network,
             txParams = method.transaction,
         ) ?: return@flow
         emitAll(delegate.invoke(transactionData))
     }
 
-    override fun dAppFee(): Fee? {
-        return dAppFee
+    override suspend fun dAppFee(): Fee? {
+        if (isIgnoreDAppFee) return null
+        if (dAppFee != null) return dAppFee
+        return ethTxHelper.getDAppFee(method.transaction, wallet, network)
+            .also { dAppFee = it }
     }
 
     override fun getAmount(): WcApprovedAmount? {
