@@ -1,4 +1,4 @@
-package com.tangem.datasource.local.swaptx
+package com.tangem.datasource.local.swap
 
 /**
  * Runtime cache for storing swap transactions statuses sent to analytics
