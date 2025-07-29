@@ -157,7 +157,12 @@ internal class WcSendTransactionModel @Inject constructor(
      * Also handles fee results from FeeSelectorBlockComponent
      */
     fun updateFee(feeSelectorUM: FeeSelectorUM) {
-        _uiState.update { it?.copy(feeSelectorUM = feeSelectorUM) }
+        _uiState.update {
+            it?.copy(
+                feeSelectorUM = feeSelectorUM,
+                transaction = it.transaction.copy(sendEnabled = feeSelectorUM is FeeSelectorUM.Content),
+            )
+        }
         val fee = (feeSelectorUM as? FeeSelectorUM.Content)?.selectedFeeItem?.fee ?: return
         (useCase as? WcMutableFee)?.updateFee(fee)
     }
@@ -201,9 +206,10 @@ internal class WcSendTransactionModel @Inject constructor(
         }
 
         val feeState = when {
-            useCase is WcMutableFee ->
-                WcTransactionFeeState
-                    .Success(dAppFee = useCase.dAppFee(), onClick = { onShowFeeBottomSheet() })
+            useCase is WcMutableFee -> WcTransactionFeeState.Success(
+                dAppFee = useCase.dAppFee(),
+                onClick = ::onShowFeeBottomSheet,
+            )
             else -> WcTransactionFeeState.None
         }
         val actions = WcTransactionActionsUM(
