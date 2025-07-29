@@ -32,7 +32,6 @@ import com.tangem.features.walletconnect.transaction.components.PreviewFeeSelect
 import com.tangem.features.walletconnect.transaction.entity.blockaid.WcEstimatedWalletChangeUM
 import com.tangem.features.walletconnect.transaction.entity.blockaid.WcEstimatedWalletChangesUM
 import com.tangem.features.walletconnect.transaction.entity.blockaid.WcSendReceiveTransactionCheckResultsUM
-import com.tangem.features.walletconnect.transaction.entity.common.WcAddressUM
 import com.tangem.features.walletconnect.transaction.entity.common.WcNetworkInfoUM
 import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionAppInfoContentUM
 import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionFeeState
@@ -194,8 +193,8 @@ private class WcSendTransactionStateProvider : CollectionPreviewParameterProvide
                 ),
                 isLoading = false,
             ),
-            walletName = "Tangem 2.0",
-            networkInfo = WcNetworkInfoUM(name = "Ethereum", iconRes = R.drawable.img_eth_22),
+            walletName = "Tangem 2.0 Tangem 2.0 Tangem 2",
+            networkInfo = WcNetworkInfoUM(name = "Optimistic Ethereum Network", iconRes = R.drawable.img_eth_22),
             feeState = WcTransactionFeeState.Success(null, {}),
             address = null,
         ),
@@ -232,7 +231,7 @@ private class WcSendTransactionStateProvider : CollectionPreviewParameterProvide
             walletName = "Tangem 2.0",
             networkInfo = WcNetworkInfoUM(name = "Ethereum", iconRes = R.drawable.img_eth_22),
             feeState = WcTransactionFeeState.Success(null, {}),
-            address = WcAddressUM("0xdac17f958d2ee523a2206206994597c13d831ec7", "0x345FF...34FA"),
+            address = "0xdac17f958d2ee523a2206206994597c13d831ec7",
         ),
         WcSendTransactionItemUM(
             onDismiss = {},
