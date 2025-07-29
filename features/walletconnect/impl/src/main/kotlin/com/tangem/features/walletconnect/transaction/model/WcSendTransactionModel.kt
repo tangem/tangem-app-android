@@ -317,22 +317,24 @@ internal class WcSendTransactionModel @Inject constructor(
 
     private fun signingIsDone(signState: WcSignState<*>, useCase: WcSignUseCase<*>): Boolean {
         (signState.domainStep as? WcSignStep.Result)?.result?.let {
-            handleSigningError(it, useCase)
-            return true
+            return handleSigningError(it, useCase)
         }
         return false
     }
 
-    private fun handleSigningError(result: Either<WcRequestError, String>, useCase: WcSignUseCase<*>) {
-        if (result.isLeft()) {
+    private fun handleSigningError(result: Either<WcRequestError, String>, useCase: WcSignUseCase<*>): Boolean {
+        return if (result.isLeft()) {
             val error = WcTransactionRoutes.Alert.Type.UnknownError(
                 errorMessage = result.leftOrNull()?.message(),
                 onDismiss = { cancel(useCase) },
+                onRetry = { signFromAlert() },
             )
             stackNavigation.pushNew(WcTransactionRoutes.Alert(error))
+            false
         } else {
             showSuccessSignMessage()
             router.pop()
+            true
         }
     }
 
