@@ -2,6 +2,8 @@ package com.tangem.data.walletconnect.pair
 
 import com.reown.walletkit.client.Wallet
 import com.tangem.data.walletconnect.model.CAIP10
+import com.tangem.data.walletconnect.model.CAIP2
+import com.tangem.data.walletconnect.pair.AssociateNetworksDelegate.Companion.setOfChainId
 import com.tangem.data.walletconnect.utils.WcNamespaceConverter
 import com.tangem.data.walletconnect.utils.WcNetworksConverter
 import com.tangem.domain.models.network.Network
@@ -21,6 +23,26 @@ internal class CaipNamespaceDelegate(
     ): Map<String, Wallet.Model.Namespace.Session> {
         val userWallet = sessionForApprove.wallet
         val result = mutableMapOf<String, Session>()
+
+        val requiredNamespaces = sessionProposal.requiredNamespaces.setOfChainId()
+        val optionalNamespaces = sessionProposal.optionalNamespaces.setOfChainId()
+        val allWcNetworks = (requiredNamespaces + optionalNamespaces)
+            .mapNotNull { chainId ->
+                val network = namespaceConverters
+                    .firstNotNullOfOrNull { it.toNetwork(chainId, userWallet) }
+                    ?: return@mapNotNull null
+                val caip2 = CAIP2.fromRaw(chainId) ?: return@mapNotNull null
+                network to caip2
+            }
+
+        suspend fun createCAIP10(userWalletId: UserWalletId, network: Network): CAIP10? {
+            val address = walletManagersFacade.getDefaultAddress(userWalletId, network)
+            val chainId = allWcNetworks
+                .find { (wcNetwork, _) -> network.rawId == wcNetwork.rawId }
+                ?.second
+            if (chainId == null || address == null) return null
+            return CAIP10(chainId = chainId, accountAddress = address)
+        }
 
         wcNetworksConverter.convertNetworksForApprove(sessionForApprove)
             .mapNotNull { createCAIP10(userWallet.walletId, it) }
@@ -50,13 +72,6 @@ internal class CaipNamespaceDelegate(
                 events = session.events.toList(),
             )
         }
-    }
-
-    private suspend fun createCAIP10(userWalletId: UserWalletId, network: Network): CAIP10? {
-        val address = walletManagersFacade.getDefaultAddress(userWalletId, network)
-        val chainId = namespaceConverters.firstNotNullOfOrNull { it.toCAIP2(network) }
-        if (chainId == null || address == null) return null
-        return CAIP10(chainId = chainId, accountAddress = address)
     }
 
     private data class Session(
