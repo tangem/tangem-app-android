@@ -15,6 +15,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
@@ -32,6 +33,7 @@ import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.SelectProviderBottomSheetTestTags
 import com.tangem.domain.onramp.model.OnrampPaymentMethod
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.paymentmethod.ui.PaymentMethodIcon
@@ -101,15 +103,19 @@ private fun PaymentMethodBlock(
                 text = stringResourceSafe(id = R.string.onramp_pay_with),
                 style = TangemTheme.typography.body2,
                 color = TangemTheme.colors.text.tertiary,
+                modifier = Modifier.testTag(SelectProviderBottomSheetTestTags.PAYMENT_METHOD_TITLE),
             )
             Text(
                 text = state.name,
                 style = TangemTheme.typography.caption2,
                 color = TangemTheme.colors.text.primary1,
+                modifier = Modifier.testTag(SelectProviderBottomSheetTestTags.PAYMENT_METHOD_NAME),
             )
         }
         Icon(
-            modifier = Modifier.size(TangemTheme.dimens.size24),
+            modifier = Modifier
+                .size(TangemTheme.dimens.size24)
+                .testTag(SelectProviderBottomSheetTestTags.PAYMENT_METHOD_EXPAND_BUTTON),
             painter = painterResource(id = R.drawable.ic_chevron_24),
             contentDescription = null,
             tint = TangemTheme.colors.icon.informative,
@@ -149,14 +155,16 @@ private fun AvailableProviderItem(state: ProviderListItemUM.Available.Content, m
         modifier = modifier
             .selectedBorder(isSelected = state.isSelected)
             .clickable(onClick = state.onClick)
-            .padding(all = TangemTheme.dimens.spacing12),
+            .padding(all = TangemTheme.dimens.spacing12)
+            .testTag(SelectProviderBottomSheetTestTags.AVAILABLE_PROVIDER_ITEM),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
     ) {
         SubcomposeAsyncImage(
             modifier = Modifier
                 .size(size = TangemTheme.dimens.size40)
-                .clip(TangemTheme.shapes.roundedCorners8),
+                .clip(TangemTheme.shapes.roundedCorners8)
+                .testTag(SelectProviderBottomSheetTestTags.AVAILABLE_PROVIDER_NAME),
             model = ImageRequest.Builder(context = LocalContext.current)
                 .data(state.imageUrl)
                 .crossfade(enable = true)
@@ -166,7 +174,9 @@ private fun AvailableProviderItem(state: ProviderListItemUM.Available.Content, m
             contentDescription = null,
         )
         Text(
-            modifier = Modifier.weight(1F),
+            modifier = Modifier
+                .weight(1F)
+                .testTag(SelectProviderBottomSheetTestTags.TOKEN_AMOUNT),
             text = state.name,
             style = TangemTheme.typography.subtitle2,
             color = if (state.isSelected) TangemTheme.colors.text.primary1 else TangemTheme.colors.text.secondary,
@@ -189,7 +199,8 @@ private fun AvailableProviderItem(state: ProviderListItemUM.Available.Content, m
                         modifier = Modifier
                             .clip(RoundedCornerShape(4.dp))
                             .background(TangemTheme.colors.icon.accent)
-                            .padding(vertical = 1.dp, horizontal = 6.dp),
+                            .padding(vertical = 1.dp, horizontal = 6.dp)
+                            .testTag(SelectProviderBottomSheetTestTags.BEST_RATE_LABEL),
                     )
                 }
                 state.diffRate != null -> {
@@ -218,7 +229,8 @@ private fun UnavailableProviderItem(
     Row(
         modifier = modifier
             .selectedBorder(isSelected = isSelected)
-            .padding(all = TangemTheme.dimens.spacing12),
+            .padding(all = TangemTheme.dimens.spacing12)
+            .testTag(SelectProviderBottomSheetTestTags.UNAVAILABLE_PROVIDER_ITEM),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
     ) {
@@ -240,11 +252,13 @@ private fun UnavailableProviderItem(
                 text = providerName,
                 style = TangemTheme.typography.subtitle2,
                 color = TangemTheme.colors.text.secondary,
+                modifier = Modifier.testTag(SelectProviderBottomSheetTestTags.UNAVAILABLE_PROVIDER_NAME),
             )
             Text(
                 text = subtitle.resolveReference(),
                 style = TangemTheme.typography.caption2,
                 color = TangemTheme.colors.text.tertiary,
+                modifier = Modifier.testTag(SelectProviderBottomSheetTestTags.UNAVAILABLE_PROVIDER_SUBTITLE),
             )
         }
     }
@@ -259,7 +273,8 @@ private fun OnrampMoreProviders() {
         contentDescription = null,
         tint = TangemTheme.colors.icon.informative,
         modifier = Modifier
-            .padding(top = 16.dp),
+            .padding(top = 16.dp)
+            .testTag(SelectProviderBottomSheetTestTags.MORE_PROVIDERS_ICON),
     )
     Text(
         text = stringResourceSafe(R.string.express_more_providers_soon),
@@ -267,7 +282,8 @@ private fun OnrampMoreProviders() {
         color = TangemTheme.colors.icon.informative,
         modifier = Modifier
             .padding(top = 4.dp, bottom = 24.dp)
-            .padding(horizontal = TangemTheme.dimens.spacing56),
+            .padding(horizontal = TangemTheme.dimens.spacing56)
+            .testTag(SelectProviderBottomSheetTestTags.MORE_PROVIDERS_TEXT),
         textAlign = TextAlign.Center,
     )
 }
