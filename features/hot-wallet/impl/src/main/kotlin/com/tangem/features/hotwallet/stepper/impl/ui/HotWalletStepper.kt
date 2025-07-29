@@ -43,18 +43,18 @@ internal fun HotWalletStepper(
     ) {
         TangemTopAppBar(
             startButton = if (state.showBackButton) {
-                TopAppBarButtonUM.Back { onBackClick() }
+                TopAppBarButtonUM.Back(onBackClick)
             } else {
                 null
             },
             endButton = when {
                 state.showSkipButton -> TopAppBarButtonUM.Text(
                     text = resourceReference(R.string.common_skip),
-                    onClicked = { onSkipClick() },
+                    onClicked = onSkipClick,
                 )
                 state.showFeedbackButton -> TopAppBarButtonUM.Icon(
                     iconRes = R.drawable.ic_chat_24,
-                    onClicked = { onFeedbackClick() },
+                    onClicked = onFeedbackClick,
                 )
                 else -> null
             },
