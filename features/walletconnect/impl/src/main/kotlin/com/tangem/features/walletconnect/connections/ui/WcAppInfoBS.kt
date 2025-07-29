@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -311,23 +312,28 @@ private fun WalletRowItem(walletName: String, showEndIcon: Boolean, modifier: Mo
             contentDescription = null,
             tint = TangemTheme.colors.icon.accent,
         )
-        Text(
-            modifier = Modifier
-                .padding(start = TangemTheme.dimens.spacing4)
-                .weight(1f),
-            text = stringResourceSafe(R.string.manage_tokens_network_selector_wallet),
-            style = TangemTheme.typography.body1,
-            color = TangemTheme.colors.text.primary1,
-        )
-        Text(
-            modifier = Modifier
-                .padding(start = TangemTheme.dimens.spacing16)
-                .weight(1f),
-            text = walletName,
-            textAlign = TextAlign.End,
-            style = TangemTheme.typography.body1,
-            color = TangemTheme.colors.text.tertiary,
-        )
+        Row(
+            modifier = Modifier.weight(1f),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                modifier = Modifier.padding(start = TangemTheme.dimens.spacing4),
+                text = stringResourceSafe(R.string.manage_tokens_network_selector_wallet),
+                style = TangemTheme.typography.body1,
+                color = TangemTheme.colors.text.primary1,
+                maxLines = 1,
+            )
+            Text(
+                modifier = Modifier.padding(start = TangemTheme.dimens.spacing16),
+                text = walletName,
+                textAlign = TextAlign.End,
+                style = TangemTheme.typography.body1,
+                color = TangemTheme.colors.text.tertiary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
         if (showEndIcon) {
             Icon(
                 modifier = Modifier
@@ -611,7 +617,7 @@ private class WcAppInfoStateProvider : CollectionPreviewParameterProvider<WcAppI
             verifiedDAppState = VerifiedDAppState.Verified {},
             appSubtitle = "react-app.walletconnect.com",
             notification = WcAppInfoSecurityNotification.SecurityRisk,
-            walletName = "Tangem 2.0",
+            walletName = "Tangem 2.0 Tangem 2.0 Tangem 2.0 Tangem 2.0",
             onWalletClick = null,
             networksInfo = WcNetworksInfo.ContainsAllRequiredNetworks(
                 items = persistentListOf(
@@ -657,7 +663,7 @@ private class WcAppInfoStateProvider : CollectionPreviewParameterProvider<WcAppI
             verifiedDAppState = VerifiedDAppState.Unknown,
             appSubtitle = "react-app.walletconnect.com",
             notification = WcAppInfoSecurityNotification.UnknownDomain,
-            walletName = "Tangem 2.0",
+            walletName = "Tangem 2.0 Tangem 2.0 Tangem 2.0 Tangem 2.0",
             onWalletClick = {},
             networksInfo = WcNetworksInfo.MissingRequiredNetworkInfo(networks = "Solana"),
             onNetworksClick = {},
