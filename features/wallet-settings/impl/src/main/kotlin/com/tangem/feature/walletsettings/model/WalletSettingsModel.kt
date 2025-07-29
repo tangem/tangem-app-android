@@ -24,6 +24,7 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.nft.DisableWalletNFTUseCase
 import com.tangem.domain.nft.EnableWalletNFTUseCase
 import com.tangem.domain.nft.GetWalletNFTEnabledUseCase
+import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.notifications.toggles.NotificationsFeatureToggles
 import com.tangem.domain.settings.repositories.PermissionRepository
 import com.tangem.domain.wallets.models.UserWallet
@@ -72,6 +73,7 @@ internal class WalletSettingsModel @Inject constructor(
     private val setNotificationsEnabledUseCase: SetNotificationsEnabledUseCase,
     private val settingsManager: SettingsManager,
     private val permissionsRepository: PermissionRepository,
+    private val notificationsRepository: NotificationsRepository,
 ) : Model() {
 
     val params: WalletSettingsComponent.Params = paramsContainer.require()
@@ -258,6 +260,7 @@ internal class WalletSettingsModel @Inject constructor(
         if (isGranted) {
             modelScope.launch {
                 setNotificationsEnabledUseCase(params.userWalletId, true).onRight {
+                    notificationsRepository.setNotificationsWasEnabledAutomatically(params.userWalletId.stringValue)
                     analyticsEventHandler.send(PushNotificationAnalyticEvents.NotificationsEnabled(true))
                 }
             }
