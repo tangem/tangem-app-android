@@ -26,5 +26,6 @@ internal data class WcSendTransactionItemUM(
     val walletName: String?,
     val networkInfo: WcNetworkInfoUM,
     val address: String?,
+    val sendEnabled: Boolean,
     val isLoading: Boolean = false,
 ) : TangemBottomSheetConfigContent
