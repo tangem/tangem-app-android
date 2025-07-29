@@ -29,7 +29,7 @@ internal class SwapAmountSetQuotesTransformer(
         val selectedQuote = if (isSilentReload) {
             prevState.selectedQuote
         } else {
-            bestQuote
+            (bestQuote as? SwapQuoteUM.Content)?.copy(diffPercent = DifferencePercent.Best) ?: bestQuote
         }
 
         val selectQuoteTransformer = SwapAmountSelectQuoteTransformer(
