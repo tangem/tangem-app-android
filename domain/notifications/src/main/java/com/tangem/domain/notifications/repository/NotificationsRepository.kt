@@ -21,4 +21,14 @@ interface NotificationsRepository {
 
     @Throws
     suspend fun getEligibleNetworks(): List<NotificationsEligibleNetwork>
+
+    suspend fun shouldShowSubscribeOnNotificationsAfterUpdate(): Boolean
+
+    suspend fun isUserAllowToSubscribeOnPushNotifications(): Boolean
+
+    suspend fun setUserAllowToSubscribeOnPushNotifications(value: Boolean)
+
+    suspend fun getWalletAutomaticallyEnabledList(): List<String>
+
+    suspend fun setNotificationsWasEnabledAutomatically(userWalletId: String)
 }
