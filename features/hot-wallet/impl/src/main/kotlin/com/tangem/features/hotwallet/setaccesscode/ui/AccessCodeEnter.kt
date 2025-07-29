@@ -1,4 +1,4 @@
-package com.tangem.features.hotwallet.accesscode.ui
+package com.tangem.features.hotwallet.setaccesscode.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
