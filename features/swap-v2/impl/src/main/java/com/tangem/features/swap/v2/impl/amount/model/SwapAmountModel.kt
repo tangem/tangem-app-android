@@ -13,6 +13,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.datasource.local.swap.SwapBestRateAnimationStore
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.express.models.ExpressError
@@ -73,6 +74,7 @@ internal class SwapAmountModel @Inject constructor(
     private val getAllowanceUseCase: GetAllowanceUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getUserCountryUseCase: GetUserCountryUseCase,
+    private val swapBestRateAnimationStore: SwapBestRateAnimationStore,
     private val appRouter: AppRouter,
     private val swapAmountAlertFactory: SwapAmountAlertFactory,
     private val swapAlertFactory: SwapAlertFactory,
@@ -96,6 +98,8 @@ internal class SwapAmountModel @Inject constructor(
     var userCountry: UserCountry = UserCountry.Other(Locale.getDefault().country)
     val bottomSheetNavigation: SlotNavigation<SwapChooseProviderConfig> = SlotNavigation()
 
+    var showBestRateAnimation: Boolean = false
+
     val uiState: StateFlow<SwapAmountUM>
     field = MutableStateFlow(params.amountUM)
 
@@ -107,6 +111,7 @@ internal class SwapAmountModel @Inject constructor(
             appCurrency = getSelectedAppCurrencyUseCase.invokeSync().getOrElse { AppCurrency.Default }
             userCountry = getUserCountryUseCase.invokeSync().getOrNull()
                 ?: UserCountry.Other(Locale.getDefault().country)
+            showBestRateAnimation = swapBestRateAnimationStore.getSyncOrNull()
         }
         configAmountNavigation()
         subscribeOnCryptoCurrencyStatusFlow()
@@ -245,6 +250,12 @@ internal class SwapAmountModel @Inject constructor(
         }
     }
 
+    fun onFinishAnimation() {
+        uiState.update {
+            (it as? SwapAmountUM.Content)?.copy(showBestRateAnimation = false) ?: it
+        }
+    }
+
     private fun confirmSendWithSwapClose() {
         val amountParams = params as? SwapAmountComponentParams.AmountParams ?: return
         val amountFieldData = uiState.value.primaryAmount.amountField as? AmountState.Data
@@ -259,6 +270,7 @@ internal class SwapAmountModel @Inject constructor(
                     swapDirection = swapDirection,
                     clickIntents = this,
                     isBalanceHidden = params.isBalanceHidingFlow.value,
+                    showBestRateAnimation = showBestRateAnimation,
                 ),
             )
         }
@@ -292,6 +304,7 @@ internal class SwapAmountModel @Inject constructor(
                             swapDirection = swapDirection,
                             clickIntents = this,
                             isBalanceHidden = params.isBalanceHidingFlow.value,
+                            showBestRateAnimation = showBestRateAnimation,
                         ),
                     )
                 }
@@ -399,6 +412,7 @@ internal class SwapAmountModel @Inject constructor(
                         swapDirection = swapDirection,
                         clickIntents = this@SwapAmountModel,
                         isBalanceHidden = params.isBalanceHidingFlow.value,
+                        showBestRateAnimation = showBestRateAnimation,
                     ),
                 )
                 startLoadingQuotesTask(isSilentReload = false)
