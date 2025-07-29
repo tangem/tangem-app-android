@@ -1,6 +1,7 @@
 package com.tangem.features.walletconnect.transaction.converter
 
 import com.tangem.domain.walletconnect.usecase.method.WcMessageSignUseCase
+import com.tangem.domain.walletconnect.usecase.method.WcMethodContext
 import com.tangem.domain.walletconnect.usecase.method.WcSignState
 import com.tangem.domain.walletconnect.usecase.method.WcSignStep
 import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionActionsUM
@@ -23,20 +24,20 @@ internal class WcSignTypedDataUMConverter @Inject constructor(
             onSign = value.actions.onSign,
             appInfo = appInfoContentUMConverter.convert(
                 WcTransactionAppInfoContentUMConverter.Input(
-                    session = value.useCase.session,
+                    session = value.context.session,
                     onShowVerifiedAlert = value.actions.onShowVerifiedAlert,
                 ),
             ),
-            walletName = value.useCase.session.wallet.name.takeIf { value.useCase.session.showWalletInfo },
-            networkInfo = networkInfoUMConverter.convert(value.useCase.network),
-            address = WcAddressConverter.convert(value.useCase.derivationState),
+            walletName = value.context.session.wallet.name.takeIf { value.context.session.showWalletInfo },
+            networkInfo = networkInfoUMConverter.convert(value.context.network),
+            address = WcAddressConverter.convert(value.context.derivationState),
             isLoading = value.signState.domainStep == WcSignStep.Signing,
         ),
         transactionRequestInfo = WcTransactionRequestInfoUM(
             blocks = buildList {
                 addAll(
                     requestBlockUMConverter.convert(
-                        WcTransactionRequestBlockUMConverter.Input(value.useCase.rawSdkRequest, value.signModel),
+                        WcTransactionRequestBlockUMConverter.Input(value.context.rawSdkRequest, value.signModel),
                     ),
                 )
             }.toImmutableList(),
@@ -45,7 +46,7 @@ internal class WcSignTypedDataUMConverter @Inject constructor(
     )
 
     data class Input(
-        val useCase: WcMessageSignUseCase,
+        val context: WcMethodContext,
         val signState: WcSignState<*>,
         val signModel: WcMessageSignUseCase.SignModel,
         val actions: WcTransactionActionsUM,
