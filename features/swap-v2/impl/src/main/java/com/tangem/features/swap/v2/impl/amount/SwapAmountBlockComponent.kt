@@ -68,6 +68,7 @@ internal class SwapAmountBlockComponent(
             onInfoClick = model::onInfoClick,
             isClickEnabled = isClickEnabled,
             onClick = onClick,
+            onFinishAnimation = model::onFinishAnimation,
             onProviderSelectClick = {
                 val amountUM = model.uiState.value as? SwapAmountUM.Content ?: return@SwapAmountBlockContent
                 val selectedProvider = amountUM.selectedQuote.provider ?: return@SwapAmountBlockContent
