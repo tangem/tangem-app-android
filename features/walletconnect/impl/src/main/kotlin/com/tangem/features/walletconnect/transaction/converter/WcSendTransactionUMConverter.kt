@@ -43,6 +43,7 @@ internal class WcSendTransactionUMConverter @Inject constructor(
                 estimatedWalletChanges = WcSendReceiveTransactionCheckResultsUM(),
                 isLoading = value.signState.domainStep == WcSignStep.Signing,
                 address = WcAddressConverter.convert(value.context.derivationState),
+                sendEnabled = value.feeSelectorUM is FeeSelectorUM.Content,
             ),
             feeSelectorUM = value.feeSelectorUM ?: FeeSelectorUM.Loading,
             transactionRequestInfo = WcTransactionRequestInfoUM(
