@@ -88,6 +88,7 @@ internal data object SwapAmountContentPreview {
         secondaryCryptoCurrencyStatus = cryptoCurrencyStatus,
         swapRateType = ExpressRateType.Float,
         appCurrency = AppCurrency.Default,
+        showBestRateAnimation = false,
     )
 
     val defaultState = SwapAmountUM.Content(
@@ -124,5 +125,6 @@ internal data object SwapAmountContentPreview {
         secondaryCryptoCurrencyStatus = cryptoCurrencyStatus,
         swapRateType = ExpressRateType.Float,
         isPrimaryButtonEnabled = true,
+        showBestRateAnimation = false,
     )
 }
