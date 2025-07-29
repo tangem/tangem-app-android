@@ -1,4 +1,4 @@
-package com.tangem.datasource.local.swaptx
+package com.tangem.datasource.local.swap
 
 import com.tangem.datasource.local.datastore.core.StringKeyDataStore
 
