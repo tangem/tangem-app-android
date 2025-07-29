@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tangem.core.ui.components.ResizableText
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.test.DialogTestTags
+import com.tangem.core.ui.test.BaseButtonTestTags
 import com.tangem.core.ui.utils.MultipleClickPreventer
 
 @Suppress("LongParameterList")
@@ -51,7 +51,7 @@ fun TangemButton(
     Button(
         modifier = modifier
             .heightIn(min = size.toHeightDp())
-            .testTag(DialogTestTags.BUTTON),
+            .testTag(BaseButtonTestTags.BUTTON),
         onClick = {
             multipleClickPreventer.processEvent { if (!showProgress) onClick() }
         },
