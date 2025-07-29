@@ -1,10 +1,10 @@
-package com.tangem.features.hotwallet.accesscode.confirm
+package com.tangem.features.hotwallet.setaccesscode
 
 import androidx.compose.runtime.Stable
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.features.hotwallet.accesscode.confirm.entity.ConfirmAccessCodeUM
+import com.tangem.features.hotwallet.setaccesscode.entity.AccessCodeUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,33 +13,41 @@ import javax.inject.Inject
 
 @Stable
 @ModelScoped
-internal class ConfirmAccessCodeModel @Inject constructor(
+internal class AccessCodeModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
 ) : Model() {
 
-    private val params = paramsContainer.require<ConfirmAccessCodeComponent.Params>()
+    private val params = paramsContainer.require<AccessCodeComponent.Params>()
 
-    internal val uiState: StateFlow<ConfirmAccessCodeUM>
+    internal val uiState: StateFlow<AccessCodeUM>
     field = MutableStateFlow(getInitialState())
 
-    private fun getInitialState() = ConfirmAccessCodeUM(
+    private fun getInitialState() = AccessCodeUM(
         accessCode = "",
         onAccessCodeChange = ::onAccessCodeChange,
         buttonEnabled = false,
-        onConfirm = ::onConfirm,
+        onButtonClick = ::onButtonClick,
     )
 
     private fun onAccessCodeChange(value: String) {
         uiState.update {
             it.copy(
                 accessCode = value,
-                buttonEnabled = value == params.accessCodeToConfirm,
+                buttonEnabled = if (params.isConfirmMode) {
+                    value == params.accessCodeToConfirm
+                } else {
+                    value.length == uiState.value.accessCodeLength
+                },
             )
         }
     }
 
-    private fun onConfirm() {
-        params.callbacks.onAccessCodeConfirmed()
+    private fun onButtonClick() {
+        if (params.isConfirmMode) {
+            params.callbacks.onAccessCodeConfirmed()
+        } else {
+            params.callbacks.onAccessCodeSet(uiState.value.accessCode)
+        }
     }
 }
