@@ -12,6 +12,7 @@ import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.util.fastForEach
 import coil.compose.AsyncImage
@@ -19,6 +20,7 @@ import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.test.ResidenceSettingsScreenTestTags
 import com.tangem.core.ui.utils.WindowInsetsZero
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.settings.entity.OnrampSettingsItemUM
@@ -95,6 +97,7 @@ private fun ResidenceSection(state: OnrampSettingsItemUM.Residence, modifier: Mo
                 text = state.countryName,
                 color = TangemTheme.colors.text.primary1,
                 style = TangemTheme.typography.body2,
+                modifier = Modifier.testTag(ResidenceSettingsScreenTestTags.COUNTRY_NAME),
             )
             Icon(
                 painter = painterResource(id = R.drawable.ic_chevron_right_24),
