@@ -15,6 +15,8 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.clipboard.ClipboardManager
+import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUMV2
+import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUMV2.Icon.Type
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.models.network.Network
@@ -251,10 +253,10 @@ internal class WcSendTransactionModel @Inject constructor(
     }
 
     private fun onSign(securityCheck: BlockAidTransactionCheck.Result?) {
-        if (securityCheck?.result?.validation == ValidationResult.UNSAFE) {
-            showMaliciousAlert(securityCheck.result.description)
-        } else {
-            sign()
+        when (securityCheck?.result?.validation) {
+            ValidationResult.UNSAFE -> showMaliciousAlert(securityCheck.result.description)
+            ValidationResult.WARNING -> showWarningAlert(securityCheck.result.description)
+            else -> sign()
         }
         securityCheck?.result?.validation?.let { securityStatus ->
             val event = WcAnalyticEvents.NoticeSecurityAlert(
@@ -265,6 +267,7 @@ internal class WcSendTransactionModel @Inject constructor(
             when (securityStatus) {
                 ValidationResult.SAFE -> Unit
                 ValidationResult.UNSAFE,
+                ValidationResult.WARNING,
                 ValidationResult.FAILED_TO_VALIDATE,
                 -> analytics.send(event)
             }
@@ -288,7 +291,22 @@ internal class WcSendTransactionModel @Inject constructor(
     }
 
     private fun showMaliciousAlert(description: String?) {
-        val type = WcTransactionRoutes.Alert.Type.MaliciousInfo(description = description, onClick = ::signFromAlert)
+        val type = WcTransactionRoutes.Alert.Type.BlockAidErrorInfo(
+            description = description,
+            onClick = ::signFromAlert,
+            iconType = Type.Warning,
+            iconBgType = MessageBottomSheetUMV2.Icon.BackgroundType.Warning,
+        )
+        stackNavigation.pushNew(WcTransactionRoutes.Alert(type))
+    }
+
+    private fun showWarningAlert(description: String?) {
+        val type = WcTransactionRoutes.Alert.Type.BlockAidErrorInfo(
+            description = description,
+            onClick = ::signFromAlert,
+            iconType = Type.Attention,
+            iconBgType = MessageBottomSheetUMV2.Icon.BackgroundType.Attention,
+        )
         stackNavigation.pushNew(WcTransactionRoutes.Alert(type))
     }
 
