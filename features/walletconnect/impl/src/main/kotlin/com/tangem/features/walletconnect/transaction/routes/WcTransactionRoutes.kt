@@ -34,7 +34,11 @@ internal sealed class WcTransactionRoutes : TangemBottomSheetConfigContent, Rout
                 val iconType: MessageBottomSheetUMV2.Icon.Type,
                 val iconBgType: MessageBottomSheetUMV2.Icon.BackgroundType,
             ) : Type()
-            data class UnknownError(val errorMessage: String?, val onDismiss: () -> Unit) : Type()
+            data class UnknownError(
+                val errorMessage: String?,
+                val onDismiss: () -> Unit,
+                val onRetry: () -> Unit,
+            ) : Type()
         }
     }
 }
