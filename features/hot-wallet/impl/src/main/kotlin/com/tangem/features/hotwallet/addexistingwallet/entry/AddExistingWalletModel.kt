@@ -14,8 +14,7 @@ import com.tangem.features.hotwallet.addexistingwallet.im.port.AddExistingWallet
 import com.tangem.features.hotwallet.addexistingwallet.entry.routing.AddExistingWalletRoute
 import com.tangem.features.hotwallet.addexistingwallet.start.AddExistingWalletStartComponent
 import com.tangem.features.hotwallet.manualbackup.completed.ManualBackupCompletedComponent
-import com.tangem.features.hotwallet.accesscode.confirm.ConfirmAccessCodeComponent
-import com.tangem.features.hotwallet.accesscode.set.SetAccessCodeComponent
+import com.tangem.features.hotwallet.setaccesscode.AccessCodeComponent
 import com.tangem.features.hotwallet.setupfinished.MobileWalletSetupFinishedComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsComponent
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
@@ -34,8 +33,7 @@ internal class AddExistingWalletModel @Inject constructor(
     val addExistingWalletImportModelCallbacks = AddExistingWalletImportModelCallbacks()
     val manualBackupCompletedComponentModelCallbacks = ManualBackupCompletedComponentModelCallbacks()
     val pushNotificationsComponentModelCallbacks = PushNotificationsComponentModelCallbacks()
-    val setAccessCodeModelCallbacks = SetAccessCodeModelCallbacks()
-    val confirmAccessCodeModelCallbacks = ConfirmAccessCodeModelCallbacks()
+    val accessCodeModelCallbacks = AccessCodeModelCallbacks()
     val mobileWalletSetupFinishedComponentModelCallbacks = MobileWalletSetupFinishedComponentModelCallbacks()
 
     val stackNavigation = StackNavigation<AddExistingWalletRoute>()
@@ -91,13 +89,11 @@ internal class AddExistingWalletModel @Inject constructor(
         }
     }
 
-    inner class SetAccessCodeModelCallbacks : SetAccessCodeComponent.ModelCallbacks {
+    inner class AccessCodeModelCallbacks : AccessCodeComponent.ModelCallbacks {
         override fun onAccessCodeSet(accessCode: String) {
             stackNavigation.push(AddExistingWalletRoute.ConfirmAccessCode(accessCode))
         }
-    }
 
-    inner class ConfirmAccessCodeModelCallbacks : ConfirmAccessCodeComponent.ModelCallbacks {
         override fun onAccessCodeConfirmed() {
             navigateToPushNotificationsOrNext()
         }
