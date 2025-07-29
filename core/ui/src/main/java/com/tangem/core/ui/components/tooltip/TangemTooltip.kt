@@ -22,9 +22,15 @@ import com.tangem.core.ui.res.TangemThemePreview
 import kotlinx.coroutines.launch
 
 @Composable
-fun TangemTooltip(text: String, content: @Composable (Modifier) -> Unit, modifier: Modifier = Modifier) {
+fun TangemTooltip(
+    text: String,
+    content: @Composable (Modifier) -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+) {
     InternalTangemTooltip(
         modifier = modifier,
+        enabled = enabled,
         tooltipContent = {
             Text(
                 modifier = Modifier.background(TangemTheme.colors.icon.secondary),
@@ -38,9 +44,15 @@ fun TangemTooltip(text: String, content: @Composable (Modifier) -> Unit, modifie
 }
 
 @Composable
-fun TangemTooltip(text: AnnotatedString, content: @Composable (Modifier) -> Unit, modifier: Modifier = Modifier) {
+fun TangemTooltip(
+    text: AnnotatedString,
+    content: @Composable (Modifier) -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+) {
     InternalTangemTooltip(
         modifier = modifier,
+        enabled = enabled,
         tooltipContent = {
             Text(
                 modifier = Modifier.background(TangemTheme.colors.icon.secondary),
@@ -59,6 +71,7 @@ private fun InternalTangemTooltip(
     tooltipContent: @Composable () -> Unit,
     content: @Composable (Modifier) -> Unit,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
 ) {
     val tooltipState = rememberTooltipState(isPersistent = true)
     val coroutineScope = rememberCoroutineScope()
@@ -78,11 +91,14 @@ private fun InternalTangemTooltip(
             )
         },
         content = {
-            content(
+            val contentModifier = if (enabled) {
                 Modifier.clickableSingle(
                     onClick = { coroutineScope.launch { tooltipState.show() } },
-                ),
-            )
+                )
+            } else {
+                Modifier
+            }
+            content(contentModifier)
         },
     )
 }
