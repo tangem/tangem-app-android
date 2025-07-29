@@ -1351,6 +1351,7 @@
   <string name="wallet_settings_access_code_description">Secret code to protect this wallet. Used for login and signatures.</string>
   <string name="wallet_settings_access_code_title">Set/Change Access Code</string>
   <string name="wallet_settings_push_notifications_description">Stay notified on wallet incoming transactions and Tangem updates.</string>
+  <string name="wallet_settings_push_notifications_huawei_warning">Push notifications may currently not work on Huawei devices. We\'re actively working on a solution and will release a fix in an upcoming update. Thank you for your understanding!</string>
   <string name="wallet_settings_push_notifications_title">Transaction Notifications</string>
   <string name="wallet_settings_title">Wallet settings</string>
   <string name="wallet_title">Tangem</string>
@@ -1510,6 +1511,7 @@
   <string name="wc_uri_already_used_description">Ensure that each pairing attempt uses a fresh and unique URI</string>
   <string name="wc_uri_already_used_title">URI already used</string>
   <string name="wc_wallet_connect">Wallet connect</string>
+  <string name="wc_warning_transaction">Suspicious transaction</string>
   <string name="welcome_interrupted_backup_alert_discard">Discard</string>
   <string name="welcome_interrupted_backup_alert_message">You have an interrupted backup. Do you want to resume?</string>
   <string name="welcome_interrupted_backup_alert_resume">Yes, resume</string>
