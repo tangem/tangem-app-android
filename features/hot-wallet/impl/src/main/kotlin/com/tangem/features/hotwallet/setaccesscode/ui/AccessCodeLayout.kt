@@ -1,20 +1,25 @@
-package com.tangem.features.hotwallet.accesscode.set.ui
+package com.tangem.features.hotwallet.setaccesscode.ui
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.PrimaryButton
-import com.tangem.core.ui.extensions.stringResourceSafe
-import com.tangem.features.hotwallet.accesscode.ui.AccessCodeEnter
-import com.tangem.core.res.R
 
+@Suppress("LongParameterList")
 @Composable
-internal fun SetAccessCodeContent(
+internal fun AccessCodeLayout(
     accessCode: String,
     onAccessCodeChange: (String) -> Unit,
     accessCodeLength: Int,
-    onContinue: () -> Unit,
+    reEnterAccessCodeState: Boolean,
+    buttonText: String,
+    onButtonClick: () -> Unit,
     buttonEnabled: Boolean,
     modifier: Modifier = Modifier,
 ) {
@@ -30,7 +35,7 @@ internal fun SetAccessCodeContent(
             accessCode = accessCode,
             onAccessCodeChange = onAccessCodeChange,
             accessCodeLength = accessCodeLength,
-            reEnterAccessCodeState = false,
+            reEnterAccessCodeState = reEnterAccessCodeState,
         )
 
         PrimaryButton(
@@ -38,8 +43,8 @@ internal fun SetAccessCodeContent(
                 .fillMaxWidth()
                 .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
                 .imePadding(),
-            text = stringResourceSafe(R.string.common_continue),
-            onClick = onContinue,
+            text = buttonText,
+            onClick = onButtonClick,
             enabled = buttonEnabled,
         )
     }
