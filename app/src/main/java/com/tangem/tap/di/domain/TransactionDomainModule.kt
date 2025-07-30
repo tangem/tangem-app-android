@@ -1,5 +1,6 @@
 package com.tangem.tap.di.domain
 
+import com.tangem.data.wallets.hot.TangemHotWalletSigner
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
@@ -11,7 +12,6 @@ import com.tangem.domain.transaction.FeeRepository
 import com.tangem.domain.transaction.TransactionRepository
 import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.tap.domain.hot.TangemHotWalletSigner
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
