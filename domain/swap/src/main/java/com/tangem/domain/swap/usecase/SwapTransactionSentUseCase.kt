@@ -8,10 +8,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.SwapErrorResolver
 import com.tangem.domain.swap.SwapRepositoryV2
 import com.tangem.domain.swap.SwapTransactionRepository
-import com.tangem.domain.swap.models.SwapDataTransactionModel
-import com.tangem.domain.swap.models.SwapStatus
-import com.tangem.domain.swap.models.SwapStatusModel
-import com.tangem.domain.swap.models.SwapTransactionModel
+import com.tangem.domain.swap.models.*
 
 @Suppress("LongParameterList")
 class SwapTransactionSentUseCase(
@@ -28,15 +25,8 @@ class SwapTransactionSentUseCase(
         provider: ExpressProvider,
         txHash: String,
         timestamp: Long,
+        swapTxType: SwapTxType,
     ) = Either.catch {
-        swapRepositoryV2.swapTransactionSent(
-            userWallet = userWallet,
-            fromCryptoCurrencyStatus = fromCryptoCurrencyStatus,
-            toAddress = swapDataTransactionModel.txTo,
-            txId = swapDataTransactionModel.txId,
-            txHash = txHash,
-            txExtraId = swapDataTransactionModel.txExtraId,
-        )
         if (provider.type.shouldStoreSwapTransaction()) {
             swapTransactionRepository.storeTransaction(
                 userWalletId = userWallet.walletId,
@@ -56,12 +46,22 @@ class SwapTransactionSentUseCase(
                         txExternalId = (swapDataTransactionModel as? SwapDataTransactionModel.CEX)?.externalTxId,
                         averageDuration = null,
                     ),
+                    swapTxType = swapTxType,
                 ),
             )
         }
+
         swapTransactionRepository.storeLastSwappedCryptoCurrencyId(
             userWalletId = userWallet.walletId,
             cryptoCurrencyId = toCryptoCurrencyStatus.currency.id,
+        )
+        swapRepositoryV2.swapTransactionSent(
+            userWallet = userWallet,
+            fromCryptoCurrencyStatus = fromCryptoCurrencyStatus,
+            toAddress = swapDataTransactionModel.txTo,
+            txId = swapDataTransactionModel.txId,
+            txHash = txHash,
+            txExtraId = swapDataTransactionModel.txExtraId,
         )
     }.mapLeft(swapErrorResolver::resolve)
 }
