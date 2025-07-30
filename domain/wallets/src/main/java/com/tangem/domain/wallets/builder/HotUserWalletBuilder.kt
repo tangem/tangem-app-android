@@ -25,7 +25,7 @@ class HotUserWalletBuilder @AssistedInject constructor(
 ) {
 
     suspend fun build(): UserWallet.Hot = withContext(dispatcherProvider.default) {
-        val allNetworks = Blockchain.entries
+        val allNetworks = Blockchain.entries // TODO [REDACTED_TASK_KEY] add derivation config
         val curves = allNetworks.map { it.getSupportedCurves() }.flatten().toSet()
         val requests = curves.sortedBy { it.ordinal }.map { curve ->
             val derivationPaths = allNetworks.filter { curve in it.getSupportedCurves() }
