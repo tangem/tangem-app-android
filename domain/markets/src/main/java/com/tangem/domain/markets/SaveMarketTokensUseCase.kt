@@ -1,7 +1,7 @@
 package com.tangem.domain.markets
 
 import arrow.core.Either
-import com.tangem.domain.card.repository.DerivationsRepository
+import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.domain.markets.repositories.MarketsTokenRepository
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
