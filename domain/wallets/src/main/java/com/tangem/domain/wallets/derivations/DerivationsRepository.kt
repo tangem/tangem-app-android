@@ -1,11 +1,11 @@
-package com.tangem.domain.card.repository
+package com.tangem.domain.wallets.derivations
 
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.crypto.hdWallet.DerivationPath
-import com.tangem.domain.card.BackendId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.wallets.usecase.BackendId
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 
 interface DerivationsRepository {

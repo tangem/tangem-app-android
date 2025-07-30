@@ -1,4 +1,4 @@
-package com.tangem.features.hotwallet
+package com.tangem.domain.wallets.hot
 
 import com.tangem.hot.sdk.model.HotAuth
 
