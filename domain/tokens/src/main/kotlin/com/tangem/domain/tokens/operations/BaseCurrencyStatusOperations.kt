@@ -5,9 +5,12 @@ import arrow.core.raise.*
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.domain.core.utils.EitherFlow
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.quote.QuoteStatus
+import com.tangem.domain.models.staking.StakingID
+import com.tangem.domain.models.staking.YieldBalance
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.multi.MultiNetworkStatusProducer
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
@@ -17,9 +20,7 @@ import com.tangem.domain.quotes.QuotesRepository
 import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.staking.StakingIdFactory
-import com.tangem.domain.models.staking.StakingID
 import com.tangem.domain.staking.model.isStakingSupported
-import com.tangem.domain.models.staking.YieldBalance
 import com.tangem.domain.staking.multi.MultiYieldBalanceProducer
 import com.tangem.domain.staking.multi.MultiYieldBalanceSupplier
 import com.tangem.domain.staking.single.SingleYieldBalanceProducer
@@ -27,7 +28,6 @@ import com.tangem.domain.staking.single.SingleYieldBalanceSupplier
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesProducer
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
 import com.tangem.domain.tokens.TokensFeatureToggles
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations.Error
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.utils.CurrencyStatusProxyCreator
