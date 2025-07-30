@@ -1,6 +1,6 @@
 package com.tangem.tap.di.domain
 
-import com.tangem.domain.card.repository.DerivationsRepository
+import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.domain.managetokens.*
 import com.tangem.domain.managetokens.repository.CustomTokensRepository
 import com.tangem.domain.managetokens.repository.ManageTokensRepository
