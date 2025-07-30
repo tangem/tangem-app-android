@@ -3,6 +3,8 @@ package com.tangem.domain.swap.usecase
 import arrow.core.Either
 import com.tangem.domain.express.models.ExpressProvider
 import com.tangem.domain.express.models.ExpressProviderType.Companion.shouldStoreSwapTransaction
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.SwapErrorResolver
 import com.tangem.domain.swap.SwapRepositoryV2
 import com.tangem.domain.swap.SwapTransactionRepository
@@ -10,8 +12,6 @@ import com.tangem.domain.swap.models.SwapDataTransactionModel
 import com.tangem.domain.swap.models.SwapStatus
 import com.tangem.domain.swap.models.SwapStatusModel
 import com.tangem.domain.swap.models.SwapTransactionModel
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.models.wallet.UserWallet
 
 @Suppress("LongParameterList")
 class SwapTransactionSentUseCase(

@@ -1,12 +1,12 @@
-package com.tangem.domain.tokens.model
+package com.tangem.domain.models.currency
 
 import com.tangem.domain.models.StatusSource
-import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.getResultStatusSource
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.network.TxInfo
+import com.tangem.domain.models.serialization.SerializedBigDecimal
 import com.tangem.domain.models.staking.YieldBalance
-import java.math.BigDecimal
+import kotlinx.serialization.Serializable
 
 /**
  * Represents the status of a cryptocurrency asset within a network.
@@ -18,6 +18,7 @@ import java.math.BigDecimal
  * @property currency The details of the cryptocurrency asset, including its type, name, symbol, and other properties.
  * @property value The current status of the cryptocurrency, reflecting its state within the network.
  */
+@Serializable
 data class CryptoCurrencyStatus(
     val currency: CryptoCurrency,
     val value: Value,
@@ -28,36 +29,40 @@ data class CryptoCurrencyStatus(
      *
      * @property isError Indicates whether this status represents an error status.
      */
-    sealed class Value(val isError: Boolean) {
+    @Serializable
+    sealed interface Value {
+
+        val isError: Boolean
 
         /** The amount of the cryptocurrency. */
-        open val amount: BigDecimal? = null
+        val amount: SerializedBigDecimal? get() = null
 
         /** The fiat equivalent of the cryptocurrency's amount. */
-        open val fiatAmount: BigDecimal? = null
+        val fiatAmount: SerializedBigDecimal? get() = null
 
         /** The exchange rate used for converting the cryptocurrency amount to fiat. */
-        open val fiatRate: BigDecimal? = null
+        val fiatRate: SerializedBigDecimal? get() = null
 
         /** The change in price of the cryptocurrency. */
-        open val priceChange: BigDecimal? = null
+        val priceChange: SerializedBigDecimal? get() = null
 
         /** Indicates if there are any transactions in progress related to the cryptocurrency network. */
-        open val hasCurrentNetworkTransactions: Boolean = false
+        val hasCurrentNetworkTransactions: Boolean get() = false
 
         /** The pending cryptocurrency transactions. */
-        open val pendingTransactions: Set<TxInfo> = emptySet()
+        val pendingTransactions: Set<TxInfo> get() = emptySet()
 
         /** The network address */
-        open val networkAddress: NetworkAddress? = null
+        val networkAddress: NetworkAddress? get() = null
 
         /** Staking yield balance */
-        open val yieldBalance: YieldBalance? = null
+        val yieldBalance: YieldBalance? get() = null
 
         /** Sources */
-        open val sources: Sources = Sources()
+        val sources: Sources get() = Sources()
     }
 
+    @Serializable
     data class Sources(
         val networkSource: StatusSource = StatusSource.ACTUAL,
         val quoteSource: StatusSource = StatusSource.ACTUAL,
@@ -70,7 +75,11 @@ data class CryptoCurrencyStatus(
     }
 
     /** Represents the Loading state of a cryptocurrency, typically while fetching its details. */
-    data object Loading : Value(isError = false)
+    @Serializable
+    data object Loading : Value {
+
+        override val isError: Boolean = false
+    }
 
     /**
      * Represents a state where the cryptocurrency is not reachable.
@@ -79,23 +88,35 @@ data class CryptoCurrencyStatus(
      * @property fiatRate The exchange rate used for converting the cryptocurrency amount to fiat.
      * @property networkAddress The network address
      */
+    @Serializable
     data class Unreachable(
-        override val priceChange: BigDecimal?,
-        override val fiatRate: BigDecimal?,
+        override val priceChange: SerializedBigDecimal?,
+        override val fiatRate: SerializedBigDecimal?,
         override val networkAddress: NetworkAddress?,
-    ) : Value(isError = true)
+    ) : Value {
+
+        override val isError: Boolean = true
+    }
 
     /** Represents a state where the cryptocurrency's network amount not found. */
+    @Serializable
     data class NoAmount(
-        override val priceChange: BigDecimal?,
-        override val fiatRate: BigDecimal?,
-    ) : Value(isError = true)
+        override val priceChange: SerializedBigDecimal?,
+        override val fiatRate: SerializedBigDecimal?,
+    ) : Value {
+
+        override val isError: Boolean = true
+    }
 
     /** Represents a state where the cryptocurrency's derivation is missed. */
+    @Serializable
     data class MissedDerivation(
-        override val priceChange: BigDecimal?,
-        override val fiatRate: BigDecimal?,
-    ) : Value(isError = true)
+        override val priceChange: SerializedBigDecimal?,
+        override val fiatRate: SerializedBigDecimal?,
+    ) : Value {
+
+        override val isError: Boolean = true
+    }
 
     /**
      * Represents a state where there is no account associated with the cryptocurrency
@@ -103,16 +124,18 @@ data class CryptoCurrencyStatus(
      * @property amountToCreateAccount base reserve amount for account creation
      * @property sources sources of data
      */
+    @Serializable
     data class NoAccount(
-        val amountToCreateAccount: BigDecimal,
-        override val fiatAmount: BigDecimal?,
-        override val priceChange: BigDecimal?,
-        override val fiatRate: BigDecimal?,
+        val amountToCreateAccount: SerializedBigDecimal,
+        override val fiatAmount: SerializedBigDecimal?,
+        override val priceChange: SerializedBigDecimal?,
+        override val fiatRate: SerializedBigDecimal?,
         override val networkAddress: NetworkAddress,
         override val sources: Sources,
-    ) : Value(isError = false) {
+    ) : Value {
 
-        override val amount: BigDecimal = BigDecimal.ZERO
+        override val isError: Boolean = false
+        override val amount: SerializedBigDecimal? = SerializedBigDecimal.ZERO
     }
 
     /**
@@ -127,17 +150,21 @@ data class CryptoCurrencyStatus(
      * @property pendingTransactions The current cryptocurrency transactions.
      * @property sources sources of data
      */
+    @Serializable
     data class Loaded(
-        override val amount: BigDecimal,
-        override val fiatAmount: BigDecimal,
-        override val fiatRate: BigDecimal,
-        override val priceChange: BigDecimal,
+        override val amount: SerializedBigDecimal,
+        override val fiatAmount: SerializedBigDecimal,
+        override val fiatRate: SerializedBigDecimal,
+        override val priceChange: SerializedBigDecimal,
         override val yieldBalance: YieldBalance?,
         override val hasCurrentNetworkTransactions: Boolean,
         override val pendingTransactions: Set<TxInfo>,
         override val networkAddress: NetworkAddress,
         override val sources: Sources,
-    ) : Value(isError = false)
+    ) : Value {
+
+        override val isError: Boolean = false
+    }
 
     /**
      * Represents a Custom state of a cryptocurrency, typically used for user-defined tokens.
@@ -150,17 +177,21 @@ data class CryptoCurrencyStatus(
      * cryptocurrency network.
      * @property pendingTransactions The current cryptocurrency transactions.
      */
+    @Serializable
     data class Custom(
-        override val amount: BigDecimal,
-        override val fiatAmount: BigDecimal?,
-        override val fiatRate: BigDecimal?,
-        override val priceChange: BigDecimal?,
+        override val amount: SerializedBigDecimal,
+        override val fiatAmount: SerializedBigDecimal?,
+        override val fiatRate: SerializedBigDecimal?,
+        override val priceChange: SerializedBigDecimal?,
         override val yieldBalance: YieldBalance?,
         override val hasCurrentNetworkTransactions: Boolean,
         override val pendingTransactions: Set<TxInfo>,
         override val networkAddress: NetworkAddress,
         override val sources: Sources,
-    ) : Value(isError = false)
+    ) : Value {
+
+        override val isError: Boolean = false
+    }
 
     /**
      * Represents a state where the cryptocurrency is available, but there is no current quote available for it.
@@ -170,12 +201,16 @@ data class CryptoCurrencyStatus(
      * cryptocurrency network.
      * @property pendingTransactions The current cryptocurrency transactions.
      */
+    @Serializable
     data class NoQuote(
-        override val amount: BigDecimal,
+        override val amount: SerializedBigDecimal,
         override val yieldBalance: YieldBalance?,
         override val hasCurrentNetworkTransactions: Boolean,
         override val pendingTransactions: Set<TxInfo>,
         override val networkAddress: NetworkAddress,
         override val sources: Sources,
-    ) : Value(isError = false)
+    ) : Value {
+
+        override val isError: Boolean = false
+    }
 }
