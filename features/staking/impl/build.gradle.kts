@@ -17,6 +17,7 @@ dependencies {
     implementation(deps.androidx.paging.runtime)
 
     /** Other dependencies */
+    implementation(deps.kotlin.datetime)
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.material)
     implementation(deps.arrow.core)
