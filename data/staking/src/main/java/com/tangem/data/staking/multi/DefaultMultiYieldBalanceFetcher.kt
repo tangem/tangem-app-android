@@ -149,7 +149,9 @@ internal class DefaultMultiYieldBalanceFetcher @Inject constructor(
                         // TODO: in the future, consider optimizing this part
                         .chunked(size = 15) // StakeKitApi limitation: no more than 15 requests at the same time
                         .map {
-                            async(dispatchers.io) { stakeKitApi.getMultipleYieldBalances(it).bind() }
+                            async(dispatchers.io) {
+                                stakeKitApi.getMultipleYieldBalances(it).bind()
+                            }
                         }
                         .awaitAll()
                         .flatten()
