@@ -2,8 +2,8 @@ package com.tangem.domain.staking.single
 
 import com.tangem.domain.core.flow.FlowProducer
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.staking.model.StakingID
-import com.tangem.domain.staking.model.stakekit.YieldBalance
+import com.tangem.domain.models.staking.StakingID
+import com.tangem.domain.models.staking.YieldBalance
 
 /**
  * Producer of yield balance for selected wallet [UserWalletId]
