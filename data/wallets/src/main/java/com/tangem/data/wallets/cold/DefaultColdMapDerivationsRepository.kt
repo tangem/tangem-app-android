@@ -1,51 +1,50 @@
-package com.tangem.tap.domain.card
+package com.tangem.data.wallets.cold
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.core.TangemSdkError
-import com.tangem.common.doOnFailure
-import com.tangem.common.doOnSuccess
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.extensions.toMapKey
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.data.common.network.NetworkFactory
-import com.tangem.datasource.local.userwallet.UserWalletsStore
-import com.tangem.domain.card.BackendId
-import com.tangem.domain.card.repository.DerivationsRepository
+import com.tangem.data.wallets.derivations.Derivations
+import com.tangem.data.wallets.derivations.MissedDerivationsFinder
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.models.wallet.requireColdWallet
+import com.tangem.domain.wallets.derivations.ColdMapDerivationsRepository
+import com.tangem.domain.wallets.usecase.BackendId
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.sdk.api.TangemSdkManager
-import com.tangem.tap.domain.tasks.UserWalletIdPreflightReadFilter
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 import timber.log.Timber
+import javax.inject.Inject
 
-internal typealias Derivations = Map<ByteArrayKey, List<DerivationPath>>
 private typealias DerivedKeys = Map<ByteArrayKey, ExtendedPublicKeysMap>
 
-internal class DefaultDerivationsRepository(
+internal class DefaultColdMapDerivationsRepository @Inject constructor(
     private val tangemSdkManager: TangemSdkManager,
-    private val userWalletsStore: UserWalletsStore,
     private val networkFactory: NetworkFactory,
     private val dispatchers: CoroutineDispatcherProvider,
-) : DerivationsRepository {
+) : ColdMapDerivationsRepository {
 
-    override suspend fun derivePublicKeys(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
-        derivePublicKeysByNetworks(userWalletId = userWalletId, networks = currencies.map(CryptoCurrency::network))
+    override suspend fun derivePublicKeys(
+        userWallet: UserWallet.Cold,
+        currencies: List<CryptoCurrency>,
+    ): UserWallet.Cold = withContext(dispatchers.io) {
+        derivePublicKeysByNetworks(userWallet = userWallet, networks = currencies.map(CryptoCurrency::network))
     }
 
-    override suspend fun derivePublicKeysByNetworkIds(userWalletId: UserWalletId, networkIds: List<Network.RawID>) {
-        val userWallet = userWalletsStore.getSyncOrNull(userWalletId) ?: error("User wallet not found")
-
+    override suspend fun derivePublicKeysByNetworkIds(
+        userWallet: UserWallet.Cold,
+        networkIds: List<Network.RawID>,
+    ): UserWallet.Cold = withContext(dispatchers.io) {
         derivePublicKeysByNetworks(
-            userWalletId = userWalletId,
+            userWallet = userWallet,
             networks = networkIds.mapNotNull {
                 networkFactory.create(
                     blockchain = Blockchain.fromNetworkId(it.value) ?: return@mapNotNull null,
@@ -56,44 +55,55 @@ internal class DefaultDerivationsRepository(
         )
     }
 
-    override suspend fun derivePublicKeysByNetworks(userWalletId: UserWalletId, networks: List<Network>) {
-        val userWallet = withContext(dispatchers.io) {
-            userWalletsStore.getSyncOrNull(userWalletId) ?: error("User wallet not found")
-        }
-
-        if (userWallet is UserWallet.Hot) {
-            return
-        }
-
-        userWallet.requireColdWallet()
-
+    override suspend fun derivePublicKeysByNetworks(
+        userWallet: UserWallet.Cold,
+        networks: List<Network>,
+    ): UserWallet.Cold = withContext(dispatchers.io) {
         if (!userWallet.scanResponse.card.settings.isHDWalletAllowed) {
             Timber.d("Nothing to derive")
-            return
+            return@withContext userWallet
         }
 
-        val derivations = MissedDerivationsFinder(scanResponse = userWallet.scanResponse)
+        val derivations = MissedDerivationsFinder(userWallet)
             .findByNetworks(networks)
             .ifEmpty {
                 Timber.d("Nothing to derive")
-                return
+                return@withContext userWallet
             }
 
-        derivePublicKeys(userWalletId = userWalletId, derivations = derivations)
+        return@withContext derivePublicKeys(userWallet = userWallet, derivations = derivations).first
+    }
+
+    override suspend fun derivePublicKeys(
+        userWallet: UserWallet.Cold,
+        derivations: Map<ByteArrayKey, List<DerivationPath>>,
+    ): Pair<UserWallet.Cold, Map<ByteArrayKey, ExtendedPublicKeysMap>> = withContext(dispatchers.io) {
+        // todo replace it in task [REDACTED_JIRA]
+        val preflightReadFilter = UserWalletIdPreflightReadFilter(userWallet.walletId)
+        val result = tangemSdkManager.derivePublicKeys(
+            cardId = null,
+            derivations = derivations,
+            preflightReadFilter = preflightReadFilter,
+        )
+
+        when (result) {
+            is CompletionResult.Success -> {
+                userWallet.updateDerivedKeys(result.data.entries).also {
+                    validateDerivations(scanResponse = it.scanResponse, derivations = derivations)
+                } to result.data.entries
+            }
+            is CompletionResult.Failure -> {
+                throw result.error
+            }
+        }
     }
 
     override suspend fun hasMissedDerivations(
-        userWalletId: UserWalletId,
+        userWallet: UserWallet.Cold,
         networksWithDerivationPath: Map<BackendId, String?>,
-    ): Boolean {
-        val userWallet = userWalletsStore.getSyncOrNull(userWalletId) ?: error("User wallet not found")
-
-        if (userWallet is UserWallet.Hot) {
-            return false
-        }
-
+    ): Boolean = withContext(dispatchers.io) {
         val derivations =
-            MissedDerivationsFinder(scanResponse = userWallet.requireColdWallet().scanResponse)
+            MissedDerivationsFinder(userWallet)
                 .findByNetworks(
                     networksWithDerivationPath.mapNotNull { (backendId, extraDerivationPath) ->
                         networkFactory.create(
@@ -104,28 +114,7 @@ internal class DefaultDerivationsRepository(
                     },
                 )
 
-        return derivations.isNotEmpty()
-    }
-
-    override suspend fun derivePublicKeys(userWalletId: UserWalletId, derivations: Derivations): DerivedKeys {
-        // todo replace it in task [REDACTED_JIRA]
-        val preflightReadFilter = UserWalletIdPreflightReadFilter(userWalletId)
-        tangemSdkManager.derivePublicKeys(
-            cardId = null,
-            derivations = derivations,
-            preflightReadFilter = preflightReadFilter,
-        ).doOnSuccess { response ->
-            updatePublicKeys(userWalletId = userWalletId, keys = response.entries)
-                .doOnSuccess {
-                    // TODO [REDACTED_TASK_KEY]
-                    validateDerivations(scanResponse = it.requireColdWallet().scanResponse, derivations = derivations)
-                    return response.entries
-                }
-                .doOnFailure { throw it }
-        }
-            .doOnFailure { throw it }
-
-        error("This code should never be reached")
+        derivations.isNotEmpty()
     }
 
     /**
@@ -144,16 +133,7 @@ internal class DefaultDerivationsRepository(
         }
     }
 
-    private suspend fun updatePublicKeys(userWalletId: UserWalletId, keys: DerivedKeys): CompletionResult<UserWallet> {
-        return withContext(dispatchers.io) {
-            userWalletsStore.update(
-                userWalletId = userWalletId,
-                update = { userWallet -> userWallet.requireColdWallet().updateDerivedKeys(keys) }, // TODO [REDACTED_TASK_KEY]
-            )
-        }
-    }
-
-    private fun UserWallet.Cold.updateDerivedKeys(keys: DerivedKeys): UserWallet {
+    private fun UserWallet.Cold.updateDerivedKeys(keys: DerivedKeys): UserWallet.Cold {
         return copy(
             scanResponse = scanResponse.copy(
                 derivedKeys = getUpdatedDerivedKeys(oldKeys = scanResponse.derivedKeys, newKeys = keys),
