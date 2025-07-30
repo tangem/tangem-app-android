@@ -84,7 +84,7 @@ internal class DefaultSingleYieldBalanceProducerTest {
         val producerFlow = producer.produceWithFallback()
 
         val balance = MockYieldBalanceWrapperDTOFactory.createWithBalance(tonId).toDomain()
-        val updatedBalance = YieldBalance.Error(integrationId = tonId.integrationId, address = tonId.address)
+        val updatedBalance = YieldBalance.Error(stakingId = tonId)
 
         // Act (first emit)
         multiFlow.emit(value = setOf(balance))
@@ -162,7 +162,7 @@ internal class DefaultSingleYieldBalanceProducerTest {
         val actual1 = getEmittedValues(flow = producerFlow)
 
         // Assert (first emit)
-        val fallbackStatus = YieldBalance.Error(integrationId = tonId.integrationId, address = "0x1")
+        val fallbackStatus = YieldBalance.Error(stakingId = tonId.copy(address = "0x1"))
 
         Truth.assertThat(actual1).hasSize(1)
         Truth.assertThat(actual1).containsExactly(fallbackStatus)
