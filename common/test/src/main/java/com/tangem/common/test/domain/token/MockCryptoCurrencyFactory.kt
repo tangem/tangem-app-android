@@ -65,6 +65,10 @@ class MockCryptoCurrencyFactory(private val userWallet: UserWallet.Cold = defaul
             hasFiatFeeRate = blockchain.feePaidCurrency() !is FeePaidCurrency.FeeResource,
             canHandleTokens = false,
             transactionExtrasType = Network.TransactionExtrasType.NONE,
+            nameResolvingType = when (blockchain) {
+                Blockchain.Ethereum, Blockchain.EthereumTestnet -> Network.NameResolvingType.ENS
+                else -> Network.NameResolvingType.NONE
+            },
         )
 
         return factory.createCoin(network = network)
@@ -95,6 +99,7 @@ class MockCryptoCurrencyFactory(private val userWallet: UserWallet.Cold = defaul
                 hasFiatFeeRate = true,
                 canHandleTokens = true,
                 transactionExtrasType = Network.TransactionExtrasType.NONE,
+                nameResolvingType = Network.NameResolvingType.NONE,
             ),
             name = "NEVER-MIND",
             symbol = "NEVER-MIND",
