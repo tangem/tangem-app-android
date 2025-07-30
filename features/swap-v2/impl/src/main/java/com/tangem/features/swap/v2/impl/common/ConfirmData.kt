@@ -2,7 +2,7 @@ package com.tangem.features.swap.v2.impl.common
 
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.domain.express.models.ExpressRateType
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
 import java.math.BigDecimal
