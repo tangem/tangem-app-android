@@ -1,13 +1,14 @@
 package com.tangem.domain.staking.model.stakekit
 
 import com.tangem.domain.core.serialization.SerializedBigDecimal
+import com.tangem.domain.models.staking.YieldToken
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class Yield(
     val id: String,
-    val token: Token,
-    val tokens: List<Token>,
+    val token: YieldToken,
+    val tokens: List<YieldToken>,
     val args: Args,
     val status: Status,
     val apy: SerializedBigDecimal,
@@ -93,9 +94,9 @@ data class Yield(
         val logoUri: String,
         val description: String,
         val documentation: String?,
-        val gasFeeToken: Token,
-        val token: Token,
-        val tokens: List<Token>,
+        val gasFeeToken: YieldToken,
+        val token: YieldToken,
+        val tokens: List<YieldToken>,
         val type: String,
         val rewardSchedule: RewardSchedule,
         val cooldownPeriod: Period?,
@@ -144,18 +145,6 @@ data class Yield(
         UNKNOWN,
     }
 }
-
-@Serializable
-data class Token(
-    val name: String,
-    val network: NetworkType,
-    val symbol: String,
-    val decimals: Int,
-    val address: String?,
-    val coinGeckoId: String?,
-    val logoURI: String?,
-    val isPoints: Boolean?,
-)
 
 @Serializable
 data class AddressArgument(

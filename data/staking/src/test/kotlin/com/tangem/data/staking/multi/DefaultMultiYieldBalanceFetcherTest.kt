@@ -14,8 +14,8 @@ import com.tangem.datasource.api.stakekit.StakeKitApi
 import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
 import com.tangem.datasource.local.token.StakingYieldsStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.models.staking.StakingID
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.staking.model.StakingID
 import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
