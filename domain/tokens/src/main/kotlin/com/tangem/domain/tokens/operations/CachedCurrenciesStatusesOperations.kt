@@ -25,6 +25,7 @@ import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.staking.StakingIdFactory
+import com.tangem.domain.staking.model.StakingID
 import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
@@ -277,12 +278,17 @@ class CachedCurrenciesStatusesOperations(
     ): YieldBalance? {
         if (yieldBalances.isNullOrEmpty()) return null
 
-        val supportedIntegration = StakingIntegrationID.create(currencyId = currency.id)?.value ?: return null
-
+        val supportedIntegration = StakingIntegrationID.create(currencyId = currency.id)?.value
         val address = extractAddress(networkStatus)
 
-        return yieldBalances.firstOrNull { it.integrationId == supportedIntegration && it.address == address }
-            ?: YieldBalance.Error(integrationId = supportedIntegration, address = address)
+        return if (supportedIntegration != null && address != null) {
+            val stakingId = StakingID(integrationId = supportedIntegration, address = address)
+
+            yieldBalances.firstOrNull { it.stakingId == stakingId }
+                ?: YieldBalance.Error(stakingId = stakingId)
+        } else {
+            null
+        }
     }
 
     private fun getCurrencies(userWalletId: UserWalletId): EitherFlow<TokenListError, List<CryptoCurrency>> {
@@ -390,7 +396,7 @@ class CachedCurrenciesStatusesOperations(
                     )
                         .onEach { balance ->
                             state.update { loadedBalances ->
-                                loadedBalances.addOrReplace(balance) { balance.getStakingId() == it }
+                                loadedBalances.addOrReplace(balance) { balance.stakingId == it }
                             }
                         }
                         .launchIn(scope = this)
