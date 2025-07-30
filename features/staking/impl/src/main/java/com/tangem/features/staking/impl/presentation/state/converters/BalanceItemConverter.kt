@@ -22,7 +22,7 @@ import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.orZero
 import kotlinx.collections.immutable.toPersistentList
-import org.joda.time.DateTime
+import kotlinx.datetime.Instant
 import java.math.BigDecimal
 import java.util.Calendar
 
@@ -122,7 +122,7 @@ internal class BalanceItemConverter(
         -> null
     }
 
-    private fun getUnbondingDate(date: DateTime?): TextReference? {
+    private fun getUnbondingDate(date: Instant?): TextReference? {
         val unbondingPeriod = yield.metadata.cooldownPeriod?.days ?: return null
         if (date == null) {
             return combinedReference(
@@ -136,7 +136,7 @@ internal class BalanceItemConverter(
         nowCalendar.resetHours()
 
         val endDate = Calendar.getInstance()
-        endDate.timeInMillis = date.millis
+        endDate.timeInMillis = date.toEpochMilliseconds()
         endDate.resetHours()
 
         val days = ((endDate.timeInMillis - nowCalendar.timeInMillis) / DAY_IN_MILLIS).toInt()
