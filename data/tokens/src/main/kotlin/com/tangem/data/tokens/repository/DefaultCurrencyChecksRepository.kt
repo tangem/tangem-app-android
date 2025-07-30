@@ -7,11 +7,11 @@ import com.tangem.blockchain.common.ReserveAmountProvider
 import com.tangem.blockchain.common.UtxoAmountLimitProvider
 import com.tangem.data.tokens.converters.UtxoConverter
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.staking.YieldBalance
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.utils.getTotalStakingBalance
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.CurrencyAmount
 import com.tangem.domain.tokens.model.blockchains.UtxoAmountLimit
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
