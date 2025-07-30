@@ -1,7 +1,7 @@
-package com.tangem.tap.domain.hot
+package com.tangem.data.wallets.hot
 
 import com.tangem.common.core.TangemSdkError
-import com.tangem.features.hotwallet.HotWalletPasswordRequester
+import com.tangem.domain.wallets.hot.HotWalletPasswordRequester
 import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.hot.sdk.exception.WrongPasswordException
 import com.tangem.hot.sdk.model.*
@@ -12,7 +12,17 @@ class HotWalletAccessor @Inject constructor(
     private val hotWalletPasswordRequester: HotWalletPasswordRequester,
 ) {
 
-    suspend fun signHashes(hotWalletId: HotWalletId, dataToSign: List<DataToSign>): List<SignedData> {
+    suspend fun signHashes(hotWalletId: HotWalletId, dataToSign: List<DataToSign>): List<SignedData> =
+        hotSdkRequest(hotWalletId) { unlock ->
+            tangemHotSdk.signHashes(unlockHotWallet = unlock, dataToSign = dataToSign)
+        }
+
+    suspend fun derivePublicKeys(hotWalletId: HotWalletId, request: DeriveWalletRequest): DerivedPublicKeyResponse =
+        hotSdkRequest(hotWalletId) { unlock ->
+            tangemHotSdk.derivePublicKey(unlockHotWallet = unlock, request = request)
+        }
+
+    private suspend fun <T> hotSdkRequest(hotWalletId: HotWalletId, block: suspend (unlock: UnlockHotWallet) -> T): T {
         val auth = when (hotWalletId.authType) {
             HotWalletId.AuthType.NoPassword -> HotAuth.NoAuth
             HotWalletId.AuthType.Password -> requestPassword(false)
@@ -20,13 +30,7 @@ class HotWalletAccessor @Inject constructor(
         }
 
         return runCatchingSdkErrors(hotWalletId, auth) {
-            tangemHotSdk.signHashes(
-                unlockHotWallet = UnlockHotWallet(
-                    walletId = hotWalletId,
-                    auth = it,
-                ),
-                dataToSign = dataToSign,
-            ).also {
+            block(UnlockHotWallet(hotWalletId, it)).also {
                 hotWalletPasswordRequester.dismiss()
             }
         }

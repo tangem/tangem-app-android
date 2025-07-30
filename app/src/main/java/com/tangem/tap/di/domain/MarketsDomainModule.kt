@@ -1,7 +1,7 @@
 package com.tangem.tap.di.domain
 
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
-import com.tangem.domain.card.repository.DerivationsRepository
+import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.domain.markets.*
 import com.tangem.domain.markets.repositories.MarketsTokenRepository
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
