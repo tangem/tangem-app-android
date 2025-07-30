@@ -1,4 +1,4 @@
-package com.tangem.tap.domain.hot
+package com.tangem.data.wallets.hot
 
 import com.tangem.blockchain.common.TransactionSigner
 import com.tangem.blockchain.common.Wallet
