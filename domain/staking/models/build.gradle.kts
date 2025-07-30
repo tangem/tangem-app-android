@@ -11,6 +11,7 @@ dependencies {
     implementation(projects.domain.core)
     implementation(projects.domain.models)
 
+    implementation(deps.kotlin.datetime)
     implementation(deps.kotlin.serialization)
     implementation(deps.jodatime)
 
