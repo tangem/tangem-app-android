@@ -176,12 +176,21 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     @Inject
     internal lateinit var testerMenuLauncher: TesterMenuLauncher
 
+    @Inject
+    internal lateinit var intentProcessor: IntentProcessor
+
+    @Inject
+    internal lateinit var walletConnectLinkIntentHandler: WalletConnectLinkIntentHandler
+
+    @Inject
+    internal lateinit var onPushClickedIntentHandler: OnPushClickedIntentHandler
+
+    @Inject
+    internal lateinit var backgroundScanIntentHandler: BackgroundScanIntentHandler
+
     internal val viewModel: MainViewModel by viewModels()
 
     private lateinit var appThemeModeFlow: SharedFlow<AppThemeMode>
-
-    // TODO: fixme: inject through DI
-    private val intentProcessor: IntentProcessor = IntentProcessor()
 
     private val dialogManager = DialogManager()
 
@@ -344,12 +353,10 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     }
 
     private fun initIntentHandlers() {
-        val hasSavedWalletsProvider = { userWalletsListManager.hasUserWallets }
-        intentProcessor.addHandler(OnPushClickedIntentHandler(analyticsEventsHandler))
-        intentProcessor.addHandler(BackgroundScanIntentHandler(hasSavedWalletsProvider, lifecycleScope))
+        intentProcessor.addHandler(onPushClickedIntentHandler)
 
         if (!walletConnectFeatureToggles.isRedesignedWalletConnectEnabled) {
-            intentProcessor.addHandler(WalletConnectLinkIntentHandler())
+            intentProcessor.addHandler(walletConnectLinkIntentHandler)
         }
     }
 
@@ -435,9 +442,15 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     }
 
     private fun navigateToInitialScreen(intentWhichStartedActivity: Intent?) {
+        val launchMode = backgroundScanIntentHandler.getInitScreenLaunchMode(intentWhichStartedActivity)
         if (userWalletsListManager.isLockable && userWalletsListManager.hasUserWallets) {
             store.dispatchNavigationAction {
-                replaceAll(AppRoute.Welcome(intentWhichStartedActivity?.let(::SerializableIntent)))
+                replaceAll(
+                    AppRoute.Welcome(
+                        launchMode = launchMode,
+                        intent = intentWhichStartedActivity?.let(::SerializableIntent),
+                    ),
+                )
             }
             intentProcessor.handleIntent(
                 intent = intentWhichStartedActivity,
@@ -452,7 +465,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
                 val route = when {
                     shouldShowTos -> AppRoute.Disclaimer(isTosAccepted = false)
                     shouldShowInitialPush -> AppRoute.PushNotification
-                    else -> AppRoute.Home
+                    else -> AppRoute.Home(launchMode = launchMode)
                 }
 
                 store.dispatchNavigationAction { replaceAll(route) }
