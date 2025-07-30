@@ -1,11 +1,11 @@
 package com.tangem.domain.wallets.usecase
 
-import com.tangem.domain.wallets.legacy.UserWalletsListManager
+import com.tangem.sdk.api.TangemSdkManager
 import javax.inject.Inject
 
 class GetIsBiometricsEnabledUseCase @Inject constructor(
-    private val userWalletsListManager: UserWalletsListManager,
+    private val tangemSdkManager: TangemSdkManager,
 ) {
 
-    operator fun invoke(): Boolean = userWalletsListManager as? UserWalletsListManager.Lockable != null
+    operator fun invoke(): Boolean = runCatching(tangemSdkManager::needEnrollBiometrics).getOrNull() ?: false
 }
