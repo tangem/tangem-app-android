@@ -1,6 +1,6 @@
 package com.tangem.domain.staking.model.stakekit
 
-import com.tangem.domain.core.serialization.SerializedBigDecimal
+import com.tangem.domain.models.serialization.SerializedBigDecimal
 import com.tangem.domain.models.staking.YieldToken
 import kotlinx.serialization.Serializable
 
