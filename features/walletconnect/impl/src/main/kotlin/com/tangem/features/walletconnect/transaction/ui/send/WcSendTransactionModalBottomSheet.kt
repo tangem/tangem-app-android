@@ -4,7 +4,9 @@ import android.content.res.Configuration
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -14,14 +16,17 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetWithFooter
 import com.tangem.core.ui.components.divider.DividerWithPadding
+import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.send.v2.api.FeeSelectorBlockComponent
@@ -101,14 +106,22 @@ internal fun WcSendTransactionModalBottomSheet(
                     if (state.estimatedWalletChanges != null) {
                         TransactionCheckResultsItem(state.estimatedWalletChanges, onClickAllowToSpend)
                     }
-                    Spacer(Modifier.height(16.dp))
                     WcSendTransactionItems(
+                        modifier = Modifier.padding(top = 16.dp),
                         walletName = state.walletName,
                         networkInfo = state.networkInfo,
                         feeState = state.feeState,
                         feeSelectorBlockComponent = feeSelectorBlockComponent,
+                        feeExceedsBalance = state.feeExceedsBalanceNotification != null,
                         address = state.address,
                     )
+                    if (state.feeExceedsBalanceNotification != null) {
+                        Notification(
+                            modifier = Modifier.padding(top = 14.dp),
+                            config = state.feeExceedsBalanceNotification.config,
+                            iconTint = TangemTheme.colors.icon.warning,
+                        )
+                    }
                 }
             }
         },
@@ -199,9 +212,10 @@ private class WcSendTransactionStateProvider : CollectionPreviewParameterProvide
             ),
             walletName = "Tangem 2.0 Tangem 2.0 Tangem 2",
             networkInfo = WcNetworkInfoUM(name = "Optimistic Ethereum Network", iconRes = R.drawable.img_eth_22),
-            feeState = WcTransactionFeeState.Success(null, {}),
+            feeState = WcTransactionFeeState.Success(dAppFee = null, onClick = {}),
             address = null,
             sendEnabled = true,
+            feeExceedsBalanceNotification = null,
         ),
         WcSendTransactionItemUM(
             onDismiss = {},
@@ -237,9 +251,13 @@ private class WcSendTransactionStateProvider : CollectionPreviewParameterProvide
             ),
             walletName = "Tangem 2.0",
             networkInfo = WcNetworkInfoUM(name = "Ethereum", iconRes = R.drawable.img_eth_22),
-            feeState = WcTransactionFeeState.Success(null, {}),
+            feeState = WcTransactionFeeState.Success(dAppFee = null, onClick = {}),
             address = "0xdac17f958d2ee523a2206206994597c13d831ec7",
             sendEnabled = true,
+            feeExceedsBalanceNotification = NotificationUM.Info(
+                title = stringReference("Insufficient Ethereum"),
+                subtitle = stringReference("Top up your balance to cover the network fee"),
+            ),
         ),
         WcSendTransactionItemUM(
             onDismiss = {},
@@ -278,6 +296,10 @@ private class WcSendTransactionStateProvider : CollectionPreviewParameterProvide
             feeState = WcTransactionFeeState.None,
             address = null,
             sendEnabled = false,
+            feeExceedsBalanceNotification = NotificationUM.Info(
+                title = stringReference("Insufficient Ethereum"),
+                subtitle = stringReference("Top up your balance to cover the network fee"),
+            ),
         ),
     ),
 )

@@ -47,6 +47,7 @@ import com.tangem.features.walletconnect.transaction.entity.common.WcTransaction
 import com.tangem.features.walletconnect.transaction.entity.send.WcSendTransactionUM
 import com.tangem.features.walletconnect.transaction.routes.WcTransactionRoutes
 import com.tangem.features.walletconnect.transaction.ui.blockaid.WcSendAndReceiveBlockAidUiConverter
+import com.tangem.features.walletconnect.utils.WcNotificationsFactory
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -69,6 +70,7 @@ internal class WcSendTransactionModel @Inject constructor(
     private val blockAidUiConverter: WcSendAndReceiveBlockAidUiConverter,
     private val getFeeUseCase: GetFeeUseCase,
     private val getNetworkCoinUseCase: GetNetworkCoinStatusUseCase,
+    private val notificationsFactory: WcNotificationsFactory,
     private val analytics: AnalyticsEventHandler,
 ) : Model(), WcCommonTransactionModel, FeeSelectorModelCallback {
 
@@ -159,10 +161,17 @@ internal class WcSendTransactionModel @Inject constructor(
      * Also handles fee results from FeeSelectorBlockComponent
      */
     fun updateFee(feeSelectorUM: FeeSelectorUM) {
+        val feeExceedsBalance = notificationsFactory.createFeeExceedsBalance(
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
+            feeSelectorUM = feeSelectorUM,
+        )
         _uiState.update {
             it?.copy(
                 feeSelectorUM = feeSelectorUM,
-                transaction = it.transaction.copy(sendEnabled = feeSelectorUM is FeeSelectorUM.Content),
+                transaction = it.transaction.copy(
+                    sendEnabled = feeSelectorUM is FeeSelectorUM.Content && feeExceedsBalance == null,
+                    feeExceedsBalanceNotification = feeExceedsBalance,
+                ),
             )
         }
         val fee = (feeSelectorUM as? FeeSelectorUM.Content)?.selectedFeeItem?.fee ?: return
@@ -227,6 +236,7 @@ internal class WcSendTransactionModel @Inject constructor(
                 signState = signState,
                 actions = actions,
                 feeSelectorUM = uiState.value?.feeSelectorUM,
+                cryptoCurrencyStatus = cryptoCurrencyStatus,
             ),
         )
         transactionUM = transactionUM?.copy(
