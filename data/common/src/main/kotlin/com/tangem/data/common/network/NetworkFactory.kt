@@ -6,11 +6,11 @@ import com.tangem.blockchain.common.FeePaidCurrency
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.blockchainsdk.utils.toNetworkId
-import com.tangem.domain.card.DerivationStyleProvider
 import com.tangem.domain.card.common.extensions.canHandleToken
-import com.tangem.domain.card.common.util.derivationStyleProvider
+import com.tangem.domain.wallets.derivations.derivationStyleProvider
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.wallets.derivations.DerivationStyleProvider
 import timber.log.Timber
 import javax.inject.Inject
 
