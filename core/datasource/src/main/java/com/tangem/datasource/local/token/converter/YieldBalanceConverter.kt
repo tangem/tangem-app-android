@@ -3,10 +3,10 @@ package com.tangem.datasource.local.token.converter
 import com.tangem.datasource.api.stakekit.models.response.model.BalanceDTO
 import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
 import com.tangem.domain.models.StatusSource
-import com.tangem.domain.staking.model.StakingID
-import com.tangem.domain.staking.model.stakekit.BalanceItem
-import com.tangem.domain.staking.model.stakekit.YieldBalance
-import com.tangem.domain.staking.model.stakekit.YieldBalanceItem
+import com.tangem.domain.models.staking.BalanceItem
+import com.tangem.domain.models.staking.StakingID
+import com.tangem.domain.models.staking.YieldBalance
+import com.tangem.domain.models.staking.YieldBalanceItem
 import com.tangem.utils.converter.Converter
 import kotlinx.datetime.Instant
 
@@ -43,7 +43,7 @@ class YieldBalanceConverter(
 
         return BalanceItem(
             groupId = item.groupId,
-            token = TokenConverter.convert(item.tokenDTO),
+            token = YieldTokenConverter.convert(item.tokenDTO),
             type = BalanceTypeConverter.convert(item.type),
             amount = item.amount,
             rawCurrencyId = item.tokenDTO.coinGeckoId,
