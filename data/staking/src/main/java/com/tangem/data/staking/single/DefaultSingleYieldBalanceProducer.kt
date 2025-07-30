@@ -35,10 +35,7 @@ internal class DefaultSingleYieldBalanceProducer @AssistedInject constructor(
 ) : SingleYieldBalanceProducer {
 
     override val fallback: YieldBalance by lazy {
-        YieldBalance.Error(
-            integrationId = params.stakingId.integrationId,
-            address = params.stakingId.address,
-        )
+        YieldBalance.Error(stakingId = params.stakingId)
     }
 
     override fun produce(): Flow<YieldBalance> {
@@ -50,7 +47,7 @@ internal class DefaultSingleYieldBalanceProducer @AssistedInject constructor(
             .mapNotNull { balances ->
                 val currentStakingId = params.stakingId
 
-                val currentBalances = balances.filter { it.getStakingId() == currentStakingId }
+                val currentBalances = balances.filter { it.stakingId == currentStakingId }
 
                 if (currentBalances.size > 1) {
                     analyticsExceptionHandler.sendException(
