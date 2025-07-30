@@ -17,6 +17,7 @@ import com.tangem.core.deeplink.global.ReferralDeepLink
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.nft.ObserveAndClearNFTCacheIfNeedUseCase
+import com.tangem.domain.notifications.GetIsHuaweiDeviceWithoutGoogleServicesUseCase
 import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.notifications.toggles.NotificationsFeatureToggles
 import com.tangem.domain.settings.*
@@ -25,10 +26,7 @@ import com.tangem.domain.tokens.RefreshMultiCurrencyWalletQuotesUseCase
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.models.isMultiCurrency
-import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
-import com.tangem.domain.wallets.usecase.GetWalletsUseCase
-import com.tangem.domain.wallets.usecase.GetWalletsForAutomaticallyPushEnablingUseCase
-import com.tangem.domain.wallets.usecase.SetNotificationsEnabledUseCase
+import com.tangem.domain.wallets.usecase.*
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.deeplink.WalletDeepLinksHandler
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
@@ -50,7 +48,6 @@ import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvid
 import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
-import com.tangem.features.pushnotifications.api.utils.getPushPermissionOrNull
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
 import kotlinx.coroutines.*
@@ -94,6 +91,8 @@ internal class WalletModel @Inject constructor(
     private val getWalletsListForEnablingUseCase: GetWalletsForAutomaticallyPushEnablingUseCase,
     private val setNotificationsEnabledUseCase: SetNotificationsEnabledUseCase,
     private val notificationsFeatureToggles: NotificationsFeatureToggles,
+    private val getIsBiometryIsEnabledUseCase: GetIsBiometricsEnabledUseCase,
+    private val getIsHuaweiDeviceWithoutGoogleServicesUseCase: GetIsHuaweiDeviceWithoutGoogleServicesUseCase,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
 ) : Model() {
@@ -208,12 +207,11 @@ internal class WalletModel @Inject constructor(
         modelScope.launch {
             val shouldAskPermission = shouldAskPermissionUseCase(PUSH_PERMISSION)
             val afterUpdate = notificationsRepository.shouldShowSubscribeOnNotificationsAfterUpdate()
-            val shouldShowBottomSheet = if (notificationsFeatureToggles.isNotificationsEnabled) {
-                (shouldAskPermission || afterUpdate) && !shouldShowSaveWalletScreenUseCase()
-            } else {
-                val isPushPermissionAvailable = getPushPermissionOrNull() != null
-                shouldAskPermission && isPushPermissionAvailable
-            }
+            val isBiometryIsEnabled = getIsBiometryIsEnabledUseCase()
+            val isHuaweiDevice = getIsHuaweiDeviceWithoutGoogleServicesUseCase()
+            val shouldShowBottomSheet = shouldAskPermission || afterUpdate
+            if (!isBiometryIsEnabled) return@launch
+            if (isHuaweiDevice) return@launch
             if (!shouldShowBottomSheet) return@launch
 
             delay(timeMillis = 1_800)
