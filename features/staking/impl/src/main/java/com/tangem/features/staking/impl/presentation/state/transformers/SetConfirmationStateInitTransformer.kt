@@ -2,10 +2,10 @@ package com.tangem.features.staking.impl.presentation.state.transformers
 
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.staking.model.StakingApproval
-import com.tangem.domain.staking.model.stakekit.PendingAction
+import com.tangem.domain.models.staking.PendingAction
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
-import com.tangem.domain.staking.model.stakekit.action.StakingActionType
+import com.tangem.domain.models.staking.action.StakingActionType
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.staking.impl.presentation.state.*
 import com.tangem.features.staking.impl.presentation.state.utils.isCompositePendingActions
