@@ -2,7 +2,6 @@ package com.tangem.domain.managetokens
 
 import arrow.core.Either
 import arrow.core.flatten
-import com.tangem.domain.card.repository.DerivationsRepository
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
 import com.tangem.domain.managetokens.repository.CustomTokensRepository
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -14,6 +13,7 @@ import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.wallets.derivations.DerivationsRepository
 
 @Suppress("LongParameterList")
 class SaveManagedTokensUseCase(
