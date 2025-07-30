@@ -1,4 +1,4 @@
-package com.tangem.tap.domain.card
+package com.tangem.data.wallets.derivations
 
 import com.tangem.blockchain.blockchains.cardano.CardanoUtils
 import com.tangem.blockchain.common.Blockchain
@@ -8,23 +8,26 @@ import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.extensions.toMapKey
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.card.configs.CardConfig
-import com.tangem.domain.card.common.util.derivationStyleProvider
+import com.tangem.domain.card.configs.Wallet2CardConfig
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.scan.KeyWalletPublicKey
-import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.wallets.derivations.derivationStyleProvider
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
+import kotlin.collections.forEach
 
 private typealias DerivationData = Pair<ByteArrayKey, List<DerivationPath>>
+internal typealias Derivations = Map<ByteArrayKey, List<DerivationPath>>
 
 /**
  * Finder of missed derivations
  *
- * @property scanResponse scanning response
+ * @property userWallet User wallet to find derivations for
  *
 [REDACTED_AUTHOR]
  */
-internal class MissedDerivationsFinder(private val scanResponse: ScanResponse) {
+internal class MissedDerivationsFinder(private val userWallet: UserWallet) {
 
     /** Find missed derivations for given currencies [currencies] */
     fun find(currencies: List<CryptoCurrency>): Derivations {
@@ -48,30 +51,39 @@ internal class MissedDerivationsFinder(private val scanResponse: ScanResponse) {
     }
 
     private fun List<Network>.mapToNewDerivations(): List<DerivationData> {
-        val config = CardConfig.createConfig(scanResponse.card)
+        val config = when (userWallet) {
+            is UserWallet.Cold -> CardConfig.createConfig(userWallet.scanResponse.card)
+            is UserWallet.Hot -> Wallet2CardConfig // TODO create config [REDACTED_TASK_KEY]
+        }
         return mapNotNull { network ->
             val blockchain = network.toBlockchain()
             val curve = config.primaryCurve(blockchain) ?: return@mapNotNull null
 
-            findNewDerivations(curve = curve, scanResponse = scanResponse, network = network)
+            val walletPublicKey = when (userWallet) {
+                is UserWallet.Cold -> {
+                    val wallet = userWallet.scanResponse.card.wallets.firstOrNull { it.curve == curve }
+                    wallet?.publicKey
+                }
+                is UserWallet.Hot -> {
+                    val wallet = userWallet.wallets?.firstOrNull { it.curve == curve }
+                    wallet?.publicKey
+                }
+            }
+
+            walletPublicKey?.let {
+                findNewDerivations(curve = curve, publicKey = it, network = network)
+            }
         }
     }
 
-    private fun findNewDerivations(
-        curve: EllipticCurve,
-        scanResponse: ScanResponse,
-        network: Network,
-    ): DerivationData? {
-        val wallet = scanResponse.card.wallets.firstOrNull { it.curve == curve } ?: return null
-        val publicKey = wallet.publicKey.toMapKey()
-
+    private fun findNewDerivations(curve: EllipticCurve, publicKey: ByteArray, network: Network): DerivationData? {
         val derivationCandidates = network
             .getDerivationCandidates(curve)
             .ifEmpty { return null }
-            .filterAlreadyDerivedKeys(publicKey)
+            .filterAlreadyDerivedKeys(publicKey.toMapKey())
             .ifEmpty { return null }
 
-        return publicKey to derivationCandidates
+        return publicKey.toMapKey() to derivationCandidates
     }
 
     private fun Network.getDerivationCandidates(curve: EllipticCurve): List<DerivationPath> {
@@ -88,7 +100,7 @@ internal class MissedDerivationsFinder(private val scanResponse: ScanResponse) {
 
     private fun Blockchain.getDerivationPath(curve: EllipticCurve): DerivationPath? {
         return if (getSupportedCurves().contains(curve)) {
-            derivationPath(style = scanResponse.derivationStyleProvider.getDerivationStyle())
+            derivationPath(style = userWallet.derivationStyleProvider.getDerivationStyle())
         } else {
             null
         }
@@ -118,7 +130,15 @@ internal class MissedDerivationsFinder(private val scanResponse: ScanResponse) {
     }
 
     private fun getAlreadyDerivedKeys(publicKey: KeyWalletPublicKey): List<DerivationPath> {
-        val extendedPublicKeysMap = scanResponse.derivedKeys[publicKey] ?: ExtendedPublicKeysMap(emptyMap())
+        val extendedPublicKeysMap = when (userWallet) {
+            is UserWallet.Cold -> userWallet.scanResponse.derivedKeys[publicKey] ?: ExtendedPublicKeysMap(emptyMap())
+            is UserWallet.Hot -> {
+                val wallets = userWallet.wallets ?: return emptyList()
+                wallets.firstOrNull { it.publicKey.contentEquals(publicKey.bytes) }?.derivedKeys
+                    ?: ExtendedPublicKeysMap(emptyMap())
+            }
+        }
+
         return extendedPublicKeysMap.keys.toList()
     }
 }
