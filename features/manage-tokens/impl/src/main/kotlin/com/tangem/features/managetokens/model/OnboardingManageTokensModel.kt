@@ -13,10 +13,10 @@ import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.SnackbarMessage
-import com.tangem.domain.card.HasMissedDerivationsUseCase
 import com.tangem.domain.managetokens.SaveManagedTokensUseCase
 import com.tangem.domain.redux.OnboardingManageTokensAction
 import com.tangem.domain.redux.ReduxStateHolder
+import com.tangem.domain.wallets.usecase.HasMissedDerivationsUseCase
 import com.tangem.features.managetokens.analytics.ManageTokensAnalyticEvent
 import com.tangem.features.managetokens.component.ManageTokensSource
 import com.tangem.features.managetokens.component.OnboardingManageTokensComponent
