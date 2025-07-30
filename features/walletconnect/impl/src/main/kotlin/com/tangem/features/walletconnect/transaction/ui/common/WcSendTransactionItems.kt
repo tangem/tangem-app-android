@@ -18,12 +18,14 @@ import com.tangem.features.send.v2.api.FeeSelectorBlockComponent
 import com.tangem.features.walletconnect.transaction.entity.common.WcNetworkInfoUM
 import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionFeeState
 
+@Suppress("LongParameterList")
 @Composable
 internal fun WcSendTransactionItems(
     walletName: String?,
     networkInfo: WcNetworkInfoUM,
     feeState: WcTransactionFeeState,
     feeSelectorBlockComponent: FeeSelectorBlockComponent?,
+    feeExceedsBalance: Boolean,
     address: String?,
     modifier: Modifier = Modifier,
 ) {
@@ -62,7 +64,7 @@ internal fun WcSendTransactionItems(
                 address = address,
             )
         }
-        if (feeState != WcTransactionFeeState.None) {
+        if (feeState != WcTransactionFeeState.None && !feeExceedsBalance) {
             DividerWithPadding(start = 40.dp, end = 12.dp)
             feeSelectorBlockComponent?.Content(
                 modifier = if (onFeeBlockClicked != null) {
