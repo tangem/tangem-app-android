@@ -2,7 +2,7 @@ package com.tangem.features.hotwallet.accesscoderequest
 
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
-import com.tangem.features.hotwallet.HotWalletPasswordRequester
+import com.tangem.domain.wallets.hot.HotWalletPasswordRequester
 import com.tangem.features.hotwallet.accesscoderequest.entity.HotAccessCodeRequestUM
 import com.tangem.hot.sdk.model.HotAuth
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
