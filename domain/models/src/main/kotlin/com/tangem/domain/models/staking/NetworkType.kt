@@ -1,5 +1,8 @@
-package com.tangem.domain.staking.model.stakekit
+package com.tangem.domain.models.staking
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 enum class NetworkType {
     AVALANCHE_C,
     AVALANCHE_ATOMIC,
