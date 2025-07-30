@@ -3,6 +3,7 @@ package com.tangem.common.routing
 import android.os.Bundle
 import com.tangem.common.routing.bundle.RouteBundleParams
 import com.tangem.common.routing.bundle.bundle
+import com.tangem.common.routing.entity.InitScreenLaunchMode
 import com.tangem.common.routing.entity.SerializableIntent
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -22,10 +23,14 @@ sealed class AppRoute(val path: String) : Route {
     data object Initial : AppRoute(path = "/initial")
 
     @Serializable
-    data object Home : AppRoute(path = "/home")
+    data class Home(
+        val launchMode: InitScreenLaunchMode = InitScreenLaunchMode.Standard,
+    ) : AppRoute(path = "/home")
 
     @Serializable
     data class Welcome(
+        val launchMode: InitScreenLaunchMode = InitScreenLaunchMode.Standard,
+        // we still have this param to be handled by WalletConnectLinkIntentHandler in WelcomeMiddleware
         val intent: SerializableIntent? = null,
     ) : AppRoute(path = "/welcome"), RouteBundleParams {
 
