@@ -29,7 +29,11 @@ import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.wallet.requireColdWallet
 import com.tangem.domain.promo.GetStoryContentUseCase
 import com.tangem.domain.promo.ShouldShowStoriesUseCase
 import com.tangem.domain.promo.models.StoryContentIds
@@ -40,11 +44,7 @@ import com.tangem.domain.tokens.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.tokens.GetMinimumTransactionAmountSyncUseCase
 import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.UpdateDelayedNetworkStatusUseCase
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
-import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.models.wallet.requireColdWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.swap.analytics.StoriesEvents
 import com.tangem.feature.swap.analytics.SwapEvents
