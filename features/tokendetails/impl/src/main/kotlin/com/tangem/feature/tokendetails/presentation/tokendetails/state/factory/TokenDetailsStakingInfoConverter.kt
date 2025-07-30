@@ -10,8 +10,8 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
-import com.tangem.domain.staking.model.stakekit.RewardBlockType
-import com.tangem.domain.staking.model.stakekit.YieldBalance
+import com.tangem.domain.models.staking.RewardBlockType
+import com.tangem.domain.models.staking.YieldBalance
 import com.tangem.domain.staking.utils.getRewardStakingBalance
 import com.tangem.domain.staking.utils.getTotalStakingBalance
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
