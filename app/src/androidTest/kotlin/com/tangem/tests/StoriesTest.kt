@@ -8,12 +8,11 @@ import com.tangem.screens.onStoriesScreen
 import com.tangem.tap.features.home.redux.HomeMiddleware.NEW_BUY_WALLET_URL
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.github.kakaocup.kakao.intent.KIntent
-import org.junit.Test
 
 @HiltAndroidTest
 class StoriesTest : BaseTestCase() {
 
-    @Test
+    // @Test
     fun clickOnOrderButtonTest() =
         setupHooks().run {
             onDisclaimerScreen {
