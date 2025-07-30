@@ -268,7 +268,7 @@ internal class ResetCardModel @Inject constructor(
             if (isLocked && userWalletsListManager.hasUserWallets) {
                 store.dispatchNavigationAction { popTo<AppRoute.Welcome>() }
             } else {
-                store.dispatchNavigationAction { replaceAll(AppRoute.Home) }
+                store.dispatchNavigationAction { replaceAll(AppRoute.Home()) }
             }
         }
     }
