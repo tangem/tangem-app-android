@@ -15,7 +15,7 @@ import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.card.HasMissedDerivationsUseCase
+import com.tangem.domain.wallets.usecase.HasMissedDerivationsUseCase
 import com.tangem.domain.managetokens.CheckCurrencyUnsupportedUseCase
 import com.tangem.domain.managetokens.model.CurrencyUnsupportedState
 import com.tangem.domain.markets.SaveMarketTokensUseCase
