@@ -420,7 +420,7 @@ abstract class BaseCurrencyStatusOperations(
             params = MultiYieldBalanceProducer.Params(userWalletId = userWalletId),
         )
             .orEmpty()
-            .filter { it.getStakingId() in stakingIds }
+            .filter { it.stakingId in stakingIds }
 
         ensure(balances.isNotEmpty()) { Error.EmptyYieldBalances }
 
