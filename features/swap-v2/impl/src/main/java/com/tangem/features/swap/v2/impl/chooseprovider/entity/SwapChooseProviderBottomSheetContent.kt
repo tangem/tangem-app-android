@@ -13,5 +13,6 @@ internal data class SwapChooseProviderBottomSheetContent(
 
 internal data class SwapProviderListItem(
     val providerUM: ProviderChooseUM,
+    val swapProviderState: SwapProviderState,
     val quote: SwapQuoteUM,
 )
