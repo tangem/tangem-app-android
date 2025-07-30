@@ -16,7 +16,7 @@ import com.tangem.common.extensions.toHexString
 import com.tangem.core.error.ext.tangemError
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
-import com.tangem.domain.card.common.util.derivationStyleProvider
+import com.tangem.domain.wallets.derivations.derivationStyleProvider
 import com.tangem.domain.card.common.visa.VisaUtilities
 import com.tangem.domain.card.common.visa.VisaWalletPublicKeyUtility
 import com.tangem.domain.card.common.visa.VisaWalletPublicKeyUtility.findKeyWithoutDerivation
