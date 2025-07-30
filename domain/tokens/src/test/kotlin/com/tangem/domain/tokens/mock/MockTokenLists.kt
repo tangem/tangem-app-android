@@ -5,10 +5,10 @@ import arrow.core.toNonEmptyListOrNull
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TokensSortType
 import com.tangem.domain.models.TotalFiatBalance
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.tokens.mock.MockNetworksGroups.failedNetworksGroups
 import com.tangem.domain.tokens.mock.MockNetworksGroups.loadedNetworksGroups
 import com.tangem.domain.tokens.mock.MockNetworksGroups.sortedNetworksGroups
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TokenList
 import java.math.BigDecimal
 
