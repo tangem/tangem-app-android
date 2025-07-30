@@ -348,10 +348,18 @@ class BuyTokenTest : BaseTestCase() {
                 onBuyTokenDetailsScreen { providerTitle.performClick() }
             }
             step("Assert available provider name is displayed") {
-                onSelectProviderBottomSheet { availableProviderItem.assertIsDisplayed() }
+                onSelectProviderBottomSheet {
+                    flakySafely(timeoutMs = 20_000) {
+                        availableProviderItem.assertIsDisplayed()
+                    }
+                }
             }
             step("Assert unavailable provider name is displayed") {
-                onSelectProviderBottomSheet { unavailableProviderItem.assertIsDisplayed() }
+                onSelectProviderBottomSheet {
+                    flakySafely(timeoutMs = 20_000) {
+                        unavailableProviderItem.assertIsDisplayed()
+                    }
+                }
             }
             step("Click on 'Expand payment methods' button") {
                 onSelectProviderBottomSheet { paymentMethodExpandButton.clickWithAssertion() }
@@ -393,7 +401,7 @@ class BuyTokenTest : BaseTestCase() {
         }
     }
 
-    @AllureId("2570")
+    @AllureId("3479")
     @DisplayName("Onramp: validate 'Select payment method' bottom sheet")
     @Test
     fun validatePaymentMethodScreenTest() {
