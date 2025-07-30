@@ -5,9 +5,9 @@ import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrap
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
 import com.tangem.datasource.local.token.converter.YieldBalanceConverter
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.staking.StakingID
+import com.tangem.domain.models.staking.YieldBalance
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.staking.model.StakingID
-import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.addOrReplace
 import kotlinx.coroutines.CoroutineScope
