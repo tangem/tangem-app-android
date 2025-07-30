@@ -1,4 +1,4 @@
-package com.tangem.tap.domain.card
+package com.tangem.data.wallets.derivations
 
 import com.google.common.truth.Truth
 import com.tangem.blockchain.blockchains.cardano.CardanoUtils
@@ -13,7 +13,7 @@ import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.card.configs.GenericCardConfig
 import com.tangem.domain.card.configs.MultiWalletCardConfig
 import com.tangem.domain.card.configs.Wallet2CardConfig
-import com.tangem.domain.card.common.util.derivationStyleProvider
+import com.tangem.domain.wallets.derivations.derivationStyleProvider
 import org.junit.Test
 
 /**
@@ -24,7 +24,8 @@ internal class MissedDerivationsFinderTest {
     @Test
     fun `empty derivations for empty currencies`() {
         val scanResponse = MockScanResponseFactory.create(cardConfig = GenericCardConfig(2), derivedKeys = emptyMap())
-        val finder = MissedDerivationsFinder(scanResponse)
+        val userWallet = MockUserWalletFactory.create(scanResponse)
+        val finder = MissedDerivationsFinder(userWallet)
 
         val actual = finder.find(emptyList())
 
@@ -36,7 +37,7 @@ internal class MissedDerivationsFinderTest {
         // Bls is not supported
         val scanResponse = MockScanResponseFactory.create(cardConfig = GenericCardConfig(2), derivedKeys = emptyMap())
         val userWallet = MockUserWalletFactory.create(scanResponse)
-        val finder = MissedDerivationsFinder(scanResponse)
+        val finder = MissedDerivationsFinder(userWallet)
 
         val currencies = MockCryptoCurrencyFactory(userWallet).chia.let(::listOf)
         val actual = finder.find(currencies)
@@ -58,7 +59,7 @@ internal class MissedDerivationsFinderTest {
             )
         }
         val userWallet = MockUserWalletFactory.create(scanResponse)
-        val finder = MissedDerivationsFinder(scanResponse)
+        val finder = MissedDerivationsFinder(userWallet)
 
         val currencies = MockCryptoCurrencyFactory(userWallet).chiaAndEthereum
         val actual = finder.find(currencies)
@@ -73,7 +74,7 @@ internal class MissedDerivationsFinderTest {
     fun `derivations for custom token`() {
         val scanResponse = MockScanResponseFactory.create(cardConfig = MultiWalletCardConfig, derivedKeys = emptyMap())
         val userWallet = MockUserWalletFactory.create(scanResponse)
-        val finder = MissedDerivationsFinder(scanResponse)
+        val finder = MissedDerivationsFinder(userWallet)
 
         val currencies = MockCryptoCurrencyFactory(userWallet).ethereumTokenWithBinanceDerivation
         val actual = finder.find(currencies)
@@ -91,7 +92,7 @@ internal class MissedDerivationsFinderTest {
     fun `derivations for cardano`() {
         val scanResponse = MockScanResponseFactory.create(cardConfig = MultiWalletCardConfig, derivedKeys = emptyMap())
         val userWallet = MockUserWalletFactory.create(scanResponse)
-        val finder = MissedDerivationsFinder(scanResponse)
+        val finder = MissedDerivationsFinder(userWallet)
 
         val currencies = MockCryptoCurrencyFactory(userWallet).cardano.let(::listOf)
         val actual = finder.find(currencies)
@@ -117,7 +118,7 @@ internal class MissedDerivationsFinderTest {
             derivedKeys = DerivedKeysMocks.ethereumDerivedKeys,
         )
         val userWallet = MockUserWalletFactory.create(scanResponse)
-        val finder = MissedDerivationsFinder(scanResponse)
+        val finder = MissedDerivationsFinder(userWallet)
 
         val currencies = MockCryptoCurrencyFactory(userWallet).ethereum.let(::listOf)
         val actual = finder.find(currencies)
@@ -132,7 +133,7 @@ internal class MissedDerivationsFinderTest {
             derivedKeys = DerivedKeysMocks.ethereumDerivedKeys,
         )
         val userWallet = MockUserWalletFactory.create(scanResponse)
-        val finder = MissedDerivationsFinder(scanResponse)
+        val finder = MissedDerivationsFinder(userWallet)
 
         val currencies = MockCryptoCurrencyFactory(userWallet).ethereumAndStellar
         val actual = finder.find(currencies)
