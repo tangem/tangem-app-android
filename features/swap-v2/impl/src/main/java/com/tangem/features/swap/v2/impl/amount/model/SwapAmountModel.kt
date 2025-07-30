@@ -17,6 +17,7 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.express.models.ExpressError
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.domain.swap.models.SwapCurrencies
@@ -27,7 +28,6 @@ import com.tangem.domain.swap.models.getGroupWithDirection
 import com.tangem.domain.swap.usecase.GetSwapQuoteUseCase
 import com.tangem.domain.swap.usecase.SelectInitialPairUseCase
 import com.tangem.domain.tokens.GetMinimumTransactionAmountSyncUseCase
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.transaction.usecase.GetAllowanceUseCase
 import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
 import com.tangem.features.swap.v2.api.choosetoken.SwapChooseTokenNetworkListener
