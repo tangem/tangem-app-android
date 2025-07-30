@@ -1,8 +1,8 @@
 package com.tangem.features.hotwallet.accesscoderequest.di
 
 import com.tangem.core.decompose.model.Model
+import com.tangem.domain.wallets.hot.HotWalletPasswordRequester
 import com.tangem.features.hotwallet.HotAccessCodeRequestComponent
-import com.tangem.features.hotwallet.HotWalletPasswordRequester
 import com.tangem.features.hotwallet.accesscoderequest.DefaultHotAccessCodeRequestComponent
 import com.tangem.features.hotwallet.accesscoderequest.HotAccessCodeRequestModel
 import com.tangem.features.hotwallet.accesscoderequest.proxy.HotWalletPasswordRequesterProxy
