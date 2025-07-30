@@ -1,7 +1,7 @@
-package com.tangem.domain.staking.model.stakekit
+package com.tangem.domain.models.staking
 
 import com.tangem.domain.core.serialization.SerializedBigDecimal
-import com.tangem.domain.staking.model.stakekit.action.StakingActionType
+import com.tangem.domain.models.staking.action.StakingActionType
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 
@@ -14,7 +14,7 @@ data class YieldBalanceItem(
 @Serializable
 data class BalanceItem(
     val groupId: String,
-    val token: Token,
+    val token: YieldToken,
     val type: BalanceType,
     val amount: SerializedBigDecimal,
     val rawCurrencyId: String?,
