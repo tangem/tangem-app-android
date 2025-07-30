@@ -9,7 +9,7 @@ import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.test.utils.ProvideTestModels
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.staking.model.StakingID
+import com.tangem.domain.models.staking.StakingID
 import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import io.mockk.clearMocks
