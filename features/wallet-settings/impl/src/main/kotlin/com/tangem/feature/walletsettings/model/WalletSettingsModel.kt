@@ -24,7 +24,7 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.nft.DisableWalletNFTUseCase
 import com.tangem.domain.nft.EnableWalletNFTUseCase
 import com.tangem.domain.nft.GetWalletNFTEnabledUseCase
-import com.tangem.domain.notifications.ShouldShowHuaweiWarningUseCase
+import com.tangem.domain.notifications.GetIsHuaweiDeviceWithoutGoogleServicesUseCase
 import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.notifications.toggles.NotificationsFeatureToggles
 import com.tangem.domain.settings.repositories.PermissionRepository
@@ -75,7 +75,7 @@ internal class WalletSettingsModel @Inject constructor(
     private val settingsManager: SettingsManager,
     private val permissionsRepository: PermissionRepository,
     private val notificationsRepository: NotificationsRepository,
-    private val shouldShowHuaweiWarningUseCase: ShouldShowHuaweiWarningUseCase,
+    private val getIsHuaweiDeviceWithoutGoogleServicesUseCase: GetIsHuaweiDeviceWithoutGoogleServicesUseCase,
 ) : Model() {
 
     val params: WalletSettingsComponent.Params = paramsContainer.require()
@@ -99,6 +99,8 @@ internal class WalletSettingsModel @Inject constructor(
         ) { maybeWallet, nftEnabled, notificationsEnabled ->
             val wallet = maybeWallet.getOrNull() ?: return@combine
             val isRenameWalletAvailable = getShouldSaveUserWalletsSyncUseCase()
+            val isNeedShowNotifications = notificationsToggles.isNotificationsEnabled &&
+                !getIsHuaweiDeviceWithoutGoogleServicesUseCase()
             state.update { value ->
                 value.copy(
                     items = buildItems(
@@ -108,7 +110,7 @@ internal class WalletSettingsModel @Inject constructor(
                         isNFTFeatureEnabled = nftFeatureToggles.isNFTEnabled,
                         isNFTEnabled = nftEnabled,
                         isNotificationsEnabled = notificationsEnabled,
-                        isNotificationsFeatureEnabled = notificationsToggles.isNotificationsEnabled,
+                        isNotificationsFeatureEnabled = isNeedShowNotifications,
                         isNotificationsPermissionGranted = isNotificationsPermissionGranted(),
                     ),
                 )
@@ -232,7 +234,7 @@ internal class WalletSettingsModel @Inject constructor(
     private fun onCheckedNotificationsChange(isChecked: Boolean) {
         modelScope.launch {
             if (isChecked) {
-                if (shouldShowHuaweiWarningUseCase()) {
+                if (getIsHuaweiDeviceWithoutGoogleServicesUseCase()) {
                     showHuaweiDialog()
                     return@launch
                 }
