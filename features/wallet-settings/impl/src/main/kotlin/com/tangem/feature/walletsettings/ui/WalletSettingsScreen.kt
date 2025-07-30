@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -28,12 +29,12 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.TestTags
-import com.tangem.core.ui.utils.requestPushPermission
+import com.tangem.core.ui.utils.requestPermission
 import com.tangem.feature.walletsettings.component.preview.PreviewWalletSettingsComponent
 import com.tangem.feature.walletsettings.entity.WalletSettingsItemUM
 import com.tangem.feature.walletsettings.entity.WalletSettingsUM
 import com.tangem.feature.walletsettings.impl.R
-import com.tangem.features.pushnotifications.api.utils.getPushPermissionOrNull
+import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 
 @Composable
 internal fun WalletSettingsScreen(
@@ -119,14 +120,16 @@ private fun Content(state: WalletSettingsUM, modifier: Modifier = Modifier) {
         }
     }
 
-    val requestPushPermission = requestPushPermission(
+    val requestPushPermission = requestPermission(
         onAllow = { state.onPushNotificationPermissionGranted(true) },
         onDeny = { state.onPushNotificationPermissionGranted(false) },
-        pushPermission = getPushPermissionOrNull(),
+        permission = PUSH_PERMISSION,
     )
 
     if (state.requestPushNotificationsPermission) {
-        requestPushPermission()
+        LaunchedEffect(Unit) {
+            requestPushPermission()
+        }
     }
 }
 
