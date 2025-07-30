@@ -111,6 +111,7 @@ class NetworkFactory @Inject constructor(
                 hasFiatFeeRate = blockchain.feePaidCurrency() !is FeePaidCurrency.FeeResource,
                 canHandleTokens = canHandleTokens,
                 transactionExtrasType = blockchain.getSupportedTransactionExtras(),
+                nameResolvingType = blockchain.getNameResolvingType(),
             )
         }
             .getOrNull()
@@ -325,6 +326,13 @@ class NetworkFactory @Inject constructor(
             Blockchain.Pepecoin, Blockchain.PepecoinTestnet,
             -> Network.TransactionExtrasType.NONE
             // endregion
+        }
+    }
+
+    private fun Blockchain.getNameResolvingType(): Network.NameResolvingType {
+        return when (this) {
+            Blockchain.Ethereum, Blockchain.EthereumTestnet -> Network.NameResolvingType.ENS
+            else -> Network.NameResolvingType.NONE
         }
     }
 
