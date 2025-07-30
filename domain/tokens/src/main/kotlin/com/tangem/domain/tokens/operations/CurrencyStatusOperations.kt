@@ -80,7 +80,8 @@ internal class CurrencyStatusOperations(
         val hasCurrentNetworkTransactions = networkStatusValue.pendingTransactions.isNotEmpty()
         val currentTransactions = networkStatusValue.pendingTransactions.getOrElse(currency.id, ::emptySet)
         val yieldBalanceData = yieldBalance as? YieldBalance.Data
-        val isCurrentAddressStaking = yieldBalanceData?.address == networkStatusValue.address.defaultAddress.value
+        val isCurrentAddressStaking =
+            yieldBalanceData?.stakingId?.address == networkStatusValue.address.defaultAddress.value
         val filteredTokenBalances = yieldBalanceData?.balance?.items?.filter {
             it.token.coinGeckoId == currency.id.rawCurrencyId?.value
         }
