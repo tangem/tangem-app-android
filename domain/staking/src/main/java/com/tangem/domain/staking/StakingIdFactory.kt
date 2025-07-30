@@ -6,7 +6,7 @@ import arrow.core.raise.ensureNotNull
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.staking.model.StakingID
+import com.tangem.domain.models.staking.StakingID
 import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.domain.walletmanager.WalletManagersFacade
 

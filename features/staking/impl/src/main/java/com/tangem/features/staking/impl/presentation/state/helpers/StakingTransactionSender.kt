@@ -10,8 +10,8 @@ import com.tangem.domain.staking.GetStakingTransactionsUseCase
 import com.tangem.domain.staking.SaveUnsubmittedHashUseCase
 import com.tangem.domain.staking.SubmitHashUseCase
 import com.tangem.domain.staking.model.SubmitHashData
-import com.tangem.domain.staking.model.stakekit.NetworkType
-import com.tangem.domain.staking.model.stakekit.PendingAction
+import com.tangem.domain.models.staking.NetworkType
+import com.tangem.domain.models.staking.PendingAction
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
