@@ -5,21 +5,24 @@ import com.tangem.common.CompletionResult
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.features.onboarding.v2.impl.R
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
 import com.tangem.sdk.api.BackupServiceHolder
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @Stable
 @ModelScoped
-internal class Wallet1ScanPrimaryModel @Inject constructor(
+internal class MultiWalletScanPrimaryModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val backupServiceHolder: BackupServiceHolder,
+    private val cardRepository: CardRepository,
 ) : Model() {
 
     private val params = paramsContainer.require<MultiWalletChildParams>()
@@ -31,9 +34,20 @@ internal class Wallet1ScanPrimaryModel @Inject constructor(
     fun onScanPrimaryClick() {
         val backupService = backupServiceHolder.backupService.get() ?: return
         val iconScanRes = R.drawable.img_hand_scan_ring.takeIf { isRing }
+
         backupService.readPrimaryCard(iconScanRes = iconScanRes, cardId = scanResponse.card.cardId) { result ->
             when (result) {
                 is CompletionResult.Success -> {
+                    modelScope.launch {
+                        cardRepository.startCardActivation(cardId = scanResponse.card.cardId)
+                    }
+                    params.multiWalletState.update {
+                        it.copy(
+                            currentScanResponse = scanResponse.copy(
+                                primaryCard = result.data,
+                            ),
+                        )
+                    }
                     modelScope.launch { onDone.emit(Unit) }
                 }
                 is CompletionResult.Failure -> Unit
