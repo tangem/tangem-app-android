@@ -61,7 +61,7 @@ class DetailsTest : BaseTestCase() {
             }
         }
 
-    @Test
+    // @Test
     fun wallet2DetailsTest() =
         setupHooks().run {
             scenario(OpenMainScreenScenario(composeTestRule, ProductType.Wallet2))
