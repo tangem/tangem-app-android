@@ -5,8 +5,12 @@ import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.staking.BalanceItem
+import com.tangem.domain.models.staking.BalanceType
+import com.tangem.domain.models.staking.RewardBlockType
+import com.tangem.domain.models.staking.YieldBalance
 import com.tangem.domain.staking.model.stakekit.*
-import com.tangem.domain.staking.model.stakekit.action.StakingActionType
+import com.tangem.domain.models.staking.action.StakingActionType
 import com.tangem.domain.staking.utils.getRewardStakingBalance
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.staking.impl.presentation.state.InnerYieldBalanceState
