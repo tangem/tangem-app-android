@@ -7,10 +7,10 @@ import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.data.walletmanager.extensions.makePublicKey
 import com.tangem.data.walletmanager.extensions.makeWalletManagerForApp
-import com.tangem.domain.card.DerivationStyleProvider
-import com.tangem.domain.card.common.util.derivationStyleProvider
+import com.tangem.domain.wallets.derivations.DerivationStyleProvider
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.wallets.derivations.derivationStyleProvider
 import timber.log.Timber
 
 internal class WalletManagerFactory(

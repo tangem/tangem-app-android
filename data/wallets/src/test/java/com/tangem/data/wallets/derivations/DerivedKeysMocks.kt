@@ -1,4 +1,4 @@
-package com.tangem.tap.domain.card
+package com.tangem.data.wallets.derivations
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.derivation.DerivationConfigV2
