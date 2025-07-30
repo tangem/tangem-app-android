@@ -52,6 +52,7 @@ dependencies {
     /** Coroutines */
     implementation(deps.kotlin.coroutines)
     implementation(deps.kotlin.coroutines.rx2)
+    implementation(deps.kotlin.datetime)
 
     /** Logging */
     implementation(deps.timber)
