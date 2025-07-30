@@ -37,6 +37,13 @@ internal class WcSignUseCaseDelegateTest {
     private val rawRequestMock = WcSdkSessionRequest(
         topic = "",
         chainId = "",
+        dAppMetaData = WcAppMetaData(
+            name = "",
+            description = "",
+            url = "",
+            icons = listOf(),
+            redirect = "",
+        ),
         request = WcSdkSessionRequest.JSONRPCRequest(
             id = 0L,
             method = "",
