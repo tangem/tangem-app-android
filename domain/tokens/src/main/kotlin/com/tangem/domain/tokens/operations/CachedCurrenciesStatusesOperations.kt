@@ -25,9 +25,9 @@ import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.staking.StakingIdFactory
-import com.tangem.domain.staking.model.StakingID
+import com.tangem.domain.models.staking.StakingID
 import com.tangem.domain.staking.model.StakingIntegrationID
-import com.tangem.domain.staking.model.stakekit.YieldBalance
+import com.tangem.domain.models.staking.YieldBalance
 import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
 import com.tangem.domain.staking.multi.MultiYieldBalanceSupplier
 import com.tangem.domain.staking.single.SingleYieldBalanceProducer

@@ -1,7 +1,6 @@
-package com.tangem.domain.staking.model.stakekit
+package com.tangem.domain.models.staking
 
 import com.tangem.domain.models.StatusSource
-import com.tangem.domain.staking.model.StakingID
 import kotlinx.serialization.Serializable
 
 /**
