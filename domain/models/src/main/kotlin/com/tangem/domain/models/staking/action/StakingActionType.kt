@@ -1,5 +1,8 @@
-package com.tangem.domain.staking.model.stakekit.action
+package com.tangem.domain.models.staking.action
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 enum class StakingActionType {
     STAKE,
     UNSTAKE,
