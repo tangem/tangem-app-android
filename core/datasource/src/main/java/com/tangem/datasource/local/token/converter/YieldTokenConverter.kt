@@ -1,13 +1,13 @@
 package com.tangem.datasource.local.token.converter
 
 import com.tangem.datasource.api.stakekit.models.response.model.TokenDTO
-import com.tangem.domain.staking.model.stakekit.Token
+import com.tangem.domain.models.staking.YieldToken
 import com.tangem.utils.converter.TwoWayConverter
 
-object TokenConverter : TwoWayConverter<TokenDTO, Token> {
+object YieldTokenConverter : TwoWayConverter<TokenDTO, YieldToken> {
 
-    override fun convert(value: TokenDTO): Token {
-        return Token(
+    override fun convert(value: TokenDTO): YieldToken {
+        return YieldToken(
             name = value.name,
             network = StakingNetworkTypeConverter.convert(value.network),
             symbol = value.symbol,
@@ -19,7 +19,7 @@ object TokenConverter : TwoWayConverter<TokenDTO, Token> {
         )
     }
 
-    override fun convertBack(value: Token): TokenDTO {
+    override fun convertBack(value: YieldToken): TokenDTO {
         return TokenDTO(
             name = value.name,
             network = StakingNetworkTypeConverter.convertBack(value.network),

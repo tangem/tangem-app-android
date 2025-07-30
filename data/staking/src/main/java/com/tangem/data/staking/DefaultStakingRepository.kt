@@ -29,22 +29,22 @@ import com.tangem.datasource.api.stakekit.models.response.model.action.StakingAc
 import com.tangem.datasource.api.stakekit.models.response.model.transaction.tron.TronStakeKitTransaction
 import com.tangem.datasource.local.token.StakingYieldsStore
 import com.tangem.datasource.local.token.converter.StakingNetworkTypeConverter
-import com.tangem.datasource.local.token.converter.TokenConverter
+import com.tangem.datasource.local.token.converter.YieldTokenConverter
 import com.tangem.domain.card.common.TapWorkarounds.isWallet2
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.staking.NetworkType
+import com.tangem.domain.models.staking.YieldBalance
+import com.tangem.domain.models.staking.action.StakingActionType
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
 import com.tangem.domain.staking.model.StakingIntegrationID
-import com.tangem.domain.staking.model.stakekit.NetworkType
 import com.tangem.domain.staking.model.stakekit.Yield
-import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.staking.model.stakekit.action.StakingAction
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.staking.model.stakekit.action.StakingActionStatus
-import com.tangem.domain.staking.model.stakekit.action.StakingActionType
 import com.tangem.domain.staking.model.stakekit.transaction.ActionParams
 import com.tangem.domain.staking.model.stakekit.transaction.StakingGasEstimate
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
@@ -399,7 +399,7 @@ internal class DefaultStakingRepository(
             ),
             args = ActionRequestBodyArgs(
                 amount = params.amount.toPlainString(),
-                inputToken = TokenConverter.convertBack(params.token),
+                inputToken = YieldTokenConverter.convertBack(params.token),
                 validatorAddress = params.validatorAddress,
                 validatorAddresses = listOf(params.validatorAddress), // check on other networks
                 tronResource = getTronResource(network),
