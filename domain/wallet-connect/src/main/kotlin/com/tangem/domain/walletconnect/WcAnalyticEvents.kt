@@ -83,45 +83,57 @@ sealed class WcAnalyticEvents(
     )
 
     class SignatureRequestReceived(
-        session: WcSession,
         rawRequest: WcSdkSessionRequest,
         network: Network,
     ) : WcAnalyticEvents(
         event = "Signature Request Received",
         params = mapOf(
-            AnalyticsParam.Key.DAPP_NAME to session.sdkModel.appMetaData.name,
-            AnalyticsParam.Key.DAPP_URL to session.sdkModel.appMetaData.url,
+            AnalyticsParam.Key.DAPP_NAME to rawRequest.dAppMetaData.name,
+            AnalyticsParam.Key.DAPP_URL to rawRequest.dAppMetaData.url,
             AnalyticsParam.Key.METHOD_NAME to rawRequest.request.method,
             AnalyticsParam.Key.BLOCKCHAIN to network.name,
         ),
     )
 
     class SignatureRequestHandled(
-        session: WcSession,
         rawRequest: WcSdkSessionRequest,
         network: Network,
     ) : WcAnalyticEvents(
         event = "Signature Request Handled",
         params = mapOf(
-            AnalyticsParam.Key.DAPP_NAME to session.sdkModel.appMetaData.name,
-            AnalyticsParam.Key.DAPP_URL to session.sdkModel.appMetaData.url,
+            AnalyticsParam.Key.DAPP_NAME to rawRequest.dAppMetaData.name,
+            AnalyticsParam.Key.DAPP_URL to rawRequest.dAppMetaData.url,
             AnalyticsParam.Key.METHOD_NAME to rawRequest.request.method,
             AnalyticsParam.Key.BLOCKCHAIN to network.name,
         ),
     )
 
     class SignatureRequestFailed(
-        session: WcSession,
         rawRequest: WcSdkSessionRequest,
         network: Network,
         errorCode: String,
     ) : WcAnalyticEvents(
         event = "Signature Request Failed",
         params = mapOf(
-            AnalyticsParam.Key.DAPP_NAME to session.sdkModel.appMetaData.name,
-            AnalyticsParam.Key.DAPP_URL to session.sdkModel.appMetaData.url,
+            AnalyticsParam.Key.DAPP_NAME to rawRequest.dAppMetaData.name,
+            AnalyticsParam.Key.DAPP_URL to rawRequest.dAppMetaData.url,
             AnalyticsParam.Key.METHOD_NAME to rawRequest.request.method,
             AnalyticsParam.Key.BLOCKCHAIN to network.name,
+            AnalyticsParam.Key.ERROR_CODE to errorCode,
+        ),
+    )
+
+    class SignatureRequestReceivedFailed(
+        rawRequest: WcSdkSessionRequest,
+        blockchain: String,
+        errorCode: String,
+    ) : WcAnalyticEvents(
+        event = "Signature Request Received with Failed",
+        params = mapOf(
+            AnalyticsParam.Key.DAPP_NAME to rawRequest.dAppMetaData.name,
+            AnalyticsParam.Key.DAPP_URL to rawRequest.dAppMetaData.url,
+            AnalyticsParam.Key.METHOD_NAME to rawRequest.request.method,
+            AnalyticsParam.Key.BLOCKCHAIN to blockchain,
             AnalyticsParam.Key.ERROR_CODE to errorCode,
         ),
     )
