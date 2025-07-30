@@ -9,7 +9,7 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.domain.card.DerivePublicKeysUseCase
+import com.tangem.domain.wallets.usecase.DerivePublicKeysUseCase
 import com.tangem.domain.card.SetCardWasScannedUseCase
 import com.tangem.domain.feedback.GetCardInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
