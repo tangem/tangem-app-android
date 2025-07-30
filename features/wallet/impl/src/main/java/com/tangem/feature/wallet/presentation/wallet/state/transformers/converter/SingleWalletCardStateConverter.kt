@@ -5,7 +5,7 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.card.common.util.getCardsCount
 import com.tangem.domain.models.StatusSource
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
