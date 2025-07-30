@@ -79,11 +79,15 @@ class OrganizeTokensTest : BaseTestCase() {
         setupHooks().run {
             val ethereumTitle = "Ethereum"
             val bitcoinTitle = "Bitcoin"
+            val balance = "$184.85"
             step("Open 'Main Screen'") {
                 scenario(OpenMainScreenScenario(composeTestRule))
             }
             step("Click on 'Synchronize addresses' button" ) {
                 onMainScreen { synchronizeAddressesButton.clickWithAssertion() }
+            }
+            step("Assert wallet balance = '$balance'") {
+                onMainScreen { walletBalance().assertTextContains(balance) }
             }
             step("Check positions of tokens on 'Main Screen'") {
                 onMainScreen {
@@ -154,11 +158,15 @@ class OrganizeTokensTest : BaseTestCase() {
             val ethereumTitle = "Ethereum"
             val bitcoinTitle = "Bitcoin"
             val polygonTitle = "Polygon"
+            val balance = "$184.85"
             step("Open 'Main Screen'") {
                 scenario(OpenMainScreenScenario(composeTestRule))
             }
             step("Click on 'Synchronize addresses' button" ) {
                 onMainScreen { synchronizeAddressesButton.clickWithAssertion() }
+            }
+            step("Assert wallet balance = '$balance'") {
+                onMainScreen { walletBalance().assertTextContains(balance) }
             }
             step("Check positions of tokens on 'Main Screen'") {
                 onMainScreen {
