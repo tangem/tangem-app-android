@@ -200,8 +200,12 @@ internal class TokenDetailsModel @Inject constructor(
     val uiState: StateFlow<TokenDetailsState> = internalUiState
 
     init {
+
         analyticsEventsHandler.send(
-            event = TokenScreenAnalyticsEvent.DetailsScreenOpened(token = cryptoCurrency.symbol),
+            event = TokenScreenAnalyticsEvent.DetailsScreenOpened(
+                token = cryptoCurrency.symbol,
+                tokenBalance =
+            ),
         )
         updateTopBarMenu()
         initButtons()
