@@ -207,10 +207,10 @@ internal class WalletModel @Inject constructor(
         modelScope.launch {
             val shouldAskPermission = shouldAskPermissionUseCase(PUSH_PERMISSION)
             val afterUpdate = notificationsRepository.shouldShowSubscribeOnNotificationsAfterUpdate()
-            val isBiometryIsEnabled = getIsBiometryIsEnabledUseCase()
+            val isBiometricsEnabled = getIsBiometryIsEnabledUseCase()
             val isHuaweiDevice = getIsHuaweiDeviceWithoutGoogleServicesUseCase()
             val shouldShowBottomSheet = shouldAskPermission || afterUpdate
-            if (!isBiometryIsEnabled) return@launch
+            if (!isBiometricsEnabled) return@launch
             if (isHuaweiDevice) return@launch
             if (!shouldShowBottomSheet) return@launch
 
