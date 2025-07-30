@@ -39,6 +39,7 @@ internal data object SwapAmountContentPreview {
                 hasFiatFeeRate = false,
                 canHandleTokens = false,
                 transactionExtrasType = Network.TransactionExtrasType.NONE,
+                nameResolvingType = Network.NameResolvingType.NONE,
 
             ),
             name = "Bitcoin",
