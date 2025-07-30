@@ -16,11 +16,20 @@ sealed class TokenScreenAnalyticsEvent(
 ) : AnalyticsEvent("Token", event, params) {
 
     /** Legacy event. It has a unique category, but it also is sent on TokenScreen */
-    class DetailsScreenOpened(token: String) : AnalyticsEvent(
+    class DetailsScreenOpened(token: String, tokenBalance: TokenBalance) : AnalyticsEvent(
         category = "Details Screen",
         event = "Details Screen Opened",
-        params = mapOf("Token" to token),
-    )
+        params = mapOf(
+            "Token" to token,
+            "Balance" to tokenBalance.name,
+        ),
+    ) {
+        sealed class TokenBalance(val name: String) {
+            data object Full : TokenBalance("Full")
+            data object Error : TokenBalance("Error")
+            data object Empty : TokenBalance("Empty")
+        }
+    }
 
     class ButtonRemoveToken(token: String) : TokenScreenAnalyticsEvent(
         "Button - Remove Token",
