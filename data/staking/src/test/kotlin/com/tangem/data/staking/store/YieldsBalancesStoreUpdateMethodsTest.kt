@@ -129,12 +129,7 @@ internal class YieldsBalancesStoreUpdateMethodsTest {
         store.storeError(userWalletId = userWalletId, stakingIds = setOf(stakingId))
 
         val runtimeExpected = mapOf(
-            userWalletId to setOf(
-                YieldBalance.Error(
-                    integrationId = stakingId.integrationId,
-                    address = stakingId.address,
-                ),
-            ),
+            userWalletId to setOf(YieldBalance.Error(stakingId)),
         )
 
         Truth.assertThat(runtimeStore.getSyncOrNull()).isEqualTo(runtimeExpected)
