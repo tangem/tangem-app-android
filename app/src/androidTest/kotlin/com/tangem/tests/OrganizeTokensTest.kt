@@ -184,8 +184,8 @@ class OrganizeTokensTest : BaseTestCase() {
             }
             step("Check positions of tokens by balance on 'Organize tokens' screen") {
                 onOrganizeTokensScreen {
-                    tokenWithTitleAndPosition(ethereumTitle, 1).assertIsDisplayed()
-                    tokenWithTitleAndPosition(polygonTitle, 2).assertIsDisplayed()
+                    tokenWithTitleAndPosition(polygonTitle, 1).assertIsDisplayed()
+                    tokenWithTitleAndPosition(ethereumTitle, 2).assertIsDisplayed()
                     tokenWithTitleAndPosition(bitcoinTitle, 3).assertIsDisplayed()
                 }
             }
@@ -194,8 +194,8 @@ class OrganizeTokensTest : BaseTestCase() {
             }
             step("Check positions of tokens by balance on 'Organize tokens' screen") {
                 onMainScreen {
-                    tokenWithTitleAndPosition(ethereumTitle, 0).assertIsDisplayed()
-                    tokenWithTitleAndPosition(polygonTitle, 1).assertIsDisplayed()
+                    tokenWithTitleAndPosition(polygonTitle, 0).assertIsDisplayed()
+                    tokenWithTitleAndPosition(ethereumTitle, 1).assertIsDisplayed()
                     tokenWithTitleAndPosition(bitcoinTitle, 2).assertIsDisplayed()
                 }
             }
