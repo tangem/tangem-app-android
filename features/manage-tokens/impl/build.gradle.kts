@@ -30,6 +30,7 @@ dependencies {
     implementation(projects.domain.manageTokens)
     implementation(projects.domain.tokens)
     implementation(projects.domain.tokens.models)
+    implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.swap.models)
 
