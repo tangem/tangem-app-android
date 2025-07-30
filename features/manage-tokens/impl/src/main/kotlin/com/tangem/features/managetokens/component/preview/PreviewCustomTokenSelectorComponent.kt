@@ -65,6 +65,7 @@ internal class PreviewCustomTokenSelectorComponent(
                         hasFiatFeeRate = false,
                         canHandleTokens = false,
                         transactionExtrasType = Network.TransactionExtrasType.NONE,
+                        nameResolvingType = Network.NameResolvingType.NONE,
                     ),
                     name = "Network $index",
                     type = "N$index",
