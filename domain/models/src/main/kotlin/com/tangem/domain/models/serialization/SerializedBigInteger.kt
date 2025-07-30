@@ -1,4 +1,4 @@
-package com.tangem.domain.core.serialization
+package com.tangem.domain.models.serialization
 
 import kotlinx.serialization.Serializable
 import java.math.BigInteger
