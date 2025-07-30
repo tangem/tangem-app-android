@@ -19,8 +19,8 @@ import com.tangem.core.ui.components.showcase.model.ShowcaseItemModel
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.utils.requestPushPermission
-import com.tangem.features.pushnotifications.api.utils.getPushPermissionOrNull
+import com.tangem.core.ui.utils.requestPermission
+import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
@@ -46,10 +46,10 @@ internal fun PushNotificationsContent(
     onDenyPermission: () -> Unit,
     showNotificationsInfo: Boolean,
 ) {
-    val requestPushPermission = requestPushPermission(
+    val requestPushPermission = requestPermission(
         onAllow = onAllowPermission,
         onDeny = onDenyPermission,
-        pushPermission = getPushPermissionOrNull(),
+        permission = PUSH_PERMISSION,
     )
 
     Column(modifier = Modifier.background(TangemTheme.colors.background.primary)) {
