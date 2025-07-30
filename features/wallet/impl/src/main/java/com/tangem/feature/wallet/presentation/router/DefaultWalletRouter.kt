@@ -75,7 +75,7 @@ internal class DefaultWalletRouter @Inject constructor(
     }
 
     override fun openStoriesScreen() {
-        router.push(AppRoute.Home)
+        router.push(AppRoute.Home())
     }
 
     override fun isWalletLastScreen(): Boolean {
