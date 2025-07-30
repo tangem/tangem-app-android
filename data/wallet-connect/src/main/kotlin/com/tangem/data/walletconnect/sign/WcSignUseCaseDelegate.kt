@@ -43,7 +43,6 @@ internal class WcSignUseCaseDelegate<MiddleAction, SignModel>(
         val state = MutableStateFlow(WcSignState(initModel, WcSignStep.PreSign))
         analytics.send(
             WcAnalyticEvents.SignatureRequestReceived(
-                session = context.session,
                 rawRequest = context.rawSdkRequest,
                 network = context.network,
             ),
@@ -73,7 +72,6 @@ internal class WcSignUseCaseDelegate<MiddleAction, SignModel>(
                 val event = step.result.fold(
                     ifLeft = { error ->
                         WcAnalyticEvents.SignatureRequestFailed(
-                            session = context.session,
                             rawRequest = context.rawSdkRequest,
                             network = context.network,
                             errorCode = error.code() ?: error::class.simpleName.orEmpty(),
@@ -81,7 +79,6 @@ internal class WcSignUseCaseDelegate<MiddleAction, SignModel>(
                     },
                     ifRight = {
                         WcAnalyticEvents.SignatureRequestHandled(
-                            session = context.session,
                             rawRequest = context.rawSdkRequest,
                             network = context.network,
                         )
