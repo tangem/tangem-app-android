@@ -4,7 +4,7 @@ import com.tangem.utils.info.AppInfoProvider
 import com.tangem.utils.notifications.PushNotificationsTokenProvider
 import javax.inject.Inject
 
-class ShouldShowHuaweiWarningUseCase @Inject constructor(
+class GetIsHuaweiDeviceWithoutGoogleServicesUseCase @Inject constructor(
     private val appInfoProvider: AppInfoProvider,
     private val pushNotificationsTokenProvider: PushNotificationsTokenProvider,
 ) {
