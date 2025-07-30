@@ -1,4 +1,4 @@
-package com.tangem.domain.card
+package com.tangem.domain.wallets.derivations
 
 import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.domain.card.common.TapWorkarounds.isWallet2
@@ -25,7 +25,6 @@ internal class TangemDerivationStyleProvider(
     }
 }
 
-// TODO remove this class [REDACTED_TASK_KEY]
 internal class TangemHotDerivationStyleProvider : DerivationStyleProvider {
     override fun getDerivationStyle(): DerivationStyle? = DerivationStyle.V3
 }
