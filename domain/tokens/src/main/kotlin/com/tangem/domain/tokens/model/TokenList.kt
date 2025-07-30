@@ -3,6 +3,7 @@ package com.tangem.domain.tokens.model
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TokensSortType
 import com.tangem.domain.models.TotalFiatBalance
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import java.math.BigDecimal
 
 /**
