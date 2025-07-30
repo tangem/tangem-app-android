@@ -1,5 +1,6 @@
 package com.tangem.domain.staking.model.stakekit.action
 
+import com.tangem.domain.models.staking.action.StakingActionType
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
 import org.joda.time.DateTime
 import java.math.BigDecimal
