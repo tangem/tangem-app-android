@@ -3,9 +3,9 @@ package com.tangem.features.swap.v2.impl.amount
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.express.models.ExpressProviderType
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.swap.models.SwapDirection
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.swap.models.SwapDirection
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
