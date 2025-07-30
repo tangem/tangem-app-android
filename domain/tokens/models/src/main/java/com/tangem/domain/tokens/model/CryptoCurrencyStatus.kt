@@ -5,7 +5,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.getResultStatusSource
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.network.TxInfo
-import com.tangem.domain.staking.model.stakekit.YieldBalance
+import com.tangem.domain.models.staking.YieldBalance
 import java.math.BigDecimal
 
 /**
