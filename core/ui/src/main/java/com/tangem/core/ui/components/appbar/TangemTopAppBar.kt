@@ -129,7 +129,7 @@ fun TangemTopAppBar(
                 TopAppBarButton(
                     button = endButton,
                     tint = iconTint,
-                    modifier = modifier.testTag(TopAppBarTestTags.MORE_BUTTON),
+                    modifier = Modifier.testTag(TopAppBarTestTags.MORE_BUTTON),
                 )
             }
         },
@@ -175,7 +175,7 @@ fun TangemTopAppBar(
                 TopAppBarButton(
                     button = startButton,
                     tint = iconTint,
-                    modifier = modifier.testTag(TopAppBarTestTags.CLOSE_BUTTON),
+                    modifier = Modifier.testTag(TopAppBarTestTags.CLOSE_BUTTON),
                 )
             }
         }
