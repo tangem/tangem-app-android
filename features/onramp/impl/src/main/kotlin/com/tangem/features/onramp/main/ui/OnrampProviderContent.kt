@@ -62,7 +62,7 @@ private fun OnrampProviderBlock(state: OnrampProviderBlockUM.Content, modifier: 
                 },
                 color = TangemTheme.colors.text.tertiary,
                 style = TangemTheme.typography.body2,
-                modifier = modifier.testTag(BuyTokenDetailsScreenTestTags.PROVIDER_TITLE),
+                modifier = Modifier.testTag(BuyTokenDetailsScreenTestTags.PROVIDER_TITLE),
             )
             Text(
                 text = buildAnnotatedString {
@@ -72,7 +72,7 @@ private fun OnrampProviderBlock(state: OnrampProviderBlockUM.Content, modifier: 
                 },
                 style = TangemTheme.typography.caption2,
                 color = TangemTheme.colors.text.tertiary,
-                modifier = modifier.testTag(BuyTokenDetailsScreenTestTags.PROVIDER_TEXT),
+                modifier = Modifier.testTag(BuyTokenDetailsScreenTestTags.PROVIDER_TEXT),
             )
         }
         AnimatedVisibility(
