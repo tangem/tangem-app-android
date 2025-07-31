@@ -51,6 +51,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.Debouncer
 import com.tangem.utils.coroutines.PeriodicTask
 import com.tangem.utils.coroutines.SingleTaskScheduler
+import com.tangem.utils.extensions.isZero
 import com.tangem.utils.extensions.orZero
 import com.tangem.utils.transformer.update
 import kotlinx.coroutines.async
@@ -480,6 +481,8 @@ internal class SwapAmountModel @Inject constructor(
         if (fromAmount?.amountTextField?.isError == true) return
 
         val fromAmountValue = fromAmount?.amountTextField?.cryptoAmount?.value ?: return
+
+        if (fromAmountValue.isZero()) return
 
         val swapGroups = state.swapCurrencies.getGroupWithDirection(state.swapDirection)
 
