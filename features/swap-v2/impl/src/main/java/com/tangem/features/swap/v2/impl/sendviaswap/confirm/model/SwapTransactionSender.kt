@@ -9,6 +9,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.models.SwapDataModel
 import com.tangem.domain.swap.models.SwapDataTransactionModel
+import com.tangem.domain.swap.models.SwapTxType
 import com.tangem.domain.swap.usecase.GetSwapDataUseCase
 import com.tangem.domain.swap.usecase.SwapTransactionSentUseCase
 import com.tangem.domain.transaction.error.SendTransactionError
@@ -158,6 +159,7 @@ internal class SwapTransactionSender @AssistedInject constructor(
                     provider = provider,
                     txHash = txHash,
                     timestamp = timestamp,
+                    swapTxType = SwapTxType.SendWithSwap,
                 )
                 onSendSuccess(txHash, timestamp, swapData)
             },
