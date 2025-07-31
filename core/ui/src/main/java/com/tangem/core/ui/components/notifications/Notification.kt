@@ -208,7 +208,7 @@ internal fun TextsBlock(
                 text = titleText,
                 color = titleColor,
                 style = TangemTheme.typography.button,
-                modifier = modifier.testTag(NotificationTestTags.TITLE),
+                modifier = Modifier.testTag(NotificationTestTags.TITLE),
             )
 
             SpacerH(height = TangemTheme.dimens.spacing2)
@@ -218,7 +218,7 @@ internal fun TextsBlock(
             text = subtitle.resolveReference(),
             color = subtitleColor,
             style = TangemTheme.typography.caption2,
-            modifier = modifier.testTag(NotificationTestTags.TEXT),
+            modifier = Modifier.testTag(NotificationTestTags.TEXT),
         )
     }
 }
