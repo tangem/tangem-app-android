@@ -11,6 +11,7 @@ import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.value.ObserveLifecycleMode
 import com.arkivanov.decompose.value.subscribe
+import com.tangem.common.ui.navigationButtons.NavigationUM
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -101,7 +102,11 @@ internal class DefaultSendWithSwapComponent @AssistedInject constructor(
         val stackState by childStack.subscribeAsState()
         val state by model.uiState.collectAsStateWithLifecycle()
 
-        BackHandler(onBack = ::onChildBack)
+        BackHandler(
+            onBack = {
+                (state.navigationUM as? NavigationUM.Content)?.backIconClick() ?: onChildBack()
+            },
+        )
         SendWithSwapContent(navigationUM = state.navigationUM, stackState = stackState)
     }
 
