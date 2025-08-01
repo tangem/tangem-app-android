@@ -37,6 +37,7 @@ internal class AddExistingWalletChildFactory @Inject constructor(
             is AddExistingWalletRoute.BackupCompleted -> ManualBackupCompletedComponent(
                 context = childContext,
                 params = ManualBackupCompletedComponent.Params(
+                    userWalletId = route.userWalletId,
                     callbacks = model.manualBackupCompletedComponentModelCallbacks,
                 ),
             )
@@ -44,6 +45,7 @@ internal class AddExistingWalletChildFactory @Inject constructor(
                 context = childContext,
                 params = AccessCodeComponent.Params(
                     isConfirmMode = false,
+                    userWalletId = route.userWalletId,
                     callbacks = model.accessCodeModelCallbacks,
                 ),
             )
@@ -52,6 +54,7 @@ internal class AddExistingWalletChildFactory @Inject constructor(
                 params = AccessCodeComponent.Params(
                     isConfirmMode = true,
                     accessCodeToConfirm = route.accessCode,
+                    userWalletId = route.userWalletId,
                     callbacks = model.accessCodeModelCallbacks,
                 ),
             )
