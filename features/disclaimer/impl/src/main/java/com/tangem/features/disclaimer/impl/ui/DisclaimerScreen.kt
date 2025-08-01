@@ -14,6 +14,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -111,7 +113,11 @@ private fun DisclaimerContent(url: String) {
             state = webViewState,
             modifier = Modifier
                 .fillMaxSize()
-                .background(TangemTheme.colors.background.primary),
+                .background(TangemTheme.colors.background.primary)
+                .testTag(DisclaimerScreenTestTags.WEB_VIEW)
+                .semantics {
+                    contentDescription = "WebView URL: ${webViewState.content.getCurrentUrl() ?: url}"
+                },
             captureBackPresses = false,
             navigator = webViewNavigator,
             onCreated = WebView::applySafeSettings,
