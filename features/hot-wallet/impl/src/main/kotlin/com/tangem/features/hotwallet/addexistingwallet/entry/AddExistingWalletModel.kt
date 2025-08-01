@@ -9,6 +9,7 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.settings.ShouldAskPermissionUseCase
 import com.tangem.features.hotwallet.addexistingwallet.im.port.AddExistingWalletImportComponent
 import com.tangem.features.hotwallet.addexistingwallet.entry.routing.AddExistingWalletRoute
@@ -78,23 +79,23 @@ internal class AddExistingWalletModel @Inject constructor(
     }
 
     inner class AddExistingWalletImportModelCallbacks : AddExistingWalletImportComponent.ModelCallbacks {
-        override fun onWalletImported() {
-            stackNavigation.replaceCurrent(AddExistingWalletRoute.BackupCompleted)
+        override fun onWalletImported(userWalletId: UserWalletId) {
+            stackNavigation.replaceCurrent(AddExistingWalletRoute.BackupCompleted(userWalletId))
         }
     }
 
     inner class ManualBackupCompletedComponentModelCallbacks : ManualBackupCompletedComponent.ModelCallbacks {
-        override fun onContinueClick() {
-            stackNavigation.replaceCurrent(AddExistingWalletRoute.SetAccessCode)
+        override fun onContinueClick(userWalletId: UserWalletId) {
+            stackNavigation.replaceCurrent(AddExistingWalletRoute.SetAccessCode(userWalletId))
         }
     }
 
     inner class AccessCodeModelCallbacks : AccessCodeComponent.ModelCallbacks {
-        override fun onAccessCodeSet(accessCode: String) {
-            stackNavigation.push(AddExistingWalletRoute.ConfirmAccessCode(accessCode))
+        override fun onAccessCodeSet(userWalletId: UserWalletId, accessCode: String) {
+            stackNavigation.push(AddExistingWalletRoute.ConfirmAccessCode(userWalletId, accessCode))
         }
 
-        override fun onAccessCodeConfirmed() {
+        override fun onAccessCodeConfirmed(userWalletId: UserWalletId) {
             navigateToPushNotificationsOrNext()
         }
     }
