@@ -6,6 +6,7 @@ import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
+import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.WindowManager
 import androidx.activity.SystemBarStyle
@@ -241,7 +242,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         lifecycle.addObserver(defaultDeviceFlipDetector)
 
         if (BuildConfig.TESTER_MENU_ENABLED) {
-            lifecycle.addObserver(testerMenuLauncher.launchOnShakeObserver)
+            lifecycle.addObserver(testerMenuLauncher.launchOnKeyEventObserver)
         }
     }
 
@@ -417,8 +418,15 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
     override fun dispatchTouchEvent(event: MotionEvent): Boolean {
         val result = WindowObscurationObserver.dispatchTouchEvent(event, analyticsEventsHandler)
-
         return if (result) super.dispatchTouchEvent(event) else false
+    }
+
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        return if (BuildConfig.TESTER_MENU_ENABLED) {
+            testerMenuLauncher.launchOnKeyEventObserver.dispatchKeyEvent(event) || super.dispatchKeyEvent(event)
+        } else {
+            super.dispatchKeyEvent(event)
+        }
     }
 
     private fun navigateToInitialScreenIfNeeded(intentWhichStartedActivity: Intent?) {
