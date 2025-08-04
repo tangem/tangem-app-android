@@ -14,7 +14,6 @@ import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.express.ExpressRepository
 import com.tangem.domain.quotes.single.SingleQuoteStatusFetcher
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
-import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.swap.SwapErrorResolver
 import com.tangem.domain.swap.SwapRepositoryV2
 import com.tangem.domain.swap.SwapTransactionRepository
@@ -49,7 +48,6 @@ internal object SwapDataModule {
         dataSignatureVerifier: DataSignatureVerifier,
         singleQuoteStatusSupplier: SingleQuoteStatusSupplier,
         singleQuoteStatusFetcher: SingleQuoteStatusFetcher,
-        stakingRepository: StakingRepository,
         @NetworkMoshi moshi: Moshi,
     ): SwapRepositoryV2 {
         return DefaultSwapRepositoryV2(
@@ -61,7 +59,7 @@ internal object SwapDataModule {
             moshi = moshi,
             singleQuoteStatusSupplier = singleQuoteStatusSupplier,
             singleQuoteStatusFetcher = singleQuoteStatusFetcher,
-            currencyStatusProxyCreator = CurrencyStatusProxyCreator(stakingRepository),
+            currencyStatusProxyCreator = CurrencyStatusProxyCreator(),
         )
     }
 
