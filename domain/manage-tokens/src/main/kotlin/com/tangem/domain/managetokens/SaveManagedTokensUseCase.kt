@@ -2,7 +2,6 @@ package com.tangem.domain.managetokens
 
 import arrow.core.Either
 import arrow.core.flatten
-import com.tangem.domain.card.repository.DerivationsRepository
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
 import com.tangem.domain.managetokens.repository.CustomTokensRepository
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -10,9 +9,11 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
+import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.wallets.derivations.DerivationsRepository
 
 @Suppress("LongParameterList")
 class SaveManagedTokensUseCase(
@@ -23,6 +24,7 @@ class SaveManagedTokensUseCase(
     private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
     private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
     private val multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
+    private val stakingIdFactory: StakingIdFactory,
 ) {
 
     suspend operator fun invoke(
@@ -91,11 +93,12 @@ class SaveManagedTokensUseCase(
         userWalletId: UserWalletId,
         addedCurrencies: List<CryptoCurrency>,
     ) {
+        val stakingIds = addedCurrencies.mapNotNullTo(hashSetOf()) {
+            stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = it).getOrNull()
+        }
+
         multiYieldBalanceFetcher(
-            params = MultiYieldBalanceFetcher.Params(
-                userWalletId = userWalletId,
-                currencyIdWithNetworkMap = addedCurrencies.associateTo(hashMapOf()) { it.id to it.network },
-            ),
+            params = MultiYieldBalanceFetcher.Params(userWalletId = userWalletId, stakingIds = stakingIds),
         )
     }
 

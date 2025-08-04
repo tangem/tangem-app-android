@@ -3,14 +3,14 @@ package com.tangem.domain.swap.usecase
 import arrow.core.Either
 import com.tangem.domain.express.models.ExpressProviderType
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.SwapErrorResolver
 import com.tangem.domain.swap.SwapRepositoryV2
 import com.tangem.domain.swap.models.SwapCryptoCurrency
 import com.tangem.domain.swap.models.SwapCurrencies
 import com.tangem.domain.swap.models.SwapCurrenciesGroup
 import com.tangem.domain.swap.models.SwapPairModel
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.models.wallet.UserWallet
 
 /**
  * Get list of swap pairs

@@ -6,15 +6,15 @@ import com.tangem.features.tester.api.TesterMenuLauncher
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
-import dagger.hilt.components.SingletonComponent
+import dagger.hilt.android.components.ActivityComponent
+import dagger.hilt.android.qualifiers.ActivityContext
 
 @Module
-@InstallIn(SingletonComponent::class)
+@InstallIn(ActivityComponent::class)
 internal object TesterMenuLauncherModule {
 
     @Provides
-    fun provideTesterMenuLauncher(@ApplicationContext context: Context): TesterMenuLauncher {
-        return DefaultTesterMenuLauncher(context = context)
+    fun provideTesterMenuLauncher(@ActivityContext context: Context): TesterMenuLauncher {
+        return DefaultTesterMenuLauncher(context)
     }
 }
