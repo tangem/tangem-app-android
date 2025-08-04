@@ -192,6 +192,7 @@ private fun ConnectionItem(connection: WcConnectionsUM, modifier: Modifier = Mod
 private fun AppInfoItem(appInfo: WcConnectedAppInfo, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
     ) {
         AsyncImage(
