@@ -10,6 +10,8 @@ internal object WcSdkSessionRequestConverter : Converter<Wallet.Model.SessionReq
         return WcSdkSessionRequest(
             topic = value.topic,
             chainId = value.chainId,
+            dAppMetaData = value.peerMetaData?.let { WcAppMetaDataConverter.convert(it) }
+                ?: WcAppMetaDataConverter.empty,
             request = JSONRPCRequestConverter.convert(value.request),
         )
     }
