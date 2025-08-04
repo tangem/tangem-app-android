@@ -20,6 +20,7 @@ internal fun WcTransactionRequestButtons(
     onDismiss: () -> Unit,
     onClickActiveButton: () -> Unit,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
 ) {
     Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8)) {
         SecondaryButton(
@@ -37,6 +38,7 @@ internal fun WcTransactionRequestButtons(
             onClick = onClickActiveButton,
             iconResId = R.drawable.ic_tangem_24,
             showProgress = isLoading,
+            enabled = enabled,
         )
     }
 }

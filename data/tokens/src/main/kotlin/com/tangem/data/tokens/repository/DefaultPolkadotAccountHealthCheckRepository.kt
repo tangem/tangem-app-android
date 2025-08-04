@@ -13,9 +13,9 @@ import com.tangem.datasource.local.preferences.PreferencesKeys.POLKADOT_HEALTH_C
 import com.tangem.datasource.local.preferences.utils.getObjectMapSync
 import com.tangem.datasource.local.preferences.utils.getObjectSetSync
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.repository.PolkadotAccountHealthCheckRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -24,7 +24,6 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.util.concurrent.ConcurrentHashMap
-import kotlin.collections.set
 
 internal class DefaultPolkadotAccountHealthCheckRepository(
     private val walletManagersFacade: WalletManagersFacade,
