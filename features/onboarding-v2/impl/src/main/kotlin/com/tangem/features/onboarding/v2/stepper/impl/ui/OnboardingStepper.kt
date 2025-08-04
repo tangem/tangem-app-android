@@ -49,7 +49,7 @@ internal fun OnboardingStepper(
     ) {
         TangemTopAppBar(
             startButton = TopAppBarButtonUM.Back(onBackClick),
-            endButton = TopAppBarButtonUM(iconRes = R.drawable.ic_chat_24, onIconClicked = onSupportButtonClick)
+            endButton = TopAppBarButtonUM.Icon(iconRes = R.drawable.ic_chat_24, onClicked = onSupportButtonClick)
                 .takeIf { state.steps != state.currentStep },
             title = if (state.steps == state.currentStep) {
                 resourceReference(R.string.common_done)

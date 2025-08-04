@@ -34,7 +34,7 @@ import com.tangem.core.ui.components.text.applyBladeBrush
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import com.tangem.utils.StringsSigns.DOT
 import com.tangem.utils.StringsSigns.THREE_STARS
