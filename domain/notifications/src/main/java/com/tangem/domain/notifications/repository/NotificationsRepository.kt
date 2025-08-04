@@ -37,4 +37,14 @@ interface NotificationsRepository {
      * Increments the counter tracking how many times the Tron token fee notification has been shown.
      */
     suspend fun incrementTronTokenFeeNotificationShowCounter()
+
+    suspend fun shouldShowSubscribeOnNotificationsAfterUpdate(): Boolean
+
+    suspend fun isUserAllowToSubscribeOnPushNotifications(): Boolean
+
+    suspend fun setUserAllowToSubscribeOnPushNotifications(value: Boolean)
+
+    suspend fun getWalletAutomaticallyEnabledList(): List<String>
+
+    suspend fun setNotificationsWasEnabledAutomatically(userWalletId: String)
 }
