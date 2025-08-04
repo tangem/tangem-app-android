@@ -362,7 +362,7 @@ private fun ExpandedCustomFeeItems(
                 showDivider = false,
                 modifier = Modifier
                     .background(
-                        color = TangemTheme.colors.background.action,
+                        color = TangemTheme.colors.background.primary,
                         shape = TangemTheme.shapes.roundedCornersXMedium,
                     ),
             )
