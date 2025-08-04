@@ -76,7 +76,7 @@ internal class WcEthTxHelper @Inject constructor(
             ?: return null
         val approves = (simulation.data as? SimulationData.Approve)?.approvedAmounts
             ?: return null
-        if (approves.size != 1) return null
+        if (approves.isEmpty()) return null
         val amount = approves.first()
         return amount
     }

@@ -11,13 +11,16 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.domain.walletconnect.WcRequestUseCaseFactory
+import com.tangem.domain.walletconnect.model.WcEthMethod
+import com.tangem.domain.walletconnect.model.WcSolanaMethod
 import com.tangem.domain.walletconnect.usecase.method.WcMessageSignUseCase
 import com.tangem.domain.walletconnect.usecase.method.WcSignState
 import com.tangem.domain.walletconnect.usecase.method.WcSignStep
 import com.tangem.domain.walletconnect.usecase.method.WcSignUseCase
 import com.tangem.features.walletconnect.transaction.components.common.WcTransactionModelParams
-import com.tangem.features.walletconnect.transaction.converter.WcCommonTransactionUMConverter
 import com.tangem.features.walletconnect.transaction.converter.WcHandleMethodErrorConverter
+import com.tangem.features.walletconnect.transaction.converter.WcSignTransactionUMConverter
+import com.tangem.features.walletconnect.transaction.converter.WcSignTypedDataUMConverter
 import com.tangem.features.walletconnect.transaction.entity.common.WcCommonTransactionModel
 import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionActionsUM
 import com.tangem.features.walletconnect.transaction.entity.sign.WcSignTransactionUM
@@ -40,7 +43,8 @@ internal class WcSignTransactionModel @Inject constructor(
     private val router: Router,
     private val clipboardManager: ClipboardManager,
     private val useCaseFactory: WcRequestUseCaseFactory,
-    private val converter: WcCommonTransactionUMConverter,
+    private val signTypedDataUMConverter: WcSignTypedDataUMConverter,
+    private val signTransactionUMConverter: WcSignTransactionUMConverter,
 ) : Model(), WcCommonTransactionModel {
 
     private val params = paramsContainer.require<WcTransactionModelParams>()
@@ -58,21 +62,41 @@ internal class WcSignTransactionModel @Inject constructor(
             useCase.invoke()
                 .onEach { signState ->
                     if (signingIsDone(signState)) return@onEach
-                    val signTransactionUM = converter.convert(
-                        WcCommonTransactionUMConverter.Input(
-                            useCase = useCase,
-                            signState = signState,
-                            actions = WcTransactionActionsUM(
-                                onShowVerifiedAlert = ::showVerifiedAlert,
-                                onDismiss = { cancel(useCase) },
-                                onSign = useCase::sign,
-                                onCopy = { copyData(useCase.rawSdkRequest.request.params) },
-                            ),
-                        ),
-                    ) as? WcSignTransactionUM
+                    val signTransactionUM = convertToUI(useCase, signState)
                     _uiState.emit(signTransactionUM)
                 }
                 .launchIn(this)
+        }
+    }
+
+    private fun convertToUI(
+        useCase: WcMessageSignUseCase,
+        signState: WcSignState<WcMessageSignUseCase.SignModel>,
+    ): WcSignTransactionUM? {
+        val actions = WcTransactionActionsUM(
+            onShowVerifiedAlert = ::showVerifiedAlert,
+            onDismiss = { cancel(useCase) },
+            onSign = useCase::sign,
+            onCopy = { copyData(useCase.rawSdkRequest.request.params) },
+        )
+        return when (useCase.method) {
+            is WcEthMethod.SignTypedData -> signTypedDataUMConverter.convert(
+                WcSignTypedDataUMConverter.Input(
+                    context = useCase,
+                    signState = signState,
+                    signModel = signState.signModel,
+                    actions = actions,
+                ),
+            )
+            is WcEthMethod.MessageSign, is WcSolanaMethod.SignMessage -> signTransactionUMConverter.convert(
+                WcSignTransactionUMConverter.Input(
+                    context = useCase,
+                    signState = signState,
+                    signModel = signState.signModel,
+                    actions = actions,
+                ),
+            )
+            else -> null
         }
     }
 
