@@ -3,7 +3,6 @@ package com.tangem.data.staking.di
 import com.squareup.moshi.Moshi
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
-import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.staking.DefaultStakingActionRepository
 import com.tangem.data.staking.DefaultStakingErrorResolver
 import com.tangem.data.staking.DefaultStakingRepository
@@ -17,7 +16,6 @@ import com.tangem.datasource.api.stakekit.models.response.model.error.StakeKitEr
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.token.StakingActionsStore
-import com.tangem.datasource.local.token.StakingBalanceStore
 import com.tangem.datasource.local.token.StakingYieldsStore
 import com.tangem.domain.staking.repositories.StakingActionRepository
 import com.tangem.domain.staking.repositories.StakingErrorResolver
@@ -42,9 +40,7 @@ internal object StakingDataModule {
     fun provideStakingRepository(
         stakeKitApi: StakeKitApi,
         stakingYieldsStore: StakingYieldsStore,
-        stakingBalanceStore: StakingBalanceStore,
         yieldsBalancesStore: YieldsBalancesStore,
-        cacheRegistry: CacheRegistry,
         dispatchers: CoroutineDispatcherProvider,
         walletManagersFacade: WalletManagersFacade,
         getUserWalletUseCase: GetUserWalletUseCase,
@@ -55,9 +51,7 @@ internal object StakingDataModule {
         return DefaultStakingRepository(
             stakeKitApi = stakeKitApi,
             stakingYieldsStore = stakingYieldsStore,
-            stakingBalanceStore = stakingBalanceStore,
             stakingBalanceStoreV2 = yieldsBalancesStore,
-            cacheRegistry = cacheRegistry,
             dispatchers = dispatchers,
             walletManagersFacade = walletManagersFacade,
             getUserWalletUseCase = getUserWalletUseCase,

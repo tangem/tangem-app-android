@@ -10,10 +10,10 @@ import com.tangem.datasource.local.preferences.utils.get
 import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
 import com.tangem.datasource.local.preferences.utils.store
 import com.tangem.datasource.local.promo.PromoStoriesStore
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.promo.PromoRepository
 import com.tangem.domain.promo.models.PromoId
 import com.tangem.domain.promo.models.StoryContent
-import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.referral.domain.ReferralRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.Flow
