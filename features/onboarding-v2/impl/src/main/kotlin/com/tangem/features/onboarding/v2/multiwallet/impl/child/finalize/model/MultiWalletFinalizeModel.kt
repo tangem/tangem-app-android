@@ -8,7 +8,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.domain.card.repository.CardRepository
-import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.feedback.GetCardInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
@@ -18,9 +18,8 @@ import com.tangem.domain.models.scan.isRing
 import com.tangem.domain.onboarding.repository.OnboardingRepository
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
-import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.copy
-import com.tangem.domain.wallets.models.requireColdWallet
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.requireColdWallet
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.features.onboarding.v2.common.ui.CantLeaveBackupDialog
 import com.tangem.features.onboarding.v2.impl.R
@@ -113,7 +112,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
         }
 
         return MultiWalletFinalizeUM(
-            isRing = batchId?.let { isRing(it) } ?: false,
+            isRing = batchId?.let { isRing(it) } == true,
             onScanClick = ::onLinkClick,
             scanPrimary = initialStep == MultiWalletFinalizeUM.Step.Primary,
             cardNumber = cardId?.lastMasked().orEmpty(),
@@ -168,7 +167,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
                     _uiState.update { st ->
                         st.copy(
                             step = MultiWalletFinalizeUM.Step.BackupDevice1,
-                            isRing = backupService.backupCardsBatchIds.getOrNull(0)?.let { isRing(it) } ?: false,
+                            isRing = backupService.backupCardsBatchIds.getOrNull(0)?.let { isRing(it) } == true,
                             scanPrimary = false,
                             cardNumber = backupService.backupCardIds.firstOrNull()?.lastMasked() ?: "",
                         )
@@ -204,7 +203,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
                             st.copy(
                                 step = MultiWalletFinalizeUM.Step.BackupDevice2,
                                 isRing = backupService.backupCardsBatchIds
-                                    .getOrNull(cardIndex + 1)?.let { isRing(it) } ?: false,
+                                    .getOrNull(cardIndex + 1)?.let { isRing(it) } == true,
                                 cardNumber = backupService.backupCardIds.getOrNull(cardIndex + 1)
                                     ?.lastMasked() ?: "",
                             )

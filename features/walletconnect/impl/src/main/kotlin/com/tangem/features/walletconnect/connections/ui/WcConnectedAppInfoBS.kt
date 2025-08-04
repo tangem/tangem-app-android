@@ -23,10 +23,15 @@ import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.utils.DateTimeFormatters
+import com.tangem.core.ui.utils.toDateFormatWithTodayYesterday
+import com.tangem.core.ui.utils.toTimeFormat
 import com.tangem.features.walletconnect.connections.entity.*
 import com.tangem.features.walletconnect.impl.R
 import kotlinx.collections.immutable.ImmutableList
@@ -43,7 +48,16 @@ internal fun WcConnectedAppInfoBS(state: WcConnectedAppInfoUM) {
         containerColor = TangemTheme.colors.background.tertiary,
         title = {
             TangemModalBottomSheetTitle(
-                title = resourceReference(R.string.wc_wallet_connect),
+                title = stringReference("Connected App"), // TODO: [REDACTED_JIRA]
+                subtitle = state.connectingTime?.let { timestamp ->
+                    resourceReference(
+                        R.string.send_date_format,
+                        wrappedList(
+                            timestamp.toDateFormatWithTodayYesterday(DateTimeFormatters.dateFormatter),
+                            timestamp.toTimeFormat(),
+                        ),
+                    )
+                },
                 endIconRes = R.drawable.ic_close_24,
                 onEndClick = state.onDismiss,
             )
@@ -185,6 +199,7 @@ private fun WcConnectedAppInfoBS_Preview() {
                 isVerified = true,
                 appSubtitle = "react-app.walletconnect.com",
                 walletName = "Tangem 2.0",
+                connectingTime = System.currentTimeMillis(),
                 networks = persistentListOf(
                     WcNetworkInfoItem.Required(
                         id = "1",
