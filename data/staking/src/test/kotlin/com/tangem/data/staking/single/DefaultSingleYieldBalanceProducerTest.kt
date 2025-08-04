@@ -1,54 +1,60 @@
 package com.tangem.data.staking.single
 
 import com.google.common.truth.Truth
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.test.data.staking.MockYieldBalanceWrapperDTOFactory
-import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.test.utils.getEmittedValues
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.data.staking.toDomain
-import com.tangem.data.staking.utils.StakingIdFactory
-import com.tangem.domain.staking.model.StakingID
-import com.tangem.domain.staking.model.stakekit.YieldBalance
+import com.tangem.domain.models.staking.StakingID
+import com.tangem.domain.models.staking.YieldBalance
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.multi.MultiYieldBalanceProducer
 import com.tangem.domain.staking.multi.MultiYieldBalanceSupplier
 import com.tangem.domain.staking.single.SingleYieldBalanceProducer
-import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
-import io.mockk.*
+import io.mockk.clearMocks
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.test.runTest
-import org.junit.Test
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 
 /**
 [REDACTED_AUTHOR]
  */
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class DefaultSingleYieldBalanceProducerTest {
 
     private val params = SingleYieldBalanceProducer.Params(
         userWalletId = UserWalletId(stringValue = "011"),
-        currencyId = ton.id,
-        network = ton.network,
+        stakingId = tonId,
     )
 
     private val multiNetworkStatusSupplier = mockk<MultiYieldBalanceSupplier>()
-    private val stakingIdFactory = mockk<StakingIdFactory>()
     private val analyticsExceptionHandler = mockk<AnalyticsExceptionHandler>(relaxUnitFun = true)
     private val dispatchers = TestingCoroutineDispatcherProvider()
 
     private val producer = DefaultSingleYieldBalanceProducer(
         params = params,
-        stakingIdFactory = stakingIdFactory,
         multiYieldBalanceSupplier = multiNetworkStatusSupplier,
         analyticsExceptionHandler = analyticsExceptionHandler,
         dispatchers = dispatchers,
     )
 
+    @BeforeEach
+    fun resetMocks() {
+        clearMocks(multiNetworkStatusSupplier, analyticsExceptionHandler)
+    }
+
     @Test
-    fun `test that flow is mapped for data from params`() = runTest {
+    fun `flow is mapped for data from params`() = runTest {
+        // Arrange
         val balance = MockYieldBalanceWrapperDTOFactory.createWithBalance(tonId).toDomain()
 
-        val expected = flowOf(
+        val multiFlow = flowOf(
             setOf(
                 balance,
                 MockYieldBalanceWrapperDTOFactory.createWithBalance(solanaId).toDomain(),
@@ -56,97 +62,89 @@ internal class DefaultSingleYieldBalanceProducerTest {
         )
 
         val multiParams = MultiYieldBalanceProducer.Params(userWalletId = params.userWalletId)
-        every { multiNetworkStatusSupplier(multiParams) } returns expected
-        coEvery { stakingIdFactory.create(params.userWalletId, params.currencyId, params.network) } returns tonId
+        every { multiNetworkStatusSupplier(multiParams) } returns multiFlow
 
-        val actual = producer.produce()
+        // Act
+        val actual = getEmittedValues(flow = producer.produce())
 
-        verify { multiNetworkStatusSupplier(multiParams) }
+        Truth.assertThat(actual).hasSize(1)
+        Truth.assertThat(actual).containsExactly(balance)
 
-        val values = getEmittedValues(flow = actual)
-
-        coVerify { stakingIdFactory.create(params.userWalletId, params.currencyId, params.network) }
-
-        Truth.assertThat(values.size).isEqualTo(1)
-        Truth.assertThat(values).isEqualTo(listOf(balance))
+        verify(exactly = 1) { multiNetworkStatusSupplier(multiParams) }
     }
 
     @Test
-    fun `test that flow is updated if yield balance is updated`() = runTest {
-        val expected = MutableSharedFlow<Set<YieldBalance>>(replay = 2, extraBufferCapacity = 1)
+    fun `flow is updated if yield balance is updated`() = runTest {
+        // Arrange
+        val multiFlow = MutableSharedFlow<Set<YieldBalance>>(replay = 2, extraBufferCapacity = 1)
 
         val multiParams = MultiYieldBalanceProducer.Params(userWalletId = params.userWalletId)
-        every { multiNetworkStatusSupplier(multiParams) } returns expected
-        coEvery { stakingIdFactory.create(params.userWalletId, params.currencyId, params.network) } returns tonId
+        every { multiNetworkStatusSupplier(multiParams) } returns multiFlow
 
-        val actual = producer.produceWithFallback()
+        val producerFlow = producer.produceWithFallback()
 
-        verify { multiNetworkStatusSupplier(multiParams) }
-
-        // first emit
         val balance = MockYieldBalanceWrapperDTOFactory.createWithBalance(tonId).toDomain()
-        expected.emit(value = setOf(balance))
+        val updatedBalance = YieldBalance.Error(stakingId = tonId)
 
-        val values1 = getEmittedValues(flow = actual)
+        // Act (first emit)
+        multiFlow.emit(value = setOf(balance))
+        val actual1 = getEmittedValues(flow = producerFlow)
 
-        coVerify { stakingIdFactory.create(params.userWalletId, params.currencyId, params.network) }
+        // Assert (first emit)
+        Truth.assertThat(actual1).hasSize(1)
+        Truth.assertThat(actual1).containsExactly(balance)
 
-        Truth.assertThat(values1.size).isEqualTo(1)
-        Truth.assertThat(values1).isEqualTo(listOf(balance))
+        // Act (second emit)
+        multiFlow.emit(value = setOf(updatedBalance))
+        val actual2 = getEmittedValues(flow = producerFlow)
 
-        // second emit
-        val updatedStatus = YieldBalance.Error(integrationId = tonId.integrationId, address = tonId.address)
-        expected.emit(value = setOf(updatedStatus))
+        // Assert (second emit)
+        Truth.assertThat(actual2).hasSize(2)
+        Truth.assertThat(actual2).containsExactly(balance, updatedBalance)
 
-        val values2 = getEmittedValues(flow = actual)
-
-        coVerify { stakingIdFactory.create(params.userWalletId, params.currencyId, params.network) }
-
-        Truth.assertThat(values2.size).isEqualTo(2)
-        Truth.assertThat(values2).isEqualTo(listOf(balance, updatedStatus))
+        verify(exactly = 1) { multiNetworkStatusSupplier(multiParams) }
     }
 
     @Test
-    fun `test that flow is filtered the same status`() = runTest {
-        val expected = MutableSharedFlow<Set<YieldBalance>>(replay = 2, extraBufferCapacity = 1)
+    fun `flow is filtered the same status`() = runTest {
+        // Arrange
+        val multiFlow = MutableSharedFlow<Set<YieldBalance>>(replay = 2, extraBufferCapacity = 1)
 
         val multiParams = MultiYieldBalanceProducer.Params(userWalletId = params.userWalletId)
-        every { multiNetworkStatusSupplier(multiParams) } returns expected
-        coEvery { stakingIdFactory.create(params.userWalletId, params.currencyId, params.network) } returns tonId
+        every { multiNetworkStatusSupplier(multiParams) } returns multiFlow
 
-        val actual = producer.produceWithFallback()
+        val producerFlow = producer.produceWithFallback()
 
-        verify { multiNetworkStatusSupplier(multiParams) }
-
-        // first emit
         val balance = MockYieldBalanceWrapperDTOFactory.createWithBalance(tonId).toDomain()
-        expected.emit(value = setOf(balance))
 
-        val values1 = getEmittedValues(flow = actual)
+        // Act (first emit)
+        multiFlow.emit(value = setOf(balance))
+        val actual1 = getEmittedValues(flow = producerFlow)
 
-        coVerify { stakingIdFactory.create(params.userWalletId, params.currencyId, params.network) }
+        // Assert (first emit)
+        Truth.assertThat(actual1).hasSize(1)
+        Truth.assertThat(actual1).containsExactly(balance)
 
-        Truth.assertThat(values1.size).isEqualTo(1)
-        Truth.assertThat(values1).isEqualTo(listOf(balance))
+        // Act (second emit)
+        multiFlow.emit(value = setOf(balance))
+        val actual2 = getEmittedValues(flow = producerFlow)
 
-        // second emit
-        expected.emit(value = setOf(balance))
+        // Assert (second emit)
+        Truth.assertThat(actual2).hasSize(1)
+        Truth.assertThat(actual2).containsExactly(balance)
 
-        val values2 = getEmittedValues(flow = actual)
-
-        coVerify { stakingIdFactory.create(params.userWalletId, params.currencyId, params.network) }
-
-        Truth.assertThat(values2.size).isEqualTo(1)
-        Truth.assertThat(values2).isEqualTo(listOf(balance))
+        verify(exactly = 1) { multiNetworkStatusSupplier(multiParams) }
     }
 
     @Test
-    fun `test if flow throws exception`() = runTest {
+    fun `flow throws exception`() = runTest {
+        // Arrange
         val exception = IllegalStateException()
+
         val balance = MockYieldBalanceWrapperDTOFactory.createWithBalance(tonId).toDomain()
 
         val innerFlow = MutableStateFlow(value = false)
-        val expected = flow {
+        val multiFlow = flow {
             if (innerFlow.value) {
                 emit(setOf(balance))
             } else {
@@ -156,82 +154,51 @@ internal class DefaultSingleYieldBalanceProducerTest {
             .buffer(capacity = 5)
 
         val multiParams = MultiYieldBalanceProducer.Params(userWalletId = params.userWalletId)
-        every { multiNetworkStatusSupplier(multiParams) } returns expected
-        every { stakingIdFactory.createIntegrationId(currencyId = params.currencyId) } returns tonId.integrationId
+        every { multiNetworkStatusSupplier(multiParams) } returns multiFlow
 
-        val actual = producer.produceWithFallback()
+        val producerFlow = producer.produceWithFallback()
 
-        verify { multiNetworkStatusSupplier(multiParams) }
+        // Act (first emit)
+        val actual1 = getEmittedValues(flow = producerFlow)
 
-        val values1 = getEmittedValues(flow = actual)
+        // Assert (first emit)
+        val fallbackStatus = YieldBalance.Error(stakingId = tonId.copy(address = "0x1"))
 
-        coVerify(inverse = true) { stakingIdFactory.create(any(), any(), any()) }
+        Truth.assertThat(actual1).hasSize(1)
+        Truth.assertThat(actual1).containsExactly(fallbackStatus)
 
-        Truth.assertThat(values1.size).isEqualTo(1)
-        val fallbackStatus = YieldBalance.Error(integrationId = tonId.integrationId, address = null)
-        Truth.assertThat(values1).isEqualTo(listOf(fallbackStatus))
-
-        coEvery { stakingIdFactory.create(params.userWalletId, params.currencyId, params.network) } returns tonId
-
+        // Act (second emit)
         innerFlow.emit(value = true)
+        val actual2 = getEmittedValues(flow = producerFlow)
 
-        val values2 = getEmittedValues(flow = actual)
+        Truth.assertThat(actual2).hasSize(1)
+        Truth.assertThat(actual2).containsExactly(balance)
 
-        coVerify { stakingIdFactory.create(params.userWalletId, params.currencyId, params.network) }
-
-        Truth.assertThat(values2.size).isEqualTo(1)
-        Truth.assertThat(values2).isEqualTo(listOf(balance))
+        verify(exactly = 1) { multiNetworkStatusSupplier(multiParams) }
     }
 
     @Test
-    fun `test if flow doesn't contain network from params`() = runTest {
+    fun `flow doesn't contain network from params`() = runTest {
+        // Arrange
         val balance = MockYieldBalanceWrapperDTOFactory.createWithBalance(solanaId).toDomain()
 
-        val yieldBalancesFlow = flowOf(setOf(balance))
+        val multiFlow = flowOf(setOf(balance))
 
         val multiParams = MultiYieldBalanceProducer.Params(userWalletId = params.userWalletId)
-        every { multiNetworkStatusSupplier(multiParams) } returns yieldBalancesFlow
-        coEvery { stakingIdFactory.create(params.userWalletId, params.currencyId, params.network) } returns tonId
+        every { multiNetworkStatusSupplier(multiParams) } returns multiFlow
 
-        val actual = producer.produce()
+        val producerFlow = producer.produce()
 
-        verify { multiNetworkStatusSupplier(multiParams) }
+        // Act
+        val actual = getEmittedValues(flow = producerFlow)
 
-        val values = getEmittedValues(flow = actual)
+        // Assert
+        Truth.assertThat(actual).isEmpty()
 
-        coVerify { stakingIdFactory.create(params.userWalletId, params.currencyId, params.network) }
-
-        val expected = YieldBalance.Unsupported
-        Truth.assertThat(values.first()).isEqualTo(expected)
-    }
-
-    @Test
-    fun `test if wallet manager facade returns null`() = runTest {
-        val balance = MockYieldBalanceWrapperDTOFactory.createWithBalance(tonId).toDomain()
-
-        val yieldBalancesFlow = flowOf(setOf(balance))
-
-        val multiParams = MultiYieldBalanceProducer.Params(userWalletId = params.userWalletId)
-        every { multiNetworkStatusSupplier(multiParams) } returns yieldBalancesFlow
-        coEvery { stakingIdFactory.create(params.userWalletId, params.currencyId, params.network) } returns null
-
-        val actual = producer.produce()
-
-        verify { multiNetworkStatusSupplier(multiParams) }
-
-        val values = getEmittedValues(flow = actual)
-
-        coVerify { stakingIdFactory.create(params.userWalletId, params.currencyId, params.network) }
-
-        val expected = YieldBalance.Unsupported
-        Truth.assertThat(values.first()).isEqualTo(expected)
+        verify(exactly = 1) { multiNetworkStatusSupplier(multiParams) }
     }
 
     private companion object {
-
-        val mocks = MockCryptoCurrencyFactory()
-
-        val ton = mocks.createCoin(Blockchain.TON)
 
         val tonId = MockYieldBalanceWrapperDTOFactory.defaultStakingId
         val solanaId = StakingID(

@@ -2,6 +2,7 @@ package com.tangem.features.walletconnect.connections.utils
 
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.bottomsheets.message.*
+import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUMV2.Icon.Type
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -51,6 +52,7 @@ internal object WcAlertsFactory {
         return messageBottomSheetUM {
             infoBlock {
                 icon(R.drawable.img_knight_shield_32) {
+                    type = Type.Warning
                     backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.Warning
                 }
                 title = resourceReference(R.string.security_alert_title)
@@ -68,6 +70,40 @@ internal object WcAlertsFactory {
                     text = resourceReference(R.string.wc_alert_connect_anyway)
                     onClick { activeButtonOnClick() }
                 }
+            }
+        }
+    }
+
+    fun createUnsupportedDomainAlert(appName: String): MessageBottomSheetUMV2 {
+        return messageBottomSheetUM {
+            infoBlock {
+                icon(R.drawable.ic_wallet_connect_24) {
+                    type = MessageBottomSheetUMV2.Icon.Type.Informative
+                    backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.SameAsTint
+                }
+                title = resourceReference(R.string.wc_alert_unsupported_dapps_title)
+                body = resourceReference(R.string.wc_alert_unsupported_dapps_description, wrappedList(appName))
+            }
+            primaryButton {
+                text = resourceReference(R.string.common_got_it)
+                onClick { closeBs() }
+            }
+        }
+    }
+
+    fun createUnsupportedChainAlert(appName: String): MessageBottomSheetUMV2 {
+        return messageBottomSheetUM {
+            infoBlock {
+                icon(R.drawable.ic_network_new_24) {
+                    type = MessageBottomSheetUMV2.Icon.Type.Informative
+                    backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.SameAsTint
+                }
+                title = resourceReference(R.string.wc_alert_unsupported_networks_title)
+                body = resourceReference(R.string.wc_alert_unsupported_networks_description, wrappedList(appName))
+            }
+            primaryButton {
+                text = resourceReference(R.string.common_got_it)
+                onClick { closeBs() }
             }
         }
     }
