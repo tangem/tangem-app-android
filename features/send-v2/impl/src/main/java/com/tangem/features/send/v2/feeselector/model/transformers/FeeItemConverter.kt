@@ -4,20 +4,20 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.features.send.v2.api.params.FeeSelectorParams
 import com.tangem.features.send.v2.api.entity.FeeItem
+import com.tangem.features.send.v2.api.params.FeeSelectorParams
 import com.tangem.features.send.v2.feeselector.model.FeeSelectorIntents
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
 internal class FeeItemConverter(
-    private val suggestedFeeState: FeeSelectorParams.SuggestedFeeState,
+    private val feeStateConfiguration: FeeSelectorParams.FeeStateConfiguration,
     private val normalFee: Fee,
     private val feeSelectorIntents: FeeSelectorIntents,
     private val appCurrency: AppCurrency,
     cryptoCurrencyStatus: CryptoCurrencyStatus,
-) : Converter<TransactionFee, ImmutableList<FeeItem>> {
+) : Converter<FeeItemConverter.Input, ImmutableList<FeeItem>> {
 
     private val customFeeFieldConverter = FeeSelectorCustomFieldConverter(
         feeSelectorIntents = feeSelectorIntents,
@@ -26,38 +26,71 @@ internal class FeeItemConverter(
         normalFee = normalFee,
     )
 
-    override fun convert(value: TransactionFee): ImmutableList<FeeItem> {
+    override fun convert(value: Input): ImmutableList<FeeItem> {
         val fees = mutableListOf<FeeItem>()
 
-        when (suggestedFeeState) {
-            FeeSelectorParams.SuggestedFeeState.None -> Unit
-            is FeeSelectorParams.SuggestedFeeState.Suggestion -> fees.add(
-                FeeItem.Suggested(
-                    title = suggestedFeeState.title,
-                    fee = suggestedFeeState.fee,
-                ),
-            )
-        }
-        when (value) {
-            is TransactionFee.Choosable -> {
-                fees.add(FeeItem.Slow(fee = value.minimum))
-                fees.add(FeeItem.Market(fee = value.normal))
-                fees.add(FeeItem.Fast(fee = value.priority))
+        when (feeStateConfiguration) {
+            FeeSelectorParams.FeeStateConfiguration.None -> fees.addFeeItemsFull(value = value)
+            is FeeSelectorParams.FeeStateConfiguration.Suggestion -> {
+                fees.addFeeItemSuggested(feeStateConfiguration)
+                fees.addFeeItemsFull(value = value)
             }
-            is TransactionFee.Single -> {
-                fees.add(FeeItem.Market(fee = value.normal))
+            FeeSelectorParams.FeeStateConfiguration.ExcludeLow -> {
+                fees.addFeeItemsLimited(value = value)
             }
-        }
-        val customFeeFields = customFeeFieldConverter.convert(normalFee)
-        if (customFeeFields.isNotEmpty()) {
-            fees.add(
-                FeeItem.Custom(
-                    fee = customFeeFieldConverter.convertBack(customFeeFields),
-                    customValues = customFeeFields,
-                ),
-            )
         }
 
         return fees.toImmutableList()
     }
+
+    private fun MutableList<FeeItem>.addFeeItemsFull(value: Input) {
+        when (value.transactionFee) {
+            is TransactionFee.Choosable -> {
+                add(FeeItem.Slow(fee = value.transactionFee.minimum))
+                add(FeeItem.Market(fee = value.transactionFee.normal))
+                add(FeeItem.Fast(fee = value.transactionFee.priority))
+            }
+            is TransactionFee.Single -> {
+                add(FeeItem.Market(fee = value.transactionFee.normal))
+            }
+        }
+        val customFee = value.customFee ?: constructCustomFee()
+        customFee?.let(::add)
+    }
+
+    private fun MutableList<FeeItem>.addFeeItemsLimited(value: Input) {
+        when (value.transactionFee) {
+            is TransactionFee.Choosable -> {
+                add(FeeItem.Market(fee = value.transactionFee.normal))
+                add(FeeItem.Fast(fee = value.transactionFee.priority))
+            }
+            is TransactionFee.Single -> {
+                add(FeeItem.Market(fee = value.transactionFee.normal))
+            }
+        }
+    }
+
+    private fun MutableList<FeeItem>.addFeeItemSuggested(
+        feeStateConfiguration: FeeSelectorParams.FeeStateConfiguration.Suggestion,
+    ) {
+        add(
+            FeeItem.Suggested(
+                title = feeStateConfiguration.title,
+                fee = feeStateConfiguration.fee,
+            ),
+        )
+    }
+
+    private fun constructCustomFee(): FeeItem.Custom? {
+        val customFeeFields = customFeeFieldConverter.convert(normalFee)
+
+        if (customFeeFields.isEmpty()) return null
+
+        return FeeItem.Custom(
+            fee = customFeeFieldConverter.convertBack(customFeeFields),
+            customValues = customFeeFields,
+        )
+    }
+
+    data class Input(val transactionFee: TransactionFee, val customFee: FeeItem.Custom?)
 }
