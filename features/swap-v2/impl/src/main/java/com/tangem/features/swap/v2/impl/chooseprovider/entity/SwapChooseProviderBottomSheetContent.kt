@@ -7,10 +7,12 @@ import kotlinx.collections.immutable.ImmutableList
 
 internal data class SwapChooseProviderBottomSheetContent(
     val providerList: ImmutableList<SwapProviderListItem>,
+    val isApplyFCARestrictions: Boolean,
     val selectedProvider: ExpressProvider,
 )
 
 internal data class SwapProviderListItem(
     val providerUM: ProviderChooseUM,
+    val swapProviderState: SwapProviderState,
     val quote: SwapQuoteUM,
 )

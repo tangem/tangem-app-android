@@ -3,8 +3,9 @@ package com.tangem.domain.tokens
 import com.tangem.blockchainsdk.utils.isNeedToCreateAccountWithoutReserve
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.model.CurrencyAmount
 import com.tangem.domain.tokens.model.FeePaidCurrency
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
@@ -15,7 +16,6 @@ import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
@@ -28,6 +28,8 @@ class GetCurrencyWarningsUseCase(
     private val dispatchers: CoroutineDispatcherProvider,
     private val currencyChecksRepository: CurrencyChecksRepository,
     private val currencyStatusOperations: BaseCurrencyStatusOperations,
+    private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
+    private val tokensFeatureToggles: TokensFeatureToggles,
 ) {
 
     suspend operator fun invoke(
@@ -150,13 +152,21 @@ class GetCurrencyWarningsUseCase(
         tokenStatus: CryptoCurrencyStatus,
         feePaidToken: FeePaidCurrency.Token,
     ): CryptoCurrencyWarning {
-        val token = currenciesRepository
-            .getMultiCurrencyWalletCurrenciesSync(userWalletId)
-            .find {
-                it is CryptoCurrency.Token &&
-                    it.contractAddress.equals(feePaidToken.contractAddress, ignoreCase = true) &&
-                    it.network.derivationPath == tokenStatus.currency.network.derivationPath
-            }
+        val tokens = if (tokensFeatureToggles.isWalletBalanceFetcherEnabled) {
+            multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
+                params = MultiWalletCryptoCurrenciesProducer.Params(userWalletId),
+            )
+                .orEmpty()
+        } else {
+            currenciesRepository.getMultiCurrencyWalletCurrenciesSync(userWalletId)
+        }
+
+        val token = tokens.find {
+            it is CryptoCurrency.Token &&
+                it.contractAddress.equals(feePaidToken.contractAddress, ignoreCase = true) &&
+                it.network.derivationPath == tokenStatus.currency.network.derivationPath
+        }
+
         return if (token != null) {
             CryptoCurrencyWarning.CustomTokenNotEnoughForFee(
                 currency = tokenStatus.currency,
