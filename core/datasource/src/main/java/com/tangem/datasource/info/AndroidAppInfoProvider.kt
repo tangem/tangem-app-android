@@ -21,4 +21,7 @@ internal class AndroidAppInfoProvider @Inject constructor(
         get() = TimeZone.getDefault().id
     override val appVersion: String
         get() = appVersionProvider.versionName
+    override val isHuaweiDevice: Boolean
+        get() = Build.MANUFACTURER.equals("HUAWEI", ignoreCase = true) ||
+            Build.BRAND.equals("HUAWEI", ignoreCase = true)
 }
