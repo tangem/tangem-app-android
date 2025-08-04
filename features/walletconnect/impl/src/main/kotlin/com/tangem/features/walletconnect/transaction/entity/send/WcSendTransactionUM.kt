@@ -28,6 +28,6 @@ internal data class WcSendTransactionItemUM(
     val networkInfo: WcNetworkInfoUM,
     val address: String?,
     val sendEnabled: Boolean,
-    val feeExceedsBalanceNotification: NotificationUM.Info?,
+    val feeErrorNotification: NotificationUM.Info?,
     val isLoading: Boolean = false,
 ) : TangemBottomSheetConfigContent
