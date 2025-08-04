@@ -34,6 +34,7 @@ internal sealed class WcAppInfoRoutes : TangemBottomSheetConfigContent, Route {
             data object UnsafeDomain : Type()
             data class UnsupportedDApp(val appName: String) : Type()
             data class UnsupportedNetwork(val appName: String) : Type()
+            data object UriAlreadyUsed : Type()
         }
     }
 }
