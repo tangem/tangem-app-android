@@ -53,7 +53,7 @@ internal class MissedDerivationsFinder(private val userWallet: UserWallet) {
     private fun List<Network>.mapToNewDerivations(): List<DerivationData> {
         val config = when (userWallet) {
             is UserWallet.Cold -> CardConfig.createConfig(userWallet.scanResponse.card)
-            is UserWallet.Hot -> Wallet2CardConfig // TODO create config [REDACTED_TASK_KEY]
+            is UserWallet.Hot -> Wallet2CardConfig // TODO [REDACTED_TASK_KEY] [Hot Wallet] Derivation config for hot wallet
         }
         return mapNotNull { network ->
             val blockchain = network.toBlockchain()
