@@ -41,12 +41,6 @@ internal class WcSignUseCaseDelegate<MiddleAction, SignModel>(
 
     operator fun invoke(initModel: SignModel) = channelFlow {
         val state = MutableStateFlow(WcSignState(initModel, WcSignStep.PreSign))
-        analytics.send(
-            WcAnalyticEvents.SignatureRequestReceived(
-                rawRequest = context.rawSdkRequest,
-                network = context.network,
-            ),
-        )
 
         state
             .onEach { newState -> channel.send(newState) }
