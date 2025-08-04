@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.organizetokens.utils.converter
 
+import com.tangem.domain.models.TokensSortType
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensListState
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensState
@@ -20,7 +21,7 @@ internal class TokenListToStateConverter(
             itemsState = itemsState,
             header = state.header.copy(
                 isEnabled = itemsState !is OrganizeTokensListState.Empty,
-                isSortedByBalance = value.sortedBy == TokenList.SortType.BALANCE,
+                isSortedByBalance = value.sortedBy == TokensSortType.BALANCE,
                 isGrouped = value is TokenList.GroupedByNetwork,
             ),
             actions = state.actions.copy(
