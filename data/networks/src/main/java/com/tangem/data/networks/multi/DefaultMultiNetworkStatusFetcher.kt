@@ -7,11 +7,10 @@ import com.tangem.data.networks.fetcher.CommonNetworkStatusFetcher
 import com.tangem.data.networks.store.NetworksStatusesStore
 import com.tangem.data.networks.store.setSourceAsCache
 import com.tangem.data.networks.store.setSourceAsOnlyCache
-import com.tangem.datasource.local.userwallet.UserWalletsStore
-import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.core.utils.eitherOn
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
-import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -22,7 +21,6 @@ import javax.inject.Inject
  * Default implementation of [MultiNetworkStatusFetcher]
  *
  * @property networksStatusesStore      networks statuses store
- * @property userWalletsStore           user wallets store
  * @property cardCryptoCurrencyFactory  card crypto currency factory
  * @property commonNetworkStatusFetcher common network status fetcher
  * @property dispatchers                dispatchers
@@ -32,7 +30,6 @@ import javax.inject.Inject
 @Suppress("LongParameterList")
 internal class DefaultMultiNetworkStatusFetcher @Inject constructor(
     private val networksStatusesStore: NetworksStatusesStore,
-    private val userWalletsStore: UserWalletsStore,
     private val cardCryptoCurrencyFactory: CardCryptoCurrencyFactory,
     private val commonNetworkStatusFetcher: CommonNetworkStatusFetcher,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -41,8 +38,8 @@ internal class DefaultMultiNetworkStatusFetcher @Inject constructor(
     override suspend fun invoke(params: MultiNetworkStatusFetcher.Params) = eitherOn(dispatchers.default) {
         networksStatusesStore.setSourceAsCache(userWalletId = params.userWalletId, networks = params.networks)
 
-        val userWallet = catch(
-            block = { userWalletsStore.getSyncStrict(key = params.userWalletId) },
+        val networksCurrencies = catch(
+            block = { createNetworksCurrenciesMap(params) },
             catch = {
                 networksStatusesStore.setSourceAsOnlyCache(
                     userWalletId = params.userWalletId,
@@ -52,31 +49,6 @@ internal class DefaultMultiNetworkStatusFetcher @Inject constructor(
                 raise(it)
             },
         )
-
-        val cardTypesResolver = userWallet.requireColdWallet().cardTypesResolver // TODO [REDACTED_TASK_KEY]
-        val isWalletSupported = with(cardTypesResolver) {
-            isMultiwalletAllowed() || isSingleWalletWithToken()
-        }
-
-        ensure(isWalletSupported) {
-            networksStatusesStore.setSourceAsOnlyCache(
-                userWalletId = params.userWalletId,
-                networks = params.networks,
-            )
-            IllegalStateException("User wallet is not multi-currency")
-        }
-
-        val networksCurrencies = if (cardTypesResolver.isMultiwalletAllowed()) {
-            cardCryptoCurrencyFactory.createCurrenciesForMultiCurrencyCard(
-                userWallet = userWallet,
-                networks = params.networks,
-            )
-        } else {
-            cardCryptoCurrencyFactory.createCurrenciesForSingleCurrencyCardWithToken(
-                scanResponse = userWallet.scanResponse,
-            )
-                .groupBy { it.network }
-        }
 
         val result = coroutineScope {
             params.networks
@@ -97,5 +69,14 @@ internal class DefaultMultiNetworkStatusFetcher @Inject constructor(
         ensure(failedResult == null) {
             IllegalStateException("Failed to fetch network statuses")
         }
+    }
+
+    private suspend fun createNetworksCurrenciesMap(
+        params: MultiNetworkStatusFetcher.Params,
+    ): Map<Network, List<CryptoCurrency>> {
+        return cardCryptoCurrencyFactory.create(
+            userWalletId = params.userWalletId,
+            networks = params.networks,
+        )
     }
 }

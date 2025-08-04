@@ -9,6 +9,7 @@ dependencies {
     implementation(deps.moshi)
     ksp(deps.moshi.kotlin.codegen)
     implementation(deps.kotlin.serialization)
+    implementation(projects.domain.models)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.visa.models)
 }
