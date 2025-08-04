@@ -9,6 +9,7 @@ import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
 import com.tangem.common.ui.navigationButtons.NavigationButton
 import com.tangem.common.ui.navigationButtons.NavigationUM
+import com.tangem.common.ui.notifications.NotificationId
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -22,6 +23,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.domain.swap.models.SwapCurrencies
+import com.tangem.domain.notifications.ShouldShowNotificationUseCase
 import com.tangem.domain.swap.models.SwapDirection
 import com.tangem.domain.swap.models.SwapDirection.Companion.withSwapDirection
 import com.tangem.domain.swap.models.SwapQuoteModel
@@ -81,6 +83,7 @@ internal class SwapAmountModel @Inject constructor(
     private val swapAmountUpdateListener: SwapAmountUpdateListener,
     private val swapAmountReduceListener: SwapAmountReduceListener,
     private val feeSelectorReloadTrigger: FeeSelectorReloadTrigger,
+    private val shouldShowNotificationUseCase: ShouldShowNotificationUseCase,
 ) : Model(), SwapAmountClickIntents, SwapChooseProviderComponent.ModelCallback {
 
     private val params: SwapAmountComponentParams = paramsContainer.require()
@@ -221,6 +224,9 @@ internal class SwapAmountModel @Inject constructor(
     override fun onSelectTokenClick() {
         val amountParams = params as? SwapAmountComponentParams.AmountParams ?: return
         modelScope.launch {
+            val showSendViaSwapNotification = shouldShowNotificationUseCase(
+                NotificationId.SendViaSwapTokenSelectorNotification.key,
+            )
             val isEditMode = amountParams.currentRoute.firstOrNull()?.isEditMode == true
             val selectedCurrency = (uiState.value as? SwapAmountUM.Content)?.secondaryCryptoCurrencyStatus?.currency
             appRouter.push(
@@ -229,6 +235,7 @@ internal class SwapAmountModel @Inject constructor(
                     initialCurrency = primaryCryptoCurrency,
                     selectedCurrency = selectedCurrency.takeIf { isEditMode },
                     source = AppRoute.ChooseManagedTokens.Source.SendViaSwap,
+                    showSendViaSwapNotification = showSendViaSwapNotification,
                 ),
             )
         }
@@ -259,6 +266,7 @@ internal class SwapAmountModel @Inject constructor(
     private fun confirmSendWithSwapClose() {
         val amountParams = params as? SwapAmountComponentParams.AmountParams ?: return
         val amountFieldData = uiState.value.primaryAmount.amountField as? AmountState.Data
+        val callback = (params as? SwapAmountComponentParams.AmountParams)?.callback ?: return
 
         val primaryCryptoCurrencyStatus = (uiState.value as? SwapAmountUM.Content)?.primaryCryptoCurrencyStatus
         if (primaryCryptoCurrencyStatus != null) {
