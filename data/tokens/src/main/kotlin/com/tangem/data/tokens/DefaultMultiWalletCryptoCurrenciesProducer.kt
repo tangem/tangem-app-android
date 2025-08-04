@@ -4,7 +4,7 @@ import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
 import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.wallet.requireColdWallet
+import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesProducer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.assisted.Assisted
@@ -35,7 +35,7 @@ internal class DefaultMultiWalletCryptoCurrenciesProducer @AssistedInject constr
         get() = emptySet()
 
     override fun produce(): Flow<Set<CryptoCurrency>> {
-        val userWallet = userWalletsStore.getSyncStrict(key = params.userWalletId).requireColdWallet() // TODO [REDACTED_TASK_KEY]
+        val userWallet = userWalletsStore.getSyncStrict(key = params.userWalletId)
 
         if (!userWallet.isMultiCurrency) {
             error("${this::class.simpleName} supports only multi-currency wallet")
