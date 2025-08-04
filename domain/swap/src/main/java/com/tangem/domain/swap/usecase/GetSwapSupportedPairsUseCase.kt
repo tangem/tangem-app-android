@@ -1,7 +1,9 @@
 package com.tangem.domain.swap.usecase
 
 import arrow.core.Either
+import com.tangem.domain.express.models.ExpressProviderType
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.SwapErrorResolver
 import com.tangem.domain.swap.SwapRepositoryV2
 import com.tangem.domain.swap.models.SwapCryptoCurrency
@@ -9,7 +11,6 @@ import com.tangem.domain.swap.models.SwapCurrencies
 import com.tangem.domain.swap.models.SwapCurrenciesGroup
 import com.tangem.domain.swap.models.SwapPairModel
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.wallets.models.UserWallet
 
 /**
  * Returns pais
@@ -23,11 +24,13 @@ class GetSwapSupportedPairsUseCase(
         userWallet: UserWallet,
         initialCurrency: CryptoCurrency,
         cryptoCurrencyList: List<CryptoCurrency>,
+        filterProviderTypes: List<ExpressProviderType>,
     ) = Either.catch {
-        val pairs = swapRepositoryV2.getPairsOnly(
+        val pairs = swapRepositoryV2.getSupportedPairs(
             userWallet = userWallet,
             initialCurrency = initialCurrency,
             cryptoCurrencyList = cryptoCurrencyList,
+            filterProviderTypes = filterProviderTypes,
         )
 
         val filteredOutInitial = cryptoCurrencyList.filterNot { it.id == initialCurrency.id }
@@ -74,7 +77,7 @@ class GetSwapSupportedPairsUseCase(
                 SwapCryptoCurrency(
                     CryptoCurrencyStatus(
                         currency = currency,
-                        value = CryptoCurrencyStatus.Loading, // todo select token unavailable
+                        value = CryptoCurrencyStatus.Loading,
                     ),
                     emptyList(),
                 )
