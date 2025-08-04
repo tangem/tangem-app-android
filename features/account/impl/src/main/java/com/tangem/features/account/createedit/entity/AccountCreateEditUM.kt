@@ -16,8 +16,9 @@ data class AccountCreateEditUM(
 
     data class Account(
         val name: TextReference = TextReference.EMPTY,
-        val portfolioIcon: CryptoPortfolioIcon = CryptoPortfolioIcon.ofMainAccount(setOf()),
+        val portfolioIcon: CryptoPortfolioIcon = CryptoPortfolioIcon.ofDefaultCustomAccount(),
         val derivationInfo: TextReference = TextReference.EMPTY,
+        val inputPlaceholder: TextReference = TextReference.EMPTY,
         val onNameChange: (String) -> Unit = {},
     )
 
