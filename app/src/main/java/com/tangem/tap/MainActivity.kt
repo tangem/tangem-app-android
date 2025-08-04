@@ -26,17 +26,13 @@ import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import arrow.core.getOrElse
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.RoutingFeatureToggle
+import com.tangem.common.routing.deeplink.DeeplinkConst.WEBLINK_KEY
+import com.tangem.common.routing.deeplink.PayloadToDeeplinkConverter
 import com.tangem.common.routing.entity.SerializableIntent
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.di.RootAppComponentContext
-import com.tangem.core.deeplink.DeepLinksRegistry
-import com.tangem.core.deeplink.WEBLINK_KEY
-import com.tangem.core.deeplink.converter.PayloadToDeeplinkConverter
-import com.tangem.core.navigation.email.EmailSender
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.core.ui.UiDependencies
 import com.tangem.data.balancehiding.DefaultDeviceFlipDetector
 import com.tangem.data.card.sdk.CardSdkOwner
 import com.tangem.domain.apptheme.model.AppThemeMode
@@ -52,6 +48,7 @@ import com.tangem.domain.tokens.GetPolkadotCheckHasImmortalUseCase
 import com.tangem.domain.tokens.GetPolkadotCheckHasResetUseCase
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
+import com.tangem.features.tester.api.TesterMenuLauncher
 import com.tangem.features.walletconnect.components.WalletConnectFeatureToggles
 import com.tangem.google.GoogleServicesHelper
 import com.tangem.operations.backup.BackupService
@@ -68,7 +65,6 @@ import com.tangem.tap.features.intentHandler.handlers.BackgroundScanIntentHandle
 import com.tangem.tap.features.intentHandler.handlers.OnPushClickedIntentHandler
 import com.tangem.tap.features.intentHandler.handlers.WalletConnectLinkIntentHandler
 import com.tangem.tap.features.main.MainViewModel
-import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.proxy.redux.DaggerGraphAction
 import com.tangem.tap.routing.component.RoutingComponent
 import com.tangem.tap.routing.configurator.AppRouterConfig
@@ -102,9 +98,6 @@ val mainScope = CoroutineScope(mainCoroutineContext)
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
-    @Inject
-    lateinit var appStateHolder: AppStateHolder
-
     /** Router for opening tester menu */
     @Inject
     lateinit var cardSdkOwner: CardSdkOwner
@@ -120,9 +113,6 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
     @Inject
     lateinit var walletConnectInteractor: WalletConnectInteractor
-
-    @Inject
-    lateinit var deepLinksRegistry: DeepLinksRegistry
 
     @Inject
     lateinit var settingsRepository: SettingsRepository
@@ -141,9 +131,6 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
     @Inject
     lateinit var userWalletsListManager: UserWalletsListManager
-
-    @Inject
-    lateinit var emailSender: EmailSender
 
     @Inject
     @RootAppComponentContext
@@ -174,13 +161,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     lateinit var dispatchers: CoroutineDispatcherProvider
 
     @Inject
-    internal lateinit var uiDependencies: UiDependencies
-
-    @Inject
     internal lateinit var defaultDeviceFlipDetector: DefaultDeviceFlipDetector
-
-    @Inject
-    internal lateinit var routingFeatureToggle: RoutingFeatureToggle
 
     @Inject
     internal lateinit var deeplinkFactory: DeepLinkFactory
@@ -190,6 +171,9 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
     @Inject
     internal lateinit var urlOpener: UrlOpener
+
+    @Inject
+    internal lateinit var testerMenuLauncher: TesterMenuLauncher
 
     internal val viewModel: MainViewModel by viewModels()
 
@@ -243,13 +227,12 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         sendStakingUnsubmittedHashes()
         checkGoogleServicesAvailability()
 
-        if (routingFeatureToggle.isDeepLinkNavigationEnabled.not() && intent != null && savedInstanceState == null) {
-            // handle intent only on start, not on recreate
-            handleDeepLink(intent = intent, isFromOnNewIntent = false)
-        }
-
         lifecycle.addObserver(WindowObscurationObserver)
         lifecycle.addObserver(defaultDeviceFlipDetector)
+
+        if (BuildConfig.TESTER_MENU_ENABLED) {
+            lifecycle.addObserver(testerMenuLauncher.launchOnShakeObserver)
+        }
     }
 
     private fun setRootContent() {
@@ -479,7 +462,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
             }
         }
 
-        if (routingFeatureToggle.isDeepLinkNavigationEnabled && intent != null) {
+        if (intent != null) {
             handleDeepLink(intent = intent, isFromOnNewIntent = false)
         }
 
@@ -487,26 +470,22 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     }
 
     private fun handleDeepLink(intent: Intent, isFromOnNewIntent: Boolean) {
-        if (routingFeatureToggle.isDeepLinkNavigationEnabled) {
-            val deepLinkExtras = PayloadToDeeplinkConverter.convertBundle(intent.extras)?.toUri()
-            val webLink = intent.getStringExtra(WEBLINK_KEY)
+        val deepLinkExtras = PayloadToDeeplinkConverter.convertBundle(intent.extras)?.toUri()
+        val webLink = intent.getStringExtra(WEBLINK_KEY)
 
-            val receivedDeepLink = intent.data ?: deepLinkExtras
+        val receivedDeepLink = intent.data ?: deepLinkExtras
 
-            when {
-                receivedDeepLink != null -> {
-                    deeplinkFactory.handleDeeplink(
-                        deeplinkUri = receivedDeepLink,
-                        coroutineScope = lifecycleScope,
-                        isFromOnNewIntent = isFromOnNewIntent,
-                    )
-                }
-                webLink?.uriValidate() == true -> {
-                    urlOpener.openUrl(webLink)
-                }
+        when {
+            receivedDeepLink != null -> {
+                deeplinkFactory.handleDeeplink(
+                    deeplinkUri = receivedDeepLink,
+                    coroutineScope = lifecycleScope,
+                    isFromOnNewIntent = isFromOnNewIntent,
+                )
             }
-        } else {
-            deepLinksRegistry.launch(intent)
+            webLink?.uriValidate() == true -> {
+                urlOpener.openUrl(webLink)
+            }
         }
     }
 

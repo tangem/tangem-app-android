@@ -15,6 +15,7 @@ dependencies {
     api(projects.domain.manageTokens.models)
     api(projects.domain.networks)
     api(projects.domain.quotes)
+    api(projects.domain.walletManager)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.staking)
