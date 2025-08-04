@@ -180,8 +180,13 @@ internal object TransactionDomainModule {
     fun providePrepareForSendUseCase(
         transactionRepository: TransactionRepository,
         cardSdkConfigRepository: CardSdkConfigRepository,
+        tangemHotWalletSignerFactory: TangemHotWalletSigner.Factory,
     ): PrepareForSendUseCase {
-        return PrepareForSendUseCase(transactionRepository, cardSdkConfigRepository)
+        return PrepareForSendUseCase(
+            transactionRepository = transactionRepository,
+            cardSdkConfigRepository = cardSdkConfigRepository,
+            getHotTransactionSigner = { tangemHotWalletSignerFactory.create(it) },
+        )
     }
 
     @Provides
@@ -189,8 +194,13 @@ internal object TransactionDomainModule {
     fun provideSignUseCase(
         walletManagersFacade: WalletManagersFacade,
         cardSdkConfigRepository: CardSdkConfigRepository,
+        tangemHotWalletSignerFactory: TangemHotWalletSigner.Factory,
     ): SignUseCase {
-        return SignUseCase(cardSdkConfigRepository, walletManagersFacade)
+        return SignUseCase(
+            cardSdkConfigRepository = cardSdkConfigRepository,
+            walletManagersFacade = walletManagersFacade,
+            getHotTransactionSigner = { tangemHotWalletSignerFactory.create(it) },
+        )
     }
 
     @Provides
