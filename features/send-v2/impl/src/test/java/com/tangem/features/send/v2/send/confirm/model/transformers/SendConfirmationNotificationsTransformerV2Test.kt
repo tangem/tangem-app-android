@@ -242,6 +242,7 @@ class SendConfirmationNotificationsTransformerV2Test {
         )
         val transactionFee = TransactionFee.Single(fee)
         return FeeSelectorUM.Content(
+            isPrimaryButtonEnabled = true,
             fees = transactionFee,
             feeItems = persistentListOf(FeeItem.Market(fee)),
             selectedFeeItem = FeeItem.Market(fee),
@@ -282,6 +283,7 @@ class SendConfirmationNotificationsTransformerV2Test {
             priority = priorityFee,
         )
         return FeeSelectorUM.Content(
+            isPrimaryButtonEnabled = true,
             fees = transactionFee,
             feeItems = persistentListOf(
                 FeeItem.Custom(
@@ -364,6 +366,7 @@ class SendConfirmationNotificationsTransformerV2Test {
             priority = fee,
         )
         return FeeSelectorUM.Content(
+            isPrimaryButtonEnabled = true,
             fees = transactionFee,
             feeItems = persistentListOf(
                 FeeItem.Custom(
@@ -434,6 +437,7 @@ class SendConfirmationNotificationsTransformerV2Test {
             priority = priorityFee,
         )
         return FeeSelectorUM.Content(
+            isPrimaryButtonEnabled = true,
             fees = transactionFee,
             feeItems = persistentListOf(
                 FeeItem.Custom(
