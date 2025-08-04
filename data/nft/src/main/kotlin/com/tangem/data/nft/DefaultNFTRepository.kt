@@ -16,20 +16,17 @@ import com.tangem.datasource.local.nft.converter.NFTSdkAssetSalePriceConverter
 import com.tangem.datasource.local.nft.converter.NFTSdkCollectionConverter
 import com.tangem.datasource.local.nft.converter.NFTSdkCollectionIdentifierConverter
 import com.tangem.datasource.local.userwallet.UserWalletsStore
-import com.tangem.domain.common.extensions.canHandleToken
-import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.card.common.extensions.canHandleToken
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.nft.models.NFTAsset
 import com.tangem.domain.nft.models.NFTCollection
 import com.tangem.domain.nft.models.NFTCollections
 import com.tangem.domain.nft.models.NFTSalePrice
 import com.tangem.domain.nft.repository.NFTRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.domain.wallets.models.requireColdWallet
-import com.tangem.features.nft.NFTFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -50,7 +47,6 @@ internal class DefaultNFTRepository @Inject constructor(
     private val walletManagersFacade: WalletManagersFacade,
     private val dispatchers: CoroutineDispatcherProvider,
     private val userWalletsStore: UserWalletsStore,
-    private val nftFeatureToggles: NFTFeatureToggles,
     private val networkFactory: NetworkFactory,
     private val excludedBlockchains: ExcludedBlockchains,
     resources: Resources,
@@ -210,7 +206,7 @@ internal class DefaultNFTRepository @Inject constructor(
                 networkFactory.create(
                     blockchain = it,
                     extraDerivationPath = null,
-                    scanResponse = userWallet.requireColdWallet().scanResponse, // TODO [REDACTED_TASK_KEY]
+                    userWallet = userWallet,
                 )
             }
             .filter { it.canHandleNFTs(userWalletId) }
@@ -544,14 +540,10 @@ internal class DefaultNFTRepository @Inject constructor(
     }
 
     private fun Network.canHandleNFTs(userWalletId: UserWalletId): Boolean {
-        val scanResponse = userWalletsStore.getSyncStrict(userWalletId).requireColdWallet().scanResponse
-        val blockchain = Blockchain.fromNetworkId(backendId)
-        return when {
-            blockchain == null -> false
-            blockchain.isEvm() && !nftFeatureToggles.isNFTEVMEnabled -> false
-            blockchain == Blockchain.Solana && !nftFeatureToggles.isNFTSolanaEnabled -> false
-            else -> blockchain.canHandleNFTs() &&
-                scanResponse.card.canHandleToken(blockchain, scanResponse.cardTypesResolver, excludedBlockchains)
-        }
+        val userWallet = userWalletsStore.getSyncStrict(userWalletId)
+        val blockchain = Blockchain.fromNetworkId(backendId) ?: return false
+
+        return blockchain.canHandleNFTs() &&
+            userWallet.canHandleToken(blockchain, excludedBlockchains)
     }
 }
