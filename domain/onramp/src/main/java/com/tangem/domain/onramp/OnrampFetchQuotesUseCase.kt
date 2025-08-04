@@ -5,7 +5,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.onramp.repositories.OnrampErrorResolver
 import com.tangem.domain.onramp.repositories.OnrampRepository
 import com.tangem.domain.tokens.model.Amount
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 
 class OnrampFetchQuotesUseCase(
     private val repository: OnrampRepository,

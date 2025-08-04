@@ -1,7 +1,7 @@
 package com.tangem.domain.onramp.repositories
 
 import com.tangem.domain.onramp.model.HotCryptoCurrency
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.coroutines.flow.Flow
 
 /**
