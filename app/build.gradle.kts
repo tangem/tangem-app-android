@@ -80,6 +80,7 @@ configurations.androidTestImplementation {
 dependencies {
     implementation(projects.domain.legacy)
     implementation(projects.libs.blockchainSdk)
+    implementation(projects.domain.account)
     implementation(projects.domain.models)
     implementation(projects.domain.core)
     implementation(projects.domain.card)
