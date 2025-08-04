@@ -15,8 +15,8 @@ data class AssetDiff(
 data class Asset(
     @Json(name = "chain_id") val chainId: Int? = null,
     @Json(name = "logo_url") val logoUrl: String? = null,
-    @Json(name = "symbol") val symbol: String,
-    @Json(name = "decimals") val decimals: Int,
+    @Json(name = "symbol") val symbol: String? = null,
+    @Json(name = "decimals") val decimals: Int? = null,
 )
 
 @JsonClass(generateAdapter = true)
