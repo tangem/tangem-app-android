@@ -10,7 +10,7 @@ import com.tangem.domain.transaction.WalletAddressServiceRepository
 import com.tangem.domain.transaction.error.AddressValidation
 import com.tangem.domain.transaction.error.AddressValidationResult
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.lib.crypto.BlockchainUtils
 
 /**

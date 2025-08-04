@@ -13,7 +13,7 @@ import com.tangem.common.core.UserCodeRequestPolicy
 import com.tangem.domain.card.ResetCardUseCase
 import com.tangem.domain.card.ResetCardUserCodeParams
 import com.tangem.domain.card.models.ResetCardError
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.sdk.api.TangemSdkManager
 
 internal class DefaultResetCardUseCase(
