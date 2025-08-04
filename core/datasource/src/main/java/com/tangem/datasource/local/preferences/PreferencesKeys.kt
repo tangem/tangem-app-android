@@ -134,6 +134,18 @@ object PreferencesKeys {
 
     val NOTIFICATIONS_ENABLED_STATES_KEY by lazy { stringPreferencesKey(name = "notificationsEnabledStates") }
 
+    val NOTIFICATIONS_AUTOMATICALLY_ENABLED_STATES_KEY by lazy {
+        stringPreferencesKey(
+            name = "notificationsAutomaticallyEnabledStates",
+        )
+    }
+
+    val NOTIFICATIONS_USER_ALLOW_SEND_ADDRESSES_KEY by lazy {
+        booleanPreferencesKey(
+            name = "userAllowSendAddresses",
+        )
+    }
+
     val TRON_NETWORK_FEE_NOTIFICATION_SHOW_COUNT_KEY by lazy {
         intPreferencesKey(name = "tronNetworkFeeNotificationShowCount")
     }
