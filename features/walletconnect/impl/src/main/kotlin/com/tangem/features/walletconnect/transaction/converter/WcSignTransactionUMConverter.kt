@@ -8,7 +8,7 @@ import com.tangem.features.walletconnect.transaction.entity.common.WcTransaction
 import com.tangem.features.walletconnect.transaction.entity.sign.WcSignTransactionItemUM
 import com.tangem.features.walletconnect.transaction.entity.sign.WcSignTransactionUM
 import com.tangem.utils.converter.Converter
-import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import javax.inject.Inject
 
 internal class WcSignTransactionUMConverter @Inject constructor(
@@ -27,16 +27,15 @@ internal class WcSignTransactionUMConverter @Inject constructor(
                     onShowVerifiedAlert = value.actions.onShowVerifiedAlert,
                 ),
             ),
-            walletName = value.useCase.session.wallet.name,
+            walletName = value.useCase.session.wallet.name.takeIf { value.useCase.session.showWalletInfo },
             networkInfo = networkInfoUMConverter.convert(value.useCase.network),
             isLoading = value.signState.domainStep == WcSignStep.Signing,
+            address = WcAddressConverter.convert(value.useCase.derivationState),
         ),
         transactionRequestInfo = WcTransactionRequestInfoUM(
-            persistentListOf(
-                requestBlockUMConverter.convert(
-                    WcTransactionRequestBlockUMConverter.Input(value.useCase.rawSdkRequest, value.signModel),
-                ),
-            ),
+            requestBlockUMConverter.convert(
+                WcTransactionRequestBlockUMConverter.Input(value.useCase.rawSdkRequest, value.signModel),
+            ).toImmutableList(),
             onCopy = value.actions.onCopy,
         ),
     )
