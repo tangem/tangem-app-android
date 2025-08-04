@@ -15,13 +15,11 @@ import com.tangem.datasource.exchangeservice.swap.ExpressServiceLoader
 import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.core.utils.catchOn
-import com.tangem.domain.demo.DemoConfig
-import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.demo.models.DemoConfig
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesFetcher
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesFetcher.Params
-import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.isMultiCurrency
-import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -60,7 +58,7 @@ internal class DefaultMultiWalletCryptoCurrenciesFetcher(
         if (!userWallet.isMultiCurrency) error("${this::class.simpleName} supports only multi-currency wallet")
 
         val response = if (userWallet is UserWallet.Cold && userWallet.isDemoWalletWithoutSavedTokens()) {
-            createDefaultUserTokensResponse(scanResponse = userWallet.scanResponse)
+            createDefaultUserTokensResponse(userWallet = userWallet)
         } else {
             safeApiCall(
                 call = {
@@ -69,7 +67,7 @@ internal class DefaultMultiWalletCryptoCurrenciesFetcher(
                     }
                 },
                 onError = {
-                    handleFetchTokensError(error = it, userWallet = userWallet.requireColdWallet()) // TODO 11142
+                    handleFetchTokensError(error = it, userWallet = userWallet)
                 },
             )
         }
@@ -99,7 +97,7 @@ internal class DefaultMultiWalletCryptoCurrenciesFetcher(
         val userWalletId = userWallet.walletId
 
         val response = userTokensResponseStore.getSyncOrNull(userWalletId = userWalletId)
-            ?: createDefaultUserTokensResponse(scanResponse = userWallet.requireColdWallet().scanResponse)
+            ?: createDefaultUserTokensResponse(userWallet = userWallet)
 
         if (error is ApiResponseError.HttpException && error.code == ApiResponseError.HttpException.Code.NOT_FOUND) {
             Timber.w(error, "Requested currencies could not be found in the remote store for: $userWalletId")
@@ -121,9 +119,9 @@ internal class DefaultMultiWalletCryptoCurrenciesFetcher(
         expressServiceLoader.update(userWallet = userWallet, userTokens = tokens)
     }
 
-    private fun createDefaultUserTokensResponse(scanResponse: ScanResponse): UserTokensResponse {
+    private fun createDefaultUserTokensResponse(userWallet: UserWallet): UserTokensResponse {
         return userTokensResponseFactory.createUserTokensResponse(
-            currencies = cardCryptoCurrencyFactory.createDefaultCoinsForMultiCurrencyCard(scanResponse),
+            currencies = cardCryptoCurrencyFactory.createDefaultCoinsForMultiCurrencyWallet(userWallet),
             isGroupedByNetwork = false,
             isSortedByBalance = false,
         )
