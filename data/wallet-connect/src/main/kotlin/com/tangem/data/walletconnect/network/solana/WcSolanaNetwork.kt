@@ -8,7 +8,6 @@ import com.squareup.moshi.Moshi
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.extensions.decodeBase58
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
-import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.common.extensions.toHexString
 import com.tangem.data.walletconnect.model.CAIP2
 import com.tangem.data.walletconnect.model.NamespaceKey
@@ -17,7 +16,6 @@ import com.tangem.data.walletconnect.request.WcRequestToUseCaseConverter.Compani
 import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
 import com.tangem.data.walletconnect.utils.WcNamespaceConverter
 import com.tangem.data.walletconnect.utils.WcNetworksConverter
-import com.tangem.domain.models.network.Network
 import com.tangem.domain.walletconnect.model.HandleMethodError
 import com.tangem.domain.walletconnect.model.WcSolanaMethod
 import com.tangem.domain.walletconnect.model.WcSolanaMethodName
@@ -88,26 +86,13 @@ internal class WcSolanaNetwork(
         override val namespaceKey: NamespaceKey = NamespaceKey("solana")
 
         override fun toBlockchain(chainId: CAIP2): Blockchain? {
+            val isMainNet = MAINNET_CHAIN_ID.any { it.lowercase() == chainId.reference.lowercase() }
             if (chainId.namespace != namespaceKey.key) return null
-            return when (chainId.reference) {
-                MAINNET_CHAIN_ID -> Blockchain.Solana
-                TESTNET_CHAIN_ID -> Blockchain.SolanaTestnet
+            return when {
+                isMainNet -> Blockchain.Solana
+                chainId.reference.lowercase() == TESTNET_CHAIN_ID -> Blockchain.SolanaTestnet
                 else -> null
             }
-        }
-
-        override fun toCAIP2(network: Network): CAIP2? {
-            val blockchain = network.toBlockchain()
-            val chainId = when (blockchain) {
-                Blockchain.Solana -> MAINNET_CHAIN_ID
-                Blockchain.SolanaTestnet -> TESTNET_CHAIN_ID
-                else -> null
-            }
-            chainId ?: return null
-            return CAIP2(
-                namespace = namespaceKey.key,
-                reference = chainId,
-            )
         }
     }
 
@@ -140,7 +125,7 @@ internal class WcSolanaNetwork(
     )
 
     companion object {
-        private const val MAINNET_CHAIN_ID = "5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"
+        private val MAINNET_CHAIN_ID = listOf("5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp", "4sGjMW1sUnHzSxGspuhpqLDx6wiyjNtZ")
         private const val TESTNET_CHAIN_ID = "4uhcVJyU9pJkvQyS88uRDiswHXSCkY3z"
     }
 }
