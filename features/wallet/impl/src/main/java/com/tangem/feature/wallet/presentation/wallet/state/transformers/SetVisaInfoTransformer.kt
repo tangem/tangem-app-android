@@ -8,18 +8,13 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
-import com.tangem.domain.common.util.getCardsCount
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.card.common.util.getCardsCount
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.visa.exception.RefreshTokenExpiredException
 import com.tangem.domain.visa.model.VisaCurrency
-import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.requireColdWallet
-import com.tangem.feature.wallet.presentation.wallet.state.model.BalancesAndLimitsBlockState
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletAdditionalInfo
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletManageButton
+import com.tangem.feature.wallet.presentation.wallet.state.model.*
 import com.tangem.utils.extensions.isZero
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
@@ -27,7 +22,7 @@ import org.joda.time.DateTime
 import org.joda.time.Days
 
 internal class SetVisaInfoTransformer(
-    private val userWallet: UserWallet,
+    private val userWallet: UserWallet.Cold,
     private val maybeVisaCurrency: Either<Throwable, VisaCurrency>,
     private val clickIntents: WalletClickIntents,
 ) : TypedWalletStateTransformer<WalletState.Visa.Content>(
@@ -76,8 +71,6 @@ internal class SetVisaInfoTransformer(
     }
 
     private fun getContentWalletCardState(prevState: WalletCardState, visaCurrency: VisaCurrency): WalletCardState {
-        userWallet.requireColdWallet() // TODO [REDACTED_TASK_KEY]
-
         return with(prevState) {
             WalletCardState.Content(
                 id = id,

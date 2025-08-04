@@ -11,10 +11,10 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.card.DeleteSavedAccessCodesUseCase
 import com.tangem.domain.card.ResetCardUseCase
 import com.tangem.domain.card.ResetCardUserCodeParams
-import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.card.common.util.cardTypesResolver
+import com.tangem.domain.models.wallet.requireColdWallet
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.legacy.asLockable
-import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.domain.wallets.usecase.DeleteWalletUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
@@ -268,7 +268,7 @@ internal class ResetCardModel @Inject constructor(
             if (isLocked && userWalletsListManager.hasUserWallets) {
                 store.dispatchNavigationAction { popTo<AppRoute.Welcome>() }
             } else {
-                store.dispatchNavigationAction { replaceAll(AppRoute.Home) }
+                store.dispatchNavigationAction { replaceAll(AppRoute.Home()) }
             }
         }
     }
