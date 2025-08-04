@@ -5,6 +5,7 @@ import arrow.core.Either
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.pushNew
+import com.domain.blockaid.models.transaction.SimulationResult
 import com.domain.blockaid.models.transaction.ValidationResult
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.TransactionFee
@@ -27,6 +28,7 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.walletconnect.WcAnalyticEvents
+import com.tangem.domain.walletconnect.WcAnalyticEvents.SignatureRequestReceived.EmulationStatus
 import com.tangem.domain.walletconnect.WcRequestUseCaseFactory
 import com.tangem.domain.walletconnect.model.WcRequestError
 import com.tangem.domain.walletconnect.model.WcRequestError.Companion.message
@@ -120,6 +122,8 @@ internal class WcSendTransactionModel @Inject constructor(
                         .distinctUntilChanged()
                         .collectLatest { (signState, securityCheck) ->
                             if (signingIsDone(signState, useCase)) return@collectLatest
+
+                            sendSignatureReceivedAnalytics(useCase, securityCheck)
 
                             this@WcSendTransactionModel.signState = signState
                             val isSecurityCheckContent = securityCheck is Lce.Content
@@ -257,6 +261,12 @@ internal class WcSendTransactionModel @Inject constructor(
     }
 
     fun showTransactionRequest() {
+        analytics.send(
+            WcAnalyticEvents.TransactionDetailsOpened(
+                rawRequest = useCase.rawSdkRequest,
+                network = useCase.network,
+            ),
+        )
         stackNavigation.pushNew(WcTransactionRoutes.TransactionRequestInfo)
     }
 
@@ -357,5 +367,27 @@ internal class WcSendTransactionModel @Inject constructor(
 
     private fun copyData(text: String) {
         clipboardManager.setText(text = text, isSensitive = true)
+    }
+
+    private fun sendSignatureReceivedAnalytics(
+        useCase: WcSignUseCase<*>,
+        securityCheck: Lce<Throwable, BlockAidTransactionCheck.Result>,
+    ) {
+        val emulationStatus = when (securityCheck) {
+            is Lce.Content -> when (securityCheck.content.result.simulation) {
+                SimulationResult.FailedToSimulate -> EmulationStatus.CanNotEmulate
+                is SimulationResult.Success -> EmulationStatus.Emulated
+            }
+            is Lce.Error -> EmulationStatus.Error
+            is Lce.Loading -> return
+        }
+
+        analytics.send(
+            WcAnalyticEvents.SignatureRequestReceived(
+                rawRequest = useCase.rawSdkRequest,
+                network = useCase.network,
+                emulationStatus = emulationStatus,
+            ),
+        )
     }
 }
