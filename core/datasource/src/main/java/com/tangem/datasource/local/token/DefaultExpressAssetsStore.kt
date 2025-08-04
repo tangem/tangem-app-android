@@ -3,7 +3,7 @@ package com.tangem.datasource.local.token
 import androidx.datastore.core.DataStore
 import com.tangem.datasource.api.express.models.response.Asset
 import com.tangem.datasource.local.datastore.core.StringKeyDataStore
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch

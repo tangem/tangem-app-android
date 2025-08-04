@@ -19,19 +19,18 @@ import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.local.config.testnet.TestnetTokensStorage
 import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
-import com.tangem.domain.common.TapWorkarounds.isTestCard
-import com.tangem.domain.common.extensions.canHandleBlockchain
-import com.tangem.domain.common.extensions.canHandleToken
-import com.tangem.domain.common.extensions.supportedBlockchains
-import com.tangem.domain.common.extensions.supportedTokens
-import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.card.common.TapWorkarounds.isTestCard
+import com.tangem.domain.card.common.extensions.canHandleBlockchain
+import com.tangem.domain.card.common.extensions.canHandleToken
+import com.tangem.domain.card.common.extensions.supportedBlockchains
+import com.tangem.domain.card.common.extensions.supportedTokens
+import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.managetokens.model.*
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency.SourceNetwork
 import com.tangem.domain.managetokens.repository.ManageTokensRepository
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.domain.wallets.models.requireColdWallet
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.BatchListSource
 import com.tangem.pagination.fetcher.LimitOffsetBatchFetcher
@@ -142,13 +141,13 @@ internal class DefaultManageTokensRepository(
             managedCryptoCurrencyFactory.createWithCustomTokens(
                 coinsResponse = updatedCoinsResponse,
                 tokensResponse = tokensResponse,
-                scanResponse = userWallet.requireColdWallet().scanResponse, // TODO [REDACTED_TASK_KEY]
+                userWallet = userWallet,
             )
         } else {
             managedCryptoCurrencyFactory.create(
                 coinsResponse = updatedCoinsResponse,
                 tokensResponse = tokensResponse,
-                scanResponse = userWallet?.requireColdWallet()?.scanResponse, // TODO [REDACTED_TASK_KEY]
+                userWallet = userWallet,
             )
         }
 
@@ -178,7 +177,7 @@ internal class DefaultManageTokensRepository(
                 testnetTokensConfig
             },
             tokensResponse = getSavedUserTokensResponseSync(userWallet.walletId),
-            scanResponse = userWallet.requireColdWallet().scanResponse, // TODO [REDACTED_TASK_KEY]
+            userWallet = userWallet,
         )
 
         return BatchFetchResult.Success(
@@ -190,19 +189,18 @@ internal class DefaultManageTokensRepository(
 
     private fun createDefaultUserTokensResponse(userWallet: UserWallet) =
         userTokensResponseFactory.createUserTokensResponse(
-            currencies = cardCryptoCurrencyFactory.createDefaultCoinsForMultiCurrencyCard(
-                userWallet.requireColdWallet().scanResponse, // TODO [REDACTED_TASK_KEY]
+            currencies = cardCryptoCurrencyFactory.createDefaultCoinsForMultiCurrencyWallet(
+                userWallet = userWallet,
             ),
             isGroupedByNetwork = false,
             isSortedByBalance = false,
         )
 
     private fun getSupportedBlockchains(userWallet: UserWallet?): List<Blockchain> {
-        return (userWallet as? UserWallet.Cold)?.scanResponse?.let {
-            it.card.supportedBlockchains(it.cardTypesResolver, excludedBlockchains) // TODO [REDACTED_TASK_KEY]
-        } ?: Blockchain.entries.filter {
-            !it.isTestnet() && it !in excludedBlockchains
-        }
+        return userWallet?.supportedBlockchains(excludedBlockchains)
+            ?: Blockchain.entries.filter {
+                !it.isTestnet() && it !in excludedBlockchains
+            }
     }
     // endregion
 
