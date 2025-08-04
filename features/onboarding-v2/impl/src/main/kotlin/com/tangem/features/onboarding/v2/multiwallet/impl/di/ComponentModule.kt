@@ -9,7 +9,7 @@ import com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.model.Mul
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.chooseoption.model.Wallet1ChooseOptionModel
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.createwallet.model.MultiWalletCreateWalletModel
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.finalize.model.MultiWalletFinalizeModel
-import com.tangem.features.onboarding.v2.multiwallet.impl.child.scanprimary.model.Wallet1ScanPrimaryModel
+import com.tangem.features.onboarding.v2.multiwallet.impl.child.scanprimary.model.MultiWalletScanPrimaryModel
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.model.MultiWalletSeedPhraseModel
 import com.tangem.features.onboarding.v2.multiwallet.impl.model.OnboardingMultiWalletModel
 import dagger.Binds
@@ -70,6 +70,6 @@ internal interface ModelModule {
 
     @Binds
     @IntoMap
-    @ClassKey(Wallet1ScanPrimaryModel::class)
-    fun provideModel8(model: Wallet1ScanPrimaryModel): Model
+    @ClassKey(MultiWalletScanPrimaryModel::class)
+    fun provideModel8(model: MultiWalletScanPrimaryModel): Model
 }
