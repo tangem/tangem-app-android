@@ -2,7 +2,7 @@ package com.tangem.feature.referral.domain.di
 
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.di.ModelComponent
-import com.tangem.domain.card.DerivePublicKeysUseCase
+import com.tangem.domain.wallets.usecase.DerivePublicKeysUseCase
 import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.referral.domain.ReferralInteractor
