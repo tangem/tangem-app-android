@@ -9,7 +9,7 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.nft.models.NFTAsset
 import com.tangem.domain.nft.models.NFTCollection
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.nft.collections.model.NFTCollectionsModel
 import com.tangem.features.nft.collections.ui.NFTCollections
 import dagger.assisted.Assisted
