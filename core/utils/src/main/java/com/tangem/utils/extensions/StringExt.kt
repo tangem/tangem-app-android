@@ -1,6 +1,6 @@
 package com.tangem.utils.extensions
 
-private const val DEEPLINK_VALIDATION_REGEX = "['\";<>()+\\\\]"
+private const val DEEPLINK_VALIDATION_REGEX = "[\";<>()+\\\\]"
 
 /**
  * Check for malicious symbol in uri part

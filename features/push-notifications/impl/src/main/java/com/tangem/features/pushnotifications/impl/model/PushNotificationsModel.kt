@@ -71,7 +71,7 @@ internal class PushNotificationsModel @Inject constructor(
             neverToInitiallyAskPermissionUseCase(PUSH_PERMISSION)
             params.modelCallbacks.onDenySystemPermission()
             if (!params.isBottomSheet) {
-                appRouter.push(AppRoute.Home)
+                appRouter.push(AppRoute.Home())
             }
         }
     }
@@ -85,7 +85,7 @@ internal class PushNotificationsModel @Inject constructor(
             neverToInitiallyAskPermissionUseCase(PUSH_PERMISSION)
             params.modelCallbacks.onAllowSystemPermission()
             if (!params.isBottomSheet) {
-                appRouter.push(AppRoute.Home)
+                appRouter.push(AppRoute.Home())
             }
         }
     }
@@ -99,7 +99,7 @@ internal class PushNotificationsModel @Inject constructor(
             neverToInitiallyAskPermissionUseCase(PUSH_PERMISSION)
             params.modelCallbacks.onDenySystemPermission()
             if (!params.isBottomSheet) {
-                appRouter.push(AppRoute.Home)
+                appRouter.push(AppRoute.Home())
             }
         }
     }
