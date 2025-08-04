@@ -9,10 +9,10 @@ import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.format.bigdecimal.*
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.StatusSource
-import com.tangem.domain.staking.model.stakekit.YieldBalance
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.staking.YieldBalance
 import com.tangem.domain.staking.utils.getTotalWithRewardsStakingBalance
 import com.tangem.domain.tokens.error.CurrencyStatusError
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.BalanceType
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockState
