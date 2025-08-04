@@ -20,6 +20,8 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
@@ -38,7 +40,9 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.reordarable.ReorderableItem
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.OrganizeTokensScreenTestTags
 import com.tangem.core.ui.utils.WindowInsetsZero
+import com.tangem.core.ui.utils.lazyListItemPosition
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.organizetokens.model.DraggableItem
@@ -122,7 +126,8 @@ private fun TokenList(
         LazyColumn(
             modifier = Modifier
                 .align(Alignment.TopCenter)
-                .reorderable(reorderableListState),
+                .reorderable(reorderableListState)
+                .testTag(OrganizeTokensScreenTestTags.TOKENS_LAZY_LIST),
             state = reorderableListState.listState,
             contentPadding = listContentPadding,
         ) {
@@ -173,16 +178,18 @@ private fun LazyItemScope.DraggableItem(
     ) { isItemDragging ->
         isDragging = isItemDragging
 
-        val modifierWithBackground = itemModifier.background(color = TangemTheme.colors.background.primary)
+        val modifierWithBackground = itemModifier
+            .background(color = TangemTheme.colors.background.primary)
+            .semantics { lazyListItemPosition = index }
 
         when (item) {
             is DraggableItem.GroupHeader -> DraggableGroupTitleItem(
                 state = item.groupTitle,
                 reorderableTokenListState = reorderableState,
-                modifier = modifierWithBackground,
+                modifier = modifierWithBackground.testTag(OrganizeTokensScreenTestTags.GROUP_TITLE_ITEM),
             )
             is DraggableItem.Token -> TokenItem(
-                modifier = modifierWithBackground,
+                modifier = modifierWithBackground.testTag(OrganizeTokensScreenTestTags.TOKEN_LIST_ITEM),
                 state = item.tokenItemState,
                 reorderableTokenListState = reorderableState,
                 isBalanceHidden = isBalanceHidden,
@@ -201,6 +208,7 @@ private fun LazyItemScope.DraggableItem(
     }
 }
 
+@Suppress("LongMethod")
 @Composable
 private fun TopBar(
     config: OrganizeTokensState.HeaderConfig,
@@ -246,7 +254,9 @@ private fun TopBar(
             horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
         ) {
             RoundedActionButton(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .testTag(OrganizeTokensScreenTestTags.SORT_BY_BALANCE_BUTTON),
                 config = ActionButtonConfig(
                     text = TextReference.Res(id = R.string.organize_tokens_sort_by_balance),
                     iconResId = R.drawable.ic_sort_24,
@@ -257,7 +267,9 @@ private fun TopBar(
                 color = TangemTheme.colors.background.primary,
             )
             RoundedActionButton(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .testTag(OrganizeTokensScreenTestTags.GROUP_BUTTON),
                 config = ActionButtonConfig(
                     text = TextReference.Res(
                         id = if (config.isGrouped) {
@@ -286,12 +298,16 @@ private fun Actions(config: OrganizeTokensState.ActionsConfig, modifier: Modifie
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
     ) {
         SecondaryButton(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier
+                .weight(1f)
+                .testTag(OrganizeTokensScreenTestTags.CANCEL_BUTTON),
             text = stringResourceSafe(id = R.string.common_cancel),
             onClick = config.onCancelClick,
         )
         PrimaryButton(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier
+                .weight(1f)
+                .testTag(OrganizeTokensScreenTestTags.APPLY_BUTTON),
             text = stringResourceSafe(id = R.string.common_apply),
             onClick = config.onApplyClick,
             showProgress = config.showApplyProgress,
