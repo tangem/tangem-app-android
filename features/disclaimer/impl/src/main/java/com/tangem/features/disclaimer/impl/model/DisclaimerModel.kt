@@ -7,6 +7,8 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.finisher.AppFinisher
 import com.tangem.domain.card.repository.CardRepository
+import com.tangem.domain.notifications.GetIsHuaweiDeviceWithoutGoogleServicesUseCase
+import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.settings.NeverRequestPermissionUseCase
 import com.tangem.domain.settings.NeverToInitiallyAskPermissionUseCase
 import com.tangem.features.disclaimer.api.components.DisclaimerComponent
@@ -26,6 +28,9 @@ internal class DisclaimerModel @Inject constructor(
     private val neverToInitiallyAskPermissionUseCase: NeverToInitiallyAskPermissionUseCase,
     private val neverRequestPermissionUseCase: NeverRequestPermissionUseCase,
     private val appFinisher: AppFinisher,
+    private val notificationsRepository: NotificationsRepository,
+    private val getIsHuaweiDeviceWithoutGoogleServicesUseCase: GetIsHuaweiDeviceWithoutGoogleServicesUseCase,
+
     paramsContainer: ParamsContainer,
 ) : Model() {
 
@@ -40,13 +45,14 @@ internal class DisclaimerModel @Inject constructor(
         ),
     )
 
-    private fun onAccept(shouldAskPushPermission: Boolean) = modelScope.launch {
+    private fun onAccept() = modelScope.launch {
         if (params.isTosAccepted) {
             router.pop()
         } else {
             cardRepository.acceptTangemTOS()
-
-            if (shouldAskPushPermission) {
+            val shouldAskPushPermission = notificationsRepository.shouldShowSubscribeOnNotificationsAfterUpdate()
+            val isHuaweiDevice = getIsHuaweiDeviceWithoutGoogleServicesUseCase()
+            if (shouldAskPushPermission && !isHuaweiDevice) {
                 router.push(AppRoute.PushNotification)
             } else {
                 neverToInitiallyAskPermissionUseCase(PUSH_PERMISSION)
