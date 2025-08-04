@@ -11,6 +11,7 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.NavigationBar3ButtonsScrim
 import com.tangem.core.ui.utils.findActivity
 import com.tangem.features.pushnotifications.api.PushNotificationsComponent
+import com.tangem.features.pushnotifications.api.PushNotificationsParams
 import com.tangem.features.pushnotifications.impl.model.PushNotificationsModel
 import com.tangem.features.pushnotifications.impl.presentation.ui.PushNotificationsScreen
 import dagger.assisted.Assisted
@@ -19,7 +20,7 @@ import dagger.assisted.AssistedInject
 
 internal class DefaultPushNotificationsComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
-    @Assisted params: PushNotificationsComponent.Params,
+    @Assisted private val params: PushNotificationsParams,
 ) : PushNotificationsComponent, AppComponentContext by appComponentContext {
 
     private val model: PushNotificationsModel = getOrCreateModel(params)
@@ -31,8 +32,8 @@ internal class DefaultPushNotificationsComponent @AssistedInject constructor(
         BackHandler(onBack = { activity.finish() })
         NavigationBar3ButtonsScrim()
         PushNotificationsScreen(
-            onRequest = model::onRequest,
-            onNeverRequest = model::onNeverRequest,
+            onAllowClick = model::onAllowClick,
+            onLaterClick = model::onLaterClick,
             onAllowPermission = model::onAllowPermission,
             onDenyPermission = model::onDenyPermission,
             showNotificationsInfo = state.showInfoAboutNotifications,
@@ -43,7 +44,7 @@ internal class DefaultPushNotificationsComponent @AssistedInject constructor(
     interface Factory : PushNotificationsComponent.Factory {
         override fun create(
             context: AppComponentContext,
-            params: PushNotificationsComponent.Params,
+            params: PushNotificationsParams,
         ): DefaultPushNotificationsComponent
     }
 }
