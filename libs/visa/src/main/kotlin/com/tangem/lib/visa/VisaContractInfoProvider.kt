@@ -5,8 +5,8 @@ import com.ihsanbal.logging.LoggingInterceptor
 import com.tangem.lib.visa.model.VisaContractInfo
 import com.tangem.lib.visa.utils.Constants
 import com.tangem.lib.visa.utils.Constants.NETWORK_LOGS_TAG
-import com.tangem.lib.visa.utils.toHexString
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.extensions.toHexString
 import okhttp3.OkHttpClient
 import org.web3j.crypto.Credentials
 import org.web3j.protocol.Web3j

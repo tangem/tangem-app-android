@@ -52,6 +52,7 @@ dependencies {
     /** Coroutines */
     implementation(deps.kotlin.coroutines)
     implementation(deps.kotlin.coroutines.rx2)
+    implementation(deps.kotlin.datetime)
 
     /** Logging */
     implementation(deps.timber)
@@ -92,4 +93,5 @@ dependencies {
     testRuntimeOnly(deps.test.junit5.engine)
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)
+    testImplementation(projects.common.test)
 }

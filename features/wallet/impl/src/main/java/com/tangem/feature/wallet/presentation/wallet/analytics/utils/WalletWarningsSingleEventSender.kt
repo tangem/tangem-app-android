@@ -1,7 +1,7 @@
 package com.tangem.feature.wallet.presentation.wallet.analytics.utils
 
 import com.tangem.core.decompose.di.ModelScoped
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.usecase.SeedPhraseNotificationUseCase
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState

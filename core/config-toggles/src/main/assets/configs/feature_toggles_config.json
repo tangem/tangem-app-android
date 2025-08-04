@@ -4,28 +4,12 @@
         "version": "undefined"
     },
     {
-        "name": "ONRAMP_ENABLED",
-        "version": "5.24.2"
-    },
-    {
         "name": "VISA_ONBOARDING_ENABLED",
         "version": "undefined"
     },
     {
         "name": "STAKING_TON_ENABLED",
         "version": "undefined"
-    },
-    {
-        "name": "NFT_ENABLED",
-        "version": "5.25.0"
-    },
-    {
-        "name": "NFT_EVM_ENABLED",
-        "version": "5.25.0"
-    },
-    {
-        "name": "NFT_SOLANA_ENABLED",
-        "version": "5.25.0"
     },
     {
         "name": "NFT_MEDIA_CONTENT_ENABLED",
@@ -36,24 +20,8 @@
         "version": "undefined"
     },
     {
-        "name": "NEW_ARTWORK_LOADING",
-        "version": "5.25.0"
-    },
-    {
-        "name": "NEW_ATTESTATION_ENABLED",
-        "version": "5.24.0"
-    },
-    {
         "name": "WALLET_CONNECT_REDESIGN_ENABLED",
         "version": "undefined"
-    },
-    {
-        "name": "STAKING_LOADING_REFACTORING_ENABLED",
-        "version": "5.25.0"
-    },
-    {
-        "name": "DEEPLINK_NAVIGATION_ENABLED",
-        "version": "5.25.0"
     },
     {
         "name": "PUSH_NOTIFICATIONS_ENABLED",
@@ -77,6 +45,10 @@
     },
     {
         "name": "WALLET_BALANCE_FETCHER_ENABLED",
+        "version": "5.27.0"
+    },
+    {
+        "name": "HOT_WALLET_ENABLED",
         "version": "undefined"
     }
 ]

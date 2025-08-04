@@ -52,7 +52,6 @@ dependencies {
     implementation(projects.core.ui)
     implementation(projects.core.utils)
     implementation(projects.core.navigation)
-    implementation(projects.core.deepLinks)
     implementation(projects.core.pagination)
 
     /** Feature Apis */

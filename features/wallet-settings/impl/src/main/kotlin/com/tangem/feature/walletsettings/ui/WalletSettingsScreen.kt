@@ -28,7 +28,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.test.TestTags
+import com.tangem.core.ui.test.WalletSettingsScreenTestTags
 import com.tangem.core.ui.utils.requestPermission
 import com.tangem.feature.walletsettings.component.preview.PreviewWalletSettingsComponent
 import com.tangem.feature.walletsettings.entity.WalletSettingsItemUM
@@ -57,7 +57,7 @@ internal fun WalletSettingsScreen(
             Content(
                 modifier = Modifier
                     .padding(paddingValues)
-                    .testTag(TestTags.WALLET_SETTINGS_SCREEN),
+                    .testTag(WalletSettingsScreenTestTags.SCREEN_CONTAINER),
                 state = state,
             )
 
@@ -91,7 +91,7 @@ private fun Content(state: WalletSettingsUM, modifier: Modifier = Modifier) {
             val itemModifier = Modifier
                 .padding(horizontal = TangemTheme.dimens.spacing16)
                 .fillMaxWidth()
-                .testTag(TestTags.WALLET_SETTINGS_SCREEN_ITEM)
+                .testTag(WalletSettingsScreenTestTags.SCREEN_ITEM)
 
             when (item) {
                 is WalletSettingsItemUM.WithItems -> ItemsBlock(

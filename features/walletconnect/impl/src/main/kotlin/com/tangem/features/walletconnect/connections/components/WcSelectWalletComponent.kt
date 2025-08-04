@@ -32,7 +32,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.walletconnect.connections.model.WcSelectWalletModel
 import com.tangem.features.walletconnect.impl.R
 import kotlinx.collections.immutable.ImmutableList
@@ -91,7 +91,7 @@ private fun WcSelectWalletModalBS(
         containerColor = TangemTheme.colors.background.primary,
         title = {
             TangemModalBottomSheetTitle(
-                title = stringReference("Choose networks"),
+                title = stringReference("Choose wallet"),
                 startIconRes = R.drawable.ic_back_24,
                 onStartClick = onBack,
             )

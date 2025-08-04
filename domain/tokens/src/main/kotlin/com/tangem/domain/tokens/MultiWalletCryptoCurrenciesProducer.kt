@@ -2,7 +2,7 @@ package com.tangem.domain.tokens
 
 import com.tangem.domain.core.flow.FlowProducer
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 
 /**
  * Producer of all crypto currencies for a multi-currency wallet with specified [UserWalletId]

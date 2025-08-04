@@ -25,7 +25,7 @@ dependencies {
 
     /** Domain */
     implementation(projects.domain.wallets)
-    implementation(projects.domain.wallets.models)
+    api(projects.domain.models)
     implementation(projects.domain.settings)
     implementation(projects.domain.card)
 

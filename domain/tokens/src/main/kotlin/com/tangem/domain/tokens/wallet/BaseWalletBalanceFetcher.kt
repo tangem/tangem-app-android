@@ -1,7 +1,7 @@
 package com.tangem.domain.tokens.wallet
 
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 
 /**
  * Base contract for implementation of wallet's balance fetcher

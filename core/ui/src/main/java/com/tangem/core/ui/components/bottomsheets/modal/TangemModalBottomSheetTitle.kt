@@ -3,10 +3,7 @@ package com.tangem.core.ui.components.bottomsheets.modal
 import android.content.res.Configuration
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -20,6 +17,7 @@ import com.tangem.core.ui.components.buttons.small.TangemIconButton
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 
@@ -30,6 +28,7 @@ import com.tangem.core.ui.res.TangemThemePreview
 fun TangemModalBottomSheetTitle(
     modifier: Modifier = Modifier,
     title: TextReference? = null,
+    subtitle: TextReference? = null,
     @DrawableRes startIconRes: Int? = null,
     onStartClick: (() -> Unit)? = null,
     @DrawableRes endIconRes: Int? = null,
@@ -49,13 +48,23 @@ fun TangemModalBottomSheetTitle(
                     .align(Alignment.CenterStart),
             )
         }
-        if (title != null) {
-            Text(
-                text = title.resolveReference(),
-                style = TangemTheme.typography.subtitle1,
-                color = TangemTheme.colors.text.primary1,
-                modifier = Modifier.align(Alignment.Center),
-            )
+        Column(modifier = Modifier.align(Alignment.Center)) {
+            if (title != null) {
+                Text(
+                    text = title.resolveReference(),
+                    style = TangemTheme.typography.subtitle1,
+                    color = TangemTheme.colors.text.primary1,
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                )
+            }
+            if (subtitle != null) {
+                Text(
+                    text = subtitle.resolveReference(),
+                    style = TangemTheme.typography.caption1,
+                    color = TangemTheme.colors.text.tertiary,
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                )
+            }
         }
         if (endIconRes != null && onEndClick != null) {
             TangemIconButton(
@@ -79,6 +88,7 @@ private fun Preview_TangemModalBottomSheetTitle(
     TangemThemePreview {
         TangemModalBottomSheetTitle(
             title = params.title,
+            subtitle = params.subtitle,
             startIconRes = params.startIconRes,
             onStartClick = params.onStartClick,
             endIconRes = params.endIconRes,
@@ -90,6 +100,7 @@ private fun Preview_TangemModalBottomSheetTitle(
 
 private data class TangemModalBottomSheetTitleData(
     val title: TextReference?,
+    val subtitle: TextReference?,
     val startIconRes: Int?,
     val onStartClick: (() -> Unit)?,
     val endIconRes: Int?,
@@ -104,6 +115,7 @@ private class TangemModalBottomSheetTitleProvider : PreviewParameterProvider<Tan
             onStartClick = {},
             endIconRes = null,
             onEndClick = null,
+            subtitle = null,
         ),
         TangemModalBottomSheetTitleData(
             title = resourceReference(R.string.wallet_title),
@@ -111,9 +123,27 @@ private class TangemModalBottomSheetTitleProvider : PreviewParameterProvider<Tan
             onStartClick = null,
             endIconRes = R.drawable.ic_close_24,
             onEndClick = {},
+            subtitle = null,
         ),
         TangemModalBottomSheetTitleData(
             title = resourceReference(R.string.wallet_title),
+            startIconRes = R.drawable.ic_back_24,
+            onStartClick = {},
+            endIconRes = R.drawable.ic_close_24,
+            onEndClick = {},
+            subtitle = null,
+        ),
+        TangemModalBottomSheetTitleData(
+            title = resourceReference(R.string.wallet_title),
+            subtitle = stringReference("Today • 2:37 PM"),
+            startIconRes = R.drawable.ic_back_24,
+            onStartClick = {},
+            endIconRes = R.drawable.ic_close_24,
+            onEndClick = {},
+        ),
+        TangemModalBottomSheetTitleData(
+            title = null,
+            subtitle = stringReference("Today • 2:37 PM"),
             startIconRes = R.drawable.ic_back_24,
             onStartClick = {},
             endIconRes = R.drawable.ic_close_24,
@@ -125,6 +155,7 @@ private class TangemModalBottomSheetTitleProvider : PreviewParameterProvider<Tan
             onStartClick = {},
             endIconRes = R.drawable.ic_close_24,
             onEndClick = {},
+            subtitle = null,
         ),
     )
 }

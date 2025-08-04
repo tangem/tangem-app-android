@@ -4,7 +4,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.wallet.BaseWalletBalanceFetcher
 import com.tangem.domain.tokens.wallet.FetchingSource
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 
 /**
  * Implementation of [BaseWalletBalanceFetcher] for SINGLE-CURRENCY wallet
