@@ -6,6 +6,7 @@ import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
+import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.WindowManager
 import androidx.activity.SystemBarStyle
@@ -26,17 +27,13 @@ import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import arrow.core.getOrElse
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.RoutingFeatureToggle
+import com.tangem.common.routing.deeplink.DeeplinkConst.WEBLINK_KEY
+import com.tangem.common.routing.deeplink.PayloadToDeeplinkConverter
 import com.tangem.common.routing.entity.SerializableIntent
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.di.RootAppComponentContext
-import com.tangem.core.deeplink.DeepLinksRegistry
-import com.tangem.core.deeplink.WEBLINK_KEY
-import com.tangem.core.deeplink.converter.PayloadToDeeplinkConverter
-import com.tangem.core.navigation.email.EmailSender
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.core.ui.UiDependencies
 import com.tangem.data.balancehiding.DefaultDeviceFlipDetector
 import com.tangem.data.card.sdk.CardSdkOwner
 import com.tangem.domain.apptheme.model.AppThemeMode
@@ -52,6 +49,7 @@ import com.tangem.domain.tokens.GetPolkadotCheckHasImmortalUseCase
 import com.tangem.domain.tokens.GetPolkadotCheckHasResetUseCase
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
+import com.tangem.features.tester.api.TesterMenuLauncher
 import com.tangem.features.walletconnect.components.WalletConnectFeatureToggles
 import com.tangem.google.GoogleServicesHelper
 import com.tangem.operations.backup.BackupService
@@ -68,7 +66,6 @@ import com.tangem.tap.features.intentHandler.handlers.BackgroundScanIntentHandle
 import com.tangem.tap.features.intentHandler.handlers.OnPushClickedIntentHandler
 import com.tangem.tap.features.intentHandler.handlers.WalletConnectLinkIntentHandler
 import com.tangem.tap.features.main.MainViewModel
-import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.proxy.redux.DaggerGraphAction
 import com.tangem.tap.routing.component.RoutingComponent
 import com.tangem.tap.routing.configurator.AppRouterConfig
@@ -102,9 +99,6 @@ val mainScope = CoroutineScope(mainCoroutineContext)
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
-    @Inject
-    lateinit var appStateHolder: AppStateHolder
-
     /** Router for opening tester menu */
     @Inject
     lateinit var cardSdkOwner: CardSdkOwner
@@ -120,9 +114,6 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
     @Inject
     lateinit var walletConnectInteractor: WalletConnectInteractor
-
-    @Inject
-    lateinit var deepLinksRegistry: DeepLinksRegistry
 
     @Inject
     lateinit var settingsRepository: SettingsRepository
@@ -141,9 +132,6 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
     @Inject
     lateinit var userWalletsListManager: UserWalletsListManager
-
-    @Inject
-    lateinit var emailSender: EmailSender
 
     @Inject
     @RootAppComponentContext
@@ -174,13 +162,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     lateinit var dispatchers: CoroutineDispatcherProvider
 
     @Inject
-    internal lateinit var uiDependencies: UiDependencies
-
-    @Inject
     internal lateinit var defaultDeviceFlipDetector: DefaultDeviceFlipDetector
-
-    @Inject
-    internal lateinit var routingFeatureToggle: RoutingFeatureToggle
 
     @Inject
     internal lateinit var deeplinkFactory: DeepLinkFactory
@@ -191,12 +173,24 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     @Inject
     internal lateinit var urlOpener: UrlOpener
 
+    @Inject
+    internal lateinit var testerMenuLauncher: TesterMenuLauncher
+
+    @Inject
+    internal lateinit var intentProcessor: IntentProcessor
+
+    @Inject
+    internal lateinit var walletConnectLinkIntentHandler: WalletConnectLinkIntentHandler
+
+    @Inject
+    internal lateinit var onPushClickedIntentHandler: OnPushClickedIntentHandler
+
+    @Inject
+    internal lateinit var backgroundScanIntentHandler: BackgroundScanIntentHandler
+
     internal val viewModel: MainViewModel by viewModels()
 
     private lateinit var appThemeModeFlow: SharedFlow<AppThemeMode>
-
-    // TODO: fixme: inject through DI
-    private val intentProcessor: IntentProcessor = IntentProcessor()
 
     private val dialogManager = DialogManager()
 
@@ -243,13 +237,12 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         sendStakingUnsubmittedHashes()
         checkGoogleServicesAvailability()
 
-        if (routingFeatureToggle.isDeepLinkNavigationEnabled.not() && intent != null && savedInstanceState == null) {
-            // handle intent only on start, not on recreate
-            handleDeepLink(intent = intent, isFromOnNewIntent = false)
-        }
-
         lifecycle.addObserver(WindowObscurationObserver)
         lifecycle.addObserver(defaultDeviceFlipDetector)
+
+        if (BuildConfig.TESTER_MENU_ENABLED) {
+            lifecycle.addObserver(testerMenuLauncher.launchOnKeyEventObserver)
+        }
     }
 
     private fun setRootContent() {
@@ -360,12 +353,10 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     }
 
     private fun initIntentHandlers() {
-        val hasSavedWalletsProvider = { userWalletsListManager.hasUserWallets }
-        intentProcessor.addHandler(OnPushClickedIntentHandler(analyticsEventsHandler))
-        intentProcessor.addHandler(BackgroundScanIntentHandler(hasSavedWalletsProvider, lifecycleScope))
+        intentProcessor.addHandler(onPushClickedIntentHandler)
 
         if (!walletConnectFeatureToggles.isRedesignedWalletConnectEnabled) {
-            intentProcessor.addHandler(WalletConnectLinkIntentHandler())
+            intentProcessor.addHandler(walletConnectLinkIntentHandler)
         }
     }
 
@@ -426,8 +417,15 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
     override fun dispatchTouchEvent(event: MotionEvent): Boolean {
         val result = WindowObscurationObserver.dispatchTouchEvent(event, analyticsEventsHandler)
-
         return if (result) super.dispatchTouchEvent(event) else false
+    }
+
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        return if (BuildConfig.TESTER_MENU_ENABLED) {
+            testerMenuLauncher.launchOnKeyEventObserver.dispatchKeyEvent(event) || super.dispatchKeyEvent(event)
+        } else {
+            super.dispatchKeyEvent(event)
+        }
     }
 
     private fun navigateToInitialScreenIfNeeded(intentWhichStartedActivity: Intent?) {
@@ -451,9 +449,15 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     }
 
     private fun navigateToInitialScreen(intentWhichStartedActivity: Intent?) {
+        val launchMode = backgroundScanIntentHandler.getInitScreenLaunchMode(intentWhichStartedActivity)
         if (userWalletsListManager.isLockable && userWalletsListManager.hasUserWallets) {
             store.dispatchNavigationAction {
-                replaceAll(AppRoute.Welcome(intentWhichStartedActivity?.let(::SerializableIntent)))
+                replaceAll(
+                    AppRoute.Welcome(
+                        launchMode = launchMode,
+                        intent = intentWhichStartedActivity?.let(::SerializableIntent),
+                    ),
+                )
             }
             intentProcessor.handleIntent(
                 intent = intentWhichStartedActivity,
@@ -467,7 +471,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
                 val route = if (shouldShowTos) {
                     AppRoute.Disclaimer(isTosAccepted = false)
                 } else {
-                    AppRoute.Home
+                    AppRoute.Home(launchMode = launchMode)
                 }
 
                 store.dispatchNavigationAction { replaceAll(route) }
@@ -479,7 +483,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
             }
         }
 
-        if (routingFeatureToggle.isDeepLinkNavigationEnabled && intent != null) {
+        if (intent != null) {
             handleDeepLink(intent = intent, isFromOnNewIntent = false)
         }
 
@@ -487,26 +491,22 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     }
 
     private fun handleDeepLink(intent: Intent, isFromOnNewIntent: Boolean) {
-        if (routingFeatureToggle.isDeepLinkNavigationEnabled) {
-            val deepLinkExtras = PayloadToDeeplinkConverter.convertBundle(intent.extras)?.toUri()
-            val webLink = intent.getStringExtra(WEBLINK_KEY)
+        val deepLinkExtras = PayloadToDeeplinkConverter.convertBundle(intent.extras)?.toUri()
+        val webLink = intent.getStringExtra(WEBLINK_KEY)
 
-            val receivedDeepLink = intent.data ?: deepLinkExtras
+        val receivedDeepLink = intent.data ?: deepLinkExtras
 
-            when {
-                receivedDeepLink != null -> {
-                    deeplinkFactory.handleDeeplink(
-                        deeplinkUri = receivedDeepLink,
-                        coroutineScope = lifecycleScope,
-                        isFromOnNewIntent = isFromOnNewIntent,
-                    )
-                }
-                webLink?.uriValidate() == true -> {
-                    urlOpener.openUrl(webLink)
-                }
+        when {
+            receivedDeepLink != null -> {
+                deeplinkFactory.handleDeeplink(
+                    deeplinkUri = receivedDeepLink,
+                    coroutineScope = lifecycleScope,
+                    isFromOnNewIntent = isFromOnNewIntent,
+                )
             }
-        } else {
-            deepLinksRegistry.launch(intent)
+            webLink?.uriValidate() == true -> {
+                urlOpener.openUrl(webLink)
+            }
         }
     }
 

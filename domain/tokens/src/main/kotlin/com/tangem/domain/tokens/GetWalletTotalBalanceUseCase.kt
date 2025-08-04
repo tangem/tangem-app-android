@@ -6,20 +6,24 @@ import arrow.core.toNonEmptyListOrNull
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.core.lce.lce
+import com.tangem.domain.core.utils.lceContent
 import com.tangem.domain.core.utils.lceLoading
+import com.tangem.domain.models.TotalFiatBalance
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.error.TokenListError
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.model.TotalFiatBalance
 import com.tangem.domain.tokens.operations.BaseCurrenciesStatusesOperations
 import com.tangem.domain.tokens.operations.TokenListFiatBalanceOperations
-import com.tangem.domain.wallets.models.UserWalletId
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.*
 import timber.log.Timber
+import java.util.concurrent.ConcurrentHashMap
 
 class GetWalletTotalBalanceUseCase(
     private val currenciesStatusesOperations: BaseCurrenciesStatusesOperations,
 ) {
+
+    private val walletBalanceCache = ConcurrentHashMap<UserWalletId, TotalFiatBalance.Loaded>()
 
     operator fun invoke(
         userTallestIds: Collection<UserWalletId>,
@@ -52,8 +56,41 @@ class GetWalletTotalBalanceUseCase(
         }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     operator fun invoke(userWalletId: UserWalletId): LceFlow<TokenListError, TotalFiatBalance> {
         return currenciesStatusesOperations.getCurrenciesStatuses(userWalletId).map(::createBalance)
+            .distinctUntilChanged()
+            .onStart {
+                val cachedBalance = walletBalanceCache[userWalletId]
+
+                if (cachedBalance != null) {
+                    emit(cachedBalance.lceContent())
+                }
+            }
+            .mapLatest { lceBalance ->
+                val cachedBalance = walletBalanceCache[userWalletId]
+
+                if (cachedBalance == null) {
+                    lceBalance.onContent { content ->
+                        if (content is TotalFiatBalance.Loaded) {
+                            walletBalanceCache.put(userWalletId, content)
+                        }
+                    }
+
+                    lceBalance
+                } else {
+                    val content = lceBalance.getOrNull(isPartialContentAccepted = false)
+
+                    if (content is TotalFiatBalance.Loaded && content != cachedBalance) {
+                        walletBalanceCache.put(userWalletId, content)
+
+                        lceBalance
+                    } else {
+                        cachedBalance.lceContent()
+                    }
+                }
+            }
+            .distinctUntilChanged()
     }
 
     private fun createBalance(
