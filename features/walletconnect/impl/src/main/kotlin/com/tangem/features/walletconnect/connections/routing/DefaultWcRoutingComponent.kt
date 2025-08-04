@@ -91,6 +91,12 @@ internal class DefaultWcRoutingComponent @AssistedInject constructor(
                     alertType = AlertsComponent.AlertType.UnsupportedMethod { model.innerRouter.pop() },
                 ),
             )
+            is WcInnerRoute.WcDappDisconnected -> AlertsComponent(
+                childContext,
+                AlertsComponent.Params(
+                    alertType = AlertsComponent.AlertType.WcDisconnected { model.innerRouter.pop() },
+                ),
+            )
         }
     }
 

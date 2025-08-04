@@ -8,10 +8,10 @@ import com.tangem.blockchain.common.NameResolver
 import com.tangem.blockchain.common.ResolveAddressResult
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.WalletAddressServiceRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.ParsedQrCode
-import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.models.errors.ParsedQrCodeErrors
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext

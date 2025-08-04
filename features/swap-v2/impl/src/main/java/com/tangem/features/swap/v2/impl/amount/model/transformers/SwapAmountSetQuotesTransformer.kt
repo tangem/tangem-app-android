@@ -17,17 +17,23 @@ import java.math.BigDecimal
 
 internal class SwapAmountSetQuotesTransformer(
     private val quotes: List<SwapQuoteUM>,
-    private val secondaryMaximumAmountBoundary: EnterAmountBoundary,
-    private val secondaryMinimumAmountBoundary: EnterAmountBoundary,
+    private val secondaryMaximumAmountBoundary: EnterAmountBoundary?,
+    private val secondaryMinimumAmountBoundary: EnterAmountBoundary?,
+    private val isSilentReload: Boolean,
 ) : Transformer<SwapAmountUM> {
     override fun transform(prevState: SwapAmountUM): SwapAmountUM {
         if (prevState !is SwapAmountUM.Content) return prevState
 
         val sortedQuotes = quotes.sortedWith(SwapQuotesComparator)
         val bestQuote = findBestQuote(quotes) ?: SwapQuoteUM.Empty
+        val selectedQuote = if (isSilentReload) {
+            prevState.selectedQuote
+        } else {
+            (bestQuote as? SwapQuoteUM.Content)?.copy(diffPercent = DifferencePercent.Best) ?: bestQuote
+        }
 
         val selectQuoteTransformer = SwapAmountSelectQuoteTransformer(
-            quoteUM = bestQuote,
+            quoteUM = selectedQuote,
             secondaryMaximumAmountBoundary = secondaryMaximumAmountBoundary,
             secondaryMinimumAmountBoundary = secondaryMinimumAmountBoundary,
         )
@@ -52,6 +58,7 @@ internal class SwapAmountSetQuotesTransformer(
                         val percent = quote.quoteAmount / bestQuote.quoteAmount - BigDecimal.ONE
                         quote.copy(
                             diffPercent = DifferencePercent.Diff(
+                                isPositive = percent.isPositive(),
                                 percent = stringReference(
                                     if (percent.isPositive()) {
                                         "${StringsSigns.PLUS}${percent.format { percent() }}"
