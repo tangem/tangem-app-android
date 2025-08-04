@@ -12,6 +12,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -19,7 +21,10 @@ import com.tangem.features.walletconnect.impl.R
 import com.tangem.features.walletconnect.transaction.ui.common.WcSmallTitleItem
 
 @Composable
-internal fun WcEstimatedWalletChangesNotLoadedItem(modifier: Modifier = Modifier) {
+internal fun WcEstimatedWalletChangesNotificationItem(
+    modifier: Modifier = Modifier,
+    description: TextReference? = null,
+) {
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(14.dp))
@@ -36,7 +41,8 @@ internal fun WcEstimatedWalletChangesNotLoadedItem(modifier: Modifier = Modifier
             modifier = modifier
                 .fillMaxWidth()
                 .padding(start = 12.dp, end = 12.dp, bottom = 14.dp),
-            text = stringResourceSafe(R.string.wc_estimated_wallet_changes_not_simulated),
+            text = description?.resolveReference()
+                ?: stringResourceSafe(R.string.wc_estimated_wallet_changes_not_simulated),
             color = TangemTheme.colors.text.tertiary,
             style = TangemTheme.typography.body2,
         )
@@ -52,7 +58,7 @@ private fun WcEstimatedWalletChangesNotLoadedItems() {
             modifier = Modifier
                 .background(TangemTheme.colors.background.tertiary),
         ) {
-            WcEstimatedWalletChangesNotLoadedItem()
+            WcEstimatedWalletChangesNotificationItem()
         }
     }
 }
