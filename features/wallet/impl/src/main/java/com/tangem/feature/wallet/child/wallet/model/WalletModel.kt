@@ -11,16 +11,18 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.card.common.util.cardTypesResolver
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.nft.ObserveAndClearNFTCacheIfNeedUseCase
+import com.tangem.domain.notifications.GetIsHuaweiDeviceWithoutGoogleServicesUseCase
+import com.tangem.domain.notifications.repository.NotificationsRepository
+import com.tangem.domain.notifications.toggles.NotificationsFeatureToggles
 import com.tangem.domain.settings.*
 import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
 import com.tangem.domain.tokens.RefreshMultiCurrencyWalletQuotesUseCase
 import com.tangem.domain.tokens.TokensFeatureToggles
-import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.models.wallet.isMultiCurrency
-import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
-import com.tangem.domain.wallets.usecase.GetWalletsUseCase
+import com.tangem.domain.wallets.usecase.*
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
@@ -28,7 +30,6 @@ import com.tangem.feature.wallet.presentation.wallet.analytics.utils.SelectedWal
 import com.tangem.feature.wallet.presentation.wallet.domain.*
 import com.tangem.feature.wallet.presentation.wallet.loaders.WalletScreenContentLoader
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
-import com.tangem.feature.wallet.presentation.wallet.state.model.PushNotificationsBottomSheetConfig
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDialogConfig
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent.DemonstrateWalletsScrollPreview.Direction
@@ -37,8 +38,8 @@ import com.tangem.feature.wallet.presentation.wallet.state.transformers.*
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
 import com.tangem.features.biometry.AskBiometryComponent
+import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
-import com.tangem.features.pushnotifications.api.utils.getPushPermissionOrNull
 import com.tangem.features.wallet.deeplink.WalletDeepLinkActionListener
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
@@ -79,11 +80,18 @@ internal class WalletModel @Inject constructor(
     private val tokensFeatureToggles: TokensFeatureToggles,
     private val observeAndClearNFTCacheIfNeedUseCase: ObserveAndClearNFTCacheIfNeedUseCase,
     private val walletDeepLinkActionListener: WalletDeepLinkActionListener,
+    private val notificationsRepository: NotificationsRepository,
+    private val getWalletsListForEnablingUseCase: GetWalletsForAutomaticallyPushEnablingUseCase,
+    private val setNotificationsEnabledUseCase: SetNotificationsEnabledUseCase,
+    private val notificationsFeatureToggles: NotificationsFeatureToggles,
+    private val getIsBiometryIsEnabledUseCase: GetIsBiometricsEnabledUseCase,
+    private val getIsHuaweiDeviceWithoutGoogleServicesUseCase: GetIsHuaweiDeviceWithoutGoogleServicesUseCase,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
 ) : Model() {
 
     val askBiometryModelCallbacks = AskBiometryModelCallbacks()
+    val askForPushNotificationsModelCallbacks = AskForPushNotificationsCallbacks()
     val uiState: StateFlow<WalletScreenState> = stateHolder.uiState
 
     private val walletsUpdateJobHolder = JobHolder()
@@ -106,6 +114,7 @@ internal class WalletModel @Inject constructor(
         subscribeOnSelectedWalletFlow()
         subscribeToScreenBackgroundState()
         subscribeOnPushNotificationsPermission()
+        enableNotificationsIfNeeded()
 
         clickIntents.initialize(innerWalletRouter, modelScope)
     }
@@ -201,20 +210,19 @@ internal class WalletModel @Inject constructor(
 
     private fun subscribeOnPushNotificationsPermission() {
         modelScope.launch {
-            val shouldRequestPush = shouldAskPermissionUseCase(PUSH_PERMISSION)
-            val isPushPermissionAvailable = getPushPermissionOrNull() != null
-            if (!shouldRequestPush || !isPushPermissionAvailable) return@launch
+            val shouldAskPermission = shouldAskPermissionUseCase(PUSH_PERMISSION)
+            val afterUpdate = notificationsRepository.shouldShowSubscribeOnNotificationsAfterUpdate()
+            val isBiometricsEnabled = getIsBiometryIsEnabledUseCase()
+            val isHuaweiDevice = getIsHuaweiDeviceWithoutGoogleServicesUseCase()
+            val shouldShowBottomSheet = shouldAskPermission || afterUpdate
+            if (!isBiometricsEnabled) return@launch
+            if (isHuaweiDevice) return@launch
+            if (!shouldShowBottomSheet) return@launch
 
             delay(timeMillis = 1_800)
 
-            stateHolder.showBottomSheet(
-                content = PushNotificationsBottomSheetConfig(
-                    onRequest = clickIntents::onRequestPushPermission,
-                    onNeverRequest = { clickIntents.onNeverAskPushPermission(false) },
-                    onAllow = clickIntents::onAllowPushPermission,
-                    onDeny = clickIntents::onDenyPushPermission,
-                ),
-                onDismiss = { clickIntents.onNeverAskPushPermission(true) },
+            innerWalletRouter.dialogNavigation.activate(
+                configuration = WalletDialogConfig.AskForPushNotifications,
             )
         }
     }
@@ -435,6 +443,8 @@ internal class WalletModel @Inject constructor(
                 it.copy(selectedWalletIndex = action.selectedWalletIndex)
             }
         }
+
+        enableNotificationsIfNeeded()
     }
 
     private fun deleteWallet(action: WalletsUpdateActionResolver.Action.DeleteWallet) {
@@ -552,6 +562,26 @@ internal class WalletModel @Inject constructor(
         }
     }
 
+    private fun enableNotificationsIfNeeded() {
+        if (!notificationsFeatureToggles.isNotificationsEnabled) return
+        modelScope.launch {
+            val isUserAllowToEnableNotifications = notificationsRepository.isUserAllowToSubscribeOnPushNotifications()
+            if (isUserAllowToEnableNotifications) {
+                val alreadyEnabledWallets = notificationsRepository.getWalletAutomaticallyEnabledList().map {
+                    UserWalletId(it)
+                }
+                val walletsListWhichShouldBeEnabled = getWalletsListForEnablingUseCase(alreadyEnabledWallets)
+                walletsListWhichShouldBeEnabled.forEach { userWalletId ->
+                    setNotificationsEnabledUseCase(userWalletId, true).onRight {
+                        notificationsRepository.setNotificationsWasEnabledAutomatically(userWalletId.stringValue)
+                    }.onLeft {
+                        Timber.e(it)
+                    }
+                }
+            }
+        }
+    }
+
     inner class AskBiometryModelCallbacks : AskBiometryComponent.ModelCallbacks {
         override fun onAllowed() {
             analyticsEventsHandler.send(MainScreenAnalyticsEvent.EnableBiometrics(AnalyticsParam.OnOffState.On))
@@ -560,6 +590,23 @@ internal class WalletModel @Inject constructor(
 
         override fun onDenied() {
             analyticsEventsHandler.send(MainScreenAnalyticsEvent.EnableBiometrics(AnalyticsParam.OnOffState.Off))
+            innerWalletRouter.dialogNavigation.dismiss()
+        }
+    }
+
+    inner class AskForPushNotificationsCallbacks : PushNotificationsModelCallbacks {
+
+        override fun onAllowSystemPermission() {
+            innerWalletRouter.dialogNavigation.dismiss()
+            enableNotificationsIfNeeded()
+        }
+
+        override fun onDenySystemPermission() {
+            innerWalletRouter.dialogNavigation.dismiss()
+            enableNotificationsIfNeeded()
+        }
+
+        override fun onDismiss() {
             innerWalletRouter.dialogNavigation.dismiss()
         }
     }
