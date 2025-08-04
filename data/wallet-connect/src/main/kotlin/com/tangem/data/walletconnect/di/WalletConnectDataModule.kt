@@ -225,8 +225,12 @@ internal object WalletConnectDataModule {
 
     @Provides
     @Singleton
-    fun wcRequestUseCaseFactory(diHelperBox: DiHelperBox): WcRequestUseCaseFactory {
-        return DefaultWcRequestUseCaseFactory(diHelperBox.handlers)
+    fun wcRequestUseCaseFactory(
+        diHelperBox: DiHelperBox,
+        namespaceConverters: Set<@JvmSuppressWildcards WcNamespaceConverter>,
+        analytics: AnalyticsEventHandler,
+    ): WcRequestUseCaseFactory {
+        return DefaultWcRequestUseCaseFactory(diHelperBox.handlers, namespaceConverters, analytics)
     }
 
     @Provides
