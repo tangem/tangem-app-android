@@ -12,7 +12,7 @@ import com.tangem.domain.core.utils.lceContent
 import com.tangem.domain.core.utils.lceError
 import com.tangem.domain.core.utils.lceLoading
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.tap.domain.model.Currency
 import com.tangem.tap.network.exchangeServices.ExchangeService
 import com.tangem.tap.network.exchangeServices.ExchangeServiceInitializationStatus
@@ -27,7 +27,7 @@ class MoonPayService(
     private val apiKey: String,
     private val secretKey: String,
     private val logEnabled: Boolean,
-    private val cardProvider: () -> CardDTO?,
+    private val userWalletProvider: () -> UserWallet?,
 ) : ExchangeService {
 
     override val initializationStatus: StateFlow<ExchangeServiceInitializationStatus>
@@ -103,8 +103,8 @@ class MoonPayService(
     }
 
     override fun availableForSell(currency: Currency): Boolean {
-        val card = cardProvider() ?: return false
-        val checkCardExchange = !card.isStart2Coin
+        val userWallet = userWalletProvider() ?: return false
+        val checkCardExchange = userWallet !is UserWallet.Cold || !userWallet.scanResponse.card.isStart2Coin
 
         if (!checkCardExchange) return false
 
