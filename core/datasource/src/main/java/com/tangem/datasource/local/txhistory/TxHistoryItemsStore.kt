@@ -2,9 +2,9 @@ package com.tangem.datasource.local.txhistory
 
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.TxInfo
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.txhistory.models.Page
 import com.tangem.domain.txhistory.models.PaginationWrapper
-import com.tangem.domain.wallets.models.UserWalletId
 
 interface TxHistoryItemsStore {
 

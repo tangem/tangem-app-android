@@ -5,19 +5,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.essenty.lifecycle.subscribe
-import com.tangem.common.routing.RoutingFeatureToggle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.model.getOrCreateModel
-import com.tangem.core.deeplink.DeepLinksRegistry
-import com.tangem.core.deeplink.global.BuyCurrencyDeepLink
-import com.tangem.core.deeplink.utils.registerDeepLinks
 import com.tangem.core.ui.components.NavigationBar3ButtonsScrim
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsModel
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.TokenDetailsScreen
 import com.tangem.features.markets.token.block.TokenMarketBlockComponent
-import com.tangem.features.onramp.OnrampFeatureToggles
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.txhistory.component.TxHistoryComponent
 import dagger.assisted.Assisted
@@ -30,9 +25,6 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
     @Assisted params: TokenDetailsComponent.Params,
     tokenMarketBlockComponentFactory: TokenMarketBlockComponent.Factory,
     txHistoryComponentFactory: TxHistoryComponent.Factory,
-    onrampFeatureToggles: OnrampFeatureToggles,
-    routingFeatureToggle: RoutingFeatureToggle,
-    deepLinksRegistry: DeepLinksRegistry,
 ) : TokenDetailsComponent, AppComponentContext by appComponentContext {
 
     private val model: TokenDetailsModel = getOrCreateModel(params)
@@ -50,23 +42,6 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
             onPause = model::onPause,
             onResume = model::onResume,
         )
-
-        if (!routingFeatureToggle.isDeepLinkNavigationEnabled) {
-            val deeplinks = buildList {
-                if (!onrampFeatureToggles.isFeatureEnabled) {
-                    add(
-                        BuyCurrencyDeepLink(
-                            onReceive = model::onBuyCurrencyDeepLink,
-                        ),
-                    )
-                }
-            }
-
-            registerDeepLinks(
-                registry = deepLinksRegistry,
-                deepLinks = deeplinks,
-            )
-        }
     }
 
     private val tokenMarketBlockComponent = params.currency.toTokenMarketParam()?.let { tokenMarketParams ->
