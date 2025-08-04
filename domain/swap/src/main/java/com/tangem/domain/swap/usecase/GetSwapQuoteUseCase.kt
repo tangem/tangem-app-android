@@ -8,7 +8,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.swap.SwapErrorResolver
 import com.tangem.domain.swap.SwapRepositoryV2
 import com.tangem.domain.swap.models.SwapQuoteModel
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 import java.math.BigDecimal
 
 /**
