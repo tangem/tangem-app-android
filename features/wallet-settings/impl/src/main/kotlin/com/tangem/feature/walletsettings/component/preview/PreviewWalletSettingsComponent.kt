@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.tangem.core.analytics.DummyAnalyticsEventHandler
 import com.tangem.core.decompose.navigation.DummyRouter
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.walletsettings.component.WalletSettingsComponent
 import com.tangem.feature.walletsettings.entity.WalletSettingsUM
 import com.tangem.feature.walletsettings.ui.WalletSettingsScreen
@@ -36,6 +36,7 @@ internal class PreviewWalletSettingsComponent : WalletSettingsComponent {
             onCheckedNotificationsChanged = {},
             onNotificationsDescriptionClick = {},
             isNotificationsPermissionGranted = false,
+            isHotWalletEnabled = false,
         ),
         requestPushNotificationsPermission = false,
         onPushNotificationPermissionGranted = {},
