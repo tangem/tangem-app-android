@@ -13,7 +13,7 @@ dependencies {
     implementation(deps.androidx.fragment.ktx)
 
     /** Project - Domain */
-    implementation(projects.domain.wallets.models)
+    implementation(projects.domain.models)
 
     /** Core */
     implementation(projects.core.ui)

@@ -24,10 +24,10 @@ data class SwapCurrencies(
 /**
  * Return swap group depending on [swapDirection]
  */
-fun SwapCurrencies.getGroupWithReverse(swapDirection: SwapDirection): SwapCurrenciesGroup {
+fun SwapCurrencies.getGroupWithDirection(swapDirection: SwapDirection): SwapCurrenciesGroup {
     return when (swapDirection) {
-        SwapDirection.Reverse -> fromGroup
-        SwapDirection.Direct -> toGroup
+        SwapDirection.Reverse -> toGroup
+        SwapDirection.Direct -> fromGroup
     }
 }
 

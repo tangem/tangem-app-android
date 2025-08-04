@@ -5,6 +5,8 @@ import com.tangem.core.ui.components.atoms.text.TextEllipsis
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.express.models.ExpressProvider
+import com.tangem.domain.express.models.ExpressProviderType
 import com.tangem.domain.express.models.ExpressRateType
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
@@ -16,10 +18,11 @@ import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountType
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
 import kotlinx.collections.immutable.persistentListOf
+import java.math.BigDecimal
 
 internal data object SwapAmountContentPreview {
 
-    private val cryptoCurrencyStatus = CryptoCurrencyStatus(
+    val cryptoCurrencyStatus = CryptoCurrencyStatus(
         currency = CryptoCurrency.Coin(
             id = CryptoCurrency.ID.fromValue("coin⟨BITCOIN⟩bitcoin"),
             network = Network(
@@ -41,10 +44,30 @@ internal data object SwapAmountContentPreview {
             name = "Bitcoin",
             symbol = "BTC",
             decimals = 8,
-            iconUrl = "",
+            iconUrl = "https://s3.eu-central-1.amazonaws.com/tangem.api/coins/medium/bitcoin.png",
             isCustom = false,
         ),
         value = CryptoCurrencyStatus.Loading,
+    )
+
+    private val provider = ExpressProvider(
+        providerId = "changenow",
+        rateTypes = listOf(ExpressRateType.Float),
+        name = "ChangeNow",
+        type = ExpressProviderType.CEX,
+        imageLarge = "",
+        termsOfUse = "",
+        privacyPolicy = "",
+        isRecommended = true,
+        slippage = BigDecimal.ZERO,
+    )
+
+    private val quote = SwapQuoteUM.Content(
+        provider = provider,
+        quoteAmount = "123".toBigDecimal(),
+        quoteAmountValue = stringReference("123"),
+        rate = stringReference("1 USD ≈ 123.123 POL"),
+        diffPercent = SwapQuoteUM.Content.DifferencePercent.Best,
     )
 
     val emptyState = SwapAmountUM.Content(
@@ -95,7 +118,7 @@ internal data object SwapAmountContentPreview {
         selectedAmountType = SwapAmountType.From,
         swapCurrencies = SwapCurrencies.EMPTY,
         swapQuotes = persistentListOf(),
-        selectedQuote = SwapQuoteUM.Empty,
+        selectedQuote = quote,
         primaryCryptoCurrencyStatus = cryptoCurrencyStatus,
         secondaryCryptoCurrencyStatus = cryptoCurrencyStatus,
         swapRateType = ExpressRateType.Float,
