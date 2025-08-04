@@ -1,5 +1,6 @@
 package com.tangem.features.walletconnect.transaction.entity.send
 
+import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.features.walletconnect.transaction.entity.approve.WcSpendAllowanceUM
@@ -23,8 +24,10 @@ internal data class WcSendTransactionItemUM(
     val onSend: () -> Unit,
     val appInfo: WcTransactionAppInfoContentUM,
     val estimatedWalletChanges: WcSendReceiveTransactionCheckResultsUM?,
-    val walletName: String,
+    val walletName: String?,
     val networkInfo: WcNetworkInfoUM,
-    val address: String? = null,
+    val address: String?,
+    val sendEnabled: Boolean,
+    val feeErrorNotification: NotificationUM.Info?,
     val isLoading: Boolean = false,
 ) : TangemBottomSheetConfigContent

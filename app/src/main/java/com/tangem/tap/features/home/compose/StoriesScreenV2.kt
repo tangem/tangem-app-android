@@ -19,7 +19,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.test.TestTags
+import com.tangem.core.ui.test.StoriesScreenTestTags
 import com.tangem.tap.features.home.compose.content.*
 import com.tangem.tap.features.home.compose.views.HomeButtonsV2
 import com.tangem.tap.features.home.compose.views.StoriesProgressBar
@@ -57,7 +57,7 @@ internal fun StoriesScreenV2(
     StoriesScreenContentV2(
         modifier = Modifier
             .fillMaxSize()
-            .testTag(TestTags.STORIES_SCREEN),
+            .testTag(StoriesScreenTestTags.SCREEN_CONTAINER),
         config = StoriesScreenContentV2Config(
             storiesSize = state.stories.lastIndex,
             currentStoryIndex = currentStoryIndex,

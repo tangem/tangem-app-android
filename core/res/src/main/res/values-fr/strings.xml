@@ -66,6 +66,10 @@
     <item quantity="one">%d carte</item>
     <item quantity="other">%d cartes</item>
   </plurals>
+  <plurals name="card_label_token_count">
+    <item quantity="one">%s token</item>
+    <item quantity="other">%s tokens</item>
+  </plurals>
   <string name="card_settings_access_code_recovery_disabled_description">Désactivez cette option si vous ne voulez pas que cette carte soit utilisée pour réinitialiser les codes d\'accès sur d\'autres cartes de ce portefeuille. Veuillez noter que cela vous empêchera également de réinitialiser le code d\'accès sur cette carte.</string>
   <string name="card_settings_access_code_recovery_enabled_description">Vous permet d\'utiliser cette carte pour réinitialiser le code d\'accès sur d\'autres cartes de ce portefeuille</string>
   <string name="card_settings_access_code_recovery_title">Récupération du code d\'accès</string>
@@ -111,6 +115,7 @@
   <string name="common_cancel">Annuler</string>
   <string name="common_change">Changez</string>
   <string name="common_choose_action">Choisissez une action</string>
+  <string name="common_choose_network">Choisissez le réseau</string>
   <string name="common_choose_token">Choisir le jeton</string>
   <string name="common_claim">Réclamer</string>
   <string name="common_claim_rewards">Réclamez des récompenses</string>
@@ -152,6 +157,7 @@
   <string name="common_generate_addresses">Synchroniser les adresses</string>
   <string name="common_go_to_provider">Aller au fournisseur</string>
   <string name="common_go_to_token">Aller au jeton</string>
+  <string name="common_got_it">Compris</string>
   <string name="common_hide">Cacher</string>
   <string name="common_hour">heure</string>
   <string name="common_import">Importez</string>
@@ -196,6 +202,7 @@
   <string name="common_server_unavailable">Le serveur n\'est pas disponible, veuillez réessayer plus tard</string>
   <string name="common_share">Partager</string>
   <string name="common_share_link">Partager le lien</string>
+  <string name="common_show_less">Afficher moins</string>
   <string name="common_show_more">Afficher plus</string>
   <string name="common_sign">Signez</string>
   <string name="common_sign_and_send">Signez et envoyez</string>
@@ -205,6 +212,7 @@
   <string name="common_submit">Soumettre</string>
   <string name="common_success">Avec succès</string>
   <string name="common_support">Support</string>
+  <string name="common_supported_networks">Réseaux pris en charge</string>
   <string name="common_swap">Échanger</string>
   <string name="common_terms_and_conditions">termes et conditions</string>
   <string name="common_terms_of_use">Conditions d\'utilisation</string>
@@ -265,6 +273,7 @@
   <string name="details_row_subtitle_signed_hashes_format">%s hashes</string>
   <string name="details_row_title_cid">ID de l\'appareil</string>
   <string name="details_row_title_contact_to_support">Contactez l\'équipe de support</string>
+  <string name="details_row_title_contact_to_support_chat">Ouvrir le chat d\'assistance</string>
   <string name="details_row_title_create_backup">Lier plus de cartes</string>
   <string name="details_row_title_currency">Monnaie de l\'application</string>
   <string name="details_row_title_flip_to_hide">Retourner pour masquer les soldes</string>
@@ -281,6 +290,7 @@
   <string name="exchange_tokens_unavailable_tokens_header">Ne peut pas être échangé contre %s</string>
   <string name="express_by_provider">Fourni par</string>
   <string name="express_cex_status_button_title">Statut</string>
+  <string name="express_choose_provider">Choisir un fournisseur</string>
   <string name="express_choose_providers_subtitle">Tangem propose des échanges de jetons via des fournisseurs tiers selon les conditions de chaque fournisseur</string>
   <string name="express_choose_providers_title">Fournisseur</string>
   <string name="express_error_code">Une erreur s\'est produite. Code : %s</string>
@@ -340,6 +350,9 @@
   <string name="express_status_hide_button_text">Masquer cette transaction</string>
   <string name="express_status_hide_dialog_text">Une fois masqué, le statut de la transaction ne peut plus être consulté. Vous pouvez simplement faire glisser votre doigt pour le fermer.</string>
   <string name="express_status_hide_dialog_title">Masquer le statut de la transaction ?</string>
+  <string name="express_swap_not_supported_text">Ce jeton n\'est pas pris en charge. Veuillez choisir un autre jeton à échanger.</string>
+  <string name="express_swap_not_supported_title">%s n\'est pas pris en charge</string>
+  <string name="express_swap_with">Échanger avec</string>
   <string name="express_token_list_empty_search">Aucun jeton trouvé. Veuillez essayer une autre demande</string>
   <string name="express_transaction_id">ID : %s</string>
   <string name="express_transaction_id_copied">ID de transaction copié</string>
@@ -367,6 +380,8 @@
   <string name="give_permission_swap_subtitle" formatted="false">Pour continuer, accordez aux smart contracts de %1s l\'autorisation d\'utiliser votre %2s</string>
   <string name="give_permission_title">Donner l\'autorisation</string>
   <string name="give_permission_unlimited">Illimité</string>
+  <string name="home_button_add_existing_wallet">Ajouter un Portefeuille existant</string>
+  <string name="home_button_create_new_wallet">Créer un nouveau Portefeuille</string>
   <string name="home_button_order">Commandez</string>
   <string name="home_button_scan">Scannez</string>
   <string name="hot_crypto_add_token_subtitle">à %s</string>
@@ -423,6 +438,7 @@
   <string name="markets_add_to_my_portfolio_unavailable_description">Cet actif n\'est pas pris en charge dans le portefeuille</string>
   <string name="markets_add_to_my_portfolio_unavailable_for_wallet_description">Cet actif n\'est pas disponible pour ce portefeuille</string>
   <string name="markets_add_token">Ajoutez un jeton</string>
+  <string name="markets_apy_placeholder">APY %s</string>
   <string name="markets_available_networks">Réseaux disponibles</string>
   <string name="markets_common_my_portfolio">Mon portfolio</string>
   <string name="markets_common_title">Marché</string>
@@ -709,6 +725,7 @@
   <string name="push_notifications_permission_alert_positive_button">Paramètres</string>
   <string name="push_notifications_permission_alert_title">Activer les notifications</string>
   <string name="push_transactions_notifications_description">Recevez des alertes pour les transactions entrantes sur les réseaux pris en charge.</string>
+  <string name="push_transactions_notifications_title">Notifications de transaction</string>
   <string name="qr_scanner_camera_denied_gallery_button">Sélectionnez dans la galerie</string>
   <string name="qr_scanner_camera_denied_settings_button">Paramètres</string>
   <string name="qr_scanner_camera_denied_text">Vous n\'avez pas donné accès à votre caméra</string>
@@ -818,6 +835,9 @@
   <string name="send_memo">Mémo : %s</string>
   <string name="send_memo_destination_tag_error">Mémo invalide</string>
   <string name="send_network_fee_warning_title">Couverture des frais de réseau</string>
+  <string name="send_nonce">Nonce</string>
+  <string name="send_nonce_footer">Numéro unique pour chaque transaction. Utilisez-le pour renvoyer ou annuler une transaction en attente.</string>
+  <string name="send_nonce_hint">Entrez le nonce…</string>
   <string name="send_notification_exceed_balance_text">Fonds insuffisants pour le transfert, car le total des frais et du montant du transfert dépasse le solde existant</string>
   <string name="send_notification_exceed_balance_title">Le total dépasse le solde</string>
   <string name="send_notification_existential_deposit_text">Un solde d\'au moins %s est requis pour conserver votre compte sur la blockchain afin d\'éviter les risques de sécurité. Ce montant restera sur votre solde et ne pourra pas être retiré.</string>
@@ -847,6 +867,7 @@
   <string name="send_recipient_address_error">Adresse non valide</string>
   <string name="send_recipient_address_footer">Assurez-vous que l\'adresse du portefeuille de réception est sur le réseau %s pour éviter de perdre vos jetons</string>
   <string name="send_recipient_address_footer_highlighted_part">envoyer à %s</string>
+  <string name="send_recipient_address_footer_v2">Assurez-vous de %s une adresse réseau, car des erreurs peuvent entraîner des transferts perdus</string>
   <string name="send_recipient_label">Envoyer à</string>
   <string name="send_recipient_memo_footer">Un Memo/Destination Tag est un identifiant unique permettant de différencier les transactions envoyées au même destinataire sur le même réseau. Attention : L\'omission d\'un mémo peut entraîner des fonds mal placés</string>
   <string name="send_recipient_memo_footer_v2">Le Memo / Destination Tag est un code qui distingue les transactions envoyées à un destinataire partagé sur un réseau crypto.</string>
@@ -873,7 +894,11 @@
   <string name="send_validation_invalid_fee">Les frais de commissions dépassent le solde</string>
   <string name="send_validation_invalid_total">Le total dépasse le solde</string>
   <string name="send_with_swap_confirm_title">Échanger et envoyer</string>
+  <string name="send_with_swap_notification_text">Envoyez n\'importe quel jeton et nous le convertirons en cours de route. Votre destinataire reçoit exactement ce dont il a besoin, en toute simplicité.</string>
+  <string name="send_with_swap_recipient_amount_success_title">Le destinataire recevra</string>
+  <string name="send_with_swap_recipient_amount_text">Un destinataire sera envoyé</string>
   <string name="send_with_swap_recipient_amount_title">Montant à recevoir</string>
+  <string name="send_with_swap_title">Envoyer avec swap</string>
   <string name="sent_transaction_sent_title">Transaction envoyée</string>
   <string name="settings_card_settings_footer">Scannez la carte/ bague que vous souhaitez configurer.</string>
   <string name="settings_forget_wallet">Oublier le portefeuille</string>
@@ -1014,6 +1039,7 @@
   <string name="story_web3_title">Compatible avec Web 3.0</string>
   <string name="sui_not_enough_coin_for_fee_description">Une transaction entrante d\'au moins de %1$s est requise pour continuer</string>
   <string name="sui_not_enough_coin_for_fee_title">Fonds insuffisants</string>
+  <string name="swap_fixed_rate">Taux fixe</string>
   <string name="swap_give_permission_fee_footer">Le réseau facturera des frais d\'approbation de jeton pour vérifier que vous autorisez l\'utilisation de votre jeton pour l\'échange.</string>
   <string name="swap_promo_text">Échangez plus de jetons à de meilleurs taux directement dans votre portefeuille.</string>
   <string name="swap_promo_title">Nouveau fournisseur d\'échange disponible !</string>
@@ -1091,6 +1117,8 @@
   <string name="transaction_notifications_warning_title">Notifications de transaction</string>
   <string name="transfer_min_amount_error">Minimum %s</string>
   <string name="transfer_notification_invalid_minimum_transaction_amount_text">Le montant minimum pour effectuer cette transaction est %1$s.</string>
+  <string name="tron_will_be_send_token_fee_description">Les frais de réseau Tron pour les jetons populaires peuvent être plus élevés. Le staking de TRX peut contribuer à réduire les coûts de transaction.</string>
+  <string name="tron_will_be_send_token_fee_title">Économisez sur les frais de réseau Tron</string>
   <string name="try_to_load_data_again_button_title">Réessayez</string>
   <string name="twin_error_same_card">Vous avez scanné la même carte. Pour créer un portefeuille jumeau, vous devez scanner la carte portant le numéro %d</string>
   <string name="twin_error_wrong_twin">Vous avez scanné une mauvaise carte jumelle. S\'il vous plaît, essayez-en un autre</string>
@@ -1103,6 +1131,8 @@
   <string name="twins_recreate_toolbar">Tangem Twin</string>
   <string name="twins_recreate_warning">Cette action est irréversible. Vous n\'aurez plus accès à l\'ancien portefeuille.</string>
   <string name="twins_scan_twin_with_number">Appuyez sur la carte jumelle avec le numéro %s et ne la retirez pas jusqu\'à la fin de l\'opération</string>
+  <string name="unexpected_error_description">Veuillez réessayer ultérieurement. Si le problème persiste, veuillez contacter le support.</string>
+  <string name="unexpected_error_title">Une erreur s\'est produite !</string>
   <string name="universal_error">Nous avons rencontré une erreur. Code d\'erreur : %s. Veuillez contacter notre équipe de support.</string>
   <string name="unlock_wallet_description_full">Utilisez %s ou scannez une carte/bague pour avoir accès à votre portefeuille</string>
   <string name="unsupported_wc_version">Échec de la connexion : Cette dApp utilise Wallet Connect version1.0, qui n\'est pas prise en charge. Veuillez vous assurer que la dApp prend en charge Wallet Connect version2.0 pour réussir la connexion.</string>
@@ -1253,6 +1283,7 @@
   <string name="warning_rate_app_message">Votre avis nous motive à améliorer encore le Portefeuille Tangem</string>
   <string name="warning_rate_app_title">Vous appréciez Tangem ?</string>
   <string name="warning_receive_blocked_hedera_token_association_required_message">Vous devez associer votre jeton avant de recevoir des jetons</string>
+  <string name="warning_receive_blocked_token_trustline_required_message">Vous devez ouvrir la ligne de confiance pour votre jeton avant de le recevoir</string>
   <string name="warning_rent_fee_title">Frais de location de réseau requis</string>
   <string name="warning_seedphrase_action_required_title">Action requise</string>
   <string name="warning_seedphrase_contacted_support">Avez-vous contacté l\'assistance via l\'application ou par e-mail dans les 7 jours suivant la création d\'un portefeuille ? Si vous l\'avez fait ou si vous n\'êtes pas sûr, suivez et complétez les instructions.</string>
@@ -1273,17 +1304,38 @@
   <string name="warning_testnet_card_title">À des fins de test uniquement</string>
   <string name="warning_token_balance_not_updated">Le solde peut être obsolète. Rafraîchissez la page.</string>
   <string name="warning_token_required_min_coin_reserve">Pas assez de %1$s. Rechargez votre compte %2$s pour associer ce jeton.</string>
+  <string name="warning_token_trustline_button_title">Activer Trustline</string>
+  <string name="warning_token_trustline_subtitle">Une Trustline doit être activée pour recevoir ce jeton. Le réseau requiert une réserve de %1$s %2$s</string>
+  <string name="warning_token_trustline_title">Trustline requise</string>
   <string name="wc_alert_audit_malicious_domain">Domaine malveillant</string>
+  <string name="wc_alert_sign_anyway">Signer quand même</string>
   <string name="wc_alert_unknown_error_description_no_error_code">Si le problème persiste, n’hésitez pas à contacter notre support.</string>
   <string name="wc_alert_unsupported_dapps_description">Le portefeuille Tangem ne prend actuellement pas en charge %ss</string>
   <string name="wc_alert_unsupported_dapps_title">dApp non prise en charge</string>
+  <string name="wc_alert_unsupported_method_description">Code d\'erreur : 8 005. Si le problème persiste, n\'hésitez pas à contacter notre support.</string>
+  <string name="wc_alert_unsupported_method_title">Nous avons rencontré une erreur inconnue</string>
+  <string name="wc_allow_to_spend">Autoriser à dépenser</string>
+  <string name="wc_common_address">Adresse</string>
+  <string name="wc_common_loading">Chargement</string>
+  <string name="wc_common_unlimited">Illimité</string>
   <string name="wc_connections">Connexions</string>
+  <string name="wc_contents">Contenu</string>
+  <string name="wc_copy_data_button_text">Copier les données</string>
   <string name="wc_disconnect_all">Déconnecter tout</string>
   <string name="wc_disconnect_all_alert_desc">Texte sur la déconnexion de toutes les dApps</string>
   <string name="wc_disconnect_all_alert_title">Déconnecter toutes les dApps</string>
+  <string name="wc_estimated_wallet_changes">Modifications estimées du portefeuille</string>
+  <string name="wc_estimated_wallet_changes_not_simulated">La transaction n\'a pas pu être simulée. Veuillez procéder avec prudence.</string>
+  <string name="wc_malicious_transaction">Transaction malveillante</string>
   <string name="wc_new_connection">Nouvelle connexion</string>
   <string name="wc_no_sessions_desc">Connectez votre portefeuille à différentes dApps</string>
   <string name="wc_no_sessions_title">Aucune séance</string>
+  <string name="wc_request_from">Demande de</string>
+  <string name="wc_signature_type">Type de signature</string>
+  <string name="wc_transaction_info_to_title">À</string>
+  <string name="wc_transaction_request">Demande de transaction</string>
+  <string name="wc_transaction_request_title">Demande de transaction</string>
+  <string name="wc_unlimited_amount">Montant illimité</string>
   <string name="welcome_interrupted_backup_alert_discard">Ignorer</string>
   <string name="welcome_interrupted_backup_alert_message">Vous avez une sauvegarde interrompue. Voulez-vous la reprendre ?</string>
   <string name="welcome_interrupted_backup_alert_resume">Oui, reprendre</string>
