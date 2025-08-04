@@ -6,7 +6,7 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.rows.model.BlockchainRowUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.markets.impl.R
 import com.tangem.features.markets.portfolio.impl.ui.state.AddToPortfolioBSContentUM
 import com.tangem.features.markets.portfolio.impl.ui.state.SelectNetworkUM
