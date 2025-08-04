@@ -4,13 +4,13 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.features.send.v2.api.entity.CustomFeeFieldUM
+import com.tangem.features.send.v2.api.entity.FeeSelectorUM
+import com.tangem.features.send.v2.feeselector.model.FeeSelectorIntents
 import com.tangem.features.send.v2.subcomponents.fee.model.converters.custom.bitcoin.BitcoinCustomFeeConverter
 import com.tangem.features.send.v2.subcomponents.fee.model.converters.custom.ethereum.EthereumCustomFeeConverter
 import com.tangem.features.send.v2.subcomponents.fee.model.converters.custom.kaspa.KaspaCustomFeeConverter
-import com.tangem.features.send.v2.api.entity.CustomFeeFieldUM
-import com.tangem.features.send.v2.feeselector.model.FeeSelectorIntents
-import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeSelectorUM
 import com.tangem.utils.converter.TwoWayConverter
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -25,7 +25,7 @@ internal class FeeSelectorCustomFieldConverter(
     private val ethereumCustomFeeConverter by lazy(LazyThreadSafetyMode.NONE) {
         EthereumCustomFeeConverter(
             onCustomFeeValueChange = feeSelectorIntents::onCustomFeeValueChange,
-            onNextClick = feeSelectorIntents::onCustomFeeNextClick,
+            onNextClick = null,
             appCurrency = appCurrency,
             feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
         )
@@ -34,7 +34,7 @@ internal class FeeSelectorCustomFieldConverter(
     private val bitcoinCustomFeeConverter by lazy(LazyThreadSafetyMode.NONE) {
         BitcoinCustomFeeConverter(
             onCustomFeeValueChange = feeSelectorIntents::onCustomFeeValueChange,
-            onNextClick = feeSelectorIntents::onCustomFeeNextClick,
+            onNextClick = null,
             appCurrency = appCurrency,
             feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
         )
@@ -77,38 +77,43 @@ internal class FeeSelectorCustomFieldConverter(
         }
     }
 
-    fun onValueChange(feeSelectorState: FeeSelectorUM.Content, index: Int, value: String) =
-        when (val fee = feeSelectorState.fees.normal) {
-            is Fee.Ethereum -> ethereumCustomFeeConverter.onValueChange(
-                feeValue = fee,
-                customValues = feeSelectorState.customValues,
-                index = index,
-                value = value,
-            )
-            is Fee.Bitcoin -> bitcoinCustomFeeConverter.onValueChange(
-                customValues = feeSelectorState.customValues,
-                index = index,
-                value = value,
-                txSize = fee.txSize,
-            )
-            is Fee.Kaspa -> kaspaCustomFeeConverter.onValueChange(
-                customValues = feeSelectorState.customValues,
-                index = index,
-                value = value,
-            )
-            else -> feeSelectorState.customValues
-        }
-
-    fun tryAutoFixValue(feeSelectorState: FeeSelectorUM.Content) = when (feeSelectorState.fees) {
-        is TransactionFee.Choosable -> feeSelectorState.fees.minimum
-        is TransactionFee.Single -> feeSelectorState.fees.normal
-    }.let {
-        when (it) {
-            is Fee.Kaspa -> kaspaCustomFeeConverter.tryAutoFixValue(
-                minimumFee = it,
-                customValues = feeSelectorState.customValues,
-            )
-            else -> feeSelectorState.customValues
-        }
+    fun onValueChange(
+        feeSelectorState: FeeSelectorUM.Content,
+        customValues: ImmutableList<CustomFeeFieldUM>,
+        index: Int,
+        value: String,
+    ) = when (val fee = feeSelectorState.fees.normal) {
+        is Fee.Ethereum -> ethereumCustomFeeConverter.onValueChange(
+            feeValue = fee,
+            customValues = customValues,
+            index = index,
+            value = value,
+        )
+        is Fee.Bitcoin -> bitcoinCustomFeeConverter.onValueChange(
+            customValues = customValues,
+            index = index,
+            value = value,
+            txSize = fee.txSize,
+        )
+        is Fee.Kaspa -> kaspaCustomFeeConverter.onValueChange(
+            customValues = customValues,
+            index = index,
+            value = value,
+        )
+        else -> customValues
     }
+
+    fun tryAutoFixValue(feeSelectorState: FeeSelectorUM.Content, customValues: ImmutableList<CustomFeeFieldUM>) =
+        when (val fees = feeSelectorState.fees) {
+            is TransactionFee.Choosable -> fees.minimum
+            is TransactionFee.Single -> fees.normal
+        }.let {
+            when (it) {
+                is Fee.Kaspa -> kaspaCustomFeeConverter.tryAutoFixValue(
+                    minimumFee = it,
+                    customValues = customValues,
+                )
+                else -> customValues
+            }
+        }
 }
