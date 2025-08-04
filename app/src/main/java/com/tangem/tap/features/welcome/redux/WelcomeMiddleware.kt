@@ -134,7 +134,7 @@ internal class WelcomeMiddleware {
     }
 
     private fun sendSignedInAnalyticsEvent(userWallet: UserWallet, signInType: Basic.SignedIn.SignInType) {
-        // TODO [REDACTED_TASK_KEY]
+        // TODO [REDACTED_TASK_KEY] [Hot Wallet] Analytics
 
         if (userWallet !is UserWallet.Cold) {
             return
