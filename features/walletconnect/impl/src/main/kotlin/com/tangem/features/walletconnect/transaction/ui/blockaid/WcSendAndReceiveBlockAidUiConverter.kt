@@ -30,6 +30,7 @@ internal class WcSendAndReceiveBlockAidUiConverter @Inject constructor(
 ) : Converter<WcSendAndReceiveBlockAidUiConverter.Input, WcSendReceiveTransactionCheckResultsUM> {
     override fun convert(value: Input): WcSendReceiveTransactionCheckResultsUM {
         val description = value.result.description?.let { if (it.isNotEmpty()) TextReference.Str(it) else null }
+        val simulation = value.result.simulation
         return WcSendReceiveTransactionCheckResultsUM(
             isLoading = false,
             notification = when (value.result.validation) {
@@ -45,9 +46,16 @@ internal class WcSendAndReceiveBlockAidUiConverter @Inject constructor(
                     text = description,
                 )
             },
-            estimatedWalletChanges = (value.result.simulation as? SimulationResult.Success)?.data?.let { data ->
+            additionalNotification = (simulation as? SimulationResult.Success)?.data?.let { data ->
+                if (data is SimulationData.NoWalletChangesDetected) {
+                    TextReference.Res(R.string.wc_no_wallet_changes_detected)
+                } else {
+                    null
+                }
+            },
+            estimatedWalletChanges = (simulation as? SimulationResult.Success)?.data?.let { data ->
                 when (data) {
-                    is SimulationData.Approve -> null
+                    is SimulationData.Approve, SimulationData.NoWalletChangesDetected -> null
                     is SimulationData.SendAndReceive -> {
                         val items: ImmutableList<WcEstimatedWalletChangeUM> = (
                             data.send.map {
@@ -94,7 +102,7 @@ internal class WcSendAndReceiveBlockAidUiConverter @Inject constructor(
             },
             spendAllowance = (value.result.simulation as? SimulationResult.Success)?.data?.let { data ->
                 when (data) {
-                    is SimulationData.SendAndReceive -> null
+                    is SimulationData.SendAndReceive, SimulationData.NoWalletChangesDetected -> null
                     is SimulationData.Approve -> value.approvedAmount?.let {
                         spendAllowanceUMConverter.convert(it)
                     }
