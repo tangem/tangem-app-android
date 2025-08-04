@@ -9,13 +9,12 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.settings.ShouldAskPermissionUseCase
-import com.tangem.features.hotwallet.setaccesscode.SetAccessCodeComponent
-import com.tangem.features.hotwallet.addexistingwallet.start.AddExistingWalletStartComponent
 import com.tangem.features.hotwallet.addexistingwallet.im.port.AddExistingWalletImportComponent
 import com.tangem.features.hotwallet.addexistingwallet.root.routing.AddExistingWalletRoute
+import com.tangem.features.hotwallet.addexistingwallet.start.AddExistingWalletStartComponent
 import com.tangem.features.hotwallet.manualbackup.completed.ManualBackupCompletedComponent
+import com.tangem.features.hotwallet.setaccesscode.SetAccessCodeComponent
 import com.tangem.features.hotwallet.setupfinished.MobileWalletSetupFinishedComponent
-import com.tangem.features.pushnotifications.api.PushNotificationsComponent
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.launch
@@ -32,7 +31,6 @@ internal class AddExistingWalletModel @Inject constructor(
     val addExistingWalletImportModelCallbacks = AddExistingWalletImportModelCallbacks()
     val manualBackupCompletedComponentModelCallbacks = ManualBackupCompletedComponentModelCallbacks()
     val accessCodeModelCallbacks = AccessCodeModelCallbacks()
-    val pushNotificationsComponentModelCallbacks = PushNotificationsComponentModelCallbacks()
     val mobileWalletSetupFinishedComponentModelCallbacks = MobileWalletSetupFinishedComponentModelCallbacks()
 
     val stackNavigation = StackNavigation<AddExistingWalletRoute>()
@@ -86,12 +84,6 @@ internal class AddExistingWalletModel @Inject constructor(
                     stackNavigation.replaceCurrent(AddExistingWalletRoute.SetupFinished)
                 }
             }
-        }
-    }
-
-    inner class PushNotificationsComponentModelCallbacks : PushNotificationsComponent.ModelCallbacks {
-        override fun onResult() {
-            stackNavigation.replaceCurrent(AddExistingWalletRoute.SetupFinished)
         }
     }
 
