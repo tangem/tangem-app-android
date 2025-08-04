@@ -7,6 +7,7 @@ internal data class WcSendReceiveTransactionCheckResultsUM(
     val estimatedWalletChanges: WcEstimatedWalletChangesUM? = null,
     val spendAllowance: WcSpendAllowanceUM? = null,
     val notification: BlockAidNotificationUM? = null,
+    val additionalNotification: TextReference? = null,
     val isLoading: Boolean = true,
 )
 
