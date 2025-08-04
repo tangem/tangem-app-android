@@ -3,7 +3,7 @@ package com.tangem.domain.managetokens
 import arrow.core.Either
 import com.tangem.domain.managetokens.repository.CustomTokensRepository
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 
 class CheckIsCurrencyNotAddedUseCase(
     private val repository: CustomTokensRepository,
