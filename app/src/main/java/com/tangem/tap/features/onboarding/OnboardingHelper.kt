@@ -1,7 +1,7 @@
 package com.tangem.tap.features.onboarding
 
-import com.tangem.domain.common.util.cardTypesResolver
-import com.tangem.domain.common.util.twinsIsTwinned
+import com.tangem.domain.card.common.util.cardTypesResolver
+import com.tangem.domain.card.common.util.twinsIsTwinned
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.visa.model.VisaCardActivationStatus

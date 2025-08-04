@@ -1,7 +1,7 @@
 package com.tangem.features.managetokens.entity.customtoken
 
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.serialization.Serializable
 
 @Serializable
