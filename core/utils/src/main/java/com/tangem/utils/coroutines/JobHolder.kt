@@ -12,6 +12,9 @@ import kotlinx.coroutines.launch
  */
 class JobHolder {
 
+    val isActive: Boolean
+        get() = job?.isActive ?: false
+
     private var job: Job? = null
 
     /** Update current [JobHolder.job] and return new [job] */
