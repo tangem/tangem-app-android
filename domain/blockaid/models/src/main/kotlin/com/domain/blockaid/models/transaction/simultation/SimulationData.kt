@@ -19,4 +19,9 @@ sealed class SimulationData {
     data class Approve(
         val approvedAmounts: List<ApprovedAmount>,
     ) : SimulationData()
+
+    /**
+     * Simulation was successfully performed and no changes detected
+     */
+    data object NoWalletChangesDetected : SimulationData()
 }
