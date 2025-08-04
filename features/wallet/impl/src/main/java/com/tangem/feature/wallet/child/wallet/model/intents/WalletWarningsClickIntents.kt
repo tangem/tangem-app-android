@@ -243,8 +243,13 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         modelScope.launch(dispatchers.main) {
             neverToSuggestRateAppUseCase()
 
-            val scanResponse =
-                getSelectedUserWallet()?.requireColdWallet()?.scanResponse ?: return@launch // TODO [REDACTED_TASK_KEY]
+            val userWallet = getSelectedUserWallet() ?: return@launch
+
+            if (userWallet is UserWallet.Hot) {
+                return@launch // TODO [REDACTED_TASK_KEY] [Hot Wallet] Email feedback flow
+            }
+
+            val scanResponse = userWallet.requireColdWallet().scanResponse
             val cardInfo = getCardInfoUseCase(scanResponse).getOrNull() ?: return@launch
 
             sendFeedbackEmailUseCase(type = FeedbackEmailType.RateCanBeBetter(cardInfo = cardInfo))
@@ -285,7 +290,13 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     }
 
     override fun onSupportClick() {
-        val scanResponse = getSelectedUserWallet()?.requireColdWallet()?.scanResponse ?: return // TODO [REDACTED_TASK_KEY]
+        val userWallet = getSelectedUserWallet() ?: return
+
+        if (userWallet is UserWallet.Hot) {
+            return // TODO [REDACTED_TASK_KEY] [Hot Wallet] Email feedback flow
+        }
+
+        val scanResponse = userWallet.requireColdWallet().scanResponse
         val cardInfo = getCardInfoUseCase(scanResponse).getOrNull() ?: return
 
         modelScope.launch {
