@@ -13,7 +13,8 @@ fun UserWallet.hasDerivation(blockchain: Blockchain, derivationPath: String): Bo
     return when (this) {
         is UserWallet.Cold -> scanResponse.hasDerivation(blockchain, derivationPath)
         is UserWallet.Hot -> {
-            val primaryCurve = Wallet2CardConfig.primaryCurve(blockchain) // TODO [REDACTED_TASK_KEY]: handle hot wallet config
+            // TODO [REDACTED_TASK_KEY] [Hot Wallet] Derivation config for hot wallet
+            val primaryCurve = Wallet2CardConfig.primaryCurve(blockchain)
             val list = if (blockchain == Blockchain.Cardano) {
                 listOf(
                     CardanoUtils.extendedDerivationPath(DerivationPath(derivationPath)),
