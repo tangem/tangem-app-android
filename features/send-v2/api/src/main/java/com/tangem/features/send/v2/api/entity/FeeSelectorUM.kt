@@ -13,11 +13,18 @@ import java.math.BigInteger
 @Immutable
 sealed class FeeSelectorUM {
 
-    data object Loading : FeeSelectorUM()
+    abstract val isPrimaryButtonEnabled: Boolean
 
-    data class Error(val error: GetFeeError) : FeeSelectorUM()
+    data object Loading : FeeSelectorUM() {
+        override val isPrimaryButtonEnabled = false
+    }
+
+    data class Error(val error: GetFeeError) : FeeSelectorUM() {
+        override val isPrimaryButtonEnabled = false
+    }
 
     data class Content(
+        override val isPrimaryButtonEnabled: Boolean,
         val fees: TransactionFee,
         val feeItems: ImmutableList<FeeItem>,
         val selectedFeeItem: FeeItem,
