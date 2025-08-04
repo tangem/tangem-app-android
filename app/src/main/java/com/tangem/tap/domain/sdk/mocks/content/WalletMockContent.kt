@@ -177,6 +177,13 @@ object WalletMockContent : MockContent {
                                 parentFingerprint = byteArrayOf(0, 0, 0, 0),
                                 childNumber = 0,
                             ),
+                            DerivationPath("m/84'/0'/0'/0/0") to ExtendedPublicKey( // btc
+                                publicKey = byteArrayOf(3, 45, 58, -110, -52, -51, -83, -4, -45, -118, 119, 37, 123, -17, 66, -83, 61, -106, 115, 47, 121, 66, 84, -122, -57, -45, 7, -79, 70, -13, 28, -125, -52),
+                                chainCode = byteArrayOf(93, 51, 52, -66, -39, -38, 34, -84, 50, 1, -127, -20, 80, -20, -30, -72, 2, 1, -78, -81, -17, 51, -52, -25, 12, 108, 50, 89, -66, 18, 65, 70),
+                                depth = 0,
+                                parentFingerprint = byteArrayOf(0, 0, 0, 0),
+                                childNumber = 0,
+                            ),
                             DerivationPath("m/44'/60'/0'/0/0") to ExtendedPublicKey( // eth
                                 publicKey = byteArrayOf(2, 34, 6, 119, -106, 5, -119, 111, -22, 8, 23, -108, -72, -56, 6, 77, -17, -61, -101, -85, 16, 28, 18, 3, -3, -89, -81, -108, 48, -7, -86, -82, -67),
                                 chainCode = byteArrayOf(-75, 55, 107, -106, -37, -81, -15, 72, -102, 94, 55, -39, 9, -112, 1, 90, -50, 103, 53, 120, -92, -36, -85, -39, -65, 1, 88, 46, 92, 104, -13, -109),

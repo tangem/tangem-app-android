@@ -7,13 +7,14 @@ import arrow.core.raise.either
 import arrow.core.raise.ensure
 import arrow.core.raise.ensureNotNull
 import arrow.core.toNonEmptyListOrNull
+import com.tangem.domain.models.TokensSortType
+import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.staking.utils.getTotalWithRewardsStakingBalance
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.NetworkGroup
 import com.tangem.domain.tokens.model.TokenList
-import com.tangem.domain.tokens.model.TotalFiatBalance
 import com.tangem.utils.extensions.orZero
 import java.math.BigDecimal
 
@@ -25,7 +26,7 @@ internal class TokenListSortingOperations(
 
     constructor(
         tokenList: TokenList,
-        sortByBalance: Boolean = tokenList.sortedBy == TokenList.SortType.BALANCE,
+        sortByBalance: Boolean = tokenList.sortedBy == TokensSortType.BALANCE,
         isAnyTokenLoading: Boolean = tokenList.totalFiatBalance is TotalFiatBalance.Loading,
     ) : this(
         currencies = tokenList.flattenCurrencies(),
@@ -51,7 +52,7 @@ internal class TokenListSortingOperations(
         if (sortByBalance) sortTokensByBalance(nonEmptyCurrencies) else nonEmptyCurrencies
     }
 
-    fun getSortType(): TokenList.SortType = if (sortByBalance) TokenList.SortType.BALANCE else TokenList.SortType.NONE
+    fun getSortType(): TokensSortType = if (sortByBalance) TokensSortType.BALANCE else TokensSortType.NONE
 
     private fun Raise<Error>.groupTokens(): NonEmptyList<NetworkGroup> {
         val groupedTokens = currencies

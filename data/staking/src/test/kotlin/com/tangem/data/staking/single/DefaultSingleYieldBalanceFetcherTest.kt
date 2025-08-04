@@ -5,9 +5,9 @@ import arrow.core.right
 import com.google.common.truth.Truth
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
 import com.tangem.domain.staking.single.SingleYieldBalanceFetcher
-import com.tangem.domain.wallets.models.UserWalletId
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify

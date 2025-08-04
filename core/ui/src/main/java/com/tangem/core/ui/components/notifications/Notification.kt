@@ -211,11 +211,14 @@ internal fun TextsBlock(
             SpacerH(height = TangemTheme.dimens.spacing2)
         }
 
-        Text(
-            text = subtitle.resolveReference(),
-            color = subtitleColor,
-            style = TangemTheme.typography.caption2,
-        )
+        val subtitleText = subtitle.resolveReference()
+        if (subtitleText.isNotEmpty()) {
+            Text(
+                text = subtitleText,
+                color = subtitleColor,
+                style = TangemTheme.typography.caption2,
+            )
+        }
     }
 }
 
