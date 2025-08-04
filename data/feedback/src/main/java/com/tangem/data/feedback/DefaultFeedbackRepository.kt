@@ -10,8 +10,8 @@ import com.tangem.datasource.local.walletmanager.WalletManagersStore
 import com.tangem.domain.feedback.models.*
 import com.tangem.domain.feedback.repository.FeedbackRepository
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
-import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.version.AppVersionProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
