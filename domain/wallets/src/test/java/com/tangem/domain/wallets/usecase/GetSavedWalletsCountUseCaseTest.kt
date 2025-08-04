@@ -4,7 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.legacy.asLockable
 import com.tangem.domain.wallets.legacy.isLockedSync
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
