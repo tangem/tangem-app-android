@@ -5,7 +5,7 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.markets.portfolio.impl.ui.state.MyPortfolioUM
 import com.tangem.features.markets.portfolio.impl.ui.state.PortfolioTokenUM
 import com.tangem.features.markets.portfolio.impl.ui.state.QuickActionUM
