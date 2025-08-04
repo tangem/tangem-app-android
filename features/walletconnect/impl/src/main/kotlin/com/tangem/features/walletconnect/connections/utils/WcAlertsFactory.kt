@@ -17,10 +17,10 @@ internal object WcAlertsFactory {
             createUnknownDomainAlert()
         is WcTransactionRoutes.Alert.Type.UnsafeDomain ->
             createUnsafeDomainAlert()
-        is WcTransactionRoutes.Alert.Type.MaliciousInfo ->
-            createMaliciousDAppAlert(alertType.description, alertType.onClick)
+        is WcTransactionRoutes.Alert.Type.BlockAidErrorInfo ->
+            createMaliciousDAppAlert(alertType.description, alertType.onClick, alertType.iconType, alertType.iconBgType)
         is WcTransactionRoutes.Alert.Type.UnknownError ->
-            createUnknownErrorAlert(alertType.errorMessage, alertType.onDismiss)
+            createUnknownErrorAlert(alertType.errorMessage, alertType.onDismiss, alertType.onRetry)
     }
 
     fun createUnknownDomainAlert(activeButtonOnClick: (() -> Unit)? = null): MessageBottomSheetUMV2 {
@@ -74,11 +74,11 @@ internal object WcAlertsFactory {
         }
     }
 
-    fun createUnsupportedDomainAlert(appName: String): MessageBottomSheetUMV2 {
+    fun createUnsupportedDomainAlert(appName: String, onDismiss: () -> Unit): MessageBottomSheetUMV2 {
         return messageBottomSheetUM {
             infoBlock {
                 icon(R.drawable.ic_wallet_connect_24) {
-                    type = MessageBottomSheetUMV2.Icon.Type.Informative
+                    type = Type.Informative
                     backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.SameAsTint
                 }
                 title = resourceReference(R.string.wc_alert_unsupported_dapps_title)
@@ -86,16 +86,34 @@ internal object WcAlertsFactory {
             }
             primaryButton {
                 text = resourceReference(R.string.common_got_it)
-                onClick { closeBs() }
+                onClick { onDismiss() }
+            }
+            onDismissRequest = onDismiss
+        }
+    }
+
+    fun createUriAlreadyUsedAlert(onDismiss: () -> Unit): MessageBottomSheetUMV2 {
+        return messageBottomSheetUM {
+            infoBlock {
+                icon(R.drawable.ic_wallet_connect_24) {
+                    type = Type.Informative
+                    backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.SameAsTint
+                }
+                title = resourceReference(R.string.wc_uri_already_used_title)
+                body = resourceReference(R.string.wc_uri_already_used_description)
+            }
+            primaryButton {
+                text = resourceReference(R.string.common_got_it)
+                onClick { onDismiss() }
             }
         }
     }
 
-    fun createUnsupportedChainAlert(appName: String): MessageBottomSheetUMV2 {
+    fun createUnsupportedChainAlert(appName: String, onDismiss: () -> Unit): MessageBottomSheetUMV2 {
         return messageBottomSheetUM {
             infoBlock {
                 icon(R.drawable.ic_network_new_24) {
-                    type = MessageBottomSheetUMV2.Icon.Type.Informative
+                    type = Type.Informative
                     backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.SameAsTint
                 }
                 title = resourceReference(R.string.wc_alert_unsupported_networks_title)
@@ -103,12 +121,17 @@ internal object WcAlertsFactory {
             }
             primaryButton {
                 text = resourceReference(R.string.common_got_it)
-                onClick { closeBs() }
+                onClick { onDismiss() }
             }
+            onDismissRequest = onDismiss
         }
     }
 
-    private fun createUnknownErrorAlert(errorMessage: String?, onDismiss: () -> Unit): MessageBottomSheetUMV2 {
+    private fun createUnknownErrorAlert(
+        errorMessage: String?,
+        onDismiss: () -> Unit,
+        onRetry: () -> Unit,
+    ): MessageBottomSheetUMV2 {
         return messageBottomSheetUM {
             infoBlock {
                 icon(R.drawable.img_attention_20) {
@@ -124,21 +147,29 @@ internal object WcAlertsFactory {
                     )
                 }
             }
+            primaryButton {
+                text = resourceReference(R.string.alert_button_try_again)
+                onClick { onRetry() }
+            }
             secondaryButton {
-                text = resourceReference(R.string.balance_hidden_got_it_button)
+                text = resourceReference(R.string.common_cancel)
                 onClick { onDismiss() }
             }
+            onDismissRequest = onDismiss
         }
     }
 
     private fun createMaliciousDAppAlert(
         description: String?,
         activeButtonOnClick: (() -> Unit),
+        iconType: Type,
+        iconBgType: MessageBottomSheetUMV2.Icon.BackgroundType,
     ): MessageBottomSheetUMV2 {
         return messageBottomSheetUM {
             infoBlock {
                 icon(R.drawable.img_knight_shield_32) {
-                    backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.Attention
+                    type = iconType
+                    backgroundType = iconBgType
                 }
                 title = resourceReference(R.string.security_alert_title)
                 if (!description.isNullOrEmpty()) {
