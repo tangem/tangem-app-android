@@ -90,6 +90,7 @@ internal class WcSendTransactionModel @Inject constructor(
     private var wcApproval: WcApproval? = null
     private var sign: () -> Unit = {}
     private val feeReloadState = MutableStateFlow(false)
+    private val signatureReceivedAnalyticsSendState = MutableStateFlow(false)
 
     init {
         @Suppress("UnusedPrivateMember")
@@ -373,6 +374,8 @@ internal class WcSendTransactionModel @Inject constructor(
         useCase: WcSignUseCase<*>,
         securityCheck: Lce<Throwable, BlockAidTransactionCheck.Result>,
     ) {
+        if (signatureReceivedAnalyticsSendState.value) return
+
         val emulationStatus = when (securityCheck) {
             is Lce.Content -> when (securityCheck.content.result.simulation) {
                 SimulationResult.FailedToSimulate -> EmulationStatus.CanNotEmulate
@@ -389,5 +392,7 @@ internal class WcSendTransactionModel @Inject constructor(
                 emulationStatus = emulationStatus,
             ),
         )
+
+        signatureReceivedAnalyticsSendState.value = true
     }
 }
