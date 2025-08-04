@@ -28,6 +28,7 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.walletconnect.connections.entity.VerifiedDAppState
 import com.tangem.features.walletconnect.connections.ui.WcAppInfoItem
 import com.tangem.features.walletconnect.impl.R
+import com.tangem.features.walletconnect.transaction.entity.common.WcAddressUM
 import com.tangem.features.walletconnect.transaction.entity.common.WcNetworkInfoUM
 import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionAppInfoContentUM
 import com.tangem.features.walletconnect.transaction.entity.sign.WcSignTransactionItemUM
@@ -113,24 +114,24 @@ private fun WcSignTransactionItems(state: WcSignTransactionItemUM, modifier: Mod
             .fillMaxWidth()
             .padding(12.dp)
 
-        DividerWithPadding(start = 0.dp, end = 0.dp)
-        WcWalletItem(
-            modifier = itemsModifier,
-            walletName = state.walletName,
-        )
-        DividerWithPadding(start = 40.dp, end = 12.dp)
+        if (state.walletName != null) {
+            WcWalletItem(
+                modifier = itemsModifier,
+                walletName = state.walletName,
+            )
+            DividerWithPadding(start = 40.dp, end = 12.dp)
+        }
         WcNetworkItem(
             modifier = itemsModifier,
             networkInfo = state.networkInfo,
         )
-        if (!state.addressText.isNullOrEmpty()) {
+        if (state.address != null) {
             DividerWithPadding(start = 40.dp, end = 12.dp)
             WcAddressItem(
                 modifier = itemsModifier,
-                addressText = state.addressText,
+                address = state.address,
             )
         }
-        DividerWithPadding(start = 40.dp, end = 12.dp)
     }
 }
 
@@ -182,6 +183,7 @@ private class WcSignTransactionStateProvider : CollectionPreviewParameterProvide
             ),
             walletName = "Tangem 2.0",
             networkInfo = WcNetworkInfoUM(name = "Ethereum", iconRes = R.drawable.img_eth_22),
+            address = null,
         ),
         WcSignTransactionItemUM(
             onDismiss = {},
@@ -192,9 +194,9 @@ private class WcSignTransactionStateProvider : CollectionPreviewParameterProvide
                 verifiedState = VerifiedDAppState.Verified {},
                 appSubtitle = "react-app.walletconnect.com",
             ),
-            walletName = "Tangem 2.0",
-            addressText = "0x345FF...34FA",
+            walletName = null,
             networkInfo = WcNetworkInfoUM(name = "Ethereum", iconRes = R.drawable.img_eth_22),
+            address = WcAddressUM("0xdac17f958d2ee523a2206206994597c13d831ec7", "0x345FF...34FA"),
         ),
     ),
 )
