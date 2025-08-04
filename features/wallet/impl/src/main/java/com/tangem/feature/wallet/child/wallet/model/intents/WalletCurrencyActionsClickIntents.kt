@@ -30,8 +30,11 @@ import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkAddress
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.promo.GetStoryContentUseCase
 import com.tangem.domain.promo.models.StoryContentIds
@@ -41,15 +44,12 @@ import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.IsCryptoCurrencyCoinCouldHideUseCase
 import com.tangem.domain.tokens.RemoveCurrencyUseCase
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.analytics.TokenReceiveAnalyticsEvent
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent.Companion.AVAILABLE
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent.Companion.toReasonAnalyticsText
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.feature.wallet.impl.R
@@ -61,7 +61,6 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.CloseBottomSheetTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
-import com.tangem.features.onramp.OnrampFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
@@ -129,7 +128,6 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     private val shareManager: ShareManager,
     private val appRouter: AppRouter,
     private val rampStateManager: RampStateManager,
-    private val onrampFeatureToggles: OnrampFeatureToggles,
 ) : BaseWalletClickIntents(), WalletCurrencyActionsClickIntents {
 
     override fun onSendClick(
@@ -345,28 +343,13 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
 
         if (handleUnavailabilityReason(unavailabilityReason)) return
 
-        if (onrampFeatureToggles.isFeatureEnabled) {
-            appRouter.push(
-                AppRoute.Onramp(
-                    userWalletId = userWallet.walletId,
-                    currency = cryptoCurrencyStatus.currency,
-                    source = OnrampSource.TOKEN_LONG_TAP,
-                ),
-            )
-        } else {
-            showErrorIfDemoModeOrElse {
-                modelScope.launch(dispatchers.main) {
-                    reduxStateHolder.dispatch(
-                        TradeCryptoAction.Buy(
-                            userWallet = userWallet,
-                            source = OnrampSource.TOKEN_LONG_TAP,
-                            cryptoCurrencyStatus = cryptoCurrencyStatus,
-                            appCurrencyCode = getSelectedAppCurrencyUseCase.unwrap().code,
-                        ),
-                    )
-                }
-            }
-        }
+        appRouter.push(
+            AppRoute.Onramp(
+                userWalletId = userWallet.walletId,
+                currency = cryptoCurrencyStatus.currency,
+                source = OnrampSource.TOKEN_LONG_TAP,
+            ),
+        )
     }
 
     override fun onSwapClick(
@@ -482,11 +465,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
 
     override fun onMultiWalletBuyClick(userWalletId: UserWalletId, screenType: String) {
         onMultiWalletActionClick(
-            statusFlow = if (onrampFeatureToggles.isFeatureEnabled) {
-                rampStateManager.getExpressInitializationStatus(userWalletId)
-            } else {
-                rampStateManager.getBuyInitializationStatus()
-            },
+            statusFlow = rampStateManager.getExpressInitializationStatus(userWalletId),
             route = AppRoute.BuyCrypto(userWalletId = userWalletId),
             eventCreator = { MainScreenAnalyticsEvent.ButtonBuy(status = it, screenType = screenType) },
         )

@@ -6,24 +6,26 @@ import com.tangem.blockchain.common.Token
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.common.test.domain.card.MockScanResponseFactory
+import com.tangem.common.test.domain.wallet.MockUserWalletFactory
 import com.tangem.data.common.currency.CryptoCurrencyFactory
-import com.tangem.domain.common.DerivationStyleProvider
-import com.tangem.domain.common.configs.GenericCardConfig
-import com.tangem.domain.common.util.derivationStyleProvider
+import com.tangem.domain.wallets.derivations.DerivationStyleProvider
+import com.tangem.domain.wallets.derivations.derivationStyleProvider
+import com.tangem.domain.card.configs.GenericCardConfig
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.models.wallet.UserWallet
 
 /**
 [REDACTED_AUTHOR]
  */
-class MockCryptoCurrencyFactory(private val scanResponse: ScanResponse = defaultScanResponse) {
+class MockCryptoCurrencyFactory(private val userWallet: UserWallet.Cold = defaultUserWallet) {
 
     private val factory = CryptoCurrencyFactory(excludedBlockchains = ExcludedBlockchains())
 
     val cardano by lazy { createCoin(blockchain = Blockchain.Cardano) }
     val chia by lazy { createCoin(Blockchain.Chia) }
     val ethereum by lazy { createCoin(Blockchain.Ethereum) }
+    val stellar by lazy { createCoin(Blockchain.Stellar) }
 
     val chiaAndEthereum by lazy {
         listOf(
@@ -49,7 +51,7 @@ class MockCryptoCurrencyFactory(private val scanResponse: ScanResponse = default
         val derivationPath = createDerivationPath(
             blockchain = blockchain,
             extraDerivationPath = null,
-            cardDerivationStyleProvider = scanResponse.derivationStyleProvider,
+            cardDerivationStyleProvider = userWallet.scanResponse.derivationStyleProvider,
         )
 
         val network = Network(
@@ -63,6 +65,10 @@ class MockCryptoCurrencyFactory(private val scanResponse: ScanResponse = default
             hasFiatFeeRate = blockchain.feePaidCurrency() !is FeePaidCurrency.FeeResource,
             canHandleTokens = false,
             transactionExtrasType = Network.TransactionExtrasType.NONE,
+            nameResolvingType = when (blockchain) {
+                Blockchain.Ethereum, Blockchain.EthereumTestnet -> Network.NameResolvingType.ENS
+                else -> Network.NameResolvingType.NONE
+            },
         )
 
         return factory.createCoin(network = network)
@@ -72,7 +78,7 @@ class MockCryptoCurrencyFactory(private val scanResponse: ScanResponse = default
     fun createCustomToken(blockchain: Blockchain, derivationBlockchain: Blockchain): CryptoCurrency {
         val derivationPath = Network.DerivationPath.Custom(
             value = derivationBlockchain.derivationPath(
-                scanResponse.derivationStyleProvider.getDerivationStyle(),
+                userWallet.scanResponse.derivationStyleProvider.getDerivationStyle(),
             )!!.rawPath,
         )
 
@@ -93,6 +99,7 @@ class MockCryptoCurrencyFactory(private val scanResponse: ScanResponse = default
                 hasFiatFeeRate = true,
                 canHandleTokens = true,
                 transactionExtrasType = Network.TransactionExtrasType.NONE,
+                nameResolvingType = Network.NameResolvingType.NONE,
             ),
             name = "NEVER-MIND",
             symbol = "NEVER-MIND",
@@ -114,7 +121,7 @@ class MockCryptoCurrencyFactory(private val scanResponse: ScanResponse = default
             ),
             blockchain = blockchain,
             extraDerivationPath = null,
-            scanResponse = scanResponse,
+            userWallet = userWallet,
         )!!
     }
 
@@ -161,9 +168,11 @@ class MockCryptoCurrencyFactory(private val scanResponse: ScanResponse = default
 
     private companion object {
 
-        val defaultScanResponse = MockScanResponseFactory.create(
-            cardConfig = GenericCardConfig(2),
-            derivedKeys = emptyMap(),
+        val defaultUserWallet = MockUserWalletFactory.create(
+            scanResponse = MockScanResponseFactory.create(
+                cardConfig = GenericCardConfig(2),
+                derivedKeys = emptyMap(),
+            ),
         )
     }
 }

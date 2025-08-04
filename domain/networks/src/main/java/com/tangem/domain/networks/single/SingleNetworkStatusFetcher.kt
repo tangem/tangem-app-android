@@ -2,7 +2,7 @@ package com.tangem.domain.networks.single
 
 import com.tangem.domain.core.flow.FlowFetcher
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 
 /**
  * Fetcher of network status [Network] for wallet with [UserWalletId]
