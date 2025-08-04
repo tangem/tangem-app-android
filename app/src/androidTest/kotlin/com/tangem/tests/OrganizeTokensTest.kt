@@ -79,11 +79,15 @@ class OrganizeTokensTest : BaseTestCase() {
         setupHooks().run {
             val ethereumTitle = "Ethereum"
             val bitcoinTitle = "Bitcoin"
+            val balance = "$184.85"
             step("Open 'Main Screen'") {
                 scenario(OpenMainScreenScenario(composeTestRule))
             }
             step("Click on 'Synchronize addresses' button" ) {
                 onMainScreen { synchronizeAddressesButton.clickWithAssertion() }
+            }
+            step("Assert wallet balance = '$balance'") {
+                onMainScreen { walletBalance().assertTextContains(balance) }
             }
             step("Check positions of tokens on 'Main Screen'") {
                 onMainScreen {
@@ -154,11 +158,15 @@ class OrganizeTokensTest : BaseTestCase() {
             val ethereumTitle = "Ethereum"
             val bitcoinTitle = "Bitcoin"
             val polygonTitle = "Polygon"
+            val balance = "$184.85"
             step("Open 'Main Screen'") {
                 scenario(OpenMainScreenScenario(composeTestRule))
             }
             step("Click on 'Synchronize addresses' button" ) {
                 onMainScreen { synchronizeAddressesButton.clickWithAssertion() }
+            }
+            step("Assert wallet balance = '$balance'") {
+                onMainScreen { walletBalance().assertTextContains(balance) }
             }
             step("Check positions of tokens on 'Main Screen'") {
                 onMainScreen {
@@ -184,8 +192,8 @@ class OrganizeTokensTest : BaseTestCase() {
             }
             step("Check positions of tokens by balance on 'Organize tokens' screen") {
                 onOrganizeTokensScreen {
-                    tokenWithTitleAndPosition(ethereumTitle, 1).assertIsDisplayed()
-                    tokenWithTitleAndPosition(polygonTitle, 2).assertIsDisplayed()
+                    tokenWithTitleAndPosition(polygonTitle, 1).assertIsDisplayed()
+                    tokenWithTitleAndPosition(ethereumTitle, 2).assertIsDisplayed()
                     tokenWithTitleAndPosition(bitcoinTitle, 3).assertIsDisplayed()
                 }
             }
@@ -194,8 +202,8 @@ class OrganizeTokensTest : BaseTestCase() {
             }
             step("Check positions of tokens by balance on 'Organize tokens' screen") {
                 onMainScreen {
-                    tokenWithTitleAndPosition(ethereumTitle, 0).assertIsDisplayed()
-                    tokenWithTitleAndPosition(polygonTitle, 1).assertIsDisplayed()
+                    tokenWithTitleAndPosition(polygonTitle, 0).assertIsDisplayed()
+                    tokenWithTitleAndPosition(ethereumTitle, 1).assertIsDisplayed()
                     tokenWithTitleAndPosition(bitcoinTitle, 2).assertIsDisplayed()
                 }
             }

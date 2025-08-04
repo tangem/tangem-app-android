@@ -102,7 +102,7 @@ internal class WalletCardClickIntentsImplementor @Inject constructor(
             } else {
                 tokenListStore.clear()
                 stateHolder.clear()
-                appRouter.replaceAll(AppRoute.Home)
+                appRouter.replaceAll(AppRoute.Home())
             }
         }
     }
