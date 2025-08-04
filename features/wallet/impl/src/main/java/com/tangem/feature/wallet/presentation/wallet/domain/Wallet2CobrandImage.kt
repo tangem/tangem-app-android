@@ -305,7 +305,7 @@ internal enum class Wallet2CobrandImage(
     USA(
         cards2ResId = R.drawable.ill_usa_card2_120_106,
         cards3ResId = R.drawable.ill_usa_card3_120_106,
-        batchIds = setOf("AF91"),
+        batchIds = setOf("AF91", "AF990017"),
     ),
 
     VeChain(
