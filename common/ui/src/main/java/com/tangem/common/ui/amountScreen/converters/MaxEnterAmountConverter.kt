@@ -1,7 +1,7 @@
 package com.tangem.common.ui.amountScreen.converters
 
 import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.utils.converter.Converter
 
 /**
