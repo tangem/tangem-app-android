@@ -3,6 +3,7 @@ package com.tangem.common.routing
 import android.os.Bundle
 import com.tangem.common.routing.bundle.RouteBundleParams
 import com.tangem.common.routing.bundle.bundle
+import com.tangem.common.routing.entity.InitScreenLaunchMode
 import com.tangem.common.routing.entity.SerializableIntent
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -10,9 +11,9 @@ import com.tangem.domain.feedback.models.CardInfo
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.nft.models.NFTAsset
 import com.tangem.domain.onramp.model.OnrampSource
-import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -22,18 +23,18 @@ sealed class AppRoute(val path: String) : Route {
     data object Initial : AppRoute(path = "/initial")
 
     @Serializable
-    data object Home : AppRoute(path = "/home")
+    data class Home(
+        val launchMode: InitScreenLaunchMode = InitScreenLaunchMode.Standard,
+    ) : AppRoute(path = "/home")
 
     @Serializable
     data class Welcome(
+        val launchMode: InitScreenLaunchMode = InitScreenLaunchMode.Standard,
+        // we still have this param to be handled by WalletConnectLinkIntentHandler in WelcomeMiddleware
         val intent: SerializableIntent? = null,
     ) : AppRoute(path = "/welcome"), RouteBundleParams {
 
         override fun getBundle(): Bundle = bundle(serializer())
-
-        companion object {
-            const val INITIAL_INTENT_KEY = "intent"
-        }
     }
 
     @Serializable
@@ -130,7 +131,9 @@ sealed class AppRoute(val path: String) : Route {
     data class ChooseManagedTokens(
         val userWalletId: UserWalletId,
         val initialCurrency: CryptoCurrency,
+        val selectedCurrency: CryptoCurrency?,
         val source: Source,
+        val showSendViaSwapNotification: Boolean,
     ) : AppRoute(path = "/$source/choose_managed_tokens/$userWalletId/${initialCurrency.id.value}") {
         enum class Source {
             SendViaSwap,
@@ -178,9 +181,6 @@ sealed class AppRoute(val path: String) : Route {
     )
 
     @Serializable
-    data object TesterMenu : AppRoute(path = "/tester_menu")
-
-    @Serializable
     data object AppCurrencySelector : AppRoute(path = "/app_currency_selector")
 
     @Serializable
@@ -197,6 +197,11 @@ sealed class AppRoute(val path: String) : Route {
     data class WalletSettings(
         val userWalletId: UserWalletId,
     ) : AppRoute(path = "/wallet_settings/${userWalletId.stringValue}")
+
+    @Serializable
+    data class WalletBackup(
+        val userWalletId: UserWalletId,
+    ) : AppRoute(path = "/wallet_backup/${userWalletId.stringValue}")
 
     @Serializable
     data object Markets : AppRoute(path = "/markets")
@@ -295,4 +300,18 @@ sealed class AppRoute(val path: String) : Route {
 
     @Serializable
     object AddExistingWallet : AppRoute(path = "/add_existing_wallet")
+
+    @Serializable
+    data class SendEntryPoint(
+        val userWalletId: UserWalletId,
+        val currency: CryptoCurrency,
+    ) : AppRoute(
+        path = "/send_entry_point/${userWalletId.stringValue}/${currency.id.value}?",
+    )
+
+    @Serializable
+    data class SendWithSwap(
+        val userWalletId: UserWalletId,
+        val currency: CryptoCurrency,
+    ) : AppRoute(path = "/send_with_swap/${userWalletId.stringValue}/${currency.symbol}")
 }
