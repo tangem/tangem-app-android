@@ -2,10 +2,10 @@ package com.tangem.domain.tokens.operations
 
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.quote.QuoteStatus
-import com.tangem.domain.staking.model.stakekit.YieldBalance
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.models.staking.YieldBalance
 import java.math.BigDecimal
 
 internal class CurrencyStatusOperations(
@@ -80,7 +80,8 @@ internal class CurrencyStatusOperations(
         val hasCurrentNetworkTransactions = networkStatusValue.pendingTransactions.isNotEmpty()
         val currentTransactions = networkStatusValue.pendingTransactions.getOrElse(currency.id, ::emptySet)
         val yieldBalanceData = yieldBalance as? YieldBalance.Data
-        val isCurrentAddressStaking = yieldBalanceData?.address == networkStatusValue.address.defaultAddress.value
+        val isCurrentAddressStaking =
+            yieldBalanceData?.stakingId?.address == networkStatusValue.address.defaultAddress.value
         val filteredTokenBalances = yieldBalanceData?.balance?.items?.filter {
             it.token.coinGeckoId == currency.id.rawCurrencyId?.value
         }
