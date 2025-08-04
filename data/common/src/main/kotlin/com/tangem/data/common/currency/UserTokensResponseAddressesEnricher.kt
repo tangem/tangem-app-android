@@ -10,7 +10,9 @@ import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
 
 class UserTokensResponseAddressesEnricher @Inject constructor(
     private val notificationsFeatureToggles: NotificationsFeatureToggles,
@@ -28,7 +30,10 @@ class UserTokensResponseAddressesEnricher @Inject constructor(
 
         return withContext(dispatchers.default) {
             val networksStatuses = if (isNotificationsEnabled) {
-                multiNetworkStatusSupplier.invoke(MultiNetworkStatusProducer.Params(userWalletId)).first()
+                withTimeoutOrNull(
+                    FETCH_TIMEOUT_SECONDS.seconds,
+                    { multiNetworkStatusSupplier.invoke(MultiNetworkStatusProducer.Params(userWalletId)).first() },
+                ) ?: emptySet()
             } else {
                 emptySet()
             }
@@ -60,5 +65,9 @@ class UserTokensResponseAddressesEnricher @Inject constructor(
 
             response.copy(tokens = enrichedTokens, notifyStatus = isNotificationsEnabled)
         }
+    }
+
+    companion object {
+        private const val FETCH_TIMEOUT_SECONDS = 3
     }
 }
