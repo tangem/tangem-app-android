@@ -2,9 +2,7 @@ package com.tangem.data.staking.single
 
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
-import com.tangem.data.staking.utils.StakingIdFactory
-import com.tangem.domain.staking.model.StakingID
-import com.tangem.domain.staking.model.stakekit.YieldBalance
+import com.tangem.domain.models.staking.YieldBalance
 import com.tangem.domain.staking.multi.MultiYieldBalanceProducer
 import com.tangem.domain.staking.multi.MultiYieldBalanceSupplier
 import com.tangem.domain.staking.single.SingleYieldBalanceProducer
@@ -24,7 +22,7 @@ import timber.log.Timber
  *
  * @property params                    params
  * @property multiYieldBalanceSupplier multi yield balance supplier
- * @property stakingIdFactory          factory for creating [StakingID]
+ * @property analyticsExceptionHandler analytics exception handler
  * @property dispatchers               dispatchers
  *
 [REDACTED_AUTHOR]
@@ -32,19 +30,13 @@ import timber.log.Timber
 internal class DefaultSingleYieldBalanceProducer @AssistedInject constructor(
     @Assisted private val params: SingleYieldBalanceProducer.Params,
     private val multiYieldBalanceSupplier: MultiYieldBalanceSupplier,
-    private val stakingIdFactory: StakingIdFactory,
     private val analyticsExceptionHandler: AnalyticsExceptionHandler,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : SingleYieldBalanceProducer {
 
     override val fallback: YieldBalance by lazy {
-        YieldBalance.Error(
-            integrationId = stakingIdFactory.createIntegrationId(currencyId = params.currencyId),
-            address = null,
-        )
+        YieldBalance.Error(stakingId = params.stakingId)
     }
-
-    private var stakingId: StakingID? = null
 
     override fun produce(): Flow<YieldBalance> {
         Timber.i("Producing yield balance for params:\n$params")
@@ -53,14 +45,9 @@ internal class DefaultSingleYieldBalanceProducer @AssistedInject constructor(
             params = MultiYieldBalanceProducer.Params(userWalletId = params.userWalletId),
         )
             .mapNotNull { balances ->
-                val currentStakingId = getStakingId()
+                val currentStakingId = params.stakingId
 
-                if (currentStakingId == null) {
-                    Timber.i("Staking ID is null for params: $params")
-                    return@mapNotNull YieldBalance.Unsupported
-                }
-
-                val currentBalances = balances.filter { it.getStakingId() == currentStakingId }
+                val currentBalances = balances.filter { it.stakingId == currentStakingId }
 
                 if (currentBalances.size > 1) {
                     analyticsExceptionHandler.sendException(
@@ -86,32 +73,14 @@ internal class DefaultSingleYieldBalanceProducer @AssistedInject constructor(
                         currentBalances.first()
                     }
                 } else {
-                    val balance = currentBalances.firstOrNull()
+                    val balance = currentBalances.firstOrNull() ?: return@mapNotNull null
 
-                    if (balance != null) {
-                        Timber.i("Yield balance found for $currentStakingId:\n$balance")
-                        balance
-                    } else {
-                        Timber.i("No yield balance found for $currentStakingId:\n${YieldBalance.Unsupported}")
-                        YieldBalance.Unsupported
-                    }
+                    Timber.i("Yield balance found for $currentStakingId:\n$balance")
+                    balance
                 }
             }
             .distinctUntilChanged()
             .flowOn(dispatchers.default)
-    }
-
-    private suspend fun getStakingId(): StakingID? {
-        val saved = stakingId
-
-        if (saved != null) return saved
-
-        return stakingIdFactory.create(
-            userWalletId = params.userWalletId,
-            currencyId = params.currencyId,
-            network = params.network,
-        )
-            .also { stakingId = it }
     }
 
     @AssistedFactory
