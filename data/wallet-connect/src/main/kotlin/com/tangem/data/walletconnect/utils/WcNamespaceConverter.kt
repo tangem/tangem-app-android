@@ -16,7 +16,6 @@ internal interface WcNamespaceConverter {
     fun toBlockchain(chainId: CAIP2): Blockchain?
     fun toBlockchain(chainId: String): Blockchain? = toCAIP2(chainId)?.let { caip2 -> toBlockchain(caip2) }
 
-    fun toCAIP2(network: Network): CAIP2?
     fun toCAIP2(chainId: String): CAIP2? = CAIP2.fromRaw(chainId)
 
     fun toNetwork(chainId: String, wallet: UserWallet): Network? {
