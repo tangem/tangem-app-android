@@ -110,8 +110,10 @@ internal class AssociateNetworksDelegate(
             .distinctBy { it.rawId }
     }
 
-    private fun Map<String, Namespace.Proposal>.setOfChainId(): Set<String> =
-        this.values.flatMap { proposal -> proposal.chains ?: listOf() }.toSet()
-
     private fun missingNetworkName(chainId: String): String = chainId.replaceFirstChar(Char::titlecase)
+
+    companion object {
+        internal fun Map<String, Namespace.Proposal>.setOfChainId(): Set<String> =
+            this.values.flatMap { proposal -> proposal.chains ?: listOf() }.toSet()
+    }
 }
