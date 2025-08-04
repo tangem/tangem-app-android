@@ -16,6 +16,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -29,6 +30,7 @@ import com.tangem.core.ui.components.fields.SimpleDialogTextField
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.DialogTestTags
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -216,7 +218,8 @@ private fun TangemDialog(
                     shape = TangemTheme.shapes.roundedCornersLarge,
                     color = TangemTheme.colors.background.primary,
                 )
-                .padding(vertical = TangemTheme.dimens.spacing24),
+                .padding(vertical = TangemTheme.dimens.spacing24)
+                .testTag(DialogTestTags.DIALOG_CONTAINER),
         ) {
             if (title != null) {
                 Text(
