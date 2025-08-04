@@ -4,7 +4,9 @@ import android.content.res.Configuration
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -14,25 +16,29 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetWithFooter
 import com.tangem.core.ui.components.divider.DividerWithPadding
+import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.send.v2.api.FeeSelectorBlockComponent
+import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.features.walletconnect.connections.entity.VerifiedDAppState
 import com.tangem.features.walletconnect.connections.ui.WcAppInfoItem
 import com.tangem.features.walletconnect.impl.R
 import com.tangem.features.walletconnect.transaction.components.PreviewFeeSelectorBlockComponent
+import com.tangem.features.walletconnect.transaction.entity.blockaid.BlockAidNotificationUM
 import com.tangem.features.walletconnect.transaction.entity.blockaid.WcEstimatedWalletChangeUM
 import com.tangem.features.walletconnect.transaction.entity.blockaid.WcEstimatedWalletChangesUM
 import com.tangem.features.walletconnect.transaction.entity.blockaid.WcSendReceiveTransactionCheckResultsUM
-import com.tangem.features.walletconnect.transaction.entity.common.WcAddressUM
 import com.tangem.features.walletconnect.transaction.entity.common.WcNetworkInfoUM
 import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionAppInfoContentUM
 import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionFeeState
@@ -49,6 +55,7 @@ import kotlinx.collections.immutable.persistentListOf
 internal fun WcSendTransactionModalBottomSheet(
     state: WcSendTransactionItemUM,
     feeSelectorBlockComponent: FeeSelectorBlockComponent?,
+    feeSelectorUM: FeeSelectorUM,
     onClickTransactionRequest: () -> Unit,
     onBack: () -> Unit,
     onDismiss: () -> Unit,
@@ -101,14 +108,23 @@ internal fun WcSendTransactionModalBottomSheet(
                     if (state.estimatedWalletChanges != null) {
                         TransactionCheckResultsItem(state.estimatedWalletChanges, onClickAllowToSpend)
                     }
-                    Spacer(Modifier.height(16.dp))
                     WcSendTransactionItems(
+                        modifier = Modifier.padding(top = 16.dp),
                         walletName = state.walletName,
                         networkInfo = state.networkInfo,
                         feeState = state.feeState,
                         feeSelectorBlockComponent = feeSelectorBlockComponent,
+                        feeSelectorUM = feeSelectorUM,
                         address = state.address,
                     )
+                    if (state.feeErrorNotification != null) {
+                        Notification(
+                            modifier = Modifier.padding(top = 14.dp),
+                            config = state.feeErrorNotification.config,
+                            iconTint = TangemTheme.colors.icon.warning,
+                            containerColor = TangemTheme.colors.button.disabled,
+                        )
+                    }
                 }
             }
         },
@@ -119,6 +135,7 @@ internal fun WcSendTransactionModalBottomSheet(
                 onClickActiveButton = state.onSend,
                 activeButtonText = resourceReference(R.string.common_send),
                 isLoading = state.isLoading,
+                enabled = state.sendEnabled,
             )
         },
     )
@@ -155,6 +172,7 @@ private fun WcSendTransactionBottomSheetPreview(
                     onBack = {},
                     onDismiss = {},
                     onClickAllowToSpend = {},
+                    feeSelectorUM = FeeSelectorUM.Loading,
                 )
             },
         )
@@ -173,8 +191,10 @@ private class WcSendTransactionStateProvider : CollectionPreviewParameterProvide
                 appSubtitle = "react-app.walletconnect.com",
             ),
             estimatedWalletChanges = WcSendReceiveTransactionCheckResultsUM(
-                notificationText = TextReference.Str(
-                    "The transaction approves erc20 tokens to a known malicious address",
+                notification = BlockAidNotificationUM(
+                    type = BlockAidNotificationUM.Type.ERROR,
+                    title = TextReference.Res(R.string.wc_malicious_transaction),
+                    text = TextReference.Str("The transaction approves erc20 tokens to a known malicious address"),
                 ),
                 estimatedWalletChanges = WcEstimatedWalletChangesUM(
                     items = persistentListOf(
@@ -194,10 +214,12 @@ private class WcSendTransactionStateProvider : CollectionPreviewParameterProvide
                 ),
                 isLoading = false,
             ),
-            walletName = "Tangem 2.0",
-            networkInfo = WcNetworkInfoUM(name = "Ethereum", iconRes = R.drawable.img_eth_22),
-            feeState = WcTransactionFeeState.Success(null, {}),
+            walletName = "Tangem 2.0 Tangem 2.0 Tangem 2",
+            networkInfo = WcNetworkInfoUM(name = "Optimistic Ethereum Network", iconRes = R.drawable.img_eth_22),
+            feeState = WcTransactionFeeState.Success(dAppFee = null, onClick = {}),
             address = null,
+            sendEnabled = true,
+            feeErrorNotification = null,
         ),
         WcSendTransactionItemUM(
             onDismiss = {},
@@ -209,8 +231,10 @@ private class WcSendTransactionStateProvider : CollectionPreviewParameterProvide
                 appSubtitle = "react-app.walletconnect.com",
             ),
             estimatedWalletChanges = WcSendReceiveTransactionCheckResultsUM(
-                notificationText = TextReference.Str(
-                    "The transaction approves erc20 tokens to a known malicious address",
+                notification = BlockAidNotificationUM(
+                    type = BlockAidNotificationUM.Type.ERROR,
+                    title = TextReference.Res(R.string.wc_malicious_transaction),
+                    text = TextReference.Str("The transaction approves erc20 tokens to a known malicious address"),
                 ),
                 estimatedWalletChanges = WcEstimatedWalletChangesUM(
                     items = persistentListOf(
@@ -231,8 +255,13 @@ private class WcSendTransactionStateProvider : CollectionPreviewParameterProvide
             ),
             walletName = "Tangem 2.0",
             networkInfo = WcNetworkInfoUM(name = "Ethereum", iconRes = R.drawable.img_eth_22),
-            feeState = WcTransactionFeeState.Success(null, {}),
-            address = WcAddressUM("0xdac17f958d2ee523a2206206994597c13d831ec7", "0x345FF...34FA"),
+            feeState = WcTransactionFeeState.Success(dAppFee = null, onClick = {}),
+            address = "0xdac17f958d2ee523a2206206994597c13d831ec7",
+            sendEnabled = true,
+            feeErrorNotification = NotificationUM.Info(
+                title = stringReference("Insufficient Ethereum"),
+                subtitle = stringReference("Top up your balance to cover the network fee"),
+            ),
         ),
         WcSendTransactionItemUM(
             onDismiss = {},
@@ -244,8 +273,10 @@ private class WcSendTransactionStateProvider : CollectionPreviewParameterProvide
                 appSubtitle = "react-app.walletconnect.com",
             ),
             estimatedWalletChanges = WcSendReceiveTransactionCheckResultsUM(
-                notificationText = TextReference.Str(
-                    "The transaction approves erc20 tokens to a known malicious address",
+                notification = BlockAidNotificationUM(
+                    type = BlockAidNotificationUM.Type.ERROR,
+                    title = TextReference.Res(R.string.wc_malicious_transaction),
+                    text = TextReference.Str("The transaction approves erc20 tokens to a known malicious address"),
                 ),
                 estimatedWalletChanges = WcEstimatedWalletChangesUM(
                     items = persistentListOf(
@@ -268,6 +299,11 @@ private class WcSendTransactionStateProvider : CollectionPreviewParameterProvide
             networkInfo = WcNetworkInfoUM(name = "Ethereum", iconRes = R.drawable.img_eth_22),
             feeState = WcTransactionFeeState.None,
             address = null,
+            sendEnabled = false,
+            feeErrorNotification = NotificationUM.Info(
+                title = stringReference("Insufficient Ethereum"),
+                subtitle = stringReference("Top up your balance to cover the network fee"),
+            ),
         ),
     ),
 )
