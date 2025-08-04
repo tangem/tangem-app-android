@@ -24,24 +24,26 @@ import com.tangem.core.ui.extensions.toWrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.datasource.local.config.issuers.IssuersConfigStorage
+import com.tangem.domain.card.common.util.twinsIsTwinned
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.common.TwinCardNumber
 import com.tangem.domain.common.getTwinCardNumber
-import com.tangem.domain.common.util.twinsIsTwinned
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.onboarding.SaveTwinsOnboardingShownUseCase
 import com.tangem.domain.onramp.GetLegacyTopUpUrlUseCase
 import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
 import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.tokens.model.analytics.TokenReceiveAnalyticsEvent
+import com.tangem.domain.tokens.wallet.WalletBalanceFetcher
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
-import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.onboarding.v2.common.analytics.OnboardingEvent
 import com.tangem.features.onboarding.v2.common.ui.interruptBackupDialog
 import com.tangem.features.onboarding.v2.impl.R
@@ -85,6 +87,8 @@ internal class OnboardingTwinModel @Inject constructor(
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val clipboardManager: ClipboardManager,
     private val shareManager: ShareManager,
+    private val tokensFeatureToggles: TokensFeatureToggles,
+    private val walletBalanceFetcher: WalletBalanceFetcher,
 ) : Model() {
 
     private val params = paramsContainer.require<OnboardingTwinComponent.Params>()
@@ -329,13 +333,15 @@ internal class OnboardingTwinModel @Inject constructor(
 
         cardRepository.finishCardActivation(params.scanResponse.card.cardId)
 
-        fetchCurrencyStatusUseCase.invoke(
-            userWalletId = userWallet.walletId,
-            refresh = true,
-        ).onLeft {
-            Timber.e("Unable to fetch currency status: $it")
-            setLoading(false)
+        if (tokensFeatureToggles.isWalletBalanceFetcherEnabled) {
+            walletBalanceFetcher(params = WalletBalanceFetcher.Params(userWalletId = userWallet.walletId))
+        } else {
+            fetchCurrencyStatusUseCase.invoke(userWalletId = userWallet.walletId, refresh = true)
         }
+            .onLeft {
+                Timber.e("Unable to fetch currency status: $it")
+                setLoading(false)
+            }
 
         val cryptoCurrencyStatus = getSingleCryptoCurrencyStatusUseCase.invokeSingleWallet(userWallet.walletId)
             .firstOrNull()?.getOrNull()
@@ -431,10 +437,12 @@ internal class OnboardingTwinModel @Inject constructor(
             it.copy(isLoading = true)
         }
         modelScope.launch {
-            fetchCurrencyStatusUseCase(
-                userWalletId = userWallet.walletId,
-                refresh = true,
-            )
+            if (tokensFeatureToggles.isWalletBalanceFetcherEnabled) {
+                walletBalanceFetcher(params = WalletBalanceFetcher.Params(userWalletId = userWallet.walletId))
+                    .onLeft(Timber::e)
+            } else {
+                fetchCurrencyStatusUseCase(userWalletId = userWallet.walletId, refresh = true)
+            }
         }
     }
 
