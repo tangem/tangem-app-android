@@ -2,9 +2,9 @@ package com.tangem.domain.tokens
 
 import arrow.core.Either
 import arrow.core.raise.either
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
-import com.tangem.domain.wallets.models.UserWalletId
 import java.math.BigDecimal
 
 class GetMinimumTransactionAmountSyncUseCase(

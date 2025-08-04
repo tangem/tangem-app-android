@@ -152,4 +152,10 @@ sealed class Lce<out E : Any, out C : Any> {
 
         return this
     }
+
+    fun onContent(action: (content: C) -> Unit): Lce<E, C> {
+        if (this is Content) action(this.content)
+
+        return this
+    }
 }

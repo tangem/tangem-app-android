@@ -1,7 +1,8 @@
 package com.tangem.domain.tokens.model
 
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.model.stakekit.Yield
-import com.tangem.domain.wallets.models.UserWalletId
 
 data class TokenActionsState(
     val walletId: UserWalletId,
