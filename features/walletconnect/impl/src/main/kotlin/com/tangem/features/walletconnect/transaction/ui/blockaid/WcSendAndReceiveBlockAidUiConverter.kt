@@ -45,7 +45,7 @@ internal class WcSendAndReceiveBlockAidUiConverter @Inject constructor(
                                     is AmountInfo.FungibleTokens -> estimatedWalletChangeUMConverter.convert(
                                         WcEstimatedWalletChangeUMConverter.Input(
                                             amountInfo = it,
-                                            iconRes = R.drawable.ic_receive_new_24,
+                                            iconRes = R.drawable.ic_send_new_24,
                                             titleRes = R.string.common_send,
                                             sign = StringsSigns.MINUS,
                                         ),
