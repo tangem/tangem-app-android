@@ -8,6 +8,7 @@ import com.tangem.feature.referral.api.ReferralComponent
 import com.tangem.feature.stories.api.StoriesComponent
 import com.tangem.feature.usedesk.api.UsedeskComponent
 import com.tangem.feature.walletsettings.component.WalletSettingsComponent
+import com.tangem.features.hotwallet.WalletBackupComponent
 import com.tangem.features.createwalletselection.CreateWalletSelectionComponent
 import com.tangem.features.details.component.DetailsComponent
 import com.tangem.features.disclaimer.api.components.DisclaimerComponent
@@ -26,9 +27,10 @@ import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
 import com.tangem.features.pushnotifications.api.PushNotificationsParams
 import com.tangem.features.send.v2.api.NFTSendComponent
 import com.tangem.features.send.v2.api.SendComponent
+import com.tangem.features.send.v2.api.SendEntryPointComponent
 import com.tangem.features.staking.api.StakingComponent
 import com.tangem.features.swap.SwapComponent
-import com.tangem.features.tester.api.TesterRouter
+import com.tangem.features.swap.v2.api.SendWithSwapComponent
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.wallet.WalletEntryComponent
 import com.tangem.features.walletconnect.components.WalletConnectEntryComponent
@@ -40,7 +42,7 @@ import com.tangem.tap.features.details.ui.cardsettings.coderecovery.api.AccessCo
 import com.tangem.tap.features.details.ui.resetcard.api.ResetCardComponent
 import com.tangem.tap.features.details.ui.securitymode.api.SecurityModeComponent
 import com.tangem.tap.features.details.ui.walletconnect.api.WalletConnectComponent
-import com.tangem.tap.features.home.api.HomeComponent
+import com.tangem.features.home.api.HomeComponent
 import com.tangem.tap.features.welcome.component.WelcomeComponent
 import com.tangem.tap.routing.component.RoutingComponent.Child
 import dagger.hilt.android.scopes.ActivityScoped
@@ -52,6 +54,7 @@ import com.tangem.features.walletconnect.components.WalletConnectEntryComponent 
 internal class ChildFactory @Inject constructor(
     private val detailsComponentFactory: DetailsComponent.Factory,
     private val walletSettingsComponentFactory: WalletSettingsComponent.Factory,
+    private val walletBackupComponentFactory: WalletBackupComponent.Factory,
     private val disclaimerComponentFactory: DisclaimerComponent.Factory,
     private val manageTokensComponentFactory: ManageTokensComponent.Factory,
     private val marketsTokenDetailsComponentFactory: MarketsTokenDetailsComponent.Factory,
@@ -88,7 +91,8 @@ internal class ChildFactory @Inject constructor(
     private val createWalletSelectionComponentFactory: CreateWalletSelectionComponent.Factory,
     private val createMobileWalletComponentFactory: CreateMobileWalletComponent.Factory,
     private val addExistingWalletComponentFactory: AddExistingWalletComponent.Factory,
-    private val testerRouter: TesterRouter,
+    private val sendWithSwapComponentFactory: SendWithSwapComponent.Factory,
+    private val sendEntryPointComponentFactory: SendEntryPointComponent.Factory,
     private val walletConnectFeatureToggles: WalletConnectFeatureToggles,
 ) {
 
@@ -129,19 +133,26 @@ internal class ChildFactory @Inject constructor(
                 createComponentChild(
                     context = context,
                     params = WelcomeComponent.Params(
+                        launchMode = route.launchMode,
                         intent = route.intent,
                     ),
                     componentFactory = welcomeComponentFactory,
                 )
-            }
-            is AppRoute.TesterMenu -> {
-                Child.LegacyIntent(testerRouter.getEntryIntent())
             }
             is AppRoute.WalletSettings -> {
                 createComponentChild(
                     context = context,
                     params = WalletSettingsComponent.Params(route.userWalletId),
                     componentFactory = walletSettingsComponentFactory,
+                )
+            }
+            is AppRoute.WalletBackup -> {
+                createComponentChild(
+                    context = context,
+                    params = WalletBackupComponent.Params(
+                        userWalletId = route.userWalletId,
+                    ),
+                    componentFactory = walletBackupComponentFactory,
                 )
             }
             is AppRoute.MarketsTokenDetails -> {
@@ -280,7 +291,7 @@ internal class ChildFactory @Inject constructor(
             is AppRoute.Home -> {
                 createComponentChild(
                     context = context,
-                    params = Unit,
+                    params = HomeComponent.Params(route.launchMode),
                     componentFactory = homeComponentFactory,
                 )
             }
@@ -425,7 +436,9 @@ internal class ChildFactory @Inject constructor(
                     params = ChooseManagedTokensComponent.Params(
                         userWalletId = route.userWalletId,
                         initialCurrency = route.initialCurrency,
+                        selectedCurrency = route.selectedCurrency,
                         source = ChooseManagedTokensComponent.Source.valueOf(route.source.name),
+                        showSendViaSwapNotification = route.showSendViaSwapNotification,
                     ),
                     componentFactory = chooseManagedTokensComponentFactory,
                 )
@@ -449,6 +462,26 @@ internal class ChildFactory @Inject constructor(
                     context = context,
                     params = Unit,
                     componentFactory = addExistingWalletComponentFactory,
+                )
+            }
+            is AppRoute.SendEntryPoint -> {
+                createComponentChild(
+                    context = context,
+                    params = SendEntryPointComponent.Params(
+                        userWalletId = route.userWalletId,
+                        cryptoCurrency = route.currency,
+                    ),
+                    componentFactory = sendEntryPointComponentFactory,
+                )
+            }
+            is AppRoute.SendWithSwap -> {
+                createComponentChild(
+                    context = context,
+                    params = SendWithSwapComponent.Params(
+                        userWalletId = route.userWalletId,
+                        currency = route.currency,
+                    ),
+                    componentFactory = sendWithSwapComponentFactory,
                 )
             }
         }

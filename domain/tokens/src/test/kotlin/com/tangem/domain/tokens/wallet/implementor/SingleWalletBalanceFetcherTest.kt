@@ -4,7 +4,7 @@ import com.google.common.truth.Truth
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.wallet.FetchingSource
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.mockk

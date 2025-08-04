@@ -26,4 +26,5 @@ data class SwapTransactionModel(
     val toCryptoAmount: BigDecimal,
     val provider: ExpressProvider,
     val status: SwapStatusModel? = null,
+    val swapTxType: SwapTxType? = SwapTxType.Swap,
 )
