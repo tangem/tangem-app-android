@@ -36,5 +36,6 @@ internal data class SwapChooseNetworkUM(
     val subtitle: TextReference,
     @DrawableRes val iconResId: Int,
     val hasFixedRate: Boolean,
+    val isMainNetwork: Boolean,
     val onNetworkClick: () -> Unit,
 )
