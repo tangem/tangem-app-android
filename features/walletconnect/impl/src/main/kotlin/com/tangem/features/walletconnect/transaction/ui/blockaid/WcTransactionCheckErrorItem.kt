@@ -11,26 +11,42 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.walletconnect.impl.R
+import com.tangem.features.walletconnect.transaction.entity.blockaid.BlockAidNotificationUM
 
 @Composable
-internal fun WcTransactionCheckErrorItem(notificationText: String, modifier: Modifier = Modifier) {
+internal fun WcTransactionCheckErrorItem(notification: BlockAidNotificationUM, modifier: Modifier = Modifier) {
     Notification(
         modifier = modifier
             .fillMaxWidth(),
         config = NotificationConfig(
-            title = resourceReference(R.string.wc_malicious_transaction),
-            subtitle = TextReference.Str(notificationText),
-            iconResId = R.drawable.ic_alert_circle_24,
+            title = notification.title,
+            subtitle = TextReference.Str(notification.text?.resolveReference() ?: ""),
+            iconResId = when (notification.type) {
+                BlockAidNotificationUM.Type.ERROR -> R.drawable.ic_alert_circle_24
+                BlockAidNotificationUM.Type.WARNING -> R.drawable.ic_alert_triangle_20
+            },
         ),
-        containerColor = TangemColorPalette.Amaranth.copy(alpha = 0.1f),
-        titleColor = TangemTheme.colors.text.warning,
-        subtitleColor = TangemTheme.colors.text.primary1,
-        iconTint = TangemTheme.colors.icon.warning,
+        containerColor = when (notification.type) {
+            BlockAidNotificationUM.Type.ERROR -> TangemColorPalette.Amaranth.copy(alpha = 0.1f)
+            BlockAidNotificationUM.Type.WARNING -> TangemColorPalette.Dark1.copy(alpha = 0.1f)
+        },
+        titleColor = when (notification.type) {
+            BlockAidNotificationUM.Type.ERROR -> TangemTheme.colors.text.warning
+            BlockAidNotificationUM.Type.WARNING -> TangemTheme.colors.text.primary1
+        },
+        subtitleColor = when (notification.type) {
+            BlockAidNotificationUM.Type.ERROR -> TangemTheme.colors.text.primary1
+            BlockAidNotificationUM.Type.WARNING -> TangemTheme.colors.text.tertiary
+        },
+        iconTint = when (notification.type) {
+            BlockAidNotificationUM.Type.ERROR -> TangemTheme.colors.icon.warning
+            BlockAidNotificationUM.Type.WARNING -> TangemTheme.colors.icon.attention
+        },
     )
 }
 
@@ -43,7 +59,13 @@ private fun WcTransactionCheckErrorItemPreview() {
             modifier = Modifier
                 .background(TangemTheme.colors.background.tertiary),
         ) {
-            WcTransactionCheckErrorItem("The transaction approves erc20 tokens to a known malicious address")
+            WcTransactionCheckErrorItem(
+                BlockAidNotificationUM(
+                    type = BlockAidNotificationUM.Type.ERROR,
+                    title = TextReference.Res(R.string.wc_malicious_transaction),
+                    text = TextReference.Str("The transaction approves erc20 tokens to a known malicious address"),
+                ),
+            )
         }
     }
 }
