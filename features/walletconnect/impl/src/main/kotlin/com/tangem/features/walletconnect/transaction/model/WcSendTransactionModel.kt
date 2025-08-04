@@ -15,6 +15,8 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.clipboard.ClipboardManager
+import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUMV2
+import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUMV2.Icon.Type
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -36,14 +38,16 @@ import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorRelo
 import com.tangem.features.send.v2.api.subcomponents.feeSelector.entity.FeeSelectorData
 import com.tangem.features.walletconnect.connections.routing.WcInnerRoute
 import com.tangem.features.walletconnect.transaction.components.common.WcTransactionModelParams
-import com.tangem.features.walletconnect.transaction.converter.WcCommonTransactionUMConverter
 import com.tangem.features.walletconnect.transaction.converter.WcHandleMethodErrorConverter
+import com.tangem.features.walletconnect.transaction.converter.WcSendTransactionUMConverter
 import com.tangem.features.walletconnect.transaction.entity.blockaid.WcSendReceiveTransactionCheckResultsUM
 import com.tangem.features.walletconnect.transaction.entity.common.WcCommonTransactionModel
 import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionActionsUM
+import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionFeeState
 import com.tangem.features.walletconnect.transaction.entity.send.WcSendTransactionUM
 import com.tangem.features.walletconnect.transaction.routes.WcTransactionRoutes
 import com.tangem.features.walletconnect.transaction.ui.blockaid.WcSendAndReceiveBlockAidUiConverter
+import com.tangem.features.walletconnect.utils.WcNotificationsFactory
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -62,10 +66,11 @@ internal class WcSendTransactionModel @Inject constructor(
     private val router: Router,
     private val clipboardManager: ClipboardManager,
     private val useCaseFactory: WcRequestUseCaseFactory,
-    private val converter: WcCommonTransactionUMConverter,
+    private val converter: WcSendTransactionUMConverter,
     private val blockAidUiConverter: WcSendAndReceiveBlockAidUiConverter,
     private val getFeeUseCase: GetFeeUseCase,
     private val getNetworkCoinUseCase: GetNetworkCoinStatusUseCase,
+    private val notificationsFactory: WcNotificationsFactory,
     private val analytics: AnalyticsEventHandler,
 ) : Model(), WcCommonTransactionModel, FeeSelectorModelCallback {
 
@@ -137,7 +142,7 @@ internal class WcSendTransactionModel @Inject constructor(
         feeReloadState.value = false
         modelScope.launch {
             feeSelectorReloadTrigger.triggerUpdate(
-                feeData = FeeSelectorData(removeSuggestedFee = true),
+                FeeSelectorData(removeSuggestedFee = feeStateConfiguration !is FeeStateConfiguration.Suggestion),
             )
         }
     }
@@ -156,7 +161,20 @@ internal class WcSendTransactionModel @Inject constructor(
      * Also handles fee results from FeeSelectorBlockComponent
      */
     fun updateFee(feeSelectorUM: FeeSelectorUM) {
-        _uiState.update { it?.copy(feeSelectorUM = feeSelectorUM) }
+        val feeErrorNotification = notificationsFactory.createFeeNotifications(
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
+            feeSelectorUM = feeSelectorUM,
+            onFeeReload = ::triggerFeeReload,
+        )
+        _uiState.update {
+            it?.copy(
+                feeSelectorUM = feeSelectorUM,
+                transaction = it.transaction.copy(
+                    sendEnabled = feeSelectorUM is FeeSelectorUM.Content && feeErrorNotification == null,
+                    feeErrorNotification = feeErrorNotification,
+                ),
+            )
+        }
         val fee = (feeSelectorUM as? FeeSelectorUM.Content)?.selectedFeeItem?.fee ?: return
         (useCase as? WcMutableFee)?.updateFee(fee)
     }
@@ -198,20 +216,31 @@ internal class WcSendTransactionModel @Inject constructor(
             is Lce.Error -> WcSendReceiveTransactionCheckResultsUM(isLoading = false)
             is Lce.Loading -> WcSendReceiveTransactionCheckResultsUM(isLoading = true)
         }
+
+        val feeState = when {
+            useCase is WcMutableFee -> WcTransactionFeeState.Success(
+                dAppFee = useCase.dAppFee(),
+                onClick = ::onShowFeeBottomSheet,
+            )
+            else -> WcTransactionFeeState.None
+        }
+        val actions = WcTransactionActionsUM(
+            onShowVerifiedAlert = ::showVerifiedAlert,
+            onDismiss = { cancel(useCase) },
+            onSign = { onSign(securityCheck.getOrNull()) },
+            onCopy = { copyData(useCase.rawSdkRequest.request.params) },
+        )
         var transactionUM = converter.convert(
-            WcCommonTransactionUMConverter.Input(
-                useCase = useCase,
+            WcSendTransactionUMConverter.Input(
+                context = useCase,
+                feeState = feeState,
                 signState = signState,
-                actions = WcTransactionActionsUM(
-                    onShowVerifiedAlert = ::showVerifiedAlert,
-                    onDismiss = { cancel(useCase) },
-                    onSign = { onSign(securityCheck.getOrNull()) },
-                    onCopy = { copyData(useCase.rawSdkRequest.request.params) },
-                    onShowFeeBottomSheet = ::onShowFeeBottomSheet,
-                ),
+                actions = actions,
                 feeSelectorUM = uiState.value?.feeSelectorUM,
+                cryptoCurrencyStatus = cryptoCurrencyStatus,
+                onFeeReload = ::triggerFeeReload,
             ),
-        ) as? WcSendTransactionUM
+        )
         transactionUM = transactionUM?.copy(
             transaction = transactionUM.transaction.copy(estimatedWalletChanges = blockAidState),
             spendAllowance = blockAidState.spendAllowance,
@@ -236,10 +265,10 @@ internal class WcSendTransactionModel @Inject constructor(
     }
 
     private fun onSign(securityCheck: BlockAidTransactionCheck.Result?) {
-        if (securityCheck?.result?.validation == ValidationResult.UNSAFE) {
-            showMaliciousAlert(securityCheck.result.description)
-        } else {
-            sign()
+        when (securityCheck?.result?.validation) {
+            ValidationResult.UNSAFE -> showMaliciousAlert(securityCheck.result.description)
+            ValidationResult.WARNING -> showWarningAlert(securityCheck.result.description)
+            else -> sign()
         }
         securityCheck?.result?.validation?.let { securityStatus ->
             val event = WcAnalyticEvents.NoticeSecurityAlert(
@@ -250,6 +279,7 @@ internal class WcSendTransactionModel @Inject constructor(
             when (securityStatus) {
                 ValidationResult.SAFE -> Unit
                 ValidationResult.UNSAFE,
+                ValidationResult.WARNING,
                 ValidationResult.FAILED_TO_VALIDATE,
                 -> analytics.send(event)
             }
@@ -273,7 +303,22 @@ internal class WcSendTransactionModel @Inject constructor(
     }
 
     private fun showMaliciousAlert(description: String?) {
-        val type = WcTransactionRoutes.Alert.Type.MaliciousInfo(description = description, onClick = ::signFromAlert)
+        val type = WcTransactionRoutes.Alert.Type.BlockAidErrorInfo(
+            description = description,
+            onClick = ::signFromAlert,
+            iconType = Type.Warning,
+            iconBgType = MessageBottomSheetUMV2.Icon.BackgroundType.Warning,
+        )
+        stackNavigation.pushNew(WcTransactionRoutes.Alert(type))
+    }
+
+    private fun showWarningAlert(description: String?) {
+        val type = WcTransactionRoutes.Alert.Type.BlockAidErrorInfo(
+            description = description,
+            onClick = ::signFromAlert,
+            iconType = Type.Attention,
+            iconBgType = MessageBottomSheetUMV2.Icon.BackgroundType.Attention,
+        )
         stackNavigation.pushNew(WcTransactionRoutes.Alert(type))
     }
 
@@ -284,22 +329,24 @@ internal class WcSendTransactionModel @Inject constructor(
 
     private fun signingIsDone(signState: WcSignState<*>, useCase: WcSignUseCase<*>): Boolean {
         (signState.domainStep as? WcSignStep.Result)?.result?.let {
-            handleSigningError(it, useCase)
-            return true
+            return handleSigningError(it, useCase)
         }
         return false
     }
 
-    private fun handleSigningError(result: Either<WcRequestError, String>, useCase: WcSignUseCase<*>) {
-        if (result.isLeft()) {
+    private fun handleSigningError(result: Either<WcRequestError, String>, useCase: WcSignUseCase<*>): Boolean {
+        return if (result.isLeft()) {
             val error = WcTransactionRoutes.Alert.Type.UnknownError(
                 errorMessage = result.leftOrNull()?.message(),
                 onDismiss = { cancel(useCase) },
+                onRetry = { signFromAlert() },
             )
             stackNavigation.pushNew(WcTransactionRoutes.Alert(error))
+            false
         } else {
             showSuccessSignMessage()
             router.pop()
+            true
         }
     }
 
