@@ -1,14 +1,13 @@
 package com.tangem.tap.di.domain
 
-import com.tangem.domain.card.repository.DerivationsRepository
+import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.domain.managetokens.*
 import com.tangem.domain.managetokens.repository.CustomTokensRepository
 import com.tangem.domain.managetokens.repository.ManageTokensRepository
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
+import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
-import com.tangem.domain.staking.repositories.StakingRepository
-import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -71,22 +70,20 @@ internal object ManageTokensDomainModule {
         walletManagersFacade: WalletManagersFacade,
         currenciesRepository: CurrenciesRepository,
         derivationsRepository: DerivationsRepository,
-        stakingRepository: StakingRepository,
         multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
         multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
         multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
-        tokensFeatureToggles: TokensFeatureToggles,
+        stakingIdFactory: StakingIdFactory,
     ): SaveManagedTokensUseCase {
         return SaveManagedTokensUseCase(
             customTokensRepository = customTokensRepository,
             walletManagersFacade = walletManagersFacade,
             currenciesRepository = currenciesRepository,
             derivationsRepository = derivationsRepository,
-            stakingRepository = stakingRepository,
             multiNetworkStatusFetcher = multiNetworkStatusFetcher,
             multiQuoteStatusFetcher = multiQuoteStatusFetcher,
             multiYieldBalanceFetcher = multiYieldBalanceFetcher,
-            tokensFeatureToggles = tokensFeatureToggles,
+            stakingIdFactory = stakingIdFactory,
         )
     }
 

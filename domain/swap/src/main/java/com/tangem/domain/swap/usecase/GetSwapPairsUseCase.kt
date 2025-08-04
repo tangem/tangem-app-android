@@ -1,15 +1,16 @@
 package com.tangem.domain.swap.usecase
 
 import arrow.core.Either
+import com.tangem.domain.express.models.ExpressProviderType
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.SwapErrorResolver
 import com.tangem.domain.swap.SwapRepositoryV2
 import com.tangem.domain.swap.models.SwapCryptoCurrency
 import com.tangem.domain.swap.models.SwapCurrencies
 import com.tangem.domain.swap.models.SwapCurrenciesGroup
 import com.tangem.domain.swap.models.SwapPairModel
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.wallets.models.UserWallet
 
 /**
  * Get list of swap pairs
@@ -23,16 +24,19 @@ class GetSwapPairsUseCase(
      * @param userWallet selected user wallet
      * @param initialCurrency initial currency to swap (to or from)
      * @param cryptoCurrencyStatusList list of added cryptocurrencies
+     * @param filterProviderTypes filters only specified provider types, if empty returns providers as is
      */
     suspend operator fun invoke(
         userWallet: UserWallet,
         initialCurrency: CryptoCurrency,
         cryptoCurrencyStatusList: List<CryptoCurrencyStatus>,
+        filterProviderTypes: List<ExpressProviderType>,
     ) = Either.catch {
         val pairs = swapRepositoryV2.getPairs(
             userWallet = userWallet,
             initialCurrency = initialCurrency,
             cryptoCurrencyStatusList = cryptoCurrencyStatusList,
+            filterProviderTypes = filterProviderTypes,
         )
 
         val fromGroup = pairs.groupPairs(

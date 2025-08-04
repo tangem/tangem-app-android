@@ -9,7 +9,7 @@ import org.rekotlin.Action
 sealed class DetailsAction : Action {
 
     data class PrepareScreen(
-        val scanResponse: ScanResponse,
+        val scanResponse: ScanResponse?,
         val initializedAppSettingsState: AppSettingsState,
     ) : DetailsAction()
 

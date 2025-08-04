@@ -1,8 +1,8 @@
 package com.tangem.domain.wallets.legacy
 
 import com.tangem.common.CompletionResult
-import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.coroutines.flow.Flow
 
 interface UserWalletsListManager {
