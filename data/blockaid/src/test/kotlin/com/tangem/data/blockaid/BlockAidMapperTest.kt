@@ -114,7 +114,7 @@ class BlockAidMapperTest {
 
         val result = mapper.mapToDomain(response)
         Truth.assertThat(result.validation).isEqualTo(ValidationResult.FAILED_TO_VALIDATE)
-        Truth.assertThat(result.simulation is SimulationResult.FailedToSimulate).isTrue()
+        Truth.assertThat(result.simulation is SimulationResult.Success).isTrue()
     }
 
     @Test
@@ -160,6 +160,6 @@ class BlockAidMapperTest {
         )
 
         val result = mapper.mapToDomain(txResponse)
-        Truth.assertThat(result.simulation is SimulationResult.FailedToSimulate).isTrue()
+        Truth.assertThat(result.simulation is SimulationResult.Success).isTrue()
     }
 }

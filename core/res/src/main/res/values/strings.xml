@@ -12,6 +12,7 @@
   <string name="access_code_create_description">Set a %s-digit Access Code to unlock your wallet.</string>
   <string name="access_code_create_title">Create Access Code</string>
   <string name="access_code_navtitle">Access code</string>
+  <string name="account_form_name">Account name</string>
   <string name="action_buttons_buy_empty_search_message">Can’t find your token? Go to the Market section on the main page and add it to your portfolio for purchase</string>
   <string name="action_buttons_sell_empty_search_message">Can’t find your token? Go to the Market section on the main page and add it to your portfolio for selling.</string>
   <string name="action_buttons_sell_navigation_bar_title">Sell</string>
@@ -1500,6 +1501,7 @@
   <string name="wc_new_connection">New connection</string>
   <string name="wc_no_sessions_desc">Connect your wallet to a different dApps</string>
   <string name="wc_no_sessions_title">No sessions</string>
+  <string name="wc_no_wallet_changes_detected">No wallet changes detected</string>
   <string name="wc_notification_security_risk_subtitle">This domain is flagged as unsafe by multiple security providers. Leave immediately to protect your assets</string>
   <string name="wc_notification_security_risk_title">Known security risk</string>
   <string name="wc_request_from">Request from</string>
@@ -1511,6 +1513,7 @@
   <string name="wc_uri_already_used_description">Ensure that each pairing attempt uses a fresh and unique URI</string>
   <string name="wc_uri_already_used_title">URI already used</string>
   <string name="wc_wallet_connect">Wallet connect</string>
+  <string name="wc_warning_transaction">Suspicious transaction</string>
   <string name="welcome_interrupted_backup_alert_discard">Discard</string>
   <string name="welcome_interrupted_backup_alert_message">You have an interrupted backup. Do you want to resume?</string>
   <string name="welcome_interrupted_backup_alert_resume">Yes, resume</string>

@@ -9,7 +9,7 @@ import com.tangem.common.test.utils.getEmittedValues
 import com.tangem.data.networks.models.SimpleNetworkStatus
 import com.tangem.data.networks.toSimple
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
