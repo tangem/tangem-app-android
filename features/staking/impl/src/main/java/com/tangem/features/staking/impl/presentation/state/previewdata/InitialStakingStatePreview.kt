@@ -4,8 +4,8 @@ import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfi
 import com.tangem.core.ui.components.list.RoundedListWithDividersItemData
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.domain.staking.model.stakekit.BalanceType
-import com.tangem.domain.staking.model.stakekit.RewardBlockType
+import com.tangem.domain.models.staking.BalanceType
+import com.tangem.domain.models.staking.RewardBlockType
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.BalanceState
