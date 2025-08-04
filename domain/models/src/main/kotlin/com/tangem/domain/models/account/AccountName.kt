@@ -3,6 +3,7 @@ package com.tangem.domain.models.account
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
+import kotlinx.serialization.Serializable
 
 /**
  * Represents an account name
@@ -11,6 +12,7 @@ import arrow.core.raise.ensure
  *
 [REDACTED_AUTHOR]
  */
+@Serializable
 data class AccountName private constructor(
     val value: String,
 ) {
@@ -18,11 +20,13 @@ data class AccountName private constructor(
     /**
      * Represents possible validation errors
      */
+    @Serializable
     sealed interface Error {
 
         /**
          * Error indicating that the account name is blank
          */
+        @Serializable
         data object Empty : Error {
             override fun toString(): String = "${Empty::class.simpleName}: Account name cannot be blank"
         }
@@ -30,6 +34,7 @@ data class AccountName private constructor(
         /**
          * Error indicating that the account name exceeds the maximum allowed length
          */
+        @Serializable
         data object ExceedsMaxLength : Error {
             override fun toString(): String {
                 return "${ExceedsMaxLength::class.simpleName}: Account name cannot exceed $MAX_LENGTH characters"
