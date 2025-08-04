@@ -11,6 +11,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.isNullOrEmpty
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -43,8 +44,10 @@ internal fun TransactionCheckResultsItem(
                 WcEstimatedWalletChangesItem(item.estimatedWalletChanges)
             } else if (item.spendAllowance != null) {
                 WcSpendAllowanceItem(item.spendAllowance, onClickAllowToSpend)
+            } else if (!item.additionalNotification.isNullOrEmpty()) {
+                WcEstimatedWalletChangesNotificationItem(description = item.additionalNotification)
             } else {
-                WcEstimatedWalletChangesNotLoadedItem()
+                WcEstimatedWalletChangesNotificationItem()
             }
         }
     }
