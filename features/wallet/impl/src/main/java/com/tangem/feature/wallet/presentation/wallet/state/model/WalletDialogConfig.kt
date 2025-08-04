@@ -16,4 +16,7 @@ internal sealed interface WalletDialogConfig {
 
     @Serializable
     data object AskForBiometry : WalletDialogConfig
+
+    @Serializable
+    data object AskForPushNotifications : WalletDialogConfig
 }
