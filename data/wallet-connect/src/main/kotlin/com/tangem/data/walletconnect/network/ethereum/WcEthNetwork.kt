@@ -7,7 +7,6 @@ import arrow.core.right
 import com.squareup.moshi.Moshi
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
-import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.data.walletconnect.model.CAIP2
 import com.tangem.data.walletconnect.model.NamespaceKey
 import com.tangem.data.walletconnect.request.WcRequestToUseCaseConverter
@@ -15,7 +14,6 @@ import com.tangem.data.walletconnect.request.WcRequestToUseCaseConverter.Compani
 import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
 import com.tangem.data.walletconnect.utils.WcNamespaceConverter
 import com.tangem.data.walletconnect.utils.WcNetworksConverter
-import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.walletconnect.model.*
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
@@ -155,16 +153,6 @@ internal class WcEthNetwork(
             if (chainId.namespace != namespaceKey.key) return null
             val ethChainId = chainId.reference.toIntOrNull() ?: return null
             return Blockchain.fromChainId(ethChainId)
-        }
-
-        override fun toCAIP2(network: Network): CAIP2? {
-            val blockchain = network.toBlockchain()
-            if (!blockchain.isEvm()) return null
-            val chainId = blockchain.getChainId() ?: return null
-            return CAIP2(
-                namespace = namespaceKey.key,
-                reference = chainId.toString(),
-            )
         }
     }
 
