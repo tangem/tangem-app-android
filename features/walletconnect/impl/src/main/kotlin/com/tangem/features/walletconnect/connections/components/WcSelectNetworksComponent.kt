@@ -115,6 +115,7 @@ private fun WcSelectNetworksBS(
                     .fillMaxWidth(),
                 text = "Done",
                 onClick = state.onDone,
+                enabled = state.doneButtonEnabled,
             )
         },
     )
@@ -216,13 +217,14 @@ private fun NetworkItems(networkItem: WcNetworkInfoItem, modifier: Modifier = Mo
         when (networkItem) {
             is WcNetworkInfoItem.Checkable,
             is WcNetworkInfoItem.Checked,
-            is WcNetworkInfoItem.Required,
             -> Image(
                 modifier = Modifier.size(24.dp),
                 painter = painterResource(networkItem.icon),
                 contentDescription = null,
             )
-            is WcNetworkInfoItem.ReadOnly -> Icon(
+            is WcNetworkInfoItem.Required,
+            is WcNetworkInfoItem.ReadOnly,
+            -> Icon(
                 modifier = Modifier
                     .size(24.dp)
                     .clip(CircleShape)
@@ -240,20 +242,28 @@ private fun NetworkItems(networkItem: WcNetworkInfoItem, modifier: Modifier = Mo
             symbol = networkItem.symbol,
         )
         when (networkItem) {
-            is WcNetworkInfoItem.Checkable -> TangemSwitch(
-                onCheckedChange = networkItem.onCheckedChange,
-                checked = networkItem.checked,
-            )
+            is WcNetworkInfoItem.Checkable -> {
+                if (networkItem.enabled) {
+                    TangemSwitch(
+                        onCheckedChange = networkItem.onCheckedChange,
+                        checked = networkItem.checked,
+                    )
+                }
+            }
             is WcNetworkInfoItem.Required -> Text(
                 text = "Required",
                 style = TangemTheme.typography.body2,
                 color = TangemTheme.colors.text.tertiary,
             )
-            is WcNetworkInfoItem.Checked -> TangemSwitch(
-                onCheckedChange = {},
-                enabled = false,
-                checked = true,
-            )
+            is WcNetworkInfoItem.Checked -> {
+                if (networkItem.enabled) {
+                    TangemSwitch(
+                        onCheckedChange = {},
+                        enabled = false,
+                        checked = true,
+                    )
+                }
+            }
             is WcNetworkInfoItem.ReadOnly -> Unit
         }
     }
@@ -320,13 +330,13 @@ private class WcSelectNetworksProvider : CollectionPreviewParameterProvider<WcSe
                     id = "ethereum",
                     name = "EthereumEthereumEthereumEthereumEthereumEthereumEthereumEthereum",
                     symbol = "ETH",
-                    icon = R.drawable.img_eth_22,
+                    icon = R.drawable.ic_solana_16,
                 ),
                 WcNetworkInfoItem.Required(
                     id = "bitcoin",
                     name = "Bitcoin",
                     symbol = "BTC",
-                    icon = R.drawable.img_btc_22,
+                    icon = R.drawable.ic_avalanche_22,
                 ),
             ),
             required = persistentListOf(

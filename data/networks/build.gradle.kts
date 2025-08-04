@@ -25,6 +25,8 @@ dependencies {
 
     // region Project - Domain
     implementation(projects.domain.legacy)
+    implementation(projects.domain.walletManager)
+    implementation(projects.domain.card)
     api(projects.domain.models)
     implementation(projects.domain.networks)
     // endregion
