@@ -6,7 +6,7 @@ import com.tangem.blockchain.common.TransactionExtras
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.transaction.TransactionRepository
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 
 /**
  * Use case to create and get transaction
