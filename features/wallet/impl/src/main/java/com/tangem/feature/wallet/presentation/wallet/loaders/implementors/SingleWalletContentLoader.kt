@@ -9,7 +9,7 @@ import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
 import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarningsAnalyticsSender
@@ -19,7 +19,7 @@ import com.tangem.feature.wallet.presentation.wallet.subscribers.*
 
 @Suppress("LongParameterList")
 internal class SingleWalletContentLoader(
-    private val userWallet: UserWallet,
+    private val userWallet: UserWallet.Cold,
     private val clickIntents: WalletClickIntents,
     private val isRefresh: Boolean,
     private val stateHolder: WalletStateController,
