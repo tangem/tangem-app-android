@@ -173,7 +173,7 @@ internal open class BaseActionsFactory(
         }
     }
 
-    private fun getReceiveScenario(requirements: AssetRequirementsCondition?): ScenarioUnavailabilityReason {
+    protected fun getReceiveScenario(requirements: AssetRequirementsCondition?): ScenarioUnavailabilityReason {
         return when (requirements) {
             AssetRequirementsCondition.PaidTransaction,
             is AssetRequirementsCondition.PaidTransactionWithFee,
