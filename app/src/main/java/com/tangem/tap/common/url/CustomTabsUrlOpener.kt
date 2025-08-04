@@ -3,12 +3,12 @@ package com.tangem.tap.common.url
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
 import androidx.browser.customtabs.CustomTabColorSchemeParams
 import androidx.browser.customtabs.CustomTabsClient
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.browser.customtabs.CustomTabsIntent.COLOR_SCHEME_DARK
 import androidx.browser.customtabs.CustomTabsIntent.COLOR_SCHEME_LIGHT
+import androidx.core.net.toUri
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.tap.common.apptheme.MutableAppThemeModeHolder
 import com.tangem.tap.common.extensions.getColorCompat
@@ -25,30 +25,37 @@ internal class CustomTabsUrlOpener : UrlOpener {
         }
     }
 
+    override fun openUrlExternalBrowser(url: String) {
+        foregroundActivityObserver.withForegroundActivity { context ->
+            if (url.isEmpty()) return@withForegroundActivity
+            val browserIntent = Intent(Intent.ACTION_VIEW, url.toUri())
+            context.startActivity(browserIntent)
+        }
+    }
+
     private fun openUrl(url: String, context: Context) {
         if (url.isEmpty()) return
-        val customTabsIntent = CustomTabsIntent.Builder()
-            .setDefaultColorSchemeParams(
-                CustomTabColorSchemeParams.Builder()
-                    .setNavigationBarColor(context.getColorCompat(R.color.toolbarColor))
-                    .build(),
-            )
-            .setColorScheme(
-                if (MutableAppThemeModeHolder.isDarkThemeActive) COLOR_SCHEME_DARK else COLOR_SCHEME_LIGHT,
-            )
-            .build()
-
-        customTabsIntent.intent.flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
-
-        val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+        val browserIntent = Intent(Intent.ACTION_VIEW, url.toUri())
         runCatching {
             if (checkCustomTabsAvailability(context, browserIntent)) {
                 context.startActivity(browserIntent)
             } else {
-                customTabsIntent.launchUrl(context, Uri.parse(url))
+                val customTabsIntent = CustomTabsIntent.Builder()
+                    .setDefaultColorSchemeParams(
+                        CustomTabColorSchemeParams.Builder()
+                            .setNavigationBarColor(context.getColorCompat(R.color.toolbarColor))
+                            .build(),
+                    )
+                    .setColorScheme(
+                        if (MutableAppThemeModeHolder.isDarkThemeActive) COLOR_SCHEME_DARK else COLOR_SCHEME_LIGHT,
+                    )
+                    .build()
+
+                customTabsIntent.intent.flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
+                customTabsIntent.launchUrl(context, url.toUri())
             }
         }.onFailure {
-            Timber.e(it.message)
+            Timber.e(it)
         }
     }
 
