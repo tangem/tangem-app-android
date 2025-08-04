@@ -37,6 +37,7 @@ dependencies {
     implementation(projects.domain.models)
     implementation(projects.domain.card)
     implementation(projects.domain.settings)
+    implementation(projects.domain.notifications)
 
     /** Feature modules */
     implementation(projects.features.disclaimer.api)
