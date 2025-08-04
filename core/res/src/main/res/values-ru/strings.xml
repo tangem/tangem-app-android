@@ -96,6 +96,7 @@
   <string name="common_add_token">Добавить токен</string>
   <string name="common_all">Все</string>
   <string name="common_allow">Разрешить</string>
+  <string name="common_amount">Сумма</string>
   <string name="common_analytics">Аналитика</string>
   <string name="common_apply">Применить</string>
   <string name="common_approval">Одобрение</string>
@@ -140,6 +141,7 @@
   <string name="common_disabled">Отключено</string>
   <string name="common_disconnect">Отключить</string>
   <string name="common_done">Готово</string>
+  <string name="common_edit">Изменить</string>
   <string name="common_enable">Включить</string>
   <string name="common_enabled">Включено</string>
   <string name="common_error">Ошибка</string>
