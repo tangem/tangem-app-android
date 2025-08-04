@@ -4,7 +4,7 @@ import androidx.compose.runtime.Immutable
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -32,6 +32,9 @@ internal sealed class WcAppInfoRoutes : TangemBottomSheetConfigContent, Route {
             data class Verified(val appName: String) : Type()
             data object UnknownDomain : Type()
             data object UnsafeDomain : Type()
+            data class UnsupportedDApp(val appName: String) : Type()
+            data class UnsupportedNetwork(val appName: String) : Type()
+            data object UriAlreadyUsed : Type()
         }
     }
 }
