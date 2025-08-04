@@ -76,11 +76,21 @@ private fun AddressBlock(address: DestinationTextFieldUM.RecipientAddress) {
                 .clip(RoundedCornerShape(TangemTheme.dimens.radius18))
                 .background(TangemTheme.colors.background.tertiary),
         )
-        Text(
-            text = address.value,
-            style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.primary1,
-        )
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = address.value,
+                style = TangemTheme.typography.body2,
+                color = TangemTheme.colors.text.primary1,
+            )
+            val blockchainAddress = address.blockchainAddress
+            if (!blockchainAddress.isNullOrBlank()) {
+                Text(
+                    text = blockchainAddress,
+                    style = TangemTheme.typography.caption2,
+                    color = TangemTheme.colors.text.tertiary,
+                )
+            }
+        }
     }
 }
 
@@ -120,12 +130,21 @@ private fun AddressWithMemoBlock(
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing24),
         modifier = Modifier.padding(top = TangemTheme.dimens.spacing8),
     ) {
-        Text(
-            modifier = Modifier.weight(1f),
-            text = address.value,
-            style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.primary1,
-        )
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = address.value,
+                style = TangemTheme.typography.body2,
+                color = TangemTheme.colors.text.primary1,
+            )
+            val blockchainAddress = address.blockchainAddress
+            if (!blockchainAddress.isNullOrBlank()) {
+                Text(
+                    text = blockchainAddress,
+                    style = TangemTheme.typography.caption2,
+                    color = TangemTheme.colors.text.tertiary,
+                )
+            }
+        }
         IdentIcon(
             address = address.value,
             modifier = Modifier
@@ -134,6 +153,7 @@ private fun AddressWithMemoBlock(
                 .background(TangemTheme.colors.background.tertiary),
         )
     }
+
     if (memo != null && memo.value.isNotBlank()) {
         Text(
             text = stringResourceSafe(R.string.send_memo, memo.value),
@@ -162,64 +182,51 @@ private fun DestinationBlockPreview(
 }
 
 private class DestinationBlockPreviewProvider : PreviewParameterProvider<DestinationUM.Content> {
+    val previewItem = DestinationUM.Content(
+        isPrimaryButtonEnabled = true,
+        addressTextField = DestinationTextFieldUM.RecipientAddress(
+            value = "0x34B4492A412D84A6E606288f3Bd714b89135D4dE",
+            keyboardOptions = KeyboardOptions.Default,
+            placeholder = TextReference.Str("Enter address"),
+            label = TextReference.Str("Recipient Address"),
+            isError = false,
+            error = null,
+            isValuePasted = false,
+        ),
+        memoTextField = DestinationTextFieldUM.RecipientMemo(
+            value = "Test memo for transaction",
+            keyboardOptions = KeyboardOptions.Default,
+            placeholder = TextReference.Str("Enter memo (optional)"),
+            label = TextReference.Str("Memo"),
+            isError = false,
+            error = null,
+            disabledText = TextReference.Str("Memo disabled"),
+            isEnabled = true,
+            isValuePasted = false,
+        ),
+        recent = emptyList<DestinationRecipientListUM>().toImmutableList(),
+        wallets = emptyList<DestinationRecipientListUM>().toImmutableList(),
+        networkName = "Ethereum",
+        isValidating = false,
+        isInitialized = true,
+        isRedesignEnabled = false,
+    )
+
     override val values: Sequence<DestinationUM.Content>
         get() = sequenceOf(
-            DestinationUM.Content(
-                isPrimaryButtonEnabled = true,
-                addressTextField = DestinationTextFieldUM.RecipientAddress(
-                    value = "0x34B4492A412D84A6E606288f3Bd714b89135D4dE",
-                    keyboardOptions = KeyboardOptions.Default,
-                    placeholder = TextReference.Str("Enter address"),
-                    label = TextReference.Str("Recipient Address"),
-                    isError = false,
-                    error = null,
-                    isValuePasted = false,
+            previewItem,
+            previewItem.copy(
+                addressTextField = previewItem.addressTextField.copy(
+                    value = "vitalik.eth",
+                    blockchainAddress = "0x34B4492A412D84A6E606288f3Bd714b89135D4dE",
                 ),
-                memoTextField = DestinationTextFieldUM.RecipientMemo(
-                    value = "Test memo for transaction",
-                    keyboardOptions = KeyboardOptions.Default,
-                    placeholder = TextReference.Str("Enter memo (optional)"),
-                    label = TextReference.Str("Memo"),
-                    isError = false,
-                    error = null,
-                    disabledText = TextReference.Str("Memo disabled"),
-                    isEnabled = true,
-                    isValuePasted = false,
-                ),
-                recent = emptyList<DestinationRecipientListUM>().toImmutableList(),
-                wallets = emptyList<DestinationRecipientListUM>().toImmutableList(),
-                networkName = "Ethereum",
-                isValidating = false,
-                isInitialized = true,
-                isRedesignEnabled = false,
             ),
-            DestinationUM.Content(
-                isPrimaryButtonEnabled = true,
-                addressTextField = DestinationTextFieldUM.RecipientAddress(
-                    value = "0x34B4492A412D84A6E606288f3Bd714b89135D4dE",
-                    keyboardOptions = KeyboardOptions.Default,
-                    placeholder = TextReference.Str("Enter address"),
-                    label = TextReference.Str("Recipient Address"),
-                    isError = false,
-                    error = null,
-                    isValuePasted = false,
+            previewItem.copy(isRedesignEnabled = true),
+            previewItem.copy(
+                addressTextField = previewItem.addressTextField.copy(
+                    value = "vitalik.eth",
+                    blockchainAddress = "0x34B4492A412D84A6E606288f3Bd714b89135D4dE",
                 ),
-                memoTextField = DestinationTextFieldUM.RecipientMemo(
-                    value = "Test memo for transaction",
-                    keyboardOptions = KeyboardOptions.Default,
-                    placeholder = TextReference.Str("Enter memo (optional)"),
-                    label = TextReference.Str("Memo"),
-                    isError = false,
-                    error = null,
-                    disabledText = TextReference.Str("Memo disabled"),
-                    isEnabled = true,
-                    isValuePasted = false,
-                ),
-                recent = emptyList<DestinationRecipientListUM>().toImmutableList(),
-                wallets = emptyList<DestinationRecipientListUM>().toImmutableList(),
-                networkName = "Ethereum",
-                isValidating = false,
-                isInitialized = true,
                 isRedesignEnabled = true,
             ),
         )

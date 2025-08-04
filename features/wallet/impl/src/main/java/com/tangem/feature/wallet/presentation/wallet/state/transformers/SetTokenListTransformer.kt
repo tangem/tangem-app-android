@@ -1,15 +1,15 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers
 
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.tokens.model.TokenList
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.tokenlist.TokenList
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.MultiWalletCardStateConverter
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.TokenListStateConverter
 import com.tangem.feature.wallet.presentation.wallet.state.utils.enableButtons
-import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import timber.log.Timber
 
 internal class SetTokenListTransformer(
