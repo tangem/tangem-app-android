@@ -134,9 +134,8 @@ internal class WcConnectionsModel @Inject constructor(
     private fun getInitialState(): WcConnectionsState {
         return WcConnectionsState(
             topAppBarConfig = WcConnectionsTopAppBarConfig(
-                startButtonUM = TopAppBarButtonUM(
-                    iconRes = R.drawable.ic_back_24,
-                    onIconClicked = router::pop,
+                startButtonUM = TopAppBarButtonUM.Back(
+                    onBackClicked = router::pop,
                     enabled = true,
                 ),
                 disconnectAllItem = TangemDropdownMenuItem(
