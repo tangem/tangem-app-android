@@ -7,10 +7,12 @@ import com.tangem.utils.converter.Converter
 internal object WcConnectButtonAvailabilityConverter : Converter<WcConnectButtonAvailabilityConverter.Input, Boolean> {
 
     override fun convert(value: Input): Boolean {
-        val (missingNetworks, requiredNetworks, availableNetworks, selectedNetworks) = value
+        val missing = value.missingNetworks
+        val required = value.requiredNetworks
+        val available = value.availableNetworks
+        val selected = value.selectedNetworks
 
-        return missingNetworks.isEmpty() &&
-            (requiredNetworks.isNotEmpty() || availableNetworks.isNotEmpty() || selectedNetworks.isNotEmpty())
+        return missing.isEmpty() && (required.isNotEmpty() || available.isNotEmpty() || selected.isNotEmpty())
     }
 
     data class Input(
