@@ -10,6 +10,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.util.fastForEach
@@ -17,6 +18,7 @@ import com.tangem.core.ui.components.dropdownmenu.TangemDropdownItem
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenu
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.TokenDetailsTopBarTestTags
 import com.tangem.feature.tokendetails.presentation.tokendetails.TokenDetailsPreviewData
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsTopAppBarConfig
 import com.tangem.features.tokendetails.impl.R
@@ -32,6 +34,7 @@ internal fun TokenDetailsTopAppBar(config: TokenDetailsTopAppBarConfig) {
                     painter = painterResource(id = R.drawable.ic_back_24),
                     tint = TangemTheme.colors.icon.primary1,
                     contentDescription = "Back",
+                    modifier = Modifier.testTag(TokenDetailsTopBarTestTags.BACK_BUTTON),
                 )
             }
         },
@@ -46,6 +49,7 @@ internal fun TokenDetailsTopAppBar(config: TokenDetailsTopAppBarConfig) {
                         painter = painterResource(id = R.drawable.ic_more_vertical_24),
                         tint = TangemTheme.colors.icon.primary1,
                         contentDescription = "More",
+                        modifier = Modifier.testTag(TokenDetailsTopBarTestTags.MORE_BUTTON),
                     )
                 }
             }
