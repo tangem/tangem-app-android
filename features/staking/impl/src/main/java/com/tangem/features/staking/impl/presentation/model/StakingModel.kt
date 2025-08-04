@@ -859,6 +859,10 @@ internal class StakingModel @Inject constructor(
         modelScope.launch {
             val network = cryptoCurrencyStatus.currency.network
 
+            if (userWallet is UserWallet.Hot) {
+                return@launch // TODO [REDACTED_TASK_KEY] [Hot Wallet] Email feedback flow
+            }
+
             val cardInfo =
                 getCardInfoUseCase(userWallet.requireColdWallet().scanResponse)
                     .getOrElse { error("CardInfo must be not null") }

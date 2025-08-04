@@ -24,8 +24,6 @@ import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.balancehiding.ListenToFlipsUseCase
 import com.tangem.domain.balancehiding.UpdateBalanceHidingSettingsUseCase
 import com.tangem.domain.common.LogConfig
-import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.models.wallet.requireColdWallet
 import com.tangem.domain.notifications.GetApplicationIdUseCase
 import com.tangem.domain.notifications.SendPushTokenUseCase
 import com.tangem.domain.notifications.models.ApplicationId
@@ -212,15 +210,11 @@ internal class MainViewModel @Inject constructor(
     }
 
     private fun makeSellExchangeService(environmentConfig: EnvironmentConfig): ExchangeService {
-        val cardProvider: () -> ScanResponse? = {
-            userWalletsListManager.selectedUserWalletSync?.requireColdWallet()?.scanResponse // TODO [REDACTED_TASK_KEY]
-        }
-
         return MoonPayService(
             apiKey = environmentConfig.moonPayApiKey,
             secretKey = environmentConfig.moonPayApiSecretKey,
             logEnabled = LogConfig.network.moonPayService,
-            cardProvider = { cardProvider.invoke()?.card },
+            userWalletProvider = { userWalletsListManager.selectedUserWalletSync },
         )
     }
 
