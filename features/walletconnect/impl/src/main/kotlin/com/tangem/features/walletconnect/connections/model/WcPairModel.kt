@@ -149,6 +149,10 @@ internal class WcPairModel @Inject constructor(
         connect()
     }
 
+    fun errorAlertOnDismiss() {
+        router.pop()
+    }
+
     private fun onConnect(securityStatus: CheckDAppResult) {
         when (securityStatus) {
             CheckDAppResult.SAFE -> connect()
@@ -193,16 +197,23 @@ internal class WcPairModel @Inject constructor(
     }
 
     private fun processError(error: WcPairError) {
-        when (error) {
+        val alert = when (error) {
             is WcPairError.UnsupportedDApp -> {
                 WcAppInfoRoutes.Alert.Type.UnsupportedDApp(error.appName)
             }
             is WcPairError.UnsupportedBlockchains -> {
                 WcAppInfoRoutes.Alert.Type.UnsupportedNetwork(error.appName)
             }
-            else -> null
-        }?.let { stackNavigation.pushNew(WcAppInfoRoutes.Alert(it)) }
-            ?: run { messageSender.send(ToastMessage(message = stringReference(error.message))) }
+            is WcPairError.UriAlreadyUsed -> {
+                WcAppInfoRoutes.Alert.Type.UriAlreadyUsed
+            }
+            else -> {
+                messageSender.send(ToastMessage(message = stringReference(error.message)))
+                router.pop()
+                null
+            }
+        }
+        alert?.let { stackNavigation.pushNew(WcAppInfoRoutes.Alert(it)) }
     }
 
     override fun onWalletSelected(userWalletId: UserWalletId) {
