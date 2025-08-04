@@ -70,8 +70,4 @@ internal class DefaultCardSdkConfigRepository(
     override fun setLinkedTerminal(isLinked: Boolean?) {
         sdk.config.linkedTerminal = isLinked
     }
-
-    override fun setTangemApiProdEnvFlag(flag: Boolean) {
-        sdk.config.isTangemAttestationProdEnv = flag
-    }
 }
