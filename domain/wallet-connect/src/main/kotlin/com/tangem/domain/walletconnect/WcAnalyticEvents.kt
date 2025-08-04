@@ -49,8 +49,13 @@ sealed class WcAnalyticEvents(
         ),
     )
 
-    data object PairFailed : WcAnalyticEvents(
+    class PairFailed(
+        errorCode: String,
+    ) : WcAnalyticEvents(
         event = "Session Failed",
+        params = mapOf(
+            AnalyticsParam.Key.ERROR_CODE to errorCode,
+        ),
     )
 
     class DAppConnected(
