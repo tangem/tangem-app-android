@@ -1,6 +1,6 @@
 package com.tangem.features.hotwallet.accesscoderequest.proxy
 
-import com.tangem.features.hotwallet.HotWalletPasswordRequester
+import com.tangem.domain.wallets.hot.HotWalletPasswordRequester
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
