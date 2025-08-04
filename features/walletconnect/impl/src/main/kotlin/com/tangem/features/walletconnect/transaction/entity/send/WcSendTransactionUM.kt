@@ -4,6 +4,7 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.features.walletconnect.transaction.entity.approve.WcSpendAllowanceUM
 import com.tangem.features.walletconnect.transaction.entity.blockaid.WcSendReceiveTransactionCheckResultsUM
+import com.tangem.features.walletconnect.transaction.entity.common.WcAddressUM
 import com.tangem.features.walletconnect.transaction.entity.common.WcCommonTransactionUM
 import com.tangem.features.walletconnect.transaction.entity.common.WcNetworkInfoUM
 import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionAppInfoContentUM
@@ -23,8 +24,8 @@ internal data class WcSendTransactionItemUM(
     val onSend: () -> Unit,
     val appInfo: WcTransactionAppInfoContentUM,
     val estimatedWalletChanges: WcSendReceiveTransactionCheckResultsUM?,
-    val walletName: String,
+    val walletName: String?,
     val networkInfo: WcNetworkInfoUM,
-    val address: String? = null,
+    val address: WcAddressUM?,
     val isLoading: Boolean = false,
 ) : TangemBottomSheetConfigContent

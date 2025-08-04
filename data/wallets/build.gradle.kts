@@ -11,9 +11,14 @@ android {
 }
 
 dependencies {
+    implementation(projects.data.common)
 
     /** Tangem libraries */
-    implementation(tangemDeps.blockchain) // android-library
+    implementation(tangemDeps.blockchain)
+    implementation(tangemDeps.card.core)
+    implementation(tangemDeps.hot.core)
+    implementation(projects.libs.tangemSdkApi)
+    implementation(projects.libs.blockchainSdk)
 
     /** Core */
     implementation(projects.core.datasource)
@@ -21,6 +26,8 @@ dependencies {
 
     /** Domain */
     implementation(projects.domain.wallets)
+    implementation(projects.domain.card)
+    api(projects.domain.models)
 
     /** Domain models */
     implementation(projects.domain.wallets.models)
@@ -28,15 +35,17 @@ dependencies {
 
     /** DI */
     implementation(deps.hilt.android)
-    implementation(project(":domain:legacy"))
     kapt(deps.hilt.kapt)
 
     /** Other deps */
     implementation(deps.androidx.datastore)
     implementation(deps.arrow.core)
+    implementation(deps.kotlin.coroutines)
+    implementation(deps.timber)
 
     /** tests */
     testImplementation(projects.domain.models)
+    testImplementation(projects.common.test)
     testImplementation(deps.test.junit)
     testImplementation(deps.test.coroutine)
     testImplementation(deps.test.truth)

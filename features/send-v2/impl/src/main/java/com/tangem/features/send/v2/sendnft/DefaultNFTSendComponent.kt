@@ -20,23 +20,21 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.features.nft.component.NFTDetailsBlockComponent
 import com.tangem.features.send.v2.api.NFTSendComponent
+import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationComponentParams
+import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.features.send.v2.common.CommonSendRoute
 import com.tangem.features.send.v2.common.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.v2.common.ui.SendContent
 import com.tangem.features.send.v2.common.ui.state.ConfirmUM
-import com.tangem.features.send.v2.common.utils.safeNextClick
 import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.sendnft.confirm.NFTSendConfirmComponent
 import com.tangem.features.send.v2.sendnft.model.NFTSendModel
 import com.tangem.features.send.v2.subcomponents.destination.DefaultSendDestinationComponent
-import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationComponentParams
-import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeComponent
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeComponentParams
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
@@ -56,16 +54,13 @@ internal class DefaultNFTSendComponent @AssistedInject constructor(
         popCallback = { onChildBack() },
     )
 
-    private val initialRoute = CommonSendRoute.Empty
-    private val currentRouteFlow = MutableStateFlow<CommonSendRoute>(initialRoute)
-
     private val model: NFTSendModel = getOrCreateModel(params = params, router = innerRouter)
 
     private val childStack = childStack(
         key = "NFTSendInnerStack",
         source = stackNavigation,
         serializer = null,
-        initialConfiguration = initialRoute,
+        initialConfiguration = model.initialRoute,
         handleBackButton = true,
         childFactory = { configuration, factoryContext ->
             createChild(
@@ -89,7 +84,7 @@ internal class DefaultNFTSendComponent @AssistedInject constructor(
                         analyticsEventHandler.send(
                             CommonSendAnalyticEvents.ConfirmationScreenOpened(categoryName = analyticsCategoryName),
                         )
-                        if (currentRouteFlow.value.isEditMode) {
+                        if (model.currentRouteFlow.value.isEditMode) {
                             activeComponent.updateState(model.uiState.value)
                         }
                     }
@@ -105,7 +100,7 @@ internal class DefaultNFTSendComponent @AssistedInject constructor(
                         )
                     }
                 }
-                currentRouteFlow.emit(stack.active.configuration)
+                model.currentRouteFlow.emit(stack.active.configuration)
             }
         }
     }
@@ -123,37 +118,26 @@ internal class DefaultNFTSendComponent @AssistedInject constructor(
     }
 
     private fun createChild(route: CommonSendRoute, factoryContext: AppComponentContext) = when (route) {
-        is CommonSendRoute.Destination -> getDestinationComponent(factoryContext, route)
+        is CommonSendRoute.Destination -> getDestinationComponent(factoryContext)
         is CommonSendRoute.Fee -> getFeeComponent(factoryContext)
         CommonSendRoute.Confirm -> getConfirmComponent(factoryContext)
         else -> getStubComponent()
     }
 
-    private fun getDestinationComponent(
-        factoryContext: AppComponentContext,
-        route: CommonSendRoute,
-    ): DefaultSendDestinationComponent = DefaultSendDestinationComponent(
-        appComponentContext = factoryContext,
-        params = SendDestinationComponentParams.DestinationParams(
-            state = model.uiState.value.destinationUM,
-            currentRoute = currentRouteFlow.filterIsInstance<CommonSendRoute.Destination>(),
-            isBalanceHidingFlow = model.isBalanceHiddenFlow,
-            title = resourceReference(R.string.nft_send),
-            analyticsCategoryName = analyticsCategoryName,
-            userWalletId = params.userWalletId,
-            cryptoCurrency = model.cryptoCurrency,
-            callback = model,
-            onBackClick = ::onChildBack,
-            onNextClick = {
-                innerRouter.safeNextClick(
-                    currentRoute = route,
-                    nextRoute = CommonSendRoute.Confirm,
-                    popBack = ::onChildBack,
-                    childStack = childStack,
-                )
-            },
-        ),
-    )
+    private fun getDestinationComponent(factoryContext: AppComponentContext): DefaultSendDestinationComponent =
+        DefaultSendDestinationComponent(
+            appComponentContext = factoryContext,
+            params = SendDestinationComponentParams.DestinationParams(
+                state = model.uiState.value.destinationUM,
+                currentRoute = model.currentRouteFlow.filterIsInstance<CommonSendRoute.Destination>(),
+                isBalanceHidingFlow = model.isBalanceHiddenFlow,
+                title = resourceReference(R.string.nft_send),
+                analyticsCategoryName = analyticsCategoryName,
+                userWalletId = params.userWalletId,
+                cryptoCurrency = model.cryptoCurrency,
+                callback = model,
+            ),
+        )
 
     private fun getFeeComponent(factoryContext: AppComponentContext): ComposableContentComponent {
         val state = model.uiState.value
@@ -163,7 +147,7 @@ internal class DefaultNFTSendComponent @AssistedInject constructor(
                 appComponentContext = factoryContext,
                 params = SendFeeComponentParams.FeeParams(
                     state = model.uiState.value.feeUM,
-                    currentRoute = currentRouteFlow.filterIsInstance<CommonSendRoute.Fee>(),
+                    currentRoute = model.currentRouteFlow.filterIsInstance<CommonSendRoute.Fee>(),
                     analyticsCategoryName = analyticsCategoryName,
                     userWallet = model.userWallet,
                     cryptoCurrencyStatus = model.cryptoCurrencyStatus,
@@ -173,7 +157,6 @@ internal class DefaultNFTSendComponent @AssistedInject constructor(
                     onLoadFee = model::loadFee,
                     destinationAddress = destinationAddress,
                     callback = model,
-                    onNextClick = ::onChildBack,
                 ),
             )
         } else {
@@ -194,7 +177,7 @@ internal class DefaultNFTSendComponent @AssistedInject constructor(
             feeCryptoCurrencyStatus = model.feeCryptoCurrencyStatus,
             appCurrency = model.appCurrency,
             callback = model,
-            currentRoute = currentRouteFlow.filterIsInstance<CommonSendRoute.Confirm>(),
+            currentRoute = model.currentRouteFlow.filterIsInstance<CommonSendRoute.Confirm>(),
             isBalanceHidingFlow = model.isBalanceHiddenFlow,
             onLoadFee = model::loadFee,
         ),
