@@ -142,7 +142,7 @@ internal class WcSendTransactionModel @Inject constructor(
         feeReloadState.value = false
         modelScope.launch {
             feeSelectorReloadTrigger.triggerUpdate(
-                feeData = FeeSelectorData(removeSuggestedFee = true),
+                FeeSelectorData(removeSuggestedFee = feeStateConfiguration !is FeeStateConfiguration.Suggestion),
             )
         }
     }
@@ -161,16 +161,17 @@ internal class WcSendTransactionModel @Inject constructor(
      * Also handles fee results from FeeSelectorBlockComponent
      */
     fun updateFee(feeSelectorUM: FeeSelectorUM) {
-        val feeExceedsBalance = notificationsFactory.createFeeExceedsBalance(
+        val feeErrorNotification = notificationsFactory.createFeeNotifications(
             cryptoCurrencyStatus = cryptoCurrencyStatus,
             feeSelectorUM = feeSelectorUM,
+            onFeeReload = ::triggerFeeReload,
         )
         _uiState.update {
             it?.copy(
                 feeSelectorUM = feeSelectorUM,
                 transaction = it.transaction.copy(
-                    sendEnabled = feeSelectorUM is FeeSelectorUM.Content && feeExceedsBalance == null,
-                    feeExceedsBalanceNotification = feeExceedsBalance,
+                    sendEnabled = feeSelectorUM is FeeSelectorUM.Content && feeErrorNotification == null,
+                    feeErrorNotification = feeErrorNotification,
                 ),
             )
         }
@@ -237,6 +238,7 @@ internal class WcSendTransactionModel @Inject constructor(
                 actions = actions,
                 feeSelectorUM = uiState.value?.feeSelectorUM,
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
+                onFeeReload = ::triggerFeeReload,
             ),
         )
         transactionUM = transactionUM?.copy(
