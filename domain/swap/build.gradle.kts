@@ -23,9 +23,11 @@ dependencies {
 
     /** Util */
     implementation(projects.core.utils)
+    implementation(projects.core.datasource)
 
     /** Other */
     implementation(deps.arrow.core)
     implementation(deps.kotlin.coroutines)
+    implementation(deps.jodatime)
 
 }
