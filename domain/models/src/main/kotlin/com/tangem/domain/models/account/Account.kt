@@ -8,12 +8,14 @@ import com.tangem.domain.models.TokensSortType
 import com.tangem.domain.models.account.Account.CryptoPortfolio.Error.AccountNameError
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
+import kotlinx.serialization.Serializable
 
 /**
  * Represents an account
  *
 [REDACTED_AUTHOR]
  */
+@Serializable
 sealed interface Account {
 
     /** Unique identifier of the account */
@@ -36,6 +38,7 @@ sealed interface Account {
      * @property isArchived         indicates whether the account is archived
      * @property cryptoCurrencyList list of tokens associated with the account
      */
+    @Serializable
     data class CryptoPortfolio private constructor(
         override val accountId: AccountId,
         override val name: AccountName,
@@ -64,6 +67,7 @@ sealed interface Account {
          * @property sortType   sorting type for the tokens
          * @property groupType  grouping type for the tokens
          */
+        @Serializable
         data class CryptoCurrencyList(
             val currencies: Set<CryptoCurrency>,
             val sortType: TokensSortType,
@@ -73,14 +77,17 @@ sealed interface Account {
         /**
          * Represents possible errors when creating a crypto portfolio account
          */
+        @Serializable
         sealed interface Error {
 
             /** Error indicating that the account name is blank */
+            @Serializable
             data class AccountNameError(val cause: AccountName.Error) : Error {
                 override fun toString(): String = cause.toString()
             }
 
             /** Error indicating that the derivation index is negative */
+            @Serializable
             data object NegativeDerivationIndex : Error {
                 override fun toString(): String = "${this::class.simpleName}: Derivation index must be non-negative"
             }
