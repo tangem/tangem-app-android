@@ -2,12 +2,20 @@ package com.tangem.features.hotwallet.addexistingwallet.root.routing
 
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.features.hotwallet.addexistingwallet.im.port.AddExistingWalletImportComponent
 import com.tangem.features.hotwallet.addexistingwallet.root.AddExistingWalletModel
 import com.tangem.features.hotwallet.addexistingwallet.start.AddExistingWalletStartComponent
-import com.tangem.features.hotwallet.addexistingwallet.im.port.AddExistingWalletImportComponent
+import com.tangem.features.hotwallet.manualbackup.completed.ManualBackupCompletedComponent
+import com.tangem.features.hotwallet.setaccesscode.SetAccessCodeComponent
+import com.tangem.features.hotwallet.setupfinished.MobileWalletSetupFinishedComponent
+import com.tangem.features.pushnotifications.api.PushNotificationsComponent
+import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacksStub
+import com.tangem.features.pushnotifications.api.PushNotificationsParams
 import javax.inject.Inject
 
-internal class AddExistingWalletChildFactory @Inject constructor() {
+internal class AddExistingWalletChildFactory @Inject constructor(
+    private val pushNotificationsComponent: PushNotificationsComponent.Factory,
+) {
 
     fun createChild(
         route: AddExistingWalletRoute,
@@ -25,6 +33,30 @@ internal class AddExistingWalletChildFactory @Inject constructor() {
                 context = childContext,
                 params = AddExistingWalletImportComponent.Params(
                     callbacks = model.addExistingWalletImportModelCallbacks,
+                ),
+            )
+            is AddExistingWalletRoute.BackupCompleted -> ManualBackupCompletedComponent(
+                context = childContext,
+                params = ManualBackupCompletedComponent.Params(
+                    callbacks = model.manualBackupCompletedComponentModelCallbacks,
+                ),
+            )
+            is AddExistingWalletRoute.AccessCode -> SetAccessCodeComponent(
+                context = childContext,
+                params = SetAccessCodeComponent.Params(
+                    callbacks = model.accessCodeModelCallbacks,
+                ),
+            )
+            is AddExistingWalletRoute.PushNotifications -> pushNotificationsComponent.create(
+                context = childContext,
+                params = PushNotificationsParams(
+                    modelCallbacks = PushNotificationsModelCallbacksStub(),
+                ),
+            )
+            AddExistingWalletRoute.SetupFinished -> MobileWalletSetupFinishedComponent(
+                context = childContext,
+                params = MobileWalletSetupFinishedComponent.Params(
+                    callbacks = model.mobileWalletSetupFinishedComponentModelCallbacks,
                 ),
             )
         }

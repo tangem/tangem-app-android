@@ -1,7 +1,7 @@
 package com.tangem.features.onboarding.v2.multiwallet.impl.model
 
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 
 data class OnboardingMultiWalletState(
     val currentStep: Step,
