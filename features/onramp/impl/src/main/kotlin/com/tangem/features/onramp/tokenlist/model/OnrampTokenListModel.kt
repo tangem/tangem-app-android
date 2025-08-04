@@ -15,7 +15,6 @@ import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.tokenlist.TokenList
-import com.tangem.domain.models.wallet.requireColdWallet
 import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.domain.tokens.GetTokenListUseCase
@@ -61,7 +60,6 @@ internal class OnrampTokenListModel @Inject constructor(
     private val params: OnrampTokenListComponent.Params = paramsContainer.require()
     private val userWallet by lazy {
         getWalletsUseCase.invokeSync().first { it.walletId == params.userWalletId }
-            .requireColdWallet() // TODO [REDACTED_TASK_KEY]
     }
 
     init {
