@@ -5,7 +5,7 @@ import arrow.core.raise.either
 import com.tangem.common.doOnFailure
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.models.DeleteWalletError
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 
 /**
  * Use case for deleting user wallet

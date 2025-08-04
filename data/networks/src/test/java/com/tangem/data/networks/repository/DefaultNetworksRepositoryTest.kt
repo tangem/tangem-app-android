@@ -10,8 +10,8 @@ import com.tangem.data.networks.store.storeStatus
 import com.tangem.data.networks.utils.NetworkStatusFactory
 import com.tangem.domain.models.network.CryptoCurrencyAddress
 import com.tangem.domain.models.network.NetworkStatus
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
 import kotlinx.coroutines.test.runTest

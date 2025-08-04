@@ -16,7 +16,7 @@ import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.isNullOrZero
@@ -125,7 +125,7 @@ class AmountStateConverterV2(
                 resourceReference(R.string.common_crypto_fiat_format, wrappedList(crypto, fiat))
             },
             tokenName = stringReference(cryptoCurrencyStatus.currency.name),
-            tokenIconState = iconStateConverter.convert(cryptoCurrencyStatus),
+            tokenIconState = iconStateConverter.convert(cryptoCurrencyStatus.currency),
             amountTextField = amountFieldConverter.convert(value.value),
             isPrimaryButtonEnabled = false,
             appCurrency = appCurrency,
