@@ -49,7 +49,7 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
             val pairResult = sdkDelegate.pair(uri)
                 .onLeft {
                     Timber.tag(WC_TAG).e(it, "Failed to call pair $pairRequest")
-                    analytics.send(WcAnalyticEvents.PairFailed)
+                    analytics.send(WcAnalyticEvents.PairFailed(it.code))
                     emit(WcPairState.Error(it))
                 }
                 .getOrNull() ?: return@flow
@@ -65,7 +65,7 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
 
             val proposalState = buildProposalState(sdkSessionProposal, sdkVerifyContext)
                 .onLeft {
-                    analytics.send(WcAnalyticEvents.PairFailed)
+                    analytics.send(WcAnalyticEvents.PairFailed(it.code))
                     emit(WcPairState.Error(it))
                 }
                 .getOrNull() ?: return@flow
@@ -115,6 +115,7 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
         }.onCompletion {
             if (it != null) {
                 Timber.tag(WC_TAG).e(it, "Completed with error $pairRequest")
+                emit(WcPairState.Error(WcPairError.Unknown(it.message.orEmpty())))
             } else {
                 Timber.tag(WC_TAG).i("Completed successfully $pairRequest")
             }
@@ -134,7 +135,7 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
     private suspend fun walletKitApproveSession(
         sessionForApprove: WcSessionApprove,
         sdkSessionProposal: Wallet.Model.SessionProposal,
-    ): Either<WcPairError, Wallet.Model.SettledSessionResponse.Result> {
+    ): Either<WcPairError, Wallet.Model.SettledSessionResponse.Result> = try {
         val namespaces = caipNamespaceDelegate.associate(
             sdkSessionProposal,
             sessionForApprove,
@@ -143,7 +144,10 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
             proposerPublicKey = sdkSessionProposal.proposerPublicKey,
             namespaces = namespaces,
         )
-        return sdkDelegate.approve(sessionApprove)
+        sdkDelegate.approve(sessionApprove)
+    } catch (e: Throwable) {
+        Timber.tag(WC_TAG).e(e, "Failed to sdk approve session $pairRequest")
+        WcPairError.ApprovalFailed(e.message.orEmpty()).left()
     }
 
     private suspend fun buildProposalState(
