@@ -7,8 +7,8 @@ import com.tangem.common.CompletionResult
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.models.SelectWalletError
-import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 
 /**
  * Use case for selecting wallet

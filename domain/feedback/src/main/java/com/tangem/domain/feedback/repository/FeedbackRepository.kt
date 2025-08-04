@@ -2,7 +2,7 @@ package com.tangem.domain.feedback.repository
 
 import com.tangem.domain.feedback.models.*
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import java.io.File
 
 interface FeedbackRepository {
