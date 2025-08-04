@@ -7,8 +7,8 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.catching
 import com.tangem.common.services.secure.SecureStorage
 import com.tangem.crypto.operations.AESCipherOperations
-import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.tap.common.extensions.filterNotNull
 import com.tangem.tap.domain.userWalletList.model.UserWalletEncryptionKey
 import com.tangem.tap.domain.userWalletList.model.UserWalletSensitiveInformation
