@@ -1,23 +1,18 @@
 package com.tangem.features.hotwallet.addexistingwallet.entry
 
-import com.arkivanov.decompose.router.stack.StackNavigation
-import com.arkivanov.decompose.router.stack.pop
-import com.arkivanov.decompose.router.stack.push
-import com.arkivanov.decompose.router.stack.replaceAll
-import com.arkivanov.decompose.router.stack.replaceCurrent
+import com.arkivanov.decompose.router.stack.*
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.settings.ShouldAskPermissionUseCase
-import com.tangem.features.hotwallet.addexistingwallet.im.port.AddExistingWalletImportComponent
 import com.tangem.features.hotwallet.addexistingwallet.entry.routing.AddExistingWalletRoute
+import com.tangem.features.hotwallet.addexistingwallet.im.port.AddExistingWalletImportComponent
 import com.tangem.features.hotwallet.addexistingwallet.start.AddExistingWalletStartComponent
 import com.tangem.features.hotwallet.manualbackup.completed.ManualBackupCompletedComponent
 import com.tangem.features.hotwallet.setaccesscode.AccessCodeComponent
 import com.tangem.features.hotwallet.setupfinished.MobileWalletSetupFinishedComponent
-import com.tangem.features.pushnotifications.api.PushNotificationsComponent
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.launch
@@ -33,7 +28,6 @@ internal class AddExistingWalletModel @Inject constructor(
     val addExistingWalletStartModelCallbacks = AddExistingWalletStartModelCallbacks()
     val addExistingWalletImportModelCallbacks = AddExistingWalletImportModelCallbacks()
     val manualBackupCompletedComponentModelCallbacks = ManualBackupCompletedComponentModelCallbacks()
-    val pushNotificationsComponentModelCallbacks = PushNotificationsComponentModelCallbacks()
     val accessCodeModelCallbacks = AccessCodeModelCallbacks()
     val mobileWalletSetupFinishedComponentModelCallbacks = MobileWalletSetupFinishedComponentModelCallbacks()
 
@@ -97,12 +91,6 @@ internal class AddExistingWalletModel @Inject constructor(
 
         override fun onAccessCodeConfirmed(userWalletId: UserWalletId) {
             navigateToPushNotificationsOrNext()
-        }
-    }
-
-    inner class PushNotificationsComponentModelCallbacks : PushNotificationsComponent.ModelCallbacks {
-        override fun onResult() {
-            stackNavigation.replaceCurrent(AddExistingWalletRoute.SetupFinished)
         }
     }
 
