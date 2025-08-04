@@ -18,6 +18,8 @@ dependencies {
     implementation(projects.domain.demo)
     implementation(projects.domain.models)
     implementation(projects.domain.manageTokens)
+    implementation(projects.domain.card)
+    implementation(projects.domain.wallets)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.legacy)
