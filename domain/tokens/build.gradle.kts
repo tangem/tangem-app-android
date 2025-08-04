@@ -18,6 +18,8 @@ dependencies {
     api(projects.domain.core)
     implementation(projects.domain.models)
     implementation(projects.domain.legacy)
+    implementation(projects.domain.walletManager)
+    implementation(projects.domain.card)
     implementation(projects.domain.staking)
     implementation(projects.libs.blockchainSdk)
     implementation(projects.domain.tokens.models)
@@ -52,6 +54,10 @@ dependencies {
     implementation(deps.jodatime)
     implementation(deps.reKotlin)
 
+    implementation(tangemDeps.blockchain) {
+        exclude(module = "joda-time")
+    }
+
     /** Tests */
     testImplementation(deps.test.coroutine)
     testImplementation(deps.test.junit5)
@@ -59,7 +65,4 @@ dependencies {
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)
     testImplementation(projects.common.test)
-    testImplementation(tangemDeps.blockchain) {
-        exclude(module = "joda-time")
-    }
 }
