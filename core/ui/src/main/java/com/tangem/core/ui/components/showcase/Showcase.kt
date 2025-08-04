@@ -66,7 +66,7 @@ fun Showcase(
 }
 
 @Composable
-private fun ShowcaseButtons(
+fun ShowcaseButtons(
     primaryButtonText: TextReference,
     secondaryButtonText: TextReference,
     onPrimaryClick: () -> Unit,
