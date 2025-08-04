@@ -276,6 +276,7 @@ include(":features:welcome:impl")
 include(":domain:models")
 include(":domain:legacy")
 
+include(":domain:account")
 include(":domain:card")
 include(":domain:core")
 include(":domain:demo")
