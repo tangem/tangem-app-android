@@ -49,7 +49,7 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
             val pairResult = sdkDelegate.pair(uri)
                 .onLeft {
                     Timber.tag(WC_TAG).e(it, "Failed to call pair $pairRequest")
-                    analytics.send(WcAnalyticEvents.PairFailed)
+                    analytics.send(WcAnalyticEvents.PairFailed(it.code))
                     emit(WcPairState.Error(it))
                 }
                 .getOrNull() ?: return@flow
@@ -65,7 +65,7 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
 
             val proposalState = buildProposalState(sdkSessionProposal, sdkVerifyContext)
                 .onLeft {
-                    analytics.send(WcAnalyticEvents.PairFailed)
+                    analytics.send(WcAnalyticEvents.PairFailed(it.code))
                     emit(WcPairState.Error(it))
                 }
                 .getOrNull() ?: return@flow
