@@ -16,18 +16,24 @@ import dagger.assisted.AssistedInject
 internal class DefaultFeeSelectorComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted private val params: FeeSelectorParams.FeeSelectorDetailsParams,
+    @Assisted private val onDismiss: () -> Unit,
 ) : FeeSelectorComponent, AppComponentContext by appComponentContext {
 
     private val model: FeeSelectorModel = getOrCreateModel(params = params)
 
     override fun dismiss() {
-        model.dismiss()
+        onDismiss()
     }
 
     @Composable
     override fun BottomSheet() {
         val state by model.uiState.collectAsStateWithLifecycle()
-        FeeSelectorModalBottomSheet(onDismiss = ::dismiss, state = state, feeSelectorIntents = model)
+        FeeSelectorModalBottomSheet(
+            onDismiss = ::dismiss,
+            state = state,
+            feeSelectorIntents = model,
+            feeDisplaySource = params.feeDisplaySource,
+        )
     }
 
     @AssistedFactory
@@ -35,6 +41,7 @@ internal class DefaultFeeSelectorComponent @AssistedInject constructor(
         override fun create(
             context: AppComponentContext,
             params: FeeSelectorParams.FeeSelectorDetailsParams,
+            onDismiss: () -> Unit,
         ): DefaultFeeSelectorComponent
     }
 }

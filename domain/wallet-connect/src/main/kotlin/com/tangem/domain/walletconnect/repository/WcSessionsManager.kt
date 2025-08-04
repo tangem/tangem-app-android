@@ -2,7 +2,7 @@ package com.tangem.domain.walletconnect.repository
 
 import arrow.core.Either
 import com.tangem.domain.walletconnect.model.WcSession
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 import kotlinx.coroutines.flow.Flow
 
 interface WcSessionsManager {
