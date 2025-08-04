@@ -12,6 +12,7 @@ interface ChooseManagedTokensComponent : ComposableContentComponent {
         val initialCurrency: CryptoCurrency,
         val selectedCurrency: CryptoCurrency?,
         val source: Source,
+        val showSendViaSwapNotification: Boolean,
     )
 
     enum class Source {
