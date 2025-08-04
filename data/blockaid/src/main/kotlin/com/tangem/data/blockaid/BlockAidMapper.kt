@@ -85,7 +85,7 @@ internal object BlockAidMapper {
                 from.exposures,
             )
             !from.traces.isNullOrEmpty() -> mapNftSendReceiveTransaction(from.traces)
-            else -> SimulationResult.FailedToSimulate
+            else -> SimulationResult.Success(data = SimulationData.NoWalletChangesDetected)
         }
     }
 
@@ -94,15 +94,15 @@ internal object BlockAidMapper {
             val tokenInfo = TokenInfo(
                 chainId = exposure.asset.chainId,
                 logoUrl = exposure.asset.logoUrl,
-                symbol = exposure.asset.symbol,
-                decimals = exposure.asset.decimals,
+                symbol = exposure.asset.symbol ?: "",
+                decimals = exposure.asset.decimals ?: 0,
             )
             exposure.spenders.flatMap { (_, spender) ->
                 val isUnlimited = spender.isApprovedForAll == true
                 val approval = spender.approval?.hexToBigDecimal()
-                spender.exposure.mapNotNull { detail ->
+                spender.exposure.map { detail ->
                     ApprovedAmount(
-                        approvedAmount = detail.value.toBigDecimalOrNull() ?: approval ?: return@mapNotNull null,
+                        approvedAmount = detail.value?.toBigDecimalOrNull() ?: approval ?: 1.toBigDecimal(),
                         isUnlimited = isUnlimited,
                         tokenInfo = tokenInfo,
                     )
@@ -112,7 +112,7 @@ internal object BlockAidMapper {
         return if (!amounts.isNullOrEmpty()) {
             SimulationResult.Success(SimulationData.Approve(amounts))
         } else {
-            SimulationResult.FailedToSimulate
+            SimulationResult.Success(SimulationData.NoWalletChangesDetected)
         }
     }
 
@@ -124,8 +124,8 @@ internal object BlockAidMapper {
             val token = TokenInfo(
                 chainId = diff.asset.chainId,
                 logoUrl = diff.asset.logoUrl,
-                symbol = diff.asset.symbol,
-                decimals = diff.asset.decimals,
+                symbol = diff.asset.symbol ?: "",
+                decimals = diff.asset.decimals ?: 0,
             )
             diff.outTransfer.orEmpty().forEach { transfer ->
                 transfer.value?.toBigDecimalOrNull()?.let { amount ->
@@ -142,7 +142,7 @@ internal object BlockAidMapper {
         return if (sendInfo.isNotEmpty() || receiveInfo.isNotEmpty()) {
             SimulationResult.Success(SimulationData.SendAndReceive(send = sendInfo, receive = receiveInfo))
         } else {
-            SimulationResult.FailedToSimulate
+            SimulationResult.Success(SimulationData.NoWalletChangesDetected)
         }
     }
 
@@ -156,7 +156,7 @@ internal object BlockAidMapper {
         return if (!sendInfo.isNullOrEmpty()) {
             SimulationResult.Success(SimulationData.SendAndReceive(send = sendInfo, receive = listOf()))
         } else {
-            SimulationResult.FailedToSimulate
+            SimulationResult.Success(SimulationData.NoWalletChangesDetected)
         }
     }
 }
