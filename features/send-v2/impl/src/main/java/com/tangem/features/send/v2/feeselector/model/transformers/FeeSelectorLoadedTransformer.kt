@@ -49,6 +49,7 @@ internal class FeeSelectorLoadedTransformer(
         val nonce = ((prevState as? FeeSelectorUM.Content)?.feeNonce as? FeeNonce.Nonce)?.nonce
 
         return FeeSelectorUM.Content(
+            isPrimaryButtonEnabled = true,
             fees = fees,
             feeItems = feeItems,
             selectedFeeItem = selectedFee,
