@@ -33,23 +33,23 @@ import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
-import com.tangem.domain.card.GetExtendedPublicKeyForCurrencyUseCase
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.NetworkAddress
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.promo.ShouldShowPromoTokenUseCase
 import com.tangem.domain.promo.models.PromoId
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.staking.GetStakingAvailabilityUseCase
 import com.tangem.domain.staking.GetStakingEntryInfoUseCase
-import com.tangem.domain.staking.GetStakingIntegrationIdUseCase
 import com.tangem.domain.staking.GetYieldUseCase
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.tokens.model.analytics.TokenReceiveAnalyticsEvent
@@ -67,9 +67,8 @@ import com.tangem.domain.transaction.usecase.RetryIncompleteTransactionUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
-import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
+import com.tangem.domain.wallets.usecase.GetExtendedPublicKeyForCurrencyUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.NetworkHasDerivationUseCase
 import com.tangem.feature.tokendetails.deeplink.TokenDetailsDeepLinkActionListener
@@ -133,7 +132,6 @@ internal class TokenDetailsModel @Inject constructor(
     paramsContainer: ParamsContainer,
     expressStatusFactory: ExpressStatusFactory.Factory,
     getUserWalletUseCase: GetUserWalletUseCase,
-    getStakingIntegrationIdUseCase: GetStakingIntegrationIdUseCase,
     private val appRouter: AppRouter,
     private val router: InnerTokenDetailsRouter,
     private val tokenDetailsDeepLinkActionListener: TokenDetailsDeepLinkActionListener,
@@ -169,7 +167,6 @@ internal class TokenDetailsModel @Inject constructor(
         networkHasDerivationUseCase = networkHasDerivationUseCase,
         getUserWalletUseCase = getUserWalletUseCase,
         userWalletId = userWalletId,
-        getStakingIntegrationIdUseCase = getStakingIntegrationIdUseCase,
         symbol = cryptoCurrency.symbol,
         decimals = cryptoCurrency.decimals,
     )
