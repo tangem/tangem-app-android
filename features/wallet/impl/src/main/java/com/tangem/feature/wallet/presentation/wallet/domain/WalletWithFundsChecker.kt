@@ -1,9 +1,9 @@
 package com.tangem.feature.wallet.presentation.wallet.domain
 
 import com.tangem.common.extensions.isZero
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.settings.SetWalletWithFundsFoundUseCase
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.model.TokenList
 import javax.inject.Inject
 
 internal class WalletWithFundsChecker @Inject constructor(
