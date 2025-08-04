@@ -11,10 +11,10 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.utils.parseBigDecimal
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.staking.model.stakekit.AddressArgument
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.staking.impl.R
 import com.tangem.lib.crypto.BlockchainUtils.isTron
 import com.tangem.utils.extensions.isPositive
