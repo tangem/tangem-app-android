@@ -15,6 +15,7 @@ import com.tangem.core.ui.components.divider.DividerWithPadding
 import com.tangem.core.ui.extensions.clickableSingle
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.send.v2.api.FeeSelectorBlockComponent
+import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.features.walletconnect.transaction.entity.common.WcNetworkInfoUM
 import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionFeeState
 
@@ -25,14 +26,15 @@ internal fun WcSendTransactionItems(
     networkInfo: WcNetworkInfoUM,
     feeState: WcTransactionFeeState,
     feeSelectorBlockComponent: FeeSelectorBlockComponent?,
-    feeExceedsBalance: Boolean,
+    feeSelectorUM: FeeSelectorUM,
     address: String?,
     modifier: Modifier = Modifier,
 ) {
-    val onFeeBlockClicked = remember(feeState) {
-        when (feeState) {
-            WcTransactionFeeState.None -> null
-            is WcTransactionFeeState.Success -> feeState.onClick
+    val onFeeBlockClicked = remember(feeState, feeSelectorUM) {
+        if (feeState is WcTransactionFeeState.Success && feeSelectorUM is FeeSelectorUM.Content) {
+            feeState.onClick
+        } else {
+            null
         }
     }
     Column(
@@ -64,7 +66,7 @@ internal fun WcSendTransactionItems(
                 address = address,
             )
         }
-        if (feeState != WcTransactionFeeState.None && !feeExceedsBalance) {
+        if (feeState != WcTransactionFeeState.None) {
             DividerWithPadding(start = 40.dp, end = 12.dp)
             feeSelectorBlockComponent?.Content(
                 modifier = if (onFeeBlockClicked != null) {
