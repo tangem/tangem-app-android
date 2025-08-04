@@ -7,6 +7,7 @@ import com.arkivanov.essenty.lifecycle.doOnResume
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.features.send.v2.api.FeeSelectorBlockComponent
+import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.features.send.v2.api.params.FeeSelectorParams
 import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionFeeState
 import com.tangem.features.walletconnect.transaction.model.WcSendTransactionModel
@@ -58,6 +59,7 @@ internal class WcSendTransactionComponent(
             WcSendTransactionModalBottomSheet(
                 state = state,
                 feeSelectorBlockComponent = feeSelectorBlock,
+                feeSelectorUM = content?.feeSelectorUM ?: FeeSelectorUM.Loading,
                 onClickTransactionRequest = model::showTransactionRequest,
                 onBack = router::pop,
                 onDismiss = ::dismiss,

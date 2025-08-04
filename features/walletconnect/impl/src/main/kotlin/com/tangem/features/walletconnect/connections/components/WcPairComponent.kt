@@ -115,8 +115,11 @@ internal class WcPairComponent(
             is Alert.Type.Verified -> WcAlertsFactory.createVerifiedDomainAlert(alertType.appName)
             is Alert.Type.UnknownDomain -> WcAlertsFactory.createUnknownDomainAlert(model::connectFromAlert)
             is Alert.Type.UnsafeDomain -> WcAlertsFactory.createUnsafeDomainAlert(model::connectFromAlert)
-            is Alert.Type.UnsupportedDApp -> WcAlertsFactory.createUnsupportedDomainAlert(alertType.appName)
-            is Alert.Type.UnsupportedNetwork -> WcAlertsFactory.createUnsupportedChainAlert(alertType.appName)
+            is Alert.Type.UnsupportedDApp ->
+                WcAlertsFactory.createUnsupportedDomainAlert(alertType.appName, model::errorAlertOnDismiss)
+            is Alert.Type.UnsupportedNetwork ->
+                WcAlertsFactory.createUnsupportedChainAlert(alertType.appName, model::errorAlertOnDismiss)
+            is Alert.Type.UriAlreadyUsed -> WcAlertsFactory.createUriAlreadyUsedAlert(model::errorAlertOnDismiss)
         }
     }
 

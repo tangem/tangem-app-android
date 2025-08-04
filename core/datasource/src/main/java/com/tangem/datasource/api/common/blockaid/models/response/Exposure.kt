@@ -18,6 +18,8 @@ data class SpenderDetails(
 
 @JsonClass(generateAdapter = true)
 data class ExposureDetail(
-    @Json(name = "value") val value: String,
-    @Json(name = "raw_value") val rawValue: String,
+    @Json(name = "value") val value: String? = null,
+    @Json(name = "raw_value") val rawValue: String? = null,
+    @Json(name = "token_id") val tokenId: String? = null,
+    @Json(name = "logo_url") val logoUrl: String? = null,
 )
