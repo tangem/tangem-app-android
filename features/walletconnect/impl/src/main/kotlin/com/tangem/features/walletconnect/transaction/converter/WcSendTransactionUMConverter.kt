@@ -26,9 +26,10 @@ internal class WcSendTransactionUMConverter @Inject constructor(
 ) : Converter<WcSendTransactionUMConverter.Input, WcSendTransactionUM?> {
 
     override fun convert(value: Input): WcSendTransactionUM? {
-        val feeExceedsBalance = notificationsFactory.createFeeExceedsBalance(
+        val feeErrorNotification = notificationsFactory.createFeeNotifications(
             cryptoCurrencyStatus = value.cryptoCurrencyStatus,
             feeSelectorUM = value.feeSelectorUM,
+            onFeeReload = value.onFeeReload,
         )
         return when (value.context.method) {
             is WcEthMethod.SendTransaction,
@@ -51,8 +52,8 @@ internal class WcSendTransactionUMConverter @Inject constructor(
                     estimatedWalletChanges = WcSendReceiveTransactionCheckResultsUM(),
                     isLoading = value.signState.domainStep == WcSignStep.Signing,
                     address = WcAddressConverter.convert(value.context.derivationState),
-                    sendEnabled = value.feeSelectorUM is FeeSelectorUM.Content && feeExceedsBalance == null,
-                    feeExceedsBalanceNotification = feeExceedsBalance,
+                    sendEnabled = value.feeSelectorUM is FeeSelectorUM.Content && feeErrorNotification == null,
+                    feeErrorNotification = feeErrorNotification,
                 ),
                 feeSelectorUM = value.feeSelectorUM ?: FeeSelectorUM.Loading,
                 transactionRequestInfo = WcTransactionRequestInfoUM(
@@ -77,5 +78,6 @@ internal class WcSendTransactionUMConverter @Inject constructor(
         val actions: WcTransactionActionsUM,
         val feeSelectorUM: FeeSelectorUM?,
         val cryptoCurrencyStatus: CryptoCurrencyStatus,
+        val onFeeReload: () -> Unit,
     )
 }
