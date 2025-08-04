@@ -13,6 +13,7 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.SystemBarsIconsDisposable
 import com.tangem.core.ui.utils.ChangeRootBackgroundColorEffect
 import com.tangem.core.ui.utils.findActivity
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.home.api.HomeComponent
 import com.tangem.tap.features.home.compose.StoriesScreen
@@ -29,6 +30,7 @@ import org.rekotlin.StoreSubscriber
 internal class DefaultHomeComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted params: Unit,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
 ) : HomeComponent, AppComponentContext by appComponentContext, StoreSubscriber<HomeState> {
 
     private val model: HomeModel = getOrCreateModel()
@@ -58,7 +60,7 @@ internal class DefaultHomeComponent @AssistedInject constructor(
         val activity = LocalContext.current.findActivity()
         BackHandler(onBack = activity::finish)
         SystemBarsIconsDisposable(darkIcons = false)
-        if (homeState.value.isV2StoriesEnabled) {
+        if (hotWalletFeatureToggles.isHotWalletEnabled) {
             StoriesScreenV2(
                 homeState = homeState,
                 onCreateNewWalletButtonClick = model::onCreateNewWalletScreen,
