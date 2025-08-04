@@ -2,7 +2,7 @@ package com.tangem.features.staking.impl.presentation.state.transformers
 
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.domain.staking.model.stakekit.PendingAction
+import com.tangem.domain.models.staking.PendingAction
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.StakingUiState
 import com.tangem.features.staking.impl.presentation.state.bottomsheet.StakingActionSelectionBottomSheetConfig

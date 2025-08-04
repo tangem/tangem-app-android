@@ -1,6 +1,6 @@
 package com.tangem.features.staking.impl.presentation.state.utils
 
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.lib.crypto.BlockchainUtils.isTron
 import java.math.BigDecimal
 import java.math.MathContext

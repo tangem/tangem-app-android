@@ -1,15 +1,11 @@
 package com.tangem.data.staking.multi
 
 import arrow.core.Either
-import arrow.core.getOrElse
 import arrow.core.left
-import arrow.core.raise.catch
-import arrow.core.raise.either
-import arrow.core.raise.ensure
+import arrow.core.right
 import arrow.core.toOption
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.staking.store.YieldsBalancesStore
-import com.tangem.data.staking.utils.StakingIdFactory
 import com.tangem.data.staking.utils.YieldBalanceRequestBodyFactory
 import com.tangem.datasource.api.stakekit.StakeKitApi
 import com.tangem.datasource.api.stakekit.models.request.YieldBalanceRequestBody
@@ -18,11 +14,11 @@ import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO
 import com.tangem.datasource.local.token.StakingYieldsStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.core.utils.catchOn
-import com.tangem.domain.staking.model.StakingID
+import com.tangem.domain.models.staking.StakingID
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
-import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.domain.wallets.models.isMultiCurrency
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -36,7 +32,6 @@ import javax.inject.Inject
  * @property userWalletsStore    user wallets store
  * @property stakingYieldsStore  staking yields store
  * @property yieldsBalancesStore yields balances store
- * @property stakingIdFactory    factory for creating StakingID
  * @property stakeKitApi         stake kit API
  * @property dispatchers         dispatchers
  *
@@ -46,7 +41,6 @@ internal class DefaultMultiYieldBalanceFetcher @Inject constructor(
     private val userWalletsStore: UserWalletsStore,
     private val stakingYieldsStore: StakingYieldsStore,
     private val yieldsBalancesStore: YieldsBalancesStore,
-    private val stakingIdFactory: StakingIdFactory,
     private val stakeKitApi: StakeKitApi,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : MultiYieldBalanceFetcher {
@@ -54,11 +48,12 @@ internal class DefaultMultiYieldBalanceFetcher @Inject constructor(
     override suspend fun invoke(params: MultiYieldBalanceFetcher.Params): Either<Throwable, Unit> {
         Timber.i("Start fetching yield balances for params:\n$params")
 
-        checkIsSupportedByWalletOrElse(userWalletId = params.userWalletId) {
-            return it.left()
+        val stakingIds = params.stakingIds.ifEmpty {
+            Timber.i("Nothing to fetch, empty stakingIds for ${params.userWalletId}")
+            return Unit.right()
         }
 
-        val stakingIds = getStakingIds(params).getOrElse {
+        checkIsSupportedByWalletOrElse(userWalletId = params.userWalletId) {
             return it.left()
         }
 
@@ -92,30 +87,6 @@ internal class DefaultMultiYieldBalanceFetcher @Inject constructor(
 
             ifNotSupported(exception)
         }
-    }
-
-    private suspend fun getStakingIds(params: MultiYieldBalanceFetcher.Params) = either {
-        val stakingIds = catch(
-            block = {
-                params.currencyIdWithNetworkMap.mapNotNullTo(hashSetOf()) { (currencyId, network) ->
-                    stakingIdFactory.create(
-                        userWalletId = params.userWalletId,
-                        currencyId = currencyId,
-                        network = network,
-                    )
-                }
-            },
-            catch = ::raise,
-        )
-
-        ensure(stakingIds.isNotEmpty()) {
-            val exception = IllegalStateException("Unable to create staking ids for $params: list is empty")
-            Timber.e(exception)
-
-            raise(exception)
-        }
-
-        stakingIds
     }
 
     private suspend fun getAvailableStakingIds(userWalletId: UserWalletId, stakingIds: Set<StakingID>): Set<StakingID> {
@@ -178,7 +149,9 @@ internal class DefaultMultiYieldBalanceFetcher @Inject constructor(
                         // TODO: in the future, consider optimizing this part
                         .chunked(size = 15) // StakeKitApi limitation: no more than 15 requests at the same time
                         .map {
-                            async(dispatchers.io) { stakeKitApi.getMultipleYieldBalances(it).bind() }
+                            async(dispatchers.io) {
+                                stakeKitApi.getMultipleYieldBalances(it).bind()
+                            }
                         }
                         .awaitAll()
                         .flatten()

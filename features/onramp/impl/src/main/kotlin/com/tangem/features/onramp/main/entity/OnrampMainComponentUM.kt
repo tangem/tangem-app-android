@@ -24,14 +24,13 @@ internal sealed interface OnrampMainComponentUM {
     ) : OnrampMainComponentUM {
         override val topBarConfig: OnrampMainTopBarUM = OnrampMainTopBarUM(
             title = combinedReference(resourceReference(R.string.common_buy), stringReference(" $currency")),
-            startButtonUM = TopAppBarButtonUM(
-                iconRes = R.drawable.ic_close_24,
-                onIconClicked = onClose,
+            startButtonUM = TopAppBarButtonUM.Back(
+                onBackClicked = onClose,
                 enabled = true,
             ),
-            endButtonUM = TopAppBarButtonUM(
+            endButtonUM = TopAppBarButtonUM.Icon(
                 iconRes = R.drawable.ic_more_vertical_24,
-                onIconClicked = openSettings,
+                onClicked = openSettings,
                 enabled = false,
             ),
         )
