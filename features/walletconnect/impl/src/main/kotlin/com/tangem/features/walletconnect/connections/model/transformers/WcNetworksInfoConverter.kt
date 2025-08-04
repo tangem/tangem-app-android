@@ -10,7 +10,11 @@ import kotlinx.collections.immutable.toImmutableList
 @Suppress("DestructuringDeclarationWithTooManyEntries")
 internal object WcNetworksInfoConverter : Converter<WcNetworksInfoConverter.Input, WcNetworksInfo> {
     override fun convert(value: Input): WcNetworksInfo {
-        val (missing, required, available, notAdded, additionallyEnabled) = value
+        val missing = value.missingNetworks
+        val required = value.requiredNetworks
+        val available = value.availableNetworks
+        val notAdded = value.notAddedNetworks
+        val additionallyEnabled = value.additionallyEnabledNetworks
         return when {
             missing.isNotEmpty() -> WcNetworksInfo.MissingRequiredNetworkInfo(missing.joinToString { it.name })
             required.isEmpty() && available.isEmpty() && notAdded.isNotEmpty() -> WcNetworksInfo.NoneNetworksAdded
