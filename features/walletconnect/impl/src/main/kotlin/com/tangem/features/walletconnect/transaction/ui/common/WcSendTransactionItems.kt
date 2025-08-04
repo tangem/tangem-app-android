@@ -15,23 +15,26 @@ import com.tangem.core.ui.components.divider.DividerWithPadding
 import com.tangem.core.ui.extensions.clickableSingle
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.send.v2.api.FeeSelectorBlockComponent
-import com.tangem.features.walletconnect.transaction.entity.common.WcAddressUM
+import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.features.walletconnect.transaction.entity.common.WcNetworkInfoUM
 import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionFeeState
 
+@Suppress("LongParameterList")
 @Composable
 internal fun WcSendTransactionItems(
     walletName: String?,
     networkInfo: WcNetworkInfoUM,
     feeState: WcTransactionFeeState,
     feeSelectorBlockComponent: FeeSelectorBlockComponent?,
-    address: WcAddressUM?,
+    feeSelectorUM: FeeSelectorUM,
+    address: String?,
     modifier: Modifier = Modifier,
 ) {
-    val onFeeBlockClicked = remember(feeState) {
-        when (feeState) {
-            WcTransactionFeeState.None -> null
-            is WcTransactionFeeState.Success -> feeState.onClick
+    val onFeeBlockClicked = remember(feeState, feeSelectorUM) {
+        if (feeState is WcTransactionFeeState.Success && feeSelectorUM is FeeSelectorUM.Content) {
+            feeState.onClick
+        } else {
+            null
         }
     }
     Column(
