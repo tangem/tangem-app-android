@@ -9,9 +9,9 @@ import com.tangem.common.ui.amountScreen.models.AmountFieldModel
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.Amount
 import com.tangem.domain.tokens.model.AmountType
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.convertToAmount
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
