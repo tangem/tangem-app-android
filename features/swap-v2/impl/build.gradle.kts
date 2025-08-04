@@ -29,6 +29,7 @@ dependencies {
     implementation(projects.core.ui)
     implementation(projects.core.navigation)
     implementation(projects.core.configToggles)
+    implementation(projects.core.datasource)
 
     /** Common */
     implementation(projects.common.ui)
@@ -63,6 +64,7 @@ dependencies {
     implementation(projects.domain.settings)
     implementation(projects.domain.txhistory.models)
     implementation(projects.domain.txhistory)
+    implementation(projects.domain.notifications)
     implementation(projects.domain.feedback.models)
     implementation(projects.domain.feedback)
 
