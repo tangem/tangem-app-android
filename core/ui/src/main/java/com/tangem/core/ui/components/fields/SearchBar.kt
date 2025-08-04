@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.SoftwareKeyboardController
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -35,6 +36,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.SelectCountryBottomSheetTestTags
 
 @Composable
 fun SearchBar(
@@ -57,7 +59,8 @@ fun SearchBar(
                 } else {
                     state.onActiveChange(false)
                 }
-            },
+            }
+            .testTag(SelectCountryBottomSheetTestTags.SEARCH_BAR),
         enabled = enabled,
         value = state.query,
         onValueChange = state.onQueryChange,

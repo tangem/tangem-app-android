@@ -30,21 +30,5 @@ sealed class GlobalAction : Action {
         data class Success(val appCurrency: AppCurrency) : GlobalAction()
     }
 
-    data class UpdateWalletSignedHashes(
-        val walletSignedHashes: Int?,
-        val remainingSignatures: Int?,
-        val walletPublicKey: ByteArray,
-    ) : GlobalAction()
-
     data class IsSignWithRing(val isSignWithRing: Boolean) : GlobalAction()
-
-    object ExchangeManager : GlobalAction() {
-        object Init : GlobalAction() {
-            data class Success(
-                val exchangeManager: com.tangem.tap.network.exchangeServices.CurrencyExchangeManager,
-            ) : GlobalAction()
-        }
-
-        object Update : GlobalAction()
-    }
 }

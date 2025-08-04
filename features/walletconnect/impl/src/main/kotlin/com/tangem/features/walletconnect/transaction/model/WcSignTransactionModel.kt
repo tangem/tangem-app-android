@@ -2,20 +2,22 @@ package com.tangem.features.walletconnect.transaction.model
 
 import androidx.compose.runtime.Stable
 import com.arkivanov.decompose.router.stack.StackNavigation
+import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.pushNew
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.domain.walletconnect.WcRequestUseCaseFactory
 import com.tangem.domain.walletconnect.usecase.method.WcMessageSignUseCase
 import com.tangem.domain.walletconnect.usecase.method.WcSignState
 import com.tangem.domain.walletconnect.usecase.method.WcSignStep
 import com.tangem.domain.walletconnect.usecase.method.WcSignUseCase
-import com.tangem.features.walletconnect.connections.routing.WcInnerRoute
 import com.tangem.features.walletconnect.transaction.components.common.WcTransactionModelParams
 import com.tangem.features.walletconnect.transaction.converter.WcCommonTransactionUMConverter
+import com.tangem.features.walletconnect.transaction.converter.WcHandleMethodErrorConverter
 import com.tangem.features.walletconnect.transaction.entity.common.WcCommonTransactionModel
 import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionActionsUM
 import com.tangem.features.walletconnect.transaction.entity.sign.WcSignTransactionUM
@@ -28,10 +30,12 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @Stable
 @ModelScoped
 internal class WcSignTransactionModel @Inject constructor(
     paramsContainer: ParamsContainer,
+    override val messageSender: UiMessageSender,
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
     private val clipboardManager: ClipboardManager,
@@ -49,7 +53,7 @@ internal class WcSignTransactionModel @Inject constructor(
     init {
         modelScope.launch {
             val useCase = useCaseFactory.createUseCase<WcMessageSignUseCase>(params.rawRequest)
-                .onLeft { router.push(WcInnerRoute.UnsupportedMethodAlert(params.rawRequest)) }
+                .onLeft { router.push(WcHandleMethodErrorConverter.convert(it)) }
                 .getOrNull() ?: return@launch
             useCase.invoke()
                 .onEach { signState ->
@@ -76,6 +80,10 @@ internal class WcSignTransactionModel @Inject constructor(
         _uiState.value?.transaction?.onDismiss?.invoke() ?: router.pop()
     }
 
+    override fun popBack() {
+        stackNavigation.pop()
+    }
+
     fun showTransactionRequest() {
         stackNavigation.pushNew(WcTransactionRoutes.TransactionRequestInfo)
     }
@@ -86,6 +94,7 @@ internal class WcSignTransactionModel @Inject constructor(
 
     private fun signingIsDone(signState: WcSignState<*>): Boolean {
         (signState.domainStep as? WcSignStep.Result)?.result?.let {
+            showSuccessSignMessage()
             router.pop()
             return true
         }

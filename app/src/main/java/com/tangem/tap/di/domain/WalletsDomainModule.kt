@@ -15,10 +15,7 @@ import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.*
 import com.tangem.feature.wallet.presentation.wallet.domain.IsWalletNFTEnabledSyncUseCase
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletNameMigrationUseCase
-import com.tangem.operations.attestation.OnlineCardVerifier
-import com.tangem.features.nft.NFTFeatureToggles
 import com.tangem.operations.attestation.CardArtworksProvider
-import com.tangem.sdk.api.featuretoggles.CardSdkFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -191,28 +188,14 @@ internal object WalletsDomainModule {
 
     @Provides
     @Singleton
-    fun provideGetCardImageUseCase(
-        onlineCardVerifier: OnlineCardVerifier,
-        cardArtworksProvider: CardArtworksProvider,
-        cardSdkFeatureToggles: CardSdkFeatureToggles,
-    ): GetCardImageUseCase {
-        return GetCardImageUseCase(
-            verifier = onlineCardVerifier,
-            cardArtworksProvider = cardArtworksProvider,
-            cardSdkFeatureToggles = cardSdkFeatureToggles,
-        )
+    fun provideGetCardImageUseCase(cardArtworksProvider: CardArtworksProvider): GetCardImageUseCase {
+        return GetCardImageUseCase(cardArtworksProvider = cardArtworksProvider)
     }
 
     @Provides
     @Singleton
-    fun providesIsWalletNFTEnabledSyncUseCase(
-        walletsRepository: WalletsRepository,
-        nftFeatureToggles: NFTFeatureToggles,
-    ): IsWalletNFTEnabledSyncUseCase {
-        return IsWalletNFTEnabledSyncUseCase(
-            walletsRepository = walletsRepository,
-            nftFeatureToggles = nftFeatureToggles,
-        )
+    fun providesIsWalletNFTEnabledSyncUseCase(walletsRepository: WalletsRepository): IsWalletNFTEnabledSyncUseCase {
+        return IsWalletNFTEnabledSyncUseCase(walletsRepository = walletsRepository)
     }
 
     @Provides

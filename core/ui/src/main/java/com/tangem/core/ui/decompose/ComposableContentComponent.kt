@@ -10,3 +10,12 @@ fun interface ComposableContentComponent {
     @Composable
     fun Content(modifier: Modifier)
 }
+
+fun getEmptyComposableContentComponent() = EmptyComposableContentComponent
+
+object EmptyComposableContentComponent : ComposableContentComponent {
+    @Composable
+    override fun Content(modifier: Modifier) {
+        /* no-op */
+    }
+}

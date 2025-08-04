@@ -29,25 +29,28 @@ import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.staking.*
+import com.tangem.domain.models.staking.action.StakingActionType
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.wallet.requireColdWallet
 import com.tangem.domain.staking.*
 import com.tangem.domain.staking.analytics.StakeScreenSource
 import com.tangem.domain.staking.analytics.StakingAnalyticsEvent
 import com.tangem.domain.staking.model.StakingApproval
-import com.tangem.domain.staking.model.stakekit.*
+import com.tangem.domain.staking.model.StakingIntegrationID
+import com.tangem.domain.staking.model.stakekit.StakingError
+import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.action.StakingAction
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
-import com.tangem.domain.staking.model.stakekit.action.StakingActionType
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
 import com.tangem.domain.staking.utils.getValidatorsCount
 import com.tangem.domain.tokens.*
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.CreateApprovalTransactionUseCase
 import com.tangem.domain.transaction.usecase.GetAllowanceUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
-import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.staking.api.StakingComponent
 import com.tangem.features.staking.impl.analytics.StakingParamsInterceptor
@@ -103,7 +106,6 @@ internal class StakingModel @Inject constructor(
     private val sendTransactionUseCase: SendTransactionUseCase,
     private val createApprovalTransactionUseCase: CreateApprovalTransactionUseCase,
     private val getAllowanceUseCase: GetAllowanceUseCase,
-    private val isApproveNeededUseCase: IsApproveNeededUseCase,
     private val vibratorHapticManager: VibratorHapticManager,
     private val getCardInfoUseCase: GetCardInfoUseCase,
     private val saveBlockchainErrorUseCase: SaveBlockchainErrorUseCase,
@@ -534,7 +536,7 @@ internal class StakingModel @Inject constructor(
                 getActionRequirementAmountUseCase.invoke(
                     integrationId = yieldBalance.integrationId,
                     actionType = StakingActionType.CLAIM_REWARDS,
-                ).getOrNull()
+                )
             } else {
                 minimumAmount
             }
@@ -857,6 +859,10 @@ internal class StakingModel @Inject constructor(
         modelScope.launch {
             val network = cryptoCurrencyStatus.currency.network
 
+            if (userWallet is UserWallet.Hot) {
+                return@launch // TODO [REDACTED_TASK_KEY] [Hot Wallet] Email feedback flow
+            }
+
             val cardInfo =
                 getCardInfoUseCase(userWallet.requireColdWallet().scanResponse)
                     .getOrElse { error("CardInfo must be not null") }
@@ -904,21 +910,18 @@ internal class StakingModel @Inject constructor(
     }
 
     private suspend fun setupApprovalNeeded() {
-        stakingApproval = isApproveNeededUseCase(cryptoCurrencyStatus.currency).fold(
-            ifRight = { approval ->
-                if (approval is StakingApproval.Needed) {
-                    stakingAllowance = getAllowanceUseCase(
-                        userWalletId = userWalletId,
-                        cryptoCurrency = cryptoCurrencyStatus.currency,
-                        spenderAddress = approval.spenderAddress,
-                    ).getOrElse { BigDecimal.ZERO }
-                }
-                approval
-            },
-            ifLeft = {
-                StakingApproval.Empty
-            },
-        )
+        val approval = StakingIntegrationID.create(currencyId = cryptoCurrencyStatus.currency.id)?.approval
+            ?: StakingApproval.Empty
+
+        stakingApproval = approval
+
+        if (approval is StakingApproval.Needed) {
+            stakingAllowance = getAllowanceUseCase(
+                userWalletId = userWalletId,
+                cryptoCurrency = cryptoCurrencyStatus.currency,
+                spenderAddress = approval.spenderAddress,
+            ).getOrElse { BigDecimal.ZERO }
+        }
     }
 
     private suspend fun setupIsAnyTokenStaked() {

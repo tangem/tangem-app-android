@@ -23,6 +23,8 @@ dependencies {
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.nft)
+    implementation(projects.domain.walletManager)
+    implementation(projects.domain.card)
     implementation(projects.domain.nft.models)
 
     /** Project - Utils */

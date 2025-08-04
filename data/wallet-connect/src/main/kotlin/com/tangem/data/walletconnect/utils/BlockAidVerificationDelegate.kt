@@ -1,6 +1,7 @@
 package com.tangem.data.walletconnect.utils
 
 import com.domain.blockaid.models.transaction.*
+import com.tangem.data.walletconnect.sign.BlockAidChainNameConverter
 import com.tangem.domain.blockaid.BlockAidVerifier
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.core.lce.LceFlow
@@ -16,6 +17,7 @@ import javax.inject.Inject
 
 internal class BlockAidVerificationDelegate @Inject constructor(
     private val blockAidVerifier: BlockAidVerifier,
+    private val blockAidChainNameConverter: BlockAidChainNameConverter,
 ) {
 
     fun getSecurityStatus(
@@ -47,7 +49,7 @@ internal class BlockAidVerificationDelegate @Inject constructor(
         }?.let { params ->
             blockAidVerifier.verifyTransaction(
                 TransactionData(
-                    chain = network.name,
+                    chain = blockAidChainNameConverter.convert(network),
                     accountAddress = accountAddress,
                     method = rawSdkRequest.request.method,
                     domainUrl = session.sdkModel.appMetaData.url,
