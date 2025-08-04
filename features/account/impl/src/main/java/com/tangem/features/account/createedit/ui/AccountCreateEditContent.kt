@@ -34,7 +34,7 @@ import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerH24
 import com.tangem.core.ui.components.SpacerH8
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
-import com.tangem.core.ui.components.fields.SimpleTextField
+import com.tangem.core.ui.components.fields.AutoSizeTextField
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
@@ -113,8 +113,8 @@ private fun AccountSummary(account: AccountCreateEditUM.Account, onNameChange: (
         )
         Spacer(modifier = Modifier.height(2.dp))
 
-        // todo accounts AutoSizeTextField
-        SimpleTextField(
+        AutoSizeTextField(
+            centered = true,
             textStyle = TangemTheme.typography.head,
             placeholder = stringReference("New account"), // todo account
             value = account.name.resolveReference(),
