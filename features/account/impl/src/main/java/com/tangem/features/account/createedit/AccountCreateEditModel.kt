@@ -5,7 +5,8 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
-import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.res.R
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.features.account.AccountCreateEditComponent
@@ -34,17 +35,17 @@ internal class AccountCreateEditModel @Inject constructor(
 
     fun unsaveChangeDialog() {
         val firstAction = EventMessageAction(
-            title = TextReference.EMPTY, // todo account res
+            title = resourceReference(R.string.account_unsaved_dialog_action_first),
             onClick = {},
         )
         val secondAction = EventMessageAction(
-            title = TextReference.EMPTY, // todo account res
+            title = resourceReference(R.string.account_unsaved_dialog_action_second),
             onClick = { router.pop() },
         )
         messageSender.send(
             DialogMessage(
-                title = TextReference.EMPTY, // todo account res
-                message = TextReference.EMPTY, // todo account res
+                title = resourceReference(R.string.account_unsaved_dialog_title),
+                message = resourceReference(R.string.account_unsaved_dialog_message_create),
                 firstActionBuilder = { firstAction },
                 secondActionBuilder = { secondAction },
             ),

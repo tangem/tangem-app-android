@@ -36,6 +36,7 @@ import com.tangem.core.ui.components.SpacerH8
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.components.fields.AutoSizeTextField
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -107,7 +108,7 @@ private fun AccountSummary(account: AccountCreateEditUM.Account, onNameChange: (
         Spacer(modifier = Modifier.height(24.dp))
 
         Text(
-            text = "Account Name", // todo account res
+            text = resourceReference(R.string.account_form_name).resolveReference(),
             style = TangemTheme.typography.caption2,
             color = TangemTheme.colors.text.tertiary,
         )
@@ -116,7 +117,7 @@ private fun AccountSummary(account: AccountCreateEditUM.Account, onNameChange: (
         AutoSizeTextField(
             centered = true,
             textStyle = TangemTheme.typography.head,
-            placeholder = stringReference("New account"), // todo account
+            placeholder = account.inputPlaceholder,
             value = account.name.resolveReference(),
             singleLine = true,
             onValueChange = onNameChange,
@@ -134,17 +135,18 @@ private fun AccountIcon(account: AccountCreateEditUM.Account) {
             .clip(RoundedCornerShape(TangemTheme.dimens.radius24))
             .background(account.portfolioIcon.color.getUiColor()),
     ) {
-        when (val icon = account.portfolioIcon.type) {
-            is CryptoPortfolioIcon.Type.Icon -> Icon(
-                modifier = Modifier.size(44.dp),
-                tint = TangemTheme.colors.text.constantWhite,
-                imageVector = ImageVector.vectorResource(id = icon.value.getResId()),
-                contentDescription = null,
-            )
-            is CryptoPortfolioIcon.Type.Symbol -> Text(
-                text = icon.value.toString().uppercase(),
+        val icon = account.portfolioIcon.value
+        when {
+            icon == CryptoPortfolioIcon.Icon.Letter -> Text(
+                text = account.name.resolveReference().first().uppercase(),
                 style = TangemTheme.typography.head,
                 color = TangemTheme.colors.text.constantWhite,
+            )
+            else -> Icon(
+                modifier = Modifier.size(44.dp),
+                tint = TangemTheme.colors.text.constantWhite,
+                imageVector = ImageVector.vectorResource(id = icon.getResId()),
+                contentDescription = null,
             )
         }
     }
@@ -290,10 +292,11 @@ private class PreviewStateProvider : CollectionPreviewParameterProvider<AccountC
     buildList {
         val colors = CryptoPortfolioIcon.Color.entries.toImmutableList()
         val icons = CryptoPortfolioIcon.Icon.entries.toImmutableList()
-        var portfolioIcon = CryptoPortfolioIcon.ofMainAccount(setOf())
+        var portfolioIcon = CryptoPortfolioIcon.ofDefaultCustomAccount()
         val first = AccountCreateEditUM(
             title = stringReference("Add account"),
             account = Account(
+                portfolioIcon = portfolioIcon,
                 derivationInfo = stringReference("Account #03 — used for address derivation."),
             ),
             colorsState = AccountCreateEditUM.Colors(
@@ -301,7 +304,7 @@ private class PreviewStateProvider : CollectionPreviewParameterProvider<AccountC
                 list = colors.toImmutableList(),
             ),
             iconsState = AccountCreateEditUM.Icons(
-                selected = (portfolioIcon.type as CryptoPortfolioIcon.Type.Icon).value,
+                selected = portfolioIcon.value,
                 list = icons.toImmutableList(),
             ),
             buttonState = AccountCreateEditUM.Button(
@@ -310,7 +313,10 @@ private class PreviewStateProvider : CollectionPreviewParameterProvider<AccountC
         )
         add(first)
 
-        portfolioIcon = CryptoPortfolioIcon.ofCustomAccount("Main account")
+        portfolioIcon = CryptoPortfolioIcon.ofCustomAccount(
+            value = CryptoPortfolioIcon.Icon.Letter,
+            color = CryptoPortfolioIcon.Color.entries.random(),
+        )
         val second = AccountCreateEditUM(
             title = stringReference("Edit account"),
             account = Account(
@@ -323,10 +329,7 @@ private class PreviewStateProvider : CollectionPreviewParameterProvider<AccountC
                 list = colors.toImmutableList(),
             ),
             iconsState = AccountCreateEditUM.Icons(
-                selected = when (val type = portfolioIcon.type) {
-                    is CryptoPortfolioIcon.Type.Icon -> type.value
-                    is CryptoPortfolioIcon.Type.Symbol -> CryptoPortfolioIcon.Icon.Letter
-                },
+                selected = portfolioIcon.value,
                 list = icons.toImmutableList(),
             ),
             buttonState = AccountCreateEditUM.Button(
