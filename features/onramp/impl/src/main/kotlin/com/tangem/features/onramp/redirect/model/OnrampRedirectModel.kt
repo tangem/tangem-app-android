@@ -85,7 +85,13 @@ internal class OnrampRedirectModel @Inject constructor(
                 .onLeft(::handleError)
                 .onRight {
                     latestOnrampTransaction = it
-                    urlOpener.openUrl(it.redirectUrl)
+
+                    // Workaround to open Unlimit provider in external browser instead of chrome custom tabs
+                    if (params.onrampProviderWithQuote.provider.id.equals(UNLIMIT_PROVIDER_ID, ignoreCase = true)) {
+                        urlOpener.openUrlExternalBrowser(it.redirectUrl)
+                    } else {
+                        urlOpener.openUrl(it.redirectUrl)
+                    }
                 }
         }
     }
@@ -125,5 +131,9 @@ internal class OnrampRedirectModel @Inject constructor(
         )
 
         messageSender.send(message)
+    }
+
+    private companion object {
+        const val UNLIMIT_PROVIDER_ID = "unlimit"
     }
 }

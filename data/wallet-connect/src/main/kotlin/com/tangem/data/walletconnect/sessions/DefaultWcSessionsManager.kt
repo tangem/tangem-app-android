@@ -52,7 +52,7 @@ internal class DefaultWcSessionsManager(
                     if (someMigrated) return@transform // ignore emit, wait next one
                 }
                 val associatedSessions: List<WcSession> = associate(inSdk, inStore, wallets)
-                val someRemove = removeUnknownSessions(inStore, associatedSessions)
+                val someRemove = removeUnknownSessions(inStore, inSdk, associatedSessions)
                 if (someRemove) return@transform // ignore emit, wait next one
                 emit(associatedSessions.groupBy { it.wallet })
             }
@@ -79,7 +79,7 @@ internal class DefaultWcSessionsManager(
     override suspend fun removeSession(session: WcSession): Either<Throwable, Unit> {
         val topic = session.sdkModel.topic
         val sdkCall = sdkDisconnectSession(topic)
-            .onRight { onSessionDelete.trySend(Wallet.Model.SessionDelete.Success(topic = topic, reason = "")) }
+        onSessionDelete.trySend(Wallet.Model.SessionDelete.Success(topic = topic, reason = ""))
         analytics.send(WcAnalyticEvents.SessionDisconnected(session.sdkModel.appMetaData))
         return sdkCall
     }
@@ -142,10 +142,17 @@ internal class DefaultWcSessionsManager(
         return wcSessions
     }
 
-    private suspend fun removeUnknownSessions(storeSessions: Set<WcSessionDTO>, wcSessions: List<WcSession>): Boolean {
+    private suspend fun removeUnknownSessions(
+        storeSessions: Set<WcSessionDTO>,
+        inSdkSessions: List<Wallet.Model.Session>,
+        wcSessions: List<WcSession>,
+    ): Boolean {
         val unknownStoredSessions = storeSessions
             .filterNot { dto -> wcSessions.any { it.sdkModel.topic == dto.topic } }
         val haveSomeUnknown = unknownStoredSessions.isNotEmpty()
+        val unknownSdkSessions = inSdkSessions
+            .filterNot { sdkSession -> wcSessions.any { it.sdkModel.topic == sdkSession.topic } }
+        val haveSomeUnknownSdkSessions = unknownSdkSessions.isNotEmpty()
 
         if (haveSomeUnknown) {
             Timber.tag(WC_TAG).i("removeUnknownSessions $unknownStoredSessions")
@@ -164,7 +171,10 @@ internal class DefaultWcSessionsManager(
             store.removeSessions(emptyNetworksDto)
         }
         if (haveEmptySessions) {
-            emptyNetworkSessions.map { scope.launch { sdkDisconnectSession(it.sdkModel.topic) } }
+            emptyNetworkSessions.forEach { scope.launch { sdkDisconnectSession(it.sdkModel.topic) } }
+        }
+        if (haveSomeUnknownSdkSessions) {
+            unknownSdkSessions.forEach { scope.launch { sdkDisconnectSession(it.topic) } }
         }
         return haveSomeUnknown || haveEmptyDto
     }
