@@ -26,9 +26,11 @@ internal class WcSendTransactionComponent(
                 state = state.feeSelectorUM,
                 onLoadFee = model::loadFee,
                 cryptoCurrencyStatus = model.cryptoCurrencyStatus,
-                callback = model,
-                suggestedFeeState = model.suggestedFeeState,
+                feeCryptoCurrencyStatus = model.cryptoCurrencyStatus,
+                feeStateConfiguration = model.feeStateConfiguration,
+                feeDisplaySource = FeeSelectorParams.FeeDisplaySource.BottomSheet,
             ),
+            onResult = model::updateFee,
         )
     }
 
