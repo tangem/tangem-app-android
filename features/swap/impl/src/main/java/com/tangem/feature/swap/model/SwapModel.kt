@@ -1351,8 +1351,6 @@ internal class SwapModel @Inject constructor(
             val transaction = dataState.swapDataModel?.transaction
             val fromCurrencyStatus = dataState.fromCryptoCurrency ?: initialFromStatus
             val network = fromCurrencyStatus.currency.network
-            val cardInfo = getCardInfoUseCase(userWallet.requireColdWallet().scanResponse) // TODO [REDACTED_TASK_KEY]
-                .getOrElse { error("CardInfo must be not null") }
 
             saveBlockchainErrorUseCase(
                 error = BlockchainErrorInfo(
@@ -1365,6 +1363,13 @@ internal class SwapModel @Inject constructor(
                     fee = dataState.selectedFee?.feeCryptoFormatted.orEmpty(),
                 ),
             )
+
+            if (userWallet is UserWallet.Hot) {
+                return@launch // TODO [REDACTED_TASK_KEY] [Hot Wallet] Email feedback flow
+            }
+
+            val cardInfo = getCardInfoUseCase(userWallet.requireColdWallet().scanResponse)
+                .getOrElse { error("CardInfo must be not null") }
 
             val email = FeedbackEmailType.SwapProblem(
                 cardInfo = cardInfo,
