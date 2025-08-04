@@ -9,6 +9,7 @@ import kotlinx.serialization.Serializable
 data class WcSdkSessionRequest(
     val topic: String,
     val chainId: String?,
+    val dAppMetaData: WcAppMetaData,
     val request: JSONRPCRequest,
 ) {
 
