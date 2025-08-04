@@ -18,6 +18,8 @@ dependencies {
     api(projects.domain.core)
     implementation(projects.domain.models)
     implementation(projects.domain.legacy)
+    implementation(projects.domain.walletManager)
+    implementation(projects.domain.card)
     implementation(projects.domain.staking)
     implementation(projects.libs.blockchainSdk)
     implementation(projects.domain.tokens.models)
