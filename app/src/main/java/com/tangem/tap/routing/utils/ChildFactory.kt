@@ -42,7 +42,7 @@ import com.tangem.tap.features.details.ui.cardsettings.coderecovery.api.AccessCo
 import com.tangem.tap.features.details.ui.resetcard.api.ResetCardComponent
 import com.tangem.tap.features.details.ui.securitymode.api.SecurityModeComponent
 import com.tangem.tap.features.details.ui.walletconnect.api.WalletConnectComponent
-import com.tangem.tap.features.home.api.HomeComponent
+import com.tangem.features.home.api.HomeComponent
 import com.tangem.tap.features.welcome.component.WelcomeComponent
 import com.tangem.tap.routing.component.RoutingComponent.Child
 import dagger.hilt.android.scopes.ActivityScoped
@@ -133,6 +133,7 @@ internal class ChildFactory @Inject constructor(
                 createComponentChild(
                     context = context,
                     params = WelcomeComponent.Params(
+                        launchMode = route.launchMode,
                         intent = route.intent,
                     ),
                     componentFactory = welcomeComponentFactory,
@@ -290,7 +291,7 @@ internal class ChildFactory @Inject constructor(
             is AppRoute.Home -> {
                 createComponentChild(
                     context = context,
-                    params = Unit,
+                    params = HomeComponent.Params(route.launchMode),
                     componentFactory = homeComponentFactory,
                 )
             }
@@ -437,6 +438,7 @@ internal class ChildFactory @Inject constructor(
                         initialCurrency = route.initialCurrency,
                         selectedCurrency = route.selectedCurrency,
                         source = ChooseManagedTokensComponent.Source.valueOf(route.source.name),
+                        showSendViaSwapNotification = route.showSendViaSwapNotification,
                     ),
                     componentFactory = chooseManagedTokensComponentFactory,
                 )

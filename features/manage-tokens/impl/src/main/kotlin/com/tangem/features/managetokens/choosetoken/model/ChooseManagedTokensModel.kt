@@ -3,6 +3,7 @@ package com.tangem.features.managetokens.choosetoken.model
 import androidx.annotation.StringRes
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
+import com.tangem.common.ui.notifications.NotificationId
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -15,6 +16,7 @@ import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.domain.notifications.SetShouldShowNotificationUseCase
 import com.tangem.features.managetokens.choosetoken.entity.ChooseManageTokensBottomSheetConfig
 import com.tangem.features.managetokens.choosetoken.entity.ChooseManagedTokenUM
 import com.tangem.features.managetokens.component.ChooseManagedTokensComponent
@@ -43,6 +45,7 @@ internal class ChooseManagedTokensModel @Inject constructor(
     private val router: Router,
     override val dispatchers: CoroutineDispatcherProvider,
     private val uiMessageSender: UiMessageSender,
+    private val setShouldShowNotificationUseCase: SetShouldShowNotificationUseCase,
     paramsContainer: ParamsContainer,
     manageTokensListManagerFactory: ManageTokensListManager.Factory,
 ) : Model() {
@@ -107,18 +110,21 @@ internal class ChooseManagedTokensModel @Inject constructor(
     }
 
     private fun getNotification(): NotificationUM? {
-        return when (params.source) {
-            Source.SendViaSwap -> ChooseManagedTokensNotificationUM.SendViaSwap(
-                onCloseClick = ::removeNotification,
-            )
+        return if (params.source == Source.SendViaSwap && params.showSendViaSwapNotification) {
+            ChooseManagedTokensNotificationUM.SendViaSwap(onCloseClick = ::removeNotification)
+        } else {
+            null
         }
     }
 
     private fun removeNotification() {
-        uiState.update {
-            it.copy(
-                notificationUM = null,
-            )
+        modelScope.launch {
+            setShouldShowNotificationUseCase(NotificationId.SendViaSwapTokenSelectorNotification.key, false)
+            uiState.update {
+                it.copy(
+                    notificationUM = null,
+                )
+            }
         }
     }
 

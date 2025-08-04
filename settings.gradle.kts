@@ -183,6 +183,9 @@ include(":libs:tangem-sdk-api")
 include(":features:onboarding-v2:api")
 include(":features:onboarding-v2:impl")
 
+include(":features:home:api")
+include(":features:home:impl")
+
 include(":features:referral:api")
 include(":features:referral:data")
 include(":features:referral:domain")
@@ -273,6 +276,7 @@ include(":features:welcome:impl")
 include(":domain:models")
 include(":domain:legacy")
 
+include(":domain:account")
 include(":domain:card")
 include(":domain:core")
 include(":domain:demo")

@@ -1,7 +1,7 @@
 package com.tangem.tap.di.domain
 
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
-import com.tangem.domain.card.repository.DerivationsRepository
+import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.domain.markets.*
 import com.tangem.domain.markets.repositories.MarketsTokenRepository
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
@@ -9,6 +9,7 @@ import com.tangem.domain.promo.PromoRepository
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.settings.repositories.SettingsRepository
+import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
@@ -63,6 +64,7 @@ object MarketsDomainModule {
         multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
         multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
         multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
+        stakingIdFactory: StakingIdFactory,
     ): SaveMarketTokensUseCase {
         return SaveMarketTokensUseCase(
             derivationsRepository = derivationsRepository,
@@ -71,6 +73,7 @@ object MarketsDomainModule {
             multiNetworkStatusFetcher = multiNetworkStatusFetcher,
             multiQuoteStatusFetcher = multiQuoteStatusFetcher,
             multiYieldBalanceFetcher = multiYieldBalanceFetcher,
+            stakingIdFactory = stakingIdFactory,
         )
     }
 
