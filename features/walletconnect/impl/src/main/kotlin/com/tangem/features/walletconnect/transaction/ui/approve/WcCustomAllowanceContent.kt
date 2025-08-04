@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
@@ -37,6 +38,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.utils.parseBigDecimalOrNull
 import com.tangem.features.walletconnect.impl.R
 import com.tangem.features.walletconnect.transaction.entity.approve.WcSpendAllowanceUM
 import java.math.BigDecimal
@@ -52,7 +54,7 @@ internal fun WcCustomAllowanceContent(
     var isUnlimited by remember { mutableStateOf(state.isUnlimited) }
 
     val amount: BigDecimal by remember(amountText) {
-        mutableStateOf(amountText.toBigDecimalOrNull() ?: state.amountValue)
+        mutableStateOf(amountText.parseBigDecimalOrNull() ?: state.amountValue)
     }
 
     TangemModalBottomSheetWithFooter<TangemBottomSheetConfigContent.Empty>(
@@ -84,12 +86,10 @@ internal fun WcCustomAllowanceContent(
                     tokenImageUrl = state.tokenImageUrl,
                     networkIconRes = state.networkIconRes,
                 )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
+                        .padding(top = 16.dp)
                         .clip(RoundedCornerShape(14.dp))
                         .background(TangemTheme.colors.background.action)
                         .padding(16.dp)
@@ -106,7 +106,6 @@ internal fun WcCustomAllowanceContent(
                         onCheckedChange = { isUnlimited = it },
                     )
                 }
-
                 Spacer(modifier = Modifier.height(60.dp))
             }
         },
@@ -122,6 +121,7 @@ internal fun WcCustomAllowanceContent(
     )
 }
 
+// TODO: [REDACTED_JIRA] refactor to use AmountField from core, use transformers to parse
 @Composable
 private fun AmountTextField(
     amountText: String,
@@ -152,9 +152,7 @@ private fun AmountTextField(
             },
             textStyle = TangemTheme.typography.body1,
             modifier = Modifier.weight(1f),
-            keyboardOptions = KeyboardOptions.Default.copy(
-                keyboardType = KeyboardType.Number,
-            ),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Done),
             colors = TextFieldDefaults.colors(
                 unfocusedContainerColor = Color.Transparent,
                 focusedContainerColor = Color.Transparent,

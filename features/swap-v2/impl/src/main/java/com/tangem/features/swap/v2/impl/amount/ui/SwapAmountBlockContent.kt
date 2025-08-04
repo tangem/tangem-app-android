@@ -37,8 +37,9 @@ import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountFieldUM
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
 import com.tangem.features.swap.v2.impl.amount.ui.preview.SwapAmountContentPreview
 import com.tangem.features.swap.v2.impl.chooseprovider.ui.SwapChooseProviderContent
+import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
 
-@Suppress("DestructuringDeclarationWithTooManyEntries")
+@Suppress("DestructuringDeclarationWithTooManyEntries", "LongParameterList")
 @Composable
 internal fun SwapAmountBlockContent(
     amountUM: SwapAmountUM,
@@ -46,6 +47,7 @@ internal fun SwapAmountBlockContent(
     onProviderSelectClick: () -> Unit,
     onInfoClick: () -> Unit,
     onClick: () -> Unit,
+    onFinishAnimation: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     if (amountUM !is SwapAmountUM.Content) return
@@ -98,9 +100,14 @@ internal fun SwapAmountBlockContent(
                 end.linkTo(parent.end)
             },
         )
+        val quoteContent = amountUM.selectedQuote as? SwapQuoteUM.Content
+        val isBestRate = quoteContent?.diffPercent is SwapQuoteUM.Content.DifferencePercent.Best
         SwapChooseProviderContent(
+            isBestRate = isBestRate,
+            showBestRateAnimation = amountUM.showBestRateAnimation,
             expressProvider = amountUM.selectedQuote.provider,
             onClick = onProviderSelectClick,
+            onFinishAnimation = onFinishAnimation,
             modifier = Modifier.constrainAs(provider) {
                 top.linkTo(to.bottom)
                 bottom.linkTo(parent.bottom)
@@ -195,6 +202,7 @@ private fun SwapAmountBlockContent_Preview() {
             onProviderSelectClick = {},
             onInfoClick = {},
             onClick = {},
+            onFinishAnimation = {},
         )
     }
 }
