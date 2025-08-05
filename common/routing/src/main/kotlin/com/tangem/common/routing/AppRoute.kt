@@ -302,6 +302,11 @@ sealed class AppRoute(val path: String) : Route {
     object AddExistingWallet : AppRoute(path = "/add_existing_wallet")
 
     @Serializable
+    data class WalletActivation(
+        val userWalletId: UserWalletId,
+    ) : AppRoute(path = "/wallet_activation/${userWalletId.stringValue}")
+
+    @Serializable
     data class SendEntryPoint(
         val userWalletId: UserWalletId,
         val currency: CryptoCurrency,

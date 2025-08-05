@@ -387,7 +387,8 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     }
 
     override fun onFinishWalletActivationClick() {
-        // TODO implement wallet activation process
+        val userWallet = getSelectedUserWallet() ?: return
+        appRouter.push(AppRoute.WalletActivation(userWallet.walletId))
     }
 
     private suspend fun fetchCryptoCurrencies(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
