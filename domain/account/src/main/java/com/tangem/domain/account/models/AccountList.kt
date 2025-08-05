@@ -5,6 +5,7 @@ import arrow.core.raise.either
 import arrow.core.raise.ensure
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.utils.extensions.addOrReplace
 import kotlinx.serialization.Serializable
 
 /**
@@ -26,6 +27,42 @@ data class AccountList private constructor(
     /** Retrieves the main crypto portfolio account from the list of accounts */
     val mainAccount: Account.CryptoPortfolio
         get() = accounts.first { it is Account.CryptoPortfolio && it.isMainAccount } as Account.CryptoPortfolio
+
+    /**
+     * Adds an account to the account list.
+     * If an account with the same identifier already exists, it will be replaced.
+     * Returns a new [AccountList] instance with the updated accounts set, or a validation error if constraints are
+     * violated (e.g., maximum number of accounts exceeded).
+     *
+     * @param other the account to add or replace
+     */
+    operator fun plus(other: Account): Either<Error, AccountList> {
+        val isNewAccount = this.accounts.none { it.accountId == other.accountId }
+        val accounts = this.accounts.addOrReplace(other) { it.accountId == other.accountId }
+
+        return invoke(
+            userWallet = this.userWallet,
+            accounts = accounts,
+            totalAccounts = this.totalAccounts + if (isNewAccount) 1 else 0,
+        )
+    }
+
+    /**
+     * Removes the specified account from the account list.
+     * Returns a new [AccountList] instance with the updated accounts set, or a validation error if constraints are
+     * violated (e.g., the list becomes empty).
+     *
+     * @param other the account to remove
+     */
+    operator fun minus(other: Account): Either<Error, AccountList> {
+        return invoke(
+            userWallet = this.userWallet,
+            accounts = this.accounts.toMutableSet().apply {
+                removeIf { it.accountId == other.accountId }
+            },
+            totalAccounts = this.totalAccounts - 1,
+        )
+    }
 
     /**
      * Represents possible errors that can occur when creating an `AccountList`
@@ -54,9 +91,22 @@ data class AccountList private constructor(
                 return "$tag: There should be at most one main crypto portfolio in the account list"
             }
         }
+
+        @Serializable
+        data object ExceedsMaxAccountsCount : Error {
+            override fun toString(): String = "$tag: The number of accounts must not exceed 20"
+        }
+
+        @Serializable
+        data object DuplicateAccountIds : Error {
+            override fun toString(): String = "$tag: Account list contains duplicate account IDs"
+        }
     }
 
     companion object {
+
+        private const val MAX_ACCOUNTS_COUNT = 20
+        private const val MAX_MAIN_ACCOUNTS_COUNT = 1
 
         /**
          * Factory method to create an `AccountList` instance.
@@ -73,14 +123,19 @@ data class AccountList private constructor(
         ): Either<Error, AccountList> = either {
             ensure(accounts.isNotEmpty()) { Error.EmptyAccountsList }
 
+            ensure(accounts.size <= MAX_ACCOUNTS_COUNT) { Error.ExceedsMaxAccountsCount }
+
             val mainAccountsCount = accounts.mainAccountsCount()
-            ensure(mainAccountsCount == 1) {
+            ensure(mainAccountsCount == MAX_MAIN_ACCOUNTS_COUNT) {
                 if (mainAccountsCount == 0) {
                     Error.MainAccountNotFound
                 } else {
                     Error.ExceedsMaxMainAccountsCount
                 }
             }
+
+            val uniqueAccountIdsCount = accounts.map { it.accountId.value }.distinct().size
+            ensure(accounts.size == uniqueAccountIdsCount) { Error.DuplicateAccountIds }
 
             AccountList(userWallet = userWallet, accounts = accounts, totalAccounts = totalAccounts)
         }
