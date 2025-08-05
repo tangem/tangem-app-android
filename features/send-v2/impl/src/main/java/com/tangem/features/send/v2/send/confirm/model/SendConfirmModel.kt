@@ -594,7 +594,11 @@ internal class SendConfirmModel @Inject constructor(
                                     isValid = confirmUM.isPrimaryButtonEnabled,
                                 ),
                             )
-                            appRouter.pop()
+                            if (state.isRedesignEnabled) {
+                                router.pop()
+                            } else {
+                                appRouter.pop()
+                            }
                         },
                         primaryButton = primaryButtonUM(),
                         prevButton = null,
