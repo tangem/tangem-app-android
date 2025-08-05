@@ -484,4 +484,10 @@ internal object TokensDomainModule {
             dispatchers = dispatchers,
         )
     }
+
+    @Provides
+    @Singleton
+    fun provideGetAssetRequirementsUseCase(walletManagersFacade: WalletManagersFacade): GetAssetRequirementsUseCase {
+        return GetAssetRequirementsUseCase(walletManagersFacade)
+    }
 }
