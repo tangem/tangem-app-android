@@ -45,6 +45,7 @@ dependencies {
     implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.settings)
+    implementation(projects.domain.transaction.models)
 
     /** DI */
     implementation(deps.hilt.android)

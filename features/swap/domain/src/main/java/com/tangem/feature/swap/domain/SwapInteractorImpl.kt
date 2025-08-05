@@ -20,6 +20,8 @@ import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.quote.QuoteStatus
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.quotes.QuotesRepository
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.tokens.*
@@ -29,10 +31,9 @@ import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.utils.convertToSdkAmount
-import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.swap.domain.api.SwapRepository
 import com.tangem.feature.swap.domain.models.ExpressDataError
@@ -79,6 +80,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     private val getEthSpecificFeeUseCase: GetEthSpecificFeeUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val getCurrencyCheckUseCase: GetCurrencyCheckUseCase,
+    private val getAssetRequirementsUseCase: GetAssetRequirementsUseCase,
     private val amountFormatter: AmountFormatter,
     @Assisted private val userWalletId: UserWalletId,
 ) : SwapInteractor {
@@ -139,7 +141,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         )
     }
 
-    private fun getToCurrenciesGroup(
+    private suspend fun getToCurrenciesGroup(
         currency: CryptoCurrency,
         leastPairs: List<SwapPairLeast>,
         cryptoCurrenciesList: List<CryptoCurrencyStatus>,
@@ -171,15 +173,18 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         )
     }
 
-    private fun findProvidersForPair(
+    private suspend fun findProvidersForPair(
         cryptoCurrencyStatuses: CryptoCurrencyStatus,
         swapPairsLeastList: List<SwapPairLeast>,
         tokenInfoForAvailable: (SwapPairLeast) -> LeastTokenInfo,
     ): List<SwapProvider>? {
+        val requirements = getAssetRequirementsUseCase.invoke(userWalletId, cryptoCurrencyStatuses.currency).getOrNull()
+
         return swapPairsLeastList.firstNotNullOfOrNull {
             val listTokenInfo = tokenInfoForAvailable(it)
             if (cryptoCurrencyStatuses.currency.network.backendId == listTokenInfo.network &&
-                cryptoCurrencyStatuses.currency.getContractAddress() == listTokenInfo.contractAddress
+                cryptoCurrencyStatuses.currency.getContractAddress() == listTokenInfo.contractAddress &&
+                requirements !is AssetRequirementsCondition.RequiredTrustline
             ) {
                 it.providers
             } else {
