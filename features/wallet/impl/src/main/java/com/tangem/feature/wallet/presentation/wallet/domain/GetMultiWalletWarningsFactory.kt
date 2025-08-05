@@ -266,8 +266,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
     ) {
         if (userWallet !is UserWallet.Hot) return
 
-        // TODO [REDACTED_TASK_KEY] set an actual value
-        val shouldShowFinishActivation = false
+        val shouldShowFinishActivation = !userWallet.backedUp
 
         addIf(
             element = WalletNotification.FinishWalletActivation(

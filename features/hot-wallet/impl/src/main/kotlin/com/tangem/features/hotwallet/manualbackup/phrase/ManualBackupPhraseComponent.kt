@@ -7,6 +7,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.hotwallet.manualbackup.phrase.model.ManualBackupPhraseModel
 import com.tangem.features.hotwallet.manualbackup.phrase.ui.ManualBackupPhraseContent
 import dagger.assisted.Assisted
@@ -32,6 +33,7 @@ internal class ManualBackupPhraseComponent @AssistedInject constructor(
     }
 
     data class Params(
+        val userWalletId: UserWalletId,
         val callbacks: ModelCallbacks,
     )
 }
