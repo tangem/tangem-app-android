@@ -2,12 +2,12 @@ package com.tangem.domain.tokens.actions
 
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState.ActionState
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.models.wallet.UserWallet
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -50,7 +50,11 @@ internal class OutdatedDataActionsFactory(
         }
 
         val onrampUnavailabilityReasonDeferred = async {
-            getOnrampUnavailabilityReason(userWallet = userWallet, currency = cryptoCurrencyStatus.currency)
+            getOnrampUnavailabilityReason(
+                userWallet = userWallet,
+                currency = cryptoCurrencyStatus.currency,
+                requirementsDeferred = requirementsDeferred,
+            )
         }
 
         val sendUnavailabilityReasonDeferred = if (sources.networkSource == StatusSource.ACTUAL) {
