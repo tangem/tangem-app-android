@@ -16,8 +16,9 @@ dependencies {
     implementation(deps.arrow.core)
     implementation(deps.kotlin.serialization)
 
+    testImplementation(deps.test.coroutine)
     testImplementation(deps.test.junit5)
     testRuntimeOnly(deps.test.junit5.engine)
-    testImplementation(deps.test.truth)
     testImplementation(deps.test.mockk)
+    testImplementation(deps.test.truth)
 }
