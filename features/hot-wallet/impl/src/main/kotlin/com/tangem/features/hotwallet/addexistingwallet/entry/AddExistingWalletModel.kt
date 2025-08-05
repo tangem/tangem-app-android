@@ -13,8 +13,11 @@ import com.tangem.features.hotwallet.addexistingwallet.start.AddExistingWalletSt
 import com.tangem.features.hotwallet.manualbackup.completed.ManualBackupCompletedComponent
 import com.tangem.features.hotwallet.setaccesscode.AccessCodeComponent
 import com.tangem.features.hotwallet.setupfinished.MobileWalletSetupFinishedComponent
+import com.tangem.features.hotwallet.stepper.api.HotWalletStepperComponent
+import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -25,28 +28,28 @@ internal class AddExistingWalletModel @Inject constructor(
     private val shouldAskPermissionUseCase: ShouldAskPermissionUseCase,
 ) : Model() {
 
+    val hotWalletStepperComponentModelCallback = HotWalletStepperComponentModelCallback()
     val addExistingWalletStartModelCallbacks = AddExistingWalletStartModelCallbacks()
     val addExistingWalletImportModelCallbacks = AddExistingWalletImportModelCallbacks()
     val manualBackupCompletedComponentModelCallbacks = ManualBackupCompletedComponentModelCallbacks()
     val accessCodeModelCallbacks = AccessCodeModelCallbacks()
+    val pushNotificationsCallbacks = PushNotificationsCallbacks()
     val mobileWalletSetupFinishedComponentModelCallbacks = MobileWalletSetupFinishedComponentModelCallbacks()
 
     val stackNavigation = StackNavigation<AddExistingWalletRoute>()
+    val startRoute = AddExistingWalletRoute.Start
+    val currentRoute: MutableStateFlow<AddExistingWalletRoute> = MutableStateFlow(startRoute)
 
-    fun onChildBack(currentRoute: AddExistingWalletRoute) {
-        when (currentRoute) {
+    fun onChildBack() {
+        when (currentRoute.value) {
+            is AddExistingWalletRoute.Start -> router.pop()
             is AddExistingWalletRoute.Import -> stackNavigation.pop()
             is AddExistingWalletRoute.BackupCompleted -> Unit
             is AddExistingWalletRoute.SetAccessCode -> Unit
             is AddExistingWalletRoute.ConfirmAccessCode -> stackNavigation.pop()
             is AddExistingWalletRoute.PushNotifications -> Unit
             is AddExistingWalletRoute.SetupFinished -> Unit
-            is AddExistingWalletRoute.Start -> Unit
         }
-    }
-
-    fun onSkipAccessCode() {
-        navigateToPushNotificationsOrNext()
     }
 
     private fun navigateToPushNotificationsOrNext() {
@@ -62,6 +65,20 @@ internal class AddExistingWalletModel @Inject constructor(
         }
     }
 
+    private fun navigateToSetupFinished() {
+        stackNavigation.replaceAll(AddExistingWalletRoute.SetupFinished)
+    }
+
+    inner class HotWalletStepperComponentModelCallback : HotWalletStepperComponent.ModelCallback {
+        override fun onBackClick() {
+            onChildBack()
+        }
+
+        override fun onSkipClick() {
+            navigateToPushNotificationsOrNext()
+        }
+    }
+
     inner class AddExistingWalletStartModelCallbacks : AddExistingWalletStartComponent.ModelCallbacks {
         override fun onBackClick() {
             router.pop()
@@ -74,13 +91,13 @@ internal class AddExistingWalletModel @Inject constructor(
 
     inner class AddExistingWalletImportModelCallbacks : AddExistingWalletImportComponent.ModelCallbacks {
         override fun onWalletImported(userWalletId: UserWalletId) {
-            stackNavigation.replaceCurrent(AddExistingWalletRoute.BackupCompleted(userWalletId))
+            stackNavigation.replaceAll(AddExistingWalletRoute.BackupCompleted(userWalletId))
         }
     }
 
     inner class ManualBackupCompletedComponentModelCallbacks : ManualBackupCompletedComponent.ModelCallbacks {
         override fun onContinueClick(userWalletId: UserWalletId) {
-            stackNavigation.replaceCurrent(AddExistingWalletRoute.SetAccessCode(userWalletId))
+            stackNavigation.replaceAll(AddExistingWalletRoute.SetAccessCode(userWalletId))
         }
     }
 
@@ -91,6 +108,20 @@ internal class AddExistingWalletModel @Inject constructor(
 
         override fun onAccessCodeConfirmed(userWalletId: UserWalletId) {
             navigateToPushNotificationsOrNext()
+        }
+    }
+
+    inner class PushNotificationsCallbacks : PushNotificationsModelCallbacks {
+        override fun onAllowSystemPermission() {
+            navigateToSetupFinished()
+        }
+
+        override fun onDenySystemPermission() {
+            navigateToSetupFinished()
+        }
+
+        override fun onDismiss() {
+            navigateToSetupFinished()
         }
     }
 
