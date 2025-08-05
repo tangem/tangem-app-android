@@ -12,8 +12,8 @@ import com.tangem.features.staking.impl.R
 private const val TERMS_OF_USE_KEY = "termsOfUse"
 private const val PRIVACY_POLICY_KEY = "privacyPolicy"
 
-private const val TERMS_OF_USE_URL = "https://docs.stakek.it/docs/terms-of-use"
-private const val PRIVACY_POLICY_URL = "https://docs.stakek.it/docs/privacy-policy"
+private const val TERMS_OF_USE_URL = "https://docs.yield.xyz/docs/terms-of-use#/"
+private const val PRIVACY_POLICY_URL = "https://docs.yield.xyz/docs/privacy-policy#/"
 
 @Composable
 internal fun StakingTosText(onTextClick: (String) -> Unit) {
