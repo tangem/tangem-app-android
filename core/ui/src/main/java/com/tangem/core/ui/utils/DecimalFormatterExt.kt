@@ -17,7 +17,8 @@ const val DECIMAL_SEPARATOR_LIMIT = 1
 
 @Composable
 fun rememberDecimalFormat(): DecimalFormat {
-    val locale = LocalConfiguration.current.locale
+    val locales = LocalConfiguration.current.locales
+    val locale = if (locales.isEmpty) Locale.getDefault() else locales[0]
     val decimalSymbols = remember { DecimalFormatSymbols.getInstance(locale) }
 
     return remember {
