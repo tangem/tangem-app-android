@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import androidx.annotation.FloatRange
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.BoxWithConstraintsScope
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
@@ -18,6 +19,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.createFontFamilyResolver
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextDirection
+import androidx.compose.ui.unit.TextUnit
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.res.TangemTheme
 
@@ -51,24 +53,10 @@ fun AutoSizeTextField(
     decorationBox: (@Composable (innerTextField: @Composable () -> Unit) -> Unit)? = null,
 ) {
     BoxWithConstraints(modifier = boxModifier) {
-        var fontSize = textStyle.fontSize
-        if (isAutoResize) {
-            val calculateIntrinsics = @Composable {
-                val transformedText = visualTransformation.filter(AnnotatedString(value)).text.text
-                ParagraphIntrinsics(
-                    text = transformedText,
-                    style = textStyle.copy(fontSize = fontSize),
-                    density = LocalDensity.current,
-                    fontFamilyResolver = createFontFamilyResolver(LocalContext.current),
-                )
-            }
-            var intrinsics = calculateIntrinsics()
-            with(LocalDensity.current) {
-                while (intrinsics.maxIntrinsicWidth > maxWidth.toPx()) {
-                    fontSize *= reduceFactor
-                    intrinsics = calculateIntrinsics()
-                }
-            }
+        val fontSize = if (isAutoResize) {
+            resizeFont(visualTransformation, value, textStyle, reduceFactor)
+        } else {
+            textStyle.fontSize
         }
         val textColor = if (value.isBlank()) TangemTheme.colors.text.disabled else color
         SimpleTextField(
@@ -94,4 +82,31 @@ fun AutoSizeTextField(
             modifier = textFieldModifier,
         )
     }
+}
+
+@Composable
+internal fun BoxWithConstraintsScope.resizeFont(
+    visualTransformation: VisualTransformation,
+    value: String,
+    textStyle: TextStyle,
+    reduceFactor: Double,
+): TextUnit {
+    var result = textStyle.fontSize
+    val calculateIntrinsics = @Composable {
+        val transformedText = visualTransformation.filter(AnnotatedString(value)).text.text
+        ParagraphIntrinsics(
+            text = transformedText,
+            style = textStyle.copy(fontSize = result),
+            density = LocalDensity.current,
+            fontFamilyResolver = createFontFamilyResolver(LocalContext.current),
+        )
+    }
+    var intrinsics = calculateIntrinsics()
+    with(LocalDensity.current) {
+        while (intrinsics.maxIntrinsicWidth > maxWidth.toPx()) {
+            result *= reduceFactor
+            intrinsics = calculateIntrinsics()
+        }
+    }
+    return result
 }
