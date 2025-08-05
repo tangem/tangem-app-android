@@ -1,5 +1,6 @@
 package com.tangem.tap.di.domain
 
+import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.account.usecase.AddCryptoPortfolioUseCase
 import com.tangem.domain.account.usecase.ArchiveCryptoPortfolioUseCase
 import com.tangem.domain.account.usecase.RecoverCryptoPortfolioUseCase
@@ -22,8 +23,10 @@ internal object AccountDomainModule {
 
     @Provides
     @Singleton
-    fun provideUpdateCryptoPortfolioUseCase(): UpdateCryptoPortfolioUseCase {
-        return UpdateCryptoPortfolioUseCase()
+    fun provideUpdateCryptoPortfolioUseCase(
+        accountsCRUDRepository: AccountsCRUDRepository,
+    ): UpdateCryptoPortfolioUseCase {
+        return UpdateCryptoPortfolioUseCase(crudRepository = accountsCRUDRepository)
     }
 
     @Provides
