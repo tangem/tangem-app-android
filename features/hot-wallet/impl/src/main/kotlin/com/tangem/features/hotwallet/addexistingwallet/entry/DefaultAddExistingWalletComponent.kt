@@ -6,19 +6,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.stack.childStack
+import com.arkivanov.decompose.value.ObserveLifecycleMode
+import com.arkivanov.decompose.value.subscribe
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
-import com.tangem.core.ui.extensions.TextReference
 import com.tangem.features.hotwallet.AddExistingWalletComponent
 import com.tangem.features.hotwallet.addexistingwallet.entry.routing.AddExistingWalletChildFactory
-import com.tangem.features.hotwallet.addexistingwallet.entry.routing.AddExistingWalletRoute
 import com.tangem.features.hotwallet.addexistingwallet.entry.ui.AddExistingWalletContent
 import com.tangem.features.hotwallet.stepper.api.HotWalletStepperComponent
 import com.tangem.features.hotwallet.stepper.impl.DefaultHotWalletStepperComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.launch
 
 internal class DefaultAddExistingWalletComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
@@ -30,13 +31,11 @@ internal class DefaultAddExistingWalletComponent @AssistedInject constructor(
 
     private val model: AddExistingWalletModel = getOrCreateModel(params)
 
-    private val startRoute = AddExistingWalletRoute.Start
-
     private val innerStack = childStack(
         key = "addExistingWalletInnerStack",
         source = model.stackNavigation,
         serializer = null,
-        initialConfiguration = startRoute,
+        initialConfiguration = model.startRoute,
         handleBackButton = true,
         childFactory = { configuration, factoryContext ->
             addExistingWalletChildFactory.createChild(
@@ -50,32 +49,28 @@ internal class DefaultAddExistingWalletComponent @AssistedInject constructor(
     private val stepperComponent = stepperComponentFactory.create(
         context = this,
         params = HotWalletStepperComponent.Params(
-            initState = HotWalletStepperComponent.StepperUM(
-                currentStep = 0,
-                steps = 0,
-                title = TextReference.EMPTY,
-                showBackButton = false,
-                showSkipButton = false,
-                showFeedbackButton = false,
-            ),
-            callback = object : HotWalletStepperComponent.ModelCallback {
-                override fun onBackClick() {
-                    onChildBack()
-                }
-
-                override fun onSkipClick() {
-                    model.onSkipAccessCode()
-                }
-            },
+            initState = HotWalletStepperComponent.StepperUM.initialState(),
+            callback = model.hotWalletStepperComponentModelCallback,
         ),
     )
+
+    init {
+        innerStack.subscribe(
+            lifecycle = lifecycle,
+            mode = ObserveLifecycleMode.CREATE_DESTROY,
+        ) { stack ->
+            componentScope.launch {
+                model.currentRoute.emit(stack.active.configuration)
+            }
+        }
+    }
 
     @Composable
     override fun Content(modifier: Modifier) {
         val stackState by innerStack.subscribeAsState()
         val currentRoute = stackState.active.configuration
 
-        BackHandler(onBack = ::onChildBack)
+        BackHandler(onBack = model::onChildBack)
 
         val stepperState = stepperStateManager.getStepperState(currentRoute)
         stepperState?.let { stepperComponent.updateState(it) }
@@ -84,17 +79,6 @@ internal class DefaultAddExistingWalletComponent @AssistedInject constructor(
             stackState = stackState,
             stepperComponent = stepperComponent.takeIf { stepperState != null },
         )
-    }
-
-    private fun onChildBack() {
-        val isEmptyStack = innerStack.value.backStack.isEmpty()
-
-        if (isEmptyStack) {
-            router.pop()
-        } else {
-            val currentRoute = innerStack.value.active.configuration
-            model.onChildBack(currentRoute)
-        }
     }
 
     @AssistedFactory
