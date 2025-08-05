@@ -3,7 +3,9 @@ package com.tangem.domain.account.models
 import arrow.core.Either
 import arrow.core.left
 import com.google.common.truth.Truth
+import com.tangem.domain.account.utils.randomAccountId
 import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.wallet.UserWallet
 import io.mockk.clearMocks
 import io.mockk.every
@@ -92,6 +94,33 @@ class AccountListTest {
                     ),
                 )
             },
+            createAccounts(count = 20).let {
+                CreateTestModel(
+                    accounts = it,
+                    expected = AccountList(
+                        userWallet = userWallet,
+                        accounts = it,
+                        totalAccounts = 20,
+                    ),
+                )
+            },
+            CreateTestModel(
+                accounts = createAccounts(21),
+                expected = AccountList.Error.ExceedsMaxAccountsCount.left(),
+            ),
+            CreateTestModel(
+                accounts = setOf(
+                    createAccount(
+                        accountId = AccountId(value = "1", userWalletId = mockk()),
+                        isMain = true,
+                    ),
+                    createAccount(
+                        accountId = AccountId(value = "1", userWalletId = mockk()),
+                        isMain = false,
+                    ),
+                ),
+                expected = AccountList.Error.DuplicateAccountIds.left(),
+            ),
         )
     }
 
@@ -100,9 +129,22 @@ class AccountListTest {
         val expected: Either<AccountList.Error, AccountList>,
     )
 
-    private fun createAccount(isMain: Boolean = false): Account.CryptoPortfolio {
+    private fun createAccounts(count: Int): Set<Account.CryptoPortfolio> {
+        return buildSet {
+            add(createAccount(isMain = true))
+            repeat(count - 1) {
+                add(createAccount(isMain = false))
+            }
+        }
+    }
+
+    private fun createAccount(
+        accountId: AccountId = AccountId(value = randomAccountId(5), userWalletId = mockk()),
+        isMain: Boolean = false,
+    ): Account.CryptoPortfolio {
         return mockk<Account.CryptoPortfolio> {
-            every { isMainAccount } returns isMain
+            every { this@mockk.accountId } returns accountId
+            every { this@mockk.isMainAccount } returns isMain
         }
     }
 }
