@@ -60,6 +60,21 @@ sealed interface Account {
         val networksCount: Int
             get() = cryptoCurrencyList.currencies.map(CryptoCurrency::network).distinct().size
 
+        fun copy(
+            accountName: AccountName = this.name,
+            accountIcon: CryptoPortfolioIcon = this.icon,
+            isArchived: Boolean = this.isArchived,
+        ): CryptoPortfolio {
+            return CryptoPortfolio(
+                accountId = this.accountId,
+                name = accountName,
+                icon = accountIcon,
+                derivationIndex = this.derivationIndex,
+                isArchived = isArchived,
+                cryptoCurrencyList = this.cryptoCurrencyList,
+            )
+        }
+
         /**
          * Represents a list of tokens in the account
          *
@@ -117,6 +132,38 @@ sealed interface Account {
                 return either {
                     val accountName = AccountName(name).mapLeft(::AccountNameError).bind()
 
+                    invoke(
+                        accountId = accountId,
+                        accountName = accountName,
+                        accountIcon = accountIcon,
+                        derivationIndex = derivationIndex,
+                        isArchived = isArchived,
+                        cryptoCurrencyList = cryptoCurrencyList,
+                    )
+                        .bind()
+                }
+            }
+
+            /**
+             * Constructor for creating a [CryptoPortfolio] instance
+             *
+             * @param accountId          unique identifier of the account
+             * @param accountName        name of the account
+             * @param accountIcon        icon representing the account
+             * @param derivationIndex    index used for derivation of the account
+             * @param isArchived         indicates whether the account is archived
+             * @param cryptoCurrencyList list of tokens associated with the account
+             */
+            @Suppress("LongParameterList")
+            operator fun invoke(
+                accountId: AccountId,
+                accountName: AccountName,
+                accountIcon: CryptoPortfolioIcon,
+                derivationIndex: Int,
+                isArchived: Boolean,
+                cryptoCurrencyList: CryptoCurrencyList,
+            ): Either<Error, CryptoPortfolio> {
+                return either {
                     ensure(derivationIndex >= 0) { Error.NegativeDerivationIndex }
 
                     CryptoPortfolio(
