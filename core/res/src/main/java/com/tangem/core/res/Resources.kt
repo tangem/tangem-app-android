@@ -29,7 +29,7 @@ fun Resources.getStringSafe(@StringRes id: Int, vararg formatArgs: Any): String 
             // If something goes wrong, returns the resource without arguments
             val string = getString(id)
 
-            reportIssue(resources = this, id, *formatArgs)
+            reportIssue(it, resources = this, id, *formatArgs)
 
             string
         }
@@ -61,19 +61,20 @@ fun Resources.getPluralStringSafe(@PluralsRes id: Int, count: Int, vararg format
 
 private fun Result<String>.getOrResourceName(resources: Resources, id: Int, vararg formatArgs: Any): String {
     return getOrElse {
-        reportIssue(resources, id, formatArgs)
+        reportIssue(it, resources, id, formatArgs)
 
         // If something still goes wrong, returns the resource name
         resources.getResourceEntryName(id)
     }
 }
 
-private fun reportIssue(resources: Resources, id: Int, vararg formatArgs: Any) {
+private fun reportIssue(throwable: Throwable, resources: Resources, id: Int, vararg formatArgs: Any) {
     val exception = IllegalStateException(
         "An error occurred while parsing the string:\n" +
             "\tname: R.string.${resources.getResourceEntryName(id)}\n" +
             "\targs: ${formatArgs.joinToString(prefix = "[", postfix = "]") { it.toString() }}\n" +
-            "\tlocale: ${SupportedLanguages.getCurrentSupportedLanguageCode()}\n",
+            "\tlocale: ${SupportedLanguages.getCurrentSupportedLanguageCode()}\n" +
+            "\terror message: ${throwable.message.orEmpty()}\n",
     )
 
     Timber.tag("Resources").e(exception)
