@@ -9,7 +9,6 @@ import com.tangem.features.hotwallet.manualbackup.completed.ManualBackupComplete
 import com.tangem.features.hotwallet.setaccesscode.AccessCodeComponent
 import com.tangem.features.hotwallet.setupfinished.MobileWalletSetupFinishedComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsComponent
-import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacksStub
 import com.tangem.features.pushnotifications.api.PushNotificationsParams
 import javax.inject.Inject
 
@@ -63,7 +62,7 @@ internal class AddExistingWalletChildFactory @Inject constructor(
             is AddExistingWalletRoute.PushNotifications -> pushNotificationsComponent.create(
                 context = childContext,
                 params = PushNotificationsParams(
-                    modelCallbacks = PushNotificationsModelCallbacksStub(),
+                    modelCallbacks = model.pushNotificationsCallbacks,
                 ),
             )
             is AddExistingWalletRoute.SetupFinished -> MobileWalletSetupFinishedComponent(
