@@ -12,6 +12,7 @@ import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.value.ObserveLifecycleMode
 import com.arkivanov.decompose.value.subscribe
 import com.tangem.common.ui.amountScreen.models.AmountState
+import com.tangem.common.ui.navigationButtons.NavigationUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
@@ -125,7 +126,11 @@ internal class DefaultSendComponent @AssistedInject constructor(
         val stackState by childStack.subscribeAsState()
         val state by model.uiState.collectAsStateWithLifecycle()
 
-        BackHandler(onBack = ::onChildBack)
+        BackHandler(
+            onBack = {
+                (state.navigationUM as? NavigationUM.Content)?.backIconClick() ?: onChildBack()
+            },
+        )
         SendContent(
             navigationUM = state.navigationUM,
             stackState = stackState,
