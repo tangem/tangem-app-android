@@ -334,6 +334,7 @@ include(":domain:wallet-manager:models")
 // endregion Domain modules
 
 // region Data modules
+include(":data:account")
 include(":data:app-currency")
 include(":data:app-theme")
 include(":data:balance-hiding")
