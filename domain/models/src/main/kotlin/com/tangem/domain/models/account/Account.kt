@@ -176,6 +176,27 @@ sealed interface Account {
                     )
                 }
             }
+
+            /**
+             * Creates a main account for the given user wallet ID
+             *
+             * @param userWalletId the ID of the user wallet
+             */
+            fun createMainAccount(userWalletId: UserWalletId): CryptoPortfolio {
+                // TODO: [REDACTED_JIRA]
+                return CryptoPortfolio(
+                    accountId = AccountId(userWalletId = userWalletId, value = "main_account"),
+                    name = AccountName.Main,
+                    icon = CryptoPortfolioIcon.ofMainAccount(userWalletId),
+                    derivationIndex = 0,
+                    isArchived = false,
+                    cryptoCurrencyList = CryptoCurrencyList(
+                        currencies = emptySet(),
+                        sortType = TokensSortType.NONE,
+                        groupType = TokensGroupType.NONE,
+                    ),
+                )
+            }
         }
     }
 }
