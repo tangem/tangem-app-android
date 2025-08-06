@@ -3,7 +3,7 @@ package com.tangem.tests
 import androidx.test.InstrumentationRegistry.getTargetContext
 import com.tangem.common.BaseTestCase
 import com.tangem.common.extensions.clickWithAssertion
-import com.tangem.common.extensions.swipeToCloseApp
+import com.tangem.common.extensions.swipeUp
 import com.tangem.screens.onDisclaimerScreen
 import com.tangem.screens.onStoriesScreen
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -67,7 +67,7 @@ class TermsOfServiceTest : BaseTestCase() {
                 device.uiDevice.pressRecentApps()
             }
             step("Stop app by swipe") {
-                swipeToCloseApp()
+                swipeUp(startHeightRatio = 0.5f)
             }
             step("Launch app") {
                 device.apps.launch(packageName)
@@ -90,7 +90,7 @@ class TermsOfServiceTest : BaseTestCase() {
                 device.uiDevice.pressRecentApps()
             }
             step("Stop app by swipe") {
-                swipeToCloseApp()
+                swipeUp(startHeightRatio = 0.5f)
             }
             step("Launch app") {
                 device.apps.launch(packageName)
