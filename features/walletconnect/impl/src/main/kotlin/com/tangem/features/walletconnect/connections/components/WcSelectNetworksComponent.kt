@@ -32,12 +32,13 @@ import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.TangemSwitch
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
-import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetWithFooter
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.domain.models.network.Network
@@ -145,8 +146,11 @@ private fun MissingRequiredBlock(missingNetworks: ImmutableList<WcNetworkInfoIte
     val missingNetworksName = missingNetworks.joinToString { it.name }
     val notificationUM = remember(missingNetworks) {
         NotificationUM.Info(
-            title = stringReference("The wallet has no required networks"),
-            subtitle = stringReference("Add the $missingNetworksName network to your portfolio for this wallet."),
+            title = resourceReference(R.string.wc_missing_required_network_title),
+            subtitle = resourceReference(
+                R.string.wc_missing_required_network_description,
+                wrappedList(missingNetworksName),
+            ),
         )
     }
     Column(modifier = modifier) {
@@ -288,7 +292,7 @@ private fun NetworkNameAndSymbol(name: String, symbol: String, modifier: Modifie
     }
 }
 
-@Preview(showBackground = true, device = Devices.PIXEL_7_PRO)
+@Preview(showBackground = true, device = Devices.PIXEL_7_PRO, uiMode = Configuration.UI_MODE_NIGHT_NO)
 @Preview(showBackground = true, device = Devices.PIXEL_7_PRO, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun WcSelectNetworksContent_Preview(
@@ -296,29 +300,7 @@ private fun WcSelectNetworksContent_Preview(
     state: WcSelectNetworksUM,
 ) {
     TangemThemePreview {
-        TangemModalBottomSheet<TangemBottomSheetConfigContent.Empty>(
-            containerColor = TangemTheme.colors.background.tertiary,
-            config = TangemBottomSheetConfig(
-                isShown = true,
-                onDismissRequest = {},
-                content = TangemBottomSheetConfigContent.Empty,
-            ),
-            title = {
-                TangemModalBottomSheetTitle(
-                    title = stringReference("Choose wallet"),
-                    onEndClick = {},
-                    endIconRes = R.drawable.ic_close_24,
-                )
-            },
-            content = {
-                WcSelectNetworksContent(
-                    modifier = Modifier
-                        .background(TangemTheme.colors.background.tertiary)
-                        .padding(horizontal = TangemTheme.dimens.spacing16),
-                    state = state,
-                )
-            },
-        )
+        WcSelectNetworksBS(state = state, onBack = {}, onDismiss = {})
     }
 }
 
@@ -328,7 +310,7 @@ private class WcSelectNetworksProvider : CollectionPreviewParameterProvider<WcSe
             missing = persistentListOf(
                 WcNetworkInfoItem.Required(
                     id = "ethereum",
-                    name = "EthereumEthereumEthereumEthereumEthereumEthereumEthereumEthereum",
+                    name = "Ethereum",
                     symbol = "ETH",
                     icon = R.drawable.ic_solana_16,
                 ),
@@ -380,6 +362,7 @@ private class WcSelectNetworksProvider : CollectionPreviewParameterProvider<WcSe
                 ),
             ),
             onDone = {},
+            doneButtonEnabled = false,
         ),
         WcSelectNetworksUM(
             missing = persistentListOf(),
@@ -424,6 +407,7 @@ private class WcSelectNetworksProvider : CollectionPreviewParameterProvider<WcSe
                 ),
             ),
             onDone = {},
+            doneButtonEnabled = true,
         ),
     ),
 )
