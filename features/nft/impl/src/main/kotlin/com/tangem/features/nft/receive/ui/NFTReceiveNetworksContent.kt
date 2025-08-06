@@ -58,7 +58,7 @@ internal fun NFTReceiveNetworksContent(state: NFTReceiveUM.Networks.Content, mod
             item(
                 key = "not_available_title",
             ) {
-                Title(resourceReference(R.string.nft_receive_unavailable_section_title))
+                Title(resourceReference(R.string.common_not_added))
             }
             networks(state.unavailableItems)
         }
