@@ -1,18 +1,29 @@
 package com.tangem.features.send.v2.entrypoint
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.arkivanov.decompose.ComponentContext
+import com.arkivanov.decompose.extensions.compose.stack.Children
+import com.arkivanov.decompose.extensions.compose.stack.animation.fade
+import com.arkivanov.decompose.extensions.compose.stack.animation.plus
+import com.arkivanov.decompose.extensions.compose.stack.animation.slide
+import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
+import com.arkivanov.decompose.extensions.compose.subscribeAsState
+import com.arkivanov.decompose.router.stack.StackNavigation
+import com.arkivanov.decompose.router.stack.childStack
+import com.arkivanov.decompose.router.stack.pop
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
+import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
+import com.tangem.core.decompose.navigation.inner.InnerRouter
+import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.features.managetokens.component.ChooseManagedTokensComponent
 import com.tangem.features.send.v2.api.SendComponent
 import com.tangem.features.send.v2.api.SendEntryPointComponent
-import com.tangem.features.send.v2.entrypoint.model.SendEntryPoint
 import com.tangem.features.send.v2.entrypoint.model.SendEntryPointModel
 import com.tangem.features.swap.v2.api.SendWithSwapComponent
 import dagger.assisted.Assisted
@@ -24,9 +35,17 @@ internal class DefaultSendEntryPointComponent @AssistedInject constructor(
     @Assisted private val params: SendEntryPointComponent.Params,
     sendWithSwapComponentFactory: SendWithSwapComponent.Factory,
     sendComponentFactory: SendComponent.Factory,
+    private val chooseManagedTokensComponentFactory: ChooseManagedTokensComponent.Factory,
 ) : SendEntryPointComponent, AppComponentContext by appComponentContext {
 
-    private val model: SendEntryPointModel = getOrCreateModel(params = params)
+    private val stackNavigation = StackNavigation<SendEntryRoute>()
+
+    private val innerRouter = InnerRouter<SendEntryRoute>(
+        stackNavigation = stackNavigation,
+        popCallback = { onChildBack() },
+    )
+
+    private val model: SendEntryPointModel = getOrCreateModel(params = params, router = innerRouter)
 
     private val sendWithSwapComponent = sendWithSwapComponentFactory.create(
         context = child("sendEntrySendWithSwap"),
@@ -46,18 +65,76 @@ internal class DefaultSendEntryPointComponent @AssistedInject constructor(
         ),
     )
 
+    private val childStack = childStack(
+        key = "sendEntryStack",
+        source = stackNavigation,
+        serializer = null,
+        initialConfiguration = SendEntryRoute.Send,
+        handleBackButton = true,
+        childFactory = { configuration, factoryContext ->
+            getChildComponent(
+                configuration = configuration,
+                factoryContext = childByContext(
+                    componentContext = factoryContext,
+                    router = innerRouter,
+                ),
+            )
+        },
+    )
+
     @Composable
     override fun Content(modifier: Modifier) {
-        val sendEntryState by model.sendEntryPointState.collectAsStateWithLifecycle()
+        val childStackValue by childStack.subscribeAsState()
 
-        sendComponent.Content(modifier)
+        Children(
+            stack = childStackValue,
+            animation = stackAnimation { child ->
+                when (child.configuration) {
+                    SendEntryRoute.Send,
+                    SendEntryRoute.SendWithSwap,
+                    -> fade()
+                    is SendEntryRoute.ChooseToken -> slide(orientation = Orientation.Vertical) + fade()
+                }
+            },
+        ) { child ->
+            child.instance.Content(modifier.fillMaxSize())
+        }
+    }
 
-        AnimatedVisibility(
-            visible = sendEntryState == SendEntryPoint.SendWithSwap,
-            enter = fadeIn(),
-            exit = fadeOut(),
-        ) {
-            sendWithSwapComponent.Content(modifier)
+    private fun getChildComponent(
+        configuration: SendEntryRoute,
+        factoryContext: AppComponentContext,
+    ): ComposableContentComponent = when (configuration) {
+        is SendEntryRoute.ChooseToken -> getManagedTokensComponent(
+            componentContext = factoryContext,
+            showSendViaSwapNotification = configuration.showSendViaSwapNotification,
+        )
+        SendEntryRoute.Send -> sendComponent
+        SendEntryRoute.SendWithSwap -> sendWithSwapComponent
+    }
+
+    private fun getManagedTokensComponent(
+        componentContext: ComponentContext,
+        showSendViaSwapNotification: Boolean,
+    ): ChooseManagedTokensComponent {
+        return chooseManagedTokensComponentFactory.create(
+            context = childByContext(componentContext),
+            params = ChooseManagedTokensComponent.Params(
+                userWalletId = params.userWalletId,
+                initialCurrency = params.cryptoCurrency,
+                source = ChooseManagedTokensComponent.Source.SendViaSwap,
+                selectedCurrency = null,
+                showSendViaSwapNotification = showSendViaSwapNotification,
+                callback = model,
+            ),
+        )
+    }
+
+    private fun onChildBack() {
+        if (childStack.value.backStack.isEmpty()) {
+            router.pop()
+        } else {
+            stackNavigation.pop()
         }
     }
 
