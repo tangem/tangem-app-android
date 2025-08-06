@@ -17,7 +17,7 @@ class HideTokenTest : BaseTestCase() {
     @Test
     fun hideWalletTokenByHideButtonTest() {
         val tokenTitle = "Polygon"
-        val balance = "<$0.01"
+        val balance = "$184.85"
         setupHooks().run {
             step("Open 'Main Screen'") {
                 scenario(OpenMainScreenScenario(composeTestRule))
