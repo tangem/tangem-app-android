@@ -1,7 +1,7 @@
 package com.tangem.features.staking.impl.presentation.state.transformers.amount
 
 import com.tangem.common.ui.amountScreen.converters.AmountCurrencyTransformer
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.features.staking.impl.presentation.state.StakingUiState
 import com.tangem.utils.transformer.Transformer
 
