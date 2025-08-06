@@ -56,15 +56,24 @@ internal open class BaseActionsFactory(
      *
      * @param userWallet the user's cold wallet
      * @param currency   the cryptocurrency to check
+     * @param requirementsDeferred a deferred object containing the asset requirements condition
      */
     protected suspend fun getOnrampUnavailabilityReason(
         userWallet: UserWallet,
         currency: CryptoCurrency,
+        requirementsDeferred: Deferred<AssetRequirementsCondition?>?,
     ): ScenarioUnavailabilityReason {
-        return rampStateManager.availableForBuy(
+        val onrampUnavailabilityReason = rampStateManager.availableForBuy(
             userWallet = userWallet,
             cryptoCurrency = currency,
         )
+        val shouldCheckAssetRequirements =
+            onrampUnavailabilityReason == ScenarioUnavailabilityReason.None && requirementsDeferred != null
+        return if (shouldCheckAssetRequirements) {
+            getReceiveScenario(requirementsDeferred.await())
+        } else {
+            onrampUnavailabilityReason
+        }
     }
 
     /**
