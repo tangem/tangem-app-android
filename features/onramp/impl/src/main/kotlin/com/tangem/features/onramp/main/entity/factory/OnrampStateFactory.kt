@@ -6,6 +6,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import com.tangem.common.ui.amountScreen.models.AmountFieldModel
 import com.tangem.common.ui.notifications.NotificationUM
+import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -37,7 +38,10 @@ internal class OnrampStateFactory(
     fun getReadyState(currency: OnrampCurrency): OnrampMainComponentUM.Content {
         val state = currentStateProvider()
 
-        val endButton = state.topBarConfig.endButtonUM.copy(enabled = true)
+        val endButton = when (val button = state.topBarConfig.endButtonUM) {
+            is TopAppBarButtonUM.Icon -> button.copy(enabled = true)
+            is TopAppBarButtonUM.Text -> button.copy(enabled = true)
+        }
         return OnrampMainComponentUM.Content(
             topBarConfig = state.topBarConfig.copy(endButtonUM = endButton),
             buyButtonConfig = state.buyButtonConfig,
@@ -80,7 +84,10 @@ internal class OnrampStateFactory(
 
     fun getErrorState(errorCode: String? = null, onRefresh: () -> Unit): OnrampMainComponentUM {
         val state = currentStateProvider()
-        val endButton = state.topBarConfig.endButtonUM.copy(enabled = true)
+        val endButton = when (val button = state.topBarConfig.endButtonUM) {
+            is TopAppBarButtonUM.Icon -> button.copy(enabled = true)
+            is TopAppBarButtonUM.Text -> button.copy(enabled = true)
+        }
 
         return when (state) {
             is OnrampMainComponentUM.Content -> state.copy(
