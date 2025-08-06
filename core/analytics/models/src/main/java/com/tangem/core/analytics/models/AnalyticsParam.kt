@@ -223,5 +223,6 @@ sealed class AnalyticsParam {
         const val NONCE = "Nonce"
         const val STANDARD = "Standard"
         const val NO_COLLECTION = "No collection"
+        const val EMULATION_STATUS = "Emulation Status"
     }
 }
