@@ -1,4 +1,4 @@
-package com.tangem.features.send.v2.common.analytics
+package com.tangem.features.send.v2.api.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam.Key.BLOCKCHAIN
@@ -6,9 +6,9 @@ import com.tangem.core.analytics.models.AnalyticsParam.Key.SOURCE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
 
 /**
- * Send screen analytics
+ * Send analytics
  */
-internal sealed class CommonSendAnalyticEvents(
+sealed class CommonSendAnalyticEvents(
     category: String,
     event: String,
     params: Map<String, String> = mapOf(),
@@ -114,12 +114,26 @@ internal sealed class CommonSendAnalyticEvents(
         ),
     )
 
+    /** Token chosen to convert with sending */
+    data class TokenChosen(
+        val categoryName: String,
+        val token: String,
+        val blockchain: String,
+    ) : CommonSendAnalyticEvents(
+        category = categoryName,
+        event = "Token chosen",
+        params = mapOf(
+            TOKEN_PARAM to token,
+            BLOCKCHAIN to blockchain,
+        ),
+    )
+
     companion object {
         const val SEND_CATEGORY = "Token / Send"
         const val NFT_SEND_CATEGORY = "NFT"
     }
 
-    internal enum class SendScreenSource {
+    enum class SendScreenSource {
         Address,
         Amount,
         Fee,
