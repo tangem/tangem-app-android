@@ -269,6 +269,9 @@ include(":features:create-wallet-selection:impl")
 
 include(":features:welcome:api")
 include(":features:welcome:impl")
+
+include(":features:account:api")
+include(":features:account:impl")
 // endregion Feature modules
 
 // region Domain modules
