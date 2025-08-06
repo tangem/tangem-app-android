@@ -3,11 +3,11 @@ package com.tangem.features.send.v2.subcomponents.amount
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.features.send.v2.common.CommonSendRoute
 import com.tangem.features.send.v2.api.entity.PredefinedValues
+import com.tangem.features.send.v2.common.CommonSendRoute
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponent.ModelCallback
 import kotlinx.coroutines.flow.StateFlow
 
