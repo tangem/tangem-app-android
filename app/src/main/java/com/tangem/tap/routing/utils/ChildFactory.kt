@@ -8,13 +8,15 @@ import com.tangem.feature.referral.api.ReferralComponent
 import com.tangem.feature.stories.api.StoriesComponent
 import com.tangem.feature.usedesk.api.UsedeskComponent
 import com.tangem.feature.walletsettings.component.WalletSettingsComponent
-import com.tangem.features.hotwallet.WalletBackupComponent
+import com.tangem.features.account.AccountCreateEditComponent
 import com.tangem.features.createwalletselection.CreateWalletSelectionComponent
 import com.tangem.features.details.component.DetailsComponent
 import com.tangem.features.disclaimer.api.components.DisclaimerComponent
+import com.tangem.features.home.api.HomeComponent
 import com.tangem.features.hotwallet.AddExistingWalletComponent
 import com.tangem.features.hotwallet.CreateMobileWalletComponent
 import com.tangem.features.hotwallet.WalletActivationComponent
+import com.tangem.features.hotwallet.WalletBackupComponent
 import com.tangem.features.managetokens.component.ChooseManagedTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensSource
@@ -43,7 +45,6 @@ import com.tangem.tap.features.details.ui.cardsettings.coderecovery.api.AccessCo
 import com.tangem.tap.features.details.ui.resetcard.api.ResetCardComponent
 import com.tangem.tap.features.details.ui.securitymode.api.SecurityModeComponent
 import com.tangem.tap.features.details.ui.walletconnect.api.WalletConnectComponent
-import com.tangem.features.home.api.HomeComponent
 import com.tangem.tap.features.welcome.component.WelcomeComponent
 import com.tangem.tap.routing.component.RoutingComponent.Child
 import dagger.hilt.android.scopes.ActivityScoped
@@ -85,6 +86,7 @@ internal class ChildFactory @Inject constructor(
     private val walletComponentFactory: WalletEntryComponent.Factory,
     private val sendComponentFactoryV2: SendComponent.Factory,
     private val redesignedWalletConnectComponentFactory: WalletConnectEntryComponent.Factory,
+    private val accountCreateEditComponentFactory: AccountCreateEditComponent.Factory,
     private val nftComponentFactory: NFTComponent.Factory,
     private val nftSendComponentFactory: NFTSendComponent.Factory,
     private val usedeskComponentFactory: UsedeskComponent.Factory,
@@ -495,6 +497,24 @@ internal class ChildFactory @Inject constructor(
                         currency = route.currency,
                     ),
                     componentFactory = sendWithSwapComponentFactory,
+                )
+            }
+            is AppRoute.CreateAccount -> {
+                createComponentChild(
+                    context = context,
+                    params = AccountCreateEditComponent.Params.Create(
+                        userWalletId = route.userWalletId,
+                    ),
+                    componentFactory = accountCreateEditComponentFactory,
+                )
+            }
+            is AppRoute.EditAccount -> {
+                createComponentChild(
+                    context = context,
+                    params = AccountCreateEditComponent.Params.Edit(
+                        account = route.account,
+                    ),
+                    componentFactory = accountCreateEditComponentFactory,
                 )
             }
         }
