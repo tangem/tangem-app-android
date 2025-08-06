@@ -369,7 +369,8 @@ abstract class BaseCurrencyStatusOperations(
                 multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
                     params = MultiWalletCryptoCurrenciesProducer.Params(userWalletId),
                 )
-                    ?.firstOrNull { it.network.id == networkId && it.network.derivationPath == derivationPath }
+                    ?.filterIsInstance<CryptoCurrency.Coin>()
+                    ?.firstOrNull { it.network.id == networkId }
                     ?: error("Unable to create network coin with ID: $networkId and derivation path: $derivationPath")
             } else {
                 currenciesRepository.getNetworkCoin(userWalletId, networkId, derivationPath)
