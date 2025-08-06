@@ -48,7 +48,7 @@ internal class CreateMobileWalletModel @Inject constructor(
                 saveUserWalletUseCase(
                     hotUserWalletBuilder.build(),
                 )
-                router.push(AppRoute.Wallet)
+                router.replaceAll(AppRoute.Wallet)
             }.onFailure {
                 Timber.e(it)
 
