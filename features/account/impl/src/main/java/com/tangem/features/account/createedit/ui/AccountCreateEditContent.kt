@@ -118,7 +118,7 @@ private fun AccountSummary(account: AccountCreateEditUM.Account, onNameChange: (
             centered = true,
             textStyle = TangemTheme.typography.head,
             placeholder = account.inputPlaceholder,
-            value = account.name.resolveReference(),
+            value = account.name,
             singleLine = true,
             onValueChange = onNameChange,
         )
@@ -138,7 +138,7 @@ private fun AccountIcon(account: AccountCreateEditUM.Account) {
         val icon = account.portfolioIcon.value
         when {
             icon == CryptoPortfolioIcon.Icon.Letter -> Text(
-                text = account.name.resolveReference().first().uppercase(),
+                text = account.name.firstOrNull()?.uppercase() ?: "",
                 style = TangemTheme.typography.head,
                 color = TangemTheme.colors.text.constantWhite,
             )
@@ -295,19 +295,27 @@ private class PreviewStateProvider : CollectionPreviewParameterProvider<AccountC
         var portfolioIcon = CryptoPortfolioIcon.ofDefaultCustomAccount()
         val first = AccountCreateEditUM(
             title = stringReference("Add account"),
+            onCloseClick = {},
             account = Account(
+                name = "",
                 portfolioIcon = portfolioIcon,
+                inputPlaceholder = resourceReference(R.string.account_form_placeholder_new_account),
+                onNameChange = {},
                 derivationInfo = stringReference("Account #03 — used for address derivation."),
             ),
             colorsState = AccountCreateEditUM.Colors(
                 selected = portfolioIcon.color,
+                onColorSelect = {},
                 list = colors.toImmutableList(),
             ),
             iconsState = AccountCreateEditUM.Icons(
                 selected = portfolioIcon.value,
+                onIconSelect = {},
                 list = icons.toImmutableList(),
             ),
             buttonState = AccountCreateEditUM.Button(
+                isButtonEnabled = false,
+                onConfirmClick = {},
                 text = stringReference("Add account"),
             ),
         )
@@ -319,20 +327,27 @@ private class PreviewStateProvider : CollectionPreviewParameterProvider<AccountC
         )
         val second = AccountCreateEditUM(
             title = stringReference("Edit account"),
+            onCloseClick = {},
             account = Account(
                 portfolioIcon = portfolioIcon,
-                name = stringReference("Main account"),
+                name = "Main account",
+                inputPlaceholder = resourceReference(R.string.account_form_placeholder_edit_account),
+                onNameChange = {},
                 derivationInfo = stringReference("Account #03 — used for address derivation."),
             ),
             colorsState = AccountCreateEditUM.Colors(
                 selected = portfolioIcon.color,
+                onColorSelect = {},
                 list = colors.toImmutableList(),
             ),
             iconsState = AccountCreateEditUM.Icons(
                 selected = portfolioIcon.value,
+                onIconSelect = {},
                 list = icons.toImmutableList(),
             ),
             buttonState = AccountCreateEditUM.Button(
+                isButtonEnabled = false,
+                onConfirmClick = {},
                 text = stringReference("Save"),
             ),
         )
