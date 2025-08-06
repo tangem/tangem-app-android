@@ -20,10 +20,10 @@ import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.requireColdWallet
 import com.tangem.domain.tokens.*
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.CreateNFTTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
@@ -206,8 +206,12 @@ internal class NFTSendModel @Inject constructor(
             ),
         )
 
+        if (userWallet is UserWallet.Hot) {
+            return // TODO [REDACTED_TASK_KEY] [Hot Wallet] Email feedback flow
+        }
+
         val cardInfo =
-            getCardInfoUseCase(userWallet.requireColdWallet().scanResponse).getOrNull() ?: return // TODO [REDACTED_TASK_KEY]
+            getCardInfoUseCase(userWallet.requireColdWallet().scanResponse).getOrNull() ?: return
 
         modelScope.launch {
             sendFeedbackEmailUseCase(type = FeedbackEmailType.TransactionSendingProblem(cardInfo = cardInfo))
