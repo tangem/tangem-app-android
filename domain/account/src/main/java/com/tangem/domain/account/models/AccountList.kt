@@ -28,6 +28,10 @@ data class AccountList private constructor(
     val mainAccount: Account.CryptoPortfolio
         get() = accounts.first { it is Account.CryptoPortfolio && it.isMainAccount } as Account.CryptoPortfolio
 
+    /** Returns true if more accounts can be added (the maximum number of accounts has not been reached) */
+    val canAddMoreAccounts: Boolean
+        get() = accounts.size < MAX_ACCOUNTS_COUNT
+
     /**
      * Adds an account to the account list.
      * If an account with the same identifier already exists, it will be replaced.
@@ -55,12 +59,15 @@ data class AccountList private constructor(
      * @param other the account to remove
      */
     operator fun minus(other: Account): Either<Error, AccountList> {
+        val isExistingAccount = this.accounts.any { it.accountId == other.accountId }
+        val accounts = this.accounts.toMutableSet().apply {
+            removeIf { it.accountId == other.accountId }
+        }
+
         return invoke(
             userWallet = this.userWallet,
-            accounts = this.accounts.toMutableSet().apply {
-                removeIf { it.accountId == other.accountId }
-            },
-            totalAccounts = this.totalAccounts - 1,
+            accounts = accounts,
+            totalAccounts = this.totalAccounts - if (isExistingAccount) 1 else 0,
         )
     }
 
@@ -138,6 +145,21 @@ data class AccountList private constructor(
             ensure(accounts.size == uniqueAccountIdsCount) { Error.DuplicateAccountIds }
 
             AccountList(userWallet = userWallet, accounts = accounts, totalAccounts = totalAccounts)
+        }
+
+        /**
+         * Factory method to create an empty [AccountList] with a main crypto portfolio account
+         *
+         * @param userWallet the user wallet associated with the account list
+         */
+        fun createEmpty(userWallet: UserWallet): AccountList {
+            return AccountList(
+                userWallet = userWallet,
+                accounts = setOf(
+                    Account.CryptoPortfolio.createMainAccount(userWalletId = userWallet.walletId),
+                ),
+                totalAccounts = 1,
+            )
         }
 
         private fun Set<Account>.mainAccountsCount(): Int {
