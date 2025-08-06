@@ -11,10 +11,13 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusManager
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
@@ -47,6 +50,7 @@ fun SearchBar(
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
+    val focusRequester = remember { FocusRequester() }
     val interactionSource = remember { MutableInteractionSource() }
 
     BasicTextField(
@@ -60,6 +64,7 @@ fun SearchBar(
                     state.onActiveChange(false)
                 }
             }
+            .focusRequester(focusRequester)
             .testTag(SelectCountryBottomSheetTestTags.SEARCH_BAR),
         enabled = enabled,
         value = state.query,
@@ -92,6 +97,10 @@ fun SearchBar(
             )
         },
     )
+
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+    }
 }
 
 @Suppress("LongParameterList")
