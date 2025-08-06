@@ -1,18 +1,20 @@
 package com.tangem.domain.tokens
 
 import arrow.core.Either
+import arrow.core.getOrElse
 import arrow.core.raise.Raise
 import arrow.core.raise.catch
 import arrow.core.raise.either
 import arrow.core.right
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
+import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.single.SingleYieldBalanceFetcher
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.repository.CurrenciesRepository
-import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -32,6 +34,7 @@ class FetchCurrencyStatusUseCase(
     private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
     private val singleYieldBalanceFetcher: SingleYieldBalanceFetcher,
     private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
+    private val stakingIdFactory: StakingIdFactory,
     private val tokensFeatureToggles: TokensFeatureToggles,
 ) {
 
@@ -136,14 +139,25 @@ class FetchCurrencyStatusUseCase(
     private suspend fun fetchStakingBalance(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
-    ): Either<Throwable, Unit> {
-        return singleYieldBalanceFetcher(
-            params = SingleYieldBalanceFetcher.Params(
-                userWalletId = userWalletId,
-                currencyId = cryptoCurrency.id,
-                network = cryptoCurrency.network,
-            ),
+    ): Either<Throwable, Unit> = either {
+        val stakingId = stakingIdFactory.create(
+            userWalletId = userWalletId,
+            currencyId = cryptoCurrency.id,
+            network = cryptoCurrency.network,
         )
+            .getOrElse {
+                when (it) {
+                    is StakingIdFactory.Error.UnableToGetAddress -> raise(IllegalStateException("$it"))
+                    StakingIdFactory.Error.UnsupportedCurrency -> Unit.right()
+                }
+
+                return@either
+            }
+
+        singleYieldBalanceFetcher(
+            params = SingleYieldBalanceFetcher.Params(userWalletId = userWalletId, stakingId = stakingId),
+        )
+            .bind()
     }
 
     private fun List<Either<Throwable, Unit>>.summarizeResult(): Either<Throwable, Unit> {

@@ -17,12 +17,10 @@ import com.tangem.datasource.local.nft.converter.NFTSdkCollectionConverter
 import com.tangem.datasource.local.nft.converter.NFTSdkCollectionIdentifierConverter
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.card.common.extensions.canHandleToken
-import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.models.wallet.requireColdWallet
 import com.tangem.domain.nft.models.NFTAsset
 import com.tangem.domain.nft.models.NFTCollection
 import com.tangem.domain.nft.models.NFTCollections
@@ -542,11 +540,10 @@ internal class DefaultNFTRepository @Inject constructor(
     }
 
     private fun Network.canHandleNFTs(userWalletId: UserWalletId): Boolean {
-        // TODO [REDACTED_TASK_KEY]
-        val scanResponse = userWalletsStore.getSyncStrict(userWalletId).requireColdWallet().scanResponse
+        val userWallet = userWalletsStore.getSyncStrict(userWalletId)
         val blockchain = Blockchain.fromNetworkId(backendId) ?: return false
 
         return blockchain.canHandleNFTs() &&
-            scanResponse.card.canHandleToken(blockchain, scanResponse.cardTypesResolver, excludedBlockchains)
+            userWallet.canHandleToken(blockchain, excludedBlockchains)
     }
 }

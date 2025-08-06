@@ -3,7 +3,7 @@ package com.tangem.features.swap.v2.impl.amount.model.transformers
 import com.tangem.common.ui.amountScreen.converters.field.AmountFieldChangeTransformer
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountFieldUM
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
 import com.tangem.utils.transformer.Transformer
