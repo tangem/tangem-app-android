@@ -21,23 +21,24 @@ import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.requireColdWallet
 import com.tangem.domain.settings.IsSendTapHelpEnabledUseCase
 import com.tangem.domain.settings.NeverShowTapHelpUseCase
 import com.tangem.domain.transaction.usecase.CreateNFTTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
-import com.tangem.domain.models.wallet.requireColdWallet
 import com.tangem.features.nft.entity.NFTSendSuccessTrigger
 import com.tangem.features.send.v2.api.SendNotificationsComponent
 import com.tangem.features.send.v2.api.SendNotificationsComponent.Params.NotificationData
+import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
+import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents.SendScreenSource
 import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.features.send.v2.api.subcomponents.notifications.SendNotificationsUpdateListener
 import com.tangem.features.send.v2.api.subcomponents.notifications.SendNotificationsUpdateTrigger
 import com.tangem.features.send.v2.common.CommonSendRoute
 import com.tangem.features.send.v2.common.SendBalanceUpdater
 import com.tangem.features.send.v2.common.SendConfirmAlertFactory
-import com.tangem.features.send.v2.common.analytics.CommonSendAnalyticEvents
-import com.tangem.features.send.v2.common.analytics.CommonSendAnalyticEvents.SendScreenSource
 import com.tangem.features.send.v2.common.ui.state.ConfirmUM
 import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.sendnft.analytics.NFTSendAnalyticHelper
@@ -231,8 +232,12 @@ internal class NFTSendConfirmModel @Inject constructor(
             ),
         )
 
+        if (userWallet is UserWallet.Hot) {
+            return // TODO [REDACTED_TASK_KEY] [Hot Wallet] Email feedback flow
+        }
+
         val cardInfo =
-            getCardInfoUseCase(userWallet.requireColdWallet().scanResponse).getOrNull() ?: return // TODO [REDACTED_TASK_KEY]
+            getCardInfoUseCase(userWallet.requireColdWallet().scanResponse).getOrNull() ?: return
 
         modelScope.launch {
             sendFeedbackEmailUseCase(type = FeedbackEmailType.TransactionSendingProblem(cardInfo = cardInfo))
