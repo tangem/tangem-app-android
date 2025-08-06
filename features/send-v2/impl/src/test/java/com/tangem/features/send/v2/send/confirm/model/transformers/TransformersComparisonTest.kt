@@ -72,6 +72,7 @@ class TransformersComparisonTest {
         val contentV1 = resultV1 as ConfirmUM.Content
         val contentV2 = resultV2 as ConfirmUM.Content
 
+        assertThat(contentV1.isPrimaryButtonEnabled).isEqualTo(contentV2.isPrimaryButtonEnabled)
         assertThat(contentV1.notifications.size).isEqualTo(contentV2.notifications.size)
         assertThat(contentV1.sendingFooter).isEqualTo(contentV2.sendingFooter)
         assertThat(contentV1.isPrimaryButtonEnabled).isEqualTo(contentV2.isPrimaryButtonEnabled)
@@ -117,6 +118,8 @@ class TransformersComparisonTest {
         val contentV1 = resultV1 as ConfirmUM.Content
         val contentV2 = resultV2 as ConfirmUM.Content
 
+        assertThat(contentV1.isPrimaryButtonEnabled).isTrue()
+        assertThat(contentV2.isPrimaryButtonEnabled).isTrue()
         assertThat(contentV1.notifications).hasSize(1)
         assertThat(contentV2.notifications).hasSize(1)
         assertThat(contentV1.notifications.first()).isInstanceOf(NotificationUM.Warning.FeeTooLow::class.java)
@@ -165,6 +168,8 @@ class TransformersComparisonTest {
         val contentV1 = resultV1 as ConfirmUM.Content
         val contentV2 = resultV2 as ConfirmUM.Content
 
+        assertThat(contentV1.isPrimaryButtonEnabled).isTrue()
+        assertThat(contentV2.isPrimaryButtonEnabled).isTrue()
         assertThat(contentV1.notifications).hasSize(1)
         assertThat(contentV2.notifications).hasSize(1)
         assertThat(contentV1.notifications.first()).isInstanceOf(NotificationUM.Warning.TooHigh::class.java)
@@ -215,6 +220,8 @@ class TransformersComparisonTest {
             val contentV1 = resultV1 as ConfirmUM.Content
             val contentV2 = resultV2 as ConfirmUM.Content
 
+            assertThat(contentV1.isPrimaryButtonEnabled).isTrue()
+            assertThat(contentV2.isPrimaryButtonEnabled).isTrue()
             assertThat(contentV1.notifications).hasSize(2)
             assertThat(contentV2.notifications).hasSize(2)
 
@@ -268,6 +275,7 @@ class TransformersComparisonTest {
 
         assertThat(contentV1.notifications).isEmpty()
         assertThat(contentV2.notifications).isEmpty()
+        assertThat(contentV1.isPrimaryButtonEnabled).isEqualTo(contentV2.isPrimaryButtonEnabled)
         assertThat(contentV1.sendingFooter).isEqualTo(contentV2.sendingFooter)
     }
 
@@ -377,6 +385,7 @@ class TransformersComparisonTest {
         )
         val transactionFee = TransactionFee.Single(fee)
         return FeeSelectorUMV2.Content(
+            isPrimaryButtonEnabled = true,
             fees = transactionFee,
             feeItems = persistentListOf(
                 FeeItem.Market(fee),
@@ -470,6 +479,7 @@ class TransformersComparisonTest {
             priority = fee,
         )
         return FeeSelectorUMV2.Content(
+            isPrimaryButtonEnabled = true,
             fees = transactionFee,
             feeItems = persistentListOf(
                 FeeItem.Custom(
@@ -605,6 +615,7 @@ class TransformersComparisonTest {
             priority = priorityFee,
         )
         return FeeSelectorUMV2.Content(
+            isPrimaryButtonEnabled = true,
             fees = transactionFee,
             feeItems = persistentListOf(
                 FeeItem.Custom(
@@ -740,6 +751,7 @@ class TransformersComparisonTest {
             priority = priorityFee,
         )
         return FeeSelectorUMV2.Content(
+            isPrimaryButtonEnabled = true,
             fees = transactionFee,
             feeItems = persistentListOf(
                 FeeItem.Custom(
@@ -839,6 +851,7 @@ class TransformersComparisonTest {
         )
         val transactionFee = TransactionFee.Single(fee)
         return FeeSelectorUMV2.Content(
+            isPrimaryButtonEnabled = true,
             fees = transactionFee,
             feeItems = persistentListOf(
                 FeeItem.Market(fee),

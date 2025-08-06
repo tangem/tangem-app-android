@@ -35,10 +35,7 @@ import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTi
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetWithFooter
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.notifications.NotificationConfig
-import com.tangem.core.ui.extensions.clickableSingle
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringResourceSafe
-import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -284,6 +281,19 @@ private fun WcAppInfoSecondBlock(state: WcAppInfoUM.Content, modifier: Modifier 
         )
         when (state.networksInfo) {
             is WcNetworksInfo.ContainsAllRequiredNetworks -> Unit
+            is WcNetworksInfo.NoneNetworksAdded -> {
+                HorizontalDivider(thickness = 1.dp, color = TangemTheme.colors.stroke.primary)
+                Notification(
+                    config = NotificationConfig(
+                        iconResId = R.drawable.ic_alert_circle_24,
+                        // TODO: [REDACTED_JIRA] localization
+                        title = stringReference("Specify selected networks"),
+                        subtitle = stringReference("At least one network is required for dApp connection"),
+                    ),
+                    iconTint = TangemTheme.colors.icon.attention,
+                    containerColor = TangemTheme.colors.background.action,
+                )
+            }
             is WcNetworksInfo.MissingRequiredNetworkInfo -> {
                 HorizontalDivider(thickness = 1.dp, color = TangemTheme.colors.stroke.primary)
                 Notification(
@@ -370,6 +380,7 @@ private fun SelectNetworksBlock(networksInfo: WcNetworksInfo, modifier: Modifier
         when (networksInfo) {
             is WcNetworksInfo.ContainsAllRequiredNetworks -> NetworkIcons(items = networksInfo.items)
             is WcNetworksInfo.MissingRequiredNetworkInfo -> Unit
+            is WcNetworksInfo.NoneNetworksAdded -> Unit
         }
         Icon(
             modifier = Modifier.size(width = 18.dp, height = 24.dp),

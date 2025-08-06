@@ -87,6 +87,7 @@ internal fun FeeSelectorModalBottomSheet(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
+                enabled = state.isPrimaryButtonEnabled,
                 text = stringResourceSafe(R.string.common_done),
                 onClick = feeSelectorIntents::onDoneClick,
             )
@@ -484,6 +485,7 @@ private fun FeeSelectorBS_Preview(
 private class FeeSelectorUMContentProvider : CollectionPreviewParameterProvider<FeeSelectorUM.Content>(
     collection = listOf(
         FeeSelectorUM.Content(
+            isPrimaryButtonEnabled = false,
             feeItems = persistentListOf(
                 FeeItem.Suggested(
                     title = stringReference("Suggested by Tangem"),
@@ -494,9 +496,6 @@ private class FeeSelectorUMContentProvider : CollectionPreviewParameterProvider<
                 FeeItem.Fast(fee = Fee.Common(Amount(value = BigDecimal("0.03"), blockchain = Blockchain.Ethereum))),
                 customFeeItem,
             ),
-            // selectedFeeItem = FeeItem.Market(
-            //     amount = Amount(value = BigDecimal("0.02"), blockchain = Blockchain.Ethereum),
-            // ),
             selectedFeeItem = customFeeItem,
             feeExtraInfo = FeeExtraInfo(
                 isFeeApproximate = true,
