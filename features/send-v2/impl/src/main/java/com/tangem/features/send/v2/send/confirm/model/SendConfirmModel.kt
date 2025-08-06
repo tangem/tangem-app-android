@@ -38,6 +38,8 @@ import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.features.send.v2.api.SendNotificationsComponent
 import com.tangem.features.send.v2.api.SendNotificationsComponent.Params.NotificationData
+import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
+import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents.SendScreenSource
 import com.tangem.features.send.v2.api.callbacks.FeeSelectorModelCallback
 import com.tangem.features.send.v2.api.entity.FeeNonce
 import com.tangem.features.send.v2.api.params.FeeSelectorParams.FeeStateConfiguration
@@ -48,8 +50,6 @@ import com.tangem.features.send.v2.api.subcomponents.notifications.SendNotificat
 import com.tangem.features.send.v2.common.CommonSendRoute
 import com.tangem.features.send.v2.common.SendBalanceUpdater
 import com.tangem.features.send.v2.common.SendConfirmAlertFactory
-import com.tangem.features.send.v2.common.analytics.CommonSendAnalyticEvents
-import com.tangem.features.send.v2.common.analytics.CommonSendAnalyticEvents.SendScreenSource
 import com.tangem.features.send.v2.common.ui.state.ConfirmUM
 import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.send.analytics.SendAnalyticHelper
