@@ -11,8 +11,8 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.staking.GetStakingIntegrationIdUseCase
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.NetworkHasDerivationUseCase
 import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
@@ -29,7 +29,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 internal class TokenDetailsSkeletonStateConverter(
     private val clickIntents: TokenDetailsClickIntents,
     private val networkHasDerivationUseCase: NetworkHasDerivationUseCase,
-    private val getStakingIntegrationIdUseCase: GetStakingIntegrationIdUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val userWalletId: UserWalletId,
 ) : Converter<CryptoCurrency, TokenDetailsState> {
@@ -38,7 +37,7 @@ internal class TokenDetailsSkeletonStateConverter(
 
     override fun convert(value: CryptoCurrency): TokenDetailsState {
         val iconState = iconStateConverter.convert(value)
-        val isSupportedInMobileApp = getStakingIntegrationIdUseCase(value.id).isNullOrBlank().not()
+        val isSupportedInMobileApp = StakingIntegrationID.create(currencyId = value.id) != null
 
         return TokenDetailsState(
             topAppBarConfig = TokenDetailsTopAppBarConfig(

@@ -73,6 +73,7 @@ viewBindingDelegate = "1.5.9"
 xmlShimmer = "1.1.3"
 zxingQrCode = "3.5.1"
 kotlinSerialization = "1.8.0"
+kotlinDatetime = "0.6.2"
 arrow = "1.2.4" # 2.0.1 breaks the build
 reownCore = "1.1.2"
 reownWeb3 = "1.1.2"
@@ -258,6 +259,7 @@ viewBindingDelegate = { module = "com.github.kirich1409:viewbindingpropertydeleg
 xmlShimmer = { module = "com.github.skydoves:androidveil", version.ref = "xmlShimmer" }
 zxing-qrCore = { module = "com.google.zxing:core", version.ref = "zxingQrCode" }
 kotlin-serialization = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinSerialization" }
+kotlin-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinDatetime" }
 arrow-core = { module = "io.arrow-kt:arrow-core", version.ref = "arrow" }
 arrow-fx = { module = "io.arrow-kt:arrow-fx-coroutines", version.ref = "arrow" }
 reownCore = { module = "com.reown:android-core", version.ref = "reownCore" }

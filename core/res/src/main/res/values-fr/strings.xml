@@ -99,6 +99,7 @@
   <string name="common_add_token">Ajouter un jeton</string>
   <string name="common_all">Tous</string>
   <string name="common_allow">Permettre</string>
+  <string name="common_amount">Montant</string>
   <string name="common_analytics">Analytique</string>
   <string name="common_apply">Appliquer</string>
   <string name="common_approval">Approbation</string>
@@ -140,6 +141,7 @@
   <string name="common_disabled">Désactivé</string>
   <string name="common_disconnect">Se déconnecter</string>
   <string name="common_done">Exécuté</string>
+  <string name="common_edit">Modifier</string>
   <string name="common_enable">Activer</string>
   <string name="common_enabled">Activé</string>
   <string name="common_error">Erreur</string>
