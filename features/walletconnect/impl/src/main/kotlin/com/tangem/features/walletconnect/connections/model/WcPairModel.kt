@@ -1,7 +1,9 @@
 package com.tangem.features.walletconnect.connections.model
 
 import androidx.compose.runtime.Stable
-import com.arkivanov.decompose.router.stack.*
+import com.arkivanov.decompose.router.stack.StackNavigation
+import com.arkivanov.decompose.router.stack.pop
+import com.arkivanov.decompose.router.stack.pushNew
 import com.domain.blockaid.models.dapp.CheckDAppResult
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
@@ -10,18 +12,16 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.ui.message.ToastMessage
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.walletconnect.WcAnalyticEvents
-import com.tangem.domain.walletconnect.model.WcPairError
-import com.tangem.domain.walletconnect.model.WcPairRequest
-import com.tangem.domain.walletconnect.model.WcSessionApprove
-import com.tangem.domain.walletconnect.model.WcSessionProposal
-import com.tangem.domain.walletconnect.usecase.pair.WcPairState
-import com.tangem.domain.walletconnect.usecase.pair.WcPairUseCase
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.models.wallet.isMultiCurrency
+import com.tangem.domain.walletconnect.WcAnalyticEvents
+import com.tangem.domain.walletconnect.model.*
+import com.tangem.domain.walletconnect.usecase.pair.WcPairState
+import com.tangem.domain.walletconnect.usecase.pair.WcPairUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.walletconnect.connections.components.WcPairComponent
 import com.tangem.features.walletconnect.connections.components.WcSelectNetworksComponent
@@ -91,7 +91,9 @@ internal class WcPairModel @Inject constructor(
                         appInfoUiState.transformerUpdate(
                             WcConnectButtonProgressTransformer(showProgress = false),
                         )
-                        pairState.result.onLeft(::processError)
+                        pairState.result
+                            .onLeft(::processError)
+                            .onRight(::processSuccessfullyConnected)
                         router.pop()
                     }
                     is WcPairState.Error -> {
@@ -196,6 +198,13 @@ internal class WcPairModel @Inject constructor(
         stackNavigation.pushNew(WcAppInfoRoutes.Alert(WcAppInfoRoutes.Alert.Type.Verified(appName)))
     }
 
+    private fun processSuccessfullyConnected(session: WcSession) {
+        // TODO: [REDACTED_JIRA] localization
+        messageSender.send(
+            SnackbarMessage(message = stringReference("Connected to ${session.sdkModel.appMetaData.name}")),
+        )
+    }
+
     private fun processError(error: WcPairError) {
         val alert = when (error) {
             is WcPairError.UnsupportedDApp -> {
@@ -236,6 +245,8 @@ internal class WcPairModel @Inject constructor(
             WcNetworksSelectedTransformer(
                 missingNetworks = proposalNetwork.missingRequired,
                 requiredNetworks = proposalNetwork.required,
+                availableNetworks = proposalNetwork.available,
+                notAddedNetworks = proposalNetwork.notAdded,
                 additionallyEnabledNetworks = additionallyEnabledNetworks,
             ),
         )
