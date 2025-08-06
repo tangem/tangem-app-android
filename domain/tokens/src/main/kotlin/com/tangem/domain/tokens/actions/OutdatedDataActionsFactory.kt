@@ -50,7 +50,11 @@ internal class OutdatedDataActionsFactory(
         }
 
         val onrampUnavailabilityReasonDeferred = async {
-            getOnrampUnavailabilityReason(userWallet = userWallet, currency = cryptoCurrencyStatus.currency)
+            getOnrampUnavailabilityReason(
+                userWallet = userWallet,
+                currency = cryptoCurrencyStatus.currency,
+                requirementsDeferred = requirementsDeferred,
+            )
         }
 
         val sendUnavailabilityReasonDeferred = if (sources.networkSource == StatusSource.ACTUAL) {
