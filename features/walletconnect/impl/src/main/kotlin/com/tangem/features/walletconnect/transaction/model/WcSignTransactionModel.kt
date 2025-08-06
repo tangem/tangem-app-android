@@ -4,12 +4,14 @@ import androidx.compose.runtime.Stable
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.pushNew
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.clipboard.ClipboardManager
+import com.tangem.domain.walletconnect.WcAnalyticEvents
 import com.tangem.domain.walletconnect.WcRequestUseCaseFactory
 import com.tangem.domain.walletconnect.model.WcEthMethod
 import com.tangem.domain.walletconnect.model.WcSolanaMethod
@@ -32,6 +34,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.properties.Delegates
 
 @Suppress("LongParameterList")
 @Stable
@@ -42,6 +45,7 @@ internal class WcSignTransactionModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
     private val clipboardManager: ClipboardManager,
+    private val analytics: AnalyticsEventHandler,
     private val useCaseFactory: WcRequestUseCaseFactory,
     private val signTypedDataUMConverter: WcSignTypedDataUMConverter,
     private val signTransactionUMConverter: WcSignTransactionUMConverter,
@@ -54,9 +58,11 @@ internal class WcSignTransactionModel @Inject constructor(
 
     val stackNavigation = StackNavigation<WcTransactionRoutes>()
 
+    private var useCase by Delegates.notNull<WcMessageSignUseCase>()
+
     init {
         modelScope.launch {
-            val useCase = useCaseFactory.createUseCase<WcMessageSignUseCase>(params.rawRequest)
+            useCase = useCaseFactory.createUseCase<WcMessageSignUseCase>(params.rawRequest)
                 .onLeft { router.push(WcHandleMethodErrorConverter.convert(it)) }
                 .getOrNull() ?: return@launch
             useCase.invoke()
@@ -109,6 +115,12 @@ internal class WcSignTransactionModel @Inject constructor(
     }
 
     fun showTransactionRequest() {
+        analytics.send(
+            WcAnalyticEvents.TransactionDetailsOpened(
+                rawRequest = useCase.rawSdkRequest,
+                network = useCase.network,
+            ),
+        )
         stackNavigation.pushNew(WcTransactionRoutes.TransactionRequestInfo)
     }
 
