@@ -80,6 +80,7 @@ configurations.androidTestImplementation {
 dependencies {
     implementation(projects.domain.legacy)
     implementation(projects.libs.blockchainSdk)
+    implementation(projects.domain.account)
     implementation(projects.domain.models)
     implementation(projects.domain.core)
     implementation(projects.domain.card)
@@ -232,6 +233,10 @@ dependencies {
     implementation(projects.features.welcome.impl)
     implementation(projects.features.createWalletSelection.api)
     implementation(projects.features.createWalletSelection.impl)
+    implementation(projects.features.home.api)
+    implementation(projects.features.home.impl)
+    implementation(projects.features.account.api)
+    implementation(projects.features.account.impl)
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)

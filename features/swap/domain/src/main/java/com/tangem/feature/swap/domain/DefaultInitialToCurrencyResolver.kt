@@ -1,7 +1,7 @@
 package com.tangem.feature.swap.domain
 
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.feature.swap.domain.models.ui.TokensDataStateExpress
 import com.tangem.feature.swap.domain.models.ui.getGroupWithReverse
