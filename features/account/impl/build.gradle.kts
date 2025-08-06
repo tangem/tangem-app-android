@@ -27,6 +27,7 @@ dependencies {
 
     /** Domain */
     implementation(projects.domain.models)
+    implementation(projects.domain.account)
 
     /** Common */
     implementation(projects.common.ui)
