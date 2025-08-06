@@ -185,9 +185,9 @@ private class WcSendTransactionStateProvider : CollectionPreviewParameterProvide
             onDismiss = {},
             onSend = {},
             appInfo = WcTransactionAppInfoContentUM(
-                appName = "React App",
+                appName = "React App React App ReactApp ReactApp ReactApp",
                 appIcon = "",
-                verifiedState = VerifiedDAppState.Verified {},
+                verifiedState = VerifiedDAppState.Unknown,
                 appSubtitle = "react-app.walletconnect.com",
             ),
             estimatedWalletChanges = WcSendReceiveTransactionCheckResultsUM(
@@ -225,7 +225,7 @@ private class WcSendTransactionStateProvider : CollectionPreviewParameterProvide
             onDismiss = {},
             onSend = {},
             appInfo = WcTransactionAppInfoContentUM(
-                appName = "React App",
+                appName = "React App React App React App React App React App",
                 appIcon = "",
                 verifiedState = VerifiedDAppState.Verified {},
                 appSubtitle = "react-app.walletconnect.com",
