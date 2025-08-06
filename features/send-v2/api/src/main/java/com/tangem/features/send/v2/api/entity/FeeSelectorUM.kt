@@ -3,9 +3,11 @@ package com.tangem.features.send.v2.api.entity
 import androidx.compose.runtime.Immutable
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.features.send.v2.api.entity.FeeItem.*
 import kotlinx.collections.immutable.ImmutableList
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -31,7 +33,19 @@ sealed class FeeSelectorUM {
         val feeExtraInfo: FeeExtraInfo,
         val feeFiatRateUM: FeeFiatRateUM?,
         val feeNonce: FeeNonce,
-    ) : FeeSelectorUM()
+    ) : FeeSelectorUM() {
+        fun toAnalyticType(): AnalyticsParam.FeeType = when (fees) {
+            is TransactionFee.Single -> AnalyticsParam.FeeType.Fixed
+            is TransactionFee.Choosable -> when (selectedFeeItem) {
+                is Suggested,
+                is Custom,
+                -> AnalyticsParam.FeeType.Custom
+                is Fast -> AnalyticsParam.FeeType.Max
+                is Market -> AnalyticsParam.FeeType.Normal
+                is Slow -> AnalyticsParam.FeeType.Min
+            }
+        }
+    }
 }
 
 @Immutable
