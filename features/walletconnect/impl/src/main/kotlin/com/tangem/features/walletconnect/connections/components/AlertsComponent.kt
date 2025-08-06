@@ -34,37 +34,9 @@ internal class AlertsComponent(
         abstract val onDismiss: () -> Unit
 
         @Serializable
-        data class VerifiedDomain(val appName: String, override val onDismiss: () -> Unit) : AlertType()
-
-        @Serializable
-        data class UnknownDomain(val onConnect: () -> Unit, override val onDismiss: () -> Unit) : AlertType()
-
-        @Serializable
-        data class UnsafeDomain(val onConnect: () -> Unit, override val onDismiss: () -> Unit) : AlertType()
-
-        @Serializable
-        data class UnsupportedNetworks(val appName: String, override val onDismiss: () -> Unit) : AlertType()
-
-        @Serializable
         data class UnsupportedMethod(override val onDismiss: () -> Unit) : AlertType()
 
         @Serializable
         data class WcDisconnected(override val onDismiss: () -> Unit) : AlertType()
-
-        @Serializable
-        data class UnknownError(val errorCode: Int, override val onDismiss: () -> Unit) : AlertType()
-
-        @Serializable
-        data class WrongCardSelected(override val onDismiss: () -> Unit) : AlertType()
-
-        @Serializable
-        data class ConnectionTimeout(val onTryAgain: () -> Unit, override val onDismiss: () -> Unit) : AlertType()
-
-        @Serializable
-        data class MaliciousTransaction(
-            val descriptionMessage: String,
-            val onConnect: () -> Unit,
-            override val onDismiss: () -> Unit,
-        ) : AlertType()
     }
 }
