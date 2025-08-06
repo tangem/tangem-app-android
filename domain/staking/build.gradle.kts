@@ -19,6 +19,7 @@ dependencies {
     api(projects.core.analytics)
     api(projects.core.utils)
 
+    implementation(deps.kotlin.datetime)
     implementation(deps.kotlin.serialization)
     implementation(deps.jodatime)
 
