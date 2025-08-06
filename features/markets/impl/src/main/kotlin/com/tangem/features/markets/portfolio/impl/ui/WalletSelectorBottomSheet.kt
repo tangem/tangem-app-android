@@ -36,7 +36,7 @@ internal fun WalletSelectorBottomSheet(config: TangemBottomSheetConfig) {
         addBottomInsets = false,
         title = { content ->
             TangemTopAppBar(
-                title = resourceReference(R.string.manage_tokens_wallet_selector_title),
+                title = resourceReference(R.string.common_choose_wallet),
                 titleAlignment = Alignment.CenterHorizontally,
                 startButton = TopAppBarButtonUM.Back(content.onBack),
                 height = TangemTopAppBarHeight.BOTTOM_SHEET,
