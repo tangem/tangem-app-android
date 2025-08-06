@@ -100,6 +100,7 @@ internal class WalletSettingsModel @Inject constructor(
             getWalletNotificationsEnabledUseCase(params.userWalletId),
         ) { maybeWallet, nftEnabled, notificationsEnabled ->
             val wallet = maybeWallet.getOrNull() ?: return@combine
+            wallet.requireColdWallet() // TODO [REDACTED_TASK_KEY] [Hot Wallet] Wallet Settings
             val isRenameWalletAvailable = getShouldSaveUserWalletsSyncUseCase()
             val isNeedShowNotifications = notificationsToggles.isNotificationsEnabled &&
                 !getIsHuaweiDeviceWithoutGoogleServicesUseCase()
@@ -132,7 +133,7 @@ internal class WalletSettingsModel @Inject constructor(
     }
 
     private fun buildItems(
-        userWallet: UserWallet,
+        userWallet: UserWallet.Cold,
         dialogNavigation: SlotNavigation<DialogConfig>,
         isRenameWalletAvailable: Boolean,
         isNFTEnabled: Boolean,
@@ -143,9 +144,8 @@ internal class WalletSettingsModel @Inject constructor(
     ): PersistentList<WalletSettingsItemUM> = itemsBuilder.buildItems(
         userWalletId = userWallet.walletId,
         userWalletName = userWallet.name,
-        isReferralAvailable = userWallet !is UserWallet.Cold || userWallet.cardTypesResolver.isTangemWallet(),
-        isLinkMoreCardsAvailable = userWallet is UserWallet.Cold &&
-            userWallet.scanResponse.card.backupStatus == CardDTO.BackupStatus.NoBackup,
+        isReferralAvailable = userWallet.cardTypesResolver.isTangemWallet(),
+        isLinkMoreCardsAvailable = userWallet.scanResponse.card.backupStatus == CardDTO.BackupStatus.NoBackup,
         isManageTokensAvailable = userWallet.isMultiCurrency,
         isRenameWalletAvailable = isRenameWalletAvailable,
         renameWallet = { openRenameWalletDialog(userWallet, dialogNavigation) },
@@ -168,7 +168,6 @@ internal class WalletSettingsModel @Inject constructor(
             messageSender.send(message)
         },
         onLinkMoreCardsClick = {
-            userWallet.requireColdWallet()
             onLinkMoreCardsClick(scanResponse = userWallet.scanResponse)
         },
         onReferralClick = { onReferralClick(userWallet) },
@@ -203,7 +202,7 @@ internal class WalletSettingsModel @Inject constructor(
         if (hasUserWallets) {
             router.pop()
         } else {
-            router.replaceAll(AppRoute.Home)
+            router.replaceAll(AppRoute.Home())
         }
     }
 
