@@ -11,9 +11,12 @@ import com.tangem.domain.core.utils.EitherFlow
 import com.tangem.domain.core.utils.lceContent
 import com.tangem.domain.core.utils.lceError
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.quote.QuoteStatus
+import com.tangem.domain.models.staking.StakingID
+import com.tangem.domain.models.staking.YieldBalance
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
@@ -24,16 +27,15 @@ import com.tangem.domain.quotes.QuotesRepository
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
-import com.tangem.domain.staking.model.stakekit.YieldBalance
-import com.tangem.domain.staking.model.stakekit.YieldBalance.Unsupported.integrationId
+import com.tangem.domain.staking.StakingIdFactory
+import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
-import com.tangem.domain.staking.repositories.StakingRepository
+import com.tangem.domain.staking.multi.MultiYieldBalanceSupplier
 import com.tangem.domain.staking.single.SingleYieldBalanceProducer
 import com.tangem.domain.staking.single.SingleYieldBalanceSupplier
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
 import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.tokens.error.TokenListError
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations.Error
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.utils.extractAddress
@@ -46,7 +48,6 @@ import kotlinx.coroutines.flow.*
 class CachedCurrenciesStatusesOperations(
     private val currenciesRepository: CurrenciesRepository,
     quotesRepository: QuotesRepository,
-    private val stakingRepository: StakingRepository,
     private val singleNetworkStatusSupplier: SingleNetworkStatusSupplier,
     multiNetworkStatusSupplier: MultiNetworkStatusSupplier,
     private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
@@ -54,19 +55,22 @@ class CachedCurrenciesStatusesOperations(
     private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
     private val singleQuoteStatusSupplier: SingleQuoteStatusSupplier,
     private val singleYieldBalanceSupplier: SingleYieldBalanceSupplier,
+    multiYieldBalanceSupplier: MultiYieldBalanceSupplier,
     private val multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
     multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
+    private val stakingIdFactory: StakingIdFactory,
     private val tokensFeatureToggles: TokensFeatureToggles,
 ) : BaseCurrenciesStatusesOperations,
     BaseCurrencyStatusOperations(
         currenciesRepository = currenciesRepository,
         quotesRepository = quotesRepository,
-        stakingRepository = stakingRepository,
         multiNetworkStatusSupplier = multiNetworkStatusSupplier,
         singleNetworkStatusSupplier = singleNetworkStatusSupplier,
         singleQuoteStatusSupplier = singleQuoteStatusSupplier,
         singleYieldBalanceSupplier = singleYieldBalanceSupplier,
+        multiYieldBalanceSupplier = multiYieldBalanceSupplier,
         multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
+        stakingIdFactory = stakingIdFactory,
         tokensFeatureToggles = tokensFeatureToggles,
     ) {
 
@@ -213,10 +217,14 @@ class CachedCurrenciesStatusesOperations(
                     )
                 },
                 async {
+                    val stakingIds = currencies.mapNotNullTo(hashSetOf()) {
+                        stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = it).getOrNull()
+                    }
+
                     multiYieldBalanceFetcher(
                         params = MultiYieldBalanceFetcher.Params(
                             userWalletId = userWalletId,
-                            currencyIdWithNetworkMap = currencies.associateTo(hashMapOf()) { it.id to it.network },
+                            stakingIds = stakingIds,
                         ),
                     )
                 },
@@ -270,14 +278,17 @@ class CachedCurrenciesStatusesOperations(
     ): YieldBalance? {
         if (yieldBalances.isNullOrEmpty()) return null
 
-        val supportedIntegration = stakingRepository.getSupportedIntegrationId(currency.id)
-
-        if (supportedIntegration.isNullOrBlank()) return null
-
+        val supportedIntegration = StakingIntegrationID.create(currencyId = currency.id)?.value
         val address = extractAddress(networkStatus)
 
-        return yieldBalances.firstOrNull { it.integrationId == supportedIntegration && it.address == address }
-            ?: YieldBalance.Error(integrationId = supportedIntegration, address = address)
+        return if (supportedIntegration != null && address != null) {
+            val stakingId = StakingID(integrationId = supportedIntegration, address = address)
+
+            yieldBalances.firstOrNull { it.stakingId == stakingId }
+                ?: YieldBalance.Error(stakingId = stakingId)
+        } else {
+            null
+        }
     }
 
     private fun getCurrencies(userWalletId: UserWalletId): EitherFlow<TokenListError, List<CryptoCurrency>> {
@@ -373,20 +384,19 @@ class CachedCurrenciesStatusesOperations(
         return channelFlow {
             val state = MutableStateFlow(emptyList<YieldBalance>())
 
-            cryptoCurrencies.onEach {
+            val stakingIds = cryptoCurrencies.mapNotNullTo(hashSetOf()) {
+                stakingIdFactory.create(userWalletId = userWalletId, currencyId = it.id, network = it.network)
+                    .getOrNull()
+            }
+
+            stakingIds.onEach {
                 launch {
                     singleYieldBalanceSupplier(
-                        params = SingleYieldBalanceProducer.Params(
-                            userWalletId = userWalletId,
-                            currencyId = it.id,
-                            network = it.network,
-                        ),
+                        params = SingleYieldBalanceProducer.Params(userWalletId = userWalletId, stakingId = it),
                     )
                         .onEach { balance ->
                             state.update { loadedBalances ->
-                                loadedBalances.addOrReplace(balance) {
-                                    it.integrationId == balance.integrationId && it.address == balance.address
-                                }
+                                loadedBalances.addOrReplace(balance) { balance.stakingId == it }
                             }
                         }
                         .launchIn(scope = this)

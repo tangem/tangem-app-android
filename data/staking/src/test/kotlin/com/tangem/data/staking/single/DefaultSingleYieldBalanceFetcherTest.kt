@@ -3,8 +3,7 @@ package com.tangem.data.staking.single
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth
-import com.tangem.blockchain.common.Blockchain
-import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
+import com.tangem.common.test.data.staking.MockYieldBalanceWrapperDTOFactory
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
 import com.tangem.domain.staking.single.SingleYieldBalanceFetcher
@@ -37,15 +36,11 @@ internal class DefaultSingleYieldBalanceFetcherTest {
     @Test
     fun `fetch yield balance successfully`() = runTest {
         // Arrange
-        val params = SingleYieldBalanceFetcher.Params(
-            userWalletId = userWalletId,
-            currencyId = ton.id,
-            network = ton.network,
-        )
+        val params = SingleYieldBalanceFetcher.Params(userWalletId = userWalletId, stakingId = tonId)
 
         val multiParams = MultiYieldBalanceFetcher.Params(
             userWalletId = userWalletId,
-            currencyIdWithNetworkMap = mapOf(ton.id to ton.network),
+            stakingIds = setOf(tonId),
         )
 
         val multiResult = Unit.right()
@@ -64,16 +59,9 @@ internal class DefaultSingleYieldBalanceFetcherTest {
     @Test
     fun `fetch yield balance failure`() = runTest {
         // Arrange
-        val params = SingleYieldBalanceFetcher.Params(
-            userWalletId = userWalletId,
-            currencyId = ton.id,
-            network = ton.network,
-        )
+        val params = SingleYieldBalanceFetcher.Params(userWalletId = userWalletId, stakingId = tonId)
 
-        val multiParams = MultiYieldBalanceFetcher.Params(
-            userWalletId = userWalletId,
-            currencyIdWithNetworkMap = mapOf(ton.id to ton.network),
-        )
+        val multiParams = MultiYieldBalanceFetcher.Params(userWalletId = userWalletId, stakingIds = setOf(tonId))
 
         val multiResult = IllegalStateException().left()
 
@@ -89,6 +77,6 @@ internal class DefaultSingleYieldBalanceFetcherTest {
 
     private companion object {
         val userWalletId = UserWalletId("011")
-        val ton = MockCryptoCurrencyFactory().createCoin(Blockchain.TON)
+        val tonId = MockYieldBalanceWrapperDTOFactory.defaultStakingId
     }
 }
