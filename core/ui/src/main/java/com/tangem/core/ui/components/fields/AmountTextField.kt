@@ -12,12 +12,7 @@ import androidx.compose.ui.Alignment.Companion.TopCenter
 import androidx.compose.ui.Alignment.Companion.TopStart
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.ParagraphIntrinsics
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.createFontFamilyResolver
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
@@ -77,24 +72,10 @@ fun AmountTextField(
 ) {
     val decimalFormat = rememberDecimalFormat()
     BoxWithConstraints(modifier = modifier) {
-        var fontSize = textStyle.fontSize
-        if (isAutoResize) {
-            val calculateIntrinsics = @Composable {
-                val transformedText = visualTransformation.filter(AnnotatedString(value)).text.text
-                ParagraphIntrinsics(
-                    text = transformedText,
-                    style = textStyle.copy(fontSize = fontSize),
-                    density = LocalDensity.current,
-                    fontFamilyResolver = createFontFamilyResolver(LocalContext.current),
-                )
-            }
-            var intrinsics = calculateIntrinsics()
-            with(LocalDensity.current) {
-                while (intrinsics.maxIntrinsicWidth > maxWidth.toPx()) {
-                    fontSize *= reduceFactor
-                    intrinsics = calculateIntrinsics()
-                }
-            }
+        val fontSize = if (isAutoResize) {
+            resizeFont(visualTransformation, value, textStyle, reduceFactor)
+        } else {
+            textStyle.fontSize
         }
         val textColor = if (value.isBlank()) TangemTheme.colors.text.disabled else color
         SimpleTextField(

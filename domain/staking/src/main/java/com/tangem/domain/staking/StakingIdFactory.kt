@@ -6,7 +6,7 @@ import arrow.core.raise.ensureNotNull
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.staking.model.StakingID
+import com.tangem.domain.models.staking.StakingID
 import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.domain.walletmanager.WalletManagersFacade
 
@@ -42,12 +42,37 @@ class StakingIdFactory(
         userWalletId: UserWalletId,
         currencyId: CryptoCurrency.ID,
         network: Network,
+    ): Either<Error, StakingID> {
+        return createInternal(
+            currencyId = currencyId,
+            defaultAddressProvider = {
+                walletManagersFacade.getDefaultAddress(userWalletId = userWalletId, network = network)
+            },
+        )
+    }
+
+    /**
+     * Creates a [StakingID] for the given cryptocurrency and default address
+     *
+     * @param currencyId      the identifier of the cryptocurrency
+     * @param defaultAddress  the default address for staking, can be null
+     */
+    fun create(currencyId: CryptoCurrency.ID, defaultAddress: String?): Either<Error, StakingID> {
+        return createInternal(
+            currencyId = currencyId,
+            defaultAddressProvider = { defaultAddress },
+        )
+    }
+
+    private inline fun createInternal(
+        currencyId: CryptoCurrency.ID,
+        defaultAddressProvider: () -> String?,
     ): Either<Error, StakingID> = either {
         val integrationId = StakingIntegrationID.create(currencyId = currencyId)
 
         ensureNotNull(integrationId) { Error.UnsupportedCurrency }
 
-        val address = walletManagersFacade.getDefaultAddress(userWalletId = userWalletId, network = network)
+        val address = defaultAddressProvider().takeUnless { it.isNullOrEmpty() }
 
         ensureNotNull(address) { Error.UnableToGetAddress(integrationId = integrationId) }
 
