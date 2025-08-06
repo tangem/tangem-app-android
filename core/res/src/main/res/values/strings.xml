@@ -149,6 +149,7 @@
   <string name="common_approval">Approval</string>
   <string name="common_approve">Approve</string>
   <string name="common_attention">Attention</string>
+  <string name="common_available_networks">Available networks</string>
   <string name="common_backup">Backup</string>
   <string name="common_balance">Balance: %s</string>
   <string name="common_balance_title">Balance</string>
@@ -163,6 +164,7 @@
   <string name="common_choose_action">Choose action</string>
   <string name="common_choose_network">Choose network</string>
   <string name="common_choose_token">Choose token</string>
+  <string name="common_choose_wallet">Choose wallet</string>
   <string name="common_claim">Claim</string>
   <string name="common_claim_rewards">Claim rewards</string>
   <string name="common_close">Close</string>
@@ -224,6 +226,7 @@
   <string name="common_nft">NFT</string>
   <string name="common_no">No</string>
   <string name="common_no_address">No address</string>
+  <string name="common_not_added">Not Added</string>
   <string name="common_now">Now</string>
   <string name="common_ok">OK</string>
   <string name="common_open_in_browser">Open in Browser</string>
@@ -239,6 +242,7 @@
   <string name="common_reject">Reject</string>
   <string name="common_reload">Reload</string>
   <string name="common_rename">Rename</string>
+  <string name="common_required">Required</string>
   <string name="common_save">Save</string>
   <string name="common_save_changes">Save changes</string>
   <string name="common_search">Search</string>
@@ -336,6 +340,9 @@
   <string name="details_title">Details</string>
   <string name="disclaimer_error_loading">Check your internet connection or switch to a different network</string>
   <string name="disclaimer_title">Terms of service</string>
+  <string name="domain_receive_assets_onboarding_description">Sending assets in other networks will result in permanent loss.</string>
+  <string name="domain_receive_assets_onboarding_network_name">%s network</string>
+  <string name="domain_receive_assets_onboarding_title">Send funds using only</string>
   <string name="error_wrong_wallet_tapped">You have used a card or ring from another wallet. Tap the card or ring associated with this wallet</string>
   <string name="eth_gas_required_exceeds_allowance">Not enough funds for the transaction. Please top up your account.</string>
   <string name="exchange_tokens_available_tokens_header">My tokens</string>
@@ -506,14 +513,12 @@
   <string name="manage_tokens_toast_portfolio_updated">Your portfolio has been updated</string>
   <string name="manage_tokens_unavailable_description">The selected token is currently unavailable for actions within the crypto wallet. But worry not, you can express your interest by upvoting it.</string>
   <string name="manage_tokens_unavailable_vote">Upvote</string>
-  <string name="manage_tokens_wallet_selector_title">Choose wallet</string>
   <string name="manage_tokens_wallet_support_only_one_network_title">The wallet doesn\'t support more than one network</string>
   <string name="markets_add_to_my_portfolio_description">To buy, exchange, or receive this asset, add it to your portfolio</string>
   <string name="markets_add_to_my_portfolio_unavailable_description">This asset is currently not supported in the wallet</string>
   <string name="markets_add_to_my_portfolio_unavailable_for_wallet_description">This asset is not available for this wallet</string>
   <string name="markets_add_token">Add</string>
   <string name="markets_apy_placeholder">APY %s</string>
-  <string name="markets_available_networks">Available networks</string>
   <string name="markets_common_my_portfolio">My portfolio</string>
   <string name="markets_common_title">Market</string>
   <string name="markets_generate_addresses_notification">To generate addresses for selected networks, you must scan your Tangem Wallet card or ring</string>
@@ -647,7 +652,6 @@
   <string name="nft_receive_title">Receive NFT</string>
   <string name="nft_receive_unavailable_asset_warning_message">You haven\'t added this network yet. To receive NFTs, add it to your portfolio.</string>
   <string name="nft_receive_unavailable_asset_warning_title">Network not added</string>
-  <string name="nft_receive_unavailable_section_title">Not Added</string>
   <string name="nft_receive_unsupported_types">Unsupported NFT types</string>
   <string name="nft_receive_unsupported_types_description">cNFTs and pNFTs are not supported yet. Please don\'t send them to your wallet.</string>
   <string name="nft_send">Send NFT</string>
@@ -1367,9 +1371,11 @@
   <string name="wallet_promo_banner_title">Discover Tangem Wallet</string>
   <string name="wallet_settings_access_code_description">Secret code to protect this wallet. Used for login and signatures.</string>
   <string name="wallet_settings_access_code_title">Set/Change Access Code</string>
+  <string name="wallet_settings_change_access_code_title">Change Access Code</string>
   <string name="wallet_settings_push_notifications_description">Stay notified on wallet incoming transactions and Tangem updates.</string>
   <string name="wallet_settings_push_notifications_huawei_warning">Push notifications may currently not work on Huawei devices. We\'re actively working on a solution and will release a fix in an upcoming update. Thank you for your understanding!</string>
   <string name="wallet_settings_push_notifications_title">Transaction Notifications</string>
+  <string name="wallet_settings_set_access_code_title">Set Access Code</string>
   <string name="wallet_settings_title">Wallet settings</string>
   <string name="wallet_title">Tangem</string>
   <string name="warning_access_denied_message">Use %s or scan a card/ring to unlock access to your wallet</string>
@@ -1487,6 +1493,7 @@
   <string name="wc_alert_verified_domain_title">Verified domain</string>
   <string name="wc_alert_wrong_card_description">Wrong card or ring selected in the App</string>
   <string name="wc_alert_wrong_card_title">We\'ve got some kind of problem</string>
+  <string name="wc_all_dapps_disconnected">All dApps disconnected</string>
   <string name="wc_allow_to_spend">Allow to spend</string>
   <string name="wc_common_address">Address</string>
   <string name="wc_common_connect">Connect</string>
@@ -1495,7 +1502,9 @@
   <string name="wc_common_networks">Networks</string>
   <string name="wc_common_unlimited">Unlimited</string>
   <string name="wc_common_wallet">Wallet</string>
+  <string name="wc_connected_app_title">Connected App</string>
   <string name="wc_connected_networks">Connected networks</string>
+  <string name="wc_connected_to">Connected to %1$s</string>
   <string name="wc_connection_reqeust_can_view_balance">View your wallet balance and activity</string>
   <string name="wc_connection_reqeust_cant_sign">Sign transactions without your notice</string>
   <string name="wc_connection_reqeust_request_approval">Request approval for transactions</string>
@@ -1506,6 +1515,7 @@
   <string name="wc_contents">Contents</string>
   <string name="wc_copy_data_button_text">Copy data</string>
   <string name="wc_custom_allowance_title">Custom allowance</string>
+  <string name="wc_dapp_disconnected">dApp disconnected</string>
   <string name="wc_disconnect_all">Disconnect all</string>
   <string name="wc_disconnect_all_alert_desc">Text about discnected all dApps</string>
   <string name="wc_disconnect_all_alert_title">Disconect All dApps</string>
@@ -1513,6 +1523,8 @@
   <string name="wc_estimated_wallet_changes_not_simulated">The transaction couldn\'t be simulated. Please proceed with caution.</string>
   <string name="wc_estimation_is_not_supported">Estimation is not supported for %s</string>
   <string name="wc_fee_suggested">Suggested by %s</string>
+  <string name="wc_insufficient_warning_subtitle">Top up your balance to cover the network fee</string>
+  <string name="wc_insufficient_warning_title">Insufficient %1$s</string>
   <string name="wc_malicious_transaction">Malicious transaction</string>
   <string name="wc_missing_required_network_description">Add the %s network to your portfolio for this wallet</string>
   <string name="wc_missing_required_network_title">The wallet has no required networks</string>
@@ -1525,6 +1537,9 @@
   <string name="wc_request_from">Request from</string>
   <string name="wc_send_anyway">Send anyway</string>
   <string name="wc_signature_type">Signature Type</string>
+  <string name="wc_specify_networks_subtitle">At least one network is required for dApp connection</string>
+  <string name="wc_specify_networks_title">Specify selected networks</string>
+  <string name="wc_successfully_signed">Successfully signed</string>
   <string name="wc_transaction_info_to_title">To</string>
   <string name="wc_transaction_request">Transaction request</string>
   <string name="wc_transaction_request_title">Transaction request</string>

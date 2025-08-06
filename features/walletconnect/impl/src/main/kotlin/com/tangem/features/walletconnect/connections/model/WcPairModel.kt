@@ -11,7 +11,9 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.ui.message.ToastMessage
 import com.tangem.domain.models.network.Network
@@ -30,6 +32,7 @@ import com.tangem.features.walletconnect.connections.entity.WcAppInfoUM
 import com.tangem.features.walletconnect.connections.entity.WcPrimaryButtonConfig
 import com.tangem.features.walletconnect.connections.model.transformers.*
 import com.tangem.features.walletconnect.connections.routes.WcAppInfoRoutes
+import com.tangem.features.walletconnect.impl.R
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
@@ -199,9 +202,13 @@ internal class WcPairModel @Inject constructor(
     }
 
     private fun processSuccessfullyConnected(session: WcSession) {
-        // TODO: [REDACTED_JIRA] localization
         messageSender.send(
-            SnackbarMessage(message = stringReference("Connected to ${session.sdkModel.appMetaData.name}")),
+            SnackbarMessage(
+                message = resourceReference(
+                    id = R.string.wc_connected_to,
+                    formatArgs = wrappedList(session.sdkModel.appMetaData.name),
+                ),
+            ),
         )
     }
 
