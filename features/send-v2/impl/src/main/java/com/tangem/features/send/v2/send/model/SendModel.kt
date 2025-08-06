@@ -23,6 +23,7 @@ import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.models.wallet.requireColdWallet
@@ -32,7 +33,6 @@ import com.tangem.domain.qrscanning.usecases.ParseQrCodeUseCase
 import com.tangem.domain.tokens.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.error.CurrencyStatusError
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
@@ -41,6 +41,8 @@ import com.tangem.domain.wallets.models.GetUserWalletError
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.v2.api.SendComponent
 import com.tangem.features.send.v2.api.SendFeatureToggles
+import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
+import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents.SendScreenSource
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.features.send.v2.api.entity.PredefinedValues
 import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationComponent
@@ -48,8 +50,6 @@ import com.tangem.features.send.v2.api.subcomponents.destination.entity.Destinat
 import com.tangem.features.send.v2.common.CommonSendRoute
 import com.tangem.features.send.v2.common.CommonSendRoute.*
 import com.tangem.features.send.v2.common.SendConfirmAlertFactory
-import com.tangem.features.send.v2.common.analytics.CommonSendAnalyticEvents
-import com.tangem.features.send.v2.common.analytics.CommonSendAnalyticEvents.SendScreenSource
 import com.tangem.features.send.v2.common.ui.state.ConfirmUM
 import com.tangem.features.send.v2.send.confirm.SendConfirmComponent
 import com.tangem.features.send.v2.send.success.SendConfirmSuccessComponent
@@ -465,8 +465,12 @@ internal class SendModel @Inject constructor(
             ),
         )
 
+        if (userWallet is UserWallet.Hot) {
+            return // TODO [REDACTED_TASK_KEY] [Hot Wallet] Email feedback flow
+        }
+
         val cardInfo =
-            getCardInfoUseCase(userWallet.requireColdWallet().scanResponse).getOrNull() ?: return // TODO [REDACTED_TASK_KEY]
+            getCardInfoUseCase(userWallet.requireColdWallet().scanResponse).getOrNull() ?: return
 
         modelScope.launch {
             sendFeedbackEmailUseCase(type = FeedbackEmailType.TransactionSendingProblem(cardInfo = cardInfo))

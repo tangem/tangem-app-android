@@ -26,12 +26,12 @@ import com.tangem.domain.transaction.usecase.ValidateWalletMemoUseCase
 import com.tangem.domain.txhistory.usecase.GetFixedTxHistoryItemsUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.send.v2.api.SendFeatureToggles
+import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
+import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents.SendScreenSource
 import com.tangem.features.send.v2.api.entity.PredefinedValues
 import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationComponentParams
 import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationComponentParams.DestinationBlockParams
 import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
-import com.tangem.features.send.v2.common.analytics.CommonSendAnalyticEvents
-import com.tangem.features.send.v2.common.analytics.CommonSendAnalyticEvents.SendScreenSource
 import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.subcomponents.destination.analytics.EnterAddressSource
 import com.tangem.features.send.v2.subcomponents.destination.analytics.SendDestinationAnalyticEvents
@@ -143,6 +143,11 @@ internal class SendDestinationModel @Inject constructor(
         router.push(
             AppRoute.QrScanning(source = AppRoute.QrScanning.Source.Send(cryptoCurrency.network.name)),
         )
+    }
+
+    fun saveResult() {
+        val params = params as? SendDestinationComponentParams.DestinationParams ?: return
+        params.callback.onDestinationResult(uiState.value)
     }
 
     private fun initSenderAddress() {
@@ -288,11 +293,6 @@ internal class SendDestinationModel @Inject constructor(
         }
     }
 
-    private fun saveResult() {
-        val params = params as? SendDestinationComponentParams.DestinationParams ?: return
-        params.callback.onDestinationResult(uiState.value)
-    }
-
     @Suppress("LongMethod")
     private fun configDestinationNavigation() {
         val params = params as? SendDestinationComponentParams.DestinationParams ?: return
@@ -321,6 +321,7 @@ internal class SendDestinationModel @Inject constructor(
                                     isValid = state.isPrimaryButtonEnabled,
                                 ),
                             )
+                            saveResult()
                         }
                         params.callback.onBackClick()
                     },
