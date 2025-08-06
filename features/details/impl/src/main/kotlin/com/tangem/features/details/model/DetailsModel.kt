@@ -118,10 +118,14 @@ internal class DetailsModel @Inject constructor(
         modelScope.launch {
             val userWallets = getWalletsUseCase.invokeSync()
 
-            val scanResponse =
-                getSelectedWalletSyncUseCase().getOrNull()?.requireColdWallet()?.scanResponse // TODO [REDACTED_TASK_KEY]
-                    ?: error("Selected wallet is null")
+            val selectedUserWallet = getSelectedWalletSyncUseCase().getOrNull()
+                ?: error("Selected wallet is null")
 
+            if (selectedUserWallet is UserWallet.Hot) {
+                return@launch // TODO [REDACTED_TASK_KEY] [Hot Wallet] Send feedback
+            }
+
+            val scanResponse = selectedUserWallet.requireColdWallet().scanResponse
             val cardInfo = getCardInfoUseCase(scanResponse).getOrNull() ?: return@launch
 
             val feedbackType = when {
@@ -140,11 +144,13 @@ internal class DetailsModel @Inject constructor(
     }
 
     private fun openUseDesk() {
-        val scanResponse =
-            getSelectedWalletSyncUseCase().getOrNull()?.requireColdWallet()?.scanResponse // TODO [REDACTED_TASK_KEY]
-                ?: error("Selected wallet is null")
+        val userWallet = getSelectedWalletSyncUseCase().getOrNull() ?: error("Selected wallet is null")
 
-        val cardInfo = getCardInfoUseCase(scanResponse).getOrNull() ?: return
+        if (userWallet is UserWallet.Hot) {
+            return // TODO [REDACTED_TASK_KEY] [Hot Wallet] UseDesk
+        }
+
+        val cardInfo = getCardInfoUseCase(userWallet.requireColdWallet().scanResponse).getOrNull() ?: return
 
         router.push(AppRoute.Usedesk(cardInfo))
     }
