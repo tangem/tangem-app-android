@@ -8,6 +8,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -17,6 +18,7 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
@@ -39,6 +41,7 @@ fun SimpleTextField(
     textStyle: TextStyle = TangemTheme.typography.body2.copy(color = color),
     placeholderColor: Color = TangemTheme.colors.text.disabled,
     readOnly: Boolean = false,
+    centered: Boolean = false,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     isValuePasted: Boolean = false,
     onValuePastedTriggerDismiss: () -> Unit = {},
@@ -80,6 +83,8 @@ fun SimpleTextField(
             onValuePastedTriggerDismiss()
         }
     }
+    var textStyle = textStyle.copy(color = color)
+    if (centered) textStyle = textStyle.copy(textAlign = TextAlign.Center)
 
     BasicTextField(
         value = textFieldValue,
@@ -91,7 +96,7 @@ fun SimpleTextField(
 
             if (stringChangedSinceLastInvocation) onValueChange(newTextFieldValueState.text)
         },
-        textStyle = textStyle.copy(color = color),
+        textStyle = textStyle,
         cursorBrush = SolidColor(TangemTheme.colors.text.primary1),
         singleLine = singleLine,
         readOnly = readOnly,
@@ -105,6 +110,7 @@ fun SimpleTextField(
                 value = value,
                 textStyle = textStyle,
                 textValue = textValue,
+                centered = centered,
                 color = placeholderColor,
             )
         },
@@ -118,10 +124,11 @@ private fun SimpleTextPlaceholder(
     placeholder: TextReference?,
     value: String,
     textStyle: TextStyle,
+    centered: Boolean,
     textValue: @Composable () -> Unit,
     color: Color = TangemTheme.colors.text.disabled,
 ) {
-    Box {
+    Box(contentAlignment = if (centered) Alignment.Center else Alignment.TopStart) {
         if (value.isBlank() && placeholder != null) {
             AnimatedContent(
                 targetState = placeholder,
