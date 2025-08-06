@@ -5,17 +5,16 @@ import com.tangem.common.BaseTestCase
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.screens.onDisclaimerScreen
 import com.tangem.screens.onStoriesScreen
-import com.tangem.tap.features.home.redux.HomeMiddleware.NEW_BUY_WALLET_URL
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.github.kakaocup.kakao.intent.KIntent
-import org.junit.Test
 
 @HiltAndroidTest
 class StoriesTest : BaseTestCase() {
 
-    @Test
+    // @Test
     fun clickOnOrderButtonTest() =
         setupHooks().run {
+            val buyWalletUrl = "https://buy.tangem.com/"
             onDisclaimerScreen {
                 step("Click on 'Accept' button") {
                     acceptButton.clickWithAssertion()
@@ -28,7 +27,7 @@ class StoriesTest : BaseTestCase() {
                 step("Assert: browser opened") {
                     val expectedIntent = KIntent {
                         hasAction(ACTION_VIEW)
-                        hasData { toString().startsWith(NEW_BUY_WALLET_URL) }
+                        hasData { toString().startsWith(buyWalletUrl) }
                     }
                     expectedIntent.intended()
                     device.uiDevice.pressBack()

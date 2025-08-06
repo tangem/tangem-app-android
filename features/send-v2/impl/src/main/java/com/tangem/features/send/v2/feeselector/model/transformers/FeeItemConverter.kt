@@ -3,7 +3,7 @@ package com.tangem.features.send.v2.feeselector.model.transformers
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.features.send.v2.api.entity.FeeItem
 import com.tangem.features.send.v2.api.params.FeeSelectorParams
 import com.tangem.features.send.v2.feeselector.model.FeeSelectorIntents
