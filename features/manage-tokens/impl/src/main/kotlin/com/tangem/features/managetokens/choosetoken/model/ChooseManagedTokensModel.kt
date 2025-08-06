@@ -89,13 +89,13 @@ internal class ChooseManagedTokensModel @Inject constructor(
         return ChooseManagedTokenUM(
             notificationUM = getNotification(),
             readContent = ManageTokensUM.ReadContent(
-                popBack = router::pop,
+                popBack = { params.callback?.onBack() ?: router.pop() },
                 isInitialBatchLoading = true,
                 isNextBatchLoading = false,
                 items = getLoadingItems(),
                 topBar = ManageTokensTopBarUM.ReadContent(
                     title = resourceReference(R.string.common_choose_token),
-                    onBackButtonClick = router::pop,
+                    onBackButtonClick = { params.callback?.onBack() ?: router.pop() },
                 ),
                 search = SearchBarUM(
                     placeholderText = resourceReference(R.string.common_search),
