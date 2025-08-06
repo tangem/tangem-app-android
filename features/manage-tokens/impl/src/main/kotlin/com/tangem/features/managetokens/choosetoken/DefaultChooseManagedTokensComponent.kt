@@ -70,7 +70,7 @@ internal class DefaultChooseManagedTokensComponent @AssistedInject constructor(
                             cryptoCurrency = cryptoCurrency,
                             shouldResetNavigation = params.selectedCurrency != null,
                         )
-                        router.pop()
+                        params.callback?.onResult() ?: router.pop()
                     }
                 },
             ),
