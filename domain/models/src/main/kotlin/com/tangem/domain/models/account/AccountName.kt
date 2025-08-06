@@ -44,7 +44,12 @@ data class AccountName private constructor(
 
     companion object {
 
+        private const val MAIN_ACCOUNT_NAME = "Main Account"
         private const val MAX_LENGTH = 20
+
+        /** Default name for the main account */
+        val Main: AccountName
+            get() = AccountName(value = MAIN_ACCOUNT_NAME)
 
         /**
          * Factory method to create an `AccountName` instance.
