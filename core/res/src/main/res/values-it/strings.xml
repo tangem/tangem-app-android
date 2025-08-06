@@ -5,6 +5,7 @@
   <string name="alert_unsupported_card">Questa carta non è progettata per funzionare con Tangem</string>
   <string name="cardano_low_ada">L\'importo inviato e il cambio non può essere inferiore a 1 ADA</string>
   <string name="common_accept">Accetta</string>
+  <string name="common_amount">Importo</string>
   <string name="common_balance">Saldo: %s</string>
   <string name="common_build_tx_error">Impossibile creare la transazione</string>
   <string name="common_camera_denied_alert_message">Non hai fornito l\'accesso alla tua videocamera, modifica le tue impostazioni sulla privacy</string>
