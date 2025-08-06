@@ -5,7 +5,7 @@ import com.squareup.moshi.JsonClass
 import com.tangem.datasource.api.stakekit.models.request.ConstructTransactionRequestBody.GasArgs
 import com.tangem.datasource.api.stakekit.models.response.model.BalanceDTO
 import com.tangem.datasource.api.stakekit.models.response.model.TokenDTO
-import com.tangem.domain.staking.model.stakekit.action.StakingActionType
+import com.tangem.domain.models.staking.action.StakingActionType
 
 @JsonClass(generateAdapter = true)
 data class PendingActionRequestBody(

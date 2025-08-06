@@ -7,7 +7,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.crypto.bip39.Mnemonic
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.hotwallet.manualbackup.check.model.ManualBackupCheckModel
 import com.tangem.features.hotwallet.manualbackup.check.ui.ManualBackupCheckContent
 import dagger.assisted.Assisted
@@ -33,7 +33,7 @@ internal class ManualBackupCheckComponent @AssistedInject constructor(
     }
 
     data class Params(
-        val generatedWords: Mnemonic,
+        val userWalletId: UserWalletId,
         val callbacks: ModelCallbacks,
     )
 }

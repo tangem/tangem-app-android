@@ -109,6 +109,7 @@
   <string name="common_add_token">Agregar token</string>
   <string name="common_all">Todos</string>
   <string name="common_allow">Autorizar</string>
+  <string name="common_amount">Montante</string>
   <string name="common_analytics">Analítica</string>
   <string name="common_apply">Aplicar</string>
   <string name="common_approval">Aprobación</string>
@@ -153,6 +154,7 @@
   <string name="common_disabled">Desactivado</string>
   <string name="common_disconnect">Desconectar</string>
   <string name="common_done">Listo</string>
+  <string name="common_edit">Editar</string>
   <string name="common_enable">Activar</string>
   <string name="common_enabled">Activado</string>
   <string name="common_error">Error</string>
