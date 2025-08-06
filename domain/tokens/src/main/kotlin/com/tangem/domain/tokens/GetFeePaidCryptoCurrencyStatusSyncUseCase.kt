@@ -2,12 +2,12 @@ package com.tangem.domain.tokens
 
 import arrow.core.Either
 import arrow.core.raise.either
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.error.TokenListError
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.FeePaidCurrency
 import com.tangem.domain.tokens.operations.BaseCurrencyStatusOperations
 import com.tangem.domain.tokens.repository.CurrenciesRepository
-import com.tangem.domain.models.wallet.UserWalletId
 
 class GetFeePaidCryptoCurrencyStatusSyncUseCase(
     internal val currenciesRepository: CurrenciesRepository,
