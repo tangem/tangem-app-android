@@ -3,7 +3,7 @@ package com.tangem.domain.notifications
 import arrow.core.Either
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.notifications.models.ApplicationId
-import com.tangem.domain.notifications.repository.NotificationsRepository
+import com.tangem.domain.notifications.repository.PushNotificationsRepository
 import com.tangem.utils.notifications.PushNotificationsTokenProvider
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -14,16 +14,16 @@ import org.junit.Test
 
 class SendPushTokenUseCaseTest {
 
-    private lateinit var notificationsRepository: NotificationsRepository
+    private lateinit var pushNotificationsRepository: PushNotificationsRepository
     private lateinit var pushNotificationsTokenProvider: PushNotificationsTokenProvider
     private lateinit var sendPushTokenUseCase: SendPushTokenUseCase
 
     @Before
     fun setup() {
-        notificationsRepository = mockk()
+        pushNotificationsRepository = mockk()
         pushNotificationsTokenProvider = mockk()
         sendPushTokenUseCase = SendPushTokenUseCase(
-            notificationsRepository = notificationsRepository,
+            pushNotificationsRepository = pushNotificationsRepository,
             pushNotificationsTokenProvider = pushNotificationsTokenProvider,
         )
     }
@@ -34,14 +34,14 @@ class SendPushTokenUseCaseTest {
         val applicationId = ApplicationId("test-app-id")
         val token = "test-token"
         coEvery { pushNotificationsTokenProvider.getToken() } returns token
-        coEvery { notificationsRepository.sendPushToken(applicationId, token) } returns Unit
+        coEvery { pushNotificationsRepository.sendPushToken(applicationId, token) } returns Unit
 
         // WHEN
         val result = sendPushTokenUseCase(applicationId)
 
         // THEN
         assertThat(result).isEqualTo(Either.Right(Unit))
-        coVerify(exactly = 1) { notificationsRepository.sendPushToken(applicationId, token) }
+        coVerify(exactly = 1) { pushNotificationsRepository.sendPushToken(applicationId, token) }
     }
 
     @Test
@@ -51,13 +51,13 @@ class SendPushTokenUseCaseTest {
         val token = "test-token"
         val expectedError = RuntimeException("Network error")
         coEvery { pushNotificationsTokenProvider.getToken() } returns token
-        coEvery { notificationsRepository.sendPushToken(applicationId, token) } throws expectedError
+        coEvery { pushNotificationsRepository.sendPushToken(applicationId, token) } throws expectedError
 
         // WHEN
         val result = sendPushTokenUseCase(applicationId)
 
         // THEN
         assertThat(result).isEqualTo(Either.Left(expectedError))
-        coVerify(exactly = 1) { notificationsRepository.sendPushToken(applicationId, token) }
+        coVerify(exactly = 1) { pushNotificationsRepository.sendPushToken(applicationId, token) }
     }
 }

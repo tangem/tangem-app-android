@@ -8,8 +8,8 @@ import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.common.test.domain.card.MockScanResponseFactory
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
 import com.tangem.data.common.currency.CryptoCurrencyFactory
-import com.tangem.domain.card.DerivationStyleProvider
-import com.tangem.domain.card.common.util.derivationStyleProvider
+import com.tangem.domain.wallets.derivations.DerivationStyleProvider
+import com.tangem.domain.wallets.derivations.derivationStyleProvider
 import com.tangem.domain.card.configs.GenericCardConfig
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
@@ -25,6 +25,7 @@ class MockCryptoCurrencyFactory(private val userWallet: UserWallet.Cold = defaul
     val cardano by lazy { createCoin(blockchain = Blockchain.Cardano) }
     val chia by lazy { createCoin(Blockchain.Chia) }
     val ethereum by lazy { createCoin(Blockchain.Ethereum) }
+    val stellar by lazy { createCoin(Blockchain.Stellar) }
 
     val chiaAndEthereum by lazy {
         listOf(
@@ -64,6 +65,10 @@ class MockCryptoCurrencyFactory(private val userWallet: UserWallet.Cold = defaul
             hasFiatFeeRate = blockchain.feePaidCurrency() !is FeePaidCurrency.FeeResource,
             canHandleTokens = false,
             transactionExtrasType = Network.TransactionExtrasType.NONE,
+            nameResolvingType = when (blockchain) {
+                Blockchain.Ethereum, Blockchain.EthereumTestnet -> Network.NameResolvingType.ENS
+                else -> Network.NameResolvingType.NONE
+            },
         )
 
         return factory.createCoin(network = network)
@@ -94,6 +99,7 @@ class MockCryptoCurrencyFactory(private val userWallet: UserWallet.Cold = defaul
                 hasFiatFeeRate = true,
                 canHandleTokens = true,
                 transactionExtrasType = Network.TransactionExtrasType.NONE,
+                nameResolvingType = Network.NameResolvingType.NONE,
             ),
             name = "NEVER-MIND",
             symbol = "NEVER-MIND",
