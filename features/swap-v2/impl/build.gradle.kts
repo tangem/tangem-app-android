@@ -30,6 +30,7 @@ dependencies {
     implementation(projects.core.navigation)
     implementation(projects.core.configToggles)
     implementation(projects.core.datasource)
+    implementation(projects.core.analytics)
 
     /** Common */
     implementation(projects.common.ui)
