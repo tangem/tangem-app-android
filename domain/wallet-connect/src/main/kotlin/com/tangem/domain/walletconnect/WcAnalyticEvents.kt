@@ -87,11 +87,11 @@ sealed class WcAnalyticEvents(
         ),
     )
 
-    class SignatureRequestReceived(
+    class TransactionDetailsOpened(
         rawRequest: WcSdkSessionRequest,
         network: Network,
     ) : WcAnalyticEvents(
-        event = "Signature Request Received",
+        event = "Transaction Details Opened",
         params = mapOf(
             AnalyticsParam.Key.DAPP_NAME to rawRequest.dAppMetaData.name,
             AnalyticsParam.Key.DAPP_URL to rawRequest.dAppMetaData.url,
@@ -99,6 +99,27 @@ sealed class WcAnalyticEvents(
             AnalyticsParam.Key.BLOCKCHAIN to network.name,
         ),
     )
+
+    class SignatureRequestReceived(
+        rawRequest: WcSdkSessionRequest,
+        network: Network,
+        emulationStatus: EmulationStatus,
+    ) : WcAnalyticEvents(
+        event = "Signature Request Received",
+        params = mapOf(
+            AnalyticsParam.Key.DAPP_NAME to rawRequest.dAppMetaData.name,
+            AnalyticsParam.Key.DAPP_URL to rawRequest.dAppMetaData.url,
+            AnalyticsParam.Key.METHOD_NAME to rawRequest.request.method,
+            AnalyticsParam.Key.BLOCKCHAIN to network.name,
+            AnalyticsParam.Key.EMULATION_STATUS to emulationStatus.status,
+        ),
+    ) {
+        enum class EmulationStatus(val status: String) {
+            Emulated("Emulated"),
+            Error("Error"),
+            CanNotEmulate("Can't emulate"),
+        }
+    }
 
     class SignatureRequestHandled(
         rawRequest: WcSdkSessionRequest,
