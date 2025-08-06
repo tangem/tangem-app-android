@@ -12,6 +12,7 @@ import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.value.ObserveLifecycleMode
 import com.arkivanov.decompose.value.subscribe
 import com.tangem.common.ui.amountScreen.models.AmountState
+import com.tangem.common.ui.navigationButtons.NavigationUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
@@ -20,13 +21,13 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.features.send.v2.api.FeeSelectorBlockComponent
 import com.tangem.features.send.v2.api.SendComponent
+import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationComponentParams
 import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.features.send.v2.common.CommonSendRoute
-import com.tangem.features.send.v2.common.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.v2.common.ui.SendContent
 import com.tangem.features.send.v2.common.ui.state.ConfirmUM
 import com.tangem.features.send.v2.impl.R
@@ -125,7 +126,11 @@ internal class DefaultSendComponent @AssistedInject constructor(
         val stackState by childStack.subscribeAsState()
         val state by model.uiState.collectAsStateWithLifecycle()
 
-        BackHandler(onBack = ::onChildBack)
+        BackHandler(
+            onBack = {
+                (state.navigationUM as? NavigationUM.Content)?.backIconClick() ?: onChildBack()
+            },
+        )
         SendContent(
             navigationUM = state.navigationUM,
             stackState = stackState,
