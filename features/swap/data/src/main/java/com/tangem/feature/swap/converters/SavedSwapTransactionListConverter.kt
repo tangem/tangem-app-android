@@ -34,6 +34,7 @@ internal class SavedSwapTransactionListConverter(
         value: SavedSwapTransactionListModelInner,
         userWallet: UserWallet,
         txStatuses: Map<String, ExchangeStatusModel>,
+        onFilter: (SavedSwapTransactionModel) -> Boolean = { true },
     ): SavedSwapTransactionListModel? {
         val fromToken = value.fromTokensResponse
         val toToken = value.toTokensResponse
@@ -50,17 +51,19 @@ internal class SavedSwapTransactionListConverter(
             ) ?: return null
 
             return SavedSwapTransactionListModel(
-                transactions = value.transactions.map { tx ->
-                    val status = txStatuses[tx.txId]
-                    val refundCurrency = status?.refundTokensResponse?.let { id ->
-                        responseCryptoCurrenciesFactory.createCurrency(
-                            responseToken = id,
-                            userWallet = userWallet,
-                        )
-                    }
-                    val statusWithRefundCurrency = status?.copy(refundCurrency = refundCurrency)
-                    tx.copy(status = statusWithRefundCurrency)
-                },
+                transactions = value.transactions
+                    .filter(onFilter)
+                    .map { tx ->
+                        val status = txStatuses[tx.txId]
+                        val refundCurrency = status?.refundTokensResponse?.let { id ->
+                            responseCryptoCurrenciesFactory.createCurrency(
+                                responseToken = id,
+                                userWallet = userWallet,
+                            )
+                        }
+                        val statusWithRefundCurrency = status?.copy(refundCurrency = refundCurrency)
+                        tx.copy(status = statusWithRefundCurrency)
+                    },
                 userWalletId = value.userWalletId,
                 fromCryptoCurrencyId = value.fromCryptoCurrencyId,
                 toCryptoCurrencyId = value.toCryptoCurrencyId,
