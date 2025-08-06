@@ -203,6 +203,7 @@ private class FeeSelectorUMProvider : PreviewParameterProvider<FeeSelectorUM> {
 
     override val values: Sequence<FeeSelectorUM> = sequenceOf(
         FeeSelectorUM.Content(
+            isPrimaryButtonEnabled = true,
             feeItems = persistentListOf(lowFeeItem),
             selectedFeeItem = lowFeeItem,
             feeExtraInfo = FeeExtraInfo(
@@ -218,6 +219,7 @@ private class FeeSelectorUMProvider : PreviewParameterProvider<FeeSelectorUM> {
             fees = TransactionFee.Single(lowFeeItem.fee),
         ),
         FeeSelectorUM.Content(
+            isPrimaryButtonEnabled = false,
             feeItems = persistentListOf(maxFeeItem),
             selectedFeeItem = maxFeeItem,
             feeExtraInfo = FeeExtraInfo(
