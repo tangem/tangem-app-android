@@ -1,7 +1,5 @@
 package com.tangem.features.tester.api
 
-import androidx.lifecycle.DefaultLifecycleObserver
-
 /**
  * Interface for launching the tester menu
  *
@@ -9,6 +7,9 @@ import androidx.lifecycle.DefaultLifecycleObserver
  */
 interface TesterMenuLauncher {
 
-    /** Observer for detecting shake events and launching the tester menu */
-    val launchOnShakeObserver: DefaultLifecycleObserver
+    /**
+     * Observer for key events to open the tester menu.
+     * Implementations should handle key events and return true if the event was consumed.
+     */
+    val launchOnKeyEventObserver: KeyEventObserver
 }
