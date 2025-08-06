@@ -2,6 +2,7 @@ package com.tangem.features.swap.v2.impl.amount.model
 
 import arrow.core.getOrElse
 import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.activate
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.amountScreen.converters.MaxEnterAmountConverter
@@ -10,6 +11,7 @@ import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
 import com.tangem.common.ui.navigationButtons.NavigationButton
 import com.tangem.common.ui.navigationButtons.NavigationUM
 import com.tangem.common.ui.notifications.NotificationId
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -32,6 +34,7 @@ import com.tangem.domain.swap.usecase.GetSwapQuoteUseCase
 import com.tangem.domain.swap.usecase.SelectInitialPairUseCase
 import com.tangem.domain.tokens.GetMinimumTransactionAmountSyncUseCase
 import com.tangem.domain.transaction.usecase.GetAllowanceUseCase
+import com.tangem.features.send.v2.api.subcomponents.amount.analytics.CommonSendAmountAnalyticEvents
 import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
 import com.tangem.features.swap.v2.api.choosetoken.SwapChooseTokenNetworkListener
 import com.tangem.features.swap.v2.impl.R
@@ -39,6 +42,7 @@ import com.tangem.features.swap.v2.impl.amount.SwapAmountBlockComponent.SwapChoo
 import com.tangem.features.swap.v2.impl.amount.SwapAmountComponentParams
 import com.tangem.features.swap.v2.impl.amount.SwapAmountReduceListener
 import com.tangem.features.swap.v2.impl.amount.SwapAmountUpdateListener
+import com.tangem.features.swap.v2.impl.amount.analytics.SwapAmountAnalyticEvents
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountFieldUM
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountType
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
@@ -85,6 +89,7 @@ internal class SwapAmountModel @Inject constructor(
     private val swapAmountReduceListener: SwapAmountReduceListener,
     private val feeSelectorReloadTrigger: FeeSelectorReloadTrigger,
     private val shouldShowNotificationUseCase: ShouldShowNotificationUseCase,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model(), SwapAmountClickIntents, SwapChooseProviderComponent.ModelCallback {
 
     private val params: SwapAmountComponentParams = paramsContainer.require()
@@ -145,6 +150,12 @@ internal class SwapAmountModel @Inject constructor(
     }
 
     override fun onProviderResult(quoteUM: SwapQuoteUM) {
+        analyticsEventHandler.send(
+            SwapAmountAnalyticEvents.ProviderChosen(
+                categoryName = params.analyticsCategoryName,
+                providerName = quoteUM.provider?.name.orEmpty(),
+            ),
+        )
         uiState.transformerUpdate(
             SwapAmountSelectQuoteTransformer(
                 quoteUM = quoteUM,
@@ -199,6 +210,9 @@ internal class SwapAmountModel @Inject constructor(
     }
 
     override fun onMaxValueClick() {
+        analyticsEventHandler.send(
+            CommonSendAmountAnalyticEvents.MaxAmountButtonClicked(categoryName = params.analyticsCategoryName),
+        )
         uiState.transformerUpdate(
             SwapAmountValueMaxTransformer(
                 primaryMaximumAmountBoundary = primaryMaximumAmountBoundary,
@@ -219,6 +233,23 @@ internal class SwapAmountModel @Inject constructor(
     }
 
     override fun onAmountNext() {
+        val amountState = uiState.value.swapDirection.withSwapDirection(
+            onDirect = { uiState.value.primaryAmount.amountField },
+            onReverse = { uiState.value.secondaryAmount.amountField },
+        ) as? AmountState.Data
+
+        amountState?.amountTextField?.isFiatValue?.let { isFiatSelected ->
+            analyticsEventHandler.send(
+                CommonSendAmountAnalyticEvents.SelectedCurrency(
+                    categoryName = params.analyticsCategoryName,
+                    type = if (isFiatSelected) {
+                        CommonSendAmountAnalyticEvents.SelectedCurrencyType.AppCurrency
+                    } else {
+                        CommonSendAmountAnalyticEvents.SelectedCurrencyType.Token
+                    },
+                ),
+            )
+        }
         saveResult()
     }
 
@@ -264,10 +295,30 @@ internal class SwapAmountModel @Inject constructor(
         }
     }
 
+    override fun onProviderClick() {
+        val amountUM = uiState.value as? SwapAmountUM.Content ?: return
+        val selectedProvider = amountUM.selectedQuote.provider ?: return
+        val cryptoCurrency = params.secondaryCryptoCurrency ?: return
+
+        analyticsEventHandler.send(
+            SwapAmountAnalyticEvents.ProviderSelectorClicked(
+                categoryName = params.analyticsCategoryName,
+            ),
+        )
+
+        bottomSheetNavigation.activate(
+            SwapChooseProviderConfig(
+                providers = amountUM.swapQuotes,
+                cryptoCurrency = cryptoCurrency,
+                selectedProvider = selectedProvider,
+                userCountry = userCountry,
+            ),
+        )
+    }
+
     private fun confirmSendWithSwapClose() {
         val amountParams = params as? SwapAmountComponentParams.AmountParams ?: return
         val amountFieldData = uiState.value.primaryAmount.amountField as? AmountState.Data
-        val callback = (params as? SwapAmountComponentParams.AmountParams)?.callback ?: return
 
         val primaryCryptoCurrencyStatus = (uiState.value as? SwapAmountUM.Content)?.primaryCryptoCurrencyStatus
         if (primaryCryptoCurrencyStatus != null) {
@@ -622,7 +673,7 @@ internal class SwapAmountModel @Inject constructor(
                         },
                         isEnabled = state.isPrimaryButtonEnabled,
                         onClick = {
-                            saveResult()
+                            onAmountNext()
                             params.callback.onNextClick()
                         },
                     ),
