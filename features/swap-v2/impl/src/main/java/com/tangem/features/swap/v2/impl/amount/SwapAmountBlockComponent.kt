@@ -6,7 +6,6 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
-import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.childSlot
 import com.arkivanov.decompose.router.slot.dismiss
 import com.arkivanov.essenty.lifecycle.subscribe
@@ -69,20 +68,7 @@ internal class SwapAmountBlockComponent(
             isClickEnabled = isClickEnabled,
             onClick = onClick,
             onFinishAnimation = model::onFinishAnimation,
-            onProviderSelectClick = {
-                val amountUM = model.uiState.value as? SwapAmountUM.Content ?: return@SwapAmountBlockContent
-                val selectedProvider = amountUM.selectedQuote.provider ?: return@SwapAmountBlockContent
-                val cryptoCurrency = params.secondaryCryptoCurrency ?: return@SwapAmountBlockContent
-
-                model.bottomSheetNavigation.activate(
-                    SwapChooseProviderConfig(
-                        providers = amountUM.swapQuotes,
-                        cryptoCurrency = cryptoCurrency,
-                        selectedProvider = selectedProvider,
-                        userCountry = model.userCountry,
-                    ),
-                )
-            },
+            onProviderSelectClick = model::onProviderClick,
         )
 
         bottomSheet.child?.instance?.BottomSheet()
