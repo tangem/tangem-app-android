@@ -12,7 +12,18 @@
   <string name="access_code_create_description">Set a %s-digit Access Code to unlock your wallet.</string>
   <string name="access_code_create_title">Create Access Code</string>
   <string name="access_code_navtitle">Access code</string>
+  <string name="account_form_create_button">Add account</string>
+  <string name="account_form_edit_button">Save</string>
   <string name="account_form_name">Account name</string>
+  <string name="account_form_placeholder_edit_account">Account</string>
+  <string name="account_form_placeholder_new_account">New account</string>
+  <string name="account_form_title_create">Add account</string>
+  <string name="account_form_title_edit">Edit account</string>
+  <string name="account_unsaved_dialog_action_first">Keep Editing</string>
+  <string name="account_unsaved_dialog_action_second">Discard</string>
+  <string name="account_unsaved_dialog_message_create">Are you sure you want to discard new account?</string>
+  <string name="account_unsaved_dialog_message_edit">Are you sure you want to discard edits?</string>
+  <string name="account_unsaved_dialog_title">Unsaved Changes</string>
   <string name="action_buttons_buy_empty_search_message">Can’t find your token? Go to the Market section on the main page and add it to your portfolio for purchase</string>
   <string name="action_buttons_sell_empty_search_message">Can’t find your token? Go to the Market section on the main page and add it to your portfolio for selling.</string>
   <string name="action_buttons_sell_navigation_bar_title">Sell</string>
@@ -132,6 +143,7 @@
   <string name="common_add_token">Add token</string>
   <string name="common_all">All</string>
   <string name="common_allow">Allow</string>
+  <string name="common_amount">Amount</string>
   <string name="common_analytics">Analytics</string>
   <string name="common_apply">Apply</string>
   <string name="common_approval">Approval</string>
@@ -177,6 +189,7 @@
   <string name="common_disabled">Disabled</string>
   <string name="common_disconnect">Disconnect</string>
   <string name="common_done">Done</string>
+  <string name="common_edit">Edit</string>
   <string name="common_enable">Enable</string>
   <string name="common_enabled">Enabled</string>
   <string name="common_error">Error</string>
@@ -432,6 +445,8 @@
   <string name="hw_activation_need_finish">Finish Now</string>
   <string name="hw_activation_need_title">Finish Wallet Activation</string>
   <string name="hw_activation_need_warning_description">To complete setup, secure app access with Access Code.</string>
+  <string name="hw_backup_alert_description">If you do, you\'ll need to start over.</string>
+  <string name="hw_backup_alert_title">Are you sure you want to exit the activation process?</string>
   <string name="hw_backup_google_drive_description">Recover an existing wallet stored in your Google Drive backup</string>
   <string name="hw_backup_google_drive_title">Google Drive Backup</string>
   <string name="hw_backup_need_action">Go to backup</string>
@@ -1129,6 +1144,7 @@
   <string name="swapping_fee_estimation_error_text">Fee estimation error. Please send feedback to support.</string>
   <string name="swapping_from_title">You swap</string>
   <string name="swapping_high_price_impact_description">Swapping this amount of selected tokens will cause a significant price impact and reduce your outcome.</string>
+  <string name="swapping_high_price_impact_title">High price impact</string>
   <string name="swapping_insufficient_funds">Insufficient funds</string>
   <string name="swapping_permission_header">Give Permission</string>
   <string name="swapping_swap_action">Swap</string>
@@ -1495,6 +1511,8 @@
   <string name="wc_disconnect_all_alert_title">Disconect All dApps</string>
   <string name="wc_estimated_wallet_changes">Estimated wallet changes</string>
   <string name="wc_estimated_wallet_changes_not_simulated">The transaction couldn\'t be simulated. Please proceed with caution.</string>
+  <string name="wc_estimation_is_not_supported">Estimation is not supported for %s</string>
+  <string name="wc_fee_suggested">Suggested by %s</string>
   <string name="wc_malicious_transaction">Malicious transaction</string>
   <string name="wc_missing_required_network_description">Add the %s network to your portfolio for this wallet</string>
   <string name="wc_missing_required_network_title">The wallet has no required networks</string>
@@ -1505,6 +1523,7 @@
   <string name="wc_notification_security_risk_subtitle">This domain is flagged as unsafe by multiple security providers. Leave immediately to protect your assets</string>
   <string name="wc_notification_security_risk_title">Known security risk</string>
   <string name="wc_request_from">Request from</string>
+  <string name="wc_send_anyway">Send anyway</string>
   <string name="wc_signature_type">Signature Type</string>
   <string name="wc_transaction_info_to_title">To</string>
   <string name="wc_transaction_request">Transaction request</string>
