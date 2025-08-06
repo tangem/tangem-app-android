@@ -7,6 +7,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.hotwallet.manualbackup.completed.ui.ManualBackupCompletedContent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
@@ -27,10 +28,11 @@ internal class ManualBackupCompletedComponent @AssistedInject constructor(
     }
 
     interface ModelCallbacks {
-        fun onContinueClick()
+        fun onContinueClick(userWalletId: UserWalletId)
     }
 
     data class Params(
+        val userWalletId: UserWalletId,
         val callbacks: ModelCallbacks,
     )
 }
