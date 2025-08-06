@@ -4,7 +4,7 @@ import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.features.send.v2.api.subcomponents.feeSelector.utils.FeeCalculationUtils
@@ -29,10 +29,12 @@ internal class WcNotificationsFactory @Inject constructor() {
         cryptoCurrencyStatus: CryptoCurrencyStatus,
         feeSelectorUM: FeeSelectorUM?,
     ): NotificationUM.Info? {
-        // TODO: [REDACTED_TASK_KEY] localization
         return NotificationUM.Info(
-            title = stringReference("Insufficient ${cryptoCurrencyStatus.currency.name}"),
-            subtitle = stringReference("Top up your balance to cover the network fee"),
+            title = resourceReference(
+                id = R.string.wc_insufficient_warning_title,
+                formatArgs = wrappedList(cryptoCurrencyStatus.currency.name),
+            ),
+            subtitle = resourceReference(R.string.wc_insufficient_warning_subtitle),
         ).takeIf { isFeeExceedsBalance(cryptoCurrencyStatus = cryptoCurrencyStatus, feeSelectorUM = feeSelectorUM) }
     }
 
