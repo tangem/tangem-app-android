@@ -4,8 +4,8 @@ import android.content.Intent
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.removePrefixOrNull
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
-import com.tangem.tap.features.intentHandler.IntentHandler
 import com.tangem.tap.features.intentHandler.AffectsNavigation
+import com.tangem.tap.features.intentHandler.IntentHandler
 import com.tangem.tap.store
 import timber.log.Timber
 import java.net.URLDecoder
