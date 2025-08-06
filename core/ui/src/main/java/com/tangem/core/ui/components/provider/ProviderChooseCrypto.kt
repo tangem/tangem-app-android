@@ -23,6 +23,7 @@ import androidx.constraintlayout.compose.Visibility
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.tangem.core.ui.R
+import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.audits.AuditLabel
 import com.tangem.core.ui.components.audits.AuditLabelUM
 import com.tangem.core.ui.components.badge.Badge
@@ -50,7 +51,6 @@ private const val DISABLED_ICON_ALPHA = 0.4f
 fun ProviderChooseCrypto(providerChooseUM: ProviderChooseUM, onClick: () -> Unit, modifier: Modifier = Modifier) {
     ConstraintLayout(
         modifier = modifier
-            .background(TangemTheme.colors.background.action)
             .clip(RoundedCornerShape(14.dp))
             .selectedBorder(isSelected = providerChooseUM.isSelected)
             .clickable(
@@ -133,13 +133,23 @@ private fun IconContent(iconUrl: String, modifier: Modifier = Modifier) {
     SubcomposeAsyncImage(
         modifier = modifier
             .size(40.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .background(TangemColorPalette.Light1),
+            .clip(RoundedCornerShape(8.dp)),
         model = ImageRequest.Builder(context = LocalContext.current)
             .data(iconUrl)
             .crossfade(enable = true)
             .allowHardware(false)
             .build(),
+        loading = {
+            RectangleShimmer(radius = 8.dp)
+        },
+        error = {
+            Box(
+                modifier = Modifier.background(
+                    color = TangemColorPalette.Light1,
+                    shape = RoundedCornerShape(8.dp),
+                ),
+            )
+        },
         contentDescription = null,
     )
 }
