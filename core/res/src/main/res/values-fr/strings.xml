@@ -105,6 +105,7 @@
   <string name="common_approval">Approbation</string>
   <string name="common_approve">Approuver</string>
   <string name="common_attention">Attention</string>
+  <string name="common_available_networks">Réseaux disponibles</string>
   <string name="common_balance">Solde : %s</string>
   <string name="common_balance_title">Solde</string>
   <string name="common_biometric_authentication">authentification biométrique</string>
@@ -118,6 +119,7 @@
   <string name="common_choose_action">Choisissez une action</string>
   <string name="common_choose_network">Choisissez le réseau</string>
   <string name="common_choose_token">Choisir le jeton</string>
+  <string name="common_choose_wallet">Choisissez un portefeuille</string>
   <string name="common_claim">Réclamer</string>
   <string name="common_claim_rewards">Réclamez des récompenses</string>
   <string name="common_close">Fermer</string>
@@ -175,6 +177,7 @@
   <string name="common_nft">NFT</string>
   <string name="common_no">Non</string>
   <string name="common_no_address">Aucune adresse</string>
+  <string name="common_not_added">Non ajouté</string>
   <string name="common_now">Maintenant</string>
   <string name="common_ok">OK</string>
   <string name="common_open_in_browser">Ouvrir dans le navigateur</string>
@@ -434,14 +437,12 @@
   <string name="manage_tokens_toast_portfolio_updated">Votre portfolio a été mis à jour</string>
   <string name="manage_tokens_unavailable_description">Le jeton sélectionné n\'est actuellement pas disponible pour des actions dans le portefeuille crypto. Mais ne vous inquiétez pas, vous pouvez exprimer votre intérêt en votant positivement.</string>
   <string name="manage_tokens_unavailable_vote">Vote positif</string>
-  <string name="manage_tokens_wallet_selector_title">Choisissez un portefeuille</string>
   <string name="manage_tokens_wallet_support_only_one_network_title">Le portefeuille ne prend pas en charge plus d\'un réseau</string>
   <string name="markets_add_to_my_portfolio_description">Pour acheter, échanger ou recevoir cet actif, ajoutez-le à votre portefeuille</string>
   <string name="markets_add_to_my_portfolio_unavailable_description">Cet actif n\'est pas pris en charge dans le portefeuille</string>
   <string name="markets_add_to_my_portfolio_unavailable_for_wallet_description">Cet actif n\'est pas disponible pour ce portefeuille</string>
   <string name="markets_add_token">Ajoutez un jeton</string>
   <string name="markets_apy_placeholder">APY %s</string>
-  <string name="markets_available_networks">Réseaux disponibles</string>
   <string name="markets_common_my_portfolio">Mon portfolio</string>
   <string name="markets_common_title">Marché</string>
   <string name="markets_generate_addresses_notification">Pour générer des adresses pour les réseaux sélectionnés, vous devez scanner votre carte Tangem</string>
@@ -575,7 +576,6 @@
   <string name="nft_receive_title">Recevoir des NFT</string>
   <string name="nft_receive_unavailable_asset_warning_message">Vous n\'avez pas encore ajouté ce réseau. Pour recevoir des NFT, ajoutez-le à votre portefeuille.</string>
   <string name="nft_receive_unavailable_asset_warning_title">Réseau non ajouté</string>
-  <string name="nft_receive_unavailable_section_title">Non ajouté</string>
   <string name="nft_receive_unsupported_types">Types de NFT non pris en charge</string>
   <string name="nft_receive_unsupported_types_description">Les cNFT et les pNFT ne sont pas encore pris en charge</string>
   <string name="nft_send">Envoyer un NFT</string>
