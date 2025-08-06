@@ -145,6 +145,7 @@
   <string name="common_approval">承認</string>
   <string name="common_approve">承認</string>
   <string name="common_attention">注意</string>
+  <string name="common_available_networks">利用可能なネットワーク</string>
   <string name="common_backup">バックアップ</string>
   <string name="common_balance">残高: %s</string>
   <string name="common_balance_title">残高</string>
@@ -159,6 +160,7 @@
   <string name="common_choose_action">アクションを選択</string>
   <string name="common_choose_network">ネットワークを選択</string>
   <string name="common_choose_token">トークンを選択</string>
+  <string name="common_choose_wallet">ウォレットを選択</string>
   <string name="common_claim">請求</string>
   <string name="common_claim_rewards">報酬を受け取る</string>
   <string name="common_close">閉じる</string>
@@ -218,6 +220,7 @@
   <string name="common_nft">NFT</string>
   <string name="common_no">いいえ</string>
   <string name="common_no_address">アドレスがありません</string>
+  <string name="common_not_added">未追加</string>
   <string name="common_now">今</string>
   <string name="common_ok">わかりました</string>
   <string name="common_open_in_browser">ブラウザで開く</string>
@@ -329,6 +332,9 @@
   <string name="details_title">詳細</string>
   <string name="disclaimer_error_loading">インターネット接続を確認するか、別のネットワークに切り替えてください。</string>
   <string name="disclaimer_title">利用規約</string>
+  <string name="domain_receive_assets_onboarding_description">他のネットワークで資産を送金すると、永久に失われます。</string>
+  <string name="domain_receive_assets_onboarding_network_name">%sネットワーク</string>
+  <string name="domain_receive_assets_onboarding_title">下記のみを使用して資金を送金する</string>
   <string name="error_wrong_wallet_tapped">別のウォレットのカードまたはリングを使用しました。このウォレットにリンクしているカードまたはリングをタップしてください。</string>
   <string name="eth_gas_required_exceeds_allowance">取引に必要な資金が不足しています。アカウントに入金してください。</string>
   <string name="exchange_tokens_available_tokens_header">マイトークン</string>
@@ -494,14 +500,12 @@
   <string name="manage_tokens_toast_portfolio_updated">ポートフォリオが更新されました</string>
   <string name="manage_tokens_unavailable_description">選択したトークンは現在、暗号資産ウォレット内でのアクションには利用できません。しかし、心配しないでください。賛成票を投じることで関心を表明できます。</string>
   <string name="manage_tokens_unavailable_vote">賛成票を投じる</string>
-  <string name="manage_tokens_wallet_selector_title">ウォレットを選択</string>
   <string name="manage_tokens_wallet_support_only_one_network_title">ウォレットは複数のネットワークをサポートしていません。</string>
   <string name="markets_add_to_my_portfolio_description">このアセットを購入・交換・受け取るには、ポートフォリオに追加してください。</string>
   <string name="markets_add_to_my_portfolio_unavailable_description">このアセットは現在ウォレットで利用できません</string>
   <string name="markets_add_to_my_portfolio_unavailable_for_wallet_description">このアセットはこのウォレットでは使用できません。</string>
   <string name="markets_add_token">追加</string>
   <string name="markets_apy_placeholder">APY %s</string>
-  <string name="markets_available_networks">利用可能なネットワーク</string>
   <string name="markets_common_my_portfolio">私のポートフォリオ</string>
   <string name="markets_common_title">マーケット</string>
   <string name="markets_generate_addresses_notification">選択したネットワークのアドレスを生成するには、Tangemウォレットカードまたはリングをスキャンする必要があります。</string>
@@ -632,7 +636,6 @@
   <string name="nft_receive_title">NFTを受け取る</string>
   <string name="nft_receive_unavailable_asset_warning_message">このネットワークはまだ追加されていません。NFTを受け取るには、ポートフォリオに追加してください。</string>
   <string name="nft_receive_unavailable_asset_warning_title">ネットワークが追加されていません</string>
-  <string name="nft_receive_unavailable_section_title">未追加</string>
   <string name="nft_receive_unsupported_types">サポートされていないNFTタイプ</string>
   <string name="nft_receive_unsupported_types_description">cNFTとpNFTはまだサポートされていません。ウォレットに送信しないでください。</string>
   <string name="nft_send">NFTを送信する</string>
@@ -1426,6 +1429,7 @@
   <string name="wc_common_networks">ネットワーク</string>
   <string name="wc_common_unlimited">無制限</string>
   <string name="wc_common_wallet">ウォレット</string>
+  <string name="wc_connected_app_title">接続されたアプリ</string>
   <string name="wc_connected_networks">接続されたネットワーク</string>
   <string name="wc_connection_reqeust_can_view_balance">ウォレットの残高とアクティビティを表示する</string>
   <string name="wc_connection_reqeust_cant_sign">通知なしに取引に署名する</string>
@@ -1456,6 +1460,8 @@
   <string name="wc_request_from">リクエスト元</string>
   <string name="wc_send_anyway">とにかく送金</string>
   <string name="wc_signature_type">署名タイプ</string>
+  <string name="wc_specify_networks_subtitle">dApp接続には、少なくとも1つのネットワークが必要です</string>
+  <string name="wc_specify_networks_title">選択したネットワークを指定する</string>
   <string name="wc_transaction_info_to_title">宛先</string>
   <string name="wc_transaction_request">取引リクエスト</string>
   <string name="wc_transaction_request_title">取引リクエスト</string>
