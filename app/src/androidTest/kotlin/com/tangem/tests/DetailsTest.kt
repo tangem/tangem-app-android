@@ -181,7 +181,6 @@ class DetailsTest : BaseTestCase() {
             step("Assert 'Referral program' screen refer title is displayed") {
                 onReferralProgramScreen { referTitle.assertIsDisplayed() }
             }
-            printSemanticTree(true)
             step("Assert info for you title is displayed") {
                 onReferralProgramScreen { infoForYouText.assertIsDisplayed() }
             }
