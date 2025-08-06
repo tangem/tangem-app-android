@@ -6,9 +6,9 @@ import arrow.core.raise.either
 import arrow.core.raise.withError
 import com.tangem.domain.models.TokensSortType
 import com.tangem.domain.models.TotalFiatBalance
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import kotlinx.coroutines.flow.*
 
