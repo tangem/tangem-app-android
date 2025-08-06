@@ -9,6 +9,9 @@ import com.tangem.common.ui.amountScreen.converters.AmountReduceByTransformer
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.navigationButtons.NavigationButton
 import com.tangem.common.ui.navigationButtons.NavigationUM
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.Basic
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -25,6 +28,8 @@ import com.tangem.domain.transaction.usecase.EstimateFeeUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.features.send.v2.api.SendNotificationsComponent
 import com.tangem.features.send.v2.api.SendNotificationsComponent.Params.NotificationData
+import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
+import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents.SendScreenSource
 import com.tangem.features.send.v2.api.callbacks.FeeSelectorModelCallback
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
@@ -43,6 +48,7 @@ import com.tangem.features.swap.v2.impl.notifications.SwapNotificationsComponent
 import com.tangem.features.swap.v2.impl.notifications.SwapNotificationsUpdateListener
 import com.tangem.features.swap.v2.impl.notifications.SwapNotificationsUpdateTrigger
 import com.tangem.features.swap.v2.impl.sendviaswap.SendWithSwapRoute
+import com.tangem.features.swap.v2.impl.sendviaswap.analytics.SendWithSwapAnalyticEvents
 import com.tangem.features.swap.v2.impl.sendviaswap.confirm.SendWithSwapConfirmComponent
 import com.tangem.features.swap.v2.impl.sendviaswap.confirm.model.transformers.SendWithSwapConfirmInitialStateTransformer
 import com.tangem.features.swap.v2.impl.sendviaswap.confirm.model.transformers.SendWithSwapConfirmationNotificationsTransformer
@@ -73,6 +79,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
     private val feeSelectorReloadTrigger: FeeSelectorReloadTrigger,
     private val swapAlertFactory: SwapAlertFactory,
     private val appRouter: AppRouter,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     swapTransactionSenderFactory: SwapTransactionSender.Factory,
     paramsContainer: ParamsContainer,
 ) : Model(), FeeSelectorModelCallback, SendNotificationsComponent.ModelCallback {
@@ -185,10 +192,22 @@ internal class SendWithSwapConfirmModel @Inject constructor(
     }
 
     fun showEditAmount() {
+        analyticsEventHandler.send(
+            CommonSendAnalyticEvents.ScreenReopened(
+                categoryName = params.analyticsCategoryName,
+                source = SendScreenSource.Amount,
+            ),
+        )
         router.push(SendWithSwapRoute.Amount(isEditMode = true))
     }
 
     fun showEditDestination() {
+        analyticsEventHandler.send(
+            CommonSendAnalyticEvents.ScreenReopened(
+                categoryName = params.analyticsCategoryName,
+                source = SendScreenSource.Address,
+            ),
+        )
         router.push(SendWithSwapRoute.Destination(isEditMode = true))
     }
 
@@ -260,7 +279,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                         txHash = txHash,
                         networkId = primaryCurrencyStatus.currency.network.id,
                     ).getOrNull().orEmpty()
-
+                    sendSuccessAnalytics()
                     uiState.update {
                         it.copy(
                             confirmUM = ConfirmUM.Success(
@@ -346,6 +365,33 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                 )
             }
         }.launchIn(modelScope)
+    }
+
+    private fun sendSuccessAnalytics() {
+        val selectedProvider = confirmData.quote?.provider ?: return
+        val fromCurrency = confirmData.fromCryptoCurrencyStatus?.currency ?: return
+        val toCurrency = confirmData.toCryptoCurrencyStatus?.currency ?: return
+        val feeSelectorUM = uiState.value.feeSelectorUM as? FeeSelectorUM.Content ?: return
+        val feeType = feeSelectorUM.toAnalyticType()
+
+        analyticsEventHandler.send(
+            SendWithSwapAnalyticEvents.TransactionScreenOpened(
+                providerName = selectedProvider.name,
+                feeType = feeType,
+                fromToken = fromCurrency,
+                toToken = toCurrency,
+            ),
+        )
+        analyticsEventHandler.send(
+            Basic.TransactionSent(
+                sentFrom = AnalyticsParam.TxSentFrom.SendWithSwap(
+                    blockchain = fromCurrency.network.name,
+                    token = fromCurrency.symbol,
+                    feeType = feeType,
+                ),
+                memoType = Basic.TransactionSent.MemoType.Null,
+            ),
+        )
     }
 
     private fun configConfirmNavigation() {
