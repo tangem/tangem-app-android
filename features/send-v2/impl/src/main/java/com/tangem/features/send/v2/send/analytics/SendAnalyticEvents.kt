@@ -32,4 +32,15 @@ internal sealed class SendAnalyticEvents(
             NONCE to nonceNotEmpty.toString().capitalize(),
         ),
     )
+
+    data class ConvertTokenButtonClicked(
+        val token: String,
+        val blockchain: String,
+    ) : SendAnalyticEvents(
+        event = "Button - Convert Token",
+        params = mapOf(
+            TOKEN_PARAM to token,
+            BLOCKCHAIN to blockchain,
+        ),
+    )
 }
