@@ -20,10 +20,10 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.features.nft.component.NFTDetailsBlockComponent
 import com.tangem.features.send.v2.api.NFTSendComponent
+import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationComponentParams
 import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.features.send.v2.common.CommonSendRoute
-import com.tangem.features.send.v2.common.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.v2.common.ui.SendContent
 import com.tangem.features.send.v2.common.ui.state.ConfirmUM
 import com.tangem.features.send.v2.impl.R
