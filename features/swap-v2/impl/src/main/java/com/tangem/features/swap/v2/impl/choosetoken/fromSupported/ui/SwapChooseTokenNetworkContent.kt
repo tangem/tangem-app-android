@@ -24,12 +24,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.util.fastForEach
+import androidx.compose.ui.util.fastForEachIndexed
 import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.message.*
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
+import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -94,13 +95,22 @@ internal fun SwapChooseTokenNetworkContent(state: SwapChooseTokenNetworkContentU
 
 @Composable
 private fun SwapChooseTokenNetworkContentList(swapNetworks: ImmutableList<SwapChooseNetworkUM>) {
-    Column {
-        swapNetworks.fastForEach { network ->
+    Column(
+        modifier = Modifier
+            .padding(top = 8.dp)
+            .padding(16.dp),
+    ) {
+        swapNetworks.fastForEachIndexed { index, network ->
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 modifier = Modifier
                     .fillMaxWidth()
+                    .roundedShapeItemDecoration(
+                        currentIndex = index,
+                        lastIndex = swapNetworks.lastIndex,
+                        addDefaultPadding = false,
+                    )
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = ripple(),
