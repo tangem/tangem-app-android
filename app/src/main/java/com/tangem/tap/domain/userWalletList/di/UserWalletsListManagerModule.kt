@@ -45,6 +45,7 @@ internal object UserWalletsListManagerModule {
 
     @Provides
     @Singleton
+    @Deprecated("Use UserWalletsListRepository instead")
     fun provideGeneralUserWalletsListManager(
         @ApplicationContext applicationContext: Context,
         appPreferencesStore: AppPreferencesStore,
@@ -63,6 +64,7 @@ internal object UserWalletsListManagerModule {
         )
     }
 
+    @Deprecated("Use UserWalletsListRepository instead")
     private fun createBiometricUserWalletsListManager(
         applicationContext: Context,
         analyticsEventHandler: AnalyticsEventHandler,
