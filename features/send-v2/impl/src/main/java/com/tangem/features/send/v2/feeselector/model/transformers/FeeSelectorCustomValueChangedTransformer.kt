@@ -1,10 +1,12 @@
 package com.tangem.features.send.v2.feeselector.model.transformers
 
+import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.features.send.v2.api.entity.FeeItem
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.features.send.v2.feeselector.model.FeeSelectorIntents
+import com.tangem.utils.extensions.isZero
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.toImmutableList
 
@@ -30,7 +32,16 @@ internal class FeeSelectorCustomValueChangedTransformer(
             fee = customFeeConverter.convertBack(updatedCustomValues),
             customValues = updatedCustomValues,
         )
+
+        val customFeeValue = updatedCustomValues.firstOrNull()
+        val isNotEmptyCustom = if (customFeeValue != null) {
+            !customFeeValue.value.parseToBigDecimal(customFeeValue.decimals).isZero()
+        } else {
+            false
+        }
+
         return state.copy(
+            isPrimaryButtonEnabled = isNotEmptyCustom,
             feeItems = state.feeItems.map { if (it is FeeItem.Custom) newCustomFee else it }.toImmutableList(),
             selectedFeeItem = newCustomFee,
         )
