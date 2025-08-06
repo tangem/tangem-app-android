@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
@@ -13,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.notifications.NotificationUM
-import com.tangem.core.ui.components.SpacerHMax
 import com.tangem.core.ui.components.transactions.TransactionDoneTitle
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -49,9 +49,13 @@ internal fun SendConfirmContent(
 ) {
     val confirmUM = sendUM.confirmUM as? ConfirmUM.Content
 
-    Column {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+    ) {
         LazyColumn(
-            modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16),
+            modifier = Modifier
+                .weight(1f)
+                .padding(horizontal = TangemTheme.dimens.spacing16),
         ) {
             blocks(
                 uiState = sendUM,
@@ -74,7 +78,6 @@ internal fun SendConfirmContent(
                 )
             }
         }
-        SpacerHMax()
         SendingText(footerText = confirmUM?.sendingFooter ?: TextReference.EMPTY)
     }
 }

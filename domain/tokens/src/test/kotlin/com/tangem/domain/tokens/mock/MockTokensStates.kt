@@ -1,11 +1,11 @@
 package com.tangem.domain.tokens.mock
 
 import arrow.core.nonEmptyListOf
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.models.quote.fold
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import java.math.BigDecimal
 
 @Suppress("MemberVisibilityCanBePrivate")
