@@ -2,8 +2,8 @@ package com.tangem.features.walletconnect.connections.model.transformers
 
 import com.domain.blockaid.models.dapp.CheckDAppResult
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.walletconnect.model.WcSessionProposal
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.walletconnect.model.WcSessionProposal
 import com.tangem.features.walletconnect.connections.entity.WcAppInfoSecurityNotification
 import com.tangem.features.walletconnect.connections.entity.WcAppInfoUM
 import com.tangem.features.walletconnect.connections.entity.WcPrimaryButtonConfig
@@ -37,13 +37,22 @@ internal class WcAppInfoTransformer(
                 value = WcNetworksInfoConverter.Input(
                     missingNetworks = proposalNetwork.missingRequired,
                     requiredNetworks = proposalNetwork.required,
+                    availableNetworks = proposalNetwork.available,
+                    notAddedNetworks = proposalNetwork.notAdded,
                     additionallyEnabledNetworks = additionallyEnabledNetworks,
                 ),
             ),
             onNetworksClick = onNetworksClick,
             connectButtonConfig = WcPrimaryButtonConfig(
                 showProgress = false,
-                enabled = proposalNetwork.missingRequired.isEmpty(),
+                enabled = WcConnectButtonAvailabilityConverter.convert(
+                    WcConnectButtonAvailabilityConverter.Input(
+                        missingNetworks = proposalNetwork.missingRequired,
+                        requiredNetworks = proposalNetwork.required,
+                        availableNetworks = proposalNetwork.available,
+                        selectedNetworks = additionallyEnabledNetworks,
+                    ),
+                ),
                 onClick = { onConnect(dAppSession.securityStatus) },
             ),
             onDismiss = onDismiss,
