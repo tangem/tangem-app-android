@@ -7,7 +7,6 @@ import com.tangem.features.walletconnect.connections.entity.WcNetworksInfo
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.toImmutableList
 
-@Suppress("DestructuringDeclarationWithTooManyEntries")
 internal object WcNetworksInfoConverter : Converter<WcNetworksInfoConverter.Input, WcNetworksInfo> {
     override fun convert(value: Input): WcNetworksInfo {
         val missing = value.missingNetworks
