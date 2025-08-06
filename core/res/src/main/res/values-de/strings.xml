@@ -120,6 +120,7 @@
   <string name="common_add_token">Token hinzufügen</string>
   <string name="common_all">Alle</string>
   <string name="common_allow">Erlauben</string>
+  <string name="common_amount">Betrag</string>
   <string name="common_analytics">Analysen</string>
   <string name="common_apply">Anwenden</string>
   <string name="common_approval">Genehmigung</string>
@@ -165,6 +166,7 @@
   <string name="common_disabled">Deaktiviert</string>
   <string name="common_disconnect">Trennen</string>
   <string name="common_done">Erledigt</string>
+  <string name="common_edit">Bearbeiten</string>
   <string name="common_enable">Aktivieren</string>
   <string name="common_enabled">Aktiviert</string>
   <string name="common_error">Fehler</string>
