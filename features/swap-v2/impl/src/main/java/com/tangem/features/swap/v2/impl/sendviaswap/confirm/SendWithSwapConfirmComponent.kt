@@ -8,11 +8,12 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.models.SwapDirection
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.send.v2.api.FeeSelectorBlockComponent
 import com.tangem.features.send.v2.api.SendNotificationsComponent
 import com.tangem.features.send.v2.api.entity.PredefinedValues
@@ -41,6 +42,7 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
     sendDestinationBlockComponent: SendDestinationBlockComponent.Factory,
     feeSelectorBlockComponentFactory: FeeSelectorBlockComponent.Factory,
     sendNotificationsComponentFactory: SendNotificationsComponent.Factory,
+    private val urlOpener: UrlOpener,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
     private val model: SendWithSwapConfirmModel = getOrCreateModel(params = params)
@@ -151,6 +153,7 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
             sendNotificationsUM = sendNotificationsUM,
             swapNotificationsComponent = swapNotificationsComponent,
             swapNotificationsUM = swapNotificationsUM,
+            onLinkClick = urlOpener::openUrl,
             modifier = modifier,
         )
     }
