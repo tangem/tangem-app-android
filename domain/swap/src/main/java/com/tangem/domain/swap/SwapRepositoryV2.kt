@@ -4,12 +4,12 @@ import com.tangem.domain.express.models.ExpressProvider
 import com.tangem.domain.express.models.ExpressProviderType
 import com.tangem.domain.express.models.ExpressRateType
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.models.SwapDataModel
 import com.tangem.domain.swap.models.SwapPairModel
 import com.tangem.domain.swap.models.SwapQuoteModel
 import com.tangem.domain.swap.models.SwapStatusModel
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import java.math.BigDecimal
 
 /**

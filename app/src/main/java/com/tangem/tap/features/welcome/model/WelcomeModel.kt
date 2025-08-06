@@ -1,6 +1,7 @@
 package com.tangem.tap.features.welcome.model
 
 import com.tangem.common.core.TangemError
+import com.tangem.common.routing.entity.InitScreenLaunchMode
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -44,10 +45,9 @@ internal class WelcomeModel @Inject constructor(
         subscribeToStoreChanges()
         initGlobalState()
 
-        val welcomeAction = if (params.intent != null) {
-            WelcomeAction.ProceedWithIntent(params.intent.toIntent())
-        } else {
-            WelcomeAction.ProceedWithBiometrics()
+        val welcomeAction = when (params.launchMode) {
+            is InitScreenLaunchMode.WithCardScan -> WelcomeAction.ProceedWithCard
+            is InitScreenLaunchMode.Standard -> WelcomeAction.ProceedWithBiometrics(params.intent?.toIntent())
         }
 
         store.dispatch(welcomeAction)
