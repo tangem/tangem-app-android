@@ -23,7 +23,6 @@ import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemColorPalette
@@ -48,7 +47,7 @@ internal fun WcConnectedAppInfoBS(state: WcConnectedAppInfoUM) {
         containerColor = TangemTheme.colors.background.tertiary,
         title = {
             TangemModalBottomSheetTitle(
-                title = stringReference("Connected App"), // TODO: [REDACTED_JIRA]
+                title = resourceReference(R.string.wc_connected_app_title),
                 subtitle = state.connectingTime?.let { timestamp ->
                     resourceReference(
                         R.string.send_date_format,
