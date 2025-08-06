@@ -240,12 +240,12 @@ private fun SwapAmountInfo(
         SwapAmountInfoMain(amountFieldUM = amountFieldUM)
         SpacerWMax()
         AnimatedContent(
-            amountUM,
-        ) { wrappedAmountUM ->
-            if (wrappedAmountUM is SwapAmountUM.Content) {
+            amountFieldUM,
+        ) { wrappedFieldAmountUM ->
+            if (amountUM is SwapAmountUM.Content) {
                 SwapAmountInfoExtra(
-                    amountUM = wrappedAmountUM,
-                    amountFieldUM = amountFieldUM,
+                    amountUM = amountUM,
+                    amountFieldUM = wrappedFieldAmountUM,
                     onMaxAmountClick = onMaxAmountClick,
                     onSelectTokenClick = onSelectTokenClick,
                 )

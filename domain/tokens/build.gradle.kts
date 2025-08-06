@@ -54,6 +54,10 @@ dependencies {
     implementation(deps.jodatime)
     implementation(deps.reKotlin)
 
+    implementation(tangemDeps.blockchain) {
+        exclude(module = "joda-time")
+    }
+
     /** Tests */
     testImplementation(deps.test.coroutine)
     testImplementation(deps.test.junit5)
@@ -61,7 +65,4 @@ dependencies {
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)
     testImplementation(projects.common.test)
-    testImplementation(tangemDeps.blockchain) {
-        exclude(module = "joda-time")
-    }
 }
