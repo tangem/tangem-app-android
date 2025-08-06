@@ -3,6 +3,7 @@ package com.tangem.domain.models.account
 import com.google.common.truth.Truth
 import com.tangem.domain.models.TokensGroupType
 import com.tangem.domain.models.TokensSortType
+import com.tangem.domain.models.account.Account.CryptoPortfolio
 import com.tangem.domain.models.account.Account.CryptoPortfolio.CryptoCurrencyList
 import com.tangem.domain.models.account.Account.CryptoPortfolio.Error.AccountNameError
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -99,7 +100,7 @@ class AccountTest {
             val name = ""
 
             // Act
-            val actual = Account.CryptoPortfolio(
+            val actual = CryptoPortfolio(
                 accountId = mockk(),
                 name = name,
                 accountIcon = mockk(),
@@ -120,7 +121,7 @@ class AccountTest {
             val derivationIndex = -1
 
             // Act
-            val actual = Account.CryptoPortfolio(
+            val actual = CryptoPortfolio(
                 accountId = mockk(),
                 name = "Test Account",
                 accountIcon = mockk(),
@@ -131,14 +132,14 @@ class AccountTest {
                 .leftOrNull()!!
 
             // Assert
-            val expected = Account.CryptoPortfolio.Error.NegativeDerivationIndex
+            val expected = CryptoPortfolio.Error.NegativeDerivationIndex
             Truth.assertThat(actual).isEqualTo(expected)
         }
 
         @Test
         fun `invoke returns CryptoPortfolio`() {
             // Act
-            val actual = Account.CryptoPortfolio(
+            val actual = CryptoPortfolio(
                 accountId = AccountId(
                     value = "value",
                     userWalletId = UserWalletId("011"),
@@ -159,6 +160,32 @@ class AccountTest {
             val expected = createCryptoPortfolioStub()
             Truth.assertThat(actual).isEqualTo(expected)
         }
+
+        @Test
+        fun createMainAccount() {
+            // Arrange
+            val userWalletId = UserWalletId("011")
+
+            // Act
+            val actual = CryptoPortfolio.createMainAccount(userWalletId = userWalletId)
+
+            // Assert
+            // TODO: [REDACTED_JIRA]
+            val expected = CryptoPortfolio(
+                accountId = AccountId(userWalletId = userWalletId, value = "main_account"),
+                accountName = AccountName.Main,
+                accountIcon = CryptoPortfolioIcon.ofMainAccount(userWalletId),
+                derivationIndex = 0,
+                isArchived = false,
+                cryptoCurrencyList = CryptoCurrencyList(
+                    currencies = emptySet(),
+                    sortType = TokensSortType.NONE,
+                    groupType = TokensGroupType.NONE,
+                ),
+            ).getOrNull()
+
+            Truth.assertThat(actual).isEqualTo(expected)
+        }
     }
 
     private fun createCryptoPortfolioStub(
@@ -166,8 +193,8 @@ class AccountTest {
         name: String = "Test Account",
         derivationIndex: Int = 0,
         currencies: Set<CryptoCurrency> = emptySet(),
-    ): Account.CryptoPortfolio {
-        return Account.CryptoPortfolio.invoke(
+    ): CryptoPortfolio {
+        return CryptoPortfolio.invoke(
             accountId = AccountId(
                 value = "value",
                 userWalletId = userWalletId,
