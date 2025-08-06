@@ -3,6 +3,7 @@ package com.tangem.tap.di.domain
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.domain.notifications.*
 import com.tangem.domain.notifications.repository.NotificationsRepository
+import com.tangem.domain.notifications.repository.PushNotificationsRepository
 import com.tangem.domain.notifications.toggles.NotificationsFeatureToggles
 import com.tangem.tap.domain.notifications.DefaultNotificationsFeatureToggles
 import com.tangem.utils.notifications.PushNotificationsTokenProvider
@@ -18,20 +19,22 @@ internal object NotificationsDomainModule {
 
     @Provides
     @Singleton
-    fun providesGetApplicationIdUseCase(notificationsRepository: NotificationsRepository): GetApplicationIdUseCase {
+    fun providesGetApplicationIdUseCase(
+        pushNotificationsRepository: PushNotificationsRepository,
+    ): GetApplicationIdUseCase {
         return GetApplicationIdUseCase(
-            notificationsRepository = notificationsRepository,
+            pushNotificationsRepository = pushNotificationsRepository,
         )
     }
 
     @Provides
     @Singleton
     fun providesSendPushTokenUseCase(
-        notificationsRepository: NotificationsRepository,
+        pushNotificationsRepository: PushNotificationsRepository,
         pushNotificationsTokenProvider: PushNotificationsTokenProvider,
     ): SendPushTokenUseCase {
         return SendPushTokenUseCase(
-            notificationsRepository = notificationsRepository,
+            pushNotificationsRepository = pushNotificationsRepository,
             pushNotificationsTokenProvider = pushNotificationsTokenProvider,
         )
     }
@@ -58,6 +61,26 @@ internal object NotificationsDomainModule {
 
     @Provides
     @Singleton
+    fun providesShouldShowNotificationUseCase(
+        notificationsRepository: NotificationsRepository,
+    ): ShouldShowNotificationUseCase {
+        return ShouldShowNotificationUseCase(
+            notificationsRepository = notificationsRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providesSetShouldShowNotificationUseCase(
+        notificationsRepository: NotificationsRepository,
+    ): SetShouldShowNotificationUseCase {
+        return SetShouldShowNotificationUseCase(
+            notificationsRepository = notificationsRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
     fun provideNotificationsFeatureToggles(featureTogglesManager: FeatureTogglesManager): NotificationsFeatureToggles {
         return DefaultNotificationsFeatureToggles(featureTogglesManager = featureTogglesManager)
     }
@@ -65,8 +88,8 @@ internal object NotificationsDomainModule {
     @Provides
     @Singleton
     fun provideGetNetworksAvailableForNotifications(
-        notificationsRepository: NotificationsRepository,
+        pushNotificationsRepository: PushNotificationsRepository,
     ): GetNetworksAvailableForNotificationsUseCase {
-        return GetNetworksAvailableForNotificationsUseCase(notificationsRepository = notificationsRepository)
+        return GetNetworksAvailableForNotificationsUseCase(pushNotificationsRepository = pushNotificationsRepository)
     }
 }

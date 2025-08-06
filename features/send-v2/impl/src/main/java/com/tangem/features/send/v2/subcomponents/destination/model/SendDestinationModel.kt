@@ -145,6 +145,11 @@ internal class SendDestinationModel @Inject constructor(
         )
     }
 
+    fun saveResult() {
+        val params = params as? SendDestinationComponentParams.DestinationParams ?: return
+        params.callback.onDestinationResult(uiState.value)
+    }
+
     private fun initSenderAddress() {
         modelScope.launch {
             senderAddresses.value = getNetworkAddressesUseCase.invokeSync(
@@ -288,11 +293,6 @@ internal class SendDestinationModel @Inject constructor(
         }
     }
 
-    private fun saveResult() {
-        val params = params as? SendDestinationComponentParams.DestinationParams ?: return
-        params.callback.onDestinationResult(uiState.value)
-    }
-
     @Suppress("LongMethod")
     private fun configDestinationNavigation() {
         val params = params as? SendDestinationComponentParams.DestinationParams ?: return
@@ -321,6 +321,7 @@ internal class SendDestinationModel @Inject constructor(
                                     isValid = state.isPrimaryButtonEnabled,
                                 ),
                             )
+                            saveResult()
                         }
                         params.callback.onBackClick()
                     },
