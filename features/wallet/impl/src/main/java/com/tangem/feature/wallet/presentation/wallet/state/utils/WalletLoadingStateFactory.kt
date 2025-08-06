@@ -45,8 +45,8 @@ internal class WalletLoadingStateFactory(
             walletCardState = WalletCardState.Loading(
                 id = userWallet.walletId,
                 title = userWallet.name,
-                additionalInfo = null, // TODO [REDACTED_TASK_KEY]
-                imageResId = null, // TODO [REDACTED_TASK_KEY]
+                additionalInfo = WalletAdditionalInfoFactory.resolve(wallet = userWallet),
+                imageResId = null,
                 dropDownItems = persistentListOf(),
             ),
             buttons = createMultiWalletActions(userWallet),
