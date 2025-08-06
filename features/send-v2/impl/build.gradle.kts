@@ -21,6 +21,7 @@ dependencies {
     implementation(projects.features.txhistory.api)
     implementation(projects.features.nft.api)
     implementation(projects.features.swapV2.api)
+    implementation(projects.features.manageTokens.api)
 
     /** Libs */
     implementation(projects.libs.crypto)
