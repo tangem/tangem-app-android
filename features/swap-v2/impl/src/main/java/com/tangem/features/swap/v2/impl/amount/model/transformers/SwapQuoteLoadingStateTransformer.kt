@@ -16,6 +16,7 @@ internal object SwapQuoteLoadingStateTransformer : Transformer<SwapAmountUM> {
         }
         return prevState.copy(
             selectedQuote = SwapQuoteUM.Loading,
+            isPrimaryButtonEnabled = false,
         )
     }
 }
