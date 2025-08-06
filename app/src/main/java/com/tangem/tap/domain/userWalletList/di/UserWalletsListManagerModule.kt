@@ -71,23 +71,7 @@ internal object UserWalletsListManagerModule {
         dispatchers: CoroutineDispatcherProvider,
     ): UserWalletsListManager {
         val moshi = buildMoshi()
-
-        val secureStorage = AndroidSecureStorage(
-            preferences = SecureStorage.createEncryptedSharedPreferences(
-                context = applicationContext,
-                storageName = "user_wallets_storage",
-            ),
-            androidSecureStorageV2 = AndroidSecureStorageV2(
-                appContext = applicationContext,
-                useStrongBox = true,
-                name = "user_wallets_storage2",
-            ),
-            androidSecureStorageV3 = AndroidSecureStorageV2(
-                appContext = applicationContext,
-                useStrongBox = false,
-                name = "user_wallets_storage3",
-            ),
-        )
+        val secureStorage = buildSecureStorage(applicationContext = applicationContext)
 
         val authenticatedStorage = AuthenticatedStorage(
             secureStorage = UserWalletsKeysStoreDecorator(
@@ -137,23 +121,7 @@ internal object UserWalletsListManagerModule {
         passwordRequester: HotWalletPasswordRequester,
     ): UserWalletsListRepository {
         val moshi = buildMoshi()
-
-        val secureStorage = AndroidSecureStorage(
-            preferences = SecureStorage.createEncryptedSharedPreferences(
-                context = applicationContext,
-                storageName = "user_wallets_storage",
-            ),
-            androidSecureStorageV2 = AndroidSecureStorageV2(
-                appContext = applicationContext,
-                useStrongBox = true,
-                name = "user_wallets_storage2",
-            ),
-            androidSecureStorageV3 = AndroidSecureStorageV2(
-                appContext = applicationContext,
-                useStrongBox = false,
-                name = "user_wallets_storage3",
-            ),
-        )
+        val secureStorage = buildSecureStorage(applicationContext = applicationContext)
 
         val authenticatedStorage = AuthenticatedStorage(
             secureStorage = UserWalletsKeysStoreDecorator(
@@ -214,5 +182,24 @@ internal object UserWalletsListManagerModule {
             .add(VisaCardActivationStatus.jsonAdapter)
             .addLast(KotlinJsonAdapterFactory())
             .build()
+    }
+
+    fun buildSecureStorage(@ApplicationContext applicationContext: Context): SecureStorage {
+        return AndroidSecureStorage(
+            preferences = SecureStorage.createEncryptedSharedPreferences(
+                context = applicationContext,
+                storageName = "user_wallets_storage",
+            ),
+            androidSecureStorageV2 = AndroidSecureStorageV2(
+                appContext = applicationContext,
+                useStrongBox = true,
+                name = "user_wallets_storage2",
+            ),
+            androidSecureStorageV3 = AndroidSecureStorageV2(
+                appContext = applicationContext,
+                useStrongBox = false,
+                name = "user_wallets_storage3",
+            ),
+        )
     }
 }
