@@ -460,7 +460,7 @@ internal class DefaultLegacyWalletConnectRepository(
             proposerPublicKey = sessionProposal.proposerPublicKey,
             namespaces = preparedRequiredNamespaces.ifEmpty {
                 sessionProposal.createPreparedOptionalNamespaces(userChains)
-            },
+            }.filterValues { it.accounts.isNotEmpty() && it.chains?.isNotEmpty() == true },
         )
 
         Timber.i("Session approval is prepared for sending: $sessionApproval")
