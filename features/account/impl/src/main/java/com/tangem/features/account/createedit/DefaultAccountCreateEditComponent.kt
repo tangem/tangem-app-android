@@ -1,5 +1,6 @@
 package com.tangem.features.account.createedit
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -26,6 +27,7 @@ internal class DefaultAccountCreateEditComponent @AssistedInject constructor(
             modifier = modifier,
             state = state,
         )
+        BackHandler(onBack = state.onCloseClick)
     }
 
     @AssistedFactory
