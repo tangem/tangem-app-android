@@ -235,6 +235,8 @@ dependencies {
     implementation(projects.features.createWalletSelection.impl)
     implementation(projects.features.home.api)
     implementation(projects.features.home.impl)
+    implementation(projects.features.account.api)
+    implementation(projects.features.account.impl)
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)
