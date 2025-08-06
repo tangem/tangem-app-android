@@ -3,7 +3,6 @@ package com.tangem.features.walletconnect.connections.model.transformers
 import com.tangem.domain.models.network.Network
 import com.tangem.utils.converter.Converter
 
-@Suppress("DestructuringDeclarationWithTooManyEntries")
 internal object WcConnectButtonAvailabilityConverter : Converter<WcConnectButtonAvailabilityConverter.Input, Boolean> {
 
     override fun convert(value: Input): Boolean {
