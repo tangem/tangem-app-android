@@ -379,6 +379,7 @@ private fun SendWithSwapSuccessContent_Preview() {
                     ),
                     feeFiatRateUM = null,
                     feeNonce = FeeNonce.None,
+                    isPrimaryButtonEnabled = false,
                 ),
                 confirmUM = ConfirmUM.Success(
                     isPrimaryButtonEnabled = true,
