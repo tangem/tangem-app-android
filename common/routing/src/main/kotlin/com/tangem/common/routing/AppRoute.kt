@@ -9,6 +9,7 @@ import com.tangem.core.decompose.navigation.Route
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.feedback.models.CardInfo
 import com.tangem.domain.markets.TokenMarketParams
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWalletId
@@ -320,4 +321,14 @@ sealed class AppRoute(val path: String) : Route {
         val userWalletId: UserWalletId,
         val currency: CryptoCurrency,
     ) : AppRoute(path = "/send_with_swap/${userWalletId.stringValue}/${currency.symbol}")
+
+    @Serializable
+    data class CreateAccount(
+        val userWalletId: UserWalletId,
+    ) : AppRoute(path = "/create_account/${userWalletId.stringValue}")
+
+    @Serializable
+    data class EditAccount(
+        val account: Account,
+    ) : AppRoute(path = "/edit_account/${account.accountId.value}")
 }

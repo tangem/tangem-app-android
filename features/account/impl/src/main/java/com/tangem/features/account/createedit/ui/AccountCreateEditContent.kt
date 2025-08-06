@@ -33,6 +33,7 @@ import com.tangem.core.ui.components.SpacerH8
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.components.fields.AutoSizeTextField
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
@@ -66,7 +67,7 @@ internal fun AccountCreateEditContent(state: AccountCreateEditUM, modifier: Modi
                 .weight(1f),
 
         ) {
-            AccountSummary(state.account, state.account.onNameChange)
+            AccountSummary(state.account)
             SpacerH24()
             AccountColor(state.colorsState)
             SpacerH24()
@@ -91,7 +92,7 @@ internal fun AccountCreateEditContent(state: AccountCreateEditUM, modifier: Modi
 }
 
 @Composable
-private fun AccountSummary(account: AccountCreateEditUM.Account, onNameChange: (String) -> Unit) {
+private fun AccountSummary(account: AccountCreateEditUM.Account) {
     Column(
         modifier = Modifier
             .clip(RoundedCornerShape(16.dp))
@@ -115,9 +116,9 @@ private fun AccountSummary(account: AccountCreateEditUM.Account, onNameChange: (
             centered = true,
             textStyle = TangemTheme.typography.head,
             placeholder = account.inputPlaceholder,
-            value = account.name.resolveReference(),
+            value = account.name,
             singleLine = true,
-            onValueChange = onNameChange,
+            onValueChange = account.onNameChange,
         )
         SpacerH(20.dp)
     }
@@ -133,9 +134,11 @@ private fun AccountIcon(account: AccountCreateEditUM.Account) {
             .background(account.portfolioIcon.color.getUiColor()),
     ) {
         val icon = account.portfolioIcon.value
+        val letter = account.name.firstOrNull()
+            ?: account.inputPlaceholder.resolveReference().first()
         when {
             icon == CryptoPortfolioIcon.Icon.Letter -> Text(
-                text = account.name.resolveReference().first().uppercase(),
+                text = letter.uppercase(),
                 style = TangemTheme.typography.head,
                 color = TangemTheme.colors.text.constantWhite,
             )
@@ -298,19 +301,27 @@ private class PreviewStateProvider : CollectionPreviewParameterProvider<AccountC
         var portfolioIcon = CryptoPortfolioIcon.ofDefaultCustomAccount()
         val first = AccountCreateEditUM(
             title = stringReference("Add account"),
+            onCloseClick = {},
             account = Account(
+                name = "",
                 portfolioIcon = portfolioIcon,
+                inputPlaceholder = resourceReference(R.string.account_form_placeholder_new_account),
+                onNameChange = {},
                 derivationInfo = stringReference("Account #03 — used for address derivation."),
             ),
             colorsState = AccountCreateEditUM.Colors(
                 selected = portfolioIcon.color,
+                onColorSelect = {},
                 list = colors.toImmutableList(),
             ),
             iconsState = AccountCreateEditUM.Icons(
                 selected = portfolioIcon.value,
+                onIconSelect = {},
                 list = icons.toImmutableList(),
             ),
             buttonState = AccountCreateEditUM.Button(
+                isButtonEnabled = false,
+                onConfirmClick = {},
                 text = stringReference("Add account"),
             ),
         )
@@ -322,20 +333,27 @@ private class PreviewStateProvider : CollectionPreviewParameterProvider<AccountC
         )
         val second = AccountCreateEditUM(
             title = stringReference("Edit account"),
+            onCloseClick = {},
             account = Account(
                 portfolioIcon = portfolioIcon,
-                name = stringReference("Main account"),
+                name = "Main account",
+                inputPlaceholder = resourceReference(R.string.account_form_placeholder_edit_account),
+                onNameChange = {},
                 derivationInfo = stringReference("Account #03 — used for address derivation."),
             ),
             colorsState = AccountCreateEditUM.Colors(
                 selected = portfolioIcon.color,
+                onColorSelect = {},
                 list = colors.toImmutableList(),
             ),
             iconsState = AccountCreateEditUM.Icons(
                 selected = portfolioIcon.value,
+                onIconSelect = {},
                 list = icons.toImmutableList(),
             ),
             buttonState = AccountCreateEditUM.Button(
+                isButtonEnabled = false,
+                onConfirmClick = {},
                 text = stringReference("Save"),
             ),
         )
