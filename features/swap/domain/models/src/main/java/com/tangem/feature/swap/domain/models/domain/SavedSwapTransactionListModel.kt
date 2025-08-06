@@ -50,4 +50,16 @@ data class SavedSwapTransactionModel(
     val provider: SwapProvider,
     @Json(name = "status")
     val status: ExchangeStatusModel? = null,
+    @Json(name = "swapTxType")
+    val swapTxTypeDTO: SwapTxTypeDTO? = SwapTxTypeDTO.Swap,
 )
+
+// TODO refactor to use separate models to store
+@JsonClass(generateAdapter = false)
+enum class SwapTxTypeDTO {
+    @Json(name = "Swap")
+    Swap,
+
+    @Json(name = "SendWithSwap")
+    SendWithSwap,
+}
