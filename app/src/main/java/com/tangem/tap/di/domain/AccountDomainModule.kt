@@ -17,8 +17,8 @@ internal object AccountDomainModule {
 
     @Provides
     @Singleton
-    fun provideAddCryptoPortfolioUseCase(): AddCryptoPortfolioUseCase {
-        return AddCryptoPortfolioUseCase()
+    fun provideAddCryptoPortfolioUseCase(accountsCRUDRepository: AccountsCRUDRepository): AddCryptoPortfolioUseCase {
+        return AddCryptoPortfolioUseCase(crudRepository = accountsCRUDRepository)
     }
 
     @Provides
