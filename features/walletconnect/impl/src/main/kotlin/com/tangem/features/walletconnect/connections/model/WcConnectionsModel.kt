@@ -13,7 +13,6 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenuItem
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
@@ -50,7 +49,7 @@ internal class WcConnectionsModel @Inject constructor(
     private val wcDisconnectUseCase: WcDisconnectUseCase,
     private val wcPairService: WcPairService,
     override val dispatchers: CoroutineDispatcherProvider,
-    private val analytics: AnalyticsEventHandler,
+    analytics: AnalyticsEventHandler,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
@@ -127,7 +126,7 @@ internal class WcConnectionsModel @Inject constructor(
     private fun disconnectAllSessions() {
         modelScope.launch {
             wcDisconnectUseCase.disconnectAll()
-            uiMessageSender.send(SnackbarMessage(message = stringReference("All dApps disconnected")))
+            uiMessageSender.send(SnackbarMessage(message = resourceReference(R.string.wc_all_dapps_disconnected)))
         }
     }
 
