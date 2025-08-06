@@ -213,9 +213,12 @@ private fun AppInfoItem(appInfo: WcConnectedAppInfo, modifier: Modifier = Modifi
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
+                    modifier = Modifier.weight(1f, fill = false),
                     text = appInfo.name,
                     color = TangemTheme.colors.text.primary1,
                     style = TangemTheme.typography.subtitle2,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
                 if (appInfo.verifiedState is VerifiedDAppState.Verified) {
                     Icon(
