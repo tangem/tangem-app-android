@@ -16,6 +16,7 @@ dependencies {
     /** Core */
     implementation(projects.core.decompose)
     implementation(projects.core.ui)
+    implementation(projects.core.analytics.models)
 
     /** Common */
     implementation(projects.common.ui)
