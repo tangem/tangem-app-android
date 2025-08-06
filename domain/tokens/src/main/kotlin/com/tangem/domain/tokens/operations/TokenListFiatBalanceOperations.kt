@@ -3,10 +3,10 @@ package com.tangem.domain.tokens.operations
 import arrow.core.NonEmptyList
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.getResultStatusSource
-import com.tangem.domain.staking.model.stakekit.YieldBalance
+import com.tangem.domain.models.staking.YieldBalance
 import com.tangem.domain.staking.utils.getTotalWithRewardsStakingBalance
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.extensions.orZero
 import java.math.BigDecimal
