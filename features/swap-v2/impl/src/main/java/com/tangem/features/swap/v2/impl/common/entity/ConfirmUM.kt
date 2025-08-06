@@ -18,7 +18,18 @@ internal sealed class ConfirmUM {
         val showTapHelp: Boolean,
         val sendingFooter: TextReference,
         val notifications: ImmutableList<NotificationUM>,
-    ) : ConfirmUM()
+        val tosUM: TosUM?,
+    ) : ConfirmUM() {
+        data class TosUM(
+            val tosLink: LegalUM?,
+            val policyLink: LegalUM?,
+        )
+
+        data class LegalUM(
+            val title: TextReference,
+            val link: String,
+        )
+    }
 
     data class Success(
         override val isPrimaryButtonEnabled: Boolean = true,
