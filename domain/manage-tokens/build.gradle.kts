@@ -21,6 +21,7 @@ dependencies {
     implementation(projects.domain.staking)
     implementation(projects.domain.tokens)
     implementation(projects.domain.card)
+    implementation(projects.domain.wallets)
     implementation(projects.domain.legacy)
 
     /* Core */

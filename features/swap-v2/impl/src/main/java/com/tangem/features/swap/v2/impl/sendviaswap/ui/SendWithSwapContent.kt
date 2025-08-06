@@ -59,7 +59,13 @@ internal fun SendWithSwapContent(
         }
         // TODO refactor [REDACTED_TASK_KEY]
         val primaryButton = navigationUM.primaryButton
-        Row(modifier = Modifier.padding(16.dp)) {
+        Row(
+            modifier = Modifier.padding(
+                start = 16.dp,
+                end = 16.dp,
+                bottom = 16.dp,
+            ),
+        ) {
             TangemButton(
                 modifier = Modifier.fillMaxWidth(),
                 text = primaryButton.textReference.resolveReference(),
