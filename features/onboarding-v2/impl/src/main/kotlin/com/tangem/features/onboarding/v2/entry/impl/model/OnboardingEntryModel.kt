@@ -206,7 +206,7 @@ internal class OnboardingEntryModel @Inject constructor(
                 router.replaceAll(AppRoute.Wallet)
             }
         } else {
-            router.replaceAll(AppRoute.Home)
+            router.replaceAll(AppRoute.Home())
         }
     }
 
