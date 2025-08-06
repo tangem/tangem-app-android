@@ -42,9 +42,9 @@ internal class PreviewManageTokensComponent(
                 ManageTokensTopBarUM.ManageContent(
                     title = resourceReference(id = R.string.main_manage_tokens),
                     onBackButtonClick = {},
-                    endButton = TopAppBarButtonUM(
+                    endButton = TopAppBarButtonUM.Icon(
                         iconRes = R.drawable.ic_plus_24,
-                        onIconClicked = {},
+                        onClicked = {},
                     ),
                 )
             } else {
@@ -163,6 +163,7 @@ internal class PreviewManageTokensComponent(
                 hasFiatFeeRate = false,
                 canHandleTokens = false,
                 transactionExtrasType = Network.TransactionExtrasType.NONE,
+                nameResolvingType = Network.NameResolvingType.NONE,
             ),
             name = "NETWORK$networkIndex",
             type = "N$networkIndex",
