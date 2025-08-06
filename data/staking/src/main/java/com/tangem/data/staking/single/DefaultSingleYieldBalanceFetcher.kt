@@ -20,9 +20,7 @@ internal class DefaultSingleYieldBalanceFetcher @Inject constructor(
         return multiYieldBalanceFetcher(
             params = MultiYieldBalanceFetcher.Params(
                 userWalletId = params.userWalletId,
-                currencyIdWithNetworkMap = mapOf(
-                    params.currencyId to params.network,
-                ),
+                stakingIds = setOf(params.stakingId),
             ),
         )
     }
