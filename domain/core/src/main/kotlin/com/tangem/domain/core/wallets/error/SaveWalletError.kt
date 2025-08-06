@@ -1,4 +1,4 @@
-package com.tangem.domain.wallets.models
+package com.tangem.domain.core.wallets.error
 
 /**
 [REDACTED_AUTHOR]
