@@ -7,9 +7,9 @@ import com.domain.blockaid.models.dapp.CheckDAppResult
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.iconResId
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.walletconnect.model.WcSession
@@ -23,6 +23,7 @@ import com.tangem.features.walletconnect.connections.entity.WcPrimaryButtonConfi
 import com.tangem.features.walletconnect.connections.entity.WcAppInfoSecurityNotification
 import com.tangem.features.walletconnect.connections.model.transformers.WcAppSubtitleConverter
 import com.tangem.features.walletconnect.connections.routes.ConnectedAppInfoRoutes
+import com.tangem.features.walletconnect.impl.R
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -35,7 +36,6 @@ import javax.inject.Inject
 @Stable
 @ModelScoped
 internal class WcConnectedAppInfoModel @Inject constructor(
-    private val router: Router,
     private val wcSessionsUseCase: WcSessionsUseCase,
     private val messageSender: UiMessageSender,
     private val disconnectUseCase: WcDisconnectUseCase,
@@ -121,7 +121,7 @@ internal class WcConnectedAppInfoModel @Inject constructor(
         }
         modelScope.launch {
             disconnectUseCase.disconnect(session)
-            messageSender.send(SnackbarMessage(message = stringReference("dApp disconnected")))
+            messageSender.send(SnackbarMessage(message = resourceReference(R.string.wc_dapp_disconnected)))
             dismiss()
         }
     }
