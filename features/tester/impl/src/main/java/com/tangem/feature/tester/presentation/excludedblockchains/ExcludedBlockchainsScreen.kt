@@ -46,9 +46,9 @@ internal fun ExcludedBlockchainsScreen(state: ExcludedBlockchainsScreenUM, modif
             TangemTopAppBar(
                 title = resourceReference(R.string.excluded_blockchains),
                 startButton = TopAppBarButtonUM.Back(onBackClicked = state.popBack),
-                endButton = TopAppBarButtonUM(
+                endButton = TopAppBarButtonUM.Icon(
                     iconRes = R.drawable.ic_refresh_24,
-                    onIconClicked = state.onRecoverClick,
+                    onClicked = state.onRecoverClick,
                 ),
             )
         },
