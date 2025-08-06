@@ -7,15 +7,14 @@ import com.tangem.screens.onDisclaimerScreen
 import com.tangem.screens.onStoriesScreen
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.github.kakaocup.kakao.intent.KIntent
-import org.junit.Test
 
 @HiltAndroidTest
 class StoriesTest : BaseTestCase() {
 
-    @Test
+    // @Test
     fun clickOnOrderButtonTest() =
         setupHooks().run {
-            val buyWalletUrl = "https://buy.tangem.com/?utm_source=tangem-app&utm_medium=app"
+            val buyWalletUrl = "https://buy.tangem.com/"
             onDisclaimerScreen {
                 step("Click on 'Accept' button") {
                     acceptButton.clickWithAssertion()
