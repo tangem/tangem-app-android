@@ -35,7 +35,7 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.components.Keyboard
 import com.tangem.core.ui.components.Notifier
 import com.tangem.core.ui.components.OutlineTextFieldWithIcon
-import com.tangem.core.ui.components.PrimaryButtonIconEnd
+import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.TangemTextFieldsDefault
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.keyboardAsState
@@ -91,12 +91,11 @@ internal fun AddExistingWalletImportContent(state: AddExistingWalletImportUM, mo
                 )
             }
 
-            PrimaryButtonIconEnd(
+            PrimaryButton(
                 modifier = Modifier
                     .padding(16.dp)
                     .fillMaxWidth(),
                 text = stringResourceSafe(id = R.string.common_import),
-                iconResId = R.drawable.ic_tangem_24,
                 enabled = state.createWalletEnabled,
                 showProgress = state.createWalletProgress,
                 onClick = state.createWalletClick,
