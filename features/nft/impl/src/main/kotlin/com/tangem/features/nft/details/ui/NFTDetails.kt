@@ -28,9 +28,8 @@ internal fun NFTDetails(state: NFTDetailsUM, modifier: Modifier = Modifier) {
         ) {
             TangemTopAppBar(
                 modifier = Modifier,
-                startButton = TopAppBarButtonUM(
-                    iconRes = R.drawable.ic_back_24,
-                    onIconClicked = state.onBackClick,
+                startButton = TopAppBarButtonUM.Back(
+                    onBackClicked = state.onBackClick,
                 ),
                 title = state.nftAsset.name,
             )

@@ -42,8 +42,8 @@ import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.domain.staking.model.stakekit.BalanceType
-import com.tangem.domain.staking.model.stakekit.RewardBlockType
+import com.tangem.domain.models.staking.BalanceType
+import com.tangem.domain.models.staking.RewardBlockType
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.model.StakingClickIntents
 import com.tangem.features.staking.impl.presentation.state.BalanceState

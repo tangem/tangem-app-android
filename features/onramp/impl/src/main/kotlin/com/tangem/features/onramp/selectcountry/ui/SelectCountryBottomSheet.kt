@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import coil.compose.AsyncImage
@@ -25,6 +26,7 @@ import com.tangem.core.ui.components.fields.SearchBar
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.test.SelectCountryBottomSheetTestTags
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.selectcountry.entity.CountryItemState
 import com.tangem.features.onramp.selectcountry.entity.CountryListUM
@@ -40,7 +42,7 @@ internal fun SelectCountryBottomSheet(config: TangemBottomSheetConfig, content: 
 @Composable
 internal fun OnrampCountryList(state: CountryListUM, modifier: Modifier = Modifier) {
     LazyColumn(
-        modifier = modifier,
+        modifier = modifier.testTag(SelectCountryBottomSheetTestTags.LAZY_LIST),
         contentPadding = PaddingValues(horizontal = TangemTheme.dimens.spacing16),
     ) {
         item(key = "search_bar") {
@@ -102,13 +104,15 @@ private fun LazyListScope.countryListWithContent(state: CountryListUM.Content) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable(onClick = item.onClick)
-                        .padding(vertical = TangemTheme.dimens.spacing16),
+                        .padding(vertical = TangemTheme.dimens.spacing16)
+                        .testTag(SelectCountryBottomSheetTestTags.COUNTRY_ITEM),
                     state = item,
                 )
                 is CountryItemState.WithContent.Unavailable -> UnavailableCountryItem(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = TangemTheme.dimens.spacing16),
+                        .padding(vertical = TangemTheme.dimens.spacing16)
+                        .testTag(SelectCountryBottomSheetTestTags.UNAVAILABLE_COUNTRY_ITEM),
                     state = item,
                 )
             }
@@ -138,13 +142,17 @@ private fun ContentCountryItem(state: CountryItemState.WithContent.Content, modi
         verticalAlignment = Alignment.CenterVertically,
     ) {
         AsyncImage(
-            modifier = Modifier.size(TangemTheme.dimens.size36),
+            modifier = Modifier
+                .size(TangemTheme.dimens.size36)
+                .testTag(SelectCountryBottomSheetTestTags.COUNTRY_ICON),
             model = state.flagUrl,
             contentDescription = null,
         )
         Text(
             text = state.countryName,
-            modifier = Modifier.weight(1F),
+            modifier = Modifier
+                .weight(1F)
+                .testTag(SelectCountryBottomSheetTestTags.COUNTRY_NAME),
             overflow = TextOverflow.Ellipsis,
             maxLines = 1,
             style = TangemTheme.typography.subtitle2,
@@ -172,7 +180,8 @@ private fun UnavailableCountryItem(state: CountryItemState.WithContent.Unavailab
         AsyncImage(
             modifier = Modifier
                 .size(TangemTheme.dimens.size36)
-                .alpha(0.4F),
+                .alpha(0.4F)
+                .testTag(SelectCountryBottomSheetTestTags.UNAVAILABLE_COUNTRY_ICON),
             model = state.flagUrl,
             contentDescription = null,
         )
