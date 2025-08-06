@@ -16,9 +16,9 @@ import com.tangem.domain.core.utils.lceContent
 import com.tangem.domain.core.utils.lceError
 import com.tangem.domain.core.utils.lceLoading
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.tokens.GetTokenListUseCase
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.feature.swap.domain.GetAvailablePairsUseCase
 import com.tangem.feature.swap.domain.models.domain.LeastTokenInfo
@@ -200,7 +200,7 @@ internal class AvailableSwapPairsModel @Inject constructor(
                 .collectLatest { selectedStatus ->
                     val networkInfo = selectedStatus.toLeastTokenInfo()
 
-                    val isAlreadyLoaded = availablePairsByNetworkFlow.value[networkInfo]?.isContent() ?: false
+                    val isAlreadyLoaded = availablePairsByNetworkFlow.value[networkInfo]?.isContent() == true
                     if (isAlreadyLoaded) return@collectLatest
 
                     val statuses = tokenListFlow.firstOrNull() ?: return@collectLatest

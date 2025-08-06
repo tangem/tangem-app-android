@@ -1,14 +1,13 @@
 package com.tangem.features.hotwallet.accesscoderequest
 
-import androidx.compose.foundation.focusable
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.FullScreen
+import com.tangem.domain.wallets.hot.HotWalletPasswordRequester
 import com.tangem.features.hotwallet.HotAccessCodeRequestComponent
-import com.tangem.features.hotwallet.HotWalletPasswordRequester
 import com.tangem.features.hotwallet.accesscoderequest.ui.HotAccessCodeRequestFullScreenContent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
