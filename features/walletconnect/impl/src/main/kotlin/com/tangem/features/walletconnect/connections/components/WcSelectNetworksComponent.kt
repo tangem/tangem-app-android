@@ -37,7 +37,7 @@ import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetWi
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -98,7 +98,7 @@ private fun WcSelectNetworksBS(
         containerColor = TangemTheme.colors.background.tertiary,
         title = {
             TangemModalBottomSheetTitle(
-                title = stringReference("Choose networks"),
+                title = resourceReference(R.string.common_choose_network),
                 startIconRes = R.drawable.ic_back_24,
                 onStartClick = onBack,
             )
@@ -114,7 +114,7 @@ private fun WcSelectNetworksBS(
                 modifier = Modifier
                     .padding(16.dp)
                     .fillMaxWidth(),
-                text = "Done",
+                text = stringResourceSafe(R.string.common_done),
                 onClick = state.onDone,
                 enabled = state.doneButtonEnabled,
             )
@@ -181,7 +181,7 @@ private fun AvailableNetworksBlock(
     Column(modifier = modifier) {
         Text(
             modifier = Modifier.padding(top = 12.dp, bottom = 4.dp, start = 12.dp, end = 12.dp),
-            text = "Available networks",
+            text = stringResourceSafe(R.string.common_available_networks),
             style = TangemTheme.typography.subtitle2,
             color = TangemTheme.colors.text.tertiary,
         )
@@ -203,7 +203,7 @@ private fun NotAddedBlock(notAdded: ImmutableList<WcNetworkInfoItem>, modifier: 
     Column(modifier = modifier) {
         Text(
             modifier = Modifier.padding(top = 12.dp, bottom = 4.dp, start = 12.dp, end = 12.dp),
-            text = "Not Added",
+            text = stringResourceSafe(R.string.common_not_added),
             style = TangemTheme.typography.subtitle2,
             color = TangemTheme.colors.text.tertiary,
         )
@@ -255,7 +255,7 @@ private fun NetworkItems(networkItem: WcNetworkInfoItem, modifier: Modifier = Mo
                 }
             }
             is WcNetworkInfoItem.Required -> Text(
-                text = "Required",
+                text = stringResourceSafe(R.string.common_required),
                 style = TangemTheme.typography.body2,
                 color = TangemTheme.colors.text.tertiary,
             )
