@@ -89,6 +89,7 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
             cryptoCurrencyStatus = model.primaryCurrencyStatus,
             feeStateConfiguration = FeeStateConfiguration.ExcludeLow,
             feeDisplaySource = FeeDisplaySource.Screen,
+            analyticsCategoryName = params.analyticsCategoryName,
         ),
         onResult = model::onFeeResult,
     )
