@@ -5,6 +5,7 @@ import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.tangem.common.ui.notifications.NotificationId
 import com.tangem.common.ui.notifications.NotificationUM
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -22,6 +23,7 @@ import com.tangem.features.managetokens.choosetoken.entity.ChooseManagedTokenUM
 import com.tangem.features.managetokens.component.ChooseManagedTokensComponent
 import com.tangem.features.managetokens.component.ChooseManagedTokensComponent.Source
 import com.tangem.features.managetokens.component.ManageTokensSource
+import com.tangem.features.managetokens.component.analytics.CommonManageTokensAnalyticEvents
 import com.tangem.features.managetokens.entity.item.CurrencyItemUM
 import com.tangem.features.managetokens.entity.managetokens.ManageTokensTopBarUM
 import com.tangem.features.managetokens.entity.managetokens.ManageTokensUM
@@ -40,12 +42,14 @@ import timber.log.Timber
 import javax.inject.Inject
 import kotlin.collections.isNotEmpty
 
+@Suppress("LongParameterList")
 @ModelScoped
 internal class ChooseManagedTokensModel @Inject constructor(
     private val router: Router,
     override val dispatchers: CoroutineDispatcherProvider,
     private val uiMessageSender: UiMessageSender,
     private val setShouldShowNotificationUseCase: SetShouldShowNotificationUseCase,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     paramsContainer: ParamsContainer,
     manageTokensListManagerFactory: ManageTokensListManager.Factory,
 ) : Model() {
@@ -60,6 +64,7 @@ internal class ChooseManagedTokensModel @Inject constructor(
                     initialCurrency = params.initialCurrency,
                     selectedCurrency = params.selectedCurrency,
                     token = token,
+                    isSearchedToken = uiState.value.readContent.search.isActive,
                 ),
             )
         },
@@ -132,6 +137,17 @@ internal class ChooseManagedTokensModel @Inject constructor(
     private fun observeSearchQueryChanges() {
         uiState
             .distinctUntilChanged { old, new ->
+                if (!new.readContent.search.isActive && old.readContent.search.isActive) {
+                    analyticsEventHandler.send(
+                        CommonManageTokensAnalyticEvents.TokenSearched(
+                            params.analyticsCategoryName,
+                            token = null,
+                            blockchain = null,
+                            isTokenChosen = false,
+                        ),
+                    )
+                }
+
                 // It's also used to skip search activation to avoid searching an empty query
                 old.readContent.search.query == new.readContent.search.query && new.readContent.search.isActive
             }
@@ -251,6 +267,11 @@ internal class ChooseManagedTokensModel @Inject constructor(
     }
 
     private fun toggleSearchBar(isActive: Boolean) {
+        if (isActive) {
+            analyticsEventHandler.send(
+                CommonManageTokensAnalyticEvents.TokenSearchClicked(params.analyticsCategoryName),
+            )
+        }
         uiState.update { state ->
             @StringRes val placeholderTextRes = if (isActive) {
                 R.string.manage_tokens_search_placeholder
