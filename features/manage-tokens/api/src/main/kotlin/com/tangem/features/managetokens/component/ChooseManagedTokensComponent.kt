@@ -14,6 +14,7 @@ interface ChooseManagedTokensComponent : ComposableContentComponent {
         val source: Source,
         val showSendViaSwapNotification: Boolean,
         val callback: ModelCallback? = null,
+        val analyticsCategoryName: String,
     )
 
     enum class Source {
