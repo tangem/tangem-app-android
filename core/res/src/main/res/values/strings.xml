@@ -400,6 +400,7 @@
   <string name="express_provider">Provider</string>
   <string name="express_provider_best_rate">Best rate</string>
   <string name="express_provider_fca_warning_list">FCA Warning List</string>
+  <string name="express_provider_in_fca_warning_list">Provider in FCA warning list</string>
   <string name="express_provider_max_amount">Available up to %s</string>
   <string name="express_provider_min_amount">Available from %s</string>
   <string name="express_provider_not_available">Unavailable for this pair</string>
