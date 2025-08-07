@@ -114,6 +114,7 @@ internal fun SwapAmountBlockContent(
                 start.linkTo(parent.start)
                 end.linkTo(parent.end)
             },
+            showFCAWarning = amountUM.showFCAWarning,
         )
     }
 }
