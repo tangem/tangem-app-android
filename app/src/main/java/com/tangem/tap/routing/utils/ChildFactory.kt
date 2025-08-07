@@ -442,6 +442,7 @@ internal class ChildFactory @Inject constructor(
                         selectedCurrency = route.selectedCurrency,
                         source = ChooseManagedTokensComponent.Source.valueOf(route.source.name),
                         showSendViaSwapNotification = route.showSendViaSwapNotification,
+                        analyticsCategoryName = route.analyticsCategoryName,
                     ),
                     componentFactory = chooseManagedTokensComponentFactory,
                 )
