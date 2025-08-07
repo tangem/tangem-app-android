@@ -116,37 +116,17 @@ class AccountTest {
         }
 
         @Test
-        fun `invoke returns NegativeDerivationIndex`() {
-            // Arrange
-            val derivationIndex = -1
-
-            // Act
-            val actual = CryptoPortfolio(
-                accountId = mockk(),
-                name = "Test Account",
-                accountIcon = mockk(),
-                derivationIndex = derivationIndex,
-                isArchived = false,
-                cryptoCurrencyList = mockk(),
-            )
-                .leftOrNull()!!
-
-            // Assert
-            val expected = CryptoPortfolio.Error.NegativeDerivationIndex
-            Truth.assertThat(actual).isEqualTo(expected)
-        }
-
-        @Test
         fun `invoke returns CryptoPortfolio`() {
             // Act
+            val derivationIndex = DerivationIndex.Main
             val actual = CryptoPortfolio(
-                accountId = AccountId(
-                    value = "value",
+                accountId = AccountId.forCryptoPortfolio(
                     userWalletId = UserWalletId("011"),
+                    derivationIndex = derivationIndex,
                 ),
                 name = "Test Account",
                 accountIcon = CryptoPortfolioIcon.ofMainAccount(userWalletId = UserWalletId("011")),
-                derivationIndex = 0,
+                derivationIndex = derivationIndex.value,
                 isArchived = false,
                 cryptoCurrencyList = CryptoCurrencyList(
                     currencies = emptySet(),
@@ -165,24 +145,27 @@ class AccountTest {
         fun createMainAccount() {
             // Arrange
             val userWalletId = UserWalletId("011")
+            val derivationIndex = DerivationIndex.Main
 
             // Act
             val actual = CryptoPortfolio.createMainAccount(userWalletId = userWalletId)
 
             // Assert
-            // TODO: [REDACTED_JIRA]
             val expected = CryptoPortfolio(
-                accountId = AccountId(userWalletId = userWalletId, value = "main_account"),
+                accountId = AccountId.forCryptoPortfolio(
+                    userWalletId = userWalletId,
+                    derivationIndex = derivationIndex,
+                ),
                 accountName = AccountName.Main,
                 accountIcon = CryptoPortfolioIcon.ofMainAccount(userWalletId),
-                derivationIndex = 0,
+                derivationIndex = derivationIndex,
                 isArchived = false,
                 cryptoCurrencyList = CryptoCurrencyList(
                     currencies = emptySet(),
                     sortType = TokensSortType.NONE,
                     groupType = TokensGroupType.NONE,
                 ),
-            ).getOrNull()
+            )
 
             Truth.assertThat(actual).isEqualTo(expected)
         }
@@ -194,11 +177,10 @@ class AccountTest {
         derivationIndex: Int = 0,
         currencies: Set<CryptoCurrency> = emptySet(),
     ): CryptoPortfolio {
+        val accountIndex = DerivationIndex(value = derivationIndex).getOrNull()!!
+
         return CryptoPortfolio.invoke(
-            accountId = AccountId(
-                value = "value",
-                userWalletId = userWalletId,
-            ),
+            accountId = AccountId.forCryptoPortfolio(userWalletId = userWalletId, derivationIndex = accountIndex),
             name = name,
             accountIcon = CryptoPortfolioIcon.ofMainAccount(userWalletId),
             derivationIndex = derivationIndex,
