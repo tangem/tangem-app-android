@@ -23,6 +23,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -33,6 +34,7 @@ import androidx.constraintlayout.compose.Visibility
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.tangem.core.ui.components.RectangleShimmer
+import com.tangem.core.ui.components.SpacerW8
 import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemColorPalette
@@ -44,6 +46,7 @@ import com.tangem.domain.express.models.ExpressRateType
 import com.tangem.features.swap.v2.impl.R
 import kotlinx.coroutines.delay
 
+@Suppress("LongParameterList")
 @Composable
 fun SwapChooseProviderContent(
     expressProvider: ExpressProvider?,
@@ -51,6 +54,7 @@ fun SwapChooseProviderContent(
     showBestRateAnimation: Boolean,
     onClick: () -> Unit,
     onFinishAnimation: () -> Unit,
+    showFCAWarning: Boolean,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -83,6 +87,32 @@ fun SwapChooseProviderContent(
             SpacerWMax()
             ProviderInfo(expressProvider, isBestRate, showBestRateAnimation, onFinishAnimation)
         }
+        if (showFCAWarning) {
+            FcaProviderWarning(
+                modifier = Modifier.padding(start = 12.dp, end = 12.dp, top = 4.dp, bottom = 12.dp),
+            )
+        }
+    }
+}
+
+@Composable
+private fun FcaProviderWarning(modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            modifier = Modifier.size(TangemTheme.dimens.size16),
+            painter = painterResource(id = R.drawable.ic_warning_16),
+            tint = TangemTheme.colors.icon.informative,
+            contentDescription = null,
+        )
+        SpacerW8()
+        Text(
+            text = stringResourceSafe(R.string.express_provider_in_fca_warning_list),
+            style = TangemTheme.typography.caption2,
+            color = TangemTheme.colors.text.tertiary,
+        )
     }
 }
 
@@ -281,6 +311,7 @@ private fun SwapChooseProviderContent_Preview() {
                     slippage = null,
                 ),
                 onClick = {},
+                showFCAWarning = true,
                 onFinishAnimation = {},
             )
         }
