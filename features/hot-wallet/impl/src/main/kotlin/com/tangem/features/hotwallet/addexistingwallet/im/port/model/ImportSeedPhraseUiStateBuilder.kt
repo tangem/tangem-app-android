@@ -35,8 +35,8 @@ internal class ImportSeedPhraseUiStateBuilder(
             passPhrase = TextFieldValue(""),
             wordsErrorText = null,
             invalidWords = persistentListOf(),
-            createWalletEnabled = false,
-            createWalletProgress = false,
+            importWalletEnabled = false,
+            importWalletProgress = false,
             suggestionsList = persistentListOf(),
             wordsChange = {
                 launchInterceptWords(wordsField = it)
@@ -50,7 +50,7 @@ internal class ImportSeedPhraseUiStateBuilder(
                 updateUiState { state -> state.copy(passPhrase = it) }
             },
             onPassphraseInfoClick = ::showInfoBS,
-            createWalletClick = ::onCreateWallet,
+            importWalletClick = ::onCreateWallet,
             onSuggestionClick = { word -> addSuggestedWord(word) },
             readyToImport = false,
             infoBottomSheetConfig = TangemBottomSheetConfig.Empty,
@@ -115,7 +115,7 @@ internal class ImportSeedPhraseUiStateBuilder(
 
         updateUiState {
             it.copy(
-                createWalletEnabled = false,
+                importWalletEnabled = false,
                 wordsErrorText = null,
             )
         }
@@ -130,7 +130,7 @@ internal class ImportSeedPhraseUiStateBuilder(
                 it.copy(
                     invalidWords = invalidWords.toImmutableList(),
                     wordsErrorText = resourceReference(R.string.onboarding_seed_mnemonic_wrong_words),
-                    createWalletEnabled = false,
+                    importWalletEnabled = false,
                 )
             }
             return
@@ -143,7 +143,7 @@ internal class ImportSeedPhraseUiStateBuilder(
                 it.copy(
                     invalidWords = emptyList<String>().toImmutableList(),
                     wordsErrorText = null,
-                    createWalletEnabled = true,
+                    importWalletEnabled = true,
                 )
             }
             readyToImport(true)
@@ -154,13 +154,13 @@ internal class ImportSeedPhraseUiStateBuilder(
                 updateUiState {
                     it.copy(
                         wordsErrorText = resourceReference(R.string.onboarding_seed_mnemonic_invalid_checksum),
-                        createWalletEnabled = false,
+                        importWalletEnabled = false,
                     )
                 }
             } else {
                 updateUiState {
                     it.copy(
-                        createWalletEnabled = false,
+                        importWalletEnabled = false,
                         wordsErrorText = null,
                     )
                 }
