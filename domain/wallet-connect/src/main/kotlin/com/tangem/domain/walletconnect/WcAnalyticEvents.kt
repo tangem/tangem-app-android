@@ -15,7 +15,7 @@ import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
 sealed class WcAnalyticEvents(
     event: String,
     params: Map<String, String> = mapOf(),
-) : AnalyticsEvent(category = "Wallet Connect", event = event, params = params) {
+) : AnalyticsEvent(category = WC_CATEGORY_NAME, event = event, params = params) {
 
     object ScreenOpened : WcAnalyticEvents(event = "WC Screen Opened")
     class NewPairInitiated(source: WcPairRequest.Source) : WcAnalyticEvents(
@@ -228,5 +228,6 @@ sealed class WcAnalyticEvents(
     companion object {
         const val NETWORKS = "Networks"
         const val DOMAIN_VERIFICATION = "Domain Verification"
+        const val WC_CATEGORY_NAME = "Wallet Connect"
     }
 }
