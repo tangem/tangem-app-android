@@ -8,6 +8,7 @@ import com.tangem.domain.express.models.ExpressError
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM.Content.DifferencePercent
+import com.tangem.features.swap.v2.impl.common.isRestrictedByFCA
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.extensions.isPositive
 import com.tangem.utils.transformer.Transformer
@@ -20,6 +21,7 @@ internal class SwapAmountSetQuotesTransformer(
     private val secondaryMaximumAmountBoundary: EnterAmountBoundary?,
     private val secondaryMinimumAmountBoundary: EnterAmountBoundary?,
     private val isSilentReload: Boolean,
+    private val needApplyFcaRestrictions: Boolean,
 ) : Transformer<SwapAmountUM> {
     override fun transform(prevState: SwapAmountUM): SwapAmountUM {
         if (prevState !is SwapAmountUM.Content) return prevState
@@ -36,6 +38,8 @@ internal class SwapAmountSetQuotesTransformer(
             quoteUM = selectedQuote,
             secondaryMaximumAmountBoundary = secondaryMaximumAmountBoundary,
             secondaryMinimumAmountBoundary = secondaryMinimumAmountBoundary,
+            needApplyFCARestrictions = needApplyFcaRestrictions &&
+                selectedQuote.provider?.isRestrictedByFCA() == true,
         )
 
         val updatedState = selectQuoteTransformer.transform(prevState = prevState)
