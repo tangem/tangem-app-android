@@ -24,6 +24,7 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.managetokens.component.ChooseManagedTokensComponent
 import com.tangem.features.send.v2.api.SendComponent
 import com.tangem.features.send.v2.api.SendEntryPointComponent
+import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.v2.entrypoint.model.SendEntryPointModel
 import com.tangem.features.swap.v2.api.SendWithSwapComponent
 import dagger.assisted.Assisted
@@ -126,6 +127,7 @@ internal class DefaultSendEntryPointComponent @AssistedInject constructor(
                 selectedCurrency = null,
                 showSendViaSwapNotification = showSendViaSwapNotification,
                 callback = model,
+                analyticsCategoryName = CommonSendAnalyticEvents.SEND_CATEGORY,
             ),
         )
     }
