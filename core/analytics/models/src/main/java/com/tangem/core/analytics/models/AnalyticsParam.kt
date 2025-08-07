@@ -234,5 +234,6 @@ sealed class AnalyticsParam {
         const val RECEIVE_TOKEN = "Receive Token"
         const val SEND_BLOCKCHAIN = "Send Blockchain"
         const val RECEIVE_BLOCKCHAIN = "Receive Blockchain"
+        const val CHOSEN_TOKEN = "Token Chosen"
     }
 }
