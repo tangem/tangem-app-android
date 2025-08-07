@@ -134,6 +134,7 @@ sealed class AppRoute(val path: String) : Route {
         val selectedCurrency: CryptoCurrency?,
         val source: Source,
         val showSendViaSwapNotification: Boolean,
+        val analyticsCategoryName: String,
     ) : AppRoute(path = "/$source/choose_managed_tokens/$userWalletId/${initialCurrency.id.value}") {
         enum class Source {
             SendViaSwap,
