@@ -24,6 +24,7 @@ import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.domain.swap.models.SwapCurrencies
 import com.tangem.domain.notifications.ShouldShowNotificationUseCase
+import com.tangem.domain.settings.usercountry.models.needApplyFCARestrictions
 import com.tangem.domain.swap.models.SwapDirection
 import com.tangem.domain.swap.models.SwapDirection.Companion.withSwapDirection
 import com.tangem.domain.swap.models.SwapQuoteModel
@@ -150,6 +151,7 @@ internal class SwapAmountModel @Inject constructor(
                 quoteUM = quoteUM,
                 secondaryMaximumAmountBoundary = secondaryMaximumAmountBoundary,
                 secondaryMinimumAmountBoundary = secondaryMinimumAmountBoundary,
+                needApplyFCARestrictions = userCountry.needApplyFCARestrictions(),
             ),
         )
     }
@@ -533,6 +535,7 @@ internal class SwapAmountModel @Inject constructor(
                     secondaryMaximumAmountBoundary = secondaryMaximumAmountBoundary,
                     secondaryMinimumAmountBoundary = secondaryMinimumAmountBoundary,
                     isSilentReload = isSilentReload,
+                    needApplyFcaRestrictions = userCountry.needApplyFCARestrictions(),
                 ),
             )
 
