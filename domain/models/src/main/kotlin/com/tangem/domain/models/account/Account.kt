@@ -2,10 +2,10 @@ package com.tangem.domain.models.account
 
 import arrow.core.Either
 import arrow.core.raise.either
-import arrow.core.raise.ensure
 import com.tangem.domain.models.TokensGroupType
 import com.tangem.domain.models.TokensSortType
 import com.tangem.domain.models.account.Account.CryptoPortfolio.Error.AccountNameError
+import com.tangem.domain.models.account.Account.CryptoPortfolio.Error.DerivationIndexError
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.serialization.Serializable
@@ -43,14 +43,14 @@ sealed interface Account {
         override val accountId: AccountId,
         override val name: AccountName,
         val icon: CryptoPortfolioIcon,
-        val derivationIndex: Int,
+        val derivationIndex: DerivationIndex,
         val isArchived: Boolean,
         val cryptoCurrencyList: CryptoCurrencyList,
     ) : Account {
 
         /** Indicates if the account is the main account */
         val isMainAccount: Boolean
-            get() = derivationIndex == 0
+            get() = derivationIndex.isMain
 
         /** Number of tokens in the account */
         val tokensCount: Int
@@ -97,15 +97,11 @@ sealed interface Account {
 
             /** Error indicating that the account name is blank */
             @Serializable
-            data class AccountNameError(val cause: AccountName.Error) : Error {
-                override fun toString(): String = cause.toString()
-            }
+            data class AccountNameError(val cause: AccountName.Error) : Error
 
             /** Error indicating that the derivation index is negative */
             @Serializable
-            data object NegativeDerivationIndex : Error {
-                override fun toString(): String = "${this::class.simpleName}: Derivation index must be non-negative"
-            }
+            data class DerivationIndexError(val cause: DerivationIndex.Error) : Error
         }
 
         companion object {
@@ -130,7 +126,8 @@ sealed interface Account {
                 cryptoCurrencyList: CryptoCurrencyList,
             ): Either<Error, CryptoPortfolio> {
                 return either {
-                    val accountName = AccountName(name).mapLeft(::AccountNameError).bind()
+                    val accountName = AccountName(value = name).mapLeft(::AccountNameError).bind()
+                    val derivationIndex = DerivationIndex(derivationIndex).mapLeft(::DerivationIndexError).bind()
 
                     invoke(
                         accountId = accountId,
@@ -140,7 +137,6 @@ sealed interface Account {
                         isArchived = isArchived,
                         cryptoCurrencyList = cryptoCurrencyList,
                     )
-                        .bind()
                 }
             }
 
@@ -159,22 +155,18 @@ sealed interface Account {
                 accountId: AccountId,
                 accountName: AccountName,
                 accountIcon: CryptoPortfolioIcon,
-                derivationIndex: Int,
+                derivationIndex: DerivationIndex,
                 isArchived: Boolean,
                 cryptoCurrencyList: CryptoCurrencyList,
-            ): Either<Error, CryptoPortfolio> {
-                return either {
-                    ensure(derivationIndex >= 0) { Error.NegativeDerivationIndex }
-
-                    CryptoPortfolio(
-                        accountId = accountId,
-                        name = accountName,
-                        icon = accountIcon,
-                        derivationIndex = derivationIndex,
-                        isArchived = isArchived,
-                        cryptoCurrencyList = cryptoCurrencyList,
-                    )
-                }
+            ): CryptoPortfolio {
+                return CryptoPortfolio(
+                    accountId = accountId,
+                    name = accountName,
+                    icon = accountIcon,
+                    derivationIndex = derivationIndex,
+                    isArchived = isArchived,
+                    cryptoCurrencyList = cryptoCurrencyList,
+                )
             }
 
             /**
@@ -183,12 +175,16 @@ sealed interface Account {
              * @param userWalletId the ID of the user wallet
              */
             fun createMainAccount(userWalletId: UserWalletId): CryptoPortfolio {
-                // TODO: [REDACTED_JIRA]
+                val derivationIndex = DerivationIndex.Main
+
                 return CryptoPortfolio(
-                    accountId = AccountId(userWalletId = userWalletId, value = "main_account"),
+                    accountId = AccountId.forCryptoPortfolio(
+                        userWalletId = userWalletId,
+                        derivationIndex = derivationIndex,
+                    ),
                     name = AccountName.Main,
                     icon = CryptoPortfolioIcon.ofMainAccount(userWalletId),
-                    derivationIndex = 0,
+                    derivationIndex = derivationIndex,
                     isArchived = false,
                     cryptoCurrencyList = CryptoCurrencyList(
                         currencies = emptySet(),
