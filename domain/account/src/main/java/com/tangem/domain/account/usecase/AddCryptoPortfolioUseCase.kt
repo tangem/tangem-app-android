@@ -10,12 +10,8 @@ import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.models.TokensGroupType
 import com.tangem.domain.models.TokensSortType
-import com.tangem.domain.models.account.Account
-import com.tangem.domain.models.account.AccountId
-import com.tangem.domain.models.account.AccountName
-import com.tangem.domain.models.account.CryptoPortfolioIcon
+import com.tangem.domain.models.account.*
 import com.tangem.domain.models.wallet.UserWalletId
-import java.util.UUID
 
 /**
  * Use case for adding a new crypto portfolio account
@@ -42,7 +38,7 @@ class AddCryptoPortfolioUseCase(
         userWalletId: UserWalletId,
         accountName: AccountName,
         icon: CryptoPortfolioIcon,
-        derivationIndex: Int,
+        derivationIndex: DerivationIndex,
     ): Either<Error, Account.CryptoPortfolio> = either {
         val newAccount = createAccount(userWalletId, accountName, icon, derivationIndex)
 
@@ -62,11 +58,10 @@ class AddCryptoPortfolioUseCase(
         userWalletId: UserWalletId,
         accountName: AccountName,
         icon: CryptoPortfolioIcon,
-        derivationIndex: Int,
+        derivationIndex: DerivationIndex,
     ): Account.CryptoPortfolio {
-        // TODO: [REDACTED_JIRA]
         return Account.CryptoPortfolio(
-            accountId = AccountId(userWalletId = userWalletId, value = UUID.randomUUID().toString()),
+            accountId = AccountId.forCryptoPortfolio(userWalletId = userWalletId, derivationIndex = derivationIndex),
             accountName = accountName,
             accountIcon = icon,
             derivationIndex = derivationIndex,
@@ -77,7 +72,6 @@ class AddCryptoPortfolioUseCase(
                 groupType = TokensGroupType.NONE,
             ),
         )
-            .getOrElse { raise(Error.AccountCreation(it)) }
     }
 
     private suspend fun Raise<Error>.getAccountList(userWalletId: UserWalletId): Option<AccountList> {
@@ -107,13 +101,6 @@ class AddCryptoPortfolioUseCase(
      * Represents possible errors that can occur during the add operation
      */
     sealed interface Error {
-
-        /**
-         * Error indicating that the account creation failed
-         *
-         * @property cause the underlying cause of the failure
-         */
-        data class AccountCreation(val cause: Account.CryptoPortfolio.Error) : Error
 
         /**
          * Error indicating that the account list requirements were not met.
