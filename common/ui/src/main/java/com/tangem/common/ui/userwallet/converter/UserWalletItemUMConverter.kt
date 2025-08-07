@@ -2,7 +2,10 @@ package com.tangem.common.ui.userwallet.converter
 
 import com.tangem.common.ui.R
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
+import com.tangem.core.ui.components.label.entity.LabelStyle
+import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.fiat
@@ -51,6 +54,14 @@ class UserWalletItemUMConverter(
                 imageState = artwork?.let {
                     UserWalletItemUM.ImageState.Image(artworkUMConverter.convert(it))
                 } ?: UserWalletItemUM.ImageState.Loading,
+                label = if (this is UserWallet.Hot && !this.backedUp) {
+                    LabelUM(
+                        text = resourceReference(R.string.hw_backup_no_backup),
+                        style = LabelStyle.WARNING,
+                    )
+                } else {
+                    null
+                },
             )
         }
     }
