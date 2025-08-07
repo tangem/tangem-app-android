@@ -11,6 +11,7 @@ import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
 import com.tangem.features.swap.v2.impl.amount.model.SwapAmountQuoteUtils.calculatePriceImpact
 import com.tangem.features.swap.v2.impl.amount.model.converter.SwapAmountErrorConverter
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
+import com.tangem.features.swap.v2.impl.common.isRestrictedByFCA
 import com.tangem.utils.extensions.orZero
 import com.tangem.utils.transformer.Transformer
 
@@ -18,6 +19,7 @@ internal class SwapAmountSelectQuoteTransformer(
     private val quoteUM: SwapQuoteUM,
     private val secondaryMaximumAmountBoundary: EnterAmountBoundary?,
     private val secondaryMinimumAmountBoundary: EnterAmountBoundary?,
+    private val needApplyFCARestrictions: Boolean,
 ) : Transformer<SwapAmountUM> {
     override fun transform(prevState: SwapAmountUM): SwapAmountUM {
         if (prevState !is SwapAmountUM.Content) return prevState
@@ -29,6 +31,7 @@ internal class SwapAmountSelectQuoteTransformer(
         return prevState.copy(
             isPrimaryButtonEnabled = quoteUM is SwapQuoteUM.Content,
             selectedQuote = quoteUM,
+            showFCAWarning = needApplyFCARestrictions && quoteUM.provider?.isRestrictedByFCA() == true,
             primaryAmount = if (prevState.selectedAmountType == SwapAmountType.From) {
                 val swapAmountField = prevState.primaryAmount as? SwapAmountFieldUM.Content
                 val amountField = swapAmountField?.amountField as? AmountState.Data
