@@ -104,6 +104,7 @@ internal class SendConfirmComponent(
             cryptoCurrencyStatus = params.cryptoCurrencyStatus,
             feeStateConfiguration = model.feeStateConfiguration,
             feeDisplaySource = FeeSelectorParams.FeeDisplaySource.Screen,
+            analyticsCategoryName = params.analyticsCategoryName,
         ),
         onResult = model::onFeeResult,
     )
