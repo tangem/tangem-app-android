@@ -1268,8 +1268,8 @@
   <string name="warning_matic_migration_message">Actualmente, MATIC está migrando a POL. Sin embargo, no se ha fijado ninguna fecha límite y MATIC aún no está obsoleto. Puede seguir usando el token MATIC de forma segura o utilizar intercambios para cambiarlo por POL.</string>
   <string name="warning_matic_migration_title">Migración de MATIC a POL</string>
   <plurals name="warning_missing_derivation_message">
-    <item quantity="one">Use su tarjeta o anillo para obtener una dirección para la red</item>
-    <item quantity="other">Use su tarjeta o anillo para obtener direcciónes para la red</item>
+    <item quantity="one">Use su tarjeta o anillo para obtener una dirección para la red %d</item>
+    <item quantity="other">Use su tarjeta o anillo para obtener direcciónes para las redes %d</item>
   </plurals>
   <string name="warning_missing_derivation_title">Faltan algunas direcciones</string>
   <string name="warning_network_unreachable_message">La red no está disponible actualmente. Por favor, inténtalo de nuevo más tarde.</string>
