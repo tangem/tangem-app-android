@@ -54,6 +54,7 @@ internal class SwapAmountPrimaryReadyStateTransformer(
             selectedQuote = SwapQuoteUM.Empty,
             appCurrency = appCurrency,
             showBestRateAnimation = showBestRateAnimation,
+            showFCAWarning = false,
         )
     }
 }
