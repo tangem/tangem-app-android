@@ -111,6 +111,9 @@ internal class ManualBackupCheckModel @Inject constructor(
                     }
                     callbacks.onCompleteClick()
                 }
+                uiState.update {
+                    it.copy(completeButtonProgress = false)
+                }
             }.onFailure {
                 Timber.e(it)
 
