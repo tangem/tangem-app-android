@@ -96,9 +96,9 @@ internal fun AddExistingWalletImportContent(state: AddExistingWalletImportUM, mo
                     .padding(16.dp)
                     .fillMaxWidth(),
                 text = stringResourceSafe(id = R.string.common_import),
-                enabled = state.createWalletEnabled,
-                showProgress = state.createWalletProgress,
-                onClick = state.createWalletClick,
+                enabled = state.importWalletEnabled,
+                showProgress = state.importWalletProgress,
+                onClick = state.importWalletClick,
             )
         }
 
@@ -228,9 +228,9 @@ private fun PreviewAddExistingWalletImportContent() {
                 onPassphraseInfoClick = {},
                 wordsErrorText = null,
                 invalidWords = persistentListOf(),
-                createWalletEnabled = false,
-                createWalletProgress = false,
-                createWalletClick = {},
+                importWalletEnabled = false,
+                importWalletProgress = false,
+                importWalletClick = {},
                 suggestionsList = persistentListOf(),
                 onSuggestionClick = {},
                 infoBottomSheetConfig = TangemBottomSheetConfig.Empty,
