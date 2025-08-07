@@ -6,7 +6,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
-import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.childSlot
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.core.decompose.context.AppComponentContext
@@ -50,6 +49,7 @@ internal class DefaultFeeSelectorBlockComponent @AssistedInject constructor(
                     callback = model,
                     feeStateConfiguration = params.feeStateConfiguration,
                     feeDisplaySource = FeeSelectorParams.FeeDisplaySource.Screen,
+                    analyticsCategoryName = params.analyticsCategoryName,
                 ),
                 onDismiss = {
                     model.feeSelectorBottomSheet.dismiss()
@@ -79,7 +79,7 @@ internal class DefaultFeeSelectorBlockComponent @AssistedInject constructor(
             modifier = modifier
                 .conditional(params.feeDisplaySource == FeeSelectorParams.FeeDisplaySource.Screen) {
                     Modifier.clickable {
-                        model.feeSelectorBottomSheet.activate(Unit)
+                        model.showFeeSelector()
                     }
                 },
         )
