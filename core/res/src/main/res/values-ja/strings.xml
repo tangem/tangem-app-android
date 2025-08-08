@@ -236,6 +236,7 @@
   <string name="common_reject">拒否</string>
   <string name="common_reload">リロード</string>
   <string name="common_rename">名前を変更</string>
+  <string name="common_required">必須</string>
   <string name="common_save">保存</string>
   <string name="common_save_changes">変更内容を保存</string>
   <string name="common_search">検索</string>
@@ -392,6 +393,7 @@
   <string name="express_provider">プロバイダー</string>
   <string name="express_provider_best_rate">ベストレート</string>
   <string name="express_provider_fca_warning_list">FCA警告リスト</string>
+  <string name="express_provider_in_fca_warning_list">FCA警告リストに掲載されたプロバイダー</string>
   <string name="express_provider_max_amount">最大 %s まで使用可能</string>
   <string name="express_provider_min_amount">%s 以上で利用可能</string>
   <string name="express_provider_not_available">このペアは利用できません</string>
@@ -1302,9 +1304,11 @@
   <string name="wallet_promo_banner_title">Tangemウォレットを見る</string>
   <string name="wallet_settings_access_code_description">このウォレットを保護するためのシークレットコードです。ログインと署名に使用されます。</string>
   <string name="wallet_settings_access_code_title">アクセスコードの設定 / 変更</string>
+  <string name="wallet_settings_change_access_code_title">アクセスコードの変更</string>
   <string name="wallet_settings_push_notifications_description">ウォレットの受信取引とTangemの更新について通知を受け取る。</string>
   <string name="wallet_settings_push_notifications_huawei_warning">現在、Huaweiデバイスではプッシュ通知が機能しない可能性があります。現在、解決策の検討に取り組んでおり、今後のアップデートで修正をリリースする予定です。ご理解のほどよろしくお願いいたします。</string>
   <string name="wallet_settings_push_notifications_title">取引通知</string>
+  <string name="wallet_settings_set_access_code_title">アクセスコードを設定する</string>
   <string name="wallet_settings_title">ウォレット設定</string>
   <string name="wallet_title">Tangem</string>
   <string name="warning_access_denied_message">%sを使用するか、カード / リングをスキャンしてウォレットにアクセスしてください</string>
@@ -1406,7 +1410,7 @@
   <string name="wc_alert_connection_timeout_title">WalletConnectを確立できませんでした</string>
   <string name="wc_alert_domain_issues_description">このドメインは検証できません。承認前にリクエスト内容をよく確認してください。</string>
   <string name="wc_alert_session_disconnected_description">ブラウザに戻り、WalletConnect経由で再接続してください。</string>
-  <string name="wc_alert_session_disconnected_title">WalletConnectセッションが接続解除されました</string>
+  <string name="wc_alert_session_disconnected_title">Wallet Connectセッションが接続解除されました</string>
   <string name="wc_alert_sign_anyway">とにかくサインする</string>
   <string name="wc_alert_unknown_error_description">エラーコード: %s 。問題が解決しない場合は、お気軽にサポートまでお問い合わせください。</string>
   <string name="wc_alert_unknown_error_description_no_error_code">問題が解決しない場合は、お気軽にサポートまでお問い合わせください。</string>
@@ -1421,6 +1425,7 @@
   <string name="wc_alert_verified_domain_title">検証済みドメイン</string>
   <string name="wc_alert_wrong_card_description">アプリで間違ったカードまたはリングが選択されました</string>
   <string name="wc_alert_wrong_card_title">問題が起きています</string>
+  <string name="wc_all_dapps_disconnected">すべてのdAppが接続解除されました</string>
   <string name="wc_allow_to_spend">使用を許可する</string>
   <string name="wc_common_address">アドレス</string>
   <string name="wc_common_connect">接続する</string>
@@ -1431,6 +1436,7 @@
   <string name="wc_common_wallet">ウォレット</string>
   <string name="wc_connected_app_title">接続されたアプリ</string>
   <string name="wc_connected_networks">接続されたネットワーク</string>
+  <string name="wc_connected_to">%1$sへ接続済み</string>
   <string name="wc_connection_reqeust_can_view_balance">ウォレットの残高とアクティビティを表示する</string>
   <string name="wc_connection_reqeust_cant_sign">通知なしに取引に署名する</string>
   <string name="wc_connection_reqeust_request_approval">取引の承認をリクエストする</string>
@@ -1441,6 +1447,7 @@
   <string name="wc_contents">内容</string>
   <string name="wc_copy_data_button_text">データをコピー</string>
   <string name="wc_custom_allowance_title">使用可能量の設定</string>
+  <string name="wc_dapp_disconnected">dAppが接続解除されました</string>
   <string name="wc_disconnect_all">すべての接続を解除する</string>
   <string name="wc_disconnect_all_alert_desc">すべてのdAppsの接続解除に関するテキスト</string>
   <string name="wc_disconnect_all_alert_title">すべてのdAppを接続解除する</string>
@@ -1448,6 +1455,8 @@
   <string name="wc_estimated_wallet_changes_not_simulated">取引をシミュレーションできませんでした。注意して続行してください。</string>
   <string name="wc_estimation_is_not_supported">%sでは見積もりはサポートされていません</string>
   <string name="wc_fee_suggested">%sによる提案</string>
+  <string name="wc_insufficient_warning_subtitle">ネットワーク手数料をカバーするために残高を補充してください</string>
+  <string name="wc_insufficient_warning_title">%1$sが不足しています</string>
   <string name="wc_malicious_transaction">悪意のある取引</string>
   <string name="wc_missing_required_network_description">このウォレットのポートフォリオに%sネットワークを追加します</string>
   <string name="wc_missing_required_network_title">ウォレットに必要なネットワークはありません</string>
@@ -1462,6 +1471,7 @@
   <string name="wc_signature_type">署名タイプ</string>
   <string name="wc_specify_networks_subtitle">dApp接続には、少なくとも1つのネットワークが必要です</string>
   <string name="wc_specify_networks_title">選択したネットワークを指定する</string>
+  <string name="wc_successfully_signed">署名に成功しました</string>
   <string name="wc_transaction_info_to_title">宛先</string>
   <string name="wc_transaction_request">取引リクエスト</string>
   <string name="wc_transaction_request_title">取引リクエスト</string>
