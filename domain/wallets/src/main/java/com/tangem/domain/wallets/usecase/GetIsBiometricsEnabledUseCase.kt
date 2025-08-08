@@ -8,4 +8,8 @@ class GetIsBiometricsEnabledUseCase @Inject constructor(
 ) {
 
     operator fun invoke(): Boolean = runCatching(tangemSdkManager::needEnrollBiometrics).getOrNull() ?: false
+
+    fun canUseBiometry(): Boolean {
+        return tangemSdkManager.canUseBiometry
+    }
 }
