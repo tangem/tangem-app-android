@@ -58,12 +58,15 @@
   <string name="alert_manage_tokens_unsupported_message">Tokens in %1$s network are not supported by this card or ring due to firmware limitation.</string>
   <string name="alert_troubleshooting_scan_card_title">Are you having difficulty scanning your card or ring?</string>
   <string name="alert_unsupported_card">This card is not designed to work with this app</string>
+  <string name="app_settings_biometrics_footer">Use %1$s to quickly and securely unlock your wallet and authorize all sensitive actions, such as signing transactions. For hardware wallets, you will still need a card to sign.</string>
   <string name="app_settings_default_fee">Default Fee</string>
   <string name="app_settings_default_fee_footer">Enable Default Fee to set transaction fees automatically and skip the Fee page when sending funds. You can always go back to this page if necessary.</string>
   <string name="app_settings_enable_biometrics_description">Go to settings to enable biometric authentication in the Tangem App</string>
   <string name="app_settings_enable_biometrics_title">Enable biometric authentication</string>
   <string name="app_settings_off_saved_access_code_alert_message">This will delete all the saved wallet access codes. Any further operation with the wallet will require submitting the access code.</string>
   <string name="app_settings_off_saved_wallet_alert_message">Removing the saved devices deletes all the saved wallets and their access codes from the app.</string>
+  <string name="app_settings_require_access_code">Require Access Code</string>
+  <string name="app_settings_require_access_code_footer">This option disables biometric authentication for sensitive actions. You will be required to enter your access code every time, such as when signing a transaction.</string>
   <string name="app_settings_saved_access_codes">Save Access Code</string>
   <string name="app_settings_saved_access_codes_footer">Biometric authentication will be requested instead of the access code for interactions with your card or ring.</string>
   <string name="app_settings_saved_wallet">Keep the wallet in the app</string>
@@ -188,6 +191,7 @@
     <item quantity="other">days</item>
   </plurals>
   <string name="common_delete">Delete</string>
+  <string name="common_disable">Disable</string>
   <string name="common_disabled">Disabled</string>
   <string name="common_disconnect">Disconnect</string>
   <string name="common_done">Done</string>
@@ -340,6 +344,7 @@
   <string name="details_title">Details</string>
   <string name="disclaimer_error_loading">Check your internet connection or switch to a different network</string>
   <string name="disclaimer_title">Terms of service</string>
+  <string name="domain_receive_assets_navigation_title">Receive assets</string>
   <string name="domain_receive_assets_onboarding_description">Sending assets in other networks will result in permanent loss.</string>
   <string name="domain_receive_assets_onboarding_network_name">%s network</string>
   <string name="domain_receive_assets_onboarding_title">Send funds using only</string>
@@ -400,6 +405,7 @@
   <string name="express_provider">Provider</string>
   <string name="express_provider_best_rate">Best rate</string>
   <string name="express_provider_fca_warning_list">FCA Warning List</string>
+  <string name="express_provider_in_fca_warning_list">Provider in FCA warning list</string>
   <string name="express_provider_max_amount">Available up to %s</string>
   <string name="express_provider_min_amount">Available from %s</string>
   <string name="express_provider_not_available">Unavailable for this pair</string>
@@ -1478,7 +1484,7 @@
   <string name="wc_alert_connection_timeout_title">Failed to establish WalletConnect</string>
   <string name="wc_alert_domain_issues_description">This domain cannot be verified. Check the request carefully approving.</string>
   <string name="wc_alert_session_disconnected_description">Please return to your browser and reconnect via WalletConnect.</string>
-  <string name="wc_alert_session_disconnected_title">WalletConnect session was disconnected</string>
+  <string name="wc_alert_session_disconnected_title">Wallet Connect session was disconnected</string>
   <string name="wc_alert_sign_anyway">Sign anyway</string>
   <string name="wc_alert_unknown_error_description">Error code: %s. If the problem persists — feel free to contact our support.</string>
   <string name="wc_alert_unknown_error_description_no_error_code">If the problem persists — feel free to contact our support.</string>
@@ -1488,7 +1494,7 @@
   <string name="wc_alert_unsupported_method_description">Error code: 8 005. If the problem persists — feel free to contact our support.</string>
   <string name="wc_alert_unsupported_method_title">We\'ve encountered unknown error</string>
   <string name="wc_alert_unsupported_networks_description">Tangem does not currently support a required network by %s.</string>
-  <string name="wc_alert_unsupported_networks_title">Unsuported networks</string>
+  <string name="wc_alert_unsupported_networks_title">Unsupported networks</string>
   <string name="wc_alert_verified_domain_description">Tangem support a required network by %s</string>
   <string name="wc_alert_verified_domain_title">Verified domain</string>
   <string name="wc_alert_wrong_card_description">Wrong card or ring selected in the App</string>
@@ -1532,14 +1538,15 @@
   <string name="wc_no_sessions_desc">Connect your wallet to a different dApps</string>
   <string name="wc_no_sessions_title">No sessions</string>
   <string name="wc_no_wallet_changes_detected">No wallet changes detected</string>
-  <string name="wc_notification_security_risk_subtitle">This domain is flagged as unsafe by multiple security providers. Leave immediately to protect your assets</string>
+  <string name="wc_notification_security_risk_subtitle">Potential risks or malicious behavior have been detected. Connecting or signing transactions may lead to loss of funds.</string>
   <string name="wc_notification_security_risk_title">Known security risk</string>
   <string name="wc_request_from">Request from</string>
-  <string name="wc_send_anyway">Send anyway</string>
+  <string name="wc_send_anyway">Sign anyway</string>
   <string name="wc_signature_type">Signature Type</string>
   <string name="wc_specify_networks_subtitle">At least one network is required for dApp connection</string>
   <string name="wc_specify_networks_title">Specify selected networks</string>
   <string name="wc_successfully_signed">Successfully signed</string>
+  <string name="wc_transaction_flow_title" translatable="false">Wallet connect</string>
   <string name="wc_transaction_info_to_title">To</string>
   <string name="wc_transaction_request">Transaction request</string>
   <string name="wc_transaction_request_title">Transaction request</string>
