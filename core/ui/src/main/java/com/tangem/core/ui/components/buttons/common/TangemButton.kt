@@ -28,7 +28,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.test.BaseButtonTestTags
 import com.tangem.core.ui.utils.MultipleClickPreventer
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LongMethod")
 @Composable
 fun TangemButton(
     text: String,
@@ -78,7 +78,8 @@ fun TangemButton(
                 ResizableText(
                     modifier = Modifier
                         .weight(1f, fill = false)
-                        .heightIn(MinButtonContentSize, maxContentSize),
+                        .heightIn(MinButtonContentSize, maxContentSize)
+                        .testTag(BaseButtonTestTags.TEXT),
                     text = text,
                     style = textStyle,
                     color = colors.contentColor(enabled = enabled).value,
@@ -92,7 +93,8 @@ fun TangemButton(
                 Icon(
                     modifier = Modifier
                         .buttonContentSize(maxContentSize)
-                        .padding(vertical = 2.dp),
+                        .padding(vertical = 2.dp)
+                        .testTag(BaseButtonTestTags.ICON),
                     painter = painterResource(id = iconResId),
                     tint = colors.contentColor(enabled = enabled).value,
                     contentDescription = null,
