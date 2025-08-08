@@ -49,12 +49,14 @@ internal class WcAddNetworkModel @Inject constructor(
 
     private val params = paramsContainer.require<WcTransactionModelParams>()
     private var useCase by Delegates.notNull<WcAddNetworkUseCase>()
+    private val signatureReceivedAnalyticsSendState = MutableStateFlow(false)
 
     init {
         modelScope.launch {
             useCase = useCaseFactory.createUseCase<WcAddNetworkUseCase>(params.rawRequest)
                 .onLeft { router.push(WcHandleMethodErrorConverter.convert(it)) }
                 .getOrNull() ?: return@launch
+            sendSignatureReceivedAnalytics(useCase)
             _uiState.emit(
                 wcAddEthereumChainUMConverter.convert(
                     WcAddEthereumChainUMConverter.Input(
@@ -113,5 +115,19 @@ internal class WcAddNetworkModel @Inject constructor(
 
     private fun copyData(text: String) {
         clipboardManager.setText(text = text, isSensitive = true)
+    }
+
+    private fun sendSignatureReceivedAnalytics(useCase: WcAddNetworkUseCase) {
+        if (signatureReceivedAnalyticsSendState.value) return
+
+        analytics.send(
+            WcAnalyticEvents.SignatureRequestReceived(
+                rawRequest = useCase.rawSdkRequest,
+                network = useCase.network,
+                emulationStatus = null,
+            ),
+        )
+
+        signatureReceivedAnalyticsSendState.value = true
     }
 }
