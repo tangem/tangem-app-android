@@ -32,6 +32,7 @@ class UserWalletItemUMConverter(
     private val appCurrency: AppCurrency? = null,
     private val balance: TotalFiatBalance? = null,
     private val isBalanceHidden: Boolean = false,
+    private val disableLockedWallets: Boolean = true,
     private val endIcon: UserWalletItemUM.EndIcon = UserWalletItemUM.EndIcon.None,
     private val artwork: ArtworkModel? = null,
 ) : Converter<UserWallet, UserWalletItemUM> {
@@ -45,13 +46,23 @@ class UserWalletItemUMConverter(
                 name = stringReference(name),
                 information = getInfo(userWallet = this),
                 balance = getBalanceInfo(userWallet = this),
-                isEnabled = !isLocked,
+                isEnabled = if (disableLockedWallets) {
+                    !isLocked
+                } else {
+                    true
+                },
                 endIcon = endIcon,
                 onClick = { onClick(value.walletId) },
-                imageState = artwork?.let {
-                    UserWalletItemUM.ImageState.Image(artworkUMConverter.convert(it))
-                } ?: UserWalletItemUM.ImageState.Loading,
+                imageState = getImageState(userWallet = value),
             )
+        }
+    }
+
+    private fun getImageState(userWallet: UserWallet): UserWalletItemUM.ImageState {
+        return when {
+            userWallet is UserWallet.Hot -> UserWalletItemUM.ImageState.MobileWallet
+            artwork != null -> UserWalletItemUM.ImageState.Image(artworkUMConverter.convert(artwork))
+            else -> UserWalletItemUM.ImageState.Loading
         }
     }
 
