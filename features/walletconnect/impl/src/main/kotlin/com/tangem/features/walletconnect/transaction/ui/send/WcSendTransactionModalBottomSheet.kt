@@ -71,7 +71,7 @@ internal fun WcSendTransactionModalBottomSheet(
         containerColor = TangemTheme.colors.background.tertiary,
         title = { config ->
             TangemModalBottomSheetTitle(
-                title = resourceReference(R.string.wc_wallet_connect),
+                title = resourceReference(R.string.wc_transaction_flow_title),
                 endIconRes = R.drawable.ic_close_24,
                 onEndClick = onDismiss,
             )
