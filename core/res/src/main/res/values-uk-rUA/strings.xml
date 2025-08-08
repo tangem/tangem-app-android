@@ -1286,10 +1286,12 @@
   <string name="wc_alert_wrong_card_description">Обрана не вірна картка або кільце</string>
   <string name="wc_common_address">Адреса</string>
   <string name="wc_common_connect">Підключення</string>
+  <string name="wc_connected_networks">Підключені мережі</string>
   <string name="wc_connection_reqeust_can_view_balance">Переглянути баланс гаманця та активність</string>
   <string name="wc_connection_request">Запит на підключення</string>
   <string name="wc_contents">Вміст</string>
   <string name="wc_copy_data_button_text">Копіювати дані</string>
+  <string name="wc_notification_security_risk_subtitle">Виявлено потенційні ризики або шкідливу активність. Підключення чи підпис транзакцій можуть призвести до втрати коштів.</string>
   <string name="wc_request_from">Запит від</string>
   <string name="wc_signature_type">Тип підпису</string>
   <string name="wc_transaction_info_to_title">До</string>
