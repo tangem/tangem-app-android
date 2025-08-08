@@ -30,13 +30,15 @@ class AddCryptoPortfolioUseCaseTest {
     @BeforeEach
     fun resetMocks() {
         clearMocks(crudRepository, userWallet)
+
+        every { userWallet.walletId } returns userWalletId
     }
 
     @Test
     fun `invoke should add new crypto portfolio account to existing list`() = runTest {
         // Arrange
         val newAccount = createNewAccount()
-        val accountList = AccountList.createEmpty(userWallet)
+        val accountList = AccountList.empty(userWallet)
         val updatedAccountList = (accountList + newAccount).getOrNull()!!
 
         coEvery { crudRepository.getAccounts(userWalletId) } returns accountList.toOption()
@@ -65,7 +67,7 @@ class AddCryptoPortfolioUseCaseTest {
     fun `invoke should create new account list if none exists`() = runTest {
         // Arrange
         val newAccount = createNewAccount()
-        val newAccountList = (AccountList.createEmpty(userWallet) + newAccount).getOrNull()!!
+        val newAccountList = (AccountList.empty(userWallet) + newAccount).getOrNull()!!
 
         coEvery { crudRepository.getAccounts(userWalletId) } returns None
         coEvery { crudRepository.getUserWallet(userWalletId) } returns userWallet
@@ -157,7 +159,7 @@ class AddCryptoPortfolioUseCaseTest {
     fun `invoke should return error if saveAccounts throws exception`() = runTest {
         // Arrange
         val newAccount = createNewAccount()
-        val accountList = AccountList.createEmpty(userWallet)
+        val accountList = AccountList.empty(userWallet)
         val updatedAccountList = (accountList + newAccount).getOrNull()!!
 
         val exception = IllegalStateException("Test error")
