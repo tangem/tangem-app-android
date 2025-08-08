@@ -565,7 +565,7 @@ internal class SendConfirmModel @Inject constructor(
                 state.copy(
                     navigationUM = NavigationUM.Content(
                         title = if (state.isRedesignEnabled) {
-                            stringReference("")
+                            resourceReference(id = R.string.common_send)
                         } else {
                             resourceReference(
                                 id = R.string.send_summary_title,
