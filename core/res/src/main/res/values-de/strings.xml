@@ -1434,7 +1434,7 @@
   <string name="wc_new_connection">Neue Verbindung</string>
   <string name="wc_no_sessions_desc">Verbinde Deine Wallet mit einer anderen dApp</string>
   <string name="wc_no_sessions_title">Keine Sitzungen</string>
-  <string name="wc_notification_security_risk_subtitle">Diese Domain wird von mehreren Sicherheitsanbietern als unsicher eingestuft. Verlasse diese umgehend, um Dein Vermögen zu schützen.</string>
+  <string name="wc_notification_security_risk_subtitle">Es wurden potenzielle Risiken oder bösartiges Verhalten erkannt. Das Verbinden oder Signieren von Transaktionen kann zum Verlust von Geldern führen.</string>
   <string name="wc_notification_security_risk_title">Bekanntes Sicherheitsrisiko</string>
   <string name="wc_request_from">Anfrage von</string>
   <string name="wc_signature_type">Art der Signatur</string>
