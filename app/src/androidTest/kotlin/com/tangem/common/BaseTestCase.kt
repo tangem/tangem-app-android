@@ -80,9 +80,12 @@ abstract class BaseTestCase : TestCase(
     ) = before {
         hiltRule.inject()
         runBlocking {
-            appPreferencesStore.editData { mutablePreferences -> mutablePreferences.set(
-                key = PreferencesKeys.NOTIFICATIONS_USER_ALLOW_SEND_ADDRESSES_KEY, value = false
-            ) }
+            appPreferencesStore.editData { mutablePreferences ->
+                mutablePreferences.set(
+                    key = PreferencesKeys.NOTIFICATIONS_USER_ALLOW_SEND_ADDRESSES_KEY,
+                    value = false
+                )
+            }
         }
         apiEnvironmentRule.setup(apiConfigsManager)
         ActivityScenario.launch(MainActivity::class.java)
