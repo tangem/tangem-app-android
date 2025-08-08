@@ -90,13 +90,15 @@ internal class DefaultSendComponent @AssistedInject constructor(
         ) { stack ->
             componentScope.launch {
                 when (val activeComponent = stack.active.instance) {
-                    is SendConfirmComponent -> if (model.currentRoute.value.isEditMode) {
+                    is SendConfirmComponent -> {
                         analyticsEventHandler.send(
                             CommonSendAnalyticEvents.ConfirmationScreenOpened(
                                 categoryName = model.analyticCategoryName,
                             ),
                         )
-                        activeComponent.updateState(model.uiState.value)
+                        if (model.currentRoute.value.isEditMode) {
+                            activeComponent.updateState(model.uiState.value)
+                        }
                     }
                     is SendAmountComponent -> {
                         analyticsEventHandler.send(
