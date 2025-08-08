@@ -260,13 +260,11 @@ dependencies {
 
     /** Compose libraries */
     implementation(deps.compose.constraintLayout)
-    implementation(deps.compose.material)
     implementation(deps.compose.material3)
     implementation(deps.compose.animation)
     implementation(deps.compose.coil)
     implementation(deps.compose.constraintLayout)
     implementation(deps.compose.foundation)
-    implementation(deps.compose.material)
     implementation(deps.compose.navigation.hilt)
     implementation(deps.compose.shimmer)
     implementation(deps.compose.ui)

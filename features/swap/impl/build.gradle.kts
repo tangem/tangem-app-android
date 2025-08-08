@@ -61,7 +61,6 @@ dependencies {
     /** Compose */
     implementation(deps.arrow.core)
     implementation(deps.compose.foundation)
-    implementation(deps.compose.material)
     implementation(deps.compose.material3)
     implementation(deps.compose.ui.tooling)
     implementation(deps.compose.coil)
