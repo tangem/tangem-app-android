@@ -2,6 +2,7 @@ package com.tangem.tests
 
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.TOTAL_BALANCE
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
@@ -372,14 +373,14 @@ class BuyTokenTest : BaseTestCase() {
             }
             step("Assert unavailable provider name is displayed") {
                 onSelectProviderBottomSheet {
-                    flakySafely(timeoutMs = 20_000) {
+                    flakySafely(WAIT_UNTIL_TIMEOUT) {
                         unavailableProviderItem.assertIsDisplayed()
                     }
                 }
             }
             step("Assert available provider name is displayed") {
                 onSelectProviderBottomSheet {
-                    flakySafely(timeoutMs = 20_000) {
+                    flakySafely(WAIT_UNTIL_TIMEOUT) {
                         availableProviderItem.assertIsDisplayed()
                     }
                 }
