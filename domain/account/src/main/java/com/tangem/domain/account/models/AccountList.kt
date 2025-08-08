@@ -108,6 +108,11 @@ data class AccountList private constructor(
         data object DuplicateAccountIds : Error {
             override fun toString(): String = "$tag: Account list contains duplicate account IDs"
         }
+
+        @Serializable
+        data object DuplicateAccountNames : Error {
+            override fun toString(): String = "$tag: Account list contains duplicate account names"
+        }
     }
 
     companion object {
@@ -144,6 +149,9 @@ data class AccountList private constructor(
             val uniqueAccountIdsCount = accounts.map { it.accountId.value }.distinct().size
             ensure(accounts.size == uniqueAccountIdsCount) { Error.DuplicateAccountIds }
 
+            val uniqueAccountNameCount = accounts.map { it.name.value }.distinct().size
+            ensure(accounts.size == uniqueAccountNameCount) { Error.DuplicateAccountNames }
+
             AccountList(userWallet = userWallet, accounts = accounts, totalAccounts = totalAccounts)
         }
 
@@ -152,7 +160,7 @@ data class AccountList private constructor(
          *
          * @param userWallet the user wallet associated with the account list
          */
-        fun createEmpty(userWallet: UserWallet): AccountList {
+        fun empty(userWallet: UserWallet): AccountList {
             return AccountList(
                 userWallet = userWallet,
                 accounts = setOf(
