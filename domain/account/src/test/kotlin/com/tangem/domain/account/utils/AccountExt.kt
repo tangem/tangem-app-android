@@ -11,7 +11,11 @@ fun createAccounts(userWalletId: UserWalletId, count: Int): Set<Account.CryptoPo
         add(Account.CryptoPortfolio.createMainAccount(userWalletId))
 
         repeat(count - 1) {
-            val account = createAccount(userWalletId = userWalletId, derivationIndex = it + 1)
+            val account = createAccount(
+                userWalletId = userWalletId,
+                name = "Test Account ${it + 1}",
+                derivationIndex = it + 1,
+            )
 
             add(account)
         }
