@@ -1320,6 +1320,7 @@
   <string name="wc_common_address">Adresse</string>
   <string name="wc_common_loading">Chargement</string>
   <string name="wc_common_unlimited">Illimité</string>
+  <string name="wc_connected_networks">Réseaux connectés</string>
   <string name="wc_connections">Connexions</string>
   <string name="wc_contents">Contenu</string>
   <string name="wc_copy_data_button_text">Copier les données</string>
@@ -1332,6 +1333,7 @@
   <string name="wc_new_connection">Nouvelle connexion</string>
   <string name="wc_no_sessions_desc">Connectez votre portefeuille à différentes dApps</string>
   <string name="wc_no_sessions_title">Aucune séance</string>
+  <string name="wc_notification_security_risk_subtitle">Des risques potentiels ou un comportement malveillant ont été détectés. Se connecter ou signer des transactions peut entraîner une perte de fonds.</string>
   <string name="wc_request_from">Demande de</string>
   <string name="wc_signature_type">Type de signature</string>
   <string name="wc_transaction_info_to_title">À</string>
