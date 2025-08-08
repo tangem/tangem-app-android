@@ -54,6 +54,8 @@ data class UserWalletItemUM(
 
         data object Loading : ImageState()
 
+        data object MobileWallet : ImageState()
+
         data class Image(
             val artwork: ArtworkUM,
         ) : ImageState()
