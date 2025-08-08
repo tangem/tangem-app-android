@@ -51,6 +51,7 @@ import com.tangem.features.send.v2.common.CommonSendRoute
 import com.tangem.features.send.v2.common.CommonSendRoute.*
 import com.tangem.features.send.v2.common.SendConfirmAlertFactory
 import com.tangem.features.send.v2.common.ui.state.ConfirmUM
+import com.tangem.features.send.v2.send.analytics.SendAnalyticEvents
 import com.tangem.features.send.v2.send.confirm.SendConfirmComponent
 import com.tangem.features.send.v2.send.success.SendConfirmSuccessComponent
 import com.tangem.features.send.v2.send.ui.state.SendUM
@@ -227,6 +228,12 @@ internal class SendModel @Inject constructor(
     }
 
     override fun onConvertToAnotherToken(lastAmount: String) {
+        analyticsEventHandler.send(
+            SendAnalyticEvents.ConvertTokenButtonClicked(
+                token = cryptoCurrency.symbol,
+                blockchain = cryptoCurrency.network.name,
+            ),
+        )
         params.callback?.onConvertToAnotherToken(lastAmount = lastAmount)
     }
 
