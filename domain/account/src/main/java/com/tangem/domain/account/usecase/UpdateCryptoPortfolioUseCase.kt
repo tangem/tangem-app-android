@@ -50,8 +50,9 @@ class UpdateCryptoPortfolioUseCase(
             .setName(name = accountName)
             .setIcon(icon = icon)
 
-        val updatedAccounts = (accountList + updatedAccount)
-            .getOrElse { raise(Error.CriticalTechError.AccountListRequirementsNotMet(it)) }
+        val updatedAccounts = (accountList + updatedAccount).getOrElse {
+            raise(Error.CriticalTechError.AccountListRequirementsNotMet(it))
+        }
 
         saveAccounts(updatedAccounts)
 
