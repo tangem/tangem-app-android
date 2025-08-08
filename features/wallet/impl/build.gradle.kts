@@ -22,7 +22,6 @@ dependencies {
     implementation(deps.compose.coil)
     implementation(deps.compose.constraintLayout)
     implementation(deps.compose.foundation)
-    implementation(deps.compose.material)
     implementation(deps.compose.material3)
     implementation(deps.compose.paging)
     implementation(deps.compose.reorderable)
