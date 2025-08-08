@@ -46,8 +46,9 @@ class AddCryptoPortfolioUseCase(
             createNewAccountList(userWalletId = userWalletId)
         }
 
-        val updatedAccounts = (accountList + newAccount)
-            .getOrElse { raise(Error.AccountListRequirementsNotMet(it)) }
+        val updatedAccounts = (accountList + newAccount).getOrElse {
+            raise(Error.AccountListRequirementsNotMet(it))
+        }
 
         saveAccounts(updatedAccounts)
 
@@ -87,7 +88,7 @@ class AddCryptoPortfolioUseCase(
             catch = { raise(Error.DataOperationFailed(cause = it)) },
         )
 
-        return AccountList.createEmpty(userWallet = userWallet)
+        return AccountList.empty(userWallet = userWallet)
     }
 
     private suspend fun Raise<Error>.saveAccounts(accountList: AccountList) {
