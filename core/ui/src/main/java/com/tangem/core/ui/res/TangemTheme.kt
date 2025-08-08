@@ -4,9 +4,9 @@ import android.app.Activity
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.text.selection.LocalTextSelectionColors
 import androidx.compose.foundation.text.selection.TextSelectionColors
-import androidx.compose.material.Colors
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.ProvideTextStyle
+import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.Color
@@ -90,7 +90,7 @@ fun TangemTheme(
     val rootBackgroundColor = rememberedColors.background.secondary
 
     MaterialTheme(
-        colors = materialThemeColors(colors = themeColors, isDark = isDark),
+        colorScheme = tangemColorScheme(colors = themeColors),
     ) {
         CompositionLocalProvider(
             LocalTangemColors provides rememberedColors,
@@ -143,21 +143,51 @@ object TangemTheme {
 
 @Stable
 @Composable
-private fun materialThemeColors(colors: TangemColors, isDark: Boolean): Colors {
-    return Colors(
+private fun tangemColorScheme(colors: TangemColors): ColorScheme {
+    return ColorScheme(
         primary = colors.background.primary,
-        primaryVariant = colors.background.secondary,
-        secondary = colors.button.primary,
-        secondaryVariant = colors.text.accent,
-        background = colors.background.primary,
-        surface = colors.background.secondary,
-        error = colors.text.warning,
         onPrimary = colors.text.primary1,
+        primaryContainer = colors.background.secondary,
+        onPrimaryContainer = colors.background.action,
+        inversePrimary = colors.background.action,
+
+        secondary = colors.button.primary,
         onSecondary = colors.text.primary1,
+        secondaryContainer = colors.background.secondary,
+        onSecondaryContainer = colors.text.primary1,
+
+        tertiary = colors.background.tertiary,
+        onTertiary = colors.text.tertiary,
+        tertiaryContainer = colors.background.tertiary,
+        onTertiaryContainer = colors.text.tertiary,
+
+        background = colors.background.primary,
         onBackground = colors.text.primary1,
+
+        surface = colors.background.secondary,
+        surfaceVariant = colors.background.tertiary,
         onSurface = colors.text.primary1,
+        onSurfaceVariant = colors.text.secondary,
+        surfaceTint = colors.background.tertiary,
+        inverseSurface = colors.button.disabled,
+        inverseOnSurface = colors.button.primary,
+        surfaceBright = colors.background.secondary,
+        surfaceDim = colors.background.tertiary,
+        surfaceContainer = colors.background.tertiary,
+        surfaceContainerHigh = colors.background.tertiary,
+        surfaceContainerHighest = colors.background.tertiary,
+        surfaceContainerLow = colors.background.tertiary,
+        surfaceContainerLowest = colors.background.tertiary,
+
+        error = colors.text.warning,
+        errorContainer = colors.background.tertiary,
+        onErrorContainer = colors.text.primary2,
         onError = colors.text.primary2,
-        isLight = !isDark,
+
+        outline = colors.stroke.primary,
+        outlineVariant = colors.stroke.secondary,
+
+        scrim = colors.stroke.transparency,
     )
 }
 
