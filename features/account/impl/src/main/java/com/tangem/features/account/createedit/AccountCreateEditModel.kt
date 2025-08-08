@@ -13,6 +13,7 @@ import com.tangem.domain.account.usecase.AddCryptoPortfolioUseCase
 import com.tangem.domain.account.usecase.UpdateCryptoPortfolioUseCase
 import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.account.CryptoPortfolioIcon
+import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.features.account.AccountCreateEditComponent
 import com.tangem.features.account.createedit.entity.AccountCreateEditUM
 import com.tangem.features.account.createedit.entity.AccountCreateEditUMBuilder
@@ -78,7 +79,7 @@ internal class AccountCreateEditModel @Inject constructor(
             userWalletId = params.userWalletId,
             accountName = name,
             icon = icon,
-            derivationIndex = 0, // todo account
+            derivationIndex = DerivationIndex.Main, // todo account
         )
     }
 

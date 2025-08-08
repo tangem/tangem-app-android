@@ -41,7 +41,7 @@ class UpdateCryptoPortfolioUseCaseTest {
     @Test
     fun `invoke should update crypto portfolio account with new name`() = runTest {
         // Arrange
-        val accountList = AccountList.createEmpty(userWallet = userWallet)
+        val accountList = AccountList.empty(userWallet = userWallet)
         val accountId = accountList.mainAccount.accountId
 
         val newAccountName = AccountName("New name").getOrNull()!!
@@ -66,7 +66,7 @@ class UpdateCryptoPortfolioUseCaseTest {
     @Test
     fun `invoke should update crypto portfolio account with new icon`() = runTest {
         // Arrange
-        val accountList = AccountList.createEmpty(userWallet = userWallet)
+        val accountList = AccountList.empty(userWallet = userWallet)
         val accountId = accountList.mainAccount.accountId
 
         val newAccountIcon = CryptoPortfolioIcon.ofCustomAccount(
@@ -94,7 +94,7 @@ class UpdateCryptoPortfolioUseCaseTest {
     @Test
     fun `invoke should update crypto portfolio account with new name and icon`() = runTest {
         // Arrange
-        val accountList = AccountList.createEmpty(userWallet = userWallet)
+        val accountList = AccountList.empty(userWallet = userWallet)
         val accountId = accountList.mainAccount.accountId
 
         val newAccountName = AccountName("New name").getOrNull()!!
@@ -123,7 +123,7 @@ class UpdateCryptoPortfolioUseCaseTest {
     @Test
     fun `invoke if name and icon are null`() = runTest {
         // Arrange
-        val accountList = AccountList.createEmpty(userWallet = userWallet)
+        val accountList = AccountList.empty(userWallet = userWallet)
         val accountId = accountList.mainAccount.accountId
 
         coEvery { crudRepository.getAccounts(userWalletId = userWalletId) } returns accountList.toOption()
@@ -144,7 +144,7 @@ class UpdateCryptoPortfolioUseCaseTest {
     @Test
     fun `invoke if getAccounts throws exception`() = runTest {
         // Arrange
-        val accountList = AccountList.createEmpty(userWallet = userWallet)
+        val accountList = AccountList.empty(userWallet = userWallet)
         val accountId = accountList.mainAccount.accountId
 
         val newAccountName = AccountName("New name").getOrNull()!!
@@ -191,7 +191,7 @@ class UpdateCryptoPortfolioUseCaseTest {
     @Test
     fun `invoke if getAccounts does not contain accountId`() = runTest {
         // Arrange
-        val accountList = AccountList.createEmpty(userWallet = userWallet)
+        val accountList = AccountList.empty(userWallet = userWallet)
         val accountId = AccountId.forCryptoPortfolio(
             userWalletId = userWalletId,
             derivationIndex = DerivationIndex(1).getOrNull()!!,
@@ -215,7 +215,7 @@ class UpdateCryptoPortfolioUseCaseTest {
     @Test
     fun `invoke if saveAccounts throws exception`() = runTest {
         // Arrange
-        val accountList = AccountList.createEmpty(userWallet = userWallet)
+        val accountList = AccountList.empty(userWallet = userWallet)
         val accountId = accountList.mainAccount.accountId
 
         val newAccountName = AccountName("New name").getOrNull()!!
