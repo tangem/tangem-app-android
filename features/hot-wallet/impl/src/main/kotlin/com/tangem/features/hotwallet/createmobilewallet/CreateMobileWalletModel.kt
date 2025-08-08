@@ -6,6 +6,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.wallets.builder.HotUserWalletBuilder
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
+import com.tangem.domain.wallets.usecase.SelectWalletUseCase
 import com.tangem.features.hotwallet.createmobilewallet.entity.CreateMobileWalletUM
 import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.hot.sdk.model.HotAuth
@@ -23,6 +24,7 @@ internal class CreateMobileWalletModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val hotUserWalletBuilderFactory: HotUserWalletBuilder.Factory,
     private val saveUserWalletUseCase: SaveWalletUseCase,
+    private val selectWalletUseCase: SelectWalletUseCase,
     private val router: Router,
     private val tangemHotSdk: TangemHotSdk,
 ) : Model() {
@@ -45,9 +47,9 @@ internal class CreateMobileWalletModel @Inject constructor(
             runCatching {
                 val hotWalletId = tangemHotSdk.generateWallet(HotAuth.NoAuth, mnemonicType = MnemonicType.Words12)
                 val hotUserWalletBuilder = hotUserWalletBuilderFactory.create(hotWalletId)
-                saveUserWalletUseCase(
-                    hotUserWalletBuilder.build(),
-                )
+                val userWallet = hotUserWalletBuilder.build()
+                saveUserWalletUseCase(userWallet)
+                selectWalletUseCase(userWallet.walletId)
                 router.replaceAll(AppRoute.Wallet)
             }.onFailure {
                 Timber.e(it)

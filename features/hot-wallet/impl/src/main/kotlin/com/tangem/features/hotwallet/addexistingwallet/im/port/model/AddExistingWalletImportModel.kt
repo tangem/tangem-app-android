@@ -6,6 +6,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.crypto.bip39.Mnemonic
 import com.tangem.domain.wallets.builder.HotUserWalletBuilder
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
+import com.tangem.domain.wallets.usecase.SelectWalletUseCase
 import com.tangem.features.hotwallet.MnemonicRepository
 import com.tangem.features.hotwallet.addexistingwallet.im.port.AddExistingWalletImportComponent
 import com.tangem.features.hotwallet.addexistingwallet.im.port.entity.AddExistingWalletImportUM
@@ -16,9 +17,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @ModelScoped
 internal class AddExistingWalletImportModel @Inject constructor(
     paramsContainer: ParamsContainer,
@@ -27,6 +28,7 @@ internal class AddExistingWalletImportModel @Inject constructor(
     private val tangemHotSdk: TangemHotSdk,
     private val hotUserWalletBuilderFactory: HotUserWalletBuilder.Factory,
     private val saveUserWalletUseCase: SaveWalletUseCase,
+    private val selectWalletUseCase: SelectWalletUseCase,
 ) : Model() {
 
     private val params: AddExistingWalletImportComponent.Params = paramsContainer.require()
@@ -58,19 +60,20 @@ internal class AddExistingWalletImportModel @Inject constructor(
                 it.copy(createWalletProgress = true)
             }
 
-            runCatching {
-                val hotWalletId = tangemHotSdk.importWallet(mnemonic, passphrase?.toCharArray(), HotAuth.NoAuth)
-                val hotUserWalletBuilder = hotUserWalletBuilderFactory.create(hotWalletId)
-                val userWallet = hotUserWalletBuilder.build()
-                saveUserWalletUseCase(userWallet)
-                params.callbacks.onWalletImported(userWallet.walletId)
-            }.onFailure {
-                Timber.e(it)
-
-                uiState.update {
-                    it.copy(createWalletProgress = false)
+            val hotWalletId = tangemHotSdk.importWallet(mnemonic, passphrase?.toCharArray(), HotAuth.NoAuth)
+            val hotUserWalletBuilder = hotUserWalletBuilderFactory.create(hotWalletId)
+            val userWallet = hotUserWalletBuilder.build()
+            saveUserWalletUseCase.invoke(userWallet)
+                .onRight {
+                    selectWalletUseCase(userWallet.walletId)
+                    params.callbacks.onWalletImported(userWallet.walletId)
                 }
-            }
+                .onLeft {
+                    // TODO show dialog
+                    uiState.update {
+                        it.copy(createWalletProgress = false)
+                    }
+                }
         }
     }
 }
