@@ -66,12 +66,12 @@ class AccountListTest {
     }
 
     @Test
-    fun createEmpty() {
+    fun empty() {
         // Arrange
         val userWallet = mockk<UserWallet>(relaxed = true)
 
         // Act
-        val actual = AccountList.createEmpty(userWallet)
+        val actual = AccountList.empty(userWallet)
 
         // Assert
         val expected = AccountList(
@@ -151,6 +151,13 @@ class AccountListTest {
                     createAccount(userWalletId = userWalletId, derivationIndex = 1),
                 ),
                 expected = AccountList.Error.DuplicateAccountIds.left(),
+            ),
+            CreateTestModel(
+                accounts = setOf(
+                    createAccount(userWalletId = userWalletId, name = "Name", derivationIndex = 0),
+                    createAccount(userWalletId = userWalletId, name = "Name", derivationIndex = 1),
+                ),
+                expected = AccountList.Error.DuplicateAccountNames.left(),
             ),
         )
     }
