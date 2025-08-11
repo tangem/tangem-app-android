@@ -144,6 +144,7 @@ dependencies {
     implementation(projects.libs.blockchainSdk)
     implementation(projects.libs.tangemSdkApi)
 
+    implementation(projects.data.account)
     implementation(projects.data.appCurrency)
     implementation(projects.data.appTheme)
     implementation(projects.data.balanceHiding)
