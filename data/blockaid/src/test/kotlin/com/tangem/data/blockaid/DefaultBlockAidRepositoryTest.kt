@@ -11,6 +11,7 @@ import com.tangem.datasource.api.common.blockaid.models.request.DomainScanReques
 import com.tangem.datasource.api.common.blockaid.models.request.EvmTransactionScanRequest
 import com.tangem.datasource.api.common.blockaid.models.request.SolanaTransactionScanRequest
 import com.tangem.datasource.api.common.blockaid.models.response.DomainScanResponse
+import com.tangem.datasource.api.common.blockaid.models.response.SolanaTransactionResponse
 import com.tangem.datasource.api.common.blockaid.models.response.TransactionScanResponse
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
@@ -91,7 +92,7 @@ class DefaultBlockAidRepositoryTest {
         )
 
         val request = mockk<SolanaTransactionScanRequest>()
-        val response = mockk<TransactionScanResponse>()
+        val response = mockk<SolanaTransactionResponse>()
         val expectedResult = mockk<CheckTransactionResult>()
 
         every { mapper.mapToSolanaRequest(data) } returns request
