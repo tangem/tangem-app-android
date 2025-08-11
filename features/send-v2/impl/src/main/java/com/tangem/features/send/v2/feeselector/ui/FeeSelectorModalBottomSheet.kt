@@ -488,7 +488,10 @@ private class FeeSelectorUMContentProvider : CollectionPreviewParameterProvider<
             isPrimaryButtonEnabled = false,
             feeItems = persistentListOf(
                 FeeItem.Suggested(
-                    title = stringReference("Suggested by Tangem"),
+                    title = resourceReference(
+                        id = R.string.wc_fee_suggested,
+                        formatArgs = wrappedList("Tangem"),
+                    ),
                     fee = Fee.Common(Amount(value = BigDecimal("0.1"), blockchain = Blockchain.Ethereum)),
                 ),
                 FeeItem.Slow(fee = Fee.Common(Amount(value = BigDecimal("0.01"), blockchain = Blockchain.Ethereum))),
