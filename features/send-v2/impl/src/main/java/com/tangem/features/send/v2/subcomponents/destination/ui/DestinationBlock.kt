@@ -18,6 +18,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.core.ui.components.icons.identicon.IdentIcon
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -62,7 +63,7 @@ private fun AddressBlock(address: DestinationTextFieldUM.RecipientAddress) {
     Text(
         text = address.label.resolveReference(),
         style = TangemTheme.typography.subtitle2,
-        color = TangemTheme.colors.text.secondary,
+        color = TangemTheme.colors.text.tertiary,
     )
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -104,7 +105,7 @@ private fun MemoBlock(memo: DestinationTextFieldUM.RecipientMemo?) {
         Text(
             text = memo.label.resolveReference(),
             style = TangemTheme.typography.subtitle2,
-            color = TangemTheme.colors.text.secondary,
+            color = TangemTheme.colors.text.tertiary,
         )
         Text(
             text = memo.value,
@@ -121,7 +122,7 @@ private fun AddressWithMemoBlock(
     memo: DestinationTextFieldUM.RecipientMemo?,
 ) {
     Text(
-        text = stringResourceSafe(R.string.send_to_address),
+        text = stringResourceSafe(R.string.send_recipient),
         style = TangemTheme.typography.subtitle2,
         color = TangemTheme.colors.text.tertiary,
     )
@@ -188,7 +189,7 @@ private class DestinationBlockPreviewProvider : PreviewParameterProvider<Destina
             value = "0x34B4492A412D84A6E606288f3Bd714b89135D4dE",
             keyboardOptions = KeyboardOptions.Default,
             placeholder = TextReference.Str("Enter address"),
-            label = TextReference.Str("Recipient Address"),
+            label = resourceReference(R.string.send_recipient),
             isError = false,
             error = null,
             isValuePasted = false,
