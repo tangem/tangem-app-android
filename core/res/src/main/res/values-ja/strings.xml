@@ -58,12 +58,16 @@
   <string name="alert_manage_tokens_unsupported_message">%1$s ネットワークのトークンは、ファームウェアの制限により、このカードまたはリングではサポートされていません。</string>
   <string name="alert_troubleshooting_scan_card_title">カードまたはリングのスキャンに問題がありますか？</string>
   <string name="alert_unsupported_card">このカードはこのアプリでは使用できません。</string>
+  <string name="app_settings_biometrics_footer">%1$sを使用すると、ウォレットのロックを迅速かつ安全に解除できます。また、取引の署名など、機密性の高い操作も承認できます。ハードウェアウォレットの場合は、署名にカードが必要です。</string>
   <string name="app_settings_default_fee">デフォルト手数料</string>
   <string name="app_settings_default_fee_footer">デフォルト手数料を有効にすると、取引手数料が自動的に設定され、送金時に手数料ページを表示する必要がなくなります。必要に応じて、いつでもこのページに戻ることができます。</string>
   <string name="app_settings_enable_biometrics_description">設定に移動して、Tangemアプリで生体認証を有効にします。</string>
   <string name="app_settings_enable_biometrics_title">生体認証を有効にする</string>
+  <string name="app_settings_off_biometrics_alert_message">%1$sが無効になると、アプリのロックを解除してウォレットを操作するために、パスコードを入力する必要があります。</string>
   <string name="app_settings_off_saved_access_code_alert_message">これにより、保存されているウォレットアクセスコードがすべて削除されます。ウォレットでの今後の操作には、アクセスコードの送信が必要になります。</string>
   <string name="app_settings_off_saved_wallet_alert_message">保存したデバイスを削除すると、保存されているすべてのウォレットとそのアクセスコードがアプリから削除されます。</string>
+  <string name="app_settings_require_access_code">アクセスコードを要求する</string>
+  <string name="app_settings_require_access_code_footer">このオプションを選択すると、機密性の高い操作における生体認証が無効になります。取引の署名時などには、毎回アクセスコードの入力が必要になります。</string>
   <string name="app_settings_saved_access_codes">アクセスコードを保存</string>
   <string name="app_settings_saved_access_codes_footer">カードまたはリングとのやり取りには、アクセスコードの代わりに生体認証が要求されます。</string>
   <string name="app_settings_saved_wallet">ウォレットをアプリに保存する</string>
@@ -89,6 +93,7 @@
   <string name="backup_info_save_description">これらの%s個の単語をパスワードマネージャーなどの安全な場所に保存し、決して他の人と共有しないでください。</string>
   <string name="backup_info_save_title">復元は不可能です</string>
   <string name="backup_info_title">リカバリーフレーズ</string>
+  <string name="backup_seed_caution">これらの単語は、絶対に誰にも共有しないでください。もし他人がこの単語を知れば、あなたの暗号資産をすべて盗むことができます。Tangemがこれらの単語を尋ねることはありません。以下の%s単語はウォレットの復元フレーズです。これらのフレーズを使用すると、デバイスを紛失した場合でもウォレットを復元できます。</string>
   <string name="backup_seed_description">これらの%s語を順番に書き留めて、安全かつプライベートに保管してください。</string>
   <string name="backup_seed_responsibility">ウォレットと、リカバリーフレーズのセキュリティとバックアップの全責任は、Tangemではなくユーザーにあります。</string>
   <string name="backup_seed_title">リカバリーフレーズ</string>
@@ -182,6 +187,7 @@
     <item quantity="other">日</item>
   </plurals>
   <string name="common_delete">削除</string>
+  <string name="common_disable">無効にする</string>
   <string name="common_disabled">無効</string>
   <string name="common_disconnect">切断</string>
   <string name="common_done">完了</string>
@@ -236,6 +242,7 @@
   <string name="common_reject">拒否</string>
   <string name="common_reload">リロード</string>
   <string name="common_rename">名前を変更</string>
+  <string name="common_required">必須</string>
   <string name="common_save">保存</string>
   <string name="common_save_changes">変更内容を保存</string>
   <string name="common_search">検索</string>
@@ -332,6 +339,7 @@
   <string name="details_title">詳細</string>
   <string name="disclaimer_error_loading">インターネット接続を確認するか、別のネットワークに切り替えてください。</string>
   <string name="disclaimer_title">利用規約</string>
+  <string name="domain_receive_assets_navigation_title">資金を受け取る</string>
   <string name="domain_receive_assets_onboarding_description">他のネットワークで資産を送金すると、永久に失われます。</string>
   <string name="domain_receive_assets_onboarding_network_name">%sネットワーク</string>
   <string name="domain_receive_assets_onboarding_title">下記のみを使用して資金を送金する</string>
@@ -392,6 +400,7 @@
   <string name="express_provider">プロバイダー</string>
   <string name="express_provider_best_rate">ベストレート</string>
   <string name="express_provider_fca_warning_list">FCA警告リスト</string>
+  <string name="express_provider_in_fca_warning_list">FCA警告リストに掲載されたプロバイダー</string>
   <string name="express_provider_max_amount">最大 %s まで使用可能</string>
   <string name="express_provider_min_amount">%s 以上で利用可能</string>
   <string name="express_provider_not_available">このペアは利用できません</string>
@@ -443,6 +452,9 @@
   <string name="hw_activation_need_description">セットアップを完了するには、ウォレットをバックアップし、アクセスコードを使用してアプリへのアクセスを保護します。</string>
   <string name="hw_activation_need_finish">今すぐ実施</string>
   <string name="hw_activation_need_title">ウォレットのアクティベーションを完了する</string>
+  <string name="hw_activation_need_warning_description">セットアップを完了するには、アクセスコードを使用してアプリへのアクセスを保護します。</string>
+  <string name="hw_backup_alert_description">そうした場合は、最初からやり直す必要があります。</string>
+  <string name="hw_backup_alert_title">アクティベーションプロセスを終了してもよろしいですか？</string>
   <string name="hw_backup_google_drive_description">Googleドライブのバックアップに保存されている既存のウォレットを復元する</string>
   <string name="hw_backup_google_drive_title">Googleドライブのバックアップ</string>
   <string name="hw_backup_need_action">バックアップへ移動</string>
@@ -456,6 +468,7 @@
   <string name="hw_create_seed_description">最新の機能とニュースをお届けします</string>
   <string name="hw_create_seed_title">シードフレーズのバックアップ</string>
   <string name="hw_create_title">モバイルウォレットを作成する</string>
+  <string name="hw_mobile_wallet">モバイルウォレット</string>
   <string name="information_generated_with_ai">この情報はAIで生成されました。 \nエラーが見つかった場合は、ここをタップしてください。</string>
   <string name="initial_message_change_access_code_body">アクセスコードを変更するには、上図のようにカードまたはリングをタップし、操作が終了するまで取り外さないでください。</string>
   <string name="initial_message_change_passcode_body">パスコードを変更するには、上記のようにカードをタップし、操作が終了するまで取り外さないでください。</string>
@@ -1302,9 +1315,11 @@
   <string name="wallet_promo_banner_title">Tangemウォレットを見る</string>
   <string name="wallet_settings_access_code_description">このウォレットを保護するためのシークレットコードです。ログインと署名に使用されます。</string>
   <string name="wallet_settings_access_code_title">アクセスコードの設定 / 変更</string>
+  <string name="wallet_settings_change_access_code_title">アクセスコードの変更</string>
   <string name="wallet_settings_push_notifications_description">ウォレットの受信取引とTangemの更新について通知を受け取る。</string>
   <string name="wallet_settings_push_notifications_huawei_warning">現在、Huaweiデバイスではプッシュ通知が機能しない可能性があります。現在、解決策の検討に取り組んでおり、今後のアップデートで修正をリリースする予定です。ご理解のほどよろしくお願いいたします。</string>
   <string name="wallet_settings_push_notifications_title">取引通知</string>
+  <string name="wallet_settings_set_access_code_title">アクセスコードを設定する</string>
   <string name="wallet_settings_title">ウォレット設定</string>
   <string name="wallet_title">Tangem</string>
   <string name="warning_access_denied_message">%sを使用するか、カード / リングをスキャンしてウォレットにアクセスしてください</string>
@@ -1406,7 +1421,7 @@
   <string name="wc_alert_connection_timeout_title">WalletConnectを確立できませんでした</string>
   <string name="wc_alert_domain_issues_description">このドメインは検証できません。承認前にリクエスト内容をよく確認してください。</string>
   <string name="wc_alert_session_disconnected_description">ブラウザに戻り、WalletConnect経由で再接続してください。</string>
-  <string name="wc_alert_session_disconnected_title">WalletConnectセッションが接続解除されました</string>
+  <string name="wc_alert_session_disconnected_title">Wallet Connectセッションが接続解除されました</string>
   <string name="wc_alert_sign_anyway">とにかくサインする</string>
   <string name="wc_alert_unknown_error_description">エラーコード: %s 。問題が解決しない場合は、お気軽にサポートまでお問い合わせください。</string>
   <string name="wc_alert_unknown_error_description_no_error_code">問題が解決しない場合は、お気軽にサポートまでお問い合わせください。</string>
@@ -1416,11 +1431,12 @@
   <string name="wc_alert_unsupported_method_description">エラーコード: 8 005。問題が解決しない場合は、お気軽にサポートまでお問い合わせください。</string>
   <string name="wc_alert_unsupported_method_title">不明なエラーが発生しました</string>
   <string name="wc_alert_unsupported_networks_description">Tangemは現在%sで必要なネットワークをサポートしていません。</string>
-  <string name="wc_alert_unsupported_networks_title">サポートされていないネットワーク</string>
+  <string name="wc_alert_unsupported_networks_title">未対応のネットワーク</string>
   <string name="wc_alert_verified_domain_description">Tangemは%sで必要なネットワークをサポートします</string>
   <string name="wc_alert_verified_domain_title">検証済みドメイン</string>
   <string name="wc_alert_wrong_card_description">アプリで間違ったカードまたはリングが選択されました</string>
   <string name="wc_alert_wrong_card_title">問題が起きています</string>
+  <string name="wc_all_dapps_disconnected">すべてのdAppが接続解除されました</string>
   <string name="wc_allow_to_spend">使用を許可する</string>
   <string name="wc_common_address">アドレス</string>
   <string name="wc_common_connect">接続する</string>
@@ -1431,6 +1447,7 @@
   <string name="wc_common_wallet">ウォレット</string>
   <string name="wc_connected_app_title">接続されたアプリ</string>
   <string name="wc_connected_networks">接続されたネットワーク</string>
+  <string name="wc_connected_to">%1$sへ接続済み</string>
   <string name="wc_connection_reqeust_can_view_balance">ウォレットの残高とアクティビティを表示する</string>
   <string name="wc_connection_reqeust_cant_sign">通知なしに取引に署名する</string>
   <string name="wc_connection_reqeust_request_approval">取引の承認をリクエストする</string>
@@ -1441,6 +1458,7 @@
   <string name="wc_contents">内容</string>
   <string name="wc_copy_data_button_text">データをコピー</string>
   <string name="wc_custom_allowance_title">使用可能量の設定</string>
+  <string name="wc_dapp_disconnected">dAppが接続解除されました</string>
   <string name="wc_disconnect_all">すべての接続を解除する</string>
   <string name="wc_disconnect_all_alert_desc">すべてのdAppsの接続解除に関するテキスト</string>
   <string name="wc_disconnect_all_alert_title">すべてのdAppを接続解除する</string>
@@ -1448,20 +1466,23 @@
   <string name="wc_estimated_wallet_changes_not_simulated">取引をシミュレーションできませんでした。注意して続行してください。</string>
   <string name="wc_estimation_is_not_supported">%sでは見積もりはサポートされていません</string>
   <string name="wc_fee_suggested">%sによる提案</string>
+  <string name="wc_insufficient_warning_subtitle">ネットワーク手数料をカバーするために残高を補充してください</string>
+  <string name="wc_insufficient_warning_title">%1$sが不足しています</string>
   <string name="wc_malicious_transaction">悪意のある取引</string>
   <string name="wc_missing_required_network_description">このウォレットのポートフォリオに%sネットワークを追加します</string>
   <string name="wc_missing_required_network_title">ウォレットに必要なネットワークはありません</string>
   <string name="wc_new_connection">新しい接続</string>
-  <string name="wc_no_sessions_desc">ウォレットを別のdAppに接続する</string>
+  <string name="wc_no_sessions_desc">ウォレットをさまざまなdAppに接続する</string>
   <string name="wc_no_sessions_title">セッションなし</string>
   <string name="wc_no_wallet_changes_detected">ウォレットの変更は検出されませんでした</string>
-  <string name="wc_notification_security_risk_subtitle">このドメインは複数のセキュリティプロバイダーから安全でないとの警告を受けています。あなたの資産を守るため、直ちにアクセスを中止してください。</string>
+  <string name="wc_notification_security_risk_subtitle">潜在的なリスクまたは悪意のある行為が検出されました。接続または取引への署名は資金の損失につながる可能性があります。</string>
   <string name="wc_notification_security_risk_title">既知のセキュリティリスク</string>
   <string name="wc_request_from">リクエスト元</string>
-  <string name="wc_send_anyway">とにかく送金</string>
+  <string name="wc_send_anyway">とにかく署名する</string>
   <string name="wc_signature_type">署名タイプ</string>
   <string name="wc_specify_networks_subtitle">dApp接続には、少なくとも1つのネットワークが必要です</string>
   <string name="wc_specify_networks_title">選択したネットワークを指定する</string>
+  <string name="wc_successfully_signed">署名に成功しました</string>
   <string name="wc_transaction_info_to_title">宛先</string>
   <string name="wc_transaction_request">取引リクエスト</string>
   <string name="wc_transaction_request_title">取引リクエスト</string>
