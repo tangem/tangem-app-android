@@ -18,7 +18,8 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUMV2
 import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUMV2.Icon.Type
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
@@ -39,6 +40,7 @@ import com.tangem.features.send.v2.api.params.FeeSelectorParams.FeeStateConfigur
 import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
 import com.tangem.features.send.v2.api.subcomponents.feeSelector.entity.FeeSelectorData
 import com.tangem.features.walletconnect.connections.routing.WcInnerRoute
+import com.tangem.features.walletconnect.impl.R
 import com.tangem.features.walletconnect.transaction.components.common.WcTransactionModelParams
 import com.tangem.features.walletconnect.transaction.converter.WcHandleMethodErrorConverter
 import com.tangem.features.walletconnect.transaction.converter.WcSendTransactionUMConverter
@@ -57,7 +59,7 @@ import java.math.BigDecimal
 import javax.inject.Inject
 import kotlin.properties.Delegates
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 @Stable
 @ModelScoped
 internal class WcSendTransactionModel @Inject constructor(
@@ -112,7 +114,10 @@ internal class WcSendTransactionModel @Inject constructor(
                         ?.dAppFee()
                         ?.let { dAppFee ->
                             feeStateConfiguration = FeeStateConfiguration.Suggestion(
-                                title = stringReference(useCase.session.sdkModel.appMetaData.name),
+                                title = resourceReference(
+                                    id = R.string.wc_fee_suggested,
+                                    formatArgs = wrappedList(useCase.session.sdkModel.appMetaData.name),
+                                ),
                                 fee = dAppFee,
                             )
                         }
