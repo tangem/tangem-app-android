@@ -4,19 +4,19 @@ import android.content.Context
 import com.huawei.agconnect.AGConnectOptionsBuilder
 import com.huawei.hms.aaid.HmsInstanceId
 import com.huawei.hms.common.ApiException
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.notifications.PushNotificationsTokenProvider
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
 internal class HuaweiPushNotificationsTokenProvider @Inject constructor(
     @ApplicationContext private val context: Context,
-) {
+    private val coroutineDispatcherProvider: CoroutineDispatcherProvider,
+) : PushNotificationsTokenProvider {
 
-    suspend fun getToken(): String = withContext(Dispatchers.IO) {
+    override suspend fun getToken(): String = withContext(coroutineDispatcherProvider.io) {
         try {
             val appId = AGConnectOptionsBuilder().build(context).getString(APP_ID_KEY)
             val token = HmsInstanceId.getInstance(context).getToken(appId, TOKEN_REQUEST_MODE)

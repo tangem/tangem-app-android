@@ -10,7 +10,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-interface AppConfigurationModule {
+internal interface AppConfigurationModule {
 
     @Binds
     @Singleton
