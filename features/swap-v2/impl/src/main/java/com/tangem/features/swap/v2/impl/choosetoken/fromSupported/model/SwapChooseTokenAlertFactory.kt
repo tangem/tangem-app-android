@@ -3,7 +3,6 @@ package com.tangem.features.swap.v2.impl.choosetoken.fromSupported.model
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.features.swap.v2.impl.R
@@ -26,22 +25,19 @@ internal class SwapChooseTokenAlertFactory @Inject constructor(
     }
 
     fun showChangeTokenAlert(onConfirm: () -> Unit, onDismiss: () -> Unit) {
-        // todo fix localization [REDACTED_TASK_KEY]
         uiMessageSender.send(
             DialogMessage(
-                title = stringReference("Changing token"),
-                message = stringReference(
-                    "Are you sure you want to change the token? After changing, previous data will be reset.",
-                ),
+                title = resourceReference(R.string.send_with_swap_change_token_alert_title),
+                message = resourceReference(R.string.send_with_swap_change_token_alert_message),
                 firstActionBuilder = {
                     EventMessageAction(
-                        title = stringReference("Change"),
+                        title = resourceReference(R.string.common_change),
                         onClick = onConfirm,
                     )
                 },
                 secondActionBuilder = {
                     EventMessageAction(
-                        title = stringReference("Cancel"),
+                        title = resourceReference(R.string.common_cancel),
                         onClick = onDismiss,
                     )
                 },
