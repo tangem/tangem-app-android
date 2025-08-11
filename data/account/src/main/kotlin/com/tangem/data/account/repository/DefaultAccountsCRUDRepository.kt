@@ -3,12 +3,13 @@ package com.tangem.data.account.repository
 import arrow.core.Option
 import arrow.core.Option.Companion.catch
 import arrow.core.none
+import arrow.core.raise.option
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.account.models.AccountList
+import com.tangem.domain.account.models.ArchivedAccount
 import com.tangem.domain.account.repository.AccountsCRUDRepository
-import com.tangem.domain.models.account.Account
-import com.tangem.domain.models.account.AccountId
+import com.tangem.domain.models.account.*
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.extensions.addOrReplace
@@ -33,6 +34,17 @@ internal class DefaultAccountsCRUDRepository(
             .flatMap { it.accounts }
             .firstOrNull { it.accountId == accountId } as? Account.CryptoPortfolio
             ?: return none()
+    }
+
+    override suspend fun getArchivedAccount(accountId: AccountId): Option<ArchivedAccount> = option {
+        ArchivedAccount(
+            accountId = accountId,
+            name = AccountName("Archived Account").getOrNull()!!,
+            icon = CryptoPortfolioIcon.ofDefaultCustomAccount(),
+            derivationIndex = DerivationIndex(value = 1000).getOrNull()!!,
+            tokensCount = 2,
+            networksCount = 1,
+        )
     }
 
     override suspend fun saveAccounts(accountList: AccountList) {
