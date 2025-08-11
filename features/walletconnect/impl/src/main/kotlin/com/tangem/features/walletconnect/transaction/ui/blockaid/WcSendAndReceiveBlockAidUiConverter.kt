@@ -21,7 +21,7 @@ import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
 import javax.inject.Inject
 
-internal const val DECIMALS_AMOUNT = 2
+private const val DECIMALS_AMOUNT = 2
 
 @Suppress("CyclomaticComplexMethod", "LongMethod")
 internal class WcSendAndReceiveBlockAidUiConverter @Inject constructor(
