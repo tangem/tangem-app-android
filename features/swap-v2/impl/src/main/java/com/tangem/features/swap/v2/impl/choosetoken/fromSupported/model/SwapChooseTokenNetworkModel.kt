@@ -9,6 +9,7 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.domain.managetokens.CreateCryptoCurrencyUseCase
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.swap.models.SwapCurrencies
+import com.tangem.domain.swap.models.SwapTxType
 import com.tangem.domain.swap.usecase.GetSwapSupportedPairsUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.managetokens.component.analytics.CommonManageTokensAnalyticEvents
@@ -84,6 +85,7 @@ internal class SwapChooseTokenNetworkModel @Inject constructor(
                 initialCurrency = params.initialCurrency,
                 cryptoCurrencyList = cryptoCurrencyList + params.initialCurrency,
                 filterProviderTypes = SEND_WITH_SWAP_PROVIDER_TYPES,
+                swapTxType = SwapTxType.SendWithSwap,
             ).getOrElse {
                 Timber.e(it.toString())
                 uiState.update(
