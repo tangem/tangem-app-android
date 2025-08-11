@@ -90,7 +90,7 @@ internal class AccountCreateEditModel @Inject constructor(
         val isNewIcon = icon != params.account.portfolioIcon
         updateCryptoPortfolioUseCase(
             icon = if (isNewIcon) icon else null,
-            name = if (isNewName) name else null,
+            accountName = if (isNewName) name else null,
             accountId = params.account.accountId,
         )
     }
