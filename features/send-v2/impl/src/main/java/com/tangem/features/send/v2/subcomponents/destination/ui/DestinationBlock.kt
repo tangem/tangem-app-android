@@ -82,7 +82,7 @@ private fun AddressBlock(address: DestinationTextFieldUM.RecipientAddress) {
                 style = TangemTheme.typography.body2,
                 color = TangemTheme.colors.text.primary1,
             )
-            val blockchainAddress = address.blockchainAddress
+            val blockchainAddress = address.briefBlockchainAddress
             if (!blockchainAddress.isNullOrBlank()) {
                 Text(
                     text = blockchainAddress,
@@ -136,7 +136,7 @@ private fun AddressWithMemoBlock(
                 style = TangemTheme.typography.body2,
                 color = TangemTheme.colors.text.primary1,
             )
-            val blockchainAddress = address.blockchainAddress
+            val blockchainAddress = address.briefBlockchainAddress
             if (!blockchainAddress.isNullOrBlank()) {
                 Text(
                     text = blockchainAddress,
