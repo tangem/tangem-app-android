@@ -40,6 +40,14 @@ internal class BlockAidVerificationDelegate @Inject constructor(
             return@flow
         }
         emit(Lce.Loading(partialContent = null))
+        val methodName = when (method) {
+            is WcEthMethod -> rawSdkRequest.request.method
+            is WcSolanaMethod -> method.trimmedPrefixMethodName
+            is WcMethod.Unsupported -> {
+                emit(Lce.Content(failedResult))
+                return@flow
+            }
+        }
         val params = when (method) {
             is WcEthMethod -> TransactionParams.Evm(rawSdkRequest.request.params)
             is WcSolanaMethod.SignAllTransaction -> TransactionParams.Solana(method.transaction)
@@ -59,7 +67,7 @@ internal class BlockAidVerificationDelegate @Inject constructor(
             data = TransactionData(
                 chain = chain,
                 accountAddress = accountAddress,
-                method = rawSdkRequest.request.method,
+                method = methodName,
                 domainUrl = session.sdkModel.appMetaData.url,
                 params = params,
             ),
