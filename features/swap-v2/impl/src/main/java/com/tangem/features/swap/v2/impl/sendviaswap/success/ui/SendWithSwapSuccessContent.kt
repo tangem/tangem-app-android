@@ -125,9 +125,12 @@ internal fun SendWithSwapSuccessContent(sendWithSwapUM: SendWithSwapUM) {
                         ),
                     ),
                 )
-                .padding(top = 24.dp)
-                .padding(horizontal = 16.dp),
-
+                .padding(
+                    top = 24.dp,
+                    bottom = 12.dp,
+                    start = 16.dp,
+                    end = 16.dp,
+                ),
         )
     }
 }
