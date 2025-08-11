@@ -2,6 +2,7 @@ package com.tangem.domain.account.repository
 
 import arrow.core.Option
 import com.tangem.domain.account.models.AccountList
+import com.tangem.domain.account.models.ArchivedAccount
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.wallet.UserWallet
@@ -29,6 +30,13 @@ interface AccountsCRUDRepository {
      * @return an [Option] containing the [Account.CryptoPortfolio] if found, or `Option.None` if not
      */
     suspend fun getAccount(accountId: AccountId): Option<Account.CryptoPortfolio>
+
+    /**
+     * Retrieves a archived account by its unique identifier
+     *
+     * @param accountId the unique identifier of the account
+     */
+    suspend fun getArchivedAccount(accountId: AccountId): Option<ArchivedAccount>
 
     /**
      * Saves a list of accounts to the repository
