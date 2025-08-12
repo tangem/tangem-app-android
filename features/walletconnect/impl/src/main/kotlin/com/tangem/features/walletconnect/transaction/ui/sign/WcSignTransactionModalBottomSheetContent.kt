@@ -95,6 +95,7 @@ internal fun WcSignTransactionModalBottomSheetContent(
                 onClickActiveButton = state.onSign,
                 activeButtonText = resourceReference(R.string.common_sign),
                 isLoading = state.isLoading,
+                validationResult = null,
             )
         },
     )
