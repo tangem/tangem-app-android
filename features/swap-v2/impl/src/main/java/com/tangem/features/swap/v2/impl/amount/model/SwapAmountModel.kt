@@ -661,7 +661,7 @@ internal class SwapAmountModel @Inject constructor(
         ).onEach { (state, route) ->
             params.callback.onNavigationResult(
                 NavigationUM.Content(
-                    title = resourceReference(R.string.common_swap),
+                    title = resourceReference(R.string.common_amount),
                     subtitle = null,
                     backIconRes = if (route.isEditMode) {
                         R.drawable.ic_back_24
