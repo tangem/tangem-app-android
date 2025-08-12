@@ -11,6 +11,7 @@ import com.tangem.domain.swap.models.SwapCryptoCurrency
 import com.tangem.domain.swap.models.SwapCurrencies
 import com.tangem.domain.swap.models.SwapCurrenciesGroup
 import com.tangem.domain.swap.models.SwapPairModel
+import com.tangem.domain.swap.models.SwapTxType
 
 /**
  * Get list of swap pairs
@@ -31,12 +32,14 @@ class GetSwapPairsUseCase(
         initialCurrency: CryptoCurrency,
         cryptoCurrencyStatusList: List<CryptoCurrencyStatus>,
         filterProviderTypes: List<ExpressProviderType>,
+        swapTxType: SwapTxType,
     ) = Either.catch {
         val pairs = swapRepositoryV2.getPairs(
             userWallet = userWallet,
             initialCurrency = initialCurrency,
             cryptoCurrencyStatusList = cryptoCurrencyStatusList,
             filterProviderTypes = filterProviderTypes,
+            swapTxType = swapTxType,
         )
 
         val fromGroup = pairs.groupPairs(
