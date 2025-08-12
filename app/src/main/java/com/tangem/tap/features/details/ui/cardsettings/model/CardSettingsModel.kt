@@ -108,8 +108,11 @@ internal class CardSettingsModel @Inject constructor(
             allowsRequestAccessCodeFromRepository = true,
         )
             .doOnSuccess { scanResponse ->
+                Timber.tag("CardSettingsModel").d("scanResponse: ${scanResponse.toString()}")
                 val scannedUserWalletId = UserWalletIdBuilder.scanResponse(scanResponse).build()
-                if (userWalletId == scannedUserWalletId || scannedUserWalletId == null) {
+                Timber.tag("CardSettingsModel").d("scannedUserWalletId: $scannedUserWalletId")
+                Timber.tag("CardSettingsModel").d("userWalletId $userWalletId")
+                if (userWalletId == scannedUserWalletId) {
                     cardSettingsInteractor.initialize(scanResponse)
                 } else {
                     store.dispatchDialogShow(
