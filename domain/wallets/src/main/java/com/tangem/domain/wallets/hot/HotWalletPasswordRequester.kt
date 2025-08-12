@@ -6,6 +6,8 @@ interface HotWalletPasswordRequester {
 
     suspend fun wrongPassword()
 
+    suspend fun successfulAuthentication()
+
     suspend fun requestPassword(hasBiometry: Boolean): Result
 
     suspend fun dismiss()
