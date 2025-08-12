@@ -66,6 +66,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
         initialCurrency: CryptoCurrency,
         cryptoCurrencyStatusList: List<CryptoCurrencyStatus>,
         filterProviderTypes: List<ExpressProviderType>,
+        swapTxType: SwapTxType,
     ): List<SwapPairModel> = withContext(coroutineDispatcher.default) {
         val cryptoCurrencyList = cryptoCurrencyStatusList.map { it.currency }
 
@@ -73,6 +74,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
             userWallet = userWallet,
             initialCurrency = initialCurrency,
             cryptoCurrencyList = cryptoCurrencyList,
+            swapTxType = swapTxType,
         )
 
         val providers = expressRepository.getProviders(
@@ -114,11 +116,13 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
         initialCurrency: CryptoCurrency,
         cryptoCurrencyList: List<CryptoCurrency>,
         filterProviderTypes: List<ExpressProviderType>,
+        swapTxType: SwapTxType,
     ): List<SwapPairModel> = withContext(coroutineDispatcher.default) {
         val allPairs = getPairsInternal(
             userWallet = userWallet,
             initialCurrency = initialCurrency,
             cryptoCurrencyList = cryptoCurrencyList,
+            swapTxType = swapTxType,
         )
 
         val providers = expressRepository.getProviders(
@@ -308,24 +312,34 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
         userWallet: UserWallet,
         initialCurrency: CryptoCurrency,
         cryptoCurrencyList: List<CryptoCurrency>,
-    ) = awaitAll(
-        // original pairs
-        async {
+        swapTxType: SwapTxType,
+    ) = when (swapTxType) {
+        SwapTxType.Swap -> awaitAll(
+            // original pairs
+            async {
+                invokePairRequest(
+                    userWallet = userWallet,
+                    from = arrayListOf(initialCurrency),
+                    to = cryptoCurrencyList,
+                )
+            },
+            // reversed pairs
+            async {
+                invokePairRequest(
+                    userWallet = userWallet,
+                    from = cryptoCurrencyList,
+                    to = arrayListOf(initialCurrency),
+                )
+            },
+        ).flatten()
+        SwapTxType.SendWithSwap -> {
             invokePairRequest(
                 userWallet = userWallet,
                 from = arrayListOf(initialCurrency),
                 to = cryptoCurrencyList,
             )
-        },
-        // reversed pairs
-        async {
-            invokePairRequest(
-                userWallet = userWallet,
-                from = cryptoCurrencyList,
-                to = arrayListOf(initialCurrency),
-            )
-        },
-    ).flatten()
+        }
+    }
 
     private suspend fun invokePairRequest(
         userWallet: UserWallet,
