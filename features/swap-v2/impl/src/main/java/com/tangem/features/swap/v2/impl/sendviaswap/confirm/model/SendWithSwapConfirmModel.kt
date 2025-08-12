@@ -329,7 +329,10 @@ internal class SendWithSwapConfirmModel @Inject constructor(
         modelScope.launch {
             sendNotificationsUpdateTrigger.triggerUpdate(
                 data = NotificationData(
-                    destinationAddress = confirmData.enteredDestination.orEmpty(),
+                    destinationAddress = when (val currency = primaryCurrencyStatus.currency) {
+                        is CryptoCurrency.Token -> currency.contractAddress
+                        is CryptoCurrency.Coin -> "0"
+                    },
                     memo = null,
                     amountValue = confirmData.enteredAmount.orZero(),
                     reduceAmountBy = confirmData.reduceAmountBy,
