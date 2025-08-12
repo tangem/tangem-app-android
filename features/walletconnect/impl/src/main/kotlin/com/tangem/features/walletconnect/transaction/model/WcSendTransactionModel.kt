@@ -249,6 +249,7 @@ internal class WcSendTransactionModel @Inject constructor(
                 feeSelectorUM = uiState.value?.feeSelectorUM,
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
                 onFeeReload = ::triggerFeeReload,
+                securityCheck = securityCheck.getOrNull(),
             ),
         )
         transactionUM = transactionUM?.copy(
@@ -280,6 +281,7 @@ internal class WcSendTransactionModel @Inject constructor(
         stackNavigation.pushNew(WcTransactionRoutes.SelectFee)
     }
 
+    // Before change, make sure you are align with WcTransactionRequestButtons
     private fun onSign(securityCheck: BlockAidTransactionCheck.Result?) {
         when (securityCheck?.result?.validation) {
             ValidationResult.UNSAFE -> showMaliciousAlert(securityCheck.result.description)
