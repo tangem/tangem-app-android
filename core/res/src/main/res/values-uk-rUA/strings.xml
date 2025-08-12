@@ -120,6 +120,7 @@
   <string name="common_claim_rewards">Отримати винагороди</string>
   <string name="common_close">Закрити</string>
   <string name="common_confirm">Підтвердити</string>
+  <string name="common_connecting">Підключення</string>
   <string name="common_continue">Продовжити</string>
   <string name="common_copy">Копіювати</string>
   <string name="common_copy_address">Скопіювати адресу</string>
@@ -218,6 +219,12 @@
   <string name="common_terms_and_conditions">умови участі</string>
   <string name="common_terms_of_use">Умовами використання</string>
   <string name="common_today">Сьогодні</string>
+  <plurals name="common_tokens_count">
+    <item quantity="one">%d токен</item>
+    <item quantity="few">%d токени</item>
+    <item quantity="many">%d токенів</item>
+    <item quantity="other">%d токенів</item>
+  </plurals>
   <string name="common_transaction_failed">Помилка транзакції</string>
   <string name="common_transaction_status">Статус транзакції</string>
   <string name="common_transactions">Транзакції</string>
