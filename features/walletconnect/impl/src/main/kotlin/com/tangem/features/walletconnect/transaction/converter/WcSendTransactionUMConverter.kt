@@ -3,6 +3,7 @@ package com.tangem.features.walletconnect.transaction.converter
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.walletconnect.model.WcEthMethod
 import com.tangem.domain.walletconnect.model.WcSolanaMethod
+import com.tangem.domain.walletconnect.usecase.method.BlockAidTransactionCheck
 import com.tangem.domain.walletconnect.usecase.method.WcMethodContext
 import com.tangem.domain.walletconnect.usecase.method.WcSignState
 import com.tangem.domain.walletconnect.usecase.method.WcSignStep
@@ -52,6 +53,7 @@ internal class WcSendTransactionUMConverter @Inject constructor(
                     estimatedWalletChanges = WcSendReceiveTransactionCheckResultsUM(),
                     isLoading = value.signState.domainStep == WcSignStep.Signing,
                     address = WcAddressConverter.convert(value.context.derivationState),
+                    transactionValidationResult = value.securityCheck?.result?.validation,
                     sendEnabled = value.feeSelectorUM is FeeSelectorUM.Content && feeErrorNotification == null,
                     feeErrorNotification = feeErrorNotification,
                 ),
@@ -78,6 +80,7 @@ internal class WcSendTransactionUMConverter @Inject constructor(
         val actions: WcTransactionActionsUM,
         val feeSelectorUM: FeeSelectorUM?,
         val cryptoCurrencyStatus: CryptoCurrencyStatus,
+        val securityCheck: BlockAidTransactionCheck.Result?,
         val onFeeReload: () -> Unit,
     )
 }
