@@ -17,6 +17,10 @@ class HotWalletPasswordRequesterProxy @Inject constructor() : HotWalletPasswordR
         call { wrongPassword() }
     }
 
+    override suspend fun successfulAuthentication() {
+        call { successfulAuthentication() }
+    }
+
     override suspend fun requestPassword(hasBiometry: Boolean): HotWalletPasswordRequester.Result =
         call { requestPassword(hasBiometry) }
 
