@@ -158,5 +158,6 @@ public val Blockchain.mercuryoNetwork: String?
             Blockchain.ZkLinkNova, Blockchain.ZkLinkNovaTestnet -> null
             Blockchain.KaspaTestnet -> null
             Blockchain.Pepecoin, Blockchain.PepecoinTestnet -> null
+            Blockchain.Hyperliquid, Blockchain.HyperliquidTestnet -> null
         }
     }
