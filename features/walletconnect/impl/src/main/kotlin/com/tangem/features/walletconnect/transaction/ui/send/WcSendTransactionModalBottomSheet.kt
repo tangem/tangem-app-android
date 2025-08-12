@@ -16,6 +16,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import com.domain.blockaid.models.transaction.ValidationResult
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
@@ -137,6 +138,7 @@ internal fun WcSendTransactionModalBottomSheet(
                 activeButtonText = resourceReference(R.string.common_send),
                 isLoading = state.isLoading,
                 enabled = state.sendEnabled,
+                validationResult = state.transactionValidationResult,
             )
         },
     )
@@ -221,6 +223,7 @@ private class WcSendTransactionStateProvider : CollectionPreviewParameterProvide
             address = null,
             sendEnabled = true,
             feeErrorNotification = null,
+            transactionValidationResult = null,
         ),
         WcSendTransactionItemUM(
             onDismiss = {},
@@ -263,6 +266,7 @@ private class WcSendTransactionStateProvider : CollectionPreviewParameterProvide
                 title = stringReference("Insufficient Ethereum"),
                 subtitle = stringReference("Top up your balance to cover the network fee"),
             ),
+            transactionValidationResult = ValidationResult.WARNING,
         ),
         WcSendTransactionItemUM(
             onDismiss = {},
@@ -309,6 +313,7 @@ private class WcSendTransactionStateProvider : CollectionPreviewParameterProvide
                     onClick = {},
                 ),
             ),
+            transactionValidationResult = ValidationResult.SAFE,
         ),
     ),
 )
