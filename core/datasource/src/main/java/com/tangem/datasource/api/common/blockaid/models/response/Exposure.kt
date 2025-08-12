@@ -5,6 +5,7 @@ import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)
 data class Exposure(
+    @Json(name = "asset_type") val assetType: String,
     @Json(name = "asset") val asset: Asset,
     @Json(name = "spenders") val spenders: Map<String, SpenderDetails>,
 )
