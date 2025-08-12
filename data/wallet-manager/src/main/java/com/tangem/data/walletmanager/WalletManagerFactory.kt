@@ -7,6 +7,7 @@ import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.data.walletmanager.extensions.makePublicKey
 import com.tangem.data.walletmanager.extensions.makeWalletManagerForApp
+import com.tangem.domain.card.configs.Wallet2CardConfig
 import com.tangem.domain.wallets.derivations.DerivationStyleProvider
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
@@ -41,7 +42,7 @@ internal class WalletManagerFactory(
         blockchain: Blockchain,
         derivationPath: DerivationPath?,
     ): WalletManager? {
-        val curve = blockchain.getSupportedCurves().first()
+        val curve = Wallet2CardConfig.primaryCurve(blockchain)
         val selectedWallet = hotWallet.wallets.orEmpty().firstOrNull { it.curve == curve }
             ?: return null
         return try {
