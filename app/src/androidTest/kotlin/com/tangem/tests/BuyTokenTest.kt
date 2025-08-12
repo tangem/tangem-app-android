@@ -3,7 +3,7 @@ package com.tangem.tests
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.TOTAL_BALANCE
 import com.tangem.common.extensions.clickWithAssertion
-import com.tangem.common.utils.resetWireMockScenarios
+import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.OpenMainScreenScenario
 import com.tangem.screens.*
@@ -19,18 +19,20 @@ class BuyTokenTest : BaseTestCase() {
     @DisplayName("Onramp: error in providers loading")
     @Test
     fun errorInProvidersLoadingTest() {
+        val scenarioName = "payment_methods"
+        val tokenTitle = "Bitcoin"
+        val balance = TOTAL_BALANCE
+
         setupHooks(
             additionalAfterSection = {
-                resetWireMockScenarios()
+                resetWireMockScenarioState(scenarioName)
             }
         ).run {
-            val tokenTitle = "Bitcoin"
-            val balance = TOTAL_BALANCE
-
-            resetWireMockScenarios()
-
-            step("Setup WireMock scenario for 'Error' state") {
-                setWireMockScenarioState("payment_methods", "Error")
+            step("Reset WireMock scenario '$scenarioName'") {
+                resetWireMockScenarioState(scenarioName)
+            }
+            step("Setup WireMock scenario '$scenarioName' for 'Error' state") {
+                setWireMockScenarioState(scenarioName, "Error")
             }
             step("Open 'Main Screen'") {
                 scenario(OpenMainScreenScenario(composeTestRule))
@@ -74,8 +76,11 @@ class BuyTokenTest : BaseTestCase() {
             val australianDollar = "AUD"
             val fiatAmount = "1"
             val tokenAmount = "POL 488.24938338"
+            val scenarioName = "payment_methods"
 
-            resetWireMockScenarios()
+            step("Reset WireMock scenario '$scenarioName'") {
+                resetWireMockScenarioState(scenarioName)
+            }
 
             step("Open 'Main Screen'") {
                 scenario(OpenMainScreenScenario(composeTestRule))
@@ -162,8 +167,11 @@ class BuyTokenTest : BaseTestCase() {
             val euro = "EUR"
             val fiatAmount = "1"
             val tokenAmount = "POL 488.24938338"
+            val scenarioName = "payment_methods"
 
-            resetWireMockScenarios()
+            step("Reset WireMock scenario '$scenarioName'") {
+                resetWireMockScenarioState(scenarioName)
+            }
 
             step("Open 'Main Screen'") {
                 scenario(OpenMainScreenScenario(composeTestRule))
@@ -234,8 +242,11 @@ class BuyTokenTest : BaseTestCase() {
             val balance = TOTAL_BALANCE
             val country = "Albania"
             val unavailableCountry = "Lebanon"
+            val scenarioName = "payment_methods"
 
-            resetWireMockScenarios()
+            step("Reset WireMock scenario '$scenarioName'") {
+                resetWireMockScenarioState(scenarioName)
+            }
 
             step("Open 'Main Screen'") {
                 scenario(OpenMainScreenScenario(composeTestRule))
@@ -320,8 +331,11 @@ class BuyTokenTest : BaseTestCase() {
             val tokenAmount = "POL 488.24938338"
             val bestRate = "Best rate"
             val rate = "-0.00%"
+            val scenarioName = "payment_methods"
 
-            resetWireMockScenarios()
+            step("Reset WireMock scenario '$scenarioName'") {
+                resetWireMockScenarioState(scenarioName)
+            }
 
             step("Open 'Main Screen'") {
                 scenario(OpenMainScreenScenario(composeTestRule))
@@ -422,8 +436,11 @@ class BuyTokenTest : BaseTestCase() {
             val invoiceRevolutPay = "Invoice Revolut Pay"
             val sepa = "Sepa"
             val fiatAmount = "1"
+            val scenarioName = "payment_methods"
 
-            resetWireMockScenarios()
+            step("Reset WireMock scenario '$scenarioName'") {
+                resetWireMockScenarioState(scenarioName)
+            }
 
             step("Open 'Main Screen'") {
                 scenario(OpenMainScreenScenario(composeTestRule))
