@@ -124,6 +124,7 @@
   <string name="common_claim_rewards">Réclamez des récompenses</string>
   <string name="common_close">Fermer</string>
   <string name="common_confirm">Confirmez</string>
+  <string name="common_connecting">Connexion</string>
   <string name="common_continue">Continuer</string>
   <string name="common_convert">Convertir</string>
   <string name="common_copy">Copier</string>
@@ -222,6 +223,10 @@
   <string name="common_terms_and_conditions">termes et conditions</string>
   <string name="common_terms_of_use">Conditions d\'utilisation</string>
   <string name="common_today">Aujourd\'hui</string>
+  <plurals name="common_tokens_count">
+    <item quantity="one">%d jeton</item>
+    <item quantity="other">%d jetons</item>
+  </plurals>
   <string name="common_transaction_failed">La transaction a échoué</string>
   <string name="common_transaction_status">Statut de la transaction</string>
   <string name="common_transactions">Transactions</string>
