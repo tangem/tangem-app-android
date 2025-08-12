@@ -1,4 +1,4 @@
-package com.tangem.domain.wallets.models
+package com.tangem.domain.core.wallets.error
 
 sealed interface DeleteWalletError {
 
