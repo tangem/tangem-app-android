@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
+  <string name="account_details_archive">Archivar cuenta</string>
+  <string name="account_details_archive_action">Archivo</string>
+  <string name="account_details_archive_description">Estás archivando esta cuenta, pero siempre puedes recuperarla.</string>
+  <string name="account_details_title">Cuenta</string>
   <string name="action_buttons_buy_empty_search_message">¿No encuentra el token en su billetera? Consulte la sección de Mercados para encontrarlo y añadirlo a la compra</string>
   <string name="action_buttons_sell_empty_search_message">¿No encuentra el token en su billetera? Consulte los mercados para encontrarlo y añadirlo a la venta</string>
   <string name="action_buttons_sell_navigation_bar_title">Vender</string>
@@ -34,12 +38,16 @@
   <string name="alert_manage_tokens_unsupported_message">Esta tarjeta no admite tokens en la red %1$s debido a una limitación del firmware.</string>
   <string name="alert_troubleshooting_scan_card_title">¿Tiene dificultades para escanear su tarjeta/anillo?</string>
   <string name="alert_unsupported_card">Esta tarjeta no está diseñada para funcionar con Tangem</string>
+  <string name="app_settings_biometrics_footer">Utilice %1$s para desbloquear de forma rápida y segura su biletera y autorizar todas las acciones importantes, como la firma de transacciones. En el caso de las billeteras físicas, seguirá necesitando una tarjeta para firmar.</string>
   <string name="app_settings_default_fee">Tarifa por defecto</string>
   <string name="app_settings_default_fee_footer">Habilite las Tarifas predeterminadas para establecer automáticamente las tarifas de transacción y omitir la página de Tarifas al enviar fondos. Siempre puede volver a esta página si es necesario.</string>
   <string name="app_settings_enable_biometrics_description">Vaya a ajustes para habilitar la autenticación biométrica en la Tangem App</string>
   <string name="app_settings_enable_biometrics_title">Habilitar autenticación biométrica</string>
+  <string name="app_settings_off_biometrics_alert_message">Para deshabilitar %1$s deberá ingresar su código de acceso para desbloquear la aplicación e interactuar con su billetera.</string>
   <string name="app_settings_off_saved_access_code_alert_message">Esto eliminará todos los códigos de acceso guardados de la billetera. Cualquier operación posterior con la billetera requerirá introducir el código de acceso.</string>
   <string name="app_settings_off_saved_wallet_alert_message">Eliminar la tarjeta guardada borra todos las billeteras guardadas y sus códigos de acceso de la app.</string>
+  <string name="app_settings_require_access_code">Requerir código de acceso</string>
+  <string name="app_settings_require_access_code_footer">Esta opción desactiva la autenticación biométrica para acciones importantes. Se le pedirá que introduzca su código de acceso cada vez que, por ejemplo, deba firmar una transacción.</string>
   <string name="app_settings_saved_access_codes">Guardar código de acceso</string>
   <string name="app_settings_saved_access_codes_footer">Se solicitará la autenticación biométrica en lugar del código de acceso para las interacciones con su tarjeta o anillo.</string>
   <string name="app_settings_saved_wallet">Mantener la billetera en la app</string>
@@ -135,6 +143,7 @@
   <string name="common_close">Cerrar</string>
   <string name="common_coming_soon">Próximamente</string>
   <string name="common_confirm">Confirme</string>
+  <string name="common_connecting">Conectando</string>
   <string name="common_contact_tangem_support">Contacte con el soporte de Tangem</string>
   <string name="common_contact_visa_support">Contacte con el soporte de Visa</string>
   <string name="common_continue">Continuar</string>
@@ -153,6 +162,7 @@
     <item quantity="other">días</item>
   </plurals>
   <string name="common_delete">Suprimir</string>
+  <string name="common_disable">Desactivar</string>
   <string name="common_disabled">Desactivado</string>
   <string name="common_disconnect">Desconectar</string>
   <string name="common_done">Listo</string>
@@ -191,6 +201,7 @@
   <string name="common_no">No</string>
   <string name="common_no_address">Ninguna dirección</string>
   <string name="common_not_added">No aregada</string>
+  <string name="common_not_now">Ahora no</string>
   <string name="common_now">Ahora</string>
   <string name="common_ok">OK</string>
   <string name="common_open_in_browser">Abrir en el navegador</string>
@@ -206,6 +217,7 @@
   <string name="common_reject">Rechazar</string>
   <string name="common_reload">Recargar</string>
   <string name="common_rename">Renombrar</string>
+  <string name="common_required">Requerido</string>
   <string name="common_save">Guarde</string>
   <string name="common_save_changes">Guardar cambios</string>
   <string name="common_search">Buscar</string>
@@ -235,6 +247,10 @@
   <string name="common_terms_and_conditions">términos y condiciones</string>
   <string name="common_terms_of_use">Condiciones de uso</string>
   <string name="common_today">Hoy</string>
+  <plurals name="common_tokens_count">
+    <item quantity="one">%d ficha</item>
+    <item quantity="other">%d fichas</item>
+  </plurals>
   <string name="common_transaction_failed">Transacción fallida</string>
   <string name="common_transaction_status">Estado de la transacción</string>
   <string name="common_transactions">Transacciones</string>
@@ -301,6 +317,8 @@
   <string name="details_title">Detalles</string>
   <string name="disclaimer_error_loading">Compruebe su conexión a internet o cambia a una red diferente</string>
   <string name="disclaimer_title">Condiciones de uso</string>
+  <string name="domain_receive_assets_navigation_title">Recibir activos</string>
+  <string name="email_subject_wc_error">Error de Wallet Connect</string>
   <string name="error_wrong_wallet_tapped">Ha usado una tarjeta de otra billetera. Toque la tarjeta asociada con esta billetera</string>
   <string name="eth_gas_required_exceeds_allowance">No hay fondos suficientes para la transacción. Por favor, recargue su cuenta.</string>
   <string name="exchange_tokens_available_tokens_header">Mis tokens</string>
@@ -358,6 +376,7 @@
   <string name="express_provider">Proveedor</string>
   <string name="express_provider_best_rate">Mejor tarifa</string>
   <string name="express_provider_fca_warning_list">Lista de advertencias de la FCA</string>
+  <string name="express_provider_in_fca_warning_list">Proveedor en la lista de advertencia de la FCA</string>
   <string name="express_provider_max_amount">Disponible hasta %s</string>
   <string name="express_provider_min_amount">Disponible desde %s</string>
   <string name="express_provider_not_available">No disponible para este par</string>
@@ -405,6 +424,8 @@
   <string name="home_button_scan">Escanee</string>
   <string name="hot_crypto_add_token_subtitle">a %s</string>
   <string name="hot_crypto_token_network">En la red %s</string>
+  <string name="hw_access_code_create_alert_title">¿Está seguro de que desea salir del proceso de creación del código de acceso?</string>
+  <string name="hw_backup_close_description">Si lo haces, tendrás que empezar de nuevo.</string>
   <string name="hw_create_seed_description">Mantente al día con las últimas funciones y noticias</string>
   <string name="information_generated_with_ai">Esta información fue generada con IA.\nPulse aquí si encuentra algún error.</string>
   <string name="initial_message_change_access_code_body">Para cambiar el código de acceso coloque la tarjeta o el anillo como se muestra arriba y no lo retire hasta el fin de la operación</string>
@@ -908,9 +929,14 @@
   <string name="send_validation_invalid_amount">Cantidad no válida</string>
   <string name="send_validation_invalid_fee">La tarifa excede el saldo</string>
   <string name="send_validation_invalid_total">El monto total excede el saldo</string>
+  <string name="send_with_swap_confirm_title">Intercambiar y enviar</string>
+  <string name="send_with_swap_convert_token_alert_message">¿Continuar con la conversión? Esto borrará tus datos anteriores.</string>
+  <string name="send_with_swap_convert_token_alert_title">Confirmar Conversión</string>
   <string name="send_with_swap_notification_text">Envía cualquier token y lo convertiremos en el camino. Su destinatario obtiene exactamente lo que necesita, sin problemas.</string>
-  <string name="send_with_swap_recipient_amount_text">Se enviará un destinatario</string>
+  <string name="send_with_swap_recipient_amount_success_title">El destinatario recibirá</string>
+  <string name="send_with_swap_recipient_amount_text">Al destinatario</string>
   <string name="send_with_swap_recipient_amount_title">Cantidad a recibir</string>
+  <string name="send_with_swap_remove_convert_alert_message">¿Seguro que desea cancelar la conversión? Se borrarán sus datos anteriores.</string>
   <string name="send_with_swap_title">Enviar con swap</string>
   <string name="sent_transaction_sent_title">Transacción enviada</string>
   <string name="settings_card_settings_footer">Escanee la tarjeta/anillo que quiere configurar</string>
@@ -1210,8 +1236,10 @@
   <string name="wallet_promo_banner_button_title">Consíguelo ahora con un 10 % de descuento</string>
   <string name="wallet_promo_banner_description">Accede a más de 13 000 criptomonedas. Compra, vende, intercambia y realiza staking con un solo toque.\nVincula hasta tres tarjetas para hacer copias de seguridad.</string>
   <string name="wallet_promo_banner_title">Descubre Tangem Wallet</string>
+  <string name="wallet_settings_change_access_code_title">Cambiar código de acceso</string>
   <string name="wallet_settings_push_notifications_description">Manténteinformado sobre las transacciones entrantes de la billetera y las actualizaciones de Tangem.</string>
   <string name="wallet_settings_push_notifications_title">Notificaciones de transacciones</string>
+  <string name="wallet_settings_set_access_code_title">Establecer código de acceso</string>
   <string name="wallet_settings_title">Ajustes de la wallet</string>
   <string name="wallet_title">Tangem</string>
   <string name="warning_access_denied_message">Use %s o escanee una tarjeta/anillo para desbloquear el acceso a su billetera</string>
@@ -1354,6 +1382,12 @@
   <string name="wc_disconnect_all">Desconectar todo</string>
   <string name="wc_disconnect_all_alert_desc">Texto sobre desconexión de todas las dApps</string>
   <string name="wc_disconnect_all_alert_title">Desconectar todas las dApps</string>
+  <string name="wc_errors_invalid_domain_subtitle">Intente emparejar nuevamente con una URI nueva</string>
+  <string name="wc_errors_invalid_domain_title">Dominio de dApp no válido</string>
+  <string name="wc_errors_no_blockchains_subtitle">%s no especifica ninguna cadena de bloques, ni obligatoria ni opcional. Asegúrese de haber utilizado el URI correcto</string>
+  <string name="wc_errors_no_blockchains_title">Sin redes</string>
+  <string name="wc_errors_proposal_expired_subtitle">Por favor, genere una nueva URI e intente conectarse nuevamente</string>
+  <string name="wc_errors_proposal_expired_title">Propuesta de conexión caducada</string>
   <string name="wc_estimated_wallet_changes">Cambios estimados en la billetera</string>
   <string name="wc_estimated_wallet_changes_not_simulated">La transacción no ha podido ser simulada. Por favor, proceda con precaución.</string>
   <string name="wc_estimation_is_not_supported">La estimación no es compatible con %s</string>
@@ -1369,6 +1403,7 @@
   <string name="wc_no_wallet_changes_detected">No se han detectado cambios en la cartera</string>
   <string name="wc_notification_security_risk_subtitle">Se han detectado riesgos potenciales o comportamiento malicioso. Conectarse o firmar transacciones puede resultar en la pérdida de fondos.</string>
   <string name="wc_notification_security_risk_title">Riesgo de seguridad conocido</string>
+  <string name="wc_qr_scan_hint">Abra la aplicación Web3 y elija la opción WalletConnect</string>
   <string name="wc_request_from">Solicitud de</string>
   <string name="wc_send_anyway">Firmar de todos modos</string>
   <string name="wc_signature_type">Tipo de firma</string>
