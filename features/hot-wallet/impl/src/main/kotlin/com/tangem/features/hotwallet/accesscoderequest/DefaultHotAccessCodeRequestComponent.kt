@@ -25,6 +25,11 @@ internal class DefaultHotAccessCodeRequestComponent @AssistedInject constructor(
         model.wrongAccessCode()
     }
 
+    override suspend fun successfulAuthentication() {
+        // TODO handle successful authentication
+        // TODO add delay
+    }
+
     override suspend fun requestPassword(hasBiometry: Boolean): HotWalletPasswordRequester.Result {
         model.show(hasBiometry)
         return model.waitResult()
