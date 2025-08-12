@@ -144,6 +144,7 @@ dependencies {
     implementation(projects.libs.blockchainSdk)
     implementation(projects.libs.tangemSdkApi)
 
+    implementation(projects.data.account)
     implementation(projects.data.appCurrency)
     implementation(projects.data.appTheme)
     implementation(projects.data.balanceHiding)
@@ -235,6 +236,8 @@ dependencies {
     implementation(projects.features.createWalletSelection.impl)
     implementation(projects.features.home.api)
     implementation(projects.features.home.impl)
+    implementation(projects.features.account.api)
+    implementation(projects.features.account.impl)
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)
@@ -257,13 +260,11 @@ dependencies {
 
     /** Compose libraries */
     implementation(deps.compose.constraintLayout)
-    implementation(deps.compose.material)
     implementation(deps.compose.material3)
     implementation(deps.compose.animation)
     implementation(deps.compose.coil)
     implementation(deps.compose.constraintLayout)
     implementation(deps.compose.foundation)
-    implementation(deps.compose.material)
     implementation(deps.compose.navigation.hilt)
     implementation(deps.compose.shimmer)
     implementation(deps.compose.ui)

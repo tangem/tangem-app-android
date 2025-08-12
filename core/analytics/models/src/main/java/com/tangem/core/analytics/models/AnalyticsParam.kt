@@ -120,6 +120,12 @@ sealed class AnalyticsParam {
             override val token: String,
             override val feeType: FeeType,
         ) : TxSentFrom("NFT"), TxData
+
+        data class SendWithSwap(
+            override val blockchain: String,
+            override val token: String,
+            override val feeType: FeeType,
+        ) : TxSentFrom("Send&Swap"), TxData
     }
 
     sealed interface TxData {
@@ -223,5 +229,11 @@ sealed class AnalyticsParam {
         const val NONCE = "Nonce"
         const val STANDARD = "Standard"
         const val NO_COLLECTION = "No collection"
+        const val EMULATION_STATUS = "Emulation Status"
+        const val SEND_TOKEN = "Send Token"
+        const val RECEIVE_TOKEN = "Receive Token"
+        const val SEND_BLOCKCHAIN = "Send Blockchain"
+        const val RECEIVE_BLOCKCHAIN = "Receive Blockchain"
+        const val CHOSEN_TOKEN = "Token Chosen"
     }
 }

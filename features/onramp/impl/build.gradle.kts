@@ -45,6 +45,7 @@ dependencies {
     implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.settings)
+    implementation(projects.domain.transaction.models)
 
     /** DI */
     implementation(deps.hilt.android)
@@ -62,7 +63,6 @@ dependencies {
     implementation(deps.compose.material3)
     implementation(deps.compose.shimmer)
     implementation(deps.compose.coil)
-    implementation(deps.compose.material)
 
     /** Other */
     implementation(deps.decompose.ext.compose)

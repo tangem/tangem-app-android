@@ -8,12 +8,18 @@ import java.io.IOException
 
 /**
  * Method uses to set WireMock scenario state
+ * @param scenarioName Name of the scenario to modify
+ * @param state The target state to set (must be one of the scenario's possibleStates)
+ * @param baseUrl WireMock base URL
+ * @return true if state was set successfully, false otherwise
  */
 fun setWireMockScenarioState(
     scenarioName: String,
     state: String,
     baseUrl: String = "[REDACTED_ENV_URL]"
 ): Boolean {
+    Timber.i("=== WireMock Scenario Set ===")
+    Timber.i("Setting scenario '$scenarioName' to state: $state")
     val client = OkHttpClient()
     val json = """{"state": "$state"}"""
     val mediaType = "application/json".toMediaType()
@@ -93,4 +99,21 @@ fun resetWireMockScenarios(baseUrl: String = "[REDACTED_ENV_URL]"): Boolean {
         Timber.e(e, "Exception during reset")
         false
     }
+}
+
+/**
+ * Method to reset a specific WireMock scenario to its initial state
+ * @param scenarioName Name of the scenario to reset
+ * @param initialState The target state to reset the scenario to (must be one of the scenario's possibleStates)
+ * @param baseUrl WireMock base URL
+ * @return true if reset was successful, false otherwise
+ */
+fun resetWireMockScenarioState(
+    scenarioName: String,
+    initialState: String = "Started",
+    baseUrl: String = "[REDACTED_ENV_URL]"
+): Boolean {
+    Timber.i("=== WireMock Scenario Reset ===")
+    Timber.i("Resetting scenario '$scenarioName' to initial state: $initialState")
+    return setWireMockScenarioState(scenarioName, initialState, baseUrl)
 }

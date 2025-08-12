@@ -96,11 +96,13 @@
   <string name="common_add_token">Добавить токен</string>
   <string name="common_all">Все</string>
   <string name="common_allow">Разрешить</string>
+  <string name="common_amount">Сумма</string>
   <string name="common_analytics">Аналитика</string>
   <string name="common_apply">Применить</string>
   <string name="common_approval">Одобрение</string>
   <string name="common_approve">Подтвердить</string>
   <string name="common_attention">Внимание</string>
+  <string name="common_available_networks">Доступные сети</string>
   <string name="common_balance">Баланс: %s</string>
   <string name="common_balance_title">Баланс</string>
   <string name="common_biometric_authentication">биометрическую аутентификацию</string>
@@ -114,6 +116,7 @@
   <string name="common_choose_action">Выберите действие</string>
   <string name="common_choose_network">Выберите сеть</string>
   <string name="common_choose_token">Выберите токен</string>
+  <string name="common_choose_wallet">Выберите кошелек</string>
   <string name="common_claim">Получить</string>
   <string name="common_claim_rewards">Вывести награду</string>
   <string name="common_close">Закрыть</string>
@@ -140,6 +143,7 @@
   <string name="common_disabled">Отключено</string>
   <string name="common_disconnect">Отключить</string>
   <string name="common_done">Готово</string>
+  <string name="common_edit">Изменить</string>
   <string name="common_enable">Включить</string>
   <string name="common_enabled">Включено</string>
   <string name="common_error">Ошибка</string>
@@ -172,6 +176,7 @@
   <string name="common_nft">NFT</string>
   <string name="common_no">Нет</string>
   <string name="common_no_address">Нет адреса</string>
+  <string name="common_not_added">Не добавлено</string>
   <string name="common_now">Сейчас</string>
   <string name="common_ok">OK</string>
   <string name="common_open_in_browser">Открыть в браузере</string>
@@ -425,13 +430,11 @@
   <string name="manage_tokens_toast_portfolio_updated">Ваш портфель был обновлен</string>
   <string name="manage_tokens_unavailable_description">Выбранный токен не доступен в кошельке на данный момент. Но не переживайте, вы можете выразить свой интерес проголосовав за его добавление.</string>
   <string name="manage_tokens_unavailable_vote">Голосовать</string>
-  <string name="manage_tokens_wallet_selector_title">Выберите кошелек</string>
   <string name="manage_tokens_wallet_support_only_one_network_title">Кошелёк не поддерживает более одной сети</string>
   <string name="markets_add_to_my_portfolio_description">Чтобы купить, обменять или получить данный токен, вам нужно добавить его к себе в портфель</string>
   <string name="markets_add_to_my_portfolio_unavailable_description">Этот актив в настоящее время не поддерживается в кошельке</string>
   <string name="markets_add_to_my_portfolio_unavailable_for_wallet_description">Этот токен не доступен для данного кошелька</string>
   <string name="markets_add_token">Добавить</string>
-  <string name="markets_available_networks">Доступные сети</string>
   <string name="markets_common_my_portfolio">Мой портфель</string>
   <string name="markets_common_title">Рынок</string>
   <string name="markets_generate_addresses_notification">Чтобы создать адреса для выбранных сетей, отсканируйте вашу карту или кольцо Tangem кошелька</string>
@@ -571,7 +574,6 @@
   <string name="nft_receive_title">Получить NFT</string>
   <string name="nft_receive_unavailable_asset_warning_message">Вы ещё не добавили эту сеть. Чтобы получать NFT, добавьте её в ваш портфель.</string>
   <string name="nft_receive_unavailable_asset_warning_title">Сеть не добавлена</string>
-  <string name="nft_receive_unavailable_section_title">Не добавлено</string>
   <string name="nft_receive_unsupported_types">Неподдерживаемый тип NFT</string>
   <string name="nft_receive_unsupported_types_description">cNFT и pNFT не поддерживаются. Пожалуйста, не отправляйте их на свой кошелёк.</string>
   <string name="nft_send">Отправить NFT</string>
@@ -1279,7 +1281,7 @@
   <string name="warning_token_balance_not_updated">Возможно, баланс устарел. Обновите страницу.</string>
   <string name="warning_token_required_min_coin_reserve">Недостаточно %1$s. Пополните свой счет %2$s для выполнения ассоциации токена</string>
   <string name="warning_token_trustline_button_title">Открыть Trustline</string>
-  <string name="warning_token_trustline_subtitle">Согласно правилам сети, чтобы пополнить этот токен, необходимо сначала открыть Trustline — это позволит вашему кошельку принимать и хранить этот актив.</string>
+  <string name="warning_token_trustline_subtitle">Чтобы получить этот токен, необходимо включить Trustline. Сеть требует резерв %1$s %2$s.</string>
   <string name="warning_token_trustline_title">Требуется трастлайн</string>
   <string name="wc_alert_audit_malicious_domain">Вредоносный домен</string>
   <string name="wc_alert_audit_unknown_domain">Неизвестный домен</string>
