@@ -29,6 +29,7 @@ import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.feature.swap.converters.*
 import com.tangem.feature.swap.domain.api.SwapRepository
@@ -134,7 +135,12 @@ internal class DefaultSwapRepository(
                     contractAddress = initialCurrency.contractAddress,
                     network = initialCurrency.network,
                 )
-                val currenciesList = currencyList.map { leastTokenInfoConverter.convert(it) }
+                val currenciesList = currencyList
+                    .filter {
+                        val requirements = walletManagersFacade.getAssetRequirements(userWallet.walletId, it)
+                        requirements !is AssetRequirementsCondition.RequiredTrustline
+                    }
+                    .map { leastTokenInfoConverter.convert(it) }
 
                 val pairsDeferred = async {
                     getPairsInternal(

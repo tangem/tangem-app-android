@@ -284,6 +284,18 @@ private fun WcAppInfoSecondBlock(state: WcAppInfoUM.Content, modifier: Modifier 
         )
         when (state.networksInfo) {
             is WcNetworksInfo.ContainsAllRequiredNetworks -> Unit
+            is WcNetworksInfo.NoneNetworksAdded -> {
+                HorizontalDivider(thickness = 1.dp, color = TangemTheme.colors.stroke.primary)
+                Notification(
+                    config = NotificationConfig(
+                        iconResId = R.drawable.ic_alert_circle_24,
+                        title = resourceReference(R.string.wc_specify_networks_title),
+                        subtitle = resourceReference(R.string.wc_specify_networks_subtitle),
+                    ),
+                    iconTint = TangemTheme.colors.icon.attention,
+                    containerColor = TangemTheme.colors.background.action,
+                )
+            }
             is WcNetworksInfo.MissingRequiredNetworkInfo -> {
                 HorizontalDivider(thickness = 1.dp, color = TangemTheme.colors.stroke.primary)
                 Notification(
@@ -370,6 +382,7 @@ private fun SelectNetworksBlock(networksInfo: WcNetworksInfo, modifier: Modifier
         when (networksInfo) {
             is WcNetworksInfo.ContainsAllRequiredNetworks -> NetworkIcons(items = networksInfo.items)
             is WcNetworksInfo.MissingRequiredNetworkInfo -> Unit
+            is WcNetworksInfo.NoneNetworksAdded -> Unit
         }
         Icon(
             modifier = Modifier.size(width = 18.dp, height = 24.dp),

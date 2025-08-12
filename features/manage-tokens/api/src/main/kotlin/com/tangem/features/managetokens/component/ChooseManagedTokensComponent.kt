@@ -13,10 +13,17 @@ interface ChooseManagedTokensComponent : ComposableContentComponent {
         val selectedCurrency: CryptoCurrency?,
         val source: Source,
         val showSendViaSwapNotification: Boolean,
+        val callback: ModelCallback? = null,
+        val analyticsCategoryName: String,
     )
 
     enum class Source {
         SendViaSwap,
+    }
+
+    interface ModelCallback {
+        fun onResult()
+        fun onBack()
     }
 
     interface Factory : ComponentFactory<Params, ChooseManagedTokensComponent>

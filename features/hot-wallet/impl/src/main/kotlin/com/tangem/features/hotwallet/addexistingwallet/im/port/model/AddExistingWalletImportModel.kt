@@ -55,7 +55,7 @@ internal class AddExistingWalletImportModel @Inject constructor(
     private fun importWallet(mnemonic: Mnemonic, passphrase: String?) {
         modelScope.launch {
             uiState.update {
-                it.copy(createWalletProgress = true)
+                it.copy(importWalletProgress = true)
             }
 
             runCatching {
@@ -68,7 +68,7 @@ internal class AddExistingWalletImportModel @Inject constructor(
                 Timber.e(it)
 
                 uiState.update {
-                    it.copy(createWalletProgress = false)
+                    it.copy(importWalletProgress = false)
                 }
             }
         }

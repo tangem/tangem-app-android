@@ -1,8 +1,10 @@
 package com.tangem.tests
 
 import com.tangem.common.BaseTestCase
+import com.tangem.common.constants.TestConstants.TOTAL_BALANCE
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.extensions.clickWithAssertion
-import com.tangem.common.utils.resetWireMockScenarios
+import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.OpenMainScreenScenario
 import com.tangem.screens.*
@@ -18,18 +20,20 @@ class BuyTokenTest : BaseTestCase() {
     @DisplayName("Onramp: error in providers loading")
     @Test
     fun errorInProvidersLoadingTest() {
+        val scenarioName = "payment_methods"
+        val tokenTitle = "Bitcoin"
+        val balance = TOTAL_BALANCE
+
         setupHooks(
             additionalAfterSection = {
-                resetWireMockScenarios()
+                resetWireMockScenarioState(scenarioName)
             }
         ).run {
-            val tokenTitle = "Bitcoin"
-            val balance = "$184.85"
-
-            resetWireMockScenarios()
-
-            step("Setup WireMock scenario for 'Error' state") {
-                setWireMockScenarioState("payment_methods", "Error")
+            step("Reset WireMock scenario '$scenarioName'") {
+                resetWireMockScenarioState(scenarioName)
+            }
+            step("Setup WireMock scenario '$scenarioName' for 'Error' state") {
+                setWireMockScenarioState(scenarioName, "Error")
             }
             step("Open 'Main Screen'") {
                 scenario(OpenMainScreenScenario(composeTestRule))
@@ -67,12 +71,17 @@ class BuyTokenTest : BaseTestCase() {
     fun validateCurrencySelectorTest() {
         setupHooks().run {
             val tokenTitle = "Polygon"
-            val balance = "$184.85"
+            val balance = TOTAL_BALANCE
             val popularFiatsTitle = "Popular Fiats"
             val otherCurrenciesTitle = "Other currencies"
             val australianDollar = "AUD"
             val fiatAmount = "1"
             val tokenAmount = "POL 488.24938338"
+            val scenarioName = "payment_methods"
+
+            step("Reset WireMock scenario '$scenarioName'") {
+                resetWireMockScenarioState(scenarioName)
+            }
 
             step("Open 'Main Screen'") {
                 scenario(OpenMainScreenScenario(composeTestRule))
@@ -155,10 +164,15 @@ class BuyTokenTest : BaseTestCase() {
     fun validateBuyTokenScreenTest() {
         setupHooks().run {
             val tokenTitle = "Polygon"
-            val balance = "$184.85"
+            val balance = TOTAL_BALANCE
             val euro = "EUR"
             val fiatAmount = "1"
             val tokenAmount = "POL 488.24938338"
+            val scenarioName = "payment_methods"
+
+            step("Reset WireMock scenario '$scenarioName'") {
+                resetWireMockScenarioState(scenarioName)
+            }
 
             step("Open 'Main Screen'") {
                 scenario(OpenMainScreenScenario(composeTestRule))
@@ -226,9 +240,14 @@ class BuyTokenTest : BaseTestCase() {
     fun validateResidenceSettingsScreenTest() {
         setupHooks().run {
             val tokenTitle = "Polygon"
-            val balance = "$184.85"
+            val balance = TOTAL_BALANCE
             val country = "Albania"
             val unavailableCountry = "Lebanon"
+            val scenarioName = "payment_methods"
+
+            step("Reset WireMock scenario '$scenarioName'") {
+                resetWireMockScenarioState(scenarioName)
+            }
 
             step("Open 'Main Screen'") {
                 scenario(OpenMainScreenScenario(composeTestRule))
@@ -305,7 +324,7 @@ class BuyTokenTest : BaseTestCase() {
     fun validateProvidersScreenTest() {
         setupHooks().run {
             val tokenTitle = "Polygon"
-            val balance = "$184.85"
+            val balance = TOTAL_BALANCE
             val paymentMethod = "Card"
             val fiatAmount = "1"
             val providerNameMercuryo = "Mercuryo"
@@ -313,6 +332,11 @@ class BuyTokenTest : BaseTestCase() {
             val tokenAmount = "POL 488.24938338"
             val bestRate = "Best rate"
             val rate = "-0.00%"
+            val scenarioName = "payment_methods"
+
+            step("Reset WireMock scenario '$scenarioName'") {
+                resetWireMockScenarioState(scenarioName)
+            }
 
             step("Open 'Main Screen'") {
                 scenario(OpenMainScreenScenario(composeTestRule))
@@ -347,17 +371,17 @@ class BuyTokenTest : BaseTestCase() {
             step("Open 'Select Provider' bottom sheet") {
                 onBuyTokenDetailsScreen { providerTitle.performClick() }
             }
-            step("Assert available provider name is displayed") {
+            step("Assert unavailable provider name is displayed") {
                 onSelectProviderBottomSheet {
-                    flakySafely(timeoutMs = 20_000) {
-                        availableProviderItem.assertIsDisplayed()
+                    flakySafely(WAIT_UNTIL_TIMEOUT) {
+                        unavailableProviderItem.assertIsDisplayed()
                     }
                 }
             }
-            step("Assert unavailable provider name is displayed") {
+            step("Assert available provider name is displayed") {
                 onSelectProviderBottomSheet {
-                    flakySafely(timeoutMs = 20_000) {
-                        unavailableProviderItem.assertIsDisplayed()
+                    flakySafely(WAIT_UNTIL_TIMEOUT) {
+                        availableProviderItem.assertIsDisplayed()
                     }
                 }
             }
@@ -407,12 +431,17 @@ class BuyTokenTest : BaseTestCase() {
     fun validatePaymentMethodScreenTest() {
         setupHooks().run {
             val tokenTitle = "Polygon"
-            val balance = "$184.85"
+            val balance = TOTAL_BALANCE
             val card = "Card"
             val googlePay = "Google Pay"
             val invoiceRevolutPay = "Invoice Revolut Pay"
             val sepa = "Sepa"
             val fiatAmount = "1"
+            val scenarioName = "payment_methods"
+
+            step("Reset WireMock scenario '$scenarioName'") {
+                resetWireMockScenarioState(scenarioName)
+            }
 
             step("Open 'Main Screen'") {
                 scenario(OpenMainScreenScenario(composeTestRule))

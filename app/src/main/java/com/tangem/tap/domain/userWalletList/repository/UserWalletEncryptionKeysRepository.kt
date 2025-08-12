@@ -159,8 +159,8 @@ internal class UserWalletEncryptionKeysRepository(
     }
 
     sealed class EncryptionMethod {
-        object Unsecured : EncryptionMethod()
-        object Biometric : EncryptionMethod()
+        data object Unsecured : EncryptionMethod()
+        data object Biometric : EncryptionMethod()
         class Password(val password: CharArray) : EncryptionMethod()
     }
 

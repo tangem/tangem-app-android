@@ -41,7 +41,7 @@ internal object WcConnectionsPreviewData {
             walletName = "Bitcoin",
             connectedApps = persistentListOf(
                 WcConnectedAppInfo(
-                    name = "React app",
+                    name = "React app React app React app React app React app",
                     iconUrl = "$BASE_URL/LiteCoin.png",
                     subtitle = "https://react-app.walletconnect.com/",
                     verifiedState = VerifiedDAppState.Verified {},
