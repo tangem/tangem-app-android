@@ -83,7 +83,7 @@ internal class AccessCodeModel @Inject constructor(
                         unlockHotWallet = unlockHotWallet,
                         auth = HotAuth.Password(accessCode.toCharArray()),
                     )
-                    saveWalletUseCase(userWallet.copy(hotWalletId = updatedHotWalletId))
+                    saveWalletUseCase(userWallet.copy(hotWalletId = updatedHotWalletId), canOverride = true)
                     params.callbacks.onAccessCodeConfirmed(params.userWalletId)
                 }
             }.onFailure {
