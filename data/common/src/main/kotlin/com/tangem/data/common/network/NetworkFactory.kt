@@ -324,6 +324,7 @@ class NetworkFactory @Inject constructor(
             Blockchain.Scroll, Blockchain.ScrollTestnet,
             Blockchain.ZkLinkNova, Blockchain.ZkLinkNovaTestnet,
             Blockchain.Pepecoin, Blockchain.PepecoinTestnet,
+            Blockchain.Hyperliquid, Blockchain.HyperliquidTestnet,
             -> Network.TransactionExtrasType.NONE
             // endregion
         }
