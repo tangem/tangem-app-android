@@ -3,7 +3,7 @@ package com.tangem.data.blockaid
 import com.domain.blockaid.models.dapp.CheckDAppResult
 import com.domain.blockaid.models.transaction.*
 import com.domain.blockaid.models.transaction.simultation.AmountInfo
-import com.domain.blockaid.models.transaction.simultation.ApprovedAmount
+import com.domain.blockaid.models.transaction.simultation.ApproveInfo
 import com.domain.blockaid.models.transaction.simultation.SimulationData
 import com.domain.blockaid.models.transaction.simultation.TokenInfo
 import com.tangem.blockchain.extensions.hexToBigDecimal
@@ -101,13 +101,8 @@ internal object BlockAidMapper {
 
     private fun mapSimulationSuccessResult(from: AccountSummaryResponse): SimulationResult {
         return when {
-            !from.assetsDiffs.isNullOrEmpty() -> mapSendReceiveTransaction(
-                from.assetsDiffs,
-            )
-            !from.exposures.isNullOrEmpty() -> mapApproveTransaction(
-                from.exposures,
-            )
-            !from.traces.isNullOrEmpty() -> mapNftSendReceiveTransaction(from.traces)
+            !from.exposures.isNullOrEmpty() -> mapApproveTransaction(from.exposures)
+            !from.assetsDiffs.isNullOrEmpty() -> mapSendReceiveTransaction(from.assetsDiffs)
             else -> SimulationResult.Success(data = SimulationData.NoWalletChangesDetected)
         }
     }
@@ -156,23 +151,11 @@ internal object BlockAidMapper {
     }
 
     private fun mapApproveTransaction(exposures: List<Exposure>?): SimulationResult {
-        val amounts = exposures?.flatMap { exposure ->
-            val tokenInfo = TokenInfo(
-                chainId = exposure.asset.chainId,
-                logoUrl = exposure.asset.logoUrl,
-                symbol = exposure.asset.symbol ?: "",
-                decimals = exposure.asset.decimals ?: 0,
-            )
-            exposure.spenders.flatMap { (_, spender) ->
-                val isUnlimited = spender.isApprovedForAll == true
-                val approval = spender.approval?.hexToBigDecimal()
-                spender.exposure.map { detail ->
-                    ApprovedAmount(
-                        approvedAmount = detail.value?.toBigDecimalOrNull() ?: approval ?: 1.toBigDecimal(),
-                        isUnlimited = isUnlimited,
-                        tokenInfo = tokenInfo,
-                    )
-                }
+        val amounts: List<ApproveInfo>? = exposures?.flatMap { exposure ->
+            if (exposure.assetType.isNFT()) {
+                listOf(mapApproveNftTransaction(exposure))
+            } else {
+                mapTransaction(exposure)
             }
         }
         return if (!amounts.isNullOrEmpty()) {
@@ -180,6 +163,34 @@ internal object BlockAidMapper {
         } else {
             SimulationResult.Success(SimulationData.NoWalletChangesDetected)
         }
+    }
+
+    private fun mapTransaction(exposure: Exposure): List<ApproveInfo.Amount> {
+        val tokenInfo = TokenInfo(
+            chainId = exposure.asset.chainId,
+            logoUrl = exposure.asset.logoUrl,
+            symbol = exposure.asset.symbol ?: "",
+            decimals = exposure.asset.decimals ?: 0,
+        )
+        return exposure.spenders.flatMap { (_, spender) ->
+            val isUnlimited = spender.isApprovedForAll == true
+            val approval = spender.approval?.hexToBigDecimal()
+            spender.exposure.map { detail ->
+                ApproveInfo.Amount(
+                    approvedAmount = detail.value?.toBigDecimalOrNull() ?: approval ?: 1.toBigDecimal(),
+                    isUnlimited = isUnlimited,
+                    tokenInfo = tokenInfo,
+                )
+            }
+        }
+    }
+
+    private fun mapApproveNftTransaction(exposure: Exposure): ApproveInfo.NonFungibleToken {
+        return ApproveInfo.NonFungibleToken(
+            name = exposure.asset.name.orEmpty(),
+            logoUrl = exposure.spenders.values.firstOrNull()?.exposure?.firstOrNull()?.logoUrl
+                ?: exposure.asset.logoUrl,
+        )
     }
 
     private fun mapSendReceiveTransaction(assetDiffs: List<AssetDiff>?): SimulationResult {
@@ -194,13 +205,31 @@ internal object BlockAidMapper {
                 decimals = diff.asset.decimals ?: 0,
             )
             diff.outTransfer.orEmpty().forEach { transfer ->
-                transfer.value?.toBigDecimalOrNull()?.let { amount ->
-                    sendInfo.add(AmountInfo.FungibleTokens(amount = amount, token = token))
+                if (diff.assetType.isNFT()) {
+                    sendInfo.add(
+                        AmountInfo.NonFungibleTokens(
+                            name = diff.asset.name.orEmpty(),
+                            logoUrl = token.logoUrl,
+                        ),
+                    )
+                } else {
+                    transfer.value?.toBigDecimalOrNull()?.let { amount ->
+                        sendInfo.add(AmountInfo.FungibleTokens(amount = amount, token = token))
+                    }
                 }
             }
             diff.inTransfer.orEmpty().forEach { transfer ->
-                transfer.value?.toBigDecimalOrNull()?.let { amount ->
-                    receiveInfo.add(AmountInfo.FungibleTokens(amount = amount, token = token))
+                if (diff.assetType.isNFT()) {
+                    receiveInfo.add(
+                        AmountInfo.NonFungibleTokens(
+                            name = diff.asset.name.orEmpty(),
+                            logoUrl = token.logoUrl,
+                        ),
+                    )
+                } else {
+                    transfer.value?.toBigDecimalOrNull()?.let { amount ->
+                        receiveInfo.add(AmountInfo.FungibleTokens(amount = amount, token = token))
+                    }
                 }
             }
         }
@@ -212,17 +241,7 @@ internal object BlockAidMapper {
         }
     }
 
-    private fun mapNftSendReceiveTransaction(traces: List<Trace>?): SimulationResult {
-        val sendInfo = traces?.mapNotNull {
-            it.exposed?.let { exposed ->
-                AmountInfo.NonFungibleTokens(name = "${it.asset.name} #${exposed.tokenId}", logoUrl = exposed.logoUrl)
-            }
-        }
-
-        return if (!sendInfo.isNullOrEmpty()) {
-            SimulationResult.Success(SimulationData.SendAndReceive(send = sendInfo, receive = listOf()))
-        } else {
-            SimulationResult.Success(SimulationData.NoWalletChangesDetected)
-        }
+    private fun String.isNFT(): Boolean {
+        return this.lowercase() == "erc721" || this.lowercase() == "erc1155" || this.lowercase() == "nft"
     }
 }
