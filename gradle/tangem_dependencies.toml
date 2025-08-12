@@ -5,13 +5,13 @@
 # https://github.com/tangem/tangem-sdk-android/
 # https://github.com/tangem/vico
 
-tangemBlockchainSdk = "develop-1134"
+tangemBlockchainSdk = "develop-1140"
 #tangemBlockchainSdk = "0.0.1" # Keep it! - used for local builds
-tangemCardSdk = "develop-509"
+tangemCardSdk = "develop-511"
 #tangemCardSdk = "0.0.1" # Keep it! - used for local builds ^
 tangemVico = "2.0.0-alpha.25-tangem12"
 #tangemVico = "0.0.1" # Keep it! - used for local builds ^
-tangemHotSdk = "develop-448"
+tangemHotSdk = "develop-454"
 #tangemHotSdk = "0.0.1" # Keep it! - used for local builds ^
 
 
