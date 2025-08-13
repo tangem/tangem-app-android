@@ -24,6 +24,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import org.joda.time.DateTime
 import timber.log.Timber
+import java.net.URI
 
 @Suppress("LongParameterList")
 internal class DefaultWcPairUseCase @AssistedInject constructor(
@@ -60,6 +61,12 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
                 Timber.tag(WC_TAG).i("Unsupported DApp ${sdkSessionProposal.name}")
                 val error = WcPairState.Error(WcPairError.UnsupportedDApp(sdkSessionProposal.name))
                 emit(error)
+                return@flow
+            }
+
+            val dAppUri = URI(sdkSessionProposal.url)
+            if (!dAppUri.host.isNullOrEmpty()) {
+                emit(WcPairState.Error(WcPairError.InvalidDomainURL))
                 return@flow
             }
 
