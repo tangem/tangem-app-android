@@ -346,4 +346,9 @@ sealed class AppRoute(val path: String) : Route {
     data class AccountDetails(
         val account: Account,
     ) : AppRoute(path = "/account_details/${account.accountId.value}")
+
+    @Serializable
+    data class ArchivedAccountList(
+        val userWalletId: UserWalletId,
+    ) : AppRoute(path = "/archived_account/${userWalletId.stringValue}")
 }
