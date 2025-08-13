@@ -5,6 +5,7 @@ import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.tangem.datasource.BuildConfig
 import com.tangem.datasource.api.common.SwitchEnvironmentInterceptor
 import com.tangem.datasource.api.common.config.ApiConfig
+import com.tangem.datasource.api.common.config.ApiConfig.Companion.MOCKED_BUILD_TYPE
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.api.common.createNetworkLoggingInterceptor
 import com.tangem.datasource.api.utils.ConnectTimeout
@@ -93,7 +94,7 @@ internal fun OkHttpClient.Builder.applyApiConfig(
     id: ApiConfig.ID,
     apiConfigsManager: ApiConfigsManager,
 ): OkHttpClient.Builder {
-    return if (BuildConfig.TESTER_MENU_ENABLED) {
+    return if (BuildConfig.TESTER_MENU_ENABLED || BuildConfig.BUILD_TYPE == MOCKED_BUILD_TYPE) {
         addInterceptor(
             interceptor = SwitchEnvironmentInterceptor(
                 id = id,
