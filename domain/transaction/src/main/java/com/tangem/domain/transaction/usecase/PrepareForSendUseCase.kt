@@ -5,13 +5,15 @@ import arrow.core.left
 import arrow.core.right
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.TransactionSigner
+import com.tangem.blockchain.extensions.Result
+import com.tangem.domain.card.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.card.models.TwinKey
 import com.tangem.domain.card.repository.CardSdkConfigRepository
-import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.transaction.TransactionRepository
-import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.requireColdWallet
+import com.tangem.domain.transaction.error.SendTransactionError
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.requireColdWallet
 
 class PrepareForSendUseCase(
     private val transactionRepository: TransactionRepository,
@@ -21,30 +23,36 @@ class PrepareForSendUseCase(
         transactionData: TransactionData,
         userWallet: UserWallet,
         network: Network,
-    ): Either<Throwable, ByteArray> {
+    ): Either<SendTransactionError, ByteArray> {
         val signer = createSigner(userWallet)
-        return transactionRepository.prepareForSend(
+        val result = transactionRepository.prepareForSend(
             transactionData = transactionData,
             userWalletId = userWallet.walletId,
             network = network,
             signer = signer,
         )
-            .fold(onSuccess = { it.right() }, onFailure = { it.left() })
+        return when (result) {
+            is Result.Failure -> SendTransactionUseCase.handleError(result).left()
+            is Result.Success -> result.data.right()
+        }
     }
 
     suspend operator fun invoke(
         transactionData: List<TransactionData>,
         userWallet: UserWallet,
         network: Network,
-    ): Either<Throwable, List<ByteArray>> {
+    ): Either<SendTransactionError, List<ByteArray>> {
         val signer = createSigner(userWallet)
-        return transactionRepository.prepareForSendMultiple(
+        val result = transactionRepository.prepareForSendMultiple(
             transactionData = transactionData,
             userWalletId = userWallet.walletId,
             network = network,
             signer = signer,
         )
-            .fold(onSuccess = { it.right() }, onFailure = { it.left() })
+        return when (result) {
+            is Result.Failure -> SendTransactionUseCase.handleError(result).left()
+            is Result.Success -> result.data.right()
+        }
     }
 
     private fun createSigner(userWallet: UserWallet): TransactionSigner {
