@@ -53,6 +53,12 @@ internal class DefaultAccountsCRUDRepository(
         }
     }
 
+    override suspend fun getTotalAccountsCount(userWalletId: UserWalletId): Int {
+        val activeAccountsCount = runtimeStore.getSyncOrNull()?.size ?: 1
+
+        return activeAccountsCount + 1
+    }
+
     override fun getUserWallet(userWalletId: UserWalletId): UserWallet {
         return userWalletsStore.getSyncStrict(userWalletId)
     }
