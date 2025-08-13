@@ -1,8 +1,11 @@
 package com.tangem.domain.walletconnect.model.sdkcopy
 
+import kotlinx.serialization.Serializable
+
 /**
  * copy of [com.reown.android.Core.Model.AppMetaData]
  */
+@Serializable
 data class WcAppMetaData(
     val name: String,
     val description: String,

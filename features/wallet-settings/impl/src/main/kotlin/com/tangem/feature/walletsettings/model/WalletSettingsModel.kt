@@ -16,8 +16,10 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.settings.SettingsManager
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.message.*
-import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.EventMessageAction
+import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
@@ -28,9 +30,9 @@ import com.tangem.domain.notifications.GetIsHuaweiDeviceWithoutGoogleServicesUse
 import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.notifications.toggles.NotificationsFeatureToggles
 import com.tangem.domain.settings.repositories.PermissionRepository
-import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.isMultiCurrency
-import com.tangem.domain.wallets.models.requireColdWallet
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.isMultiCurrency
+import com.tangem.domain.models.wallet.requireColdWallet
 import com.tangem.domain.wallets.usecase.*
 import com.tangem.feature.walletsettings.analytics.Settings
 import com.tangem.feature.walletsettings.analytics.WalletSettingsAnalyticEvents
@@ -41,7 +43,7 @@ import com.tangem.feature.walletsettings.entity.WalletSettingsItemUM
 import com.tangem.feature.walletsettings.entity.WalletSettingsUM
 import com.tangem.feature.walletsettings.impl.R
 import com.tangem.feature.walletsettings.utils.ItemsBuilder
-import com.tangem.features.nft.NFTFeatureToggles
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.PersistentList
@@ -65,15 +67,15 @@ internal class WalletSettingsModel @Inject constructor(
     private val analyticsContextProxy: AnalyticsContextProxy,
     private val getShouldSaveUserWalletsSyncUseCase: ShouldSaveUserWalletsSyncUseCase,
     private val isDemoCardUseCase: IsDemoCardUseCase,
-    private val nftFeatureToggles: NFTFeatureToggles,
-    private val getWalletNFTEnabledUseCase: GetWalletNFTEnabledUseCase,
+    getWalletNFTEnabledUseCase: GetWalletNFTEnabledUseCase,
     private val enableWalletNFTUseCase: EnableWalletNFTUseCase,
     private val disableWalletNFTUseCase: DisableWalletNFTUseCase,
     private val notificationsToggles: NotificationsFeatureToggles,
-    private val getWalletNotificationsEnabledUseCase: GetWalletNotificationsEnabledUseCase,
+    getWalletNotificationsEnabledUseCase: GetWalletNotificationsEnabledUseCase,
     private val setNotificationsEnabledUseCase: SetNotificationsEnabledUseCase,
     private val settingsManager: SettingsManager,
     private val permissionsRepository: PermissionRepository,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     private val notificationsRepository: NotificationsRepository,
     private val getIsHuaweiDeviceWithoutGoogleServicesUseCase: GetIsHuaweiDeviceWithoutGoogleServicesUseCase,
 ) : Model() {
@@ -107,11 +109,11 @@ internal class WalletSettingsModel @Inject constructor(
                         userWallet = wallet,
                         dialogNavigation = dialogNavigation,
                         isRenameWalletAvailable = isRenameWalletAvailable,
-                        isNFTFeatureEnabled = nftFeatureToggles.isNFTEnabled,
                         isNFTEnabled = nftEnabled,
                         isNotificationsEnabled = notificationsEnabled,
                         isNotificationsFeatureEnabled = isNeedShowNotifications,
                         isNotificationsPermissionGranted = isNotificationsPermissionGranted(),
+                        isHotWalletEnabled = hotWalletFeatureToggles.isHotWalletEnabled,
                     ),
                 )
             }
@@ -133,11 +135,11 @@ internal class WalletSettingsModel @Inject constructor(
         userWallet: UserWallet,
         dialogNavigation: SlotNavigation<DialogConfig>,
         isRenameWalletAvailable: Boolean,
-        isNFTFeatureEnabled: Boolean,
         isNFTEnabled: Boolean,
         isNotificationsFeatureEnabled: Boolean,
         isNotificationsEnabled: Boolean,
         isNotificationsPermissionGranted: Boolean,
+        isHotWalletEnabled: Boolean,
     ): PersistentList<WalletSettingsItemUM> = itemsBuilder.buildItems(
         userWalletId = userWallet.walletId,
         userWalletName = userWallet.name,
@@ -147,7 +149,7 @@ internal class WalletSettingsModel @Inject constructor(
         isManageTokensAvailable = userWallet.isMultiCurrency,
         isRenameWalletAvailable = isRenameWalletAvailable,
         renameWallet = { openRenameWalletDialog(userWallet, dialogNavigation) },
-        isNFTFeatureEnabled = isNFTFeatureEnabled && userWallet.isMultiCurrency,
+        isNFTFeatureEnabled = userWallet.isMultiCurrency,
         isNFTEnabled = isNFTEnabled,
         onCheckedNFTChange = ::onCheckedNFTChange,
         forgetWallet = {
@@ -175,6 +177,7 @@ internal class WalletSettingsModel @Inject constructor(
         isNotificationsPermissionGranted = isNotificationsPermissionGranted,
         onCheckedNotificationsChanged = ::onCheckedNotificationsChange,
         onNotificationsDescriptionClick = ::onNotificationsDescriptionClick,
+        isHotWalletEnabled = isHotWalletEnabled,
     )
 
     private fun openRenameWalletDialog(userWallet: UserWallet, dialogNavigation: SlotNavigation<DialogConfig>) {
