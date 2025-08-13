@@ -6,6 +6,17 @@ import com.tangem.features.walletconnect.transaction.entity.approve.WcSpendAllow
 internal data class WcSendReceiveTransactionCheckResultsUM(
     val estimatedWalletChanges: WcEstimatedWalletChangesUM? = null,
     val spendAllowance: WcSpendAllowanceUM? = null,
-    val notificationText: TextReference? = null,
+    val notification: BlockAidNotificationUM? = null,
+    val additionalNotification: TextReference? = null,
     val isLoading: Boolean = true,
 )
+
+internal data class BlockAidNotificationUM(
+    val type: Type,
+    val title: TextReference,
+    val text: TextReference? = null,
+) {
+    internal enum class Type {
+        ERROR, WARNING
+    }
+}

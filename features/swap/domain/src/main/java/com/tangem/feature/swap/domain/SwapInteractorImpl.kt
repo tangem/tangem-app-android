@@ -17,14 +17,15 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.extenstions.unwrap
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.domain.demo.IsDemoCardUseCase
+import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.quote.QuoteStatus
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.quotes.QuotesRepository
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
-import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
-import com.tangem.domain.tokens.GetCurrencyCheckUseCase
-import com.tangem.domain.tokens.GetMultiCryptoCurrencyStatusUseCase
+import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.FeePaidCurrency
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
@@ -33,8 +34,6 @@ import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.utils.convertToSdkAmount
-import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.swap.domain.api.SwapRepository
 import com.tangem.feature.swap.domain.models.ExpressDataError
@@ -72,6 +71,8 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     private val currencyChecksRepository: CurrencyChecksRepository,
     private val appCurrencyRepository: AppCurrencyRepository,
     private val currenciesRepository: CurrenciesRepository,
+    private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
+    private val tokensFeatureToggles: TokensFeatureToggles,
     private val initialToCurrencyResolver: InitialToCurrencyResolver,
     private val validateTransactionUseCase: ValidateTransactionUseCase,
     private val estimateFeeUseCase: EstimateFeeUseCase,
@@ -79,7 +80,9 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     private val getEthSpecificFeeUseCase: GetEthSpecificFeeUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val getCurrencyCheckUseCase: GetCurrencyCheckUseCase,
+    private val getAssetRequirementsUseCase: GetAssetRequirementsUseCase,
     private val amountFormatter: AmountFormatter,
+    private val rampStateManager: RampStateManager,
     @Assisted private val userWalletId: UserWalletId,
 ) : SwapInteractor {
 
@@ -139,7 +142,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         )
     }
 
-    private fun getToCurrenciesGroup(
+    private suspend fun getToCurrenciesGroup(
         currency: CryptoCurrency,
         leastPairs: List<SwapPairLeast>,
         cryptoCurrenciesList: List<CryptoCurrencyStatus>,
@@ -171,15 +174,19 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         )
     }
 
-    private fun findProvidersForPair(
+    private suspend fun findProvidersForPair(
         cryptoCurrencyStatuses: CryptoCurrencyStatus,
         swapPairsLeastList: List<SwapPairLeast>,
         tokenInfoForAvailable: (SwapPairLeast) -> LeastTokenInfo,
     ): List<SwapProvider>? {
+        val requirements = getAssetRequirementsUseCase.invoke(userWalletId, cryptoCurrencyStatuses.currency).getOrNull()
+        val isAvailableForSwap = rampStateManager.checkAssetRequirements(requirements)
+
         return swapPairsLeastList.firstNotNullOfOrNull {
             val listTokenInfo = tokenInfoForAvailable(it)
             if (cryptoCurrencyStatuses.currency.network.backendId == listTokenInfo.network &&
-                cryptoCurrencyStatuses.currency.getContractAddress() == listTokenInfo.contractAddress
+                cryptoCurrencyStatuses.currency.getContractAddress() == listTokenInfo.contractAddress &&
+                isAvailableForSwap
             ) {
                 it.providers
             } else {
@@ -333,7 +340,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
 
         if (isAllowedToSpend && allowPermissionsHandler.isAddressAllowanceInProgress(fromTokenAddress)) {
             allowPermissionsHandler.removeAddressFromProgress(fromTokenAddress)
-            fetchCurrencyStatusUseCase(userWalletId, fromToken.currency.id, true)
+            fetchCurrencyStatusUseCase(userWalletId = userWalletId, id = fromToken.currency.id)
         }
         return if (isAllowedToSpend && isBalanceWithoutFeeEnough) {
             provider to loadDexSwapData(
@@ -1754,13 +1761,22 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 if (feePaidCurrency.balance > fee.multiply(percentsToFeeIncrease)) {
                     SwapFeeState.Enough
                 } else {
-                    val token = currenciesRepository
-                        .getMultiCurrencyWalletCurrenciesSync(userWalletId)
+                    val tokens = if (tokensFeatureToggles.isWalletBalanceFetcherEnabled) {
+                        multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
+                            params = MultiWalletCryptoCurrenciesProducer.Params(userWalletId),
+                        )
+                            .orEmpty()
+                    } else {
+                        currenciesRepository.getMultiCurrencyWalletCurrenciesSync(userWalletId)
+                    }
+
+                    val token = tokens
                         .filterIsInstance<CryptoCurrency.Token>()
                         .find {
                             it.contractAddress.equals(feePaidCurrency.contractAddress, ignoreCase = true) &&
                                 it.network.derivationPath == fromTokenStatus.currency.network.derivationPath
                         }
+
                     SwapFeeState.NotEnough(
                         feeCurrency = token,
                         currencyName = feePaidCurrency.name,
