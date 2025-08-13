@@ -183,7 +183,7 @@ private fun AccountRow(state: AccountDetailsUM) {
 
 // todo account make reusable
 @Composable
-private fun AccountIcon(accountName: String, accountIcon: CryptoPortfolioIconUM, modifier: Modifier = Modifier) {
+internal fun AccountIcon(accountName: String, accountIcon: CryptoPortfolioIconUM, modifier: Modifier = Modifier) {
     Box(
         contentAlignment = Alignment.Center,
         modifier = modifier.background(accountIcon.color.getUiColor()),
