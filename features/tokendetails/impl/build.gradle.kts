@@ -21,7 +21,6 @@ dependencies {
     implementation(deps.compose.accompanist.systemUiController)
     implementation(deps.compose.coil)
     implementation(deps.compose.foundation)
-    implementation(deps.compose.material)
     implementation(deps.compose.material3)
     implementation(deps.compose.navigation)
     implementation(deps.compose.navigation.hilt)
@@ -53,8 +52,6 @@ dependencies {
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
     implementation(projects.core.datasource)
-    implementation(projects.core.deepLinks)
-    implementation(projects.core.deepLinks.global)
     implementation(projects.core.configToggles)
     implementation(projects.core.decompose)
     implementation(projects.common.ui)
@@ -96,11 +93,13 @@ dependencies {
 
     /** Feature Apis */
     implementation(projects.features.tokendetails.api)
+    implementation(projects.features.wallet.api)
     implementation(projects.features.staking.api)
     implementation(projects.features.markets.api)
     implementation(projects.features.onramp.api)
     implementation(projects.features.pushNotifications.api)
     implementation(projects.features.swap.api)
     implementation(projects.features.txhistory.api)
+    implementation(projects.features.sendV2.api)
 
 }

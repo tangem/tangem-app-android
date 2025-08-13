@@ -1,7 +1,6 @@
 package com.tangem.features.pushnotifications.impl.model
 
 import androidx.compose.runtime.Stable
-import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
@@ -71,7 +70,7 @@ internal class PushNotificationsModel @Inject constructor(
             neverToInitiallyAskPermissionUseCase(PUSH_PERMISSION)
             params.modelCallbacks.onDenySystemPermission()
             if (!params.isBottomSheet) {
-                appRouter.push(AppRoute.Home)
+                params.nextRoute?.let { appRouter.push(it) }
             }
         }
     }
@@ -85,7 +84,7 @@ internal class PushNotificationsModel @Inject constructor(
             neverToInitiallyAskPermissionUseCase(PUSH_PERMISSION)
             params.modelCallbacks.onAllowSystemPermission()
             if (!params.isBottomSheet) {
-                appRouter.push(AppRoute.Home)
+                params.nextRoute?.let { appRouter.push(it) }
             }
         }
     }
@@ -99,7 +98,7 @@ internal class PushNotificationsModel @Inject constructor(
             neverToInitiallyAskPermissionUseCase(PUSH_PERMISSION)
             params.modelCallbacks.onDenySystemPermission()
             if (!params.isBottomSheet) {
-                appRouter.push(AppRoute.Home)
+                params.nextRoute?.let { appRouter.push(it) }
             }
         }
     }
