@@ -3,7 +3,7 @@ package com.tangem.domain.onramp.repositories
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.onramp.model.OnrampStatus
 import com.tangem.domain.onramp.model.cache.OnrampTransaction
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.coroutines.flow.Flow
 
 interface OnrampTransactionRepository {
