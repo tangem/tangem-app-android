@@ -2,7 +2,7 @@ package com.tangem.feature.tester.presentation.testpush.viewmodel.transformers.m
 
 import androidx.compose.ui.text.input.TextFieldValue
 import com.tangem.common.routing.DeepLinkRoute
-import com.tangem.core.deeplink.DEEPLINK_KEY
+import com.tangem.common.routing.deeplink.DeeplinkConst.DEEPLINK_KEY
 import com.tangem.domain.markets.TokenMarket
 import com.tangem.feature.tester.presentation.testpush.entity.TestPushUM
 import com.tangem.utils.transformer.Transformer
