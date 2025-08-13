@@ -17,7 +17,7 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.onboarding.v2.impl.R
 
 @Composable
-internal fun Wallet1ScanPrimary(isRing: Boolean, onScanPrimaryClick: () -> Unit, modifier: Modifier = Modifier) {
+internal fun MultiWalletScanPrimary(isRing: Boolean, onScanPrimaryClick: () -> Unit, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -66,7 +66,7 @@ internal fun Wallet1ScanPrimary(isRing: Boolean, onScanPrimaryClick: () -> Unit,
 @Composable
 private fun Preview() {
     TangemThemePreview {
-        Wallet1ScanPrimary(
+        MultiWalletScanPrimary(
             isRing = true,
             onScanPrimaryClick = {},
         )
