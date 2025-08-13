@@ -216,6 +216,9 @@ internal class WcPairModel @Inject constructor(
 
     private fun processError(error: WcPairError) {
         val alert = when (error) {
+            is WcPairError.InvalidDomainURL -> {
+                WcAppInfoRoutes.Alert.Type.InvalidDomain
+            }
             is WcPairError.UnsupportedDApp -> {
                 WcAppInfoRoutes.Alert.Type.UnsupportedDApp(error.appName)
             }
