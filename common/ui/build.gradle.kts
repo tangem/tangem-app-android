@@ -12,7 +12,6 @@ dependencies {
 
     /** Compose */
     implementation(deps.compose.material3)
-    implementation(deps.compose.material)
     implementation(deps.compose.foundation)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
@@ -34,6 +33,7 @@ dependencies {
     implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.models)
     implementation(projects.domain.legacy)
+    implementation(projects.domain.card)
     implementation(projects.domain.staking.models)
     implementation(projects.domain.staking)
     implementation(projects.domain.tokens.models)
