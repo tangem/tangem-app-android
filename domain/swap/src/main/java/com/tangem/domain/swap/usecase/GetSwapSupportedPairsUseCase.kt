@@ -67,7 +67,9 @@ class GetSwapSupportedPairsUseCase(
             // Search available to swap currency
             .filter { pair ->
                 cryptoCurrencyList.any { currencyStatus ->
-                    currencyStatus.id == pair.to.currency.id
+                    // Allowed only on networks without tx extras (e.i. memo and destination tag)
+                    val isExtrasSupported = currencyStatus.network.transactionExtrasType.isTxExtrasSupported()
+                    currencyStatus.id == pair.to.currency.id && !isExtrasSupported
                 }
             }.map { pair -> SwapCryptoCurrency(groupingCurrency(pair), pair.providers) }
 
