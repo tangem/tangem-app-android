@@ -11,6 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
@@ -25,6 +26,8 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
 import com.tangem.core.ui.components.notifications.Notification
+import com.tangem.core.ui.components.provider.entity.ProviderChooseUM
+import com.tangem.core.ui.extensions.conditional
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.selectedBorder
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -35,6 +38,8 @@ import com.tangem.features.swap.v2.impl.chooseprovider.entity.SwapChooseProvider
 import com.tangem.features.swap.v2.impl.chooseprovider.ui.preview.SwapChooseProviderContentPreview
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
 import com.tangem.features.swap.v2.impl.notifications.entity.SwapNotificationUM
+
+private const val DISABLED_COLORS_ALPHA = 0.5f
 
 @Composable
 internal fun SwapChooseProviderBottomSheet(config: TangemBottomSheetConfig, content: @Composable () -> Unit) {
@@ -90,7 +95,10 @@ internal fun SwapChooseProviderContent(
                         enabled = provider.quote !is SwapQuoteUM.Error,
                         onClick = { onProviderClick(provider.quote) },
                     )
-                    .padding(12.dp),
+                    .padding(12.dp)
+                    .conditional(provider.providerUM.extraUM is ProviderChooseUM.ExtraUM.Error) {
+                        Modifier.alpha(DISABLED_COLORS_ALPHA)
+                    },
             )
         }
         Icon(
