@@ -16,6 +16,7 @@ dependencies {
     implementation(projects.features.onboardingV2.api)
     implementation(projects.features.manageTokens.api)
     implementation(projects.features.biometry.api)
+    implementation(projects.features.hotWallet.api)
 
     /** Core modules */
     implementation(projects.core.configToggles)
@@ -61,7 +62,6 @@ dependencies {
     implementation(deps.lifecycle.runtime.ktx)
 
     /** Compose libraries */
-    implementation(deps.compose.material)  // to use buttons and text field in MultiWalletSeedPhraseImport.kt
     implementation(deps.compose.material3)
     implementation(deps.compose.animation)
     implementation(deps.compose.foundation)
