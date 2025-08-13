@@ -40,6 +40,7 @@
   <string name="card_settings_title">卡片設置</string>
   <string name="cardano_low_ada">發送金額和找零不能少於1個ADA</string>
   <string name="common_accept">接受</string>
+  <string name="common_amount">數量</string>
   <string name="common_approve">允許</string>
   <string name="common_attention">注意</string>
   <string name="common_balance">餘額: %s</string>
