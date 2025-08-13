@@ -2,15 +2,15 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.
 
 import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheetConfig
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.datasource.local.swaptx.ExpressAnalyticsStatus
-import com.tangem.datasource.local.swaptx.SwapTransactionStatusStore
+import com.tangem.datasource.local.swap.ExpressAnalyticsStatus
+import com.tangem.datasource.local.swap.SwapTransactionStatusStore
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.quotes.QuotesRepository
 import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.model.analytics.TokenExchangeAnalyticsEvent
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.feature.swap.domain.SwapTransactionRepository
 import com.tangem.feature.swap.domain.api.SwapRepository
 import com.tangem.feature.swap.domain.models.domain.*

@@ -11,6 +11,7 @@ import com.tangem.data.walletconnect.sign.SignStateConverter.toResult
 import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
 import com.tangem.data.walletconnect.utils.BlockAidVerificationDelegate
 import com.tangem.domain.transaction.usecase.PrepareForSendUseCase
+import com.tangem.domain.walletconnect.error.parseSendError
 import com.tangem.domain.walletconnect.model.WcSolanaMethod
 import com.tangem.domain.walletconnect.usecase.method.BlockAidTransactionCheck
 import com.tangem.domain.walletconnect.usecase.method.WcListTransactionUseCase
@@ -47,7 +48,7 @@ internal class WcSolanaSignAllTransactionUseCase @AssistedInject constructor(
     override suspend fun SignCollector<List<TransactionData>>.onSign(state: WcSignState<List<TransactionData>>) {
         val hash = prepareForSend.invoke(transactionData = state.signModel, userWallet = wallet, network = network)
             .onLeft { error ->
-                emit(state.toResult(error.left()))
+                emit(state.toResult(parseSendError(error).left()))
             }
             .getOrNull()
             ?: return

@@ -6,17 +6,16 @@ import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.common.services.Result
 import com.tangem.common.services.performRequest
 import com.tangem.datasource.api.common.createRetrofitInstance
+import com.tangem.domain.card.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.extensions.withIOContext
 import com.tangem.domain.core.utils.lceContent
 import com.tangem.domain.core.utils.lceError
 import com.tangem.domain.core.utils.lceLoading
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.tap.domain.model.Currency
-import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
 import com.tangem.tap.network.exchangeServices.ExchangeService
 import com.tangem.tap.network.exchangeServices.ExchangeServiceInitializationStatus
-import com.tangem.tap.network.exchangeServices.ExchangeUrlBuilder.Companion.SCHEME
 import com.tangem.tap.network.exchangeServices.moonpay.models.MoonPayAvailableCurrency
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -28,6 +27,7 @@ class MoonPayService(
     private val apiKey: String,
     private val secretKey: String,
     private val logEnabled: Boolean,
+    private val userWalletProvider: () -> UserWallet?,
 ) : ExchangeService {
 
     override val initializationStatus: StateFlow<ExchangeServiceInitializationStatus>
@@ -102,9 +102,12 @@ class MoonPayService(
         }
     }
 
-    override fun availableForBuy(scanResponse: ScanResponse, currency: Currency): Boolean = false
-
     override fun availableForSell(currency: Currency): Boolean {
+        val userWallet = userWalletProvider() ?: return false
+        val checkCardExchange = userWallet !is UserWallet.Cold || !userWallet.scanResponse.card.isStart2Coin
+
+        if (!checkCardExchange) return false
+
         if (!isSellAllowed()) return false
 
         val availableForSell = status?.availableForSell ?: return false
@@ -125,15 +128,14 @@ class MoonPayService(
     }
 
     override fun getUrl(
-        action: CurrencyExchangeManager.Action,
         cryptoCurrency: CryptoCurrency,
         fiatCurrencyName: String,
         walletAddress: String,
         isDarkTheme: Boolean,
     ): String? {
-        if (action == CurrencyExchangeManager.Action.Buy) throw UnsupportedOperationException()
-
         val blockchain = cryptoCurrency.network.toBlockchain()
+        if (blockchain.isTestnet()) return blockchain.getTestnetTopUpUrl()
+
         val supportedCurrency = blockchain.moonPaySupportedCurrency ?: return null
         val moonpayCurrency = status?.availableForSell?.firstOrNull {
             when (cryptoCurrency) {
@@ -165,7 +167,7 @@ class MoonPayService(
         return uri.build().toString()
     }
 
-    override fun getSellCryptoReceiptUrl(action: CurrencyExchangeManager.Action, transactionId: String): String {
+    override fun getSellCryptoReceiptUrl(transactionId: String): String {
         return Uri.Builder()
             .scheme(SCHEME)
             .authority(URL_SELL)
@@ -185,8 +187,9 @@ class MoonPayService(
         return status?.responseUserStatus?.isSellAllowed ?: false
     }
 
-    companion object {
+    private companion object {
         const val URL_SELL = "sell.moonpay.com"
+        const val SCHEME = "https"
     }
 }
 
