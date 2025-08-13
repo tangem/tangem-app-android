@@ -10,6 +10,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment.Companion.CenterEnd
@@ -19,6 +20,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.buttons.small.TangemIconButton
 import com.tangem.core.ui.components.fields.SimpleTextField
@@ -69,6 +71,7 @@ fun InputRowRecipient(
     showDivider: Boolean = false,
     isLoading: Boolean = false,
     isValuePasted: Boolean = false,
+    resolvedAddress: String? = null,
 ) {
     val (titleText, color) = if (isError && error != null) {
         error to TangemTheme.colors.text.warning
@@ -127,7 +130,7 @@ fun InputRowRecipient(
                 ) {
                     if (isRedesignEnabled) {
                         QrButton(
-                            visible = !singleLine,
+                            visible = value.isBlank(),
                             onQrCodeClick = onQrCodeClick,
                         )
                     }
@@ -144,11 +147,15 @@ fun InputRowRecipient(
                         } else {
                             TangemTheme.colors.text.primary2
                         },
-                        modifier = Modifier
-                            .padding(start = TangemTheme.dimens.spacing8),
+                        modifier = Modifier.padding(start = TangemTheme.dimens.spacing8),
                     )
                 }
             }
+
+            ResolvedAddressRow(
+                isLoading = isLoading,
+                resolvedAddress = resolvedAddress,
+            )
         }
     }
 }
@@ -203,6 +210,38 @@ private fun RowScope.InputIcon(isLoading: Boolean, value: String) {
     }
 }
 
+@Composable
+private fun ResolvedAddressRow(isLoading: Boolean, resolvedAddress: String?) {
+    AnimatedContent(
+        targetState = if (resolvedAddress.isNullOrBlank() || isLoading) {
+            ResolvedState.Hide
+        } else {
+            ResolvedState.Show(resolvedAddress)
+        },
+        label = "Resolved Address",
+    ) { state ->
+        if (state is ResolvedState.Show) {
+            Column {
+                HorizontalDivider(
+                    thickness = 0.5.dp,
+                    modifier = Modifier.padding(top = 12.dp, bottom = 12.dp),
+                    color = TangemTheme.colors.stroke.primary,
+                )
+                Text(
+                    text = state.address,
+                    style = TangemTheme.typography.caption2,
+                    color = TangemTheme.colors.text.tertiary,
+                )
+            }
+        }
+    }
+}
+
+private sealed interface ResolvedState {
+    data object Hide : ResolvedState
+    data class Show(val address: String) : ResolvedState
+}
+
 //region preview
 @Preview
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
@@ -224,6 +263,7 @@ private fun InputRowRecipientPreview(
             onQrCodeClick = {},
             modifier = Modifier.background(TangemTheme.colors.background.primary),
             isRedesignEnabled = false,
+            resolvedAddress = value.resolvedAddress,
         )
     }
 }
@@ -232,6 +272,7 @@ private data class InputRowRecipientPreviewData(
     val value: String,
     val isError: Boolean,
     val isLoading: Boolean = false,
+    val resolvedAddress: String? = null,
 )
 
 private class InputRowRecipientPreviewDataProvider : PreviewParameterProvider<InputRowRecipientPreviewData> {
@@ -249,6 +290,12 @@ private class InputRowRecipientPreviewDataProvider : PreviewParameterProvider<In
                 value = "0x391316d97a07027a0702c8A002c8A0C25d8470",
                 isLoading = true,
                 isError = true,
+            ),
+            InputRowRecipientPreviewData(
+                value = "vitalik.eth",
+                isLoading = false,
+                isError = true,
+                resolvedAddress = "0x391316d97a07027a0702c8A002c8A0C25d8470",
             ),
         )
 }

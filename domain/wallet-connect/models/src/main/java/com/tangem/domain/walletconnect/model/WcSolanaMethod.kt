@@ -10,6 +10,7 @@ sealed interface WcSolanaMethod : WcMethod {
 
     data class SignTransaction(
         val transaction: String,
+        val address: String?,
     ) : WcSolanaMethod
 
     data class SignAllTransaction(

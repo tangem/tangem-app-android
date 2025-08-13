@@ -61,9 +61,8 @@ private fun Content(state: OnrampSuccessComponentUM.Content, onBackClick: () -> 
             .systemBarsPadding(),
         topBar = {
             TangemTopAppBar(
-                startButton = TopAppBarButtonUM(
-                    iconRes = R.drawable.ic_close_24,
-                    onIconClicked = onBackClick,
+                startButton = TopAppBarButtonUM.Back(
+                    onBackClicked = onBackClick,
                 ),
             )
         },
