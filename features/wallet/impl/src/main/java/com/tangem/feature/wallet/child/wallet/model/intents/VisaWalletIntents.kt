@@ -10,7 +10,7 @@ import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.visa.GetVisaCurrencyUseCase
 import com.tangem.domain.visa.GetVisaTxDetailsUseCase
 import com.tangem.domain.visa.model.VisaTxDetails
-import com.tangem.domain.wallets.models.requireColdWallet
+import com.tangem.domain.models.wallet.requireColdWallet
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.BalancesAndLimitsBottomSheetConverter
