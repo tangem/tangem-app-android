@@ -7,4 +7,5 @@ interface AppInfoProvider {
     val language: String
     val timezone: String
     val appVersion: String
+    val isHuaweiDevice: Boolean
 }
