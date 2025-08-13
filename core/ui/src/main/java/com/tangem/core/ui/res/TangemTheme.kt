@@ -238,6 +238,10 @@ private fun lightThemeColors(): TangemColors {
             primary = TangemColorPalette.Light1,
             focused = TangemColorPalette.Light2,
         ),
+        overlay = TangemColors.Overlay(
+            primary = TangemColorPalette.Black.copy(alpha = 0.4f),
+            secondary = TangemColorPalette.Black.copy(alpha = 0.7f),
+        ),
     )
 }
 
@@ -287,6 +291,10 @@ private fun darkThemeColors(): TangemColors {
         field = TangemColors.Field(
             primary = TangemColorPalette.Dark5,
             focused = TangemColorPalette.Dark4,
+        ),
+        overlay = TangemColors.Overlay(
+            primary = TangemColorPalette.Black.copy(alpha = 0.4f),
+            secondary = TangemColorPalette.Black.copy(alpha = 0.7f),
         ),
     )
 }
