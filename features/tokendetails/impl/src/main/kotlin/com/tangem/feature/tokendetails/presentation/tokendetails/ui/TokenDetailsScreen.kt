@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
@@ -29,6 +30,7 @@ import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.components.transactions.txHistoryItems
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.TokenDetailsScreenTestTags
 import com.tangem.feature.tokendetails.presentation.tokendetails.TokenDetailsPreviewData
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.StakingBlockUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
@@ -79,7 +81,9 @@ internal fun TokenDetailsScreen(
             modifier = Modifier.padding(scaffoldPaddings),
         ) {
             LazyColumn(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .testTag(TokenDetailsScreenTestTags.SCREEN_CONTAINER),
                 state = listState,
                 contentPadding = PaddingValues(
                     bottom = TangemTheme.dimens.spacing16 + bottomBarHeight,

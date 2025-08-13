@@ -10,6 +10,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.quote.QuoteStatus
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.multi.MultiNetworkStatusProducer
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
 import com.tangem.domain.networks.single.SingleNetworkStatusProducer
@@ -18,16 +19,16 @@ import com.tangem.domain.quotes.QuotesRepository
 import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.staking.model.stakekit.YieldBalance
-import com.tangem.domain.staking.model.stakekit.YieldBalanceList
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.staking.single.SingleYieldBalanceProducer
 import com.tangem.domain.staking.single.SingleYieldBalanceSupplier
+import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesProducer
+import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
 import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations.Error
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.utils.CurrencyStatusProxyCreator
-import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.*
 
 /**
@@ -47,6 +48,7 @@ abstract class BaseCurrencyStatusOperations(
     private val singleNetworkStatusSupplier: SingleNetworkStatusSupplier,
     private val singleQuoteStatusSupplier: SingleQuoteStatusSupplier,
     private val singleYieldBalanceSupplier: SingleYieldBalanceSupplier,
+    private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
     private val tokensFeatureToggles: TokensFeatureToggles,
 ) {
 
@@ -176,7 +178,7 @@ abstract class BaseCurrencyStatusOperations(
                     val currency = if (isSingleWalletWithTokens) {
                         currenciesRepository.getSingleCurrencyWalletWithCardCurrency(userWalletId, cryptoCurrencyId)
                     } else {
-                        currenciesRepository.getMultiCurrencyWalletCurrency(userWalletId, cryptoCurrencyId)
+                        getMultiCurrencyWalletCurrency(userWalletId, cryptoCurrencyId)
                     }
 
                     val quote = cryptoCurrencyId.rawCurrencyId?.let { rawId ->
@@ -231,8 +233,7 @@ abstract class BaseCurrencyStatusOperations(
             userWalletId = userWalletId,
             currency = currency,
             includeQuotes = includeQuotes,
-            // If toggle is off, then subscribe on yield balance. If toggle is on, then don't
-            subscribeOnYieldBalance = !tokensFeatureToggles.isStakingLoadingRefactoringEnabled,
+            subscribeOnYieldBalance = false,
         )
     }
 
@@ -240,9 +241,16 @@ abstract class BaseCurrencyStatusOperations(
         return either {
             catch(
                 block = {
-                    val nonEmptyCurrencies =
+                    val nonEmptyCurrencies = if (tokensFeatureToggles.isWalletBalanceFetcherEnabled) {
+                        multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
+                            params = MultiWalletCryptoCurrenciesProducer.Params(userWalletId),
+                        )
+                            ?.toNonEmptyListOrNull()
+                    } else {
                         currenciesRepository.getMultiCurrencyWalletCurrenciesSync(userWalletId).toNonEmptyListOrNull()
-                            ?: return emptyList<CryptoCurrencyStatus>().right()
+                    }
+                        ?: return emptyList<CryptoCurrencyStatus>().right()
+
                     val (_, currenciesIds) = getIds(nonEmptyCurrencies)
                     val rawIds = currenciesIds.mapNotNull { it.rawCurrencyId }.toSet()
 
@@ -303,7 +311,15 @@ abstract class BaseCurrencyStatusOperations(
         currencyId: CryptoCurrency.ID,
     ): CryptoCurrency {
         return Either.catch {
-            currenciesRepository.getMultiCurrencyWalletCurrency(userWalletId = userWalletId, id = currencyId)
+            if (tokensFeatureToggles.isWalletBalanceFetcherEnabled) {
+                multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
+                    params = MultiWalletCryptoCurrenciesProducer.Params(userWalletId),
+                )
+                    ?.firstOrNull { it.id == currencyId }
+                    ?: error("Unable to find currency with ID: $currencyId")
+            } else {
+                currenciesRepository.getMultiCurrencyWalletCurrency(userWalletId = userWalletId, id = currencyId)
+            }
         }
             .mapLeft(Error::DataError)
             .bind()
@@ -322,17 +338,13 @@ abstract class BaseCurrencyStatusOperations(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
     ): EitherFlow<Error, YieldBalance> {
-        return if (tokensFeatureToggles.isStakingLoadingRefactoringEnabled) {
-            singleYieldBalanceSupplier(
-                params = SingleYieldBalanceProducer.Params(
-                    userWalletId = userWalletId,
-                    currencyId = cryptoCurrency.id,
-                    network = cryptoCurrency.network,
-                ),
-            )
-        } else {
-            stakingRepository.getSingleYieldBalanceFlow(userWalletId = userWalletId, cryptoCurrency = cryptoCurrency)
-        }
+        return singleYieldBalanceSupplier(
+            params = SingleYieldBalanceProducer.Params(
+                userWalletId = userWalletId,
+                currencyId = cryptoCurrency.id,
+                network = cryptoCurrency.network,
+            ),
+        )
             .map<YieldBalance, Either<Error, YieldBalance>> { it.right() }
             .catch { emit(Error.DataError(it).left()) }
             .onEmpty { emit(Error.EmptyYieldBalances.left()) }
@@ -352,7 +364,18 @@ abstract class BaseCurrencyStatusOperations(
         networkId: Network.ID,
         derivationPath: Network.DerivationPath,
     ): CryptoCurrency {
-        return Either.catch { currenciesRepository.getNetworkCoin(userWalletId, networkId, derivationPath) }
+        return Either.catch {
+            if (tokensFeatureToggles.isWalletBalanceFetcherEnabled) {
+                multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
+                    params = MultiWalletCryptoCurrenciesProducer.Params(userWalletId),
+                )
+                    ?.filterIsInstance<CryptoCurrency.Coin>()
+                    ?.firstOrNull { it.network.id == networkId }
+                    ?: error("Unable to create network coin with ID: $networkId")
+            } else {
+                currenciesRepository.getNetworkCoin(userWalletId, networkId, derivationPath)
+            }
+        }
             .mapLeft { Error.DataError(it) }
             .bind()
     }
@@ -373,25 +396,21 @@ abstract class BaseCurrencyStatusOperations(
     private suspend fun getYieldBalancesSync(
         userWalletId: UserWalletId,
         cryptoCurrencies: List<CryptoCurrency>,
-    ): Either<Error.EmptyYieldBalances, YieldBalanceList> {
+    ): Either<Error.EmptyYieldBalances, List<YieldBalance>> {
         return catch(
             block = {
-                if (tokensFeatureToggles.isStakingLoadingRefactoringEnabled) {
-                    stakingRepository.getMultiYieldBalanceSync(
-                        userWalletId = userWalletId,
-                        cryptoCurrencies = cryptoCurrencies,
-                    )
+                val balances = stakingRepository.getMultiYieldBalanceSync(
+                    userWalletId = userWalletId,
+                    cryptoCurrencies = cryptoCurrencies,
+                )
+
+                if (balances.isNullOrEmpty()) {
+                    Error.EmptyYieldBalances.left()
                 } else {
-                    stakingRepository.getMultiYieldBalanceSyncLegacy(
-                        userWalletId = userWalletId,
-                        cryptoCurrencies = cryptoCurrencies,
-                    )
+                    balances.right()
                 }
-                    .right()
             },
-            catch = {
-                Error.EmptyYieldBalances.left()
-            },
+            catch = { Error.EmptyYieldBalances.left() },
         )
     }
 
@@ -400,14 +419,7 @@ abstract class BaseCurrencyStatusOperations(
         cryptoCurrency: CryptoCurrency,
     ): Either<Error.EmptyYieldBalances, YieldBalance> {
         return catch(
-            block = {
-                if (tokensFeatureToggles.isStakingLoadingRefactoringEnabled) {
-                    stakingRepository.getSingleYieldBalanceSync(userWalletId, cryptoCurrency)
-                } else {
-                    stakingRepository.getSingleYieldBalanceSyncLegacy(userWalletId, cryptoCurrency)
-                }
-                    .right()
-            },
+            block = { stakingRepository.getSingleYieldBalanceSync(userWalletId, cryptoCurrency).right() },
             catch = {
                 Error.EmptyYieldBalances.left()
             },
