@@ -6,6 +6,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
+import com.tangem.utils.StringsSigns.WHITE_SPACE
 import com.tangem.utils.extensions.isSingleItem
 import kotlinx.collections.immutable.ImmutableList
 
@@ -71,7 +72,6 @@ class InvalidWordsColorTransformation(
     private fun AnnotatedString.toTransformedText(): TransformedText = TransformedText(this, OffsetMapping.Identity)
 
     companion object {
-        private const val WHITE_SPACE = " "
         private const val WORD_SEPARATOR = "_$@-*"
     }
 }

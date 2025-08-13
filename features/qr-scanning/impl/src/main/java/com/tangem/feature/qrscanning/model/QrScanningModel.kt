@@ -10,6 +10,8 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.settings.SettingsManager
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.data.card.sdk.CardSdkProvider
+import com.tangem.domain.qrscanning.models.QrResultSource
+import com.tangem.domain.qrscanning.models.RawQrResult
 import com.tangem.domain.qrscanning.usecases.EmitQrScannedEventUseCase
 import com.tangem.feature.qrscanning.QrScanningComponent
 import com.tangem.feature.qrscanning.presentation.QrScanningState
@@ -71,10 +73,11 @@ internal class QrScanningModel @Inject constructor(
 
     override fun onBackClick() = appRouter.pop()
 
-    override fun onQrScanned(qrCode: String) {
+    override fun onQrScanned(qrCode: String, source: QrResultSource) {
         if (qrCode.isNotBlank()) {
             modelScope.launch(dispatchers.mainImmediate) {
-                emitQrScannedEventUseCase.invoke(params.source, qrCode)
+                val qrCode = RawQrResult(qrCode, source, params.source)
+                emitQrScannedEventUseCase.invoke(qrCode)
             }
             if (!isScanned) {
                 appRouter.pop()
