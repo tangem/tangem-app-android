@@ -4,8 +4,8 @@ import androidx.compose.runtime.Stable
 import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.StateFlow
 
 /** Token list component that present list of available tokens for swap */
