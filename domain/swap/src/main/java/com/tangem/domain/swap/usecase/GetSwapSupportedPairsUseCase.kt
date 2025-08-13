@@ -1,15 +1,17 @@
 package com.tangem.domain.swap.usecase
 
 import arrow.core.Either
+import com.tangem.domain.express.models.ExpressProviderType
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.SwapErrorResolver
 import com.tangem.domain.swap.SwapRepositoryV2
 import com.tangem.domain.swap.models.SwapCryptoCurrency
 import com.tangem.domain.swap.models.SwapCurrencies
 import com.tangem.domain.swap.models.SwapCurrenciesGroup
 import com.tangem.domain.swap.models.SwapPairModel
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.swap.models.SwapTxType
 
 /**
  * Returns pais
@@ -23,11 +25,15 @@ class GetSwapSupportedPairsUseCase(
         userWallet: UserWallet,
         initialCurrency: CryptoCurrency,
         cryptoCurrencyList: List<CryptoCurrency>,
+        filterProviderTypes: List<ExpressProviderType>,
+        swapTxType: SwapTxType,
     ) = Either.catch {
-        val pairs = swapRepositoryV2.getPairsOnly(
+        val pairs = swapRepositoryV2.getSupportedPairs(
             userWallet = userWallet,
             initialCurrency = initialCurrency,
             cryptoCurrencyList = cryptoCurrencyList,
+            filterProviderTypes = filterProviderTypes,
+            swapTxType = swapTxType,
         )
 
         val filteredOutInitial = cryptoCurrencyList.filterNot { it.id == initialCurrency.id }
@@ -61,7 +67,9 @@ class GetSwapSupportedPairsUseCase(
             // Search available to swap currency
             .filter { pair ->
                 cryptoCurrencyList.any { currencyStatus ->
-                    currencyStatus.id == pair.to.currency.id
+                    // Allowed only on networks without tx extras (e.i. memo and destination tag)
+                    val isExtrasSupported = currencyStatus.network.transactionExtrasType.isTxExtrasSupported()
+                    currencyStatus.id == pair.to.currency.id && !isExtrasSupported
                 }
             }.map { pair -> SwapCryptoCurrency(groupingCurrency(pair), pair.providers) }
 
@@ -74,7 +82,7 @@ class GetSwapSupportedPairsUseCase(
                 SwapCryptoCurrency(
                     CryptoCurrencyStatus(
                         currency = currency,
-                        value = CryptoCurrencyStatus.Loading, // todo select token unavailable
+                        value = CryptoCurrencyStatus.Loading,
                     ),
                     emptyList(),
                 )

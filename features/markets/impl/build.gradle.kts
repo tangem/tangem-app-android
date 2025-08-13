@@ -15,6 +15,7 @@ dependencies {
     /* Project - API */
     api(projects.features.markets.api)
     api(projects.features.onramp.api)
+    api(projects.features.sendV2.api)
 
     /* Data */
     implementation(projects.data.common)
@@ -49,7 +50,6 @@ dependencies {
     /* Compose */
     implementation(deps.compose.coil)
     implementation(deps.compose.foundation)
-    implementation(deps.compose.material)
     implementation(deps.compose.material3)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
@@ -74,7 +74,6 @@ dependencies {
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
     implementation(projects.core.navigation)
-    implementation(projects.core.deepLinks)
 
     /* Common */
     implementation(projects.common.ui)
