@@ -5,10 +5,12 @@
   <string name="alert_unsupported_card">Questa carta non è progettata per funzionare con Tangem</string>
   <string name="cardano_low_ada">L\'importo inviato e il cambio non può essere inferiore a 1 ADA</string>
   <string name="common_accept">Accetta</string>
+  <string name="common_amount">Importo</string>
   <string name="common_balance">Saldo: %s</string>
   <string name="common_build_tx_error">Impossibile creare la transazione</string>
   <string name="common_camera_denied_alert_message">Non hai fornito l\'accesso alla tua videocamera, modifica le tue impostazioni sulla privacy</string>
   <string name="common_cancel">Annulla</string>
+  <string name="common_connecting">Connessione in corso</string>
   <string name="common_delete">Rimuovere</string>
   <string name="common_done">Fatto</string>
   <string name="common_error">Errore</string>
@@ -19,6 +21,10 @@
   <string name="common_send">Invia</string>
   <string name="common_send_tx_error">Impossibile inviare la transazione</string>
   <string name="common_success">Con successo</string>
+  <plurals name="common_tokens_count">
+    <item quantity="one">%d gettone</item>
+    <item quantity="other">%d gettoni</item>
+  </plurals>
   <string name="details_manage_security_access_code">Codice di accesso</string>
   <string name="details_manage_security_access_code_description">Prima di scansionare la carta sarà necessario inserire il codice di accesso corretto</string>
   <string name="details_manage_security_long_tap">Mantenimento della carta</string>

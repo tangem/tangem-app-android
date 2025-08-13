@@ -17,7 +17,6 @@ dependencies {
     /** Compose */
     implementation(deps.compose.accompanist.systemUiController)
     implementation(deps.compose.foundation)
-    implementation(deps.compose.material)
     implementation(deps.compose.material3)
     implementation(deps.compose.navigation)
     implementation(deps.compose.navigation.hilt)
@@ -52,7 +51,6 @@ dependencies {
     implementation(projects.core.ui)
     implementation(projects.core.utils)
     implementation(projects.core.navigation)
-    implementation(projects.core.deepLinks)
     implementation(projects.core.pagination)
 
     /** Feature Apis */

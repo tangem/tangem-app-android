@@ -30,11 +30,14 @@ import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.block.BlockCard
 import com.tangem.core.ui.components.block.TangemBlockCardColors
+import com.tangem.core.ui.components.label.Label
+import com.tangem.core.ui.components.label.entity.LabelStyle
+import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.components.text.applyBladeBrush
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import com.tangem.utils.StringsSigns.DOT
 import com.tangem.utils.StringsSigns.THREE_STARS
@@ -67,8 +70,10 @@ fun UserWalletItem(
                 balance = state.balance,
             )
 
+            state.label?.let { Label(it) }
+
             when (state.endIcon) {
-                UserWalletItemUM.EndIcon.None -> {}
+                UserWalletItemUM.EndIcon.None -> Unit
                 UserWalletItemUM.EndIcon.Arrow -> {
                     Icon(
                         imageVector = ImageVector.vectorResource(R.drawable.ic_chevron_right_24),
@@ -257,6 +262,18 @@ private fun Preview_UserWalletItem(
 private class UserWalletItemUMPreviewProvider : PreviewParameterProvider<UserWalletItemUM> {
     override val values: Sequence<UserWalletItemUM>
         get() = sequenceOf(
+            UserWalletItemUM(
+                id = UserWalletId("user_wallet_0".encodeToByteArray()),
+                name = stringReference("Mobile Wallet"),
+                information = getInformation(cardCount = 1),
+                balance = UserWalletItemUM.Balance.Locked,
+                label = LabelUM(
+                    text = resourceReference(R.string.hw_backup_no_backup),
+                    style = LabelStyle.WARNING,
+                ),
+                isEnabled = true,
+                onClick = {},
+            ),
             UserWalletItemUM(
                 id = UserWalletId("user_wallet_1".encodeToByteArray()),
                 name = stringReference("My Wallet"),
