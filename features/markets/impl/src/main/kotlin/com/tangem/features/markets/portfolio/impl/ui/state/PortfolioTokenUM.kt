@@ -1,7 +1,7 @@
 package com.tangem.features.markets.portfolio.impl.ui.state
 
 import com.tangem.core.ui.components.token.state.TokenItemState
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.collections.immutable.ImmutableList
 
 internal data class PortfolioTokenUM(

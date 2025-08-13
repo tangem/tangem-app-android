@@ -109,11 +109,13 @@
   <string name="common_add_token">Agregar token</string>
   <string name="common_all">Todos</string>
   <string name="common_allow">Autorizar</string>
+  <string name="common_amount">Montante</string>
   <string name="common_analytics">Analítica</string>
   <string name="common_apply">Aplicar</string>
   <string name="common_approval">Aprobación</string>
   <string name="common_approve">Aprobar</string>
   <string name="common_attention">Atención</string>
+  <string name="common_available_networks">Redes disponibles</string>
   <string name="common_balance">Saldo: %s</string>
   <string name="common_balance_title">Saldo</string>
   <string name="common_biometric_authentication">autenticación biométrica</string>
@@ -127,6 +129,7 @@
   <string name="common_choose_action">Elige una acción</string>
   <string name="common_choose_network">Elegir red</string>
   <string name="common_choose_token">Elige token</string>
+  <string name="common_choose_wallet">Elegir wallet</string>
   <string name="common_claim">Reclamar</string>
   <string name="common_claim_rewards">Reclame recompensas</string>
   <string name="common_close">Cerrar</string>
@@ -153,6 +156,7 @@
   <string name="common_disabled">Desactivado</string>
   <string name="common_disconnect">Desconectar</string>
   <string name="common_done">Listo</string>
+  <string name="common_edit">Editar</string>
   <string name="common_enable">Activar</string>
   <string name="common_enabled">Activado</string>
   <string name="common_error">Error</string>
@@ -186,6 +190,7 @@
   <string name="common_nft">NFT</string>
   <string name="common_no">No</string>
   <string name="common_no_address">Ninguna dirección</string>
+  <string name="common_not_added">No aregada</string>
   <string name="common_now">Ahora</string>
   <string name="common_ok">OK</string>
   <string name="common_open_in_browser">Abrir en el navegador</string>
@@ -446,14 +451,12 @@
   <string name="manage_tokens_toast_portfolio_updated">Su portafolio ha sido actualizada</string>
   <string name="manage_tokens_unavailable_description">El token seleccionado no está disponible actualmente para acciones dentro de la billetera cripto. Pero no se preocupa, puede expresar su interés votando a favor.</string>
   <string name="manage_tokens_unavailable_vote">Votar a favor</string>
-  <string name="manage_tokens_wallet_selector_title">Elegir wallet</string>
   <string name="manage_tokens_wallet_support_only_one_network_title">La billetera no admite más de una red</string>
   <string name="markets_add_to_my_portfolio_description">Para comprar, intercambiar o recibir este activo, agréguelo a su portafolio</string>
   <string name="markets_add_to_my_portfolio_unavailable_description">Este activo no está disponible en la billetera</string>
   <string name="markets_add_to_my_portfolio_unavailable_for_wallet_description">Este activo no está disponible para esta billetera</string>
   <string name="markets_add_token">Añadir</string>
   <string name="markets_apy_placeholder">APY %s</string>
-  <string name="markets_available_networks">Redes disponibles</string>
   <string name="markets_common_my_portfolio">Mi portafolio</string>
   <string name="markets_common_title">Mercado</string>
   <string name="markets_generate_addresses_notification">Para generar direcciones para las redes seleccionadas, debe escanear su tarjeta Tangem</string>
@@ -587,7 +590,6 @@
   <string name="nft_receive_title">Recibir NFT</string>
   <string name="nft_receive_unavailable_asset_warning_message">Todavía no ha agregado esta red. Para recibir NFTs, añádala a su portafolio.</string>
   <string name="nft_receive_unavailable_asset_warning_title">Red no agregada</string>
-  <string name="nft_receive_unavailable_section_title">No aregada</string>
   <string name="nft_receive_unsupported_types">Tipos de NFT no compatibles</string>
   <string name="nft_receive_unsupported_types_description">cNFT y pNFT aún no son compatibles. Por favor, no los envíes a tu billetera.</string>
   <string name="nft_send">Enviar NFT</string>
@@ -1266,8 +1268,8 @@
   <string name="warning_matic_migration_message">Actualmente, MATIC está migrando a POL. Sin embargo, no se ha fijado ninguna fecha límite y MATIC aún no está obsoleto. Puede seguir usando el token MATIC de forma segura o utilizar intercambios para cambiarlo por POL.</string>
   <string name="warning_matic_migration_title">Migración de MATIC a POL</string>
   <plurals name="warning_missing_derivation_message">
-    <item quantity="one">Use su tarjeta o anillo para obtener una dirección para la red</item>
-    <item quantity="other">Use su tarjeta o anillo para obtener direcciónes para la red</item>
+    <item quantity="one">Use su tarjeta o anillo para obtener una dirección para la red %d</item>
+    <item quantity="other">Use su tarjeta o anillo para obtener direcciónes para las redes %d</item>
   </plurals>
   <string name="warning_missing_derivation_title">Faltan algunas direcciones</string>
   <string name="warning_network_unreachable_message">La red no está disponible actualmente. Por favor, inténtalo de nuevo más tarde.</string>
@@ -1339,7 +1341,7 @@
   <string name="wc_malicious_transaction">Transacción maliciosa</string>
   <string name="wc_missing_required_network_description">Añada la red %s a su perfil para esta billetera</string>
   <string name="wc_missing_required_network_title">La billetera no tiene las redes requeridas</string>
-  <string name="wc_notification_security_risk_subtitle">Este dominio está marcado como no seguro por varios proveedores de seguridad. Salga de inmediato para proteger sus activos</string>
+  <string name="wc_notification_security_risk_subtitle">Se han detectado riesgos potenciales o comportamiento malicioso. Conectarse o firmar transacciones puede resultar en la pérdida de fondos.</string>
   <string name="wc_notification_security_risk_title">Riesgo de seguridad conocido</string>
   <string name="wc_request_from">Solicitud de</string>
   <string name="wc_signature_type">Tipo de firma</string>

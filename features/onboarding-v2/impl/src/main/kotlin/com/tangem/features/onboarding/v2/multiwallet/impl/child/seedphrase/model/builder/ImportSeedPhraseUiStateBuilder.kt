@@ -7,8 +7,8 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.crypto.bip39.Mnemonic
 import com.tangem.crypto.bip39.MnemonicErrorResult
+import com.tangem.features.hotwallet.MnemonicRepository
 import com.tangem.features.onboarding.v2.impl.R
-import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.model.MnemonicRepository
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.ui.state.MultiWalletSeedPhraseUM
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
