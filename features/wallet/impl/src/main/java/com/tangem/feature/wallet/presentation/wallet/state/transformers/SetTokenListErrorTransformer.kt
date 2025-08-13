@@ -3,10 +3,9 @@ package com.tangem.feature.wallet.presentation.wallet.state.transformers
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.common.util.getCardsCount
+import com.tangem.domain.card.common.util.getCardsCount
 import com.tangem.domain.tokens.error.TokenListError
-import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.requireColdWallet
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
@@ -57,8 +56,6 @@ internal class SetTokenListErrorTransformer(
     }
 
     private fun WalletCardState.toLoadedState(): WalletCardState {
-        selectedWallet.requireColdWallet() // TODO [REDACTED_TASK_KEY]
-
         return WalletCardState.Content(
             id = id,
             title = title,
@@ -68,7 +65,10 @@ internal class SetTokenListErrorTransformer(
             balance = BigDecimal.ZERO.format {
                 fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol)
             },
-            cardCount = selectedWallet.getCardsCount(),
+            cardCount = when (selectedWallet) {
+                is UserWallet.Cold -> selectedWallet.getCardsCount()
+                is UserWallet.Hot -> null
+            },
             isZeroBalance = true,
             isBalanceFlickering = false,
         )

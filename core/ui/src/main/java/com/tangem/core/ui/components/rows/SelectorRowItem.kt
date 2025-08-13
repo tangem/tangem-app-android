@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
@@ -25,6 +26,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.SelectNetworkFeeBottomSheetTestTags
 import com.tangem.utils.StringsSigns
 
 @Composable
@@ -68,7 +70,8 @@ fun SelectorRowItem(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(paddingValues),
+                .padding(paddingValues)
+                .testTag(SelectNetworkFeeBottomSheetTestTags.SELECTOR_ITEM),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(

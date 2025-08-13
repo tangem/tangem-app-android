@@ -28,9 +28,8 @@ internal fun NFTReceive(state: NFTReceiveUM, modifier: Modifier = Modifier) {
     ) {
         TangemTopAppBar(
             modifier = Modifier,
-            startButton = TopAppBarButtonUM(
-                iconRes = R.drawable.ic_close_24,
-                onIconClicked = state.onBackClick,
+            startButton = TopAppBarButtonUM.Back(
+                onBackClicked = state.onBackClick,
             ),
             title = stringResourceSafe(id = R.string.nft_receive_title),
             subtitle = state.appBarSubtitle.resolveReference(),
