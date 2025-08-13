@@ -8,9 +8,8 @@ import com.tangem.datasource.local.preferences.utils.getObjectList
 import com.tangem.datasource.local.preferences.utils.getObjectListSync
 import com.tangem.datasource.local.preferences.utils.getObjectMap
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.domain.wallets.models.requireColdWallet
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.swap.converters.SavedSwapTransactionListConverter
 import com.tangem.feature.swap.domain.SwapTransactionRepository
 import com.tangem.feature.swap.domain.models.domain.*
@@ -93,21 +92,37 @@ internal class DefaultSwapTransactionRepository(
                 key = PreferencesKeys.SWAP_TRANSACTIONS_STATUSES_KEY,
             ),
         ) { savedTransactions, txStatuses ->
-            val currencyTxs = savedTransactions?.filter {
-                it.userWalletId == userWallet.walletId.stringValue &&
-                    (
-                        it.toCryptoCurrencyId == cryptoCurrencyId.value ||
-                            it.fromCryptoCurrencyId == cryptoCurrencyId.value
-                        )
+
+            val currencyToTxs = savedTransactions?.filter {
+                val isUserWallet = it.userWalletId == userWallet.walletId.stringValue
+                val toCurrency = it.toCryptoCurrencyId == cryptoCurrencyId.value
+                isUserWallet && toCurrency
             }
 
-            currencyTxs?.mapNotNull {
+            val currencyFromTxs = savedTransactions?.filter {
+                val isUserWallet = it.userWalletId == userWallet.walletId.stringValue
+                val fromCurrency = it.fromCryptoCurrencyId == cryptoCurrencyId.value
+                isUserWallet && fromCurrency
+            }
+
+            val toTxs = currencyToTxs?.mapNotNull {
                 converter.convertBack(
                     value = it,
-                    scanResponse = userWallet.requireColdWallet().scanResponse, // TODO [REDACTED_TASK_KEY]
+                    userWallet = userWallet,
+                    txStatuses = txStatuses,
+                    onFilter = { it.swapTxTypeDTO == SwapTxTypeDTO.Swap },
+                )
+            }.orEmpty()
+
+            val fromTxs = currencyFromTxs?.mapNotNull {
+                converter.convertBack(
+                    value = it,
+                    userWallet = userWallet,
                     txStatuses = txStatuses,
                 )
-            }
+            }.orEmpty()
+
+            fromTxs + toTxs
         }
             .flowOn(dispatchers.default)
     }

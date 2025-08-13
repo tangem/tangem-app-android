@@ -2,6 +2,10 @@ package com.tangem.features.staking.impl.presentation.state
 
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.domain.models.staking.BalanceType
+import com.tangem.domain.models.staking.PendingAction
+import com.tangem.domain.models.staking.PendingActionConstraints
+import com.tangem.domain.models.staking.RewardBlockType
 import com.tangem.domain.staking.model.stakekit.*
 import kotlinx.collections.immutable.ImmutableList
 import java.math.BigDecimal
