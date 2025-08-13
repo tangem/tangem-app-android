@@ -84,6 +84,15 @@ class MultiWalletBackupModel @Inject constructor(
         }
 
         analyticsEventHandler.send(OnboardingEvent.Backup.Started)
+
+        // Clear any saved backup before starting the backup process
+        // also clears the primary card if it was set
+        backupService.discardSavedBackup()
+
+        // Primary card from ScanTask or from the ScanPrimaryModel or from MultiWalletCreateWalletModel
+        // always not null for this step
+        val primaryCard = requireNotNull(scanResponse.primaryCard)
+        backupService.setPrimaryCard(primaryCard)
     }
 
     private fun getInitState(): MultiWalletBackupUM {
@@ -93,22 +102,9 @@ class MultiWalletBackupModel @Inject constructor(
             finalizeButtonEnabled = false,
             addBackupButtonEnabled = true,
             addBackupButtonLoading = false,
-            onAddBackupClick = ::startBackupWallet,
+            onAddBackupClick = ::addBackupCardWithService,
             onFinalizeButtonClick = ::onFinalizeClick,
         )
-    }
-
-    private fun startBackupWallet() {
-        if (state.value.numberOfBackupCards == 0 && scanResponse.primaryCard != null) {
-            backupService.discardSavedBackup()
-        }
-
-        val primaryCard = scanResponse.primaryCard
-        if (primaryCard != null) {
-            backupService.setPrimaryCard(primaryCard)
-        }
-
-        addBackupCardWithService()
     }
 
     private fun setNumberOfBackupCards(number: Int) {
