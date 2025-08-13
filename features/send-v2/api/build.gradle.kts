@@ -8,10 +8,15 @@ android {
     namespace = "com.tangem.features.send.v2.api"
 }
 
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+}
+
 dependencies {
     /** Core */
     implementation(projects.core.decompose)
     implementation(projects.core.ui)
+    implementation(projects.core.analytics.models)
 
     /** Common */
     implementation(projects.common.ui)
@@ -34,4 +39,14 @@ dependencies {
     /** Other */
     implementation(deps.arrow.core)
     implementation(deps.kotlin.immutable.collections)
+
+    // region Tests
+    testImplementation(deps.test.coroutine)
+    testImplementation(deps.test.junit5)
+    testRuntimeOnly(deps.test.junit5.engine)
+    testImplementation(deps.test.mockk)
+    testImplementation(deps.test.truth)
+    testImplementation(projects.common.test)
+    testImplementation(projects.domain.staking.models)
+    // endregion
 }
