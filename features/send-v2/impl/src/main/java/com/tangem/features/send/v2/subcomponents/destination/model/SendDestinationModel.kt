@@ -10,9 +10,11 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
-import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.network.CryptoCurrencyAddress
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.isLocked
+import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
 import com.tangem.domain.qrscanning.usecases.ParseQrCodeUseCase
@@ -22,17 +24,14 @@ import com.tangem.domain.transaction.usecase.IsUtxoConsolidationAvailableUseCase
 import com.tangem.domain.transaction.usecase.ValidateWalletAddressUseCase
 import com.tangem.domain.transaction.usecase.ValidateWalletMemoUseCase
 import com.tangem.domain.txhistory.usecase.GetFixedTxHistoryItemsUseCase
-import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.isLocked
-import com.tangem.domain.wallets.models.isMultiCurrency
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.send.v2.api.SendFeatureToggles
+import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
+import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents.SendScreenSource
 import com.tangem.features.send.v2.api.entity.PredefinedValues
 import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationComponentParams
 import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationComponentParams.DestinationBlockParams
 import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
-import com.tangem.features.send.v2.common.analytics.CommonSendAnalyticEvents
-import com.tangem.features.send.v2.common.analytics.CommonSendAnalyticEvents.SendScreenSource
 import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.subcomponents.destination.analytics.EnterAddressSource
 import com.tangem.features.send.v2.subcomponents.destination.analytics.SendDestinationAnalyticEvents
@@ -144,6 +143,11 @@ internal class SendDestinationModel @Inject constructor(
         router.push(
             AppRoute.QrScanning(source = AppRoute.QrScanning.Source.Send(cryptoCurrency.network.name)),
         )
+    }
+
+    fun saveResult() {
+        val params = params as? SendDestinationComponentParams.DestinationParams ?: return
+        params.callback.onDestinationResult(uiState.value)
     }
 
     private fun initSenderAddress() {
@@ -285,13 +289,8 @@ internal class SendDestinationModel @Inject constructor(
         val isRecent = type == EnterAddressSource.RecentAddress
         if (isRecent && isValidAddress && isValidMemo) {
             saveResult()
-            (params as? SendDestinationComponentParams.DestinationParams)?.onNextClick?.invoke()
+            (params as? SendDestinationComponentParams.DestinationParams)?.callback?.onNextClick()
         }
-    }
-
-    private fun saveResult() {
-        val params = params as? SendDestinationComponentParams.DestinationParams ?: return
-        params.callback.onDestinationResult(uiState.value)
     }
 
     @Suppress("LongMethod")
@@ -322,8 +321,9 @@ internal class SendDestinationModel @Inject constructor(
                                     isValid = state.isPrimaryButtonEnabled,
                                 ),
                             )
+                            saveResult()
                         }
-                        params.onBackClick()
+                        params.callback.onBackClick()
                     },
                     additionalIconRes = if (isRedesignEnabled) {
                         null
@@ -344,22 +344,9 @@ internal class SendDestinationModel @Inject constructor(
                         isEnabled = state.isPrimaryButtonEnabled,
                         onClick = {
                             saveResult()
-                            params.onNextClick()
+                            params.callback.onNextClick()
                         },
                     ),
-                    prevButton = if (!route.isEditMode && isRedesignEnabled) {
-                        NavigationButton(
-                            textReference = TextReference.EMPTY,
-                            iconRes = R.drawable.ic_back_24,
-                            isEnabled = true,
-                            onClick = {
-                                saveResult()
-                                params.onBackClick()
-                            },
-                        )
-                    } else {
-                        null
-                    },
                     secondaryPairButtonsUM = null,
                 ),
             )

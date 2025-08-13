@@ -13,21 +13,19 @@ import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectList
 import com.tangem.datasource.local.preferences.utils.getObjectListSync
-import com.tangem.datasource.local.preferences.utils.getObjectMapSync
+import com.tangem.datasource.local.preferences.utils.getObjectMap
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.swap.SwapTransactionRepository
 import com.tangem.domain.swap.models.SwapStatusModel
 import com.tangem.domain.swap.models.SwapTransactionListModel
 import com.tangem.domain.swap.models.SwapTransactionModel
-import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.addOrReplace
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.withContext
 
 internal class DefaultSwapTransactionRepository(
     private val appPreferencesStore: AppPreferencesStore,
@@ -96,36 +94,34 @@ internal class DefaultSwapTransactionRepository(
         }
     }
 
-    override suspend fun getTransactions(
+    override fun getTransactions(
         userWallet: UserWallet,
         cryptoCurrencyId: CryptoCurrency.ID,
-    ): Flow<List<SwapTransactionListModel>?> {
-        return withContext(dispatchers.io) {
-            val txStatuses = appPreferencesStore.getObjectMapSync<SwapStatusDTO>(
-                key = PreferencesKeys.SWAP_TRANSACTIONS_STATUSES_KEY,
-            )
-            appPreferencesStore.getObjectList<SwapTransactionListDTO>(
-                key = PreferencesKeys.SWAP_TRANSACTIONS_KEY,
-            ).map { savedTransactions ->
-                val currencyTxs = savedTransactions
-                    ?.filter {
-                        it.userWalletId == userWallet.walletId.stringValue &&
-                            (
-                                it.toCryptoCurrencyId == cryptoCurrencyId.value ||
-                                    it.fromCryptoCurrencyId == cryptoCurrencyId.value
-                                )
-                    }
+    ): Flow<List<SwapTransactionListModel>?> = combine(
+        flow = appPreferencesStore.getObjectList<SwapTransactionListDTO>(
+            key = PreferencesKeys.SWAP_TRANSACTIONS_KEY,
+        ),
+        flow2 = appPreferencesStore.getObjectMap<SwapStatusDTO>(
+            key = PreferencesKeys.SWAP_TRANSACTIONS_STATUSES_KEY,
+        ),
+    ) { savedTransactions, txStatuses ->
+        val currencyTxs = savedTransactions
+            ?.filter {
+                it.userWalletId == userWallet.walletId.stringValue &&
+                    (
+                        it.toCryptoCurrencyId == cryptoCurrencyId.value ||
+                            it.fromCryptoCurrencyId == cryptoCurrencyId.value
+                        )
+            }
 
-                currencyTxs?.mapNotNull {
-                    listConverter.convertBack(
-                        value = it,
-                        scanResponse = userWallet.requireColdWallet().scanResponse, // TODO [REDACTED_TASK_KEY]
-                        txStatuses = txStatuses,
-                    )
-                }
-            }.flowOn(dispatchers.io)
+        currencyTxs?.mapNotNull {
+            listConverter.convertBack(
+                value = it,
+                userWallet = userWallet,
+                txStatuses = txStatuses,
+            )
         }
-    }
+    }.flowOn(dispatchers.default)
 
     override suspend fun removeTransaction(
         userWalletId: UserWalletId,
@@ -189,7 +185,7 @@ internal class DefaultSwapTransactionRepository(
             )
 
             val updatesMap = savedMap.toMutableMap()
-            updatesMap[txId] = savedStatusConverter.convertBack(
+            updatesMap[txId] = savedStatusConverter.convert(
                 status.copy(
                     refundTokensResponse = refundTokenCurrency?.let {
                         userTokensResponseFactory.createResponseToken(refundTokenCurrency)
