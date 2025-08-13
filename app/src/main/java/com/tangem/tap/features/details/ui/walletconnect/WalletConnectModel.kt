@@ -5,6 +5,7 @@ import arrow.core.getOrElse
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.domain.qrscanning.models.QrResultSource
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
@@ -31,12 +32,18 @@ internal class WalletConnectModel @Inject constructor(
 
     init {
         modelScope.launch {
-            listenToQrScanningUseCase(SourceType.WALLET_CONNECT)
+            listenToQrScanningUseCase.listen(SourceType.WALLET_CONNECT)
                 .getOrElse { emptyFlow() }
-                .map {
+                .map { result ->
+                    val source = when (result.resultSource) {
+                        QrResultSource.CLIPBOARD -> WalletConnectAction.OpenSession.SourceType.CLIPBOARD
+                        QrResultSource.CAMERA,
+                        QrResultSource.GALLERY,
+                        -> WalletConnectAction.OpenSession.SourceType.QR
+                    }
                     WalletConnectAction.OpenSession(
-                        wcUri = it,
-                        source = WalletConnectAction.OpenSession.SourceType.QR,
+                        wcUri = result.qrCode,
+                        source = source,
                         userWalletId = params.userWalletId,
                     )
                 }

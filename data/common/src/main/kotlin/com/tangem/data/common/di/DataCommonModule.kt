@@ -7,7 +7,7 @@ import com.tangem.data.common.quote.QuotesFetcher
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
-import com.tangem.domain.demo.DemoConfig
+import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
 import com.tangem.domain.notifications.toggles.NotificationsFeatureToggles
 import com.tangem.domain.wallets.repository.WalletsRepository

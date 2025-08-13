@@ -31,6 +31,7 @@ dependencies {
     implementation(projects.domain.tokens)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets.models)
+    implementation(projects.domain.swap.models)
 
     /* AndroidX */
     implementation(deps.androidx.activity.compose)
