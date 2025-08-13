@@ -48,7 +48,7 @@ internal class DefaultWcInitializeUseCase(
             application = application,
             metaData = appMetaData,
         ) { error ->
-            Timber.e("Error while initializing client: $error")
+            Timber.tag(WC_TAG).e("Error while initializing client: $error")
         }
 
         WalletKit.initialize(
@@ -60,7 +60,7 @@ internal class DefaultWcInitializeUseCase(
                 Timber.tag(WC_TAG).i("onWcSdkInit")
             },
             onError = { error ->
-                Timber.e("Error while initializing Web3Wallet: $error")
+                Timber.tag(WC_TAG).e("Error while initializing Web3Wallet: $error")
             },
         )
     }
