@@ -5,7 +5,7 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Stable
 import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.txhistory.entity.TxHistoryUM
 import kotlinx.coroutines.flow.StateFlow
 
