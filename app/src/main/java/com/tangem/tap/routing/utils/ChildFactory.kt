@@ -17,6 +17,7 @@ import com.tangem.features.hotwallet.AddExistingWalletComponent
 import com.tangem.features.hotwallet.CreateMobileWalletComponent
 import com.tangem.features.hotwallet.WalletActivationComponent
 import com.tangem.features.hotwallet.WalletBackupComponent
+import com.tangem.features.hotwallet.UpdateAccessCodeComponent
 import com.tangem.features.managetokens.component.ChooseManagedTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensSource
@@ -95,6 +96,7 @@ internal class ChildFactory @Inject constructor(
     private val createMobileWalletComponentFactory: CreateMobileWalletComponent.Factory,
     private val addExistingWalletComponentFactory: AddExistingWalletComponent.Factory,
     private val walletActivationComponentFactory: WalletActivationComponent.Factory,
+    private val updateAccessCodeComponentFactory: UpdateAccessCodeComponent.Factory,
     private val sendWithSwapComponentFactory: SendWithSwapComponent.Factory,
     private val sendEntryPointComponentFactory: SendEntryPointComponent.Factory,
     private val walletConnectFeatureToggles: WalletConnectFeatureToggles,
@@ -477,6 +479,15 @@ internal class ChildFactory @Inject constructor(
                         userWalletId = route.userWalletId,
                     ),
                     componentFactory = walletActivationComponentFactory,
+                )
+            }
+            is AppRoute.UpdateAccessCode -> {
+                createComponentChild(
+                    context = context,
+                    params = UpdateAccessCodeComponent.Params(
+                        userWalletId = route.userWalletId,
+                    ),
+                    componentFactory = updateAccessCodeComponentFactory,
                 )
             }
             is AppRoute.SendEntryPoint -> {
