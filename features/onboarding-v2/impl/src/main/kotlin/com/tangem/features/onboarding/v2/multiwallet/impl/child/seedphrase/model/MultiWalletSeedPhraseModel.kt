@@ -13,6 +13,7 @@ import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.feedback.GetCardInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.features.hotwallet.MnemonicRepository
 import com.tangem.features.onboarding.v2.common.analytics.OnboardingEvent
 import com.tangem.features.onboarding.v2.common.ui.OnboardingDialogUM
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
