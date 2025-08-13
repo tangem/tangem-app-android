@@ -7,7 +7,7 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.feature.swap.domain.models.domain.CryptoCurrencySwapInfo
 import com.tangem.feature.swap.models.CurrenciesGroupWithFromCurrency
 import com.tangem.feature.swap.models.SwapSelectTokenStateHolder
