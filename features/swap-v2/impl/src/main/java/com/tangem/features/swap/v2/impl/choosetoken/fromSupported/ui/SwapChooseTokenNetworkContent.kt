@@ -96,9 +96,12 @@ internal fun SwapChooseTokenNetworkContent(state: SwapChooseTokenNetworkContentU
 @Composable
 private fun SwapChooseTokenNetworkContentList(swapNetworks: ImmutableList<SwapChooseNetworkUM>) {
     Column(
-        modifier = Modifier
-            .padding(top = 8.dp)
-            .padding(16.dp),
+        modifier = Modifier.padding(
+            top = 8.dp,
+            start = 16.dp,
+            end = 16.dp,
+            bottom = 16.dp,
+        ),
     ) {
         swapNetworks.fastForEachIndexed { index, network ->
             Row(
@@ -116,10 +119,7 @@ private fun SwapChooseTokenNetworkContentList(swapNetworks: ImmutableList<SwapCh
                         indication = ripple(),
                         onClick = { network.onNetworkClick() },
                     )
-                    .padding(
-                        vertical = 12.dp,
-                        horizontal = 14.dp,
-                    ),
+                    .padding(vertical = 12.dp, horizontal = 14.dp),
             ) {
                 Image(
                     modifier = Modifier.size(36.dp),
@@ -153,10 +153,7 @@ private fun SwapChooseTokenNetworkContentList(swapNetworks: ImmutableList<SwapCh
                                 color = TangemTheme.colors.stroke.primary,
                                 shape = RoundedCornerShape(6.dp),
                             )
-                            .padding(
-                                vertical = 2.dp,
-                                horizontal = 4.dp,
-                            ),
+                            .padding(vertical = 2.dp, horizontal = 4.dp),
                     )
                 }
             }
