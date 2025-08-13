@@ -1,4 +1,4 @@
-package com.tangem.features.hotwallet.setaccesscode.ui
+package com.tangem.features.hotwallet.accesscode.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
@@ -16,7 +16,7 @@ import com.tangem.core.ui.components.fields.PinTextField
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.features.hotwallet.setaccesscode.entity.AccessCodeUM
+import com.tangem.features.hotwallet.accesscode.entity.AccessCodeUM
 
 @Suppress("LongParameterList", "LongMethod")
 @Composable
