@@ -19,7 +19,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.toWrappedList
 import com.tangem.core.ui.message.dialog.Dialogs
 import com.tangem.domain.common.extensions.withMainContext
-import com.tangem.domain.common.util.twinsIsTwinned
+import com.tangem.domain.card.common.util.twinsIsTwinned
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder

@@ -5,10 +5,11 @@ import arrow.core.raise.Raise
 import arrow.core.raise.either
 import arrow.core.raise.ensure
 import arrow.core.raise.withError
+import com.tangem.domain.models.TokensSortType
+import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.tokens.error.TokenListSortingError
 import com.tangem.domain.tokens.error.mapper.mapToTokenListSortingError
 import com.tangem.domain.tokens.model.TokenList
-import com.tangem.domain.tokens.model.TotalFiatBalance
 import com.tangem.domain.tokens.operations.TokenListSortingOperations
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
@@ -66,7 +67,7 @@ class ToggleTokenListSortingUseCase(
     private fun getSortingOperations(tokenList: TokenList): TokenListSortingOperations {
         return TokenListSortingOperations(
             tokenList = tokenList,
-            sortByBalance = tokenList.sortedBy != TokenList.SortType.BALANCE,
+            sortByBalance = tokenList.sortedBy != TokensSortType.BALANCE,
         )
     }
 }

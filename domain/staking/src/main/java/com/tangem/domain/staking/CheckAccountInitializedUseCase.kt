@@ -3,7 +3,7 @@ package com.tangem.domain.staking
 import arrow.core.Either
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 
 class CheckAccountInitializedUseCase(private val walletManagersFacade: WalletManagersFacade) {
 
