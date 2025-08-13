@@ -3,12 +3,13 @@ package com.tangem.domain.tokens.mock
 import arrow.core.NonEmptyList
 import arrow.core.toNonEmptyListOrNull
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.TokensSortType
+import com.tangem.domain.models.TotalFiatBalance
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.tokens.mock.MockNetworksGroups.failedNetworksGroups
 import com.tangem.domain.tokens.mock.MockNetworksGroups.loadedNetworksGroups
 import com.tangem.domain.tokens.mock.MockNetworksGroups.sortedNetworksGroups
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.model.TokenList
-import com.tangem.domain.tokens.model.TotalFiatBalance
 import java.math.BigDecimal
 
 @Suppress("MemberVisibilityCanBePrivate")
@@ -22,25 +23,25 @@ internal object MockTokenLists {
     val emptyGroupedTokenList = TokenList.GroupedByNetwork(
         groups = emptyList(),
         totalFiatBalance = TotalFiatBalance.Failed,
-        sortedBy = TokenList.SortType.NONE,
+        sortedBy = TokensSortType.NONE,
     )
 
     val emptyUngroupedTokenList = TokenList.Ungrouped(
         currencies = emptyList(),
         totalFiatBalance = TotalFiatBalance.Failed,
-        sortedBy = TokenList.SortType.NONE,
+        sortedBy = TokensSortType.NONE,
     )
 
     val failedGroupedTokenList = TokenList.GroupedByNetwork(
         groups = failedNetworksGroups,
         totalFiatBalance = TotalFiatBalance.Failed,
-        sortedBy = TokenList.SortType.NONE,
+        sortedBy = TokensSortType.NONE,
     )
 
     val failedUngroupedTokenList = TokenList.Ungrouped(
         currencies = MockTokensStates.failedTokenStates,
         totalFiatBalance = TotalFiatBalance.Failed,
-        sortedBy = TokenList.SortType.NONE,
+        sortedBy = TokensSortType.NONE,
     )
 
     val noQuotesUngroupedTokenList = failedUngroupedTokenList.copy(
@@ -76,7 +77,7 @@ internal object MockTokenLists {
 
             return failedUngroupedTokenList.copy(
                 currencies = tokens,
-                sortedBy = TokenList.SortType.NONE,
+                sortedBy = TokensSortType.NONE,
                 totalFiatBalance = TotalFiatBalance.Loaded(
                     amount = tokens.sumOf { it.value.fiatAmount ?: BigDecimal.ZERO },
                     isAllAmountsSummarized = true,
@@ -91,7 +92,7 @@ internal object MockTokenLists {
 
             return failedGroupedTokenList.copy(
                 groups = groups,
-                sortedBy = TokenList.SortType.NONE,
+                sortedBy = TokensSortType.NONE,
                 totalFiatBalance = TotalFiatBalance.Loaded(
                     amount = groups
                         .flatMap { it.currencies as NonEmptyList<CryptoCurrencyStatus> }
@@ -109,7 +110,7 @@ internal object MockTokenLists {
 
             return unsortedUngroupedTokenList.copy(
                 currencies = tokens,
-                sortedBy = TokenList.SortType.BALANCE,
+                sortedBy = TokensSortType.BALANCE,
             )
         }
 
@@ -119,7 +120,7 @@ internal object MockTokenLists {
 
             return unsortedGroupedTokenList.copy(
                 groups = groups,
-                sortedBy = TokenList.SortType.BALANCE,
+                sortedBy = TokensSortType.BALANCE,
             )
         }
 }

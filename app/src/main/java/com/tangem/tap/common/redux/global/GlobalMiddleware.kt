@@ -2,23 +2,14 @@ package com.tangem.tap.common.redux.global
 
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
-import com.tangem.common.extensions.guard
 import com.tangem.core.analytics.models.AnalyticsParam
-import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.common.LogConfig
-import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.redux.StateDialog
-import com.tangem.domain.wallets.models.requireColdWallet
-import com.tangem.tap.common.extensions.*
+import com.tangem.tap.common.extensions.dispatchDialogShow
+import com.tangem.tap.common.extensions.dispatchWithMain
+import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.redux.AppState
-import com.tangem.tap.network.exchangeServices.CardExchangeRules
-import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
-import com.tangem.tap.network.exchangeServices.ExchangeService
-import com.tangem.tap.network.exchangeServices.mercuryo.MercuryoEnvironment
-import com.tangem.tap.network.exchangeServices.mercuryo.MercuryoService
-import com.tangem.tap.network.exchangeServices.moonpay.MoonPayService
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
 import com.tangem.tap.store
@@ -31,17 +22,17 @@ object GlobalMiddleware {
     val handler = globalMiddlewareHandler
 }
 
-private val globalMiddlewareHandler: Middleware<AppState> = { dispatch, appState ->
+private val globalMiddlewareHandler: Middleware<AppState> = { _, _ ->
     { nextDispatch ->
         { action ->
-            handleAction(action, appState)
+            handleAction(action)
             nextDispatch(action)
         }
     }
 }
 
 @Suppress("LongMethod", "ComplexMethod")
-private fun handleAction(action: Action, appState: () -> AppState?) {
+private fun handleAction(action: Action) {
     when (action) {
         is GlobalAction.ScanFailsCounter.ChooseBehavior -> {
             when (action.result) {
@@ -51,42 +42,7 @@ private fun handleAction(action: Action, appState: () -> AppState?) {
                 }
             }
         }
-        is GlobalAction.RestoreAppCurrency -> {
-            restoreAppCurrency()
-        }
-        is GlobalAction.ExchangeManager.Init -> {
-            val config = store.inject(DaggerGraphState::environmentConfigStorage).getConfigSync()
-
-            scope.launch {
-                val scanResponseProvider: () -> ScanResponse? = {
-                    val userWalletsListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
-                    userWalletsListManager.selectedUserWalletSync?.requireColdWallet()?.scanResponse // TODO [REDACTED_TASK_KEY]
-                }
-                val cardProvider: () -> CardDTO? = { scanResponseProvider.invoke()?.card }
-
-                val buyService = makeBuyExchangeService(config)
-                val sellService = makeSellExchangeService(config)
-                val exchangeManager = CurrencyExchangeManager(
-                    buyService = buyService,
-                    sellService = sellService,
-                    primaryRules = CardExchangeRules(cardProvider),
-                )
-                // TODO: for refactoring (after remove old design refactor CurrencyExchangeManager and use 1 instance)
-                store.inject(DaggerGraphState::appStateHolder).buyService = buyService
-                store.inject(DaggerGraphState::appStateHolder).sellService = sellService
-                store.inject(DaggerGraphState::appStateHolder).exchangeService = exchangeManager
-                store.dispatchOnMain(GlobalAction.ExchangeManager.Init.Success(exchangeManager))
-                store.dispatchOnMain(GlobalAction.ExchangeManager.Update)
-            }
-        }
-        is GlobalAction.ExchangeManager.Init.Success -> {}
-        is GlobalAction.ExchangeManager.Update -> {
-            val exchangeManager = appState()?.globalState?.exchangeManager.guard {
-                store.dispatchDebugErrorNotification("exchangeManager is not initialized")
-                return
-            }
-            scope.launch { exchangeManager.update() }
-        }
+        is GlobalAction.RestoreAppCurrency -> restoreAppCurrency()
     }
 }
 
@@ -119,21 +75,4 @@ private fun restoreAppCurrency() {
 
         store.dispatchWithMain(GlobalAction.RestoreAppCurrency.Success(currency))
     }
-}
-
-private fun makeSellExchangeService(environmentConfig: EnvironmentConfig): ExchangeService {
-    return MoonPayService(
-        apiKey = environmentConfig.moonPayApiKey,
-        secretKey = environmentConfig.moonPayApiSecretKey,
-        logEnabled = LogConfig.network.moonPayService,
-    )
-}
-
-private fun makeBuyExchangeService(environmentConfig: EnvironmentConfig): ExchangeService {
-    return MercuryoService(
-        environment = MercuryoEnvironment.prod(
-            widgetId = environmentConfig.mercuryoWidgetId,
-            secret = environmentConfig.mercuryoSecret,
-        ),
-    )
 }
