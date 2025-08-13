@@ -149,6 +149,8 @@ object PreferencesKeys {
     val TRON_NETWORK_FEE_NOTIFICATION_SHOW_COUNT_KEY by lazy {
         intPreferencesKey(name = "tronNetworkFeeNotificationShowCount")
     }
+
+    fun getShouldShowNotificationKey(key: String) = booleanPreferencesKey("showShowNotificationUM_$key")
     // endregion
 
     // region Promo
