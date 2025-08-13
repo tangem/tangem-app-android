@@ -96,6 +96,8 @@ dependencies {
     implementation(projects.domain.visa)
     implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
+    implementation(projects.domain.notifications)
+    implementation(projects.domain.notifications.toggles)
 
     /** Feature Apis */
     implementation(projects.features.details.api)
