@@ -1,4 +1,4 @@
-package com.tangem.features.hotwallet.setaccesscode
+package com.tangem.features.hotwallet.accesscode
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -8,7 +8,7 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.security.DisableScreenshotsDisposableEffect
-import com.tangem.features.hotwallet.setaccesscode.ui.AccessCode
+import com.tangem.features.hotwallet.accesscode.ui.AccessCode
 import com.tangem.domain.models.wallet.UserWalletId
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
