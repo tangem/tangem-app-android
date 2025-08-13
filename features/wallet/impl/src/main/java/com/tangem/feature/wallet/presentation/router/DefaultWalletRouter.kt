@@ -6,12 +6,12 @@ import com.tangem.common.routing.AppRoute.ManageTokens.Source
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.redux.StateDialog
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.wallet.navigation.WalletRoute
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDialogConfig
 import kotlinx.coroutines.channels.BufferOverflow
@@ -75,7 +75,7 @@ internal class DefaultWalletRouter @Inject constructor(
     }
 
     override fun openStoriesScreen() {
-        router.push(AppRoute.Home)
+        router.push(AppRoute.Home())
     }
 
     override fun isWalletLastScreen(): Boolean {

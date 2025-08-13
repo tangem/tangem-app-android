@@ -4,7 +4,7 @@ import com.tangem.data.networks.models.SimpleNetworkStatus
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkStatus
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import timber.log.Timber
 
 /**
