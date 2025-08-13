@@ -14,6 +14,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import com.google.accompanist.web.WebView
 import com.google.accompanist.web.WebViewNavigator
@@ -29,8 +31,7 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.test.TestTags.DISCLAIMER_SCREEN_ACCEPT_BUTTON
-import com.tangem.core.ui.test.TestTags.DISCLAIMER_SCREEN_CONTAINER
+import com.tangem.core.ui.test.DisclaimerScreenTestTags
 import com.tangem.core.ui.webview.applySafeSettings
 import com.tangem.features.disclaimer.impl.R
 import com.tangem.features.disclaimer.impl.entity.DisclaimerUM
@@ -54,7 +55,7 @@ internal fun DisclaimerScreen(state: DisclaimerUM) {
         modifier = Modifier
             .background(backgroundColor)
             .statusBarsPadding()
-            .testTag(DISCLAIMER_SCREEN_CONTAINER),
+            .testTag(DisclaimerScreenTestTags.SCREEN_CONTAINER),
     ) {
         Column(
             modifier = Modifier
@@ -63,9 +64,8 @@ internal fun DisclaimerScreen(state: DisclaimerUM) {
         ) {
             TangemTopAppBar(
                 title = resourceReference(R.string.disclaimer_title),
-                startButton = TopAppBarButtonUM(
-                    iconRes = R.drawable.ic_back_24,
-                    onIconClicked = state.popBack,
+                startButton = TopAppBarButtonUM.Back(
+                    onBackClicked = state.popBack,
                 ).takeIf { state.isTosAccepted },
                 titleAlignment = Alignment.CenterHorizontally,
                 textColor = textColor,
@@ -109,7 +109,11 @@ private fun DisclaimerContent(url: String) {
             state = webViewState,
             modifier = Modifier
                 .fillMaxSize()
-                .background(TangemTheme.colors.background.primary),
+                .background(TangemTheme.colors.background.primary)
+                .testTag(DisclaimerScreenTestTags.WEB_VIEW)
+                .semantics {
+                    contentDescription = "WebView URL: ${webViewState.content.getCurrentUrl() ?: url}"
+                },
             captureBackPresses = false,
             navigator = webViewNavigator,
             onCreated = WebView::applySafeSettings,
@@ -175,7 +179,7 @@ private fun BoxScope.DisclaimerButton(onAccept: () -> Unit) {
             disabledContentColor = TangemColorPalette.Dark6,
         ),
         modifier = Modifier
-            .testTag(DISCLAIMER_SCREEN_ACCEPT_BUTTON)
+            .testTag(DisclaimerScreenTestTags.ACCEPT_BUTTON)
             .align(Alignment.BottomCenter)
             .navigationBarsPadding()
             .padding(

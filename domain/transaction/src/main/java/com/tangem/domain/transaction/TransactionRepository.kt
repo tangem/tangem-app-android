@@ -8,7 +8,7 @@ import com.tangem.blockchain.common.transaction.TransactionsSendResult
 import com.tangem.blockchain.nft.models.NFTAsset
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import java.math.BigDecimal
 import java.math.BigInteger
 
@@ -101,12 +101,12 @@ interface TransactionRepository {
         signer: TransactionSigner,
         userWalletId: UserWalletId,
         network: Network,
-    ): Result<ByteArray>
+    ): com.tangem.blockchain.extensions.Result<ByteArray>
 
     suspend fun prepareForSendMultiple(
         transactionData: List<TransactionData>,
         signer: TransactionSigner,
         userWalletId: UserWalletId,
         network: Network,
-    ): Result<List<ByteArray>>
+    ): com.tangem.blockchain.extensions.Result<List<ByteArray>>
 }
