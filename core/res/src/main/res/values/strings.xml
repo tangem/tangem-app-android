@@ -178,6 +178,7 @@
   <string name="common_close">Close</string>
   <string name="common_coming_soon">Coming Soon</string>
   <string name="common_confirm">Confirm</string>
+  <string name="common_connecting">Connecting</string>
   <string name="common_contact_tangem_support">Contact Tangem Support</string>
   <string name="common_contact_visa_support">Contact Visa Support</string>
   <string name="common_continue">Continue</string>
@@ -284,6 +285,10 @@
   <string name="common_terms_and_conditions">terms and conditions</string>
   <string name="common_terms_of_use">Terms of Use</string>
   <string name="common_today">Today</string>
+  <plurals name="common_tokens_count">
+    <item quantity="one">%d token</item>
+    <item quantity="other">%d tokens</item>
+  </plurals>
   <string name="common_transaction_failed">Transaction failed</string>
   <string name="common_transaction_status">Transaction status</string>
   <string name="common_transactions">Transactions</string>
@@ -354,6 +359,7 @@
   <string name="domain_receive_assets_onboarding_description">Sending assets in other networks will result in permanent loss.</string>
   <string name="domain_receive_assets_onboarding_network_name">%s network</string>
   <string name="domain_receive_assets_onboarding_title">Send funds using only</string>
+  <string name="email_subject_wc_error">Wallet Connect error</string>
   <string name="error_wrong_wallet_tapped">You have used a card or ring from another wallet. Tap the card or ring associated with this wallet</string>
   <string name="eth_gas_required_exceeds_allowance">Not enough funds for the transaction. Please top up your account.</string>
   <string name="exchange_tokens_available_tokens_header">My tokens</string>
@@ -459,6 +465,7 @@
   <string name="home_button_scan">Scan Tangem</string>
   <string name="hot_crypto_add_token_subtitle">to %s</string>
   <string name="hot_crypto_token_network">On %s network</string>
+  <string name="hw_access_code_create_alert_title">Are you sure you want to exit the access code creation process?</string>
   <string name="hw_activation_need_backup">Backup Now</string>
   <string name="hw_activation_need_description">To complete setup, back up your wallet and secure app access with a Access Code.</string>
   <string name="hw_activation_need_finish">Finish Now</string>
@@ -986,17 +993,17 @@
   <string name="send_validation_invalid_amount">Invalid amount</string>
   <string name="send_validation_invalid_fee">Fee exceeds balance</string>
   <string name="send_validation_invalid_total">Total amount exceeds balance</string>
-  <string name="send_with_swap_change_token_alert_message">Are you sure you want to change the token? After changing, previous data will be reset.</string>
+  <string name="send_with_swap_change_token_alert_message">Are you sure you want to change the receiving token? This will reset your previously entered data.</string>
   <string name="send_with_swap_change_token_alert_title">Changing token</string>
   <string name="send_with_swap_confirm_title">Swap and send</string>
-  <string name="send_with_swap_convert_token_alert_message">Proceed with conversion? Previous data will be reset.</string>
-  <string name="send_with_swap_convert_token_alert_title">Confirm Convert</string>
+  <string name="send_with_swap_convert_token_alert_message">Proceed with conversion? This will clear your previous data.</string>
+  <string name="send_with_swap_convert_token_alert_title">Confirm Conversion</string>
   <string name="send_with_swap_notification_text">Send any token, and we’ll convert it on the way. Your recipient gets exactly what they need—seamlessly.</string>
   <string name="send_with_swap_recipient_amount_success_title">Recipient will receive</string>
-  <string name="send_with_swap_recipient_amount_text">Will be sent a recipient</string>
+  <string name="send_with_swap_recipient_amount_text">To recipient</string>
   <string name="send_with_swap_recipient_amount_title">Amount to receive</string>
-  <string name="send_with_swap_remove_convert_alert_message">Are you sure you want to cancel the conversion? After changing, previous data will be reset.</string>
-  <string name="send_with_swap_remove_convert_alert_title">Confirm cancellation</string>
+  <string name="send_with_swap_remove_convert_alert_message">Are you sure you want to cancel the conversion? Your previous data will be cleared.</string>
+  <string name="send_with_swap_remove_convert_alert_title">Remove Conversion</string>
   <string name="send_with_swap_title">Send with swap</string>
   <string name="sent_transaction_sent_title">Transaction sent</string>
   <string name="settings_card_settings_footer">Prepare to scan card or ring you want to set up.</string>
@@ -1534,6 +1541,12 @@
   <string name="wc_disconnect_all">Disconnect all</string>
   <string name="wc_disconnect_all_alert_desc">Text about discnected all dApps</string>
   <string name="wc_disconnect_all_alert_title">Disconect All dApps</string>
+  <string name="wc_errors_invalid_domain_subtitle">Try pairing again with a fresh URI</string>
+  <string name="wc_errors_invalid_domain_title">Invalid dApp domain</string>
+  <string name="wc_errors_no_blockchains_subtitle">%s does not specify any blockchains — neither required nor optional.\nPlease ensure you used the correct URI</string>
+  <string name="wc_errors_no_blockchains_title">No networks</string>
+  <string name="wc_errors_proposal_expired_subtitle">Please, generate a new URI and attempt connecting again</string>
+  <string name="wc_errors_proposal_expired_title">Connection proposal expired</string>
   <string name="wc_estimated_wallet_changes">Estimated wallet changes</string>
   <string name="wc_estimated_wallet_changes_not_simulated">The transaction couldn\'t be simulated. Please proceed with caution.</string>
   <string name="wc_estimation_is_not_supported">Estimation is not supported for %s</string>
@@ -1549,6 +1562,7 @@
   <string name="wc_no_wallet_changes_detected">No wallet changes detected</string>
   <string name="wc_notification_security_risk_subtitle">Potential risks or malicious behavior have been detected. Connecting or signing transactions may lead to loss of funds.</string>
   <string name="wc_notification_security_risk_title">Known security risk</string>
+  <string name="wc_qr_scan_hint">Open Web3 app and chose WalletConnect option</string>
   <string name="wc_request_from">Request from</string>
   <string name="wc_send_anyway">Sign anyway</string>
   <string name="wc_signature_type">Signature Type</string>
