@@ -1,6 +1,6 @@
-package com.tangem.features.hotwallet.setaccesscode.entity
+package com.tangem.features.hotwallet.accesscode.entity
 
-import com.tangem.features.hotwallet.setaccesscode.ACCESS_CODE_LENGTH
+import com.tangem.features.hotwallet.accesscode.ACCESS_CODE_LENGTH
 
 internal data class AccessCodeUM(
     val accessCode: String,
