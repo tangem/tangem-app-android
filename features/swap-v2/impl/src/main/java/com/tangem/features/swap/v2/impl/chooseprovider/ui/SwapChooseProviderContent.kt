@@ -2,8 +2,7 @@ package com.tangem.features.swap.v2.impl.chooseprovider.ui
 
 import android.content.res.Configuration
 import androidx.compose.animation.*
-import androidx.compose.animation.core.MutableTransitionState
-import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -26,6 +25,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstrainedLayoutReference
 import androidx.constraintlayout.compose.ConstraintLayout
@@ -69,7 +69,7 @@ fun SwapChooseProviderContent(
             color = TangemTheme.colors.stroke.primary,
             modifier = Modifier.padding(horizontal = 12.dp),
         )
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row {
             Icon(
                 painter = rememberVectorPainter(
                     ImageVector.vectorResource(R.drawable.ic_stack_new_24),
@@ -80,12 +80,17 @@ fun SwapChooseProviderContent(
             )
             Text(
                 text = stringResourceSafe(R.string.express_provider),
-                style = TangemTheme.typography.body2,
+                style = TangemTheme.typography.body1,
                 color = TangemTheme.colors.text.primary1,
                 modifier = Modifier.padding(start = 8.dp, top = 12.dp, bottom = 12.dp),
             )
             SpacerWMax()
-            ProviderInfo(expressProvider, isBestRate, showBestRateAnimation, onFinishAnimation)
+            ProviderInfo(
+                expressProvider = expressProvider,
+                isBestRate = isBestRate,
+                showBestRateAnimation = showBestRateAnimation,
+                onFinishAnimation = onFinishAnimation,
+            )
         }
         if (showFCAWarning) {
             FcaProviderWarning(
@@ -122,8 +127,9 @@ private fun ProviderInfo(
     isBestRate: Boolean,
     showBestRateAnimation: Boolean,
     onFinishAnimation: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    ConstraintLayout {
+    ConstraintLayout(modifier = modifier) {
         val (imageRef, nameRef, iconRef) = createRefs()
         SubcomposeAsyncImage(
             model = ImageRequest.Builder(context = LocalContext.current)
@@ -146,13 +152,13 @@ private fun ProviderInfo(
                 .clip(RoundedCornerShape(4.dp))
                 .constrainAs(imageRef) {
                     start.linkTo(parent.start)
-                    top.linkTo(parent.top)
-                    bottom.linkTo(parent.bottom)
+                    top.linkTo(parent.top, 14.dp)
+                    bottom.linkTo(parent.bottom, 14.dp)
                 },
         )
         Text(
             text = expressProvider?.name.orEmpty(),
-            style = TangemTheme.typography.body2,
+            style = TangemTheme.typography.body1,
             color = TangemTheme.colors.text.tertiary,
             modifier = Modifier
                 .padding(start = 6.dp)
@@ -164,7 +170,7 @@ private fun ProviderInfo(
         )
         Icon(
             painter = rememberVectorPainter(
-                ImageVector.vectorResource(R.drawable.ic_chevron_24),
+                ImageVector.vectorResource(R.drawable.ic_select_18_24),
             ),
             tint = TangemTheme.colors.icon.informative,
             contentDescription = null,
@@ -196,6 +202,7 @@ private fun ConstraintLayoutScope.BestRateBadge(
     modifier: Modifier = Modifier,
 ) {
     val animateState = remember { MutableTransitionState(false) }
+    val animationSpec = rememberBestRateAnimationSpec(animateState)
 
     LaunchedEffect(showBestRateAnimation) {
         if (showBestRateAnimation) {
@@ -209,6 +216,7 @@ private fun ConstraintLayoutScope.BestRateBadge(
 
     val iconSize by animateDpAsState(
         label = "iconSize",
+        animationSpec = animationSpec,
         targetValue = if (animateState.targetState) {
             12.dp
         } else {
@@ -217,6 +225,7 @@ private fun ConstraintLayoutScope.BestRateBadge(
     )
     val iconVerticalPaddings by animateDpAsState(
         label = "iconVerticalPaddings",
+        animationSpec = animationSpec,
         targetValue = if (animateState.targetState) {
             3.dp
         } else {
@@ -225,6 +234,7 @@ private fun ConstraintLayoutScope.BestRateBadge(
     )
     val iconHorizontalPaddings by animateDpAsState(
         label = "iconHorizontalPaddings",
+        animationSpec = animationSpec,
         targetValue = if (animateState.targetState) {
             4.dp
         } else {
@@ -234,6 +244,7 @@ private fun ConstraintLayoutScope.BestRateBadge(
 
     val startMargin by animateDpAsState(
         label = "startMargin",
+        animationSpec = animationSpec,
         targetValue = if (animateState.targetState) {
             (-12).dp
         } else {
@@ -243,6 +254,7 @@ private fun ConstraintLayoutScope.BestRateBadge(
 
     val topMargin by animateDpAsState(
         label = "topMargin",
+        animationSpec = animationSpec,
         targetValue = if (animateState.targetState) {
             (-12).dp
         } else {
@@ -273,8 +285,10 @@ private fun ConstraintLayoutScope.BestRateBadge(
         )
         AnimatedVisibility(
             visibleState = animateState,
-            enter = expandIn() + fadeIn(),
-            exit = shrinkOut() + fadeOut(),
+            enter = expandIn(animationSpec = tween(durationMillis = 400, easing = EaseInOutQuart)) +
+                fadeIn(animationSpec = tween(delayMillis = 50, easing = EaseInOutQuint)),
+            exit = shrinkOut(animationSpec = tween(durationMillis = 400, easing = EaseInOutQuint)) +
+                fadeOut(animationSpec = tween(delayMillis = 100, durationMillis = 200, easing = EaseInOutQuint)),
             label = "textAnimation",
             modifier = Modifier.padding(end = 6.dp),
         ) {
@@ -285,6 +299,20 @@ private fun ConstraintLayoutScope.BestRateBadge(
             )
         }
     }
+}
+
+@Composable
+private fun rememberBestRateAnimationSpec(animateState: MutableTransitionState<Boolean>): TweenSpec<Dp> = remember(
+    animateState,
+) {
+    tween(
+        durationMillis = 400,
+        easing = if (animateState.targetState) {
+            EaseInOutQuart
+        } else {
+            EaseInOutQuint
+        },
+    )
 }
 
 // region Preview
