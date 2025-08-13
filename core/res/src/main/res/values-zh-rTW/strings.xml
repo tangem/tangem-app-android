@@ -52,6 +52,7 @@
   <string name="common_camera_denied_alert_message">您尚未授予相機訪問權限，請更改您的隱私設置</string>
   <string name="common_cancel">删除</string>
   <string name="common_choose_token">選擇代幣</string>
+  <string name="common_choose_wallet">選擇錢包</string>
   <string name="common_close">關閉</string>
   <string name="common_connecting">連線中</string>
   <string name="common_continue">繼續</string>
@@ -133,6 +134,7 @@
   <string name="details_title">更多</string>
   <string name="disclaimer_error_loading">檢查您的網路連接或切換到其他網絡</string>
   <string name="disclaimer_title">服務條款</string>
+  <string name="email_preface_wc_error">您好，支援團隊，我遇到了一個錯誤，代碼為：%s</string>
   <string name="email_subject_wc_error">WalletConnect 錯誤</string>
   <string name="error_wrong_wallet_tapped">您使用了另一個錢包中的卡。點按與此錢包關聯的卡片</string>
   <string name="eth_gas_required_exceeds_allowance">沒有足夠的資金進行交易。請先入金</string>
@@ -377,6 +379,12 @@
   <string name="warning_failed_to_verify_card_title">認證檢查失敗</string>
   <string name="warning_network_unreachable_title">網路無法使用</string>
   <string name="warning_solana_rent_fee_message">Solana 網絡每 2 天收取 %1$s 的費用。無法付此費用的帳戶將從網絡中清除。向您的帳戶存入超過 %2$s 即可免費使用</string>
+  <string name="wc_errors_invalid_domain_subtitle">請使用新的 URI 再次嘗試配對</string>
+  <string name="wc_errors_invalid_domain_title">無效的 dApp 網域</string>
+  <string name="wc_errors_no_blockchains_subtitle">%s 未指定任何區塊鏈——無論是必須的還是可選的。\n請確保您使用了正確的 URI</string>
+  <string name="wc_errors_no_blockchains_title">沒有網路</string>
+  <string name="wc_errors_proposal_expired_subtitle">請生成新的 URI，然後再次嘗試連線</string>
+  <string name="wc_errors_proposal_expired_title">連線提案已過期</string>
   <string name="welcome_interrupted_backup_alert_discard">捨棄</string>
   <string name="welcome_interrupted_backup_alert_message">您有一個備份中斷了，您想繼續嗎？</string>
   <string name="welcome_interrupted_backup_alert_resume">是的，恢復</string>
