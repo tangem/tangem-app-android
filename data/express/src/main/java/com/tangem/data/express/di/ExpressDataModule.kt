@@ -10,6 +10,7 @@ import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.express.ExpressErrorResolver
 import com.tangem.domain.express.ExpressRepository
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -34,10 +35,12 @@ internal object ExpressDataModule {
     fun provideExpressRepository(
         tangemExpressApi: TangemExpressApi,
         appPreferencesStore: AppPreferencesStore,
+        dispatchers: CoroutineDispatcherProvider,
     ): ExpressRepository {
         return DefaultExpressRepository(
             tangemExpressApi = tangemExpressApi,
             appPreferencesStore = appPreferencesStore,
+            dispatchers = dispatchers,
         )
     }
 }
