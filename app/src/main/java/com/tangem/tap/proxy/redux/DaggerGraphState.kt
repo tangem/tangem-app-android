@@ -32,9 +32,7 @@ import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
-import com.tangem.features.onramp.OnrampFeatureToggles
 import com.tangem.operations.attestation.CardArtworksProvider
-import com.tangem.operations.attestation.OnlineCardVerifier
 import com.tangem.tap.domain.scanCard.CardScanningFeatureToggles
 import com.tangem.tap.domain.walletconnect2.domain.LegacyWalletConnectRepository
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
@@ -68,7 +66,6 @@ data class DaggerGraphState(
     val shareManager: ShareManager? = null,
     val appRouter: AppRouter? = null,
     val transactionSignerFactory: TransactionSignerFactory? = null,
-    val onrampFeatureToggles: OnrampFeatureToggles? = null,
     val environmentConfigStorage: EnvironmentConfigStorage? = null,
     val onboardingV2FeatureToggles: OnboardingV2FeatureToggles? = null,
     val onboardingRepository: OnboardingRepository? = null,
@@ -77,7 +74,6 @@ data class DaggerGraphState(
     val clipboardManager: ClipboardManager? = null,
     val settingsManager: SettingsManager? = null,
     val uiMessageSender: UiMessageSender? = null,
-    val onlineCardVerifier: OnlineCardVerifier? = null,
     val cardArworksProvider: CardArtworksProvider? = null,
     val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory? = null,
     val userTokensResponseStore: UserTokensResponseStore? = null,
