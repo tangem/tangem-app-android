@@ -1,7 +1,7 @@
 package com.tangem.datasource.local.token
 
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.coroutines.flow.Flow
 
 /**
