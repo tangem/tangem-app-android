@@ -147,6 +147,7 @@
   <string name="common_close">Schließen</string>
   <string name="common_coming_soon">Demnächst verfügbar</string>
   <string name="common_confirm">Bestätigen</string>
+  <string name="common_connecting">Verbinden</string>
   <string name="common_contact_tangem_support">Kontakt zum Tangem-Support</string>
   <string name="common_contact_visa_support">Kontakt zum Visa-Support</string>
   <string name="common_continue">Weiter</string>
@@ -249,6 +250,10 @@
   <string name="common_terms_and_conditions">Allgemeine Geschäftsbedingungen</string>
   <string name="common_terms_of_use">Nutzungsbedingungen</string>
   <string name="common_today">Heute</string>
+  <plurals name="common_tokens_count">
+    <item quantity="one">%d Token</item>
+    <item quantity="other">%d Token</item>
+  </plurals>
   <string name="common_transaction_failed">Transaktion fehlgeschlagen</string>
   <string name="common_transaction_status">Transaktionsstatus</string>
   <string name="common_transactions">Transaktionen</string>
