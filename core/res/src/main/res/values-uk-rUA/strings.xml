@@ -1302,6 +1302,7 @@
   <string name="wc_alert_session_disconnected_title">Сеанс Wallet Connect було завершено</string>
   <string name="wc_alert_unknown_error_description">Код помилки: %s. Якщо проблема зберігається, зверніться до нашої служби підтримки.</string>
   <string name="wc_alert_unknown_error_title">Ми зіткнулися з невідомою помилкою</string>
+  <string name="wc_alert_unsupported_dapps_description">Tangem Wallet наразі не підтримує %s</string>
   <string name="wc_alert_unsupported_networks_description">Tangem наразі не підтримує необхідну мережу для %s.</string>
   <string name="wc_alert_unsupported_networks_title">Непідтримувані мережі</string>
   <string name="wc_alert_verified_domain_description">Цей домен пройшов перевірку та вважається безпечним, надійним і вільним від відомих загроз чи підозрілої активності. %s</string>
@@ -1354,7 +1355,7 @@
   <string name="wc_transaction_info_to_title">До</string>
   <string name="wc_transaction_request">Запит транзакції</string>
   <string name="wc_transaction_request_title">Запит транзакції</string>
-  <string name="wc_wallet_connect">Підключення гаманця</string>
+  <string name="wc_wallet_connect">WalletConnect</string>
   <string name="welcome_interrupted_backup_alert_discard">Відмовитися</string>
   <string name="welcome_interrupted_backup_alert_message">Ви не завершили резервне копіювання. Бажаєте продовжити?</string>
   <string name="welcome_interrupted_backup_alert_resume">Так, поновити</string>

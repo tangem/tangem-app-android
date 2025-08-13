@@ -8,6 +8,7 @@ import com.tangem.feature.referral.api.ReferralComponent
 import com.tangem.feature.stories.api.StoriesComponent
 import com.tangem.feature.usedesk.api.UsedeskComponent
 import com.tangem.feature.walletsettings.component.WalletSettingsComponent
+import com.tangem.features.account.ArchivedAccountListComponent
 import com.tangem.features.account.AccountCreateEditComponent
 import com.tangem.features.account.AccountDetailsComponent
 import com.tangem.features.createwalletselection.CreateWalletSelectionComponent
@@ -94,6 +95,7 @@ internal class ChildFactory @Inject constructor(
     private val redesignedWalletConnectComponentFactory: WalletConnectEntryComponent.Factory,
     private val accountCreateEditComponentFactory: AccountCreateEditComponent.Factory,
     private val accountDetailsComponentFactory: AccountDetailsComponent.Factory,
+    private val archivedAccountListComponentFactory: ArchivedAccountListComponent.Factory,
     private val nftComponentFactory: NFTComponent.Factory,
     private val nftSendComponentFactory: NFTSendComponent.Factory,
     private val usedeskComponentFactory: UsedeskComponent.Factory,
@@ -563,6 +565,15 @@ internal class ChildFactory @Inject constructor(
                         account = route.account,
                     ),
                     componentFactory = accountDetailsComponentFactory,
+                )
+            }
+            is AppRoute.ArchivedAccountList -> {
+                createComponentChild(
+                    context = context,
+                    params = ArchivedAccountListComponent.Params(
+                        userWalletId = route.userWalletId,
+                    ),
+                    componentFactory = archivedAccountListComponentFactory,
                 )
             }
         }
