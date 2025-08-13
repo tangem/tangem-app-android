@@ -8,18 +8,18 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.features.onboarding.v2.impl.R
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
-import com.tangem.features.onboarding.v2.multiwallet.impl.child.scanprimary.model.Wallet1ScanPrimaryModel
-import com.tangem.features.onboarding.v2.multiwallet.impl.child.scanprimary.ui.Wallet1ScanPrimary
+import com.tangem.features.onboarding.v2.multiwallet.impl.child.scanprimary.model.MultiWalletScanPrimaryModel
+import com.tangem.features.onboarding.v2.multiwallet.impl.child.scanprimary.ui.MultiWalletScanPrimary
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-internal class Wallet1ScanPrimaryComponent(
+internal class MultiWalletScanPrimaryComponent(
     context: AppComponentContext,
     params: MultiWalletChildParams,
     onDone: () -> Unit,
 ) : AppComponentContext by context, ComposableContentComponent {
 
-    private val model: Wallet1ScanPrimaryModel = getOrCreateModel(params)
+    private val model: MultiWalletScanPrimaryModel = getOrCreateModel(params)
 
     init {
         params.innerNavigation.update {
@@ -38,7 +38,7 @@ internal class Wallet1ScanPrimaryComponent(
 
     @Composable
     override fun Content(modifier: Modifier) {
-        Wallet1ScanPrimary(
+        MultiWalletScanPrimary(
             isRing = model.isRing,
             onScanPrimaryClick = model::onScanPrimaryClick,
         )
