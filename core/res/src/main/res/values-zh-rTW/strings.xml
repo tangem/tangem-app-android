@@ -40,6 +40,7 @@
   <string name="card_settings_title">卡片設置</string>
   <string name="cardano_low_ada">發送金額和找零不能少於1個ADA</string>
   <string name="common_accept">接受</string>
+  <string name="common_amount">數量</string>
   <string name="common_approve">允許</string>
   <string name="common_attention">注意</string>
   <string name="common_balance">餘額: %s</string>
@@ -52,6 +53,7 @@
   <string name="common_cancel">删除</string>
   <string name="common_choose_token">選擇代幣</string>
   <string name="common_close">關閉</string>
+  <string name="common_connecting">連線中</string>
   <string name="common_continue">繼續</string>
   <string name="common_copy">複製</string>
   <string name="common_copy_address">複製地址</string>
@@ -89,6 +91,9 @@
   <string name="common_success">成功</string>
   <string name="common_swap">交換</string>
   <string name="common_terms_and_conditions">條款和條件</string>
+  <plurals name="common_tokens_count">
+    <item quantity="other">%d 代幣</item>
+  </plurals>
   <string name="common_transactions">交易</string>
   <string name="common_understand">我了解</string>
   <string name="common_unreachable">無法觸達</string>
@@ -128,6 +133,7 @@
   <string name="details_title">更多</string>
   <string name="disclaimer_error_loading">檢查您的網路連接或切換到其他網絡</string>
   <string name="disclaimer_title">服務條款</string>
+  <string name="email_subject_wc_error">WalletConnect 錯誤</string>
   <string name="error_wrong_wallet_tapped">您使用了另一個錢包中的卡。點按與此錢包關聯的卡片</string>
   <string name="eth_gas_required_exceeds_allowance">沒有足夠的資金進行交易。請先入金</string>
   <string name="feedback_data_collection_message">以下信息是可選的。如果不想共享，可以將其刪除</string>

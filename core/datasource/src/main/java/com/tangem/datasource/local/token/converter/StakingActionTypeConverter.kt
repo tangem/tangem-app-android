@@ -1,7 +1,7 @@
 package com.tangem.datasource.local.token.converter
 
 import com.tangem.datasource.api.stakekit.models.response.model.action.StakingActionTypeDTO
-import com.tangem.domain.staking.model.stakekit.action.StakingActionType
+import com.tangem.domain.models.staking.action.StakingActionType
 import com.tangem.utils.converter.Converter
 
 @Suppress("CyclomaticComplexMethod")
