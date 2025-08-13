@@ -330,6 +330,6 @@ internal class WalletSettingsModel @Inject constructor(
     }
 
     private fun onAccessCodeClick() {
-        // TODO [REDACTED_TASK_KEY]
+        router.push(AppRoute.UpdateAccessCode(params.userWalletId))
     }
 }
