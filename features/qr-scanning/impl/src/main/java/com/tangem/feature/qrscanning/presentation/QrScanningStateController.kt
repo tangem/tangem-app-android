@@ -26,6 +26,7 @@ internal class QrScanningStateController @Inject constructor() {
 
     private fun getInitialState(): QrScanningState {
         return QrScanningState(
+            topBarConfig = TopBarConfig(title = null, startIcon = 0),
             message = null,
             onBackClick = {},
             onQrScanned = {},

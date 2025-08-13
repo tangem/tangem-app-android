@@ -2,13 +2,14 @@ package com.tangem.domain.tokens.actions
 
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState.ActionState
+import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -35,7 +36,7 @@ internal class CommonActionsFactory(
      * @param shouldShowSwapStories a flag indicating whether to show swap stories
      */
     suspend fun create(
-        userWallet: UserWallet.Cold,
+        userWallet: UserWallet,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
         stakingAvailability: StakingAvailability,
         shouldShowSwapStories: Boolean,
@@ -51,7 +52,11 @@ internal class CommonActionsFactory(
         }
 
         val onrampUnavailabilityReasonDeferred = async {
-            getOnrampUnavailabilityReason(userWallet = userWallet, currency = cryptoCurrencyStatus.currency)
+            getOnrampUnavailabilityReason(
+                userWallet = userWallet,
+                currency = cryptoCurrencyStatus.currency,
+                requirementsDeferred = requirementsDeferred,
+            )
         }
 
         val sendUnavailabilityReasonDeferred = async {
@@ -65,6 +70,7 @@ internal class CommonActionsFactory(
                 getSwapUnavailabilityReason(
                     userWalletId = userWallet.walletId,
                     currency = cryptoCurrencyStatus.currency,
+                    requirementsDeferred = requirementsDeferred,
                 )
             }
         } else {
@@ -170,7 +176,16 @@ internal class CommonActionsFactory(
     private suspend fun getSwapUnavailabilityReason(
         userWalletId: UserWalletId,
         currency: CryptoCurrency,
+        requirementsDeferred: Deferred<AssetRequirementsCondition?>?,
     ): ScenarioUnavailabilityReason {
-        return rampStateManager.availableForSwap(userWalletId = userWalletId, cryptoCurrency = currency)
+        val swapUnavailabilityReason = rampStateManager
+            .availableForSwap(userWalletId = userWalletId, cryptoCurrency = currency)
+        val shouldCheckAssetRequirements =
+            swapUnavailabilityReason == ScenarioUnavailabilityReason.None && requirementsDeferred != null
+        return if (shouldCheckAssetRequirements) {
+            getReceiveScenario(requirementsDeferred.await())
+        } else {
+            swapUnavailabilityReason
+        }
     }
 }
