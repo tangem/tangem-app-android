@@ -11,6 +11,7 @@ import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.features.send.v2.api.entity.CustomFeeFieldUM
 import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.subcomponents.fee.model.checkExceedBalance
 import com.tangem.features.send.v2.subcomponents.fee.model.converters.custom.ethereum.EthereumCustomFeeConverter.Companion.ETHEREUM_GAS_UNIT
@@ -18,7 +19,7 @@ import com.tangem.features.send.v2.subcomponents.fee.model.converters.custom.eth
 import com.tangem.features.send.v2.subcomponents.fee.model.converters.custom.ethereum.EthereumCustomFeeConverter.Companion.GAS_DECIMALS
 import com.tangem.features.send.v2.subcomponents.fee.model.converters.custom.ethereum.EthereumCustomFeeConverter.Companion.GIGA_DECIMALS
 import com.tangem.features.send.v2.subcomponents.fee.model.converters.custom.setEmpty
-import com.tangem.features.send.v2.api.entity.CustomFeeFieldUM
+import com.tangem.utils.extensions.isZero
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -91,7 +92,7 @@ internal class EthereumEIPCustomFeeConverter(
         val mutableCustomValues = customValues.toMutableList()
         return mutableCustomValues.apply {
             when (index) {
-                FEE_AMOUNT -> setOnAmountChange(value, index)
+                FEE_AMOUNT -> setOnAmountChange(feeValue, value, index)
                 MAX_FEE -> setOnMaxFeeChange(value, index)
                 GAS_LIMIT -> setOnGasLimitChange(value, index)
                 else -> set(index, this[index].copy(value = value))
@@ -99,14 +100,39 @@ internal class EthereumEIPCustomFeeConverter(
         }.toImmutableList()
     }
 
-    private fun MutableList<CustomFeeFieldUM>.setOnAmountChange(value: String, index: Int) {
-        val gasLimit = this[GAS_LIMIT].value.parseToBigDecimal(this[GAS_LIMIT].decimals)
+    private fun MutableList<CustomFeeFieldUM>.setOnAmountChange(
+        feeValue: Fee.Ethereum.EIP1559,
+        value: String,
+        index: Int,
+    ) {
+        val gasLimitRaw = this[GAS_LIMIT].value.parseToBigDecimal(this[GAS_LIMIT].decimals)
         if (value.isBlank()) {
             setEmpty(FEE_AMOUNT)
             setEmpty(MAX_FEE)
         } else {
             val newFeeAmountDecimal = value.parseToBigDecimal(this[FEE_AMOUNT].decimals)
             val newFeeAmount = newFeeAmountDecimal.movePointRight(GIGA_DECIMALS) // from ETH to GWEI
+
+            val gasLimit = if (gasLimitRaw.isZero()) {
+                val gasLimitTemp = feeValue.gasLimit.toBigDecimal()
+                set(
+                    index = GAS_LIMIT,
+                    element = this[GAS_LIMIT].copy(value = gasLimitTemp.parseBigDecimal(GIGA_DECIMALS)),
+                )
+                gasLimitTemp
+            } else {
+                gasLimitRaw
+            }
+
+            if (this[PRIORITY_FEE].value.isBlank()) {
+                set(
+                    index = PRIORITY_FEE,
+                    element = this[PRIORITY_FEE].copy(
+                        value = feeValue.priorityFee.toBigDecimal().movePointLeft(GIGA_DECIMALS)
+                            .parseBigDecimal(GIGA_DECIMALS),
+                    ),
+                )
+            }
 
             val newMaxFee = newFeeAmount.divide(gasLimit, this[MAX_FEE].decimals, RoundingMode.HALF_UP)
 
