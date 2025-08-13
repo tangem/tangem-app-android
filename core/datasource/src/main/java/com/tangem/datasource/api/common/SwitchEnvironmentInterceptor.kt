@@ -15,12 +15,14 @@ import okio.IOException
  * Switch api environment [Interceptor]
  *
  * @property id                api config id [ApiConfig.ID]
+ * @property baseUrls          base urls for all api config environments
  * @property apiConfigsManager api configs manager
  *
 [REDACTED_AUTHOR]
  */
 internal class SwitchEnvironmentInterceptor(
     private val id: ApiConfig.ID,
+    private val baseUrls: Set<String>,
     private val apiConfigsManager: ApiConfigsManager,
 ) : Interceptor {
 
@@ -39,10 +41,13 @@ internal class SwitchEnvironmentInterceptor(
         return chain.proceed(request)
     }
 
-    private fun HttpUrl.adjustBaseUrl(url: String): HttpUrl {
-        return this.newBuilder()
-            .host(host = url.toHttpUrl().host)
-            .build()
+    private fun HttpUrl.adjustBaseUrl(newBaseUrl: String): HttpUrl {
+        val currentUrl = this.toString()
+        val currentBaseUrl = baseUrls.first { currentUrl.contains(it) }
+
+        return currentUrl
+            .replace(oldValue = currentBaseUrl, newValue = newBaseUrl)
+            .toHttpUrl()
     }
 
     private fun Request.Builder.addHeaders(headers: Map<String, ProviderSuspend<String>>): Request.Builder {
