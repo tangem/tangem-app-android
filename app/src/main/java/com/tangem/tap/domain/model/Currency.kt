@@ -1,6 +1,5 @@
 package com.tangem.tap.domain.model
 
-import com.tangem.domain.common.BlockchainNetwork
 import com.tangem.domain.features.addCustomToken.CustomCurrency
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.blockchain.common.Blockchain as SdkBlockchain
@@ -32,21 +31,6 @@ sealed interface Currency {
     }
 
     companion object {
-        fun fromBlockchainNetwork(blockchainNetwork: BlockchainNetwork, token: SdkToken? = null): Currency {
-            return if (token != null) {
-                Token(
-                    token = token,
-                    blockchain = blockchainNetwork.blockchain,
-                    derivationPath = blockchainNetwork.derivationPath,
-                )
-            } else {
-                Blockchain(
-                    blockchain = blockchainNetwork.blockchain,
-                    derivationPath = blockchainNetwork.derivationPath,
-                )
-            }
-        }
-
         fun fromCustomCurrency(customCurrency: CustomCurrency): Currency {
             return when (customCurrency) {
                 is CustomCurrency.CustomBlockchain -> Blockchain(

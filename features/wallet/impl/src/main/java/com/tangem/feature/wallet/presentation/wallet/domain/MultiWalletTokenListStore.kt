@@ -2,10 +2,10 @@ package com.tangem.feature.wallet.presentation.wallet.domain
 
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.domain.core.lce.LceFlow
+import com.tangem.domain.models.tokenlist.TokenList
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.GetTokenListUseCase
 import com.tangem.domain.tokens.error.TokenListError
-import com.tangem.domain.tokens.model.TokenList
-import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.SharingStarted

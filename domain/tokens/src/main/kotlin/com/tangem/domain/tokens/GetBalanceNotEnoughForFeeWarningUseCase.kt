@@ -2,11 +2,11 @@ package com.tangem.domain.tokens
 
 import arrow.core.Either
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.model.FeePaidCurrency
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.tokens.repository.CurrenciesRepository
-import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 import java.math.BigDecimal
@@ -25,6 +25,8 @@ import java.math.BigDecimal
  */
 class GetBalanceNotEnoughForFeeWarningUseCase(
     private val currenciesRepository: CurrenciesRepository,
+    private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
+    private val tokensFeatureToggles: TokensFeatureToggles,
     private val dispatchers: CoroutineDispatcherProvider,
 ) {
     suspend operator fun invoke(
@@ -69,13 +71,21 @@ class GetBalanceNotEnoughForFeeWarningUseCase(
         tokenStatus: CryptoCurrencyStatus,
         feePaidToken: FeePaidCurrency.Token,
     ): CryptoCurrencyWarning {
-        val token = currenciesRepository
-            .getMultiCurrencyWalletCurrenciesSync(userWalletId)
-            .find {
-                it is CryptoCurrency.Token &&
-                    it.contractAddress.equals(feePaidToken.contractAddress, ignoreCase = true) &&
-                    it.network.derivationPath == tokenStatus.currency.network.derivationPath
-            }
+        val tokens = if (tokensFeatureToggles.isWalletBalanceFetcherEnabled) {
+            multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
+                params = MultiWalletCryptoCurrenciesProducer.Params(userWalletId),
+            )
+                .orEmpty()
+        } else {
+            currenciesRepository.getMultiCurrencyWalletCurrenciesSync(userWalletId)
+        }
+
+        val token = tokens.find {
+            it is CryptoCurrency.Token &&
+                it.contractAddress.equals(feePaidToken.contractAddress, ignoreCase = true) &&
+                it.network.derivationPath == tokenStatus.currency.network.derivationPath
+        }
+
         return if (token != null) {
             CryptoCurrencyWarning.CustomTokenNotEnoughForFee(
                 currency = tokenStatus.currency,

@@ -10,6 +10,7 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.domain.express.models.ExpressProvider
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.features.swap.v2.impl.chooseprovider.model.SwapChooseProviderModel
 import com.tangem.features.swap.v2.impl.chooseprovider.ui.SwapChooseProviderBottomSheet
 import com.tangem.features.swap.v2.impl.chooseprovider.ui.SwapChooseProviderContent
@@ -41,7 +42,7 @@ internal class SwapChooseProviderComponent(
 
         SwapChooseProviderBottomSheet(config = bottomSheetConfig) {
             SwapChooseProviderContent(
-                providerList = state.value.providerList,
+                contentUM = state.value,
                 onProviderClick = model::onProviderClick,
             )
         }
@@ -51,6 +52,7 @@ internal class SwapChooseProviderComponent(
         val cryptoCurrency: CryptoCurrency,
         val selectedProvider: ExpressProvider,
         val providers: ImmutableList<SwapQuoteUM>,
+        val userCountry: UserCountry,
         val callback: ModelCallback,
         val onDismiss: () -> Unit,
     )

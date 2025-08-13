@@ -6,6 +6,8 @@ import com.tangem.data.walletconnect.sign.SignStateConverter.toPreSign
 import com.tangem.data.walletconnect.sign.SignStateConverter.toResult
 import com.tangem.data.walletconnect.sign.SignStateConverter.toSigning
 import com.tangem.domain.walletconnect.WcAnalyticEvents
+import com.tangem.domain.walletconnect.model.WcRequestError
+import com.tangem.domain.walletconnect.model.WcRequestError.Companion.code
 import com.tangem.domain.walletconnect.usecase.method.WcSignState
 import com.tangem.domain.walletconnect.usecase.method.WcSignStep
 import kotlinx.coroutines.Job
@@ -39,13 +41,6 @@ internal class WcSignUseCaseDelegate<MiddleAction, SignModel>(
 
     operator fun invoke(initModel: SignModel) = channelFlow {
         val state = MutableStateFlow(WcSignState(initModel, WcSignStep.PreSign))
-        analytics.send(
-            WcAnalyticEvents.SignatureRequestReceived(
-                session = context.session,
-                rawRequest = context.rawSdkRequest,
-                network = context.network,
-            ),
-        )
 
         state
             .onEach { newState -> channel.send(newState) }
@@ -62,23 +57,22 @@ internal class WcSignUseCaseDelegate<MiddleAction, SignModel>(
         fun signFlow() = flow { onSign(state.updateAndGet { it.toSigning() }) }
             .onEach { newState -> state.update { newState } }
             .catch { exception ->
-                val errorResult = state.value.toResult(exception.left())
+                val errorResult = state.value
+                    .toResult(WcRequestError.UnknownError(exception).left())
                 state.update { errorResult }
             }
             .onEach { state ->
                 val step = state.domainStep as? WcSignStep.Result ?: return@onEach
                 val event = step.result.fold(
-                    ifLeft = {
+                    ifLeft = { error ->
                         WcAnalyticEvents.SignatureRequestFailed(
-                            session = context.session,
                             rawRequest = context.rawSdkRequest,
                             network = context.network,
-                            it.message.orEmpty(),
+                            errorCode = error.code() ?: error::class.simpleName.orEmpty(),
                         )
                     },
                     ifRight = {
                         WcAnalyticEvents.SignatureRequestHandled(
-                            session = context.session,
                             rawRequest = context.rawSdkRequest,
                             network = context.network,
                         )

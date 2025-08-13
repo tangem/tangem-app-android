@@ -57,9 +57,9 @@ private fun Preview_TangemBottomSheetTitle() {
     TangemThemePreview {
         TangemBottomSheetTitle(
             title = "Title",
-            endButton = TopAppBarButtonUM(
+            endButton = TopAppBarButtonUM.Icon(
                 iconRes = R.drawable.ic_information_24,
-                onIconClicked = {},
+                onClicked = {},
             ),
             containerColor = TangemTheme.colors.background.secondary,
         )
