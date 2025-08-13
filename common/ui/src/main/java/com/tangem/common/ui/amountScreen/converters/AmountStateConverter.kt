@@ -125,7 +125,7 @@ class AmountStateConverterV2(
                 resourceReference(R.string.common_crypto_fiat_format, wrappedList(crypto, fiat))
             },
             tokenName = stringReference(cryptoCurrencyStatus.currency.name),
-            tokenIconState = iconStateConverter.convert(cryptoCurrencyStatus),
+            tokenIconState = iconStateConverter.convert(cryptoCurrencyStatus.currency),
             amountTextField = amountFieldConverter.convert(value.value),
             isPrimaryButtonEnabled = false,
             appCurrency = appCurrency,
