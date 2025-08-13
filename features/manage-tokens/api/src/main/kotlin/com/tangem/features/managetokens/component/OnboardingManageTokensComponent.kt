@@ -2,7 +2,7 @@ package com.tangem.features.managetokens.component
 
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 
 interface OnboardingManageTokensComponent : ComposableContentComponent {
 
