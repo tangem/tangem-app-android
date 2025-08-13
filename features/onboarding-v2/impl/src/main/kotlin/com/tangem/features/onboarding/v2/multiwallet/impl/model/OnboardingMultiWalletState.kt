@@ -24,6 +24,9 @@ data class OnboardingMultiWalletState(
      *                                    -> [Done]
      *
      * Wallet2/Ring
+     *
+     *             ScanPrimary -> | (BackupService is cleared, no PrimaryCard)
+     *                            |
      * CreateWallet -> SeedPhrase -> AddBackupDevice -> Finalize -> [Done]
      *              |
      *              -> AddBackupDevice -> Finalize -> [Done]
