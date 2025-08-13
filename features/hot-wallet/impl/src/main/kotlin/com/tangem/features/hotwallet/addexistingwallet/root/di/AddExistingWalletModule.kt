@@ -4,8 +4,6 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.features.hotwallet.AddExistingWalletComponent
 import com.tangem.features.hotwallet.addexistingwallet.root.AddExistingWalletModel
 import com.tangem.features.hotwallet.addexistingwallet.root.DefaultAddExistingWalletComponent
-import com.tangem.features.hotwallet.addexistingwallet.start.AddExistingWalletStartModel
-import com.tangem.features.hotwallet.addexistingwallet.im.port.AddExistingWalletImportModel
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -16,11 +14,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-internal object AddExistingWalletModule
-
-@Module
-@InstallIn(SingletonComponent::class)
-internal interface AddExistingWalletModuleBinds {
+internal interface AddExistingWalletModule {
 
     @Binds
     @Singleton
@@ -32,14 +26,4 @@ internal interface AddExistingWalletModuleBinds {
     @IntoMap
     @ClassKey(AddExistingWalletModel::class)
     fun bindAddExistingWalletModel(model: AddExistingWalletModel): Model
-
-    @Binds
-    @IntoMap
-    @ClassKey(AddExistingWalletStartModel::class)
-    fun bindAddExistingWalletStartModel(model: AddExistingWalletStartModel): Model
-
-    @Binds
-    @IntoMap
-    @ClassKey(AddExistingWalletImportModel::class)
-    fun bindAddExistingWalletImportModel(model: AddExistingWalletImportModel): Model
 }

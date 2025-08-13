@@ -8,12 +8,14 @@ internal object SwapQuoteLoadingStateTransformer : Transformer<SwapAmountUM> {
     override fun transform(prevState: SwapAmountUM): SwapAmountUM {
         if (prevState !is SwapAmountUM.Content) return prevState
 
+        when (prevState.selectedQuote) {
+            is SwapQuoteUM.Allowance,
+            is SwapQuoteUM.Content,
+            -> return prevState // No need to set loading state if quotes are already display
+            else -> Unit
+        }
         return prevState.copy(
-            selectedQuote = if (prevState.selectedQuote is SwapQuoteUM.Empty) {
-                SwapQuoteUM.Loading
-            } else {
-                prevState.selectedQuote
-            },
+            selectedQuote = SwapQuoteUM.Loading,
         )
     }
 }
