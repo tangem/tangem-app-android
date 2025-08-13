@@ -1,6 +1,7 @@
 package com.tangem.features.onramp.selecttoken.model
 
 import arrow.core.getOrElse
+import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.alerts.models.AlertDemoModeUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -21,9 +22,8 @@ import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
-import com.tangem.domain.wallets.models.requireColdWallet
+import com.tangem.domain.models.wallet.requireColdWallet
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
-import com.tangem.features.onramp.OnrampFeatureToggles
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.selecttoken.OnrampOperationComponent.Params
 import com.tangem.features.onramp.selecttoken.entity.OnrampOperationUM
@@ -46,7 +46,6 @@ internal class OnrampOperationModel @Inject constructor(
     private val reduxStateHolder: ReduxStateHolder,
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val messageSender: UiMessageSender,
-    private val onrampFeatureToggles: OnrampFeatureToggles,
     private val rampStateManager: RampStateManager,
 ) : Model() {
 
@@ -84,8 +83,7 @@ internal class OnrampOperationModel @Inject constructor(
     fun onHotTokenClick(status: CryptoCurrencyStatus) {
         modelScope.launch {
             val unavailabilityReason = rampStateManager.availableForBuy(
-                scanResponse = selectedUserWallet.scanResponse,
-                userWalletId = params.userWalletId,
+                userWallet = selectedUserWallet,
                 cryptoCurrency = status.currency,
             )
 
@@ -100,7 +98,7 @@ internal class OnrampOperationModel @Inject constructor(
     }
 
     private fun selectTokenIfDemoModeOff(status: CryptoCurrencyStatus) {
-        if (params is Params.Sell || !onrampFeatureToggles.isFeatureEnabled) {
+        if (params is Params.Sell) {
             showErrorIfDemoModeOrElse { selectToken(status) }
         } else {
             selectToken(status)
@@ -109,14 +107,25 @@ internal class OnrampOperationModel @Inject constructor(
 
     private fun selectToken(status: CryptoCurrencyStatus) {
         modelScope.launch {
-            val appCurrencyCode = getSelectedAppCurrencyUseCase.invokeSync().getOrElse { AppCurrency.Default }.code
+            when (params) {
+                is Params.Buy -> {
+                    router.push(
+                        AppRoute.Onramp(
+                            userWalletId = selectedUserWallet.walletId,
+                            currency = status.currency,
+                            source = OnrampSource.ACTION_BUTTONS,
+                        ),
+                    )
+                }
+                is Params.Sell -> {
+                    val appCurrencyCode = getSelectedAppCurrencyUseCase.invokeSync()
+                        .getOrElse { AppCurrency.Default }.code
 
-            reduxStateHolder.dispatch(
-                action = when (params) {
-                    is Params.Buy -> getBuyAction(status, appCurrencyCode)
-                    is Params.Sell -> TradeCryptoAction.Sell(status, appCurrencyCode)
-                },
-            )
+                    reduxStateHolder.dispatch(
+                        action = TradeCryptoAction.Sell(status, appCurrencyCode),
+                    )
+                }
+            }
         }
     }
 
@@ -142,15 +151,6 @@ internal class OnrampOperationModel @Inject constructor(
         )
 
         router.pop()
-    }
-
-    private fun getBuyAction(status: CryptoCurrencyStatus, appCurrencyCode: String): TradeCryptoAction {
-        return TradeCryptoAction.Buy(
-            userWallet = selectedUserWallet,
-            cryptoCurrencyStatus = status,
-            source = OnrampSource.ACTION_BUTTONS,
-            appCurrencyCode = appCurrencyCode,
-        )
     }
 
     private fun showErrorIfDemoModeOrElse(action: () -> Unit) {

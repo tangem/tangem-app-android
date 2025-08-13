@@ -127,7 +127,7 @@ fun InputRowRecipient(
                 ) {
                     if (isRedesignEnabled) {
                         QrButton(
-                            visible = !singleLine,
+                            visible = value.isBlank(),
                             onQrCodeClick = onQrCodeClick,
                         )
                     }
