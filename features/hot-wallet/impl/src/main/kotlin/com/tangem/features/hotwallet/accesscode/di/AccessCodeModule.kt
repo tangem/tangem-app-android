@@ -1,7 +1,7 @@
-package com.tangem.features.hotwallet.setaccesscode.di
+package com.tangem.features.hotwallet.accesscode.di
 
 import com.tangem.core.decompose.model.Model
-import com.tangem.features.hotwallet.setaccesscode.AccessCodeModel
+import com.tangem.features.hotwallet.accesscode.AccessCodeModel
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
