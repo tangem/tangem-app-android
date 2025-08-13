@@ -11,7 +11,7 @@ import com.tangem.features.hotwallet.addexistingwallet.entry.routing.AddExisting
 import com.tangem.features.hotwallet.addexistingwallet.im.port.AddExistingWalletImportComponent
 import com.tangem.features.hotwallet.addexistingwallet.start.AddExistingWalletStartComponent
 import com.tangem.features.hotwallet.manualbackup.completed.ManualBackupCompletedComponent
-import com.tangem.features.hotwallet.setaccesscode.AccessCodeComponent
+import com.tangem.features.hotwallet.accesscode.AccessCodeComponent
 import com.tangem.features.hotwallet.setupfinished.MobileWalletSetupFinishedComponent
 import com.tangem.features.hotwallet.stepper.api.HotWalletStepperComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
