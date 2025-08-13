@@ -495,6 +495,7 @@
   <string name="hw_create_seed_description">Stay up to date with the latest features and news</string>
   <string name="hw_create_seed_title">Seed phrase backup</string>
   <string name="hw_create_title">Create Mobile Wallet</string>
+  <string name="hw_import_seed_phrase_already_imported">This recovery phrase has already been imported</string>
   <string name="hw_mobile_wallet">Mobile Wallet</string>
   <string name="information_generated_with_ai">This information was generated with AI.\nTap here, if you find any errors.</string>
   <string name="initial_message_change_access_code_body">To change the access code tap the card or ring as shown above and do not remove until the end of the operation</string>
@@ -1504,12 +1505,18 @@
   <string name="warning_token_trustline_button_title">Enable Trustline</string>
   <string name="warning_token_trustline_subtitle">A Trustline must be enabled to receive this token. The network requires a %1$s %2$s reserve.</string>
   <string name="warning_token_trustline_title">Trustline Required</string>
+  <string name="wc_alert_add_network_to_portfolio_description">The required network %s is not added to your portfolio. Add it first, then proceed with the connection.</string>
+  <string name="wc_alert_add_network_to_portfolio_title">Add network to portfolio</string>
   <string name="wc_alert_audit_malicious_domain">Malicious domain</string>
   <string name="wc_alert_audit_unknown_domain">Unknown domain</string>
   <string name="wc_alert_connect_anyway">Connect anyway</string>
   <string name="wc_alert_connection_timeout_description">Timeout error. Please, try again later.</string>
   <string name="wc_alert_connection_timeout_title">Failed to establish WalletConnect</string>
   <string name="wc_alert_domain_issues_description">This domain cannot be verified. Check the request carefully approving.</string>
+  <string name="wc_alert_network_not_connected_description">To continue, please reconnect your dApp session with the required network %s.</string>
+  <string name="wc_alert_network_not_connected_title">Network not connected</string>
+  <string name="wc_alert_request_timeout_description">Check your network connection</string>
+  <string name="wc_alert_request_timeout_title">Request timeout</string>
   <string name="wc_alert_session_disconnected_description">Please return to your browser and reconnect via WalletConnect.</string>
   <string name="wc_alert_session_disconnected_title">Wallet Connect session was disconnected</string>
   <string name="wc_alert_sign_anyway">Sign anyway</string>
@@ -1520,6 +1527,8 @@
   <string name="wc_alert_unsupported_dapps_title">Unsupported dApp</string>
   <string name="wc_alert_unsupported_method_description">Error code: 8 005. If the problem persists — feel free to contact our support.</string>
   <string name="wc_alert_unsupported_method_title">We\'ve encountered unknown error</string>
+  <string name="wc_alert_unsupported_network_description">This network %s is not supported by Tangem Wallet and cannot be connected.</string>
+  <string name="wc_alert_unsupported_network_title">Unsupported network</string>
   <string name="wc_alert_unsupported_networks_description">Tangem does not currently support a required network by %s.</string>
   <string name="wc_alert_unsupported_networks_title">Unsupported networks</string>
   <string name="wc_alert_verified_domain_description">This domain has passed verification checks and is considered safe, reputable, and free from known threats or suspicious activity. %s</string>
