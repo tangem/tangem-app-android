@@ -121,6 +121,7 @@
   <string name="common_claim_rewards">Вывести награду</string>
   <string name="common_close">Закрыть</string>
   <string name="common_confirm">Подтвердить</string>
+  <string name="common_connecting">Подключение</string>
   <string name="common_continue">Продолжить</string>
   <string name="common_copy">Копировать</string>
   <string name="common_copy_address">Скопировать адрес</string>
@@ -219,6 +220,12 @@
   <string name="common_terms_and_conditions">условия участия</string>
   <string name="common_terms_of_use">Условиями использования</string>
   <string name="common_today">Сегодня</string>
+  <plurals name="common_tokens_count">
+    <item quantity="one">%d токен</item>
+    <item quantity="few">%d токена</item>
+    <item quantity="many">%d токенов</item>
+    <item quantity="other">%d токенов</item>
+  </plurals>
   <string name="common_transaction_failed">Ошибка транзакции</string>
   <string name="common_transaction_status">Статус транзакции</string>
   <string name="common_transactions">Транзакции</string>
@@ -895,6 +902,18 @@
   <string name="send_validation_invalid_amount">Недопустимая сумма</string>
   <string name="send_validation_invalid_fee">Комиссия превышает остаток</string>
   <string name="send_validation_invalid_total">Отправляемая сумма превышает остаток</string>
+  <string name="send_with_swap_change_token_alert_message">Вы уверены, что хотите изменить токен для получения? Это действие сбросит ранее введённые данные.</string>
+  <string name="send_with_swap_change_token_alert_title">Изменение токена</string>
+  <string name="send_with_swap_confirm_title">Обмен и отправка</string>
+  <string name="send_with_swap_convert_token_alert_message">Продолжить с конвертацией? Это действие удалит предыдущие данные</string>
+  <string name="send_with_swap_convert_token_alert_title">Подтвердить конвертацию</string>
+  <string name="send_with_swap_notification_text">Отправьте любой токен, и мы конвертируем его по пути. Адресат получит именно то, что нужно — без лишних действий.</string>
+  <string name="send_with_swap_recipient_amount_success_title">Будет получено</string>
+  <string name="send_with_swap_recipient_amount_text">Получателю</string>
+  <string name="send_with_swap_recipient_amount_title">Сумма к получению</string>
+  <string name="send_with_swap_remove_convert_alert_message">Вы уверены, что хотите отменить конвертацию? Ваши предыдущие данные будут удалены.</string>
+  <string name="send_with_swap_remove_convert_alert_title">Убрать конвертацию</string>
+  <string name="send_with_swap_title">Отправка с обменом</string>
   <string name="sent_transaction_sent_title">Транзакция отправлена</string>
   <string name="settings_card_settings_footer">Подготовьтесь к сканированию кольца или карты, которую вы хотите настроить.</string>
   <string name="settings_forget_wallet">Забыть кошелек</string>
