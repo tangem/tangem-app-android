@@ -3,8 +3,8 @@ package com.tangem.feature.swap.converters
 import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
 import com.tangem.data.common.currency.UserTokensResponseFactory
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatusModel
 import com.tangem.feature.swap.domain.models.domain.SavedSwapTransactionListModel
 import com.tangem.feature.swap.domain.models.domain.SavedSwapTransactionListModelInner
@@ -32,8 +32,9 @@ internal class SavedSwapTransactionListConverter(
 
     fun convertBack(
         value: SavedSwapTransactionListModelInner,
-        scanResponse: ScanResponse,
+        userWallet: UserWallet,
         txStatuses: Map<String, ExchangeStatusModel>,
+        onFilter: (SavedSwapTransactionModel) -> Boolean = { true },
     ): SavedSwapTransactionListModel? {
         val fromToken = value.fromTokensResponse
         val toToken = value.toTokensResponse
@@ -42,25 +43,27 @@ internal class SavedSwapTransactionListConverter(
         } else {
             val fromCryptoCurrency = responseCryptoCurrenciesFactory.createCurrency(
                 responseToken = fromToken,
-                scanResponse = scanResponse,
+                userWallet = userWallet,
             ) ?: return null
             val toCryptoCurrency = responseCryptoCurrenciesFactory.createCurrency(
                 responseToken = toToken,
-                scanResponse = scanResponse,
+                userWallet = userWallet,
             ) ?: return null
 
             return SavedSwapTransactionListModel(
-                transactions = value.transactions.map { tx ->
-                    val status = txStatuses[tx.txId]
-                    val refundCurrency = status?.refundTokensResponse?.let { id ->
-                        responseCryptoCurrenciesFactory.createCurrency(
-                            responseToken = id,
-                            scanResponse = scanResponse,
-                        )
-                    }
-                    val statusWithRefundCurrency = status?.copy(refundCurrency = refundCurrency)
-                    tx.copy(status = statusWithRefundCurrency)
-                },
+                transactions = value.transactions
+                    .filter(onFilter)
+                    .map { tx ->
+                        val status = txStatuses[tx.txId]
+                        val refundCurrency = status?.refundTokensResponse?.let { id ->
+                            responseCryptoCurrenciesFactory.createCurrency(
+                                responseToken = id,
+                                userWallet = userWallet,
+                            )
+                        }
+                        val statusWithRefundCurrency = status?.copy(refundCurrency = refundCurrency)
+                        tx.copy(status = statusWithRefundCurrency)
+                    },
                 userWalletId = value.userWalletId,
                 fromCryptoCurrencyId = value.fromCryptoCurrencyId,
                 toCryptoCurrencyId = value.toCryptoCurrencyId,

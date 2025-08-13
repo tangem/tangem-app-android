@@ -1,6 +1,6 @@
 package com.tangem.feature.wallet.presentation.organizetokens.utils.converter.items
 
-import com.tangem.domain.tokens.model.NetworkGroup
+import com.tangem.domain.models.tokenlist.TokenList.GroupedByNetwork.NetworkGroup
 import com.tangem.feature.wallet.presentation.organizetokens.model.DraggableItem
 import com.tangem.feature.wallet.presentation.organizetokens.utils.common.getGroupHeaderId
 import com.tangem.feature.wallet.presentation.organizetokens.utils.common.getGroupPlaceholder

@@ -2,6 +2,7 @@ package com.tangem.tap.common.extensions
 
 import com.tangem.core.analytics.Analytics
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.tap.common.analytics.paramsInterceptor.LinkedCardContextInterceptor
 
@@ -19,6 +20,15 @@ fun Analytics.setContext(scanResponse: ScanResponse) {
     }
 
     addParamsInterceptor(LinkedCardContextInterceptor(scanResponse))
+}
+
+fun Analytics.setContext(userWallet: UserWallet) {
+    setUserId(userWallet.walletId.stringValue)
+    // TODO add product type for hot ([REDACTED_TASK_KEY] [Hot Wallet] Analytics)
+
+    if (userWallet is UserWallet.Cold) {
+        addParamsInterceptor(LinkedCardContextInterceptor(userWallet.scanResponse))
+    }
 }
 
 /**
