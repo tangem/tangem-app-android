@@ -22,6 +22,8 @@ import com.tangem.features.nft.component.NFTComponent
 import com.tangem.features.onboarding.v2.entry.OnboardingEntryComponent
 import com.tangem.features.onramp.component.*
 import com.tangem.features.pushnotifications.api.PushNotificationsComponent
+import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacksStub
+import com.tangem.features.pushnotifications.api.PushNotificationsParams
 import com.tangem.features.send.v2.api.NFTSendComponent
 import com.tangem.features.send.v2.api.SendComponent
 import com.tangem.features.staking.api.StakingComponent
@@ -370,7 +372,9 @@ internal class ChildFactory @Inject constructor(
             is AppRoute.PushNotification -> {
                 createComponentChild(
                     context = context,
-                    params = Unit,
+                    params = PushNotificationsParams(
+                        modelCallbacks = PushNotificationsModelCallbacksStub(),
+                    ),
                     componentFactory = pushNotificationsComponentFactory,
                 )
             }
