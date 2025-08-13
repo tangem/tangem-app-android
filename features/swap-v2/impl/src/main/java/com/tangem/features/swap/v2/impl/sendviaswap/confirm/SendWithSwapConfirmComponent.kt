@@ -11,6 +11,7 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.models.SwapDirection
@@ -104,7 +105,10 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
             appCurrency = params.appCurrency,
             callback = model,
             notificationData = SendNotificationsComponent.Params.NotificationData(
-                destinationAddress = model.confirmData.enteredDestination.orEmpty(),
+                destinationAddress = when (val currency = model.primaryCurrencyStatus.currency) {
+                    is CryptoCurrency.Token -> currency.contractAddress
+                    is CryptoCurrency.Coin -> "0"
+                },
                 memo = null,
                 amountValue = model.confirmData.enteredAmount.orZero(),
                 reduceAmountBy = model.confirmData.reduceAmountBy.orZero(),
