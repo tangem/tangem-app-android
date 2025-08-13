@@ -83,6 +83,7 @@ sealed class AnalyticsParam {
         data object Onboarding : ScreensSources("Onboarding")
         data object LongTap : ScreensSources("Long Tap")
         data object Markets : ScreensSources("Markets")
+        data object HotWallet : ScreensSources("Hot Wallet")
     }
 
     sealed class TxSentFrom(val value: String) {
@@ -222,5 +223,6 @@ sealed class AnalyticsParam {
         const val NONCE = "Nonce"
         const val STANDARD = "Standard"
         const val NO_COLLECTION = "No collection"
+        const val EMULATION_STATUS = "Emulation Status"
     }
 }
