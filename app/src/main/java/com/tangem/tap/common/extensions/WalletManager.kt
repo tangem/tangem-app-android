@@ -3,16 +3,11 @@ package com.tangem.tap.common.extensions
 import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.common.WalletManager
-import com.tangem.blockchain.common.address.AddressType
 import com.tangem.blockchainsdk.utils.amountToCreateAccount
 import com.tangem.common.services.Result
-import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.tap.common.TestActions
-import com.tangem.tap.common.apptheme.MutableAppThemeModeHolder
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.getFirstToken
-import com.tangem.tap.domain.model.WalletAddressData
-import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
 import kotlinx.coroutines.delay
@@ -57,43 +52,4 @@ suspend fun WalletManager.safeUpdate(isDemoCard: Boolean): Result<Wallet> = try 
             }
         }
     }
-}
-
-internal fun WalletManager.getTopUpUrl(cryptoCurrency: CryptoCurrency): String? {
-    val globalState = store.state.globalState
-    val defaultAddress = wallet.address
-
-    return globalState.exchangeManager.getUrl(
-        action = CurrencyExchangeManager.Action.Buy,
-        cryptoCurrency = cryptoCurrency,
-        fiatCurrencyName = globalState.appCurrency.code,
-        walletAddress = defaultAddress,
-        isDarkTheme = MutableAppThemeModeHolder.isDarkThemeActive,
-    )
-}
-
-internal fun WalletManager?.getAddressData(): WalletAddressData? {
-    val wallet = this?.wallet ?: return null
-
-    val addressDataList = wallet.createAddressesData()
-    return if (addressDataList.isEmpty()) null else addressDataList[0]
-}
-
-private fun Wallet.createAddressesData(): List<WalletAddressData> {
-    val listOfAddressData = mutableListOf<WalletAddressData>()
-    // put a defaultAddress at the first place
-    addresses.forEach {
-        val addressData = WalletAddressData(
-            it.value,
-            it.type,
-            getShareUri(it.value),
-            getExploreUrl(it.value),
-        )
-        if (it.type == AddressType.Default) {
-            listOfAddressData.add(0, addressData)
-        } else {
-            listOfAddressData.add(addressData)
-        }
-    }
-    return listOfAddressData
 }
