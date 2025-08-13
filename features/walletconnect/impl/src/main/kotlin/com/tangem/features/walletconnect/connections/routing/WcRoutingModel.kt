@@ -57,7 +57,7 @@ internal class WcRoutingModel @Inject constructor(
                     WcSolanaMethodName.SendAllTransaction,
                     -> WcInnerRoute.Send(rawRequest)
                     is WcMethodName.Unsupported,
-                    -> WcInnerRoute.UnsupportedMethodAlert(rawRequest)
+                    -> WcInnerRoute.UnsupportedMethodAlert
                 }
             }
 
