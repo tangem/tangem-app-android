@@ -32,10 +32,7 @@ import com.tangem.core.ui.components.SpacerH24
 import com.tangem.core.ui.components.SpacerH8
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.components.fields.AutoSizeTextField
-import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.domain.models.account.CryptoPortfolioIcon
@@ -76,7 +73,7 @@ internal fun AccountCreateEditContent(state: AccountCreateEditUM, modifier: Modi
             SpacerH8()
             Text(
                 modifier = Modifier.padding(horizontal = 8.dp),
-                text = state.account.derivationInfo.resolveReference(),
+                text = state.account.derivationInfo.text.resolveReference(),
                 style = TangemTheme.typography.caption2,
                 color = TangemTheme.colors.text.tertiary,
             )
@@ -93,7 +90,7 @@ internal fun AccountCreateEditContent(state: AccountCreateEditUM, modifier: Modi
 }
 
 @Composable
-private fun AccountSummary(account: AccountCreateEditUM.Account) {
+private fun AccountSummary(account: Account) {
     Column(
         modifier = Modifier
             .clip(RoundedCornerShape(16.dp))
@@ -126,7 +123,7 @@ private fun AccountSummary(account: AccountCreateEditUM.Account) {
 }
 
 @Composable
-private fun AccountIcon(account: AccountCreateEditUM.Account) {
+private fun AccountIcon(account: Account) {
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
@@ -308,7 +305,10 @@ private class PreviewStateProvider : CollectionPreviewParameterProvider<AccountC
                 portfolioIcon = portfolioIcon,
                 inputPlaceholder = resourceReference(R.string.account_form_placeholder_new_account),
                 onNameChange = {},
-                derivationInfo = stringReference("Account #03 — used for address derivation."),
+                derivationInfo = AccountCreateEditUM.DerivationInfo.Content(
+                    text = resourceReference(id = R.string.account_form_account_index, formatArgs = wrappedList(1)),
+                    index = 1,
+                ),
             ),
             colorsState = AccountCreateEditUM.Colors(
                 selected = portfolioIcon.color,
@@ -340,7 +340,10 @@ private class PreviewStateProvider : CollectionPreviewParameterProvider<AccountC
                 name = "Main account",
                 inputPlaceholder = resourceReference(R.string.account_form_placeholder_edit_account),
                 onNameChange = {},
-                derivationInfo = stringReference("Account #03 — used for address derivation."),
+                derivationInfo = AccountCreateEditUM.DerivationInfo.Content(
+                    text = resourceReference(id = R.string.account_form_account_index, formatArgs = wrappedList(1)),
+                    index = 1,
+                ),
             ),
             colorsState = AccountCreateEditUM.Colors(
                 selected = portfolioIcon.color,
