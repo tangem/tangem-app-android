@@ -293,6 +293,8 @@
   <string name="details_title">Détails</string>
   <string name="disclaimer_error_loading">Vérifiez votre connexion Internet ou passez à un réseau différent</string>
   <string name="disclaimer_title">Conditions d\'utilisation</string>
+  <string name="email_preface_wc_error">Bonjour équipe de support, j’ai rencontré une erreur avec le code : %s</string>
+  <string name="email_subject_wc_error">Erreur WalletConnect</string>
   <string name="error_wrong_wallet_tapped">Vous avez utilisé une carte d\'un autre portefeuille. Appuyez sur la carte associée à ce portefeuille</string>
   <string name="eth_gas_required_exceeds_allowance">Pas assez de fonds pour la transaction. Veuillez recharger votre compte.</string>
   <string name="exchange_tokens_available_tokens_header">Mes jetons</string>
@@ -1332,6 +1334,12 @@
   <string name="wc_disconnect_all">Déconnecter tout</string>
   <string name="wc_disconnect_all_alert_desc">Texte sur la déconnexion de toutes les dApps</string>
   <string name="wc_disconnect_all_alert_title">Déconnecter toutes les dApps</string>
+  <string name="wc_errors_invalid_domain_subtitle">Essayez de jumeler à nouveau avec un nouvel URI</string>
+  <string name="wc_errors_invalid_domain_title">Domaine dApp invalide</string>
+  <string name="wc_errors_no_blockchains_subtitle">%s ne spécifie aucune blockchain — ni requise ni optionnelle.\nVeuillez vous assurer que vous avez utilisé l’URI correct</string>
+  <string name="wc_errors_no_blockchains_title">Aucun réseau</string>
+  <string name="wc_errors_proposal_expired_subtitle">Veuillez générer un nouvel URI et essayer de vous connecter à nouveau</string>
+  <string name="wc_errors_proposal_expired_title">La proposition de connexion a expiré</string>
   <string name="wc_estimated_wallet_changes">Modifications estimées du portefeuille</string>
   <string name="wc_estimated_wallet_changes_not_simulated">La transaction n\'a pas pu être simulée. Veuillez procéder avec prudence.</string>
   <string name="wc_malicious_transaction">Transaction malveillante</string>
