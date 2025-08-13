@@ -6,7 +6,7 @@ import com.tangem.features.hotwallet.manualbackup.check.ManualBackupCheckCompone
 import com.tangem.features.hotwallet.manualbackup.completed.ManualBackupCompletedComponent
 import com.tangem.features.hotwallet.manualbackup.phrase.ManualBackupPhraseComponent
 import com.tangem.features.hotwallet.manualbackup.start.ManualBackupStartComponent
-import com.tangem.features.hotwallet.setaccesscode.AccessCodeComponent
+import com.tangem.features.hotwallet.accesscode.AccessCodeComponent
 import com.tangem.features.hotwallet.setupfinished.MobileWalletSetupFinishedComponent
 import com.tangem.features.hotwallet.walletactivation.entry.WalletActivationModel
 import com.tangem.features.pushnotifications.api.PushNotificationsComponent
