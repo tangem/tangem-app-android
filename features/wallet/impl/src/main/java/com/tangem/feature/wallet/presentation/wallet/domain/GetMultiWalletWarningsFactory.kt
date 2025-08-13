@@ -1,21 +1,21 @@
 package com.tangem.feature.wallet.presentation.wallet.domain
 
 import com.tangem.core.decompose.di.ModelScoped
-import com.tangem.domain.common.CardTypesResolver
-import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.card.CardTypesResolver
+import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.tokenlist.TokenList
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.promo.ShouldShowPromoWalletUseCase
 import com.tangem.domain.promo.models.PromoId
 import com.tangem.domain.settings.IsReadyToShowRateAppUseCase
 import com.tangem.domain.tokens.error.TokenListError
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.model.TokenList
-import com.tangem.domain.tokens.model.TotalFiatBalance
 import com.tangem.domain.wallets.models.SeedPhraseNotificationsStatus
-import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
 import com.tangem.domain.wallets.usecase.SeedPhraseNotificationUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
@@ -25,7 +25,6 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import javax.inject.Inject
-import kotlin.collections.count
 
 @Suppress("LongParameterList")
 @ModelScoped
@@ -54,6 +53,8 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
                 addUsedOutdatedDataNotification(maybeTokenList)
 
                 addCriticalNotifications(userWallet, seedPhraseIssueStatus, clickIntents)
+
+                addFinishWalletActivationNotification(userWallet, clickIntents)
 
                 addReferralPromoNotification(cardTypesResolver, clickIntents, shouldShowReferralPromo)
 
@@ -257,6 +258,22 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
 
     private fun MutableList<WalletNotification>.addIf(element: WalletNotification, condition: Boolean) {
         if (condition) add(element = element)
+    }
+
+    private fun MutableList<WalletNotification>.addFinishWalletActivationNotification(
+        userWallet: UserWallet,
+        clickIntents: WalletClickIntents,
+    ) {
+        if (userWallet !is UserWallet.Hot) return
+
+        val shouldShowFinishActivation = !userWallet.backedUp
+
+        addIf(
+            element = WalletNotification.FinishWalletActivation(
+                onFinishClick = clickIntents::onFinishWalletActivationClick,
+            ),
+            condition = shouldShowFinishActivation,
+        )
     }
 
     private companion object {
