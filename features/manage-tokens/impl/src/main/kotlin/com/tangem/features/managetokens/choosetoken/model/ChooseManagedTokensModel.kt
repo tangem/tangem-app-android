@@ -3,7 +3,9 @@ package com.tangem.features.managetokens.choosetoken.model
 import androidx.annotation.StringRes
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
+import com.tangem.common.ui.notifications.NotificationId
 import com.tangem.common.ui.notifications.NotificationUM
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -15,11 +17,13 @@ import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.domain.notifications.SetShouldShowNotificationUseCase
 import com.tangem.features.managetokens.choosetoken.entity.ChooseManageTokensBottomSheetConfig
 import com.tangem.features.managetokens.choosetoken.entity.ChooseManagedTokenUM
 import com.tangem.features.managetokens.component.ChooseManagedTokensComponent
 import com.tangem.features.managetokens.component.ChooseManagedTokensComponent.Source
 import com.tangem.features.managetokens.component.ManageTokensSource
+import com.tangem.features.managetokens.component.analytics.CommonManageTokensAnalyticEvents
 import com.tangem.features.managetokens.entity.item.CurrencyItemUM
 import com.tangem.features.managetokens.entity.managetokens.ManageTokensTopBarUM
 import com.tangem.features.managetokens.entity.managetokens.ManageTokensUM
@@ -38,11 +42,14 @@ import timber.log.Timber
 import javax.inject.Inject
 import kotlin.collections.isNotEmpty
 
+@Suppress("LongParameterList")
 @ModelScoped
 internal class ChooseManagedTokensModel @Inject constructor(
     private val router: Router,
     override val dispatchers: CoroutineDispatcherProvider,
     private val uiMessageSender: UiMessageSender,
+    private val setShouldShowNotificationUseCase: SetShouldShowNotificationUseCase,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     paramsContainer: ParamsContainer,
     manageTokensListManagerFactory: ManageTokensListManager.Factory,
 ) : Model() {
@@ -55,7 +62,9 @@ internal class ChooseManagedTokensModel @Inject constructor(
                 ChooseManageTokensBottomSheetConfig.SwapTokensBottomSheetConfig(
                     userWalletId = params.userWalletId,
                     initialCurrency = params.initialCurrency,
+                    selectedCurrency = params.selectedCurrency,
                     token = token,
+                    isSearchedToken = uiState.value.readContent.search.isActive,
                 ),
             )
         },
@@ -85,13 +94,13 @@ internal class ChooseManagedTokensModel @Inject constructor(
         return ChooseManagedTokenUM(
             notificationUM = getNotification(),
             readContent = ManageTokensUM.ReadContent(
-                popBack = router::pop,
+                popBack = { params.callback?.onBack() ?: router.pop() },
                 isInitialBatchLoading = true,
                 isNextBatchLoading = false,
                 items = getLoadingItems(),
                 topBar = ManageTokensTopBarUM.ReadContent(
                     title = resourceReference(R.string.common_choose_token),
-                    onBackButtonClick = router::pop,
+                    onBackButtonClick = { params.callback?.onBack() ?: router.pop() },
                 ),
                 search = SearchBarUM(
                     placeholderText = resourceReference(R.string.common_search),
@@ -106,18 +115,21 @@ internal class ChooseManagedTokensModel @Inject constructor(
     }
 
     private fun getNotification(): NotificationUM? {
-        return when (params.source) {
-            Source.SendViaSwap -> ChooseManagedTokensNotificationUM.SendViaSwap(
-                onCloseClick = ::removeNotification,
-            )
+        return if (params.source == Source.SendViaSwap && params.showSendViaSwapNotification) {
+            ChooseManagedTokensNotificationUM.SendViaSwap(onCloseClick = ::removeNotification)
+        } else {
+            null
         }
     }
 
     private fun removeNotification() {
-        uiState.update {
-            it.copy(
-                notificationUM = null,
-            )
+        modelScope.launch {
+            setShouldShowNotificationUseCase(NotificationId.SendViaSwapTokenSelectorNotification.key, false)
+            uiState.update {
+                it.copy(
+                    notificationUM = null,
+                )
+            }
         }
     }
 
@@ -125,6 +137,17 @@ internal class ChooseManagedTokensModel @Inject constructor(
     private fun observeSearchQueryChanges() {
         uiState
             .distinctUntilChanged { old, new ->
+                if (!new.readContent.search.isActive && old.readContent.search.isActive) {
+                    analyticsEventHandler.send(
+                        CommonManageTokensAnalyticEvents.TokenSearched(
+                            params.analyticsCategoryName,
+                            token = null,
+                            blockchain = null,
+                            isTokenChosen = false,
+                        ),
+                    )
+                }
+
                 // It's also used to skip search activation to avoid searching an empty query
                 old.readContent.search.query == new.readContent.search.query && new.readContent.search.isActive
             }
@@ -244,6 +267,11 @@ internal class ChooseManagedTokensModel @Inject constructor(
     }
 
     private fun toggleSearchBar(isActive: Boolean) {
+        if (isActive) {
+            analyticsEventHandler.send(
+                CommonManageTokensAnalyticEvents.TokenSearchClicked(params.analyticsCategoryName),
+            )
+        }
         uiState.update { state ->
             @StringRes val placeholderTextRes = if (isActive) {
                 R.string.manage_tokens_search_placeholder
