@@ -3,8 +3,8 @@ package com.tangem.datasource.exchangeservice.swap
 import com.tangem.datasource.api.express.models.request.LeastTokenInfo
 import com.tangem.datasource.api.express.models.response.Asset
 import com.tangem.domain.core.lce.Lce
-import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.coroutines.flow.Flow
 
 /**
