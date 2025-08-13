@@ -4,6 +4,7 @@ import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
 import com.tangem.features.send.v2.send.confirm.model.SendConfirmModel
 import com.tangem.features.send.v2.send.model.SendModel
+import com.tangem.features.send.v2.send.success.model.SendConfirmSuccessModel
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -23,4 +24,9 @@ internal interface CommonSendModelModule {
     @IntoMap
     @ClassKey(SendConfirmModel::class)
     fun provideSendConfirmModel(model: SendConfirmModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(SendConfirmSuccessModel::class)
+    fun provideSendConfirmSuccessModel(model: SendConfirmSuccessModel): Model
 }
