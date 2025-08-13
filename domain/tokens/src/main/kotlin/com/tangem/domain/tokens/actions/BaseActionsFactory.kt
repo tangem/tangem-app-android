@@ -2,15 +2,15 @@ package com.tangem.domain.tokens.actions
 
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.NetworkAddress
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.model.StakingAvailability
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState.ActionState
 import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.withTimeoutOrNull
 
@@ -56,16 +56,24 @@ internal open class BaseActionsFactory(
      *
      * @param userWallet the user's cold wallet
      * @param currency   the cryptocurrency to check
+     * @param requirementsDeferred a deferred object containing the asset requirements condition
      */
     protected suspend fun getOnrampUnavailabilityReason(
-        userWallet: UserWallet.Cold,
+        userWallet: UserWallet,
         currency: CryptoCurrency,
+        requirementsDeferred: Deferred<AssetRequirementsCondition?>?,
     ): ScenarioUnavailabilityReason {
-        return rampStateManager.availableForBuy(
-            userWalletId = userWallet.walletId,
-            scanResponse = userWallet.scanResponse,
+        val onrampUnavailabilityReason = rampStateManager.availableForBuy(
+            userWallet = userWallet,
             cryptoCurrency = currency,
         )
+        val shouldCheckAssetRequirements =
+            onrampUnavailabilityReason == ScenarioUnavailabilityReason.None && requirementsDeferred != null
+        return if (shouldCheckAssetRequirements) {
+            getReceiveScenario(requirementsDeferred.await())
+        } else {
+            onrampUnavailabilityReason
+        }
     }
 
     /**
@@ -174,7 +182,7 @@ internal open class BaseActionsFactory(
         }
     }
 
-    private fun getReceiveScenario(requirements: AssetRequirementsCondition?): ScenarioUnavailabilityReason {
+    protected fun getReceiveScenario(requirements: AssetRequirementsCondition?): ScenarioUnavailabilityReason {
         return when (requirements) {
             AssetRequirementsCondition.PaidTransaction,
             is AssetRequirementsCondition.PaidTransactionWithFee,
