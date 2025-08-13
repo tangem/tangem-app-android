@@ -54,10 +54,18 @@ internal class WcSendTransactionUMConverter @Inject constructor(
                     isLoading = value.signState.domainStep == WcSignStep.Signing,
                     address = WcAddressConverter.convert(value.context.derivationState),
                     transactionValidationResult = value.securityCheck?.result?.validation,
-                    sendEnabled = value.feeSelectorUM is FeeSelectorUM.Content && feeErrorNotification == null,
+                    sendEnabled = when (value.feeState) {
+                        WcTransactionFeeState.None -> feeErrorNotification == null
+                        is WcTransactionFeeState.Success -> {
+                            value.feeSelectorUM is FeeSelectorUM.Content && feeErrorNotification == null
+                        }
+                    },
                     feeErrorNotification = feeErrorNotification,
                 ),
-                feeSelectorUM = value.feeSelectorUM ?: FeeSelectorUM.Loading,
+                feeSelectorUM = when (value.feeState) {
+                    WcTransactionFeeState.None -> FeeSelectorUM.Loading
+                    is WcTransactionFeeState.Success -> value.feeSelectorUM ?: FeeSelectorUM.Loading
+                },
                 transactionRequestInfo = WcTransactionRequestInfoUM(
                     blocks = buildList {
                         addAll(
