@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.domain.blockaid.models.transaction.ValidationResult
+import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.PrimaryButtonIconEnd
 import com.tangem.core.ui.components.SecondaryButton
 import com.tangem.core.ui.extensions.TextReference
@@ -17,9 +19,11 @@ import com.tangem.features.walletconnect.impl.R
 internal fun WcTransactionRequestButtons(
     activeButtonText: TextReference,
     isLoading: Boolean,
+    validationResult: ValidationResult?,
     onDismiss: () -> Unit,
     onClickActiveButton: () -> Unit,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
 ) {
     Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8)) {
         SecondaryButton(
@@ -29,14 +33,32 @@ internal fun WcTransactionRequestButtons(
             text = stringResourceSafe(R.string.common_cancel),
             onClick = onDismiss,
         )
-        PrimaryButtonIconEnd(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
-            text = activeButtonText.resolveReference(),
-            onClick = onClickActiveButton,
-            iconResId = R.drawable.ic_tangem_24,
-            showProgress = isLoading,
-        )
+        // Before change, make sure you are align with WcSendTransactionModel::onSign
+        when (validationResult) {
+            ValidationResult.UNSAFE,
+            ValidationResult.WARNING,
+            -> PrimaryButton(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                text = stringResourceSafe(R.string.common_continue),
+                onClick = onClickActiveButton,
+                showProgress = isLoading,
+                enabled = enabled,
+            )
+            ValidationResult.SAFE,
+            ValidationResult.FAILED_TO_VALIDATE,
+            null,
+            -> PrimaryButtonIconEnd(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                text = activeButtonText.resolveReference(),
+                onClick = onClickActiveButton,
+                iconResId = R.drawable.ic_tangem_24,
+                showProgress = isLoading,
+                enabled = enabled,
+            )
+        }
     }
 }

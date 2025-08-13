@@ -1,11 +1,11 @@
 package com.tangem.domain.tokens.actions
 
 import com.tangem.domain.exchange.RampStateManager
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState.ActionState
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.models.UserWallet
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 
@@ -22,7 +22,7 @@ internal class UnreachableActionsFactory(
     rampStateManager: RampStateManager,
 ) : BaseActionsFactory(walletManagersFacade, rampStateManager) {
 
-    suspend fun create(userWallet: UserWallet.Cold, cryptoCurrencyStatus: CryptoCurrencyStatus): Set<ActionState> =
+    suspend fun create(userWallet: UserWallet, cryptoCurrencyStatus: CryptoCurrencyStatus): Set<ActionState> =
         coroutineScope {
             val isAddressAvailable = isAddressAvailable(cryptoCurrencyStatus.value.networkAddress)
 
@@ -36,7 +36,11 @@ internal class UnreachableActionsFactory(
             }
 
             val onrampUnavailabilityReasonDeferred = async {
-                getOnrampUnavailabilityReason(userWallet = userWallet, currency = cryptoCurrencyStatus.currency)
+                getOnrampUnavailabilityReason(
+                    userWallet = userWallet,
+                    currency = cryptoCurrencyStatus.currency,
+                    requirementsDeferred = requirementsDeferred,
+                )
             }
             // endregion
 
