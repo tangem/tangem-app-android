@@ -4,16 +4,20 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.swap.models.SwapDirection
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountFieldUM
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountType
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
-import com.tangem.utils.extensions.isZero
+import com.tangem.utils.isNullOrZero
 import java.math.BigDecimal
 import java.math.RoundingMode
+import kotlin.math.min
 
 internal object SwapAmountQuoteUtils {
+
+    private const val MAX_DECIMALS = 8
+    private const val MIN_DECIMALS = 2
 
     fun calculatePriceImpact(
         fromTokenAmount: BigDecimal,
@@ -28,11 +32,10 @@ internal object SwapAmountQuoteUtils {
             secondaryCryptoCurrencyStatus.value.fiatRate to primaryCryptoCurrencyStatus.value.fiatRate
         }
 
+        if (fromRate.isNullOrZero() || toRate.isNullOrZero()) return null
+
         val fromTokenFiatValue = fromTokenAmount.multiply(fromRate)
         val toTokenFiatValue = toTokenAmount.multiply(toRate)
-
-        // Check for zero division
-        if (fromTokenFiatValue.isZero() || toTokenFiatValue.isZero()) return null
 
         val value = BigDecimal.ONE - toTokenFiatValue.divide(fromTokenFiatValue, 2, RoundingMode.HALF_UP)
 
@@ -41,20 +44,31 @@ internal object SwapAmountQuoteUtils {
         }
     }
 
+    fun calculateRate(fromAmount: BigDecimal, toAmount: BigDecimal, toAmountDecimals: Int): BigDecimal {
+        val rateDecimals = if (toAmountDecimals == 0) MIN_DECIMALS else toAmountDecimals
+        return toAmount.divide(fromAmount, min(rateDecimals, MAX_DECIMALS), RoundingMode.HALF_UP)
+    }
+
     fun SwapAmountUM.updateAmount(
-        onPrimaryAmount: SwapAmountFieldUM.Content.() -> SwapAmountFieldUM,
-        onSecondaryAmount: SwapAmountFieldUM.Content.() -> SwapAmountFieldUM,
+        onPrimaryAmount: SwapAmountFieldUM.Content.(CryptoCurrencyStatus) -> SwapAmountFieldUM,
+        onSecondaryAmount: SwapAmountFieldUM.Content.(CryptoCurrencyStatus) -> SwapAmountFieldUM,
     ): SwapAmountUM {
         if (this !is SwapAmountUM.Content) return this
 
-        return if (
+        val updatedAmountField = if (
             selectedAmountType == SwapAmountType.From && swapDirection == SwapDirection.Direct
         ) {
             val amountFieldUM = primaryAmount as? SwapAmountFieldUM.Content ?: return this
-            copy(primaryAmount = amountFieldUM.onPrimaryAmount())
+            amountFieldUM.onPrimaryAmount(primaryCryptoCurrencyStatus)
         } else {
+            if (secondaryCryptoCurrencyStatus == null) return this
             val amountFieldUM = secondaryAmount as? SwapAmountFieldUM.Content ?: return this
-            copy(secondaryAmount = amountFieldUM.onSecondaryAmount())
+            amountFieldUM.onSecondaryAmount(secondaryCryptoCurrencyStatus)
         }
+
+        return copy(
+            isPrimaryButtonEnabled = updatedAmountField.amountField.isPrimaryButtonEnabled,
+            primaryAmount = updatedAmountField,
+        )
     }
 }
