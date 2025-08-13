@@ -1,10 +1,7 @@
 package com.tangem.tap.di.domain
 
 import com.tangem.domain.account.repository.AccountsCRUDRepository
-import com.tangem.domain.account.usecase.AddCryptoPortfolioUseCase
-import com.tangem.domain.account.usecase.ArchiveCryptoPortfolioUseCase
-import com.tangem.domain.account.usecase.RecoverCryptoPortfolioUseCase
-import com.tangem.domain.account.usecase.UpdateCryptoPortfolioUseCase
+import com.tangem.domain.account.usecase.*
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -43,5 +40,13 @@ internal object AccountDomainModule {
         accountsCRUDRepository: AccountsCRUDRepository,
     ): RecoverCryptoPortfolioUseCase {
         return RecoverCryptoPortfolioUseCase(crudRepository = accountsCRUDRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetUnoccupiedAccountIndexUseCase(
+        accountsCRUDRepository: AccountsCRUDRepository,
+    ): GetUnoccupiedAccountIndexUseCase {
+        return GetUnoccupiedAccountIndexUseCase(crudRepository = accountsCRUDRepository)
     }
 }
