@@ -45,7 +45,7 @@ import kotlinx.collections.immutable.toPersistentList
 internal fun SwapChooseTokenNetworkBottomSheet(config: TangemBottomSheetConfig) {
     TangemModalBottomSheet<SwapChooseTokenNetworkContentUM>(
         config = config,
-        containerColor = TangemTheme.colors.background.tertiary,
+        containerColor = TangemTheme.colors.background.primary,
         title = {
             AnimatedContent(
                 targetState = config.content is SwapChooseTokenNetworkContentUM.Content,
