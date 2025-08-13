@@ -43,8 +43,14 @@ interface AccountsCRUDRepository {
      *
      * @param accountList the list of accounts to be saved.
      */
-    @Throws
     suspend fun saveAccounts(accountList: AccountList)
+
+    /**
+     * Retrieves the total count of accounts associated with a specific user wallet including archived accounts
+     *
+     * @param userWalletId the unique identifier of the user wallet
+     */
+    suspend fun getTotalAccountsCount(userWalletId: UserWalletId): Int
 
     /**
      * Retrieves a user wallet by its unique identifier
@@ -52,6 +58,5 @@ interface AccountsCRUDRepository {
      * @param userWalletId the unique identifier of the user wallet
      * @return the [UserWallet] associated with the given identifier
      */
-    @Throws
     fun getUserWallet(userWalletId: UserWalletId): UserWallet
 }
