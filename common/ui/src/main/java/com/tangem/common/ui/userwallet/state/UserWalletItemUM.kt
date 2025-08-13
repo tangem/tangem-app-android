@@ -1,8 +1,9 @@
 package com.tangem.common.ui.userwallet.state
 
 import com.tangem.core.ui.components.artwork.ArtworkUM
+import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import javax.annotation.concurrent.Immutable
 
 @Immutable
@@ -15,6 +16,7 @@ data class UserWalletItemUM(
     val isEnabled: Boolean,
     val endIcon: EndIcon = EndIcon.None,
     val onClick: () -> Unit,
+    val label: LabelUM? = null,
 ) {
     enum class EndIcon {
         None,

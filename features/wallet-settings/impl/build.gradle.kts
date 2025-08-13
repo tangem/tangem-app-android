@@ -19,6 +19,7 @@ dependencies {
     implementation(projects.features.nft.api)
     implementation(projects.features.onboardingV2.api)
     implementation(projects.features.pushNotifications.api)
+    implementation(projects.features.hotWallet.api)
 
     /* Project - Core */
     implementation(projects.core.decompose)
@@ -31,6 +32,7 @@ dependencies {
 
     /* Project - Domain */
     implementation(projects.domain.legacy)
+    implementation(projects.domain.card)
     implementation(projects.domain.models)
     implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
@@ -63,4 +65,7 @@ dependencies {
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.timber)
     implementation(deps.reKotlin)
+
+    /** Tangem libraries */
+    implementation(tangemDeps.hot.core)
 }

@@ -4,7 +4,7 @@ import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.onramp.model.OnrampCountry
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 
 internal interface ConfirmResidencyComponent : ComposableBottomSheetComponent {
 

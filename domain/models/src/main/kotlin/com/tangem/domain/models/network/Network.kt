@@ -20,6 +20,7 @@ import kotlinx.serialization.Serializable
  * currency (for those blockchains that have FeeResource instead of a standard type of fee)
  * @property canHandleTokens       indicates whether the network can handle tokens
  * @property transactionExtrasType the type of extras supported for sending a transaction
+ * @property nameResolvingType     the type of on-chain name resolution supported by the network (e.g., ENS, SNS etc)
  */
 @Serializable
 data class Network(
@@ -33,6 +34,7 @@ data class Network(
     val hasFiatFeeRate: Boolean,
     val canHandleTokens: Boolean,
     val transactionExtrasType: TransactionExtrasType,
+    val nameResolvingType: NameResolvingType,
 ) {
 
     /** Raw ID */
@@ -148,5 +150,29 @@ data class Network(
 
         /** Destination tag supported */
         DESTINATION_TAG,
+
+        ;
+
+        /**
+         * Indicated whether any tx extras are supported
+         */
+        fun isTxExtrasSupported() = when (this) {
+            NONE -> false
+            MEMO,
+            DESTINATION_TAG,
+            -> true
+        }
+    }
+
+    /**
+     * Represents the type of on-chain name resolution supported by the network.
+     */
+    enum class NameResolvingType {
+
+        /** No name resolution supported */
+        NONE,
+
+        /** Ethereum Name Service (ENS)  */
+        ENS,
     }
 }
