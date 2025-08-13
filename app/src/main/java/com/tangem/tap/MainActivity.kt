@@ -52,7 +52,6 @@ import com.tangem.domain.tokens.GetPolkadotCheckHasImmortalUseCase
 import com.tangem.domain.tokens.GetPolkadotCheckHasResetUseCase
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
-import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.features.walletconnect.components.WalletConnectFeatureToggles
 import com.tangem.google.GoogleServicesHelper
 import com.tangem.operations.backup.BackupService
@@ -464,12 +463,11 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         } else {
             lifecycleScope.launch {
                 val shouldShowTos = !cardRepository.isTangemTOSAccepted()
-                val shouldShowInitialPush = shouldInitiallyAskPermissionUseCase(PUSH_PERMISSION).getOrElse { false }
 
-                val route = when {
-                    shouldShowTos -> AppRoute.Disclaimer(isTosAccepted = false)
-                    shouldShowInitialPush -> AppRoute.PushNotification
-                    else -> AppRoute.Home
+                val route = if (shouldShowTos) {
+                    AppRoute.Disclaimer(isTosAccepted = false)
+                } else {
+                    AppRoute.Home
                 }
 
                 store.dispatchNavigationAction { replaceAll(route) }
