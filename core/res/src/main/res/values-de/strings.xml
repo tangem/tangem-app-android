@@ -1408,6 +1408,7 @@
   <string name="wc_alert_unknown_error_description">Fehlercode: %s. Wenn das Problem weiterhin besteht, wende Dich bitte an unseren Support.</string>
   <string name="wc_alert_unknown_error_description_no_error_code">Wenn das Problem weiterhin besteht, wende Dich bitte an unseren Support.</string>
   <string name="wc_alert_unknown_error_title">Wir haben einen unbekannten Fehler festgestellt.</string>
+  <string name="wc_alert_unsupported_dapps_description">Tangem Wallet unterstützt derzeit nicht %s</string>
   <string name="wc_alert_unsupported_method_description">Fehlercode: 8 005. Wenn das Problem weiterhin besteht, wende Dich bitte an unseren Support.</string>
   <string name="wc_alert_unsupported_method_title">Wir haben einen unbekannten Fehler festgestellt.</string>
   <string name="wc_alert_unsupported_networks_description">Tangem unterstützt derzeit das erforderliches Netzwerk von %s nicht.</string>
@@ -1460,7 +1461,7 @@
   <string name="wc_transaction_request">Transaktionsanfrage</string>
   <string name="wc_transaction_request_title">Transaktionsanfrage</string>
   <string name="wc_unlimited_amount">Unbegrenzte Menge</string>
-  <string name="wc_wallet_connect">Wallet verbinden</string>
+  <string name="wc_wallet_connect">WalletConnect</string>
   <string name="welcome_interrupted_backup_alert_discard">Verwerfen</string>
   <string name="welcome_interrupted_backup_alert_message">Du hast eine unterbrochene Sicherung. Möchtest du diese fortsetzen?</string>
   <string name="welcome_interrupted_backup_alert_resume">Ja, fortsetzen</string>
