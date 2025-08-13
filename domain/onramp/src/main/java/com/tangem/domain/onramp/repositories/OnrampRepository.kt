@@ -4,7 +4,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.onramp.model.*
 import com.tangem.domain.onramp.model.cache.OnrampTransaction
 import com.tangem.domain.tokens.model.Amount
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 import kotlinx.coroutines.flow.Flow
 
 @Suppress("TooManyFunctions")

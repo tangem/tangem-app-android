@@ -373,5 +373,15 @@ sealed class NotificationUM(val config: NotificationConfig) {
                 formatArgs = wrappedList(rentInfo.exemptionAmount),
             ),
         )
+
+        data class RentExemptionDestination(
+            private val rentExemptionAmount: BigDecimal,
+        ) : Error(
+            title = TextReference.Res(R.string.send_notification_invalid_amount_title),
+            subtitle = TextReference.Res(
+                id = R.string.send_notification_invalid_amount_rent_destination,
+                formatArgs = wrappedList(rentExemptionAmount),
+            ),
+        )
     }
 }

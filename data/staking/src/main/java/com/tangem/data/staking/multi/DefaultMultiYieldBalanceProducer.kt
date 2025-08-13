@@ -1,7 +1,7 @@
 package com.tangem.data.staking.multi
 
 import com.tangem.data.staking.store.YieldsBalancesStore
-import com.tangem.domain.staking.model.stakekit.YieldBalance
+import com.tangem.domain.models.staking.YieldBalance
 import com.tangem.domain.staking.multi.MultiYieldBalanceProducer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.assisted.Assisted

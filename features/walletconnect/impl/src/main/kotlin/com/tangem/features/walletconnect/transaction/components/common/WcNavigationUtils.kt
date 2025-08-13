@@ -2,6 +2,7 @@ package com.tangem.features.walletconnect.transaction.components.common
 
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
+import com.tangem.domain.walletconnect.WcAnalyticEvents
 import com.tangem.features.send.v2.api.FeeSelectorComponent
 import com.tangem.features.send.v2.api.params.FeeSelectorParams
 import com.tangem.features.walletconnect.connections.components.AlertsComponentV2
@@ -41,12 +42,16 @@ internal fun getWcCommonScreen(
             val state = model.uiState.value ?: error("in this step state should be not null")
             feeSelectorComponentFactory.create(
                 context = appComponentContext,
+                onDismiss = model::popBack,
                 params = FeeSelectorParams.FeeSelectorDetailsParams(
                     state = state.feeSelectorUM,
                     onLoadFee = model::loadFee,
+                    feeCryptoCurrencyStatus = model.cryptoCurrencyStatus,
                     cryptoCurrencyStatus = model.cryptoCurrencyStatus,
                     callback = model,
-                    suggestedFeeState = model.suggestedFeeState,
+                    feeStateConfiguration = model.feeStateConfiguration,
+                    feeDisplaySource = FeeSelectorParams.FeeDisplaySource.BottomSheet,
+                    analyticsCategoryName = WcAnalyticEvents.WC_CATEGORY_NAME,
                 ),
             )
         }

@@ -17,6 +17,7 @@ dependencies {
     implementation(deps.androidx.paging.runtime)
 
     /** Other dependencies */
+    implementation(deps.kotlin.datetime)
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.material)
     implementation(deps.arrow.core)
@@ -27,7 +28,6 @@ dependencies {
     /** Compose */
     implementation(deps.compose.accompanist.systemUiController)
     implementation(deps.compose.material3)
-    implementation(deps.compose.material)
     implementation(deps.compose.foundation)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
@@ -47,8 +47,6 @@ dependencies {
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
     implementation(projects.core.decompose)
-    implementation(projects.core.deepLinks)
-
 
     /** Domain */
     implementation(projects.domain.tokens)
@@ -65,6 +63,7 @@ dependencies {
     implementation(projects.domain.transaction)
     implementation(projects.domain.transaction.models)
     implementation(projects.domain.txhistory)
+    implementation(projects.domain.txhistory.models)
     implementation(projects.domain.feedback)
     implementation(projects.domain.feedback.models)
     implementation(projects.domain.notifications.models)

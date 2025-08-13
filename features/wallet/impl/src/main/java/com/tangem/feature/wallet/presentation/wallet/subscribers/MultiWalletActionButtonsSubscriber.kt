@@ -2,7 +2,7 @@ package com.tangem.feature.wallet.presentation.wallet.subscribers
 
 import com.tangem.domain.promo.GetStoryContentUseCase
 import com.tangem.domain.promo.models.StoryContentIds
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.UpdateMultiWalletActionButtonBadgeTransformer
 import kotlinx.coroutines.CoroutineScope
