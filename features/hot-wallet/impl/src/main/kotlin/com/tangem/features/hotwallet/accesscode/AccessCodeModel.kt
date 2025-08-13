@@ -1,4 +1,4 @@
-package com.tangem.features.hotwallet.setaccesscode
+package com.tangem.features.hotwallet.accesscode
 
 import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
@@ -9,7 +9,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
-import com.tangem.features.hotwallet.setaccesscode.entity.AccessCodeUM
+import com.tangem.features.hotwallet.accesscode.entity.AccessCodeUM
 import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.hot.sdk.model.HotAuth
 import com.tangem.hot.sdk.model.UnlockHotWallet
