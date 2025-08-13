@@ -20,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
@@ -35,6 +36,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.NotificationTestTags
 import com.tangem.core.ui.components.notifications.NotificationConfig.ButtonsState as NotificationButtonsState
 
 /**
@@ -206,16 +208,21 @@ internal fun TextsBlock(
                 text = titleText,
                 color = titleColor,
                 style = TangemTheme.typography.button,
+                modifier = Modifier.testTag(NotificationTestTags.TITLE),
             )
 
             SpacerH(height = TangemTheme.dimens.spacing2)
         }
 
-        Text(
-            text = subtitle.resolveReference(),
-            color = subtitleColor,
-            style = TangemTheme.typography.caption2,
-        )
+        val subtitleText = subtitle.resolveReference()
+        if (subtitleText.isNotEmpty()) {
+            Text(
+                text = subtitleText,
+                color = subtitleColor,
+                style = TangemTheme.typography.caption2,
+                modifier = Modifier.testTag(NotificationTestTags.TEXT),
+            )
+        }
     }
 }
 

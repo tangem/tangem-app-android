@@ -2,7 +2,6 @@ package com.tangem.features.send.v2.subcomponents.amount.model
 
 import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
-import com.tangem.common.ui.amountScreen.AmountScreenClickIntents
 import com.tangem.common.ui.amountScreen.converters.*
 import com.tangem.common.ui.amountScreen.converters.field.AmountBoundaryUpdateTransformer
 import com.tangem.common.ui.amountScreen.converters.field.AmountFieldChangeTransformer
@@ -22,18 +21,23 @@ import com.tangem.core.ui.extensions.WrappedList
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.exchange.RampStateManager
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.tokens.GetMinimumTransactionAmountSyncUseCase
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.v2.api.SendFeatureToggles
 import com.tangem.features.send.v2.api.entity.PredefinedValues
+import com.tangem.features.send.v2.api.subcomponents.amount.analytics.CommonSendAmountAnalyticEvents
+import com.tangem.features.send.v2.api.subcomponents.amount.analytics.CommonSendAmountAnalyticEvents.SelectedCurrencyType
+import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
+import com.tangem.features.send.v2.common.CommonSendRoute
 import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponentParams
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountReduceListener
-import com.tangem.features.send.v2.subcomponents.amount.SendAmountUpdateQRListener
-import com.tangem.features.send.v2.subcomponents.amount.analytics.SendAmountAnalyticEvents
-import com.tangem.features.send.v2.subcomponents.amount.analytics.SendAmountAnalyticEvents.SelectedCurrencyType
+import com.tangem.features.send.v2.subcomponents.amount.SendAmountUpdateListener
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeData
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeReloadTrigger
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -45,7 +49,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.properties.Delegates
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 @Stable
 @ModelScoped
 internal class SendAmountModel @Inject constructor(
@@ -53,13 +57,16 @@ internal class SendAmountModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val getMinimumTransactionAmountSyncUseCase: GetMinimumTransactionAmountSyncUseCase,
     private val sendAmountReduceListener: SendAmountReduceListener,
-    private val feeReloadTrigger: SendFeeReloadTrigger,
-    private val sendAmountUpdateQRListener: SendAmountUpdateQRListener,
+    private val sendAmountUpdateListener: SendAmountUpdateListener,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val sendFeatureToggles: SendFeatureToggles,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
+    private val feeReloadTrigger: SendFeeReloadTrigger,
+    private val feeSelectorReloadTrigger: FeeSelectorReloadTrigger,
     private val getUserWalletUseCase: GetUserWalletUseCase,
-) : Model(), AmountScreenClickIntents {
+    private val rampStateManager: RampStateManager,
+    private val sendAmountAlertFactory: SendAmountAlertFactory,
+) : Model(), SendAmountClickIntents {
 
     private val params: SendAmountComponentParams = paramsContainer.require()
     private var appCurrency: AppCurrency = AppCurrency.Default
@@ -67,6 +74,10 @@ internal class SendAmountModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(params.state)
     val uiState = _uiState.asStateFlow()
+
+    private var isAvailableForSwap: Boolean = false
+    val isSendWithSwapAvailable: StateFlow<Boolean>
+    field = MutableStateFlow(false)
 
     private val analyticsCategoryName = params.analyticsCategoryName
     private var cryptoCurrencyStatus: CryptoCurrencyStatus = CryptoCurrencyStatus(
@@ -78,20 +89,34 @@ internal class SendAmountModel @Inject constructor(
     private var maxAmountBoundary: EnterAmountBoundary by Delegates.notNull()
 
     init {
+        modelScope.launch {
+            isAvailableForSwap = rampStateManager.availableForSwap(
+                userWalletId = params.userWalletId,
+                cryptoCurrency = params.cryptoCurrency,
+            ) == ScenarioUnavailabilityReason.None
+        }
         configAmountNavigation()
         initAppCurrency()
         subscribeOnCryptoCurrencyStatusFlow()
         subscribeOnAmountReduceByTriggerUpdates()
         subscribeOnAmountReduceToTriggerUpdates()
         subscribeOnAmountIgnoreReduceTriggerUpdates()
-        subscribeOnAmountUpdateQRTriggerUpdates()
+        subscribeOnAmountUpdateTriggerUpdates()
     }
 
     private fun initAppCurrency() {
-        modelScope.launch {
-            userWallet = getUserWalletUseCase(params.userWalletId).getOrNull()
-            appCurrency = getSelectedAppCurrencyUseCase.invokeSync().getOrElse { AppCurrency.Default }
-        }
+        getUserWalletUseCase.invokeFlow(params.userWalletId)
+            .onEach { either ->
+                either.fold(
+                    ifLeft = { error ->
+                        val amountParams = params as? SendAmountComponentParams.AmountParams
+                        amountParams?.callback?.onError(error)
+                    },
+                    ifRight = { wallet ->
+                        userWallet = wallet
+                    },
+                )
+            }.launchIn(modelScope)
     }
 
     private fun subscribeOnCryptoCurrencyStatusFlow() {
@@ -115,6 +140,8 @@ internal class SendAmountModel @Inject constructor(
                     fiatRate = cryptoCurrencyStatus.value.fiatRate.orZero(),
                 )
             }
+
+            appCurrency = getSelectedAppCurrencyUseCase.invokeSync().getOrElse { AppCurrency.Default }
 
             if (uiState.value is AmountState.Data) {
                 _uiState.update(
@@ -191,7 +218,7 @@ internal class SendAmountModel @Inject constructor(
             ),
         )
         analyticsEventHandler.send(
-            SendAmountAnalyticEvents.MaxAmountButtonClicked(categoryName = analyticsCategoryName),
+            CommonSendAmountAnalyticEvents.MaxAmountButtonClicked(categoryName = analyticsCategoryName),
         )
     }
 
@@ -202,7 +229,7 @@ internal class SendAmountModel @Inject constructor(
     override fun onAmountNext() {
         (uiState.value as? AmountState.Data)?.amountTextField?.isFiatValue?.let { isFiatSelected ->
             analyticsEventHandler.send(
-                SendAmountAnalyticEvents.SelectedCurrency(
+                CommonSendAmountAnalyticEvents.SelectedCurrency(
                     categoryName = analyticsCategoryName,
                     type = if (isFiatSelected) {
                         SelectedCurrencyType.AppCurrency
@@ -215,6 +242,24 @@ internal class SendAmountModel @Inject constructor(
         saveResult()
     }
 
+    override fun onConvertToAnotherToken() {
+        val amountParams = params as? SendAmountComponentParams.AmountParams ?: return
+        if (amountParams.currentRoute.value.isEditMode) {
+            sendAmountAlertFactory.showResetSendingAlert {
+                params.callback.resetSendNavigation()
+                confirmConvertToToken()
+            }
+        } else {
+            confirmConvertToToken()
+        }
+    }
+
+    private fun confirmConvertToToken() {
+        val amountParams = params as? SendAmountComponentParams.AmountParams ?: return
+        val amountFieldData = uiState.value as? AmountState.Data
+        amountParams.callback.onConvertToAnotherToken(amountFieldData?.amountTextField?.value.orEmpty())
+    }
+
     private fun subscribeOnAmountReduceToTriggerUpdates() {
         sendAmountReduceListener.reduceToTriggerFlow
             .onEach { reduceTo ->
@@ -225,11 +270,14 @@ internal class SendAmountModel @Inject constructor(
                         value = reduceTo,
                     ),
                 )
-                feeReloadTrigger.triggerUpdate(
-                    feeData = SendFeeData(
-                        amount = (uiState.value as? AmountState.Data)?.amountTextField?.cryptoAmount?.value,
-                    ),
-                )
+                val amountValue = (uiState.value as? AmountState.Data)?.amountTextField?.cryptoAmount?.value
+                if (uiState.value.isRedesignEnabled) {
+                    feeSelectorReloadTrigger.triggerUpdate()
+                } else {
+                    feeReloadTrigger.triggerUpdate(
+                        feeData = SendFeeData(amount = amountValue),
+                    )
+                }
             }
             .launchIn(modelScope)
     }
@@ -244,11 +292,15 @@ internal class SendAmountModel @Inject constructor(
                         value = reduceByData,
                     ),
                 )
-                feeReloadTrigger.triggerUpdate(
-                    feeData = SendFeeData(
-                        amount = (uiState.value as? AmountState.Data)?.amountTextField?.cryptoAmount?.value,
-                    ),
-                )
+
+                val amountValue = (uiState.value as? AmountState.Data)?.amountTextField?.cryptoAmount?.value
+                if (uiState.value.isRedesignEnabled) {
+                    feeSelectorReloadTrigger.triggerUpdate()
+                } else {
+                    feeReloadTrigger.triggerUpdate(
+                        feeData = SendFeeData(amount = amountValue),
+                    )
+                }
             }
             .launchIn(modelScope)
     }
@@ -259,8 +311,8 @@ internal class SendAmountModel @Inject constructor(
             .launchIn(modelScope)
     }
 
-    private fun subscribeOnAmountUpdateQRTriggerUpdates() {
-        sendAmountUpdateQRListener.updateAmountTriggerFlow
+    private fun subscribeOnAmountUpdateTriggerUpdates() {
+        sendAmountUpdateListener.updateAmountTriggerFlow
             .onEach { amount ->
                 onAmountValueChange(amount)
                 saveResult()
@@ -281,9 +333,10 @@ internal class SendAmountModel @Inject constructor(
         val params = params as? SendAmountComponentParams.AmountParams ?: return
         combine(
             flow = uiState,
-            flow2 = params.currentRoute,
+            flow2 = params.currentRoute.filterIsInstance<CommonSendRoute.Amount>(),
             transform = { state, route -> state to route },
         ).onEach { (state, route) ->
+            setSendWithSwapAvailability()
             params.callback.onNavigationResult(
                 NavigationUM.Content(
                     title = resourceReference(R.string.send_amount_label),
@@ -293,7 +346,7 @@ internal class SendAmountModel @Inject constructor(
                     } else {
                         R.drawable.ic_close_24
                     },
-                    backIconClick = { params.onBackClick() },
+                    backIconClick = params.callback::onBackClick,
                     primaryButton = NavigationButton(
                         textReference = if (route.isEditMode) {
                             resourceReference(R.string.common_continue)
@@ -303,7 +356,7 @@ internal class SendAmountModel @Inject constructor(
                         isEnabled = state.isPrimaryButtonEnabled,
                         onClick = {
                             onAmountNext()
-                            params.onNextClick()
+                            params.callback.onNextClick()
                         },
                     ),
                     prevButton = if (params.isRedesignEnabled) {
@@ -315,7 +368,7 @@ internal class SendAmountModel @Inject constructor(
                             isEnabled = true,
                             onClick = {
                                 saveResult()
-                                params.onBackClick()
+                                params.callback.onBackClick()
                             },
                         ).takeIf { route.isEditMode.not() }
                     },
@@ -323,5 +376,16 @@ internal class SendAmountModel @Inject constructor(
                 ),
             )
         }.launchIn(modelScope)
+    }
+
+    private fun setSendWithSwapAvailability() {
+        // Allowed only in multicurrency wallets
+        val isMultiCurrency = userWallet?.isMultiCurrency == true
+
+        // Allowed only on networks without tx extras (e.i. memo and destination tag)
+        val isExtrasSupported = cryptoCurrencyStatus.currency.network.transactionExtrasType.isTxExtrasSupported()
+        isSendWithSwapAvailable.update {
+            isAvailableForSwap && isMultiCurrency && sendFeatureToggles.isSendWithSwapEnabled && !isExtrasSupported
+        }
     }
 }

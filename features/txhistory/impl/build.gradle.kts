@@ -27,6 +27,7 @@ dependencies {
     /* Project - Domain */
     implementation(projects.domain.models)
     implementation(projects.domain.legacy)
+    implementation(projects.domain.card)
     implementation(projects.domain.txhistory)
     implementation(projects.domain.txhistory.models)
     implementation(projects.domain.wallets)
