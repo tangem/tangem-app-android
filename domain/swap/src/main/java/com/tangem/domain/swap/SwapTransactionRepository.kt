@@ -1,11 +1,11 @@
 package com.tangem.domain.swap
 
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.swap.models.SwapStatusModel
 import com.tangem.domain.swap.models.SwapTransactionListModel
 import com.tangem.domain.swap.models.SwapTransactionModel
-import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -34,7 +34,7 @@ interface SwapTransactionRepository {
      * @param userWallet selected user wallet
      * @param cryptoCurrencyId transactions for specific crypto currency
      */
-    suspend fun getTransactions(
+    fun getTransactions(
         userWallet: UserWallet,
         cryptoCurrencyId: CryptoCurrency.ID,
     ): Flow<List<SwapTransactionListModel>?>

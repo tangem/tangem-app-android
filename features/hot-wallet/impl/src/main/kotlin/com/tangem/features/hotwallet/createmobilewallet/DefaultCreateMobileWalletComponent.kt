@@ -12,10 +12,12 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 
+@Suppress("UnusedPrivateMember")
 internal class DefaultCreateMobileWalletComponent @AssistedInject constructor(
     @Assisted private val context: AppComponentContext,
     @Assisted private val params: Unit,
 ) : CreateMobileWalletComponent, AppComponentContext by context {
+
     private val model: CreateMobileWalletModel = getOrCreateModel(params)
 
     @Composable

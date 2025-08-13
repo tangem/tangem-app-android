@@ -12,6 +12,7 @@ internal class AlertsComponentV2(
 ) : AppComponentContext by appComponentContext, ComposableBottomSheetComponent {
 
     override fun dismiss() {
+        messageUM.onDismissRequest()
         router.pop()
     }
 

@@ -1,17 +1,16 @@
 package com.tangem.feature.wallet.presentation.wallet.subscribers
 
-import com.tangem.common.routing.RoutingFeatureToggle
-import com.tangem.core.deeplink.DeepLinksRegistry
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.core.lce.LceFlow
+import com.tangem.domain.models.TokensSortType
+import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.tokenlist.TokenList
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.tokens.ApplyTokenListSortingUseCase
 import com.tangem.domain.tokens.RunPolkadotAccountHealthCheckUseCase
 import com.tangem.domain.tokens.error.TokenListError
-import com.tangem.domain.tokens.model.TokenList
-import com.tangem.domain.tokens.model.TotalFiatBalance
-import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.TokenListAnalyticsSender
 import com.tangem.feature.wallet.presentation.wallet.domain.MultiWalletTokenListStore
@@ -30,8 +29,6 @@ internal class MultiWalletTokenListSubscriber(
     walletWithFundsChecker: WalletWithFundsChecker,
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     runPolkadotAccountHealthCheckUseCase: RunPolkadotAccountHealthCheckUseCase,
-    deepLinksRegistry: DeepLinksRegistry,
-    routingFeatureToggle: RoutingFeatureToggle,
 ) : BasicTokenListSubscriber(
     userWallet = userWallet,
     stateHolder = stateHolder,
@@ -40,8 +37,6 @@ internal class MultiWalletTokenListSubscriber(
     walletWithFundsChecker = walletWithFundsChecker,
     getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
     runPolkadotAccountHealthCheckUseCase = runPolkadotAccountHealthCheckUseCase,
-    deepLinksRegistry = deepLinksRegistry,
-    routingFeatureToggle = routingFeatureToggle,
 ) {
 
     override fun tokenListFlow(coroutineScope: CoroutineScope): LceFlow<TokenListError, TokenList> {
@@ -52,7 +47,6 @@ internal class MultiWalletTokenListSubscriber(
 
     override suspend fun onTokenListReceived(maybeTokenList: Lce<TokenListError, TokenList>) {
         updateSortingIfNeeded(maybeTokenList)
-        super.onTokenListReceived(maybeTokenList)
     }
 
     private suspend fun updateSortingIfNeeded(maybeTokenList: Lce<*, TokenList>) {
@@ -62,7 +56,7 @@ internal class MultiWalletTokenListSubscriber(
             userWalletId = userWallet.walletId,
             sortedTokensIds = getCurrenciesIds(tokenList),
             isGroupedByNetwork = tokenList is TokenList.GroupedByNetwork,
-            isSortedByBalance = tokenList.sortedBy == TokenList.SortType.BALANCE,
+            isSortedByBalance = tokenList.sortedBy == TokensSortType.BALANCE,
         )
     }
 
@@ -72,7 +66,7 @@ internal class MultiWalletTokenListSubscriber(
 
         return tokenList.takeIf {
             tokenList.totalFiatBalance is TotalFiatBalance.Loaded &&
-                tokenList.sortedBy == TokenList.SortType.BALANCE
+                tokenList.sortedBy == TokensSortType.BALANCE
         }
     }
 

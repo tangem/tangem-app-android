@@ -26,5 +26,8 @@ internal sealed interface WcInnerRoute : Route {
     data class Pair(val request: WcPairRequest) : WcInnerRoute
 
     @Serializable
-    data class UnsupportedMethodAlert(override val rawRequest: WcSdkSessionRequest) : Method
+    data object UnsupportedMethodAlert : WcInnerRoute
+
+    @Serializable
+    data object WcDappDisconnected : WcInnerRoute
 }

@@ -11,7 +11,7 @@ import com.tangem.domain.transaction.error.IncompleteTransactionError
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.error.parseWrappedError
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 
 class RetryIncompleteTransactionUseCase(
     private val cardSdkConfigRepository: CardSdkConfigRepository,

@@ -1,6 +1,6 @@
 package com.tangem.domain.redux
 
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 import org.rekotlin.Action
 
 interface ReduxStateHolder {

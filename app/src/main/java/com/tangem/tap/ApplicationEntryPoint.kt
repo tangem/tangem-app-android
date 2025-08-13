@@ -39,8 +39,6 @@ import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
-import com.tangem.features.onramp.OnrampFeatureToggles
-import com.tangem.operations.attestation.OnlineCardVerifier
 import com.tangem.tap.common.analytics.handlers.BlockchainExceptionHandler
 import com.tangem.tap.common.log.TangemAppLoggerInitializer
 import com.tangem.tap.domain.scanCard.CardScanningFeatureToggles
@@ -118,8 +116,6 @@ interface ApplicationEntryPoint {
 
     fun getTransactionSignerFactory(): TransactionSignerFactory
 
-    fun getOnrampFeatureToggles(): OnrampFeatureToggles
-
     fun getOnboardingV2FeatureToggles(): OnboardingV2FeatureToggles
 
     fun getOnboardingRepository(): OnboardingRepository
@@ -140,8 +136,6 @@ interface ApplicationEntryPoint {
     fun getUiMessageSender(): UiMessageSender
 
     fun getWorkerFactory(): HiltWorkerFactory
-
-    fun getOnlineCardVerifier(): OnlineCardVerifier
 
     fun getColdUserWalletBuilderFactory(): ColdUserWalletBuilder.Factory
 

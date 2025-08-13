@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.managetokens.component.CustomTokenSelectorComponent
 import com.tangem.features.managetokens.component.CustomTokenSelectorComponent.Params
 import com.tangem.features.managetokens.entity.customtoken.CustomTokenSelectorUM
@@ -65,6 +65,7 @@ internal class PreviewCustomTokenSelectorComponent(
                         hasFiatFeeRate = false,
                         canHandleTokens = false,
                         transactionExtrasType = Network.TransactionExtrasType.NONE,
+                        nameResolvingType = Network.NameResolvingType.NONE,
                     ),
                     name = "Network $index",
                     type = "N$index",

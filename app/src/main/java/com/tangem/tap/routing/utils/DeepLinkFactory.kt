@@ -8,7 +8,10 @@ import com.tangem.data.card.sdk.CardSdkProvider
 import com.tangem.feature.referral.api.deeplink.ReferralDeepLinkHandler
 import com.tangem.features.markets.deeplink.MarketsDeepLinkHandler
 import com.tangem.features.markets.deeplink.MarketsTokenDetailDeepLinkHandler
-import com.tangem.features.onramp.deeplink.*
+import com.tangem.features.onramp.deeplink.BuyDeepLinkHandler
+import com.tangem.features.onramp.deeplink.OnrampDeepLinkHandler
+import com.tangem.features.onramp.deeplink.SellDeepLinkHandler
+import com.tangem.features.onramp.deeplink.SwapDeepLinkHandler
 import com.tangem.features.send.v2.api.deeplink.SellRedirectDeepLinkHandler
 import com.tangem.features.staking.api.deeplink.StakingDeepLinkHandler
 import com.tangem.features.tokendetails.deeplink.TokenDetailsDeepLinkHandler
@@ -33,7 +36,6 @@ internal class DeepLinkFactory @Inject constructor(
     private val cardSdkProvider: CardSdkProvider,
     private val onrampDeepLink: OnrampDeepLinkHandler.Factory,
     private val sellRedirectDeepLink: SellRedirectDeepLinkHandler.Factory,
-    private val buyRedirectDeepLink: BuyRedirectDeepLinkHandler.Factory,
     private val referralDeepLink: ReferralDeepLinkHandler.Factory,
     private val walletConnectDeepLink: WalletConnectDeepLinkHandler.Factory,
     private val walletDeepLink: WalletDeepLinkHandler.Factory,
@@ -114,7 +116,7 @@ internal class DeepLinkFactory @Inject constructor(
         when (deeplinkUri.host) {
             DeepLinkRoute.Onramp.host -> onrampDeepLink.create(coroutineScope, queryParams)
             DeepLinkRoute.SellRedirect.host -> sellRedirectDeepLink.create(coroutineScope, queryParams)
-            DeepLinkRoute.BuyRedirect.host -> buyRedirectDeepLink.create(coroutineScope)
+            DeepLinkRoute.BuyRedirect.host -> Unit
             DeepLinkRoute.Referral.host -> referralDeepLink.create()
             DeepLinkRoute.Wallet.host -> walletDeepLink.create()
             DeepLinkRoute.TokenDetails.host -> tokenDetailsDeepLink.create(
