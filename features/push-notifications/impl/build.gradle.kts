@@ -16,6 +16,8 @@ dependencies {
     implementation(deps.androidx.activity.compose)
 
     /** Compose */
+    implementation(deps.compose.material3)
+    implementation(deps.compose.ui.tooling)
     implementation(deps.compose.foundation)
     implementation(deps.compose.accompanist.systemUiController)
     implementation(deps.compose.accompanist.permission)
@@ -39,6 +41,7 @@ dependencies {
     /** Domain module */
     implementation(projects.domain.settings)
     implementation(projects.domain.notifications.toggles)
+    implementation(projects.domain.notifications)
 
     /** Feature modules */
     implementation(projects.features.pushNotifications.api)
