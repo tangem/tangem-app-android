@@ -1,8 +1,8 @@
 package com.tangem.domain.promo
 
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.promo.models.PromoId
 import com.tangem.domain.promo.models.StoryContent
-import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
 
 interface PromoRepository {

@@ -6,7 +6,7 @@ import com.tangem.datasource.local.preferences.utils.getObjectListSync
 import com.tangem.datasource.local.preferences.utils.getObjectMapSync
 import com.tangem.domain.analytics.model.WalletBalanceState
 import com.tangem.domain.analytics.repository.AnalyticsRepository
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 
 internal class DefaultAnalyticsRepository(
     private val appPreferencesStore: AppPreferencesStore,
