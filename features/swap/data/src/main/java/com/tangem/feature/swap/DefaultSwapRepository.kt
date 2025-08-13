@@ -25,12 +25,12 @@ import com.tangem.datasource.api.express.models.response.TxDetails
 import com.tangem.datasource.crypto.DataSignatureVerifier
 import com.tangem.datasource.exchangeservice.swap.ExpressUtils
 import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
-import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.feature.swap.converters.*
 import com.tangem.feature.swap.domain.api.SwapRepository
 import com.tangem.feature.swap.domain.models.ExpressDataError
@@ -55,6 +55,7 @@ internal class DefaultSwapRepository(
     private val errorsDataConverter: ErrorsDataConverter,
     private val dataSignatureVerifier: DataSignatureVerifier,
     private val appPreferencesStore: AppPreferencesStore,
+    private val rampStateManager: RampStateManager,
     moshi: Moshi,
     excludedBlockchains: ExcludedBlockchains,
 ) : SwapRepository {
@@ -135,7 +136,13 @@ internal class DefaultSwapRepository(
                     contractAddress = initialCurrency.contractAddress,
                     network = initialCurrency.network,
                 )
-                val currenciesList = currencyList.map { leastTokenInfoConverter.convert(it) }
+                val currenciesList = currencyList
+                    .filter {
+                        val requirements = walletManagersFacade.getAssetRequirements(userWallet.walletId, it)
+                        val isAvailableForSwap = rampStateManager.checkAssetRequirements(requirements)
+                        isAvailableForSwap
+                    }
+                    .map { leastTokenInfoConverter.convert(it) }
 
                 val pairsDeferred = async {
                     getPairsInternal(
@@ -404,12 +411,7 @@ internal class DefaultSwapRepository(
             cryptoCurrencyFactory.createCoin(
                 blockchain = blockchain,
                 extraDerivationPath = null,
-                scanResponse = requireNotNull(
-                    userWalletsListManager
-                        .selectedUserWalletSync
-                        ?.requireColdWallet() // TODO [REDACTED_TASK_KEY]
-                        ?.scanResponse,
-                ),
+                userWallet = requireNotNull(userWalletsListManager.selectedUserWalletSync),
             ),
         )
     }
