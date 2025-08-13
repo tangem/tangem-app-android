@@ -31,11 +31,11 @@ import kotlinx.collections.immutable.toImmutableList
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-internal fun TesterMenuScreen(state: TesterMenuUM) {
+internal fun TesterMenuScreen(state: TesterMenuUM, modifier: Modifier = Modifier) {
     BackHandler(onBack = state.onBackClick)
 
     LazyColumn(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(TangemTheme.colors.background.primary),
     ) {
