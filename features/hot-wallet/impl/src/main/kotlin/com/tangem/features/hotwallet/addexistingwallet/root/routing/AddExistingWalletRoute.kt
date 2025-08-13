@@ -10,4 +10,16 @@ internal sealed class AddExistingWalletRoute : Route {
 
     @Serializable
     object Import : AddExistingWalletRoute()
+
+    @Serializable
+    object BackupCompleted : AddExistingWalletRoute()
+
+    @Serializable
+    object AccessCode : AddExistingWalletRoute()
+
+    @Serializable
+    object PushNotifications : AddExistingWalletRoute()
+
+    @Serializable
+    object SetupFinished : AddExistingWalletRoute()
 }

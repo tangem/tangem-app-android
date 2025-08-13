@@ -140,7 +140,7 @@ internal class DefaultQuotesFetcherTest {
     @Test
     fun `fetch if all currencies ids ARE CACHED and EXPIRED`() = runTest {
         // Arrange
-        val cachedQuote = MockQuoteResponseFactory.createSinglePrice(BigDecimal.ZERO)
+        val cachedQuote = MockQuoteResponseFactory.createSinglePrice(BigDecimal.ONE)
         val apiQuote = MockQuoteResponseFactory.createSinglePrice(BigDecimal.ONE)
         val apiResponse = ApiResponse.Success(
             data = QuotesResponse(quotes = mapOf("ethereum" to apiQuote)),

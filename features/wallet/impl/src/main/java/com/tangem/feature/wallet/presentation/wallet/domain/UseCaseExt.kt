@@ -4,8 +4,8 @@ import arrow.core.Either
 import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import kotlinx.coroutines.flow.*
 import timber.log.Timber

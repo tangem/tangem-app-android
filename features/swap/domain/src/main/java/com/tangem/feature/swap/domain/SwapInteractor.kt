@@ -2,7 +2,7 @@ package com.tangem.feature.swap.domain
 
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.IncludeFeeInAmount
 import com.tangem.feature.swap.domain.models.domain.PermissionOptions
