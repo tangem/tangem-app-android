@@ -6,12 +6,15 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.components.block.model.BlockUM
+import com.tangem.core.ui.components.label.entity.LabelStyle
+import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.feature.walletsettings.analytics.Settings
 import com.tangem.feature.walletsettings.entity.WalletSettingsItemUM
 import com.tangem.feature.walletsettings.impl.R
+import com.tangem.hot.sdk.model.HotWalletId
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -25,7 +28,7 @@ internal class ItemsBuilder @Inject constructor(
 
     @Suppress("LongParameterList")
     fun buildItems(
-        userWalletId: UserWalletId,
+        userWallet: UserWallet,
         userWalletName: String,
         isLinkMoreCardsAvailable: Boolean,
         isReferralAvailable: Boolean,
@@ -43,18 +46,13 @@ internal class ItemsBuilder @Inject constructor(
         renameWallet: () -> Unit,
         onLinkMoreCardsClick: () -> Unit,
         onReferralClick: () -> Unit,
+        onAccessCodeClick: () -> Unit,
     ): PersistentList<WalletSettingsItemUM> = persistentListOf<WalletSettingsItemUM>()
         .add(buildNameItem(userWalletName, isRenameWalletAvailable, renameWallet))
-        .run {
-            if (isNFTFeatureEnabled) {
-                add(buildNFTItem(isNFTEnabled, onCheckedNFTChange))
-            } else {
-                this
-            }
-        }
+        .addAll(buildAccessCodeItem(userWallet, onAccessCodeClick))
         .add(
             buildCardItem(
-                userWalletId = userWalletId,
+                userWallet = userWallet,
                 isLinkMoreCardsAvailable = isLinkMoreCardsAvailable,
                 isReferralAvailable = isReferralAvailable,
                 isManageTokensAvailable = isManageTokensAvailable,
@@ -71,7 +69,26 @@ internal class ItemsBuilder @Inject constructor(
                 onNotificationsDescriptionClick = onNotificationsDescriptionClick,
             ),
         )
+        .addAll(
+            buildNFTItems(
+                isNFTFeatureEnabled = isNFTFeatureEnabled,
+                isNFTEnabled = isNFTEnabled,
+                onCheckedNFTChange = onCheckedNFTChange,
+            ),
+        )
         .add(buildForgetItem(forgetWallet))
+
+    private fun buildNFTItems(
+        isNFTFeatureEnabled: Boolean,
+        isNFTEnabled: Boolean,
+        onCheckedNFTChange: (Boolean) -> Unit,
+    ): List<WalletSettingsItemUM> {
+        return if (isNFTFeatureEnabled) {
+            listOf(buildNFTItem(isNFTEnabled, onCheckedNFTChange))
+        } else {
+            emptyList()
+        }
+    }
 
     private fun buildNotificationItems(
         isNotificationsFeatureEnabled: Boolean,
@@ -131,7 +148,7 @@ internal class ItemsBuilder @Inject constructor(
 
     @Suppress("LongParameterList")
     private fun buildCardItem(
-        userWalletId: UserWalletId,
+        userWallet: UserWallet,
         isLinkMoreCardsAvailable: Boolean,
         isReferralAvailable: Boolean,
         isManageTokensAvailable: Boolean,
@@ -141,6 +158,25 @@ internal class ItemsBuilder @Inject constructor(
         id = "card",
         description = resourceReference(R.string.settings_card_settings_footer),
         blocks = buildList {
+            val userWalletId = userWallet.walletId
+            val isHotWallet = userWallet is UserWallet.Hot
+            if (isHotWallet) {
+                val hasBackup = userWallet.backedUp
+                BlockUM(
+                    text = resourceReference(R.string.common_backup),
+                    iconRes = R.drawable.ic_more_cards_24,
+                    onClick = { router.push(AppRoute.WalletBackup(userWalletId)) },
+                    label = if (hasBackup) {
+                        null
+                    } else {
+                        LabelUM(
+                            text = resourceReference(R.string.hw_backup_no_backup),
+                            style = LabelStyle.WARNING,
+                        )
+                    },
+                ).let(::add)
+            }
+
             if (isManageTokensAvailable) {
                 BlockUM(
                     text = resourceReference(R.string.add_tokens_title),
@@ -160,11 +196,13 @@ internal class ItemsBuilder @Inject constructor(
                 ).let(::add)
             }
 
-            BlockUM(
-                text = resourceReference(R.string.card_settings_title),
-                iconRes = R.drawable.ic_card_settings_24,
-                onClick = { router.push(AppRoute.CardSettings(userWalletId)) },
-            ).let(::add)
+            if (!isHotWallet) {
+                BlockUM(
+                    text = resourceReference(R.string.card_settings_title),
+                    iconRes = R.drawable.ic_card_settings_24,
+                    onClick = { router.push(AppRoute.CardSettings(userWalletId)) },
+                ).let(::add)
+            }
 
             if (isReferralAvailable) {
                 BlockUM(
@@ -188,4 +226,36 @@ internal class ItemsBuilder @Inject constructor(
             ),
         ),
     )
+
+    private fun buildAccessCodeItem(userWallet: UserWallet, onItemClick: () -> Unit): List<WalletSettingsItemUM> {
+        return when (userWallet) {
+            is UserWallet.Cold -> emptyList()
+            is UserWallet.Hot -> buildHotWalletAccessCodeItem(userWallet, onItemClick)
+        }
+    }
+
+    private fun buildHotWalletAccessCodeItem(
+        userWallet: UserWallet.Hot,
+        onItemClick: () -> Unit,
+    ): List<WalletSettingsItemUM> {
+        val isCodeSet = userWallet.hotWalletId.authType != HotWalletId.AuthType.NoPassword
+        return listOf(
+            WalletSettingsItemUM.WithItems(
+                id = "access_code",
+                description = resourceReference(R.string.wallet_settings_access_code_description),
+                blocks = persistentListOf(
+                    BlockUM(
+                        text = if (isCodeSet) {
+                            resourceReference(R.string.wallet_settings_change_access_code_title)
+                        } else {
+                            resourceReference(R.string.wallet_settings_set_access_code_title)
+                        },
+                        iconRes = R.drawable.ic_lock_24,
+                        onClick = onItemClick,
+                        accentType = BlockUM.AccentType.ACCENT,
+                    ),
+                ),
+            ),
+        )
+    }
 }

@@ -1,7 +1,7 @@
 package com.tangem.features.onboarding.v2.multiwallet.impl.child.finalize.model
 
 import com.tangem.common.card.EllipticCurve
-import com.tangem.domain.common.configs.CardConfig
+import com.tangem.domain.card.configs.CardConfig
 import com.tangem.domain.models.scan.CardDTO
 import javax.inject.Inject
 
