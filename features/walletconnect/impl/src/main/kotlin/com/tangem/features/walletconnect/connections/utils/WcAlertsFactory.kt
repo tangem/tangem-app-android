@@ -48,6 +48,24 @@ internal object WcAlertsFactory {
         }
     }
 
+    fun createInvalidDomainAlert(onDismiss: () -> Unit): MessageBottomSheetUMV2 {
+        return messageBottomSheetUM {
+            infoBlock {
+                icon(R.drawable.ic_wallet_connect_24) {
+                    type = Type.Informative
+                    backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.SameAsTint
+                }
+                title = resourceReference(R.string.wc_errors_invalid_domain_title)
+                body = resourceReference(R.string.wc_errors_invalid_domain_subtitle)
+            }
+            primaryButton {
+                text = resourceReference(R.string.common_got_it)
+                onClick { onDismiss() }
+            }
+            onDismissRequest = onDismiss
+        }
+    }
+
     fun createUnsafeDomainAlert(activeButtonOnClick: (() -> Unit)? = null): MessageBottomSheetUMV2 {
         return messageBottomSheetUM {
             infoBlock {
