@@ -6,6 +6,7 @@ import android.util.Log
 import coil.ImageLoader
 import coil.decode.GifDecoder
 import coil.decode.ImageDecoderDecoder
+import coil.decode.SvgDecoder
 import coil.memory.MemoryCache
 import coil.request.CachePolicy
 import coil.util.Logger
@@ -36,6 +37,7 @@ fun createCoilImageLoader(context: Context, logEnabled: Boolean = false): ImageL
             } else {
                 add(GifDecoder.Factory())
             }
+            add(SvgDecoder.Factory())
         }
         .memoryCachePolicy(CachePolicy.ENABLED)
         .memoryCache {

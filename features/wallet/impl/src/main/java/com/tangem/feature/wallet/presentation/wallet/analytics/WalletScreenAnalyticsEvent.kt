@@ -3,7 +3,7 @@ package com.tangem.feature.wallet.presentation.wallet.analytics
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.OneTimeAnalyticsEvent
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 
 sealed class WalletScreenAnalyticsEvent {
 
