@@ -114,6 +114,7 @@ internal class WcPairComponent(
         return when (alertType) {
             is Alert.Type.Verified -> WcAlertsFactory.createVerifiedDomainAlert(alertType.appName)
             is Alert.Type.UnknownDomain -> WcAlertsFactory.createUnknownDomainAlert(model::connectFromAlert)
+            is Alert.Type.InvalidDomain -> WcAlertsFactory.createInvalidDomainAlert(model::errorAlertOnDismiss)
             is Alert.Type.UnsafeDomain -> WcAlertsFactory.createUnsafeDomainAlert(model::connectFromAlert)
             is Alert.Type.UnsupportedDApp ->
                 WcAlertsFactory.createUnsupportedDomainAlert(alertType.appName, model::errorAlertOnDismiss)
