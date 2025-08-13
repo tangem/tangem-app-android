@@ -26,7 +26,7 @@ internal sealed class WcAppInfoRoutes : TangemBottomSheetConfigContent, Route {
     ) : WcAppInfoRoutes()
 
     @Serializable
-    data class Alert(val type: Type) : WcAppInfoRoutes() {
+    data class Alert(val alertType: Type) : WcAppInfoRoutes() {
         @Serializable
         sealed class Type {
             data class Verified(val appName: String) : Type()
