@@ -3,8 +3,10 @@ package com.tangem.data.swap.converter.transaction
 import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
 import com.tangem.data.swap.models.SwapStatusDTO
 import com.tangem.data.swap.models.SwapTransactionDTO
-import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.data.swap.models.SwapTxTypeDTO
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.models.SwapTransactionModel
+import com.tangem.domain.swap.models.SwapTxType
 import com.tangem.utils.converter.TwoWayConverter
 
 internal class SavedSwapTransactionConverter(
@@ -21,7 +23,10 @@ internal class SavedSwapTransactionConverter(
         fromCryptoAmount = value.fromCryptoAmount,
         toCryptoAmount = value.toCryptoAmount,
         provider = value.provider,
-        status = value.status,
+        status = value.status?.let(statusConverter::convert),
+        swapTxType = SwapTxTypeDTO.entries.firstOrNull {
+            it.name.lowercase() == value.swapTxType?.name?.lowercase()
+        },
     )
 
     override fun convertBack(value: SwapTransactionDTO) = SwapTransactionModel(
@@ -30,19 +35,22 @@ internal class SavedSwapTransactionConverter(
         fromCryptoAmount = value.fromCryptoAmount,
         toCryptoAmount = value.toCryptoAmount,
         provider = value.provider,
-        status = value.status,
+        status = value.status?.let(statusConverter::convertBack),
+        swapTxType = SwapTxType.entries.firstOrNull {
+            it.name.lowercase() == value.swapTxType?.name?.lowercase()
+        },
     )
 
     fun convertBack(
         value: SwapTransactionDTO,
-        scanResponse: ScanResponse,
+        userWallet: UserWallet,
         txStatuses: Map<String, SwapStatusDTO>,
     ): SwapTransactionModel {
         val status = txStatuses[value.txId]
         val refundCurrency = status?.refundTokensResponse?.let { id ->
             responseCryptoCurrenciesFactory.createCurrency(
                 responseToken = id,
-                scanResponse = scanResponse,
+                userWallet = userWallet,
             )
         }
         val statusWithRefundCurrency = status?.copy(refundCurrency = refundCurrency)
@@ -53,7 +61,10 @@ internal class SavedSwapTransactionConverter(
             fromCryptoAmount = value.fromCryptoAmount,
             toCryptoAmount = value.toCryptoAmount,
             provider = value.provider,
-            status = statusWithRefundCurrency?.let(statusConverter::convert),
+            status = statusWithRefundCurrency?.let(statusConverter::convertBack),
+            swapTxType = SwapTxType.entries.firstOrNull {
+                it.name.lowercase() == value.swapTxType?.name?.lowercase()
+            },
         )
     }
 }
