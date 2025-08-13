@@ -1,7 +1,7 @@
 package com.tangem.domain.tokens
 
 import com.tangem.domain.core.flow.FlowFetcher
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 
 /**
  * Fetcher of crypto currencies for a multi-currency wallet with [UserWalletId]

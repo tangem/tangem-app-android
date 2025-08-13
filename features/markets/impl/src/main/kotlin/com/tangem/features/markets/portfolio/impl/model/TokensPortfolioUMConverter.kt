@@ -2,8 +2,8 @@ package com.tangem.features.markets.portfolio.impl.model
 
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.features.markets.portfolio.impl.loader.PortfolioData
 import com.tangem.features.markets.portfolio.impl.ui.state.MyPortfolioUM
 import com.tangem.features.markets.portfolio.impl.ui.state.MyPortfolioUM.Tokens.AddButtonState
@@ -80,7 +80,7 @@ internal class TokensPortfolioUMConverter(
                     token.copy(
                         isQuickActionsShown = previousList
                             .firstOrNull { it.matchWith(token) }
-                            ?.isQuickActionsShown ?: false,
+                            ?.isQuickActionsShown == true,
                     )
                 }
             }
@@ -88,7 +88,7 @@ internal class TokensPortfolioUMConverter(
     }
 
     private fun isEmptyBalance(cryptoData: PortfolioData.CryptoCurrencyData): Boolean {
-        return cryptoData.status.value.amount?.isZero() ?: false
+        return cryptoData.status.value.amount?.isZero() == true
     }
 
     private fun toggleQuickActions(cryptoData: PortfolioData.CryptoCurrencyData) {

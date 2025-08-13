@@ -2,7 +2,7 @@ package com.tangem.domain.tokens.mock
 
 import arrow.core.nonEmptyListOf
 import arrow.core.toNonEmptyListOrNull
-import com.tangem.domain.tokens.model.NetworkGroup
+import com.tangem.domain.models.tokenlist.TokenList.GroupedByNetwork.NetworkGroup
 
 @Suppress("MemberVisibilityCanBePrivate")
 internal object MockNetworksGroups {
