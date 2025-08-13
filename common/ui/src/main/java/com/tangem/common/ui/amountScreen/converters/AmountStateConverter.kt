@@ -9,6 +9,7 @@ import com.tangem.common.ui.amountScreen.models.AmountSegmentedButtonsConfig
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
+import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -18,6 +19,7 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.utils.Provider
+import com.tangem.utils.StringsSigns.DOT
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.isNullOrZero
 import kotlinx.collections.immutable.persistentListOf
@@ -120,7 +122,11 @@ class AmountStateConverterV2(
         return AmountState.Data(
             title = value.title,
             availableBalance = if (isRedesignEnabled) {
-                resourceReference(R.string.common_balance, wrappedList(crypto))
+                combinedReference(
+                    stringReference(crypto),
+                    stringReference(" $DOT "),
+                    stringReference(fiat),
+                )
             } else {
                 resourceReference(R.string.common_crypto_fiat_format, wrappedList(crypto, fiat))
             },
