@@ -113,7 +113,7 @@ internal fun LazyListScope.amountFieldV2(
                 } else {
                     Text(
                         text = amountState.title.resolveReference(),
-                        style = TangemTheme.typography.caption2,
+                        style = TangemTheme.typography.subtitle2,
                         color = TangemTheme.colors.text.tertiary,
                     )
                 }
@@ -164,7 +164,7 @@ private fun AmountInfo(amountUM: AmountState, onMaxAmountClick: () -> Unit, modi
             modifier = Modifier
                 .padding(end = 16.dp)
                 .clip(RoundedCornerShape(16.dp))
-                .background(TangemTheme.colors.background.secondary)
+                .background(TangemTheme.colors.button.secondary)
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = ripple(),
