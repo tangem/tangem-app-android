@@ -120,11 +120,13 @@
   <string name="common_add_token">Token hinzufügen</string>
   <string name="common_all">Alle</string>
   <string name="common_allow">Erlauben</string>
+  <string name="common_amount">Betrag</string>
   <string name="common_analytics">Analysen</string>
   <string name="common_apply">Anwenden</string>
   <string name="common_approval">Genehmigung</string>
   <string name="common_approve">Genehmigen</string>
   <string name="common_attention">Achtung</string>
+  <string name="common_available_networks">Verfügbare Netzwerke</string>
   <string name="common_backup">Sicherungskopie</string>
   <string name="common_balance">Bilanz: %s</string>
   <string name="common_balance_title">Saldo</string>
@@ -139,11 +141,13 @@
   <string name="common_choose_action">Aktion wählen</string>
   <string name="common_choose_network">Netzwerk auswählen</string>
   <string name="common_choose_token">Token auswählen</string>
+  <string name="common_choose_wallet">Wallet auswählen</string>
   <string name="common_claim">Beanspruchen</string>
   <string name="common_claim_rewards">Stakingbelohnungen beanspruchen</string>
   <string name="common_close">Schließen</string>
   <string name="common_coming_soon">Demnächst verfügbar</string>
   <string name="common_confirm">Bestätigen</string>
+  <string name="common_connecting">Verbinden</string>
   <string name="common_contact_tangem_support">Kontakt zum Tangem-Support</string>
   <string name="common_contact_visa_support">Kontakt zum Visa-Support</string>
   <string name="common_continue">Weiter</string>
@@ -165,6 +169,7 @@
   <string name="common_disabled">Deaktiviert</string>
   <string name="common_disconnect">Trennen</string>
   <string name="common_done">Erledigt</string>
+  <string name="common_edit">Bearbeiten</string>
   <string name="common_enable">Aktivieren</string>
   <string name="common_enabled">Aktiviert</string>
   <string name="common_error">Fehler</string>
@@ -199,6 +204,7 @@
   <string name="common_nft">NFT</string>
   <string name="common_no">Nein</string>
   <string name="common_no_address">Keine Adresse</string>
+  <string name="common_not_added">Nicht hinzugefügt</string>
   <string name="common_now">Jetzt</string>
   <string name="common_ok">OK</string>
   <string name="common_open_in_browser">Im Browser öffnen</string>
@@ -244,6 +250,10 @@
   <string name="common_terms_and_conditions">Allgemeine Geschäftsbedingungen</string>
   <string name="common_terms_of_use">Nutzungsbedingungen</string>
   <string name="common_today">Heute</string>
+  <plurals name="common_tokens_count">
+    <item quantity="one">%d Token</item>
+    <item quantity="other">%d Token</item>
+  </plurals>
   <string name="common_transaction_failed">Transaktion fehlgeschlagen</string>
   <string name="common_transaction_status">Transaktionsstatus</string>
   <string name="common_transactions">Transaktionen</string>
@@ -474,14 +484,12 @@
   <string name="manage_tokens_toast_portfolio_updated">Dein Portfolio wurde aktualisiert</string>
   <string name="manage_tokens_unavailable_description">Der ausgewählte Token ist derzeit nicht für Aktionen innerhalb der Krypto-Wallet verfügbar. Aber keine Sorge, du kannst dein Interesse bekunden, indem du den Token hochstufen.</string>
   <string name="manage_tokens_unavailable_vote">Hochstimmen</string>
-  <string name="manage_tokens_wallet_selector_title">Wallet auswählen</string>
   <string name="manage_tokens_wallet_support_only_one_network_title">Das Wallet unterstützt nicht mehr als ein Netzwerk</string>
   <string name="markets_add_to_my_portfolio_description">Um dieses Asset zu kaufen, zu tauschen oder zu erhalten, füge diesen Deinem Portfolio hinzu</string>
   <string name="markets_add_to_my_portfolio_unavailable_description">Dieses Asset wird derzeit in der Wallet nicht unterstützt.</string>
   <string name="markets_add_to_my_portfolio_unavailable_for_wallet_description">Dieses Asset ist für dieses Wallet nicht verfügbar</string>
   <string name="markets_add_token">Hinzufügen</string>
   <string name="markets_apy_placeholder">APY %s</string>
-  <string name="markets_available_networks">Verfügbare Netzwerke</string>
   <string name="markets_common_my_portfolio">Mein Portfolio</string>
   <string name="markets_common_title">Markt</string>
   <string name="markets_generate_addresses_notification">Um Adressen für ausgewählte Netzwerke zu generieren, musst du eine Tangem-Karte oder Ring scannen</string>
@@ -615,7 +623,6 @@
   <string name="nft_receive_title">NFT erhalten</string>
   <string name="nft_receive_unavailable_asset_warning_message">Du hast dieses Netzwerk noch nicht hinzugefügt. Um NFTs zu erhalten, füge es Deinem Portfolio hinzu.</string>
   <string name="nft_receive_unavailable_asset_warning_title">Netzwerk nicht hinzugefügt</string>
-  <string name="nft_receive_unavailable_section_title">Nicht hinzugefügt</string>
   <string name="nft_receive_unsupported_types">Nicht unterstützte NFT-Arten</string>
   <string name="nft_receive_unsupported_types_description">cNFTs und pNFTs werden derzeit nicht unterstützt. Bitte sende diese nicht an Deine Wallet.</string>
   <string name="nft_send">NFT senden</string>
@@ -1432,7 +1439,7 @@
   <string name="wc_new_connection">Neue Verbindung</string>
   <string name="wc_no_sessions_desc">Verbinde Deine Wallet mit einer anderen dApp</string>
   <string name="wc_no_sessions_title">Keine Sitzungen</string>
-  <string name="wc_notification_security_risk_subtitle">Diese Domain wird von mehreren Sicherheitsanbietern als unsicher eingestuft. Verlasse diese umgehend, um Dein Vermögen zu schützen.</string>
+  <string name="wc_notification_security_risk_subtitle">Es wurden potenzielle Risiken oder bösartiges Verhalten erkannt. Das Verbinden oder Signieren von Transaktionen kann zum Verlust von Geldern führen.</string>
   <string name="wc_notification_security_risk_title">Bekanntes Sicherheitsrisiko</string>
   <string name="wc_request_from">Anfrage von</string>
   <string name="wc_signature_type">Art der Signatur</string>

@@ -2,9 +2,9 @@ package com.tangem.tap.data
 
 import com.tangem.common.CompletionResult
 import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
-import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 
