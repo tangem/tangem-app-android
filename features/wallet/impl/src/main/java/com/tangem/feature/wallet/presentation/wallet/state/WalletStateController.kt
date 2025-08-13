@@ -2,7 +2,7 @@ package com.tangem.feature.wallet.presentation.wallet.state
 
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.event.consumedEvent
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.wallet.presentation.wallet.state.model.NOT_INITIALIZED_WALLET_INDEX
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletScreenState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
@@ -10,6 +10,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTopBarCon
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.CloseBottomSheetTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.OpenBottomSheetTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.WalletScreenStateTransformer
+import com.tangem.utils.extensions.indexOfFirstOrNull
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -66,6 +67,10 @@ internal class WalletStateController @Inject constructor() {
 
     fun getSelectedWalletId(): UserWalletId {
         return with(value) { wallets[selectedWalletIndex].walletCardState.id }
+    }
+
+    fun getWalletIndexByWalletId(userWalletId: UserWalletId): Int? {
+        return with(value) { wallets.indexOfFirstOrNull { it.walletCardState.id == userWalletId } }
     }
 
     fun showBottomSheet(
