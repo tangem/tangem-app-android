@@ -22,6 +22,7 @@ dependencies {
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.models)
     implementation(projects.domain.legacy)
+    implementation(projects.domain.walletManager)
     implementation(projects.libs.blockchainSdk)
     implementation(projects.data.common)
 
@@ -51,6 +52,7 @@ dependencies {
     /* Other */
     implementation(deps.kotlin.coroutines)
     implementation(deps.arrow.core)
+    implementation(deps.jodatime)
     implementation(projects.domain.blockaid)
     implementation(projects.domain.blockaid.models)
     implementation(projects.libs.crypto)
