@@ -22,11 +22,11 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.express.models.ExpressError
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.notifications.ShouldShowNotificationUseCase
 import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.settings.usercountry.models.UserCountry
-import com.tangem.domain.swap.models.SwapCurrencies
-import com.tangem.domain.notifications.ShouldShowNotificationUseCase
 import com.tangem.domain.settings.usercountry.models.needApplyFCARestrictions
+import com.tangem.domain.swap.models.SwapCurrencies
 import com.tangem.domain.swap.models.SwapDirection
 import com.tangem.domain.swap.models.SwapDirection.Companion.withSwapDirection
 import com.tangem.domain.swap.models.SwapQuoteModel
@@ -56,8 +56,8 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.Debouncer
 import com.tangem.utils.coroutines.PeriodicTask
 import com.tangem.utils.coroutines.SingleTaskScheduler
-import com.tangem.utils.extensions.isZero
 import com.tangem.utils.extensions.orZero
+import com.tangem.utils.isNullOrZero
 import com.tangem.utils.transformer.update
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -199,8 +199,6 @@ internal class SwapAmountModel @Inject constructor(
         )
         amountDebouncer.debounce(
             coroutineScope = modelScope,
-            waitMs = DEBOUNCE_AMOUNT_DELAY,
-            forceUpdate = true,
             destinationFunction = {
                 startLoadingQuotesTask(isSilentReload = false)
             },
@@ -532,11 +530,12 @@ internal class SwapAmountModel @Inject constructor(
             SwapDirection.Reverse -> state.secondaryAmount.amountField
         } as? AmountState.Data
 
-        if (fromAmount?.amountTextField?.isError == true) return
+        val fromAmountValue = fromAmount?.amountTextField?.cryptoAmount?.value.orZero()
 
-        val fromAmountValue = fromAmount?.amountTextField?.cryptoAmount?.value ?: return
-
-        if (fromAmountValue.isZero()) return
+        if (fromAmount?.amountTextField?.isError == true || fromAmountValue.isNullOrZero()) {
+            uiState.transformerUpdate(SwapQuoteEmptyStateTransformer)
+            return
+        }
 
         val swapGroups = state.swapCurrencies.getGroupWithDirection(state.swapDirection)
 
