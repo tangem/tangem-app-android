@@ -80,10 +80,12 @@ configurations.androidTestImplementation {
 dependencies {
     implementation(projects.domain.legacy)
     implementation(projects.libs.blockchainSdk)
+    implementation(projects.domain.account)
     implementation(projects.domain.models)
     implementation(projects.domain.core)
     implementation(projects.domain.card)
     implementation(projects.domain.demo)
+    implementation(projects.domain.demo.models)
     implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.settings)
@@ -121,6 +123,8 @@ dependencies {
     implementation(projects.domain.notifications.toggles)
     implementation(projects.domain.swap.models)
     implementation(projects.domain.swap)
+    implementation(projects.domain.walletManager)
+    implementation(projects.domain.walletManager.models)
 
     implementation(projects.common)
     implementation(projects.common.routing)
@@ -134,13 +138,13 @@ dependencies {
     implementation(projects.core.datasource)
     implementation(projects.core.utils)
     implementation(projects.core.decompose)
-    implementation(projects.core.deepLinks)
     implementation(projects.core.error.ext)
     implementation(projects.libs.crypto)
     implementation(projects.libs.auth)
     implementation(projects.libs.blockchainSdk)
     implementation(projects.libs.tangemSdkApi)
 
+    implementation(projects.data.account)
     implementation(projects.data.appCurrency)
     implementation(projects.data.appTheme)
     implementation(projects.data.balanceHiding)
@@ -168,6 +172,7 @@ dependencies {
     implementation(projects.data.blockaid)
     implementation(projects.data.notifications)
     implementation(projects.data.swap)
+    implementation(projects.data.walletManager)
 
     /** Features */
     implementation(projects.features.referral.impl)
@@ -229,6 +234,10 @@ dependencies {
     implementation(projects.features.welcome.impl)
     implementation(projects.features.createWalletSelection.api)
     implementation(projects.features.createWalletSelection.impl)
+    implementation(projects.features.home.api)
+    implementation(projects.features.home.impl)
+    implementation(projects.features.account.api)
+    implementation(projects.features.account.impl)
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)
@@ -251,13 +260,11 @@ dependencies {
 
     /** Compose libraries */
     implementation(deps.compose.constraintLayout)
-    implementation(deps.compose.material)
     implementation(deps.compose.material3)
     implementation(deps.compose.animation)
     implementation(deps.compose.coil)
     implementation(deps.compose.constraintLayout)
     implementation(deps.compose.foundation)
-    implementation(deps.compose.material)
     implementation(deps.compose.navigation.hilt)
     implementation(deps.compose.shimmer)
     implementation(deps.compose.ui)
@@ -281,6 +288,8 @@ dependencies {
     implementation(tangemDeps.card.android) {
         exclude(module = "joda-time")
     }
+    implementation(tangemDeps.hot.core)
+    implementation(tangemDeps.hot.android)
 
     /** DI */
     implementation(deps.hilt.android)
@@ -300,6 +309,7 @@ dependencies {
     implementation(deps.zxing.qrCore)
     implementation(deps.coil)
     implementation(deps.coil.gif)
+    implementation(deps.coil.svg)
     implementation(deps.amplitude)
     implementation(deps.kotsonGson)
     implementation(deps.spongecastle.core)

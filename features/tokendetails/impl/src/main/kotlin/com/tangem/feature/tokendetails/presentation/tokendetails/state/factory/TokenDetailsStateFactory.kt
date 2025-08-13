@@ -13,24 +13,24 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.card.NetworkHasDerivationUseCase
-import com.tangem.domain.common.CardTypesResolver
+import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.network.TxInfo
-import com.tangem.domain.staking.GetStakingIntegrationIdUseCase
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
 import com.tangem.domain.tokens.error.CurrencyStatusError
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.txhistory.models.TxHistoryListError
 import com.tangem.domain.txhistory.models.TxHistoryStateError
-import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.domain.wallets.usecase.NetworkHasDerivationUseCase
 import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenBalanceSegmentedButtonConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsAppBarMenuConfig
@@ -54,7 +54,6 @@ internal class TokenDetailsStateFactory(
     private val networkHasDerivationUseCase: NetworkHasDerivationUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val userWalletId: UserWalletId,
-    getStakingIntegrationIdUseCase: GetStakingIntegrationIdUseCase,
     symbol: String,
     decimals: Int,
 ) {
@@ -63,7 +62,6 @@ internal class TokenDetailsStateFactory(
         TokenDetailsSkeletonStateConverter(
             clickIntents = clickIntents,
             networkHasDerivationUseCase = networkHasDerivationUseCase,
-            getStakingIntegrationIdUseCase = getStakingIntegrationIdUseCase,
             getUserWalletUseCase = getUserWalletUseCase,
             userWalletId = userWalletId,
         )
@@ -348,7 +346,7 @@ internal class TokenDetailsStateFactory(
     }
 
     fun getStateWithUpdatedMenu(
-        cardTypesResolver: CardTypesResolver,
+        userWallet: UserWallet,
         hasDerivations: Boolean,
         isSupported: Boolean,
     ): TokenDetailsState {
@@ -356,7 +354,7 @@ internal class TokenDetailsStateFactory(
             copy(
                 topAppBarConfig = topAppBarConfig.copy(
                     tokenDetailsAppBarMenuConfig = topAppBarConfig.tokenDetailsAppBarMenuConfig
-                        ?.updateMenu(cardTypesResolver, hasDerivations, isSupported),
+                        ?.updateMenu(userWallet, hasDerivations, isSupported),
                 ),
             )
         }
@@ -385,11 +383,16 @@ internal class TokenDetailsStateFactory(
     }
 
     private fun TokenDetailsAppBarMenuConfig.updateMenu(
-        cardTypesResolver: CardTypesResolver,
+        userWallet: UserWallet,
         hasDerivations: Boolean,
         isSupported: Boolean,
     ): TokenDetailsAppBarMenuConfig? {
-        if (cardTypesResolver.isSingleWalletWithToken()) return null
+        if (userWallet is UserWallet.Cold &&
+            userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()
+        ) {
+            return null
+        }
+
         return copy(
             items = buildList {
                 if (isSupported && hasDerivations) {

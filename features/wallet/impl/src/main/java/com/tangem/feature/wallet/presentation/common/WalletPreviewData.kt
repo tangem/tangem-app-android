@@ -7,7 +7,7 @@ import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemColorPalette
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.wallet.presentation.wallet.state.model.ActionsBottomSheetConfig
 import com.tangem.feature.wallet.presentation.wallet.state.model.TokenActionButtonConfig
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletAdditionalInfo

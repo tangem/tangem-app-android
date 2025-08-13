@@ -27,11 +27,9 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.ui.AmountFieldV2
 import com.tangem.core.ui.components.RectangleShimmer
-import com.tangem.core.ui.components.SecondaryButton
 import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.atoms.text.EllipsisText
-import com.tangem.core.ui.components.buttons.common.TangemButtonSize
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.conditionalCompose
@@ -81,6 +79,7 @@ internal fun SwapAmountContent(
             },
         )
         SwapAmountBlockSeparator(
+            onClick = clickIntents::onSeparatorClick,
             modifier = Modifier
                 .constrainAs(middleButtonRef) {
                     top.linkTo(amountFromRef.bottom)
@@ -93,7 +92,7 @@ internal fun SwapAmountContent(
 }
 
 @Composable
-private fun SwapAmountBlockSeparator(modifier: Modifier = Modifier) {
+private fun SwapAmountBlockSeparator(onClick: () -> Unit, modifier: Modifier = Modifier) {
     // todo add swap type like [Swap, SendViaSwap, SendIncognito]
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -102,13 +101,11 @@ private fun SwapAmountBlockSeparator(modifier: Modifier = Modifier) {
             .heightIn(max = 28.dp)
             .clip(RoundedCornerShape(32.dp))
             .background(TangemTheme.colors.background.secondary)
-            .padding(
-                vertical = 6.dp,
-                horizontal = 12.dp,
-            ),
+            .clickable(onClick = onClick)
+            .padding(vertical = 6.dp, horizontal = 12.dp),
     ) {
         Text(
-            text = "Convert",
+            text = stringResourceSafe(R.string.common_convert),
             style = TangemTheme.typography.caption1,
             color = TangemTheme.colors.text.tertiary,
         )
@@ -180,8 +177,7 @@ private fun SwapAmountEditBlock(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(12.dp),
-        modifier = modifier
-            .padding(vertical = 48.dp),
+        modifier = modifier.padding(top = 48.dp, bottom = 28.dp),
     ) {
         if (amountFieldUM.amountField !is AmountState.Data) {
             TextShimmer(
@@ -244,12 +240,12 @@ private fun SwapAmountInfo(
         SwapAmountInfoMain(amountFieldUM = amountFieldUM)
         SpacerWMax()
         AnimatedContent(
-            amountUM,
-        ) { wrappedAmountUM ->
-            if (wrappedAmountUM is SwapAmountUM.Content) {
+            amountFieldUM,
+        ) { wrappedFieldAmountUM ->
+            if (amountUM is SwapAmountUM.Content) {
                 SwapAmountInfoExtra(
-                    amountUM = wrappedAmountUM,
-                    amountFieldUM = amountFieldUM,
+                    amountUM = amountUM,
+                    amountFieldUM = wrappedFieldAmountUM,
                     onMaxAmountClick = onMaxAmountClick,
                     onSelectTokenClick = onSelectTokenClick,
                 )
@@ -263,24 +259,10 @@ private fun SwapAmountInfo(
 @Composable
 private fun SwapAmountInfoMain(amountFieldUM: SwapAmountFieldUM, modifier: Modifier = Modifier) {
     AnimatedContent(
-        targetState = amountFieldUM !is SwapAmountFieldUM.Content,
+        targetState = amountFieldUM is SwapAmountFieldUM.Content,
         modifier = modifier,
     ) { isContent ->
-        if (isContent) {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(2.dp),
-            ) {
-                TextShimmer(
-                    style = TangemTheme.typography.subtitle2,
-                    modifier = Modifier.width(56.dp),
-                )
-                TextShimmer(
-                    style = TangemTheme.typography.caption2,
-                    modifier = Modifier.width(72.dp),
-                )
-            }
-        } else {
-            val amountFieldUM = amountFieldUM as SwapAmountFieldUM.Content
+        if (isContent && amountFieldUM is SwapAmountFieldUM.Content) {
             Column(
                 verticalArrangement = Arrangement.spacedBy(2.dp),
             ) {
@@ -295,6 +277,19 @@ private fun SwapAmountInfoMain(amountFieldUM: SwapAmountFieldUM, modifier: Modif
                     style = TangemTheme.typography.caption2,
                     color = TangemTheme.colors.text.tertiary,
                     ellipsis = amountFieldUM.subtitleEllipsis,
+                )
+            }
+        } else {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                TextShimmer(
+                    style = TangemTheme.typography.subtitle2,
+                    modifier = Modifier.width(56.dp),
+                )
+                TextShimmer(
+                    style = TangemTheme.typography.caption2,
+                    modifier = Modifier.width(72.dp),
                 )
             }
         }
@@ -323,8 +318,7 @@ private fun SwapAmountInfoExtra(
                 SwapAmountInfoQuote(
                     quoteUM = amountUM.selectedQuote,
                     swapRateType = amountUM.swapRateType,
-                    onSelectTokenClick =
-                    onSelectTokenClick,
+                    onSelectTokenClick = onSelectTokenClick,
                 )
             }
         }
@@ -352,11 +346,20 @@ private fun SwapAmountInfoExtra(
 
 @Composable
 private fun AmountMaxButton(onMaxAmountClick: () -> Unit) {
-    SecondaryButton(
+    Text(
         text = stringResourceSafe(R.string.send_max_amount),
-        size = TangemButtonSize.Small,
-        onClick = onMaxAmountClick,
-        modifier = Modifier.padding(end = 16.dp),
+        style = TangemTheme.typography.caption1,
+        color = TangemTheme.colors.text.primary1,
+        modifier = Modifier
+            .padding(end = 16.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(TangemTheme.colors.background.secondary)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = ripple(),
+                onClick = onMaxAmountClick,
+            )
+            .padding(horizontal = 12.dp, vertical = 4.dp),
     )
 }
 

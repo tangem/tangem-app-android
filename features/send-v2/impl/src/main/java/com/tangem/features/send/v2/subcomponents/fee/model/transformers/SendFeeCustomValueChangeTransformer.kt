@@ -1,11 +1,11 @@
 package com.tangem.features.send.v2.subcomponents.fee.model.transformers
 
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeSelectorUM
-import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeUM
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.features.send.v2.subcomponents.fee.model.SendFeeClickIntents
 import com.tangem.features.send.v2.subcomponents.fee.model.converters.SendFeeCustomFieldConverter
+import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeSelectorUM
+import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeUM
 import com.tangem.utils.transformer.Transformer
 
 internal class SendFeeCustomValueChangeTransformer(

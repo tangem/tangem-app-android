@@ -9,7 +9,7 @@ import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.CoinsResponse
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
 import kotlinx.coroutines.test.runTest

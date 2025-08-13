@@ -8,7 +8,7 @@ import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIco
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 
 /**
 [REDACTED_AUTHOR]

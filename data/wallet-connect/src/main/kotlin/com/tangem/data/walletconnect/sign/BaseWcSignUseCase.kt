@@ -7,6 +7,7 @@ import com.tangem.domain.walletconnect.WcAnalyticEvents
 import com.tangem.domain.walletconnect.model.WcSession
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
 import com.tangem.domain.walletconnect.usecase.method.WcMethodUseCase
+import com.tangem.domain.walletconnect.usecase.method.WcNetworkDerivationState
 import com.tangem.domain.walletconnect.usecase.method.WcSignState
 import com.tangem.domain.walletconnect.usecase.method.WcSignUseCase
 import kotlinx.coroutines.flow.FlowCollector
@@ -23,8 +24,12 @@ internal abstract class BaseWcSignUseCase<MiddleAction, SignModel> :
     abstract val context: WcMethodUseCaseContext
     override val network: Network get() = context.network
     override val session: WcSession get() = context.session
-    override val walletAddress: String get() = context.accountAddress
     override val rawSdkRequest: WcSdkSessionRequest get() = context.rawSdkRequest
+    override val derivationState: WcNetworkDerivationState
+        get() = when {
+            context.networkDerivationsCount > 1 -> WcNetworkDerivationState.Multiple(context.accountAddress)
+            else -> WcNetworkDerivationState.Single
+        }
 
     protected val delegate by lazy {
         WcSignUseCaseDelegate(
@@ -73,6 +78,7 @@ internal class WcMethodUseCaseContext(
     val rawSdkRequest: WcSdkSessionRequest,
     val network: Network,
     val accountAddress: String,
+    val networkDerivationsCount: Int,
 )
 
 internal typealias SignCollector<SignModel> = FlowCollector<WcSignState<SignModel>>

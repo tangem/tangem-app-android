@@ -6,14 +6,14 @@ import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.staking.model.stakekit.BalanceItem
-import com.tangem.domain.staking.model.stakekit.BalanceType
-import com.tangem.domain.staking.model.stakekit.BalanceType.Companion.isClickable
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.staking.BalanceItem
+import com.tangem.domain.models.staking.BalanceType
+import com.tangem.domain.models.staking.BalanceType.Companion.isClickable
+import com.tangem.domain.models.staking.YieldBalance
+import com.tangem.domain.models.staking.action.StakingActionType
 import com.tangem.domain.staking.model.stakekit.Yield
-import com.tangem.domain.staking.model.stakekit.YieldBalance
-import com.tangem.domain.staking.model.stakekit.action.StakingActionType
 import com.tangem.domain.staking.utils.getRewardStakingBalance
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.BalanceState
 import com.tangem.lib.crypto.BlockchainUtils
@@ -22,7 +22,7 @@ import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.orZero
 import kotlinx.collections.immutable.toPersistentList
-import org.joda.time.DateTime
+import kotlinx.datetime.Instant
 import java.math.BigDecimal
 import java.util.Calendar
 
@@ -122,7 +122,7 @@ internal class BalanceItemConverter(
         -> null
     }
 
-    private fun getUnbondingDate(date: DateTime?): TextReference? {
+    private fun getUnbondingDate(date: Instant?): TextReference? {
         val unbondingPeriod = yield.metadata.cooldownPeriod?.days ?: return null
         if (date == null) {
             return combinedReference(
@@ -136,7 +136,7 @@ internal class BalanceItemConverter(
         nowCalendar.resetHours()
 
         val endDate = Calendar.getInstance()
-        endDate.timeInMillis = date.millis
+        endDate.timeInMillis = date.toEpochMilliseconds()
         endDate.resetHours()
 
         val days = ((endDate.timeInMillis - nowCalendar.timeInMillis) / DAY_IN_MILLIS).toInt()

@@ -1,6 +1,7 @@
 package com.tangem.features.walletconnect.transaction.converter
 
 import com.tangem.domain.walletconnect.usecase.method.WcMessageSignUseCase
+import com.tangem.domain.walletconnect.usecase.method.WcMethodContext
 import com.tangem.domain.walletconnect.usecase.method.WcSignState
 import com.tangem.domain.walletconnect.usecase.method.WcSignStep
 import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionActionsUM
@@ -8,7 +9,7 @@ import com.tangem.features.walletconnect.transaction.entity.common.WcTransaction
 import com.tangem.features.walletconnect.transaction.entity.sign.WcSignTransactionItemUM
 import com.tangem.features.walletconnect.transaction.entity.sign.WcSignTransactionUM
 import com.tangem.utils.converter.Converter
-import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import javax.inject.Inject
 
 internal class WcSignTransactionUMConverter @Inject constructor(
@@ -23,26 +24,25 @@ internal class WcSignTransactionUMConverter @Inject constructor(
             onSign = value.actions.onSign,
             appInfo = appInfoContentUMConverter.convert(
                 WcTransactionAppInfoContentUMConverter.Input(
-                    session = value.useCase.session,
+                    session = value.context.session,
                     onShowVerifiedAlert = value.actions.onShowVerifiedAlert,
                 ),
             ),
-            walletName = value.useCase.session.wallet.name,
-            networkInfo = networkInfoUMConverter.convert(value.useCase.network),
+            walletName = value.context.session.wallet.name.takeIf { value.context.session.showWalletInfo },
+            networkInfo = networkInfoUMConverter.convert(value.context.network),
             isLoading = value.signState.domainStep == WcSignStep.Signing,
+            address = WcAddressConverter.convert(value.context.derivationState),
         ),
         transactionRequestInfo = WcTransactionRequestInfoUM(
-            persistentListOf(
-                requestBlockUMConverter.convert(
-                    WcTransactionRequestBlockUMConverter.Input(value.useCase.rawSdkRequest, value.signModel),
-                ),
-            ),
+            requestBlockUMConverter.convert(
+                WcTransactionRequestBlockUMConverter.Input(value.context.rawSdkRequest, value.signModel),
+            ).toImmutableList(),
             onCopy = value.actions.onCopy,
         ),
     )
 
     data class Input(
-        val useCase: WcMessageSignUseCase,
+        val context: WcMethodContext,
         val signState: WcSignState<*>,
         val signModel: WcMessageSignUseCase.SignModel,
         val actions: WcTransactionActionsUM,

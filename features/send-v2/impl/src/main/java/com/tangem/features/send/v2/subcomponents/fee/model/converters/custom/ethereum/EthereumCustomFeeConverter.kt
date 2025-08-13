@@ -9,16 +9,16 @@ import com.tangem.common.ui.amountScreen.utils.getFiatReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.features.send.v2.api.entity.CustomFeeFieldUM
 import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.subcomponents.fee.model.checkExceedBalance
-import com.tangem.features.send.v2.api.entity.CustomFeeFieldUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
 internal class EthereumCustomFeeConverter(
     private val onCustomFeeValueChange: (Int, String) -> Unit,
-    private val onNextClick: () -> Unit,
+    private val onNextClick: (() -> Unit)?,
     private val appCurrency: AppCurrency,
     feeCryptoCurrencyStatus: CryptoCurrencyStatus,
 ) : BaseEthereumCustomFeeConverter<Fee.Ethereum> {
@@ -112,7 +112,11 @@ internal class EthereumCustomFeeConverter(
                 keyboardType = KeyboardType.Number,
             ),
             keyboardActions = KeyboardActions(
-                onDone = { onNextClick() },
+                onDone = if (onNextClick != null) {
+                    { onNextClick() }
+                } else {
+                    null
+                },
             ),
         )
     }

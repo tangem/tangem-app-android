@@ -25,6 +25,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -48,6 +49,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemDimens
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.MainScreenTestTags
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDropDownItems
@@ -278,7 +280,9 @@ private fun Balance(state: WalletCardState, isBalanceHidden: Boolean, modifier: 
         when (state) {
             is WalletCardState.Content -> {
                 ResizableText(
-                    modifier = Modifier.defaultMinSize(minHeight = TangemTheme.dimens.size32),
+                    modifier = Modifier
+                        .defaultMinSize(minHeight = TangemTheme.dimens.size32)
+                        .testTag(MainScreenTestTags.WALLET_BALANCE),
                     text = balance,
                     fontSizeRange = FontSizeRange(min = 16.sp, max = TangemTheme.typography.h2.fontSize),
                     overflow = TextOverflow.Ellipsis,

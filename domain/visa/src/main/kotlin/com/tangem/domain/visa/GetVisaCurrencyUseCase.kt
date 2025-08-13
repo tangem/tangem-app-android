@@ -3,7 +3,7 @@ package com.tangem.domain.visa
 import arrow.core.Either
 import com.tangem.domain.visa.model.VisaCurrency
 import com.tangem.domain.visa.repository.VisaRepository
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 
 class GetVisaCurrencyUseCase(
     private val repository: VisaRepository,

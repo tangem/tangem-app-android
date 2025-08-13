@@ -4,7 +4,7 @@ import com.tangem.common.CardIdRangeDec
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 import kotlinx.coroutines.runBlocking
 
 object ExpressUtils {

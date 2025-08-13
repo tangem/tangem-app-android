@@ -24,6 +24,7 @@ dependencies {
     implementation(projects.domain.express.models)
     implementation(projects.domain.express)
     implementation(projects.domain.wallets.models)
+    api(projects.domain.models)
 
     /** Other */
     implementation(deps.moshi)

@@ -19,6 +19,11 @@ internal sealed class CommonSendRoute : Route {
     }
 
     @Serializable
+    data object ConfirmSuccess : CommonSendRoute() {
+        override val isEditMode: Boolean = false
+    }
+
+    @Serializable
     data class Destination(
         override val isEditMode: Boolean,
     ) : CommonSendRoute(), DestinationRoute

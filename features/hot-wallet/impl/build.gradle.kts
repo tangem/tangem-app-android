@@ -14,6 +14,7 @@ android {
 dependencies {
     /** Api */
     implementation(projects.features.hotWallet.api)
+    implementation(projects.features.pushNotifications.api)
 
     /** Core modules */
     implementation(projects.core.configToggles)
@@ -26,6 +27,13 @@ dependencies {
     implementation(projects.core.navigation)
     implementation(projects.core.datasource)
 
+    /** Domain */
+    implementation(projects.domain.models)
+    implementation(projects.domain.wallets)
+    implementation(projects.domain.wallets.models)
+    implementation(projects.domain.models)
+    implementation(projects.domain.settings)
+
     /** Common */
     implementation(projects.common.ui)
     implementation(projects.common.routing)
@@ -36,13 +44,14 @@ dependencies {
     implementation(tangemDeps.card.android) {
         exclude(module = "joda-time")
     }
+    implementation(tangemDeps.hot.core)
+    implementation(tangemDeps.hot.android)
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)
     implementation(deps.lifecycle.runtime.ktx)
 
     /** Compose libraries */
-    implementation(deps.compose.material)  // to use buttons and text field in MultiWalletSeedPhraseImport.kt
     implementation(deps.compose.material3)
     implementation(deps.compose.animation)
     implementation(deps.compose.foundation)

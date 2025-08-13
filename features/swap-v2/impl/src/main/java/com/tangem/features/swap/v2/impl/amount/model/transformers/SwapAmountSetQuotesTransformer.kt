@@ -8,6 +8,7 @@ import com.tangem.domain.express.models.ExpressError
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM.Content.DifferencePercent
+import com.tangem.features.swap.v2.impl.common.isRestrictedByFCA
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.extensions.isPositive
 import com.tangem.utils.transformer.Transformer
@@ -17,19 +18,28 @@ import java.math.BigDecimal
 
 internal class SwapAmountSetQuotesTransformer(
     private val quotes: List<SwapQuoteUM>,
-    private val secondaryMaximumAmountBoundary: EnterAmountBoundary,
-    private val secondaryMinimumAmountBoundary: EnterAmountBoundary,
+    private val secondaryMaximumAmountBoundary: EnterAmountBoundary?,
+    private val secondaryMinimumAmountBoundary: EnterAmountBoundary?,
+    private val isSilentReload: Boolean,
+    private val needApplyFcaRestrictions: Boolean,
 ) : Transformer<SwapAmountUM> {
     override fun transform(prevState: SwapAmountUM): SwapAmountUM {
         if (prevState !is SwapAmountUM.Content) return prevState
 
         val sortedQuotes = quotes.sortedWith(SwapQuotesComparator)
         val bestQuote = findBestQuote(quotes) ?: SwapQuoteUM.Empty
+        val selectedQuote = if (isSilentReload && prevState.selectedQuote !is SwapQuoteUM.Loading) {
+            prevState.selectedQuote
+        } else {
+            (bestQuote as? SwapQuoteUM.Content)?.copy(diffPercent = DifferencePercent.Best) ?: bestQuote
+        }
 
         val selectQuoteTransformer = SwapAmountSelectQuoteTransformer(
-            quoteUM = bestQuote,
+            quoteUM = selectedQuote,
             secondaryMaximumAmountBoundary = secondaryMaximumAmountBoundary,
             secondaryMinimumAmountBoundary = secondaryMinimumAmountBoundary,
+            needApplyFCARestrictions = needApplyFcaRestrictions &&
+                selectedQuote.provider?.isRestrictedByFCA() == true,
         )
 
         val updatedState = selectQuoteTransformer.transform(prevState = prevState)
@@ -52,6 +62,7 @@ internal class SwapAmountSetQuotesTransformer(
                         val percent = quote.quoteAmount / bestQuote.quoteAmount - BigDecimal.ONE
                         quote.copy(
                             diffPercent = DifferencePercent.Diff(
+                                isPositive = percent.isPositive(),
                                 percent = stringReference(
                                     if (percent.isPositive()) {
                                         "${StringsSigns.PLUS}${percent.format { percent() }}"

@@ -23,12 +23,14 @@ internal object WcConnectionsPreviewData {
                 WcConnectedAppInfo(
                     name = "Moralis",
                     iconUrl = "$BASE_URL/satoshi.png",
+                    subtitle = "https://react-app.walletconnect.com/",
                     verifiedState = VerifiedDAppState.Verified {},
                     onClick = { Timber.d("Moralis clicked") },
                 ),
                 WcConnectedAppInfo(
                     name = "website.com",
                     iconUrl = "$BASE_URL/doge_again_lol.jpg",
+                    subtitle = "https://react-app.walletconnect.com/",
                     onClick = { Timber.d("website.com clicked") },
                     verifiedState = VerifiedDAppState.Unknown,
                 ),
@@ -39,8 +41,9 @@ internal object WcConnectionsPreviewData {
             walletName = "Bitcoin",
             connectedApps = persistentListOf(
                 WcConnectedAppInfo(
-                    name = "React app",
+                    name = "React app React app React app React app React app",
                     iconUrl = "$BASE_URL/LiteCoin.png",
+                    subtitle = "https://react-app.walletconnect.com/",
                     verifiedState = VerifiedDAppState.Verified {},
                     onClick = { Timber.d("React app clicked") },
                 ),
@@ -53,12 +56,14 @@ internal object WcConnectionsPreviewData {
                 WcConnectedAppInfo(
                     name = "Moralis",
                     iconUrl = "$BASE_URL/satoshi.png",
+                    subtitle = "https://react-app.walletconnect.com/",
                     verifiedState = VerifiedDAppState.Verified {},
                     onClick = { Timber.d("Moralis clicked") },
                 ),
                 WcConnectedAppInfo(
                     name = "website.com",
                     iconUrl = "$BASE_URL/doge_again_lol.jpg",
+                    subtitle = "https://react-app.walletconnect.com/",
                     verifiedState = VerifiedDAppState.Unknown,
                     onClick = { Timber.d("website.com clicked") },
                 ),
@@ -71,6 +76,7 @@ internal object WcConnectionsPreviewData {
                 WcConnectedAppInfo(
                     name = "React app",
                     iconUrl = "$BASE_URL/LiteCoin.png",
+                    subtitle = "https://react-app.walletconnect.com/",
                     onClick = { Timber.d("React app clicked") },
                     verifiedState = VerifiedDAppState.Verified {},
                 ),
@@ -83,12 +89,14 @@ internal object WcConnectionsPreviewData {
                 WcConnectedAppInfo(
                     name = "Moralis",
                     iconUrl = "$BASE_URL/satoshi.png",
+                    subtitle = "https://react-app.walletconnect.com/",
                     verifiedState = VerifiedDAppState.Verified {},
                     onClick = { Timber.d("Moralis clicked") },
                 ),
                 WcConnectedAppInfo(
                     name = "website.com",
                     iconUrl = "$BASE_URL/doge_again_lol.jpg",
+                    subtitle = "https://react-app.walletconnect.com/",
                     onClick = { Timber.d("website.com clicked") },
                     verifiedState = VerifiedDAppState.Unknown,
                 ),
@@ -101,6 +109,7 @@ internal object WcConnectionsPreviewData {
                 WcConnectedAppInfo(
                     name = "React app",
                     iconUrl = "$BASE_URL/LiteCoin.png",
+                    subtitle = "https://react-app.walletconnect.com/",
                     verifiedState = VerifiedDAppState.Verified {},
                     onClick = { Timber.d("React app clicked") },
                 ),
@@ -109,9 +118,8 @@ internal object WcConnectionsPreviewData {
     )
     val stateWithEmptyConnections = WcConnectionsState(
         topAppBarConfig = WcConnectionsTopAppBarConfig(
-            startButtonUM = TopAppBarButtonUM(
-                iconRes = R.drawable.ic_back_24,
-                onIconClicked = {},
+            startButtonUM = TopAppBarButtonUM.Back(
+                onBackClicked = {},
                 enabled = true,
             ),
             disconnectAllItem = TangemDropdownMenuItem(

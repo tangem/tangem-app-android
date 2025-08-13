@@ -16,8 +16,10 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.settings.SettingsManager
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.message.*
-import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.EventMessageAction
+import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
@@ -28,9 +30,7 @@ import com.tangem.domain.notifications.GetIsHuaweiDeviceWithoutGoogleServicesUse
 import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.notifications.toggles.NotificationsFeatureToggles
 import com.tangem.domain.settings.repositories.PermissionRepository
-import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.isMultiCurrency
-import com.tangem.domain.wallets.models.requireColdWallet
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.usecase.*
 import com.tangem.feature.walletsettings.analytics.Settings
 import com.tangem.feature.walletsettings.analytics.WalletSettingsAnalyticEvents
@@ -41,7 +41,6 @@ import com.tangem.feature.walletsettings.entity.WalletSettingsItemUM
 import com.tangem.feature.walletsettings.entity.WalletSettingsUM
 import com.tangem.feature.walletsettings.impl.R
 import com.tangem.feature.walletsettings.utils.ItemsBuilder
-import com.tangem.features.nft.NFTFeatureToggles
 import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.PersistentList
@@ -65,12 +64,11 @@ internal class WalletSettingsModel @Inject constructor(
     private val analyticsContextProxy: AnalyticsContextProxy,
     private val getShouldSaveUserWalletsSyncUseCase: ShouldSaveUserWalletsSyncUseCase,
     private val isDemoCardUseCase: IsDemoCardUseCase,
-    private val nftFeatureToggles: NFTFeatureToggles,
-    private val getWalletNFTEnabledUseCase: GetWalletNFTEnabledUseCase,
+    getWalletNFTEnabledUseCase: GetWalletNFTEnabledUseCase,
     private val enableWalletNFTUseCase: EnableWalletNFTUseCase,
     private val disableWalletNFTUseCase: DisableWalletNFTUseCase,
     private val notificationsToggles: NotificationsFeatureToggles,
-    private val getWalletNotificationsEnabledUseCase: GetWalletNotificationsEnabledUseCase,
+    getWalletNotificationsEnabledUseCase: GetWalletNotificationsEnabledUseCase,
     private val setNotificationsEnabledUseCase: SetNotificationsEnabledUseCase,
     private val settingsManager: SettingsManager,
     private val permissionsRepository: PermissionRepository,
@@ -107,7 +105,6 @@ internal class WalletSettingsModel @Inject constructor(
                         userWallet = wallet,
                         dialogNavigation = dialogNavigation,
                         isRenameWalletAvailable = isRenameWalletAvailable,
-                        isNFTFeatureEnabled = nftFeatureToggles.isNFTEnabled,
                         isNFTEnabled = nftEnabled,
                         isNotificationsEnabled = notificationsEnabled,
                         isNotificationsFeatureEnabled = isNeedShowNotifications,
@@ -133,49 +130,62 @@ internal class WalletSettingsModel @Inject constructor(
         userWallet: UserWallet,
         dialogNavigation: SlotNavigation<DialogConfig>,
         isRenameWalletAvailable: Boolean,
-        isNFTFeatureEnabled: Boolean,
         isNFTEnabled: Boolean,
         isNotificationsFeatureEnabled: Boolean,
         isNotificationsEnabled: Boolean,
         isNotificationsPermissionGranted: Boolean,
-    ): PersistentList<WalletSettingsItemUM> = itemsBuilder.buildItems(
-        userWalletId = userWallet.walletId,
-        userWalletName = userWallet.name,
-        isReferralAvailable = userWallet !is UserWallet.Cold || userWallet.cardTypesResolver.isTangemWallet(),
-        isLinkMoreCardsAvailable = userWallet is UserWallet.Cold &&
-            userWallet.scanResponse.card.backupStatus == CardDTO.BackupStatus.NoBackup,
-        isManageTokensAvailable = userWallet.isMultiCurrency,
-        isRenameWalletAvailable = isRenameWalletAvailable,
-        renameWallet = { openRenameWalletDialog(userWallet, dialogNavigation) },
-        isNFTFeatureEnabled = isNFTFeatureEnabled && userWallet.isMultiCurrency,
-        isNFTEnabled = isNFTEnabled,
-        onCheckedNFTChange = ::onCheckedNFTChange,
-        forgetWallet = {
-            val message = DialogMessage(
-                message = resourceReference(R.string.user_wallet_list_delete_prompt),
-                firstActionBuilder = {
-                    EventMessageAction(
-                        title = resourceReference(R.string.common_delete),
-                        warning = true,
-                        onClick = ::forgetWallet,
-                    )
-                },
-                secondActionBuilder = { cancelAction() },
-            )
+    ): PersistentList<WalletSettingsItemUM> {
+        val isMultiCurrency = when (userWallet) {
+            is UserWallet.Cold -> userWallet.isMultiCurrency
+            is UserWallet.Hot -> true
+        }
+        return itemsBuilder.buildItems(
+            userWallet = userWallet,
+            userWalletName = userWallet.name,
+            isReferralAvailable = when (userWallet) {
+                is UserWallet.Cold -> userWallet.cardTypesResolver.isTangemWallet()
+                is UserWallet.Hot -> false
+            },
+            isLinkMoreCardsAvailable = when (userWallet) {
+                is UserWallet.Cold -> userWallet.scanResponse.card.backupStatus == CardDTO.BackupStatus.NoBackup
+                is UserWallet.Hot -> false
+            },
+            isManageTokensAvailable = isMultiCurrency,
+            isRenameWalletAvailable = isRenameWalletAvailable,
+            renameWallet = { openRenameWalletDialog(userWallet, dialogNavigation) },
+            isNFTFeatureEnabled = isMultiCurrency,
+            isNFTEnabled = isNFTEnabled,
+            onCheckedNFTChange = ::onCheckedNFTChange,
+            forgetWallet = {
+                val message = DialogMessage(
+                    message = resourceReference(R.string.user_wallet_list_delete_prompt),
+                    firstActionBuilder = {
+                        EventMessageAction(
+                            title = resourceReference(R.string.common_delete),
+                            warning = true,
+                            onClick = ::forgetWallet,
+                        )
+                    },
+                    secondActionBuilder = { cancelAction() },
+                )
 
-            messageSender.send(message)
-        },
-        onLinkMoreCardsClick = {
-            userWallet.requireColdWallet()
-            onLinkMoreCardsClick(scanResponse = userWallet.scanResponse)
-        },
-        onReferralClick = { onReferralClick(userWallet) },
-        isNotificationsEnabled = isNotificationsEnabled,
-        isNotificationsFeatureEnabled = isNotificationsFeatureEnabled,
-        isNotificationsPermissionGranted = isNotificationsPermissionGranted,
-        onCheckedNotificationsChanged = ::onCheckedNotificationsChange,
-        onNotificationsDescriptionClick = ::onNotificationsDescriptionClick,
-    )
+                messageSender.send(message)
+            },
+            onLinkMoreCardsClick = {
+                when (userWallet) {
+                    is UserWallet.Cold -> onLinkMoreCardsClick(scanResponse = userWallet.scanResponse)
+                    is UserWallet.Hot -> Unit
+                }
+            },
+            onReferralClick = { onReferralClick(userWallet) },
+            isNotificationsEnabled = isNotificationsEnabled,
+            isNotificationsFeatureEnabled = isNotificationsFeatureEnabled,
+            isNotificationsPermissionGranted = isNotificationsPermissionGranted,
+            onCheckedNotificationsChanged = ::onCheckedNotificationsChange,
+            onNotificationsDescriptionClick = ::onNotificationsDescriptionClick,
+            onAccessCodeClick = ::onAccessCodeClick,
+        )
+    }
 
     private fun openRenameWalletDialog(userWallet: UserWallet, dialogNavigation: SlotNavigation<DialogConfig>) {
         val config = DialogConfig.RenameWallet(
@@ -200,7 +210,7 @@ internal class WalletSettingsModel @Inject constructor(
         if (hasUserWallets) {
             router.pop()
         } else {
-            router.replaceAll(AppRoute.Home)
+            router.replaceAll(AppRoute.Home())
         }
     }
 
@@ -317,5 +327,9 @@ internal class WalletSettingsModel @Inject constructor(
         } else {
             router.push(AppRoute.ReferralProgram(userWallet.walletId))
         }
+    }
+
+    private fun onAccessCodeClick() {
+        router.push(AppRoute.UpdateAccessCode(params.userWalletId))
     }
 }
