@@ -18,6 +18,7 @@
   <string name="account_details_archive_action">Archive</string>
   <string name="account_details_archive_description">You are archiving this account, but you can always get it back.</string>
   <string name="account_details_title">Account</string>
+  <string name="account_form_account_index">Account #%s — used for address derivation.</string>
   <string name="account_form_create_button">Add account</string>
   <string name="account_form_edit_button">Save</string>
   <string name="account_form_name">Account name</string>
