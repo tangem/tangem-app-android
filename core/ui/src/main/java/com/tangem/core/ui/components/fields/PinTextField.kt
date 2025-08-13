@@ -57,7 +57,7 @@ fun PinTextField(
             }
             .focusRequester(focusRequester),
         keyboardOptions = KeyboardOptions.Default.copy(
-            keyboardType = KeyboardType.Number,
+            keyboardType = KeyboardType.NumberPassword,
             imeAction = ImeAction.Done,
         ),
         singleLine = true,
