@@ -4,11 +4,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.tangem.core.analytics.DummyAnalyticsEventHandler
 import com.tangem.core.decompose.navigation.DummyRouter
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.walletsettings.component.WalletSettingsComponent
 import com.tangem.feature.walletsettings.entity.WalletSettingsUM
 import com.tangem.feature.walletsettings.ui.WalletSettingsScreen
 import com.tangem.feature.walletsettings.utils.ItemsBuilder
+import com.tangem.hot.sdk.model.HotWalletId
 
 internal class PreviewWalletSettingsComponent : WalletSettingsComponent {
 
@@ -18,7 +20,13 @@ internal class PreviewWalletSettingsComponent : WalletSettingsComponent {
             router = DummyRouter(),
             analyticsEventHandler = DummyAnalyticsEventHandler(),
         ).buildItems(
-            userWalletId = UserWalletId("011"),
+            userWallet = UserWallet.Hot(
+                walletId = UserWalletId("011"),
+                name = "My Wallet",
+                hotWalletId = HotWalletId("", HotWalletId.AuthType.NoPassword),
+                wallets = null,
+                backedUp = false,
+            ),
             userWalletName = "My Wallet",
             isReferralAvailable = true,
             isLinkMoreCardsAvailable = true,
@@ -36,6 +44,7 @@ internal class PreviewWalletSettingsComponent : WalletSettingsComponent {
             onCheckedNotificationsChanged = {},
             onNotificationsDescriptionClick = {},
             isNotificationsPermissionGranted = false,
+            onAccessCodeClick = {},
         ),
         requestPushNotificationsPermission = false,
         onPushNotificationPermissionGranted = {},
