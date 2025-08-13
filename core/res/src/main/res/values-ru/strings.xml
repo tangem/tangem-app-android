@@ -1359,7 +1359,7 @@
   <string name="wc_errors_no_blockchains_title">Нет сетей</string>
   <string name="wc_errors_proposal_expired_subtitle">Пожалуйста, сгенерируйте новый URI и попробуйте подключиться снова</string>
   <string name="wc_errors_proposal_expired_title">Предложение подключения истекло</string>
-  <string name="wc_estimated_wallet_changes">Предварительные изменения</string>
+  <string name="wc_estimated_wallet_changes">Прогнозируемые изменения</string>
   <string name="wc_estimated_wallet_changes_not_simulated">Не удалось выполнить симуляцию транзакции. Пожалуйста, действуйте с осторожностью.</string>
   <string name="wc_estimation_is_not_supported">Оценка не поддерживается для %s</string>
   <string name="wc_fee_suggested">Предложено %s</string>
