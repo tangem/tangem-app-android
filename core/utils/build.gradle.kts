@@ -4,6 +4,10 @@ plugins {
     id("configuration")
 }
 
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+}
+
 dependencies {
 
     // region DI
@@ -18,4 +22,9 @@ dependencies {
     // region Time dependencies
     implementation(deps.jodatime)
     // endregion
+
+    testImplementation(deps.test.junit5)
+    testRuntimeOnly(deps.test.junit5.engine)
+    testImplementation(deps.test.truth)
+    testImplementation(deps.test.mockk)
 }

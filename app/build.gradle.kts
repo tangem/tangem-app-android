@@ -84,6 +84,7 @@ dependencies {
     implementation(projects.domain.core)
     implementation(projects.domain.card)
     implementation(projects.domain.demo)
+    implementation(projects.domain.demo.models)
     implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.settings)
@@ -97,6 +98,7 @@ dependencies {
     implementation(projects.domain.balanceHiding)
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.transaction)
+    implementation(projects.domain.transaction.models)
     implementation(projects.domain.analytics)
     implementation(projects.domain.visa)
     implementation(projects.domain.onboarding)
@@ -121,6 +123,8 @@ dependencies {
     implementation(projects.domain.notifications.toggles)
     implementation(projects.domain.swap.models)
     implementation(projects.domain.swap)
+    implementation(projects.domain.walletManager)
+    implementation(projects.domain.walletManager.models)
 
     implementation(projects.common)
     implementation(projects.common.routing)
@@ -134,7 +138,6 @@ dependencies {
     implementation(projects.core.datasource)
     implementation(projects.core.utils)
     implementation(projects.core.decompose)
-    implementation(projects.core.deepLinks)
     implementation(projects.core.error.ext)
     implementation(projects.libs.crypto)
     implementation(projects.libs.auth)
@@ -168,6 +171,7 @@ dependencies {
     implementation(projects.data.blockaid)
     implementation(projects.data.notifications)
     implementation(projects.data.swap)
+    implementation(projects.data.walletManager)
 
     /** Features */
     implementation(projects.features.referral.impl)
@@ -281,6 +285,8 @@ dependencies {
     implementation(tangemDeps.card.android) {
         exclude(module = "joda-time")
     }
+    implementation(tangemDeps.hot.core)
+    implementation(tangemDeps.hot.android)
 
     /** DI */
     implementation(deps.hilt.android)
@@ -300,6 +306,7 @@ dependencies {
     implementation(deps.zxing.qrCore)
     implementation(deps.coil)
     implementation(deps.coil.gif)
+    implementation(deps.coil.svg)
     implementation(deps.amplitude)
     implementation(deps.kotsonGson)
     implementation(deps.spongecastle.core)
