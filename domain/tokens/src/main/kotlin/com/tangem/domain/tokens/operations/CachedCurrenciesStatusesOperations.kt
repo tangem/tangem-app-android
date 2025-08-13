@@ -14,6 +14,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.quote.QuoteStatus
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
@@ -24,18 +25,18 @@ import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.staking.model.stakekit.YieldBalance
-import com.tangem.domain.staking.model.stakekit.YieldBalanceList
+import com.tangem.domain.staking.model.stakekit.YieldBalance.Unsupported.integrationId
 import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.staking.single.SingleYieldBalanceProducer
 import com.tangem.domain.staking.single.SingleYieldBalanceSupplier
+import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
 import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations.Error
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.utils.extractAddress
-import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.extensions.addOrReplace
 import com.tangem.utils.extensions.isSingleItem
 import kotlinx.coroutines.*
@@ -54,6 +55,7 @@ class CachedCurrenciesStatusesOperations(
     private val singleQuoteStatusSupplier: SingleQuoteStatusSupplier,
     private val singleYieldBalanceSupplier: SingleYieldBalanceSupplier,
     private val multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
+    multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
     private val tokensFeatureToggles: TokensFeatureToggles,
 ) : BaseCurrenciesStatusesOperations,
     BaseCurrencyStatusOperations(
@@ -64,6 +66,7 @@ class CachedCurrenciesStatusesOperations(
         singleNetworkStatusSupplier = singleNetworkStatusSupplier,
         singleQuoteStatusSupplier = singleQuoteStatusSupplier,
         singleYieldBalanceSupplier = singleYieldBalanceSupplier,
+        multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
         tokensFeatureToggles = tokensFeatureToggles,
     ) {
 
@@ -85,7 +88,9 @@ class CachedCurrenciesStatusesOperations(
 
         val nonEmptyCurrencies = currenciesFlow.mapNotNull { it.getOrNull() }.firstOrNull()?.toNonEmptyListOrNull()
 
-        if (!isFetchingStarted(userWalletId) && nonEmptyCurrencies != null) {
+        if (!tokensFeatureToggles.isWalletBalanceFetcherEnabled && !isFetchingStarted(userWalletId) &&
+            nonEmptyCurrencies != null
+        ) {
             launch {
                 setFetchStarted(userWalletId)
 
@@ -123,9 +128,9 @@ class CachedCurrenciesStatusesOperations(
             val (networks, currenciesIds) = getIds(currencies)
 
             fun createCurrenciesStatuses(
-                maybeQuotes: Either<TokenListError, Set<QuoteStatus>>?,
-                maybeNetworkStatuses: Either<TokenListError, Set<NetworkStatus>>?,
-                maybeYieldBalances: Either<TokenListError, YieldBalanceList>?,
+                maybeQuotes: Either<TokenListError, Set<QuoteStatus>>,
+                maybeNetworkStatuses: Either<TokenListError, Set<NetworkStatus>>,
+                maybeYieldBalances: Either<TokenListError, List<YieldBalance>>,
                 isUpdating: Boolean,
             ) = createCurrenciesStatuses(
                 currencies = currencies,
@@ -145,7 +150,7 @@ class CachedCurrenciesStatusesOperations(
                 )
             }
 
-            if (!isFetchingStarted(userWalletId)) {
+            if (!tokensFeatureToggles.isWalletBalanceFetcherEnabled && !isFetchingStarted(userWalletId)) {
                 launch {
                     setFetchStarted(userWalletId)
 
@@ -157,7 +162,7 @@ class CachedCurrenciesStatusesOperations(
             combine(
                 flow = getQuotes(currenciesIds),
                 flow2 = getNetworkStatusesUpdates(userWalletId, networks),
-                flow3 = getYieldBalances(userWalletId, currencies),
+                flow3 = getYieldsBalancesUpdates(userWalletId, currencies),
                 flow4 = fetchingState.map {
                     val state = it[userWalletId] ?: return@map false
 
@@ -208,16 +213,12 @@ class CachedCurrenciesStatusesOperations(
                     )
                 },
                 async {
-                    if (tokensFeatureToggles.isStakingLoadingRefactoringEnabled) {
-                        multiYieldBalanceFetcher(
-                            params = MultiYieldBalanceFetcher.Params(
-                                userWalletId = userWalletId,
-                                currencyIdWithNetworkMap = currencies.associateTo(hashMapOf()) { it.id to it.network },
-                            ),
-                        )
-                    } else {
-                        stakingRepository.fetchMultiYieldBalance(userWalletId, currencies)
-                    }
+                    multiYieldBalanceFetcher(
+                        params = MultiYieldBalanceFetcher.Params(
+                            userWalletId = userWalletId,
+                            currencyIdWithNetworkMap = currencies.associateTo(hashMapOf()) { it.id to it.network },
+                        ),
+                    )
                 },
             )
         }
@@ -228,7 +229,7 @@ class CachedCurrenciesStatusesOperations(
         currencies: NonEmptyList<CryptoCurrency>,
         maybeQuotes: Either<TokenListError, Set<QuoteStatus>>?,
         maybeNetworkStatuses: Either<TokenListError, Set<NetworkStatus>>?,
-        maybeYieldBalances: Either<TokenListError, YieldBalanceList>?,
+        maybeYieldBalances: Either<TokenListError, List<YieldBalance>>?,
         isUpdating: Boolean,
     ): Lce<TokenListError, List<CryptoCurrencyStatus>> = lce {
         isLoading.set(isUpdating)
@@ -263,20 +264,20 @@ class CachedCurrenciesStatusesOperations(
     }
 
     private fun findYieldBalanceOrNull(
-        yieldBalances: YieldBalanceList?,
+        yieldBalances: List<YieldBalance>?,
         currency: CryptoCurrency,
         networkStatus: NetworkStatus?,
     ): YieldBalance? {
-        if (yieldBalances !is YieldBalanceList.Data) return null
+        if (yieldBalances.isNullOrEmpty()) return null
 
         val supportedIntegration = stakingRepository.getSupportedIntegrationId(currency.id)
 
         if (supportedIntegration.isNullOrBlank()) return null
 
-        return yieldBalances.getBalance(
-            address = extractAddress(networkStatus),
-            integrationId = supportedIntegration,
-        )
+        val address = extractAddress(networkStatus)
+
+        return yieldBalances.firstOrNull { it.integrationId == supportedIntegration && it.address == address }
+            ?: YieldBalance.Error(integrationId = supportedIntegration, address = address)
     }
 
     private fun getCurrencies(userWalletId: UserWalletId): EitherFlow<TokenListError, List<CryptoCurrency>> {
@@ -301,25 +302,6 @@ class CachedCurrenciesStatusesOperations(
         )
             .map<QuoteStatus, Either<Error, Set<QuoteStatus>>> { setOf(it).right() }
             .distinctUntilChanged()
-    }
-
-    private fun getYieldBalances(
-        userWalletId: UserWalletId,
-        cryptoCurrencies: List<CryptoCurrency>,
-    ): EitherFlow<TokenListError, YieldBalanceList> {
-        return if (tokensFeatureToggles.isStakingLoadingRefactoringEnabled) {
-            getYieldsBalancesUpdates(userWalletId, cryptoCurrencies)
-        } else {
-            stakingRepository.getMultiYieldBalanceUpdates(userWalletId, cryptoCurrencies)
-                .map<YieldBalanceList, Either<TokenListError, YieldBalanceList>> { it.right() }
-                .retryWhen { cause, _ ->
-                    emit(TokenListError.DataError(cause).left())
-                    // adding delay before retry to avoid spam when flow restarted
-                    delay(RETRY_DELAY)
-                    true
-                }
-                .distinctUntilChanged()
-        }
     }
 
     // temporary code because token list is built using networks list
@@ -387,7 +369,7 @@ class CachedCurrenciesStatusesOperations(
     private fun getYieldsBalancesUpdates(
         userWalletId: UserWalletId,
         cryptoCurrencies: List<CryptoCurrency>,
-    ): EitherFlow<TokenListError, YieldBalanceList> {
+    ): EitherFlow<TokenListError, List<YieldBalance>> {
         return channelFlow {
             val state = MutableStateFlow(emptyList<YieldBalance>())
 
@@ -412,23 +394,14 @@ class CachedCurrenciesStatusesOperations(
             }
 
             state
-                .onEach(::send)
+                .onEach { send(it.right()) }
                 .launchIn(scope = this)
         }
-            .map<List<YieldBalance>, Either<TokenListError, YieldBalanceList>> { balances ->
-                val yieldBalanceList = if (balances.isEmpty()) {
-                    YieldBalanceList.Empty
-                } else {
-                    YieldBalanceList.Data(balances)
-                }
-
-                yieldBalanceList.right()
-            }
             .distinctUntilChanged()
     }
 
     private fun isFetchingStarted(userWalletId: UserWalletId): Boolean {
-        return fetchingState.value[userWalletId]?.let { it.isStarted() || it.isFinished() } ?: false
+        return fetchingState.value[userWalletId]?.let { it.isStarted() || it.isFinished() } == true
     }
 
     private fun setFetchStarted(userWalletId: UserWalletId) {
@@ -455,7 +428,6 @@ class CachedCurrenciesStatusesOperations(
     }
 
     companion object {
-        internal const val RETRY_DELAY = 2000L
 
         private val fetchingState = MutableStateFlow(value = emptyMap<UserWalletId, FetchingState>())
     }

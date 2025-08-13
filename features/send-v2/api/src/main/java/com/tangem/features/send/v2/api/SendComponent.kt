@@ -3,7 +3,7 @@ package com.tangem.features.send.v2.api
 import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 
 interface SendComponent : ComposableContentComponent {
 
@@ -14,7 +14,12 @@ interface SendComponent : ComposableContentComponent {
         val amount: String? = null,
         val tag: String? = null,
         val destinationAddress: String? = null,
+        val callback: ModelCallback? = null,
     )
 
     interface Factory : ComponentFactory<Params, SendComponent>
+
+    interface ModelCallback {
+        fun onConvertToAnotherToken(lastAmount: String)
+    }
 }
