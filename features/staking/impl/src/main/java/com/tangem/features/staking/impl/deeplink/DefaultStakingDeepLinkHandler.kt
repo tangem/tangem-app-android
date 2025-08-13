@@ -3,14 +3,17 @@ package com.tangem.features.staking.impl.deeplink
 import arrow.core.getOrElse
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
-import com.tangem.core.deeplink.DeeplinkConst.NETWORK_ID_KEY
-import com.tangem.core.deeplink.DeeplinkConst.TOKEN_ID_KEY
-import com.tangem.core.deeplink.DeeplinkConst.WALLET_ID_KEY
+import com.tangem.common.routing.deeplink.DeeplinkConst.NETWORK_ID_KEY
+import com.tangem.common.routing.deeplink.DeeplinkConst.TOKEN_ID_KEY
+import com.tangem.common.routing.deeplink.DeeplinkConst.WALLET_ID_KEY
 import com.tangem.domain.staking.GetStakingAvailabilityUseCase
 import com.tangem.domain.staking.GetYieldUseCase
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.tokens.GetCryptoCurrenciesUseCase
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesProducer
+import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
+import com.tangem.domain.tokens.TokensFeatureToggles
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.features.staking.api.deeplink.StakingDeepLinkHandler
 import dagger.assisted.Assisted
@@ -27,6 +30,8 @@ internal class DefaultStakingDeepLinkHandler @AssistedInject constructor(
     private val appRouter: AppRouter,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val getCryptoCurrenciesUseCase: GetCryptoCurrenciesUseCase,
+    private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
+    private val tokensFeatureToggles: TokensFeatureToggles,
     private val getYieldUseCase: GetYieldUseCase,
     private val getStakingAvailabilityUseCase: GetStakingAvailabilityUseCase,
 ) : StakingDeepLinkHandler {
@@ -51,14 +56,22 @@ internal class DefaultStakingDeepLinkHandler @AssistedInject constructor(
         }
 
         scope.launch {
-            val cryptoCurrency = getCryptoCurrenciesUseCase(userWalletId = selectedUserWalletId).getOrElse {
-                Timber.e("Error on getting crypto currency list")
-                return@launch
-            }.firstOrNull {
-                val isNetwork = it.network.backendId.equals(networkId, ignoreCase = true)
-                val isCurrency = it.id.rawCurrencyId?.value?.equals(tokenId, ignoreCase = true) == true
-                isNetwork && isCurrency
+            val cryptoCurrency = if (tokensFeatureToggles.isWalletBalanceFetcherEnabled) {
+                multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
+                    params = MultiWalletCryptoCurrenciesProducer.Params(selectedUserWalletId),
+                )
+                    .orEmpty()
+            } else {
+                getCryptoCurrenciesUseCase(userWalletId = selectedUserWalletId).getOrElse {
+                    Timber.e("Error on getting crypto currency list")
+                    return@launch
+                }
             }
+                .firstOrNull {
+                    val isNetwork = it.network.backendId.equals(networkId, ignoreCase = true)
+                    val isCurrency = it.id.rawCurrencyId?.value?.equals(tokenId, ignoreCase = true) == true
+                    isNetwork && isCurrency
+                }
 
             if (cryptoCurrency == null) {
                 Timber.e(
@@ -84,7 +97,7 @@ internal class DefaultStakingDeepLinkHandler @AssistedInject constructor(
                 cryptoCurrencyId = cryptoCurrency.id,
                 symbol = cryptoCurrency.symbol,
             ).getOrElse {
-                error("Staking is unavailable for ${cryptoCurrency.name}")
+                Timber.e("Staking is unavailable for ${cryptoCurrency.name}")
                 return@launch
             }
 
