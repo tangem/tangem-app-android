@@ -3,7 +3,7 @@ package com.tangem.domain.tokens
 import arrow.core.Either
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.networks.repository.NetworksRepository
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 
 /**
  * Use case responsible for fetching current pending transactions

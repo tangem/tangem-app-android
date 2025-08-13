@@ -10,13 +10,14 @@ import com.tangem.domain.express.models.ExpressRateType
 import com.tangem.features.swap.v2.impl.R
 import com.tangem.features.swap.v2.impl.chooseprovider.entity.SwapChooseProviderBottomSheetContent
 import com.tangem.features.swap.v2.impl.chooseprovider.entity.SwapProviderListItem
+import com.tangem.features.swap.v2.impl.chooseprovider.entity.SwapProviderState
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
 import kotlinx.collections.immutable.persistentListOf
 import java.math.BigDecimal
 
 internal object SwapChooseProviderContentPreview {
 
-    private val provider1 = ExpressProvider(
+    val provider1 = ExpressProvider(
         providerId = "changenow",
         rateTypes = listOf(ExpressRateType.Float),
         name = "ChangeNow",
@@ -36,6 +37,7 @@ internal object SwapChooseProviderContentPreview {
         provider = provider1,
         quoteAmount = "123".toBigDecimal(),
         quoteAmountValue = stringReference("123"),
+        rate = stringReference("1 USD ≈ 123.123 POL"),
         diffPercent = SwapQuoteUM.Content.DifferencePercent.Best,
     )
 
@@ -43,6 +45,7 @@ internal object SwapChooseProviderContentPreview {
         provider = provider2,
         quoteAmount = "13.12".toBigDecimal(),
         quoteAmountValue = stringReference("13.12"),
+        rate = stringReference("1 USD ≈ 12.123 POL"),
         diffPercent = SwapQuoteUM.Content.DifferencePercent.Empty,
     )
 
@@ -62,6 +65,15 @@ internal object SwapChooseProviderContentPreview {
                             type = AuditLabelUM.Type.Info,
                         ),
                     ),
+                ),
+                swapProviderState = SwapProviderState.Content(
+                    name = provider1.name,
+                    type = provider1.type.typeName,
+                    iconUrl = "",
+                    subtitle = stringReference("1800 POL"),
+                    additionalBadge = SwapProviderState.AdditionalBadge.BestTrade,
+                    diffPercent = SwapQuoteUM.Content.DifferencePercent.Best,
+                    isSelected = true,
                 ),
                 quote = quote1,
             ),
@@ -83,8 +95,18 @@ internal object SwapChooseProviderContentPreview {
                     ),
                 ),
                 quote = quote2,
+                swapProviderState = SwapProviderState.Content(
+                    name = provider1.name,
+                    type = provider1.type.typeName,
+                    iconUrl = "",
+                    subtitle = stringReference("1800 POL"),
+                    additionalBadge = SwapProviderState.AdditionalBadge.BestTrade,
+                    diffPercent = SwapQuoteUM.Content.DifferencePercent.Best,
+                    isSelected = true,
+                ),
             ),
         ),
         selectedProvider = provider1,
+        isApplyFCARestrictions = false,
     )
 }
