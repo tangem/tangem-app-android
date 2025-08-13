@@ -1,13 +1,13 @@
 package com.tangem.domain.swap.usecase
 
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.SwapTransactionRepository
 import com.tangem.domain.swap.models.SwapCurrencies
 import com.tangem.domain.swap.models.SwapCurrenciesGroup
 import com.tangem.domain.swap.models.SwapDirection
-import com.tangem.domain.swap.models.getGroupWithReverse
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.swap.models.getGroupWithDirection
 import com.tangem.utils.extensions.orZero
 
 /**
@@ -31,7 +31,7 @@ class SelectInitialPairUseCase(
         swapCurrencies: SwapCurrencies,
         swapDirection: SwapDirection,
     ): CryptoCurrencyStatus? {
-        val swapCurrenciesGroup = swapCurrencies.getGroupWithReverse(swapDirection)
+        val swapCurrenciesGroup = swapCurrencies.getGroupWithDirection(swapDirection)
         return tryToGetAlreadySelectedCurrency(secondaryCryptoCurrency, swapCurrenciesGroup)
             ?: tryGetFromCache(userWallet, primaryCryptoCurrency, swapCurrenciesGroup)
             ?: tryGetWithMaxAmount(swapCurrenciesGroup)

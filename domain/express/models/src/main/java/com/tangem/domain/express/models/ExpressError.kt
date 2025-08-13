@@ -2,7 +2,7 @@ package com.tangem.domain.express.models
 
 import java.math.BigDecimal
 
-sealed class ExpressError {
+sealed class ExpressError : Throwable() {
 
     abstract val code: Int
 
