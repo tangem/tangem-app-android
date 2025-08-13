@@ -5,7 +5,7 @@ import com.tangem.domain.managetokens.model.ManageTokensListBatchFlow
 import com.tangem.domain.managetokens.model.ManageTokensListBatchingContext
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 
 interface ManageTokensRepository {
 
