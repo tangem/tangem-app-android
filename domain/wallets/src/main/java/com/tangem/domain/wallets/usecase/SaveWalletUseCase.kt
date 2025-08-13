@@ -8,8 +8,8 @@ import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.domain.wallets.legacy.UserWalletsListError
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
-import com.tangem.domain.wallets.models.SaveWalletError
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.core.wallets.error.SaveWalletError
+import com.tangem.domain.models.wallet.UserWallet
 
 /**
  * Use case for saving user wallet

@@ -6,9 +6,9 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.error.GetFeeError
-import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.flow.StateFlow
 import java.math.BigDecimal
@@ -31,6 +31,7 @@ interface SendNotificationsComponent {
         val feeCryptoCurrencyStatus: CryptoCurrencyStatus,
         val appCurrency: AppCurrency,
         val notificationData: NotificationData,
+        val callback: ModelCallback,
     ) {
         data class NotificationData(
             val destinationAddress: String,
@@ -44,4 +45,14 @@ interface SendNotificationsComponent {
     }
 
     interface Factory : ComponentFactory<Params, SendNotificationsComponent>
+
+    interface ModelCallback {
+        fun onFeeReload()
+
+        fun onAmountReduceTo(reduceTo: BigDecimal) {}
+
+        fun onAmountReduceBy(reduceBy: BigDecimal, reduceByDiff: BigDecimal) {}
+
+        fun onAmountIgnore() {}
+    }
 }

@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -128,7 +129,6 @@ private fun WcAppInfoModalBottomSheetContent(state: WcAppInfoUM.Content, modifie
 private fun WcAppInfoFirstBlock(state: WcAppInfoUM.Content, modifier: Modifier = Modifier) {
     var connectionRequestExpanded by remember { mutableStateOf(false) }
     Column(modifier = modifier) {
-        val verifiedDAppState = state.verifiedDAppState
         WcAppInfoItem(
             iconUrl = state.appIcon,
             title = state.appName,
@@ -193,11 +193,13 @@ private fun ConnectionRequestDescription(modifier: Modifier = Modifier) {
             iconPainter = painterResource(R.drawable.ic_check_24),
             tint = TangemTheme.colors.icon.accent,
             text = stringResourceSafe(R.string.wc_connection_reqeust_can_view_balance),
+            backgroundColor = TangemTheme.colors.icon.accent,
         )
         ConnectionRequestDescriptionRow(
             iconPainter = painterResource(R.drawable.ic_check_24),
             tint = TangemTheme.colors.icon.accent,
             text = stringResourceSafe(R.string.wc_connection_reqeust_request_approval),
+            backgroundColor = TangemTheme.colors.icon.accent,
         )
         HorizontalDivider(
             modifier = Modifier.padding(top = TangemTheme.dimens.spacing12),
@@ -214,6 +216,7 @@ private fun ConnectionRequestDescription(modifier: Modifier = Modifier) {
             iconPainter = painterResource(R.drawable.ic_close_24),
             tint = TangemTheme.colors.icon.warning,
             text = stringResourceSafe(R.string.wc_connection_reqeust_cant_sign),
+            backgroundColor = TangemTheme.colors.icon.warning,
         )
     }
 }
@@ -221,6 +224,7 @@ private fun ConnectionRequestDescription(modifier: Modifier = Modifier) {
 @Composable
 private fun ConnectionRequestDescriptionRow(
     iconPainter: Painter,
+    backgroundColor: Color,
     tint: Color,
     text: String,
     modifier: Modifier = Modifier,
@@ -232,11 +236,20 @@ private fun ConnectionRequestDescriptionRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
     ) {
-        Icon(
-            modifier = Modifier.size(TangemTheme.dimens.size24),
-            painter = iconPainter,
-            contentDescription = null,
-            tint = tint,
+        Box(
+            modifier = Modifier
+                .size(TangemTheme.dimens.size24)
+                .clip(CircleShape)
+                .background(backgroundColor.copy(alpha = 0.1F)),
+            contentAlignment = Alignment.Center,
+            content = {
+                Icon(
+                    modifier = Modifier.size(TangemTheme.dimens.size20),
+                    painter = iconPainter,
+                    contentDescription = null,
+                    tint = tint,
+                )
+            },
         )
         Text(
             modifier = Modifier.fillMaxWidth(),
@@ -260,6 +273,7 @@ private fun WcAppInfoSecondBlock(state: WcAppInfoUM.Content, modifier: Modifier 
                 Modifier
             }.then(itemsModifier),
             walletName = state.walletName,
+            showEndIcon = state.onWalletClick != null,
         )
         HorizontalDivider(thickness = 1.dp, color = TangemTheme.colors.stroke.primary)
         SelectNetworksBlock(
@@ -270,6 +284,18 @@ private fun WcAppInfoSecondBlock(state: WcAppInfoUM.Content, modifier: Modifier 
         )
         when (state.networksInfo) {
             is WcNetworksInfo.ContainsAllRequiredNetworks -> Unit
+            is WcNetworksInfo.NoneNetworksAdded -> {
+                HorizontalDivider(thickness = 1.dp, color = TangemTheme.colors.stroke.primary)
+                Notification(
+                    config = NotificationConfig(
+                        iconResId = R.drawable.ic_alert_circle_24,
+                        title = resourceReference(R.string.wc_specify_networks_title),
+                        subtitle = resourceReference(R.string.wc_specify_networks_subtitle),
+                    ),
+                    iconTint = TangemTheme.colors.icon.attention,
+                    containerColor = TangemTheme.colors.background.action,
+                )
+            }
             is WcNetworksInfo.MissingRequiredNetworkInfo -> {
                 HorizontalDivider(thickness = 1.dp, color = TangemTheme.colors.stroke.primary)
                 Notification(
@@ -290,7 +316,7 @@ private fun WcAppInfoSecondBlock(state: WcAppInfoUM.Content, modifier: Modifier 
 }
 
 @Composable
-private fun WalletRowItem(walletName: String, modifier: Modifier = Modifier) {
+private fun WalletRowItem(walletName: String, showEndIcon: Boolean, modifier: Modifier = Modifier) {
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
         Icon(
             modifier = Modifier.size(24.dp),
@@ -298,31 +324,38 @@ private fun WalletRowItem(walletName: String, modifier: Modifier = Modifier) {
             contentDescription = null,
             tint = TangemTheme.colors.icon.accent,
         )
-        Text(
-            modifier = Modifier
-                .padding(start = TangemTheme.dimens.spacing4)
-                .weight(1f),
-            text = stringResourceSafe(R.string.manage_tokens_network_selector_wallet),
-            style = TangemTheme.typography.body1,
-            color = TangemTheme.colors.text.primary1,
-        )
-        Text(
-            modifier = Modifier
-                .padding(start = TangemTheme.dimens.spacing16)
-                .weight(1f),
-            text = walletName,
-            textAlign = TextAlign.End,
-            style = TangemTheme.typography.body1,
-            color = TangemTheme.colors.text.tertiary,
-        )
-        Icon(
-            modifier = Modifier
-                .padding(start = TangemTheme.dimens.spacing12)
-                .size(width = 18.dp, height = 24.dp),
-            painter = painterResource(R.drawable.ic_select_18_24),
-            contentDescription = null,
-            tint = TangemTheme.colors.icon.informative,
-        )
+        Row(
+            modifier = Modifier.weight(1f),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                modifier = Modifier.padding(start = TangemTheme.dimens.spacing4),
+                text = stringResourceSafe(R.string.manage_tokens_network_selector_wallet),
+                style = TangemTheme.typography.body1,
+                color = TangemTheme.colors.text.primary1,
+                maxLines = 1,
+            )
+            Text(
+                modifier = Modifier.padding(start = TangemTheme.dimens.spacing16),
+                text = walletName,
+                textAlign = TextAlign.End,
+                style = TangemTheme.typography.body1,
+                color = TangemTheme.colors.text.tertiary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        if (showEndIcon) {
+            Icon(
+                modifier = Modifier
+                    .padding(start = TangemTheme.dimens.spacing12)
+                    .size(width = 18.dp, height = 24.dp),
+                painter = painterResource(R.drawable.ic_select_18_24),
+                contentDescription = null,
+                tint = TangemTheme.colors.icon.informative,
+            )
+        }
     }
 }
 
@@ -349,6 +382,7 @@ private fun SelectNetworksBlock(networksInfo: WcNetworksInfo, modifier: Modifier
         when (networksInfo) {
             is WcNetworksInfo.ContainsAllRequiredNetworks -> NetworkIcons(items = networksInfo.items)
             is WcNetworksInfo.MissingRequiredNetworkInfo -> Unit
+            is WcNetworksInfo.NoneNetworksAdded -> Unit
         }
         Icon(
             modifier = Modifier.size(width = 18.dp, height = 24.dp),
@@ -596,8 +630,8 @@ private class WcAppInfoStateProvider : CollectionPreviewParameterProvider<WcAppI
             verifiedDAppState = VerifiedDAppState.Verified {},
             appSubtitle = "react-app.walletconnect.com",
             notification = WcAppInfoSecurityNotification.SecurityRisk,
-            walletName = "Tangem 2.0",
-            onWalletClick = {},
+            walletName = "Tangem 2.0 Tangem 2.0 Tangem 2.0 Tangem 2.0",
+            onWalletClick = null,
             networksInfo = WcNetworksInfo.ContainsAllRequiredNetworks(
                 items = persistentListOf(
                     WcNetworkInfoItem.Required(
@@ -642,7 +676,7 @@ private class WcAppInfoStateProvider : CollectionPreviewParameterProvider<WcAppI
             verifiedDAppState = VerifiedDAppState.Unknown,
             appSubtitle = "react-app.walletconnect.com",
             notification = WcAppInfoSecurityNotification.UnknownDomain,
-            walletName = "Tangem 2.0",
+            walletName = "Tangem 2.0 Tangem 2.0 Tangem 2.0 Tangem 2.0",
             onWalletClick = {},
             networksInfo = WcNetworksInfo.MissingRequiredNetworkInfo(networks = "Solana"),
             onNetworksClick = {},
