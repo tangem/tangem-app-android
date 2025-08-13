@@ -24,16 +24,21 @@ internal class DefaultBlockAidRepository(
     }
 
     override suspend fun verifyTransaction(data: TransactionData): CheckTransactionResult {
-        val response = withContext(dispatchers.io) {
-            when (data.params) {
-                is TransactionParams.Evm -> {
-                    api.scanJsonRpc(mapper.mapToEvmRequest(data))
-                }
-                is TransactionParams.Solana -> {
-                    api.scanSolanaMessage(mapper.mapToSolanaRequest(data))
-                }
-            }
+        return when (data.params) {
+            is TransactionParams.Evm -> scanEvmTransaction(data = data)
+            is TransactionParams.Solana -> scanSolanaTransaction(data = data)
         }
-        return mapper.mapToDomain(response)
     }
+
+    private suspend fun scanEvmTransaction(data: TransactionData): CheckTransactionResult =
+        withContext(dispatchers.io) {
+            val response = api.scanJsonRpc(mapper.mapToEvmRequest(data))
+            mapper.mapToDomain(response)
+        }
+
+    private suspend fun scanSolanaTransaction(data: TransactionData): CheckTransactionResult =
+        withContext(dispatchers.io) {
+            val response = api.scanSolanaMessage(mapper.mapToSolanaRequest(data))
+            mapper.mapToDomain(response)
+        }
 }
