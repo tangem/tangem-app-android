@@ -57,7 +57,7 @@ internal class WcPairComponent(
     private fun onChildBack() {
         when (val config = contentStack.value.active.configuration) {
             is WcAppInfoRoutes.AppInfo -> dismiss()
-            is Alert -> when (config.type) {
+            is Alert -> when (config.alertType) {
                 is Alert.Type.UnsupportedDApp,
                 is Alert.Type.UnsupportedNetwork,
                 -> dismiss()
@@ -85,7 +85,7 @@ internal class WcPairComponent(
             )
             is Alert -> AlertsComponentV2(
                 appComponentContext = appComponentContext,
-                messageUM = createBottomSheetMessageUM(config.type),
+                messageUM = createBottomSheetMessageUM(config.alertType),
             )
             is WcAppInfoRoutes.SelectNetworks -> WcSelectNetworksComponent(
                 appComponentContext = appComponentContext,
