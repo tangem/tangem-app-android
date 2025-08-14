@@ -235,6 +235,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicModalBottomSheetWit
             onBack = onBack,
             dragHandle = null,
             content = bsContent,
+            scrimColor = TangemTheme.colors.overlay.secondary,
         )
     } else {
         ModalBottomSheet(
@@ -246,6 +247,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicModalBottomSheetWit
             contentWindowInsets = { WindowInsetsZero },
             dragHandle = null,
             content = bsContent,
+            scrimColor = TangemTheme.colors.overlay.secondary,
         )
     }
 }
