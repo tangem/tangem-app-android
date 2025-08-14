@@ -10,6 +10,7 @@ import com.tangem.domain.wallets.legacy.UserWalletsListError
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.core.wallets.error.SaveWalletError
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.core.wallets.UserWalletsListRepository
 
 /**
  * Use case for saving user wallet
@@ -18,22 +19,51 @@ import com.tangem.domain.models.wallet.UserWallet
  *
 [REDACTED_AUTHOR]
  */
-class SaveWalletUseCase(private val userWalletsListManager: UserWalletsListManager) {
+class SaveWalletUseCase(
+    private val userWalletsListManager: UserWalletsListManager,
+    private val userWalletsListRepository: UserWalletsListRepository,
+    private val useNewRepository: Boolean,
+) {
 
     suspend operator fun invoke(userWallet: UserWallet, canOverride: Boolean = false): Either<SaveWalletError, Unit> {
-        return either {
-            userWalletsListManager.save(userWallet, canOverride)
-                .doOnSuccess { return Unit.right() }
-                .doOnFailure {
-                    return when (it) {
-                        is UserWalletsListError.WalletAlreadySaved -> SaveWalletError.WalletAlreadySaved(
-                            it.messageResId,
-                        )
-                        else -> SaveWalletError.DataError(it.messageResId)
-                    }.left()
-                }
+        return if (useNewRepository) {
+            either {
+                val newUserWallet =
+                    userWalletsListRepository.userWalletsSync().none { it.walletId == userWallet.walletId }
+                val userWallet = userWalletsListRepository.saveWithoutLock(userWallet, canOverride).bind()
 
-            return Unit.right()
+                if (newUserWallet) {
+                    when (userWallet) {
+                        is UserWallet.Cold -> {
+                            userWalletsListRepository.setLock(
+                                userWallet.walletId,
+                                UserWalletsListRepository.LockMethod.Biometric,
+                            )
+                        }
+                        is UserWallet.Hot -> {
+                            userWalletsListRepository.setLock(
+                                userWallet.walletId,
+                                UserWalletsListRepository.LockMethod.NoLock,
+                            )
+                        }
+                    }.mapLeft { SaveWalletError.DataError(null) }.bind()
+                }
+            }
+        } else {
+            either {
+                userWalletsListManager.save(userWallet, canOverride)
+                    .doOnSuccess { return Unit.right() }
+                    .doOnFailure {
+                        return when (it) {
+                            is UserWalletsListError.WalletAlreadySaved -> SaveWalletError.WalletAlreadySaved(
+                                it.messageResId,
+                            )
+                            else -> SaveWalletError.DataError(it.messageResId)
+                        }.left()
+                    }
+
+                return Unit.right()
+            }
         }
     }
 }
