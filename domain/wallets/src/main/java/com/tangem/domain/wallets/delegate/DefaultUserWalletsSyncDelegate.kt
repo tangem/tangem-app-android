@@ -10,11 +10,14 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.models.UserWalletRemoteInfo
 import com.tangem.domain.models.wallet.copy
+import com.tangem.domain.core.wallets.UserWalletsListRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 
 class DefaultUserWalletsSyncDelegate(
     private val userWalletsListManager: UserWalletsListManager,
+    private val userWalletsListRepository: UserWalletsListRepository,
+    private val useNewRepository: Boolean,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : UserWalletsSyncDelegate {
 
@@ -28,8 +31,41 @@ class DefaultUserWalletsSyncDelegate(
         }
     }
 
-    // TODO remove dispatchers whnen UserWalletsListManager will be main safe
     private suspend fun renameUserWallet(
+        userWalletId: UserWalletId,
+        name: String,
+    ): Either<UpdateWalletError, UserWallet> = if (useNewRepository) {
+        renameUserWalletInNewRepository(userWalletId, name)
+    } else {
+        renameUserWalletInLegacyRepository(userWalletId, name)
+    }
+
+    private suspend fun renameUserWalletInNewRepository(
+        userWalletId: UserWalletId,
+        name: String,
+    ): Either<UpdateWalletError, UserWallet> = either {
+        val userWallets = userWalletsListRepository.userWalletsSync()
+        val userWallet = userWallets.find { it.walletId == userWalletId }
+            ?: raise(UpdateWalletError.DataError(IllegalStateException("User wallet with id $userWalletId not found")))
+
+        ensure(userWallets.none { it.name == name && it.walletId != userWalletId }) {
+            UpdateWalletError.NameAlreadyExists
+        }
+
+        ensure(name != userWallet.name) {
+            UpdateWalletError.NameAlreadyExists
+        }
+
+        val updatedWallet = userWallet.copy(name = name)
+
+        userWalletsListRepository.saveWithoutLock(updatedWallet, canOverride = true)
+            .map { updatedWallet }
+            .mapLeft { error -> UpdateWalletError.DataError(IllegalStateException("")) }
+            .bind()
+    }
+
+    // TODO remove dispatchers whnen UserWalletsListManager will be main safe
+    private suspend fun renameUserWalletInLegacyRepository(
         userWalletId: UserWalletId,
         name: String,
     ): Either<UpdateWalletError, UserWallet> = withContext(dispatchers.io) {
