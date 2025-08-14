@@ -18,6 +18,7 @@
   <string name="account_details_archive_action">Archive</string>
   <string name="account_details_archive_description">You are archiving this account, but you can always get it back.</string>
   <string name="account_details_title">Account</string>
+  <string name="account_form_account_index">Account #%s — used for address derivation.</string>
   <string name="account_form_create_button">Add account</string>
   <string name="account_form_edit_button">Save</string>
   <string name="account_form_name">Account name</string>
@@ -151,6 +152,7 @@
   <string name="common_access_denied">Access denied</string>
   <string name="common_add_to_portfolio">Add to portfolio</string>
   <string name="common_add_token">Add token</string>
+  <string name="common_address">Address</string>
   <string name="common_all">All</string>
   <string name="common_allow">Allow</string>
   <string name="common_amount">Amount</string>
@@ -1001,6 +1003,8 @@
   <string name="send_with_swap_confirm_title">Swap and send</string>
   <string name="send_with_swap_convert_token_alert_message">Proceed with conversion? This will clear your previous data.</string>
   <string name="send_with_swap_convert_token_alert_title">Confirm Conversion</string>
+  <string name="send_with_swap_correct_recipient_network_notification_message">Sending any other currency will result in its irreversible loss.</string>
+  <string name="send_with_swap_correct_recipient_network_notification_title">Select the correct recipient network</string>
   <string name="send_with_swap_notification_text">Send any token, and we’ll convert it on the way. Your recipient gets exactly what they need—seamlessly.</string>
   <string name="send_with_swap_recipient_amount_success_title">Recipient will receive</string>
   <string name="send_with_swap_recipient_amount_text">To recipient</string>
