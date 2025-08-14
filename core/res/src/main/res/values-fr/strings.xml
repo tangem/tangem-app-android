@@ -97,6 +97,7 @@
   <string name="common_access_denied">Accès refusé</string>
   <string name="common_add_to_portfolio">Ajouter au portfolio</string>
   <string name="common_add_token">Ajouter un jeton</string>
+  <string name="common_address">Adresse</string>
   <string name="common_all">Tous</string>
   <string name="common_allow">Permettre</string>
   <string name="common_amount">Montant</string>
