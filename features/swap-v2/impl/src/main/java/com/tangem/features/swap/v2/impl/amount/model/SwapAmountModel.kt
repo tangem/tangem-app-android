@@ -197,8 +197,10 @@ internal class SwapAmountModel @Inject constructor(
                 value = value,
             ),
         )
+        quoteTaskScheduler.cancelTask()
         amountDebouncer.debounce(
             coroutineScope = modelScope,
+            waitMs = DEBOUNCE_AMOUNT_DELAY,
             destinationFunction = {
                 startLoadingQuotesTask(isSilentReload = false)
             },
@@ -686,7 +688,7 @@ internal class SwapAmountModel @Inject constructor(
     }
 
     private companion object {
-        const val DEBOUNCE_AMOUNT_DELAY = 1000L
+        const val DEBOUNCE_AMOUNT_DELAY = 500L
         const val QUOTES_UPDATE_DELAY = 10000L
     }
 }
