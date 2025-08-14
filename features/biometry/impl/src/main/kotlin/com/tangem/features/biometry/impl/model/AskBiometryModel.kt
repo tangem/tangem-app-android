@@ -16,8 +16,8 @@ import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.settings.SetSaveWalletScreenShownUseCase
 import com.tangem.domain.settings.repositories.SettingsRepository
-import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.repository.WalletsRepository
+import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.biometry.impl.ui.state.AskBiometryUM
 import com.tangem.sdk.api.TangemSdkManager
@@ -40,7 +40,7 @@ internal class AskBiometryModel @Inject constructor(
     private val setSaveWalletScreenShownUseCase: SetSaveWalletScreenShownUseCase,
     private val settingsRepository: SettingsRepository,
     private val tangemSdkManager: TangemSdkManager,
-    private val userWalletsListManager: UserWalletsListManager,
+    private val getSelectedWalletUseCase: GetSelectedWalletUseCase,
     private val walletsRepository: WalletsRepository,
     private val cardSdkConfigRepository: CardSdkConfigRepository,
     private val settingsManager: SettingsManager,
@@ -87,7 +87,7 @@ internal class AskBiometryModel @Inject constructor(
 
              * because it will be automatically saved on UserWalletsListManager switch
              */
-            val selectedUserWallet = userWalletsListManager.selectedUserWalletSync ?: run {
+            val selectedUserWallet = getSelectedWalletUseCase.sync().getOrNull() ?: run {
                 Timber.e("Unable to save user wallet")
                 uiMessageSender.send(
                     SnackbarMessage(stringReference("No selected user wallet")),
