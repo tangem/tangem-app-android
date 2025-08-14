@@ -43,7 +43,8 @@ import com.tangem.domain.tokens.model.analytics.TokenReceiveAnalyticsEvent
 import com.tangem.domain.tokens.wallet.WalletBalanceFetcher
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
-import com.tangem.domain.wallets.legacy.UserWalletsListManager
+import com.tangem.domain.wallets.usecase.DeleteWalletUseCase
+import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.features.onboarding.v2.common.analytics.OnboardingEvent
 import com.tangem.features.onboarding.v2.common.ui.interruptBackupDialog
 import com.tangem.features.onboarding.v2.impl.R
@@ -73,7 +74,8 @@ internal class OnboardingTwinModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     paramsContainer: ParamsContainer,
     private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory,
-    private val userWalletsListManager: UserWalletsListManager,
+    private val saveWalletUseCase: SaveWalletUseCase,
+    private val deleteWalletUseCase: DeleteWalletUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val saveTwinsOnboardingShownUseCase: SaveTwinsOnboardingShownUseCase,
     private val tangemSdkManager: TangemSdkManager,
@@ -199,9 +201,9 @@ internal class OnboardingTwinModel @Inject constructor(
 
                     // remove wallet only after first step of retwin
                     if (params.mode == Mode.RecreateWallet) {
-                        userWalletsListManager.delete(
-                            listOfNotNull(UserWalletIdBuilder.scanResponse(params.scanResponse).build()),
-                        )
+                        UserWalletIdBuilder.scanResponse(params.scanResponse).build()?.let {
+                            deleteWalletUseCase(it)
+                        }
                     }
 
                     analyticsEventHandler.send(OnboardingEvent.CreateWallet.WalletCreatedSuccessfully())
@@ -329,7 +331,14 @@ internal class OnboardingTwinModel @Inject constructor(
             return@coroutineScope
         }
 
-        userWalletsListManager.save(userWallet, canOverride = true)
+        saveWalletUseCase(
+            userWallet = userWallet,
+            canOverride = true,
+        ).onLeft {
+            Timber.e("Unable to save user wallet: $it")
+            setLoading(false)
+            return@coroutineScope
+        }
 
         cardRepository.finishCardActivation(params.scanResponse.card.cardId)
 
@@ -456,7 +465,15 @@ internal class OnboardingTwinModel @Inject constructor(
                 return@launch
             }
 
-            userWalletsListManager.save(userWallet, canOverride = true)
+            saveWalletUseCase(
+                userWallet = userWallet,
+                canOverride = true,
+            ).onLeft {
+                Timber.e("Unable to save user wallet: $it")
+                setLoading(false)
+                return@launch
+            }
+
             params.modelCallbacks.onDone()
         }
     }
