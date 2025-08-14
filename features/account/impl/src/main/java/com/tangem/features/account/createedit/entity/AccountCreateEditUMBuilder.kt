@@ -6,6 +6,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.features.account.AccountCreateEditComponent
+import com.tangem.features.account.common.toUM
 import kotlinx.collections.immutable.toImmutableList
 import javax.inject.Inject
 
@@ -15,7 +16,7 @@ internal class AccountCreateEditUMBuilder @Inject constructor(
 
     private val accountColors = CryptoPortfolioIcon.Color.entries.toImmutableList()
     private val accountIcons = CryptoPortfolioIcon.Icon.entries.toImmutableList()
-    private val createIcon = CryptoPortfolioIcon.ofDefaultCustomAccount()
+    private val createIcon = CryptoPortfolioIcon.ofDefaultCustomAccount().toUM()
 
     val toolbarTitle: TextReference
         get() = when (params) {
@@ -34,7 +35,7 @@ internal class AccountCreateEditUMBuilder @Inject constructor(
             )
             is AccountCreateEditComponent.Params.Edit -> AccountCreateEditUM.Account(
                 name = params.account.name.value,
-                portfolioIcon = params.account.portfolioIcon,
+                portfolioIcon = params.account.portfolioIcon.toUM(),
                 derivationInfo = TextReference.EMPTY, // todo account use Account.CryptoPortfolio.derivationIndex ?
                 inputPlaceholder = resourceReference(R.string.account_form_placeholder_edit_account),
                 onNameChange = onNameChange,
@@ -86,8 +87,7 @@ internal class AccountCreateEditUMBuilder @Inject constructor(
             }
 
         fun AccountCreateEditUM.updateColorSelect(color: CryptoPortfolioIcon.Color): AccountCreateEditUM {
-            val newIcon = CryptoPortfolioIcon.ofCustomAccount(
-                value = account.portfolioIcon.value,
+            val newIcon = this.account.portfolioIcon.copy(
                 color = color,
             )
             return this.copy(
@@ -97,9 +97,8 @@ internal class AccountCreateEditUMBuilder @Inject constructor(
         }
 
         fun AccountCreateEditUM.updateIconSelect(icon: CryptoPortfolioIcon.Icon): AccountCreateEditUM {
-            val newIcon = CryptoPortfolioIcon.ofCustomAccount(
+            val newIcon = this.account.portfolioIcon.copy(
                 value = icon,
-                color = account.portfolioIcon.color,
             )
             return this.copy(
                 account = this.account.copy(portfolioIcon = newIcon),
