@@ -22,7 +22,11 @@ class GetSavedWalletsCountUseCaseTest {
     @Before
     fun setup() {
         userWalletsListManager = mockk()
-        useCase = GetSavedWalletsCountUseCase(userWalletsListManager)
+        useCase = GetSavedWalletsCountUseCase(
+            userWalletsListManager,
+            userWalletsListRepository = mockk(),
+            useNewRepository = false,
+        )
         mockkStatic("com.tangem.domain.wallets.legacy.UserWalletsListManagerExtensionsKt")
     }
 
