@@ -20,8 +20,8 @@ import com.tangem.domain.visa.model.VisaCardId
 import com.tangem.domain.visa.repository.VisaActivationRepository
 import com.tangem.domain.visa.repository.VisaAuthRepository
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
-import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.features.onboarding.v2.visa.impl.child.inprogress.OnboardingVisaInProgressComponent.Config
 import com.tangem.features.onboarding.v2.visa.impl.child.inprogress.OnboardingVisaInProgressComponent.Params
 import com.tangem.features.onboarding.v2.visa.impl.child.welcome.model.analytics.OnboardingVisaAnalyticsEvent
@@ -46,7 +46,7 @@ internal class OnboardingVisaInProgressModel @Inject constructor(
     private val visaAuthTokenStorage: VisaAuthTokenStorage,
     private val otpStorage: VisaOTPStorage,
     private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory,
-    private val userWalletsListManager: UserWalletsListManager,
+    private val saveWalletUseCase: SaveWalletUseCase,
     private val uiMessageSender: UiMessageSender,
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
@@ -173,7 +173,7 @@ internal class OnboardingVisaInProgressModel @Inject constructor(
             }
 
         val userWallet = createUserWallet(params.scanResponse, newTokens)
-        userWalletsListManager.save(userWallet)
+        saveWalletUseCase(userWallet)
         visaAuthTokenStorage.remove(params.scanResponse.card.cardId)
         otpStorage.removeOTP(params.scanResponse.card.cardId)
 
