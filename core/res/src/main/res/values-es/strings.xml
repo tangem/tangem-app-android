@@ -318,7 +318,8 @@
   <string name="disclaimer_error_loading">Compruebe su conexión a internet o cambia a una red diferente</string>
   <string name="disclaimer_title">Condiciones de uso</string>
   <string name="domain_receive_assets_navigation_title">Recibir activos</string>
-  <string name="email_subject_wc_error">Error de Wallet Connect</string>
+  <string name="email_preface_wc_error">Hola equipo de soporte, he encontrado un error con el código: %s</string>
+  <string name="email_subject_wc_error">Error de WalletConnect</string>
   <string name="error_wrong_wallet_tapped">Ha usado una tarjeta de otra billetera. Toque la tarjeta asociada con esta billetera</string>
   <string name="eth_gas_required_exceeds_allowance">No hay fondos suficientes para la transacción. Por favor, recargue su cuenta.</string>
   <string name="exchange_tokens_available_tokens_header">Mis tokens</string>
