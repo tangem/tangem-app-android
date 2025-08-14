@@ -11,7 +11,7 @@ import com.tangem.domain.walletconnect.WcPairService
 import com.tangem.domain.walletconnect.model.legacy.WalletConnectSessionsRepository
 import com.tangem.domain.walletconnect.usecase.initialize.WcInitializeUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.legacy.UserWalletsListManager
+import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.features.walletconnect.components.WalletConnectFeatureToggles
 import com.tangem.tap.domain.walletconnect.WalletConnectSdkHelper
 import com.tangem.tap.domain.walletconnect2.app.TangemWcBlockchainHelper
@@ -42,9 +42,9 @@ internal object WalletConnectInteractorModule {
         wcSessionsRepository: WalletConnectSessionsRepository,
         currenciesRepository: CurrenciesRepository,
         walletManagersFacade: WalletManagersFacade,
-        userWalletsListManager: UserWalletsListManager,
         walletConnectFeatureToggles: WalletConnectFeatureToggles,
         coroutineDispatcherProvider: CoroutineDispatcherProvider,
+        getSelectedWalletUseCase: GetSelectedWalletUseCase,
     ): WalletConnectInteractor {
         return WalletConnectInteractor(
             handler = WalletConnectEventsHandlerImpl(),
@@ -54,7 +54,7 @@ internal object WalletConnectInteractorModule {
             blockchainHelper = TangemWcBlockchainHelper(),
             currenciesRepository = currenciesRepository,
             walletManagersFacade = walletManagersFacade,
-            userWalletsListManager = userWalletsListManager,
+            getSelectedWalletUseCase = getSelectedWalletUseCase,
             dispatchers = coroutineDispatcherProvider,
             walletConnectFeatureToggles = walletConnectFeatureToggles,
         )
