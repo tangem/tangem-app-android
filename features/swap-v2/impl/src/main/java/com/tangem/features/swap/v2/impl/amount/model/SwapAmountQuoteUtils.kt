@@ -9,6 +9,7 @@ import com.tangem.domain.swap.models.SwapDirection
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountFieldUM
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountType
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
+import com.tangem.utils.extensions.isZero
 import com.tangem.utils.isNullOrZero
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -32,7 +33,9 @@ internal object SwapAmountQuoteUtils {
             secondaryCryptoCurrencyStatus.value.fiatRate to primaryCryptoCurrencyStatus.value.fiatRate
         }
 
-        if (fromRate.isNullOrZero() || toRate.isNullOrZero()) return null
+        val isRatesNull = fromRate.isNullOrZero() || toRate.isNullOrZero()
+        val isAmountNull = fromTokenAmount.isZero() || toTokenAmount.isZero()
+        if (isRatesNull || isAmountNull) return null
 
         val fromTokenFiatValue = fromTokenAmount.multiply(fromRate)
         val toTokenFiatValue = toTokenAmount.multiply(toRate)
