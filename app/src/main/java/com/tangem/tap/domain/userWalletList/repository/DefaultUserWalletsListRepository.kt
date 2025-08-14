@@ -30,6 +30,7 @@ import com.tangem.tap.domain.userWalletList.utils.toUserWallets
 import com.tangem.tap.domain.userWalletList.utils.updateWith
 import com.tangem.utils.Provider
 import com.tangem.utils.ProviderSuspend
+import com.tangem.utils.extensions.indexOfFirstOrNull
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 
@@ -173,6 +174,8 @@ internal class DefaultUserWalletsListRepository(
 
         userWalletEncryptionKeysRepository.delete(userWalletIds)
 
+        val userWalletsBeforeDelete = userWallets.value ?: return@either
+
         userWallets.update { currentWallets ->
             currentWallets?.filterNot { it.walletId in userWalletIds }
         }
@@ -181,7 +184,7 @@ internal class DefaultUserWalletsListRepository(
             if (currentSelected == null) return@update null
 
             userWallets.value?.findAvailableUserWallet(
-                userWallets.value?.indexOfFirst { it.walletId == currentSelected.walletId } ?: 0,
+                userWalletsBeforeDelete.indexOfFirstOrNull { it.walletId == currentSelected.walletId } ?: 0,
             )
         }
     }
@@ -199,7 +202,7 @@ internal class DefaultUserWalletsListRepository(
 
         when (unlockMethod) {
             UserWalletsListRepository.UnlockMethod.Biometric -> {
-                unlockAllWallets()
+                unlockAllWallets().bind()
                 select(userWalletId)
             }
             UserWalletsListRepository.UnlockMethod.AccessCode -> {
@@ -225,7 +228,7 @@ internal class DefaultUserWalletsListRepository(
                 }
 
                 sensitiveInformationRepository.getAll(listOf(encryptionKey))
-                    .doOnSuccess { userWallets.value?.updateWith(it) }
+                    .doOnSuccess { sensitiveInfo -> userWallets.update { it?.updateWith(sensitiveInfo) } }
                     .doOnFailure { error ->
                         raise(UnlockWalletError.UnableToUnlock)
                     }
@@ -255,6 +258,7 @@ internal class DefaultUserWalletsListRepository(
     }
 
     override suspend fun unlockAllWallets(): Either<UnlockWalletError, Unit> = either {
+        val userWalletIds = userWalletsSync().map { it.walletId }.toSet()
         val biometricKeys = runCatching {
             userWalletEncryptionKeysRepository.getAllBiometric()
         }.getOrElse {
@@ -264,8 +268,14 @@ internal class DefaultUserWalletsListRepository(
 
         val unsecuredKeys = userWalletEncryptionKeysRepository.getAllUnsecured()
         val allKeys = biometricKeys + unsecuredKeys
+
+        if (allKeys.all { it.walletId in userWalletIds }.not()) {
+            raise(UnlockWalletError.UnableToUnlock)
+        }
+
         sensitiveInformationRepository.getAll(allKeys)
-            .doOnSuccess { userWallets.value?.updateWith(it) }
+            .doOnSuccess { sensitiveInfo -> userWallets.update { it?.updateWith(sensitiveInfo) } }
+            .doOnFailure { raise(UnlockWalletError.UnableToUnlock) }
     }
 
     override suspend fun lockAllWallets(): Either<LockWalletsError, Unit> = either {
@@ -297,7 +307,7 @@ internal class DefaultUserWalletsListRepository(
         biometryFallback: suspend () -> Either<UnlockWalletError, Unit>,
     ): Either<UnlockWalletError, UserWalletEncryptionKey?> {
         val result = passwordRequester.requestPassword(
-            hasBiometry = tangemSdkManagerProvider.invoke().needEnrollBiometrics,
+            hasBiometry = tangemSdkManagerProvider.invoke().canUseBiometry,
         )
 
         return when (result) {
@@ -312,6 +322,7 @@ internal class DefaultUserWalletsListRepository(
                     requestPasswordRecursive(block, biometryFallback)
                 } else {
                     passwordRequester.successfulAuthentication()
+                    passwordRequester.dismiss()
                     decrypted.right()
                 }
             }
@@ -319,9 +330,9 @@ internal class DefaultUserWalletsListRepository(
                 biometryFallback()
                     .onRight {
                         passwordRequester.successfulAuthentication()
+                        passwordRequester.dismiss()
                     }
-                passwordRequester.dismiss()
-                null.right()
+                    .map { null }
             }
         }
     }

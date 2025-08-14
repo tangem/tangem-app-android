@@ -62,15 +62,16 @@ internal class UserWalletEncryptionKeysRepository(
         }
     }
 
-    suspend fun getEncryptedWithPassword(userWalletId: UserWalletId, password: CharArray): UserWalletEncryptionKey? {
-        val encrypted = secureStorage.get(
-            account = StorageKey.UserWalletEncryptionKeyEncrypted(userWalletId).name,
-        ) ?: return null
+    suspend fun getEncryptedWithPassword(userWalletId: UserWalletId, password: CharArray): UserWalletEncryptionKey? =
+        withContext(dispatchers.io) {
+            val encrypted = secureStorage.get(
+                account = StorageKey.UserWalletEncryptionKeyEncrypted(userWalletId).name,
+            ) ?: return@withContext null
 
-        val decrypted = AESEncryptionProtocol.decryptWithPassword(password, encrypted)
-
-        return decrypted.decodeToKey()
-    }
+            withContext(dispatchers.default) {
+                AESEncryptionProtocol.decryptWithPassword(password, encrypted).decodeToKey()
+            }
+        }
 
     suspend fun getAllBiometric(): List<UserWalletEncryptionKey> = withContext(dispatchers.io) {
         val keys = getUserWalletsIds().map { userWalletId ->
