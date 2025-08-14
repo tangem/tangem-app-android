@@ -3,8 +3,6 @@ package com.tangem.features.swap.v2.impl.amount.ui
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -26,7 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.ui.AmountFieldV2
-import com.tangem.core.ui.components.RectangleShimmer
+import com.tangem.core.ui.components.SpacerH2
 import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.atoms.text.EllipsisText
@@ -38,7 +36,6 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.domain.express.models.ExpressRateType
-import com.tangem.domain.swap.models.SwapDirection
 import com.tangem.features.swap.v2.impl.R
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountFieldUM
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountType
@@ -54,13 +51,17 @@ internal fun SwapAmountContent(
     clickIntents: SwapAmountClickIntents,
     modifier: Modifier = Modifier,
 ) {
+    val swapAmountContent = amountUM as? SwapAmountUM.Content
+    val isFixedRate = swapAmountContent?.swapRateType == ExpressRateType.Fixed
     ConstraintLayout(
         modifier = modifier,
     ) {
         val (amountFromRef, amountToRef, middleButtonRef) = createRefs()
         SwapAmountBlock(
-            amountUM = amountUM,
             amountFieldUM = amountUM.primaryAmount,
+            selectedAmountType = amountUM.selectedAmountType,
+            selectedQuote = swapAmountContent?.selectedQuote,
+            isFixedRate = isFixedRate,
             clickIntents = clickIntents,
             modifier = Modifier.constrainAs(amountFromRef) {
                 top.linkTo(parent.top)
@@ -69,8 +70,10 @@ internal fun SwapAmountContent(
             },
         )
         SwapAmountBlock(
-            amountUM = amountUM,
             amountFieldUM = amountUM.secondaryAmount,
+            selectedAmountType = amountUM.selectedAmountType,
+            selectedQuote = swapAmountContent?.selectedQuote,
+            isFixedRate = isFixedRate,
             clickIntents = clickIntents,
             modifier = Modifier.constrainAs(amountToRef) {
                 top.linkTo(amountFromRef.bottom, 8.dp)
@@ -100,7 +103,7 @@ private fun SwapAmountBlockSeparator(onClick: () -> Unit, modifier: Modifier = M
         modifier = modifier
             .heightIn(max = 28.dp)
             .clip(RoundedCornerShape(32.dp))
-            .background(TangemTheme.colors.background.secondary)
+            .background(TangemTheme.colors.button.secondary)
             .clickable(onClick = onClick)
             .padding(vertical = 6.dp, horizontal = 12.dp),
     ) {
@@ -108,10 +111,6 @@ private fun SwapAmountBlockSeparator(onClick: () -> Unit, modifier: Modifier = M
             text = stringResourceSafe(R.string.common_convert),
             style = TangemTheme.typography.caption1,
             color = TangemTheme.colors.text.tertiary,
-        )
-        VerticalDivider(
-            thickness = 1.dp,
-            color = TangemTheme.colors.icon.inactive,
         )
         Icon(
             painter = rememberVectorPainter(
@@ -126,11 +125,14 @@ private fun SwapAmountBlockSeparator(onClick: () -> Unit, modifier: Modifier = M
 
 @Composable
 private fun SwapAmountBlock(
-    amountUM: SwapAmountUM,
     amountFieldUM: SwapAmountFieldUM,
+    selectedQuote: SwapQuoteUM?,
+    selectedAmountType: SwapAmountType,
+    isFixedRate: Boolean,
     clickIntents: SwapAmountClickIntents,
     modifier: Modifier = Modifier,
 ) {
+    val isSelectedAmountType = selectedAmountType == amountFieldUM.amountType
     Column(
         modifier = modifier
             .padding(horizontal = 16.dp)
@@ -138,7 +140,7 @@ private fun SwapAmountBlock(
             .fillMaxWidth()
             .background(TangemTheme.colors.background.action),
     ) {
-        AnimatedVisibility(amountUM.selectedAmountType == amountFieldUM.amountType) {
+        AnimatedVisibility(isSelectedAmountType) {
             Box {
                 SwapAmountEditBlock(
                     amountFieldUM = amountFieldUM,
@@ -157,8 +159,10 @@ private fun SwapAmountBlock(
             }
         }
         SwapAmountInfo(
-            amountUM = amountUM,
             amountFieldUM = amountFieldUM,
+            selectedQuote = selectedQuote,
+            isSelectedAmountType = isSelectedAmountType,
+            isFixedRate = isFixedRate,
             onExpandEditField = clickIntents::onExpandEditField,
             onSelectTokenClick = clickIntents::onSelectTokenClick,
             onMaxAmountClick = clickIntents::onMaxValueClick,
@@ -187,7 +191,7 @@ private fun SwapAmountEditBlock(
         } else {
             Text(
                 text = (amountFieldUM.amountField as AmountState.Data).title.resolveReference(),
-                style = TangemTheme.typography.caption2,
+                style = TangemTheme.typography.subtitle2,
                 color = TangemTheme.colors.text.tertiary,
             )
         }
@@ -201,10 +205,13 @@ private fun SwapAmountEditBlock(
     }
 }
 
+@Suppress("LongParameterList")
 @Composable
 private fun SwapAmountInfo(
-    amountUM: SwapAmountUM,
     amountFieldUM: SwapAmountFieldUM,
+    selectedQuote: SwapQuoteUM?,
+    isSelectedAmountType: Boolean,
+    isFixedRate: Boolean,
     onExpandEditField: (SwapAmountType) -> Unit,
     onMaxAmountClick: () -> Unit,
     onSelectTokenClick: () -> Unit,
@@ -220,7 +227,7 @@ private fun SwapAmountInfo(
                 indication = ripple(),
                 enabled = (amountFieldUM as? SwapAmountFieldUM.Content)?.isClickEnabled == true,
                 onClick = {
-                    if ((amountUM as? SwapAmountUM.Content)?.swapRateType == ExpressRateType.Fixed) {
+                    if (isFixedRate) {
                         onExpandEditField(amountFieldUM.amountType)
                     } else {
                         onSelectTokenClick()
@@ -237,107 +244,85 @@ private fun SwapAmountInfo(
                 bottom = 16.dp,
             ),
         )
-        SwapAmountInfoMain(amountFieldUM = amountFieldUM)
+        SwapAmountInfoMain(
+            amountFieldUM = amountFieldUM,
+            selectedQuote = selectedQuote,
+            isSelectedAmountType = isSelectedAmountType,
+        )
         SpacerWMax()
         AnimatedContent(
-            amountFieldUM,
-        ) { wrappedFieldAmountUM ->
-            if (amountUM is SwapAmountUM.Content) {
-                SwapAmountInfoExtra(
-                    amountUM = amountUM,
-                    amountFieldUM = wrappedFieldAmountUM,
-                    onMaxAmountClick = onMaxAmountClick,
+            targetState = isSelectedAmountType,
+        ) { isSelected ->
+            if (isSelected) {
+                AmountMaxButton(onMaxAmountClick)
+            } else {
+                SwapAmountInfoQuote(
+                    quoteUM = selectedQuote,
+                    isFixedRate = isFixedRate,
                     onSelectTokenClick = onSelectTokenClick,
                 )
-            } else {
-                RectangleShimmer()
             }
         }
     }
 }
 
 @Composable
-private fun SwapAmountInfoMain(amountFieldUM: SwapAmountFieldUM, modifier: Modifier = Modifier) {
-    AnimatedContent(
-        targetState = amountFieldUM is SwapAmountFieldUM.Content,
+private fun SwapAmountInfoMain(
+    amountFieldUM: SwapAmountFieldUM,
+    selectedQuote: SwapQuoteUM?,
+    isSelectedAmountType: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    Column(
         modifier = modifier,
-    ) { isContent ->
-        if (isContent && amountFieldUM is SwapAmountFieldUM.Content) {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(2.dp),
-            ) {
+    ) {
+        AnimatedContent(amountFieldUM is SwapAmountFieldUM.Content) { isContent ->
+            if (isContent && amountFieldUM is SwapAmountFieldUM.Content) {
                 Text(
                     text = amountFieldUM.title.resolveReference(),
                     style = TangemTheme.typography.subtitle2,
                     color = TangemTheme.colors.text.primary1,
                     maxLines = 1,
                 )
+            } else {
+                TextShimmer(
+                    style = TangemTheme.typography.subtitle2,
+                    modifier = Modifier.width(56.dp),
+                )
+            }
+        }
+        AnimatedContent(isSelectedAmountType) { isSelected ->
+            if (isSelected && amountFieldUM is SwapAmountFieldUM.Content) {
+                SpacerH2()
                 EllipsisText(
                     text = amountFieldUM.subtitle.resolveReference(),
                     style = TangemTheme.typography.caption2,
                     color = TangemTheme.colors.text.tertiary,
                     ellipsis = amountFieldUM.subtitleEllipsis,
                 )
-            }
-        } else {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(2.dp),
-            ) {
-                TextShimmer(
-                    style = TangemTheme.typography.subtitle2,
-                    modifier = Modifier.width(56.dp),
-                )
-                TextShimmer(
-                    style = TangemTheme.typography.caption2,
-                    modifier = Modifier.width(72.dp),
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun SwapAmountInfoExtra(
-    amountUM: SwapAmountUM.Content,
-    amountFieldUM: SwapAmountFieldUM,
-    onMaxAmountClick: () -> Unit,
-    onSelectTokenClick: () -> Unit,
-) {
-    when (amountFieldUM.amountType) {
-        SwapAmountType.From -> when (amountUM.swapDirection) {
-            SwapDirection.Direct -> {
-                AnimatedVisibility(
-                    visible = amountUM.selectedAmountType == amountFieldUM.amountType,
-                    enter = fadeIn(),
-                    exit = fadeOut(),
-                ) {
-                    AmountMaxButton(onMaxAmountClick)
-                }
-            }
-            SwapDirection.Reverse -> {
-                SwapAmountInfoQuote(
-                    quoteUM = amountUM.selectedQuote,
-                    swapRateType = amountUM.swapRateType,
-                    onSelectTokenClick = onSelectTokenClick,
-                )
-            }
-        }
-
-        SwapAmountType.To -> when (amountUM.swapDirection) {
-            SwapDirection.Direct -> {
-                SwapAmountInfoQuote(
-                    quoteUM = amountUM.selectedQuote,
-                    swapRateType = amountUM.swapRateType,
-                    onSelectTokenClick = onSelectTokenClick,
-                )
-            }
-            SwapDirection.Reverse -> {
-                AnimatedVisibility(
-                    visible = amountUM.selectedAmountType == amountFieldUM.amountType,
-                    enter = fadeIn(),
-                    exit = fadeOut(),
-                ) {
-                    AmountMaxButton(onMaxAmountClick)
+            } else {
+                AnimatedContent(selectedQuote) { quote ->
+                    when (quote) {
+                        is SwapQuoteUM.Content -> {
+                            SpacerH2()
+                            EllipsisText(
+                                text = stringResourceSafe(
+                                    R.string.send_with_swap_recipient_get_amount,
+                                    quote.quoteAmountValue.resolveReference(),
+                                ),
+                                style = TangemTheme.typography.caption2,
+                                color = TangemTheme.colors.text.tertiary,
+                            )
+                        }
+                        SwapQuoteUM.Loading -> {
+                            SpacerH2()
+                            TextShimmer(
+                                style = TangemTheme.typography.caption2,
+                                modifier = Modifier.width(72.dp),
+                            )
+                        }
+                        else -> Unit
+                    }
                 }
             }
         }
@@ -353,7 +338,7 @@ private fun AmountMaxButton(onMaxAmountClick: () -> Unit) {
         modifier = Modifier
             .padding(end = 16.dp)
             .clip(RoundedCornerShape(16.dp))
-            .background(TangemTheme.colors.background.secondary)
+            .background(TangemTheme.colors.button.secondary)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = ripple(),
@@ -364,11 +349,11 @@ private fun AmountMaxButton(onMaxAmountClick: () -> Unit) {
 }
 
 @Composable
-private fun SwapAmountInfoQuote(quoteUM: SwapQuoteUM, swapRateType: ExpressRateType, onSelectTokenClick: () -> Unit) {
+private fun SwapAmountInfoQuote(quoteUM: SwapQuoteUM?, isFixedRate: Boolean, onSelectTokenClick: () -> Unit) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.conditionalCompose(
-            condition = swapRateType == ExpressRateType.Fixed,
+            condition = isFixedRate,
             modifier = {
                 clickable(
                     interactionSource = remember { MutableInteractionSource() },
@@ -378,29 +363,20 @@ private fun SwapAmountInfoQuote(quoteUM: SwapQuoteUM, swapRateType: ExpressRateT
             },
         ),
     ) {
-        when (quoteUM) {
-            is SwapQuoteUM.Content -> EllipsisText(
-                text = quoteUM.quoteAmountValue.resolveReference(),
-                style = TangemTheme.typography.body2,
-                color = TangemTheme.colors.text.tertiary,
-                modifier = Modifier.padding(end = 2.dp),
-            )
-
-            is SwapQuoteUM.Error,
-            is SwapQuoteUM.Empty,
-            -> Box(modifier = Modifier.padding(start = 16.dp))
-
-            is SwapQuoteUM.Loading -> CircularProgressIndicator(
-                color = TangemTheme.colors.icon.inactive,
-                modifier = Modifier
-                    .padding(end = 4.dp)
-                    .size(20.dp),
-            )
-
-            is SwapQuoteUM.Allowance -> Text(
-                text = "ALLOWANCE NOT IMPLEMENTED",
-            )
+        AnimatedContent(
+            quoteUM,
+        ) { quote ->
+            when (quote) {
+                is SwapQuoteUM.Loading -> CircularProgressIndicator(
+                    color = TangemTheme.colors.icon.inactive,
+                    modifier = Modifier
+                        .padding(end = 4.dp)
+                        .size(20.dp),
+                )
+                else -> Box(modifier = Modifier.padding(start = 16.dp))
+            }
         }
+
         Icon(
             painter = rememberVectorPainter(
                 ImageVector.vectorResource(R.drawable.ic_chevron_24),

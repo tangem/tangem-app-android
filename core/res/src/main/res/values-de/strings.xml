@@ -320,6 +320,8 @@
   <string name="details_title">Details</string>
   <string name="disclaimer_error_loading">Überprüfe deine Internetverbindung oder wechseln zu einem anderen Netzwerk</string>
   <string name="disclaimer_title">Nutzungsbedingungen</string>
+  <string name="email_preface_wc_error">Hallo Support-Team, ich habe einen Fehler mit dem Code %s festgestellt.</string>
+  <string name="email_subject_wc_error">WalletConnect-Fehler</string>
   <string name="error_wrong_wallet_tapped">Du hast eine Karte oder Ring aus einer anderen Wallet verwendet. Tippe auf die Karte oder Ring, die dieser Wallet zugeordnet ist.</string>
   <string name="eth_gas_required_exceeds_allowance">Nicht genug Geld für die Transaktion. Bitte lade dein  Konto auf.</string>
   <string name="exchange_tokens_available_tokens_header">Meine Token</string>
@@ -1431,6 +1433,12 @@
   <string name="wc_disconnect_all">Alle trennen</string>
   <string name="wc_disconnect_all_alert_desc">Text über die Trennung aller dApps</string>
   <string name="wc_disconnect_all_alert_title">Alle dApps trennen</string>
+  <string name="wc_errors_invalid_domain_subtitle">Versuchen Sie erneut, mit einer neuen URI zu koppeln</string>
+  <string name="wc_errors_invalid_domain_title">Ungültige dApp-Domain</string>
+  <string name="wc_errors_no_blockchains_subtitle">%s gibt keine Blockchains an — weder erforderlich noch optional.\nBitte stellen Sie sicher, dass Sie die richtige URI verwendet haben</string>
+  <string name="wc_errors_no_blockchains_title">Keine Netzwerke</string>
+  <string name="wc_errors_proposal_expired_subtitle">Bitte generieren Sie eine neue URI und versuchen Sie erneut, eine Verbindung herzustellen</string>
+  <string name="wc_errors_proposal_expired_title">Verbindungsvorschlag abgelaufen</string>
   <string name="wc_estimated_wallet_changes">Geschätzte Wallet-Änderungen</string>
   <string name="wc_estimated_wallet_changes_not_simulated">Die Transaktion konnte nicht simuliert werden. Bitte sei vorsichtig.</string>
   <string name="wc_malicious_transaction">Böswillige/ gefährliche Transaktion</string>
