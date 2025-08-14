@@ -39,6 +39,7 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.domain.models.account.CryptoPortfolioIcon
+import com.tangem.features.account.common.toUM
 import com.tangem.features.account.createedit.entity.AccountCreateEditUM
 import com.tangem.features.account.createedit.entity.AccountCreateEditUM.Account
 import kotlinx.collections.immutable.toImmutableList
@@ -298,7 +299,7 @@ private class PreviewStateProvider : CollectionPreviewParameterProvider<AccountC
     buildList {
         val colors = CryptoPortfolioIcon.Color.entries.toImmutableList()
         val icons = CryptoPortfolioIcon.Icon.entries.toImmutableList()
-        var portfolioIcon = CryptoPortfolioIcon.ofDefaultCustomAccount()
+        var portfolioIcon = CryptoPortfolioIcon.ofDefaultCustomAccount().toUM()
         val first = AccountCreateEditUM(
             title = stringReference("Add account"),
             onCloseClick = {},
@@ -327,7 +328,7 @@ private class PreviewStateProvider : CollectionPreviewParameterProvider<AccountC
         )
         add(first)
 
-        portfolioIcon = CryptoPortfolioIcon.ofCustomAccount(
+        portfolioIcon = portfolioIcon.copy(
             value = CryptoPortfolioIcon.Icon.Letter,
             color = CryptoPortfolioIcon.Color.entries.random(),
         )
