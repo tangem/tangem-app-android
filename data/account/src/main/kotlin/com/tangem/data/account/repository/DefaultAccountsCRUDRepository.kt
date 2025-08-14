@@ -13,6 +13,8 @@ import com.tangem.domain.models.account.*
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.extensions.addOrReplace
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 
 /**
 [REDACTED_AUTHOR]
@@ -37,15 +39,22 @@ internal class DefaultAccountsCRUDRepository(
     }
 
     override suspend fun getArchivedAccount(accountId: AccountId): Option<ArchivedAccount> = option {
-        ArchivedAccount(
-            accountId = accountId,
-            name = AccountName("Archived Account").getOrNull()!!,
-            icon = CryptoPortfolioIcon.ofDefaultCustomAccount(),
-            derivationIndex = DerivationIndex(value = 1000).getOrNull()!!,
-            tokensCount = 2,
-            networksCount = 1,
+        createMockArchivedAccount(userWalletId = accountId.userWalletId)
+    }
+
+    override suspend fun getArchivedAccountsSync(userWalletId: UserWalletId): Option<List<ArchivedAccount>> = option {
+        listOf(
+            createMockArchivedAccount(userWalletId),
         )
     }
+
+    override fun getArchivedAccounts(userWalletId: UserWalletId): Flow<List<ArchivedAccount>> {
+        return flow {
+            getArchivedAccountsSync(userWalletId).getOrNull().orEmpty()
+        }
+    }
+
+    override suspend fun fetchArchivedAccounts(userWalletId: UserWalletId) = Unit
 
     override suspend fun saveAccounts(accountList: AccountList) {
         runtimeStore.update(emptyList()) {
@@ -61,5 +70,21 @@ internal class DefaultAccountsCRUDRepository(
 
     override fun getUserWallet(userWalletId: UserWalletId): UserWallet {
         return userWalletsStore.getSyncStrict(userWalletId)
+    }
+
+    private fun createMockArchivedAccount(userWalletId: UserWalletId): ArchivedAccount {
+        val derivationIndex = DerivationIndex(value = 1000).getOrNull()!!
+
+        return ArchivedAccount(
+            accountId = AccountId.forCryptoPortfolio(
+                userWalletId = userWalletId,
+                derivationIndex = derivationIndex,
+            ),
+            name = AccountName("Archived Account").getOrNull()!!,
+            icon = CryptoPortfolioIcon.ofDefaultCustomAccount(),
+            derivationIndex = derivationIndex,
+            tokensCount = 2,
+            networksCount = 1,
+        )
     }
 }

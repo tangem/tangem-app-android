@@ -7,6 +7,7 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import kotlinx.coroutines.flow.Flow
 
 /**
  * Repository interface for performing CRUD operations on accounts
@@ -37,6 +38,28 @@ interface AccountsCRUDRepository {
      * @param accountId the unique identifier of the account
      */
     suspend fun getArchivedAccount(accountId: AccountId): Option<ArchivedAccount>
+
+    /**
+     * Retrieves a list of archived accounts associated with a specific user wallet
+     *
+     * @param userWalletId the unique identifier of the user wallet
+     * @return an [Option] containing a list of [ArchivedAccount] if found, or `Option.None` if not
+     */
+    suspend fun getArchivedAccountsSync(userWalletId: UserWalletId): Option<List<ArchivedAccount>>
+
+    /**
+     * Provides a flow of archived accounts associated with a specific user wallet
+     *
+     * @param userWalletId the unique identifier of the user wallet
+     */
+    fun getArchivedAccounts(userWalletId: UserWalletId): Flow<List<ArchivedAccount>>
+
+    /**
+     * Fetches archived accounts for a specific user wallet and updates the repository
+     *
+     * @param userWalletId the unique identifier of the user wallet
+     */
+    suspend fun fetchArchivedAccounts(userWalletId: UserWalletId)
 
     /**
      * Saves a list of accounts to the repository
