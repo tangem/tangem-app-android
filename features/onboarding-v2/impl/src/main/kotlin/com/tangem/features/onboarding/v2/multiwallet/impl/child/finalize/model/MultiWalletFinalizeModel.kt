@@ -21,6 +21,7 @@ import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.requireColdWallet
 import com.tangem.domain.wallets.repository.WalletsRepository
+import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.features.onboarding.v2.common.ui.CantLeaveBackupDialog
 import com.tangem.features.onboarding.v2.impl.R
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
@@ -51,6 +52,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory,
     private val userWalletsListManager: UserWalletsListManager,
+    private val saveWalletUseCase: SaveWalletUseCase,
     private val cardRepository: CardRepository,
     private val onboardingRepository: OnboardingRepository,
     private val walletsRepository: WalletsRepository,
@@ -231,7 +233,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
                 OnboardingMultiWalletComponent.Mode.Onboarding,
                 OnboardingMultiWalletComponent.Mode.ContinueFinalize,
                 -> {
-                    userWalletsListManager.save(
+                    saveWalletUseCase(
                         userWallet = userWalletCreated.copy(
                             scanResponse = scanResponse.updateScanResponseAfterBackup(),
                         ),
@@ -247,13 +249,11 @@ internal class MultiWalletFinalizeModel @Inject constructor(
                         }
                         ?: userWalletCreated
 
-                    userWalletsListManager.update(
-                        userWalletId = userWallet.walletId,
-                        update = { wallet ->
-                            wallet.requireColdWallet().copy(
-                                scanResponse = scanResponse.updateScanResponseAfterBackup(),
-                            )
-                        },
+                    saveWalletUseCase(
+                        userWallet = userWallet.requireColdWallet().copy(
+                            scanResponse = scanResponse.updateScanResponseAfterBackup(),
+                        ),
+                        canOverride = true,
                     )
 
                     userWallet
