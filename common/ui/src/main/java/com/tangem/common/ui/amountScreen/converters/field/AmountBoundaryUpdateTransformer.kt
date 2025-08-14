@@ -48,6 +48,7 @@ class AmountBoundaryUpdateTransformer(
 
         return prevState.copy(
             availableBalance = availableBalance,
+            availableBalanceShort = stringReference(crypto),
         )
     }
 }
