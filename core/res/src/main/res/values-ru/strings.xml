@@ -116,7 +116,7 @@
   <string name="common_choose_action">Выберите действие</string>
   <string name="common_choose_network">Выберите сеть</string>
   <string name="common_choose_token">Выберите токен</string>
-  <string name="common_choose_wallet">Выберите кошелек</string>
+  <string name="common_choose_wallet">Выберите кошелёк</string>
   <string name="common_claim">Получить</string>
   <string name="common_claim_rewards">Вывести награду</string>
   <string name="common_close">Закрыть</string>
@@ -291,6 +291,8 @@
   <string name="details_title">Подробности</string>
   <string name="disclaimer_error_loading">Проверьте подключение с интернетом или переключитесь на другую сеть</string>
   <string name="disclaimer_title">Условия использования</string>
+  <string name="email_preface_wc_error">Привет, команда поддержки, у меня возникла ошибка с кодом: %s</string>
+  <string name="email_subject_wc_error">Ошибка WalletConnect</string>
   <string name="error_wrong_wallet_tapped">Вы использовали карту или кольцо от другого кошелька. Приложите карту или кольцо, связанную с этим кошельком.</string>
   <string name="eth_gas_required_exceeds_allowance">Недостаточно средств для совершения транзакции. Пожалуйста, пополните свой аккаунт.</string>
   <string name="exchange_tokens_available_tokens_header">Мои токены</string>
@@ -1304,7 +1306,7 @@
   <string name="warning_token_trustline_title">Требуется трастлайн</string>
   <string name="wc_alert_audit_malicious_domain">Вредоносный домен</string>
   <string name="wc_alert_audit_unknown_domain">Неизвестный домен</string>
-  <string name="wc_alert_connect_anyway">Подключиться всё равно</string>
+  <string name="wc_alert_connect_anyway">Всё равно подключиться</string>
   <string name="wc_alert_connection_timeout_description">Ошибка тайм-аута. Пожалуйста, попробуйте позже.</string>
   <string name="wc_alert_connection_timeout_title">Не удалось подключиться через Wallet Connect</string>
   <string name="wc_alert_domain_issues_description">Этот домен не может быть верифицирован. Внимательно проверьте запрос перед одобрением.</string>
@@ -1348,6 +1350,12 @@
   <string name="wc_dapp_disconnected">dApp отключен</string>
   <string name="wc_disconnect_all">Отключить все</string>
   <string name="wc_disconnect_all_alert_title">Отключить все dApp</string>
+  <string name="wc_errors_invalid_domain_subtitle">Попробуйте соединиться снова, используя новый URI</string>
+  <string name="wc_errors_invalid_domain_title">Недействительный домен dApp</string>
+  <string name="wc_errors_no_blockchains_subtitle">%s не указывает никаких блокчейнов — ни обязательных, ни опциональных.\nПожалуйста, убедитесь, что вы использовали правильный URI</string>
+  <string name="wc_errors_no_blockchains_title">Нет сетей</string>
+  <string name="wc_errors_proposal_expired_subtitle">Пожалуйста, сгенерируйте новый URI и попробуйте подключиться снова</string>
+  <string name="wc_errors_proposal_expired_title">Предложение подключения истекло</string>
   <string name="wc_estimated_wallet_changes">Предварительные изменения</string>
   <string name="wc_estimated_wallet_changes_not_simulated">Не удалось выполнить симуляцию транзакции. Пожалуйста, действуйте с осторожностью.</string>
   <string name="wc_estimation_is_not_supported">Оценка не поддерживается для %s</string>

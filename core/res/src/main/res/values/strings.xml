@@ -12,6 +12,8 @@
   <string name="access_code_create_description">Set a %s-digit Access Code to unlock your wallet.</string>
   <string name="access_code_create_title">Create Access Code</string>
   <string name="access_code_navtitle">Access code</string>
+  <string name="account_archived_recover">Recover</string>
+  <string name="account_archived_title">Archived</string>
   <string name="account_details_archive">Archive account</string>
   <string name="account_details_archive_action">Archive</string>
   <string name="account_details_archive_description">You are archiving this account, but you can always get it back.</string>
@@ -359,7 +361,8 @@
   <string name="domain_receive_assets_onboarding_description">Sending assets in other networks will result in permanent loss.</string>
   <string name="domain_receive_assets_onboarding_network_name">%s network</string>
   <string name="domain_receive_assets_onboarding_title">Send funds using only</string>
-  <string name="email_subject_wc_error">Wallet Connect error</string>
+  <string name="email_preface_wc_error">Hi support team, I\'ve encountered an error with code: %s</string>
+  <string name="email_subject_wc_error">WalletConnect error</string>
   <string name="error_wrong_wallet_tapped">You have used a card or ring from another wallet. Tap the card or ring associated with this wallet</string>
   <string name="eth_gas_required_exceeds_allowance">Not enough funds for the transaction. Please top up your account.</string>
   <string name="exchange_tokens_available_tokens_header">My tokens</string>
@@ -1002,6 +1005,7 @@
   <string name="send_with_swap_recipient_amount_success_title">Recipient will receive</string>
   <string name="send_with_swap_recipient_amount_text">To recipient</string>
   <string name="send_with_swap_recipient_amount_title">Amount to receive</string>
+  <string name="send_with_swap_recipient_get_amount">Recipient get %s</string>
   <string name="send_with_swap_remove_convert_alert_message">Are you sure you want to cancel the conversion? Your previous data will be cleared.</string>
   <string name="send_with_swap_remove_convert_alert_title">Remove Conversion</string>
   <string name="send_with_swap_title">Send with swap</string>
@@ -1569,7 +1573,7 @@
   <string name="wc_specify_networks_subtitle">At least one network is required for dApp connection</string>
   <string name="wc_specify_networks_title">Specify selected networks</string>
   <string name="wc_successfully_signed">Successfully signed</string>
-  <string name="wc_transaction_flow_title" translatable="false">Wallet connect</string>
+  <string name="wc_transaction_flow_title" translatable="false">WalletConnect</string>
   <string name="wc_transaction_info_to_title">To</string>
   <string name="wc_transaction_request">Transaction request</string>
   <string name="wc_transaction_request_title">Transaction request</string>

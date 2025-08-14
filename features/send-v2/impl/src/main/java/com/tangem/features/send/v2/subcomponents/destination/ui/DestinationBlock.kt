@@ -134,7 +134,7 @@ private fun AddressWithMemoBlock(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = address.value,
-                style = TangemTheme.typography.body2,
+                style = TangemTheme.typography.body1,
                 color = TangemTheme.colors.text.primary1,
             )
             val blockchainAddress = address.briefBlockchainAddress
