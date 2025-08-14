@@ -5,6 +5,10 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.coroutines.flow.Flow
 
+@Deprecated(
+    message = "Use UserWalletsListRepository instead",
+    replaceWith = ReplaceWith("UserWalletsListRepository"),
+)
 interface UserWalletsStore {
 
     val selectedUserWalletOrNull: UserWallet?
@@ -14,8 +18,6 @@ interface UserWalletsStore {
     fun getSyncOrNull(key: UserWalletId): UserWallet?
 
     fun getSyncStrict(key: UserWalletId): UserWallet
-
-    suspend fun getAllSyncOrNull(): List<UserWallet>?
 
     suspend fun update(
         userWalletId: UserWalletId,
