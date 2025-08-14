@@ -18,6 +18,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
+@Suppress("TooManyFunctions")
 @Module
 @InstallIn(SingletonComponent::class)
 internal object TransactionDomainModule {
@@ -182,6 +183,15 @@ internal object TransactionDomainModule {
         cardSdkConfigRepository: CardSdkConfigRepository,
     ): PrepareForSendUseCase {
         return PrepareForSendUseCase(transactionRepository, cardSdkConfigRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun providePrepareAndSignUseCase(
+        transactionRepository: TransactionRepository,
+        cardSdkConfigRepository: CardSdkConfigRepository,
+    ): PrepareAndSignUseCase {
+        return PrepareAndSignUseCase(transactionRepository, cardSdkConfigRepository)
     }
 
     @Provides
