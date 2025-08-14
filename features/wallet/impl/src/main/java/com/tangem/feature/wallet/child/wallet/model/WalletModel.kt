@@ -13,6 +13,7 @@ import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.nft.ObserveAndClearNFTCacheIfNeedUseCase
 import com.tangem.domain.notifications.GetIsHuaweiDeviceWithoutGoogleServicesUseCase
@@ -383,9 +384,11 @@ internal class WalletModel @Inject constructor(
         val otherWallets = action.wallets.minus(action.selectedWallet)
 
         if (tokensFeatureToggles.isWalletBalanceFetcherEnabled) {
-            otherWallets.onEach { userWallet ->
-                modelScope.launch { walletContentFetcher(userWalletId = userWallet.walletId) }
-            }
+            otherWallets
+                .filterNot(UserWallet::isLocked)
+                .onEach { userWallet ->
+                    modelScope.launch { walletContentFetcher(userWalletId = userWallet.walletId) }
+                }
         }
 
         if (action.wallets.size > 1 && isWalletsScrollPreviewEnabled()) {
@@ -500,6 +503,10 @@ internal class WalletModel @Inject constructor(
             clickIntents = clickIntents,
             coroutineScope = modelScope,
         )
+
+        action.unlockedWallets.onEach { userWallet ->
+            modelScope.launch { fetchWalletContent(userWallet = userWallet) }
+        }
     }
 
     private fun demonstrateWalletsScrollPreview(direction: Direction) {
@@ -541,6 +548,8 @@ internal class WalletModel @Inject constructor(
 
     private suspend fun fetchWalletContent(userWallet: UserWallet) {
         if (tokensFeatureToggles.isWalletBalanceFetcherEnabled) {
+            if (userWallet.isLocked) return
+
             /*
              * Updating the balance of the current wallet is an essential part of InitializationWallets,
              * so the coroutine is launched in the current context
