@@ -30,7 +30,7 @@ import com.tangem.blockchain.common.Amount as BlockchainAmount
 internal class WcEthSignTransactionUseCase @AssistedInject constructor(
     override val respondService: WcRespondService,
     override val analytics: AnalyticsEventHandler,
-    private val prepareForSend: PrepareForSendUseCase,
+    private val prepareForSend: PrepareForSendUseCase, // TODO: TODO("[REDACTED_JIRA]")
     private val ethTxHelper: WcEthTxHelper,
     @Assisted override val context: WcMethodUseCaseContext,
     @Assisted override val method: WcEthMethod.SignTransaction,
