@@ -15,6 +15,7 @@ import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.features.account.AccountCreateEditComponent
+import com.tangem.features.account.common.toDomain
 import com.tangem.features.account.createedit.entity.AccountCreateEditUM
 import com.tangem.features.account.createedit.entity.AccountCreateEditUMBuilder
 import com.tangem.features.account.createedit.entity.AccountCreateEditUMBuilder.Companion.portfolioIcon
@@ -74,7 +75,7 @@ internal class AccountCreateEditModel @Inject constructor(
     private suspend fun createNewCryptoPortfolio(params: AccountCreateEditComponent.Params.Create) {
         val state = uiState.value
         val name = AccountName(state.account.name).getOrNull() ?: return
-        val icon = state.account.portfolioIcon
+        val icon = state.account.portfolioIcon.toDomain()
         addCryptoPortfolioUseCase(
             userWalletId = params.userWalletId,
             accountName = name,
@@ -86,7 +87,7 @@ internal class AccountCreateEditModel @Inject constructor(
     private suspend fun editCryptoPortfolio(params: AccountCreateEditComponent.Params.Edit) {
         val state = uiState.value
         val name = AccountName(state.account.name).getOrNull() ?: return
-        val icon = state.account.portfolioIcon
+        val icon = state.account.portfolioIcon.toDomain()
         val isNewName = name != params.account.name
         val isNewIcon = icon != params.account.portfolioIcon
         updateCryptoPortfolioUseCase(
