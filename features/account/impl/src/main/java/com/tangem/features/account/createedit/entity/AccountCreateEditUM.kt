@@ -2,6 +2,7 @@ package com.tangem.features.account.createedit.entity
 
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.account.CryptoPortfolioIcon
+import com.tangem.features.account.common.CryptoPortfolioIconUM
 import kotlinx.collections.immutable.ImmutableList
 
 data class AccountCreateEditUM(
@@ -15,7 +16,7 @@ data class AccountCreateEditUM(
 
     data class Account(
         val name: String,
-        val portfolioIcon: CryptoPortfolioIcon,
+        val portfolioIcon: CryptoPortfolioIconUM,
         val derivationInfo: TextReference,
         val inputPlaceholder: TextReference,
         val onNameChange: (String) -> Unit,
