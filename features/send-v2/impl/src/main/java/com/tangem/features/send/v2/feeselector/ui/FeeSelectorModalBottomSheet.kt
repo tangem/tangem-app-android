@@ -15,7 +15,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -82,15 +81,19 @@ internal fun FeeSelectorModalBottomSheet(
                 modifier = Modifier.padding(vertical = 4.dp, horizontal = 13.dp),
             )
         },
-        footer = {
-            PrimaryButton(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                enabled = state.isPrimaryButtonEnabled,
-                text = stringResourceSafe(R.string.common_done),
-                onClick = feeSelectorIntents::onDoneClick,
-            )
+        footer = if (state.selectedFeeItem is FeeItem.Custom) {
+            {
+                PrimaryButton(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    enabled = state.isPrimaryButtonEnabled,
+                    text = stringResourceSafe(R.string.common_done),
+                    onClick = feeSelectorIntents::onDoneClick,
+                )
+            }
+        } else {
+            null
         },
     )
 }
@@ -115,7 +118,6 @@ private fun FeeTitle(feeDisplaySource: FeeSelectorParams.FeeDisplaySource, onDis
     }
 }
 
-@Suppress("LongMethod", "CyclomaticComplexMethod")
 @Composable
 private fun FeeSelectorItems(
     state: FeeSelectorUM.Content,
@@ -123,22 +125,10 @@ private fun FeeSelectorItems(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
-        val feeFiatRateUM = state.feeFiatRateUM
         state.feeItems.fastForEachIndexed { index, item ->
             val isSelected = item.isSameClass(state.selectedFeeItem)
-            val lastItem = index == state.feeItems.size - 1
-            val iconTint by animateColorAsState(
-                targetValue = if (isSelected) TangemTheme.colors.icon.accent else TangemTheme.colors.text.tertiary,
-                label = "Fee selector icon tint change",
-            )
-            val iconBackgroundColor by animateColorAsState(
-                targetValue = if (isSelected) {
-                    TangemTheme.colors.icon.accent.copy(alpha = 0.1F)
-                } else {
-                    TangemTheme.colors.background.secondary
-                },
-                label = "Fee selector icon background change",
-            )
+            val lastItem = index == state.feeItems.lastIndex
+
             val itemModifier = Modifier
                 .fillMaxWidth()
                 .background(TangemTheme.colors.background.primary)
@@ -149,112 +139,46 @@ private fun FeeSelectorItems(
                     modifier = itemModifier,
                     title = item.title,
                     iconRes = R.drawable.ic_star_mini_24,
-                    iconBackgroundColor = iconBackgroundColor,
-                    iconTint = iconTint,
-                    preDot = stringReference(
-                        item.fee.amount.value.format {
-                            crypto(
-                                symbol = item.fee.amount.currencySymbol,
-                                decimals = item.fee.amount.decimals,
-                            ).fee(canBeLower = state.feeExtraInfo.isFeeApproximate)
-                        },
-                    ),
-                    postDot = if (feeFiatRateUM != null) {
-                        getFiatReference(
-                            value = item.fee.amount.value,
-                            rate = feeFiatRateUM.rate,
-                            appCurrency = feeFiatRateUM.appCurrency,
-                        )
-                    } else {
-                        null
-                    },
-                    ellipsizeOffset = item.fee.amount.currencySymbol.length,
+                    isSelected = isSelected,
+                    amount = item.fee.amount,
+                    isFeeApproximate = state.feeExtraInfo.isFeeApproximate,
+                    feeFiatRateUM = state.feeFiatRateUM,
                     showDivider = !isSelected && !lastItem,
                 )
                 is FeeItem.Slow -> RegularFeeItemContent(
                     modifier = itemModifier,
                     title = resourceReference(R.string.common_fee_selector_option_slow),
                     iconRes = R.drawable.ic_tortoise_24,
-                    iconBackgroundColor = iconBackgroundColor,
-                    iconTint = iconTint,
-                    preDot = stringReference(
-                        item.fee.amount.value.format {
-                            crypto(
-                                symbol = item.fee.amount.currencySymbol,
-                                decimals = item.fee.amount.decimals,
-                            ).fee(canBeLower = state.feeExtraInfo.isFeeApproximate)
-                        },
-                    ),
-                    postDot = if (feeFiatRateUM != null) {
-                        getFiatReference(
-                            value = item.fee.amount.value,
-                            rate = feeFiatRateUM.rate,
-                            appCurrency = feeFiatRateUM.appCurrency,
-                        )
-                    } else {
-                        null
-                    },
-                    ellipsizeOffset = item.fee.amount.currencySymbol.length,
+                    isSelected = isSelected,
+                    amount = item.fee.amount,
+                    feeFiatRateUM = state.feeFiatRateUM,
+                    isFeeApproximate = state.feeExtraInfo.isFeeApproximate,
                     showDivider = !isSelected && !lastItem,
                 )
                 is FeeItem.Market -> RegularFeeItemContent(
                     modifier = itemModifier,
                     title = resourceReference(R.string.common_fee_selector_option_market),
                     iconRes = R.drawable.ic_bird_24,
-                    iconBackgroundColor = iconBackgroundColor,
-                    iconTint = iconTint,
-                    preDot = stringReference(
-                        item.fee.amount.value.format {
-                            crypto(
-                                symbol = item.fee.amount.currencySymbol,
-                                decimals = item.fee.amount.decimals,
-                            ).fee(canBeLower = state.feeExtraInfo.isFeeApproximate)
-                        },
-                    ),
-                    postDot = if (feeFiatRateUM != null) {
-                        getFiatReference(
-                            value = item.fee.amount.value,
-                            rate = feeFiatRateUM.rate,
-                            appCurrency = feeFiatRateUM.appCurrency,
-                        )
-                    } else {
-                        null
-                    },
-                    ellipsizeOffset = item.fee.amount.currencySymbol.length,
+                    isSelected = isSelected,
+                    amount = item.fee.amount,
+                    feeFiatRateUM = state.feeFiatRateUM,
+                    isFeeApproximate = state.feeExtraInfo.isFeeApproximate,
                     showDivider = !isSelected && !lastItem,
                 )
                 is FeeItem.Fast -> RegularFeeItemContent(
                     modifier = itemModifier,
                     title = resourceReference(R.string.common_fee_selector_option_fast),
                     iconRes = R.drawable.ic_hare_24,
-                    iconBackgroundColor = iconBackgroundColor,
-                    iconTint = iconTint,
-                    preDot = stringReference(
-                        item.fee.amount.value.format {
-                            crypto(
-                                symbol = item.fee.amount.currencySymbol,
-                                decimals = item.fee.amount.decimals,
-                            ).fee(canBeLower = state.feeExtraInfo.isFeeApproximate)
-                        },
-                    ),
-                    postDot = if (feeFiatRateUM != null) {
-                        getFiatReference(
-                            value = item.fee.amount.value,
-                            rate = feeFiatRateUM.rate,
-                            appCurrency = feeFiatRateUM.appCurrency,
-                        )
-                    } else {
-                        null
-                    },
-                    ellipsizeOffset = item.fee.amount.currencySymbol.length,
+                    isSelected = isSelected,
+                    amount = item.fee.amount,
+                    feeFiatRateUM = state.feeFiatRateUM,
+                    isFeeApproximate = state.feeExtraInfo.isFeeApproximate,
                     showDivider = !isSelected && !lastItem,
                 )
                 is FeeItem.Custom -> CustomFeeBlock(
                     modifier = itemModifier,
                     customFee = item,
                     isSelected = isSelected,
-                    iconBackgroundColor = iconBackgroundColor,
-                    iconTint = iconTint,
                     onValueChange = feeSelectorIntents::onCustomFeeValueChange,
                     nonce = state.feeNonce,
                 )
@@ -263,17 +187,27 @@ private fun FeeSelectorItems(
     }
 }
 
-@Suppress("LongParameterList")
 @Composable
 private fun CustomFeeBlock(
     customFee: FeeItem.Custom,
     isSelected: Boolean,
-    iconBackgroundColor: Color,
-    iconTint: Color,
     onValueChange: (Int, String) -> Unit,
     nonce: FeeNonce,
     modifier: Modifier = Modifier,
 ) {
+    val iconTint by animateColorAsState(
+        targetValue = if (isSelected) TangemTheme.colors.icon.accent else TangemTheme.colors.text.tertiary,
+        label = "Fee selector icon tint change",
+    )
+    val iconBackgroundColor by animateColorAsState(
+        targetValue = if (isSelected) {
+            TangemTheme.colors.icon.accent.copy(alpha = 0.1F)
+        } else {
+            TangemTheme.colors.background.secondary
+        },
+        label = "Fee selector icon background change",
+    )
+
     Column(modifier = modifier) {
         Row(
             modifier = Modifier.padding(all = 12.dp),
@@ -371,18 +305,48 @@ private fun ExpandedCustomFeeItems(
     }
 }
 
+@Suppress("LongParameterList")
 @Composable
 private fun RegularFeeItemContent(
     title: TextReference,
     @DrawableRes iconRes: Int,
-    iconBackgroundColor: Color,
-    iconTint: Color,
+    isSelected: Boolean,
+    amount: Amount,
+    feeFiatRateUM: FeeFiatRateUM?,
+    isFeeApproximate: Boolean,
     modifier: Modifier = Modifier,
-    preDot: TextReference? = null,
-    postDot: TextReference? = null,
-    ellipsizeOffset: Int? = null,
     showDivider: Boolean = true,
 ) {
+    val iconTint by animateColorAsState(
+        targetValue = if (isSelected) TangemTheme.colors.icon.accent else TangemTheme.colors.text.tertiary,
+        label = "Fee selector icon tint change",
+    )
+    val iconBackgroundColor by animateColorAsState(
+        targetValue = if (isSelected) {
+            TangemTheme.colors.icon.accent.copy(alpha = 0.1F)
+        } else {
+            TangemTheme.colors.background.secondary
+        },
+        label = "Fee selector icon background change",
+    )
+    val preDot = stringReference(
+        amount.value.format {
+            crypto(
+                symbol = amount.currencySymbol,
+                decimals = amount.decimals,
+            ).fee(canBeLower = isFeeApproximate)
+        },
+    )
+    val postDot = if (feeFiatRateUM != null) {
+        getFiatReference(
+            value = amount.value,
+            rate = feeFiatRateUM.rate,
+            appCurrency = feeFiatRateUM.appCurrency,
+        )
+    } else {
+        null
+    }
+
     Column(modifier = modifier) {
         Row(
             modifier = Modifier.padding(all = 12.dp),
@@ -402,7 +366,7 @@ private fun RegularFeeItemContent(
                 title = title,
                 preDot = preDot,
                 postDot = postDot,
-                ellipsizeOffset = ellipsizeOffset,
+                ellipsizeOffset = amount.currencySymbol.length,
             )
         }
         if (showDivider) {
@@ -496,7 +460,14 @@ private class FeeSelectorUMContentProvider : CollectionPreviewParameterProvider<
                 FeeItem.Fast(fee = Fee.Common(Amount(value = BigDecimal("0.03"), blockchain = Blockchain.Ethereum))),
                 customFeeItem,
             ),
-            selectedFeeItem = customFeeItem,
+            selectedFeeItem = FeeItem.Slow(
+                fee = Fee.Common(
+                    Amount(
+                        value = BigDecimal("0.01"),
+                        blockchain = Blockchain.Ethereum,
+                    ),
+                ),
+            ),
             feeExtraInfo = FeeExtraInfo(
                 isFeeApproximate = true,
                 isFeeConvertibleToFiat = true,
