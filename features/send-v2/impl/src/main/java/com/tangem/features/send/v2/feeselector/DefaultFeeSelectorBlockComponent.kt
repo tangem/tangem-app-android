@@ -18,6 +18,7 @@ import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.features.send.v2.api.params.FeeSelectorParams
 import com.tangem.features.send.v2.feeselector.model.FeeSelectorModel
 import com.tangem.features.send.v2.feeselector.ui.FeeSelectorBlockContent
+import com.tangem.utils.extensions.isSingleItem
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -73,11 +74,13 @@ internal class DefaultFeeSelectorBlockComponent @AssistedInject constructor(
         val state by model.uiState.collectAsStateWithLifecycle()
         val bottomSheet by bottomSheetSlot.subscribeAsState()
 
+        val isScreenSource = params.feeDisplaySource == FeeSelectorParams.FeeDisplaySource.Screen
+        val isNotSingleFee = (state as? FeeSelectorUM.Content)?.feeItems?.isSingleItem() == false
         FeeSelectorBlockContent(
             state = state,
             onReadMoreClick = model::onReadMoreClicked,
             modifier = modifier
-                .conditional(params.feeDisplaySource == FeeSelectorParams.FeeDisplaySource.Screen) {
+                .conditional(isScreenSource && isNotSingleFee) {
                     Modifier.clickable {
                         model.showFeeSelector()
                     }
