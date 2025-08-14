@@ -14,6 +14,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.runBlocking
 import javax.inject.Singleton
 
 @Module
@@ -41,6 +42,12 @@ internal object FeatureTogglesManagerModule {
                 localTogglesStorage = localTogglesStorage,
                 versionProvider = versionProvider,
             )
+        }.also {
+            // We need to initialize during the hilt graph creation
+            // in order to provide the feature toggles correctly to other dependencies.
+            runBlocking {
+                it.init()
+            }
         }
     }
 }
