@@ -72,14 +72,13 @@ internal fun SwapAmountBlockContent(
                 start.linkTo(parent.start)
                 end.linkTo(parent.end)
             },
-            extraContent = {
-                SwapPriceImpact(amountFieldUM = amountUM.primaryAmount, onInfoClick = onInfoClick)
-            },
+            extraContent = { SwapPriceImpact(amountFieldUM = amountUM.primaryAmount, onInfoClick = onInfoClick) },
         )
         AmountBlockV2(
             amountState = (amountUM.secondaryAmount.amountField as? AmountState.Data)?.copy(
                 title = resourceReference(R.string.send_with_swap_recipient_amount_title),
                 availableBalance = TextReference.EMPTY,
+                availableBalanceShort = TextReference.EMPTY,
             ) ?: amountUM.secondaryAmount.amountField,
             isClickDisabled = true,
             isEditingDisabled = false,
