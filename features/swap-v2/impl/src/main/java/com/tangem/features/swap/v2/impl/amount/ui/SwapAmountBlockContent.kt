@@ -23,7 +23,9 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.constraintlayout.compose.ConstrainedLayoutReference
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.constraintlayout.compose.ConstraintLayoutScope
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.ui.AmountBlockV2
 import com.tangem.core.ui.extensions.TextReference
@@ -34,6 +36,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.swap.v2.impl.R
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountFieldUM
+import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountType
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
 import com.tangem.features.swap.v2.impl.amount.ui.preview.SwapAmountContentPreview
 import com.tangem.features.swap.v2.impl.chooseprovider.ui.SwapChooseProviderContent
@@ -63,33 +66,11 @@ internal fun SwapAmountBlockContent(
             ),
     ) {
         val (from, to, separator, provider) = createRefs()
-        AmountBlockV2(
-            amountState = amountUM.primaryAmount.amountField,
-            isClickDisabled = true,
-            isEditingDisabled = false,
-            modifier = Modifier.constrainAs(from) {
-                top.linkTo(parent.top)
-                start.linkTo(parent.start)
-                end.linkTo(parent.end)
-            },
-            extraContent = { SwapPriceImpact(amountFieldUM = amountUM.primaryAmount, onInfoClick = onInfoClick) },
-        )
-        AmountBlockV2(
-            amountState = (amountUM.secondaryAmount.amountField as? AmountState.Data)?.copy(
-                title = resourceReference(R.string.send_with_swap_recipient_amount_title),
-                availableBalance = TextReference.EMPTY,
-                availableBalanceShort = TextReference.EMPTY,
-            ) ?: amountUM.secondaryAmount.amountField,
-            isClickDisabled = true,
-            isEditingDisabled = false,
-            modifier = Modifier.constrainAs(to) {
-                top.linkTo(from.bottom, 8.dp)
-                start.linkTo(parent.start)
-                end.linkTo(parent.end)
-            },
-            extraContent = {
-                SwapPriceImpact(amountFieldUM = amountUM.secondaryAmount, onInfoClick = onInfoClick)
-            },
+        SwapAmountBlock(
+            amountUM = amountUM,
+            fromAmountRef = from,
+            toAmountRef = to,
+            onInfoClick = onInfoClick,
         )
         SwapAmountDivider(
             modifier = Modifier.constrainAs(separator) {
@@ -103,6 +84,7 @@ internal fun SwapAmountBlockContent(
         val isBestRate = quoteContent?.diffPercent is SwapQuoteUM.Content.DifferencePercent.Best
         SwapChooseProviderContent(
             isBestRate = isBestRate,
+            isSingleProvider = quoteContent?.isSingleProvider == true,
             showBestRateAnimation = amountUM.showBestRateAnimation,
             expressProvider = amountUM.selectedQuote.provider,
             onClick = onProviderSelectClick,
@@ -119,29 +101,88 @@ internal fun SwapAmountBlockContent(
 }
 
 @Composable
-private fun SwapPriceImpact(amountFieldUM: SwapAmountFieldUM, onInfoClick: () -> Unit) {
+private fun ConstraintLayoutScope.SwapAmountBlock(
+    amountUM: SwapAmountUM.Content,
+    fromAmountRef: ConstrainedLayoutReference,
+    toAmountRef: ConstrainedLayoutReference,
+    onInfoClick: () -> Unit,
+) {
+    AmountBlockV2(
+        amountState = amountUM.primaryAmount.amountField,
+        isClickDisabled = true,
+        isEditingDisabled = false,
+        modifier = Modifier.constrainAs(fromAmountRef) {
+            top.linkTo(parent.top)
+            start.linkTo(parent.start)
+            end.linkTo(parent.end)
+        },
+        extraContent = {
+            SwapPriceImpact(
+                amountFieldUM = amountUM.primaryAmount,
+                selectedAmountType = amountUM.selectedAmountType,
+                onInfoClick = onInfoClick,
+            )
+        },
+    )
+    AmountBlockV2(
+        amountState = (amountUM.secondaryAmount.amountField as? AmountState.Data)?.copy(
+            title = resourceReference(R.string.send_with_swap_recipient_amount_title),
+            availableBalance = TextReference.EMPTY,
+            availableBalanceShort = TextReference.EMPTY,
+        ) ?: amountUM.secondaryAmount.amountField,
+        isClickDisabled = true,
+        isEditingDisabled = false,
+        modifier = Modifier.constrainAs(toAmountRef) {
+            top.linkTo(fromAmountRef.bottom, 8.dp)
+            start.linkTo(parent.start)
+            end.linkTo(parent.end)
+        },
+        extraContent = {
+            SwapPriceImpact(
+                amountFieldUM = amountUM.secondaryAmount,
+                selectedAmountType = amountUM.selectedAmountType,
+                onInfoClick = onInfoClick,
+            )
+        },
+    )
+}
+
+@Composable
+private fun SwapPriceImpact(
+    amountFieldUM: SwapAmountFieldUM,
+    selectedAmountType: SwapAmountType,
+    onInfoClick: () -> Unit,
+) {
+    if (amountFieldUM.amountType == selectedAmountType) return
+
     val priceImpact = (amountFieldUM as? SwapAmountFieldUM.Content)?.priceImpact
+    val iconColor = if (priceImpact != null) {
+        TangemTheme.colors.icon.attention
+    } else {
+        TangemTheme.colors.icon.informative
+    }
+
     if (priceImpact != null) {
         Text(
             text = priceImpact.resolveReference(),
             style = TangemTheme.typography.body2,
             color = TangemTheme.colors.text.attention,
         )
-        Icon(
-            painter = rememberVectorPainter(
-                ImageVector.vectorResource(R.drawable.ic_information_24),
-            ),
-            tint = TangemTheme.colors.icon.attention,
-            contentDescription = null,
-            modifier = Modifier
-                .size(20.dp)
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = ripple(bounded = false),
-                    onClick = onInfoClick,
-                ),
-        )
     }
+    Icon(
+        painter = rememberVectorPainter(
+            ImageVector.vectorResource(R.drawable.ic_information_24),
+        ),
+        tint = iconColor,
+        contentDescription = null,
+        modifier = Modifier
+            .size(20.dp)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = ripple(bounded = false),
+                onClick = onInfoClick,
+            ),
+    )
 }
 
 @Composable
