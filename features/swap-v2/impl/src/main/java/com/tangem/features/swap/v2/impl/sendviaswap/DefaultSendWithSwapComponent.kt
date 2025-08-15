@@ -160,7 +160,7 @@ internal class DefaultSendWithSwapComponent @AssistedInject constructor(
                 currentRoute = model.currentRoute.filterIsInstance<DestinationRoute>(),
                 isBalanceHidingFlow = model.isBalanceHiddenFlow,
                 analyticsCategoryName = model.analyticCategoryName,
-                title = resourceReference(R.string.send_recipient_label),
+                title = resourceReference(R.string.common_address),
                 userWalletId = params.userWalletId,
                 cryptoCurrency = secondaryCryptoCurrency,
                 callback = model,
