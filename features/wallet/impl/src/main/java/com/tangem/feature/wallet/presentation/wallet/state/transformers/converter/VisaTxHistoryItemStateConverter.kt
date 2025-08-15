@@ -4,13 +4,13 @@ import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.extensions.capitalize
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
-import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.visa.model.VisaCurrency
 import com.tangem.domain.visa.model.VisaTxHistoryItem
-import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.child.wallet.model.intents.VisaWalletIntents
+import com.tangem.feature.wallet.impl.R
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.converter.Converter
 import org.joda.time.DateTimeZone
@@ -29,11 +29,12 @@ internal class VisaTxHistoryItemStateConverter(
             txHash = value.id,
             amount = value.amount.format { crypto(visaCurrency.symbol, visaCurrency.decimals) },
             // Show tx fiat amount instead of tx time
-            time = BigDecimalFormatter.formatFiatAmount(
-                fiatAmount = value.fiatAmount,
-                fiatCurrencyCode = value.fiatCurrency.currencyCode,
-                fiatCurrencySymbol = value.fiatCurrency.symbol,
-            ),
+            time = value.fiatAmount.format {
+                fiat(
+                    fiatCurrencyCode = value.fiatCurrency.currencyCode,
+                    fiatCurrencySymbol = value.fiatCurrency.symbol,
+                )
+            },
             status = TransactionState.Content.Status.Confirmed,
             direction = TransactionState.Content.Direction.INCOMING,
             iconRes = R.drawable.ic_arrow_up_24,
