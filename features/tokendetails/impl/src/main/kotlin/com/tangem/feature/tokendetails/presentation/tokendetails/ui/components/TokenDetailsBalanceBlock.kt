@@ -20,11 +20,11 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.feature.tokendetails.presentation.tokendetails.TokenDetailsPreviewData
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsActionButton
 import com.tangem.features.tokendetails.impl.R
+import com.tangem.utils.StringsSigns.DASH_SIGN
 import kotlinx.collections.immutable.toImmutableList
 
 @Suppress("DestructuringDeclarationWithTooManyEntries")
@@ -124,7 +124,7 @@ private fun FiatBalance(
         )
         is TokenDetailsBalanceBlockState.Error -> Text(
             modifier = modifier,
-            text = BigDecimalFormatter.EMPTY_BALANCE_SIGN.orMaskWithStars(isBalanceHidden),
+            text = DASH_SIGN.orMaskWithStars(isBalanceHidden),
             style = TangemTheme.typography.h2,
             color = TangemTheme.colors.text.primary1,
         )
@@ -154,7 +154,7 @@ private fun CryptoBalance(
         )
         is TokenDetailsBalanceBlockState.Error -> Text(
             modifier = modifier,
-            text = BigDecimalFormatter.EMPTY_BALANCE_SIGN.orMaskWithStars(isBalanceHidden),
+            text = DASH_SIGN.orMaskWithStars(isBalanceHidden),
             style = TangemTheme.typography.caption2,
             color = TangemTheme.colors.text.tertiary,
         )
