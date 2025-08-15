@@ -13,6 +13,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import com.tangem.common.ui.footers.SendingText
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.transactions.TransactionDoneTitle
 import com.tangem.core.ui.extensions.TextReference
@@ -22,7 +23,6 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.core.ui.utils.toTimeFormat
 import com.tangem.features.send.v2.api.FeeSelectorBlockComponent
-import com.tangem.features.send.v2.common.ui.SendingText
 import com.tangem.features.send.v2.common.ui.state.ConfirmUM
 import com.tangem.features.send.v2.common.ui.tapHelp
 import com.tangem.features.send.v2.impl.R
