@@ -5,9 +5,13 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.arkivanov.decompose.extensions.compose.stack.Children
-import com.arkivanov.decompose.extensions.compose.stack.animation.*
+import com.arkivanov.decompose.extensions.compose.stack.animation.fade
+import com.arkivanov.decompose.extensions.compose.stack.animation.slide
+import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.arkivanov.decompose.router.stack.ChildStack
+import com.tangem.common.ui.navigationButtons.NavigationButtonsBlockV2
 import com.tangem.common.ui.navigationButtons.NavigationUM
 import com.tangem.core.ui.components.appbar.AppBarWithBackButtonAndIcon
 import com.tangem.core.ui.decompose.ComposableContentComponent
@@ -45,7 +49,14 @@ internal fun SendContent(
             it.instance.Content(Modifier.weight(1f))
         }
         if (stackState.active.configuration != CommonSendRoute.ConfirmSuccess) {
-            SendNavigationButtons(navigationUM = navigationUM)
+            NavigationButtonsBlockV2(
+                navigationUM = navigationUM,
+                modifier = Modifier.padding(
+                    start = 16.dp,
+                    end = 16.dp,
+                    bottom = 16.dp,
+                ),
+            )
         }
     }
 }
