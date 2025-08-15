@@ -79,7 +79,7 @@ internal fun FeeSelectorModalBottomSheet(
             FeeSelectorItems(
                 state = state,
                 feeSelectorIntents = feeSelectorIntents,
-                modifier = Modifier.padding(vertical = 4.dp, horizontal = 13.dp),
+                modifier = Modifier.padding(vertical = 4.dp, horizontal = 12.dp),
             )
         },
         footer = {
@@ -141,7 +141,6 @@ private fun FeeSelectorItems(
             )
             val itemModifier = Modifier
                 .fillMaxWidth()
-                .background(TangemTheme.colors.background.primary)
                 .selectedBorder(isSelected = isSelected)
                 .clickableSingle(onClick = { feeSelectorIntents.onFeeItemSelected(item) })
             when (item) {
