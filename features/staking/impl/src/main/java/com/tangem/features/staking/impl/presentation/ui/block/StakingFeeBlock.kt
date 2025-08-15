@@ -26,9 +26,9 @@ import com.tangem.core.ui.format.bigdecimal.fee
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.features.staking.impl.presentation.state.FeeState
+import com.tangem.utils.StringsSigns.DASH_SIGN
 import java.math.BigDecimal
 
 @Composable
@@ -126,7 +126,7 @@ private fun BoxScope.FeeError(feeState: FeeState) {
     ) {
         if (it == FeeState.Error) {
             Text(
-                text = BigDecimalFormatter.EMPTY_BALANCE_SIGN,
+                text = DASH_SIGN,
                 color = TangemTheme.colors.text.primary1,
                 style = TangemTheme.typography.body1,
             )
