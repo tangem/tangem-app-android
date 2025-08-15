@@ -5,29 +5,25 @@ import com.tangem.common.ui.navigationButtons.NavigationButton
 import com.tangem.common.ui.navigationButtons.NavigationButtonsState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
-import kotlinx.collections.immutable.persistentListOf
 
 internal object NavigationButtonsPreview {
 
-    private val extraButtons = persistentListOf(
-        NavigationButton(
-            textReference = resourceReference(R.string.common_explore),
-            iconRes = R.drawable.ic_tangem_24,
-            isSecondary = true,
-            isIconVisible = true,
-            showProgress = false,
-            isEnabled = true,
-            onClick = {},
-        ),
-        NavigationButton(
-            textReference = resourceReference(R.string.common_share),
-            iconRes = R.drawable.ic_tangem_24,
-            isSecondary = true,
-            isIconVisible = true,
-            showProgress = false,
-            isEnabled = true,
-            onClick = {},
-        ),
+    private val extraButtons = NavigationButton(
+        textReference = resourceReference(R.string.common_explore),
+        iconRes = R.drawable.ic_tangem_24,
+        isSecondary = true,
+        isIconVisible = true,
+        showProgress = false,
+        isEnabled = true,
+        onClick = {},
+    ) to NavigationButton(
+        textReference = resourceReference(R.string.common_share),
+        iconRes = R.drawable.ic_tangem_24,
+        isSecondary = true,
+        isIconVisible = true,
+        showProgress = false,
+        isEnabled = true,
+        onClick = {},
     )
 
     private val prev = NavigationButton(
