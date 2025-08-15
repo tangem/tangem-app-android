@@ -118,6 +118,7 @@
   <string name="common_access_denied">Zugang verweigert</string>
   <string name="common_add_to_portfolio">Zum Portfolio hinzufügen</string>
   <string name="common_add_token">Token hinzufügen</string>
+  <string name="common_address">Vertragsadresse</string>
   <string name="common_all">Alle</string>
   <string name="common_allow">Erlauben</string>
   <string name="common_amount">Betrag</string>
