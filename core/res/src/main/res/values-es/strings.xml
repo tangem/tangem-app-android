@@ -115,6 +115,7 @@
   <string name="common_access_denied">Acceso denegado</string>
   <string name="common_add_to_portfolio">Añadir al portafolio</string>
   <string name="common_add_token">Agregar token</string>
+  <string name="common_address">Dirección</string>
   <string name="common_all">Todos</string>
   <string name="common_allow">Autorizar</string>
   <string name="common_amount">Montante</string>
