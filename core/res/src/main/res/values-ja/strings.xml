@@ -146,6 +146,7 @@
   <string name="common_access_denied">アクセスが拒否されました</string>
   <string name="common_add_to_portfolio">ポートフォリオに追加</string>
   <string name="common_add_token">トークンを追加</string>
+  <string name="common_address">アドレス</string>
   <string name="common_all">すべて</string>
   <string name="common_allow">許可する</string>
   <string name="common_amount">金額</string>
