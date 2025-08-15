@@ -6,9 +6,11 @@ import arrow.core.left
 import arrow.core.right
 import com.squareup.moshi.Moshi
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.extensions.hexToInt
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.data.walletconnect.model.CAIP2
 import com.tangem.data.walletconnect.model.NamespaceKey
+import com.tangem.data.walletconnect.network.ethereum.WcEthNetwork.NamespaceConverter.Companion.ETH_NAMESPACE_KEY
 import com.tangem.data.walletconnect.request.WcRequestToUseCaseConverter
 import com.tangem.data.walletconnect.request.WcRequestToUseCaseConverter.Companion.fromJson
 import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
@@ -113,8 +115,10 @@ internal class WcEthNetwork(
                 .getOrElse { return it.left() }
                 ?.firstOrNull()
                 ?.let {
+                    val caip2 = CAIP2.fromRaw("$ETH_NAMESPACE_KEY:${it.chainId.hexToInt()}")
+                        ?: return null.right()
                     val newNetwork = networksConverter
-                        .mainOrAnyWalletNetworkForRequest(it.chainId, wallet)
+                        .mainOrAnyWalletNetworkForRequest(caip2.raw, wallet)
                         ?: return null.right()
                     WcEthMethod.AddEthereumChain(rawChain = it, network = newNetwork).right()
                 }
@@ -147,12 +151,16 @@ internal class WcEthNetwork(
         override val excludedBlockchains: ExcludedBlockchains,
     ) : WcNamespaceConverter {
 
-        override val namespaceKey: NamespaceKey = NamespaceKey("eip155")
+        override val namespaceKey: NamespaceKey = NamespaceKey(ETH_NAMESPACE_KEY)
 
         override fun toBlockchain(chainId: CAIP2): Blockchain? {
             if (chainId.namespace != namespaceKey.key) return null
             val ethChainId = chainId.reference.toIntOrNull() ?: return null
             return Blockchain.fromChainId(ethChainId)
+        }
+
+        companion object {
+            const val ETH_NAMESPACE_KEY = "eip155"
         }
     }
 
