@@ -77,7 +77,9 @@ internal class DefaultUserWalletsListRepository(
 
     override suspend fun userWalletsSync(): List<UserWallet> {
         load()
-        return userWallets.value!!
+        return requireNotNull(userWallets.value) {
+            "This should never happen"
+        }
     }
 
     override suspend fun selectedUserWalletSync(): UserWallet? {
