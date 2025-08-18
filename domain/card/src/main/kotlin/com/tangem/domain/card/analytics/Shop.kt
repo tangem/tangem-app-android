@@ -1,8 +1,8 @@
-package com.tangem.features.home.impl.analytics
+package com.tangem.domain.card.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
 
-internal sealed class Shop(
+sealed class Shop(
     event: String,
     params: Map<String, String> = mapOf(),
 ) : AnalyticsEvent("Shop", event, params) {
