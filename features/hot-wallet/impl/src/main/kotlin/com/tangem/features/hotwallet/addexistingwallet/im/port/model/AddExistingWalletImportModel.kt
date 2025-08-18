@@ -1,8 +1,18 @@
 package com.tangem.features.hotwallet.addexistingwallet.im.port.model
 
+import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.R
+import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUMV2
+import com.tangem.core.ui.components.bottomsheets.message.icon
+import com.tangem.core.ui.components.bottomsheets.message.infoBlock
+import com.tangem.core.ui.components.bottomsheets.message.onClick
+import com.tangem.core.ui.components.bottomsheets.message.secondaryButton
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.bottomSheetMessage
 import com.tangem.crypto.bip39.Mnemonic
 import com.tangem.domain.wallets.builder.HotUserWalletBuilder
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
@@ -19,6 +29,7 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @ModelScoped
 internal class AddExistingWalletImportModel @Inject constructor(
     paramsContainer: ParamsContainer,
@@ -27,11 +38,28 @@ internal class AddExistingWalletImportModel @Inject constructor(
     private val tangemHotSdk: TangemHotSdk,
     private val hotUserWalletBuilderFactory: HotUserWalletBuilder.Factory,
     private val saveUserWalletUseCase: SaveWalletUseCase,
+    @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
 ) : Model() {
 
     private val params: AddExistingWalletImportComponent.Params = paramsContainer.require()
 
     private val importSeedPhraseUiStateBuilder: ImportSeedPhraseUiStateBuilder
+
+    private val passphraseInfoAlertBS
+        get() = bottomSheetMessage {
+            infoBlock {
+                icon(R.drawable.ic_passcode_lock_56) {
+                    type = MessageBottomSheetUMV2.Icon.Type.Accent
+                    backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.SameAsTint
+                }
+                title = resourceReference(R.string.common_passphrase)
+                body = resourceReference(R.string.onboarding_bottom_sheet_passphrase_description)
+            }
+            secondaryButton {
+                text = resourceReference(R.string.common_got_it)
+                onClick { closeBs() }
+            }
+        }
 
     init {
         importSeedPhraseUiStateBuilder = ImportSeedPhraseUiStateBuilder(
@@ -45,6 +73,7 @@ internal class AddExistingWalletImportModel @Inject constructor(
                     passphrase = passphrase,
                 )
             },
+            onPassphraseInfoClick = ::onPassphraseInfoClick,
         )
     }
 
@@ -72,5 +101,9 @@ internal class AddExistingWalletImportModel @Inject constructor(
                 }
             }
         }
+    }
+
+    private fun onPassphraseInfoClick() {
+        uiMessageSender.send(passphraseInfoAlertBS)
     }
 }
