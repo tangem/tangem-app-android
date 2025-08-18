@@ -2,6 +2,7 @@ package com.tangem.features.hotwallet.accesscoderequest
 
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
+import com.tangem.core.ui.components.fields.PinTextColor
 import com.tangem.domain.wallets.hot.HotWalletPasswordRequester
 import com.tangem.features.hotwallet.accesscode.ACCESS_CODE_LENGTH
 import com.tangem.features.hotwallet.accesscoderequest.entity.HotAccessCodeRequestUM
@@ -45,11 +46,21 @@ internal class HotAccessCodeRequestModel @Inject constructor(
     suspend fun wrongAccessCode() {
         uiState.update {
             it.copy(
-                wrongAccessCode = true,
+                accessCodeColor = PinTextColor.WrongCode,
                 onAccessCodeChange = {},
             )
         }
         delay(timeMillis = 500) // Delay to show the wrong access code state
+    }
+
+    suspend fun successfulAuthentication() {
+        uiState.update {
+            it.copy(
+                accessCodeColor = PinTextColor.Success,
+                onAccessCodeChange = {},
+            )
+        }
+        delay(timeMillis = 200) // Delay to show the success state
     }
 
     private fun getInitialState() = HotAccessCodeRequestUM(
@@ -66,7 +77,10 @@ internal class HotAccessCodeRequestModel @Inject constructor(
         if (accessCode.length > ACCESS_CODE_LENGTH) return
 
         uiState.update {
-            it.copy(accessCode = accessCode, wrongAccessCode = false)
+            it.copy(
+                accessCode = accessCode,
+                accessCodeColor = PinTextColor.Primary,
+            )
         }
 
         if (accessCode.length == ACCESS_CODE_LENGTH) {
