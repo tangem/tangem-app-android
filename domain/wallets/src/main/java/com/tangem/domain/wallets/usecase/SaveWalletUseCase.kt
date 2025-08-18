@@ -46,7 +46,11 @@ class SaveWalletUseCase(
                                 UserWalletsListRepository.LockMethod.NoLock,
                             )
                         }
-                    }.mapLeft { SaveWalletError.DataError(null) }.bind()
+                    }.mapLeft {
+                        SaveWalletError.DataError(null)
+                    }.map {
+                        userWalletsListRepository.select(userWallet.walletId)
+                    }.bind()
                 }
             }
         } else {
