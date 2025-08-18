@@ -76,7 +76,7 @@ fun InputRowRecipient(
     val (titleText, color) = if (isError && error != null) {
         error to TangemTheme.colors.text.warning
     } else {
-        title to TangemTheme.colors.text.secondary
+        title to TangemTheme.colors.text.tertiary
     }
     DividerContainer(
         modifier = modifier,
