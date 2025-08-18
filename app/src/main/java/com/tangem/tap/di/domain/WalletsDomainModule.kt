@@ -133,6 +133,12 @@ internal object WalletsDomainModule {
 
     @Provides
     @Singleton
+    fun providesOpenBuyTangemCardUseCase(): GenerateBuyTangemCardLinkUseCase {
+        return GenerateBuyTangemCardLinkUseCase()
+    }
+
+    @Provides
+    @Singleton
     fun providesGetExploreUrlUseCase(walletsManagersFacade: WalletManagersFacade): GetExploreUrlUseCase {
         return GetExploreUrlUseCase(walletsManagersFacade = walletsManagersFacade)
     }
