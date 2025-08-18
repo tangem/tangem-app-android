@@ -3,7 +3,9 @@ package com.tangem.common.ui.userwallet
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -22,6 +24,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.tangem.common.ui.R
@@ -182,6 +185,19 @@ fun CardImage(imageState: UserWalletItemUM.ImageState, modifier: Modifier = Modi
             RectangleShimmer(
                 modifier = imageModifier,
                 radius = TangemTheme.dimens.size2,
+            )
+        }
+        is UserWalletItemUM.ImageState.MobileWallet -> {
+            Image(
+                modifier = Modifier
+                    .size(36.dp)
+                    .background(
+                        color = TangemTheme.colors.field.focused,
+                        shape = RoundedCornerShape(10.dp),
+                    )
+                    .padding(6.dp),
+                imageVector = ImageVector.vectorResource(R.drawable.ic_mobile_wallet_icon_24),
+                contentDescription = null,
             )
         }
         is UserWalletItemUM.ImageState.Image -> {
@@ -361,6 +377,18 @@ private class UserWalletItemUMPreviewProvider : PreviewParameterProvider<UserWal
                     value = "1.2345 BTC",
                     isFlickering = false,
                 ),
+                isEnabled = true,
+                onClick = {},
+            ),
+            UserWalletItemUM(
+                id = UserWalletId("user_wallet_3".encodeToByteArray()),
+                name = stringReference("Multi Card"),
+                information = UserWalletItemUM.Information.Failed,
+                balance = UserWalletItemUM.Balance.Loaded(
+                    value = "1.2345 BTC",
+                    isFlickering = false,
+                ),
+                imageState = UserWalletItemUM.ImageState.MobileWallet,
                 isEnabled = true,
                 onClick = {},
             ),
