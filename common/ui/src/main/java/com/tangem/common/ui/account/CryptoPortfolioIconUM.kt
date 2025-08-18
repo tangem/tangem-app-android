@@ -12,11 +12,4 @@ data class CryptoPortfolioIconUM(
         value = domainModel.value,
         color = domainModel.color,
     )
-
-    companion object {
-        fun random(letterIcon: Boolean = false) = CryptoPortfolioIconUM(
-            value = if (letterIcon) Icon.Letter else Icon.entries.random(),
-            color = Color.entries.random(),
-        )
-    }
 }
