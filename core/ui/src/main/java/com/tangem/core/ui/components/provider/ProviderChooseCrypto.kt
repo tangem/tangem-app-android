@@ -51,7 +51,6 @@ private const val DISABLED_ICON_ALPHA = 0.4f
 fun ProviderChooseCrypto(providerChooseUM: ProviderChooseUM, onClick: () -> Unit, modifier: Modifier = Modifier) {
     ConstraintLayout(
         modifier = modifier
-            .clip(RoundedCornerShape(14.dp))
             .selectedBorder(isSelected = providerChooseUM.isSelected)
             .clickable(
                 enabled = !providerChooseUM.hasError(),
