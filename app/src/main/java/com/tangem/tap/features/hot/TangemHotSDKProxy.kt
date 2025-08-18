@@ -37,6 +37,9 @@ class TangemHotSDKProxy @Inject constructor() : TangemHotSdk {
     override suspend fun changeAuth(unlockHotWallet: UnlockHotWallet, auth: HotAuth): HotWalletId =
         callSdk { changeAuth(unlockHotWallet, auth) }
 
+    override suspend fun removeBiometryAuthIfPresented(id: HotWalletId): HotWalletId =
+        callSdk { removeBiometryAuthIfPresented(id) }
+
     override suspend fun derivePublicKey(
         unlockHotWallet: UnlockHotWallet,
         request: DeriveWalletRequest,
