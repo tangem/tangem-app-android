@@ -39,6 +39,7 @@ internal object SwapChooseProviderContentPreview {
         quoteAmountValue = stringReference("123"),
         rate = stringReference("1 USD ≈ 123.123 POL"),
         diffPercent = SwapQuoteUM.Content.DifferencePercent.Best,
+        isSingleProvider = false,
     )
 
     private val quote2 = SwapQuoteUM.Content(
@@ -47,6 +48,7 @@ internal object SwapChooseProviderContentPreview {
         quoteAmountValue = stringReference("13.12"),
         rate = stringReference("1 USD ≈ 12.123 POL"),
         diffPercent = SwapQuoteUM.Content.DifferencePercent.Empty,
+        isSingleProvider = false,
     )
 
     val state = SwapChooseProviderBottomSheetContent(
