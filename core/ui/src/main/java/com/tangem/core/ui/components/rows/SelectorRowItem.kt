@@ -2,7 +2,6 @@ package com.tangem.core.ui.components.rows
 
 import android.content.res.Configuration
 import androidx.annotation.DrawableRes
-import androidx.annotation.StringRes
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -23,7 +22,7 @@ import com.tangem.core.ui.components.atoms.text.EllipsisText
 import com.tangem.core.ui.components.atoms.text.TextEllipsis
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.SelectNetworkFeeBottomSheetTestTags
@@ -31,7 +30,7 @@ import com.tangem.utils.StringsSigns
 
 @Composable
 fun SelectorRowItem(
-    @StringRes titleRes: Int,
+    title: TextReference,
     @DrawableRes iconRes: Int,
     modifier: Modifier = Modifier,
     paddingValues: PaddingValues = PaddingValues(TangemTheme.dimens.spacing12),
@@ -80,7 +79,7 @@ fun SelectorRowItem(
                 contentDescription = null,
             )
             Text(
-                text = stringResourceSafe(titleRes),
+                text = title.resolveReference(),
                 style = textStyle,
                 color = TangemTheme.colors.text.primary1,
                 modifier = Modifier.padding(start = TangemTheme.dimens.spacing8),
@@ -151,7 +150,7 @@ private fun RowScope.SelectorValueContent(
 private fun SelectorRowItemPreview() {
     TangemThemePreview {
         SelectorRowItem(
-            titleRes = R.string.common_fee_selector_option_slow,
+            title = resourceReference(R.string.common_fee_selector_option_slow),
             iconRes = R.drawable.ic_tortoise_24,
             preDot = TextReference.Str("1000 ETH"),
             postDot = TextReference.Str("1000 $"),
