@@ -1,14 +1,14 @@
-package com.tangem.features.home.impl.analytics
+package com.tangem.domain.card.analytics
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.core.analytics.models.AnalyticsParam.WalletType
 import com.tangem.domain.card.CardTypesResolver
 import com.tangem.utils.converter.Converter
-import com.tangem.core.analytics.models.AnalyticsParam as CoreAnalyticsParam
 
-internal class ParamCardCurrencyConverter : Converter<CardTypesResolver, CoreAnalyticsParam.WalletType?> {
+class ParamCardCurrencyConverter : Converter<CardTypesResolver, WalletType?> {
 
-    override fun convert(value: CardTypesResolver): CoreAnalyticsParam.WalletType? {
-        if (value.isMultiwalletAllowed()) return CoreAnalyticsParam.WalletType.MultiCurrency
+    override fun convert(value: CardTypesResolver): WalletType? {
+        if (value.isMultiwalletAllowed()) return WalletType.MultiCurrency
 
         val type = when {
             value.isTangemNote() -> AnalyticsParam.CurrencyType.Blockchain(value.getBlockchain())
@@ -18,6 +18,6 @@ internal class ParamCardCurrencyConverter : Converter<CardTypesResolver, CoreAna
             else -> null
         } ?: return null
 
-        return CoreAnalyticsParam.WalletType.SingleCurrency(type.value)
+        return WalletType.SingleCurrency(type.value)
     }
 }

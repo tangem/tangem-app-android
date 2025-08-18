@@ -1,4 +1,4 @@
-package com.tangem.features.home.impl.analytics
+package com.tangem.domain.card.analytics
 
 internal sealed class AnalyticsParam {
 
