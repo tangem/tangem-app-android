@@ -1,5 +1,7 @@
 package com.tangem.features.account.createedit
 
+import com.tangem.core.analytics.api.AnalyticsExceptionHandler
+import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -9,11 +11,14 @@ import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
+import com.tangem.core.ui.utils.showErrorDialog
 import com.tangem.domain.account.usecase.AddCryptoPortfolioUseCase
+import com.tangem.domain.account.usecase.GetUnoccupiedAccountIndexUseCase
 import com.tangem.domain.account.usecase.UpdateCryptoPortfolioUseCase
 import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.account.DerivationIndex
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.account.AccountCreateEditComponent
 import com.tangem.features.account.common.toDomain
 import com.tangem.features.account.createedit.entity.AccountCreateEditUM
@@ -21,15 +26,20 @@ import com.tangem.features.account.createedit.entity.AccountCreateEditUMBuilder
 import com.tangem.features.account.createedit.entity.AccountCreateEditUMBuilder.Companion.portfolioIcon
 import com.tangem.features.account.createedit.entity.AccountCreateEditUMBuilder.Companion.updateButton
 import com.tangem.features.account.createedit.entity.AccountCreateEditUMBuilder.Companion.updateColorSelect
+import com.tangem.features.account.createedit.entity.AccountCreateEditUMBuilder.Companion.updateDerivationIndex
 import com.tangem.features.account.createedit.entity.AccountCreateEditUMBuilder.Companion.updateIconSelect
 import com.tangem.features.account.createedit.entity.AccountCreateEditUMBuilder.Companion.updateName
+import com.tangem.features.account.createedit.error.AccountFeatureError
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 @ModelScoped
+@Suppress("LongParameterList")
 internal class AccountCreateEditModel @Inject constructor(
     paramsContainer: ParamsContainer,
     private val messageSender: UiMessageSender,
@@ -37,13 +47,21 @@ internal class AccountCreateEditModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val updateCryptoPortfolioUseCase: UpdateCryptoPortfolioUseCase,
     private val addCryptoPortfolioUseCase: AddCryptoPortfolioUseCase,
+    private val getUnoccupiedAccountIndexUseCase: GetUnoccupiedAccountIndexUseCase,
+    private val analyticsExceptionHandler: AnalyticsExceptionHandler,
 ) : Model() {
 
     private val params = paramsContainer.require<AccountCreateEditComponent.Params>()
     private val umBuilder = AccountCreateEditUMBuilder(params)
 
-    val uiState: StateFlow<AccountCreateEditUM> get() = _uiState
-    private val _uiState = MutableStateFlow(value = getInitialState())
+    val uiState: StateFlow<AccountCreateEditUM>
+    field = MutableStateFlow(value = getInitialState())
+
+    init {
+        if (params is AccountCreateEditComponent.Params.Create) {
+            updateDerivationInfo(userWalletId = params.userWalletId)
+        }
+    }
 
     private fun unsaveChangeDialog() {
         val secondAction = EventMessageAction(
@@ -74,13 +92,16 @@ internal class AccountCreateEditModel @Inject constructor(
 
     private suspend fun createNewCryptoPortfolio(params: AccountCreateEditComponent.Params.Create) {
         val state = uiState.value
-        val name = AccountName(state.account.name).getOrNull() ?: return
+        val name = AccountName(value = state.account.name).getOrNull() ?: return
         val icon = state.account.portfolioIcon.toDomain()
+        val index = state.account.derivationInfo.index ?: return
+        val derivationIndex = DerivationIndex(value = index).getOrNull() ?: return
+
         addCryptoPortfolioUseCase(
             userWalletId = params.userWalletId,
             accountName = name,
             icon = icon,
-            derivationIndex = DerivationIndex.Main, // todo account
+            derivationIndex = derivationIndex,
         )
     }
 
@@ -100,19 +121,19 @@ internal class AccountCreateEditModel @Inject constructor(
     private fun onCloseClick() = unsaveChangeDialog()
 
     private fun onIconSelect(icon: CryptoPortfolioIcon.Icon) {
-        _uiState.value = uiState.value
+        uiState.value = uiState.value
             .updateIconSelect(icon)
             .validateNewState()
     }
 
     private fun onColorSelect(color: CryptoPortfolioIcon.Color) {
-        _uiState.value = uiState.value
+        uiState.value = uiState.value
             .updateColorSelect(color)
             .validateNewState()
     }
 
     private fun onNameChange(name: String) {
-        _uiState.value = uiState.value
+        uiState.value = uiState.value
             .updateName(name)
             .validateNewState()
     }
@@ -139,5 +160,36 @@ internal class AccountCreateEditModel @Inject constructor(
             buttonState = umBuilder.initButtonUM(::onConfirmClick),
             onCloseClick = ::onCloseClick,
         )
+    }
+
+    private fun updateDerivationInfo(userWalletId: UserWalletId) {
+        modelScope.launch(dispatchers.default) {
+            getUnoccupiedAccountIndexUseCase(userWalletId = userWalletId)
+                .onRight { derivationIndex ->
+                    uiState.update {
+                        it.updateDerivationIndex(derivationIndex = derivationIndex.value)
+                    }
+                }
+                .onLeft {
+                    handleError(
+                        error = AccountFeatureError.CreateAccount.UnableToGetDerivationIndex,
+                        params = mapOf("userWalletId" to userWalletId.stringValue),
+                    )
+
+                    return@launch
+                }
+        }
+    }
+
+    private fun handleError(error: AccountFeatureError, params: Map<String, String> = mapOf()) {
+        val exception = IllegalStateException(error.toString())
+
+        Timber.e(exception)
+
+        analyticsExceptionHandler.sendException(
+            event = ExceptionAnalyticsEvent(exception = exception, params = params),
+        )
+
+        messageSender.showErrorDialog(universalError = error, onDismiss = router::pop)
     }
 }
