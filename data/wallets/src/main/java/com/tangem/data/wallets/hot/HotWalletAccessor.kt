@@ -46,9 +46,8 @@ class HotWalletAccessor @Inject constructor(
             auth = auth,
             block = { blockAuth ->
                 block(blockAuth).also {
-                    // TODO [REDACTED_TASK_KEY] [Hot Wallet] Authorization by access code
-                    // if user has biometry enabled, we set it as the new auth method
-                    if (blockAuth is HotAuth.Password /*&& has biometry enabled */) {
+                    // Update biometry auth if the original auth was password
+                    if (blockAuth is HotAuth.Password) {
                         tangemHotSdk.changeAuth(
                             unlockHotWallet = UnlockHotWallet(
                                 walletId = hotWalletId,

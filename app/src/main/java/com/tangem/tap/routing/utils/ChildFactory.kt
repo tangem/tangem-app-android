@@ -19,6 +19,7 @@ import com.tangem.features.hotwallet.CreateMobileWalletComponent
 import com.tangem.features.hotwallet.WalletActivationComponent
 import com.tangem.features.hotwallet.WalletBackupComponent
 import com.tangem.features.hotwallet.UpdateAccessCodeComponent
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.managetokens.component.ChooseManagedTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensSource
@@ -52,6 +53,7 @@ import com.tangem.tap.routing.component.RoutingComponent.Child
 import dagger.hilt.android.scopes.ActivityScoped
 import javax.inject.Inject
 import com.tangem.features.walletconnect.components.WalletConnectEntryComponent as RedesignedWalletConnectComponent
+import com.tangem.features.welcome.WelcomeComponent as NewWelcomeComponent
 
 @ActivityScoped
 @Suppress("LongParameterList", "LargeClass")
@@ -70,6 +72,7 @@ internal class ChildFactory @Inject constructor(
     private val swapSelectTokensComponentFactory: SwapSelectTokensComponent.Factory,
     private val onboardingEntryComponentFactory: OnboardingEntryComponent.Factory,
     private val welcomeComponentFactory: WelcomeComponent.Factory,
+    private val newWelcomeComponentFactory: NewWelcomeComponent.Factory,
     private val storiesComponentFactory: StoriesComponent.Factory,
     private val stakingComponentFactory: StakingComponent.Factory,
     private val swapComponentFactory: SwapComponent.Factory,
@@ -102,6 +105,7 @@ internal class ChildFactory @Inject constructor(
     private val sendWithSwapComponentFactory: SendWithSwapComponent.Factory,
     private val sendEntryPointComponentFactory: SendEntryPointComponent.Factory,
     private val walletConnectFeatureToggles: WalletConnectFeatureToggles,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
 ) {
 
     @Suppress("LongMethod", "CyclomaticComplexMethod")
@@ -138,14 +142,25 @@ internal class ChildFactory @Inject constructor(
                 )
             }
             is AppRoute.Welcome -> {
-                createComponentChild(
-                    context = context,
-                    params = WelcomeComponent.Params(
-                        launchMode = route.launchMode,
-                        intent = route.intent,
-                    ),
-                    componentFactory = welcomeComponentFactory,
-                )
+                if (hotWalletFeatureToggles.isHotWalletEnabled) {
+                    createComponentChild(
+                        context = context,
+                        params = NewWelcomeComponent.Params(
+                            launchMode = route.launchMode,
+                            intent = route.intent,
+                        ),
+                        componentFactory = newWelcomeComponentFactory,
+                    )
+                } else {
+                    createComponentChild(
+                        context = context,
+                        params = WelcomeComponent.Params(
+                            launchMode = route.launchMode,
+                            intent = route.intent,
+                        ),
+                        componentFactory = welcomeComponentFactory,
+                    )
+                }
             }
             is AppRoute.WalletSettings -> {
                 createComponentChild(
