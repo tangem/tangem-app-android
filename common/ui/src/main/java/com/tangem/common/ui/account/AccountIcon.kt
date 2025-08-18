@@ -93,6 +93,10 @@ private fun Modifier.selectBoxModifier(size: AccountIconSize): Modifier = when (
     AccountIconSize.ExtraSmall -> size(14.dp).clip(RoundedCornerShape(4.dp))
 }
 
+private enum class AccountIconSize {
+    Default, Large, Medium, Small, ExtraSmall
+}
+
 @Preview(showBackground = true)
 @Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
@@ -105,6 +109,7 @@ private fun Preview_AccountIcon() {
 @Composable
 private fun Sample() {
     val name = stringReference("Account Name")
+    fun icon(letter: Boolean = false) = CryptoPortfolioIconUM.random(letter)
     Row(
         modifier = Modifier.background(TangemTheme.colors.background.primary),
     ) {
