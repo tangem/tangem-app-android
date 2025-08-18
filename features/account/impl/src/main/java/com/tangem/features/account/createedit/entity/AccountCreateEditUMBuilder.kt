@@ -3,15 +3,15 @@ package com.tangem.features.account.createedit.entity
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.features.account.AccountCreateEditComponent
 import com.tangem.features.account.common.toUM
 import kotlinx.collections.immutable.toImmutableList
-import javax.inject.Inject
 
-internal class AccountCreateEditUMBuilder @Inject constructor(
-    val params: AccountCreateEditComponent.Params,
+internal class AccountCreateEditUMBuilder(
+    private val params: AccountCreateEditComponent.Params,
 ) {
 
     private val accountColors = CryptoPortfolioIcon.Color.entries.toImmutableList()
@@ -29,14 +29,16 @@ internal class AccountCreateEditUMBuilder @Inject constructor(
             is AccountCreateEditComponent.Params.Create -> AccountCreateEditUM.Account(
                 name = "",
                 portfolioIcon = createIcon,
-                derivationInfo = TextReference.EMPTY,
+                derivationInfo = AccountCreateEditUM.DerivationInfo.Empty,
                 inputPlaceholder = resourceReference(R.string.account_form_placeholder_new_account),
                 onNameChange = onNameChange,
             )
             is AccountCreateEditComponent.Params.Edit -> AccountCreateEditUM.Account(
                 name = params.account.name.value,
                 portfolioIcon = params.account.portfolioIcon.toUM(),
-                derivationInfo = TextReference.EMPTY, // todo account use Account.CryptoPortfolio.derivationIndex ?
+                derivationInfo = createAccountDerivationInfo(
+                    index = (params.account as Account.CryptoPortfolio).derivationIndex.value,
+                ),
                 inputPlaceholder = resourceReference(R.string.account_form_placeholder_edit_account),
                 onNameChange = onNameChange,
             )
@@ -112,6 +114,26 @@ internal class AccountCreateEditUMBuilder @Inject constructor(
 
         fun AccountCreateEditUM.updateButton(isButtonEnabled: Boolean): AccountCreateEditUM {
             return this.copy(buttonState = this.buttonState.copy(isButtonEnabled = isButtonEnabled))
+        }
+
+        fun AccountCreateEditUM.updateDerivationIndex(derivationIndex: Int): AccountCreateEditUM {
+            return this.copy(
+                account = this.account.copy(
+                    derivationInfo = createAccountDerivationInfo(index = derivationIndex),
+                ),
+            )
+        }
+
+        private fun createAccountDerivationInfo(index: Int): AccountCreateEditUM.DerivationInfo {
+            val derivationIndexText = if (index.toString().length == 1) "0$index" else "$index"
+
+            return AccountCreateEditUM.DerivationInfo.Content(
+                text = resourceReference(
+                    id = R.string.account_form_account_index,
+                    formatArgs = wrappedList(derivationIndexText),
+                ),
+                index = index,
+            )
         }
     }
 }
