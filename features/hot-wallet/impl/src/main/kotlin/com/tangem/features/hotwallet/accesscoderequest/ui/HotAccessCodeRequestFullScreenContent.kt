@@ -20,6 +20,7 @@ import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerH24
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
+import com.tangem.core.ui.components.fields.PinTextColor
 import com.tangem.core.ui.components.fields.PinTextField
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.haptic.TangemHapticEffect
@@ -85,7 +86,7 @@ internal fun HotAccessCodeRequestFullScreenContent(state: HotAccessCodeRequestUM
                     length = 6,
                     isPasswordVisual = true,
                     value = state.accessCode,
-                    wrongCode = state.wrongAccessCode,
+                    pinTextColor = state.accessCodeColor,
                     onValueChange = state.onAccessCodeChange,
                 )
             }
@@ -106,9 +107,15 @@ internal fun HotAccessCodeRequestFullScreenContent(state: HotAccessCodeRequestUM
 
     val hapticManager = LocalHapticManager.current
 
-    LaunchedEffect(state.wrongAccessCode) {
-        if (state.wrongAccessCode) {
-            hapticManager.perform(TangemHapticEffect.View.Reject)
+    LaunchedEffect(state.accessCodeColor) {
+        when (state.accessCodeColor) {
+            PinTextColor.WrongCode -> {
+                hapticManager.perform(TangemHapticEffect.View.Reject)
+            }
+            PinTextColor.Success -> {
+                hapticManager.perform(TangemHapticEffect.View.Confirm)
+            }
+            else -> Unit
         }
     }
 }

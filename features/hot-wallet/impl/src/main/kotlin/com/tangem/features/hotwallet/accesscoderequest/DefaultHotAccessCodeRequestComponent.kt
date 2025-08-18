@@ -26,8 +26,7 @@ internal class DefaultHotAccessCodeRequestComponent @AssistedInject constructor(
     }
 
     override suspend fun successfulAuthentication() {
-        // TODO handle successful authentication
-        // TODO add delay
+        model.successfulAuthentication()
     }
 
     override suspend fun requestPassword(hasBiometry: Boolean): HotWalletPasswordRequester.Result {
