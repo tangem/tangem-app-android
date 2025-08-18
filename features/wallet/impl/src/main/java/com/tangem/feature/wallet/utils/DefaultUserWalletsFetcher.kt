@@ -43,7 +43,8 @@ internal class DefaultUserWalletsFetcher @AssistedInject constructor(
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     @Assisted private val onWalletClick: (UserWalletId) -> Unit,
     @Assisted private val messageSender: UiMessageSender,
-    @Assisted private val onlyMultiCurrency: Boolean,
+    @Assisted("onlyMultiCurrency") private val onlyMultiCurrency: Boolean,
+    @Assisted("authMode") private val authMode: Boolean,
     private val getCardImageUseCase: GetCardImageUseCase,
     dispatchers: CoroutineDispatcherProvider,
 ) : UserWalletsFetcher {
@@ -54,7 +55,10 @@ internal class DefaultUserWalletsFetcher @AssistedInject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override val userWallets: Flow<ImmutableList<UserWalletItemUM>> = walletsFlow.transformLatest { wallets ->
-        val uiModels = UserWalletItemUMConverter(onClick = onWalletClick).convertList(wallets)
+        val uiModels = UserWalletItemUMConverter(
+            onClick = onWalletClick,
+            authMode = authMode,
+        ).convertList(wallets)
             .toImmutableList()
 
         emit(uiModels)
@@ -132,6 +136,7 @@ internal class DefaultUserWalletsFetcher @AssistedInject constructor(
                     balance = balance,
                     isBalanceHidden = balanceHidingSettings.isBalanceHidden,
                     artwork = artworks[userWallet.walletId],
+                    authMode = authMode,
                 )
                     .convert(userWallet)
             }
@@ -149,7 +154,8 @@ internal class DefaultUserWalletsFetcher @AssistedInject constructor(
     interface Factory : UserWalletsFetcher.Factory {
         override fun create(
             messageSender: UiMessageSender,
-            onlyMultiCurrency: Boolean,
+            @Assisted("onlyMultiCurrency") onlyMultiCurrency: Boolean,
+            @Assisted("authMode") authMode: Boolean,
             onWalletClick: (UserWalletId) -> Unit,
         ): DefaultUserWalletsFetcher
     }
