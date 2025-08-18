@@ -13,11 +13,13 @@ android {
 
 dependencies {
     implementation(projects.features.welcome.api)
+    implementation(projects.features.wallet.api)
 
     /** Core */
     implementation(projects.core.configToggles)
     implementation(projects.core.decompose)
     implementation(projects.core.ui)
+    implementation(projects.core.analytics)
     implementation(projects.common.routing)
     implementation(projects.common.ui)
 
@@ -30,6 +32,7 @@ dependencies {
     /** Domain */
     implementation(projects.domain.appCurrency)
     implementation(projects.domain.wallets)
+    implementation(projects.domain.card)
 
     /** DI */
     implementation(deps.hilt.android)
@@ -54,4 +57,5 @@ dependencies {
     implementation(deps.timber)
     implementation(tangemDeps.card.core)
     implementation(tangemDeps.blockchain)
+    implementation(tangemDeps.hot.core)
 }
