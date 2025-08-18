@@ -85,7 +85,7 @@ internal class WalletModel @Inject constructor(
     private val getWalletsListForEnablingUseCase: GetWalletsForAutomaticallyPushEnablingUseCase,
     private val setNotificationsEnabledUseCase: SetNotificationsEnabledUseCase,
     private val notificationsFeatureToggles: NotificationsFeatureToggles,
-    private val getIsBiometryIsEnabledUseCase: GetIsBiometricsEnabledUseCase,
+    private val shouldSaveUserWalletsSyncUseCase: ShouldSaveUserWalletsSyncUseCase,
     private val getIsHuaweiDeviceWithoutGoogleServicesUseCase: GetIsHuaweiDeviceWithoutGoogleServicesUseCase,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
@@ -213,9 +213,15 @@ internal class WalletModel @Inject constructor(
         modelScope.launch {
             val shouldAskPermission = shouldAskPermissionUseCase(PUSH_PERMISSION)
             val afterUpdate = notificationsRepository.shouldShowSubscribeOnNotificationsAfterUpdate()
-            val isBiometricsEnabled = getIsBiometryIsEnabledUseCase()
+            val isBiometricsEnabled = shouldSaveUserWalletsSyncUseCase()
             val isHuaweiDevice = getIsHuaweiDeviceWithoutGoogleServicesUseCase()
             val shouldShowBottomSheet = shouldAskPermission || afterUpdate
+            Timber.d(
+                "push BS afterUpdate: $afterUpdate," +
+                    "shouldAskPermission $shouldAskPermission," +
+                    "isBiometricsEnabled $isBiometricsEnabled," +
+                    "isHuaweiDevice $isHuaweiDevice",
+            )
             if (!isBiometricsEnabled) return@launch
             if (isHuaweiDevice) return@launch
             if (!shouldShowBottomSheet) return@launch
