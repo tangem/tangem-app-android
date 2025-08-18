@@ -17,10 +17,22 @@ data class AccountCreateEditUM(
     data class Account(
         val name: String,
         val portfolioIcon: CryptoPortfolioIconUM,
-        val derivationInfo: TextReference,
+        val derivationInfo: DerivationInfo,
         val inputPlaceholder: TextReference,
         val onNameChange: (String) -> Unit,
     )
+
+    sealed interface DerivationInfo {
+        val text: TextReference
+        val index: Int?
+
+        data class Content(override val text: TextReference, override val index: Int) : DerivationInfo
+
+        data object Empty : DerivationInfo {
+            override val text: TextReference = TextReference.EMPTY
+            override val index: Int? = null
+        }
+    }
 
     data class Colors(
         val selected: CryptoPortfolioIcon.Color,
