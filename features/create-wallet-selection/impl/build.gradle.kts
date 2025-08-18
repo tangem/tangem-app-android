@@ -18,6 +18,12 @@ dependencies {
     /** Hot Wallet Feature */
     implementation(projects.features.hotWallet.api)
 
+    /** Project - Domain */
+    implementation(projects.domain.card)
+    implementation(projects.domain.settings)
+    implementation(projects.domain.wallets)
+    implementation(projects.domain.models)
+
     /** Core modules */
     implementation(projects.core.configToggles)
     implementation(projects.core.analytics)
