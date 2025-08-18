@@ -94,6 +94,7 @@
   <string name="common_access_denied">Доступ запрещен</string>
   <string name="common_add_to_portfolio">Добавить в портфель</string>
   <string name="common_add_token">Добавить токен</string>
+  <string name="common_address">Адрес</string>
   <string name="common_all">Все</string>
   <string name="common_allow">Разрешить</string>
   <string name="common_amount">Сумма</string>
