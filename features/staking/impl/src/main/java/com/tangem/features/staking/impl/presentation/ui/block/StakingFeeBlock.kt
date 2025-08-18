@@ -19,6 +19,7 @@ import com.tangem.common.ui.R
 import com.tangem.common.ui.amountScreen.utils.getFiatReference
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.rows.SelectorRowItem
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.format.bigdecimal.crypto
@@ -51,7 +52,7 @@ internal fun StakingFeeBlock(feeState: FeeState) {
                 is FeeState.Content -> {
                     val feeAmount = feeState.fee?.amount
                     SelectorRowItem(
-                        titleRes = R.string.common_fee_selector_option_market,
+                        title = resourceReference(R.string.common_fee_selector_option_market),
                         iconRes = R.drawable.ic_bird_24,
                         preDot = stringReference(
                             feeAmount?.value.format {
@@ -75,7 +76,7 @@ internal fun StakingFeeBlock(feeState: FeeState) {
                 }
                 is FeeState.Loading -> {
                     SelectorRowItem(
-                        titleRes = R.string.common_fee_selector_option_market,
+                        title = resourceReference(R.string.common_fee_selector_option_market),
                         iconRes = R.drawable.ic_bird_24,
                         isSelected = true,
                         paddingValues = PaddingValues(),
@@ -85,7 +86,7 @@ internal fun StakingFeeBlock(feeState: FeeState) {
                 }
                 is FeeState.Error -> {
                     SelectorRowItem(
-                        titleRes = R.string.common_fee_selector_option_market,
+                        title = resourceReference(R.string.common_fee_selector_option_market),
                         iconRes = R.drawable.ic_bird_24,
                         isSelected = true,
                         paddingValues = PaddingValues(),
