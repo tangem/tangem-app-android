@@ -5,14 +5,12 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -65,7 +63,7 @@ internal fun SwapChooseProviderContent(
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier.padding(horizontal = 13.dp),
+        modifier = modifier.padding(horizontal = 12.dp),
     ) {
         Text(
             text = stringResourceSafe(id = R.string.onramp_choose_provider_title_hint),
@@ -89,7 +87,6 @@ internal fun SwapChooseProviderContent(
             SwapProviderItem(
                 state = provider.swapProviderState,
                 modifier = Modifier
-                    .clip(RoundedCornerShape(14.dp))
                     .selectedBorder(isSelected = provider.swapProviderState.isSelected)
                     .clickable(
                         enabled = provider.quote !is SwapQuoteUM.Error,
