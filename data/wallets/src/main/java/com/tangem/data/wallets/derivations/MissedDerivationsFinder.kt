@@ -7,12 +7,11 @@ import com.tangem.common.card.EllipticCurve
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.extensions.toMapKey
 import com.tangem.crypto.hdWallet.DerivationPath
-import com.tangem.domain.card.configs.CardConfig
-import com.tangem.domain.card.configs.Wallet2CardConfig
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.scan.KeyWalletPublicKey
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.wallets.config.curvesConfig
 import com.tangem.domain.wallets.derivations.derivationStyleProvider
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import kotlin.collections.forEach
@@ -51,13 +50,9 @@ internal class MissedDerivationsFinder(private val userWallet: UserWallet) {
     }
 
     private fun List<Network>.mapToNewDerivations(): List<DerivationData> {
-        val config = when (userWallet) {
-            is UserWallet.Cold -> CardConfig.createConfig(userWallet.scanResponse.card)
-            is UserWallet.Hot -> Wallet2CardConfig // TODO [REDACTED_TASK_KEY] [Hot Wallet] Derivation config for hot wallet
-        }
         return mapNotNull { network ->
             val blockchain = network.toBlockchain()
-            val curve = config.primaryCurve(blockchain) ?: return@mapNotNull null
+            val curve = userWallet.curvesConfig.primaryCurve(blockchain) ?: return@mapNotNull null
 
             val walletPublicKey = when (userWallet) {
                 is UserWallet.Cold -> {
