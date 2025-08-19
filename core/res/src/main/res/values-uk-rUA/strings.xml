@@ -1304,7 +1304,7 @@
   <string name="wc_alert_unknown_error_title">Ми зіткнулися з невідомою помилкою</string>
   <string name="wc_alert_unsupported_networks_description">Tangem наразі не підтримує необхідну мережу для %s.</string>
   <string name="wc_alert_unsupported_networks_title">Непідтримувані мережі</string>
-  <string name="wc_alert_verified_domain_description">Tangem підтримує мережу, необхідну для %s</string>
+  <string name="wc_alert_verified_domain_description">Цей домен пройшов перевірку та вважається безпечним, надійним і вільним від відомих загроз чи підозрілої активності. %s</string>
   <string name="wc_alert_verified_domain_title">Верифікований домен</string>
   <string name="wc_alert_wrong_card_description">Обрана не вірна картка або кільце</string>
   <string name="wc_alert_wrong_card_title">Схоже, виникла проблема</string>
@@ -1328,7 +1328,7 @@
   <string name="wc_copy_data_button_text">Копіювати дані</string>
   <string name="wc_dapp_disconnected">dApp відключено</string>
   <string name="wc_disconnect_all">Розʼєднати все</string>
-  <string name="wc_disconnect_all_alert_desc">Відключити всі dApps</string>
+  <string name="wc_disconnect_all_alert_desc">Усі сесії dApp буде відключено. Ваш гаманець більше не буде пов’язаний із жодним dApp.</string>
   <string name="wc_disconnect_all_alert_title">Відключити всі dApps</string>
   <string name="wc_errors_invalid_domain_subtitle">Спробуйте ще раз з новим URI</string>
   <string name="wc_errors_invalid_domain_title">Недійсний домен dApp</string>
