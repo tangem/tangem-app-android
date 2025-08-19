@@ -27,6 +27,7 @@ import com.tangem.domain.tokens.GetNetworkCoinStatusUseCase
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.error.SendTransactionError.UserCancelledError
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.walletconnect.WcAnalyticEvents
 import com.tangem.domain.walletconnect.WcAnalyticEvents.SignatureRequestReceived.EmulationStatus
@@ -346,25 +347,35 @@ internal class WcSendTransactionModel @Inject constructor(
     }
 
     private fun signingIsDone(signState: WcSignState<*>, useCase: WcSignUseCase<*>): Boolean {
-        (signState.domainStep as? WcSignStep.Result)?.result?.let {
-            return handleSigningError(it, useCase)
+        return when (val step = signState.domainStep) {
+            is WcSignStep.Result -> processResultStep(result = step.result, useCase = useCase)
+            WcSignStep.PreSign,
+            WcSignStep.Signing,
+            -> false
         }
-        return false
     }
 
-    private fun handleSigningError(result: Either<WcRequestError, String>, useCase: WcSignUseCase<*>): Boolean {
-        return if (result.isLeft()) {
-            val error = WcTransactionRoutes.Alert.Type.UnknownError(
-                errorMessage = result.leftOrNull()?.message(),
-                onDismiss = { cancel(useCase) },
-                onRetry = { signFromAlert() },
-            )
-            stackNavigation.pushNew(WcTransactionRoutes.Alert(error))
-            false
-        } else {
-            showSuccessSignMessage()
-            router.pop()
-            true
+    private fun processResultStep(result: Either<WcRequestError, String>, useCase: WcSignUseCase<*>): Boolean {
+        return when (result) {
+            is Either.Left<WcRequestError> -> {
+                val error = result.value
+                if (error is WcRequestError.WrappedSendError && error.sendTransactionError is UserCancelledError) {
+                    return false
+                }
+
+                val alertError = WcTransactionRoutes.Alert.Type.UnknownError(
+                    errorMessage = result.value.message(),
+                    onDismiss = { cancel(useCase) },
+                    onRetry = { signFromAlert() },
+                )
+                stackNavigation.pushNew(WcTransactionRoutes.Alert(alertError))
+                false
+            }
+            is Either.Right<String> -> {
+                showSuccessSignMessage()
+                router.pop()
+                true
+            }
         }
     }
 
