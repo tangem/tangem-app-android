@@ -1515,6 +1515,8 @@
   <string name="wc_alert_domain_issues_description">This domain cannot be verified. Check the request carefully approving.</string>
   <string name="wc_alert_network_not_connected_description">To continue, please reconnect your dApp session with the required network %s.</string>
   <string name="wc_alert_network_not_connected_title">Network not connected</string>
+  <string name="wc_alert_request_timeout_description">Check your network connection</string>
+  <string name="wc_alert_request_timeout_title">Request timeout</string>
   <string name="wc_alert_session_disconnected_description">Please return to your browser and reconnect via WalletConnect.</string>
   <string name="wc_alert_session_disconnected_title">Wallet Connect session was disconnected</string>
   <string name="wc_alert_sign_anyway">Sign anyway</string>
