@@ -6,17 +6,14 @@ import arrow.core.left
 import arrow.core.right
 import com.squareup.moshi.Moshi
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.extensions.hexToInt
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.data.walletconnect.model.CAIP2
 import com.tangem.data.walletconnect.model.NamespaceKey
-import com.tangem.data.walletconnect.network.ethereum.WcEthNetwork.NamespaceConverter.Companion.ETH_NAMESPACE_KEY
 import com.tangem.data.walletconnect.request.WcRequestToUseCaseConverter
 import com.tangem.data.walletconnect.request.WcRequestToUseCaseConverter.Companion.fromJson
 import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
 import com.tangem.data.walletconnect.utils.WcNamespaceConverter
 import com.tangem.data.walletconnect.utils.WcNetworksConverter
-import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.walletconnect.model.*
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
 import com.tangem.domain.walletconnect.repository.WcSessionsManager
@@ -46,7 +43,7 @@ internal class WcEthNetwork(
             ?: return HandleMethodError.UnknownSession.left()
         val wallet = session.wallet
         val chainId = request.chainId.orEmpty()
-        val method: WcEthMethod = name.toMethod(request, wallet)
+        val method: WcEthMethod = name.toMethod(request)
             .getOrElse { return error(it.message.orEmpty()) }
             ?: return error("Failed to parse $name")
         suspend fun anyExistNetwork() = networksConverter.mainOrAnyWalletNetworkForRequest(chainId, wallet)
@@ -56,7 +53,9 @@ internal class WcEthNetwork(
             is WcEthMethod.SendTransaction -> method.transaction.from
             is WcEthMethod.SignTransaction -> method.transaction.from
             is WcEthMethod.SignTypedData -> method.account
-            is WcEthMethod.AddEthereumChain ->
+            is WcEthMethod.AddEthereumChain,
+            is WcEthMethod.SwitchEthereumChain,
+            ->
                 anyExistNetwork()
                     ?.let { network -> walletManagersFacade.getDefaultAddress(wallet.walletId, network).orEmpty() }
                     .orEmpty()
@@ -67,7 +66,9 @@ internal class WcEthNetwork(
             is WcEthMethod.SendTransaction,
             is WcEthMethod.SignTransaction,
             -> networksConverter.findWalletNetworkForRequest(request, session, accountAddress)
-            is WcEthMethod.AddEthereumChain -> anyExistNetwork()
+            is WcEthMethod.AddEthereumChain,
+            is WcEthMethod.SwitchEthereumChain,
+            -> anyExistNetwork()
         } ?: return error("Failed to find walletNetwork for accountAddress $accountAddress")
 
         val context = WcMethodUseCaseContext(
@@ -83,13 +84,11 @@ internal class WcEthNetwork(
             is WcEthMethod.SignTransaction -> factories.signTransaction.create(context, method)
             is WcEthMethod.SignTypedData -> factories.signTypedData.create(context, method)
             is WcEthMethod.AddEthereumChain -> factories.addNetwork.create(context, method)
+            is WcEthMethod.SwitchEthereumChain -> factories.switchNetwork.create(context, method)
         }.right()
     }
 
-    private suspend fun WcEthMethodName.toMethod(
-        request: WcSdkSessionRequest,
-        wallet: UserWallet,
-    ): Either<Throwable, WcEthMethod?> {
+    private fun WcEthMethodName.toMethod(request: WcSdkSessionRequest): Either<Throwable, WcEthMethod?> {
         val rawParams = request.request.params
         return when (this) {
             WcEthMethodName.EthSign,
@@ -111,16 +110,17 @@ internal class WcEthNetwork(
                     }
                 }
                 ?: return null.right()
-            WcEthMethodName.AddEthereumChain -> moshi.fromJson<List<WcEthAddChain>>(rawParams)
+            WcEthMethodName.AddEthereumChain,
+            WcEthMethodName.SwitchEthereumChain,
+            -> moshi.fromJson<List<WcEthAddChain>>(rawParams)
                 .getOrElse { return it.left() }
                 ?.firstOrNull()
                 ?.let {
-                    val caip2 = CAIP2.fromRaw("$ETH_NAMESPACE_KEY:${it.chainId.hexToInt()}")
-                        ?: return null.right()
-                    val newNetwork = networksConverter
-                        .mainOrAnyWalletNetworkForRequest(caip2.raw, wallet)
-                        ?: return null.right()
-                    WcEthMethod.AddEthereumChain(rawChain = it, network = newNetwork).right()
+                    if (this == WcEthMethodName.AddEthereumChain) {
+                        WcEthMethod.AddEthereumChain(rawChain = it).right()
+                    } else {
+                        WcEthMethod.SwitchEthereumChain(rawChain = it).right()
+                    }
                 }
                 ?: null.right()
         }
@@ -170,5 +170,6 @@ internal class WcEthNetwork(
         val sendTransaction: WcEthSendTransactionUseCase.Factory,
         val signTransaction: WcEthSignTransactionUseCase.Factory,
         val addNetwork: WcEthAddNetworkUseCase.Factory,
+        val switchNetwork: WcEthSwitchNetworkUseCase.Factory,
     )
 }
