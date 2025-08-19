@@ -272,6 +272,9 @@ include(":features:welcome:impl")
 
 include(":features:account:api")
 include(":features:account:impl")
+
+include(":features:token-recieve:api")
+include(":features:token-recieve:impl")
 // endregion Feature modules
 
 // region Domain modules
