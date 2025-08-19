@@ -9,6 +9,8 @@ import kotlinx.collections.immutable.persistentListOf
 @Immutable
 internal sealed class WelcomeUM {
 
+    data object Empty : WelcomeUM()
+
     data object Plain : WelcomeUM()
 
     data class SelectWallet(
