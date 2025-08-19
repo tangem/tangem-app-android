@@ -127,6 +127,23 @@ internal object WcAlertsFactory {
         }
     }
 
+    fun createTimeoutExceptionAlert(onDismiss: () -> Unit): MessageBottomSheetUMV2 {
+        return messageBottomSheetUM {
+            infoBlock {
+                icon(R.drawable.ic_wallet_connect_24) {
+                    type = Type.Informative
+                    backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.SameAsTint
+                }
+                title = resourceReference(R.string.wc_alert_request_timeout_title)
+                body = resourceReference(R.string.wc_alert_request_timeout_description)
+            }
+            primaryButton {
+                text = resourceReference(R.string.common_got_it)
+                onClick { onDismiss() }
+            }
+        }
+    }
+
     fun createUnsupportedChainAlert(appName: String, onDismiss: () -> Unit): MessageBottomSheetUMV2 {
         return messageBottomSheetUM {
             infoBlock {
