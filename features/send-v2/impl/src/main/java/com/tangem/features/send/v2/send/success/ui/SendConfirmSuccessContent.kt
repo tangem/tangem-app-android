@@ -21,18 +21,14 @@ import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.core.ui.utils.toPx
 import com.tangem.core.ui.utils.toTimeFormat
 import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationBlockComponent
+import com.tangem.features.send.v2.common.ui.FeeBlock
 import com.tangem.features.send.v2.common.ui.state.ConfirmUM
 import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.send.ui.state.SendUM
-import com.tangem.features.send.v2.subcomponents.fee.SendFeeBlockComponent
 import kotlinx.coroutines.delay
 
 @Composable
-internal fun SendConfirmSuccessContent(
-    sendUM: SendUM,
-    destinationBlockComponent: SendDestinationBlockComponent,
-    feeBlockComponent: SendFeeBlockComponent,
-) {
+internal fun SendConfirmSuccessContent(sendUM: SendUM, destinationBlockComponent: SendDestinationBlockComponent) {
     var visible by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
@@ -84,7 +80,7 @@ internal fun SendConfirmSuccessContent(
                     onClick = {},
                 )
                 destinationBlockComponent.Content(modifier = Modifier)
-                feeBlockComponent.Content(modifier = Modifier)
+                FeeBlock(feeSelectorUM = sendUM.feeSelectorUM)
                 Spacer(Modifier.height(60.dp))
             }
             BottomFade(Modifier.align(Alignment.BottomCenter), TangemTheme.colors.background.tertiary)
