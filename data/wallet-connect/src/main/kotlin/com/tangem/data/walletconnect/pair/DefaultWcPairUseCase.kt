@@ -20,6 +20,7 @@ import com.tangem.domain.walletconnect.usecase.pair.WcPairUseCase
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import org.joda.time.DateTime
@@ -119,14 +120,21 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
                 Timber.tag(WC_TAG).e(it, "Failed to approve session ${sdkSessionProposal.name}")
             }
             emit(WcPairState.Approving.Result(sessionForApprove, either))
-        }.onCompletion {
-            if (it != null) {
-                Timber.tag(WC_TAG).e(it, "Completed with error $pairRequest")
-                emit(WcPairState.Error(WcPairError.Unknown(it.message.orEmpty())))
-            } else {
-                Timber.tag(WC_TAG).i("Completed successfully $pairRequest")
-            }
         }
+            .catch {
+                val pairError: WcPairError = when (it) {
+                    is TimeoutCancellationException -> WcPairError.TimeoutException(it.message.orEmpty())
+                    else -> WcPairError.Unknown(it.message.orEmpty())
+                }
+                emit(WcPairState.Error(pairError))
+            }
+            .onCompletion {
+                if (it != null) {
+                    Timber.tag(WC_TAG).e(it, "Completed with error $pairRequest")
+                } else {
+                    Timber.tag(WC_TAG).i("Completed successfully $pairRequest")
+                }
+            }
     }
 
     override fun approve(sessionForApprove: WcSessionApprove) {
