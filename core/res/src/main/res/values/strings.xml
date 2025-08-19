@@ -18,6 +18,7 @@
   <string name="account_details_archive_action">Archive</string>
   <string name="account_details_archive_description">You are archiving this account, but you can always get it back.</string>
   <string name="account_details_title">Account</string>
+  <string name="account_form_account_index">Account #%s — used for address derivation.</string>
   <string name="account_form_create_button">Add account</string>
   <string name="account_form_edit_button">Save</string>
   <string name="account_form_name">Account name</string>
@@ -70,8 +71,10 @@
   <string name="app_settings_enable_biometrics_description">Go to settings to enable biometric authentication in the Tangem App</string>
   <string name="app_settings_enable_biometrics_title">Enable biometric authentication</string>
   <string name="app_settings_off_biometrics_alert_message">Disabling %1$s will require you to enter your passcode to unlock the app and to interact with your wallet.</string>
+  <string name="app_settings_off_require_access_code_alert_message">You’ll be asked for your wallet’s access code later so we can securely store it for future use</string>
   <string name="app_settings_off_saved_access_code_alert_message">This will delete all the saved wallet access codes. Any further operation with the wallet will require submitting the access code.</string>
   <string name="app_settings_off_saved_wallet_alert_message">Removing the saved devices deletes all the saved wallets and their access codes from the app.</string>
+  <string name="app_settings_on_require_access_code_alert_message">This will delete all the saved wallet access codes. Any further interaction with the wallet will require submitting the access code.</string>
   <string name="app_settings_require_access_code">Require Access Code</string>
   <string name="app_settings_require_access_code_footer">This option disables biometric authentication for sensitive actions. You will be required to enter your access code every time, such as when signing a transaction.</string>
   <string name="app_settings_saved_access_codes">Save Access Code</string>
@@ -151,6 +154,7 @@
   <string name="common_access_denied">Access denied</string>
   <string name="common_add_to_portfolio">Add to portfolio</string>
   <string name="common_add_token">Add token</string>
+  <string name="common_address">Address</string>
   <string name="common_all">All</string>
   <string name="common_allow">Allow</string>
   <string name="common_amount">Amount</string>
@@ -295,6 +299,7 @@
   <string name="common_transaction_status">Transaction status</string>
   <string name="common_transactions">Transactions</string>
   <string name="common_transfer">Transfer</string>
+  <string name="common_unable_to_load">Unable to load the data…</string>
   <string name="common_understand">I understand</string>
   <string name="common_unknown_error">There was an error. Please try again.</string>
   <string name="common_unreachable">Unreachable</string>
@@ -490,6 +495,7 @@
   <string name="hw_create_seed_description">Stay up to date with the latest features and news</string>
   <string name="hw_create_seed_title">Seed phrase backup</string>
   <string name="hw_create_title">Create Mobile Wallet</string>
+  <string name="hw_import_seed_phrase_already_imported">This recovery phrase has already been imported</string>
   <string name="hw_mobile_wallet">Mobile Wallet</string>
   <string name="information_generated_with_ai">This information was generated with AI.\nTap here, if you find any errors.</string>
   <string name="initial_message_change_access_code_body">To change the access code tap the card or ring as shown above and do not remove until the end of the operation</string>
@@ -1001,6 +1007,8 @@
   <string name="send_with_swap_confirm_title">Swap and send</string>
   <string name="send_with_swap_convert_token_alert_message">Proceed with conversion? This will clear your previous data.</string>
   <string name="send_with_swap_convert_token_alert_title">Confirm Conversion</string>
+  <string name="send_with_swap_correct_recipient_network_notification_message">Sending any other currency will result in its irreversible loss.</string>
+  <string name="send_with_swap_correct_recipient_network_notification_title">Select the correct recipient network</string>
   <string name="send_with_swap_notification_text">Send any token, and we’ll convert it on the way. Your recipient gets exactly what they need—seamlessly.</string>
   <string name="send_with_swap_recipient_amount_success_title">Recipient will receive</string>
   <string name="send_with_swap_recipient_amount_text">To recipient</string>
@@ -1515,7 +1523,7 @@
   <string name="wc_alert_unsupported_method_title">We\'ve encountered unknown error</string>
   <string name="wc_alert_unsupported_networks_description">Tangem does not currently support a required network by %s.</string>
   <string name="wc_alert_unsupported_networks_title">Unsupported networks</string>
-  <string name="wc_alert_verified_domain_description">Tangem support a required network by %s</string>
+  <string name="wc_alert_verified_domain_description">This domain has passed verification checks and is considered safe, reputable, and free from known threats or suspicious activity. %s</string>
   <string name="wc_alert_verified_domain_title">Verified domain</string>
   <string name="wc_alert_wrong_card_description">Wrong card or ring selected in the App</string>
   <string name="wc_alert_wrong_card_title">We\'ve got some kind of problem</string>
@@ -1543,7 +1551,7 @@
   <string name="wc_custom_allowance_title">Custom allowance</string>
   <string name="wc_dapp_disconnected">dApp disconnected</string>
   <string name="wc_disconnect_all">Disconnect all</string>
-  <string name="wc_disconnect_all_alert_desc">Text about discnected all dApps</string>
+  <string name="wc_disconnect_all_alert_desc">All dApp sessions will be disconnected. Your wallet will no longer be linked to any dApps.</string>
   <string name="wc_disconnect_all_alert_title">Disconect All dApps</string>
   <string name="wc_errors_invalid_domain_subtitle">Try pairing again with a fresh URI</string>
   <string name="wc_errors_invalid_domain_title">Invalid dApp domain</string>
@@ -1580,7 +1588,7 @@
   <string name="wc_unlimited_amount">Unlimited Amount</string>
   <string name="wc_uri_already_used_description">Ensure that each pairing attempt uses a fresh and unique URI</string>
   <string name="wc_uri_already_used_title">URI already used</string>
-  <string name="wc_wallet_connect">Wallet connect</string>
+  <string name="wc_wallet_connect">WalletConnect</string>
   <string name="wc_warning_transaction">Suspicious transaction</string>
   <string name="welcome_interrupted_backup_alert_discard">Discard</string>
   <string name="welcome_interrupted_backup_alert_message">You have an interrupted backup. Do you want to resume?</string>
