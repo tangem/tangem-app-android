@@ -1,6 +1,7 @@
 package com.tangem.tap.features.details.ui.appsettings
 
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.tap.features.details.ui.appsettings.AppSettingsScreenState.Dialog
 import com.tangem.wallet.R
@@ -52,6 +53,39 @@ internal class AppSettingsDialogsFactory {
 
                 onSelect(mode)
             },
+            onDismiss = onDismiss,
+        )
+    }
+
+    fun createDisableBiometricAuthenticationAlert(onDisable: () -> Unit, onDismiss: () -> Unit): Dialog.Alert {
+        return Dialog.Alert(
+            title = resourceReference(R.string.common_attention),
+            description = resourceReference(
+                R.string.app_settings_off_biometrics_alert_message,
+                wrappedList(resourceReference(R.string.common_biometrics)),
+            ),
+            confirmText = resourceReference(R.string.common_disable),
+            onConfirm = onDisable,
+            onDismiss = onDismiss,
+        )
+    }
+
+    fun createEnableRequireAccessCodeAlert(onEnable: () -> Unit, onDismiss: () -> Unit): Dialog.Alert {
+        return Dialog.Alert(
+            title = resourceReference(R.string.common_attention),
+            description = resourceReference(R.string.app_settings_on_require_access_code_alert_message),
+            confirmText = resourceReference(R.string.common_enable),
+            onConfirm = { onEnable() },
+            onDismiss = onDismiss,
+        )
+    }
+
+    fun createDisableRequireAccessCodeAlert(onDisable: () -> Unit, onDismiss: () -> Unit): Dialog.Alert {
+        return Dialog.Alert(
+            title = resourceReference(R.string.common_attention),
+            description = resourceReference(R.string.app_settings_off_require_access_code_alert_message),
+            confirmText = resourceReference(R.string.common_disable),
+            onConfirm = { onDisable() },
             onDismiss = onDismiss,
         )
     }
