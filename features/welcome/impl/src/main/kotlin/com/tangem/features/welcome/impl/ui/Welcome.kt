@@ -35,6 +35,7 @@ internal fun Welcome(state: WelcomeUM, modifier: Modifier = Modifier) {
                     state = st,
                     modifier = modifier,
                 )
+                WelcomeUM.Empty -> {}
             }
         }
     }
@@ -79,7 +80,8 @@ private fun Preview() {
                 onClick = {
                     currentState = when (currentState) {
                         is WelcomeUM.Plain -> state
-                        is WelcomeUM.SelectWallet -> WelcomeUM.Plain
+                        is WelcomeUM.SelectWallet -> WelcomeUM.Empty
+                        WelcomeUM.Empty -> WelcomeUM.Plain
                     }
                 },
             ) {
