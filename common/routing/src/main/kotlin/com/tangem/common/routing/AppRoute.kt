@@ -309,6 +309,11 @@ sealed class AppRoute(val path: String) : Route {
     ) : AppRoute(path = "/wallet_activation/${userWalletId.stringValue}")
 
     @Serializable
+    data class CreateWalletBackup(
+        val userWalletId: UserWalletId,
+    ) : AppRoute(path = "/create_wallet_backup/${userWalletId.stringValue}")
+
+    @Serializable
     data class UpdateAccessCode(
         val userWalletId: UserWalletId,
     ) : AppRoute(path = "/update_access_code/${userWalletId.stringValue}")
