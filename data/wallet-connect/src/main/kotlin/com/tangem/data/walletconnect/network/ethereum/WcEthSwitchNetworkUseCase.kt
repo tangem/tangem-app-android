@@ -37,7 +37,12 @@ internal class WcEthSwitchNetworkUseCase @AssistedInject constructor(
     override suspend fun invoke(): Either<HandleMethodError, WcSwitchNetworkUseCase.SwitchNetwork> {
         return addSwitchCommonDelegate
             .commonChecks(method.rawChain.chainId)
-            .map { addedNetwork -> WcSwitchNetworkUseCase.SwitchNetwork(addedNetwork) }
+            .map { addedNetwork ->
+                WcSwitchNetworkUseCase.SwitchNetwork(
+                    network = addedNetwork,
+                    isExistInWcSession = addSwitchCommonDelegate.existInWcSession(addedNetwork),
+                )
+            }
     }
 
     override fun reject() {
