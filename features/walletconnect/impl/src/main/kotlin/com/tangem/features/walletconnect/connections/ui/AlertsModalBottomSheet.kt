@@ -177,7 +177,7 @@ private fun AlertContentDescription(alert: AlertsComponent.AlertType, modifier: 
             R.string.wc_alert_unsupported_method_description,
         )
         is AlertsComponent.AlertType.RequiredAddNetwork -> stringResourceSafe(
-            R.string.wc_alert_unsupported_method_description,
+            R.string.wc_alert_add_network_to_portfolio_description,
             alert.network,
         )
         is AlertsComponent.AlertType.RequiredReconnectWithNetwork -> stringResourceSafe(
