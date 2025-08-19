@@ -25,19 +25,19 @@ internal class UserWalletEncryptionKeysRepository(
         Types.newParameterizedType(List::class.java, UserWalletId::class.java),
     )
 
-    suspend fun save(encryptionKey: UserWalletEncryptionKey, method: EncryptionMethod) = withContext(dispatchers.io) {
-        secureStorage.delete(StorageKey.UserWalletEncryptionKeyUnsecured(encryptionKey.walletId).name)
+    suspend fun save(
+        encryptionKey: UserWalletEncryptionKey,
+        removeUnsecured: Boolean = true,
+        method: EncryptionMethod,
+    ) = withContext(dispatchers.io) {
+        if (removeUnsecured) {
+            secureStorage.delete(StorageKey.UserWalletEncryptionKeyUnsecured(encryptionKey.walletId).name)
+        }
 
         when (method) {
             EncryptionMethod.Unsecured -> {
                 secureStorage.store(
                     account = StorageKey.UserWalletEncryptionKeyUnsecured(encryptionKey.walletId).name,
-                    data = encryptionKey.encode(),
-                )
-            }
-            EncryptionMethod.Biometric -> {
-                authenticatedStorage.store(
-                    keyAlias = StorageKey.UserWalletEncryptionKey(encryptionKey.walletId).name,
                     data = encryptionKey.encode(),
                 )
             }
@@ -51,9 +51,19 @@ internal class UserWalletEncryptionKeysRepository(
                     data = encodedWithPass,
                 )
             }
+            EncryptionMethod.Biometric -> {
+                authenticatedStorage.store(
+                    keyAlias = StorageKey.UserWalletEncryptionKey(encryptionKey.walletId).name,
+                    data = encryptionKey.encode(),
+                )
+            }
         }
 
         storeUserWalletId(userWalletId = encryptionKey.walletId)
+    }
+
+    fun removeBiometricKey(userWalletId: UserWalletId) {
+        authenticatedStorage.delete(StorageKey.UserWalletEncryptionKey(userWalletId).name)
     }
 
     suspend fun getAllUnsecured(): List<UserWalletEncryptionKey> = withContext(dispatchers.io) {
