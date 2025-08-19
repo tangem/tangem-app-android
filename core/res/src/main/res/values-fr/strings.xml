@@ -97,6 +97,7 @@
   <string name="common_access_denied">Accès refusé</string>
   <string name="common_add_to_portfolio">Ajouter au portfolio</string>
   <string name="common_add_token">Ajouter un jeton</string>
+  <string name="common_address">Adresse</string>
   <string name="common_all">Tous</string>
   <string name="common_allow">Permettre</string>
   <string name="common_amount">Montant</string>
@@ -1323,6 +1324,7 @@
   <string name="wc_alert_unsupported_dapps_title">dApp non prise en charge</string>
   <string name="wc_alert_unsupported_method_description">Code d\'erreur : 8 005. Si le problème persiste, n\'hésitez pas à contacter notre support.</string>
   <string name="wc_alert_unsupported_method_title">Nous avons rencontré une erreur inconnue</string>
+  <string name="wc_alert_verified_domain_description">Ce domaine a passé les contrôles de vérification et est considéré comme sûr, fiable et exempt de menaces connues ou d’activités suspectes.%s</string>
   <string name="wc_allow_to_spend">Autoriser à dépenser</string>
   <string name="wc_common_address">Adresse</string>
   <string name="wc_common_loading">Chargement</string>
@@ -1332,7 +1334,7 @@
   <string name="wc_contents">Contenu</string>
   <string name="wc_copy_data_button_text">Copier les données</string>
   <string name="wc_disconnect_all">Déconnecter tout</string>
-  <string name="wc_disconnect_all_alert_desc">Texte sur la déconnexion de toutes les dApps</string>
+  <string name="wc_disconnect_all_alert_desc">Toutes les sessions dApp seront déconnectées. Votre portefeuille ne sera plus lié à aucune dApp.</string>
   <string name="wc_disconnect_all_alert_title">Déconnecter toutes les dApps</string>
   <string name="wc_errors_invalid_domain_subtitle">Essayez de jumeler à nouveau avec un nouvel URI</string>
   <string name="wc_errors_invalid_domain_title">Domaine dApp invalide</string>
@@ -1353,6 +1355,7 @@
   <string name="wc_transaction_request">Demande de transaction</string>
   <string name="wc_transaction_request_title">Demande de transaction</string>
   <string name="wc_unlimited_amount">Montant illimité</string>
+  <string name="wc_wallet_connect">WalletConnect</string>
   <string name="welcome_interrupted_backup_alert_discard">Ignorer</string>
   <string name="welcome_interrupted_backup_alert_message">Vous avez une sauvegarde interrompue. Voulez-vous la reprendre ?</string>
   <string name="welcome_interrupted_backup_alert_resume">Oui, reprendre</string>
