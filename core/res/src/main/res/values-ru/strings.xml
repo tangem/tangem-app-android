@@ -94,6 +94,7 @@
   <string name="common_access_denied">Доступ запрещен</string>
   <string name="common_add_to_portfolio">Добавить в портфель</string>
   <string name="common_add_token">Добавить токен</string>
+  <string name="common_address">Адрес</string>
   <string name="common_all">Все</string>
   <string name="common_allow">Разрешить</string>
   <string name="common_amount">Сумма</string>
@@ -230,6 +231,7 @@
   <string name="common_transaction_status">Статус транзакции</string>
   <string name="common_transactions">Транзакции</string>
   <string name="common_transfer">Перевод</string>
+  <string name="common_unable_to_load">Невозможно загрузить данные…</string>
   <string name="common_understand">Я понял</string>
   <string name="common_unknown_error">Произошла ошибка. Пожалуйста, попробуйте снова.</string>
   <string name="common_unreachable">Недоступно</string>
@@ -1316,12 +1318,12 @@
   <string name="wc_alert_unknown_error_description">Код ошибки: %s. Если проблема сохраняется, обратитесь в нашу службу поддержки.</string>
   <string name="wc_alert_unknown_error_description_no_error_code">Если проблема сохраняется, обратитесь в нашу службу поддержки</string>
   <string name="wc_alert_unknown_error_title">Мы обнаружили неизвестную ошибку</string>
-  <string name="wc_alert_unsupported_dapps_description">Кошелек Tangem.в настоящий момент не поддерживает %s</string>
+  <string name="wc_alert_unsupported_dapps_description">Кошелек Tangem в настоящий момент не поддерживает %s</string>
   <string name="wc_alert_unsupported_dapps_title">Неподдерживаемый dApp</string>
   <string name="wc_alert_unsupported_method_title">Мы обнаружили неизвестную ошибку</string>
   <string name="wc_alert_unsupported_networks_description">Tangem в настоящее время не поддерживает необходимую сеть для %s</string>
   <string name="wc_alert_unsupported_networks_title">Неподдерживаемые сети</string>
-  <string name="wc_alert_verified_domain_description">Tangem поддерживает сеть, необходимую для %s</string>
+  <string name="wc_alert_verified_domain_description">Этот домен прошёл проверку и считается безопасным, надёжным и свободным от известных угроз или подозрительной активности. %s</string>
   <string name="wc_alert_verified_domain_title">Верифицированный домен</string>
   <string name="wc_alert_wrong_card_description">Выбрана не верная карта или кольцо</string>
   <string name="wc_alert_wrong_card_title">Похоже, возникла проблема</string>
@@ -1349,6 +1351,7 @@
   <string name="wc_custom_allowance_title">Настраиваемый лимит</string>
   <string name="wc_dapp_disconnected">dApp отключен</string>
   <string name="wc_disconnect_all">Отключить все</string>
+  <string name="wc_disconnect_all_alert_desc">Все сессии dApp будут отключены. Ваш кошелёк больше не будет связан ни с одним dApp.</string>
   <string name="wc_disconnect_all_alert_title">Отключить все dApp</string>
   <string name="wc_errors_invalid_domain_subtitle">Попробуйте соединиться снова, используя новый URI</string>
   <string name="wc_errors_invalid_domain_title">Недействительный домен dApp</string>
@@ -1356,7 +1359,7 @@
   <string name="wc_errors_no_blockchains_title">Нет сетей</string>
   <string name="wc_errors_proposal_expired_subtitle">Пожалуйста, сгенерируйте новый URI и попробуйте подключиться снова</string>
   <string name="wc_errors_proposal_expired_title">Предложение подключения истекло</string>
-  <string name="wc_estimated_wallet_changes">Предварительные изменения</string>
+  <string name="wc_estimated_wallet_changes">Прогнозируемые изменения</string>
   <string name="wc_estimated_wallet_changes_not_simulated">Не удалось выполнить симуляцию транзакции. Пожалуйста, действуйте с осторожностью.</string>
   <string name="wc_estimation_is_not_supported">Оценка не поддерживается для %s</string>
   <string name="wc_fee_suggested">Предложено %s</string>
@@ -1383,7 +1386,7 @@
   <string name="wc_unlimited_amount">Безлимитное количество</string>
   <string name="wc_uri_already_used_description">Убедитесь, что каждая попытка сопряжения использует новый и уникальный URI.</string>
   <string name="wc_uri_already_used_title">URI уже используется</string>
-  <string name="wc_wallet_connect">Подключение кошелька</string>
+  <string name="wc_wallet_connect">WalletConnect</string>
   <string name="wc_warning_transaction">Подозрительная транзакция</string>
   <string name="welcome_interrupted_backup_alert_discard">Отказаться</string>
   <string name="welcome_interrupted_backup_alert_message">Вы не закончили резервное копирование. Хотите продолжить?</string>
