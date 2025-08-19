@@ -53,6 +53,11 @@ internal class WcNetworksConverter @Inject constructor(
         return networks.firstOrNull { !isCustomCoin(it) } ?: networks.firstOrNull()
     }
 
+    suspend fun allAddressForChain(rawChainId: String, wallet: UserWallet): List<String> {
+        return filterWalletNetworkForRequest(rawChainId, wallet)
+            .mapNotNull { walletManagersFacade.getDefaultAddress(wallet.walletId, it)?.lowercase() }
+    }
+
     /**
      * return all exist derivation networks
      */

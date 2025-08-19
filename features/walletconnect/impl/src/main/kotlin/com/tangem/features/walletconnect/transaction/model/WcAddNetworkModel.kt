@@ -60,7 +60,9 @@ internal class WcAddNetworkModel @Inject constructor(
             val either = useCase.invoke()
             either
                 .onLeft { router.push(WcHandleMethodErrorConverter.convert(it)) }
-                .map { showUI() }
+                .map {
+                    if (it.isExistInWcSession) cancel(useCase) else showUI()
+                }
         }
     }
 

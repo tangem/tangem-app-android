@@ -15,5 +15,6 @@ interface WcAddNetworkUseCase :
 
     data class AddNetwork(
         val network: Network,
+        val isExistInWcSession: Boolean,
     )
 }
