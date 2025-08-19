@@ -53,6 +53,15 @@ sealed class PushNotificationAnalyticEvents(
         ),
     )
 
+    data class NotificationsScreenOpened(
+        val source: AnalyticsParam.ScreensSources,
+    ) : PushNotificationAnalyticEvents(
+        event = "Push Notification Screen Opened",
+        params = mapOf(
+            AnalyticsParam.SOURCE to source.value,
+        ),
+    )
+
     data class NotificationsEnabled(
         val isEnabled: Boolean,
     ) : PushNotificationAnalyticEvents(
