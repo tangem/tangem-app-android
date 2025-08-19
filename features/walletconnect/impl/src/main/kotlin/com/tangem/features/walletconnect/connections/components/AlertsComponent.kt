@@ -38,5 +38,23 @@ internal class AlertsComponent(
 
         @Serializable
         data class WcDisconnected(override val onDismiss: () -> Unit) : AlertType()
+
+        @Serializable
+        data class TangemUnsupportedNetwork(
+            val network: String,
+            override val onDismiss: () -> Unit,
+        ) : AlertType()
+
+        @Serializable
+        data class RequiredAddNetwork(
+            val network: String,
+            override val onDismiss: () -> Unit,
+        ) : AlertType()
+
+        @Serializable
+        data class RequiredReconnectWithNetwork(
+            val network: String,
+            override val onDismiss: () -> Unit,
+        ) : AlertType()
     }
 }
