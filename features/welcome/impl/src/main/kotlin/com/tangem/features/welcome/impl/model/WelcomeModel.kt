@@ -67,6 +67,7 @@ internal class WelcomeModel @Inject constructor(
     )
     private val walletsFetcherJobHolder = JobHolder()
     private val wallets = MutableStateFlow<ImmutableList<UserWalletItemUM>>(persistentListOf())
+    private var routedOut = false
 
     init {
         modelScope.launch {
@@ -87,6 +88,7 @@ internal class WelcomeModel @Inject constructor(
             if (canUnlockWithBiometrics()) {
                 userWalletsListRepository.unlockAllWallets()
                     .onRight {
+                        routedOut = true
                         router.replaceAll(AppRoute.Wallet)
                     }
                     .onLeft {
@@ -100,16 +102,19 @@ internal class WelcomeModel @Inject constructor(
         }
     }
 
-    private fun tryToUnlockWithAccessCodeRightAway() = modelScope.launch {
+    private suspend fun tryToUnlockWithAccessCodeRightAway() {
         if (onlyOneHotWalletWithAccessCode()) {
             val userWallets = userWalletsListRepository.userWalletsSync()
             val userWallet = userWallets.first()
+            uiState.value = WelcomeUM.Empty
             unlockWallet(userWallet.walletId, UserWalletsListRepository.UnlockMethod.AccessCode)
         }
     }
 
     private fun setSelectWalletState() {
         modelScope.launch {
+            if (routedOut || uiState.value is WelcomeUM.SelectWallet) return@launch
+
             uiState.value = WelcomeUM.SelectWallet(
                 wallets = walletsFetcher.userWallets.first(),
                 showUnlockWithBiometricButton = canUnlockWithBiometrics(),
@@ -178,10 +183,14 @@ internal class WelcomeModel @Inject constructor(
 
         val unlockMethod = when (userWallet) {
             is UserWallet.Cold -> UserWalletsListRepository.UnlockMethod.Scan
-            is UserWallet.Hot -> UserWalletsListRepository.UnlockMethod.AccessCode
+            is UserWallet.Hot -> {
+                uiState.value = WelcomeUM.Empty
+                UserWalletsListRepository.UnlockMethod.AccessCode
+            }
         }
 
         unlockWallet(userWallet.walletId, unlockMethod)
+        setSelectWalletState()
     }
 
     private suspend fun canUnlockWithBiometrics(): Boolean {
@@ -191,6 +200,7 @@ internal class WelcomeModel @Inject constructor(
     suspend fun unlockWallet(userWalletId: UserWalletId, unlockMethod: UserWalletsListRepository.UnlockMethod) {
         userWalletsListRepository.unlock(userWalletId, unlockMethod)
             .onRight {
+                routedOut = true
                 userWalletsListRepository.select(userWalletId)
                 router.replaceAll(AppRoute.Wallet)
             }
@@ -199,7 +209,7 @@ internal class WelcomeModel @Inject constructor(
             }
     }
 
-    suspend fun UnlockWalletError.handle(specificWalletId: UserWalletId?, onUserCancelled: () -> Unit = { }) {
+    suspend fun UnlockWalletError.handle(specificWalletId: UserWalletId?, onUserCancelled: suspend () -> Unit = { }) {
         when (this) {
             UnlockWalletError.AlreadyUnlocked -> {
                 // this should not happen, as we check for locked state before this
