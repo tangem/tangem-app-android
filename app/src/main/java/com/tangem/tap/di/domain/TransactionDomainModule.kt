@@ -10,6 +10,7 @@ import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.transaction.FeeRepository
 import com.tangem.domain.transaction.TransactionRepository
+import com.tangem.domain.transaction.WalletAddressServiceRepository
 import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import dagger.Module
@@ -18,6 +19,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
+@Suppress("TooManyFunctions")
 @Module
 @InstallIn(SingletonComponent::class)
 internal object TransactionDomainModule {
@@ -209,5 +211,25 @@ internal object TransactionDomainModule {
         transactionRepository: TransactionRepository,
     ): CreateNFTTransferTransactionUseCase {
         return CreateNFTTransferTransactionUseCase(transactionRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetEnsNameUseCase(
+        walletManagersFacade: WalletManagersFacade,
+        walletAddressServiceRepository: WalletAddressServiceRepository,
+    ): GetEnsNameUseCase {
+        return GetEnsNameUseCase(
+            walletManagersFacade = walletManagersFacade,
+            walletAddressServiceRepository = walletAddressServiceRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetReverseResolvedEnsAddressUseCase(
+        walletAddressServiceRepository: WalletAddressServiceRepository,
+    ): GetReverseResolvedEnsAddressUseCase {
+        return GetReverseResolvedEnsAddressUseCase(walletAddressServiceRepository)
     }
 }
