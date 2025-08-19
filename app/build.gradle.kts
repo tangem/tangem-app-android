@@ -238,6 +238,8 @@ dependencies {
     implementation(projects.features.home.impl)
     implementation(projects.features.account.api)
     implementation(projects.features.account.impl)
+    implementation(projects.features.tokenRecieve.api)
+    implementation(projects.features.tokenRecieve.impl)
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)
