@@ -62,6 +62,7 @@ internal class WcSignUseCaseDelegateTest {
             connectingTime = 0L,
             sdkModel = WcSdkSession(
                 topic = "",
+                namespaces = mapOf(),
                 appMetaData = WcAppMetaData(
                     name = "",
                     description = "",
