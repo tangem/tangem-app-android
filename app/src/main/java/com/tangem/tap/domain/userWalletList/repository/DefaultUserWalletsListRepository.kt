@@ -8,6 +8,9 @@ import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.common.flatMap
 import com.tangem.common.map
+import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
@@ -43,6 +46,7 @@ internal class DefaultUserWalletsListRepository(
     private val userWalletEncryptionKeysRepository: UserWalletEncryptionKeysRepository,
     private val tangemSdkManagerProvider: Provider<TangemSdkManager>,
     private val savePersistentInformation: ProviderSuspend<Boolean>,
+    private val appPreferencesStore: AppPreferencesStore,
 ) : UserWalletsListRepository {
 
     override val userWallets = MutableStateFlow<List<UserWallet>?>(null)
@@ -129,38 +133,46 @@ internal class DefaultUserWalletsListRepository(
         userWallet
     }
 
-    override suspend fun setLock(userWalletId: UserWalletId, lockMethod: LockMethod): Either<SetLockError, Unit> =
-        either {
-            val userWallet = userWallets.value?.find { it.walletId == userWalletId }
-                ?: raise(SetLockError.UserWalletNotFound)
+    override suspend fun setLock(
+        userWalletId: UserWalletId,
+        lockMethod: LockMethod,
+        changeUnsecured: Boolean,
+    ): Either<SetLockError, Unit> = either {
+        val userWallet = userWallets.value?.find { it.walletId == userWalletId }
+            ?: raise(SetLockError.UserWalletNotFound)
 
-            val encryptionKey = userWallet.encryptionKey
-                ?: raise(SetLockError.UserWalletLocked)
+        val encryptionKey = userWallet.encryptionKey
+            ?: raise(SetLockError.UserWalletLocked)
 
-            runCatching {
-                userWalletEncryptionKeysRepository.save(
-                    encryptionKey = UserWalletEncryptionKey(
-                        walletId = userWalletId,
-                        encryptionKey = encryptionKey,
-                    ),
-                    method = when (lockMethod) {
-                        is LockMethod.AccessCode -> {
-                            UserWalletEncryptionKeysRepository.EncryptionMethod.Password(lockMethod.accessCode)
+        runCatching {
+            userWalletEncryptionKeysRepository.save(
+                encryptionKey = UserWalletEncryptionKey(
+                    walletId = userWalletId,
+                    encryptionKey = encryptionKey,
+                ),
+                removeUnsecured = changeUnsecured,
+                method = when (lockMethod) {
+                    is LockMethod.AccessCode -> {
+                        UserWalletEncryptionKeysRepository.EncryptionMethod.Password(lockMethod.accessCode)
+                    }
+                    LockMethod.Biometric -> {
+                        UserWalletEncryptionKeysRepository.EncryptionMethod.Biometric
+                    }
+                    LockMethod.NoLock -> {
+                        if (userWallet is UserWallet.Cold) {
+                            raise(SetLockError.UserWalletNotFound)
                         }
-                        LockMethod.Biometric -> {
-                            UserWalletEncryptionKeysRepository.EncryptionMethod.Biometric
-                        }
-                        LockMethod.NoLock -> {
-                            if (userWallet is UserWallet.Cold) {
-                                raise(SetLockError.UserWalletNotFound)
-                            }
 
-                            UserWalletEncryptionKeysRepository.EncryptionMethod.Unsecured
-                        }
-                    },
-                )
-            }.onFailure { raise(SetLockError.UnableToSetLock(it)) }
-        }
+                        UserWalletEncryptionKeysRepository.EncryptionMethod.Unsecured
+                    }
+                },
+            )
+        }.onFailure { raise(SetLockError.UnableToSetLock(it)) }
+    }
+
+    override suspend fun removeBiometricLock(userWalletId: UserWalletId) {
+        userWalletEncryptionKeysRepository.removeBiometricKey(userWalletId)
+    }
 
     override suspend fun delete(userWalletIds: List<UserWalletId>): Either<DeleteWalletError, Unit> = either {
         if (userWalletIds.isEmpty()) return Unit.right()
@@ -269,9 +281,11 @@ internal class DefaultUserWalletsListRepository(
         }
 
         val unsecuredKeys = userWalletEncryptionKeysRepository.getAllUnsecured()
-        val allKeys = biometricKeys + unsecuredKeys
+        val allKeys = (biometricKeys + unsecuredKeys).distinct()
+        val unlockedWallets = allKeys.map { it.walletId }
 
-        if (allKeys.all { it.walletId in userWalletIds }.not()) {
+        // if we cant unlock all wallets
+        if (userWalletIds.all { it in unlockedWallets }.not()) {
             raise(UnlockWalletError.UnableToUnlock)
         }
 
@@ -309,7 +323,7 @@ internal class DefaultUserWalletsListRepository(
         biometryFallback: suspend () -> Either<UnlockWalletError, Unit>,
     ): Either<UnlockWalletError, UserWalletEncryptionKey?> {
         val result = passwordRequester.requestPassword(
-            hasBiometry = tangemSdkManagerProvider.invoke().canUseBiometry,
+            hasBiometry = hasBiometry(),
         )
 
         return when (result) {
@@ -337,6 +351,15 @@ internal class DefaultUserWalletsListRepository(
                     .map { null }
             }
         }
+    }
+
+    private suspend fun hasBiometry(): Boolean {
+        val useBiometricAuthentication = appPreferencesStore.getSyncOrDefault(
+            key = PreferencesKeys.USE_BIOMETRIC_AUTHENTICATION_KEY,
+            default = false,
+        )
+
+        return tangemSdkManagerProvider.invoke().canUseBiometry && useBiometricAuthentication
     }
 
     /**
