@@ -91,7 +91,7 @@ internal class AddExistingWalletImportModel @Inject constructor(
                 val hotWalletId = tangemHotSdk.importWallet(mnemonic, passphrase?.toCharArray(), HotAuth.NoAuth)
                 val hotUserWalletBuilder = hotUserWalletBuilderFactory.create(hotWalletId)
                 val userWallet = hotUserWalletBuilder.build()
-                saveUserWalletUseCase(userWallet)
+                saveUserWalletUseCase(userWallet.copy(backedUp = true))
                 params.callbacks.onWalletImported(userWallet.walletId)
             }.onFailure {
                 Timber.e(it)
