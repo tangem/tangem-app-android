@@ -3,10 +3,11 @@ package com.tangem.core.ui.components.buttons.small
 import android.content.res.Configuration
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,20 +42,19 @@ fun TangemIconButton(
     background: Color = TangemTheme.colors.button.secondary,
     iconTint: Color = TangemTheme.colors.icon.secondary,
 ) {
-    IconButton(
-        onClick = onClick,
+    Icon(
+        painter = rememberVectorPainter(ImageVector.vectorResource(iconRes)),
+        contentDescription = "",
+        tint = iconTint,
         modifier = modifier
+            .size(24.dp)
             .clip(shape)
             .background(background)
-            .size(24.dp),
-    ) {
-        Icon(
-            painter = rememberVectorPainter(ImageVector.vectorResource(iconRes)),
-            contentDescription = "",
-            tint = iconTint,
-            modifier = Modifier.size(16.dp),
-        )
-    }
+            .padding(4.dp)
+            .clickable(
+                onClick = onClick,
+            ),
+    )
 }
 
 // region Preview
