@@ -84,6 +84,10 @@ object PreferencesKeys {
 
     val SHOULD_SAVE_ACCESS_CODES_KEY by lazy { booleanPreferencesKey(name = "saveAccessCodes") }
 
+    val REQUIRE_ACCESS_CODE_KEY by lazy { booleanPreferencesKey(name = "requireAccessCode") }
+
+    val USE_BIOMETRIC_AUTHENTICATION_KEY by lazy { booleanPreferencesKey(name = "useBiometricAuthentication") }
+
     val SHOULD_SHOW_MARKETS_TOOLTIP_KEY by lazy { booleanPreferencesKey(name = "shouldShowMarketsTooltip") }
 
     val MARKETS_STAKING_NOTIFICATION_HIDE_CLICKED_KEY by lazy {
