@@ -8,6 +8,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.core.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.hotwallet.accesscode.entity.AccessCodeUM
 import com.tangem.hot.sdk.TangemHotSdk
@@ -28,6 +29,7 @@ internal class AccessCodeModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val userWalletsListRepository: UserWalletsListRepository,
+    private val walletsRepository: WalletsRepository,
     private val tangemHotSdk: TangemHotSdk,
 ) : Model() {
 
@@ -85,13 +87,15 @@ internal class AccessCodeModel @Inject constructor(
                     auth = HotAuth.Password(accessCode.toCharArray()),
                 )
 
-                updatedHotWalletId = tangemHotSdk.changeAuth(
-                    unlockHotWallet = UnlockHotWallet(
-                        walletId = updatedHotWalletId,
-                        auth = HotAuth.Password(accessCode.toCharArray()),
-                    ),
-                    auth = HotAuth.Biometry,
-                )
+                if (walletsRepository.requireAccessCode().not()) {
+                    updatedHotWalletId = tangemHotSdk.changeAuth(
+                        unlockHotWallet = UnlockHotWallet(
+                            walletId = updatedHotWalletId,
+                            auth = HotAuth.Password(accessCode.toCharArray()),
+                        ),
+                        auth = HotAuth.Biometry,
+                    )
+                }
 
                 userWalletsListRepository.saveWithoutLock(
                     userWallet.copy(
@@ -106,10 +110,12 @@ internal class AccessCodeModel @Inject constructor(
                     UserWalletsListRepository.LockMethod.AccessCode(accessCode.toCharArray()),
                 )
 
-                userWalletsListRepository.setLock(
-                    userWallet.walletId,
-                    UserWalletsListRepository.LockMethod.Biometric,
-                )
+                if (walletsRepository.useBiometricAuthentication()) {
+                    userWalletsListRepository.setLock(
+                        userWallet.walletId,
+                        UserWalletsListRepository.LockMethod.Biometric,
+                    )
+                }
 
                 params.callbacks.onAccessCodeConfirmed(params.userWalletId)
             }.onFailure {
