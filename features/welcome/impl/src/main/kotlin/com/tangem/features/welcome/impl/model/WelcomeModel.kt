@@ -14,6 +14,7 @@ import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.core.wallets.UserWalletsListRepository
 import com.tangem.domain.core.wallets.error.UnlockWalletError
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.GetIsBiometricsEnabledUseCase
 import com.tangem.features.wallet.utils.UserWalletsFetcher
 import com.tangem.features.welcome.impl.R
@@ -35,6 +36,7 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @ModelScoped
 internal class WelcomeModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
@@ -43,6 +45,7 @@ internal class WelcomeModel @Inject constructor(
     private val userWalletsFetcherFactory: UserWalletsFetcher.Factory,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val getIsBiometricsEnabledUseCase: GetIsBiometricsEnabledUseCase,
+    private val walletsRepository: WalletsRepository,
 ) : Model() {
 
     // TODO add intent handling
@@ -154,8 +157,7 @@ internal class WelcomeModel @Inject constructor(
         when (option) {
             Create -> router.push(AppRoute.CreateWalletSelection)
             Add -> router.push(AppRoute.AddExistingWallet)
-            Buy -> {
-            }
+            Buy -> Unit // TODO
         }
     }
 
@@ -182,8 +184,8 @@ internal class WelcomeModel @Inject constructor(
         unlockWallet(userWallet.walletId, unlockMethod)
     }
 
-    private fun canUnlockWithBiometrics(): Boolean {
-        return getIsBiometricsEnabledUseCase.canUseBiometry()
+    private suspend fun canUnlockWithBiometrics(): Boolean {
+        return getIsBiometricsEnabledUseCase.canUseBiometry() && walletsRepository.useBiometricAuthentication()
     }
 
     suspend fun unlockWallet(userWalletId: UserWalletId, unlockMethod: UserWalletsListRepository.UnlockMethod) {
