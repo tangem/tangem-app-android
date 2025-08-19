@@ -13,6 +13,7 @@ import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
 import com.tangem.domain.settings.CanUseBiometryUseCase
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.wallets.repository.WalletsRepository
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.extensions.dispatchNavigationAction
@@ -51,6 +52,7 @@ internal class AppSettingsModel @Inject constructor(
     private val appThemeModeRepository: AppThemeModeRepository,
     private val settingsRepository: SettingsRepository,
     private val appSettingsItemsAnalyticsSender: AppSettingsItemsAnalyticsSender,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
 ) : Model(), StoreSubscriber<DetailsState> {
 
     private val itemsFactory = AppSettingsItemsFactory()
@@ -109,20 +111,36 @@ internal class AppSettingsModel @Inject constructor(
                 onClick = ::showAppCurrencySelector,
             ).let(::add)
 
-            if (state.isBiometricsAvailable) {
+            if (hotWalletFeatureToggles.isHotWalletEnabled) {
                 val canUseBiometrics = !state.needEnrollBiometrics && !state.isInProgress
 
-                itemsFactory.createSaveWalletsSwitch(
-                    isChecked = state.saveWallets,
+                itemsFactory.createUseBiometricsSwitch(
+                    isChecked = state.useBiometricAuthentication,
                     isEnabled = canUseBiometrics,
-                    onCheckedChange = ::onSaveWalletsToggled,
+                    onCheckedChange = ::onBiometricAuthenticationToggled,
                 ).let(::add)
 
-                itemsFactory.createSaveAccessCodeSwitch(
-                    isChecked = state.saveAccessCodes,
-                    isEnabled = canUseBiometrics,
-                    onCheckedChange = ::onSaveAccessCodesToggled,
+                itemsFactory.createRequireAccessCodeSwitch(
+                    isChecked = state.requireAccessCode,
+                    isEnabled = canUseBiometrics && state.useBiometricAuthentication,
+                    onCheckedChange = ::onRequireAccessCodeToggled,
                 ).let(::add)
+            } else {
+                if (state.isBiometricsAvailable) {
+                    val canUseBiometrics = !state.needEnrollBiometrics && !state.isInProgress
+
+                    itemsFactory.createSaveWalletsSwitch(
+                        isChecked = state.saveWallets,
+                        isEnabled = canUseBiometrics,
+                        onCheckedChange = ::onSaveWalletsToggled,
+                    ).let(::add)
+
+                    itemsFactory.createSaveAccessCodeSwitch(
+                        isChecked = state.saveAccessCodes,
+                        isEnabled = canUseBiometrics,
+                        onCheckedChange = ::onSaveAccessCodesToggled,
+                    ).let(::add)
+                }
             }
 
             itemsFactory.createFlipToHideBalanceSwitch(
@@ -164,6 +182,56 @@ internal class AppSettingsModel @Inject constructor(
                     },
                     onDismiss = ::dismissDialog,
                 ),
+            )
+        }
+    }
+
+    private fun onBiometricAuthenticationToggled(isChecked: Boolean) {
+        // TODO : Uncomment and implement analytics event when ready
+        // val param = AnalyticsParam.OnOffState(isChecked)
+        // analyticsEventHandler.send(Settings.AppSettings.BiometricAuthenticationChanged(param))
+        if (isChecked) {
+            onSettingsToggled(AppSetting.BiometricAuthentication, enable = true)
+            onSettingsToggled(AppSetting.RequireAccessCode, enable = true)
+        } else {
+            updateContentState {
+                copy(
+                    dialog = dialogsFactory.createDisableBiometricAuthenticationAlert(
+                        onDisable = {
+                            onSettingsToggled(AppSetting.BiometricAuthentication, enable = false)
+                            onSettingsToggled(AppSetting.RequireAccessCode, enable = true)
+                            dismissDialog()
+                        },
+                        onDismiss = ::dismissDialog,
+                    ),
+                )
+            }
+        }
+    }
+
+    private fun onRequireAccessCodeToggled(isChecked: Boolean) {
+        // TODO : Uncomment and implement analytics event when ready
+        // val param = AnalyticsParam.OnOffState(isChecked)
+        // analyticsEventHandler.send(Settings.AppSettings.RequireAccessCodeChanged(param))
+        updateContentState {
+            copy(
+                dialog = if (isChecked) {
+                    dialogsFactory.createEnableRequireAccessCodeAlert(
+                        onEnable = {
+                            onSettingsToggled(AppSetting.RequireAccessCode, enable = true)
+                            dismissDialog()
+                        },
+                        onDismiss = ::dismissDialog,
+                    )
+                } else {
+                    dialogsFactory.createDisableRequireAccessCodeAlert(
+                        onDisable = {
+                            onSettingsToggled(AppSetting.RequireAccessCode, enable = false)
+                            dismissDialog()
+                        },
+                        onDismiss = ::dismissDialog,
+                    )
+                },
             )
         }
     }
@@ -236,6 +304,8 @@ internal class AppSettingsModel @Inject constructor(
             saveWallets = walletsRepository.shouldSaveUserWalletsSync(),
             saveAccessCodes = settingsRepository.shouldSaveAccessCodes(),
             isBiometricsAvailable = canUseBiometryUseCase(),
+            useBiometricAuthentication = walletsRepository.useBiometricAuthentication(),
+            requireAccessCode = walletsRepository.requireAccessCode(),
             isHidingEnabled = balanceHidingRepository.getBalanceHidingSettings().isHidingEnabledInSettings,
             selectedAppCurrency = appCurrencyRepository.getSelectedAppCurrency().firstOrNull() ?: AppCurrency.Default,
             selectedThemeMode = appThemeModeRepository.getAppThemeMode().firstOrNull() ?: AppThemeMode.DEFAULT,
