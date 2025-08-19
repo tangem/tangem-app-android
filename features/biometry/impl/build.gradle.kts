@@ -13,6 +13,7 @@ android {
 
 dependencies {
     api(projects.features.biometry.api)
+    implementation(projects.features.hotWallet.api)
 
     /** Core modules */
     implementation(projects.core.ui)
