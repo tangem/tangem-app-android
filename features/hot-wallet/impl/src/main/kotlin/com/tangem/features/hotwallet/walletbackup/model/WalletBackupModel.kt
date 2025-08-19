@@ -18,6 +18,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.bottomSheetMessage
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.common.routing.AppRoute
 import com.tangem.features.hotwallet.WalletBackupComponent
 import com.tangem.features.hotwallet.walletbackup.entity.WalletBackupUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -66,8 +67,8 @@ internal class WalletBackupModel @Inject constructor(
             secondaryButton {
                 text = resourceReference(R.string.hw_backup_need_action)
                 onClick {
+                    router.push(AppRoute.CreateWalletBackup(params.userWalletId))
                     closeBs()
-                    // TODO [REDACTED_TASK_KEY]
                 }
             }
         }
