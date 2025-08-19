@@ -119,6 +119,7 @@ internal object UserWalletsListManagerModule {
         @ApplicationContext applicationContext: Context,
         dispatchers: CoroutineDispatcherProvider,
         passwordRequester: HotWalletPasswordRequester,
+        appPreferencesStore: AppPreferencesStore,
     ): UserWalletsListRepository {
         val moshi = buildMoshi()
         val secureStorage = buildSecureStorage(applicationContext = applicationContext)
@@ -162,8 +163,8 @@ internal object UserWalletsListManagerModule {
             passwordRequester = passwordRequester,
             userWalletEncryptionKeysRepository = userWalletEncryptionKeysRepository,
             tangemSdkManagerProvider = Provider { tangemSdkManager },
+            appPreferencesStore = appPreferencesStore,
             savePersistentInformation = ProviderSuspend { true }, // Always save persistent information for now
-            // TODO add a settings toggle to disable saving persistent information
         )
     }
 
