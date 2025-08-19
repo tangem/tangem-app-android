@@ -18,8 +18,6 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.send.v2.common.CommonSendRoute
-import com.tangem.features.send.v2.send.confirm.SendConfirmComponent
-import com.tangem.features.send.v2.send.success.SendConfirmSuccessComponent
 
 @Composable
 internal fun SendContent(
@@ -38,9 +36,9 @@ internal fun SendContent(
         Children(
             stack = stackState,
             animation = stackAnimation { child ->
-                when (child.instance) {
-                    is SendConfirmSuccessComponent -> fade(minAlpha = 1.0f)
-                    is SendConfirmComponent -> fade()
+                when (child.configuration) {
+                    is CommonSendRoute.ConfirmSuccess -> fade(minAlpha = 1.0f)
+                    is CommonSendRoute.Confirm -> fade()
                     else -> slide()
                 }
             },
