@@ -216,18 +216,11 @@ internal class WcPairModel @Inject constructor(
 
     private fun processError(error: WcPairError) {
         val alert = when (error) {
-            is WcPairError.InvalidDomainURL -> {
-                WcAppInfoRoutes.Alert.Type.InvalidDomain
-            }
-            is WcPairError.UnsupportedDApp -> {
-                WcAppInfoRoutes.Alert.Type.UnsupportedDApp(error.appName)
-            }
-            is WcPairError.UnsupportedBlockchains -> {
-                WcAppInfoRoutes.Alert.Type.UnsupportedNetwork(error.appName)
-            }
-            is WcPairError.UriAlreadyUsed -> {
-                WcAppInfoRoutes.Alert.Type.UriAlreadyUsed
-            }
+            is WcPairError.InvalidDomainURL -> WcAppInfoRoutes.Alert.Type.InvalidDomain
+            is WcPairError.UnsupportedDApp -> WcAppInfoRoutes.Alert.Type.UnsupportedDApp(error.appName)
+            is WcPairError.UnsupportedBlockchains -> WcAppInfoRoutes.Alert.Type.UnsupportedNetwork(error.appName)
+            is WcPairError.UriAlreadyUsed -> WcAppInfoRoutes.Alert.Type.UriAlreadyUsed
+            is WcPairError.TimeoutException -> WcAppInfoRoutes.Alert.Type.TimeoutException
             else -> {
                 messageSender.send(ToastMessage(message = stringReference(error.message)))
                 router.pop()
