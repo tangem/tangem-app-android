@@ -202,16 +202,17 @@ private fun FeeBlock(feeSelectorUM: FeeSelectorUM.Content) {
             .padding(TangemTheme.dimens.spacing12),
     ) {
         Text(
-            text = stringResourceSafe(com.tangem.common.ui.R.string.common_network_fee_title),
+            text = stringResourceSafe(R.string.common_network_fee_title),
             style = TangemTheme.typography.subtitle2,
             color = TangemTheme.colors.text.tertiary,
         )
 
         Box(modifier = Modifier.padding(top = TangemTheme.dimens.spacing8)) {
-            val feeAmount = feeSelectorUM.selectedFeeItem.fee.amount
+            val feeItemUM = feeSelectorUM.selectedFeeItem
+            val feeAmount = feeItemUM.fee.amount
             SelectorRowItem(
-                titleRes = com.tangem.common.ui.R.string.common_fee_selector_option_market,
-                iconRes = com.tangem.common.ui.R.drawable.ic_bird_24,
+                title = feeItemUM.title,
+                iconRes = feeItemUM.iconRes,
                 preDot = stringReference(
                     feeAmount.value.format {
                         crypto(
