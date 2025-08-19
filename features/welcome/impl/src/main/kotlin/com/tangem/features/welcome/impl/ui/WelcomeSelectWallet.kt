@@ -70,16 +70,18 @@ internal fun AnimatedContentScope.WelcomeSelectWallet(state: WelcomeUM.SelectWal
 
             BottomFade(modifier = Modifier.align(Alignment.BottomCenter))
 
-            SecondaryButton(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-                    .padding(16.dp)
-                    .navigationBarsPadding()
-                    .animateEnterExit(fadeIn(), fadeOut()),
-                text = "Unlock all with biometric",
-                onClick = state.onUnlockWithBiometricClick,
-            )
+            if (state.showUnlockWithBiometricButton) {
+                SecondaryButton(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .navigationBarsPadding()
+                        .animateEnterExit(fadeIn(), fadeOut()),
+                    text = "Unlock all with biometric",
+                    onClick = state.onUnlockWithBiometricClick,
+                )
+            }
         }
 
         LaunchedEffect(state.wallets) {
