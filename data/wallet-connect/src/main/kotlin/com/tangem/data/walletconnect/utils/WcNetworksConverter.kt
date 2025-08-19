@@ -25,6 +25,11 @@ internal class WcNetworksConverter @Inject constructor(
     private val tokensFeatureToggles: TokensFeatureToggles,
 ) {
 
+    fun createNetwork(chainId: String, wallet: UserWallet): Network? {
+        return namespaceConverters
+            .firstNotNullOfOrNull { it.toNetwork(chainId, wallet) }
+    }
+
     suspend fun findWalletNetworkForRequest(
         request: WcSdkSessionRequest,
         session: WcSession,
