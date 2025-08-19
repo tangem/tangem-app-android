@@ -1,7 +1,11 @@
 package com.tangem.data.wallets.hot
 
 import com.tangem.common.core.TangemSdkError
+import com.tangem.domain.core.wallets.UserWalletsListRepository
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.copy
 import com.tangem.domain.wallets.hot.HotWalletPasswordRequester
+import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.hot.sdk.exception.WrongPasswordException
 import com.tangem.hot.sdk.model.*
@@ -9,7 +13,9 @@ import javax.inject.Inject
 
 class HotWalletAccessor @Inject constructor(
     private val tangemHotSdk: TangemHotSdk,
+    private val userWalletsListRepository: UserWalletsListRepository,
     private val hotWalletPasswordRequester: HotWalletPasswordRequester,
+    private val walletsRepository: WalletsRepository,
 ) {
 
     suspend fun signHashes(hotWalletId: HotWalletId, dataToSign: List<DataToSign>): List<SignedData> =
@@ -23,10 +29,18 @@ class HotWalletAccessor @Inject constructor(
         }
 
     private suspend fun <T> hotSdkRequest(hotWalletId: HotWalletId, block: suspend (unlock: UnlockHotWallet) -> T): T {
+        val isAccessCodeRequired = walletsRepository.requireAccessCode()
+
         val auth = when (hotWalletId.authType) {
             HotWalletId.AuthType.NoPassword -> HotAuth.NoAuth
             HotWalletId.AuthType.Password -> requestPassword(false)
-            HotWalletId.AuthType.Biometry -> HotAuth.Biometry
+            HotWalletId.AuthType.Biometry -> {
+                if (isAccessCodeRequired) {
+                    requestPassword(false)
+                } else {
+                    HotAuth.Biometry
+                }
+            }
         }
 
         return runCatchingSdkErrors(hotWalletId, auth) {
@@ -47,18 +61,39 @@ class HotWalletAccessor @Inject constructor(
             block = { blockAuth ->
                 block(blockAuth).also {
                     // Update biometry auth if the original auth was password
-                    if (blockAuth is HotAuth.Password) {
-                        tangemHotSdk.changeAuth(
-                            unlockHotWallet = UnlockHotWallet(
-                                walletId = hotWalletId,
-                                auth = blockAuth,
-                            ),
-                            auth = HotAuth.Biometry,
-                        )
-                    }
+                    updateBiometryAuthIfNeeded(
+                        hotWalletId = hotWalletId,
+                        originalAuth = blockAuth,
+                    )
                 }
             },
         )
+    }
+
+    private suspend fun updateBiometryAuthIfNeeded(hotWalletId: HotWalletId, originalAuth: HotAuth) {
+        val isAccessCodeRequired = walletsRepository.requireAccessCode()
+
+        if (originalAuth is HotAuth.Password && isAccessCodeRequired.not()) {
+            val userWallet = userWalletsListRepository.userWalletsSync()
+                .find { it is UserWallet.Hot && it.hotWalletId == hotWalletId }
+                as? UserWallet.Hot
+                ?: return
+
+            val newHotWalletId = tangemHotSdk.changeAuth(
+                unlockHotWallet = UnlockHotWallet(
+                    walletId = hotWalletId,
+                    auth = originalAuth,
+                ),
+                auth = HotAuth.Biometry,
+            )
+
+            userWalletsListRepository.saveWithoutLock(
+                userWallet = userWallet.copy(
+                    hotWalletId = newHotWalletId,
+                ),
+                canOverride = true,
+            )
+        }
     }
 
     private suspend fun <T> runCatchingWrongPassInternal(
