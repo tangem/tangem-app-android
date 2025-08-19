@@ -123,10 +123,12 @@ internal object WalletsDomainModule {
         userWalletsListManager: UserWalletsListManager,
         userWalletsListRepository: UserWalletsListRepository,
         hotWalletFeatureToggles: HotWalletFeatureToggles,
+        walletsRepository: WalletsRepository,
     ): SaveWalletUseCase {
         return SaveWalletUseCase(
             userWalletsListManager = userWalletsListManager,
             userWalletsListRepository = userWalletsListRepository,
+            walletsRepository = walletsRepository,
             useNewRepository = hotWalletFeatureToggles.isHotWalletEnabled,
         )
     }
