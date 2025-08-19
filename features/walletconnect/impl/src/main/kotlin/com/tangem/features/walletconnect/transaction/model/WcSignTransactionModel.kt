@@ -131,8 +131,10 @@ internal class WcSignTransactionModel @Inject constructor(
     }
 
     private fun signingIsDone(signState: WcSignState<*>): Boolean {
-        (signState.domainStep as? WcSignStep.Result)?.result?.let {
-            showSuccessSignMessage()
+        (signState.domainStep as? WcSignStep.Result)?.result?.let { result ->
+            if (result.isRight()) {
+                showSuccessSignMessage()
+            }
             router.pop()
             return true
         }
