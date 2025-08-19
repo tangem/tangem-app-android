@@ -71,8 +71,10 @@
   <string name="app_settings_enable_biometrics_description">設定に移動して、Tangemアプリで生体認証を有効にします。</string>
   <string name="app_settings_enable_biometrics_title">生体認証を有効にする</string>
   <string name="app_settings_off_biometrics_alert_message">%1$sが無効になると、アプリのロックを解除してウォレットを操作するために、パスコードを入力する必要があります。</string>
+  <string name="app_settings_off_require_access_code_alert_message">後でウォレットのアクセスコードを入力してもらいます。それを安全に保存し、今後の利用に備えるためです。</string>
   <string name="app_settings_off_saved_access_code_alert_message">これにより、保存されているウォレットアクセスコードがすべて削除されます。ウォレットでの今後の操作には、アクセスコードの送信が必要になります。</string>
   <string name="app_settings_off_saved_wallet_alert_message">保存したデバイスを削除すると、保存されているすべてのウォレットとそのアクセスコードがアプリから削除されます。</string>
+  <string name="app_settings_on_require_access_code_alert_message">これにより、保存されているウォレットアクセスコードがすべて削除されます。今後ウォレットを操作するには、アクセスコードの送信が必要になります。</string>
   <string name="app_settings_require_access_code">アクセスコードを要求する</string>
   <string name="app_settings_require_access_code_footer">このオプションを選択すると、機密性の高い操作における生体認証が無効になります。取引の署名時などには、毎回アクセスコードの入力が必要になります。</string>
   <string name="app_settings_saved_access_codes">アクセスコードを保存</string>
@@ -486,6 +488,7 @@
   <string name="hw_create_seed_description">最新の機能とニュースをお届けします</string>
   <string name="hw_create_seed_title">シードフレーズのバックアップ</string>
   <string name="hw_create_title">モバイルウォレットを作成する</string>
+  <string name="hw_import_seed_phrase_already_imported">このリカバリーフレーズはすでにインポートされています。</string>
   <string name="hw_mobile_wallet">モバイルウォレット</string>
   <string name="information_generated_with_ai">この情報はAIで生成されました。 \nエラーが見つかった場合は、ここをタップしてください。</string>
   <string name="initial_message_change_access_code_body">アクセスコードを変更するには、上図のようにカードまたはリングをタップし、操作が終了するまで取り外さないでください。</string>
@@ -1491,7 +1494,7 @@
   <string name="wc_custom_allowance_title">使用可能量の設定</string>
   <string name="wc_dapp_disconnected">dAppが接続解除されました</string>
   <string name="wc_disconnect_all">すべての接続を解除する</string>
-  <string name="wc_disconnect_all_alert_desc">すべてのdAppセッションが切断されます。ウォレットはどのdAppにも接続されなくなります。</string>
+  <string name="wc_disconnect_all_alert_desc">すべてのdAppセッションの接続が解除されます。ウォレットはどのdAppにもリンクされなくなります。</string>
   <string name="wc_disconnect_all_alert_title">すべてのdAppを接続解除する</string>
   <string name="wc_errors_invalid_domain_subtitle">新しいURIで、再度ペアリングを試してください</string>
   <string name="wc_errors_invalid_domain_title">無効なdAppドメイン</string>
