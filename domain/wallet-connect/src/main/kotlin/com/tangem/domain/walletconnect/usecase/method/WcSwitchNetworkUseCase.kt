@@ -13,5 +13,6 @@ interface WcSwitchNetworkUseCase :
 
     data class SwitchNetwork(
         val network: Network,
+        val isExistInWcSession: Boolean,
     )
 }
