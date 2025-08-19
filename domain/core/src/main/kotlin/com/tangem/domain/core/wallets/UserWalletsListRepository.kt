@@ -73,8 +73,21 @@ interface UserWalletsListRepository {
      * If the wallet is not found, it returns [SetLockError.UserWalletNotFound]
      * If the wallet is locked, it returns [SetLockError.UserWalletLocked]
      * If the lock method is not supported, it returns [SetLockError.UnableToSetLock].
+     *
+     * @param userWalletId The ID of the user wallet to set the lock for.
+     * @param lockMethod The method to use for locking the wallet.
+     * @param changeUnsecured If false, the method will have no effect on unsecured wallets.
      */
-    suspend fun setLock(userWalletId: UserWalletId, lockMethod: LockMethod): Either<SetLockError, Unit>
+    suspend fun setLock(
+        userWalletId: UserWalletId,
+        lockMethod: LockMethod,
+        changeUnsecured: Boolean = true,
+    ): Either<SetLockError, Unit>
+
+    /**
+     * Removes biometric lock for user wallet if it is set.
+     */
+    suspend fun removeBiometricLock(userWalletId: UserWalletId)
 
     /**
      * Deletes user wallets by ids.
