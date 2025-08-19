@@ -115,6 +115,7 @@
   <string name="common_access_denied">Acceso denegado</string>
   <string name="common_add_to_portfolio">Añadir al portafolio</string>
   <string name="common_add_token">Agregar token</string>
+  <string name="common_address">Dirección</string>
   <string name="common_all">Todos</string>
   <string name="common_allow">Autorizar</string>
   <string name="common_amount">Montante</string>
@@ -1353,7 +1354,7 @@
   <string name="wc_alert_unsupported_method_title">Hemos encontrado un error desconocido</string>
   <string name="wc_alert_unsupported_networks_description">Actualmente, Tangem no es compatible con una red requerida por %s.</string>
   <string name="wc_alert_unsupported_networks_title">Redes no compatibles</string>
-  <string name="wc_alert_verified_domain_description">Tangem soporta una red requerida por %s</string>
+  <string name="wc_alert_verified_domain_description">Este dominio ha superado las verificaciones y se considera seguro, confiable y libre de amenazas conocidas o actividades sospechosas. %s</string>
   <string name="wc_alert_verified_domain_title">Dominio verificado</string>
   <string name="wc_alert_wrong_card_description">Se seleccionó una tarjeta o un anillo incorrectos en la app</string>
   <string name="wc_alert_wrong_card_title">Tenemos algún tipo de problema</string>
@@ -1381,7 +1382,7 @@
   <string name="wc_custom_allowance_title">Asignación personalizada</string>
   <string name="wc_dapp_disconnected">dApp desconectada</string>
   <string name="wc_disconnect_all">Desconectar todo</string>
-  <string name="wc_disconnect_all_alert_desc">Texto sobre desconexión de todas las dApps</string>
+  <string name="wc_disconnect_all_alert_desc">Todas las sesiones de dApp se desconectarán. Su billetera ya no estará vinculada a ninguna dApp.</string>
   <string name="wc_disconnect_all_alert_title">Desconectar todas las dApps</string>
   <string name="wc_errors_invalid_domain_subtitle">Intente emparejar nuevamente con una URI nueva</string>
   <string name="wc_errors_invalid_domain_title">Dominio de dApp no válido</string>
@@ -1417,7 +1418,7 @@
   <string name="wc_unlimited_amount">Cantidad ilimitada</string>
   <string name="wc_uri_already_used_description">Asegúrese de que cada intento de emparejamiento utiliza un URI nuevo y único</string>
   <string name="wc_uri_already_used_title">URI ya utilizado</string>
-  <string name="wc_wallet_connect">Wallet connect</string>
+  <string name="wc_wallet_connect">WalletConnect</string>
   <string name="wc_warning_transaction">Transacción sospechosa</string>
   <string name="welcome_interrupted_backup_alert_discard">Ignorar</string>
   <string name="welcome_interrupted_backup_alert_message">Tiene un backup interrumpido. ¿Quiere reanudarlo?</string>
