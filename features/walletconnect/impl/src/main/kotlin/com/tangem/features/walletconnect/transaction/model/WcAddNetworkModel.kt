@@ -57,20 +57,25 @@ internal class WcAddNetworkModel @Inject constructor(
                 .onLeft { router.push(WcHandleMethodErrorConverter.convert(it)) }
                 .getOrNull() ?: return@launch
             sendSignatureReceivedAnalytics(useCase)
-            _uiState.emit(
-                wcAddEthereumChainUMConverter.convert(
-                    WcAddEthereumChainUMConverter.Input(
-                        useCase = useCase,
-                        actions = WcTransactionActionsUM(
-                            onShowVerifiedAlert = ::showVerifiedAlert,
-                            onDismiss = { cancel(useCase) },
-                            onSign = { sign(useCase) },
-                            onCopy = { copyData(useCase.rawSdkRequest.request.params) },
-                        ),
-                    ),
-                ),
-            )
+            val either = useCase.invoke()
+            either
+                .onLeft { router.push(WcHandleMethodErrorConverter.convert(it)) }
+                .map { showUI() }
         }
+    }
+
+    private fun showUI() {
+        _uiState.value = wcAddEthereumChainUMConverter.convert(
+            WcAddEthereumChainUMConverter.Input(
+                useCase = useCase,
+                actions = WcTransactionActionsUM(
+                    onShowVerifiedAlert = ::showVerifiedAlert,
+                    onDismiss = { cancel(useCase) },
+                    onSign = { sign(useCase) },
+                    onCopy = { copyData(useCase.rawSdkRequest.request.params) },
+                ),
+            ),
+        )
     }
 
     override fun dismiss() {
