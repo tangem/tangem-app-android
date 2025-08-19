@@ -35,7 +35,13 @@ internal class WcSwitchNetworkModel @Inject constructor(
             useCase.reject()
             either
                 .onLeft { showErrorDialog(it) }
-                .map { showErrorDialog(HandleMethodError.RequiredNetwork(it.network.name)) }
+                .map {
+                    if (it.isExistInWcSession) {
+                        router.pop()
+                    } else {
+                        showErrorDialog(HandleMethodError.RequiredNetwork(it.network.name))
+                    }
+                }
         }
     }
 
