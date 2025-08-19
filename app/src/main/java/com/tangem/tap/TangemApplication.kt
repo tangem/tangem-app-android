@@ -227,6 +227,15 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
     private val userTokensResponseStore: UserTokensResponseStore
         get() = entryPoint.getUserTokensResponseStore()
 
+    private val userWalletsListRepository
+        get() = entryPoint.getUserWalletsListRepository()
+
+    private val tangemHotSdk
+        get() = entryPoint.getTangemHotSdk()
+
+    private val hotWalletFeatureToggles
+        get() = entryPoint.getHotWalletFeatureToggles()
+
     // endregion
 
     private val appScope = MainScope()
@@ -364,6 +373,9 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
                     uiMessageSender = uiMessageSender,
                     coldUserWalletBuilderFactory = coldUserWalletBuilderFactory,
                     userTokensResponseStore = userTokensResponseStore,
+                    userWalletsListRepository = userWalletsListRepository,
+                    tangemHotSdk = tangemHotSdk,
+                    hotWalletFeatureToggles = hotWalletFeatureToggles,
                 ),
             ),
         )
