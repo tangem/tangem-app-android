@@ -1531,7 +1531,7 @@
   <string name="wc_alert_unsupported_network_title">Unsupported network</string>
   <string name="wc_alert_unsupported_networks_description">Tangem does not currently support a required network by %s.</string>
   <string name="wc_alert_unsupported_networks_title">Unsupported networks</string>
-  <string name="wc_alert_verified_domain_description">This domain has passed verification checks and is considered safe, reputable, and free from known threats or suspicious activity. %s</string>
+  <string name="wc_alert_verified_domain_description">This domain has passed verification checks and is considered safe, reputable, and free from known threats or suspicious activity.</string>
   <string name="wc_alert_verified_domain_title">Verified domain</string>
   <string name="wc_alert_wrong_card_description">Wrong card or ring selected in the App</string>
   <string name="wc_alert_wrong_card_title">We\'ve got some kind of problem</string>
