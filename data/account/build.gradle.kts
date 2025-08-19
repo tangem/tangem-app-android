@@ -9,9 +9,14 @@ android {
     namespace = "com.tangem.data.account"
 }
 
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+}
+
 dependencies {
 
     // region Project - Core
+    implementation(projects.core.datasource)
     api(projects.core.utils)
     // endregion
 
@@ -21,7 +26,7 @@ dependencies {
     // endregion
 
     // Project - Data
-    implementation(projects.core.datasource)
+    implementation(projects.data.common)
     // endregion
 
     // region DI
@@ -33,5 +38,14 @@ dependencies {
     implementation(deps.arrow.core)
     implementation(deps.kotlin.coroutines)
     implementation(deps.timber)
+    // endregion
+
+    // region Test
+    testImplementation(deps.test.coroutine)
+    testImplementation(deps.test.junit5)
+    testRuntimeOnly(deps.test.junit5.engine)
+    testImplementation(deps.test.mockk)
+    testImplementation(deps.test.truth)
+    testImplementation(projects.common.test)
     // endregion
 }
