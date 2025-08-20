@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -27,6 +28,7 @@ import com.tangem.core.ui.format.bigdecimal.fee
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.StakingSendDetailsScreenTestTags
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.features.staking.impl.presentation.state.FeeState
 import com.tangem.utils.StringsSigns.DASH_SIGN
@@ -39,7 +41,8 @@ internal fun StakingFeeBlock(feeState: FeeState) {
             .fillMaxWidth()
             .clip(TangemTheme.shapes.roundedCornersXMedium)
             .background(TangemTheme.colors.background.action)
-            .padding(TangemTheme.dimens.spacing12),
+            .padding(TangemTheme.dimens.spacing12)
+            .testTag(StakingSendDetailsScreenTestTags.NETWORK_FEE_BLOCK),
     ) {
         Text(
             text = stringResourceSafe(R.string.common_network_fee_title),
