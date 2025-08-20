@@ -281,6 +281,9 @@ include(":features:account:impl")
 
 include(":features:token-recieve:api")
 include(":features:token-recieve:impl")
+
+include(":features:yield-lending:api")
+include(":features:yield-lending:impl")
 // endregion Feature modules
 
 // region Domain modules
