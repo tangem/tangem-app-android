@@ -50,6 +50,7 @@ dependencies {
     /** Libs - Tangem */
     implementation(tangemDeps.blockchain)
     implementation(tangemDeps.card.core)
+    implementation(projects.libs.tangemSdkApi)
 
     /** DI */
     implementation(deps.hilt.core)
