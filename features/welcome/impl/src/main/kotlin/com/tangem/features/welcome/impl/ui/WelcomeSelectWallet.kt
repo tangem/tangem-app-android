@@ -22,6 +22,7 @@ import com.tangem.common.ui.userwallet.state.UserWalletItemUM
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.block.TangemBlockCardColors
 import com.tangem.core.ui.components.buttons.common.TangemButtonsDefaults
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.welcome.impl.R
 import com.tangem.features.welcome.impl.ui.state.WelcomeUM
@@ -78,7 +79,10 @@ internal fun AnimatedContentScope.WelcomeSelectWallet(state: WelcomeUM.SelectWal
                         .padding(16.dp)
                         .navigationBarsPadding()
                         .animateEnterExit(fadeIn(), fadeOut()),
-                    text = "Unlock all with biometric",
+                    text = stringResourceSafe(
+                        R.string.user_wallet_list_unlock_all_with,
+                        stringResourceSafe(id = R.string.common_biometrics),
+                    ),
                     onClick = state.onUnlockWithBiometricClick,
                 )
             }
@@ -122,7 +126,7 @@ private fun AnimatedContentScope.TopBar(state: WelcomeUM.SelectWallet, modifier:
 
         TextButton(
             modifier = Modifier.clip(TangemTheme.shapes.roundedCornersLarge),
-            text = "Add Wallet",
+            text = stringResourceSafe(R.string.auth_info_add_wallet_title),
             colors = TangemButtonsDefaults.defaultTextButtonColors.copy(
                 contentColor = TangemTheme.colors.text.primary1,
             ),
@@ -146,7 +150,7 @@ private fun AnimatedContentScope.TitleText(modifier: Modifier = Modifier) {
                 ) + fadeIn(tween(delayMillis = 300)),
                 exit = fadeOut(),
             ),
-            text = "Welcome back!",
+            text = stringResourceSafe(R.string.auth_info_title),
             style = TangemTheme.typography.h2,
             color = TangemTheme.colors.text.primary1,
         )
@@ -161,7 +165,7 @@ private fun AnimatedContentScope.TitleText(modifier: Modifier = Modifier) {
                 ) + fadeIn(tween(delayMillis = 300)),
                 exit = fadeOut(),
             ),
-            text = "Select a wallet to log in",
+            text = stringResourceSafe(R.string.auth_info_subtitle),
             style = TangemTheme.typography.body1,
             color = TangemTheme.colors.text.secondary,
         )
