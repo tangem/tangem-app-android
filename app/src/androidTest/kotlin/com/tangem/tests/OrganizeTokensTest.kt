@@ -31,6 +31,7 @@ class OrganizeTokensTest : BaseTestCase() {
             }
             step("Swipe to 'Organize tokens' button") {
                 swipeUp()
+                swipeUp()
             }
             step("Click 'Organize tokens' button") {
                 onMainScreen { organizeTokensButton().clickWithAssertion() }
@@ -54,6 +55,7 @@ class OrganizeTokensTest : BaseTestCase() {
                 onMainScreen { tokenNetworkGroupTitle(tokenNetwork).assertIsDisplayed() }
             }
             step("Swipe to 'Organize tokens' button") {
+                swipeUp()
                 swipeUp()
             }
             step("Click 'Organize tokens' button") {
@@ -105,6 +107,7 @@ class OrganizeTokensTest : BaseTestCase() {
             }
             step("Swipe to 'Organize tokens' button") {
                 swipeUp()
+                swipeUp()
             }
             step("Click 'Organize tokens' button") {
                 onMainScreen { organizeTokensButton().clickWithAssertion() }
@@ -139,6 +142,7 @@ class OrganizeTokensTest : BaseTestCase() {
                 }
             }
             step("Swipe to 'Organize tokens' button") {
+                swipeUp()
                 swipeUp()
             }
             step("Click 'Organize tokens' button") {
@@ -191,6 +195,7 @@ class OrganizeTokensTest : BaseTestCase() {
                 }
             }
             step("Swipe to 'Organize tokens' button") {
+                swipeUp()
                 swipeUp()
             }
             step("Click 'Organize tokens' button") {
