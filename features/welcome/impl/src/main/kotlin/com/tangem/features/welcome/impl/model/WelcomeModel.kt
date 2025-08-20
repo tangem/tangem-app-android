@@ -76,7 +76,13 @@ internal class WelcomeModel @Inject constructor(
 
             launch {
                 walletsFetcher.userWallets
-                    .collectLatest { wallets.value = it }
+                    .collectLatest {
+                        if (it.isEmpty()) {
+                            router.replaceAll(AppRoute.Home())
+                        }
+
+                        wallets.value = it
+                    }
             }
 
             tryToUnlockRightAway()
