@@ -13,6 +13,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.LineBreak
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SecondaryButton
@@ -22,6 +24,8 @@ import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.fields.PinTextColor
 import com.tangem.core.ui.components.fields.PinTextField
+import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.res.LocalHapticManager
@@ -89,6 +93,33 @@ internal fun HotAccessCodeRequestFullScreenContent(state: HotAccessCodeRequestUM
                     pinTextColor = state.accessCodeColor,
                     onValueChange = state.onAccessCodeChange,
                 )
+
+                SpacerH(20.dp)
+
+                AnimatedVisibility(
+                    modifier = Modifier.animateEnterExit(
+                        enter = slideInVertically(
+                            tween(),
+                            initialOffsetY = { it + 200 },
+                        ) + fadeIn(tween()),
+                        exit = slideOutVertically(tween(300)) { it - 200 } + fadeOut(tween()),
+                    ),
+                    visible = state.wrongAccessCodeText != null,
+                    enter = fadeIn(),
+                    exit = fadeOut(),
+                ) {
+                    val wrongAccessCodeText =
+                        state.wrongAccessCodeText ?: return@AnimatedVisibility
+
+                    Text(
+                        text = wrongAccessCodeText.resolveReference(),
+                        textAlign = TextAlign.Center,
+                        style = TangemTheme.typography.caption2.copy(
+                            lineBreak = LineBreak.Heading,
+                        ),
+                        color = TangemTheme.colors.text.warning,
+                    )
+                }
             }
 
             if (state.useBiometricVisible) {
@@ -132,7 +163,10 @@ private fun Preview() {
             var isShown by remember { mutableStateOf(true) }
 
             HotAccessCodeRequestFullScreenContent(
-                state = HotAccessCodeRequestUM(isShown = isShown),
+                state = HotAccessCodeRequestUM(
+                    isShown = isShown,
+                    wrongAccessCodeText = stringReference("Wrong access code"),
+                ),
                 modifier = Modifier,
             )
 
