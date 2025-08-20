@@ -50,5 +50,9 @@
     {
         "name": "HOT_WALLET_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "NEW_TOKEN_RECEIVE_ENABLED",
+        "version": "undefined"
     }
 ]
