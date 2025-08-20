@@ -92,6 +92,7 @@
   <string name="cardano_max_amount_has_token_title">Недостатньо ADA</string>
   <string name="common_accept">Прийняти</string>
   <string name="common_access_denied">Доступ заборонено</string>
+  <string name="common_add">Додати</string>
   <string name="common_add_to_portfolio">Додати у портфель</string>
   <string name="common_add_token">Додати токен</string>
   <string name="common_address">Адреса</string>
