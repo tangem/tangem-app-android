@@ -149,6 +149,7 @@
   <string name="cardano_max_amount_has_token_title">ADAが不足しています。</string>
   <string name="common_accept">受け入れる</string>
   <string name="common_access_denied">アクセスが拒否されました</string>
+  <string name="common_add">追加</string>
   <string name="common_add_to_portfolio">ポートフォリオに追加</string>
   <string name="common_add_token">トークンを追加</string>
   <string name="common_address">アドレス</string>
