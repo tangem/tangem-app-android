@@ -27,7 +27,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.test.SwapTokenScreenTestTags
+import com.tangem.core.ui.test.BaseBlockTestTags
 
 /**
  * [InputRowDefault](https://www.figma.com/file/14ISV23YB1yVW1uNVwqrKv/Android?type=design&node-id=2100-807&mode=design&t=86eKp9izWxUvmoCq-4)
@@ -67,20 +67,23 @@ fun InputRowDefault(
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .testTag(SwapTokenScreenTestTags.NETWORK_FEE_BLOCK),
+                    .testTag(BaseBlockTestTags.BLOCK),
             ) {
                 title?.let {
                     Text(
                         text = title.resolveReference(),
                         style = TangemTheme.typography.subtitle2,
                         color = titleColor,
-                        modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing8),
+                        modifier = Modifier
+                            .padding(bottom = TangemTheme.dimens.spacing8)
+                            .testTag(BaseBlockTestTags.BLOCK_TITLE),
                     )
                 }
                 Text(
                     text = text.resolveReference(),
                     style = TangemTheme.typography.body2,
                     color = textColor,
+                    modifier = Modifier.testTag(BaseBlockTestTags.BLOCK_TEXT),
                 )
             }
             iconRes?.let {
