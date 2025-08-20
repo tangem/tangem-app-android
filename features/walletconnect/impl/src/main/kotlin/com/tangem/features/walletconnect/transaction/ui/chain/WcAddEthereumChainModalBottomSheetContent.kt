@@ -30,8 +30,8 @@ import com.tangem.features.walletconnect.connections.ui.WcAppInfoItem
 import com.tangem.features.walletconnect.impl.R
 import com.tangem.features.walletconnect.transaction.entity.chain.WcAddEthereumChainItemUM
 import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionAppInfoContentUM
+import com.tangem.features.walletconnect.transaction.ui.common.WcSimpleConfirmButtons
 import com.tangem.features.walletconnect.transaction.ui.common.WcSmallTitleItem
-import com.tangem.features.walletconnect.transaction.ui.common.WcTransactionRequestButtons
 import com.tangem.features.walletconnect.transaction.ui.common.WcTransactionRequestItem
 import com.tangem.features.walletconnect.transaction.ui.common.WcWalletItem
 
@@ -91,13 +91,12 @@ internal fun WcAddEthereumChainModalBottomSheetContent(
             }
         },
         footer = {
-            WcTransactionRequestButtons(
+            WcSimpleConfirmButtons(
                 modifier = Modifier.padding(16.dp),
                 onDismiss = state.onDismiss,
                 onClickActiveButton = state.onSign,
-                activeButtonText = resourceReference(R.string.common_sign),
+                activeButtonText = resourceReference(R.string.common_add),
                 isLoading = state.isLoading,
-                validationResult = null,
             )
         },
     )
