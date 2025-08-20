@@ -113,6 +113,7 @@ dependencies {
     implementation(projects.features.biometry.api)
     implementation(projects.features.nft.api)
     implementation(projects.features.sendV2.api)
+    implementation(projects.features.kyc.api)
 
     /** Common modules */
     implementation(projects.common)
