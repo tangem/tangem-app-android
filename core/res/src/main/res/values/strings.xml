@@ -152,6 +152,7 @@
   <string name="cardano_max_amount_has_token_title">Not enough ADA</string>
   <string name="common_accept">Accept</string>
   <string name="common_access_denied">Access denied</string>
+  <string name="common_add">Add</string>
   <string name="common_add_to_portfolio">Add to portfolio</string>
   <string name="common_add_token">Add token</string>
   <string name="common_address">Address</string>
