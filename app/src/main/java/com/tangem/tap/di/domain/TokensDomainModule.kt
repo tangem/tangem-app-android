@@ -18,7 +18,6 @@ import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.staking.single.SingleYieldBalanceFetcher
 import com.tangem.domain.staking.single.SingleYieldBalanceSupplier
 import com.tangem.domain.tokens.*
-import com.tangem.domain.tokens.operations.BaseCurrenciesStatusesOperations
 import com.tangem.domain.tokens.operations.BaseCurrencyStatusOperations
 import com.tangem.domain.tokens.operations.CachedCurrenciesStatusesOperations
 import com.tangem.domain.tokens.repository.CurrenciesRepository
@@ -97,11 +96,11 @@ internal object TokensDomainModule {
     @Singleton
     fun provideGetTokenListUseCase(
         currenciesRepository: CurrenciesRepository,
-        baseCurrenciesStatusesOperations: BaseCurrenciesStatusesOperations,
+        currenciesStatusesOperations: BaseCurrencyStatusOperations,
     ): GetTokenListUseCase {
         return GetTokenListUseCase(
             currenciesRepository = currenciesRepository,
-            currenciesStatusesOperations = baseCurrenciesStatusesOperations,
+            currenciesStatusesOperations = currenciesStatusesOperations,
         )
     }
 
@@ -369,9 +368,9 @@ internal object TokensDomainModule {
     @Provides
     @Singleton
     fun provideGetWalletTotalBalanceUseCase(
-        baseCurrenciesStatusesOperations: BaseCurrenciesStatusesOperations,
+        currenciesStatusesOperations: BaseCurrencyStatusOperations,
     ): GetWalletTotalBalanceUseCase {
-        return GetWalletTotalBalanceUseCase(baseCurrenciesStatusesOperations)
+        return GetWalletTotalBalanceUseCase(currenciesStatusesOperations)
     }
 
     @Provides
@@ -397,42 +396,6 @@ internal object TokensDomainModule {
         dispatchers: CoroutineDispatcherProvider,
     ): GetCurrencyCheckUseCase {
         return GetCurrencyCheckUseCase(currencyChecksRepository, dispatchers)
-    }
-
-    @Provides
-    @Singleton
-    fun provideBaseCurrenciesStatusesOperations(
-        tokensFeatureToggles: TokensFeatureToggles,
-        currenciesRepository: CurrenciesRepository,
-        quotesRepository: QuotesRepository,
-        singleNetworkStatusSupplier: SingleNetworkStatusSupplier,
-        multiNetworkStatusSupplier: MultiNetworkStatusSupplier,
-        multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
-        singleNetworkStatusFetcher: SingleNetworkStatusFetcher,
-        multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
-        singleQuoteStatusSupplier: SingleQuoteStatusSupplier,
-        singleYieldBalanceSupplier: SingleYieldBalanceSupplier,
-        multiYieldBalanceSupplier: MultiYieldBalanceSupplier,
-        multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
-        multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
-        stakingIdFactory: StakingIdFactory,
-    ): BaseCurrenciesStatusesOperations {
-        return CachedCurrenciesStatusesOperations(
-            currenciesRepository = currenciesRepository,
-            quotesRepository = quotesRepository,
-            singleNetworkStatusSupplier = singleNetworkStatusSupplier,
-            multiNetworkStatusSupplier = multiNetworkStatusSupplier,
-            multiNetworkStatusFetcher = multiNetworkStatusFetcher,
-            singleNetworkStatusFetcher = singleNetworkStatusFetcher,
-            multiQuoteStatusFetcher = multiQuoteStatusFetcher,
-            singleQuoteStatusSupplier = singleQuoteStatusSupplier,
-            singleYieldBalanceSupplier = singleYieldBalanceSupplier,
-            multiYieldBalanceSupplier = multiYieldBalanceSupplier,
-            multiYieldBalanceFetcher = multiYieldBalanceFetcher,
-            tokensFeatureToggles = tokensFeatureToggles,
-            multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
-            stakingIdFactory = stakingIdFactory,
-        )
     }
 
     @Provides
