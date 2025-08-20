@@ -44,11 +44,13 @@ dependencies {
     implementation(projects.core.analytics.models)
     implementation(projects.core.decompose)
     implementation(projects.core.res)
+    implementation(projects.core.configToggles)
 
     /** Domain modules */
     implementation(projects.domain.models)
     implementation(projects.domain.transaction)
     implementation(projects.domain.transaction.models)
+    implementation(projects.domain.tokens)
 
     /** Feature Apis */
     implementation(projects.features.tokenRecieve.api)
