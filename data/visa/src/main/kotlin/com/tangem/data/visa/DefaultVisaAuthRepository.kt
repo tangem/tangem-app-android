@@ -65,6 +65,39 @@ internal class DefaultVisaAuthRepository @Inject constructor(
         }
     }
 
+    override suspend fun getCustomerWalletAuthChallenge(
+        customerWalletAddress: String,
+    ): Either<VisaApiError, VisaAuthChallenge.Wallet> = withContext(dispatchers.io) {
+        request {
+            visaAuthApi.generateNonceByCustomerWallet(
+                GenerateNonceByCustomerWalletRequest(customerWalletAddress = customerWalletAddress),
+            ).getOrThrow()
+        }.map { response ->
+            VisaAuthChallenge.Wallet(
+                challenge = response.result.nonce,
+                session = VisaAuthSession(response.result.sessionId),
+            )
+        }
+    }
+
+    override suspend fun getTokenWithCustomerWallet(
+        sessionId: String,
+        signature: String,
+        nonce: String,
+    ): Either<VisaApiError, String> = withContext(dispatchers.io) {
+        request {
+            visaAuthApi.getTokenByCustomerWallet(
+                GetTokenByCustomerWalletRequest(
+                    sessionId = sessionId,
+                    signature = signature,
+                    messageFormat = "Tangem Pay wants to sign in with your account. Nonce: $nonce",
+                ),
+            ).getOrThrow()
+        }.map { response ->
+            "Bearer ${response.result.accessToken}"
+        }
+    }
+
     override suspend fun getAccessTokens(
         signedChallenge: VisaAuthSignedChallenge,
     ): Either<VisaApiError, VisaAuthTokens> = withContext(dispatchers.io) {
