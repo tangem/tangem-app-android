@@ -149,10 +149,7 @@ internal class ChildFactory @Inject constructor(
                 if (hotWalletFeatureToggles.isHotWalletEnabled) {
                     createComponentChild(
                         context = context,
-                        params = NewWelcomeComponent.Params(
-                            launchMode = route.launchMode,
-                            intent = route.intent,
-                        ),
+                        params = Unit,
                         componentFactory = newWelcomeComponentFactory,
                     )
                 } else {
