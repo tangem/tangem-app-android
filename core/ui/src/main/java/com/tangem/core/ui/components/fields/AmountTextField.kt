@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment.Companion.TopCenter
 import androidx.compose.ui.Alignment.Companion.TopStart
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.VisualTransformation
@@ -23,6 +24,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.core.ui.components.fields.visualtransformations.AmountVisualTransformation
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.StakingSendScreenTestTags
 import com.tangem.core.ui.utils.*
 import java.math.BigDecimal
 import java.text.DecimalFormat
@@ -102,7 +104,9 @@ fun AmountTextField(
             singleLine = true,
             readOnly = !isEnabled,
             visualTransformation = visualTransformation,
-            modifier = Modifier.background(backgroundColor),
+            modifier = Modifier
+                .background(backgroundColor)
+                .testTag(StakingSendScreenTestTags.INPUT_TEXT_FIELD),
         )
     }
 }
