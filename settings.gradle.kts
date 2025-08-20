@@ -272,6 +272,9 @@ include(":features:welcome:impl")
 
 include(":features:account:api")
 include(":features:account:impl")
+
+include(":features:yield-lending:api")
+include(":features:yield-lending:impl")
 // endregion Feature modules
 
 // region Domain modules
