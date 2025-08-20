@@ -7,7 +7,6 @@ import com.tangem.core.analytics.api.AnalyticsErrorHandler
 import com.tangem.datasource.BuildConfig
 import com.tangem.datasource.api.common.SwitchEnvironmentInterceptor
 import com.tangem.datasource.api.common.config.ApiConfig
-import com.tangem.datasource.api.common.config.ApiConfig.Companion.MOCKED_BUILD_TYPE
 import com.tangem.datasource.api.common.config.ApiConfigs
 import com.tangem.datasource.api.common.config.ApiEnvironmentConfig
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
@@ -111,7 +110,7 @@ internal class RetrofitApiBuilder @Inject constructor(
         apiConfigId: ApiConfig.ID,
         environmentConfig: ApiEnvironmentConfig,
     ): OkHttpClient.Builder {
-        return if (BuildConfig.TESTER_MENU_ENABLED || BuildConfig.BUILD_TYPE == MOCKED_BUILD_TYPE) {
+        return if (BuildConfig.TESTER_MENU_ENABLED) {
             addInterceptor(
                 interceptor = SwitchEnvironmentInterceptor(
                     id = apiConfigId,
