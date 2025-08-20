@@ -12,8 +12,10 @@ import com.tangem.core.ui.components.bottomsheets.message.infoBlock
 import com.tangem.core.ui.components.bottomsheets.message.onClick
 import com.tangem.core.ui.components.bottomsheets.message.secondaryButton
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.ui.message.bottomSheetMessage
 import com.tangem.crypto.bip39.Mnemonic
+import com.tangem.domain.core.wallets.error.SaveWalletError
 import com.tangem.domain.wallets.builder.HotUserWalletBuilder
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.features.hotwallet.MnemonicRepository
@@ -83,23 +85,38 @@ internal class AddExistingWalletImportModel @Inject constructor(
     @Suppress("UnusedPrivateMember")
     private fun importWallet(mnemonic: Mnemonic, passphrase: String?) {
         modelScope.launch {
-            uiState.update {
-                it.copy(importWalletProgress = true)
-            }
+            setImportProgress(true)
 
             runCatching {
                 val hotWalletId = tangemHotSdk.importWallet(mnemonic, passphrase?.toCharArray(), HotAuth.NoAuth)
                 val hotUserWalletBuilder = hotUserWalletBuilderFactory.create(hotWalletId)
                 val userWallet = hotUserWalletBuilder.build()
-                saveUserWalletUseCase(userWallet.copy(backedUp = true))
-                params.callbacks.onWalletImported(userWallet.walletId)
+                saveUserWalletUseCase.invoke(userWallet.copy(backedUp = true))
+                    .onLeft {
+                        setImportProgress(false)
+                        when (it) {
+                            is SaveWalletError.DataError -> Timber.e(it.toString(), "Unable to save user wallet")
+                            is SaveWalletError.WalletAlreadySaved -> {
+                                uiMessageSender.send(
+                                    SnackbarMessage(resourceReference(R.string.hw_import_seed_phrase_already_imported)),
+                                )
+                            }
+                        }
+                    }
+                    .onRight {
+                        setImportProgress(false)
+                        params.callbacks.onWalletImported(userWallet.walletId)
+                    }
             }.onFailure {
                 Timber.e(it)
-
-                uiState.update {
-                    it.copy(importWalletProgress = false)
-                }
+                setImportProgress(false)
             }
+        }
+    }
+
+    private fun setImportProgress(progress: Boolean) {
+        uiState.update {
+            it.copy(importWalletProgress = progress)
         }
     }
 
