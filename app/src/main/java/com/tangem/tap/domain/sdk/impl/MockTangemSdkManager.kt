@@ -18,9 +18,7 @@ import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.visa.model.VisaActivationInput
-import com.tangem.domain.visa.model.VisaDataForApprove
-import com.tangem.domain.visa.model.VisaSignedDataByCustomerWallet
+import com.tangem.domain.visa.model.*
 import com.tangem.operations.derivation.DerivationTaskResponse
 import com.tangem.operations.preflightread.PreflightReadFilter
 import com.tangem.operations.wallet.CreateWalletResponse
