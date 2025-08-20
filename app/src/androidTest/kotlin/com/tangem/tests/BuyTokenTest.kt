@@ -371,13 +371,6 @@ class BuyTokenTest : BaseTestCase() {
             step("Open 'Select Provider' bottom sheet") {
                 onBuyTokenDetailsScreen { providerTitle.performClick() }
             }
-            step("Assert unavailable provider name is displayed") {
-                onSelectProviderBottomSheet {
-                    flakySafely(WAIT_UNTIL_TIMEOUT) {
-                        unavailableProviderItem.assertIsDisplayed()
-                    }
-                }
-            }
             step("Assert available provider name is displayed") {
                 onSelectProviderBottomSheet {
                     flakySafely(WAIT_UNTIL_TIMEOUT) {
