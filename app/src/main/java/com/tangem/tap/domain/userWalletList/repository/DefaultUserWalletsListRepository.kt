@@ -25,6 +25,8 @@ import com.tangem.domain.core.wallets.error.SetLockError
 import com.tangem.domain.core.wallets.error.UnlockWalletError
 import com.tangem.domain.core.wallets.UserWalletsListRepository
 import com.tangem.domain.core.wallets.UserWalletsListRepository.LockMethod
+import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository
+import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.domain.userWalletList.model.UserWalletEncryptionKey
 import com.tangem.tap.domain.userWalletList.utils.encryptionKey
@@ -37,7 +39,7 @@ import com.tangem.utils.extensions.indexOfFirstOrNull
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 internal class DefaultUserWalletsListRepository(
     private val publicInformationRepository: UserWalletsPublicInformationRepository,
     private val sensitiveInformationRepository: UserWalletsSensitiveInformationRepository,
@@ -47,6 +49,7 @@ internal class DefaultUserWalletsListRepository(
     private val tangemSdkManagerProvider: Provider<TangemSdkManager>,
     private val savePersistentInformation: ProviderSuspend<Boolean>,
     private val appPreferencesStore: AppPreferencesStore,
+    private val hotWalletAccessCodeAttemptsRepository: HotWalletAccessCodeAttemptsRepository,
 ) : UserWalletsListRepository {
 
     override val userWallets = MutableStateFlow<List<UserWallet>?>(null)
@@ -225,6 +228,7 @@ internal class DefaultUserWalletsListRepository(
                 }
 
                 val encryptionKey = requestPasswordRecursive(
+                    hotWalletId = userWallet.hotWalletId,
                     block = { password ->
                         runCatching {
                             userWalletEncryptionKeysRepository.getEncryptedWithPassword(userWalletId, password)
@@ -240,6 +244,8 @@ internal class DefaultUserWalletsListRepository(
                 if (encryptionKey == null) {
                     return@either
                 }
+
+                removePasswordAttempts(userWallet)
 
                 sensitiveInformationRepository.getAll(listOf(encryptionKey))
                     .doOnSuccess { sensitiveInfo -> userWallets.update { it?.updateWith(sensitiveInfo) } }
@@ -282,15 +288,26 @@ internal class DefaultUserWalletsListRepository(
 
         val unsecuredKeys = userWalletEncryptionKeysRepository.getAllUnsecured()
         val allKeys = (biometricKeys + unsecuredKeys).distinct()
-        val unlockedWallets = allKeys.map { it.walletId }
+        val unlockedWalletsIds = allKeys.map { it.walletId }
+
+        val unlockedWallets = unlockedWalletsIds.mapNotNull { id ->
+            userWalletsSync().firstOrNull { it.walletId == id }
+        }
+
+        // Remove all password attempts for unlocked hot wallets
+        unlockedWallets.forEach {
+            removePasswordAttempts(it)
+        }
 
         // if we cant unlock all wallets
-        if (userWalletIds.all { it in unlockedWallets }.not()) {
+        if (userWalletIds.all { it in unlockedWalletsIds }.not()) {
             raise(UnlockWalletError.UnableToUnlock)
         }
 
         sensitiveInformationRepository.getAll(allKeys)
-            .doOnSuccess { sensitiveInfo -> userWallets.update { it?.updateWith(sensitiveInfo) } }
+            .doOnSuccess { sensitiveInfo ->
+                userWallets.update { it?.updateWith(sensitiveInfo) }
+            }
             .doOnFailure { raise(UnlockWalletError.UnableToUnlock) }
     }
 
@@ -319,12 +336,16 @@ internal class DefaultUserWalletsListRepository(
     }
 
     private suspend fun requestPasswordRecursive(
+        hotWalletId: HotWalletId,
         block: suspend (CharArray) -> UserWalletEncryptionKey?,
         biometryFallback: suspend () -> Either<UnlockWalletError, Unit>,
     ): Either<UnlockWalletError, UserWalletEncryptionKey?> {
-        val result = passwordRequester.requestPassword(
+        val attemptRequest = HotWalletPasswordRequester.AttemptRequest(
+            hotWalletId = hotWalletId,
+            authMode = true, // In auth mode user wallet can be deleted after 30 failed attempts
             hasBiometry = hasBiometry(),
         )
+        val result = passwordRequester.requestPassword(attemptRequest)
 
         return when (result) {
             HotWalletPasswordRequester.Result.Dismiss -> {
@@ -335,7 +356,7 @@ internal class DefaultUserWalletsListRepository(
                 val decrypted = block(result.password.value)
                 if (decrypted == null) {
                     passwordRequester.wrongPassword()
-                    requestPasswordRecursive(block, biometryFallback)
+                    requestPasswordRecursive(hotWalletId, block, biometryFallback)
                 } else {
                     passwordRequester.successfulAuthentication()
                     passwordRequester.dismiss()
@@ -350,6 +371,12 @@ internal class DefaultUserWalletsListRepository(
                     }
                     .map { null }
             }
+        }
+    }
+
+    private suspend fun removePasswordAttempts(userWallet: UserWallet) {
+        if (userWallet is UserWallet.Hot) {
+            hotWalletAccessCodeAttemptsRepository.resetAttempts(userWallet.hotWalletId)
         }
     }
 
