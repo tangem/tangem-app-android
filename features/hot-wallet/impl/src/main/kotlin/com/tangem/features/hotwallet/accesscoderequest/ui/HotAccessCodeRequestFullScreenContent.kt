@@ -129,7 +129,10 @@ internal fun HotAccessCodeRequestFullScreenContent(state: HotAccessCodeRequestUM
                         .fillMaxWidth()
                         .navigationBarsPadding()
                         .imePadding(),
-                    text = "Use biometric",
+                    text = stringResourceSafe(
+                        id = R.string.welcome_unlock,
+                        stringResourceSafe(R.string.common_biometrics),
+                    ),
                     onClick = state.useBiometricClick,
                 )
             }
