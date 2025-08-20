@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -35,6 +36,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.singleEvent
+import com.tangem.core.ui.test.StakingSendScreenTestTags
 
 @Composable
 fun NavigationButtonsBlock(
@@ -146,7 +148,8 @@ private fun PreviousButton(prevButton: NavigationButton?) {
                     .clip(RoundedCornerShape(TangemTheme.dimens.radius16))
                     .background(TangemTheme.colors.button.secondary)
                     .clickable(onClick = button.onClick)
-                    .padding(TangemTheme.dimens.spacing12),
+                    .padding(TangemTheme.dimens.spacing12)
+                    .testTag(StakingSendScreenTestTags.PREVIOUS_BUTTON),
             )
         }
     }
