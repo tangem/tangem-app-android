@@ -29,6 +29,8 @@ import com.tangem.domain.transaction.usecase.CreateNFTTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.v2.api.NFTSendComponent
+import com.tangem.features.send.v2.api.SendFeatureToggles
+import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationComponent
 import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.features.send.v2.common.CommonSendRoute
@@ -36,6 +38,7 @@ import com.tangem.features.send.v2.common.CommonSendRoute.*
 import com.tangem.features.send.v2.common.SendConfirmAlertFactory
 import com.tangem.features.send.v2.common.ui.state.ConfirmUM
 import com.tangem.features.send.v2.sendnft.confirm.NFTSendConfirmComponent
+import com.tangem.features.send.v2.sendnft.success.NFTSendSuccessComponent
 import com.tangem.features.send.v2.sendnft.ui.state.NFTSendUM
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeComponent
 import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeUM
@@ -70,7 +73,8 @@ internal class NFTSendModel @Inject constructor(
     private val getCardInfoUseCase: GetCardInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val alertFactory: SendConfirmAlertFactory,
-) : Model(), SendNFTComponentCallback {
+    private val sendFeatureToggles: SendFeatureToggles,
+) : Model(), SendNFTComponentCallback, NFTSendSuccessComponent.ModelCallback {
 
     val params: NFTSendComponent.Params = paramsContainer.require()
 
@@ -124,7 +128,7 @@ internal class NFTSendModel @Inject constructor(
         } else {
             when (currentRouteFlow.value) {
                 is Destination -> router.push(Confirm)
-                Confirm -> router.push(ConfirmSuccess)
+                Confirm -> router.replaceAll(ConfirmSuccess)
                 else -> onBackClick()
             }
         }
@@ -193,6 +197,13 @@ internal class NFTSendModel @Inject constructor(
         }
     }
 
+    fun showAlertError() {
+        alertFactory.getGenericErrorState(
+            onFailedTxEmailClick = ::onFailedTxEmailClick,
+            popBack = router::pop,
+        )
+    }
+
     private fun onFailedTxEmailClick(errorMessage: String? = null) {
         saveBlockchainErrorUseCase(
             error = BlockchainErrorInfo(
@@ -249,7 +260,9 @@ internal class NFTSendModel @Inject constructor(
     private fun initialState(): NFTSendUM = NFTSendUM(
         destinationUM = DestinationUM.Empty(),
         feeUM = FeeUM.Empty(),
+        feeSelectorUM = FeeSelectorUM.Loading,
         confirmUM = ConfirmUM.Empty,
         navigationUM = NavigationUM.Empty,
+        isRedesignEnabled = sendFeatureToggles.isNFTSendRedesignEnabled,
     )
 }
