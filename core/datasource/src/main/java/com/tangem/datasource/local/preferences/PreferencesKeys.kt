@@ -169,6 +169,18 @@ object PreferencesKeys {
     fun getShouldShowInitialPermissionScreen(permission: String) =
         booleanPreferencesKey("shouldShowInitialPushPermissionScreen_$permission")
     // endregion
+
+    // region Hot Wallet unlock attempts
+
+    fun getHotWalletUnlockAttemptsKey(attemptId: String) =
+        intPreferencesKey(name = "hotWalletUnlockAttempts_$attemptId")
+
+    fun getHotWalletUnlockBootKey(attemptId: String) = intPreferencesKey(name = "hotWalletUnlockBootCount_$attemptId")
+
+    fun getHotWalletUnlockDeadlineKey(attemptId: String) =
+        longPreferencesKey(name = "hotWalletUnlockDeadline_$attemptId")
+
+    // endregion
 }
 
 /** Preferences keys set that should be migrated from "PreferencesDataSource" to a new DataStore<Preferences> */
