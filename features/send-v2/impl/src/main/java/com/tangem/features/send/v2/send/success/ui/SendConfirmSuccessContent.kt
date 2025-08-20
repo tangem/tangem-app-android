@@ -56,7 +56,7 @@ internal fun SendConfirmSuccessContent(sendUM: SendUM, destinationBlockComponent
                     .padding(horizontal = TangemTheme.dimens.spacing16)
                     .scrollable(
                         state = rememberScrollState(),
-                        orientation = Orientation.Horizontal,
+                        orientation = Orientation.Vertical,
                     ),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
