@@ -30,8 +30,10 @@ sealed class AppRoute(val path: String) : Route {
 
     @Serializable
     data class Welcome(
+        @Deprecated("No longer used, will be removed in future releases")
         val launchMode: InitScreenLaunchMode = InitScreenLaunchMode.Standard,
         // we still have this param to be handled by WalletConnectLinkIntentHandler in WelcomeMiddleware
+        @Deprecated("No longer used, will be removed in future releases")
         val intent: SerializableIntent? = null,
     ) : AppRoute(path = "/welcome"), RouteBundleParams {
 
