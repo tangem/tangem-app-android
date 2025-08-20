@@ -48,8 +48,6 @@ internal class WelcomeModel @Inject constructor(
     private val walletsRepository: WalletsRepository,
 ) : Model() {
 
-    // TODO add intent handling
-    // val params
     val uiState: StateFlow<WelcomeUM>
     field = MutableStateFlow<WelcomeUM>(WelcomeUM.Plain)
 
