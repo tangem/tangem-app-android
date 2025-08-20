@@ -20,6 +20,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -42,6 +43,7 @@ import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.StakingDetailsScreenTestTags
 import com.tangem.domain.models.staking.BalanceType
 import com.tangem.domain.models.staking.RewardBlockType
 import com.tangem.features.staking.impl.R
@@ -171,7 +173,8 @@ private fun LazyListScope.activeStakingBlock(
                         currentIndex = index + 1,
                         lastIndex = state.yieldBalance.balances.lastIndex + 1,
                         addDefaultPadding = false,
-                    ),
+                    )
+                    .testTag(StakingDetailsScreenTestTags.ACTIVE_STAKING_BLOCK),
             )
         }
     }
@@ -189,7 +192,9 @@ private fun BannerBlock(onClick: () -> Unit) {
             ),
     ) {
         Image(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .testTag(StakingDetailsScreenTestTags.BANNER_IMAGE),
             contentScale = ContentScale.FillWidth,
             painter = painterResource(R.drawable.img_staking_banner),
             contentDescription = null,
@@ -197,7 +202,8 @@ private fun BannerBlock(onClick: () -> Unit) {
         Text(
             modifier = Modifier
                 .align(Alignment.CenterStart)
-                .padding(TangemTheme.dimens.spacing16),
+                .padding(TangemTheme.dimens.spacing16)
+                .testTag(StakingDetailsScreenTestTags.BANNER_TEXT),
             text = buildAnnotatedString {
                 withStyle(SpanStyle(Brush.linearGradient(textGradientColors))) {
                     append(stringResourceSafe(R.string.staking_details_banner_text))
