@@ -16,9 +16,7 @@ sealed class SimulationData {
     /**
      * Represents an approve operation with the specified amount (can be multiple amounts for NFT)
      */
-    data class Approve(
-        val approvedAmounts: List<ApprovedAmount>,
-    ) : SimulationData()
+    data class Approve(val items: List<ApproveInfo>) : SimulationData()
 
     /**
      * Simulation was successfully performed and no changes detected
