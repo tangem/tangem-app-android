@@ -26,11 +26,11 @@ import com.tangem.datasource.crypto.DataSignatureVerifier
 import com.tangem.datasource.exchangeservice.swap.ExpressUtils
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.feature.swap.converters.*
 import com.tangem.feature.swap.domain.api.SwapRepository
 import com.tangem.feature.swap.domain.models.ExpressDataError
@@ -55,6 +55,7 @@ internal class DefaultSwapRepository(
     private val errorsDataConverter: ErrorsDataConverter,
     private val dataSignatureVerifier: DataSignatureVerifier,
     private val appPreferencesStore: AppPreferencesStore,
+    private val rampStateManager: RampStateManager,
     moshi: Moshi,
     excludedBlockchains: ExcludedBlockchains,
 ) : SwapRepository {
@@ -138,7 +139,8 @@ internal class DefaultSwapRepository(
                 val currenciesList = currencyList
                     .filter {
                         val requirements = walletManagersFacade.getAssetRequirements(userWallet.walletId, it)
-                        requirements !is AssetRequirementsCondition.RequiredTrustline
+                        val isAvailableForSwap = rampStateManager.checkAssetRequirements(requirements)
+                        isAvailableForSwap
                     }
                     .map { leastTokenInfoConverter.convert(it) }
 
