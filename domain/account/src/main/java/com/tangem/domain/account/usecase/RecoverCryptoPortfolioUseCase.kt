@@ -8,8 +8,6 @@ import arrow.core.raise.either
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.models.ArchivedAccount
 import com.tangem.domain.account.repository.AccountsCRUDRepository
-import com.tangem.domain.models.TokensGroupType
-import com.tangem.domain.models.TokensSortType
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.wallet.UserWalletId
@@ -66,14 +64,10 @@ class RecoverCryptoPortfolioUseCase(
         return Account.CryptoPortfolio(
             accountId = this.accountId,
             accountName = this.name,
-            accountIcon = this.icon,
+            icon = this.icon,
             derivationIndex = this.derivationIndex,
-            isArchived = false,
-            cryptoCurrencyList = Account.CryptoPortfolio.CryptoCurrencyList(
-                currencies = emptySet(),
-                sortType = TokensSortType.NONE,
-                groupType = TokensGroupType.NONE,
-            ),
+            // TODO: [REDACTED_JIRA]
+            cryptoCurrencies = emptySet(),
         )
     }
 
