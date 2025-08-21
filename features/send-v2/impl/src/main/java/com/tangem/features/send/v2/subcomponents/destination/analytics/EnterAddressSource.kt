@@ -10,4 +10,7 @@ internal enum class EnterAddressSource {
 
     val isPasted: Boolean
         get() = this != InputField
+
+    val isAutoNext: Boolean
+        get() = this == RecentAddress || this == MyWallets
 }
