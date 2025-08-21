@@ -6,9 +6,9 @@ import com.tangem.core.ui.components.atoms.text.TextEllipsis
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.express.models.ExpressRateType
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.swap.models.SwapCurrencies
 import com.tangem.domain.swap.models.SwapDirection
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
 import kotlinx.collections.immutable.ImmutableList
 
@@ -48,9 +48,11 @@ internal sealed class SwapAmountUM {
         val swapCurrencies: SwapCurrencies,
         val swapQuotes: ImmutableList<SwapQuoteUM>,
         val selectedQuote: SwapQuoteUM,
+        val showFCAWarning: Boolean,
 
         // extra data
         val appCurrency: AppCurrency?,
+        val showBestRateAnimation: Boolean,
     ) : SwapAmountUM()
 }
 
