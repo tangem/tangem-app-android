@@ -65,4 +65,7 @@ dependencies {
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.timber)
     implementation(deps.reKotlin)
+
+    /** Tangem libraries */
+    implementation(tangemDeps.hot.core)
 }

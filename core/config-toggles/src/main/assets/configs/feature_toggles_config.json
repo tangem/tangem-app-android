@@ -50,5 +50,13 @@
     {
         "name": "HOT_WALLET_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "NFT_SEND_REDESIGN_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "TANGEM_PAY_ENABLED",
+        "version": "undefined"
     }
 ]

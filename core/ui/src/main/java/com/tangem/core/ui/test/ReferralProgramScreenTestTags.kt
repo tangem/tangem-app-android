@@ -1,0 +1,8 @@
+package com.tangem.core.ui.test
+
+object ReferralProgramScreenTestTags {
+    const val IMAGE = "REFERRAL_PROGRAM_SCREEN_IMAGE"
+    const val CONDITION_BLOCK = "REFERRAL_PROGRAM_SCREEN_CONDITION_BLOCK"
+    const val INFO_FOR_YOU_TEXT = "REFERRAL_PROGRAM_SCREEN_INFO_FOR_YOU_TEXT"
+    const val INFO_FOR_YOUR_FRIEND_TEXT = "REFERRAL_PROGRAM_INFO_FOR_YOUR_FRIEND_TEXT"
+}
