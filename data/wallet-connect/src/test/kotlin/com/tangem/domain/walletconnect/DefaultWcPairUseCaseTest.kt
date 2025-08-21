@@ -47,7 +47,7 @@ internal class DefaultWcPairUseCaseTest {
             pairingTopic = "",
             name = "",
             description = "",
-            url = "",
+            url = "https://react-app.walletconnect.com/",
             icons = listOf(),
             redirect = "",
             requiredNamespaces = mapOf(),
