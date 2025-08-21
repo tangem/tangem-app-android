@@ -34,7 +34,7 @@ internal class AccountCreateEditUMBuilder(
                 onNameChange = onNameChange,
             )
             is AccountCreateEditComponent.Params.Edit -> AccountCreateEditUM.Account(
-                name = params.account.name.value,
+                name = params.account.accountName.value,
                 portfolioIcon = params.account.portfolioIcon.toUM(),
                 derivationInfo = createAccountDerivationInfo(
                     index = (params.account as Account.CryptoPortfolio).derivationIndex.value,
