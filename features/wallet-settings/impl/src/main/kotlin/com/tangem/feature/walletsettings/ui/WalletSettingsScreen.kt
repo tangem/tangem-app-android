@@ -25,6 +25,7 @@ import com.tangem.core.ui.components.items.DescriptionItem
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -113,6 +114,10 @@ private fun Content(state: WalletSettingsUM, modifier: Modifier = Modifier) {
                     onDescriptionClick = item.onClick,
                 )
                 is WalletSettingsItemUM.NotificationPermission -> NotificationAlertBlock(
+                    modifier = itemModifier,
+                    model = item,
+                )
+                is WalletSettingsItemUM.UpgradeWallet -> UpgradeWalletBlock(
                     modifier = itemModifier,
                     model = item,
                 )
@@ -226,6 +231,21 @@ private fun SwitchBlock(model: WalletSettingsItemUM.WithSwitch, modifier: Modifi
 }
 
 @Composable
+private fun UpgradeWalletBlock(model: WalletSettingsItemUM.UpgradeWallet, modifier: Modifier = Modifier) {
+    Notification(
+        config = NotificationConfig(
+            title = model.title,
+            subtitle = model.description,
+            iconResId = R.drawable.ic_hardware_backup_36,
+            iconSize = 36.dp,
+            onClick = model.onClick,
+            onCloseClick = model.onDismissClick,
+        ),
+        modifier = modifier,
+    )
+}
+
+@Composable
 private fun NotificationAlertBlock(model: WalletSettingsItemUM.NotificationPermission, modifier: Modifier = Modifier) {
     Notification(
         config = NotificationConfig(
@@ -264,6 +284,23 @@ private val DESCRIPTION_OFFSET = -8.dp
 private fun Preview_WalletSettingsScreen() {
     TangemThemePreview {
         PreviewWalletSettingsComponent().Content(modifier = Modifier.fillMaxSize())
+    }
+}
+
+@Composable
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+private fun Preview_WalletSettingsScreen1() {
+    TangemThemePreview {
+        UpgradeWalletBlock(
+            model = WalletSettingsItemUM.UpgradeWallet(
+                id = "upgrade_wallet",
+                title = stringReference("Upgrade wallet with a hardware backup"),
+                description = stringReference("Keep your crypto safe with Tangem’s best-in-class hardware wallet."),
+                onClick = {},
+                onDismissClick = {},
+            ),
+        )
     }
 }
 // endregion Preview
