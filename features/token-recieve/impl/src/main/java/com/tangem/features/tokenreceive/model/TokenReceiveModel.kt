@@ -3,6 +3,7 @@ package com.tangem.features.tokenreceive.model
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.push
 import com.tangem.common.ui.notifications.NotificationUM
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -19,6 +20,7 @@ import com.tangem.domain.models.ReceiveAddressModel
 import com.tangem.domain.models.ens.EnsAddress
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.tokens.SaveViewedTokenReceiveWarningUseCase
+import com.tangem.domain.tokens.model.analytics.TokenReceiveNewAnalyticsEvent
 import com.tangem.domain.transaction.usecase.GetReverseResolvedEnsAddressUseCase
 import com.tangem.features.tokenreceive.TokenReceiveComponent
 import com.tangem.features.tokenreceive.component.TokenReceiveModelCallback
@@ -35,6 +37,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @ModelScoped
 internal class TokenReceiveModel @Inject constructor(
     private val clipboardManager: ClipboardManager,
@@ -43,6 +46,7 @@ internal class TokenReceiveModel @Inject constructor(
     private val saveViewedTokenReceiveWarningUseCase: SaveViewedTokenReceiveWarningUseCase,
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model(), TokenReceiveModelCallback {
 
     private val iconStateConverter by lazy(::CryptoCurrencyToIconStateConverter)
@@ -61,11 +65,18 @@ internal class TokenReceiveModel @Inject constructor(
     }
 
     override fun onQrCodeClick(id: Int) {
+        analyticsEventHandler.send(
+            TokenReceiveNewAnalyticsEvent.QrScreenOpened(
+                token = getTokenName(),
+                blockchainName = params.config.cryptoCurrency.network.name,
+            ),
+        )
         stackNavigation.push(configuration = TokenReceiveRoutes.QrCode(addressId = id))
     }
 
     override fun onCopyClick(id: Int) {
         val addressToCopy = state.value.addresses[id] ?: return
+        sendCopyActionAnalytic(addressToCopy)
         clipboardManager.setText(text = addressToCopy.value, isSensitive = true)
     }
 
@@ -82,6 +93,13 @@ internal class TokenReceiveModel @Inject constructor(
                 },
             )
             stackNavigation.push(configuration = TokenReceiveRoutes.ReceiveAssets)
+        }
+    }
+
+    internal fun getTokenName(): String {
+        return when (val asset = params.config.asset) {
+            Asset.Currency -> params.config.cryptoCurrency.symbol
+            Asset.NFT -> asset.name
         }
     }
 
@@ -151,10 +169,7 @@ internal class TokenReceiveModel @Inject constructor(
                     title = resourceReference(
                         R.string.receive_bottom_sheet_warning_title,
                         wrappedList(
-                            when (val asset = params.config.asset) {
-                                Asset.Currency -> params.config.cryptoCurrency.symbol
-                                Asset.NFT -> asset.name
-                            },
+                            getTokenName(),
                             params.config.cryptoCurrency.network.name,
                         ),
                     ),
@@ -182,5 +197,23 @@ internal class TokenReceiveModel @Inject constructor(
             isEnsResultLoading = false,
             notificationConfigs = getNotifications().toImmutableList(),
         )
+    }
+
+    private fun sendCopyActionAnalytic(receiveAddress: ReceiveAddress) {
+        val event = when (receiveAddress.type) {
+            is ReceiveAddress.Type.Default -> {
+                TokenReceiveNewAnalyticsEvent.ButtonCopyAddress(
+                    token = getTokenName(),
+                    blockchainName = params.config.cryptoCurrency.network.name,
+                )
+            }
+            ReceiveAddress.Type.Ens -> {
+                TokenReceiveNewAnalyticsEvent.ButtonCopyEns(
+                    token = getTokenName(),
+                    blockchainName = params.config.cryptoCurrency.network.name,
+                )
+            }
+        }
+        analyticsEventHandler.send(event)
     }
 }
