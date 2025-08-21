@@ -50,7 +50,7 @@ internal fun WcSignTransactionModalBottomSheetContent(
         onBack = onBack,
         title = {
             TangemModalBottomSheetTitle(
-                title = resourceReference(R.string.wc_wallet_connect),
+                title = resourceReference(R.string.wc_transaction_flow_title),
                 endIconRes = R.drawable.ic_close_24,
                 onEndClick = onDismiss,
             )
@@ -95,6 +95,7 @@ internal fun WcSignTransactionModalBottomSheetContent(
                 onClickActiveButton = state.onSign,
                 activeButtonText = resourceReference(R.string.common_sign),
                 isLoading = state.isLoading,
+                validationResult = null,
             )
         },
     )

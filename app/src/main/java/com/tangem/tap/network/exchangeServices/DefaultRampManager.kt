@@ -18,6 +18,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runCatching
@@ -127,6 +128,18 @@ internal class DefaultRampManager(
                 )
             }
             else -> ScenarioUnavailabilityReason.None
+        }
+    }
+
+    override fun checkAssetRequirements(requirements: AssetRequirementsCondition?): Boolean {
+        return when (requirements) {
+            AssetRequirementsCondition.PaidTransaction,
+            is AssetRequirementsCondition.PaidTransactionWithFee,
+            is AssetRequirementsCondition.RequiredTrustline,
+            -> false
+            is AssetRequirementsCondition.IncompleteTransaction,
+            null,
+            -> true
         }
     }
 

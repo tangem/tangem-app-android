@@ -109,4 +109,18 @@ interface TransactionRepository {
         userWalletId: UserWalletId,
         network: Network,
     ): com.tangem.blockchain.extensions.Result<List<ByteArray>>
+
+    suspend fun prepareAndSign(
+        transactionData: TransactionData,
+        signer: TransactionSigner,
+        userWalletId: UserWalletId,
+        network: Network,
+    ): com.tangem.blockchain.extensions.Result<ByteArray>
+
+    suspend fun prepareAndSignMultiple(
+        transactionData: List<TransactionData>,
+        signer: TransactionSigner,
+        userWalletId: UserWalletId,
+        network: Network,
+    ): com.tangem.blockchain.extensions.Result<List<ByteArray>>
 }
