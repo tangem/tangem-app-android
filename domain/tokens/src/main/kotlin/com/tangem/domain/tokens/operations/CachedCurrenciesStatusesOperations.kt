@@ -168,15 +168,18 @@ class CachedCurrenciesStatusesOperations(
             combine(
                 flow = getQuotes(currenciesIds),
                 flow2 = networksStatusesUpdates,
-                flow3 = networksStatusesUpdates.flatMapLatest {
-                    val currenciesAddresses = it.getOrElse(default = { emptySet() })
-                        .mapNotNull {
-                            val currency = currencies.firstOrNull { currency -> currency.network == it.network }
-                                ?: return@mapNotNull null
+                flow3 = networksStatusesUpdates.flatMapLatest { maybeNetworksStatuses ->
+                    val networksStatuses = maybeNetworksStatuses.getOrNull()
 
-                            currency.id to extractAddress(it)
+                    val currenciesAddresses = if (networksStatuses == null) {
+                        emptyMap()
+                    } else {
+                        currencies.associate { currency ->
+                            val networkStatus = networksStatuses.firstOrNull { it.network == currency.network }
+
+                            currency.id to extractAddress(networkStatus)
                         }
-                        .toMap()
+                    }
 
                     getYieldsBalancesUpdates(userWalletId, currenciesAddresses)
                 },
@@ -397,8 +400,11 @@ class CachedCurrenciesStatusesOperations(
         return channelFlow {
             val state = MutableStateFlow(emptyList<YieldBalance>())
 
-            val stakingIds = cryptoCurrencies.mapNotNullTo(hashSetOf()) {
-                stakingIdFactory.create(currencyId = it.key, defaultAddress = it.value)
+            val stakingIds = cryptoCurrencies.mapNotNullTo(hashSetOf()) { currencyWithAddress ->
+                stakingIdFactory.create(
+                    currencyId = currencyWithAddress.key,
+                    defaultAddress = currencyWithAddress.value,
+                )
                     .getOrNull()
             }
 
