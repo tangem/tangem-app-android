@@ -11,6 +11,8 @@ import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.value.ObserveLifecycleMode
 import com.arkivanov.decompose.value.subscribe
+import com.tangem.common.ui.navigationButtons.NavigationUM
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -20,6 +22,7 @@ import com.tangem.core.ui.decompose.getEmptyComposableContentComponent
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.swap.models.R
 import com.tangem.domain.swap.models.SwapDirection
+import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.v2.api.subcomponents.destination.DestinationRoute
 import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationComponent
 import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationComponentParams
@@ -43,6 +46,7 @@ internal class DefaultSendWithSwapComponent @AssistedInject constructor(
     @Assisted private val params: SendWithSwapComponent.Params,
     private val sendDestinationComponentFactory: SendDestinationComponent.Factory,
     private val confirmComponentFactory: SendWithSwapConfirmComponent.Factory,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : SendWithSwapComponent, AppComponentContext by appComponentContext {
 
     private val stackNavigation = StackNavigation<SendWithSwapRoute>()
@@ -79,15 +83,23 @@ internal class DefaultSendWithSwapComponent @AssistedInject constructor(
             componentScope.launch {
                 when (val activeComponent = stack.active.instance) {
                     is SwapAmountComponent -> {
-                        // todo send with swap analytics
+                        analyticsEventHandler.send(
+                            CommonSendAnalyticEvents.AmountScreenOpened(categoryName = model.analyticCategoryName),
+                        )
                         activeComponent.updateState(model.uiState.value.amountUM)
                     }
                     is SendDestinationComponent -> {
-                        // todo send with swap analytics
+                        analyticsEventHandler.send(
+                            CommonSendAnalyticEvents.AddressScreenOpened(categoryName = model.analyticCategoryName),
+                        )
                         activeComponent.updateState(model.uiState.value.destinationUM)
                     }
                     is SendWithSwapConfirmComponent -> if (model.currentRoute.value.isEditMode) {
-                        // todo send with swap analytics
+                        analyticsEventHandler.send(
+                            CommonSendAnalyticEvents.ConfirmationScreenOpened(
+                                categoryName = model.analyticCategoryName,
+                            ),
+                        )
                         activeComponent.updateState(model.uiState.value)
                     }
                 }
@@ -101,7 +113,11 @@ internal class DefaultSendWithSwapComponent @AssistedInject constructor(
         val stackState by childStack.subscribeAsState()
         val state by model.uiState.collectAsStateWithLifecycle()
 
-        BackHandler(onBack = ::onChildBack)
+        BackHandler(
+            onBack = {
+                (state.navigationUM as? NavigationUM.Content)?.backIconClick() ?: onChildBack()
+            },
+        )
         SendWithSwapContent(navigationUM = state.navigationUM, stackState = stackState)
     }
 
@@ -120,7 +136,7 @@ internal class DefaultSendWithSwapComponent @AssistedInject constructor(
                 title = resourceReference(R.string.common_send),
                 currentRoute = model.currentRoute.filterIsInstance<SendWithSwapRoute.Amount>(),
                 isBalanceHidingFlow = model.isBalanceHiddenFlow,
-                analyticsCategoryName = "",
+                analyticsCategoryName = model.analyticCategoryName,
                 primaryCryptoCurrencyStatusFlow = model.primaryCryptoCurrencyStatusFlow,
                 secondaryCryptoCurrency = null,
                 swapDirection = SwapDirection.Direct,
@@ -143,8 +159,8 @@ internal class DefaultSendWithSwapComponent @AssistedInject constructor(
                 state = model.uiState.value.destinationUM,
                 currentRoute = model.currentRoute.filterIsInstance<DestinationRoute>(),
                 isBalanceHidingFlow = model.isBalanceHiddenFlow,
-                analyticsCategoryName = "",
-                title = resourceReference(R.string.send_recipient_label),
+                analyticsCategoryName = model.analyticCategoryName,
+                title = resourceReference(R.string.common_address),
                 userWalletId = params.userWalletId,
                 cryptoCurrency = secondaryCryptoCurrency,
                 callback = model,
@@ -162,7 +178,7 @@ internal class DefaultSendWithSwapComponent @AssistedInject constructor(
                 appCurrency = model.appCurrency,
                 userWallet = model.userWallet,
                 callback = model,
-                analyticsCategoryName = "",
+                analyticsCategoryName = model.analyticCategoryName,
                 primaryCryptoCurrencyStatusFlow = model.primaryCryptoCurrencyStatusFlow,
                 primaryFeePaidCurrencyStatusFlow = model.primaryFeePaidCurrencyStatusFlow,
                 swapDirection = SwapDirection.Direct,
@@ -177,7 +193,7 @@ internal class DefaultSendWithSwapComponent @AssistedInject constructor(
                 sendWithSwapUMFlow = model.uiState,
                 currentRoute = model.currentRoute.filterIsInstance<SendWithSwapRoute.Success>(),
                 callback = model,
-                analyticsCategoryName = "",
+                analyticsCategoryName = model.analyticCategoryName,
             ),
         )
     }

@@ -5,12 +5,9 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -20,14 +17,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
-import com.tangem.common.ui.userwallet.CardImage
+import com.tangem.common.ui.userwallet.UserWalletItem
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
 import com.tangem.core.ui.components.*
+import com.tangem.core.ui.components.block.TangemBlockCardColors
 import com.tangem.core.ui.components.buttons.common.TangemButtonsDefaults
-import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.welcome.impl.R
-import com.tangem.features.welcome.impl.ui.state.WalletUM
 import com.tangem.features.welcome.impl.ui.state.WelcomeUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -45,7 +42,7 @@ internal fun AnimatedContentScope.WelcomeSelectWallet(state: WelcomeUM.SelectWal
         TitleText()
         SpacerH12()
 
-        var actualWallets by remember { mutableStateOf<ImmutableList<WalletUM>>(persistentListOf()) }
+        var actualWallets by remember { mutableStateOf<ImmutableList<UserWalletItemUM>>(persistentListOf()) }
 
         Box(modifier = Modifier.weight(1f)) {
             LazyColumn(
@@ -62,25 +59,33 @@ internal fun AnimatedContentScope.WelcomeSelectWallet(state: WelcomeUM.SelectWal
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 itemsIndexed(actualWallets) { index, walletState ->
-                    WalletItem(
+                    UserWalletItem(
+                        modifier = Modifier.fillMaxWidth(),
                         state = walletState,
-                        modifier = Modifier,
+                        blockColors = TangemBlockCardColors.copy(
+                            containerColor = TangemTheme.colors.field.primary,
+                        ),
                     )
                 }
             }
 
             BottomFade(modifier = Modifier.align(Alignment.BottomCenter))
 
-            SecondaryButton(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-                    .padding(16.dp)
-                    .navigationBarsPadding()
-                    .animateEnterExit(fadeIn(), fadeOut()),
-                text = "Unlock all with biometric",
-                onClick = state.onUnlockWithBiometricClick,
-            )
+            if (state.showUnlockWithBiometricButton) {
+                SecondaryButton(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .navigationBarsPadding()
+                        .animateEnterExit(fadeIn(), fadeOut()),
+                    text = stringResourceSafe(
+                        R.string.user_wallet_list_unlock_all_with,
+                        stringResourceSafe(id = R.string.common_biometrics),
+                    ),
+                    onClick = state.onUnlockWithBiometricClick,
+                )
+            }
         }
 
         LaunchedEffect(state.wallets) {
@@ -121,7 +126,7 @@ private fun AnimatedContentScope.TopBar(state: WelcomeUM.SelectWallet, modifier:
 
         TextButton(
             modifier = Modifier.clip(TangemTheme.shapes.roundedCornersLarge),
-            text = "Add Wallet",
+            text = stringResourceSafe(R.string.auth_info_add_wallet_title),
             colors = TangemButtonsDefaults.defaultTextButtonColors.copy(
                 contentColor = TangemTheme.colors.text.primary1,
             ),
@@ -145,7 +150,7 @@ private fun AnimatedContentScope.TitleText(modifier: Modifier = Modifier) {
                 ) + fadeIn(tween(delayMillis = 300)),
                 exit = fadeOut(),
             ),
-            text = "Welcome back!",
+            text = stringResourceSafe(R.string.auth_info_title),
             style = TangemTheme.typography.h2,
             color = TangemTheme.colors.text.primary1,
         )
@@ -160,71 +165,9 @@ private fun AnimatedContentScope.TitleText(modifier: Modifier = Modifier) {
                 ) + fadeIn(tween(delayMillis = 300)),
                 exit = fadeOut(),
             ),
-            text = "Select a wallet to log in",
+            text = stringResourceSafe(R.string.auth_info_subtitle),
             style = TangemTheme.typography.body1,
             color = TangemTheme.colors.text.secondary,
         )
-    }
-}
-
-@Suppress("MagicNumber")
-@Composable
-private fun WalletItem(state: WalletUM, modifier: Modifier = Modifier) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(TangemTheme.shapes.roundedCornersXMedium)
-            .background(TangemTheme.colors.background.secondary, TangemTheme.shapes.roundedCornersXMedium)
-            .clickable(onClick = state.onClick)
-            .padding(12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        WalletImage(state.imageState)
-
-        SpacerW12()
-
-        Column(Modifier.weight(1f)) {
-            Text(
-                text = state.name.resolveReference(),
-                style = TangemTheme.typography.subtitle1,
-                color = TangemTheme.colors.text.primary1,
-            )
-
-            Text(
-                text = state.subtitle.resolveReference(),
-                style = TangemTheme.typography.caption2,
-                color = TangemTheme.colors.text.tertiary,
-            )
-        }
-    }
-}
-
-@Composable
-private fun WalletImage(state: WalletUM.ImageState, modifier: Modifier = Modifier) {
-    when (state) {
-        WalletUM.ImageState.MobileWallet -> {
-            Box(
-                modifier = modifier
-                    .size(36.dp)
-                    .background(TangemTheme.colors.icon.accent.copy(alpha = 0.1f), CircleShape),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    imageVector = ImageVector.vectorResource(R.drawable.ic_wallet_filled_24),
-                    tint = TangemTheme.colors.icon.accent,
-                    contentDescription = null,
-                )
-            }
-        }
-        else -> {
-            CardImage(
-                imageState = when (state) {
-                    is WalletUM.ImageState.Image -> UserWalletItemUM.ImageState.Image(state.artwork)
-                    WalletUM.ImageState.Loading -> UserWalletItemUM.ImageState.Loading
-                    else -> error("")
-                },
-                modifier = modifier,
-            )
-        }
     }
 }

@@ -22,7 +22,6 @@ dependencies {
     implementation(deps.compose.coil)
     implementation(deps.compose.constraintLayout)
     implementation(deps.compose.foundation)
-    implementation(deps.compose.material)
     implementation(deps.compose.material3)
     implementation(deps.compose.paging)
     implementation(deps.compose.reorderable)
@@ -114,6 +113,7 @@ dependencies {
     implementation(projects.features.biometry.api)
     implementation(projects.features.nft.api)
     implementation(projects.features.sendV2.api)
+    implementation(projects.features.kyc.api)
 
     /** Common modules */
     implementation(projects.common)
