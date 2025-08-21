@@ -238,6 +238,10 @@ dependencies {
     implementation(projects.features.home.impl)
     implementation(projects.features.account.api)
     implementation(projects.features.account.impl)
+    implementation(projects.features.tangempay.details.api)
+    implementation(projects.features.tangempay.details.impl)
+    implementation(projects.features.tangempay.main.api)
+    implementation(projects.features.tangempay.main.impl)
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)
