@@ -3,10 +3,10 @@ package com.tangem.features.swap.v2.impl.amount.model.transformers
 import com.tangem.common.ui.amountScreen.AmountScreenClickIntents
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.express.models.ExpressRateType
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.models.SwapCurrencies
 import com.tangem.domain.swap.models.SwapDirection
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountType
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
 import com.tangem.features.swap.v2.impl.amount.model.converter.SwapAmountFieldConverter
@@ -24,6 +24,7 @@ internal class SwapAmountSecondaryReadyStateTransformer(
     private val clickIntents: AmountScreenClickIntents,
     private val swapDirection: SwapDirection,
     private val isBalanceHidden: Boolean,
+    private val showBestRateAnimation: Boolean,
 ) : Transformer<SwapAmountUM> {
 
     private val amountFieldConverter = SwapAmountFieldConverter(
@@ -51,6 +52,8 @@ internal class SwapAmountSecondaryReadyStateTransformer(
             swapQuotes = persistentListOf(),
             selectedQuote = SwapQuoteUM.Empty,
             appCurrency = appCurrency,
+            showBestRateAnimation = showBestRateAnimation,
+            showFCAWarning = false,
         )
     }
 }

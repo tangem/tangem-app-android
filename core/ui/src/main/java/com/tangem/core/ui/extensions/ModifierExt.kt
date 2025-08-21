@@ -4,7 +4,6 @@ import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -72,26 +71,24 @@ fun Modifier.conditionalCompose(
 fun Modifier.selectedBorder(
     isSelected: Boolean,
     width: Dp = 2.5.dp,
-    color: Color = TangemTheme.colors.text.accent.copy(alpha = 0.1f),
+    color: Color = TangemTheme.colors.text.accent,
     radius: Dp = 16.dp,
 ) = conditionalCompose(
     condition = isSelected,
     modifier = {
-        border(
+        outsetBorder(
             width = width,
-            color = color,
-            shape = RoundedCornerShape(radius),
+            color = color.copy(alpha = 0.15f),
+            shape = RoundedCornerShape(radius + 2.dp),
         )
-            .padding(width)
             .border(
                 width = 1.dp,
-                color = TangemTheme.colors.text.accent,
-                shape = RoundedCornerShape(radius - 2.dp),
+                color = color,
+                shape = RoundedCornerShape(radius),
             )
-            .clip(RoundedCornerShape(radius - 2.dp))
+            .clip(RoundedCornerShape(radius))
     },
     otherModifier = {
-        padding(width)
-            .clip(RoundedCornerShape(radius - 2.dp))
+        clip(RoundedCornerShape(radius))
     },
 )
