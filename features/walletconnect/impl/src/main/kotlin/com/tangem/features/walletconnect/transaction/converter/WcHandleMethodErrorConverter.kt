@@ -12,5 +12,9 @@ internal object WcHandleMethodErrorConverter :
         is HandleMethodError.UnknownError,
         -> WcInnerRoute.UnsupportedMethodAlert
         HandleMethodError.UnknownSession -> WcInnerRoute.WcDappDisconnected
+
+        is HandleMethodError.NotAddedNetwork -> WcInnerRoute.RequiredAddNetwork(value.networkName)
+        is HandleMethodError.RequiredNetwork -> WcInnerRoute.RequiredReconnectWithNetwork(value.networkName)
+        is HandleMethodError.TangemUnsupportedNetwork -> WcInnerRoute.TangemUnsupportedNetwork(value.unsupportedNetwork)
     }
 }

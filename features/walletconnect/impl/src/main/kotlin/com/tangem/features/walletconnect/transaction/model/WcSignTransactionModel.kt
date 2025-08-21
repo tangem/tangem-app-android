@@ -59,12 +59,14 @@ internal class WcSignTransactionModel @Inject constructor(
     val stackNavigation = StackNavigation<WcTransactionRoutes>()
 
     private var useCase by Delegates.notNull<WcMessageSignUseCase>()
+    private val signatureReceivedAnalyticsSendState = MutableStateFlow(false)
 
     init {
         modelScope.launch {
             useCase = useCaseFactory.createUseCase<WcMessageSignUseCase>(params.rawRequest)
                 .onLeft { router.push(WcHandleMethodErrorConverter.convert(it)) }
                 .getOrNull() ?: return@launch
+            sendSignatureReceivedAnalytics(useCase)
             useCase.invoke()
                 .onEach { signState ->
                     if (signingIsDone(signState)) return@onEach
@@ -129,8 +131,10 @@ internal class WcSignTransactionModel @Inject constructor(
     }
 
     private fun signingIsDone(signState: WcSignState<*>): Boolean {
-        (signState.domainStep as? WcSignStep.Result)?.result?.let {
-            showSuccessSignMessage()
+        (signState.domainStep as? WcSignStep.Result)?.result?.let { result ->
+            if (result.isRight()) {
+                showSuccessSignMessage()
+            }
             router.pop()
             return true
         }
@@ -144,5 +148,19 @@ internal class WcSignTransactionModel @Inject constructor(
 
     private fun copyData(text: String) {
         clipboardManager.setText(text = text, isSensitive = true)
+    }
+
+    private fun sendSignatureReceivedAnalytics(useCase: WcMessageSignUseCase) {
+        if (signatureReceivedAnalyticsSendState.value) return
+
+        analytics.send(
+            WcAnalyticEvents.SignatureRequestReceived(
+                rawRequest = useCase.rawSdkRequest,
+                network = useCase.network,
+                emulationStatus = null,
+            ),
+        )
+
+        signatureReceivedAnalyticsSendState.value = true
     }
 }
