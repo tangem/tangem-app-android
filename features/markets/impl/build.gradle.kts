@@ -16,6 +16,7 @@ dependencies {
     api(projects.features.markets.api)
     api(projects.features.onramp.api)
     api(projects.features.sendV2.api)
+    api(projects.features.tokenRecieve.api)
 
     /* Data */
     implementation(projects.data.common)
@@ -39,6 +40,7 @@ dependencies {
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.settings)
     implementation(projects.domain.notifications.models)
+    implementation(projects.domain.transaction)
 
     // FIXME [REDACTED_TASK_KEY]
     // Remove the "Buy" and "Sell" actions from the redux middleware.

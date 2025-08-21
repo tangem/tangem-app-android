@@ -51,6 +51,7 @@ dependencies {
     implementation(projects.domain.transaction)
     implementation(projects.domain.transaction.models)
     implementation(projects.domain.tokens)
+    implementation(projects.domain.tokens.models)
 
     /** Feature Apis */
     implementation(projects.features.tokenRecieve.api)
