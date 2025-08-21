@@ -4,7 +4,7 @@ import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheetConfig
 import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
-import com.tangem.datasource.local.swaptx.ExpressAnalyticsStatus
+import com.tangem.datasource.local.swap.ExpressAnalyticsStatus
 import com.tangem.domain.onramp.GetOnrampStatusUseCase
 import com.tangem.domain.onramp.OnrampRemoveTransactionUseCase
 import com.tangem.domain.onramp.OnrampUpdateTransactionStatusUseCase
