@@ -16,6 +16,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -26,6 +27,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.BaseBlockTestTags
 
 /**
  * [InputRowDefault](https://www.figma.com/file/14ISV23YB1yVW1uNVwqrKv/Android?type=design&node-id=2100-807&mode=design&t=86eKp9izWxUvmoCq-4)
@@ -64,20 +66,24 @@ fun InputRowDefault(
         ) {
             Column(
                 modifier = Modifier
-                    .weight(1f),
+                    .weight(1f)
+                    .testTag(BaseBlockTestTags.BLOCK),
             ) {
                 title?.let {
                     Text(
                         text = title.resolveReference(),
                         style = TangemTheme.typography.subtitle2,
                         color = titleColor,
-                        modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing8),
+                        modifier = Modifier
+                            .padding(bottom = TangemTheme.dimens.spacing8)
+                            .testTag(BaseBlockTestTags.BLOCK_TITLE),
                     )
                 }
                 Text(
                     text = text.resolveReference(),
                     style = TangemTheme.typography.body2,
                     color = textColor,
+                    modifier = Modifier.testTag(BaseBlockTestTags.BLOCK_TEXT),
                 )
             }
             iconRes?.let {

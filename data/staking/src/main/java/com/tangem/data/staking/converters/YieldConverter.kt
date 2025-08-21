@@ -4,7 +4,7 @@ import com.tangem.datasource.api.stakekit.models.response.model.AddressArgumentD
 import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO
 import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO.MetadataDTO.RewardScheduleDTO
 import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO.ValidatorDTO.ValidatorStatusDTO
-import com.tangem.datasource.local.token.converter.TokenConverter
+import com.tangem.datasource.local.token.converter.YieldTokenConverter
 import com.tangem.domain.staking.model.stakekit.AddressArgument
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.Yield.Metadata.RewardSchedule
@@ -24,8 +24,8 @@ internal object YieldConverter : Converter<YieldDTO, Yield> {
     override fun convert(value: YieldDTO): Yield {
         return Yield(
             id = value.id.asMandatory("id"),
-            token = TokenConverter.convert(value.token.asMandatory("token")),
-            tokens = value.tokens.asMandatory("tokens").map(TokenConverter::convert),
+            token = YieldTokenConverter.convert(value.token.asMandatory("token")),
+            tokens = value.tokens.asMandatory("tokens").map(YieldTokenConverter::convert),
             args = convertArgs(value.args.asMandatory("args")),
             status = convertStatus(value.status.asMandatory("status")),
             apy = value.apy.asMandatory("apy"),
@@ -91,9 +91,9 @@ internal object YieldConverter : Converter<YieldDTO, Yield> {
             logoUri = metadataDTO.logoUri.asMandatory("logoUri"),
             description = metadataDTO.description.asMandatory("description"),
             documentation = metadataDTO.documentation,
-            gasFeeToken = TokenConverter.convert(metadataDTO.gasFeeTokenDTO.asMandatory("gasFeeTokenDTO")),
-            token = TokenConverter.convert(metadataDTO.tokenDTO.asMandatory("tokenDTO")),
-            tokens = metadataDTO.tokensDTO.asMandatory("tokensDTO").map(TokenConverter::convert),
+            gasFeeToken = YieldTokenConverter.convert(metadataDTO.gasFeeTokenDTO.asMandatory("gasFeeTokenDTO")),
+            token = YieldTokenConverter.convert(metadataDTO.tokenDTO.asMandatory("tokenDTO")),
+            tokens = metadataDTO.tokensDTO.asMandatory("tokensDTO").map(YieldTokenConverter::convert),
             type = metadataDTO.type.asMandatory("type"),
             rewardSchedule = convertRewardSchedule(metadataDTO.rewardSchedule.asMandatory("rewardSchedule")),
             cooldownPeriod = metadataDTO.cooldownPeriod?.let { convertPeriod(it) },
