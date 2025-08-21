@@ -3,9 +3,9 @@ package com.tangem.feature.wallet.presentation.organizetokens
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.error.TokenListSortingError
-import com.tangem.domain.tokens.model.TokenList
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensListState
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensState
 import com.tangem.feature.wallet.presentation.organizetokens.utils.converter.InProgressStateConverter
