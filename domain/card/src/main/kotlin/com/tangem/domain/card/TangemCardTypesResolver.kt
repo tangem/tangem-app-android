@@ -1,6 +1,7 @@
 package com.tangem.domain.card
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.Blockchain.Companion.fromId
 import com.tangem.blockchain.common.Token
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.card.FirmwareVersion
@@ -76,7 +77,7 @@ internal class TangemCardTypesResolver(
                     } else {
                         return Blockchain.Unknown
                     }
-                Blockchain.Companion.fromBlockchainName(blockchainName)
+                Blockchain.fromBlockchainName(blockchainName)
             }
         }
     }
