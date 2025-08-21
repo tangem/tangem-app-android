@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -25,6 +26,7 @@ import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.StakingSendDetailsScreenTestTags
 import java.math.BigDecimal
 
 @Composable
@@ -63,7 +65,8 @@ fun AmountBlock(amountState: AmountState, isClickDisabled: Boolean, isEditingDis
             maxLines = 1,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = TangemTheme.dimens.spacing24),
+                .padding(top = TangemTheme.dimens.spacing24)
+                .testTag(StakingSendDetailsScreenTestTags.PRIMARY_AMOUNT),
         )
         Text(
             text = secondAmount,
@@ -72,7 +75,8 @@ fun AmountBlock(amountState: AmountState, isClickDisabled: Boolean, isEditingDis
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = TangemTheme.dimens.spacing8),
+                .padding(top = TangemTheme.dimens.spacing8)
+                .testTag(StakingSendDetailsScreenTestTags.SECONDARY_AMOUNT),
         )
     }
 }
