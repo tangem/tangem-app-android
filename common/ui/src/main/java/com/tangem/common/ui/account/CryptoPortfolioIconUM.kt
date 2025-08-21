@@ -1,4 +1,4 @@
-package com.tangem.features.account.common
+package com.tangem.common.ui.account
 
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.account.CryptoPortfolioIcon.Color
@@ -13,6 +13,3 @@ data class CryptoPortfolioIconUM(
         color = domainModel.color,
     )
 }
-
-fun CryptoPortfolioIcon.toUM() = CryptoPortfolioIconUM(this)
-fun CryptoPortfolioIconUM.toDomain() = CryptoPortfolioIcon.ofCustomAccount(this.value, this.color)
