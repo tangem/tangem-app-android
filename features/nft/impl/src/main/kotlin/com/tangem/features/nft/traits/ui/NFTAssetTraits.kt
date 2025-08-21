@@ -22,9 +22,8 @@ internal fun NFTAssetTraits(state: NFTAssetTraitsUM, modifier: Modifier = Modifi
     ) {
         TangemTopAppBar(
             modifier = Modifier,
-            startButton = TopAppBarButtonUM(
-                iconRes = R.drawable.ic_back_24,
-                onIconClicked = state.onBackClick,
+            startButton = TopAppBarButtonUM.Back(
+                onBackClicked = state.onBackClick,
             ),
             title = stringResourceSafe(R.string.nft_traits_title),
         )
