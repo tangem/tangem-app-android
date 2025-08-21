@@ -33,6 +33,7 @@ internal class DefaultWcRequestService(
         Timber.tag(WC_TAG).i("handle request name $name")
         if (name is WcMethodName.Unsupported) {
             respondService.rejectRequestNonBlock(sr)
+            if (name.raw.startsWith("wallet_")) return
         }
         _wcRequest.trySend(name to sr)
     }
