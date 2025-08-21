@@ -48,7 +48,7 @@ internal class ArchivedAccountListModel @Inject constructor(
         )
         messageSender.send(
             DialogMessage(
-                title = stringReference(account.name.value),
+                title = stringReference(account.accountName.value),
                 message = TextReference.EMPTY,
                 firstActionBuilder = { firstAction },
                 secondActionBuilder = { secondAction },
