@@ -2,11 +2,14 @@ package com.tangem.features.staking.impl.presentation.ui
 
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import com.tangem.core.ui.extensions.appendColored
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.test.StakingDetailsScreenTestTags
 import com.tangem.features.staking.impl.R
 
 private const val TERMS_OF_USE_KEY = "termsOfUse"
@@ -58,5 +61,6 @@ internal fun StakingTosText(onTextClick: (String) -> Unit) {
                 onTextClick(PRIVACY_POLICY_URL)
             }
         },
+        modifier = Modifier.testTag(StakingDetailsScreenTestTags.TOS_TEXT),
     )
 }
