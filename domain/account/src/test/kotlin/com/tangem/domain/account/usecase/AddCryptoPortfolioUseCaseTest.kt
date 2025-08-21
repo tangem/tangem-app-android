@@ -46,7 +46,7 @@ class AddCryptoPortfolioUseCaseTest {
         // Act
         val actual = useCase(
             userWalletId = userWalletId,
-            accountName = newAccount.name,
+            accountName = newAccount.accountName,
             icon = newAccount.icon,
             derivationIndex = newAccount.derivationIndex,
         )
@@ -75,7 +75,7 @@ class AddCryptoPortfolioUseCaseTest {
         // Act
         val actual = useCase(
             userWalletId = userWalletId,
-            accountName = newAccount.name,
+            accountName = newAccount.accountName,
             icon = newAccount.icon,
             derivationIndex = newAccount.derivationIndex,
         )
@@ -107,7 +107,7 @@ class AddCryptoPortfolioUseCaseTest {
         // Act
         val actual = useCase(
             userWalletId = userWalletId,
-            accountName = newAccount.name,
+            accountName = newAccount.accountName,
             icon = newAccount.icon,
             derivationIndex = newAccount.derivationIndex,
         )
@@ -138,7 +138,7 @@ class AddCryptoPortfolioUseCaseTest {
         // Act
         val actual = useCase(
             userWalletId = userWalletId,
-            accountName = newAccount.name,
+            accountName = newAccount.accountName,
             icon = newAccount.icon,
             derivationIndex = newAccount.derivationIndex,
         )
@@ -170,7 +170,7 @@ class AddCryptoPortfolioUseCaseTest {
         // Act
         val actual = useCase(
             userWalletId = userWalletId,
-            accountName = newAccount.name,
+            accountName = newAccount.accountName,
             icon = newAccount.icon,
             derivationIndex = newAccount.derivationIndex,
         )
