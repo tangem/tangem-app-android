@@ -39,6 +39,7 @@ import com.tangem.features.send.v2.api.SendEntryPointComponent
 import com.tangem.features.staking.api.StakingComponent
 import com.tangem.features.swap.SwapComponent
 import com.tangem.features.swap.v2.api.SendWithSwapComponent
+import com.tangem.features.tangempay.components.TangemPayDetailsComponent
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.wallet.WalletEntryComponent
 import com.tangem.features.walletconnect.components.WalletConnectEntryComponent
@@ -108,6 +109,7 @@ internal class ChildFactory @Inject constructor(
     private val updateAccessCodeComponentFactory: UpdateAccessCodeComponent.Factory,
     private val sendWithSwapComponentFactory: SendWithSwapComponent.Factory,
     private val sendEntryPointComponentFactory: SendEntryPointComponent.Factory,
+    private val tangemPayDetailsComponentFactory: TangemPayDetailsComponent.Factory,
     private val walletConnectFeatureToggles: WalletConnectFeatureToggles,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
 ) {
@@ -571,6 +573,13 @@ internal class ChildFactory @Inject constructor(
                         userWalletId = route.userWalletId,
                     ),
                     componentFactory = archivedAccountListComponentFactory,
+                )
+            }
+            is AppRoute.TangemPayDetails -> {
+                createComponentChild(
+                    context = context,
+                    params = TangemPayDetailsComponent.Params(),
+                    componentFactory = tangemPayDetailsComponentFactory,
                 )
             }
         }
