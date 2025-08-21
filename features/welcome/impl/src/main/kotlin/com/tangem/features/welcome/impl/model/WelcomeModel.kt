@@ -13,14 +13,14 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
-import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.core.wallets.UserWalletsListRepository
 import com.tangem.domain.core.wallets.error.UnlockWalletError
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.wallet.isLocked
+import com.tangem.domain.settings.CanUseBiometryUseCase
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
-import com.tangem.domain.wallets.usecase.GetIsBiometricsEnabledUseCase
 import com.tangem.features.wallet.utils.UserWalletsFetcher
 import com.tangem.features.welcome.impl.R
 import com.tangem.features.welcome.impl.ui.state.WelcomeUM
@@ -30,11 +30,7 @@ import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
@@ -45,12 +41,12 @@ internal class WelcomeModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
     private val uiMessageSender: UiMessageSender,
-    private val userWalletsFetcherFactory: UserWalletsFetcher.Factory,
     private val userWalletsListRepository: UserWalletsListRepository,
-    private val getIsBiometricsEnabledUseCase: GetIsBiometricsEnabledUseCase,
+    private val canUseBiometryUseCase: CanUseBiometryUseCase,
     private val walletsRepository: WalletsRepository,
     private val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase,
     private val urlOpener: UrlOpener,
+    userWalletsFetcherFactory: UserWalletsFetcher.Factory,
 ) : Model() {
 
     val uiState: StateFlow<WelcomeUM>
@@ -224,7 +220,7 @@ internal class WelcomeModel @Inject constructor(
     }
 
     private suspend fun canUnlockWithBiometrics(): Boolean {
-        return getIsBiometricsEnabledUseCase.canUseBiometry() && walletsRepository.useBiometricAuthentication()
+        return canUseBiometryUseCase() && walletsRepository.useBiometricAuthentication()
     }
 
     suspend fun unlockWallet(userWalletId: UserWalletId, unlockMethod: UserWalletsListRepository.UnlockMethod) {
