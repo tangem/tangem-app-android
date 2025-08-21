@@ -18,7 +18,6 @@ import com.tangem.domain.core.utils.catchOn
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isMultiCurrency
-import com.tangem.domain.models.wallet.requireColdWallet
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesFetcher
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesFetcher.Params
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -68,7 +67,7 @@ internal class DefaultMultiWalletCryptoCurrenciesFetcher(
                     }
                 },
                 onError = {
-                    handleFetchTokensError(error = it, userWallet = userWallet.requireColdWallet()) // TODO 11142
+                    handleFetchTokensError(error = it, userWallet = userWallet)
                 },
             )
         }
