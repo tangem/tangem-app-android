@@ -24,7 +24,8 @@ object AmountStatePreviewData {
     val amountState = AmountState.Data(
         isPrimaryButtonEnabled = false,
         title = stringReference("Family Wallet"),
-        availableBalance = stringReference("2 130,88 USDT (2 129,92 \$)"),
+        availableBalance = stringReference("2 130,88 USDT • 2 129,92 \$)"),
+        availableBalanceShort = stringReference("2 130,88 USDT"),
         tokenIconState = CurrencyIconState.Loading,
         segmentedButtonConfig = persistentListOf(
             AmountSegmentedButtonsConfig(

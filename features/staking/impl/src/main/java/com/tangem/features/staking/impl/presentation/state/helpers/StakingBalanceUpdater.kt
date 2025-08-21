@@ -1,14 +1,14 @@
 package com.tangem.features.staking.impl.presentation.state.helpers
 
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.staking.FetchActionsUseCase
 import com.tangem.domain.staking.FetchStakingYieldBalanceUseCase
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.action.StakingActionStatus
 import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
 import com.tangem.domain.tokens.FetchPendingTransactionsUseCase
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
-import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
 import com.tangem.utils.coroutines.DelayedWork
 import dagger.assisted.Assisted

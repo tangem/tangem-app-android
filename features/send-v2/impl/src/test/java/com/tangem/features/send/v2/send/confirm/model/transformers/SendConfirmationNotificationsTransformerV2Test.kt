@@ -204,6 +204,7 @@ class SendConfirmationNotificationsTransformerV2Test {
             isRedesignEnabled = false,
             title = mockk(relaxed = true),
             availableBalance = mockk(relaxed = true),
+            availableBalanceShort = mockk(relaxed = true),
             tokenName = mockk(relaxed = true),
             tokenIconState = mockk(relaxed = true),
             segmentedButtonConfig = persistentListOf(),
