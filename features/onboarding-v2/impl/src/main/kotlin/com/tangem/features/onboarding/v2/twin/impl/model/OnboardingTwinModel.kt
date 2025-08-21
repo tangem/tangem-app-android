@@ -7,40 +7,22 @@ import com.tangem.common.core.TangemError
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toHexString
-import com.tangem.common.ui.bottomsheet.receive.TokenReceiveBottomSheetConfig
-import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
-import com.tangem.core.navigation.share.ShareManager
-import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.core.ui.clipboard.ClipboardManager
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.toWrappedList
-import com.tangem.core.ui.format.bigdecimal.crypto
-import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.datasource.local.config.issuers.IssuersConfigStorage
-import com.tangem.domain.card.common.util.twinsIsTwinned
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.common.TwinCardNumber
 import com.tangem.domain.common.getTwinCardNumber
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
-import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.onboarding.SaveTwinsOnboardingShownUseCase
-import com.tangem.domain.onramp.GetLegacyTopUpUrlUseCase
-import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
-import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
-import com.tangem.domain.tokens.TokensFeatureToggles
-import com.tangem.domain.tokens.model.analytics.TokenReceiveAnalyticsEvent
-import com.tangem.domain.tokens.wallet.WalletBalanceFetcher
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.domain.wallets.usecase.DeleteWalletUseCase
@@ -61,11 +43,9 @@ import com.tangem.utils.coroutines.saveIn
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import java.math.BigDecimal
 import javax.inject.Inject
 
 @Suppress("LongParameterList", "LargeClass")
@@ -81,16 +61,8 @@ internal class OnboardingTwinModel @Inject constructor(
     private val tangemSdkManager: TangemSdkManager,
     private val issuersConfigStorage: IssuersConfigStorage,
     private val cardRepository: CardRepository,
-    private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
-    private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
-    private val getLegacyTopUpUrlUseCase: GetLegacyTopUpUrlUseCase,
-    private val urlOpener: UrlOpener,
     private val uiMessageSender: UiMessageSender,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
-    private val clipboardManager: ClipboardManager,
-    private val shareManager: ShareManager,
-    private val tokensFeatureToggles: TokensFeatureToggles,
-    private val walletBalanceFetcher: WalletBalanceFetcher,
 ) : Model() {
 
     private val params = paramsContainer.require<OnboardingTwinComponent.Params>()
@@ -116,14 +88,10 @@ internal class OnboardingTwinModel @Inject constructor(
                 )
             }
             Mode.CreateWallet -> {
-                if (params.scanResponse.twinsIsTwinned()) {
-                    OnboardingTwinUM.TopUpPrepare
-                } else {
-                    OnboardingTwinUM.Welcome(
-                        pairCardNumber = firstCardTwinNumber.pairNumber().number,
-                        onContinueClick = ::navigateToFirstScan,
-                    )
-                }
+                OnboardingTwinUM.Welcome(
+                    pairCardNumber = firstCardTwinNumber.pairNumber().number,
+                    onContinueClick = ::navigateToFirstScan,
+                )
             }
         },
     )
@@ -137,11 +105,6 @@ internal class OnboardingTwinModel @Inject constructor(
                 analyticsEventHandler.send(OnboardingEvent.Twins.ScreenOpened)
                 modelScope.launch {
                     saveTwinsOnboardingShownUseCase()
-                }
-            }
-            OnboardingTwinUM.TopUpPrepare -> {
-                modelScope.launch {
-                    setTopUpState(params.scanResponse)
                 }
             }
             else -> {}
@@ -218,10 +181,7 @@ internal class OnboardingTwinModel @Inject constructor(
                             },
                         )
                     }
-
-                    innerNavigationState.update {
-                        it.copy(stackSize = 2)
-                    }
+                    innerNavigationState.update { it.copy(stackSize = 2) }
                 }
             }
         }
@@ -229,7 +189,6 @@ internal class OnboardingTwinModel @Inject constructor(
 
     private fun createSecondWallet(firstPublicKey: String) {
         setLoading(true)
-
         modelScope.launch {
             val secondCardNumber = firstCardTwinNumber.pairNumber().number
             val result = tangemSdkManager.createSecondTwinWallet(
@@ -318,13 +277,13 @@ internal class OnboardingTwinModel @Inject constructor(
             Mode.CreateWallet -> {
                 modelScope.launch {
                     setLoading(true)
-                    setTopUpState(scanResponse)
+                    finishActivation(scanResponse)
                 }.saveIn(cryptoCurrencyStatusJobHolder)
             }
         }
     }
 
-    private suspend fun setTopUpState(scanResponse: ScanResponse) = coroutineScope {
+    private suspend fun finishActivation(scanResponse: ScanResponse) = coroutineScope {
         val userWallet = coldUserWalletBuilderFactory.create(scanResponse).build() ?: run {
             Timber.e("User wallet not created")
             setLoading(false)
@@ -342,117 +301,7 @@ internal class OnboardingTwinModel @Inject constructor(
 
         cardRepository.finishCardActivation(params.scanResponse.card.cardId)
 
-        if (tokensFeatureToggles.isWalletBalanceFetcherEnabled) {
-            walletBalanceFetcher(params = WalletBalanceFetcher.Params(userWalletId = userWallet.walletId))
-        } else {
-            fetchCurrencyStatusUseCase.invoke(userWalletId = userWallet.walletId, refresh = true)
-        }
-            .onLeft {
-                Timber.e("Unable to fetch currency status: $it")
-                setLoading(false)
-            }
-
-        val cryptoCurrencyStatus = getSingleCryptoCurrencyStatusUseCase.invokeSingleWallet(userWallet.walletId)
-            .firstOrNull()?.getOrNull()
-            ?: run {
-                setLoading(false)
-                Timber.e("Unable to get currency status")
-                return@coroutineScope
-            }
-
-        launch {
-            getSingleCryptoCurrencyStatusUseCase.invokeSingleWallet(userWallet.walletId)
-                .collect {
-                    it.onRight { status ->
-                        applyCryptoCurrencyStatusToState(status)
-                    }
-                }
-        }
-
-        _uiState.value = OnboardingTwinUM.TopUp(
-            onBuyCryptoClick = { onBuyCryptoClick(cryptoCurrencyStatus) },
-            onRefreshClick = { onRefreshBalanceClick(userWallet) },
-            onShowAddressClick = { onShowAddressClick(cryptoCurrencyStatus) },
-            isLoading = true,
-        )
-
-        innerNavigationState.update {
-            it.copy(stackSize = 4)
-        }
-    }
-
-    private fun applyCryptoCurrencyStatusToState(status: CryptoCurrencyStatus) {
-        val amount = (status.value as? CryptoCurrencyStatus.Loaded)?.amount ?: return
-        if (amount > BigDecimal.ZERO) {
-            params.modelCallbacks.onDone()
-        } else {
-            update<OnboardingTwinUM.TopUp> {
-                it.copy(
-                    balance = BigDecimal.ZERO.format { crypto(status.currency) },
-                    onBuyCryptoClick = { onBuyCryptoClick(status) },
-                    onShowAddressClick = { onShowAddressClick(status) },
-                    isLoading = false,
-                )
-            }
-        }
-    }
-
-    private fun onBuyCryptoClick(status: CryptoCurrencyStatus) {
-        modelScope.launch {
-            getLegacyTopUpUrlUseCase(status).onRight {
-                urlOpener.openUrl(it)
-            }
-        }
-    }
-
-    private fun onShowAddressClick(status: CryptoCurrencyStatus) {
-        val currency = status.currency
-        val networkAddress = status.value.networkAddress ?: return
-
-        update<OnboardingTwinUM.TopUp> {
-            it.copy(
-                bottomSheetConfig = TangemBottomSheetConfig(
-                    isShown = true,
-                    onDismissRequest = {
-                        update<OnboardingTwinUM.TopUp> {
-                            it.copy(bottomSheetConfig = TangemBottomSheetConfig.Empty)
-                        }
-                    },
-                    content = TokenReceiveBottomSheetConfig(
-                        asset = TokenReceiveBottomSheetConfig.Asset.Currency(
-                            name = currency.name,
-                            symbol = currency.symbol,
-                        ),
-                        network = currency.network,
-                        networkAddress = networkAddress,
-                        showMemoDisclaimer =
-                        currency.network.transactionExtrasType != Network.TransactionExtrasType.NONE,
-                        onCopyClick = {
-                            Analytics.send(TokenReceiveAnalyticsEvent.ButtonCopyAddress(currency.symbol))
-                            clipboardManager.setText(text = it, isSensitive = true)
-                        },
-                        onShareClick = {
-                            Analytics.send(TokenReceiveAnalyticsEvent.ButtonShareAddress(currency.symbol))
-                            shareManager.shareText(text = it)
-                        },
-                    ),
-                ),
-            )
-        }
-    }
-
-    private fun onRefreshBalanceClick(userWallet: UserWallet) {
-        update<OnboardingTwinUM.TopUp> {
-            it.copy(isLoading = true)
-        }
-        modelScope.launch {
-            if (tokensFeatureToggles.isWalletBalanceFetcherEnabled) {
-                walletBalanceFetcher(params = WalletBalanceFetcher.Params(userWalletId = userWallet.walletId))
-                    .onLeft(Timber::e)
-            } else {
-                fetchCurrencyStatusUseCase(userWalletId = userWallet.walletId, refresh = true)
-            }
-        }
+        params.modelCallbacks.onDone()
     }
 
     private fun saveWalletAndDone() {
