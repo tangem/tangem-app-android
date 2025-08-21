@@ -1,9 +1,9 @@
 package com.tangem.domain.account.usecase
 
 import arrow.core.left
-import arrow.core.right
 import com.google.common.truth.Truth
 import com.tangem.domain.account.repository.AccountsCRUDRepository
+import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.wallet.UserWalletId
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -35,7 +35,7 @@ class GetUnoccupiedAccountIndexUseCaseTest {
         val actual = useCase(userWalletId = userWalletId)
 
         // Assert
-        val expected = 4.right()
+        val expected = DerivationIndex(4)
         Truth.assertThat(actual).isEqualTo(expected)
 
         coVerify { crudRepository.getTotalAccountsCount(userWalletId) }
