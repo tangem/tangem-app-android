@@ -99,6 +99,7 @@ dependencies {
     implementation(projects.domain.balanceHiding)
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.transaction)
+    implementation(projects.domain.transaction.models)
     implementation(projects.domain.analytics)
     implementation(projects.domain.visa)
     implementation(projects.domain.onboarding)
