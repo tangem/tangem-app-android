@@ -92,6 +92,7 @@ internal class RewardsValidatorStateConverter(
             isClickable = true,
             type = balance.type,
             isPending = balance.isPending,
+            validatorAddress = balance.validatorAddress,
         )
     }
 }

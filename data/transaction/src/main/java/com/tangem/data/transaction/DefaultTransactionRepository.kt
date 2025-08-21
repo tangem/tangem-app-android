@@ -381,6 +381,26 @@ internal class DefaultTransactionRepository(
         preparer.prepareForSendMultiple(transactionData, signer)
     }
 
+    override suspend fun prepareAndSign(
+        transactionData: TransactionData,
+        signer: TransactionSigner,
+        userWalletId: UserWalletId,
+        network: Network,
+    ) = withContext(dispatchers.io) {
+        val preparer = getPreparer(network, userWalletId)
+        preparer.prepareAndSign(transactionData, signer)
+    }
+
+    override suspend fun prepareAndSignMultiple(
+        transactionData: List<TransactionData>,
+        signer: TransactionSigner,
+        userWalletId: UserWalletId,
+        network: Network,
+    ) = withContext(dispatchers.io) {
+        val preparer = getPreparer(network, userWalletId)
+        preparer.prepareAndSignMultiple(transactionData, signer)
+    }
+
     private suspend fun getPreparer(network: Network, userWalletId: UserWalletId): TransactionPreparer {
         val blockchain = network.toBlockchain()
         val walletManager = walletManagersFacade.getOrCreateWalletManager(
