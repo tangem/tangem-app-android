@@ -12,7 +12,7 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.utils.parseBigDecimal
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.utils.extensions.isZero
 import com.tangem.utils.transformer.Transformer
 import java.math.BigDecimal

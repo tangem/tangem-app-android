@@ -8,6 +8,8 @@ internal class DefaultSendFeatureToggles(
 ) : SendFeatureToggles {
     override val isSendRedesignEnabled: Boolean
         get() = featureToggles.isFeatureEnabled("SEND_REDESIGN_ENABLED")
+    override val isNFTSendRedesignEnabled: Boolean
+        get() = featureToggles.isFeatureEnabled("NFT_SEND_REDESIGN_ENABLED")
     override val isSendWithSwapEnabled: Boolean
         get() = featureToggles.isFeatureEnabled("SEND_VIA_SWAP_ENABLED")
 }
