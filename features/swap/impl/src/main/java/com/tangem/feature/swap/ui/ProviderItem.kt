@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -27,6 +28,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.SwapTokenScreenTestTags
 import com.tangem.core.ui.utils.GRAY_SCALE_ALPHA
 import com.tangem.core.ui.utils.GrayscaleColorFilter
 import com.tangem.feature.swap.models.states.PercentDifference
@@ -117,7 +119,9 @@ private fun ProviderContentState(
             )
 
             Column(
-                modifier = Modifier.padding(start = TangemTheme.dimens.spacing12),
+                modifier = Modifier
+                    .padding(start = TangemTheme.dimens.spacing12)
+                    .testTag(SwapTokenScreenTestTags.PROVIDERS_BLOCK),
             ) {
                 Row {
                     if (state.namePrefix == ProviderState.PrefixType.PROVIDED_BY) {
