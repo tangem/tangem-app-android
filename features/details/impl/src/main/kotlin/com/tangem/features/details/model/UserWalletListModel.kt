@@ -17,6 +17,8 @@ import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsUseCase
 import com.tangem.features.details.entity.UserWalletListUM
 import com.tangem.features.details.impl.R
+import com.tangem.features.details.utils.UserWalletSaver
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.wallet.utils.UserWalletsFetcher
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.ImmutableList
@@ -38,6 +40,8 @@ internal class UserWalletListModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase,
     private val urlOpener: UrlOpener,
+    private val userWalletSaver: UserWalletSaver,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
 ) : Model() {
 
     private val isWalletSavingInProgress: MutableStateFlow<Boolean> = MutableStateFlow(value = false)
@@ -53,7 +57,7 @@ internal class UserWalletListModel @Inject constructor(
             userWallets = persistentListOf(),
             isWalletSavingInProgress = false,
             addNewWalletText = TextReference.EMPTY,
-            onAddNewWalletClick = ::showAddWalletBottomSheet,
+            onAddNewWalletClick = ::onAddNewWalletClick,
             addWalletBottomSheet = TangemBottomSheetConfig.Empty,
         ),
     )
@@ -76,7 +80,7 @@ internal class UserWalletListModel @Inject constructor(
         value.copy(
             userWallets = userWallets,
             isWalletSavingInProgress = isWalletSavingInProgress,
-            addNewWalletText = if (shouldSaveUserWallets) {
+            addNewWalletText = if (shouldSaveUserWallets || hotWalletFeatureToggles.isHotWalletEnabled) {
                 resourceReference(R.string.user_wallet_list_add_button)
             } else {
                 resourceReference(R.string.scan_card_settings_button)
@@ -84,15 +88,21 @@ internal class UserWalletListModel @Inject constructor(
         )
     }
 
-    private fun showAddWalletBottomSheet() {
-        state.update { currentState ->
-            currentState.copy(
-                addWalletBottomSheet = TangemBottomSheetConfig(
-                    isShown = true,
-                    onDismissRequest = ::dismissAddWalletBottomSheet,
-                    content = createAddWalletBottomSheetContent(),
-                ),
-            )
+    private fun onAddNewWalletClick() {
+        if (hotWalletFeatureToggles.isHotWalletEnabled) {
+            state.update { currentState ->
+                currentState.copy(
+                    addWalletBottomSheet = TangemBottomSheetConfig(
+                        isShown = true,
+                        onDismissRequest = ::dismissAddWalletBottomSheet,
+                        content = createAddWalletBottomSheetContent(),
+                    ),
+                )
+            }
+        } else {
+            withProgress(isWalletSavingInProgress) {
+                userWalletSaver.scanAndSaveUserWallet(modelScope)
+            }
         }
     }
 
