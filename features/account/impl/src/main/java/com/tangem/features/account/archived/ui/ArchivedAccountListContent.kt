@@ -6,33 +6,28 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
-import androidx.compose.ui.unit.dp
+import com.tangem.common.ui.account.AccountIconPreviewData
+import com.tangem.common.ui.account.AccountRow
 import com.tangem.core.res.R
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.components.buttons.SecondarySmallButton
 import com.tangem.core.ui.components.buttons.SmallButtonConfig
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
-import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.features.account.archived.entity.AccountArchivedUM
 import com.tangem.features.account.archived.entity.ArchivedAccountUM
-import com.tangem.features.account.common.toUM
-import com.tangem.features.account.details.ui.AccountIcon
 import kotlinx.collections.immutable.toImmutableList
 
 @Composable
@@ -135,28 +130,12 @@ private fun ArchivedAccountRow(item: ArchivedAccountUM, modifier: Modifier = Mod
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
     ) {
-        AccountIcon(
-            modifier = Modifier
-                .size(36.dp)
-                .clip(RoundedCornerShape(9.dp)),
-            accountName = item.accountName,
-            accountIcon = item.accountIcon,
-        )
-        Column(
+        AccountRow(
+            title = item.accountName,
+            subtitle = item.tokensInfo,
+            icon = item.accountIconUM,
             modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing2),
-        ) {
-            Text(
-                text = item.accountName,
-                style = TangemTheme.typography.subtitle2,
-                color = TangemTheme.colors.text.primary1,
-            )
-            Text(
-                color = TangemTheme.colors.text.tertiary,
-                style = TangemTheme.typography.caption2,
-                text = item.tokensInfo.resolveReference(),
-            )
-        }
+        )
 
         SecondarySmallButton(
             config = SmallButtonConfig(
@@ -179,13 +158,14 @@ private fun WcConnectionsContentPreview(@PreviewParameter(PreviewStateProvider::
 @Suppress("MagicNumber")
 private class PreviewStateProvider : CollectionPreviewParameterProvider<AccountArchivedUM>(
     buildList {
-        fun portfolioIcon() = CryptoPortfolioIcon.ofDefaultCustomAccount().toUM()
+        fun portfolioIcon() = AccountIconPreviewData.randomAccountIcon()
+        val accountName = stringReference("Account name")
 
         val firstList = List(10) {
             ArchivedAccountUM(
                 accountId = it.toString(),
-                accountName = "Account name",
-                accountIcon = portfolioIcon(),
+                accountName = accountName,
+                accountIconUM = portfolioIcon(),
                 tokensInfo = stringReference("10 tokens in 2 networks"),
                 onClick = {},
 
