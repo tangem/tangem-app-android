@@ -4,6 +4,7 @@ import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
 import com.tangem.features.send.v2.sendnft.confirm.model.NFTSendConfirmModel
 import com.tangem.features.send.v2.sendnft.model.NFTSendModel
+import com.tangem.features.send.v2.sendnft.success.model.NFTSendSuccessModel
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -23,4 +24,9 @@ internal interface NFTSendModelModule {
     @IntoMap
     @ClassKey(NFTSendConfirmModel::class)
     fun provideNFTSendConfirmModel(model: NFTSendConfirmModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(NFTSendSuccessModel::class)
+    fun provideNFTSendSuccessModel(model: NFTSendSuccessModel): Model
 }

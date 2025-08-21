@@ -6,12 +6,13 @@ import arrow.core.raise.catch
 import arrow.core.raise.either
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
+import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.repository.CurrenciesRepository
-import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -21,6 +22,7 @@ class FetchCardTokenListUseCase(
     private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
     private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
     private val multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
+    private val stakingIdFactory: StakingIdFactory,
 ) {
 
     suspend operator fun invoke(userWalletId: UserWalletId, refresh: Boolean = false): Either<TokenListError, Unit> {
@@ -83,11 +85,12 @@ class FetchCardTokenListUseCase(
     }
 
     private suspend fun fetchYieldBalances(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
+        val stakingIds = currencies.mapNotNullTo(hashSetOf()) {
+            stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = it).getOrNull()
+        }
+
         multiYieldBalanceFetcher(
-            params = MultiYieldBalanceFetcher.Params(
-                userWalletId = userWalletId,
-                currencyIdWithNetworkMap = currencies.associateTo(hashMapOf()) { it.id to it.network },
-            ),
+            params = MultiYieldBalanceFetcher.Params(userWalletId = userWalletId, stakingIds = stakingIds),
         )
     }
 }

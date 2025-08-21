@@ -14,5 +14,6 @@ internal sealed class ChooseManageTokensBottomSheetConfig {
         val initialCurrency: CryptoCurrency,
         val selectedCurrency: CryptoCurrency?,
         val token: ManagedCryptoCurrency.Token,
+        val isSearchedToken: Boolean,
     ) : ChooseManageTokensBottomSheetConfig()
 }

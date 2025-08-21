@@ -24,12 +24,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.util.fastForEach
+import androidx.compose.ui.util.fastForEachIndexed
 import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.message.*
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
+import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -44,7 +45,7 @@ import kotlinx.collections.immutable.toPersistentList
 internal fun SwapChooseTokenNetworkBottomSheet(config: TangemBottomSheetConfig) {
     TangemModalBottomSheet<SwapChooseTokenNetworkContentUM>(
         config = config,
-        containerColor = TangemTheme.colors.background.tertiary,
+        containerColor = TangemTheme.colors.background.primary,
         title = {
             AnimatedContent(
                 targetState = config.content is SwapChooseTokenNetworkContentUM.Content,
@@ -94,22 +95,31 @@ internal fun SwapChooseTokenNetworkContent(state: SwapChooseTokenNetworkContentU
 
 @Composable
 private fun SwapChooseTokenNetworkContentList(swapNetworks: ImmutableList<SwapChooseNetworkUM>) {
-    Column {
-        swapNetworks.fastForEach { network ->
+    Column(
+        modifier = Modifier.padding(
+            top = 8.dp,
+            start = 16.dp,
+            end = 16.dp,
+            bottom = 16.dp,
+        ),
+    ) {
+        swapNetworks.fastForEachIndexed { index, network ->
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 modifier = Modifier
                     .fillMaxWidth()
+                    .roundedShapeItemDecoration(
+                        currentIndex = index,
+                        lastIndex = swapNetworks.lastIndex,
+                        addDefaultPadding = false,
+                    )
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = ripple(),
                         onClick = { network.onNetworkClick() },
                     )
-                    .padding(
-                        vertical = 12.dp,
-                        horizontal = 14.dp,
-                    ),
+                    .padding(vertical = 12.dp, horizontal = 14.dp),
             ) {
                 Image(
                     modifier = Modifier.size(36.dp),
@@ -143,10 +153,7 @@ private fun SwapChooseTokenNetworkContentList(swapNetworks: ImmutableList<SwapCh
                                 color = TangemTheme.colors.stroke.primary,
                                 shape = RoundedCornerShape(6.dp),
                             )
-                            .padding(
-                                vertical = 2.dp,
-                                horizontal = 4.dp,
-                            ),
+                            .padding(vertical = 2.dp, horizontal = 4.dp),
                     )
                 }
             }
