@@ -1,10 +1,7 @@
 package com.tangem.domain.models.account
 
 import com.google.common.truth.Truth
-import com.tangem.domain.models.TokensGroupType
-import com.tangem.domain.models.TokensSortType
 import com.tangem.domain.models.account.Account.CryptoPortfolio
-import com.tangem.domain.models.account.Account.CryptoPortfolio.CryptoCurrencyList
 import com.tangem.domain.models.account.Account.CryptoPortfolio.Error.AccountNameError
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
@@ -100,13 +97,12 @@ class AccountTest {
             val name = ""
 
             // Act
-            val actual = CryptoPortfolio(
+            val actual = CryptoPortfolio.invoke(
                 accountId = mockk(),
                 name = name,
-                accountIcon = mockk(),
+                icon = mockk(),
                 derivationIndex = 0,
-                isArchived = false,
-                cryptoCurrencyList = mockk(),
+                cryptoCurrencies = emptySet(),
             )
                 .leftOrNull()!!
 
@@ -125,14 +121,9 @@ class AccountTest {
                     derivationIndex = derivationIndex,
                 ),
                 name = "Test Account",
-                accountIcon = CryptoPortfolioIcon.ofMainAccount(userWalletId = UserWalletId("011")),
+                icon = CryptoPortfolioIcon.ofMainAccount(userWalletId = UserWalletId("011")),
                 derivationIndex = derivationIndex.value,
-                isArchived = false,
-                cryptoCurrencyList = CryptoCurrencyList(
-                    currencies = emptySet(),
-                    sortType = TokensSortType.NONE,
-                    groupType = TokensGroupType.NONE,
-                ),
+                cryptoCurrencies = emptySet(),
             )
                 .getOrNull()!!
 
@@ -157,14 +148,9 @@ class AccountTest {
                     derivationIndex = derivationIndex,
                 ),
                 accountName = AccountName.Main,
-                accountIcon = CryptoPortfolioIcon.ofMainAccount(userWalletId),
+                icon = CryptoPortfolioIcon.ofMainAccount(userWalletId),
                 derivationIndex = derivationIndex,
-                isArchived = false,
-                cryptoCurrencyList = CryptoCurrencyList(
-                    currencies = emptySet(),
-                    sortType = TokensSortType.NONE,
-                    groupType = TokensGroupType.NONE,
-                ),
+                cryptoCurrencies = emptySet(),
             )
 
             Truth.assertThat(actual).isEqualTo(expected)
@@ -182,14 +168,9 @@ class AccountTest {
         return CryptoPortfolio.invoke(
             accountId = AccountId.forCryptoPortfolio(userWalletId = userWalletId, derivationIndex = accountIndex),
             name = name,
-            accountIcon = CryptoPortfolioIcon.ofMainAccount(userWalletId),
+            icon = CryptoPortfolioIcon.ofMainAccount(userWalletId),
             derivationIndex = derivationIndex,
-            isArchived = false,
-            cryptoCurrencyList = CryptoCurrencyList(
-                currencies = currencies,
-                sortType = TokensSortType.NONE,
-                groupType = TokensGroupType.NONE,
-            ),
+            cryptoCurrencies = currencies,
         )
             .getOrNull()!!
     }
