@@ -7,6 +7,7 @@ import com.tangem.features.walletconnect.connections.routing.WcRoutingModel
 import com.tangem.features.walletconnect.transaction.model.WcAddNetworkModel
 import com.tangem.features.walletconnect.transaction.model.WcSendTransactionModel
 import com.tangem.features.walletconnect.transaction.model.WcSignTransactionModel
+import com.tangem.features.walletconnect.transaction.model.WcSwitchNetworkModel
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -56,6 +57,11 @@ internal interface WalletConnectModelModule {
     @IntoMap
     @ClassKey(WcAddNetworkModel::class)
     fun bindWcAddNetworkModel(model: WcAddNetworkModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(WcSwitchNetworkModel::class)
+    fun bindWcSwitchNetworkModel(model: WcSwitchNetworkModel): Model
 
     @Binds
     @IntoMap
