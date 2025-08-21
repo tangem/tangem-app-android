@@ -109,7 +109,7 @@ internal class AccountCreateEditModel @Inject constructor(
         val state = uiState.value
         val name = AccountName(state.account.name).getOrNull() ?: return
         val icon = state.account.portfolioIcon.toDomain()
-        val isNewName = name != params.account.name
+        val isNewName = name != params.account.accountName
         val isNewIcon = icon != params.account.portfolioIcon
         updateCryptoPortfolioUseCase(
             icon = if (isNewIcon) icon else null,
@@ -143,7 +143,7 @@ internal class AccountCreateEditModel @Inject constructor(
         val isAvailableForConfirm = when (params) {
             is AccountCreateEditComponent.Params.Create -> isValidName
             is AccountCreateEditComponent.Params.Edit -> {
-                val isNewName = this.account.name != params.account.name.value
+                val isNewName = this.account.name != params.account.accountName.value
                 val isNewIcon = this.account.portfolioIcon != params.account.portfolioIcon
                 isValidName && (isNewName || isNewIcon)
             }
