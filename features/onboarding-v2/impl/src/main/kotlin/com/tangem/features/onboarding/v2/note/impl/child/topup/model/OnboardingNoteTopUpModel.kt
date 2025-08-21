@@ -1,5 +1,7 @@
 package com.tangem.features.onboarding.v2.note.impl.child.topup.model
 
+import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.activate
 import com.tangem.common.ui.bottomsheet.receive.TokenReceiveBottomSheetConfig
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.decompose.di.ModelScoped
@@ -13,23 +15,29 @@ import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.exchange.RampStateManager
+import com.tangem.domain.models.ReceiveAddressModel
+import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.onramp.GetLegacyTopUpUrlUseCase
 import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
 import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
+import com.tangem.domain.tokens.GetViewedTokenReceiveWarningUseCase
 import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.analytics.TokenReceiveAnalyticsEvent
 import com.tangem.domain.tokens.wallet.WalletBalanceFetcher
+import com.tangem.domain.transaction.usecase.GetEnsNameUseCase
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.features.onboarding.v2.common.analytics.OnboardingEvent
 import com.tangem.features.onboarding.v2.note.impl.child.topup.OnboardingNoteTopUpComponent
 import com.tangem.features.onboarding.v2.note.impl.child.topup.ui.state.OnboardingNoteTopUpUM
+import com.tangem.features.tokenreceive.TokenReceiveFeatureToggle
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.isPositive
 import kotlinx.coroutines.flow.*
@@ -54,12 +62,17 @@ internal class OnboardingNoteTopUpModel @Inject constructor(
     private val saveWalletUseCase: SaveWalletUseCase,
     private val walletBalanceFetcher: WalletBalanceFetcher,
     private val tokensFeatureToggles: TokensFeatureToggles,
+    private val tokenReceiveFeatureToggle: TokenReceiveFeatureToggle,
+    private val getViewedTokenReceiveWarningUseCase: GetViewedTokenReceiveWarningUseCase,
+    private val getEnsNameUseCase: GetEnsNameUseCase,
 ) : Model() {
 
     private val params = paramsContainer.require<OnboardingNoteTopUpComponent.Params>()
     private val commonState = params.childParams.commonState
     private val scanResponse = params.childParams.commonState.value.scanResponse
     private var userWallet = params.childParams.commonState.value.userWallet
+
+    val bottomSheetNavigation: SlotNavigation<TokenReceiveConfig> = SlotNavigation()
 
     private val _uiState = MutableStateFlow(
         OnboardingNoteTopUpUM(
@@ -112,8 +125,18 @@ internal class OnboardingNoteTopUpModel @Inject constructor(
         val currencyStatus = params.childParams.commonState.value.cryptoCurrencyStatus ?: return
         val networkAddress = currencyStatus.value.networkAddress ?: return
 
-        _uiState.update {
-            it.copy(addressBottomSheetConfig = createReceiveBS(currencyStatus, networkAddress))
+        if (tokenReceiveFeatureToggle.isNewTokenReceiveEnabled) {
+            val userWalletId = userWallet?.walletId ?: return
+            modelScope.launch {
+                configureReceiveAddresses(
+                    cryptoCurrencyStatus = currencyStatus,
+                    userWalletId = userWalletId,
+                )?.let { bottomSheetNavigation.activate(it) }
+            }
+        } else {
+            _uiState.update {
+                it.copy(addressBottomSheetConfig = createReceiveBS(currencyStatus, networkAddress))
+            }
         }
         Analytics.send(OnboardingEvent.Topup.ButtonShowWalletAddress)
     }
@@ -249,5 +272,48 @@ internal class OnboardingNoteTopUpModel @Inject constructor(
         )
         saveWalletUseCase(wallet, false)
         return wallet
+    }
+
+    private suspend fun configureReceiveAddresses(
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        userWalletId: UserWalletId,
+    ): TokenReceiveConfig? {
+        val addresses = cryptoCurrencyStatus.value.networkAddress ?: return null
+
+        val ensName = getEnsNameUseCase.invoke(
+            userWalletId = userWalletId,
+            network = cryptoCurrencyStatus.currency.network,
+            address = addresses.defaultAddress.value,
+        )
+
+        val receiveAddresses = buildList {
+            ensName?.let { ens ->
+                add(
+                    ReceiveAddressModel(
+                        nameService = ReceiveAddressModel.NameService.Ens,
+                        value = ens,
+                        displayName = ens,
+                    ),
+                )
+            }
+            addresses.availableAddresses.map { address ->
+                add(
+                    ReceiveAddressModel(
+                        nameService = ReceiveAddressModel.NameService.Default,
+                        value = address.value,
+                        displayName = "${cryptoCurrencyStatus.currency.name} (${cryptoCurrencyStatus.currency.symbol})",
+                    ),
+                )
+            }
+        }
+
+        return TokenReceiveConfig(
+            shouldShowWarning = cryptoCurrencyStatus.currency.name !in getViewedTokenReceiveWarningUseCase(),
+            cryptoCurrency = cryptoCurrencyStatus.currency,
+            userWalletId = userWalletId,
+            showMemoDisclaimer = cryptoCurrencyStatus.currency.network.transactionExtrasType != Network
+                .TransactionExtrasType.NONE,
+            receiveAddress = receiveAddresses,
+        )
     }
 }
