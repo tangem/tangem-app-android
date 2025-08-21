@@ -39,5 +39,6 @@ internal class TokenReceiveAssetsComponent(
         val onDismiss: () -> Unit,
         val showMemoDisclaimer: Boolean,
         val fullName: String,
+        val tokenName: String,
     )
 }
