@@ -1,6 +1,7 @@
 package com.tangem.features.pushnotifications.impl.model
 
 import androidx.compose.runtime.Stable
+import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
@@ -36,12 +37,21 @@ internal class PushNotificationsModel @Inject constructor(
 ) : Model(), PushNotificationsClickIntents {
 
     val params: PushNotificationsParams = paramsContainer.require()
+    val source = when (params.source) {
+        AppRoute.PushNotification.Source.Stories -> AnalyticsParam.ScreensSources.Stories
+        AppRoute.PushNotification.Source.Main -> AnalyticsParam.ScreensSources.Main
+        AppRoute.PushNotification.Source.Onboarding -> AnalyticsParam.ScreensSources.Onboarding
+    }
 
     private val _state = MutableStateFlow(
         PushNotificationsUM(
             showInfoAboutNotifications = notificationsFeatureToggles.isNotificationsEnabled,
         ),
     )
+
+    init {
+        analyticHandler.send(PushNotificationAnalyticEvents.NotificationsScreenOpened(source))
+    }
 
     val state = _state.asStateFlow()
 
@@ -51,9 +61,7 @@ internal class PushNotificationsModel @Inject constructor(
                 notificationsRepository.setUserAllowToSubscribeOnPushNotifications(true)
             }
         }
-        analyticHandler.send(
-            PushNotificationAnalyticEvents.ButtonAllow(AnalyticsParam.ScreensSources.Stories),
-        )
+        analyticHandler.send(PushNotificationAnalyticEvents.ButtonAllow(source))
     }
 
     override fun onLaterClick() {
@@ -62,9 +70,7 @@ internal class PushNotificationsModel @Inject constructor(
                 notificationsRepository.setUserAllowToSubscribeOnPushNotifications(false)
             }
         }
-        analyticHandler.send(
-            PushNotificationAnalyticEvents.ButtonLater(AnalyticsParam.ScreensSources.Stories),
-        )
+        analyticHandler.send(PushNotificationAnalyticEvents.ButtonLater(source))
         modelScope.launch {
             neverRequestPermissionUseCase(PUSH_PERMISSION)
             neverToInitiallyAskPermissionUseCase(PUSH_PERMISSION)
