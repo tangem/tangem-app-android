@@ -5,7 +5,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import kotlinx.collections.immutable.ImmutableList
 
-data class AccountCreateEditUM(
+internal data class AccountCreateEditUM(
     val title: TextReference,
     val account: Account,
     val colorsState: Colors,
