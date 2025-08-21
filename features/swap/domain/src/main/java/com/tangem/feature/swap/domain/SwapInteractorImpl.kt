@@ -17,6 +17,7 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.extenstions.unwrap
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.domain.demo.IsDemoCardUseCase
+import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
@@ -31,7 +32,6 @@ import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.error.GetFeeError
-import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
@@ -82,6 +82,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     private val getCurrencyCheckUseCase: GetCurrencyCheckUseCase,
     private val getAssetRequirementsUseCase: GetAssetRequirementsUseCase,
     private val amountFormatter: AmountFormatter,
+    private val rampStateManager: RampStateManager,
     @Assisted private val userWalletId: UserWalletId,
 ) : SwapInteractor {
 
@@ -179,12 +180,13 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         tokenInfoForAvailable: (SwapPairLeast) -> LeastTokenInfo,
     ): List<SwapProvider>? {
         val requirements = getAssetRequirementsUseCase.invoke(userWalletId, cryptoCurrencyStatuses.currency).getOrNull()
+        val isAvailableForSwap = rampStateManager.checkAssetRequirements(requirements)
 
         return swapPairsLeastList.firstNotNullOfOrNull {
             val listTokenInfo = tokenInfoForAvailable(it)
             if (cryptoCurrencyStatuses.currency.network.backendId == listTokenInfo.network &&
                 cryptoCurrencyStatuses.currency.getContractAddress() == listTokenInfo.contractAddress &&
-                requirements !is AssetRequirementsCondition.RequiredTrustline
+                isAvailableForSwap
             ) {
                 it.providers
             } else {
