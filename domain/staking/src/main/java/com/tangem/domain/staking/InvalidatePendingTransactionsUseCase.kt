@@ -1,10 +1,14 @@
 package com.tangem.domain.staking
 
 import arrow.core.Either
-import com.tangem.domain.staking.model.stakekit.*
+import com.tangem.domain.models.staking.BalanceItem
+import com.tangem.domain.models.staking.BalanceType
+import com.tangem.domain.models.staking.NetworkType
+import com.tangem.domain.models.staking.YieldToken
+import com.tangem.domain.models.staking.action.StakingActionType
+import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.model.stakekit.action.StakingAction
 import com.tangem.domain.staking.model.stakekit.action.StakingActionStatus
-import com.tangem.domain.staking.model.stakekit.action.StakingActionType
 import com.tangem.domain.staking.repositories.StakingErrorResolver
 import com.tangem.utils.extensions.isEqualTo
 import java.math.BigDecimal
@@ -17,7 +21,7 @@ class InvalidatePendingTransactionsUseCase(
     operator fun invoke(
         balanceItems: List<BalanceItem>,
         stakingActions: List<StakingAction>,
-        token: Token,
+        token: YieldToken,
     ): Either<StakingError, List<BalanceItem>> {
         return Either.catch {
             val balancesToDisplay = mergeBalancesAndProcessingActions(
@@ -34,7 +38,7 @@ class InvalidatePendingTransactionsUseCase(
     private fun mergeBalancesAndProcessingActions(
         realBalances: List<BalanceItem>,
         processingActions: List<StakingAction>,
-        token: Token,
+        token: YieldToken,
     ): List<BalanceItem> {
         val balances = realBalances.toMutableList()
 
@@ -87,7 +91,7 @@ class InvalidatePendingTransactionsUseCase(
     private fun addStubStakedPendingTransaction(
         balances: MutableList<BalanceItem>,
         action: StakingAction,
-        token: Token,
+        token: YieldToken,
     ) {
         balances.add(
             BalanceItem(
@@ -153,7 +157,7 @@ class InvalidatePendingTransactionsUseCase(
         return index to action.amount
     }
 
-    private fun doPostProcessing(balances: MutableList<BalanceItem>, action: StakingAction, token: Token) {
+    private fun doPostProcessing(balances: MutableList<BalanceItem>, action: StakingAction, token: YieldToken) {
         val validatorAddress = action.validatorAddress ?: action.validatorAddresses?.firstOrNull()
         if (token.network == NetworkType.TON && validatorAddress != null) {
             for (index in balances.indices) {
