@@ -56,7 +56,7 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 @ModelScoped
 internal class WalletSettingsModel @Inject constructor(
     getWalletUseCase: GetUserWalletUseCase,
@@ -80,6 +80,8 @@ internal class WalletSettingsModel @Inject constructor(
     private val permissionsRepository: PermissionRepository,
     private val notificationsRepository: NotificationsRepository,
     private val getIsHuaweiDeviceWithoutGoogleServicesUseCase: GetIsHuaweiDeviceWithoutGoogleServicesUseCase,
+    private val isUpgradeWalletNotificationEnabledUseCase: IsUpgradeWalletNotificationEnabledUseCase,
+    private val dismissUpgradeWalletNotificationUseCase: DismissUpgradeWalletNotificationUseCase,
 ) : Model() {
 
     val params: WalletSettingsComponent.Params = paramsContainer.require()
@@ -93,6 +95,7 @@ internal class WalletSettingsModel @Inject constructor(
             requestPushNotificationsPermission = false,
             onPushNotificationPermissionGranted = ::onPushNotificationPermissionGranted,
             isWalletBackedUp = true,
+            walletUpgradeDismissed = false,
         ),
     )
 
@@ -120,7 +123,8 @@ internal class WalletSettingsModel @Inject constructor(
             getWalletUseCase.invokeFlow(params.userWalletId).distinctUntilChanged(),
             getWalletNFTEnabledUseCase.invoke(params.userWalletId),
             getWalletNotificationsEnabledUseCase(params.userWalletId),
-        ) { maybeWallet, nftEnabled, notificationsEnabled ->
+            isUpgradeWalletNotificationEnabledUseCase(params.userWalletId),
+        ) { maybeWallet, nftEnabled, notificationsEnabled, isUpgradeNotificationEnabled ->
             val wallet = maybeWallet.getOrNull() ?: return@combine
             val isRenameWalletAvailable = getShouldSaveUserWalletsSyncUseCase()
             val isWalletBackedUp = when (wallet) {
@@ -139,6 +143,7 @@ internal class WalletSettingsModel @Inject constructor(
                         isNotificationsEnabled = notificationsEnabled,
                         isNotificationsFeatureEnabled = isNeedShowNotifications,
                         isNotificationsPermissionGranted = isNotificationsPermissionGranted(),
+                        isUpgradeNotificationEnabled = isUpgradeNotificationEnabled,
                     ),
                     isWalletBackedUp = isWalletBackedUp,
                 )
@@ -165,6 +170,7 @@ internal class WalletSettingsModel @Inject constructor(
         isNotificationsFeatureEnabled: Boolean,
         isNotificationsEnabled: Boolean,
         isNotificationsPermissionGranted: Boolean,
+        isUpgradeNotificationEnabled: Boolean,
     ): PersistentList<WalletSettingsItemUM> {
         val isMultiCurrency = when (userWallet) {
             is UserWallet.Cold -> userWallet.isMultiCurrency
@@ -215,6 +221,9 @@ internal class WalletSettingsModel @Inject constructor(
             onCheckedNotificationsChanged = ::onCheckedNotificationsChange,
             onNotificationsDescriptionClick = ::onNotificationsDescriptionClick,
             onAccessCodeClick = ::onAccessCodeClick,
+            walletUpgradeDismissed = isUpgradeNotificationEnabled,
+            onUpgradeWalletClick = ::onUpgradeWalletClick,
+            onDismissUpgradeWalletClick = ::onDismissUpgradeWalletClick,
         )
     }
 
@@ -365,6 +374,16 @@ internal class WalletSettingsModel @Inject constructor(
             messageSender.send(makeBackupAtFirstAlertBS)
         } else {
             router.push(AppRoute.UpdateAccessCode(params.userWalletId))
+        }
+    }
+
+    private fun onUpgradeWalletClick() {
+        // TODO [REDACTED_TASK_KEY]
+    }
+
+    private fun onDismissUpgradeWalletClick() {
+        modelScope.launch {
+            dismissUpgradeWalletNotificationUseCase.invoke(params.userWalletId)
         }
     }
 }

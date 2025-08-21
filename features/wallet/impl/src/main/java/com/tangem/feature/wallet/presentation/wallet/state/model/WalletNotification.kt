@@ -1,6 +1,7 @@
 package com.tangem.feature.wallet.presentation.wallet.state.model
 
 import androidx.compose.runtime.Immutable
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.pluralReference
@@ -282,6 +283,7 @@ sealed class WalletNotification(val config: NotificationConfig) {
                 text = resourceReference(R.string.notification_referral_promo_button),
                 onClick = onClick,
             ),
+            iconSize = 54.dp,
         ),
     )
 }
