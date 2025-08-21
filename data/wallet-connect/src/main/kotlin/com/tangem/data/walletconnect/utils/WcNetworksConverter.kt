@@ -25,6 +25,11 @@ internal class WcNetworksConverter @Inject constructor(
     private val tokensFeatureToggles: TokensFeatureToggles,
 ) {
 
+    fun createNetwork(chainId: String, wallet: UserWallet): Network? {
+        return namespaceConverters
+            .firstNotNullOfOrNull { it.toNetwork(chainId, wallet) }
+    }
+
     suspend fun findWalletNetworkForRequest(
         request: WcSdkSessionRequest,
         session: WcSession,
@@ -46,6 +51,11 @@ internal class WcNetworksConverter @Inject constructor(
     suspend fun mainOrAnyWalletNetworkForRequest(rawChainId: String, wallet: UserWallet): Network? {
         val networks = filterWalletNetworkForRequest(rawChainId, wallet)
         return networks.firstOrNull { !isCustomCoin(it) } ?: networks.firstOrNull()
+    }
+
+    suspend fun allAddressForChain(rawChainId: String, wallet: UserWallet): List<String> {
+        return filterWalletNetworkForRequest(rawChainId, wallet)
+            .mapNotNull { walletManagersFacade.getDefaultAddress(wallet.walletId, it)?.lowercase() }
     }
 
     /**
