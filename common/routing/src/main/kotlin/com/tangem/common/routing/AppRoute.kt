@@ -1,6 +1,7 @@
 package com.tangem.common.routing
 
 import android.os.Bundle
+import com.tangem.common.routing.AppRoute.ManageTokens.Source
 import com.tangem.common.routing.bundle.RouteBundleParams
 import com.tangem.common.routing.bundle.bundle
 import com.tangem.common.routing.entity.InitScreenLaunchMode
@@ -195,7 +196,15 @@ sealed class AppRoute(val path: String) : Route {
     ) : AppRoute(path = "/staking/${userWalletId.stringValue}/${cryptoCurrencyId.value}/$yieldId")
 
     @Serializable
-    data object PushNotification : AppRoute(path = "/push_notification")
+    data class PushNotification(
+        val source: Source,
+    ) : AppRoute(path = "/push_notification") {
+        enum class Source {
+            Stories,
+            Main,
+            Onboarding,
+        }
+    }
 
     @Serializable
     data class WalletSettings(
