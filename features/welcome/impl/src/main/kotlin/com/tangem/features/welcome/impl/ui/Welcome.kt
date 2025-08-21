@@ -10,10 +10,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.tangem.core.ui.extensions.TextReference
+import com.tangem.common.ui.userwallet.state.UserWalletItemUM
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.features.welcome.impl.ui.state.WalletUM
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.welcome.impl.ui.state.WelcomeUM
 import kotlinx.collections.immutable.persistentListOf
 
@@ -34,10 +35,7 @@ internal fun Welcome(state: WelcomeUM, modifier: Modifier = Modifier) {
                     state = st,
                     modifier = modifier,
                 )
-                is WelcomeUM.EnterAccessCode -> WelcomeEnterAccessCode(
-                    state = st,
-                    modifier = modifier,
-                )
+                WelcomeUM.Empty -> {}
             }
         }
     }
@@ -49,22 +47,30 @@ private fun Preview() {
     TangemThemePreview {
         val state = WelcomeUM.SelectWallet(
             wallets = persistentListOf(
-                WalletUM(
-                    name = TextReference.Str("Wallet 1"),
-                    subtitle = TextReference.Str("3 cards"),
-                    imageState = WalletUM.ImageState.Loading,
+                UserWalletItemUM(
+                    id = UserWalletId("user_wallet_3".encodeToByteArray()),
+                    name = stringReference("Multi Card"),
+                    information = UserWalletItemUM.Information.Loading,
+                    balance = UserWalletItemUM.Balance.Loaded(
+                        value = "1.2345 BTC",
+                        isFlickering = false,
+                    ),
+                    isEnabled = true,
                     onClick = {},
                 ),
-                WalletUM(
-                    name = TextReference.Str("Wallet 1"),
-                    subtitle = TextReference.Str("Mobile wallet"),
-                    imageState = WalletUM.ImageState.MobileWallet,
+                UserWalletItemUM(
+                    id = UserWalletId("user_wallet_3".encodeToByteArray()),
+                    name = stringReference("Multi Card"),
+                    information = UserWalletItemUM.Information.Failed,
+                    imageState = UserWalletItemUM.ImageState.MobileWallet,
+                    balance = UserWalletItemUM.Balance.Locked,
+                    isEnabled = true,
                     onClick = {},
                 ),
             ),
         )
 
-        var currentState by remember { mutableStateOf<WelcomeUM>(WelcomeUM.EnterAccessCode()) }
+        var currentState by remember { mutableStateOf<WelcomeUM>(WelcomeUM.SelectWallet()) }
 
         Box {
             Welcome(currentState)
@@ -74,11 +80,8 @@ private fun Preview() {
                 onClick = {
                     currentState = when (currentState) {
                         is WelcomeUM.Plain -> state
-                        is WelcomeUM.SelectWallet -> WelcomeUM.EnterAccessCode(
-                            value = "",
-                            onValueChange = {},
-                        )
-                        is WelcomeUM.EnterAccessCode -> WelcomeUM.Plain
+                        is WelcomeUM.SelectWallet -> WelcomeUM.Empty
+                        WelcomeUM.Empty -> WelcomeUM.Plain
                     }
                 },
             ) {
