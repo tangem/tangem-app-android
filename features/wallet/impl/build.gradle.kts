@@ -96,6 +96,7 @@ dependencies {
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.notifications)
     implementation(projects.domain.notifications.toggles)
+    implementation(projects.domain.transaction)
 
     /** Feature Apis */
     implementation(projects.features.details.api)
@@ -113,6 +114,7 @@ dependencies {
     implementation(projects.features.biometry.api)
     implementation(projects.features.nft.api)
     implementation(projects.features.sendV2.api)
+    implementation(projects.features.tokenRecieve.api)
 
     /** Common modules */
     implementation(projects.common)
