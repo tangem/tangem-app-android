@@ -1,7 +1,7 @@
 package com.tangem.features.account.archived.entity
 
+import com.tangem.common.ui.account.CryptoPortfolioIconUM
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.features.account.common.CryptoPortfolioIconUM
 import kotlinx.collections.immutable.ImmutableList
 
 internal sealed interface AccountArchivedUM {
@@ -20,8 +20,8 @@ internal sealed interface AccountArchivedUM {
 
 internal data class ArchivedAccountUM(
     val accountId: String,
-    val accountName: String,
-    val accountIcon: CryptoPortfolioIconUM,
+    val accountName: TextReference,
+    val accountIconUM: CryptoPortfolioIconUM,
     val tokensInfo: TextReference,
     val onClick: (accountId: String) -> Unit,
 )
