@@ -10,6 +10,14 @@ internal object WcSdkSessionConverter : Converter<Wallet.Model.Session, WcSdkSes
         return WcSdkSession(
             topic = value.topic,
             appMetaData = value.metaData?.let { WcAppMetaDataConverter.convert(it) } ?: WcAppMetaDataConverter.empty,
+            namespaces = value.namespaces.mapValues { (_, session) ->
+                WcSdkSession.Session(
+                    chains = session.chains ?: listOf(),
+                    accounts = session.accounts,
+                    methods = session.methods,
+                    events = session.events,
+                )
+            },
         )
     }
 }
