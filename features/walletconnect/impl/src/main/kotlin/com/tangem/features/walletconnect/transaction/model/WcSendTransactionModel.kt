@@ -18,7 +18,8 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUMV2
 import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUMV2.Icon.Type
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
@@ -26,6 +27,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.tokens.GetNetworkCoinStatusUseCase
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.error.SendTransactionError.UserCancelledError
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.walletconnect.WcAnalyticEvents
 import com.tangem.domain.walletconnect.WcAnalyticEvents.SignatureRequestReceived.EmulationStatus
@@ -39,6 +41,7 @@ import com.tangem.features.send.v2.api.params.FeeSelectorParams.FeeStateConfigur
 import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
 import com.tangem.features.send.v2.api.subcomponents.feeSelector.entity.FeeSelectorData
 import com.tangem.features.walletconnect.connections.routing.WcInnerRoute
+import com.tangem.features.walletconnect.impl.R
 import com.tangem.features.walletconnect.transaction.components.common.WcTransactionModelParams
 import com.tangem.features.walletconnect.transaction.converter.WcHandleMethodErrorConverter
 import com.tangem.features.walletconnect.transaction.converter.WcSendTransactionUMConverter
@@ -57,7 +60,7 @@ import java.math.BigDecimal
 import javax.inject.Inject
 import kotlin.properties.Delegates
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 @Stable
 @ModelScoped
 internal class WcSendTransactionModel @Inject constructor(
@@ -112,7 +115,10 @@ internal class WcSendTransactionModel @Inject constructor(
                         ?.dAppFee()
                         ?.let { dAppFee ->
                             feeStateConfiguration = FeeStateConfiguration.Suggestion(
-                                title = stringReference(useCase.session.sdkModel.appMetaData.name),
+                                title = resourceReference(
+                                    id = R.string.wc_fee_suggested,
+                                    formatArgs = wrappedList(useCase.session.sdkModel.appMetaData.name),
+                                ),
                                 fee = dAppFee,
                             )
                         }
@@ -244,6 +250,7 @@ internal class WcSendTransactionModel @Inject constructor(
                 feeSelectorUM = uiState.value?.feeSelectorUM,
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
                 onFeeReload = ::triggerFeeReload,
+                securityCheck = securityCheck.getOrNull(),
             ),
         )
         transactionUM = transactionUM?.copy(
@@ -275,6 +282,7 @@ internal class WcSendTransactionModel @Inject constructor(
         stackNavigation.pushNew(WcTransactionRoutes.SelectFee)
     }
 
+    // Before change, make sure you are align with WcTransactionRequestButtons
     private fun onSign(securityCheck: BlockAidTransactionCheck.Result?) {
         when (securityCheck?.result?.validation) {
             ValidationResult.UNSAFE -> showMaliciousAlert(securityCheck.result.description)
@@ -339,25 +347,35 @@ internal class WcSendTransactionModel @Inject constructor(
     }
 
     private fun signingIsDone(signState: WcSignState<*>, useCase: WcSignUseCase<*>): Boolean {
-        (signState.domainStep as? WcSignStep.Result)?.result?.let {
-            return handleSigningError(it, useCase)
+        return when (val step = signState.domainStep) {
+            is WcSignStep.Result -> processResultStep(result = step.result, useCase = useCase)
+            WcSignStep.PreSign,
+            WcSignStep.Signing,
+            -> false
         }
-        return false
     }
 
-    private fun handleSigningError(result: Either<WcRequestError, String>, useCase: WcSignUseCase<*>): Boolean {
-        return if (result.isLeft()) {
-            val error = WcTransactionRoutes.Alert.Type.UnknownError(
-                errorMessage = result.leftOrNull()?.message(),
-                onDismiss = { cancel(useCase) },
-                onRetry = { signFromAlert() },
-            )
-            stackNavigation.pushNew(WcTransactionRoutes.Alert(error))
-            false
-        } else {
-            showSuccessSignMessage()
-            router.pop()
-            true
+    private fun processResultStep(result: Either<WcRequestError, String>, useCase: WcSignUseCase<*>): Boolean {
+        return when (result) {
+            is Either.Left<WcRequestError> -> {
+                val error = result.value
+                if (error is WcRequestError.WrappedSendError && error.sendTransactionError is UserCancelledError) {
+                    return false
+                }
+
+                val alertError = WcTransactionRoutes.Alert.Type.UnknownError(
+                    errorMessage = result.value.message(),
+                    onDismiss = { cancel(useCase) },
+                    onRetry = { signFromAlert() },
+                )
+                stackNavigation.pushNew(WcTransactionRoutes.Alert(alertError))
+                false
+            }
+            is Either.Right<String> -> {
+                showSuccessSignMessage()
+                router.pop()
+                true
+            }
         }
     }
 

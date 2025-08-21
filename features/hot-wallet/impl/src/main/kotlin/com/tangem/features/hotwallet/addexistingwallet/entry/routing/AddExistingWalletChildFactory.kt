@@ -1,5 +1,6 @@
 package com.tangem.features.hotwallet.addexistingwallet.entry.routing
 
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.hotwallet.addexistingwallet.entry.AddExistingWalletModel
@@ -63,6 +64,7 @@ internal class AddExistingWalletChildFactory @Inject constructor(
                 context = childContext,
                 params = PushNotificationsParams(
                     modelCallbacks = model.pushNotificationsCallbacks,
+                    source = AppRoute.PushNotification.Source.Onboarding,
                 ),
             )
             is AddExistingWalletRoute.SetupFinished -> MobileWalletSetupFinishedComponent(
