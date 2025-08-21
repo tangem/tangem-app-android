@@ -49,26 +49,35 @@ internal class WcAddNetworkModel @Inject constructor(
 
     private val params = paramsContainer.require<WcTransactionModelParams>()
     private var useCase by Delegates.notNull<WcAddNetworkUseCase>()
+    private val signatureReceivedAnalyticsSendState = MutableStateFlow(false)
 
     init {
         modelScope.launch {
             useCase = useCaseFactory.createUseCase<WcAddNetworkUseCase>(params.rawRequest)
                 .onLeft { router.push(WcHandleMethodErrorConverter.convert(it)) }
                 .getOrNull() ?: return@launch
-            _uiState.emit(
-                wcAddEthereumChainUMConverter.convert(
-                    WcAddEthereumChainUMConverter.Input(
-                        useCase = useCase,
-                        actions = WcTransactionActionsUM(
-                            onShowVerifiedAlert = ::showVerifiedAlert,
-                            onDismiss = { cancel(useCase) },
-                            onSign = { sign(useCase) },
-                            onCopy = { copyData(useCase.rawSdkRequest.request.params) },
-                        ),
-                    ),
-                ),
-            )
+            sendSignatureReceivedAnalytics(useCase)
+            val either = useCase.invoke()
+            either
+                .onLeft { router.push(WcHandleMethodErrorConverter.convert(it)) }
+                .map {
+                    if (it.isExistInWcSession) cancel(useCase) else showUI()
+                }
         }
+    }
+
+    private fun showUI() {
+        _uiState.value = wcAddEthereumChainUMConverter.convert(
+            WcAddEthereumChainUMConverter.Input(
+                useCase = useCase,
+                actions = WcTransactionActionsUM(
+                    onShowVerifiedAlert = ::showVerifiedAlert,
+                    onDismiss = { cancel(useCase) },
+                    onSign = { sign(useCase) },
+                    onCopy = { copyData(useCase.rawSdkRequest.request.params) },
+                ),
+            ),
+        )
     }
 
     override fun dismiss() {
@@ -113,5 +122,19 @@ internal class WcAddNetworkModel @Inject constructor(
 
     private fun copyData(text: String) {
         clipboardManager.setText(text = text, isSensitive = true)
+    }
+
+    private fun sendSignatureReceivedAnalytics(useCase: WcAddNetworkUseCase) {
+        if (signatureReceivedAnalyticsSendState.value) return
+
+        analytics.send(
+            WcAnalyticEvents.SignatureRequestReceived(
+                rawRequest = useCase.rawSdkRequest,
+                network = useCase.network,
+                emulationStatus = null,
+            ),
+        )
+
+        signatureReceivedAnalyticsSendState.value = true
     }
 }
