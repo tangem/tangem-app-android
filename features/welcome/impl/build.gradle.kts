@@ -18,6 +18,7 @@ dependencies {
     /** Core */
     implementation(projects.core.configToggles)
     implementation(projects.core.decompose)
+    implementation(projects.core.navigation)
     implementation(projects.core.ui)
     implementation(projects.core.analytics)
     implementation(projects.common.routing)
