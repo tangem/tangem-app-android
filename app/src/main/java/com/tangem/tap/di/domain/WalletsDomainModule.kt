@@ -25,7 +25,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LargeClass")
 @Module
 @InstallIn(SingletonComponent::class)
 internal object WalletsDomainModule {
@@ -349,6 +349,26 @@ internal object WalletsDomainModule {
         walletsRepository: WalletsRepository,
     ): GetIsNotificationsEnabledUseCase {
         return GetIsNotificationsEnabledUseCase(
+            walletsRepository = walletsRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providesIsUpgradeWalletNotificationEnabledUseCase(
+        walletsRepository: WalletsRepository,
+    ): IsUpgradeWalletNotificationEnabledUseCase {
+        return IsUpgradeWalletNotificationEnabledUseCase(
+            walletsRepository = walletsRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providesDismissUpgradeWalletNotificationUseCase(
+        walletsRepository: WalletsRepository,
+    ): DismissUpgradeWalletNotificationUseCase {
+        return DismissUpgradeWalletNotificationUseCase(
             walletsRepository = walletsRepository,
         )
     }
