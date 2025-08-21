@@ -25,12 +25,12 @@ import com.tangem.datasource.api.express.models.response.TxDetails
 import com.tangem.datasource.crypto.DataSignatureVerifier
 import com.tangem.datasource.exchangeservice.swap.ExpressUtils
 import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.feature.swap.converters.*
 import com.tangem.feature.swap.domain.api.SwapRepository
 import com.tangem.feature.swap.domain.models.ExpressDataError
@@ -51,7 +51,7 @@ internal class DefaultSwapRepository(
     private val tangemExpressApi: TangemExpressApi,
     private val coroutineDispatcher: CoroutineDispatcherProvider,
     private val walletManagersFacade: WalletManagersFacade,
-    private val userWalletsListManager: UserWalletsListManager,
+    private val userWalletsStore: UserWalletsStore,
     private val errorsDataConverter: ErrorsDataConverter,
     private val dataSignatureVerifier: DataSignatureVerifier,
     private val appPreferencesStore: AppPreferencesStore,
@@ -411,7 +411,7 @@ internal class DefaultSwapRepository(
             cryptoCurrencyFactory.createCoin(
                 blockchain = blockchain,
                 extraDerivationPath = null,
-                userWallet = requireNotNull(userWalletsListManager.selectedUserWalletSync),
+                userWallet = requireNotNull(userWalletsStore.selectedUserWalletOrNull),
             ),
         )
     }
