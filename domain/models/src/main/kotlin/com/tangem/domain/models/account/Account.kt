@@ -1,9 +1,8 @@
 package com.tangem.domain.models.account
 
 import arrow.core.Either
+import arrow.core.getOrElse
 import arrow.core.raise.either
-import com.tangem.domain.models.TokensGroupType
-import com.tangem.domain.models.TokensSortType
 import com.tangem.domain.models.account.Account.CryptoPortfolio.Error.AccountNameError
 import com.tangem.domain.models.account.Account.CryptoPortfolio.Error.DerivationIndexError
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -22,7 +21,7 @@ sealed interface Account {
     val accountId: AccountId
 
     /** Name of the account */
-    val name: AccountName
+    val accountName: AccountName
 
     /** The identifier of the user wallet associated with the account */
     val userWalletId: UserWalletId
@@ -31,21 +30,19 @@ sealed interface Account {
     /**
      * Represents a crypto portfolio account
      *
-     * @property accountId          unique identifier of the account
-     * @property name               name of the account
-     * @property icon               icon representing the account
-     * @property derivationIndex    index used for derivation of the account
-     * @property isArchived         indicates whether the account is archived
-     * @property cryptoCurrencyList list of tokens associated with the account
+     * @property accountId        unique identifier of the account
+     * @property accountName      name of the account
+     * @property icon             icon representing the account
+     * @property derivationIndex  index used for derivation of the account
+     * @property cryptoCurrencies set of tokens associated with the account
      */
     @Serializable
     data class CryptoPortfolio private constructor(
         override val accountId: AccountId,
-        override val name: AccountName,
+        override val accountName: AccountName,
         val icon: CryptoPortfolioIcon,
         val derivationIndex: DerivationIndex,
-        val isArchived: Boolean,
-        val cryptoCurrencyList: CryptoCurrencyList,
+        val cryptoCurrencies: Set<CryptoCurrency>,
     ) : Account {
 
         /** Indicates if the account is the main account */
@@ -54,40 +51,21 @@ sealed interface Account {
 
         /** Number of tokens in the account */
         val tokensCount: Int
-            get() = cryptoCurrencyList.currencies.size
+            get() = cryptoCurrencies.size
 
         /** Number of distinct networks in the account */
         val networksCount: Int
-            get() = cryptoCurrencyList.currencies.map(CryptoCurrency::network).distinct().size
+            get() = cryptoCurrencies.map(CryptoCurrency::network).distinct().size
 
-        fun copy(
-            accountName: AccountName = this.name,
-            accountIcon: CryptoPortfolioIcon = this.icon,
-            isArchived: Boolean = this.isArchived,
-        ): CryptoPortfolio {
+        fun copy(accountName: AccountName = this.accountName, icon: CryptoPortfolioIcon = this.icon): CryptoPortfolio {
             return CryptoPortfolio(
                 accountId = this.accountId,
-                name = accountName,
-                icon = accountIcon,
+                accountName = accountName,
+                icon = icon,
                 derivationIndex = this.derivationIndex,
-                isArchived = isArchived,
-                cryptoCurrencyList = this.cryptoCurrencyList,
+                cryptoCurrencies = this.cryptoCurrencies,
             )
         }
-
-        /**
-         * Represents a list of tokens in the account
-         *
-         * @property currencies set of cryptocurrencies in the account
-         * @property sortType   sorting type for the tokens
-         * @property groupType  grouping type for the tokens
-         */
-        @Serializable
-        data class CryptoCurrencyList(
-            val currencies: Set<CryptoCurrency>,
-            val sortType: TokensSortType,
-            val groupType: TokensGroupType,
-        )
 
         /**
          * Represents possible errors when creating a crypto portfolio account
@@ -109,33 +87,34 @@ sealed interface Account {
             /**
              * Constructor for creating a [CryptoPortfolio] instance
              *
-             * @param accountId          unique identifier of the account
-             * @param name               name of the account
-             * @param accountIcon        icon representing the account
-             * @param derivationIndex    index used for derivation of the account
-             * @param isArchived         indicates whether the account is archived
-             * @param cryptoCurrencyList list of tokens associated with the account
+             * @param accountId        unique identifier of the account
+             * @param name      name of the account
+             * @param icon             icon representing the account
+             * @param derivationIndex  index used for derivation of the account
+             * @param cryptoCurrencies set of tokens associated with the account
              */
-            @Suppress("LongParameterList")
             operator fun invoke(
                 accountId: AccountId,
                 name: String,
-                accountIcon: CryptoPortfolioIcon,
+                icon: CryptoPortfolioIcon,
                 derivationIndex: Int,
-                isArchived: Boolean,
-                cryptoCurrencyList: CryptoCurrencyList,
+                cryptoCurrencies: Set<CryptoCurrency> = emptySet(),
             ): Either<Error, CryptoPortfolio> {
                 return either {
-                    val accountName = AccountName(value = name).mapLeft(::AccountNameError).bind()
-                    val derivationIndex = DerivationIndex(derivationIndex).mapLeft(::DerivationIndexError).bind()
+                    val accountName = AccountName(value = name).getOrElse {
+                        raise(AccountNameError(cause = it))
+                    }
+
+                    val derivationIndex = DerivationIndex(value = derivationIndex).getOrElse {
+                        raise(DerivationIndexError(cause = it))
+                    }
 
                     invoke(
                         accountId = accountId,
                         accountName = accountName,
-                        accountIcon = accountIcon,
+                        icon = icon,
                         derivationIndex = derivationIndex,
-                        isArchived = isArchived,
-                        cryptoCurrencyList = cryptoCurrencyList,
+                        cryptoCurrencies = cryptoCurrencies,
                     )
                 }
             }
@@ -143,38 +122,39 @@ sealed interface Account {
             /**
              * Constructor for creating a [CryptoPortfolio] instance
              *
-             * @param accountId          unique identifier of the account
-             * @param accountName        name of the account
-             * @param accountIcon        icon representing the account
-             * @param derivationIndex    index used for derivation of the account
-             * @param isArchived         indicates whether the account is archived
-             * @param cryptoCurrencyList list of tokens associated with the account
+             * @param accountId        unique identifier of the account
+             * @param accountName      name of the account
+             * @param icon             icon representing the account
+             * @param derivationIndex  index used for derivation of the account
+             * @param cryptoCurrencies set of tokens associated with the account
              */
             @Suppress("LongParameterList")
             operator fun invoke(
                 accountId: AccountId,
                 accountName: AccountName,
-                accountIcon: CryptoPortfolioIcon,
+                icon: CryptoPortfolioIcon,
                 derivationIndex: DerivationIndex,
-                isArchived: Boolean,
-                cryptoCurrencyList: CryptoCurrencyList,
+                cryptoCurrencies: Set<CryptoCurrency> = emptySet(),
             ): CryptoPortfolio {
                 return CryptoPortfolio(
                     accountId = accountId,
-                    name = accountName,
-                    icon = accountIcon,
+                    accountName = accountName,
+                    icon = icon,
                     derivationIndex = derivationIndex,
-                    isArchived = isArchived,
-                    cryptoCurrencyList = cryptoCurrencyList,
+                    cryptoCurrencies = cryptoCurrencies,
                 )
             }
 
             /**
              * Creates a main account for the given user wallet ID
              *
-             * @param userWalletId the ID of the user wallet
+             * @param userWalletId     the ID of the user wallet
+             * @param cryptoCurrencies set of tokens associated with the account
              */
-            fun createMainAccount(userWalletId: UserWalletId): CryptoPortfolio {
+            fun createMainAccount(
+                userWalletId: UserWalletId,
+                cryptoCurrencies: Set<CryptoCurrency> = emptySet(),
+            ): CryptoPortfolio {
                 val derivationIndex = DerivationIndex.Main
 
                 return CryptoPortfolio(
@@ -182,15 +162,10 @@ sealed interface Account {
                         userWalletId = userWalletId,
                         derivationIndex = derivationIndex,
                     ),
-                    name = AccountName.Main,
+                    accountName = AccountName.Main,
                     icon = CryptoPortfolioIcon.ofMainAccount(userWalletId),
                     derivationIndex = derivationIndex,
-                    isArchived = false,
-                    cryptoCurrencyList = CryptoCurrencyList(
-                        currencies = emptySet(),
-                        sortType = TokensSortType.NONE,
-                        groupType = TokensGroupType.NONE,
-                    ),
+                    cryptoCurrencies = cryptoCurrencies,
                 )
             }
         }
