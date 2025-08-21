@@ -179,6 +179,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicModalBottomSheet(
             onBack = onBack,
             dragHandle = null,
             content = bsContent,
+            scrimColor = TangemTheme.colors.overlay.secondary,
         )
     } else {
         ModalBottomSheet(
@@ -190,6 +191,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicModalBottomSheet(
             contentWindowInsets = { WindowInsetsZero },
             dragHandle = null,
             content = bsContent,
+            scrimColor = TangemTheme.colors.overlay.secondary,
         )
     }
 }
@@ -200,58 +202,62 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicModalBottomSheet(
 @Composable
 private fun TangemModalBottomSheet_Preview() {
     TangemThemePreview {
-        TangemModalBottomSheet<TangemBottomSheetConfigContentPreviewConfig>(
-            config = TangemBottomSheetConfig(
-                isShown = true,
-                onDismissRequest = {},
-                content = TangemBottomSheetConfigContentPreviewConfig(),
-            ),
-            title = {
-                TangemModalBottomSheetTitle(
-                    endIconRes = R.drawable.ic_close_24,
-                    onEndClick = {},
-                )
-            },
-            content = {
-                Column(
-                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Icon(
-                        modifier = Modifier
-                            .size(56.dp)
-                            .clip(RoundedCornerShape(100))
-                            .background(TangemTheme.colors.icon.informative.copy(alpha = 0.1f))
-                            .padding(12.dp),
-                        painter = rememberVectorPainter(
-                            ImageVector.vectorResource(R.drawable.ic_alert_24),
-                        ),
-                        tint = TangemTheme.colors.icon.informative,
-                        contentDescription = null,
+        Box(
+            Modifier.background(TangemTheme.colors.background.tertiary),
+        ) {
+            TangemModalBottomSheet<TangemBottomSheetConfigContentPreviewConfig>(
+                config = TangemBottomSheetConfig(
+                    isShown = true,
+                    onDismissRequest = {},
+                    content = TangemBottomSheetConfigContentPreviewConfig(),
+                ),
+                title = {
+                    TangemModalBottomSheetTitle(
+                        endIconRes = R.drawable.ic_close_24,
+                        onEndClick = {},
                     )
-                    SpacerH24()
-                    Text(
-                        text = "Unsuported networks",
-                        style = TangemTheme.typography.h3,
-                        color = TangemTheme.colors.text.primary1,
-                        textAlign = TextAlign.Center,
-                    )
-                    SpacerH8()
-                    Text(
-                        text = "Tangem does not currently support a required network by React App.",
-                        style = TangemTheme.typography.body2,
-                        color = TangemTheme.colors.text.secondary,
-                        textAlign = TextAlign.Center,
-                    )
-                    SpacerH(48.dp)
-                    PrimaryButton(
-                        modifier = Modifier.fillMaxWidth(),
-                        text = "Go it",
-                        onClick = {},
-                    )
-                }
-            },
-        )
+                },
+                content = {
+                    Column(
+                        modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Icon(
+                            modifier = Modifier
+                                .size(56.dp)
+                                .clip(RoundedCornerShape(100))
+                                .background(TangemTheme.colors.icon.informative.copy(alpha = 0.1f))
+                                .padding(12.dp),
+                            painter = rememberVectorPainter(
+                                ImageVector.vectorResource(R.drawable.ic_alert_24),
+                            ),
+                            tint = TangemTheme.colors.icon.informative,
+                            contentDescription = null,
+                        )
+                        SpacerH24()
+                        Text(
+                            text = "Unsuported networks",
+                            style = TangemTheme.typography.h3,
+                            color = TangemTheme.colors.text.primary1,
+                            textAlign = TextAlign.Center,
+                        )
+                        SpacerH8()
+                        Text(
+                            text = "Tangem does not currently support a required network by React App.",
+                            style = TangemTheme.typography.body2,
+                            color = TangemTheme.colors.text.secondary,
+                            textAlign = TextAlign.Center,
+                        )
+                        SpacerH(48.dp)
+                        PrimaryButton(
+                            modifier = Modifier.fillMaxWidth(),
+                            text = "Go it",
+                            onClick = {},
+                        )
+                    }
+                },
+            )
+        }
     }
 }
 
