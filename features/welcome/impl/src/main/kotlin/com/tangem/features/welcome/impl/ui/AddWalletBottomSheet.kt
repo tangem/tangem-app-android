@@ -12,16 +12,17 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
 import com.tangem.core.ui.components.inputrow.InputRowDefault
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
-import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.features.welcome.impl.R
 import com.tangem.features.welcome.impl.ui.state.AddWalletBottomSheetContentUM
 
 @Composable
 fun AddWalletBottomSheet(config: TangemBottomSheetConfig) {
     TangemBottomSheet<AddWalletBottomSheetContentUM>(
         config = config,
-        titleText = TextReference.Str("Add Wallet"),
+        titleText = resourceReference(R.string.auth_info_add_wallet_title),
         containerColor = TangemTheme.colors.background.tertiary,
         content = { Content(it) },
     )
@@ -38,7 +39,7 @@ private fun Content(content: AddWalletBottomSheetContentUM) {
             ),
     ) {
         InputRowDefault(
-            text = TextReference.Str("Create New Wallet"),
+            text = resourceReference(R.string.home_button_create_new_wallet),
             modifier = Modifier
                 .roundedShapeItemDecoration(
                     currentIndex = 0,
@@ -49,7 +50,7 @@ private fun Content(content: AddWalletBottomSheetContentUM) {
                 .clickable { content.onOptionClick(AddWalletBottomSheetContentUM.Option.Create) },
         )
         InputRowDefault(
-            text = TextReference.Str("Add Existing Wallet"),
+            text = resourceReference(R.string.home_button_add_existing_wallet),
             modifier = Modifier
                 .roundedShapeItemDecoration(
                     currentIndex = 1,
@@ -60,7 +61,7 @@ private fun Content(content: AddWalletBottomSheetContentUM) {
                 .clickable { content.onOptionClick(AddWalletBottomSheetContentUM.Option.Add) },
         )
         InputRowDefault(
-            text = TextReference.Str("Buy Tangem Wallet"),
+            text = resourceReference(R.string.details_buy_wallet),
             modifier = Modifier
                 .roundedShapeItemDecoration(
                     currentIndex = 2,
