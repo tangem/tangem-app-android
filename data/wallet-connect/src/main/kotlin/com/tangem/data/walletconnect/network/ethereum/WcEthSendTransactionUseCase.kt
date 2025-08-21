@@ -7,6 +7,9 @@ import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.extensions.formatHex
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam.TxSentFrom
+import com.tangem.core.analytics.models.Basic
+import com.tangem.core.analytics.models.Basic.TransactionSent.MemoType
 import com.tangem.data.walletconnect.respond.WcRespondService
 import com.tangem.data.walletconnect.sign.BaseWcSignUseCase
 import com.tangem.data.walletconnect.sign.SignCollector
@@ -86,6 +89,16 @@ internal class WcEthSendTransactionUseCase @AssistedInject constructor(
                 emit(state.toResult(parseSendError(error).left()))
             }
             .getOrNull() ?: return
+        analytics.send(
+            Basic.TransactionSent(
+                sentFrom = TxSentFrom.WalletConnect(
+                    blockchain = network.name,
+                    token = network.currencySymbol,
+                    feeType = null,
+                ),
+                memoType = MemoType.Null,
+            ),
+        )
         val respondResult = respondService.respond(rawSdkRequest, hash.formatHex())
         emit(state.toResult(respondResult))
     }

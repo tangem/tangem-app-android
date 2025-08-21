@@ -17,7 +17,6 @@ import javax.inject.Inject
 
 internal class BlockAidVerificationDelegate @Inject constructor(
     private val blockAidVerifier: BlockAidVerifier,
-    private val blockAidChainNameConverter: BlockAidChainNameConverter,
 ) {
 
     fun getSecurityStatus(
@@ -27,7 +26,6 @@ internal class BlockAidVerificationDelegate @Inject constructor(
         session: WcSession,
         accountAddress: String?,
     ): LceFlow<Throwable, CheckTransactionResult> = flow {
-        emit(Lce.Loading(partialContent = null))
         val failedResult = CheckTransactionResult(
             validation = ValidationResult.FAILED_TO_VALIDATE,
             simulation = SimulationResult.FailedToSimulate,
@@ -36,7 +34,21 @@ internal class BlockAidVerificationDelegate @Inject constructor(
             emit(Lce.Content(failedResult))
             return@flow
         }
-        when (method) {
+        val chain = BlockAidChainNameConverter.convert(network)
+        if (chain == null) {
+            emit(Lce.Content(failedResult))
+            return@flow
+        }
+        emit(Lce.Loading(partialContent = null))
+        val methodName = when (method) {
+            is WcEthMethod -> rawSdkRequest.request.method
+            is WcSolanaMethod -> method.trimmedPrefixMethodName
+            is WcMethod.Unsupported -> {
+                emit(Lce.Content(failedResult))
+                return@flow
+            }
+        }
+        val params = when (method) {
             is WcEthMethod -> TransactionParams.Evm(rawSdkRequest.request.params)
             is WcSolanaMethod.SignAllTransaction -> TransactionParams.Solana(method.transaction)
             is WcSolanaMethod.SignTransaction -> TransactionParams.Solana(listOf(method.transaction))
@@ -45,25 +57,28 @@ internal class BlockAidVerificationDelegate @Inject constructor(
                 emit(Lce.Content(failedResult))
                 return@flow
             }
-            else -> null
-        }?.let { params ->
-            blockAidVerifier.verifyTransaction(
-                TransactionData(
-                    chain = blockAidChainNameConverter.convert(network),
-                    accountAddress = accountAddress,
-                    method = rawSdkRequest.request.method,
-                    domainUrl = session.sdkModel.appMetaData.url,
-                    params = params,
-                ),
-            ).fold(
-                ifLeft = {
-                    Timber.e("Failed to verify transaction: ${it.localizedMessage}")
-                    emit(Lce.Error(it))
-                },
-                ifRight = {
-                    emit(Lce.Content(it))
-                },
-            )
-        } ?: emit(Lce.Content(failedResult))
+            else -> {
+                emit(Lce.Content(failedResult))
+                return@flow
+            }
+        }
+
+        blockAidVerifier.verifyTransaction(
+            data = TransactionData(
+                chain = chain,
+                accountAddress = accountAddress,
+                method = methodName,
+                domainUrl = session.sdkModel.appMetaData.url,
+                params = params,
+            ),
+        ).fold(
+            ifLeft = {
+                Timber.e("Failed to verify transaction: ${it.localizedMessage}")
+                emit(Lce.Error(it))
+            },
+            ifRight = {
+                emit(Lce.Content(it))
+            },
+        )
     }
 }
