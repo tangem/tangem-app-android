@@ -60,7 +60,7 @@ internal fun TokenReceiveQrCodeContent(qrCodeUM: QrCodeUM) {
 
             Buttons(
                 onShareClick = { qrCodeUM.onShareClick(qrCodeUM.addressValue) },
-                onCopyClick = { qrCodeUM.onCopyClick(qrCodeUM.addressValue) },
+                onCopyClick = qrCodeUM.onCopyClick,
                 snackbarHostState = snackbarHostState,
             )
         }
