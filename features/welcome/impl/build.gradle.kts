@@ -34,6 +34,7 @@ dependencies {
     implementation(projects.domain.appCurrency)
     implementation(projects.domain.wallets)
     implementation(projects.domain.card)
+    implementation(projects.domain.settings)
 
     /** DI */
     implementation(deps.hilt.android)
