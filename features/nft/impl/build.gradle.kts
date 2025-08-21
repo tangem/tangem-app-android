@@ -14,6 +14,7 @@ android {
 dependencies {
     /** Api */
     implementation(projects.features.nft.api)
+    implementation(projects.features.tokenRecieve.api)
 
     /** Core modules */
     implementation(projects.core.configToggles)
@@ -34,6 +35,8 @@ dependencies {
     implementation(projects.domain.nft.models)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets.models)
+    implementation(projects.domain.transaction)
+    implementation(projects.domain.tokens)
 
     /** Common */
     implementation(projects.common.ui)
