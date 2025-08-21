@@ -8,14 +8,16 @@ import com.tangem.core.ui.components.atoms.text.TextEllipsis
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.models.SwapDirection
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.swap.v2.impl.R
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountFieldUM
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountType
+import com.tangem.utils.StringsSigns.DOT
 
 internal class SwapAmountFieldConverter(
     private val swapDirection: SwapDirection,
@@ -60,15 +62,26 @@ internal class SwapAmountFieldConverter(
     }
 
     private fun getSubtitle(selectedType: SwapAmountType, cryptoCurrencyStatus: CryptoCurrencyStatus) = when {
-        selectedType.isEnteringField() -> resourceReference(
-            R.string.common_balance,
-            wrappedList(
+        selectedType.isEnteringField() -> combinedReference(
+            stringReference(
                 cryptoCurrencyStatus.value.amount.format {
                     crypto(cryptoCurrency = cryptoCurrencyStatus.currency)
                 },
             ),
+            stringReference(value = " $DOT "),
+            stringReference(
+                cryptoCurrencyStatus.value.fiatAmount.format {
+                    fiat(
+                        fiatCurrencyCode = appCurrency.code,
+                        fiatCurrencySymbol = appCurrency.symbol,
+                    )
+                },
+            ),
         ).orMaskWithStars(isBalanceHidden)
-        selectedType.isViewingField() -> resourceReference(R.string.send_with_swap_recipient_amount_text)
+        selectedType.isViewingField() -> resourceReference(
+            R.string.send_with_swap_recipient_get_amount,
+
+        )
         else -> TextReference.Companion.EMPTY
     }
 

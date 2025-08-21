@@ -1,6 +1,6 @@
 package com.tangem.domain.tokens.legacy
 
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import org.rekotlin.Action
 
 sealed class TradeCryptoAction : Action {
