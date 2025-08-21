@@ -192,6 +192,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicBottomSheet(
             dragHandle = { TangemBottomSheetDraggableHeader(color = containerColor) },
             onBack = onBack,
             content = bsContent,
+            scrimColor = TangemTheme.colors.overlay.secondary,
         )
     } else {
         ModalBottomSheet(
@@ -203,6 +204,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicBottomSheet(
             contentWindowInsets = { WindowInsetsZero },
             dragHandle = { TangemBottomSheetDraggableHeader(color = containerColor) },
             content = bsContent,
+            scrimColor = TangemTheme.colors.overlay.secondary,
         )
     }
 }
