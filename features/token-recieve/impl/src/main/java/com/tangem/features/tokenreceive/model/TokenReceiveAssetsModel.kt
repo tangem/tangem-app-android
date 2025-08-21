@@ -1,10 +1,14 @@
 package com.tangem.features.tokenreceive.model
 
 import androidx.compose.runtime.Stable
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.domain.tokens.model.analytics.TokenReceiveNewAnalyticsEvent
 import com.tangem.features.tokenreceive.component.TokenReceiveAssetsComponent
+import com.tangem.features.tokenreceive.entity.ReceiveAddress
 import com.tangem.features.tokenreceive.ui.state.ReceiveAssetsUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,9 +20,20 @@ import javax.inject.Inject
 internal class TokenReceiveAssetsModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
+    analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
     private val params = paramsContainer.require<TokenReceiveAssetsComponent.TokenReceiveAssetsParams>()
+
+    init {
+        analyticsEventHandler.send(
+            TokenReceiveNewAnalyticsEvent.ReceiveScreenOpened(
+                token = params.tokenName,
+                blockchainName = params.fullName,
+                ensStatus = configureEnsStatus(),
+            ),
+        )
+    }
 
     internal val state: StateFlow<ReceiveAssetsUM>
     field = MutableStateFlow<ReceiveAssetsUM>(
@@ -32,4 +47,13 @@ internal class TokenReceiveAssetsModel @Inject constructor(
             fullName = params.fullName,
         ),
     )
+
+    private fun configureEnsStatus(): AnalyticsParam.EnsStatus {
+        val hasEnsAddress = params.addresses.values.any { it.type == ReceiveAddress.Type.Ens }
+        return if (hasEnsAddress) {
+            AnalyticsParam.EnsStatus.FULL
+        } else {
+            AnalyticsParam.EnsStatus.EMPTY
+        }
+    }
 }
