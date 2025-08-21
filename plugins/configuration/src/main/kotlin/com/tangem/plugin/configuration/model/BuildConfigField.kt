@@ -15,13 +15,6 @@ internal sealed class BuildConfigField(val type: String, val name: String, val v
         value = "\"$value\"",
     )
 
-    // TODO remove
-    class TestActionEnabled(isEnabled: Boolean) : BuildConfigField(
-        type = "Boolean",
-        name = "TEST_ACTION_ENABLED",
-        value = isEnabled.toString(),
-    )
-
     class LogEnabled(isEnabled: Boolean) : BuildConfigField(
         type = "Boolean",
         name = "LOG_ENABLED",
