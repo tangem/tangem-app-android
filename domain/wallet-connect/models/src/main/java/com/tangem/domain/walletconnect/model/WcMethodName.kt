@@ -14,6 +14,7 @@ enum class WcEthMethodName(override val raw: String) : WcMethodName {
     SignTransaction("eth_signTransaction"),
     SendTransaction("eth_sendTransaction"),
     AddEthereumChain("wallet_addEthereumChain"),
+    SwitchEthereumChain("wallet_switchEthereumChain"),
 }
 
 enum class WcSolanaMethodName(override val raw: String) : WcMethodName {
