@@ -1,5 +1,7 @@
 package com.tangem.features.onboarding.v2.twin.impl.model
 
+import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.activate
 import com.tangem.Message
 import com.tangem.common.CompletionResult
 import com.tangem.common.KeyPair
@@ -30,6 +32,8 @@ import com.tangem.domain.common.TwinCardNumber
 import com.tangem.domain.common.getTwinCardNumber
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.models.ReceiveAddressModel
+import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.scan.ScanResponse
@@ -38,9 +42,11 @@ import com.tangem.domain.onboarding.SaveTwinsOnboardingShownUseCase
 import com.tangem.domain.onramp.GetLegacyTopUpUrlUseCase
 import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
 import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
+import com.tangem.domain.tokens.GetViewedTokenReceiveWarningUseCase
 import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.tokens.model.analytics.TokenReceiveAnalyticsEvent
 import com.tangem.domain.tokens.wallet.WalletBalanceFetcher
+import com.tangem.domain.transaction.usecase.GetEnsNameUseCase
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
@@ -52,6 +58,7 @@ import com.tangem.features.onboarding.v2.twin.api.OnboardingTwinComponent.Params
 import com.tangem.features.onboarding.v2.twin.impl.DefaultOnboardingTwinComponent
 import com.tangem.features.onboarding.v2.twin.impl.ui.TwinWalletArtworkUM
 import com.tangem.features.onboarding.v2.twin.impl.ui.state.OnboardingTwinUM
+import com.tangem.features.tokenreceive.TokenReceiveFeatureToggle
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.sdk.extensions.localizedDescriptionRes
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -89,11 +96,16 @@ internal class OnboardingTwinModel @Inject constructor(
     private val shareManager: ShareManager,
     private val tokensFeatureToggles: TokensFeatureToggles,
     private val walletBalanceFetcher: WalletBalanceFetcher,
+    private val tokenReceiveFeatureToggle: TokenReceiveFeatureToggle,
+    private val getViewedTokenReceiveWarningUseCase: GetViewedTokenReceiveWarningUseCase,
+    private val getEnsNameUseCase: GetEnsNameUseCase,
 ) : Model() {
 
     private val params = paramsContainer.require<OnboardingTwinComponent.Params>()
     private val firstCardTwinNumber = params.scanResponse.card.getTwinCardNumber() ?: error("Not twin")
     private val cryptoCurrencyStatusJobHolder = JobHolder()
+
+    val bottomSheetNavigation: SlotNavigation<TokenReceiveConfig> = SlotNavigation()
 
     private val _uiState = MutableStateFlow(
         when (params.mode) {
@@ -400,35 +412,43 @@ internal class OnboardingTwinModel @Inject constructor(
         val currency = status.currency
         val networkAddress = status.value.networkAddress ?: return
 
-        update<OnboardingTwinUM.TopUp> {
-            it.copy(
-                bottomSheetConfig = TangemBottomSheetConfig(
-                    isShown = true,
-                    onDismissRequest = {
-                        update<OnboardingTwinUM.TopUp> {
-                            it.copy(bottomSheetConfig = TangemBottomSheetConfig.Empty)
-                        }
-                    },
-                    content = TokenReceiveBottomSheetConfig(
-                        asset = TokenReceiveBottomSheetConfig.Asset.Currency(
-                            name = currency.name,
-                            symbol = currency.symbol,
+        if (tokenReceiveFeatureToggle.isNewTokenReceiveEnabled) {
+            modelScope.launch {
+                configureReceiveAddresses(cryptoCurrencyStatus = status)?.let {
+                    bottomSheetNavigation.activate(it)
+                }
+            }
+        } else {
+            update<OnboardingTwinUM.TopUp> {
+                it.copy(
+                    bottomSheetConfig = TangemBottomSheetConfig(
+                        isShown = true,
+                        onDismissRequest = {
+                            update<OnboardingTwinUM.TopUp> {
+                                it.copy(bottomSheetConfig = TangemBottomSheetConfig.Empty)
+                            }
+                        },
+                        content = TokenReceiveBottomSheetConfig(
+                            asset = TokenReceiveBottomSheetConfig.Asset.Currency(
+                                name = currency.name,
+                                symbol = currency.symbol,
+                            ),
+                            network = currency.network,
+                            networkAddress = networkAddress,
+                            showMemoDisclaimer =
+                            currency.network.transactionExtrasType != Network.TransactionExtrasType.NONE,
+                            onCopyClick = {
+                                Analytics.send(TokenReceiveAnalyticsEvent.ButtonCopyAddress(currency.symbol))
+                                clipboardManager.setText(text = it, isSensitive = true)
+                            },
+                            onShareClick = {
+                                Analytics.send(TokenReceiveAnalyticsEvent.ButtonShareAddress(currency.symbol))
+                                shareManager.shareText(text = it)
+                            },
                         ),
-                        network = currency.network,
-                        networkAddress = networkAddress,
-                        showMemoDisclaimer =
-                        currency.network.transactionExtrasType != Network.TransactionExtrasType.NONE,
-                        onCopyClick = {
-                            Analytics.send(TokenReceiveAnalyticsEvent.ButtonCopyAddress(currency.symbol))
-                            clipboardManager.setText(text = it, isSensitive = true)
-                        },
-                        onShareClick = {
-                            Analytics.send(TokenReceiveAnalyticsEvent.ButtonShareAddress(currency.symbol))
-                            shareManager.shareText(text = it)
-                        },
                     ),
-                ),
-            )
+                )
+            }
         }
     }
 
@@ -505,5 +525,46 @@ internal class OnboardingTwinModel @Inject constructor(
     private fun TwinWalletArtworkUM.Leapfrog.Step.next(): TwinWalletArtworkUM.Leapfrog.Step = when (this) {
         TwinWalletArtworkUM.Leapfrog.Step.FirstCard -> TwinWalletArtworkUM.Leapfrog.Step.SecondCard
         TwinWalletArtworkUM.Leapfrog.Step.SecondCard -> TwinWalletArtworkUM.Leapfrog.Step.FirstCard
+    }
+
+    private suspend fun configureReceiveAddresses(cryptoCurrencyStatus: CryptoCurrencyStatus): TokenReceiveConfig? {
+        val userWallet = coldUserWalletBuilderFactory.create(params.scanResponse).build() ?: return null
+        val addresses = cryptoCurrencyStatus.value.networkAddress ?: return null
+
+        val ensName = getEnsNameUseCase.invoke(
+            userWalletId = userWallet.walletId,
+            network = cryptoCurrencyStatus.currency.network,
+            address = addresses.defaultAddress.value,
+        )
+
+        val receiveAddresses = buildList {
+            ensName?.let { ens ->
+                add(
+                    ReceiveAddressModel(
+                        nameService = ReceiveAddressModel.NameService.Ens,
+                        value = ens,
+                        displayName = ens,
+                    ),
+                )
+            }
+            addresses.availableAddresses.map { address ->
+                add(
+                    ReceiveAddressModel(
+                        nameService = ReceiveAddressModel.NameService.Default,
+                        value = address.value,
+                        displayName = "${cryptoCurrencyStatus.currency.name} (${cryptoCurrencyStatus.currency.symbol})",
+                    ),
+                )
+            }
+        }
+
+        return TokenReceiveConfig(
+            shouldShowWarning = cryptoCurrencyStatus.currency.name !in getViewedTokenReceiveWarningUseCase(),
+            cryptoCurrency = cryptoCurrencyStatus.currency,
+            userWalletId = userWallet.walletId,
+            showMemoDisclaimer = cryptoCurrencyStatus.currency.network.transactionExtrasType != Network
+                .TransactionExtrasType.NONE,
+            receiveAddress = receiveAddresses,
+        )
     }
 }
