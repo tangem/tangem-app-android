@@ -93,6 +93,7 @@ internal class DefaultTokenReceiveComponent @AssistedInject constructor(
                     notificationConfigs = model.state.value.notificationConfigs,
                     showMemoDisclaimer = model.params.config.showMemoDisclaimer,
                     fullName = model.params.config.cryptoCurrency.network.name,
+                    tokenName = model.getTokenName(),
                 ),
             )
             TokenReceiveRoutes.Warning -> TokenReceiveWarningComponent(
