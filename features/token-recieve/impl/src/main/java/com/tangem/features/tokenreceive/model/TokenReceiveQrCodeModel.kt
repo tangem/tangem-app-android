@@ -4,7 +4,7 @@ import androidx.compose.runtime.Stable
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.features.tokenreceive.component.TokenReceiveQrCodeComponent
 import com.tangem.features.tokenreceive.entity.ReceiveAddress
 import com.tangem.features.tokenreceive.ui.state.QrCodeUM
@@ -27,7 +27,7 @@ internal class TokenReceiveQrCodeModel @Inject constructor(
         QrCodeUM(
             network = params.network,
             addressValue = params.address.value,
-            addressName = (params.address.type as? ReceiveAddress.Type.Default)?.displayName ?: stringReference(""),
+            addressName = (params.address.type as? ReceiveAddress.Type.Default)?.displayName ?: TextReference.EMPTY,
             onCopyClick = { params.callback.onCopyClick(params.id) },
             onShareClick = params.callback::onShareClick,
         ),
