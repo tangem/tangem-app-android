@@ -64,14 +64,9 @@ class AddCryptoPortfolioUseCase(
         return Account.CryptoPortfolio(
             accountId = AccountId.forCryptoPortfolio(userWalletId = userWalletId, derivationIndex = derivationIndex),
             accountName = accountName,
-            accountIcon = icon,
+            icon = icon,
             derivationIndex = derivationIndex,
-            isArchived = false,
-            cryptoCurrencyList = Account.CryptoPortfolio.CryptoCurrencyList(
-                currencies = emptySet(),
-                sortType = TokensSortType.NONE,
-                groupType = TokensGroupType.NONE,
-            ),
+            cryptoCurrencies = emptySet(),
         )
     }
 
@@ -88,7 +83,13 @@ class AddCryptoPortfolioUseCase(
             catch = { raise(Error.DataOperationFailed(cause = it)) },
         )
 
-        return AccountList.empty(userWallet = userWallet)
+        // TODO: [REDACTED_JIRA]
+        return AccountList.empty(
+            userWallet = userWallet,
+            cryptoCurrencies = emptySet(),
+            sortType = TokensSortType.NONE,
+            groupType = TokensGroupType.NONE,
+        )
     }
 
     private suspend fun Raise<Error>.saveAccounts(accountList: AccountList) {
