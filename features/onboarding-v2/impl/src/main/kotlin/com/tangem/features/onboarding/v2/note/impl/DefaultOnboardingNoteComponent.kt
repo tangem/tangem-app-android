@@ -28,6 +28,7 @@ import com.tangem.features.onboarding.v2.note.impl.model.OnboardingNoteModel
 import com.tangem.features.onboarding.v2.note.impl.model.OnboardingNoteCommonState
 import com.tangem.features.onboarding.v2.note.impl.route.ONBOARDING_NOTE_STEPS_COUNT
 import com.tangem.features.onboarding.v2.note.impl.route.OnboardingNoteRoute
+import com.tangem.features.tokenreceive.TokenReceiveComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -39,6 +40,7 @@ import kotlinx.coroutines.flow.StateFlow
 internal class DefaultOnboardingNoteComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
     @Assisted val params: OnboardingNoteComponent.Params,
+    private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
 ) : OnboardingNoteComponent, AppComponentContext by context {
 
     private val model: OnboardingNoteModel = getOrCreateModel(params)
@@ -108,6 +110,7 @@ internal class DefaultOnboardingNoteComponent @AssistedInject constructor(
                     childParams = childParams,
                     onDone = { params.onDone() },
                 ),
+                tokenReceiveComponentFactory = tokenReceiveComponentFactory,
             )
         }
     }
