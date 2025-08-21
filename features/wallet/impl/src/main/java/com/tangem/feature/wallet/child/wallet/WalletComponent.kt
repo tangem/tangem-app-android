@@ -23,11 +23,13 @@ import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.markets.entry.MarketsEntryComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsBottomSheetComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsParams
+import com.tangem.features.tokenreceive.TokenReceiveComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.launch
 
+@Suppress("LongParameterList")
 internal class WalletComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted navigate: (WalletRoute) -> Unit,
@@ -35,6 +37,7 @@ internal class WalletComponent @AssistedInject constructor(
     private val marketsEntryComponentFactory: MarketsEntryComponent.Factory,
     private val askBiometryComponentFactory: AskBiometryComponent.Factory,
     private val pushNotificationsBottomSheetComponent: PushNotificationsBottomSheetComponent.Factory,
+    private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
     private val model: WalletModel = getOrCreateModel()
@@ -76,6 +79,15 @@ internal class WalletComponent @AssistedInject constructor(
                         modelCallbacks = model.askForPushNotificationsModelCallbacks,
                     ),
                 )
+                is WalletDialogConfig.TokenReceive -> {
+                    tokenReceiveComponentFactory.create(
+                        context = childByContext(componentContext),
+                        params = TokenReceiveComponent.Params(
+                            config = dialogConfig.tokenReceiveConfig,
+                            onDismiss = model.innerWalletRouter.dialogNavigation::dismiss,
+                        ),
+                    )
+                }
             }
         },
     )
