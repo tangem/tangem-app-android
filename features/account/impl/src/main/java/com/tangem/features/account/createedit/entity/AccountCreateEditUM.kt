@@ -1,8 +1,8 @@
 package com.tangem.features.account.createedit.entity
 
+import com.tangem.common.ui.account.CryptoPortfolioIconUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.account.CryptoPortfolioIcon
-import com.tangem.features.account.common.CryptoPortfolioIconUM
 import kotlinx.collections.immutable.ImmutableList
 
 data class AccountCreateEditUM(
