@@ -485,6 +485,8 @@
   <string name="hw_backup_close_description">If you do, you\'ll need to start over.</string>
   <string name="hw_backup_google_drive_description">Recover an existing wallet stored in your Google Drive backup</string>
   <string name="hw_backup_google_drive_title">Google Drive Backup</string>
+  <string name="hw_backup_hardware_description">Upgrade your security right away with a best in class hardware wallet from Tangem.</string>
+  <string name="hw_backup_hardware_title">Hardware Wallet</string>
   <string name="hw_backup_need_action">Go to backup</string>
   <string name="hw_backup_need_description">To secure your wallet with a Access Code, complete the backup first.</string>
   <string name="hw_backup_need_title">Finish Backup First</string>
@@ -498,6 +500,19 @@
   <string name="hw_create_title">Create Mobile Wallet</string>
   <string name="hw_import_seed_phrase_already_imported">This recovery phrase has already been imported</string>
   <string name="hw_mobile_wallet">Mobile Wallet</string>
+  <string name="hw_upgrade_funds_access_description">Your funds stay safe and fully accessible during the process</string>
+  <string name="hw_upgrade_funds_access_title">Funds access</string>
+  <string name="hw_upgrade_general_security_description">All private wallet data will be removed from the mobile app and stored securely on your Tangem device only</string>
+  <string name="hw_upgrade_general_security_title">General Security</string>
+  <string name="hw_upgrade_key_migration_description">Private keys will be moved from the app to your Tangem card or ring</string>
+  <string name="hw_upgrade_key_migration_title">Key Migration</string>
+  <string name="hw_upgrade_scan_device">Scan device</string>
+  <string name="hw_upgrade_start_action">Start upgrade</string>
+  <string name="hw_upgrade_start_description">You’re about to upgrade your wallet to Tangem Wallet. This will keep your assets safe with cold storage.</string>
+  <string name="hw_upgrade_start_title">Tangem Wallet</string>
+  <string name="hw_upgrade_title">Upgrade to Hardware Wallet</string>
+  <string name="hw_upgrade_to_cold_banner_description">Keep your crypto safe with Tangem’s best-in-class hardware wallet.</string>
+  <string name="hw_upgrade_to_cold_banner_title">Upgrade wallet with a hardware backup</string>
   <string name="information_generated_with_ai">This information was generated with AI.\nTap here, if you find any errors.</string>
   <string name="initial_message_change_access_code_body">To change the access code tap the card or ring as shown above and do not remove until the end of the operation</string>
   <string name="initial_message_change_passcode_body">To change the passcode tap the card as shown above and do not remove until the end of the operation</string>
