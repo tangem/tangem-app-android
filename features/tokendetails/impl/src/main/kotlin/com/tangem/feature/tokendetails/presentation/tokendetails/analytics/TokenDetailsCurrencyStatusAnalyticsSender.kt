@@ -4,8 +4,8 @@ import arrow.core.Either
 import arrow.core.getOrElse
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.tokens.error.CurrencyStatusError
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 
 internal class TokenDetailsCurrencyStatusAnalyticsSender(
     private val analyticsEventHandler: AnalyticsEventHandler,
