@@ -2,7 +2,7 @@ package com.tangem.feature.swap.domain.models.domain
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import java.math.BigDecimal
 
 /**
