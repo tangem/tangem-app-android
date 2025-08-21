@@ -6,8 +6,12 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.components.bottomsheets.BottomSheetOption
+import com.tangem.core.ui.components.bottomsheets.OptionsBottomSheetContent
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isLocked
@@ -15,11 +19,10 @@ import com.tangem.domain.core.wallets.UserWalletsListRepository
 import com.tangem.domain.core.wallets.error.UnlockWalletError
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.repository.WalletsRepository
+import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.domain.wallets.usecase.GetIsBiometricsEnabledUseCase
 import com.tangem.features.wallet.utils.UserWalletsFetcher
 import com.tangem.features.welcome.impl.R
-import com.tangem.features.welcome.impl.ui.state.AddWalletBottomSheetContentUM
-import com.tangem.features.welcome.impl.ui.state.AddWalletBottomSheetContentUM.Option.*
 import com.tangem.features.welcome.impl.ui.state.WelcomeUM
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -46,6 +49,8 @@ internal class WelcomeModel @Inject constructor(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val getIsBiometricsEnabledUseCase: GetIsBiometricsEnabledUseCase,
     private val walletsRepository: WalletsRepository,
+    private val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase,
+    private val urlOpener: UrlOpener,
 ) : Model() {
 
     val uiState: StateFlow<WelcomeUM>
@@ -149,8 +154,27 @@ internal class WelcomeModel @Inject constructor(
             currentState.copy(
                 addWalletBottomSheet = TangemBottomSheetConfig(
                     isShown = true,
-                    content = AddWalletBottomSheetContentUM(
-                        onOptionClick = ::onAddWalletOptionClick,
+                    content = OptionsBottomSheetContent(
+                        options = persistentListOf(
+                            BottomSheetOption(
+                                key = ADD_WALLET_KEY_CREATE,
+                                label = resourceReference(R.string.home_button_create_new_wallet),
+                            ),
+                            BottomSheetOption(
+                                key = ADD_WALLET_KEY_ADD,
+                                label = resourceReference(R.string.home_button_add_existing_wallet),
+                            ),
+                            BottomSheetOption(
+                                key = ADD_WALLET_KEY_BUY,
+                                label = resourceReference(R.string.details_buy_wallet),
+                            ),
+                        ),
+                        onOptionClick = { optionKey ->
+                            updateSelectState {
+                                it.copy(addWalletBottomSheet = it.addWalletBottomSheet.copy(isShown = false))
+                            }
+                            onAddWalletOptionClick(optionKey)
+                        },
                     ),
                     onDismissRequest = {
                         updateSelectState {
@@ -162,11 +186,13 @@ internal class WelcomeModel @Inject constructor(
         }
     }
 
-    private fun onAddWalletOptionClick(option: AddWalletBottomSheetContentUM.Option) {
-        when (option) {
-            Create -> router.push(AppRoute.CreateWalletSelection)
-            Add -> router.push(AppRoute.AddExistingWallet)
-            Buy -> Unit // TODO
+    private fun onAddWalletOptionClick(optionKey: String) {
+        when (optionKey) {
+            ADD_WALLET_KEY_CREATE -> router.push(AppRoute.CreateWalletSelection)
+            ADD_WALLET_KEY_ADD -> router.push(AppRoute.AddExistingWallet)
+            ADD_WALLET_KEY_BUY -> modelScope.launch {
+                generateBuyTangemCardLinkUseCase.invoke().let { urlOpener.openUrl(it) }
+            }
         }
     }
 
@@ -245,5 +271,11 @@ internal class WelcomeModel @Inject constructor(
                 currentState
             }
         }
+    }
+
+    companion object {
+        private const val ADD_WALLET_KEY_CREATE = "create"
+        private const val ADD_WALLET_KEY_ADD = "add"
+        private const val ADD_WALLET_KEY_BUY = "buy"
     }
 }
