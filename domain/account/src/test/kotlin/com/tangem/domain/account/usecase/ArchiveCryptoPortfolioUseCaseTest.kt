@@ -39,8 +39,7 @@ class ArchiveCryptoPortfolioUseCaseTest {
         val accountList = (AccountList.empty(userWallet) + account).getOrNull()!!
         val accountId = account.accountId
 
-        val archivedAccount = account.copy(isArchived = true)
-        val updatedAccountList = (accountList - archivedAccount).getOrNull()!!
+        val updatedAccountList = (accountList - account).getOrNull()!!
 
         coEvery { crudRepository.getAccounts(userWalletId) } returns accountList.toOption()
 
@@ -130,8 +129,7 @@ class ArchiveCryptoPortfolioUseCaseTest {
         val accountList = (AccountList.empty(userWallet) + account).getOrNull()!!
         val accountId = account.accountId
 
-        val archivedAccount = account.copy(isArchived = true)
-        val updatedAccountList = (accountList - archivedAccount).getOrNull()!!
+        val updatedAccountList = (accountList - account).getOrNull()!!
 
         val exception = IllegalStateException("Save failed")
 
