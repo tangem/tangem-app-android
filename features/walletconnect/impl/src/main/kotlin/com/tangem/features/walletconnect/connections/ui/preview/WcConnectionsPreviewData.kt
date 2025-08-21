@@ -118,9 +118,8 @@ internal object WcConnectionsPreviewData {
     )
     val stateWithEmptyConnections = WcConnectionsState(
         topAppBarConfig = WcConnectionsTopAppBarConfig(
-            startButtonUM = TopAppBarButtonUM(
-                iconRes = R.drawable.ic_back_24,
-                onIconClicked = {},
+            startButtonUM = TopAppBarButtonUM.Back(
+                onBackClicked = {},
                 enabled = true,
             ),
             disconnectAllItem = TangemDropdownMenuItem(
