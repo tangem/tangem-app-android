@@ -10,6 +10,7 @@ class GetManagedTokensUseCase(
 
     operator fun invoke(
         context: ManageTokensListBatchingContext,
+        // only for onboarding case, change carefully and check repository implementation
         loadUserTokensFromRemote: Boolean,
         batchSize: Int = 40,
     ): ManageTokensListBatchFlow {

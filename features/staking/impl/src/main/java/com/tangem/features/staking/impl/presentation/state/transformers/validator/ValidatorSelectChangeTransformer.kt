@@ -33,6 +33,10 @@ internal class ValidatorSelectChangeTransformer(
             selectedValidator
         }
 
+        if (selectedValidator == null && yield.preferredValidators.isEmpty()) {
+            return prevState
+        }
+
         return prevState.copy(
             validatorState = StakingStates.ValidatorState.Data(
                 chosenValidator = selectedValidator ?: yield.preferredValidators.first(),
