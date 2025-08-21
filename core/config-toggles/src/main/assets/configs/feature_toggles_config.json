@@ -54,5 +54,9 @@
     {
         "name": "NFT_SEND_REDESIGN_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "TANGEM_PAY_ENABLED",
+        "version": "undefined"
     }
 ]
