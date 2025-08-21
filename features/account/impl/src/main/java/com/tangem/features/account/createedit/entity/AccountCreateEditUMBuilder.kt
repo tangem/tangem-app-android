@@ -1,5 +1,6 @@
 package com.tangem.features.account.createedit.entity
 
+import com.tangem.common.ui.account.toUM
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -7,7 +8,6 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.features.account.AccountCreateEditComponent
-import com.tangem.features.account.common.toUM
 import kotlinx.collections.immutable.toImmutableList
 
 internal class AccountCreateEditUMBuilder(
