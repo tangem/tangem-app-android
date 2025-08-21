@@ -1,7 +1,5 @@
 package com.tangem.domain.account.utils
 
-import com.tangem.domain.models.TokensGroupType
-import com.tangem.domain.models.TokensSortType
 import com.tangem.domain.models.account.*
 import com.tangem.domain.models.wallet.UserWalletId
 import kotlin.random.Random
@@ -33,13 +31,8 @@ fun createAccount(
     return Account.CryptoPortfolio(
         accountId = AccountId.forCryptoPortfolio(userWalletId = userWalletId, derivationIndex = derivationIndex),
         accountName = AccountName(name).getOrNull()!!,
-        accountIcon = icon,
+        icon = icon,
         derivationIndex = derivationIndex,
-        isArchived = false,
-        cryptoCurrencyList = Account.CryptoPortfolio.CryptoCurrencyList(
-            currencies = emptySet(),
-            sortType = TokensSortType.NONE,
-            groupType = TokensGroupType.NONE,
-        ),
+        cryptoCurrencies = emptySet(),
     )
 }
