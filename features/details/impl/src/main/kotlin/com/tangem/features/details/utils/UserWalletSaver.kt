@@ -21,7 +21,7 @@ import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
-import com.tangem.domain.wallets.models.SaveWalletError
+import com.tangem.domain.core.wallets.error.SaveWalletError
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsSyncUseCase

@@ -15,6 +15,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.preview.AmountStatePreviewData
+import com.tangem.core.ui.components.ResizableText
 import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
@@ -24,6 +25,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.format.bigdecimal.uncapped
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 
@@ -43,7 +45,7 @@ fun AmountBlockV2(
         crypto(
             symbol = "",
             decimals = amount.cryptoAmount.decimals,
-        )
+        ).uncapped()
     }.orEmpty()
 
     val fiatAmount = amount.fiatAmount.value.format {
@@ -62,7 +64,7 @@ fun AmountBlockV2(
 
     AmountBlockV2(
         title = amountState.title,
-        balance = amountState.availableBalance,
+        balance = amountState.availableBalanceShort,
         currencyTitle = currencyTitle,
         currencyIconState = amountState.tokenIconState,
         firstAmount = firstAmount,
@@ -102,7 +104,7 @@ private fun AmountBlockV2(
         Row {
             Text(
                 text = title.resolveReference(),
-                style = TangemTheme.typography.body2,
+                style = TangemTheme.typography.subtitle2,
                 color = TangemTheme.colors.text.tertiary,
             )
             SpacerWMax()
@@ -121,18 +123,20 @@ private fun AmountBlockV2(
                 verticalArrangement = Arrangement.spacedBy(4.dp),
                 modifier = Modifier.padding(top = 8.dp),
             ) {
-                Text(
+                ResizableText(
                     text = firstAmount,
                     style = TangemTheme.typography.h2,
                     color = TangemTheme.colors.text.primary1,
+                    maxLines = 1,
                 )
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
-                    Text(
+                    ResizableText(
                         text = secondAmount,
                         style = TangemTheme.typography.body2,
                         color = TangemTheme.colors.text.tertiary,
+                        maxLines = 1,
                     )
                     extraContent()
                 }
