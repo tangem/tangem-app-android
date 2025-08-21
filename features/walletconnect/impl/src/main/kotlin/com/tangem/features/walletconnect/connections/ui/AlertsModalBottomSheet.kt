@@ -87,7 +87,11 @@ private fun ButtonsContainer(alert: AlertsComponent.AlertType, modifier: Modifie
     ) {
         val buttonsModifier = Modifier.fillMaxWidth()
         when (alert) {
-            is AlertsComponent.AlertType.UnsupportedMethod -> SecondaryButton(
+            is AlertsComponent.AlertType.UnsupportedMethod,
+            is AlertsComponent.AlertType.RequiredAddNetwork,
+            is AlertsComponent.AlertType.RequiredReconnectWithNetwork,
+            is AlertsComponent.AlertType.TangemUnsupportedNetwork,
+            -> SecondaryButton(
                 modifier = buttonsModifier,
                 onClick = alert.onDismiss,
                 text = stringResourceSafe(R.string.balance_hidden_got_it_button),
@@ -105,16 +109,28 @@ private fun ButtonsContainer(alert: AlertsComponent.AlertType, modifier: Modifie
 private fun AlertIcon(alert: AlertsComponent.AlertType, modifier: Modifier = Modifier) {
     val color = when (alert) {
         is AlertsComponent.AlertType.WcDisconnected -> TangemTheme.colors.icon.informative
-        is AlertsComponent.AlertType.UnsupportedMethod -> TangemTheme.colors.icon.attention
+        is AlertsComponent.AlertType.UnsupportedMethod,
+        is AlertsComponent.AlertType.RequiredAddNetwork,
+        is AlertsComponent.AlertType.RequiredReconnectWithNetwork,
+        is AlertsComponent.AlertType.TangemUnsupportedNetwork,
+        -> TangemTheme.colors.icon.attention
     }
 
     @DrawableRes val drawableId = when (alert) {
         is AlertsComponent.AlertType.WcDisconnected -> R.drawable.ic_wallet_connect_24
-        is AlertsComponent.AlertType.UnsupportedMethod -> R.drawable.img_attention_20
+        is AlertsComponent.AlertType.UnsupportedMethod,
+        is AlertsComponent.AlertType.RequiredAddNetwork,
+        is AlertsComponent.AlertType.RequiredReconnectWithNetwork,
+        is AlertsComponent.AlertType.TangemUnsupportedNetwork,
+        -> R.drawable.img_attention_20
     }
     val iconTint = when (alert) {
         is AlertsComponent.AlertType.WcDisconnected -> color
-        is AlertsComponent.AlertType.UnsupportedMethod -> Color.Unspecified
+        is AlertsComponent.AlertType.UnsupportedMethod,
+        is AlertsComponent.AlertType.RequiredAddNetwork,
+        is AlertsComponent.AlertType.RequiredReconnectWithNetwork,
+        is AlertsComponent.AlertType.TangemUnsupportedNetwork,
+        -> Color.Unspecified
     }
     Box(
         modifier = modifier
@@ -138,6 +154,9 @@ private fun AlertContentTitle(alert: AlertsComponent.AlertType, modifier: Modifi
     @StringRes val titleRes: Int = when (alert) {
         is AlertsComponent.AlertType.WcDisconnected -> R.string.wc_alert_session_disconnected_title
         is AlertsComponent.AlertType.UnsupportedMethod -> R.string.wc_alert_unsupported_method_title
+        is AlertsComponent.AlertType.RequiredAddNetwork -> R.string.wc_alert_add_network_to_portfolio_title
+        is AlertsComponent.AlertType.RequiredReconnectWithNetwork -> R.string.wc_alert_network_not_connected_title
+        is AlertsComponent.AlertType.TangemUnsupportedNetwork -> R.string.wc_alert_unsupported_network_title
     }
     Text(
         modifier = modifier,
@@ -156,6 +175,18 @@ private fun AlertContentDescription(alert: AlertsComponent.AlertType, modifier: 
         )
         is AlertsComponent.AlertType.UnsupportedMethod -> stringResourceSafe(
             R.string.wc_alert_unsupported_method_description,
+        )
+        is AlertsComponent.AlertType.RequiredAddNetwork -> stringResourceSafe(
+            R.string.wc_alert_add_network_to_portfolio_description,
+            alert.network,
+        )
+        is AlertsComponent.AlertType.RequiredReconnectWithNetwork -> stringResourceSafe(
+            R.string.wc_alert_network_not_connected_description,
+            alert.network,
+        )
+        is AlertsComponent.AlertType.TangemUnsupportedNetwork -> stringResourceSafe(
+            R.string.wc_alert_unsupported_network_description,
+            alert.network,
         )
     }
     Text(
@@ -188,5 +219,8 @@ private class AlertTypesProvider : CollectionPreviewParameterProvider<AlertsComp
     collection = listOf(
         AlertsComponent.AlertType.WcDisconnected(onDismiss = {}),
         AlertsComponent.AlertType.UnsupportedMethod(onDismiss = {}),
+        AlertsComponent.AlertType.TangemUnsupportedNetwork(network = "Solana", onDismiss = {}),
+        AlertsComponent.AlertType.RequiredAddNetwork(network = "Solana", onDismiss = {}),
+        AlertsComponent.AlertType.RequiredReconnectWithNetwork(network = "Solana", onDismiss = {}),
     ),
 )
