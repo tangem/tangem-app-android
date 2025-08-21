@@ -5,13 +5,14 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.extenstions.unwrap
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.exchange.RampStateManager
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.onramp.FetchHotCryptoUseCase
 import com.tangem.domain.settings.NeverToShowWalletsScrollPreview
 import com.tangem.domain.tokens.FetchCardTokenListUseCase
 import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
 import com.tangem.domain.tokens.FetchTokenListUseCase
 import com.tangem.domain.tokens.TokensFeatureToggles
-import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.domain.wallets.usecase.SelectWalletUseCase
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
@@ -87,7 +88,7 @@ internal class WalletClickIntents @Inject constructor(
             stateHolder.update { it.copy(selectedWalletIndex = index) }
 
             maybeUserWallet.onRight {
-                if (tokensFeatureToggles.isWalletBalanceFetcherEnabled) {
+                if (tokensFeatureToggles.isWalletBalanceFetcherEnabled && !it.isLocked) {
                     launch { walletContentFetcher(userWalletId = it.walletId) }
                 }
 
