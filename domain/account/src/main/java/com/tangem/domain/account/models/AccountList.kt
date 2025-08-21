@@ -3,7 +3,10 @@ package com.tangem.domain.account.models
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
+import com.tangem.domain.models.TokensGroupType
+import com.tangem.domain.models.TokensSortType
 import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.utils.extensions.addOrReplace
 import kotlinx.serialization.Serializable
@@ -22,6 +25,8 @@ data class AccountList private constructor(
     val userWallet: UserWallet,
     val accounts: Set<Account>,
     val totalAccounts: Int,
+    val sortType: TokensSortType,
+    val groupType: TokensGroupType,
 ) {
 
     /** Retrieves the main crypto portfolio account from the list of accounts */
@@ -48,6 +53,8 @@ data class AccountList private constructor(
             userWallet = this.userWallet,
             accounts = accounts,
             totalAccounts = this.totalAccounts + if (isNewAccount) 1 else 0,
+            sortType = this.sortType,
+            groupType = this.groupType,
         )
     }
 
@@ -68,6 +75,8 @@ data class AccountList private constructor(
             userWallet = this.userWallet,
             accounts = accounts,
             totalAccounts = this.totalAccounts - if (isExistingAccount) 1 else 0,
+            sortType = this.sortType,
+            groupType = this.groupType,
         )
     }
 
@@ -132,6 +141,8 @@ data class AccountList private constructor(
             userWallet: UserWallet,
             accounts: Set<Account>,
             totalAccounts: Int,
+            sortType: TokensSortType = TokensSortType.NONE,
+            groupType: TokensGroupType = TokensGroupType.NONE,
         ): Either<Error, AccountList> = either {
             ensure(accounts.isNotEmpty()) { Error.EmptyAccountsList }
 
@@ -149,10 +160,16 @@ data class AccountList private constructor(
             val uniqueAccountIdsCount = accounts.map { it.accountId.value }.distinct().size
             ensure(accounts.size == uniqueAccountIdsCount) { Error.DuplicateAccountIds }
 
-            val uniqueAccountNameCount = accounts.map { it.name.value }.distinct().size
+            val uniqueAccountNameCount = accounts.map { it.accountName.value }.distinct().size
             ensure(accounts.size == uniqueAccountNameCount) { Error.DuplicateAccountNames }
 
-            AccountList(userWallet = userWallet, accounts = accounts, totalAccounts = totalAccounts)
+            AccountList(
+                userWallet = userWallet,
+                accounts = accounts,
+                totalAccounts = totalAccounts,
+                sortType = sortType,
+                groupType = groupType,
+            )
         }
 
         /**
@@ -160,13 +177,23 @@ data class AccountList private constructor(
          *
          * @param userWallet the user wallet associated with the account list
          */
-        fun empty(userWallet: UserWallet): AccountList {
+        fun empty(
+            userWallet: UserWallet,
+            cryptoCurrencies: Set<CryptoCurrency> = emptySet(),
+            sortType: TokensSortType = TokensSortType.NONE,
+            groupType: TokensGroupType = TokensGroupType.NONE,
+        ): AccountList {
             return AccountList(
                 userWallet = userWallet,
                 accounts = setOf(
-                    Account.CryptoPortfolio.createMainAccount(userWalletId = userWallet.walletId),
+                    Account.CryptoPortfolio.createMainAccount(
+                        userWalletId = userWallet.walletId,
+                        cryptoCurrencies = cryptoCurrencies,
+                    ),
                 ),
                 totalAccounts = 1,
+                sortType = sortType,
+                groupType = groupType,
             )
         }
 
