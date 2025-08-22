@@ -5,7 +5,7 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.nft.models.NFTAsset
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.transaction.TransactionRepository
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 
 class CreateNFTTransferTransactionUseCase(
     private val transactionRepository: TransactionRepository,
