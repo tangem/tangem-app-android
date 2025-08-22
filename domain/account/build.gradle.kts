@@ -10,10 +10,12 @@ tasks.withType<Test>().configureEach {
 
 dependencies {
 
+    api(projects.domain.core)
     api(projects.domain.models)
     api(projects.domain.wallets.models)
 
     implementation(deps.arrow.core)
+    implementation(deps.kotlin.coroutines)
     implementation(deps.kotlin.serialization)
 
     testImplementation(deps.test.coroutine)
