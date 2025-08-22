@@ -12,6 +12,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.feature.walletsettings.analytics.Settings
+import com.tangem.feature.walletsettings.entity.WalletSettingsAccountsUM
 import com.tangem.feature.walletsettings.entity.WalletSettingsItemUM
 import com.tangem.feature.walletsettings.impl.R
 import com.tangem.hot.sdk.model.HotWalletId
@@ -30,6 +31,7 @@ internal class ItemsBuilder @Inject constructor(
     fun buildItems(
         userWallet: UserWallet,
         userWalletName: String,
+        accountsUM: List<WalletSettingsAccountsUM>,
         isLinkMoreCardsAvailable: Boolean,
         isReferralAvailable: Boolean,
         isManageTokensAvailable: Boolean,
@@ -60,6 +62,7 @@ internal class ItemsBuilder @Inject constructor(
                 onDismissUpgradeWalletClick = onDismissUpgradeWalletClick,
             ),
         )
+        .addAll(accountsUM)
         .addAll(buildAccessCodeItem(userWallet, onAccessCodeClick))
         .add(
             buildCardItem(
