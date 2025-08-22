@@ -69,6 +69,7 @@ internal data object SwapAmountContentPreview {
         quoteAmountValue = stringReference("123"),
         rate = stringReference("1 USD ≈ 123.123 POL"),
         diffPercent = SwapQuoteUM.Content.DifferencePercent.Best,
+        isSingleProvider = false,
     )
 
     val emptyState = SwapAmountUM.Content(

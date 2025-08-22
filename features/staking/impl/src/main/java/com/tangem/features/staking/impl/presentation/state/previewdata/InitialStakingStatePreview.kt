@@ -100,6 +100,7 @@ internal object InitialStakingStatePreview {
                     type = BalanceType.STAKED,
                     subtitle = null,
                     isPending = false,
+                    validatorAddress = "",
                 ),
             ),
         ),

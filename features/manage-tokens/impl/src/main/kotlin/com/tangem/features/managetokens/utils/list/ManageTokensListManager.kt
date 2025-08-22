@@ -93,6 +93,7 @@ internal class ManageTokensListManager @AssistedInject constructor(
                 actionsFlow = actionsFlow,
                 coroutineScope = this,
             ),
+            // only for onboarding case, change carefully and check repository implementation
             loadUserTokensFromRemote = userWalletId != null && source == ManageTokensSource.ONBOARDING,
         )
 
