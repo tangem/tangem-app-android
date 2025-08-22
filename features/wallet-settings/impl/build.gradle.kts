@@ -29,6 +29,7 @@ dependencies {
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
     implementation(projects.common.routing)
+    implementation(projects.common.ui)
 
     /* Project - Domain */
     implementation(projects.domain.legacy)
