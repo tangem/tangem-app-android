@@ -5,9 +5,8 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.res.R
-import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.domain.account.usecase.RecoverCryptoPortfolioUseCase
@@ -48,8 +47,11 @@ internal class ArchivedAccountListModel @Inject constructor(
         )
         messageSender.send(
             DialogMessage(
-                title = stringReference(account.accountName.value),
-                message = TextReference.EMPTY,
+                title = resourceReference(R.string.account_archived_recover_dialog_title),
+                message = resourceReference(
+                    id = R.string.account_archived_recover_dialog_description,
+                    formatArgs = wrappedList(account.accountName.value),
+                ),
                 firstActionBuilder = { firstAction },
                 secondActionBuilder = { secondAction },
             ),
