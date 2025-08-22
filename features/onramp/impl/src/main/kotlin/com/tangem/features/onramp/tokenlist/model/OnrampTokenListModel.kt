@@ -21,7 +21,6 @@ import com.tangem.domain.tokens.GetAssetRequirementsUseCase
 import com.tangem.domain.tokens.GetTokenListUseCase
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
-import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.tokenlist.OnrampTokenListComponent
@@ -210,21 +209,22 @@ internal class OnrampTokenListModel @Inject constructor(
                     val isOperationAvailable = checkAvailabilityByOperation(status = status)
                     val isNotMissedDerivation = status.value !is CryptoCurrencyStatus.MissedDerivation
                     val isNotLoading = status.value !is CryptoCurrencyStatus.Loading
+
                     val requirements = getAssetRequirementsUseCase(
                         userWalletId = userWallet.walletId,
                         currency = status.currency,
                     ).getOrNull()
 
-                    val isNotTrustlineRequired = requirements !is AssetRequirementsCondition.RequiredTrustline
+                    val isAvailableForBuy = rampStateManager.checkAssetRequirements(requirements)
                     val isNotUnreachable = status.value !is CryptoCurrencyStatus.Unreachable
 
                     val isAvailable = when (params.filterOperation) {
                         OnrampOperation.BUY -> {
-                            isNotTrustlineRequired
+                            isAvailableForBuy
                         } // unreachable state is available for Buy operation
                         OnrampOperation.SELL -> isNotUnreachable
                         OnrampOperation.SWAP -> {
-                            isNotUnreachable && isNotTrustlineRequired
+                            isNotUnreachable && isAvailableForBuy
                         }
                     }
 

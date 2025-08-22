@@ -73,7 +73,7 @@ class UpdateCryptoPortfolioUseCaseTest {
             value = CryptoPortfolioIcon.Icon.Star,
             color = CryptoPortfolioIcon.Color.CaribbeanBlue,
         )
-        val updatedAccount = accountList.mainAccount.copy(accountIcon = newAccountIcon)
+        val updatedAccount = accountList.mainAccount.copy(icon = newAccountIcon)
         val updatedAccountList = (accountList + updatedAccount).getOrNull()!!
 
         coEvery { crudRepository.getAccounts(userWalletId = userWalletId) } returns accountList.toOption()
@@ -102,7 +102,7 @@ class UpdateCryptoPortfolioUseCaseTest {
             value = CryptoPortfolioIcon.Icon.Star,
             color = CryptoPortfolioIcon.Color.CaribbeanBlue,
         )
-        val updatedAccount = accountList.mainAccount.copy(accountName = newAccountName, accountIcon = newAccountIcon)
+        val updatedAccount = accountList.mainAccount.copy(accountName = newAccountName, icon = newAccountIcon)
         val updatedAccountList = (accountList + updatedAccount).getOrNull()!!
 
         coEvery { crudRepository.getAccounts(userWalletId = userWalletId) } returns accountList.toOption()

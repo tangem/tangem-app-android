@@ -15,6 +15,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -22,18 +25,18 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.common.ui.navigationButtons.preview.NavigationButtonsPreview
 import com.tangem.core.ui.components.Keyboard
+import com.tangem.core.ui.components.SecondaryButtonIconStart
 import com.tangem.core.ui.components.buttons.common.TangemButton
 import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
 import com.tangem.core.ui.components.buttons.common.TangemButtonsDefaults
-import com.tangem.core.ui.components.buttons.common.contentColor
 import com.tangem.core.ui.components.keyboardAsState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.isNullOrEmpty
-import com.tangem.core.ui.extensions.rememberHapticFeedback
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import kotlinx.collections.immutable.ImmutableList
+import com.tangem.core.ui.utils.singleEvent
+import com.tangem.core.ui.test.StakingSendScreenTestTags
 
 @Composable
 fun NavigationButtonsBlock(
@@ -47,7 +50,7 @@ fun NavigationButtonsBlock(
         modifier = modifier.fillMaxWidth(),
     ) {
         InfoText(footerText)
-        ExtraButtons(state?.extraButtons, state?.txUrl)
+        DoneButtons(state?.extraButtons)
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
@@ -59,8 +62,32 @@ fun NavigationButtonsBlock(
 }
 
 @Composable
+fun NavigationButtonsBlockV2(
+    navigationUM: NavigationUM,
+    modifier: Modifier = Modifier,
+    footerText: TextReference? = null,
+) {
+    val navigationUM = navigationUM as? NavigationUM.Content
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier.fillMaxWidth(),
+    ) {
+        InfoText(footerText)
+        DoneButtons(navigationUM?.secondaryPairButtonsUM)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
+        ) {
+            PreviousButton(navigationUM?.prevButton)
+            NavigationPrimaryButton(navigationUM?.primaryButton, modifier = Modifier.weight(1f))
+        }
+    }
+}
+
+@Composable
 fun NavigationPrimaryButton(primaryButton: NavigationButton?, modifier: Modifier = Modifier) {
     val wrappedButton by rememberNavigationButton(primaryButton)
+    val hapticFeedback = LocalHapticFeedback.current
     AnimatedContent(
         targetState = wrappedButton,
         transitionSpec = { navigationButtonsTransition() },
@@ -83,7 +110,12 @@ fun NavigationPrimaryButton(primaryButton: NavigationButton?, modifier: Modifier
             TangemButton(
                 text = button.textReference.resolveReference(),
                 enabled = button.isEnabled,
-                onClick = button.onClick,
+                onClick = {
+                    if (button.isHapticClick) {
+                        hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                    }
+                    button.onClick()
+                },
                 showProgress = button.showProgress,
                 colors = color,
                 textStyle = TangemTheme.typography.subtitle1,
@@ -116,40 +148,47 @@ private fun PreviousButton(prevButton: NavigationButton?) {
                     .clip(RoundedCornerShape(TangemTheme.dimens.radius16))
                     .background(TangemTheme.colors.button.secondary)
                     .clickable(onClick = button.onClick)
-                    .padding(TangemTheme.dimens.spacing12),
+                    .padding(TangemTheme.dimens.spacing12)
+                    .testTag(StakingSendScreenTestTags.PREVIOUS_BUTTON),
             )
         }
     }
 }
 
 @Composable
-private fun ExtraButtons(extraButtons: ImmutableList<NavigationButton>?, txUrl: String?) {
+fun DoneButtons(pairButtons: Pair<NavigationButton, NavigationButton>?, modifier: Modifier = Modifier) {
     AnimatedVisibility(
-        visible = !txUrl.isNullOrBlank() && extraButtons != null,
+        visible = pairButtons != null,
         enter = slideInVertically(initialOffsetY = { it / 2 }).plus(fadeIn()),
         exit = slideOutVertically(targetOffsetY = { it / 2 }).plus(fadeOut()),
         label = "Animate show sent state buttons",
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
     ) {
-        val buttons = remember(this) { requireNotNull(extraButtons) }
+        val (leftButton, rightButton) = remember(this) { requireNotNull(pairButtons) }
         Row(
             horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
             modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing12),
         ) {
-            buttons.forEach { button ->
-                val icon = button.iconRes?.let { TangemButtonIconPosition.Start(iconResId = it) }
-                    ?: TangemButtonIconPosition.None
-                TangemButton(
-                    text = button.textReference.resolveReference(),
-                    icon = icon,
-                    textStyle = TangemTheme.typography.subtitle1,
-                    onClick = rememberHapticFeedback(state = button, onAction = button.onClick),
-                    modifier = Modifier.weight(1f),
-                    enabled = button.isEnabled,
-                    showProgress = false,
-                    colors = TangemButtonsDefaults.secondaryButtonColors,
-                )
-            }
+            SecondaryButtonIconStart(
+                text = leftButton.textReference.resolveReference(),
+                iconResId = requireNotNull(leftButton.iconRes),
+                onClick = {
+                    singleEvent {
+                        leftButton.onClick()
+                    }
+                },
+                modifier = Modifier.weight(1f),
+            )
+            SecondaryButtonIconStart(
+                text = rightButton.textReference.resolveReference(),
+                iconResId = requireNotNull(rightButton.iconRes),
+                onClick = {
+                    singleEvent {
+                        rightButton.onClick()
+                    }
+                },
+                modifier = Modifier.weight(1f),
+            )
         }
     }
 }

@@ -5,10 +5,11 @@ import arrow.core.getOrElse
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.domain.core.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
-import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.features.hotwallet.accesscode.entity.AccessCodeUM
 import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.hot.sdk.model.HotAuth
@@ -27,7 +28,8 @@ internal class AccessCodeModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val getUserWalletUseCase: GetUserWalletUseCase,
-    private val saveWalletUseCase: SaveWalletUseCase,
+    private val userWalletsListRepository: UserWalletsListRepository,
+    private val walletsRepository: WalletsRepository,
     private val tangemHotSdk: TangemHotSdk,
 ) : Model() {
 
@@ -77,15 +79,45 @@ internal class AccessCodeModel @Inject constructor(
             runCatching {
                 val userWallet = getUserWalletUseCase(userWalletId)
                     .getOrElse { error("User wallet with id $userWalletId not found") }
-                if (userWallet is UserWallet.Hot) {
-                    val unlockHotWallet = UnlockHotWallet(userWallet.hotWalletId, HotAuth.NoAuth)
-                    val updatedHotWalletId = tangemHotSdk.changeAuth(
-                        unlockHotWallet = unlockHotWallet,
-                        auth = HotAuth.Password(accessCode.toCharArray()),
+                if (userWallet !is UserWallet.Hot) return@launch
+
+                val unlockHotWallet = UnlockHotWallet(userWallet.hotWalletId, HotAuth.NoAuth)
+                var updatedHotWalletId = tangemHotSdk.changeAuth(
+                    unlockHotWallet = unlockHotWallet,
+                    auth = HotAuth.Password(accessCode.toCharArray()),
+                )
+
+                if (walletsRepository.requireAccessCode().not()) {
+                    updatedHotWalletId = tangemHotSdk.changeAuth(
+                        unlockHotWallet = UnlockHotWallet(
+                            walletId = updatedHotWalletId,
+                            auth = HotAuth.Password(accessCode.toCharArray()),
+                        ),
+                        auth = HotAuth.Biometry,
                     )
-                    saveWalletUseCase(userWallet.copy(hotWalletId = updatedHotWalletId), canOverride = true)
-                    params.callbacks.onAccessCodeConfirmed(params.userWalletId)
                 }
+
+                userWalletsListRepository.saveWithoutLock(
+                    userWallet.copy(
+                        hotWalletId = updatedHotWalletId,
+                        backedUp = true,
+                    ),
+                    canOverride = true,
+                )
+
+                userWalletsListRepository.setLock(
+                    userWallet.walletId,
+                    UserWalletsListRepository.LockMethod.AccessCode(accessCode.toCharArray()),
+                )
+
+                if (walletsRepository.useBiometricAuthentication()) {
+                    userWalletsListRepository.setLock(
+                        userWallet.walletId,
+                        UserWalletsListRepository.LockMethod.Biometric,
+                    )
+                }
+
+                params.callbacks.onAccessCodeConfirmed(params.userWalletId)
             }.onFailure {
                 Timber.e(it)
 

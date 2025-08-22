@@ -2,12 +2,12 @@ package com.tangem.tap.common.analytics.paramsInterceptor
 
 import com.tangem.core.analytics.api.ParamsInterceptor
 import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.domain.card.analytics.IntroductionProcess
+import com.tangem.domain.card.analytics.ParamCardCurrencyConverter
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
-import com.tangem.features.home.impl.analytics.IntroductionProcess
-import com.tangem.tap.common.analytics.converters.ParamCardCurrencyConverter
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.features.demo.DemoHelper

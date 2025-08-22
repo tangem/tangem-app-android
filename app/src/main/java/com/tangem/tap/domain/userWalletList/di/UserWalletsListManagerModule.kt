@@ -14,6 +14,7 @@ import com.tangem.domain.visa.model.VisaCardActivationStatus
 import com.tangem.domain.wallets.hot.HotWalletPasswordRequester
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.core.wallets.UserWalletsListRepository
+import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository
 import com.tangem.sdk.storage.AndroidSecureStorage
 import com.tangem.sdk.storage.AndroidSecureStorageV2
 import com.tangem.sdk.storage.createEncryptedSharedPreferences
@@ -119,6 +120,8 @@ internal object UserWalletsListManagerModule {
         @ApplicationContext applicationContext: Context,
         dispatchers: CoroutineDispatcherProvider,
         passwordRequester: HotWalletPasswordRequester,
+        appPreferencesStore: AppPreferencesStore,
+        hotWalletAccessCodeAttemptsRepository: HotWalletAccessCodeAttemptsRepository,
     ): UserWalletsListRepository {
         val moshi = buildMoshi()
         val secureStorage = buildSecureStorage(applicationContext = applicationContext)
@@ -162,8 +165,9 @@ internal object UserWalletsListManagerModule {
             passwordRequester = passwordRequester,
             userWalletEncryptionKeysRepository = userWalletEncryptionKeysRepository,
             tangemSdkManagerProvider = Provider { tangemSdkManager },
+            appPreferencesStore = appPreferencesStore,
             savePersistentInformation = ProviderSuspend { true }, // Always save persistent information for now
-            // TODO add a settings toggle to disable saving persistent information
+            hotWalletAccessCodeAttemptsRepository = hotWalletAccessCodeAttemptsRepository,
         )
     }
 
