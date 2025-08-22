@@ -58,5 +58,9 @@
     {
         "name": "TANGEM_PAY_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "NEW_TOKEN_RECEIVE_ENABLED",
+        "version": "5.28.0"
     }
 ]
