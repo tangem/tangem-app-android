@@ -24,11 +24,10 @@ import com.tangem.features.onboarding.v2.done.api.OnboardingDoneComponent
 import com.tangem.features.onboarding.v2.impl.R
 import com.tangem.features.onboarding.v2.note.api.OnboardingNoteComponent
 import com.tangem.features.onboarding.v2.note.impl.child.create.OnboardingNoteCreateWalletComponent
-import com.tangem.features.onboarding.v2.note.impl.model.OnboardingNoteModel
 import com.tangem.features.onboarding.v2.note.impl.model.OnboardingNoteCommonState
+import com.tangem.features.onboarding.v2.note.impl.model.OnboardingNoteModel
 import com.tangem.features.onboarding.v2.note.impl.route.ONBOARDING_NOTE_STEPS_COUNT
 import com.tangem.features.onboarding.v2.note.impl.route.OnboardingNoteRoute
-import com.tangem.features.tokenreceive.TokenReceiveComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -41,7 +40,6 @@ internal class DefaultOnboardingNoteComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
     @Assisted val params: OnboardingNoteComponent.Params,
     val onboardingDoneComponentFactory: OnboardingDoneComponent.Factory,
-    private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
 ) : OnboardingNoteComponent, AppComponentContext by context {
 
     private val model: OnboardingNoteModel = getOrCreateModel(params)
@@ -111,7 +109,6 @@ internal class DefaultOnboardingNoteComponent @AssistedInject constructor(
                     mode = OnboardingDoneComponent.Mode.WalletCreated,
                     onDone = { params.onDone() },
                 ),
-                tokenReceiveComponentFactory = tokenReceiveComponentFactory,
             )
         }
     }
