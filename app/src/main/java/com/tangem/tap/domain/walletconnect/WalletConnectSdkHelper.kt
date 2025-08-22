@@ -13,11 +13,8 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toDecompressedPublicKey
 import com.tangem.common.extensions.toHexString
-import com.tangem.core.analytics.Analytics
-import com.tangem.core.analytics.models.Basic
-import com.tangem.core.analytics.models.Basic.TransactionSent.MemoType
 import com.tangem.data.walletconnect.network.ethereum.LegacySdkHelper
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.operations.sign.SignHashCommand
 import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.extensions.safeUpdate
@@ -42,7 +39,6 @@ import org.json.JSONArray
 import org.json.JSONObject
 import timber.log.Timber
 import java.math.BigDecimal
-import com.tangem.core.analytics.models.AnalyticsParam as CoreAnalyticsParam
 
 @Suppress("LargeClass")
 class WalletConnectSdkHelper {
@@ -227,8 +223,6 @@ class WalletConnectSdkHelper {
         )
         return when (result) {
             is Result.Success -> {
-                val sentFrom = CoreAnalyticsParam.TxSentFrom.WalletConnect
-                Analytics.send(Basic.TransactionSent(sentFrom = sentFrom, memoType = MemoType.Null))
                 val hash = result.data.hash
                 if (hash.startsWith(HEX_PREFIX)) {
                     hash
@@ -394,7 +388,8 @@ class WalletConnectSdkHelper {
                         signature = signedHash,
                         hash = hashToSign,
                         publicKey = wallet.publicKey.blockchainKey.toDecompressedPublicKey(),
-                    ).asRSVLegacyEVM().toHexString().formatHex().lowercase() // use lowercase because some dapps cant handle UPPERCASE
+                    ).asRSVLegacyEVM().toHexString().formatHex()
+                        .lowercase() // use lowercase because some dapps cant handle UPPERCASE
                 }
             }
             is CompletionResult.Failure -> {
