@@ -68,6 +68,7 @@ internal class BalanceItemConverter(
                 pendingActions = value.pendingActions.toPersistentList(),
                 isClickable = value.isClickable(),
                 isPending = value.isPending,
+                validatorAddress = value.validatorAddress,
             )
         }
     }
