@@ -15,8 +15,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -28,23 +30,30 @@ import com.tangem.core.ui.components.BottomFade
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownItem
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenu
-import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.components.snackbar.TangemSnackbarHost
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.features.walletconnect.connections.entity.WcConnectedAppInfo
-import com.tangem.features.walletconnect.connections.entity.WcConnectionsState
-import com.tangem.features.walletconnect.connections.entity.WcConnectionsTopAppBarConfig
-import com.tangem.features.walletconnect.connections.entity.WcConnectionsUM
+import com.tangem.features.walletconnect.connections.entity.*
 import com.tangem.features.walletconnect.connections.ui.preview.WcConnectionsPreviewData
 import com.tangem.features.walletconnect.impl.R
 import kotlinx.collections.immutable.ImmutableList
 
 @Composable
-internal fun WcConnectionsContent(state: WcConnectionsState, modifier: Modifier = Modifier) {
+internal fun WcConnectionsContent(
+    state: WcConnectionsState,
+    modifier: Modifier = Modifier,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+) {
     Scaffold(
         modifier = modifier,
         containerColor = TangemTheme.colors.background.secondary,
+        snackbarHost = {
+            TangemSnackbarHost(
+                modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+                hostState = snackbarHostState,
+            )
+        },
         topBar = {
             ConnectionsTopBar(
                 modifier = Modifier.statusBarsPadding(),
@@ -111,6 +120,7 @@ private fun EmptyConnectionsBlock(onNewConnectionClick: () -> Unit, modifier: Mo
             text = stringResourceSafe(R.string.wc_no_sessions_desc),
             color = TangemTheme.colors.text.secondary,
             style = TangemTheme.typography.body1,
+            textAlign = TextAlign.Center,
         )
         NewConnectionButton(
             modifier = Modifier.padding(top = TangemTheme.dimens.spacing48),
@@ -182,6 +192,7 @@ private fun ConnectionItem(connection: WcConnectionsUM, modifier: Modifier = Mod
 private fun AppInfoItem(appInfo: WcConnectedAppInfo, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
     ) {
         AsyncImage(
@@ -189,19 +200,37 @@ private fun AppInfoItem(appInfo: WcConnectedAppInfo, modifier: Modifier = Modifi
                 .size(40.dp)
                 .clip(RoundedCornerShape(TangemTheme.dimens.radius8)),
             model = appInfo.iconUrl,
+            error = painterResource(R.drawable.img_wc_dapp_icon_placeholder_48),
+            fallback = painterResource(R.drawable.img_wc_dapp_icon_placeholder_48),
             contentDescription = appInfo.name,
         )
         Column(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing2),
         ) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    modifier = Modifier.weight(1f, fill = false),
+                    text = appInfo.name,
+                    color = TangemTheme.colors.text.primary1,
+                    style = TangemTheme.typography.subtitle2,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                if (appInfo.verifiedState is VerifiedDAppState.Verified) {
+                    Icon(
+                        modifier = Modifier.size(20.dp),
+                        painter = painterResource(R.drawable.img_approvale2_20),
+                        contentDescription = null,
+                        tint = Color.Unspecified,
+                    )
+                }
+            }
             Text(
-                text = appInfo.name,
-                color = TangemTheme.colors.text.primary1,
-                style = TangemTheme.typography.subtitle2,
-            )
-            Text(
-                text = appInfo.subtitle.resolveReference(),
+                text = appInfo.subtitle,
                 color = TangemTheme.colors.text.tertiary,
                 style = TangemTheme.typography.caption2,
             )

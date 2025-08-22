@@ -31,6 +31,10 @@ dependencies {
     implementation(projects.domain.tokens)
     implementation(projects.domain.legacy)
     implementation(projects.domain.models)
+    implementation(projects.domain.quotes)
+    implementation(projects.domain.networks)
+    implementation(projects.domain.staking.models)
+    implementation(projects.domain.staking)
 
     /** Tangem SDK */
     implementation(tangemDeps.blockchain) {

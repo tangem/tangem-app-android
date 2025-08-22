@@ -2,8 +2,8 @@ package com.tangem.datasource.local.token
 
 import com.tangem.datasource.local.datastore.core.StringKeyDataStore
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.model.stakekit.action.StakingAction
-import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
