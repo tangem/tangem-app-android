@@ -79,7 +79,7 @@ class UpdateCryptoPortfolioUseCase(
     }
 
     private fun Account.CryptoPortfolio.setIcon(icon: CryptoPortfolioIcon?): Account.CryptoPortfolio {
-        return if (icon != null) this.copy(accountIcon = icon) else this
+        return if (icon != null) this.copy(icon = icon) else this
     }
 
     /**
