@@ -23,6 +23,7 @@ import com.tangem.domain.tokens.operations.CachedCurrenciesStatusesOperations
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.tokens.repository.PolkadotAccountHealthCheckRepository
+import com.tangem.domain.tokens.repository.TokenReceiveWarningsViewedRepository
 import com.tangem.domain.tokens.wallet.WalletBalanceFetcher
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.tap.domain.tokens.DefaultTokensFeatureToggles
@@ -468,5 +469,21 @@ internal object TokensDomainModule {
     @Singleton
     fun provideGetAssetRequirementsUseCase(walletManagersFacade: WalletManagersFacade): GetAssetRequirementsUseCase {
         return GetAssetRequirementsUseCase(walletManagersFacade)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetViewedTokenReceiveWarningUseCase(
+        tokenReceiveWarningsViewedRepository: TokenReceiveWarningsViewedRepository,
+    ): GetViewedTokenReceiveWarningUseCase {
+        return GetViewedTokenReceiveWarningUseCase(tokenReceiveWarningsViewedRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideSaveViewedTokenReceiveWarningUseCase(
+        tokenReceiveWarningsViewedRepository: TokenReceiveWarningsViewedRepository,
+    ): SaveViewedTokenReceiveWarningUseCase {
+        return SaveViewedTokenReceiveWarningUseCase(tokenReceiveWarningsViewedRepository)
     }
 }
