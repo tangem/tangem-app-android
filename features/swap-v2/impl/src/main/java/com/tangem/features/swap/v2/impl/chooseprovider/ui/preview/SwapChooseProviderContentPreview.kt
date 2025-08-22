@@ -36,6 +36,7 @@ internal object SwapChooseProviderContentPreview {
         provider = provider1,
         quoteAmount = "123".toBigDecimal(),
         quoteAmountValue = stringReference("123"),
+        rate = stringReference("1 USD ≈ 123.123 POL"),
         diffPercent = SwapQuoteUM.Content.DifferencePercent.Best,
     )
 
@@ -43,6 +44,7 @@ internal object SwapChooseProviderContentPreview {
         provider = provider2,
         quoteAmount = "13.12".toBigDecimal(),
         quoteAmountValue = stringReference("13.12"),
+        rate = stringReference("1 USD ≈ 12.123 POL"),
         diffPercent = SwapQuoteUM.Content.DifferencePercent.Empty,
     )
 

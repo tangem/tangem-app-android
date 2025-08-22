@@ -8,6 +8,7 @@ plugins {
 dependencies {
     // region Tangem libraries
     implementation(tangemDeps.card.core)
+    implementation(tangemDeps.hot.core)
     // endregion
 
     // region Domain modules

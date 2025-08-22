@@ -166,7 +166,9 @@ internal class DefaultVisaActivationRepository @AssistedInject constructor(
         val rsaPublicKey = visaLibLoader.getOrCreateConfig().rsaPublicKey
         return when (env) {
             ApiEnvironment.DEV,
+            ApiEnvironment.DEV_2,
             ApiEnvironment.STAGE,
+            ApiEnvironment.MOCK,
             -> rsaPublicKey.dev
             ApiEnvironment.PROD -> rsaPublicKey.prod
         }

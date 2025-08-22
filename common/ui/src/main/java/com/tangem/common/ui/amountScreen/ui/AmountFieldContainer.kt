@@ -101,7 +101,7 @@ internal fun LazyListScope.amountFieldV2(
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = modifier
                     .padding(top = 48.dp, bottom = 28.dp),
             ) {
@@ -165,12 +165,12 @@ private fun AmountInfo(amountUM: AmountState, onMaxAmountClick: () -> Unit, modi
                 .padding(end = 16.dp)
                 .clip(RoundedCornerShape(16.dp))
                 .background(TangemTheme.colors.background.secondary)
-                .padding(horizontal = 12.dp, vertical = 4.dp)
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = ripple(),
                     onClick = onMaxAmountClick,
-                ),
+                )
+                .padding(horizontal = 12.dp, vertical = 4.dp),
         )
     }
 }
