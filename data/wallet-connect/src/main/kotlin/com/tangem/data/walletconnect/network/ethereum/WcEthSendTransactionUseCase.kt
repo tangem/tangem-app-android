@@ -3,11 +3,13 @@ package com.tangem.data.walletconnect.network.ethereum
 import arrow.core.left
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.blockchains.ethereum.tokenmethods.ApprovalERC20TokenCallData
-import com.tangem.blockchain.common.Amount as BlockchainAmount
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.extensions.formatHex
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam.TxSentFrom
+import com.tangem.core.analytics.models.Basic
+import com.tangem.core.analytics.models.Basic.TransactionSent.MemoType
 import com.tangem.data.walletconnect.respond.WcRespondService
 import com.tangem.data.walletconnect.sign.BaseWcSignUseCase
 import com.tangem.data.walletconnect.sign.SignCollector
@@ -17,6 +19,7 @@ import com.tangem.data.walletconnect.utils.BlockAidVerificationDelegate
 import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.tokens.model.Amount
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
+import com.tangem.domain.walletconnect.error.parseSendError
 import com.tangem.domain.walletconnect.model.WcApprovedAmount
 import com.tangem.domain.walletconnect.model.WcEthMethod
 import com.tangem.domain.walletconnect.usecase.method.*
@@ -24,13 +27,16 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.*
+import com.tangem.blockchain.common.Amount as BlockchainAmount
 
+@Suppress("LongParameterList")
 internal class WcEthSendTransactionUseCase @AssistedInject constructor(
     @Assisted override val context: WcMethodUseCaseContext,
     @Assisted override val method: WcEthMethod.SendTransaction,
     override val respondService: WcRespondService,
     override val analytics: AnalyticsEventHandler,
     private val sendTransaction: SendTransactionUseCase,
+    private val ethTxHelper: WcEthTxHelper,
     blockAidDelegate: BlockAidVerificationDelegate,
 ) : BaseWcSignUseCase<WcEthTxAction, TransactionData>(),
     WcTransactionUseCase,
@@ -38,10 +44,10 @@ internal class WcEthSendTransactionUseCase @AssistedInject constructor(
     WcMutableFee {
 
     private var approvalAmount: WcApprovedAmount? = null
-    private var dAppFee = WcEthTxHelper.getDAppFee(
-        network = context.network,
-        txParams = method.transaction,
-    )
+    // in case of change TransactionExtras
+    // change approvalAmount for example
+    private var isIgnoreDAppFee: Boolean = false
+    private var dAppFee: Fee? = null
 
     override val securityStatus: LceFlow<Throwable, BlockAidTransactionCheck.Result> =
         blockAidDelegate.getSecurityStatus(
@@ -52,7 +58,7 @@ internal class WcEthSendTransactionUseCase @AssistedInject constructor(
             accountAddress = context.accountAddress,
         ).map { lce ->
             lce.map { result ->
-                val amount = WcEthTxHelper.getApprovedAmount(method.transaction.data, result)
+                val amount = ethTxHelper.getApprovedAmount(method.transaction.data, result)
                     ?: return@map BlockAidTransactionCheck.Result.Plain(result)
                 val tokenInfo = amount.tokenInfo
                 this@WcEthSendTransactionUseCase.approvalAmount = WcApprovedAmount(
@@ -80,10 +86,19 @@ internal class WcEthSendTransactionUseCase @AssistedInject constructor(
     override suspend fun SignCollector<TransactionData>.onSign(state: WcSignState<TransactionData>) {
         val hash = sendTransaction(state.signModel, wallet, network)
             .onLeft { error ->
-                val sendError = IllegalArgumentException(error.toString()) // todo(wc) use domain error
-                emit(state.toResult(sendError.left()))
+                emit(state.toResult(parseSendError(error).left()))
             }
             .getOrNull() ?: return
+        analytics.send(
+            Basic.TransactionSent(
+                sentFrom = TxSentFrom.WalletConnect(
+                    blockchain = network.name,
+                    token = network.currencySymbol,
+                    feeType = null,
+                ),
+                memoType = MemoType.Null,
+            ),
+        )
         val respondResult = respondService.respond(rawSdkRequest, hash.formatHex())
         emit(state.toResult(respondResult))
     }
@@ -103,7 +118,7 @@ internal class WcEthSendTransactionUseCase @AssistedInject constructor(
                     },
                 )
                 approvalAmount = action.amount
-                dAppFee = null
+                isIgnoreDAppFee = true
                 uncompiled.copy(extras = extras.copy(callData = callData))
             }
             is WcEthTxAction.UpdateFee -> uncompiled.copy(fee = action.fee)
@@ -112,8 +127,11 @@ internal class WcEthSendTransactionUseCase @AssistedInject constructor(
         emit(newState)
     }
 
-    override fun dAppFee(): Fee.Ethereum.Legacy? {
-        return dAppFee
+    override suspend fun dAppFee(): Fee? {
+        if (isIgnoreDAppFee) return null
+        if (dAppFee != null) return dAppFee
+        return ethTxHelper.getDAppFee(method.transaction, wallet, network)
+            .also { dAppFee = it }
     }
 
     override fun updateFee(fee: Fee) {
@@ -121,7 +139,7 @@ internal class WcEthSendTransactionUseCase @AssistedInject constructor(
     }
 
     override fun invoke(): Flow<WcSignState<TransactionData>> = flow {
-        val transactionData = WcEthTxHelper.createTransactionData(
+        val transactionData = ethTxHelper.createTransactionData(
             dAppFee = dAppFee(),
             network = context.network,
             txParams = method.transaction,

@@ -3,7 +3,7 @@ package com.tangem.domain.tokens
 import com.tangem.domain.core.flow.FlowCachingSupplier
 import com.tangem.domain.core.flow.FlowProducer
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesProducer as Producer
 
 /**
