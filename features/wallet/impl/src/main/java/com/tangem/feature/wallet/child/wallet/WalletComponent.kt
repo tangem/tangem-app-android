@@ -7,6 +7,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.slot.childSlot
 import com.arkivanov.decompose.router.slot.dismiss
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
@@ -77,6 +78,7 @@ internal class WalletComponent @AssistedInject constructor(
                     params = PushNotificationsParams(
                         isBottomSheet = true,
                         modelCallbacks = model.askForPushNotificationsModelCallbacks,
+                        source = AppRoute.PushNotification.Source.Main,
                     ),
                 )
                 is WalletDialogConfig.TokenReceive -> {
