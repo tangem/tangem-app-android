@@ -4,12 +4,11 @@ import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.send.v2.common.CommonSendRoute
 import com.tangem.features.send.v2.api.entity.PredefinedValues
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponent.ModelCallback
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
 internal sealed class SendAmountComponentParams {
@@ -33,10 +32,8 @@ internal sealed class SendAmountComponentParams {
         override val cryptoCurrency: CryptoCurrency,
         override val cryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>,
         val callback: ModelCallback,
-        val currentRoute: Flow<CommonSendRoute.Amount>,
+        val currentRoute: StateFlow<CommonSendRoute>,
         val isBalanceHidingFlow: StateFlow<Boolean>,
-        val onBackClick: () -> Unit,
-        val onNextClick: () -> Unit,
     ) : SendAmountComponentParams()
 
     data class AmountBlockParams(
