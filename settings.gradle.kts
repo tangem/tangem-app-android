@@ -260,9 +260,15 @@ include(":features:walletconnect:impl")
 include(":features:hot-wallet:api")
 include(":features:hot-wallet:impl")
 
+include(":features:kyc:api")
 //TODO disable for release because of the permissions
-// include(":features:kyc:api")
 // include(":features:kyc:impl")
+
+include(":features:tangempay:main:api")
+include(":features:tangempay:main:impl")
+
+include(":features:tangempay:details:api")
+include(":features:tangempay:details:impl")
 
 include(":features:create-wallet-selection:api")
 include(":features:create-wallet-selection:impl")

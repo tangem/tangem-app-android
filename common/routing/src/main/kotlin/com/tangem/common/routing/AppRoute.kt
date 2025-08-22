@@ -1,6 +1,7 @@
 package com.tangem.common.routing
 
 import android.os.Bundle
+import com.tangem.common.routing.AppRoute.ManageTokens.Source
 import com.tangem.common.routing.bundle.RouteBundleParams
 import com.tangem.common.routing.bundle.bundle
 import com.tangem.common.routing.entity.InitScreenLaunchMode
@@ -30,8 +31,10 @@ sealed class AppRoute(val path: String) : Route {
 
     @Serializable
     data class Welcome(
+        @Deprecated("No longer used, will be removed in future releases")
         val launchMode: InitScreenLaunchMode = InitScreenLaunchMode.Standard,
         // we still have this param to be handled by WalletConnectLinkIntentHandler in WelcomeMiddleware
+        @Deprecated("No longer used, will be removed in future releases")
         val intent: SerializableIntent? = null,
     ) : AppRoute(path = "/welcome"), RouteBundleParams {
 
@@ -193,7 +196,15 @@ sealed class AppRoute(val path: String) : Route {
     ) : AppRoute(path = "/staking/${userWalletId.stringValue}/${cryptoCurrencyId.value}/$yieldId")
 
     @Serializable
-    data object PushNotification : AppRoute(path = "/push_notification")
+    data class PushNotification(
+        val source: Source,
+    ) : AppRoute(path = "/push_notification") {
+        enum class Source {
+            Stories,
+            Main,
+            Onboarding,
+        }
+    }
 
     @Serializable
     data class WalletSettings(
@@ -309,6 +320,11 @@ sealed class AppRoute(val path: String) : Route {
     ) : AppRoute(path = "/wallet_activation/${userWalletId.stringValue}")
 
     @Serializable
+    data class CreateWalletBackup(
+        val userWalletId: UserWalletId,
+    ) : AppRoute(path = "/create_wallet_backup/${userWalletId.stringValue}")
+
+    @Serializable
     data class UpdateAccessCode(
         val userWalletId: UserWalletId,
     ) : AppRoute(path = "/update_access_code/${userWalletId.stringValue}")
@@ -341,4 +357,12 @@ sealed class AppRoute(val path: String) : Route {
     data class AccountDetails(
         val account: Account,
     ) : AppRoute(path = "/account_details/${account.accountId.value}")
+
+    @Serializable
+    data class ArchivedAccountList(
+        val userWalletId: UserWalletId,
+    ) : AppRoute(path = "/archived_account/${userWalletId.stringValue}")
+
+    @Serializable
+    data object TangemPayDetails : AppRoute(path = "/tangem_pay_details")
 }
