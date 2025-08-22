@@ -1,53 +1,44 @@
 package com.tangem.features.send.v2.sendnft.confirm.model.transformers
 
 import com.tangem.blockchain.common.transaction.Fee
-import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
+import com.tangem.features.send.v2.api.entity.FeeSelectorUM
+import com.tangem.features.send.v2.api.subcomponents.feeSelector.utils.FeeCalculationUtils
 import com.tangem.features.send.v2.api.utils.formatFooterFiatFee
 import com.tangem.features.send.v2.api.utils.getTronTokenFeeSendingText
 import com.tangem.features.send.v2.common.ui.state.ConfirmUM
 import com.tangem.features.send.v2.impl.R
-import com.tangem.features.send.v2.subcomponents.fee.model.checkIfFeeTooHigh
-import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeSelectorUM
-import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeType
-import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeUM
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.toPersistentList
 
-internal class NFTSendConfirmationNotificationsTransformer(
-    private val feeUM: FeeUM,
+internal class NFTSendConfirmationNotificationsTransformerV2(
+    private val feeSelectorUM: FeeSelectorUM,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val cryptoCurrency: CryptoCurrency,
-    private val analyticsCategoryName: String,
     private val appCurrency: AppCurrency,
+    private val analyticsCategoryName: String,
 ) : Transformer<ConfirmUM> {
     override fun transform(prevState: ConfirmUM): ConfirmUM {
         val state = prevState as? ConfirmUM.Content ?: return prevState
-        val feeUM = feeUM as? FeeUM.Content ?: return prevState
+        val feeSelectorUM = feeSelectorUM as? FeeSelectorUM.Content ?: return prevState
         return state.copy(
             sendingFooter = getSendingFooterText(),
             notifications = buildList {
-                addTooHighNotification(feeUM.feeSelectorUM)
-                addTooLowNotification(feeUM)
+                addTooHighNotification(feeSelectorUM)
+                addTooLowNotification(feeSelectorUM)
             }.toPersistentList(),
         )
     }
 
-    private fun MutableList<NotificationUM>.addTooLowNotification(feeUM: FeeUM.Content) {
-        val feeSelectorUM = feeUM.feeSelectorUM as? FeeSelectorUM.Content ?: return
-        val multipleFees = feeSelectorUM.fees as? TransactionFee.Choosable ?: return
-        val minimumValue = multipleFees.minimum.amount.value ?: return
-        val customAmount = feeSelectorUM.customValues.firstOrNull() ?: return
-        val customValue = customAmount.value.parseToBigDecimal(customAmount.decimals)
-        if (feeSelectorUM.selectedType == FeeType.Custom && minimumValue > customValue) {
+    private fun MutableList<NotificationUM>.addTooLowNotification(feeSelectorUM: FeeSelectorUM.Content) {
+        if (FeeCalculationUtils.checkIfCustomFeeTooLow(feeSelectorUM)) {
             add(NotificationUM.Warning.FeeTooLow)
             analyticsEventHandler.send(
                 CommonSendAnalyticEvents.NoticeTransactionDelays(
@@ -58,20 +49,27 @@ internal class NFTSendConfirmationNotificationsTransformer(
         }
     }
 
-    private fun getSendingFooterText(): TextReference {
-        val feeUM = feeUM as? FeeUM.Content
-        val fee = (feeUM?.feeSelectorUM as? FeeSelectorUM.Content)?.selectedFee ?: return TextReference.EMPTY
+    private fun MutableList<NotificationUM>.addTooHighNotification(feeSelectorUM: FeeSelectorUM.Content) {
+        val (isFeeTooHigh, diff) = FeeCalculationUtils.checkIfCustomFeeTooHigh(feeSelectorUM)
+        if (isFeeTooHigh) {
+            add(NotificationUM.Warning.TooHigh(diff))
+        }
+    }
 
-        val fiatFeeValue = feeUM.rate?.let { fee.amount.value?.multiply(it) }
+    private fun getSendingFooterText(): TextReference {
+        val feeSelectorUM = feeSelectorUM as? FeeSelectorUM.Content
+        val fee = feeSelectorUM?.selectedFeeItem?.fee ?: return TextReference.EMPTY
+
+        val fiatFeeValue = feeSelectorUM.feeFiatRateUM?.rate?.let { fee.amount.value?.multiply(it) }
 
         val fiatFee = formatFooterFiatFee(
             amount = fee.amount.copy(value = fiatFeeValue),
-            isFeeConvertibleToFiat = feeUM.isFeeConvertibleToFiat,
-            isFeeApproximate = feeUM.isFeeApproximate,
+            isFeeConvertibleToFiat = feeSelectorUM.feeFiatRateUM != null,
+            isFeeApproximate = feeSelectorUM.feeExtraInfo.isFeeApproximate,
             appCurrency = appCurrency,
         )
 
-        return if (feeUM.isTronToken && fee is Fee.Tron) {
+        return if (fee is Fee.Tron) {
             getTronTokenFeeSendingText(
                 fee = fee,
                 fiatFee = fiatFee,
@@ -79,7 +77,7 @@ internal class NFTSendConfirmationNotificationsTransformer(
             )
         } else {
             resourceReference(
-                id = if (feeUM.isFeeConvertibleToFiat) {
+                id = if (feeSelectorUM.feeFiatRateUM != null) {
                     R.string.send_summary_transaction_description
                 } else {
                     R.string.send_summary_transaction_description_no_fiat_fee
@@ -89,15 +87,6 @@ internal class NFTSendConfirmationNotificationsTransformer(
                     fiatFee,
                 ),
             )
-        }
-    }
-
-    private fun MutableList<NotificationUM>.addTooHighNotification(feeSelectorUM: FeeSelectorUM) {
-        if (feeSelectorUM !is FeeSelectorUM.Content) return
-
-        val (isFeeTooHigh, diff) = checkIfFeeTooHigh(feeSelectorUM)
-        if (isFeeTooHigh) {
-            add(NotificationUM.Warning.TooHigh(diff))
         }
     }
 }
