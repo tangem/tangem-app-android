@@ -5,18 +5,22 @@
 # https://github.com/tangem/tangem-sdk-android/
 # https://github.com/tangem/vico
 
-tangemBlockchainSdk = "releases-5.26.0-1141"
+tangemBlockchainSdk = "releases-5.27.0-1148"
 #tangemBlockchainSdk = "0.0.1" # Keep it! - used for local builds
-tangemCardSdk = "releases-5.26.0-512"
+tangemCardSdk = "releases-5.27.0-519"
 #tangemCardSdk = "0.0.1" # Keep it! - used for local builds ^
 tangemVico = "2.0.0-alpha.25-tangem12"
 #tangemVico = "0.0.1" # Keep it! - used for local builds ^
+tangemHotSdk = "develop-454"
+#tangemHotSdk = "0.0.1" # Keep it! - used for local builds ^
 
 
 [libraries]
 blockchain = { module = "com.tangem:blockchain", version.ref = "tangemBlockchainSdk" }
 card-android = { module = "com.tangem.tangem-sdk-kotlin:android", version.ref = "tangemCardSdk" }
 card-core = { module = "com.tangem.tangem-sdk-kotlin:core", version.ref = "tangemCardSdk" }
+hot-core = { module = "com.tangem.tangem-hot-sdk-kotlin:core", version.ref = "tangemHotSdk" }
+hot-android = { module = "com.tangem.tangem-hot-sdk-kotlin:android", version.ref = "tangemHotSdk" }
 
 vico-compose = { group = "com.tangem.vico", name = "compose", version.ref = "tangemVico" }
 vico-compose-m3 = { group = "com.tangem.vico", name = "compose-m3", version.ref = "tangemVico" }

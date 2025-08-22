@@ -83,6 +83,7 @@ sealed class AnalyticsParam {
         data object Onboarding : ScreensSources("Onboarding")
         data object LongTap : ScreensSources("Long Tap")
         data object Markets : ScreensSources("Markets")
+        data object HotWallet : ScreensSources("Hot Wallet")
     }
 
     sealed class TxSentFrom(val value: String) {
@@ -111,7 +112,12 @@ sealed class AnalyticsParam {
             val permissionType: String,
         ) : TxSentFrom("Approve"), TxData
 
-        data object WalletConnect : TxSentFrom("WalletConnect")
+        data class WalletConnect(
+            override val blockchain: String,
+            override val token: String,
+            override val feeType: FeeType?,
+        ) : TxSentFrom("WalletConnect"), TxData
+
         data object Sell : TxSentFrom("Sell")
 
         data class NFT(
@@ -124,7 +130,7 @@ sealed class AnalyticsParam {
     sealed interface TxData {
         val blockchain: String
         val token: String
-        val feeType: FeeType
+        val feeType: FeeType?
     }
 
     sealed class FeeType(val value: String) {
@@ -222,5 +228,6 @@ sealed class AnalyticsParam {
         const val NONCE = "Nonce"
         const val STANDARD = "Standard"
         const val NO_COLLECTION = "No collection"
+        const val EMULATION_STATUS = "Emulation Status"
     }
 }

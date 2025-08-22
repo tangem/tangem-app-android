@@ -3,27 +3,27 @@ package com.tangem.features.hotwallet.addexistingwallet.start.ui
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.R
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.buttons.common.TangemButtonSize
 import com.tangem.core.ui.components.buttons.common.TangemButtonsDefaults
-import com.tangem.core.ui.extensions.clickableSingle
-import com.tangem.core.ui.extensions.conditional
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.hotwallet.addexistingwallet.start.entity.AddExistingWalletStartUM
-import com.tangem.core.ui.R
-import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.features.hotwallet.common.ui.OptionBlock
 
 @Suppress("LongMethod")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -62,6 +62,7 @@ internal fun AddExistingWalletStartContent(state: AddExistingWalletStartUM, modi
             OptionBlock(
                 modifier = Modifier
                     .padding(top = 24.dp),
+                backgroundColor = TangemTheme.colors.background.secondary,
                 title = stringResourceSafe(R.string.wallet_import_seed_title),
                 description = stringResourceSafe(R.string.wallet_import_seed_description),
                 badge = null,
@@ -69,6 +70,7 @@ internal fun AddExistingWalletStartContent(state: AddExistingWalletStartUM, modi
                 enabled = true,
             )
             OptionBlock(
+                backgroundColor = TangemTheme.colors.background.secondary,
                 title = stringResourceSafe(R.string.wallet_import_scan_title),
                 description = stringResourceSafe(R.string.wallet_import_scan_description),
                 badge = {
@@ -85,6 +87,7 @@ internal fun AddExistingWalletStartContent(state: AddExistingWalletStartUM, modi
                 enabled = true,
             )
             OptionBlock(
+                backgroundColor = TangemTheme.colors.background.secondary,
                 title = stringResourceSafe(R.string.wallet_import_google_drive_title),
                 description = stringResourceSafe(R.string.wallet_import_google_drive_description),
                 badge = {
@@ -110,58 +113,6 @@ internal fun AddExistingWalletStartContent(state: AddExistingWalletStartUM, modi
         }
         BuyTangemWalletBlock(
             onScanClick = state.onBuyCardClick,
-        )
-    }
-}
-
-@Composable
-private fun OptionBlock(
-    title: String,
-    description: String,
-    badge: (@Composable () -> Unit)?,
-    onClick: (() -> Unit)?,
-    enabled: Boolean,
-    modifier: Modifier = Modifier,
-) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(top = 8.dp)
-            .clip(TangemTheme.shapes.roundedCornersXMedium)
-            .background(
-                color = TangemTheme.colors.background.secondary,
-                shape = TangemTheme.shapes.roundedCornersXMedium,
-            )
-            .conditional(onClick != null) {
-                onClick?.let { clickableSingle(onClick = it) } ?: Modifier
-            }
-            .padding(16.dp),
-    ) {
-        Row {
-            Text(
-                modifier = Modifier
-                    .weight(1f, fill = false)
-                    .padding(end = 4.dp),
-                text = title,
-                style = TangemTheme.typography.subtitle1,
-                color = if (enabled) {
-                    TangemTheme.colors.text.primary1
-                } else {
-                    TangemTheme.colors.text.secondary
-                },
-            )
-            badge?.invoke()
-        }
-        Text(
-            modifier = Modifier
-                .padding(top = 4.dp),
-            text = description,
-            style = TangemTheme.typography.body2,
-            color = if (enabled) {
-                TangemTheme.colors.text.tertiary
-            } else {
-                TangemTheme.colors.text.disabled
-            },
         )
     }
 }
