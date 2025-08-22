@@ -47,6 +47,7 @@ import com.tangem.features.send.v2.sendnft.confirm.NFTSendConfirmComponent
 import com.tangem.features.send.v2.sendnft.confirm.model.transformers.NFTSendConfirmInitialStateTransformer
 import com.tangem.features.send.v2.sendnft.confirm.model.transformers.NFTSendConfirmSendingStateTransformer
 import com.tangem.features.send.v2.sendnft.confirm.model.transformers.NFTSendConfirmationNotificationsTransformer
+import com.tangem.features.send.v2.sendnft.confirm.model.transformers.NFTSendConfirmationNotificationsTransformerV2
 import com.tangem.features.send.v2.sendnft.ui.state.NFTSendUM
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeCheckReloadListener
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeCheckReloadTrigger
@@ -393,13 +394,23 @@ internal class NFTSendConfirmModel @Inject constructor(
         }
         _uiState.update {
             it.copy(
-                confirmUM = NFTSendConfirmationNotificationsTransformer(
-                    feeUM = uiState.value.feeUM,
-                    analyticsEventHandler = analyticsEventHandler,
-                    cryptoCurrency = cryptoCurrencyStatus.currency,
-                    analyticsCategoryName = analyticsCategoryName,
-                    appCurrency = params.appCurrency,
-                ).transform(uiState.value.confirmUM),
+                confirmUM = if (uiState.value.isRedesignEnabled) {
+                    NFTSendConfirmationNotificationsTransformerV2(
+                        feeSelectorUM = uiState.value.feeSelectorUM,
+                        analyticsEventHandler = analyticsEventHandler,
+                        cryptoCurrency = cryptoCurrencyStatus.currency,
+                        appCurrency = params.appCurrency,
+                        analyticsCategoryName = analyticsCategoryName,
+                    )
+                } else {
+                    NFTSendConfirmationNotificationsTransformer(
+                        feeUM = uiState.value.feeUM,
+                        analyticsEventHandler = analyticsEventHandler,
+                        cryptoCurrency = cryptoCurrencyStatus.currency,
+                        analyticsCategoryName = analyticsCategoryName,
+                        appCurrency = params.appCurrency,
+                    )
+                }.transform(uiState.value.confirmUM),
             )
         }
     }
