@@ -17,6 +17,7 @@ import com.tangem.datasource.local.preferences.PreferencesKeys.SEED_FIRST_NOTIFI
 import com.tangem.datasource.local.preferences.utils.get
 import com.tangem.datasource.local.preferences.utils.getObjectMap
 import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
+import com.tangem.datasource.local.preferences.utils.getSyncOrNull
 import com.tangem.datasource.local.preferences.utils.store
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.models.wallet.UserWallet
@@ -47,12 +48,76 @@ internal class DefaultWalletsRepository(
         return appPreferencesStore.getSyncOrDefault(key = PreferencesKeys.SAVE_USER_WALLETS_KEY, default = false)
     }
 
+    @Deprecated("Hot wallet feature makes app always save user wallets. Do not use this method")
     override fun shouldSaveUserWallets(): Flow<Boolean> {
         return appPreferencesStore.get(key = PreferencesKeys.SAVE_USER_WALLETS_KEY, default = false)
     }
 
+    @Deprecated("Hot wallet feature makes app always save user wallets. Do not use this method")
     override suspend fun saveShouldSaveUserWallets(item: Boolean) {
         appPreferencesStore.store(key = PreferencesKeys.SAVE_USER_WALLETS_KEY, value = item)
+    }
+
+    override suspend fun useBiometricAuthentication(): Boolean {
+        val useBiometricAuthentication = appPreferencesStore.getSyncOrNull(
+            key = PreferencesKeys.USE_BIOMETRIC_AUTHENTICATION_KEY,
+        )
+
+        if (useBiometricAuthentication != null) {
+            return useBiometricAuthentication
+        }
+
+        val legacySaveWalletsInTheApp = appPreferencesStore.getSyncOrNull(
+            key = PreferencesKeys.SAVE_USER_WALLETS_KEY,
+        )
+
+        if (legacySaveWalletsInTheApp != null) {
+            // Migrate legacy setting to new one
+            appPreferencesStore.store(
+                key = PreferencesKeys.USE_BIOMETRIC_AUTHENTICATION_KEY,
+                value = legacySaveWalletsInTheApp,
+            )
+            return legacySaveWalletsInTheApp
+        } else {
+            // Default value for new users
+            setUseBiometricAuthentication(false)
+            return false
+        }
+    }
+
+    override suspend fun setUseBiometricAuthentication(value: Boolean) {
+        appPreferencesStore.store(key = PreferencesKeys.USE_BIOMETRIC_AUTHENTICATION_KEY, value = value)
+    }
+
+    override suspend fun requireAccessCode(): Boolean {
+        val requireAccessCode = appPreferencesStore.getSyncOrNull(
+            key = PreferencesKeys.REQUIRE_ACCESS_CODE_KEY,
+        )
+
+        if (requireAccessCode != null) {
+            return requireAccessCode
+        }
+
+        val legacyShouldSaveAccessCode = appPreferencesStore.getSyncOrNull(
+            key = PreferencesKeys.SHOULD_SAVE_ACCESS_CODES_KEY,
+        )
+
+        if (legacyShouldSaveAccessCode != null) {
+            // Migrate legacy setting to new one
+            appPreferencesStore.store(
+                key = PreferencesKeys.REQUIRE_ACCESS_CODE_KEY,
+                value = legacyShouldSaveAccessCode.not(),
+            )
+            return legacyShouldSaveAccessCode.not()
+        } else {
+            // Default value for new users
+            setRequireAccessCode(true)
+            return true
+        }
+    }
+
+    override suspend fun setRequireAccessCode(value: Boolean) {
+        appPreferencesStore.store(key = PreferencesKeys.REQUIRE_ACCESS_CODE_KEY, value = value)
     }
 
     override suspend fun isWalletWithRing(userWalletId: UserWalletId): Boolean {

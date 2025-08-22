@@ -16,4 +16,5 @@ sealed class WcPairError(
     data class ApprovalFailed(override val message: String) : WcPairError("107 002 003")
     data object RejectionFailed : WcPairError("107 002 004")
     data class Unknown(override val message: String) : WcPairError(message)
+    data class TimeoutException(override val message: String) : WcPairError(message)
 }
