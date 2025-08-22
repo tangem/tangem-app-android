@@ -43,15 +43,14 @@ class RecoverCryptoPortfolioUseCaseTest {
         val accountList = AccountList.empty(userWallet)
         val archivedAccount = ArchivedAccount(
             accountId = account.accountId,
-            name = account.name,
+            name = account.accountName,
             icon = account.icon,
             derivationIndex = account.derivationIndex,
             tokensCount = 1,
             networksCount = 1,
         )
 
-        val recoveredAccount = account.copy(isArchived = false)
-        val updatedAccountList = (accountList + recoveredAccount).getOrNull()!!
+        val updatedAccountList = (accountList + account).getOrNull()!!
 
         coEvery { crudRepository.getAccounts(userWalletId) } returns accountList.toOption()
         coEvery { crudRepository.getArchivedAccount(account.accountId) } returns archivedAccount.toOption()
@@ -60,7 +59,7 @@ class RecoverCryptoPortfolioUseCaseTest {
         val actual = useCase(account.accountId)
 
         // Assert
-        val expected = recoveredAccount.right()
+        val expected = account.right()
         Truth.assertThat(actual).isEqualTo(expected)
 
         coVerifyOrder {
@@ -173,15 +172,14 @@ class RecoverCryptoPortfolioUseCaseTest {
         val accountList = AccountList.empty(userWallet)
         val archivedAccount = ArchivedAccount(
             accountId = account.accountId,
-            name = account.name,
+            name = account.accountName,
             icon = account.icon,
             derivationIndex = account.derivationIndex,
             tokensCount = 1,
             networksCount = 1,
         )
 
-        val recoveredAccount = account.copy(isArchived = false)
-        val updatedAccountList = (accountList + recoveredAccount).getOrNull()!!
+        val updatedAccountList = (accountList + account).getOrNull()!!
         val exception = IllegalStateException("Save failed")
 
         coEvery { crudRepository.getAccounts(userWalletId) } returns accountList.toOption()
