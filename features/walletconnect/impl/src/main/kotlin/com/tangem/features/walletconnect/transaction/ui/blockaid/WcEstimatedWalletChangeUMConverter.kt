@@ -6,7 +6,6 @@ import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.features.walletconnect.transaction.entity.blockaid.WcEstimatedWalletChangeUM
 import com.tangem.utils.converter.Converter
-import java.math.BigDecimal
 import javax.inject.Inject
 
 internal class WcEstimatedWalletChangeUMConverter @Inject constructor() :
@@ -17,7 +16,7 @@ internal class WcEstimatedWalletChangeUMConverter @Inject constructor() :
             is AmountInfo.FungibleTokens -> WcEstimatedWalletChangeUM(
                 iconRes = value.iconRes,
                 title = resourceReference(value.titleRes),
-                description = "${value.sign} ${amountInfo.amount.amountText()} ${amountInfo.token.symbol}",
+                description = "${value.sign} ${amountInfo.amountText()} ${amountInfo.token.symbol}",
                 tokenIconUrl = amountInfo.token.logoUrl,
             )
             is AmountInfo.NonFungibleTokens -> WcEstimatedWalletChangeUM(
@@ -29,7 +28,7 @@ internal class WcEstimatedWalletChangeUMConverter @Inject constructor() :
         }
     }
 
-    private fun BigDecimal.amountText() = format { crypto("", DECIMALS_AMOUNT) }
+    private fun AmountInfo.FungibleTokens.amountText() = amount.format { crypto("", token.decimals) }
 
     data class Input(
         val amountInfo: AmountInfo,

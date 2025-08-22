@@ -19,21 +19,18 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.R
-import com.tangem.common.ui.account.getResId
-import com.tangem.common.ui.account.getUiColor
+import com.tangem.common.ui.account.AccountIconPreviewData
+import com.tangem.common.ui.account.AccountRow
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerH16
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.components.buttons.SecondarySmallButton
 import com.tangem.core.ui.components.buttons.SmallButtonConfig
-import com.tangem.core.ui.components.fields.AutoSizeTextField
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.domain.models.account.CryptoPortfolioIcon
-import com.tangem.features.account.common.CryptoPortfolioIconUM
-import com.tangem.features.account.common.toUM
 import com.tangem.features.account.details.entity.AccountDetailsUM
 
 @Composable
@@ -145,32 +142,13 @@ private fun AccountRow(state: AccountDetailsUM) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
     ) {
-        AccountIcon(
-            modifier = Modifier
-                .size(36.dp)
-                .clip(RoundedCornerShape(9.dp)),
-            accountName = state.accountName,
-            accountIcon = state.accountIcon,
+        AccountRow(
+            title = stringReference(state.accountName),
+            subtitle = resourceReference(R.string.account_form_name),
+            icon = state.accountIcon,
+            modifier = Modifier.weight(1f),
+            isReverse = true,
         )
-        Column(
-            modifier = Modifier
-                .weight(1f),
-            verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing2),
-        ) {
-            Text(
-                text = stringResourceSafe(R.string.account_form_name),
-                color = TangemTheme.colors.text.tertiary,
-                style = TangemTheme.typography.caption2,
-            )
-            AutoSizeTextField(
-                textStyle = TangemTheme.typography.subtitle2,
-                color = TangemTheme.colors.text.primary1,
-                value = state.accountName,
-                singleLine = true,
-                readOnly = true,
-                onValueChange = {},
-            )
-        }
 
         SecondarySmallButton(
             config = SmallButtonConfig(
@@ -178,31 +156,6 @@ private fun AccountRow(state: AccountDetailsUM) {
                 onClick = state.onAccountEditClick,
             ),
         )
-    }
-}
-
-// todo account make reusable
-@Composable
-private fun AccountIcon(accountName: String, accountIcon: CryptoPortfolioIconUM, modifier: Modifier = Modifier) {
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = modifier.background(accountIcon.color.getUiColor()),
-    ) {
-        val icon = accountIcon.value
-        val letter = accountName.first()
-        when {
-            icon == CryptoPortfolioIcon.Icon.Letter -> Text(
-                text = letter.uppercase(),
-                style = TangemTheme.typography.body2,
-                color = TangemTheme.colors.text.constantWhite,
-            )
-            else -> Icon(
-                modifier = Modifier.size(20.dp),
-                tint = TangemTheme.colors.text.constantWhite,
-                imageVector = ImageVector.vectorResource(id = icon.getResId()),
-                contentDescription = null,
-            )
-        }
     }
 }
 
@@ -217,20 +170,18 @@ private fun WcConnectionsContentPreview(@PreviewParameter(PreviewStateProvider::
 
 private class PreviewStateProvider : CollectionPreviewParameterProvider<AccountDetailsUM>(
     buildList {
-        var portfolioIcon = CryptoPortfolioIcon.ofDefaultCustomAccount().toUM()
+        val accountName = "Main"
+        var portfolioIcon = AccountIconPreviewData.randomAccountIcon()
         val first = AccountDetailsUM(
             onCloseClick = {},
             onAccountEditClick = {},
             onManageTokensClick = {},
             onArchiveAccountClick = {},
-            accountName = "Main",
+            accountName = accountName,
             accountIcon = portfolioIcon,
         )
         add(first)
-        portfolioIcon = portfolioIcon.copy(
-            value = CryptoPortfolioIcon.Icon.Letter,
-            color = CryptoPortfolioIcon.Color.entries.random(),
-        )
+        portfolioIcon = AccountIconPreviewData.randomAccountIcon(letter = true)
         add(first.copy(accountIcon = portfolioIcon))
     },
 )

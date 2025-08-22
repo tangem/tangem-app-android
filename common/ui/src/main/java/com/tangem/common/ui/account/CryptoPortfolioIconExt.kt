@@ -48,3 +48,6 @@ fun CryptoPortfolioIcon.Icon.getResId(): Int {
         CryptoPortfolioIcon.Icon.Gift -> R.drawable.ic_gift_24
     }
 }
+
+fun CryptoPortfolioIcon.toUM() = CryptoPortfolioIconUM(domainModel = this)
+fun CryptoPortfolioIconUM.toDomain() = CryptoPortfolioIcon.ofCustomAccount(value = this.value, color = this.color)

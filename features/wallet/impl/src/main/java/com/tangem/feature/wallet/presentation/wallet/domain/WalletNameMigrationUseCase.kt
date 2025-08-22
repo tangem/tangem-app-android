@@ -2,29 +2,44 @@ package com.tangem.feature.wallet.presentation.wallet.domain
 
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.models.wallet.copy
+import com.tangem.domain.core.wallets.UserWalletsListRepository
 import com.tangem.domain.wallets.repository.WalletNamesMigrationRepository
 import timber.log.Timber
 
 class WalletNameMigrationUseCase(
     private val userWalletsListManager: UserWalletsListManager,
+    private val userWalletsListRepository: UserWalletsListRepository,
+    private val useNewListRepository: Boolean,
     private val walletNamesMigrationRepository: WalletNamesMigrationRepository,
 ) {
 
     suspend operator fun invoke() {
-        val wallets = userWalletsListManager.userWalletsSync
-
         if (walletNamesMigrationRepository.isMigrationDone()) {
             return
         }
 
-        val existingNames: MutableSet<String> = mutableSetOf()
-        wallets.indices.forEach { i ->
-            val defaultName = wallets[i].name
-            val suggestedWalletName = suggestedWalletName(defaultName, existingNames)
-            if (defaultName != suggestedWalletName) {
-                userWalletsListManager.update(wallets[i].walletId) { it.copy(name = suggestedWalletName) }
+        if (useNewListRepository) {
+            val wallets = userWalletsListRepository.userWalletsSync()
+            val existingNames: MutableSet<String> = mutableSetOf()
+            wallets.forEach {
+                val defaultName = it.name
+                val suggestedWalletName = suggestedWalletName(defaultName, existingNames)
+                if (defaultName != suggestedWalletName) {
+                    userWalletsListRepository.saveWithoutLock(it.copy(name = suggestedWalletName), canOverride = true)
+                }
+                Timber.tag("Migrated names").e(it.walletId.toString() + " " + suggestedWalletName)
             }
-            Timber.tag("Migrated names").e(i.toString() + " " + suggestedWalletName)
+        } else {
+            val wallets = userWalletsListManager.userWalletsSync
+            val existingNames: MutableSet<String> = mutableSetOf()
+            wallets.indices.forEach { i ->
+                val defaultName = wallets[i].name
+                val suggestedWalletName = suggestedWalletName(defaultName, existingNames)
+                if (defaultName != suggestedWalletName) {
+                    userWalletsListManager.update(wallets[i].walletId) { it.copy(name = suggestedWalletName) }
+                }
+                Timber.tag("Migrated names").e(i.toString() + " " + suggestedWalletName)
+            }
         }
 
         walletNamesMigrationRepository.setMigrationDone()

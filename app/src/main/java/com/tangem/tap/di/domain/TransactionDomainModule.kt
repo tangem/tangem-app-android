@@ -193,6 +193,15 @@ internal object TransactionDomainModule {
 
     @Provides
     @Singleton
+    fun providePrepareAndSignUseCase(
+        transactionRepository: TransactionRepository,
+        cardSdkConfigRepository: CardSdkConfigRepository,
+    ): PrepareAndSignUseCase {
+        return PrepareAndSignUseCase(transactionRepository, cardSdkConfigRepository)
+    }
+
+    @Provides
+    @Singleton
     fun provideSignUseCase(
         walletManagersFacade: WalletManagersFacade,
         cardSdkConfigRepository: CardSdkConfigRepository,
