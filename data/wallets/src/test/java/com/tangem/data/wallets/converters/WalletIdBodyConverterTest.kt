@@ -1,10 +1,10 @@
 package com.tangem.data.wallets.converters
 
+import com.google.common.truth.Truth.assertThat
 import com.tangem.datasource.api.tangemTech.models.CardInfoBody
 import com.tangem.datasource.api.tangemTech.models.WalletIdBody
-import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.UserWalletId
-import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import io.mockk.mockk
 import org.junit.Test
 

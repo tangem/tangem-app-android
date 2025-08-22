@@ -1,7 +1,7 @@
 package com.tangem.tap.domain.userWalletList.repository.implementation
 
 import com.tangem.common.services.secure.SecureStorage
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.tap.domain.userWalletList.repository.SelectedUserWalletRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.sync.Mutex

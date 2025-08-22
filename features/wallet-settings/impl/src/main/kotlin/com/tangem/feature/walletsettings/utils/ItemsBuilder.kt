@@ -8,7 +8,7 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.components.block.model.BlockUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.walletsettings.analytics.Settings
 import com.tangem.feature.walletsettings.entity.WalletSettingsItemUM
 import com.tangem.feature.walletsettings.impl.R
@@ -43,6 +43,7 @@ internal class ItemsBuilder @Inject constructor(
         renameWallet: () -> Unit,
         onLinkMoreCardsClick: () -> Unit,
         onReferralClick: () -> Unit,
+        isHotWalletEnabled: Boolean,
     ): PersistentList<WalletSettingsItemUM> = persistentListOf<WalletSettingsItemUM>()
         .add(buildNameItem(userWalletName, isRenameWalletAvailable, renameWallet))
         .run {
@@ -60,6 +61,7 @@ internal class ItemsBuilder @Inject constructor(
                 isManageTokensAvailable = isManageTokensAvailable,
                 onLinkMoreCardsClick = onLinkMoreCardsClick,
                 onReferralClick = onReferralClick,
+                isHotWalletEnabled = isHotWalletEnabled,
             ),
         )
         .addAll(
@@ -137,6 +139,7 @@ internal class ItemsBuilder @Inject constructor(
         isManageTokensAvailable: Boolean,
         onLinkMoreCardsClick: () -> Unit,
         onReferralClick: () -> Unit,
+        isHotWalletEnabled: Boolean,
     ) = WalletSettingsItemUM.WithItems(
         id = "card",
         description = resourceReference(R.string.settings_card_settings_footer),
@@ -165,6 +168,14 @@ internal class ItemsBuilder @Inject constructor(
                 iconRes = R.drawable.ic_card_settings_24,
                 onClick = { router.push(AppRoute.CardSettings(userWalletId)) },
             ).let(::add)
+
+            if (isHotWalletEnabled) {
+                BlockUM(
+                    text = resourceReference(R.string.common_backup),
+                    iconRes = R.drawable.ic_more_cards_24,
+                    onClick = { router.push(AppRoute.WalletBackup(userWalletId)) },
+                ).let(::add)
+            }
 
             if (isReferralAvailable) {
                 BlockUM(

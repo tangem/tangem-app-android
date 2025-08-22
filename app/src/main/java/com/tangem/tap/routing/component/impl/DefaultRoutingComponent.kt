@@ -6,17 +6,24 @@ import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.decompose.value.subscribe
+import com.arkivanov.essenty.lifecycle.subscribe
 import com.google.android.material.snackbar.Snackbar
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.context.AppComponentContext
+import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.navigation.getOrCreateTyped
 import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.features.hotwallet.HotAccessCodeRequestComponent
+import com.tangem.features.hotwallet.accesscoderequest.proxy.HotWalletPasswordRequesterProxy
 import com.tangem.features.walletconnect.components.WcRoutingComponent
+import com.tangem.hot.sdk.TangemHotSdk
+import com.tangem.hot.sdk.android.create
 import com.tangem.tap.common.SnackbarHandler
+import com.tangem.tap.features.hot.TangemHotSDKProxy
 import com.tangem.tap.routing.RootContent
 import com.tangem.tap.routing.component.RoutingComponent
 import com.tangem.tap.routing.component.RoutingComponent.Child
@@ -36,13 +43,21 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     private val uiDependencies: UiDependencies,
     private val wcRoutingComponentFactory: WcRoutingComponent.Factory,
     private val deeplinkFactory: DeepLinkFactory,
+    private val tangemHotSDKProxy: TangemHotSDKProxy,
+    private val hotAccessCodeRequestComponentFactory: HotAccessCodeRequestComponent.Factory,
+    private val hotAccessCodeRequesterProxy: HotWalletPasswordRequesterProxy,
 ) : RoutingComponent,
     AppComponentContext by context,
     SnackbarHandler {
 
     private val wcRoutingComponent: WcRoutingComponent by lazy {
         wcRoutingComponentFactory
-            .create(childByContext(componentContext = this), params = Unit)
+            .create(child("wcRoutingComponent"), params = Unit)
+    }
+
+    private val hotAccessCodeRequestComponent: HotAccessCodeRequestComponent by lazy {
+        hotAccessCodeRequestComponentFactory
+            .create(child("hotAccessCodeRequestComponent"), Unit)
     }
 
     private val stack: Value<ChildStack<AppRoute, Child>> = childStack(
@@ -70,6 +85,8 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
                 appRouterConfig.stack = stackItems
             }
         }
+
+        configureProxies()
     }
 
     @Composable
@@ -79,6 +96,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
             stack = stack,
             uiDependencies = uiDependencies,
             wcContent = { wcRoutingComponent.Content(it) },
+            hotAccessCodeContent = { hotAccessCodeRequestComponent.Content(it) },
             backHandler = backHandler,
             onBack = router::pop,
         )
@@ -118,6 +136,19 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
         listOf(AppRoute.Initial)
     } else {
         initialStack
+    }
+
+    private fun configureProxies() {
+        lifecycle.subscribe(
+            onCreate = {
+                tangemHotSDKProxy.sdkState.value = TangemHotSdk.create(activity)
+                hotAccessCodeRequesterProxy.componentRequester.value = hotAccessCodeRequestComponent
+            },
+            onDestroy = {
+                tangemHotSDKProxy.sdkState.value = null
+                hotAccessCodeRequesterProxy.componentRequester.value = null
+            },
+        )
     }
 
     @AssistedFactory
