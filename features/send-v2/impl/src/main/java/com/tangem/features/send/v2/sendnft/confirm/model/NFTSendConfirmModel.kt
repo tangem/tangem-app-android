@@ -33,6 +33,7 @@ import com.tangem.features.send.v2.api.SendNotificationsComponent
 import com.tangem.features.send.v2.api.SendNotificationsComponent.Params.NotificationData
 import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents.SendScreenSource
+import com.tangem.features.send.v2.api.callbacks.FeeSelectorModelCallback
 import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.features.send.v2.api.subcomponents.notifications.SendNotificationsUpdateListener
 import com.tangem.features.send.v2.api.subcomponents.notifications.SendNotificationsUpdateTrigger
@@ -61,6 +62,7 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.math.BigDecimal
 import javax.inject.Inject
+import com.tangem.features.send.v2.api.entity.FeeSelectorUM as FeeSelectorUMRedesigned
 
 @Suppress("LongParameterList", "LargeClass")
 @ModelScoped
@@ -89,7 +91,7 @@ internal class NFTSendConfirmModel @Inject constructor(
     private val nftSendSuccessTrigger: NFTSendSuccessTrigger,
     private val sendFeeReloadTrigger: SendFeeReloadTrigger,
     sendBalanceUpdaterFactory: SendBalanceUpdater.Factory,
-) : Model(), NFTSendConfirmClickIntents, SendNotificationsComponent.ModelCallback {
+) : Model(), NFTSendConfirmClickIntents, SendNotificationsComponent.ModelCallback, FeeSelectorModelCallback {
 
     private val params: NFTSendConfirmComponent.Params = paramsContainer.require()
 
@@ -138,6 +140,12 @@ internal class NFTSendConfirmModel @Inject constructor(
     fun onFeeResult(feeUM: FeeUM) {
         sendIdleTimer = SystemClock.elapsedRealtime()
         _uiState.update { it.copy(feeUM = feeUM) }
+        updateConfirmNotifications()
+    }
+
+    override fun onFeeResult(feeSelectorUM: FeeSelectorUMRedesigned) {
+        sendIdleTimer = SystemClock.elapsedRealtime()
+        _uiState.update { it.copy(feeSelectorUM = feeSelectorUM) }
         updateConfirmNotifications()
     }
 
@@ -400,13 +408,23 @@ internal class NFTSendConfirmModel @Inject constructor(
         ).onEach { (state, _) ->
             val confirmUM = state.confirmUM
             val confirmUMContent = confirmUM as? ConfirmUM.Content
-            val isReadyToSend = confirmUMContent != null && !confirmUM.isSending
             params.callback.onResult(
                 state.copy(
                     navigationUM = NavigationUM.Content(
                         title = resourceReference(R.string.nft_send),
-                        subtitle = confirmUMContent?.walletName,
-                        backIconRes = R.drawable.ic_close_24,
+                        subtitle = if (uiState.value.isRedesignEnabled) {
+                            null
+                        } else {
+                            confirmUMContent?.walletName
+                        },
+                        backIconRes = if (state.isRedesignEnabled) {
+                            when (confirmUM) {
+                                is ConfirmUM.Success -> R.drawable.ic_close_24
+                                else -> R.drawable.ic_back_24
+                            }
+                        } else {
+                            R.drawable.ic_close_24
+                        },
                         backIconClick = {
                             analyticsEventHandler.send(
                                 CommonSendAnalyticEvents.CloseButtonClicked(
@@ -416,25 +434,13 @@ internal class NFTSendConfirmModel @Inject constructor(
                                     isValid = confirmUM.isPrimaryButtonEnabled,
                                 ),
                             )
-                            appRouter.pop()
+                            if (state.isRedesignEnabled) {
+                                router.pop()
+                            } else {
+                                appRouter.pop()
+                            }
                         },
-                        primaryButton = NavigationButton(
-                            textReference = when (confirmUM) {
-                                is ConfirmUM.Success -> resourceReference(R.string.common_close)
-                                is ConfirmUM.Content -> if (confirmUM.isSending) {
-                                    resourceReference(R.string.send_sending)
-                                } else {
-                                    resourceReference(R.string.common_send)
-                                }
-                                else -> resourceReference(R.string.common_send)
-                            },
-                            iconRes = R.drawable.ic_tangem_24.takeIf { isReadyToSend },
-                            isEnabled = confirmUM.isPrimaryButtonEnabled,
-                            isHapticClick = isReadyToSend,
-                            onClick = {
-                                onNextClick(confirmUM)
-                            },
-                        ),
+                        primaryButton = primaryButtonUM(),
                         prevButton = null,
                         secondaryPairButtonsUM = (
                             NavigationButton(
@@ -453,21 +459,40 @@ internal class NFTSendConfirmModel @Inject constructor(
         }.launchIn(modelScope)
     }
 
-    private fun onNextClick(confirmUM: ConfirmUM) {
-        when (confirmUM) {
-            is ConfirmUM.Success -> {
-                modelScope.launch {
-                    nftSendSuccessTrigger.triggerSuccessNFTSend()
+    private fun primaryButtonUM(): NavigationButton {
+        val confirmUM = uiState.value.confirmUM
+        val isReadyToSend = confirmUM is ConfirmUM.Content && !confirmUM.isSending
+        return NavigationButton(
+            textReference = when (confirmUM) {
+                is ConfirmUM.Success -> resourceReference(R.string.common_close)
+                is ConfirmUM.Content -> if (confirmUM.isSending) {
+                    resourceReference(R.string.send_sending)
+                } else {
+                    resourceReference(R.string.common_send)
                 }
-                appRouter.pop()
-            }
-            is ConfirmUM.Content -> if (confirmUM.isSending) {
-                return
-            } else {
-                onSendClick()
-            }
-            else -> return
-        }
+                else -> resourceReference(R.string.common_send)
+            },
+            iconRes = R.drawable.ic_tangem_24,
+            isIconVisible = isReadyToSend,
+            isEnabled = confirmUM.isPrimaryButtonEnabled,
+            isHapticClick = isReadyToSend,
+            onClick = {
+                when (confirmUM) {
+                    is ConfirmUM.Success -> {
+                        modelScope.launch {
+                            nftSendSuccessTrigger.triggerSuccessNFTSend()
+                        }
+                        appRouter.pop()
+                    }
+                    is ConfirmUM.Content -> if (confirmUM.isSending) {
+                        return@NavigationButton
+                    } else {
+                        onSendClick()
+                    }
+                    else -> return@NavigationButton
+                }
+            },
+        )
     }
 
     private companion object {

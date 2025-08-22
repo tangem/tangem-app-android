@@ -10,6 +10,8 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.legacy.asLockable
+import com.tangem.domain.core.wallets.UserWalletsListRepository
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.tap.LockTimerWorker.Companion.TAG
 import com.tangem.tap.common.extensions.dispatchNavigationAction
 import kotlinx.coroutines.CoroutineScope
@@ -25,6 +27,8 @@ internal class LockUserWalletsTimer(
     private val settingsRepository: SettingsRepository,
     private val duration: Duration = with(Duration) { 5.minutes },
     private val userWalletsListManager: UserWalletsListManager,
+    private val userWalletsListRepository: UserWalletsListRepository,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     private val coroutineScope: CoroutineScope,
 ) : LifecycleOwner by context as LifecycleOwner,
     DefaultLifecycleObserver {
@@ -108,20 +112,33 @@ internal class LockUserWalletsTimer(
 
         delay(duration)
 
-        val userWalletsListManager = userWalletsListManager.asLockable() ?: return@launch
+        if (hotWalletFeatureToggles.isHotWalletEnabled) {
+            val userWallets = userWalletsListRepository.userWalletsSync()
+            if (userWallets.isNotEmpty()) {
+                userWalletsListRepository.lockAllWallets()
+                    .onLeft {
+                        start()
+                    }
+                    .onRight {
+                        store.dispatchNavigationAction { replaceAll(AppRoute.Welcome()) }
+                    }
+            }
+        } else {
+            val userWalletsListManager = userWalletsListManager.asLockable() ?: return@launch
 
-        if (userWalletsListManager.hasUserWallets) {
-            val currentTime = System.currentTimeMillis()
+            if (userWalletsListManager.hasUserWallets) {
+                val currentTime = System.currentTimeMillis()
 
-            Timber.i(
-                """
+                Timber.i(
+                    """
                         Finished
                         |- Millis passed: ${currentTime - startTime}
-                """.trimIndent(),
-            )
+                    """.trimIndent(),
+                )
 
-            userWalletsListManager.lock()
-            store.dispatchNavigationAction { replaceAll(AppRoute.Welcome()) }
+                userWalletsListManager.lock()
+                store.dispatchNavigationAction { replaceAll(AppRoute.Welcome()) }
+            }
         }
     }
 }
