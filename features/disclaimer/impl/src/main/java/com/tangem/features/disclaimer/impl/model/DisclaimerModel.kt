@@ -53,7 +53,7 @@ internal class DisclaimerModel @Inject constructor(
             val shouldAskPushPermission = notificationsRepository.shouldShowSubscribeOnNotificationsAfterUpdate()
             val isHuaweiDevice = getIsHuaweiDeviceWithoutGoogleServicesUseCase()
             if (shouldAskPushPermission && !isHuaweiDevice) {
-                router.push(AppRoute.PushNotification)
+                router.push(AppRoute.PushNotification(AppRoute.PushNotification.Source.Stories))
             } else {
                 neverToInitiallyAskPermissionUseCase(PUSH_PERMISSION)
                 neverRequestPermissionUseCase(PUSH_PERMISSION)

@@ -13,8 +13,6 @@ import com.tangem.features.staking.impl.presentation.state.utils.getPendingActio
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.extensions.orZero
 import com.tangem.utils.transformer.Transformer
-import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.persistentListOf
 
 internal class SetButtonsStateTransformer(
     private val urlOpener: UrlOpener,
@@ -23,12 +21,13 @@ internal class SetButtonsStateTransformer(
     override fun transform(prevState: StakingUiState): StakingUiState {
         val confirmState = prevState.confirmationState as? StakingStates.ConfirmationState.Data
 
+        val txUrl = (confirmState?.transactionDoneState as? TransactionDoneState.Content)?.txUrl
         val buttonsState = if (prevState.isButtonsVisible()) {
             NavigationButtonsState.Data(
                 primaryButton = getPrimaryButton(prevState),
                 prevButton = getPrevButton(prevState),
-                extraButtons = getExtraButtons(prevState),
-                txUrl = (confirmState?.transactionDoneState as? TransactionDoneState.Content)?.txUrl,
+                extraButtons = getExtraButtons(prevState).takeIf { txUrl != null },
+                txUrl = txUrl,
                 onTextClick = urlOpener::openUrl,
             )
         } else {
@@ -77,26 +76,23 @@ internal class SetButtonsStateTransformer(
         ).takeIf { prevState.currentStep.isPrevButtonVisible() }
     }
 
-    private fun getExtraButtons(prevState: StakingUiState): ImmutableList<NavigationButton> {
-        return persistentListOf(
-            NavigationButton(
-                textReference = resourceReference(R.string.common_explore),
-                iconRes = R.drawable.ic_web_24,
-                isSecondary = true,
-                isIconVisible = true,
-                showProgress = false,
-                isEnabled = true,
-                onClick = prevState.clickIntents::onExploreClick,
-            ),
-            NavigationButton(
-                textReference = resourceReference(R.string.common_share),
-                iconRes = R.drawable.ic_share_24,
-                isSecondary = true,
-                isIconVisible = true,
-                showProgress = false,
-                isEnabled = true,
-                onClick = prevState.clickIntents::onShareClick,
-            ),
+    private fun getExtraButtons(prevState: StakingUiState): Pair<NavigationButton, NavigationButton> {
+        return NavigationButton(
+            textReference = resourceReference(R.string.common_explore),
+            iconRes = R.drawable.ic_web_24,
+            isSecondary = true,
+            isIconVisible = true,
+            showProgress = false,
+            isEnabled = true,
+            onClick = prevState.clickIntents::onExploreClick,
+        ) to NavigationButton(
+            textReference = resourceReference(R.string.common_share),
+            iconRes = R.drawable.ic_share_24,
+            isSecondary = true,
+            isIconVisible = true,
+            showProgress = false,
+            isEnabled = true,
+            onClick = prevState.clickIntents::onShareClick,
         )
     }
 
