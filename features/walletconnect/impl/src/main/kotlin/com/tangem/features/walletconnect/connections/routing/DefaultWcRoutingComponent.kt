@@ -18,8 +18,10 @@ import com.tangem.features.send.v2.api.FeeSelectorBlockComponent
 import com.tangem.features.send.v2.api.FeeSelectorComponent
 import com.tangem.features.walletconnect.components.WcRoutingComponent
 import com.tangem.features.walletconnect.connections.components.AlertsComponent
+import com.tangem.features.walletconnect.connections.components.AlertsComponent.AlertType.*
 import com.tangem.features.walletconnect.connections.components.WcPairComponent
 import com.tangem.features.walletconnect.transaction.components.chain.WcAddNetworkContainerComponent
+import com.tangem.features.walletconnect.transaction.components.chain.WcSwitchNetworkComponent
 import com.tangem.features.walletconnect.transaction.components.common.WcTransactionModelParams
 import com.tangem.features.walletconnect.transaction.components.send.WcSendTransactionContainerComponent
 import com.tangem.features.walletconnect.transaction.components.sign.WcSignTransactionContainerComponent
@@ -71,6 +73,10 @@ internal class DefaultWcRoutingComponent @AssistedInject constructor(
                 appComponentContext = childContext,
                 params = WcTransactionModelParams(config.rawRequest),
             )
+            is WcInnerRoute.SwitchNetwork -> WcSwitchNetworkComponent(
+                appComponentContext = childContext,
+                params = WcTransactionModelParams(config.rawRequest),
+            )
             is WcInnerRoute.Send -> WcSendTransactionContainerComponent(
                 appComponentContext = childContext,
                 params = WcTransactionModelParams(config.rawRequest),
@@ -88,13 +94,31 @@ internal class DefaultWcRoutingComponent @AssistedInject constructor(
             is WcInnerRoute.UnsupportedMethodAlert -> AlertsComponent(
                 childContext,
                 AlertsComponent.Params(
-                    alertType = AlertsComponent.AlertType.UnsupportedMethod { model.innerRouter.pop() },
+                    alertType = UnsupportedMethod { model.innerRouter.pop() },
                 ),
             )
             is WcInnerRoute.WcDappDisconnected -> AlertsComponent(
                 childContext,
                 AlertsComponent.Params(
-                    alertType = AlertsComponent.AlertType.WcDisconnected { model.innerRouter.pop() },
+                    alertType = WcDisconnected { model.innerRouter.pop() },
+                ),
+            )
+            is WcInnerRoute.TangemUnsupportedNetwork -> AlertsComponent(
+                childContext,
+                AlertsComponent.Params(
+                    alertType = TangemUnsupportedNetwork(config.networkName) { model.innerRouter.pop() },
+                ),
+            )
+            is WcInnerRoute.RequiredAddNetwork -> AlertsComponent(
+                childContext,
+                AlertsComponent.Params(
+                    alertType = RequiredAddNetwork(config.networkName) { model.innerRouter.pop() },
+                ),
+            )
+            is WcInnerRoute.RequiredReconnectWithNetwork -> AlertsComponent(
+                childContext,
+                AlertsComponent.Params(
+                    alertType = RequiredReconnectWithNetwork(config.networkName) { model.innerRouter.pop() },
                 ),
             )
         }
