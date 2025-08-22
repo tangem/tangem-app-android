@@ -51,6 +51,8 @@ internal class WcRoutingModel @Inject constructor(
                     -> WcInnerRoute.SignMessage(rawRequest)
                     WcEthMethodName.AddEthereumChain,
                     -> WcInnerRoute.AddNetwork(rawRequest)
+                    WcEthMethodName.SwitchEthereumChain,
+                    -> WcInnerRoute.SwitchNetwork(rawRequest)
                     WcEthMethodName.SignTransaction,
                     WcEthMethodName.SendTransaction,
                     WcSolanaMethodName.SignTransaction,

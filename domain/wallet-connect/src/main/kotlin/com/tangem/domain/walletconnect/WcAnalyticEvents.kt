@@ -11,6 +11,7 @@ import com.tangem.domain.walletconnect.model.WcSessionApprove
 import com.tangem.domain.walletconnect.model.WcSessionProposal
 import com.tangem.domain.walletconnect.model.sdkcopy.WcAppMetaData
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
+import com.tangem.utils.extensions.mapNotNullValues
 
 sealed class WcAnalyticEvents(
     event: String,
@@ -103,7 +104,7 @@ sealed class WcAnalyticEvents(
     class SignatureRequestReceived(
         rawRequest: WcSdkSessionRequest,
         network: Network,
-        emulationStatus: EmulationStatus,
+        emulationStatus: EmulationStatus?,
     ) : WcAnalyticEvents(
         event = "Signature Request Received",
         params = mapOf(
@@ -111,8 +112,8 @@ sealed class WcAnalyticEvents(
             AnalyticsParam.Key.DAPP_URL to rawRequest.dAppMetaData.url,
             AnalyticsParam.Key.METHOD_NAME to rawRequest.request.method,
             AnalyticsParam.Key.BLOCKCHAIN to network.name,
-            AnalyticsParam.Key.EMULATION_STATUS to emulationStatus.status,
-        ),
+            AnalyticsParam.Key.EMULATION_STATUS to emulationStatus?.status,
+        ).mapNotNullValues { it.value },
     ) {
         enum class EmulationStatus(val status: String) {
             Emulated("Emulated"),

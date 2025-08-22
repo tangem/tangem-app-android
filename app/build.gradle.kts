@@ -99,6 +99,7 @@ dependencies {
     implementation(projects.domain.balanceHiding)
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.transaction)
+    implementation(projects.domain.transaction.models)
     implementation(projects.domain.analytics)
     implementation(projects.domain.visa)
     implementation(projects.domain.onboarding)
@@ -227,8 +228,8 @@ dependencies {
     implementation(projects.features.usedesk.impl)
     implementation(projects.features.hotWallet.api)
     implementation(projects.features.hotWallet.impl)
+    implementation(projects.features.kyc.api)
     //TODO disable for release because of the permissions
-    // implementation(projects.features.kyc.api)
     // implementation(projects.features.kyc.impl)
     implementation(projects.features.welcome.api)
     implementation(projects.features.welcome.impl)
@@ -238,6 +239,10 @@ dependencies {
     implementation(projects.features.home.impl)
     implementation(projects.features.account.api)
     implementation(projects.features.account.impl)
+    implementation(projects.features.tangempay.details.api)
+    implementation(projects.features.tangempay.details.impl)
+    implementation(projects.features.tangempay.main.api)
+    implementation(projects.features.tangempay.main.impl)
     implementation(projects.features.tokenRecieve.api)
     implementation(projects.features.tokenRecieve.impl)
 
@@ -351,7 +356,7 @@ dependencies {
 
     /** Chucker */
     debugImplementation(deps.chucker)
-    mockedImplementation(deps.chuckerStub)
+    mockedImplementation(deps.chucker)
     externalImplementation(deps.chuckerStub)
     internalImplementation(deps.chuckerStub)
     releaseImplementation(deps.chuckerStub)
