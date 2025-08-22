@@ -4,6 +4,7 @@ import com.tangem.datasource.api.common.blockaid.models.request.DomainScanReques
 import com.tangem.datasource.api.common.blockaid.models.request.EvmTransactionScanRequest
 import com.tangem.datasource.api.common.blockaid.models.request.SolanaTransactionScanRequest
 import com.tangem.datasource.api.common.blockaid.models.response.DomainScanResponse
+import com.tangem.datasource.api.common.blockaid.models.response.SolanaTransactionResponse
 import com.tangem.datasource.api.common.blockaid.models.response.TransactionScanResponse
 import retrofit2.http.Body
 import retrofit2.http.POST
@@ -17,5 +18,5 @@ interface BlockAidApi {
     suspend fun scanJsonRpc(@Body request: EvmTransactionScanRequest): TransactionScanResponse
 
     @POST("solana/message/scan")
-    suspend fun scanSolanaMessage(@Body request: SolanaTransactionScanRequest): TransactionScanResponse
+    suspend fun scanSolanaMessage(@Body request: SolanaTransactionScanRequest): SolanaTransactionResponse
 }
