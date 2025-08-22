@@ -15,11 +15,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.settings.SettingsManager
-import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUMV2
-import com.tangem.core.ui.components.bottomsheets.message.icon
-import com.tangem.core.ui.components.bottomsheets.message.infoBlock
-import com.tangem.core.ui.components.bottomsheets.message.onClick
-import com.tangem.core.ui.components.bottomsheets.message.secondaryButton
+import com.tangem.core.ui.components.bottomsheets.message.*
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
@@ -29,6 +25,7 @@ import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.nft.DisableWalletNFTUseCase
 import com.tangem.domain.nft.EnableWalletNFTUseCase
 import com.tangem.domain.nft.GetWalletNFTEnabledUseCase
@@ -36,7 +33,6 @@ import com.tangem.domain.notifications.GetIsHuaweiDeviceWithoutGoogleServicesUse
 import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.notifications.toggles.NotificationsFeatureToggles
 import com.tangem.domain.settings.repositories.PermissionRepository
-import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.usecase.*
 import com.tangem.feature.walletsettings.analytics.Settings
 import com.tangem.feature.walletsettings.analytics.WalletSettingsAnalyticEvents
@@ -46,6 +42,7 @@ import com.tangem.feature.walletsettings.entity.NetworksAvailableForNotification
 import com.tangem.feature.walletsettings.entity.WalletSettingsItemUM
 import com.tangem.feature.walletsettings.entity.WalletSettingsUM
 import com.tangem.feature.walletsettings.impl.R
+import com.tangem.feature.walletsettings.utils.AccountItemsDelegate
 import com.tangem.feature.walletsettings.utils.ItemsBuilder
 import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -65,6 +62,7 @@ internal class WalletSettingsModel @Inject constructor(
     private val messageSender: UiMessageSender,
     private val deleteWalletUseCase: DeleteWalletUseCase,
     private val itemsBuilder: ItemsBuilder,
+    private val accountItemsDelegate: AccountItemsDelegate,
     override val dispatchers: CoroutineDispatcherProvider,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val analyticsContextProxy: AnalyticsContextProxy,
@@ -224,6 +222,7 @@ internal class WalletSettingsModel @Inject constructor(
             walletUpgradeDismissed = isUpgradeNotificationEnabled,
             onUpgradeWalletClick = ::onUpgradeWalletClick,
             onDismissUpgradeWalletClick = ::onDismissUpgradeWalletClick,
+            accountsUM = with(accountItemsDelegate) { listOf() }, // todo account
         )
     }
 
