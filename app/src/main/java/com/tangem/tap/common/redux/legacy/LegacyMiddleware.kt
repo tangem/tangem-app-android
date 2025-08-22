@@ -26,10 +26,9 @@ internal object LegacyMiddleware {
             { action ->
                 when (action) {
                     is LegacyAction.PrepareDetailsScreen -> {
-                        val userWalletsListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
                         val walletsRepository = store.inject(DaggerGraphState::walletsRepository)
 
-                        userWalletsListManager.selectedUserWallet
+                        selectedUserWallet()
                             .distinctUntilChanged()
                             .onEach { selectedUserWallet ->
                                 val initializedAppSettingsStateContent = initializeAppSettingsState(
@@ -52,6 +51,16 @@ internal object LegacyMiddleware {
         }
     }
 
+    private fun selectedUserWallet(): Flow<UserWallet> {
+        val hotWalletFeatureToggles = store.inject(DaggerGraphState::hotWalletFeatureToggles)
+        return if (hotWalletFeatureToggles.isHotWalletEnabled) {
+            store.inject(DaggerGraphState::userWalletsListRepository).selectedUserWallet.filterNotNull()
+        } else {
+            val userWalletsListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
+            userWalletsListManager.selectedUserWallet
+        }
+    }
+
     /**
      * LEGACY: We need to initialize [AppSettingsState] async to avoid drawing blocking
      * previously it was initialized in runBlocking and blocked details screen
@@ -64,6 +73,8 @@ internal object LegacyMiddleware {
             selectedAppCurrency = store.state.globalState.appCurrency,
             selectedThemeMode = store.inject(DaggerGraphState::appThemeModeRepository).getAppThemeMode().firstOrNull()
                 ?: AppThemeMode.DEFAULT,
+            requireAccessCode = store.inject(DaggerGraphState::walletsRepository).requireAccessCode(),
+            useBiometricAuthentication = store.inject(DaggerGraphState::walletsRepository).useBiometricAuthentication(),
             isHidingEnabled = store.inject(DaggerGraphState::balanceHidingRepository)
                 .getBalanceHidingSettings().isHidingEnabledInSettings,
             needEnrollBiometrics = runCatching(tangemSdkManager::needEnrollBiometrics).getOrNull() == true,
