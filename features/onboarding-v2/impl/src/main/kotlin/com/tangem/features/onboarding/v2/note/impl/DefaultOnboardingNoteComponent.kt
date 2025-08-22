@@ -24,8 +24,8 @@ import com.tangem.features.onboarding.v2.done.api.OnboardingDoneComponent
 import com.tangem.features.onboarding.v2.impl.R
 import com.tangem.features.onboarding.v2.note.api.OnboardingNoteComponent
 import com.tangem.features.onboarding.v2.note.impl.child.create.OnboardingNoteCreateWalletComponent
-import com.tangem.features.onboarding.v2.note.impl.model.OnboardingNoteModel
 import com.tangem.features.onboarding.v2.note.impl.model.OnboardingNoteCommonState
+import com.tangem.features.onboarding.v2.note.impl.model.OnboardingNoteModel
 import com.tangem.features.onboarding.v2.note.impl.route.ONBOARDING_NOTE_STEPS_COUNT
 import com.tangem.features.onboarding.v2.note.impl.route.OnboardingNoteRoute
 import dagger.assisted.Assisted
