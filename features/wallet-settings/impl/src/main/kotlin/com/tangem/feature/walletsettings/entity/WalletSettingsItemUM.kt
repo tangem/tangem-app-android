@@ -2,6 +2,7 @@ package com.tangem.feature.walletsettings.entity
 
 import androidx.compose.runtime.Immutable
 import com.tangem.common.ui.account.CryptoPortfolioIconUM
+import com.tangem.common.ui.userwallet.state.UserWalletItemUM.ImageState
 import com.tangem.core.ui.components.block.model.BlockUM
 import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableList
@@ -24,11 +25,12 @@ internal sealed class WalletSettingsItemUM {
         val onCheckedChange: (Boolean) -> Unit,
     ) : WalletSettingsItemUM()
 
-    data class WithText(
+    data class CardBlock(
         override val id: String,
         val title: TextReference,
         val text: TextReference,
         val isEnabled: Boolean,
+        val imageState: ImageState,
         val onClick: () -> Unit,
     ) : WalletSettingsItemUM()
 
