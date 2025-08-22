@@ -13,20 +13,15 @@ class HotWalletPasswordRequesterProxy @Inject constructor() : HotWalletPasswordR
 
     val componentRequester = MutableStateFlow<HotWalletPasswordRequester?>(null)
 
-    override suspend fun wrongPassword() {
-        call { wrongPassword() }
-    }
+    override suspend fun wrongPassword() = call { wrongPassword() }
 
-    override suspend fun successfulAuthentication() {
-        call { successfulAuthentication() }
-    }
+    override suspend fun successfulAuthentication() = call { successfulAuthentication() }
 
-    override suspend fun requestPassword(hasBiometry: Boolean): HotWalletPasswordRequester.Result =
-        call { requestPassword(hasBiometry) }
+    override suspend fun requestPassword(
+        attemptRequest: HotWalletPasswordRequester.AttemptRequest,
+    ): HotWalletPasswordRequester.Result = call { requestPassword(attemptRequest) }
 
-    override suspend fun dismiss() {
-        call { dismiss() }
-    }
+    override suspend fun dismiss() = call { dismiss() }
 
     private suspend fun <T> call(block: suspend HotWalletPasswordRequester.() -> T): T {
         return withTimeout(timeMillis = 1000) {
