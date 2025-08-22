@@ -16,6 +16,11 @@ enum class ValidationResult {
     UNSAFE,
 
     /**
+     * Transaction was confirmed suspicious
+     */
+    WARNING,
+
+    /**
      * Validation wasn't performed, BlockAid cannot guarantee transaction's safety
      */
     FAILED_TO_VALIDATE,
