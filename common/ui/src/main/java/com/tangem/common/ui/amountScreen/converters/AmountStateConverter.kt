@@ -60,6 +60,7 @@ class AmountStateConverter(
         return AmountState.Data(
             title = value.title,
             availableBalance = resourceReference(R.string.common_crypto_fiat_format, wrappedList(crypto, fiat)),
+            availableBalanceShort = stringReference(crypto),
             tokenName = stringReference(status.currency.name),
             tokenIconState = iconStateConverter.convert(status),
             amountTextField = amountFieldConverter.convert(value.value),
@@ -130,6 +131,7 @@ class AmountStateConverterV2(
             } else {
                 resourceReference(R.string.common_crypto_fiat_format, wrappedList(crypto, fiat))
             },
+            availableBalanceShort = stringReference(crypto),
             tokenName = stringReference(cryptoCurrencyStatus.currency.name),
             tokenIconState = iconStateConverter.convert(cryptoCurrencyStatus.currency),
             amountTextField = amountFieldConverter.convert(value.value),
