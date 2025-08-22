@@ -3,6 +3,7 @@ package com.tangem.features.send.v2.send.analytics
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.AnalyticsParam.Key.BLOCKCHAIN
+import com.tangem.core.analytics.models.AnalyticsParam.Key.ENS_ADDRESS
 import com.tangem.core.analytics.models.AnalyticsParam.Key.FEE_TYPE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.NONCE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
@@ -23,6 +24,7 @@ internal sealed class SendAnalyticEvents(
         val feeType: AnalyticsParam.FeeType,
         val blockchain: String,
         val nonceNotEmpty: Boolean,
+        private val ensStatus: AnalyticsParam.EnsStatus,
     ) : SendAnalyticEvents(
         event = "Transaction Sent Screen Opened",
         params = mapOf(
@@ -30,6 +32,10 @@ internal sealed class SendAnalyticEvents(
             FEE_TYPE to feeType.value,
             BLOCKCHAIN to blockchain,
             NONCE to nonceNotEmpty.toString().capitalize(),
+            ENS_ADDRESS to when (ensStatus) {
+                AnalyticsParam.EnsStatus.EMPTY -> false.toString()
+                AnalyticsParam.EnsStatus.FULL -> true.toString()
+            },
         ),
     )
 
