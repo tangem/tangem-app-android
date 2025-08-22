@@ -9,29 +9,35 @@ import kotlinx.collections.immutable.toImmutableList
 
 internal object WcNetworksInfoConverter : Converter<WcNetworksInfoConverter.Input, WcNetworksInfo> {
     override fun convert(value: Input): WcNetworksInfo {
-        return if (value.missingNetworks.isNotEmpty()) {
-            WcNetworksInfo.MissingRequiredNetworkInfo(
-                networks = value.missingNetworks.joinToString { it.name },
-            )
-        } else {
-            WcNetworksInfo.ContainsAllRequiredNetworks(
-                items = (value.requiredNetworks + value.additionallyEnabledNetworks)
-                    .map {
+        val missing = value.missingNetworks
+        val required = value.requiredNetworks
+        val available = value.availableNetworks
+        val notAdded = value.notAddedNetworks
+        val additionallyEnabled = value.additionallyEnabledNetworks
+        return when {
+            missing.isNotEmpty() -> WcNetworksInfo.MissingRequiredNetworkInfo(missing.joinToString { it.name })
+            required.isEmpty() && available.isEmpty() && notAdded.isNotEmpty() -> WcNetworksInfo.NoneNetworksAdded
+            else -> {
+                val combinedNetworks = required + additionallyEnabled
+                WcNetworksInfo.ContainsAllRequiredNetworks(
+                    items = combinedNetworks.map { network ->
                         WcNetworkInfoItem.Required(
-                            id = it.rawId,
-                            icon = it.iconResId,
-                            name = it.name,
-                            symbol = it.currencySymbol,
+                            id = network.rawId,
+                            icon = network.iconResId,
+                            name = network.name,
+                            symbol = network.currencySymbol,
                         )
-                    }
-                    .toImmutableList(),
-            )
+                    }.toImmutableList(),
+                )
+            }
         }
     }
 
     data class Input(
         val missingNetworks: Set<Network>,
         val requiredNetworks: Set<Network>,
+        val availableNetworks: Set<Network>,
+        val notAddedNetworks: Set<Network>,
         val additionallyEnabledNetworks: Set<Network>,
     )
 }
