@@ -32,12 +32,13 @@ import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.TangemSwitch
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
-import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetWithFooter
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.domain.models.network.Network
@@ -97,7 +98,7 @@ private fun WcSelectNetworksBS(
         containerColor = TangemTheme.colors.background.tertiary,
         title = {
             TangemModalBottomSheetTitle(
-                title = stringReference("Choose networks"),
+                title = resourceReference(R.string.common_choose_network),
                 startIconRes = R.drawable.ic_back_24,
                 onStartClick = onBack,
             )
@@ -113,8 +114,9 @@ private fun WcSelectNetworksBS(
                 modifier = Modifier
                     .padding(16.dp)
                     .fillMaxWidth(),
-                text = "Done",
+                text = stringResourceSafe(R.string.common_done),
                 onClick = state.onDone,
+                enabled = state.doneButtonEnabled,
             )
         },
     )
@@ -144,8 +146,11 @@ private fun MissingRequiredBlock(missingNetworks: ImmutableList<WcNetworkInfoIte
     val missingNetworksName = missingNetworks.joinToString { it.name }
     val notificationUM = remember(missingNetworks) {
         NotificationUM.Info(
-            title = stringReference("The wallet has no required networks"),
-            subtitle = stringReference("Add the $missingNetworksName network to your portfolio for this wallet."),
+            title = resourceReference(R.string.wc_missing_required_network_title),
+            subtitle = resourceReference(
+                R.string.wc_missing_required_network_description,
+                wrappedList(missingNetworksName),
+            ),
         )
     }
     Column(modifier = modifier) {
@@ -176,7 +181,7 @@ private fun AvailableNetworksBlock(
     Column(modifier = modifier) {
         Text(
             modifier = Modifier.padding(top = 12.dp, bottom = 4.dp, start = 12.dp, end = 12.dp),
-            text = "Available networks",
+            text = stringResourceSafe(R.string.common_available_networks),
             style = TangemTheme.typography.subtitle2,
             color = TangemTheme.colors.text.tertiary,
         )
@@ -198,7 +203,7 @@ private fun NotAddedBlock(notAdded: ImmutableList<WcNetworkInfoItem>, modifier: 
     Column(modifier = modifier) {
         Text(
             modifier = Modifier.padding(top = 12.dp, bottom = 4.dp, start = 12.dp, end = 12.dp),
-            text = "Not Added",
+            text = stringResourceSafe(R.string.common_not_added),
             style = TangemTheme.typography.subtitle2,
             color = TangemTheme.colors.text.tertiary,
         )
@@ -216,13 +221,14 @@ private fun NetworkItems(networkItem: WcNetworkInfoItem, modifier: Modifier = Mo
         when (networkItem) {
             is WcNetworkInfoItem.Checkable,
             is WcNetworkInfoItem.Checked,
-            is WcNetworkInfoItem.Required,
             -> Image(
                 modifier = Modifier.size(24.dp),
                 painter = painterResource(networkItem.icon),
                 contentDescription = null,
             )
-            is WcNetworkInfoItem.ReadOnly -> Icon(
+            is WcNetworkInfoItem.Required,
+            is WcNetworkInfoItem.ReadOnly,
+            -> Icon(
                 modifier = Modifier
                     .size(24.dp)
                     .clip(CircleShape)
@@ -240,20 +246,28 @@ private fun NetworkItems(networkItem: WcNetworkInfoItem, modifier: Modifier = Mo
             symbol = networkItem.symbol,
         )
         when (networkItem) {
-            is WcNetworkInfoItem.Checkable -> TangemSwitch(
-                onCheckedChange = networkItem.onCheckedChange,
-                checked = networkItem.checked,
-            )
+            is WcNetworkInfoItem.Checkable -> {
+                if (networkItem.enabled) {
+                    TangemSwitch(
+                        onCheckedChange = networkItem.onCheckedChange,
+                        checked = networkItem.checked,
+                    )
+                }
+            }
             is WcNetworkInfoItem.Required -> Text(
-                text = "Required",
+                text = stringResourceSafe(R.string.common_required),
                 style = TangemTheme.typography.body2,
                 color = TangemTheme.colors.text.tertiary,
             )
-            is WcNetworkInfoItem.Checked -> TangemSwitch(
-                onCheckedChange = {},
-                enabled = false,
-                checked = true,
-            )
+            is WcNetworkInfoItem.Checked -> {
+                if (networkItem.enabled) {
+                    TangemSwitch(
+                        onCheckedChange = {},
+                        enabled = false,
+                        checked = true,
+                    )
+                }
+            }
             is WcNetworkInfoItem.ReadOnly -> Unit
         }
     }
@@ -278,7 +292,7 @@ private fun NetworkNameAndSymbol(name: String, symbol: String, modifier: Modifie
     }
 }
 
-@Preview(showBackground = true, device = Devices.PIXEL_7_PRO)
+@Preview(showBackground = true, device = Devices.PIXEL_7_PRO, uiMode = Configuration.UI_MODE_NIGHT_NO)
 @Preview(showBackground = true, device = Devices.PIXEL_7_PRO, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun WcSelectNetworksContent_Preview(
@@ -286,29 +300,7 @@ private fun WcSelectNetworksContent_Preview(
     state: WcSelectNetworksUM,
 ) {
     TangemThemePreview {
-        TangemModalBottomSheet<TangemBottomSheetConfigContent.Empty>(
-            containerColor = TangemTheme.colors.background.tertiary,
-            config = TangemBottomSheetConfig(
-                isShown = true,
-                onDismissRequest = {},
-                content = TangemBottomSheetConfigContent.Empty,
-            ),
-            title = {
-                TangemModalBottomSheetTitle(
-                    title = stringReference("Choose wallet"),
-                    onEndClick = {},
-                    endIconRes = R.drawable.ic_close_24,
-                )
-            },
-            content = {
-                WcSelectNetworksContent(
-                    modifier = Modifier
-                        .background(TangemTheme.colors.background.tertiary)
-                        .padding(horizontal = TangemTheme.dimens.spacing16),
-                    state = state,
-                )
-            },
-        )
+        WcSelectNetworksBS(state = state, onBack = {}, onDismiss = {})
     }
 }
 
@@ -318,15 +310,15 @@ private class WcSelectNetworksProvider : CollectionPreviewParameterProvider<WcSe
             missing = persistentListOf(
                 WcNetworkInfoItem.Required(
                     id = "ethereum",
-                    name = "EthereumEthereumEthereumEthereumEthereumEthereumEthereumEthereum",
+                    name = "Ethereum",
                     symbol = "ETH",
-                    icon = R.drawable.img_eth_22,
+                    icon = R.drawable.ic_solana_16,
                 ),
                 WcNetworkInfoItem.Required(
                     id = "bitcoin",
                     name = "Bitcoin",
                     symbol = "BTC",
-                    icon = R.drawable.img_btc_22,
+                    icon = R.drawable.ic_avalanche_22,
                 ),
             ),
             required = persistentListOf(
@@ -370,6 +362,7 @@ private class WcSelectNetworksProvider : CollectionPreviewParameterProvider<WcSe
                 ),
             ),
             onDone = {},
+            doneButtonEnabled = false,
         ),
         WcSelectNetworksUM(
             missing = persistentListOf(),
@@ -414,6 +407,7 @@ private class WcSelectNetworksProvider : CollectionPreviewParameterProvider<WcSe
                 ),
             ),
             onDone = {},
+            doneButtonEnabled = true,
         ),
     ),
 )

@@ -5,7 +5,7 @@ import arrow.core.right
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.Analytics
 import com.tangem.domain.card.ScanCardException
-import com.tangem.domain.common.util.twinsIsTwinned
+import com.tangem.domain.card.common.util.twinsIsTwinned
 import com.tangem.domain.core.chain.Chain
 import com.tangem.domain.core.chain.ResultChain
 import com.tangem.domain.models.scan.ScanResponse

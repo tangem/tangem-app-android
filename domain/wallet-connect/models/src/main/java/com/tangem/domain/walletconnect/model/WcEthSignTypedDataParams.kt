@@ -6,34 +6,34 @@ import com.squareup.moshi.JsonClass
 @JsonClass(generateAdapter = true)
 data class WcEthSignTypedDataParams(
     @Json(name = "domain")
-    val domain: Domain,
+    val domain: Domain?,
     @Json(name = "message")
-    val message: Message,
+    val message: Message?,
     @Json(name = "primaryType")
-    val primaryType: String,
+    val primaryType: String?,
     @Json(name = "types")
-    val types: Types,
+    val types: Map<String, List<Types.Type>>,
 ) {
     @JsonClass(generateAdapter = true)
     data class Domain(
         @Json(name = "chainId")
-        val chainId: Int,
+        val chainId: Int?,
         @Json(name = "name")
-        val name: String,
+        val name: String?,
         @Json(name = "verifyingContract")
-        val verifyingContract: String,
+        val verifyingContract: String?,
         @Json(name = "version")
-        val version: String,
+        val version: String?,
     )
 
     @JsonClass(generateAdapter = true)
     data class Message(
         @Json(name = "contents")
-        val contents: String,
+        val contents: String?,
         @Json(name = "from")
-        val from: Address,
+        val from: Address?,
         @Json(name = "to")
-        val to: Address,
+        val to: Address?,
     ) {
         @JsonClass(generateAdapter = true)
         data class Address(
