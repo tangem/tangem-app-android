@@ -23,9 +23,9 @@ import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.datasource.local.walletmanager.WalletManagersStore
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.TransactionRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -36,7 +36,7 @@ import java.math.BigInteger
 internal class DefaultTransactionRepository(
     private val walletManagersFacade: WalletManagersFacade,
     private val walletManagersStore: WalletManagersStore,
-    private val coroutineDispatcherProvider: CoroutineDispatcherProvider,
+    private val dispatchers: CoroutineDispatcherProvider,
 ) : TransactionRepository {
 
     override suspend fun createTransaction(
@@ -47,7 +47,7 @@ internal class DefaultTransactionRepository(
         userWalletId: UserWalletId,
         network: Network,
         txExtras: TransactionExtras?,
-    ): TransactionData.Uncompiled = withContext(coroutineDispatcherProvider.io) {
+    ): TransactionData.Uncompiled = withContext(dispatchers.io) {
         val blockchain = network.toBlockchain()
         val walletManager = walletManagersFacade.getOrCreateWalletManager(
             userWalletId = userWalletId,
@@ -84,7 +84,7 @@ internal class DefaultTransactionRepository(
         userWalletId: UserWalletId,
         network: Network,
         nonce: BigInteger?,
-    ): TransactionData.Uncompiled = withContext(coroutineDispatcherProvider.io) {
+    ): TransactionData.Uncompiled = withContext(dispatchers.io) {
         val blockchain = network.toBlockchain()
         val walletManager = walletManagersFacade.getOrCreateWalletManager(
             userWalletId = userWalletId,
@@ -138,7 +138,7 @@ internal class DefaultTransactionRepository(
         spenderAddress: String,
         userWalletId: UserWalletId,
         network: Network,
-    ): TransactionData.Uncompiled = withContext(coroutineDispatcherProvider.io) {
+    ): TransactionData.Uncompiled = withContext(dispatchers.io) {
         val blockchain = network.toBlockchain()
 
         val extras = createTransactionDataExtras(
@@ -171,7 +171,7 @@ internal class DefaultTransactionRepository(
         destinationAddress: String,
         userWalletId: UserWalletId,
         network: Network,
-    ): TransactionData.Uncompiled = withContext(coroutineDispatcherProvider.io) {
+    ): TransactionData.Uncompiled = withContext(dispatchers.io) {
         val blockchain = network.toBlockchain()
 
         // For now transfer one nft asset at a time
@@ -229,7 +229,7 @@ internal class DefaultTransactionRepository(
         destination: String,
         userWalletId: UserWalletId,
         network: Network,
-    ): Result<Unit> = withContext(coroutineDispatcherProvider.io) {
+    ): Result<Unit> = withContext(dispatchers.io) {
         val blockchain = network.toBlockchain()
         val walletManager = walletManagersStore.getSyncOrNull(
             userWalletId = userWalletId,
@@ -260,7 +260,7 @@ internal class DefaultTransactionRepository(
         signer: TransactionSigner,
         userWalletId: UserWalletId,
         network: Network,
-    ) = withContext(coroutineDispatcherProvider.io) {
+    ) = withContext(dispatchers.io) {
         val blockchain = network.toBlockchain()
         val walletManager = walletManagersFacade.getOrCreateWalletManager(
             userWalletId = userWalletId,
@@ -276,7 +276,7 @@ internal class DefaultTransactionRepository(
         userWalletId: UserWalletId,
         network: Network,
         sendMode: TransactionSender.MultipleTransactionSendMode,
-    ) = withContext(coroutineDispatcherProvider.io) {
+    ) = withContext(dispatchers.io) {
         val blockchain = network.toBlockchain()
         val walletManager = walletManagersFacade.getOrCreateWalletManager(
             userWalletId = userWalletId,
@@ -366,13 +366,9 @@ internal class DefaultTransactionRepository(
         signer: TransactionSigner,
         userWalletId: UserWalletId,
         network: Network,
-    ): Result<ByteArray> = withContext(coroutineDispatcherProvider.io) {
+    ) = withContext(dispatchers.io) {
         val preparer = getPreparer(network, userWalletId)
-
-        when (val prepareForSend = preparer.prepareForSend(transactionData, signer)) {
-            is com.tangem.blockchain.extensions.Result.Failure -> Result.failure(prepareForSend.error)
-            is com.tangem.blockchain.extensions.Result.Success -> Result.success(prepareForSend.data)
-        }
+        preparer.prepareForSend(transactionData, signer)
     }
 
     override suspend fun prepareForSendMultiple(
@@ -380,13 +376,29 @@ internal class DefaultTransactionRepository(
         signer: TransactionSigner,
         userWalletId: UserWalletId,
         network: Network,
-    ): Result<List<ByteArray>> = withContext(coroutineDispatcherProvider.io) {
+    ) = withContext(dispatchers.io) {
         val preparer = getPreparer(network, userWalletId)
+        preparer.prepareForSendMultiple(transactionData, signer)
+    }
 
-        when (val prepareForSend = preparer.prepareForSendMultiple(transactionData, signer)) {
-            is com.tangem.blockchain.extensions.Result.Failure -> Result.failure(prepareForSend.error)
-            is com.tangem.blockchain.extensions.Result.Success -> Result.success(prepareForSend.data)
-        }
+    override suspend fun prepareAndSign(
+        transactionData: TransactionData,
+        signer: TransactionSigner,
+        userWalletId: UserWalletId,
+        network: Network,
+    ) = withContext(dispatchers.io) {
+        val preparer = getPreparer(network, userWalletId)
+        preparer.prepareAndSign(transactionData, signer)
+    }
+
+    override suspend fun prepareAndSignMultiple(
+        transactionData: List<TransactionData>,
+        signer: TransactionSigner,
+        userWalletId: UserWalletId,
+        network: Network,
+    ) = withContext(dispatchers.io) {
+        val preparer = getPreparer(network, userWalletId)
+        preparer.prepareAndSignMultiple(transactionData, signer)
     }
 
     private suspend fun getPreparer(network: Network, userWalletId: UserWalletId): TransactionPreparer {
