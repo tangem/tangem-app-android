@@ -37,7 +37,6 @@ import com.tangem.core.ui.components.Notifier
 import com.tangem.core.ui.components.OutlineTextFieldWithIcon
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.TangemTextFieldsDefault
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.keyboardAsState
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.features.hotwallet.addexistingwallet.im.port.ui.utils.InvalidWordsColorTransformation
@@ -113,8 +112,6 @@ internal fun AddExistingWalletImportContent(state: AddExistingWalletImportUM, mo
             )
         }
     }
-
-    PassphraseInfoBottomSheet(state.infoBottomSheetConfig)
 }
 
 @Composable
@@ -233,7 +230,6 @@ private fun PreviewAddExistingWalletImportContent() {
                 importWalletClick = {},
                 suggestionsList = persistentListOf(),
                 onSuggestionClick = {},
-                infoBottomSheetConfig = TangemBottomSheetConfig.Empty,
                 readyToImport = false,
             ),
         )
