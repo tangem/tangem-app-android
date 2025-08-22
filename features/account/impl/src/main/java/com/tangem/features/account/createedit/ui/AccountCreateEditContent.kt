@@ -24,6 +24,9 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.R
+import com.tangem.common.ui.account.AccountIcon
+import com.tangem.common.ui.account.AccountIconPreviewData
+import com.tangem.common.ui.account.AccountIconSize
 import com.tangem.common.ui.account.getResId
 import com.tangem.common.ui.account.getUiColor
 import com.tangem.core.ui.components.PrimaryButton
@@ -32,14 +35,10 @@ import com.tangem.core.ui.components.SpacerH24
 import com.tangem.core.ui.components.SpacerH8
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.components.fields.AutoSizeTextField
-import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.domain.models.account.CryptoPortfolioIcon
-import com.tangem.features.account.common.toUM
 import com.tangem.features.account.createedit.entity.AccountCreateEditUM
 import com.tangem.features.account.createedit.entity.AccountCreateEditUM.Account
 import kotlinx.collections.immutable.toImmutableList
@@ -72,11 +71,11 @@ internal fun AccountCreateEditContent(state: AccountCreateEditUM, modifier: Modi
             SpacerH24()
             AccountColor(state.colorsState)
             SpacerH24()
-            AccountIcon(state.iconsState)
+            AccountIcons(state.iconsState)
             SpacerH8()
             Text(
                 modifier = Modifier.padding(horizontal = 8.dp),
-                text = state.account.derivationInfo.resolveReference(),
+                text = state.account.derivationInfo.text.resolveReference(),
                 style = TangemTheme.typography.caption2,
                 color = TangemTheme.colors.text.tertiary,
             )
@@ -93,7 +92,7 @@ internal fun AccountCreateEditContent(state: AccountCreateEditUM, modifier: Modi
 }
 
 @Composable
-private fun AccountSummary(account: AccountCreateEditUM.Account) {
+private fun AccountSummary(account: Account) {
     Column(
         modifier = Modifier
             .clip(RoundedCornerShape(16.dp))
@@ -103,7 +102,11 @@ private fun AccountSummary(account: AccountCreateEditUM.Account) {
     ) {
         Spacer(modifier = Modifier.height(24.dp))
 
-        AccountIcon(account)
+        AccountIcon(
+            name = stringReference(account.name),
+            icon = account.portfolioIcon,
+            size = AccountIconSize.Large,
+        )
         Spacer(modifier = Modifier.height(24.dp))
 
         Text(
@@ -122,34 +125,6 @@ private fun AccountSummary(account: AccountCreateEditUM.Account) {
             onValueChange = account.onNameChange,
         )
         SpacerH(20.dp)
-    }
-}
-
-@Composable
-private fun AccountIcon(account: AccountCreateEditUM.Account) {
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier
-            .size(88.dp)
-            .clip(RoundedCornerShape(TangemTheme.dimens.radius24))
-            .background(account.portfolioIcon.color.getUiColor()),
-    ) {
-        val icon = account.portfolioIcon.value
-        val letter = account.name.firstOrNull()
-            ?: account.inputPlaceholder.resolveReference().first()
-        when {
-            icon == CryptoPortfolioIcon.Icon.Letter -> Text(
-                text = letter.uppercase(),
-                style = TangemTheme.typography.head,
-                color = TangemTheme.colors.text.constantWhite,
-            )
-            else -> Icon(
-                modifier = Modifier.size(44.dp),
-                tint = TangemTheme.colors.text.constantWhite,
-                imageVector = ImageVector.vectorResource(id = icon.getResId()),
-                contentDescription = null,
-            )
-        }
     }
 }
 
@@ -204,7 +179,7 @@ private fun AccountColor(colorsState: AccountCreateEditUM.Colors) {
 
 @Suppress("LongMethod", "MagicNumber")
 @Composable
-private fun AccountIcon(iconsState: AccountCreateEditUM.Icons) {
+private fun AccountIcons(iconsState: AccountCreateEditUM.Icons) {
     Box(
         Modifier
             .clip(RoundedCornerShape(16.dp))
@@ -299,7 +274,7 @@ private class PreviewStateProvider : CollectionPreviewParameterProvider<AccountC
     buildList {
         val colors = CryptoPortfolioIcon.Color.entries.toImmutableList()
         val icons = CryptoPortfolioIcon.Icon.entries.toImmutableList()
-        var portfolioIcon = CryptoPortfolioIcon.ofDefaultCustomAccount().toUM()
+        var portfolioIcon = AccountIconPreviewData.randomAccountIcon()
         val first = AccountCreateEditUM(
             title = stringReference("Add account"),
             onCloseClick = {},
@@ -308,7 +283,10 @@ private class PreviewStateProvider : CollectionPreviewParameterProvider<AccountC
                 portfolioIcon = portfolioIcon,
                 inputPlaceholder = resourceReference(R.string.account_form_placeholder_new_account),
                 onNameChange = {},
-                derivationInfo = stringReference("Account #03 — used for address derivation."),
+                derivationInfo = AccountCreateEditUM.DerivationInfo.Content(
+                    text = resourceReference(id = R.string.account_form_account_index, formatArgs = wrappedList(1)),
+                    index = 1,
+                ),
             ),
             colorsState = AccountCreateEditUM.Colors(
                 selected = portfolioIcon.color,
@@ -328,19 +306,20 @@ private class PreviewStateProvider : CollectionPreviewParameterProvider<AccountC
         )
         add(first)
 
-        portfolioIcon = portfolioIcon.copy(
-            value = CryptoPortfolioIcon.Icon.Letter,
-            color = CryptoPortfolioIcon.Color.entries.random(),
-        )
+        portfolioIcon = AccountIconPreviewData.randomAccountIcon(letter = true)
+        val accountName = "Main account"
         val second = AccountCreateEditUM(
             title = stringReference("Edit account"),
             onCloseClick = {},
             account = Account(
                 portfolioIcon = portfolioIcon,
-                name = "Main account",
+                name = accountName,
                 inputPlaceholder = resourceReference(R.string.account_form_placeholder_edit_account),
                 onNameChange = {},
-                derivationInfo = stringReference("Account #03 — used for address derivation."),
+                derivationInfo = AccountCreateEditUM.DerivationInfo.Content(
+                    text = resourceReference(id = R.string.account_form_account_index, formatArgs = wrappedList(1)),
+                    index = 1,
+                ),
             ),
             colorsState = AccountCreateEditUM.Colors(
                 selected = portfolioIcon.color,

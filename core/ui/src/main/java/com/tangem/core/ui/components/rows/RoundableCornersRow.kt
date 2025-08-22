@@ -14,6 +14,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
@@ -23,6 +24,7 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.StakingDetailsScreenTestTags
 
 @Suppress("LongParameterList")
 @Composable
@@ -54,7 +56,8 @@ fun RoundableCornersRow(
                 .padding(
                     horizontal = TangemTheme.dimens.spacing16,
                     vertical = TangemTheme.dimens.spacing12,
-                ),
+                )
+                .testTag(StakingDetailsScreenTestTags.PARAMETER_BLOCK),
             horizontalArrangement = Arrangement.Start,
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -63,6 +66,7 @@ fun RoundableCornersRow(
                 color = startTextColor,
                 maxLines = 1,
                 style = startTextStyle,
+                modifier = Modifier.testTag(StakingDetailsScreenTestTags.PARAMETER_NAME),
             )
             if (iconResId != null && iconClick != null) {
                 Icon(
@@ -85,6 +89,7 @@ fun RoundableCornersRow(
                 color = endTextColor,
                 maxLines = 1,
                 style = endTextStyle,
+                modifier = Modifier.testTag(StakingDetailsScreenTestTags.PARAMETER_VALUE),
             )
         }
     }
