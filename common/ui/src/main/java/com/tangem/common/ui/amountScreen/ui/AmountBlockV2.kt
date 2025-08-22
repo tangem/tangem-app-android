@@ -64,7 +64,7 @@ fun AmountBlockV2(
 
     AmountBlockV2(
         title = amountState.title,
-        balance = amountState.availableBalance,
+        balance = amountState.availableBalanceShort,
         currencyTitle = currencyTitle,
         currencyIconState = amountState.tokenIconState,
         firstAmount = firstAmount,
