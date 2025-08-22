@@ -4,8 +4,8 @@ import com.tangem.common.card.Card
 import com.tangem.common.core.SessionEnvironment
 import com.tangem.common.core.TangemSdkError
 import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
-import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.operations.preflightread.PreflightReadFilter
 
 /**

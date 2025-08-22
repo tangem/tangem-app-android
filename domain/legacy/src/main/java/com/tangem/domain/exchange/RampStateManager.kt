@@ -3,22 +3,20 @@ package com.tangem.domain.exchange
 import arrow.core.Either
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import kotlinx.coroutines.flow.Flow
 
 /**
  * Manager that holds info about available actions as Sell and Buy
  */
+@Deprecated("Move to express domain layer")
 interface RampStateManager {
 
-    suspend fun availableForBuy(
-        scanResponse: ScanResponse,
-        userWalletId: UserWalletId,
-        cryptoCurrency: CryptoCurrency,
-    ): ScenarioUnavailabilityReason
+    suspend fun availableForBuy(userWallet: UserWallet, cryptoCurrency: CryptoCurrency): ScenarioUnavailabilityReason
 
     /**
      * Check if [CryptoCurrency] is available for sell
@@ -38,10 +36,6 @@ interface RampStateManager {
         cryptoCurrency: CryptoCurrency,
     ): ScenarioUnavailabilityReason
 
-    suspend fun fetchBuyServiceData()
-
-    fun getBuyInitializationStatus(): Flow<Lce<Throwable, Any>>
-
     suspend fun fetchSellServiceData()
 
     fun getSellInitializationStatus(): Flow<Lce<Throwable, Any>>
@@ -58,4 +52,9 @@ interface RampStateManager {
         userWalletId: UserWalletId,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
     ): ScenarioUnavailabilityReason
+
+    /**
+     * Returns whether asset requirements are full filled to be able use express services
+     */
+    fun checkAssetRequirements(requirements: AssetRequirementsCondition?): Boolean
 }

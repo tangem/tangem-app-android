@@ -3,6 +3,7 @@ package com.tangem.core.ui.components
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.PixelFormat
+import android.view.KeyEvent
 import android.view.View
 import android.view.WindowManager
 import androidx.compose.runtime.*
@@ -18,7 +19,12 @@ import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import java.util.UUID
 
 @Composable
-fun FullScreen(notTouchable: Boolean = false, content: @Composable (() -> Unit) -> Unit) {
+fun FullScreen(
+    notTouchable: Boolean = false,
+    focusable: Boolean = false,
+    onBackClick: () -> Unit = {},
+    content: @Composable (() -> Unit) -> Unit,
+) {
     val view = LocalView.current
     val parentComposition = rememberCompositionContext()
     val currentContent by rememberUpdatedState(content)
@@ -27,7 +33,9 @@ fun FullScreen(notTouchable: Boolean = false, content: @Composable (() -> Unit) 
     val fullScreenLayout = remember {
         FullScreenLayout(
             notTouchable = notTouchable,
+            focusable = focusable,
             composeView = view,
+            onBackClick = onBackClick,
             uniqueId = id,
         ).apply {
             setContent(parentComposition) {
@@ -45,7 +53,9 @@ fun FullScreen(notTouchable: Boolean = false, content: @Composable (() -> Unit) 
 @SuppressLint("ViewConstructor", "ClickableViewAccessibility")
 private class FullScreenLayout(
     private val notTouchable: Boolean,
+    private val focusable: Boolean,
     private val composeView: View,
+    private val onBackClick: () -> Unit,
     uniqueId: UUID,
 ) : AbstractComposeView(composeView.context) {
 
@@ -97,7 +107,10 @@ private class FullScreenLayout(
     fun show() {
         if (viewShowing) dismiss()
         windowManager.addView(this, params)
-        params.flags = params.flags or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+
+        if (focusable.not()) {
+            params.flags = params.flags or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+        }
 
         if (notTouchable) {
             params.flags = params.flags or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
@@ -105,6 +118,19 @@ private class FullScreenLayout(
 
         windowManager.updateViewLayout(this, params)
         viewShowing = true
+    }
+
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (focusable.not()) {
+            return super.dispatchKeyEvent(event)
+        }
+
+        if (event.keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_UP) {
+            onBackClick()
+            return true
+        }
+
+        return super.dispatchKeyEvent(event)
     }
 
     fun dismiss() {
