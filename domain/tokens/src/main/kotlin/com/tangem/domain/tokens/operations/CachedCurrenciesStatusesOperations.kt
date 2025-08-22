@@ -60,19 +60,18 @@ class CachedCurrenciesStatusesOperations(
     multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
     private val stakingIdFactory: StakingIdFactory,
     private val tokensFeatureToggles: TokensFeatureToggles,
-) : BaseCurrenciesStatusesOperations,
-    BaseCurrencyStatusOperations(
-        currenciesRepository = currenciesRepository,
-        quotesRepository = quotesRepository,
-        multiNetworkStatusSupplier = multiNetworkStatusSupplier,
-        singleNetworkStatusSupplier = singleNetworkStatusSupplier,
-        singleQuoteStatusSupplier = singleQuoteStatusSupplier,
-        singleYieldBalanceSupplier = singleYieldBalanceSupplier,
-        multiYieldBalanceSupplier = multiYieldBalanceSupplier,
-        multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
-        stakingIdFactory = stakingIdFactory,
-        tokensFeatureToggles = tokensFeatureToggles,
-    ) {
+) : BaseCurrencyStatusOperations(
+    currenciesRepository = currenciesRepository,
+    quotesRepository = quotesRepository,
+    multiNetworkStatusSupplier = multiNetworkStatusSupplier,
+    singleNetworkStatusSupplier = singleNetworkStatusSupplier,
+    singleQuoteStatusSupplier = singleQuoteStatusSupplier,
+    singleYieldBalanceSupplier = singleYieldBalanceSupplier,
+    multiYieldBalanceSupplier = multiYieldBalanceSupplier,
+    multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
+    stakingIdFactory = stakingIdFactory,
+    tokensFeatureToggles = tokensFeatureToggles,
+) {
 
     override fun getCurrenciesStatuses(
         userWalletId: UserWalletId,
@@ -83,6 +82,7 @@ class CachedCurrenciesStatusesOperations(
         )
     }
 
+    @Suppress("LongMethod")
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun transformToCurrenciesStatuses(
         userWalletId: UserWalletId,
@@ -163,10 +163,26 @@ class CachedCurrenciesStatusesOperations(
                     .invokeOnCompletion { setFetchFinished(userWalletId) }
             }
 
+            val networksStatusesUpdates = getNetworkStatusesUpdates(userWalletId, networks)
+
             combine(
                 flow = getQuotes(currenciesIds),
-                flow2 = getNetworkStatusesUpdates(userWalletId, networks),
-                flow3 = getYieldsBalancesUpdates(userWalletId, currencies),
+                flow2 = networksStatusesUpdates,
+                flow3 = networksStatusesUpdates.flatMapLatest { maybeNetworksStatuses ->
+                    val networksStatuses = maybeNetworksStatuses.getOrNull()
+
+                    val currenciesAddresses = if (networksStatuses == null) {
+                        emptyMap()
+                    } else {
+                        currencies.associate { currency ->
+                            val networkStatus = networksStatuses.firstOrNull { it.network == currency.network }
+
+                            currency.id to extractAddress(networkStatus)
+                        }
+                    }
+
+                    getYieldsBalancesUpdates(userWalletId, currenciesAddresses)
+                },
                 flow4 = fetchingState.map {
                     val state = it[userWalletId] ?: return@map false
 
@@ -379,24 +395,27 @@ class CachedCurrenciesStatusesOperations(
     // temporary code because token list is built using networks list
     private fun getYieldsBalancesUpdates(
         userWalletId: UserWalletId,
-        cryptoCurrencies: List<CryptoCurrency>,
+        cryptoCurrencies: Map<CryptoCurrency.ID, String?>,
     ): EitherFlow<TokenListError, List<YieldBalance>> {
         return channelFlow {
             val state = MutableStateFlow(emptyList<YieldBalance>())
 
-            val stakingIds = cryptoCurrencies.mapNotNullTo(hashSetOf()) {
-                stakingIdFactory.create(userWalletId = userWalletId, currencyId = it.id, network = it.network)
+            val stakingIds = cryptoCurrencies.mapNotNullTo(hashSetOf()) { currencyWithAddress ->
+                stakingIdFactory.create(
+                    currencyId = currencyWithAddress.key,
+                    defaultAddress = currencyWithAddress.value,
+                )
                     .getOrNull()
             }
 
-            stakingIds.onEach {
+            stakingIds.onEach { stakingId ->
                 launch {
                     singleYieldBalanceSupplier(
-                        params = SingleYieldBalanceProducer.Params(userWalletId = userWalletId, stakingId = it),
+                        params = SingleYieldBalanceProducer.Params(userWalletId = userWalletId, stakingId = stakingId),
                     )
                         .onEach { balance ->
                             state.update { loadedBalances ->
-                                loadedBalances.addOrReplace(balance) { balance.stakingId == it }
+                                loadedBalances.addOrReplace(balance) { balance.stakingId == it.stakingId }
                             }
                         }
                         .launchIn(scope = this)
