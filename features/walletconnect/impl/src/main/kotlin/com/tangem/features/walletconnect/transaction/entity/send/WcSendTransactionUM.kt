@@ -1,5 +1,6 @@
 package com.tangem.features.walletconnect.transaction.entity.send
 
+import com.domain.blockaid.models.transaction.ValidationResult
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
@@ -27,6 +28,7 @@ internal data class WcSendTransactionItemUM(
     val walletName: String?,
     val networkInfo: WcNetworkInfoUM,
     val address: String?,
+    val transactionValidationResult: ValidationResult?,
     val sendEnabled: Boolean,
     val feeErrorNotification: NotificationUM.Info?,
     val isLoading: Boolean = false,

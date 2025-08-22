@@ -50,6 +50,7 @@ import kotlinx.coroutines.delay
 @Composable
 fun SwapChooseProviderContent(
     expressProvider: ExpressProvider?,
+    isSingleProvider: Boolean,
     isBestRate: Boolean,
     showBestRateAnimation: Boolean,
     onClick: () -> Unit,
@@ -62,6 +63,7 @@ fun SwapChooseProviderContent(
             interactionSource = remember { MutableInteractionSource() },
             indication = ripple(),
             onClick = onClick,
+            enabled = !isSingleProvider,
         ),
     ) {
         HorizontalDivider(
@@ -88,6 +90,7 @@ fun SwapChooseProviderContent(
             ProviderInfo(
                 expressProvider = expressProvider,
                 isBestRate = isBestRate,
+                isSingleProvider = isSingleProvider,
                 showBestRateAnimation = showBestRateAnimation,
                 onFinishAnimation = onFinishAnimation,
             )
@@ -125,6 +128,7 @@ private fun FcaProviderWarning(modifier: Modifier = Modifier) {
 private fun ProviderInfo(
     expressProvider: ExpressProvider?,
     isBestRate: Boolean,
+    isSingleProvider: Boolean,
     showBestRateAnimation: Boolean,
     onFinishAnimation: () -> Unit,
     modifier: Modifier = Modifier,
@@ -166,6 +170,7 @@ private fun ProviderInfo(
                     start.linkTo(imageRef.end)
                     top.linkTo(parent.top)
                     bottom.linkTo(parent.bottom)
+                    end.linkTo(iconRef.start, goneMargin = 12.dp)
                 },
         )
         Icon(
@@ -180,12 +185,13 @@ private fun ProviderInfo(
                     start.linkTo(nameRef.end)
                     top.linkTo(parent.top)
                     bottom.linkTo(parent.bottom)
-                    end.linkTo(parent.end, 12.dp)
+                    end.linkTo(parent.end, margin = 12.dp)
+                    visibility = if (isSingleProvider) Visibility.Gone else Visibility.Visible
                 },
         )
         BestRateBadge(
             showBestRateAnimation = showBestRateAnimation,
-            isBestRate = isBestRate,
+            isBestRate = isBestRate && !isSingleProvider,
             ref = imageRef,
             onFinishAnimation = onFinishAnimation,
         )
@@ -325,6 +331,7 @@ private fun SwapChooseProviderContent_Preview() {
             modifier = Modifier.background(TangemTheme.colors.background.tertiary),
         ) {
             SwapChooseProviderContent(
+                isSingleProvider = false,
                 isBestRate = true,
                 showBestRateAnimation = true,
                 expressProvider = ExpressProvider(
