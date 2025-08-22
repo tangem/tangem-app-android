@@ -13,6 +13,7 @@ internal class DefaultSwapErrorResolver(
             is ApiResponseError.HttpException -> {
                 expressErrorConverter.convert(throwable.errorBody.orEmpty())
             }
+            is ExpressError -> throwable
             else -> ExpressError.UnknownError
         }
     }

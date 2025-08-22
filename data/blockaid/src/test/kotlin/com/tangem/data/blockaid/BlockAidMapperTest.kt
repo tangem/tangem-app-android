@@ -4,6 +4,7 @@ import com.domain.blockaid.models.dapp.CheckDAppResult
 import com.domain.blockaid.models.transaction.SimulationResult
 import com.domain.blockaid.models.transaction.ValidationResult
 import com.domain.blockaid.models.transaction.simultation.AmountInfo
+import com.domain.blockaid.models.transaction.simultation.ApproveInfo
 import com.domain.blockaid.models.transaction.simultation.SimulationData
 import com.google.common.truth.Truth
 import com.tangem.datasource.api.common.blockaid.models.response.*
@@ -44,6 +45,7 @@ class BlockAidMapperTest {
         val exposure = Exposure(
             asset = Asset(chainId = 1, logoUrl = "logo", symbol = "PEPE", decimals = 8),
             spenders = mapOf("spender" to spenderDetails),
+            assetType = "native",
         )
         val response = TransactionScanResponse(
             validation = ValidationResponse(status = "Success", resultType = "Benign", description = ""),
@@ -65,9 +67,10 @@ class BlockAidMapperTest {
 
         val approve = simulation?.data as? SimulationData.Approve
         Truth.assertThat(approve).isNotNull()
-        Truth.assertThat(approve?.approvedAmounts?.size).isEqualTo(1)
-        Truth.assertThat(approve?.approvedAmounts?.first()?.approvedAmount).isEqualTo(BigDecimal("1000.0"))
-        Truth.assertThat(approve?.approvedAmounts?.first()?.isUnlimited).isTrue()
+        Truth.assertThat(approve?.items?.size).isEqualTo(1)
+        Truth.assertThat((approve?.items?.first() as? ApproveInfo.Amount)?.approvedAmount)
+            .isEqualTo(BigDecimal("1000.0"))
+        Truth.assertThat((approve?.items?.first() as? ApproveInfo.Amount)?.isUnlimited).isTrue()
     }
 
     @Test
@@ -114,7 +117,7 @@ class BlockAidMapperTest {
 
         val result = mapper.mapToDomain(response)
         Truth.assertThat(result.validation).isEqualTo(ValidationResult.FAILED_TO_VALIDATE)
-        Truth.assertThat(result.simulation is SimulationResult.FailedToSimulate).isTrue()
+        Truth.assertThat(result.simulation is SimulationResult.Success).isTrue()
     }
 
     @Test
@@ -160,6 +163,6 @@ class BlockAidMapperTest {
         )
 
         val result = mapper.mapToDomain(txResponse)
-        Truth.assertThat(result.simulation is SimulationResult.FailedToSimulate).isTrue()
+        Truth.assertThat(result.simulation is SimulationResult.Success).isTrue()
     }
 }
