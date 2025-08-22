@@ -406,6 +406,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
             it.second is SendWithSwapRoute.Confirm
         }.onEach { (state, _) ->
             val confirmUM = state.confirmUM
+            val isReadyToSend = confirmUM is ConfirmUM.Content && !confirmUM.isTransactionInProcess
             params.callback.onResult(
                 state.copy(
                     navigationUM = NavigationUM.Content(
@@ -416,6 +417,8 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                         primaryButton = NavigationButton(
                             textReference = resourceReference(R.string.common_send),
                             iconRes = R.drawable.ic_tangem_24,
+                            isIconVisible = isReadyToSend,
+                            isHapticClick = isReadyToSend,
                             isEnabled = confirmUM.isPrimaryButtonEnabled,
                             onClick = {
                                 when (confirmUM) {
