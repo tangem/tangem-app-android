@@ -15,8 +15,8 @@ import com.tangem.domain.tokens.actions.UnreachableActionsFactory
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -53,18 +53,8 @@ class GetCryptoCurrencyActionsUseCase(
         rampStateManager = rampManager,
     )
 
-    operator fun invoke(userWallet: UserWallet, cryptoCurrencyStatus: CryptoCurrencyStatus): Flow<TokenActionsState> {
-        return when (userWallet) {
-            is UserWallet.Cold -> coldFlow(userWallet, cryptoCurrencyStatus)
-            is UserWallet.Hot -> TODO("[REDACTED_TASK_KEY]")
-        }
-    }
-
     @OptIn(ExperimentalCoroutinesApi::class)
-    private fun coldFlow(
-        userWallet: UserWallet.Cold,
-        cryptoCurrencyStatus: CryptoCurrencyStatus,
-    ): Flow<TokenActionsState> {
+    operator fun invoke(userWallet: UserWallet, cryptoCurrencyStatus: CryptoCurrencyStatus): Flow<TokenActionsState> {
         return when {
             cryptoCurrencyStatus.value is CryptoCurrencyStatus.MissedDerivation -> {
                 flowOf(value = MissedDerivationsActionsFactory.create())

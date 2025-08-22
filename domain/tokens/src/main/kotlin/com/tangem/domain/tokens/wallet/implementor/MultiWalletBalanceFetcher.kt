@@ -6,7 +6,7 @@ import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesProducer
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
 import com.tangem.domain.tokens.wallet.BaseWalletBalanceFetcher
 import com.tangem.domain.tokens.wallet.FetchingSource
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.coroutines.flow.firstOrNull
 import timber.log.Timber
 
