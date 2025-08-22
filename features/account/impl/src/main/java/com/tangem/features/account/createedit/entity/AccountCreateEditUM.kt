@@ -1,8 +1,8 @@
 package com.tangem.features.account.createedit.entity
 
+import com.tangem.common.ui.account.CryptoPortfolioIconUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.account.CryptoPortfolioIcon
-import com.tangem.features.account.common.CryptoPortfolioIconUM
 import kotlinx.collections.immutable.ImmutableList
 
 data class AccountCreateEditUM(
@@ -17,10 +17,22 @@ data class AccountCreateEditUM(
     data class Account(
         val name: String,
         val portfolioIcon: CryptoPortfolioIconUM,
-        val derivationInfo: TextReference,
+        val derivationInfo: DerivationInfo,
         val inputPlaceholder: TextReference,
         val onNameChange: (String) -> Unit,
     )
+
+    sealed interface DerivationInfo {
+        val text: TextReference
+        val index: Int?
+
+        data class Content(override val text: TextReference, override val index: Int) : DerivationInfo
+
+        data object Empty : DerivationInfo {
+            override val text: TextReference = TextReference.EMPTY
+            override val index: Int? = null
+        }
+    }
 
     data class Colors(
         val selected: CryptoPortfolioIcon.Color,
