@@ -1,6 +1,6 @@
 package com.tangem.tap.features.details.ui.common.utils
 
-import com.tangem.domain.common.CardTypesResolver
+import com.tangem.domain.card.CardTypesResolver
 import com.tangem.tap.features.details.ui.cardsettings.TextReference
 import com.tangem.wallet.R
 

@@ -1,7 +1,7 @@
 package com.tangem.datasource.local.db.utils
 
 import androidx.room.TypeConverter
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 
 internal class Converters {
 

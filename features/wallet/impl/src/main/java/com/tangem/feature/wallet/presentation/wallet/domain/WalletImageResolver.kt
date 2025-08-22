@@ -1,10 +1,10 @@
 package com.tangem.feature.wallet.presentation.wallet.domain
 
 import androidx.annotation.DrawableRes
-import com.tangem.domain.common.util.cardTypesResolver
-import com.tangem.domain.common.util.getCardsCount
-import com.tangem.domain.demo.DemoConfig
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.card.common.util.cardTypesResolver
+import com.tangem.domain.card.common.util.getCardsCount
+import com.tangem.domain.demo.models.DemoConfig
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.feature.wallet.impl.R
 import kotlinx.coroutines.runBlocking
@@ -24,7 +24,11 @@ internal class WalletImageResolver @Inject constructor(
     /** Get a specified wallet [userWallet] image */
     @Suppress("CyclomaticComplexMethod")
     @DrawableRes
-    fun resolve(userWallet: UserWallet.Cold): Int? {
+    fun resolve(userWallet: UserWallet): Int? {
+        if (userWallet !is UserWallet.Cold) {
+            return null
+        }
+
         val cardTypesResolver = userWallet.scanResponse.cardTypesResolver
 
         val cobrandImage = Wallet2CobrandImage.entries.firstOrNull {

@@ -10,8 +10,8 @@ import com.tangem.common.services.secure.SecureStorage
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.legacy.UserWalletsListError
-import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.tap.domain.userWalletList.model.UserWalletEncryptionKey
 import com.tangem.tap.domain.userWalletList.repository.UserWalletsKeysRepository
 import kotlinx.coroutines.Dispatchers
