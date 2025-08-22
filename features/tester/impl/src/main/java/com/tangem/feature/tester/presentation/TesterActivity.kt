@@ -32,7 +32,6 @@ import com.tangem.feature.tester.presentation.providers.ui.BlockchainProvidersSc
 import com.tangem.feature.tester.presentation.providers.viewmodel.BlockchainProvidersViewModel
 import com.tangem.feature.tester.presentation.testpush.ui.TestPushScreen
 import com.tangem.feature.tester.presentation.testpush.viewmodel.TestPushViewModel
-import com.tangem.features.tester.api.TesterRouter
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.collections.immutable.persistentSetOf
 import javax.inject.Inject
@@ -44,20 +43,14 @@ internal class TesterActivity : ComposeActivity() {
     @Inject
     override lateinit var uiDependencies: UiDependencies
 
-    /** Router for inner feature navigation */
     @Inject
-    lateinit var testerRouter: TesterRouter
+    lateinit var innerTesterRouter: InnerTesterRouter
 
     @Inject
     lateinit var appFinisher: AppFinisher
 
     @Inject
     lateinit var appRouter: AppRouter
-
-    private val innerTesterRouter: InnerTesterRouter
-        get() = requireNotNull(testerRouter as? InnerTesterRouter) {
-            "TesterRouter must be InnerTesterRouter for tester feature"
-        }
 
     @Composable
     override fun ScreenContent(modifier: Modifier) {

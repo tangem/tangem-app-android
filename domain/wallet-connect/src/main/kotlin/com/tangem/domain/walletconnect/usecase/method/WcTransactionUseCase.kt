@@ -34,7 +34,7 @@ interface WcListTransactionUseCase :
  * [updateFee] triggered a new [TransactionData] emit
  */
 interface WcMutableFee {
-    fun dAppFee(): Fee?
+    suspend fun dAppFee(): Fee?
     fun updateFee(fee: Fee)
 }
 
