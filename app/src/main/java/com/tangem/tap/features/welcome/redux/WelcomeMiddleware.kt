@@ -11,13 +11,13 @@ import com.tangem.common.routing.utils.popTo
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
+import com.tangem.domain.card.analytics.ParamCardCurrencyConverter
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.legacy.UserWalletsListManager.Lockable.UnlockType
 import com.tangem.domain.wallets.legacy.unlockIfLockable
 import com.tangem.tap.*
-import com.tangem.tap.common.analytics.converters.ParamCardCurrencyConverter
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.intentHandler.handlers.WalletConnectLinkIntentHandler
