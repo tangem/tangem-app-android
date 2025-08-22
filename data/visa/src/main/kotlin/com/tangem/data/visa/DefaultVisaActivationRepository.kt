@@ -131,16 +131,18 @@ internal class DefaultVisaActivationRepository @AssistedInject constructor(
                 val authTokens =
                     checkNotNull(visaAuthTokenStorage.get(visaCardId.cardId)) { "Visa auth tokens are not stored" }
 
-                visaApi.activateByCustomerWallet(
-                    authHeader = authTokens.getAuthHeader(),
-                    body = ActivationByCustomerWalletRequest(
-                        orderId = signedData.dataToSign.request.orderId,
-                        customerWallet = ActivationByCustomerWalletRequest.CustomerWallet(
-                            deployAcceptanceSignature = signedData.signature,
-                            customerWalletAddress = signedData.customerWalletAddress,
+                signedData.dataToSign.request?.orderId?.let { orderId ->
+                    visaApi.activateByCustomerWallet(
+                        authHeader = authTokens.getAuthHeader(),
+                        body = ActivationByCustomerWalletRequest(
+                            orderId = orderId,
+                            customerWallet = ActivationByCustomerWalletRequest.CustomerWallet(
+                                deployAcceptanceSignature = signedData.signature,
+                                customerWalletAddress = signedData.customerWalletAddress,
+                            ),
                         ),
-                    ),
-                ).getOrThrow()
+                    ).getOrThrow()
+                } ?: error("Order Id cannot be null")
             }
         }
 

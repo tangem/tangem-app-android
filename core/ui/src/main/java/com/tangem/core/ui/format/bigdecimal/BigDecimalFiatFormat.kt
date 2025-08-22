@@ -121,7 +121,10 @@ fun BigDecimalFiatFormat.price(): BigDecimalFormat = BigDecimalFormat { value ->
 
 private fun BigDecimal.isLessThanThreshold() = this > BigDecimal.ZERO && this < FIAT_FORMAT_THRESHOLD
 
-private fun getFiatPriceAmountWithScale(value: BigDecimal): Pair<BigDecimal, Int> {
+/**
+ * Returns amount with correct scale
+ */
+fun getFiatPriceAmountWithScale(value: BigDecimal): Pair<BigDecimal, Int> {
     return if (value < BigDecimal.ONE) {
         val leadingZeroes = value.scale() - value.precision()
         val scale = leadingZeroes + FRACTIONAL_PART_LENGTH_AFTER_LEADING_ZEROES
