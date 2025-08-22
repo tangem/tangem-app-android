@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment.Companion.TopCenter
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDirection
 import com.tangem.common.ui.amountScreen.models.AmountFieldModel
@@ -28,6 +29,7 @@ import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.test.StakingSendScreenTestTags
 import com.tangem.core.ui.utils.rememberDecimalFormat
 import kotlinx.coroutines.delay
 
@@ -116,7 +118,8 @@ private fun AmountSecondary(amountField: AmountFieldModel, appCurrencyCode: Stri
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .align(TopCenter)
-                .padding(bottom = TangemTheme.dimens.spacing32),
+                .padding(bottom = TangemTheme.dimens.spacing32)
+                .testTag(StakingSendScreenTestTags.SECONDARY_AMOUNT),
         )
         AmountFieldError(
             isError = amountField.isError,
