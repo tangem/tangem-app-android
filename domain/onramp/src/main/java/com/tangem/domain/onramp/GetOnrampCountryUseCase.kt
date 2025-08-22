@@ -7,7 +7,7 @@ import com.tangem.domain.onramp.model.OnrampCountry
 import com.tangem.domain.onramp.model.error.OnrampError
 import com.tangem.domain.onramp.repositories.OnrampErrorResolver
 import com.tangem.domain.onramp.repositories.OnrampRepository
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map

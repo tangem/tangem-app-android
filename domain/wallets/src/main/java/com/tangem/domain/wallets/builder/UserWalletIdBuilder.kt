@@ -3,12 +3,12 @@ package com.tangem.domain.wallets.builder
 import com.tangem.common.extensions.calculateSha256
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.crypto.Secp256k1
-import com.tangem.domain.common.TapWorkarounds.isTangemTwins
+import com.tangem.domain.card.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.common.extensions.calculateHmacSha256
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 
 class UserWalletIdBuilder private constructor(
     private val publicKey: ByteArray?,

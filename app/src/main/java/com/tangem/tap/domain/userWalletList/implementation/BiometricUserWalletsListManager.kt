@@ -1,13 +1,12 @@
 package com.tangem.tap.domain.userWalletList.implementation
 
 import com.tangem.common.*
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.wallets.legacy.UserWalletsListError
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.legacy.UserWalletsListManager.Lockable.UnlockType
-import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.domain.wallets.models.isLocked
-import com.tangem.domain.wallets.models.requireColdWallet
 import com.tangem.tap.domain.userWalletList.model.UserWalletEncryptionKey
 import com.tangem.tap.domain.userWalletList.repository.SelectedUserWalletRepository
 import com.tangem.tap.domain.userWalletList.repository.UserWalletsKeysRepository
@@ -213,8 +212,7 @@ internal class BiometricUserWalletsListManager(
         changeSelectedUserWallet: Boolean,
         canOverridePublicInfo: Boolean,
     ): CompletionResult<Unit> {
-        userWallet.requireColdWallet() // TODO [REDACTED_TASK_KEY]
-        val encryptionKey = userWallet.scanResponse.card.encryptionKey
+        val encryptionKey = userWallet.encryptionKey
             ?.let { UserWalletEncryptionKey(userWallet.walletId, it) }
             ?: return CompletionResult.Success(Unit) // No encryption key, no need to save
 

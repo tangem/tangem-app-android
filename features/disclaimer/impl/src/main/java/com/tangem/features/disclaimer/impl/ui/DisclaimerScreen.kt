@@ -29,8 +29,7 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.test.TestTags.DISCLAIMER_SCREEN_ACCEPT_BUTTON
-import com.tangem.core.ui.test.TestTags.DISCLAIMER_SCREEN_CONTAINER
+import com.tangem.core.ui.test.DisclaimerScreenTestTags
 import com.tangem.core.ui.webview.applySafeSettings
 import com.tangem.features.disclaimer.impl.R
 import com.tangem.features.disclaimer.impl.entity.DisclaimerUM
@@ -54,7 +53,7 @@ internal fun DisclaimerScreen(state: DisclaimerUM) {
         modifier = Modifier
             .background(backgroundColor)
             .statusBarsPadding()
-            .testTag(DISCLAIMER_SCREEN_CONTAINER),
+            .testTag(DisclaimerScreenTestTags.SCREEN_CONTAINER),
     ) {
         Column(
             modifier = Modifier
@@ -175,7 +174,7 @@ private fun BoxScope.DisclaimerButton(onAccept: () -> Unit) {
             disabledContentColor = TangemColorPalette.Dark6,
         ),
         modifier = Modifier
-            .testTag(DISCLAIMER_SCREEN_ACCEPT_BUTTON)
+            .testTag(DisclaimerScreenTestTags.ACCEPT_BUTTON)
             .align(Alignment.BottomCenter)
             .navigationBarsPadding()
             .padding(
