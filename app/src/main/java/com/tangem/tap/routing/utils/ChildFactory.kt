@@ -8,6 +8,7 @@ import com.tangem.feature.referral.api.ReferralComponent
 import com.tangem.feature.stories.api.StoriesComponent
 import com.tangem.feature.usedesk.api.UsedeskComponent
 import com.tangem.feature.walletsettings.component.WalletSettingsComponent
+import com.tangem.features.account.ArchivedAccountListComponent
 import com.tangem.features.account.AccountCreateEditComponent
 import com.tangem.features.account.AccountDetailsComponent
 import com.tangem.features.createwalletselection.CreateWalletSelectionComponent
@@ -17,8 +18,10 @@ import com.tangem.features.home.api.HomeComponent
 import com.tangem.features.hotwallet.AddExistingWalletComponent
 import com.tangem.features.hotwallet.CreateMobileWalletComponent
 import com.tangem.features.hotwallet.WalletActivationComponent
-import com.tangem.features.hotwallet.WalletBackupComponent
+import com.tangem.features.hotwallet.CreateWalletBackupComponent
 import com.tangem.features.hotwallet.UpdateAccessCodeComponent
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
+import com.tangem.features.hotwallet.WalletBackupComponent
 import com.tangem.features.managetokens.component.ChooseManagedTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensSource
@@ -36,6 +39,7 @@ import com.tangem.features.send.v2.api.SendEntryPointComponent
 import com.tangem.features.staking.api.StakingComponent
 import com.tangem.features.swap.SwapComponent
 import com.tangem.features.swap.v2.api.SendWithSwapComponent
+import com.tangem.features.tangempay.components.TangemPayDetailsComponent
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.wallet.WalletEntryComponent
 import com.tangem.features.walletconnect.components.WalletConnectEntryComponent
@@ -52,6 +56,7 @@ import com.tangem.tap.routing.component.RoutingComponent.Child
 import dagger.hilt.android.scopes.ActivityScoped
 import javax.inject.Inject
 import com.tangem.features.walletconnect.components.WalletConnectEntryComponent as RedesignedWalletConnectComponent
+import com.tangem.features.welcome.WelcomeComponent as NewWelcomeComponent
 
 @ActivityScoped
 @Suppress("LongParameterList", "LargeClass")
@@ -70,6 +75,7 @@ internal class ChildFactory @Inject constructor(
     private val swapSelectTokensComponentFactory: SwapSelectTokensComponent.Factory,
     private val onboardingEntryComponentFactory: OnboardingEntryComponent.Factory,
     private val welcomeComponentFactory: WelcomeComponent.Factory,
+    private val newWelcomeComponentFactory: NewWelcomeComponent.Factory,
     private val storiesComponentFactory: StoriesComponent.Factory,
     private val stakingComponentFactory: StakingComponent.Factory,
     private val swapComponentFactory: SwapComponent.Factory,
@@ -90,6 +96,7 @@ internal class ChildFactory @Inject constructor(
     private val redesignedWalletConnectComponentFactory: WalletConnectEntryComponent.Factory,
     private val accountCreateEditComponentFactory: AccountCreateEditComponent.Factory,
     private val accountDetailsComponentFactory: AccountDetailsComponent.Factory,
+    private val archivedAccountListComponentFactory: ArchivedAccountListComponent.Factory,
     private val nftComponentFactory: NFTComponent.Factory,
     private val nftSendComponentFactory: NFTSendComponent.Factory,
     private val usedeskComponentFactory: UsedeskComponent.Factory,
@@ -98,10 +105,13 @@ internal class ChildFactory @Inject constructor(
     private val createMobileWalletComponentFactory: CreateMobileWalletComponent.Factory,
     private val addExistingWalletComponentFactory: AddExistingWalletComponent.Factory,
     private val walletActivationComponentFactory: WalletActivationComponent.Factory,
+    private val createWalletBackupComponentFactory: CreateWalletBackupComponent.Factory,
     private val updateAccessCodeComponentFactory: UpdateAccessCodeComponent.Factory,
     private val sendWithSwapComponentFactory: SendWithSwapComponent.Factory,
     private val sendEntryPointComponentFactory: SendEntryPointComponent.Factory,
+    private val tangemPayDetailsComponentFactory: TangemPayDetailsComponent.Factory,
     private val walletConnectFeatureToggles: WalletConnectFeatureToggles,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
 ) {
 
     @Suppress("LongMethod", "CyclomaticComplexMethod")
@@ -138,14 +148,22 @@ internal class ChildFactory @Inject constructor(
                 )
             }
             is AppRoute.Welcome -> {
-                createComponentChild(
-                    context = context,
-                    params = WelcomeComponent.Params(
-                        launchMode = route.launchMode,
-                        intent = route.intent,
-                    ),
-                    componentFactory = welcomeComponentFactory,
-                )
+                if (hotWalletFeatureToggles.isHotWalletEnabled) {
+                    createComponentChild(
+                        context = context,
+                        params = Unit,
+                        componentFactory = newWelcomeComponentFactory,
+                    )
+                } else {
+                    createComponentChild(
+                        context = context,
+                        params = WelcomeComponent.Params(
+                            launchMode = route.launchMode,
+                            intent = route.intent,
+                        ),
+                        componentFactory = welcomeComponentFactory,
+                    )
+                }
             }
             is AppRoute.WalletSettings -> {
                 createComponentChild(
@@ -393,6 +411,7 @@ internal class ChildFactory @Inject constructor(
                     context = context,
                     params = PushNotificationsParams(
                         modelCallbacks = PushNotificationsModelCallbacksStub(),
+                        source = route.source,
                         nextRoute = AppRoute.Home(),
                     ),
                     componentFactory = pushNotificationsComponentFactory,
@@ -483,6 +502,15 @@ internal class ChildFactory @Inject constructor(
                     componentFactory = walletActivationComponentFactory,
                 )
             }
+            is AppRoute.CreateWalletBackup -> {
+                createComponentChild(
+                    context = context,
+                    params = CreateWalletBackupComponent.Params(
+                        userWalletId = route.userWalletId,
+                    ),
+                    componentFactory = createWalletBackupComponentFactory,
+                )
+            }
             is AppRoute.UpdateAccessCode -> {
                 createComponentChild(
                     context = context,
@@ -537,6 +565,22 @@ internal class ChildFactory @Inject constructor(
                         account = route.account,
                     ),
                     componentFactory = accountDetailsComponentFactory,
+                )
+            }
+            is AppRoute.ArchivedAccountList -> {
+                createComponentChild(
+                    context = context,
+                    params = ArchivedAccountListComponent.Params(
+                        userWalletId = route.userWalletId,
+                    ),
+                    componentFactory = archivedAccountListComponentFactory,
+                )
+            }
+            is AppRoute.TangemPayDetails -> {
+                createComponentChild(
+                    context = context,
+                    params = TangemPayDetailsComponent.Params(),
+                    componentFactory = tangemPayDetailsComponentFactory,
                 )
             }
         }

@@ -96,6 +96,7 @@ private class WalletBackupUMProvider : CollectionPreviewParameterProvider<Wallet
             onBackClick = {},
             onRecoveryPhraseClick = {},
             onGoogleDriveClick = {},
+            backedUp = false,
         ),
         WalletBackupUM(
             recoveryPhraseStatus = LabelUM(
@@ -109,6 +110,7 @@ private class WalletBackupUMProvider : CollectionPreviewParameterProvider<Wallet
             onBackClick = {},
             onRecoveryPhraseClick = {},
             onGoogleDriveClick = {},
+            backedUp = false,
         ),
         WalletBackupUM(
             recoveryPhraseStatus = LabelUM(
@@ -122,6 +124,7 @@ private class WalletBackupUMProvider : CollectionPreviewParameterProvider<Wallet
             onBackClick = {},
             onRecoveryPhraseClick = {},
             onGoogleDriveClick = {},
+            backedUp = false,
         ),
     ),
 )
