@@ -2,10 +2,10 @@ package com.tangem.feature.wallet.presentation.wallet.state.transformers
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
-import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.txhistory.models.TxHistoryStateError
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.TxHistoryItemStateConverter

@@ -6,7 +6,6 @@ import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,7 +22,6 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.SecondaryButton
-import com.tangem.core.ui.components.SecondaryButtonIconEnd
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
@@ -77,7 +75,6 @@ private fun ContentContainer(alert: AlertsComponent.AlertType, modifier: Modifie
                 .padding(top = TangemTheme.dimens.spacing8),
             alert = alert,
         )
-        AlertAudit(alert, modifier = Modifier.padding(top = TangemTheme.dimens.spacing16))
     }
 }
 
@@ -90,71 +87,16 @@ private fun ButtonsContainer(alert: AlertsComponent.AlertType, modifier: Modifie
     ) {
         val buttonsModifier = Modifier.fillMaxWidth()
         when (alert) {
-            is AlertsComponent.AlertType.UnsafeDomain -> {
-                PrimaryButton(
-                    modifier = buttonsModifier,
-                    text = stringResourceSafe(R.string.common_cancel),
-                    onClick = alert.onDismiss,
-                )
-                SecondaryButton(
-                    modifier = buttonsModifier,
-                    onClick = alert.onConnect,
-                    text = stringResourceSafe(R.string.wc_alert_connect_anyway),
-                )
-            }
-            is AlertsComponent.AlertType.MaliciousTransaction -> {
-                PrimaryButton(
-                    modifier = buttonsModifier,
-                    text = stringResourceSafe(R.string.common_cancel),
-                    onClick = alert.onDismiss,
-                )
-                SecondaryButtonIconEnd(
-                    modifier = buttonsModifier,
-                    onClick = alert.onConnect,
-                    iconResId = R.drawable.ic_tangem_24,
-                    text = stringResourceSafe(R.string.wc_alert_connect_anyway),
-                )
-            }
-            is AlertsComponent.AlertType.UnknownDomain -> {
-                PrimaryButton(
-                    modifier = buttonsModifier,
-                    text = stringResourceSafe(R.string.common_cancel),
-                    onClick = alert.onDismiss,
-                )
-                SecondaryButton(
-                    modifier = buttonsModifier,
-                    onClick = alert.onConnect,
-                    text = stringResourceSafe(R.string.wc_alert_connect_anyway),
-                )
-            }
-            is AlertsComponent.AlertType.VerifiedDomain -> SecondaryButton(
-                modifier = buttonsModifier,
-                text = stringResourceSafe(R.string.common_done),
-                onClick = alert.onDismiss,
-            )
-            is AlertsComponent.AlertType.ConnectionTimeout -> {
-                PrimaryButton(
-                    modifier = buttonsModifier,
-                    onClick = alert.onTryAgain,
-                    text = stringResourceSafe(R.string.alert_button_try_again),
-                )
-                SecondaryButton(
-                    modifier = buttonsModifier,
-                    onClick = alert.onDismiss,
-                    text = stringResourceSafe(R.string.balance_hidden_got_it_button),
-                )
-            }
-            is AlertsComponent.AlertType.WrongCardSelected,
-            is AlertsComponent.AlertType.UnknownError,
             is AlertsComponent.AlertType.UnsupportedMethod,
+            is AlertsComponent.AlertType.RequiredAddNetwork,
+            is AlertsComponent.AlertType.RequiredReconnectWithNetwork,
+            is AlertsComponent.AlertType.TangemUnsupportedNetwork,
             -> SecondaryButton(
                 modifier = buttonsModifier,
                 onClick = alert.onDismiss,
                 text = stringResourceSafe(R.string.balance_hidden_got_it_button),
             )
-            is AlertsComponent.AlertType.WcDisconnected,
-            is AlertsComponent.AlertType.UnsupportedNetworks,
-            -> PrimaryButton(
+            is AlertsComponent.AlertType.WcDisconnected -> PrimaryButton(
                 modifier = buttonsModifier,
                 onClick = alert.onDismiss,
                 text = stringResourceSafe(R.string.balance_hidden_got_it_button),
@@ -166,48 +108,28 @@ private fun ButtonsContainer(alert: AlertsComponent.AlertType, modifier: Modifie
 @Composable
 private fun AlertIcon(alert: AlertsComponent.AlertType, modifier: Modifier = Modifier) {
     val color = when (alert) {
-        is AlertsComponent.AlertType.VerifiedDomain -> TangemTheme.colors.icon.accent
-        is AlertsComponent.AlertType.WcDisconnected,
-        is AlertsComponent.AlertType.ConnectionTimeout,
-        is AlertsComponent.AlertType.UnsupportedNetworks,
-        -> TangemTheme.colors.icon.informative
-        is AlertsComponent.AlertType.WrongCardSelected,
-        is AlertsComponent.AlertType.UnknownDomain,
-        is AlertsComponent.AlertType.UnknownError,
+        is AlertsComponent.AlertType.WcDisconnected -> TangemTheme.colors.icon.informative
         is AlertsComponent.AlertType.UnsupportedMethod,
+        is AlertsComponent.AlertType.RequiredAddNetwork,
+        is AlertsComponent.AlertType.RequiredReconnectWithNetwork,
+        is AlertsComponent.AlertType.TangemUnsupportedNetwork,
         -> TangemTheme.colors.icon.attention
-        is AlertsComponent.AlertType.MaliciousTransaction,
-        is AlertsComponent.AlertType.UnsafeDomain,
-        -> TangemTheme.colors.icon.warning
     }
 
     @DrawableRes val drawableId = when (alert) {
-        is AlertsComponent.AlertType.WcDisconnected,
-        is AlertsComponent.AlertType.ConnectionTimeout,
-        -> R.drawable.ic_wallet_connect_24
-        is AlertsComponent.AlertType.MaliciousTransaction -> R.drawable.img_knight_shield_32
-        is AlertsComponent.AlertType.UnknownDomain,
-        is AlertsComponent.AlertType.UnsafeDomain,
-        -> R.drawable.img_knight_shield_32
-        is AlertsComponent.AlertType.UnsupportedNetworks -> R.drawable.ic_network_new_24
-        is AlertsComponent.AlertType.WrongCardSelected,
-        is AlertsComponent.AlertType.UnknownError,
+        is AlertsComponent.AlertType.WcDisconnected -> R.drawable.ic_wallet_connect_24
         is AlertsComponent.AlertType.UnsupportedMethod,
+        is AlertsComponent.AlertType.RequiredAddNetwork,
+        is AlertsComponent.AlertType.RequiredReconnectWithNetwork,
+        is AlertsComponent.AlertType.TangemUnsupportedNetwork,
         -> R.drawable.img_attention_20
-        is AlertsComponent.AlertType.VerifiedDomain -> R.drawable.img_approvale2_20
     }
     val iconTint = when (alert) {
-        is AlertsComponent.AlertType.UnknownDomain,
-        is AlertsComponent.AlertType.UnsafeDomain,
-        is AlertsComponent.AlertType.MaliciousTransaction,
-        is AlertsComponent.AlertType.UnsupportedNetworks,
-        is AlertsComponent.AlertType.ConnectionTimeout,
-        is AlertsComponent.AlertType.WcDisconnected,
-        -> color
-        is AlertsComponent.AlertType.VerifiedDomain,
-        is AlertsComponent.AlertType.UnknownError,
-        is AlertsComponent.AlertType.WrongCardSelected,
+        is AlertsComponent.AlertType.WcDisconnected -> color
         is AlertsComponent.AlertType.UnsupportedMethod,
+        is AlertsComponent.AlertType.RequiredAddNetwork,
+        is AlertsComponent.AlertType.RequiredReconnectWithNetwork,
+        is AlertsComponent.AlertType.TangemUnsupportedNetwork,
         -> Color.Unspecified
     }
     Box(
@@ -230,17 +152,11 @@ private fun AlertIcon(alert: AlertsComponent.AlertType, modifier: Modifier = Mod
 @Composable
 private fun AlertContentTitle(alert: AlertsComponent.AlertType, modifier: Modifier = Modifier) {
     @StringRes val titleRes: Int = when (alert) {
-        is AlertsComponent.AlertType.UnknownDomain,
-        is AlertsComponent.AlertType.UnsafeDomain,
-        is AlertsComponent.AlertType.MaliciousTransaction,
-        -> R.string.security_alert_title
-        is AlertsComponent.AlertType.ConnectionTimeout -> R.string.wc_alert_connection_timeout_title
-        is AlertsComponent.AlertType.UnknownError -> R.string.wc_alert_unknown_error_title
-        is AlertsComponent.AlertType.UnsupportedNetworks -> R.string.wc_alert_unsupported_networks_title
-        is AlertsComponent.AlertType.VerifiedDomain -> R.string.wc_alert_verified_domain_title
         is AlertsComponent.AlertType.WcDisconnected -> R.string.wc_alert_session_disconnected_title
-        is AlertsComponent.AlertType.WrongCardSelected -> R.string.wc_alert_wrong_card_title
         is AlertsComponent.AlertType.UnsupportedMethod -> R.string.wc_alert_unsupported_method_title
+        is AlertsComponent.AlertType.RequiredAddNetwork -> R.string.wc_alert_add_network_to_portfolio_title
+        is AlertsComponent.AlertType.RequiredReconnectWithNetwork -> R.string.wc_alert_network_not_connected_title
+        is AlertsComponent.AlertType.TangemUnsupportedNetwork -> R.string.wc_alert_unsupported_network_title
     }
     Text(
         modifier = modifier,
@@ -254,31 +170,23 @@ private fun AlertContentTitle(alert: AlertsComponent.AlertType, modifier: Modifi
 @Composable
 private fun AlertContentDescription(alert: AlertsComponent.AlertType, modifier: Modifier = Modifier) {
     val message = when (alert) {
-        is AlertsComponent.AlertType.ConnectionTimeout -> stringResourceSafe(
-            R.string.wc_alert_connection_timeout_description,
-        )
-        is AlertsComponent.AlertType.MaliciousTransaction -> alert.descriptionMessage
-        is AlertsComponent.AlertType.UnknownDomain,
-        is AlertsComponent.AlertType.UnsafeDomain,
-        -> stringResourceSafe(R.string.wc_alert_domain_issues_description)
-        is AlertsComponent.AlertType.UnknownError -> stringResourceSafe(
-            R.string.wc_alert_unknown_error_description,
-            alert.errorCode,
-        )
-        is AlertsComponent.AlertType.UnsupportedNetworks -> stringResourceSafe(
-            R.string.wc_alert_unsupported_networks_description,
-            alert.appName,
-        )
-        is AlertsComponent.AlertType.VerifiedDomain -> stringResourceSafe(
-            R.string.wc_alert_verified_domain_description,
-            alert.appName,
-        )
         is AlertsComponent.AlertType.WcDisconnected -> stringResourceSafe(
             R.string.wc_alert_session_disconnected_description,
         )
-        is AlertsComponent.AlertType.WrongCardSelected -> stringResourceSafe(R.string.wc_alert_wrong_card_description)
         is AlertsComponent.AlertType.UnsupportedMethod -> stringResourceSafe(
             R.string.wc_alert_unsupported_method_description,
+        )
+        is AlertsComponent.AlertType.RequiredAddNetwork -> stringResourceSafe(
+            R.string.wc_alert_add_network_to_portfolio_description,
+            alert.network,
+        )
+        is AlertsComponent.AlertType.RequiredReconnectWithNetwork -> stringResourceSafe(
+            R.string.wc_alert_network_not_connected_description,
+            alert.network,
+        )
+        is AlertsComponent.AlertType.TangemUnsupportedNetwork -> stringResourceSafe(
+            R.string.wc_alert_unsupported_network_description,
+            alert.network,
         )
     }
     Text(
@@ -288,44 +196,6 @@ private fun AlertContentDescription(alert: AlertsComponent.AlertType, modifier: 
         color = TangemTheme.colors.text.secondary,
         textAlign = TextAlign.Center,
     )
-}
-
-@Composable
-private fun AlertAudit(alert: AlertsComponent.AlertType, modifier: Modifier = Modifier) {
-    when (alert) {
-        is AlertsComponent.AlertType.UnknownDomain -> Text(
-            modifier = modifier
-                .background(
-                    shape = RoundedCornerShape(TangemTheme.dimens.radius16),
-                    color = TangemTheme.colors.text.primary1.copy(alpha = 0.1F),
-                )
-                .padding(vertical = TangemTheme.dimens.spacing4, horizontal = TangemTheme.dimens.spacing12),
-            text = stringResourceSafe(R.string.wc_alert_audit_unknown_domain),
-            style = TangemTheme.typography.caption1,
-            color = TangemTheme.colors.text.primary1,
-        )
-        is AlertsComponent.AlertType.UnsafeDomain -> Text(
-            modifier = Modifier
-                .padding(top = TangemTheme.dimens.spacing16)
-                .background(
-                    shape = RoundedCornerShape(TangemTheme.dimens.radius16),
-                    color = TangemTheme.colors.text.warning.copy(alpha = 0.1F),
-                )
-                .padding(vertical = TangemTheme.dimens.spacing4, horizontal = TangemTheme.dimens.spacing12),
-            text = stringResourceSafe(R.string.wc_alert_audit_unknown_domain),
-            style = TangemTheme.typography.caption1,
-            color = TangemTheme.colors.text.warning,
-        )
-        is AlertsComponent.AlertType.ConnectionTimeout,
-        is AlertsComponent.AlertType.MaliciousTransaction,
-        is AlertsComponent.AlertType.UnknownError,
-        is AlertsComponent.AlertType.UnsupportedNetworks,
-        is AlertsComponent.AlertType.VerifiedDomain,
-        is AlertsComponent.AlertType.WcDisconnected,
-        is AlertsComponent.AlertType.WrongCardSelected,
-        is AlertsComponent.AlertType.UnsupportedMethod,
-        -> Unit
-    }
 }
 
 @Preview(showBackground = true)
@@ -347,19 +217,10 @@ private fun AlertsModalBottomSheet_Preview(
 
 private class AlertTypesProvider : CollectionPreviewParameterProvider<AlertsComponent.AlertType>(
     collection = listOf(
-        AlertsComponent.AlertType.VerifiedDomain(appName = "React App", onDismiss = {}),
-        AlertsComponent.AlertType.UnknownDomain(onConnect = {}, onDismiss = {}),
-        AlertsComponent.AlertType.UnsafeDomain(onConnect = {}, onDismiss = {}),
-        AlertsComponent.AlertType.MaliciousTransaction(
-            descriptionMessage = "The transaction approves erc20 tokens to a known malicious address",
-            onConnect = {},
-            onDismiss = {},
-        ),
-        AlertsComponent.AlertType.UnsupportedNetworks(appName = "React App", onDismiss = {}),
         AlertsComponent.AlertType.WcDisconnected(onDismiss = {}),
-        AlertsComponent.AlertType.UnknownError(errorCode = 8005, onDismiss = {}),
-        AlertsComponent.AlertType.WrongCardSelected(onDismiss = {}),
-        AlertsComponent.AlertType.ConnectionTimeout(onTryAgain = {}, onDismiss = {}),
         AlertsComponent.AlertType.UnsupportedMethod(onDismiss = {}),
+        AlertsComponent.AlertType.TangemUnsupportedNetwork(network = "Solana", onDismiss = {}),
+        AlertsComponent.AlertType.RequiredAddNetwork(network = "Solana", onDismiss = {}),
+        AlertsComponent.AlertType.RequiredReconnectWithNetwork(network = "Solana", onDismiss = {}),
     ),
 )
