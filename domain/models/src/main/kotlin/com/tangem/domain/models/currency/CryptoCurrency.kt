@@ -217,6 +217,9 @@ sealed class CryptoCurrency {
 
             private const val ID_PARTS_COUNT = 3
 
+            const val MAIN_NETWORK_TYPE_NAME = "MAIN"
+            const val MAIN_NETWORK_L2_TYPE_NAME = "MAIN L2"
+
             /**
              * Creates an [ID] from a string [value].
              *

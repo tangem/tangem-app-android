@@ -62,6 +62,8 @@ internal fun WcAppInfoItem(
                     text = title,
                     color = TangemTheme.colors.text.primary1,
                     style = TangemTheme.typography.h3,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
                 if (verifiedDAppState is VerifiedDAppState.Verified) {
                     Icon(
