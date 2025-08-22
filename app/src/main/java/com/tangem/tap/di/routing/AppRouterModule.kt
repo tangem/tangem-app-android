@@ -1,9 +1,7 @@
 package com.tangem.tap.di.routing
 
 import com.tangem.common.routing.AppRouter
-import com.tangem.common.routing.RoutingFeatureToggle
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
-import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.tap.routing.ProxyAppRouter
 import com.tangem.tap.routing.configurator.AppRouterConfig
 import com.tangem.tap.routing.configurator.MutableAppRouterConfig
@@ -33,10 +31,4 @@ internal object AppRouterModule {
     @Provides
     @Singleton
     fun provideAppRouterConfigurator(): AppRouterConfig = MutableAppRouterConfig()
-
-    @Provides
-    @Singleton
-    fun provideRoutingFeatureToggle(featureTogglesManager: FeatureTogglesManager): RoutingFeatureToggle {
-        return RoutingFeatureToggle(featureTogglesManager)
-    }
 }
