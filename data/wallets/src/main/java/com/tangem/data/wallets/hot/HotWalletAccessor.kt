@@ -1,7 +1,11 @@
 package com.tangem.data.wallets.hot
 
 import com.tangem.common.core.TangemSdkError
+import com.tangem.domain.core.wallets.UserWalletsListRepository
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.copy
 import com.tangem.domain.wallets.hot.HotWalletPasswordRequester
+import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.hot.sdk.exception.WrongPasswordException
 import com.tangem.hot.sdk.model.*
@@ -9,7 +13,9 @@ import javax.inject.Inject
 
 class HotWalletAccessor @Inject constructor(
     private val tangemHotSdk: TangemHotSdk,
+    private val userWalletsListRepository: UserWalletsListRepository,
     private val hotWalletPasswordRequester: HotWalletPasswordRequester,
+    private val walletsRepository: WalletsRepository,
 ) {
 
     suspend fun signHashes(hotWalletId: HotWalletId, dataToSign: List<DataToSign>): List<SignedData> =
@@ -23,10 +29,24 @@ class HotWalletAccessor @Inject constructor(
         }
 
     private suspend fun <T> hotSdkRequest(hotWalletId: HotWalletId, block: suspend (unlock: UnlockHotWallet) -> T): T {
+        val isAccessCodeRequired = walletsRepository.requireAccessCode()
+
         val auth = when (hotWalletId.authType) {
             HotWalletId.AuthType.NoPassword -> HotAuth.NoAuth
-            HotWalletId.AuthType.Password -> requestPassword(false)
-            HotWalletId.AuthType.Biometry -> HotAuth.Biometry
+            HotWalletId.AuthType.Password -> requestPassword(
+                hotWalletId = hotWalletId,
+                hasBiometry = false,
+            )
+            HotWalletId.AuthType.Biometry -> {
+                if (isAccessCodeRequired) {
+                    requestPassword(
+                        hotWalletId = hotWalletId,
+                        hasBiometry = false,
+                    )
+                } else {
+                    HotAuth.Biometry
+                }
+            }
         }
 
         return runCatchingSdkErrors(hotWalletId, auth) {
@@ -42,27 +62,49 @@ class HotWalletAccessor @Inject constructor(
         block: suspend (auth: HotAuth) -> T,
     ): T {
         return runCatchingWrongPassInternal(
+            hotWalletId = hotWalletId,
             originalAuth = auth,
             auth = auth,
             block = { blockAuth ->
                 block(blockAuth).also {
-                    // TODO [REDACTED_TASK_KEY] [Hot Wallet] Authorization by access code
-                    // if user has biometry enabled, we set it as the new auth method
-                    if (blockAuth is HotAuth.Password /*&& has biometry enabled */) {
-                        tangemHotSdk.changeAuth(
-                            unlockHotWallet = UnlockHotWallet(
-                                walletId = hotWalletId,
-                                auth = blockAuth,
-                            ),
-                            auth = HotAuth.Biometry,
-                        )
-                    }
+                    // Update biometry auth if the original auth was password
+                    updateBiometryAuthIfNeeded(
+                        hotWalletId = hotWalletId,
+                        originalAuth = blockAuth,
+                    )
                 }
             },
         )
     }
 
+    private suspend fun updateBiometryAuthIfNeeded(hotWalletId: HotWalletId, originalAuth: HotAuth) {
+        val isAccessCodeRequired = walletsRepository.requireAccessCode()
+
+        if (originalAuth is HotAuth.Password && isAccessCodeRequired.not()) {
+            val userWallet = userWalletsListRepository.userWalletsSync()
+                .find { it is UserWallet.Hot && it.hotWalletId == hotWalletId }
+                as? UserWallet.Hot
+                ?: return
+
+            val newHotWalletId = tangemHotSdk.changeAuth(
+                unlockHotWallet = UnlockHotWallet(
+                    walletId = hotWalletId,
+                    auth = originalAuth,
+                ),
+                auth = HotAuth.Biometry,
+            )
+
+            userWalletsListRepository.saveWithoutLock(
+                userWallet = userWallet.copy(
+                    hotWalletId = newHotWalletId,
+                ),
+                canOverride = true,
+            )
+        }
+    }
+
     private suspend fun <T> runCatchingWrongPassInternal(
+        hotWalletId: HotWalletId,
         originalAuth: HotAuth,
         auth: HotAuth,
         block: suspend (auth: HotAuth) -> T,
@@ -71,9 +113,13 @@ class HotWalletAccessor @Inject constructor(
     }.getOrElse { exception ->
         if (auth is HotAuth.Biometry && exception.isBiometryError()) {
             // fallback to password if biometry fails
-            val passAuth = requestPassword(true)
+            val passAuth = requestPassword(
+                hotWalletId = hotWalletId,
+                hasBiometry = true,
+            )
 
             return@getOrElse runCatchingWrongPassInternal(
+                hotWalletId = hotWalletId,
                 originalAuth = originalAuth,
                 auth = passAuth,
                 block = block,
@@ -87,17 +133,28 @@ class HotWalletAccessor @Inject constructor(
         // If the exception is a wrong password, we need to request the password again
 
         hotWalletPasswordRequester.wrongPassword()
-        val passResult = requestPassword(originalAuth is HotAuth.Biometry)
+        val passResult = requestPassword(
+            hotWalletId = hotWalletId,
+            hasBiometry = originalAuth is HotAuth.Biometry,
+        )
 
         runCatchingWrongPassInternal(
+            hotWalletId = hotWalletId,
             originalAuth = originalAuth,
             auth = passResult,
             block = block,
         )
     }
 
-    private suspend fun requestPassword(hasBiometry: Boolean): HotAuth {
-        return hotWalletPasswordRequester.requestPassword(hasBiometry).toAuth() ?: throw TangemSdkError.UserCancelled()
+    private suspend fun requestPassword(hotWalletId: HotWalletId, hasBiometry: Boolean): HotAuth {
+        val attemptRequest = HotWalletPasswordRequester.AttemptRequest(
+            hotWalletId = hotWalletId,
+            authMode = false,
+            hasBiometry = hasBiometry,
+        )
+
+        return hotWalletPasswordRequester.requestPassword(attemptRequest).toAuth()
+            ?: throw TangemSdkError.UserCancelled()
     }
 
     private fun Throwable.isBiometryError(): Boolean {
