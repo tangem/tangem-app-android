@@ -3,6 +3,7 @@ package com.tangem.domain.tokens.operations
 import arrow.core.*
 import arrow.core.raise.*
 import com.tangem.blockchainsdk.utils.toBlockchain
+import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.core.utils.EitherFlow
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -28,6 +29,7 @@ import com.tangem.domain.staking.single.SingleYieldBalanceSupplier
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesProducer
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
 import com.tangem.domain.tokens.TokensFeatureToggles
+import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations.Error
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.utils.CurrencyStatusProxyCreator
@@ -55,6 +57,8 @@ abstract class BaseCurrencyStatusOperations(
 ) {
 
     protected val currencyStatusProxyCreator = CurrencyStatusProxyCreator()
+
+    abstract fun getCurrenciesStatuses(userWalletId: UserWalletId): LceFlow<TokenListError, List<CryptoCurrencyStatus>>
 
     protected abstract fun getQuotes(id: CryptoCurrency.RawID): Flow<Either<Error, Set<QuoteStatus>>>
 
@@ -382,8 +386,9 @@ abstract class BaseCurrencyStatusOperations(
                 multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
                     params = MultiWalletCryptoCurrenciesProducer.Params(userWalletId),
                 )
-                    ?.firstOrNull { it.network.id == networkId && it.network.derivationPath == derivationPath }
-                    ?: error("Unable to create network coin with ID: $networkId and derivation path: $derivationPath")
+                    ?.filterIsInstance<CryptoCurrency.Coin>()
+                    ?.firstOrNull { it.network.id == networkId }
+                    ?: error("Unable to create network coin with ID: $networkId")
             } else {
                 currenciesRepository.getNetworkCoin(userWalletId, networkId, derivationPath)
             }

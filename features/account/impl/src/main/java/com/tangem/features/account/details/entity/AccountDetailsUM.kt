@@ -1,6 +1,6 @@
 package com.tangem.features.account.details.entity
 
-import com.tangem.features.account.common.CryptoPortfolioIconUM
+import com.tangem.common.ui.account.CryptoPortfolioIconUM
 
 data class AccountDetailsUM(
     val accountName: String,

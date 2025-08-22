@@ -29,6 +29,7 @@ import com.tangem.features.staking.impl.presentation.state.converters.RewardsVal
 import com.tangem.features.staking.impl.presentation.state.converters.YieldBalancesConverter
 import com.tangem.features.staking.impl.presentation.state.utils.getRewardScheduleText
 import com.tangem.utils.Provider
+import com.tangem.utils.StringsSigns.DASH_SIGN
 import com.tangem.utils.isNullOrZero
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.PersistentList
@@ -227,6 +228,9 @@ internal class SetInitialDataStateTransformer(
     }
 
     private fun getAprRange(validators: List<Yield.Validator>): TextReference {
+        if (validators.isEmpty()) {
+            return stringReference(DASH_SIGN)
+        }
         val aprValues = validators
             .filter { it.preferred }
             .takeIf { it.isNotEmpty() }

@@ -14,8 +14,8 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
-import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
 import com.tangem.core.ui.components.rows.SelectorRowItem
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
@@ -110,7 +110,7 @@ private fun FeeItemsBlock(content: ChooseFeeBottomSheetConfig) {
         when (feeItem.feeType) {
             FeeType.NORMAL -> {
                 SelectorRowItem(
-                    titleRes = R.string.common_fee_selector_option_market,
+                    title = resourceReference(R.string.common_fee_selector_option_market),
                     iconRes = R.drawable.ic_bird_24,
                     preDot = TextReference.Str(preDotText),
                     postDot = TextReference.Str(postDot),
@@ -122,7 +122,7 @@ private fun FeeItemsBlock(content: ChooseFeeBottomSheetConfig) {
             }
             FeeType.PRIORITY -> {
                 SelectorRowItem(
-                    titleRes = R.string.common_fee_selector_option_fast,
+                    title = resourceReference(R.string.common_fee_selector_option_fast),
                     iconRes = R.drawable.ic_hare_24,
                     preDot = TextReference.Str(preDotText),
                     postDot = TextReference.Str(postDot),
