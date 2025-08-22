@@ -273,6 +273,7 @@ sealed class NotificationUM(val config: NotificationConfig) {
         iconResId: Int = R.drawable.ic_alert_circle_24,
         buttonsState: NotificationConfig.ButtonsState? = null,
         onCloseClick: (() -> Unit)? = null,
+        iconTint: NotificationConfig.IconTint = NotificationConfig.IconTint.Unspecified,
     ) : NotificationUM(
         config = NotificationConfig(
             title = title,
@@ -280,6 +281,7 @@ sealed class NotificationUM(val config: NotificationConfig) {
             iconResId = iconResId,
             buttonsState = buttonsState,
             onCloseClick = onCloseClick,
+            iconTint = iconTint,
         ),
     )
 
