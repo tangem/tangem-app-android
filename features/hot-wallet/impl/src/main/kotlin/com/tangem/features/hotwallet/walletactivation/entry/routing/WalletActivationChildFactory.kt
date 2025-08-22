@@ -1,12 +1,13 @@
 package com.tangem.features.hotwallet.walletactivation.entry.routing
 
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.features.hotwallet.accesscode.AccessCodeComponent
 import com.tangem.features.hotwallet.manualbackup.check.ManualBackupCheckComponent
 import com.tangem.features.hotwallet.manualbackup.completed.ManualBackupCompletedComponent
 import com.tangem.features.hotwallet.manualbackup.phrase.ManualBackupPhraseComponent
 import com.tangem.features.hotwallet.manualbackup.start.ManualBackupStartComponent
-import com.tangem.features.hotwallet.accesscode.AccessCodeComponent
 import com.tangem.features.hotwallet.setupfinished.MobileWalletSetupFinishedComponent
 import com.tangem.features.hotwallet.walletactivation.entry.WalletActivationModel
 import com.tangem.features.pushnotifications.api.PushNotificationsComponent
@@ -72,6 +73,7 @@ internal class WalletActivationChildFactory @Inject constructor(
                 context = childContext,
                 params = PushNotificationsParams(
                     modelCallbacks = model.pushNotificationsCallbacks,
+                    source = AppRoute.PushNotification.Source.Onboarding,
                 ),
             )
             is WalletActivationRoute.SetupFinished -> MobileWalletSetupFinishedComponent(
