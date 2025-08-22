@@ -15,10 +15,16 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.settings.SettingsManager
+import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUMV2
+import com.tangem.core.ui.components.bottomsheets.message.icon
+import com.tangem.core.ui.components.bottomsheets.message.infoBlock
+import com.tangem.core.ui.components.bottomsheets.message.onClick
+import com.tangem.core.ui.components.bottomsheets.message.secondaryButton
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.core.ui.message.bottomSheetMessage
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.models.scan.CardDTO
@@ -86,8 +92,28 @@ internal class WalletSettingsModel @Inject constructor(
             items = persistentListOf(),
             requestPushNotificationsPermission = false,
             onPushNotificationPermissionGranted = ::onPushNotificationPermissionGranted,
+            isWalletBackedUp = true,
         ),
     )
+
+    private val makeBackupAtFirstAlertBS
+        get() = bottomSheetMessage {
+            infoBlock {
+                icon(R.drawable.ic_passcode_lock_32) {
+                    type = MessageBottomSheetUMV2.Icon.Type.Accent
+                    backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.SameAsTint
+                }
+                title = resourceReference(R.string.hw_backup_need_title)
+                body = resourceReference(R.string.hw_backup_need_description)
+            }
+            secondaryButton {
+                text = resourceReference(R.string.hw_backup_need_action)
+                onClick {
+                    router.push(AppRoute.CreateWalletBackup(params.userWalletId))
+                    closeBs()
+                }
+            }
+        }
 
     init {
         combine(
@@ -97,6 +123,10 @@ internal class WalletSettingsModel @Inject constructor(
         ) { maybeWallet, nftEnabled, notificationsEnabled ->
             val wallet = maybeWallet.getOrNull() ?: return@combine
             val isRenameWalletAvailable = getShouldSaveUserWalletsSyncUseCase()
+            val isWalletBackedUp = when (wallet) {
+                is UserWallet.Hot -> wallet.backedUp
+                is UserWallet.Cold -> true
+            }
             val isNeedShowNotifications = notificationsToggles.isNotificationsEnabled &&
                 !getIsHuaweiDeviceWithoutGoogleServicesUseCase()
             state.update { value ->
@@ -110,6 +140,7 @@ internal class WalletSettingsModel @Inject constructor(
                         isNotificationsFeatureEnabled = isNeedShowNotifications,
                         isNotificationsPermissionGranted = isNotificationsPermissionGranted(),
                     ),
+                    isWalletBackedUp = isWalletBackedUp,
                 )
             }
         }
@@ -330,6 +361,10 @@ internal class WalletSettingsModel @Inject constructor(
     }
 
     private fun onAccessCodeClick() {
-        router.push(AppRoute.UpdateAccessCode(params.userWalletId))
+        if (!state.value.isWalletBackedUp) {
+            messageSender.send(makeBackupAtFirstAlertBS)
+        } else {
+            router.push(AppRoute.UpdateAccessCode(params.userWalletId))
+        }
     }
 }
