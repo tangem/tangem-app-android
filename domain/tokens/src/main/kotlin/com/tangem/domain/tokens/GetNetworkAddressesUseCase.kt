@@ -3,7 +3,7 @@ package com.tangem.domain.tokens
 import com.tangem.domain.models.network.CryptoCurrencyAddress
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.networks.repository.NetworksRepository
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 
 class GetNetworkAddressesUseCase(
     private val networksRepository: NetworksRepository,

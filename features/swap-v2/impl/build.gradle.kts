@@ -34,6 +34,9 @@ dependencies {
     implementation(projects.common.ui)
     implementation(projects.common.routing)
 
+    /** Libs */
+    implementation(projects.libs.crypto)
+
     implementation(tangemDeps.blockchain) {
         exclude(module = "joda-time")
     }
@@ -44,6 +47,7 @@ dependencies {
     implementation(projects.domain.wallets)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.tokens)
+    implementation(projects.domain.card)
     implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.appCurrency)
     implementation(projects.domain.express.models)
@@ -54,6 +58,13 @@ dependencies {
     implementation(projects.domain.transaction.models)
     implementation(projects.domain.transaction)
     implementation(projects.domain.legacy)
+    implementation(projects.domain.balanceHiding.models)
+    implementation(projects.domain.balanceHiding)
+    implementation(projects.domain.settings)
+    implementation(projects.domain.txhistory.models)
+    implementation(projects.domain.txhistory)
+    implementation(projects.domain.feedback.models)
+    implementation(projects.domain.feedback)
 
     /** Compose */
     implementation(deps.compose.foundation)
