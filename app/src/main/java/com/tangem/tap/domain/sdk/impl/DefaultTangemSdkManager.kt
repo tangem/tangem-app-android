@@ -24,9 +24,7 @@ import com.tangem.domain.wallets.derivations.derivationStyleProvider
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.visa.model.VisaActivationInput
-import com.tangem.domain.visa.model.VisaDataForApprove
-import com.tangem.domain.visa.model.VisaSignedDataByCustomerWallet
+import com.tangem.domain.visa.model.*
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.operations.ScanTask
 import com.tangem.operations.derivation.DerivationTaskResponse
@@ -501,7 +499,12 @@ internal class DefaultTangemSdkManager(
     ): CompletionResult<VisaSignedDataByCustomerWallet> {
         return runTaskAsyncReturnOnMain(
             runnable = VisaCustomerWalletApproveTask(
-                visaDataForApprove = visaDataForApprove,
+                VisaCustomerWalletApproveTask.Input(
+                    cardId = visaDataForApprove.customerWalletCardId,
+                    targetAddress = visaDataForApprove.targetAddress,
+                    hashToSign = visaDataForApprove.dataToSign.hashToSign,
+                    sign = visaDataForApprove.dataToSign::sign,
+                ),
             ),
             cardId = visaDataForApprove.customerWalletCardId,
             initialMessage = Message(resources.getStringSafe(R.string.initial_message_tap_header)),

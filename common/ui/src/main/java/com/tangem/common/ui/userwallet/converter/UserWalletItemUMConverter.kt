@@ -2,8 +2,8 @@ package com.tangem.common.ui.userwallet.converter
 
 import com.tangem.common.ui.R
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
-import com.tangem.core.ui.components.label.entity.LabelStyle
 import com.tangem.core.ui.components.label.entity.LabelUM
+import com.tangem.core.ui.components.label.entity.LabelStyle
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -35,6 +35,7 @@ class UserWalletItemUMConverter(
     private val appCurrency: AppCurrency? = null,
     private val balance: TotalFiatBalance? = null,
     private val isBalanceHidden: Boolean = false,
+    private val authMode: Boolean = false,
     private val endIcon: UserWalletItemUM.EndIcon = UserWalletItemUM.EndIcon.None,
     private val artwork: ArtworkModel? = null,
 ) : Converter<UserWallet, UserWalletItemUM> {
@@ -48,21 +49,35 @@ class UserWalletItemUMConverter(
                 name = stringReference(name),
                 information = getInfo(userWallet = this),
                 balance = getBalanceInfo(userWallet = this),
-                isEnabled = !isLocked,
+                isEnabled = isEnabled(userWallet = this),
                 endIcon = endIcon,
                 onClick = { onClick(value.walletId) },
-                imageState = artwork?.let {
-                    UserWalletItemUM.ImageState.Image(artworkUMConverter.convert(it))
-                } ?: UserWalletItemUM.ImageState.Loading,
-                label = if (this is UserWallet.Hot && !this.backedUp) {
-                    LabelUM(
-                        text = resourceReference(R.string.hw_backup_no_backup),
-                        style = LabelStyle.WARNING,
-                    )
-                } else {
-                    null
-                },
+                imageState = getImageState(userWallet = value),
+                label = getLabelOrNull(userWallet = this),
             )
+        }
+    }
+
+    private fun isEnabled(userWallet: UserWallet): Boolean {
+        return authMode || userWallet.isLocked.not()
+    }
+
+    private fun getLabelOrNull(userWallet: UserWallet): LabelUM? {
+        return if (authMode.not() && userWallet is UserWallet.Hot && !userWallet.backedUp) {
+            LabelUM(
+                text = resourceReference(R.string.hw_backup_no_backup),
+                style = LabelStyle.WARNING,
+            )
+        } else {
+            null
+        }
+    }
+
+    private fun getImageState(userWallet: UserWallet): UserWalletItemUM.ImageState {
+        return when {
+            userWallet is UserWallet.Hot -> UserWalletItemUM.ImageState.MobileWallet
+            artwork != null -> UserWalletItemUM.ImageState.Image(artworkUMConverter.convert(artwork))
+            else -> UserWalletItemUM.ImageState.Loading
         }
     }
 
