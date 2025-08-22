@@ -153,7 +153,7 @@ private fun PinCode(
                 }
             },
             keyboardOptions = KeyboardOptions.Default.copy(
-                keyboardType = KeyboardType.Number,
+                keyboardType = KeyboardType.NumberPassword,
                 imeAction = ImeAction.Done,
             ),
             keyboardActions = KeyboardActions(
