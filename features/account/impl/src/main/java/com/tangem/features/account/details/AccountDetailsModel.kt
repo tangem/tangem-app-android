@@ -1,6 +1,7 @@
 package com.tangem.features.account.details
 
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.ui.account.toUM
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -12,7 +13,6 @@ import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.domain.account.usecase.ArchiveCryptoPortfolioUseCase
 import com.tangem.features.account.AccountDetailsComponent
-import com.tangem.features.account.common.toUM
 import com.tangem.features.account.createedit.entity.AccountCreateEditUMBuilder.Companion.portfolioIcon
 import com.tangem.features.account.details.entity.AccountDetailsUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -74,7 +74,7 @@ internal class AccountDetailsModel @Inject constructor(
 
     private fun getInitialState(): AccountDetailsUM {
         return AccountDetailsUM(
-            accountName = params.account.name.value,
+            accountName = params.account.accountName.value,
             accountIcon = params.account.portfolioIcon.toUM(),
             onCloseClick = { router.pop() },
             onAccountEditClick = ::onEditAccountClick,

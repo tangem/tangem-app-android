@@ -2,7 +2,7 @@ package com.tangem.data.walletconnect.network.ethereum
 
 import com.domain.blockaid.models.transaction.CheckTransactionResult
 import com.domain.blockaid.models.transaction.SimulationResult
-import com.domain.blockaid.models.transaction.simultation.ApprovedAmount
+import com.domain.blockaid.models.transaction.simultation.ApproveInfo
 import com.domain.blockaid.models.transaction.simultation.SimulationData
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.blockchains.ethereum.tokenmethods.ApprovalERC20TokenCallData
@@ -68,13 +68,15 @@ internal class WcEthTxHelper @Inject constructor(
         )
     }
 
-    fun getApprovedAmount(txData: String?, result: CheckTransactionResult): ApprovedAmount? {
+    fun getApprovedAmount(txData: String?, result: CheckTransactionResult): ApproveInfo.Amount? {
         val approvalMethodId = ApprovalERC20TokenCallData("", null).methodId
         val isApprovalWcMethod = txData?.startsWith(approvalMethodId)
         if (isApprovalWcMethod != true) return null
         val simulation = result.simulation as? SimulationResult.Success
             ?: return null
-        val approves = (simulation.data as? SimulationData.Approve)?.approvedAmounts
+        val approves = (simulation.data as? SimulationData.Approve)
+            ?.items
+            ?.filterIsInstance<ApproveInfo.Amount>()
             ?: return null
         if (approves.isEmpty()) return null
         val amount = approves.first()

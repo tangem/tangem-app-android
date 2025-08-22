@@ -17,6 +17,7 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.ui.message.ToastMessage
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.models.wallet.isMultiCurrency
@@ -69,8 +70,9 @@ internal class WcPairModel @Inject constructor(
 
     val stackNavigation = StackNavigation<WcAppInfoRoutes>()
 
-    private val selectedUserWalletFlow =
+    private val selectedUserWalletFlow: MutableStateFlow<UserWallet> by lazy {
         MutableStateFlow(getWalletsUseCase.invokeSync().first { it.walletId == params.userWalletId })
+    }
     private var proposalNetwork by Delegates.notNull<WcSessionProposal.ProposalNetwork>()
     private var sessionProposal by Delegates.notNull<WcSessionProposal>()
     private var additionallyEnabledNetworks = setOf<Network>()
@@ -214,15 +216,11 @@ internal class WcPairModel @Inject constructor(
 
     private fun processError(error: WcPairError) {
         val alert = when (error) {
-            is WcPairError.UnsupportedDApp -> {
-                WcAppInfoRoutes.Alert.Type.UnsupportedDApp(error.appName)
-            }
-            is WcPairError.UnsupportedBlockchains -> {
-                WcAppInfoRoutes.Alert.Type.UnsupportedNetwork(error.appName)
-            }
-            is WcPairError.UriAlreadyUsed -> {
-                WcAppInfoRoutes.Alert.Type.UriAlreadyUsed
-            }
+            is WcPairError.InvalidDomainURL -> WcAppInfoRoutes.Alert.Type.InvalidDomain
+            is WcPairError.UnsupportedDApp -> WcAppInfoRoutes.Alert.Type.UnsupportedDApp(error.appName)
+            is WcPairError.UnsupportedBlockchains -> WcAppInfoRoutes.Alert.Type.UnsupportedNetwork(error.appName)
+            is WcPairError.UriAlreadyUsed -> WcAppInfoRoutes.Alert.Type.UriAlreadyUsed
+            is WcPairError.TimeoutException -> WcAppInfoRoutes.Alert.Type.TimeoutException
             else -> {
                 messageSender.send(ToastMessage(message = stringReference(error.message)))
                 router.pop()

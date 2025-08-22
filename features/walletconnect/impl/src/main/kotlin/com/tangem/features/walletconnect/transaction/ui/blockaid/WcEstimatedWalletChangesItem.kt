@@ -132,8 +132,7 @@ private fun EstimatedWalletChangesPreviewMoreThanFour(
     }
 }
 
-private class EstimatedWalletChangesPreviewProviderTwoItems :
-    PreviewParameterProvider<WcEstimatedWalletChangesUM> {
+private class EstimatedWalletChangesPreviewProviderTwoItems : PreviewParameterProvider<WcEstimatedWalletChangesUM> {
     override val values = sequenceOf(
         WcEstimatedWalletChangesUM(
             items = persistentListOf(
@@ -148,6 +147,13 @@ private class EstimatedWalletChangesPreviewProviderTwoItems :
                     title = resourceReference(R.string.common_receive),
                     description = "+ 1,131.46 MATIC",
                     tokenIconUrl = "https://tangem.com",
+                ),
+                WcEstimatedWalletChangeUM(
+                    iconRes = R.drawable.img_approvale_new_24,
+                    title = resourceReference(R.string.common_approve),
+                    description = "10 Collection",
+                    tokenIconUrl = "https://cdn.blockaid.io/nft/0x09851531816f78cF4841f1DeF22fbaB78aDD02c5/29805/" +
+                        "polygon?r=ed117da0-6065-4ff8-ba81-cb7395e1ec3d",
                 ),
             ),
         ),

@@ -1,6 +1,5 @@
 package com.tangem.features.walletconnect.utils
 
-import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.resourceReference
@@ -54,14 +53,11 @@ internal class WcNotificationsFactory @Inject constructor() {
         feeSelectorUM: FeeSelectorUM?,
     ): Boolean {
         val feeSelectorContent = feeSelectorUM as? FeeSelectorUM.Content ?: return false
-        val lowestFee = when (val fees = feeSelectorContent.fees) {
-            is TransactionFee.Choosable -> fees.minimum
-            is TransactionFee.Single -> fees.normal
-        }
+        val selectedFee = feeSelectorContent.selectedFeeItem.fee
 
         return FeeCalculationUtils.checkExceedBalance(
             feeBalance = cryptoCurrencyStatus.value.amount,
-            feeAmount = lowestFee.amount.value,
+            feeAmount = selectedFee.amount.value,
         )
     }
 }

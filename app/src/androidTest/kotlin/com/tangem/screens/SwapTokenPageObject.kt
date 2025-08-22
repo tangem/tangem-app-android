@@ -3,10 +3,7 @@ package com.tangem.screens
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.tangem.common.BaseTestCase
 import com.tangem.core.ui.R
-import com.tangem.core.ui.test.BaseButtonTestTags
-import com.tangem.core.ui.test.NotificationTestTags
-import com.tangem.core.ui.test.SwapTokenScreenTestTags
-import com.tangem.core.ui.test.TopAppBarTestTags
+import com.tangem.core.ui.test.*
 import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
@@ -32,7 +29,7 @@ class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
     }
 
     val networkFeeBlock: KNode = child {
-        hasTestTag(SwapTokenScreenTestTags.NETWORK_FEE_BLOCK)
+        hasTestTag(BaseBlockTestTags.BLOCK)
         useUnmergedTree = true
     }
 
