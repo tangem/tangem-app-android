@@ -69,4 +69,9 @@ sealed class HandleMethodError(
     data object UnknownSession : HandleMethodError(message = "WalletConnect session was disconnected")
 
     data class UnknownError(override val message: String) : HandleMethodError(message)
+    data class TangemUnsupportedNetwork(val unsupportedNetwork: String) :
+        HandleMethodError("TangemUnsupportedNetwork $unsupportedNetwork")
+
+    data class NotAddedNetwork(val networkName: String) : HandleMethodError("NotAddedNetwork $networkName")
+    data class RequiredNetwork(val networkName: String) : HandleMethodError("RequiredNetwork $networkName")
 }
