@@ -9,6 +9,7 @@ import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.common.currency.CardCryptoCurrencyFactory
 import com.tangem.data.common.currency.UserTokensResponseFactory
+import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.data.common.network.NetworkFactory
 import com.tangem.data.common.utils.retryOnError
 import com.tangem.data.managetokens.utils.ManageTokensUpdateFetcher
@@ -42,6 +43,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 internal class DefaultManageTokensRepository(
     private val tangemTechApi: TangemTechApi,
     private val userWalletsStore: UserWalletsStore,
+    private val userTokenSaver: UserTokensSaver,
     private val manageTokensUpdateFetcher: ManageTokensUpdateFetcher,
     private val userTokensResponseStore: UserTokensResponseStore,
     private val testnetTokensStorage: TestnetTokensStorage,
@@ -127,7 +129,8 @@ internal class DefaultManageTokensRepository(
         val tokensResponse = request.params.userWalletId?.let { userWalletId ->
             if (loadUserTokensFromRemote && userWallet != null) {
                 safeApiCall({ tangemTechApi.getUserTokens(userWalletId.stringValue).bind() }) {
-                    createDefaultUserTokensResponse(userWallet)
+                    // save tokens response only if loadUserTokensFromRemote is true and it means onboarding call
+                    createAndSaveDefaultUserTokensResponse(userWallet = userWallet)
                 }
             } else {
                 getSavedUserTokensResponseSync(userWalletId)
@@ -156,6 +159,12 @@ internal class DefaultManageTokensRepository(
             empty = items.isEmpty(),
             last = items.size < request.limit,
         )
+    }
+
+    private suspend fun createAndSaveDefaultUserTokensResponse(userWallet: UserWallet): UserTokensResponse {
+        val userTokensResponse = createDefaultUserTokensResponse(userWallet)
+        userTokenSaver.store(userWallet.walletId, userTokensResponse, useEnricher = false)
+        return userTokensResponse
     }
 
     private suspend fun fetchTestnetCurrencies(
