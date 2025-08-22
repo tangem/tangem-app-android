@@ -2,6 +2,7 @@ package com.tangem.feature.wallet.presentation.router
 
 import androidx.compose.runtime.Stable
 import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
@@ -54,4 +55,6 @@ internal interface InnerWalletRouter {
 
     /** Open NFT collections screen */
     fun openNFT(userWallet: UserWallet)
+
+    fun openTokenReceiveBottomSheet(tokenReceiveConfig: TokenReceiveConfig)
 }

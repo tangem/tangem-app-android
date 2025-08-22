@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.state.model
 
+import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.serialization.Serializable
 
@@ -19,4 +20,7 @@ internal sealed interface WalletDialogConfig {
 
     @Serializable
     data object AskForPushNotifications : WalletDialogConfig
+
+    @Serializable
+    data class TokenReceive(val tokenReceiveConfig: TokenReceiveConfig) : WalletDialogConfig
 }
