@@ -632,7 +632,8 @@ internal class SendConfirmModel @Inject constructor(
                 }
                 else -> resourceReference(R.string.common_send)
             },
-            iconRes = R.drawable.ic_tangem_24.takeIf { isReadyToSend },
+            iconRes = R.drawable.ic_tangem_24,
+            isIconVisible = isReadyToSend,
             isEnabled = confirmUM.isPrimaryButtonEnabled,
             isHapticClick = isReadyToSend,
             onClick = {

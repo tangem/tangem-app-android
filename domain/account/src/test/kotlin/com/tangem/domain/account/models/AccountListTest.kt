@@ -123,7 +123,7 @@ class AccountListTest {
                 accounts = setOf(
                     Account.CryptoPortfolio.createMainAccount(userWalletId),
                     Account.CryptoPortfolio.createMainAccount(userWalletId).copy(
-                        accountIcon = CryptoPortfolioIcon.ofDefaultCustomAccount(),
+                        icon = CryptoPortfolioIcon.ofDefaultCustomAccount(),
                     ),
                 ),
                 expected = AccountList.Error.ExceedsMaxMainAccountsCount.left(),

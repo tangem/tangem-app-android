@@ -20,10 +20,10 @@ import com.tangem.core.decompose.navigation.inner.InnerNavigation
 import com.tangem.core.decompose.navigation.inner.InnerNavigationState
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.features.onboarding.v2.done.api.OnboardingDoneComponent
 import com.tangem.features.onboarding.v2.impl.R
 import com.tangem.features.onboarding.v2.note.api.OnboardingNoteComponent
 import com.tangem.features.onboarding.v2.note.impl.child.create.OnboardingNoteCreateWalletComponent
-import com.tangem.features.onboarding.v2.note.impl.child.topup.OnboardingNoteTopUpComponent
 import com.tangem.features.onboarding.v2.note.impl.model.OnboardingNoteModel
 import com.tangem.features.onboarding.v2.note.impl.model.OnboardingNoteCommonState
 import com.tangem.features.onboarding.v2.note.impl.route.ONBOARDING_NOTE_STEPS_COUNT
@@ -40,6 +40,7 @@ import kotlinx.coroutines.flow.StateFlow
 internal class DefaultOnboardingNoteComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
     @Assisted val params: OnboardingNoteComponent.Params,
+    val onboardingDoneComponentFactory: OnboardingDoneComponent.Factory,
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
 ) : OnboardingNoteComponent, AppComponentContext by context {
 
@@ -100,14 +101,14 @@ internal class DefaultOnboardingNoteComponent @AssistedInject constructor(
                     childParams = childParams,
                     onWalletCreated = { userWallet ->
                         model.onWalletCreated(userWallet)
-                        model.stackNavigation.push(OnboardingNoteRoute.TopUp)
+                        model.stackNavigation.push(OnboardingNoteRoute.Done)
                     },
                 ),
             )
-            OnboardingNoteRoute.TopUp -> OnboardingNoteTopUpComponent(
-                appComponentContext = factoryContext,
-                params = OnboardingNoteTopUpComponent.Params(
-                    childParams = childParams,
+            OnboardingNoteRoute.Done -> onboardingDoneComponentFactory.create(
+                context = factoryContext,
+                params = OnboardingDoneComponent.Params(
+                    mode = OnboardingDoneComponent.Mode.WalletCreated,
                     onDone = { params.onDone() },
                 ),
                 tokenReceiveComponentFactory = tokenReceiveComponentFactory,
