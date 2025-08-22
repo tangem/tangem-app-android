@@ -3,21 +3,12 @@ package com.tangem.features.markets.details.impl.model.formatter
 import com.tangem.common.ui.charts.state.MarketChartLook
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.format.bigdecimal.getFiatPriceAmountWithScale
 import com.tangem.core.ui.format.bigdecimal.percent
-import com.tangem.core.ui.utils.BigDecimalFormatter
-import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.PriceChangeInterval
 import com.tangem.domain.markets.TokenQuotes
 import java.math.BigDecimal
 import java.math.RoundingMode
-
-internal fun BigDecimal.formatAsPrice(currency: AppCurrency): String {
-    return BigDecimalFormatter.formatFiatPriceUncapped(
-        fiatAmount = this,
-        fiatCurrencyCode = currency.code,
-        fiatCurrencySymbol = currency.symbol,
-    )
-}
 
 internal fun TokenQuotes.getFormattedPercentByInterval(interval: PriceChangeInterval): String {
     val percent = when (interval) {
@@ -66,8 +57,8 @@ internal fun getChangePercentBetween(currentPrice: BigDecimal, previousPrice: Bi
 }
 
 internal fun getFormattedPriceChange(currentPrice: BigDecimal, updatedPrice: BigDecimal): PriceChangeType {
-    val current = BigDecimalFormatter.getFiatPriceUncappedWithScale(value = currentPrice).first
-    val updated = BigDecimalFormatter.getFiatPriceUncappedWithScale(value = updatedPrice).first
+    val current = getFiatPriceAmountWithScale(value = currentPrice).first
+    val updated = getFiatPriceAmountWithScale(value = updatedPrice).first
 
     return when {
         updated > current -> PriceChangeType.UP
