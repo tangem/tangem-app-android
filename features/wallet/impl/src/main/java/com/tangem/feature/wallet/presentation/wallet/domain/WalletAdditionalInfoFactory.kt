@@ -6,11 +6,9 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
-import com.tangem.domain.common.util.cardTypesResolver
-import com.tangem.domain.common.util.getCardsCount
-import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.isLocked
-import com.tangem.domain.wallets.models.isMultiCurrency
+import com.tangem.domain.card.common.util.cardTypesResolver
+import com.tangem.domain.card.common.util.getCardsCount
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletAdditionalInfo
 import java.math.BigDecimal
@@ -39,8 +37,20 @@ internal object WalletAdditionalInfoFactory {
                     wallet.resolveSingleCurrencyInfo(currencyAmount)
                 }
             }
-            is UserWallet.Hot -> TODO("[REDACTED_TASK_KEY]")
+            is UserWallet.Hot -> wallet.resolveAdditionalInfo()
         }
+    }
+
+    private fun UserWallet.Hot.resolveAdditionalInfo(): WalletAdditionalInfo {
+        return WalletAdditionalInfo(
+            hideable = false,
+            content = TextReference.Res(R.string.hw_mobile_wallet) +
+                when {
+                    isLocked -> DIVIDER + TextReference.Res(R.string.common_locked)
+                    backedUp.not() -> DIVIDER + TextReference.Res(R.string.hw_backup_no_backup)
+                    else -> TextReference.Str("")
+                },
+        )
     }
 
     private fun UserWallet.Cold.resolveMultiCurrencyInfo(): WalletAdditionalInfo {
