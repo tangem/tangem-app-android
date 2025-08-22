@@ -10,7 +10,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.details.component.UserWalletListComponent
 import com.tangem.features.details.entity.UserWalletListUM
 import com.tangem.features.details.impl.R
