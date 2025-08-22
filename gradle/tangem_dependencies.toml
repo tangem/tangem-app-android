@@ -15,7 +15,6 @@ tangemHotSdk = "develop-454"
 #tangemHotSdk = "0.0.1" # Keep it! - used for local builds ^
 
 
-
 [libraries]
 blockchain = { module = "com.tangem:blockchain", version.ref = "tangemBlockchainSdk" }
 card-android = { module = "com.tangem.tangem-sdk-kotlin:android", version.ref = "tangemCardSdk" }
