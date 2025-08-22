@@ -8,13 +8,17 @@ import com.tangem.data.swap.DefaultSwapRepositoryV2
 import com.tangem.data.swap.DefaultSwapTransactionRepository
 import com.tangem.datasource.api.express.TangemExpressApi
 import com.tangem.datasource.api.express.models.response.ExpressErrorResponse
+import com.tangem.datasource.crypto.DataSignatureVerifier
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.express.ExpressRepository
+import com.tangem.domain.quotes.single.SingleQuoteStatusFetcher
+import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
+import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.swap.SwapErrorResolver
 import com.tangem.domain.swap.SwapRepositoryV2
 import com.tangem.domain.swap.SwapTransactionRepository
-import com.tangem.domain.tokens.operations.BaseCurrencyStatusOperations
+import com.tangem.domain.tokens.utils.CurrencyStatusProxyCreator
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -42,14 +46,22 @@ internal object SwapDataModule {
         expressRepository: ExpressRepository,
         coroutineDispatcher: CoroutineDispatcherProvider,
         appPreferencesStore: AppPreferencesStore,
-        currencyStatusOperations: BaseCurrencyStatusOperations,
+        dataSignatureVerifier: DataSignatureVerifier,
+        singleQuoteStatusSupplier: SingleQuoteStatusSupplier,
+        singleQuoteStatusFetcher: SingleQuoteStatusFetcher,
+        stakingRepository: StakingRepository,
+        @NetworkMoshi moshi: Moshi,
     ): SwapRepositoryV2 {
         return DefaultSwapRepositoryV2(
             tangemExpressApi = tangemExpressApi,
             expressRepository = expressRepository,
             coroutineDispatcher = coroutineDispatcher,
             appPreferencesStore = appPreferencesStore,
-            currencyStatusOperations = currencyStatusOperations,
+            dataSignatureVerifier = dataSignatureVerifier,
+            moshi = moshi,
+            singleQuoteStatusSupplier = singleQuoteStatusSupplier,
+            singleQuoteStatusFetcher = singleQuoteStatusFetcher,
+            currencyStatusProxyCreator = CurrencyStatusProxyCreator(stakingRepository),
         )
     }
 
