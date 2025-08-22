@@ -155,7 +155,7 @@ private fun WalletBlock(
         Row {
             Text(
                 modifier = Modifier
-                    .weight(1f)
+                    .weight(1f, fill = false)
                     .padding(end = 8.dp),
                 text = title,
                 style = TangemTheme.typography.subtitle1,

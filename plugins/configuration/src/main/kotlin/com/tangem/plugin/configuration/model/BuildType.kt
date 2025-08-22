@@ -25,7 +25,6 @@ internal enum class BuildType(
         appIdSuffix = "debug",
         configFields = listOf(
             BuildConfigField.Environment(value = "dev"),
-            BuildConfigField.TestActionEnabled(isEnabled = true),
             BuildConfigField.LogEnabled(isEnabled = true),
             BuildConfigField.TesterMenuAvailability(isEnabled = true),
             BuildConfigField.MockDataSource(isEnabled = false),
@@ -47,7 +46,6 @@ internal enum class BuildType(
         versionSuffix = "mocked",
         configFields = listOf(
             BuildConfigField.Environment(value = "dev"),
-            BuildConfigField.TestActionEnabled(isEnabled = false),
             BuildConfigField.LogEnabled(isEnabled = true),
             BuildConfigField.TesterMenuAvailability(isEnabled = false),
             BuildConfigField.MockDataSource(isEnabled = true),
@@ -71,7 +69,6 @@ internal enum class BuildType(
         versionSuffix = "internal",
         configFields = listOf(
             BuildConfigField.Environment(value = "prod"),
-            BuildConfigField.TestActionEnabled(isEnabled = true),
             BuildConfigField.LogEnabled(isEnabled = true),
             BuildConfigField.TesterMenuAvailability(isEnabled = true),
             BuildConfigField.MockDataSource(isEnabled = false),
@@ -92,7 +89,6 @@ internal enum class BuildType(
         versionSuffix = "external",
         configFields = listOf(
             BuildConfigField.Environment(value = "prod"),
-            BuildConfigField.TestActionEnabled(isEnabled = false),
             BuildConfigField.LogEnabled(isEnabled = false),
             BuildConfigField.TesterMenuAvailability(isEnabled = false),
             BuildConfigField.MockDataSource(isEnabled = false),
@@ -111,7 +107,6 @@ internal enum class BuildType(
         id = "release",
         configFields = listOf(
             BuildConfigField.Environment(value = "prod"),
-            BuildConfigField.TestActionEnabled(isEnabled = false),
             BuildConfigField.LogEnabled(isEnabled = false),
             BuildConfigField.TesterMenuAvailability(isEnabled = false),
             BuildConfigField.MockDataSource(isEnabled = false),

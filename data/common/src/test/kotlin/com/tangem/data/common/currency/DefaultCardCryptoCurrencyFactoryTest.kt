@@ -12,14 +12,14 @@ import com.tangem.data.common.network.NetworkFactory
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
-import com.tangem.domain.common.configs.GenericCardConfig
-import com.tangem.domain.common.util.cardTypesResolver
-import com.tangem.domain.demo.DemoConfig
+import com.tangem.domain.card.configs.GenericCardConfig
+import com.tangem.domain.card.common.util.cardTypesResolver
+import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.scan.ProductType
-import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -266,7 +266,9 @@ internal class DefaultCardCryptoCurrencyFactoryTest {
             CreateCurrenciesForMultiWalletModel(
                 multiWallet = createMultiWallet(),
                 userTokensResponse = createUserTokensResponse(),
-                expected = Result.success(emptyMap()),
+                expected = Result.success(
+                    setOf(ethereum.network, bitcoin.network).associateWith { emptyList() },
+                ),
             ),
             CreateCurrenciesForMultiWalletModel(
                 multiWallet = createMultiWallet(),
@@ -306,7 +308,7 @@ internal class DefaultCardCryptoCurrencyFactoryTest {
             val multiWallet = model.multiWallet
 
             // Act
-            val actual = factory.createDefaultCoinsForMultiCurrencyCard(scanResponse = multiWallet.scanResponse)
+            val actual = factory.createDefaultCoinsForMultiCurrencyWallet(multiWallet)
 
             // Assert
             val expected = model.expected
@@ -353,7 +355,7 @@ internal class DefaultCardCryptoCurrencyFactoryTest {
 
                 // Act
                 val actual = runCatching {
-                    factory.createPrimaryCurrencyForSingleCurrencyCard(scanResponse = singleWallet.scanResponse)
+                    factory.createPrimaryCurrencyForSingleCurrencyCard(singleWallet)
                 }
 
                 // Assert
@@ -403,7 +405,7 @@ internal class DefaultCardCryptoCurrencyFactoryTest {
 
                 // Act
                 val actual = runCatching {
-                    factory.createCurrenciesForSingleCurrencyCardWithToken(scanResponse = userWallet.scanResponse)
+                    factory.createCurrenciesForSingleCurrencyCardWithToken(userWallet)
                 }
 
                 // Assert
@@ -552,7 +554,7 @@ internal class DefaultCardCryptoCurrencyFactoryTest {
             sdkToken = userWallet.scanResponse.cardTypesResolver.getPrimaryToken()!!,
             blockchain = blockchain,
             extraDerivationPath = null,
-            scanResponse = userWallet.scanResponse,
+            userWallet = userWallet,
         )!!
     }
 
