@@ -15,8 +15,8 @@ internal data class WcSignTransactionItemUM(
     val onDismiss: () -> Unit,
     val onSign: () -> Unit,
     val appInfo: WcTransactionAppInfoContentUM,
-    val walletName: String,
+    val walletName: String?,
     val networkInfo: WcNetworkInfoUM,
-    val addressText: String? = null,
+    val address: String?,
     val isLoading: Boolean = false,
 ) : TangemBottomSheetConfigContent
