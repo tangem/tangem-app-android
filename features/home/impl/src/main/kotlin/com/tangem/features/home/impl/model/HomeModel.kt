@@ -1,7 +1,5 @@
 package com.tangem.features.home.impl.model
 
-import com.google.firebase.analytics.ktx.analytics
-import com.google.firebase.ktx.Firebase
 import com.tangem.common.core.TangemError
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.routing.AppRoute
@@ -23,20 +21,22 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.card.ScanCardProcessor
+import com.tangem.domain.card.analytics.IntroductionProcess
+import com.tangem.domain.card.analytics.ParamCardCurrencyConverter
+import com.tangem.domain.card.analytics.Shop
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.card.repository.CardSdkConfigRepository
+import com.tangem.domain.core.wallets.error.SaveWalletError
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.domain.settings.usercountry.models.needApplyFCARestrictions
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
+import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
-import com.tangem.domain.wallets.usecase.SelectWalletUseCase
 import com.tangem.features.home.api.HomeComponent
-import com.tangem.features.home.impl.analytics.IntroductionProcess
-import com.tangem.features.home.impl.analytics.ParamCardCurrencyConverter
-import com.tangem.features.home.impl.analytics.Shop
 import com.tangem.features.home.impl.ui.state.HomeUM
 import com.tangem.features.home.impl.ui.state.Stories
 import com.tangem.features.home.impl.ui.state.getRestrictedStories
@@ -64,16 +64,17 @@ internal class HomeModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val scanCardProcessor: ScanCardProcessor,
-    private val saveWalletUseCase: SaveWalletUseCase,
     private val cardSdkConfigRepository: CardSdkConfigRepository,
     private val settingsRepository: SettingsRepository,
-    private val urlOpener: UrlOpener,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory,
     private val router: Router,
-    private val selectWalletUseCase: SelectWalletUseCase,
     private val appRouter: AppRouter,
     private val getUserCountryUseCase: GetUserCountryUseCase,
+    private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory,
+    private val saveWalletUseCase: SaveWalletUseCase,
+    private val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase,
+    private val urlOpener: UrlOpener,
+    private val userWalletsListManager: UserWalletsListManager,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
 ) : Model() {
 
@@ -135,10 +136,9 @@ internal class HomeModel @Inject constructor(
     private fun onShopClick() {
         analyticsEventHandler.send(IntroductionProcess.ButtonBuyCards)
         analyticsEventHandler.send(Shop.ScreenOpened)
-
-        Firebase.analytics.appInstanceId
-            .addOnSuccessListener { urlOpener.openUrl(url = "$NEW_BUY_WALLET_URL&app_instance_id=$it") }
-            .addOnFailureListener { urlOpener.openUrl(url = NEW_BUY_WALLET_URL) }
+        modelScope.launch {
+            generateBuyTangemCardLinkUseCase.invoke().let { urlOpener.openUrl(it) }
+        }
     }
 
     private fun onSearchTokensClick() {
@@ -198,24 +198,17 @@ internal class HomeModel @Inject constructor(
 
         saveWalletUseCase(userWallet).fold(
             ifLeft = {
-                Timber.e(it.toString(), "Unable to save user wallet")
+                delay(HIDE_PROGRESS_DELAY)
                 setLoading(false)
+                when (it) {
+                    is SaveWalletError.DataError -> Timber.e(it.toString(), "Unable to save user wallet")
+                    is SaveWalletError.WalletAlreadySaved -> appRouter.replaceAll(AppRoute.Wallet)
+                }
             },
             ifRight = {
+                setLoading(false)
                 sendSignedInCardAnalyticsEvent(scanResponse)
-
-                // Select the wallet using new mechanism
-                selectWalletUseCase(userWallet.walletId).fold(
-                    ifLeft = {
-                        Timber.e("Unable to select user wallet: $it")
-                        setLoading(false)
-                    },
-                    ifRight = {
-                        delay(HIDE_PROGRESS_DELAY)
-                        setLoading(false)
-                        appRouter.replaceAll(AppRoute.Wallet)
-                    },
-                )
+                appRouter.replaceAll(AppRoute.Wallet)
             },
         )
     }
@@ -228,7 +221,7 @@ internal class HomeModel @Inject constructor(
                     currency = currency,
                     batch = scanResponse.card.batchId,
                     signInType = SignInType.Card,
-                    walletsCount = "1",
+                    walletsCount = userWalletsListManager.walletsCount.toString(),
                     hasBackup = scanResponse.card.backupStatus?.isActive,
                 ),
             )
@@ -241,15 +234,9 @@ internal class HomeModel @Inject constructor(
 
     fun handleScanError(error: TangemError) {
         when (error) {
-            is TangemSdkError.NfcFeatureIsUnavailable -> {
-                handleNfcFeatureUnavailable()
-            }
-            is TangemSdkError -> {
-                Timber.e(error, "Scan error occurred")
-            }
-            else -> {
-                Timber.e(error, "Error happened")
-            }
+            is TangemSdkError.NfcFeatureIsUnavailable -> handleNfcFeatureUnavailable()
+            is TangemSdkError -> Timber.e(error, "Scan error occurred")
+            else -> Timber.e(error, "Error happened")
         }
     }
 
@@ -260,9 +247,5 @@ internal class HomeModel @Inject constructor(
                 title = resourceReference(id = R.string.common_error),
             ),
         )
-    }
-
-    companion object {
-        const val NEW_BUY_WALLET_URL = "https://buy.tangem.com/?utm_source=tangem-app&utm_medium=app"
     }
 }
