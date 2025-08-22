@@ -59,7 +59,8 @@ internal class DefaultAddExistingWalletComponent @AssistedInject constructor(
         if (isEmptyStack) {
             router.pop()
         } else {
-            model.stackNavigation.pop()
+            val currentRoute = innerStack.value.active.configuration
+            model.onChildBack(currentRoute)
         }
     }
 

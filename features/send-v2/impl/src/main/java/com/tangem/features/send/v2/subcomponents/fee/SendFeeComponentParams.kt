@@ -5,7 +5,7 @@ import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.features.send.v2.common.CommonSendRoute
 import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeUM
 import kotlinx.coroutines.flow.Flow
@@ -36,7 +36,6 @@ internal sealed class SendFeeComponentParams {
         override val onLoadFee: suspend () -> Either<GetFeeError, TransactionFee>,
         val currentRoute: Flow<CommonSendRoute.Fee>,
         val callback: SendFeeComponent.ModelCallback,
-        val onNextClick: () -> Unit,
     ) : SendFeeComponentParams()
 
     data class FeeBlockParams(

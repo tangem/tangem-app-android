@@ -14,7 +14,7 @@ import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.managetokens.*
 import com.tangem.domain.managetokens.model.*
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.managetokens.analytics.ManageTokensAnalyticEvent
 import com.tangem.features.managetokens.component.ManageTokensSource
 import com.tangem.features.managetokens.entity.item.CurrencyItemUM
@@ -93,6 +93,7 @@ internal class ManageTokensListManager @AssistedInject constructor(
                 actionsFlow = actionsFlow,
                 coroutineScope = this,
             ),
+            // only for onboarding case, change carefully and check repository implementation
             loadUserTokensFromRemote = userWalletId != null && source == ManageTokensSource.ONBOARDING,
         )
 
