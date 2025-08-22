@@ -12,6 +12,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.res.R
 import com.tangem.core.ui.components.PrimaryButton
+import com.tangem.core.ui.components.fields.PinTextColor
 import com.tangem.core.ui.components.fields.PinTextField
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
@@ -73,8 +74,9 @@ internal fun AccessCode(state: AccessCodeUM, modifier: Modifier = Modifier) {
             ) {
                 PinTextField(
                     length = state.accessCodeLength,
-                    isPasswordVisual = true,
+                    isPasswordVisual = !state.isConfirmMode,
                     value = state.accessCode,
+                    pinTextColor = PinTextColor.Primary,
                     onValueChange = state.onAccessCodeChange,
                 )
             }
