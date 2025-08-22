@@ -19,8 +19,11 @@ internal sealed class SwapAmountUM {
     abstract val primaryAmount: SwapAmountFieldUM
     abstract val secondaryAmount: SwapAmountFieldUM
     abstract val selectedAmountType: SwapAmountType
+    abstract val swapDirection: SwapDirection
 
-    data object Empty : SwapAmountUM() {
+    data class Empty(
+        override val swapDirection: SwapDirection,
+    ) : SwapAmountUM() {
         override val isPrimaryButtonEnabled = false
         override val selectedAmountType = SwapAmountType.From
         override val primaryAmount = SwapAmountFieldUM.Empty(SwapAmountType.From)
@@ -29,16 +32,16 @@ internal sealed class SwapAmountUM {
 
     data class Content(
         override val isPrimaryButtonEnabled: Boolean,
+        override val swapDirection: SwapDirection,
+        override val selectedAmountType: SwapAmountType,
 
         // two amount fields
         override val primaryAmount: SwapAmountFieldUM,
         override val secondaryAmount: SwapAmountFieldUM,
-        override val selectedAmountType: SwapAmountType,
         val primaryCryptoCurrencyStatus: CryptoCurrencyStatus,
-        val secondaryCryptoCurrencyStatus: CryptoCurrencyStatus,
+        val secondaryCryptoCurrencyStatus: CryptoCurrencyStatus?,
 
         // selected swap route
-        val swapDirection: SwapDirection,
         val swapRateType: ExpressRateType,
 
         // swap models

@@ -34,6 +34,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.routing.component.RoutingComponent
 import com.tangem.tap.routing.transitions.RoutingTransitionAnimationFactory
 
+@Suppress("LongParameterList")
 @OptIn(ExperimentalDecomposeApi::class)
 @Composable
 internal fun RootContent(
@@ -41,6 +42,7 @@ internal fun RootContent(
     backHandler: BackHandler,
     uiDependencies: UiDependencies,
     wcContent: @Composable (modifier: Modifier) -> Unit,
+    hotAccessCodeContent: @Composable (modifier: Modifier) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -73,6 +75,8 @@ internal fun RootContent(
             }
 
             wcContent(Modifier.fillMaxSize())
+
+            hotAccessCodeContent(Modifier.fillMaxSize())
 
             TangemSnackbarHost(
                 modifier = Modifier

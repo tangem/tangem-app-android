@@ -11,7 +11,7 @@ import com.tangem.domain.onramp.OnrampUpdateTransactionStatusUseCase
 import com.tangem.domain.onramp.model.OnrampStatus
 import com.tangem.domain.onramp.model.OnrampStatus.Status.*
 import com.tangem.domain.tokens.model.analytics.TokenOnrampAnalyticsEvent
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
