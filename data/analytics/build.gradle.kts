@@ -13,6 +13,7 @@ dependencies {
 
     /** Project - Domain */
     implementation(projects.domain.analytics)
+    implementation(projects.domain.models)
     implementation(projects.domain.wallets.models)
 
     /** Project - Analytics */

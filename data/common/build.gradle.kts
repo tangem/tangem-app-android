@@ -21,6 +21,7 @@ dependencies {
     /* Domain */
     implementation(projects.domain.demo)
     implementation(projects.domain.legacy)
+    implementation(projects.domain.card)
     implementation(projects.domain.models)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets.models)

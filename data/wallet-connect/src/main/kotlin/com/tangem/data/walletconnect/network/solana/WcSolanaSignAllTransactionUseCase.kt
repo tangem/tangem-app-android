@@ -10,7 +10,8 @@ import com.tangem.data.walletconnect.sign.SignCollector
 import com.tangem.data.walletconnect.sign.SignStateConverter.toResult
 import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
 import com.tangem.data.walletconnect.utils.BlockAidVerificationDelegate
-import com.tangem.domain.transaction.usecase.PrepareForSendUseCase
+import com.tangem.domain.transaction.usecase.PrepareAndSignUseCase
+import com.tangem.domain.walletconnect.error.parseSendError
 import com.tangem.domain.walletconnect.model.WcSolanaMethod
 import com.tangem.domain.walletconnect.usecase.method.BlockAidTransactionCheck
 import com.tangem.domain.walletconnect.usecase.method.WcListTransactionUseCase
@@ -28,7 +29,7 @@ import org.json.JSONObject
 internal class WcSolanaSignAllTransactionUseCase @AssistedInject constructor(
     override val respondService: WcRespondService,
     override val analytics: AnalyticsEventHandler,
-    private val prepareForSend: PrepareForSendUseCase,
+    private val prepareAndSign: PrepareAndSignUseCase,
     @Assisted override val context: WcMethodUseCaseContext,
     @Assisted override val method: WcSolanaMethod.SignAllTransaction,
     blockAidDelegate: BlockAidVerificationDelegate,
@@ -45,9 +46,9 @@ internal class WcSolanaSignAllTransactionUseCase @AssistedInject constructor(
     ).map { lce -> lce.map { result -> BlockAidTransactionCheck.Result.Plain(result) } }
 
     override suspend fun SignCollector<List<TransactionData>>.onSign(state: WcSignState<List<TransactionData>>) {
-        val hash = prepareForSend.invoke(transactionData = state.signModel, userWallet = wallet, network = network)
+        val hash = prepareAndSign.invoke(transactionData = state.signModel, userWallet = wallet, network = network)
             .onLeft { error ->
-                emit(state.toResult(error.left()))
+                emit(state.toResult(parseSendError(error).left()))
             }
             .getOrNull()
             ?: return
