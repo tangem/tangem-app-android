@@ -1,6 +1,7 @@
 package com.tangem.feature.walletsettings.entity
 
 import androidx.compose.runtime.Immutable
+import com.tangem.common.ui.account.CryptoPortfolioIconUM
 import com.tangem.core.ui.components.block.model.BlockUM
 import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableList
@@ -51,4 +52,36 @@ internal sealed class WalletSettingsItemUM {
         val onClick: () -> Unit,
         val onDismissClick: () -> Unit,
     ) : WalletSettingsItemUM()
+}
+
+@Immutable
+internal sealed class WalletSettingsAccountsUM : WalletSettingsItemUM() {
+
+    data class Header(
+        override val id: String,
+        val text: TextReference,
+    ) : WalletSettingsAccountsUM()
+
+    data class Account(
+        override val id: String,
+        val accountName: TextReference,
+        val accountIconUM: CryptoPortfolioIconUM,
+        val tokensInfo: TextReference,
+        val networksInfo: TextReference,
+        val onClick: () -> Unit,
+    ) : WalletSettingsAccountsUM()
+
+    data class Footer(
+        override val id: String,
+        val addAccount: AddAccountUM,
+        val archivedAccounts: BlockUM,
+        val description: TextReference,
+    ) : WalletSettingsAccountsUM() {
+
+        data class AddAccountUM(
+            val title: TextReference,
+            val addAccountEnabled: Boolean,
+            val onAddAccountClick: () -> Unit,
+        )
+    }
 }
