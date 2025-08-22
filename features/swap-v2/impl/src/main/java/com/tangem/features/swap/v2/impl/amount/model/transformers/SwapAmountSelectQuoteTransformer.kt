@@ -16,8 +16,8 @@ import com.tangem.utils.transformer.Transformer
 
 internal class SwapAmountSelectQuoteTransformer(
     private val quoteUM: SwapQuoteUM,
-    private val secondaryMaximumAmountBoundary: EnterAmountBoundary,
-    private val secondaryMinimumAmountBoundary: EnterAmountBoundary,
+    private val secondaryMaximumAmountBoundary: EnterAmountBoundary?,
+    private val secondaryMinimumAmountBoundary: EnterAmountBoundary?,
 ) : Transformer<SwapAmountUM> {
     override fun transform(prevState: SwapAmountUM): SwapAmountUM {
         if (prevState !is SwapAmountUM.Content) return prevState
@@ -46,7 +46,9 @@ internal class SwapAmountSelectQuoteTransformer(
             } else {
                 prevState.primaryAmount
             },
-            secondaryAmount = if (prevState.selectedAmountType == SwapAmountType.From) {
+            secondaryAmount = if (prevState.selectedAmountType == SwapAmountType.From &&
+                prevState.secondaryCryptoCurrencyStatus != null && secondaryMaximumAmountBoundary != null
+            ) {
                 val secondaryAmountField = prevState.secondaryAmount as? SwapAmountFieldUM.Content
                 val fromAmount = (prevState.primaryAmount.amountField as? AmountState.Data)
                     ?.amountTextField?.cryptoAmount?.value.orZero()

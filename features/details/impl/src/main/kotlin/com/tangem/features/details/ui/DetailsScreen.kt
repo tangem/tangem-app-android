@@ -25,7 +25,7 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.test.TestTags
+import com.tangem.core.ui.test.DetailsScreenTestTags
 import com.tangem.features.details.component.preview.PreviewDetailsComponent
 import com.tangem.features.details.entity.DetailsFooterUM
 import com.tangem.features.details.entity.DetailsItemUM
@@ -67,7 +67,7 @@ private fun Content(
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
-        modifier = modifier.testTag(TestTags.DETAILS_SCREEN),
+        modifier = modifier.testTag(DetailsScreenTestTags.SCREEN_CONTAINER),
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
         contentPadding = PaddingValues(
             top = TangemTheme.dimens.spacing12,
@@ -120,7 +120,7 @@ private fun Block(
     ) {
         val itemModifier = Modifier
             .fillMaxWidth()
-            .testTag(TestTags.DETAILS_SCREEN_ITEM)
+            .testTag(DetailsScreenTestTags.SCREEN_ITEM)
 
         when (model) {
             is DetailsItemUM.Basic -> {

@@ -34,6 +34,7 @@ internal data class BalanceState(
     val validator: Yield.Validator?,
     val pendingActions: ImmutableList<PendingAction>,
     val isPending: Boolean,
+    val validatorAddress: String?,
 )
 
 @Immutable

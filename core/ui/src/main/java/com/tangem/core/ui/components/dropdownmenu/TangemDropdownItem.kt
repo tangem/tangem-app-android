@@ -7,12 +7,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.PopUpMenuTestTags
 
 @Suppress("ComposableEventParameterNaming")
 @Composable
@@ -23,7 +25,8 @@ fun TangemDropdownItem(item: TangemDropdownMenuItem, dismissParent: () -> Unit, 
                 dismissParent()
                 item.onClick()
             }
-            .padding(vertical = TangemTheme.dimens.spacing8, horizontal = TangemTheme.dimens.spacing16),
+            .padding(vertical = TangemTheme.dimens.spacing8, horizontal = TangemTheme.dimens.spacing16)
+            .testTag(PopUpMenuTestTags.BUTTON),
         text = item.title.resolveReference(),
         style = TangemTheme.typography.button.copy(color = item.textColorProvider()),
     )
