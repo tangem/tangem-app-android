@@ -13,6 +13,8 @@ import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
+import com.tangem.domain.core.wallets.UserWalletsListRepository
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -81,10 +83,14 @@ object MarketsDomainModule {
     @Singleton
     fun provideFilterNetworksUseCase(
         userWalletsListManager: UserWalletsListManager,
+        userWalletsListRepository: UserWalletsListRepository,
+        hotWalletFeatureToggles: HotWalletFeatureToggles,
         excludedBlockchains: ExcludedBlockchains,
     ): FilterAvailableNetworksForWalletUseCase {
         return FilterAvailableNetworksForWalletUseCase(
             userWalletsListManager = userWalletsListManager,
+            userWalletsListRepository = userWalletsListRepository,
+            useNewRepository = hotWalletFeatureToggles.isHotWalletEnabled,
             excludedBlockchains = excludedBlockchains,
         )
     }
