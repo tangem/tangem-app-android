@@ -16,6 +16,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import com.domain.blockaid.models.transaction.ValidationResult
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
@@ -24,6 +25,7 @@ import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTi
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetWithFooter
 import com.tangem.core.ui.components.divider.DividerWithPadding
 import com.tangem.core.ui.components.notifications.Notification
+import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -71,7 +73,7 @@ internal fun WcSendTransactionModalBottomSheet(
         containerColor = TangemTheme.colors.background.tertiary,
         title = { config ->
             TangemModalBottomSheetTitle(
-                title = resourceReference(R.string.wc_wallet_connect),
+                title = resourceReference(R.string.wc_transaction_flow_title),
                 endIconRes = R.drawable.ic_close_24,
                 onEndClick = onDismiss,
             )
@@ -122,7 +124,7 @@ internal fun WcSendTransactionModalBottomSheet(
                             modifier = Modifier.padding(top = 14.dp),
                             config = state.feeErrorNotification.config,
                             iconTint = TangemTheme.colors.icon.warning,
-                            containerColor = TangemTheme.colors.button.disabled,
+                            containerColor = TangemTheme.colors.background.action,
                         )
                     }
                 }
@@ -136,6 +138,7 @@ internal fun WcSendTransactionModalBottomSheet(
                 activeButtonText = resourceReference(R.string.common_send),
                 isLoading = state.isLoading,
                 enabled = state.sendEnabled,
+                validationResult = state.transactionValidationResult,
             )
         },
     )
@@ -220,6 +223,7 @@ private class WcSendTransactionStateProvider : CollectionPreviewParameterProvide
             address = null,
             sendEnabled = true,
             feeErrorNotification = null,
+            transactionValidationResult = null,
         ),
         WcSendTransactionItemUM(
             onDismiss = {},
@@ -262,6 +266,7 @@ private class WcSendTransactionStateProvider : CollectionPreviewParameterProvide
                 title = stringReference("Insufficient Ethereum"),
                 subtitle = stringReference("Top up your balance to cover the network fee"),
             ),
+            transactionValidationResult = ValidationResult.WARNING,
         ),
         WcSendTransactionItemUM(
             onDismiss = {},
@@ -301,9 +306,14 @@ private class WcSendTransactionStateProvider : CollectionPreviewParameterProvide
             address = null,
             sendEnabled = false,
             feeErrorNotification = NotificationUM.Info(
-                title = stringReference("Insufficient Ethereum"),
-                subtitle = stringReference("Top up your balance to cover the network fee"),
+                title = resourceReference(R.string.send_fee_unreachable_error_title),
+                subtitle = resourceReference(R.string.send_fee_unreachable_error_text),
+                buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
+                    text = resourceReference(R.string.warning_button_refresh),
+                    onClick = {},
+                ),
             ),
+            transactionValidationResult = ValidationResult.SAFE,
         ),
     ),
 )
