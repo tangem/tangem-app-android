@@ -4,7 +4,7 @@ import arrow.core.getOrElse
 import com.tangem.common.core.TangemSdkError
 import com.tangem.domain.card.DerivePublicKeysUseCase
 import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.referral.domain.errors.ReferralError
 import com.tangem.feature.referral.domain.models.ReferralData

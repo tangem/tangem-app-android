@@ -1,7 +1,7 @@
 package com.tangem.domain.analytics.repository
 
 import com.tangem.domain.analytics.model.WalletBalanceState
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 
 interface AnalyticsRepository {
 

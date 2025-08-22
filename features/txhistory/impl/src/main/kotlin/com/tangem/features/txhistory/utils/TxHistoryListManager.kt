@@ -6,7 +6,7 @@ import com.tangem.domain.txhistory.model.TxHistoryListBatchingContext
 import com.tangem.domain.txhistory.model.TxHistoryListConfig
 import com.tangem.domain.txhistory.models.PaginationWrapper
 import com.tangem.domain.txhistory.repository.TxHistoryRepositoryV2
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.txhistory.converter.TxHistoryItemToTransactionStateConverter
 import com.tangem.features.txhistory.entity.TxHistoryUM
 import com.tangem.pagination.BatchAction
