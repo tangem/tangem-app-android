@@ -2,7 +2,7 @@ package com.tangem.domain.staking.repositories
 
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.staking.model.stakekit.action.StakingAction
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.coroutines.flow.Flow
 
 interface StakingActionRepository {
