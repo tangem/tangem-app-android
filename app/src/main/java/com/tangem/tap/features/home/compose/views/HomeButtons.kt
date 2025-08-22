@@ -17,7 +17,7 @@ import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.test.TestTags
+import com.tangem.core.ui.test.StoriesScreenTestTags
 import com.tangem.wallet.R
 
 @Composable
@@ -34,7 +34,7 @@ internal fun HomeButtons(
         ScanCardButton(
             modifier = Modifier
                 .weight(weight = 1f)
-                .testTag(TestTags.STORIES_SCREEN_SCAN_BUTTON),
+                .testTag(StoriesScreenTestTags.SCAN_BUTTON),
             showProgress = btnScanStateInProgress,
             onClick = onScanButtonClick,
         )
@@ -42,7 +42,7 @@ internal fun HomeButtons(
         OrderCardButton(
             modifier = Modifier
                 .weight(weight = 1f)
-                .testTag(TestTags.STORIES_SCREEN_ORDER_BUTTON),
+                .testTag(StoriesScreenTestTags.ORDER_BUTTON),
             onClick = onShopButtonClick,
         )
     }
