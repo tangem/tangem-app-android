@@ -21,6 +21,7 @@ dependencies {
 
     /** Domain */
     implementation(projects.domain.wallets)
+    api(projects.domain.models)
 
     /** Domain models */
     implementation(projects.domain.wallets.models)
