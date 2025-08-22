@@ -349,6 +349,10 @@ internal class NFTSendConfirmModel @Inject constructor(
                 updateTransactionStatus(txData)
                 sendBalanceUpdater.scheduleUpdates()
                 nftSendAnalyticHelper.nftSendSuccessAnalytics(cryptoCurrency, uiState.value)
+                if (uiState.value.isRedesignEnabled) {
+                    params.callback.onResult(uiState.value)
+                    params.onSendTransaction()
+                }
             },
         )
     }
