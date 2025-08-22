@@ -1,6 +1,6 @@
 package com.tangem.features.markets.portfolio.impl.model
 
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 
 /**
  * Portfolio UI data. Combined data from all UI flows that required to setup portfolio

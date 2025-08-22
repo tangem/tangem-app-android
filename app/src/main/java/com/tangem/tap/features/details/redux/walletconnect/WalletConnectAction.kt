@@ -1,6 +1,6 @@
 package com.tangem.tap.features.details.redux.walletconnect
 
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.tap.domain.walletconnect2.domain.WcPreparedRequest
 import com.tangem.tap.domain.walletconnect2.domain.models.WalletConnectError
 import com.tangem.tap.domain.walletconnect2.domain.models.WalletConnectEvents

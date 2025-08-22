@@ -4,7 +4,7 @@ import androidx.paging.PagingData
 import com.tangem.domain.visa.model.VisaCurrency
 import com.tangem.domain.visa.model.VisaTxDetails
 import com.tangem.domain.visa.model.VisaTxHistoryItem
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.coroutines.flow.Flow
 
 interface VisaRepository {
