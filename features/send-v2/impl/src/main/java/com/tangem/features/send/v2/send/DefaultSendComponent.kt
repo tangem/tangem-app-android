@@ -38,7 +38,6 @@ import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponent
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponentParams
 import com.tangem.features.send.v2.subcomponents.destination.DefaultSendDestinationBlockComponent
 import com.tangem.features.send.v2.subcomponents.destination.DefaultSendDestinationComponent
-import com.tangem.features.send.v2.subcomponents.fee.SendFeeBlockComponent
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeComponent
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeComponentParams
 import dagger.assisted.Assisted
@@ -156,7 +155,7 @@ internal class DefaultSendComponent @AssistedInject constructor(
                 currentRoute = model.currentRoute.filterIsInstance<CommonSendRoute.Destination>(),
                 isBalanceHidingFlow = model.isBalanceHiddenFlow,
                 analyticsCategoryName = model.analyticCategoryName,
-                title = resourceReference(R.string.send_recipient_label),
+                title = resourceReference(R.string.common_address),
                 userWalletId = params.userWalletId,
                 cryptoCurrency = params.currency,
                 callback = model,
@@ -254,7 +253,6 @@ internal class DefaultSendComponent @AssistedInject constructor(
         val destinationAddress = (state.destinationUM as? DestinationUM.Content)?.addressTextField?.value
         val txUrl = (state.confirmUM as? ConfirmUM.Success)?.txUrl
         val cryptoCurrencyStatus = model.cryptoCurrencyStatusFlow.value
-        val feeCryptoCurrencyStatus = model.feeCryptoCurrencyStatusFlow.value
 
         if (sendAmount == null ||
             destinationAddress == null ||
@@ -279,29 +277,10 @@ internal class DefaultSendComponent @AssistedInject constructor(
                 onClick = {},
             )
 
-        val feeBlockComponent = SendFeeBlockComponent(
-            appComponentContext = child("sendConfirmFeeBlock"),
-            params = SendFeeComponentParams.FeeBlockParams(
-                state = model.uiState.value.feeUM,
-                analyticsCategoryName = model.analyticCategoryName,
-                userWallet = model.userWallet,
-                cryptoCurrencyStatus = cryptoCurrencyStatus,
-                feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
-                appCurrency = model.appCurrency,
-                sendAmount = sendAmount,
-                destinationAddress = destinationAddress,
-                blockClickEnableFlow = MutableStateFlow(true),
-                onLoadFee = model::loadFee,
-            ),
-            onResult = { },
-            onClick = {},
-        )
-
         return SendConfirmSuccessComponent(
             appComponentContext = factoryContext,
             params = SendConfirmSuccessComponent.Params(
                 sendUMFlow = model.uiState,
-                feeBlockComponent = feeBlockComponent,
                 destinationBlockComponent = destinationBlockComponent,
                 analyticsCategoryName = model.analyticCategoryName,
                 currentRoute = model.currentRoute,
