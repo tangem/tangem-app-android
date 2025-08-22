@@ -4,6 +4,7 @@ import com.domain.blockaid.models.transaction.CheckTransactionResult
 import com.domain.blockaid.models.transaction.SimulationResult
 import com.domain.blockaid.models.transaction.ValidationResult
 import com.domain.blockaid.models.transaction.simultation.AmountInfo
+import com.domain.blockaid.models.transaction.simultation.ApproveInfo
 import com.domain.blockaid.models.transaction.simultation.SimulationData
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.format.bigdecimal.crypto
@@ -21,7 +22,7 @@ import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
 import javax.inject.Inject
 
-internal const val DECIMALS_AMOUNT = 2
+private const val DECIMALS_AMOUNT = 2
 
 @Suppress("CyclomaticComplexMethod", "LongMethod")
 internal class WcSendAndReceiveBlockAidUiConverter @Inject constructor(
@@ -55,7 +56,20 @@ internal class WcSendAndReceiveBlockAidUiConverter @Inject constructor(
             },
             estimatedWalletChanges = (simulation as? SimulationResult.Success)?.data?.let { data ->
                 when (data) {
-                    is SimulationData.Approve, SimulationData.NoWalletChangesDetected -> null
+                    is SimulationData.NoWalletChangesDetected -> null
+                    is SimulationData.Approve -> {
+                        val nftItems = data.items.mapNotNull { item ->
+                            if (item !is ApproveInfo.NonFungibleToken) return@mapNotNull null
+
+                            WcEstimatedWalletChangeUM(
+                                iconRes = R.drawable.img_approvale_new_24,
+                                title = TextReference.Res(R.string.common_approve),
+                                description = item.name,
+                                tokenIconUrl = item.logoUrl,
+                            )
+                        }
+                        WcEstimatedWalletChangesUM(nftItems.toImmutableList()).takeIf { nftItems.isNotEmpty() }
+                    }
                     is SimulationData.SendAndReceive -> {
                         val items: ImmutableList<WcEstimatedWalletChangeUM> = (
                             data.send.map {

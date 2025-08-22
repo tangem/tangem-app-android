@@ -40,6 +40,7 @@ import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.card.repository.CardSdkConfigRepository
+import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.settings.SetGooglePayAvailabilityUseCase
 import com.tangem.domain.settings.SetGoogleServicesAvailabilityUseCase
 import com.tangem.domain.settings.ShouldInitiallyAskPermissionUseCase
@@ -48,7 +49,10 @@ import com.tangem.domain.staking.SendUnsubmittedHashesUseCase
 import com.tangem.domain.tokens.GetPolkadotCheckHasImmortalUseCase
 import com.tangem.domain.tokens.GetPolkadotCheckHasResetUseCase
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
+import com.tangem.domain.core.wallets.UserWalletsListRepository
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tester.api.TesterMenuLauncher
 import com.tangem.features.walletconnect.components.WalletConnectFeatureToggles
 import com.tangem.google.GoogleServicesHelper
@@ -188,6 +192,15 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     @Inject
     internal lateinit var backgroundScanIntentHandler: BackgroundScanIntentHandler
 
+    @Inject
+    internal lateinit var userWalletsListRepository: UserWalletsListRepository
+
+    @Inject
+    internal lateinit var hotWalletFeatureToggles: HotWalletFeatureToggles
+
+    @Inject
+    internal lateinit var tangemPayFeatureToggles: TangemPayFeatureToggles
+
     internal val viewModel: MainViewModel by viewModels()
 
     private lateinit var appThemeModeFlow: SharedFlow<AppThemeMode>
@@ -271,6 +284,8 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
             settingsRepository = settingsRepository,
             userWalletsListManager = userWalletsListManager,
             coroutineScope = mainScope,
+            userWalletsListRepository = userWalletsListRepository,
+            hotWalletFeatureToggles = hotWalletFeatureToggles,
         )
 
         initIntentHandlers()
@@ -429,6 +444,12 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     }
 
     private fun navigateToInitialScreenIfNeeded(intentWhichStartedActivity: Intent?) {
+        // TODO refactor this method to return a route instead of navigating directly
+        if (hotWalletFeatureToggles.isHotWalletEnabled) {
+            navigateToInitialScreenIfNeededNew(intentWhichStartedActivity)
+            return
+        }
+
         val backStack = appRouterConfig.stack ?: emptyList()
         // TODO move inital navigation to navigation component ([REDACTED_JIRA])
         val isOnlyInitialRoute = backStack.all { it is AppRoute.Initial }
@@ -448,9 +469,66 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         }
     }
 
+    @Deprecated("Refactor this method to return a route instead of navigating directly")
+    private fun navigateToInitialScreenIfNeededNew(intentWhichStartedActivity: Intent?) {
+        lifecycleScope.launch {
+            val userWallets = userWalletsListRepository.userWalletsSync()
+            val launchMode = backgroundScanIntentHandler.getInitScreenLaunchMode(intentWhichStartedActivity)
+            if (userWallets.isEmpty()) {
+                val shouldShowTos = !cardRepository.isTangemTOSAccepted()
+
+                val route = if (shouldShowTos) {
+                    AppRoute.Disclaimer(isTosAccepted = false)
+                } else {
+                    AppRoute.Home(launchMode = launchMode)
+                }
+
+                store.dispatchNavigationAction { replaceAll(route) }
+                intentProcessor.handleIntent(
+                    intent = intentWhichStartedActivity,
+                    isFromForeground = false,
+                    skipNavigationHandlers = false,
+                )
+            } else {
+                if (userWallets.any { it.isLocked }) {
+                    store.dispatchNavigationAction {
+                        replaceAll(
+                            AppRoute.Welcome(
+                                launchMode = launchMode,
+                                intent = intentWhichStartedActivity?.let(::SerializableIntent),
+                            ),
+                        )
+                    }
+                } else {
+                    store.dispatchNavigationAction {
+                        replaceAll(AppRoute.Wallet)
+                    }
+                }
+
+                intentProcessor.handleIntent(
+                    intent = intentWhichStartedActivity,
+                    isFromForeground = false,
+                    skipNavigationHandlers = true,
+                )
+            }
+
+            if (intent != null) {
+                handleDeepLink(intent = intent, isFromOnNewIntent = false)
+            }
+
+            viewModel.checkForUnfinishedBackup()
+        }
+    }
+
     private fun navigateToInitialScreen(intentWhichStartedActivity: Intent?) {
         val launchMode = backgroundScanIntentHandler.getInitScreenLaunchMode(intentWhichStartedActivity)
-        if (userWalletsListManager.isLockable && userWalletsListManager.hasUserWallets) {
+
+        // Workaround to navigate to TangemPayDetails screen. Will be deleted in next PRs
+        if (tangemPayFeatureToggles.isTangemPayEnabled) {
+            store.dispatchNavigationAction {
+                replaceAll(AppRoute.TangemPayDetails)
+            }
+        } else if (userWalletsListManager.isLockable && userWalletsListManager.hasUserWallets) {
             store.dispatchNavigationAction {
                 replaceAll(
                     AppRoute.Welcome(
