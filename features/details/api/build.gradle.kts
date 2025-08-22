@@ -11,7 +11,7 @@ android {
 dependencies {
 
     /* Project - Domain */
-    implementation(projects.domain.wallets.models)
+    implementation(projects.domain.models)
 
     /* Project - Core */
     implementation(projects.core.decompose)

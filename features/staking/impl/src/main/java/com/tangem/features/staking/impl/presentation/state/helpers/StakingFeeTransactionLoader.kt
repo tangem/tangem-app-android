@@ -21,7 +21,7 @@ import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.CreateApprovalTransactionUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.features.staking.impl.presentation.state.StakingStateController
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.state.utils.isCompositePendingActions
@@ -57,16 +57,16 @@ internal class StakingFeeTransactionLoader @AssistedInject constructor(
         val state = stateController.value
         val confirmationState = state.confirmationState as? StakingStates.ConfirmationState.Data
             ?: error("Illegal state")
-        val validatorState = state.validatorState as? StakingStates.ValidatorState.Data
-            ?: error("No validator provided")
+
+        val validatorAddress = (state.validatorState as? StakingStates.ValidatorState.Data)?.chosenValidator?.address
+            ?: state.balanceState?.validatorAddress
+            ?: error("No validator address provided")
 
         val amount = (state.amountState as? AmountState.Data)?.amountTextField?.cryptoAmount?.value
             ?: error("No amount provided")
 
         val pendingAction = confirmationState.pendingAction
         val pendingActions = confirmationState.pendingActions
-
-        val validatorAddress = validatorState.chosenValidator.address
 
         val isEnter = state.actionType is StakingActionCommonType.Enter
         val isApprovalNeeded = confirmationState.isApprovalNeeded
