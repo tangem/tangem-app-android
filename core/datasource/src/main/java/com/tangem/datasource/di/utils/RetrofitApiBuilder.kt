@@ -7,7 +7,7 @@ import com.tangem.core.analytics.api.AnalyticsErrorHandler
 import com.tangem.datasource.BuildConfig
 import com.tangem.datasource.api.common.SwitchEnvironmentInterceptor
 import com.tangem.datasource.api.common.config.ApiConfig
-import com.tangem.datasource.api.common.config.ApiConfig.Companion.MOCKED_BUILD_TYPE
+import com.tangem.datasource.api.common.config.ApiConfigs
 import com.tangem.datasource.api.common.config.ApiEnvironmentConfig
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.api.common.createNetworkLoggingInterceptor
@@ -42,12 +42,15 @@ import javax.inject.Singleton
  */
 @Singleton
 internal class RetrofitApiBuilder @Inject constructor(
+    private val apiConfigs: ApiConfigs,
     private val apiConfigsManager: ApiConfigsManager,
     @NetworkMoshi private val moshi: Moshi,
     private val analyticsErrorHandler: AnalyticsErrorHandler,
     @ApplicationContext private val context: Context,
     private val appLogsStore: AppLogsStore,
 ) {
+
+    private val configsBaseUrls: Map<ApiConfig.ID, Set<String>> = getConfigsBaseUrls()
 
     /**
      * Builds a Retrofit API instance for the specified API configuration ID
@@ -95,13 +98,26 @@ internal class RetrofitApiBuilder @Inject constructor(
         val writeTimeoutSeconds: Long? = null,
     )
 
+    private fun getConfigsBaseUrls(): Map<ApiConfig.ID, Set<String>> {
+        return apiConfigs.associate { config ->
+            val allBaseUrls = config.environmentConfigs.mapTo(hashSetOf(), ApiEnvironmentConfig::baseUrl)
+
+            config.id to allBaseUrls
+        }
+    }
+
     private fun OkHttpClient.Builder.applyApiConfig(
         apiConfigId: ApiConfig.ID,
         environmentConfig: ApiEnvironmentConfig,
     ): OkHttpClient.Builder {
-        return if (BuildConfig.TESTER_MENU_ENABLED || BuildConfig.BUILD_TYPE == MOCKED_BUILD_TYPE) {
+        return if (BuildConfig.TESTER_MENU_ENABLED) {
             addInterceptor(
-                interceptor = SwitchEnvironmentInterceptor(id = apiConfigId, apiConfigsManager = apiConfigsManager),
+                interceptor = SwitchEnvironmentInterceptor(
+                    id = apiConfigId,
+                    baseUrls = configsBaseUrls[apiConfigId]
+                        ?: error("Base URLs for ApiConfig with id [$apiConfigId] not found"),
+                    apiConfigsManager = apiConfigsManager,
+                ),
             )
         } else {
             val headers = environmentConfig.headers
