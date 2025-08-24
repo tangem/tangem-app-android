@@ -248,6 +248,17 @@
                     android:host="swap"
                     android:scheme="tangem" />
             </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:host="promo"
+                    android:scheme="tangem" />
+            </intent-filter>
         </activity>
 
         <!-- Disable android.startup completely. Used for Worker according doc -->

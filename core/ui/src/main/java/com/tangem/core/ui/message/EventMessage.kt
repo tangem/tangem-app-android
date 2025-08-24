@@ -147,6 +147,8 @@ data class DialogMessage(
     }
 }
 
+data class GlobalLoadingMessage(val isShow: Boolean) : EventMessage
+
 /**
  * Shows a bottom sheet.
  *

@@ -81,3 +81,28 @@ fun String.capitalize(): String = replaceFirstChar { if (it.isLowerCase()) it.ti
 fun String.orMaskWithStars(maskWithStars: Boolean): String {
     return if (maskWithStars) THREE_STARS else this
 }
+
+/**
+ * Returns a masked representation of the string for safe display.
+ *
+ * Rules:
+ * - empty string: returned unchanged
+ * - length <= 2: all characters are replaced with '*'
+ * - length <= 4: keep the first and last characters, mask the middle
+ * - length > 4: keep the first two and last two characters, mask the middle with "**"
+ *
+ * @return masked string according to the rules above
+ */
+@Suppress("MagicNumber")
+fun String.mask(): String {
+    return when {
+        this.isEmpty() -> this
+        this.length <= 2 -> "*".repeat(this.length) // mask all if too short
+        this.length <= 4 -> this.first() + "*".repeat(this.length - 2) + this.last()
+        else -> {
+            val prefix = this.take(2)
+            val suffix = this.takeLast(2)
+            "$prefix**$suffix"
+        }
+    }
+}
