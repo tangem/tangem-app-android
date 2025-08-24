@@ -12,7 +12,12 @@
   <string name="access_code_create_description">Set a %s-digit Access Code to unlock your wallet.</string>
   <string name="access_code_create_title">Create Access Code</string>
   <string name="access_code_navtitle">Access code</string>
+  <string name="account_add_limit_dialog_description">You cannot create more than %1$s accounts. Archive one to add new.</string>
+  <string name="account_add_limit_dialog_title">Can’t add new account</string>
+  <string name="account_archived_accounts">Archived accounts</string>
   <string name="account_archived_recover">Recover</string>
+  <string name="account_archived_recover_dialog_description">You’re about to recover “%1$s”.</string>
+  <string name="account_archived_recover_dialog_title">Recover account</string>
   <string name="account_archived_title">Archived</string>
   <string name="account_details_archive">Archive account</string>
   <string name="account_details_archive_action">Archive</string>
@@ -26,6 +31,8 @@
   <string name="account_form_placeholder_new_account">New account</string>
   <string name="account_form_title_create">Add account</string>
   <string name="account_form_title_edit">Edit account</string>
+  <string name="account_label_tokens_info">%1$s in %2$s</string>
+  <string name="account_reorder_description">Long tap on an account to reorder accounts</string>
   <string name="account_unsaved_dialog_action_first">Keep Editing</string>
   <string name="account_unsaved_dialog_action_second">Discard</string>
   <string name="account_unsaved_dialog_message_create">Are you sure you want to discard new account?</string>
@@ -117,6 +124,16 @@
   <string name="biometric_lockout_warning_description">Please try again in 30 seconds or scan the card or ring</string>
   <string name="biometric_lockout_warning_title">Too many attempts</string>
   <string name="biometric_unavailable_warning">You have disabled biometric authentication on your phone and will not be able to save wallets in the app. To save wallets, please enable the biometric authentication function in your phone settings.</string>
+  <string name="bitcoin_promo_activation_error">An error occurred while processing your promo code. Please try again later.</string>
+  <string name="bitcoin_promo_activation_error_title">Activation error</string>
+  <string name="bitcoin_promo_activation_success">Your promo code has been successfully activated. A bonus of 10 USDT in Bitcoin will be credited in 14 days.</string>
+  <string name="bitcoin_promo_activation_success_title">Promo code activated</string>
+  <string name="bitcoin_promo_already_activated">This promo code has already been used and cannot be activated again.</string>
+  <string name="bitcoin_promo_already_activated_title">Code unavailable</string>
+  <string name="bitcoin_promo_invalid_code">This promo code is not valid and cannot be activated.</string>
+  <string name="bitcoin_promo_invalid_code_title">Invalid code</string>
+  <string name="bitcoin_promo_no_address">A Bitcoin address is required to receive the bonus. Please add one to your wallet and retry the activation.</string>
+  <string name="bitcoin_promo_no_address_title">Bitcoin address required</string>
   <string name="button_start_backup_process">Start backup process</string>
   <string name="buy_token_description">Use a bank card or other payment methods</string>
   <plurals name="card_label_card_count">
@@ -152,6 +169,7 @@
   <string name="cardano_max_amount_has_token_title">Not enough ADA</string>
   <string name="common_accept">Accept</string>
   <string name="common_access_denied">Access denied</string>
+  <string name="common_accounts">Accounts</string>
   <string name="common_add">Add</string>
   <string name="common_add_to_portfolio">Add to portfolio</string>
   <string name="common_add_token">Add token</string>
@@ -239,6 +257,10 @@
   <string name="common_month">month</string>
   <string name="common_network_fee_title">Network fee</string>
   <string name="common_network_fee_warning_content">Amount sent will be reduced by %1$s (%2$s) to cover the selected fee level</string>
+  <plurals name="common_networks_count">
+    <item quantity="one">%d network</item>
+    <item quantity="other">%d networks</item>
+  </plurals>
   <string name="common_next">Next</string>
   <string name="common_nft">NFT</string>
   <string name="common_no">No</string>
@@ -485,6 +507,8 @@
   <string name="hw_backup_close_description">If you do, you\'ll need to start over.</string>
   <string name="hw_backup_google_drive_description">Recover an existing wallet stored in your Google Drive backup</string>
   <string name="hw_backup_google_drive_title">Google Drive Backup</string>
+  <string name="hw_backup_hardware_description">Upgrade your security right away with a best in class hardware wallet from Tangem.</string>
+  <string name="hw_backup_hardware_title">Hardware Wallet</string>
   <string name="hw_backup_need_action">Go to backup</string>
   <string name="hw_backup_need_description">To secure your wallet with a Access Code, complete the backup first.</string>
   <string name="hw_backup_need_title">Finish Backup First</string>
@@ -498,6 +522,19 @@
   <string name="hw_create_title">Create Mobile Wallet</string>
   <string name="hw_import_seed_phrase_already_imported">This recovery phrase has already been imported</string>
   <string name="hw_mobile_wallet">Mobile Wallet</string>
+  <string name="hw_upgrade_funds_access_description">Your funds stay safe and fully accessible during the process</string>
+  <string name="hw_upgrade_funds_access_title">Funds access</string>
+  <string name="hw_upgrade_general_security_description">All private wallet data will be removed from the mobile app and stored securely on your Tangem device only</string>
+  <string name="hw_upgrade_general_security_title">General Security</string>
+  <string name="hw_upgrade_key_migration_description">Private keys will be moved from the app to your Tangem card or ring</string>
+  <string name="hw_upgrade_key_migration_title">Key Migration</string>
+  <string name="hw_upgrade_scan_device">Scan device</string>
+  <string name="hw_upgrade_start_action">Start upgrade</string>
+  <string name="hw_upgrade_start_description">You’re about to upgrade your wallet to Tangem Wallet. This will keep your assets safe with cold storage.</string>
+  <string name="hw_upgrade_start_title">Tangem Wallet</string>
+  <string name="hw_upgrade_title">Upgrade to Hardware Wallet</string>
+  <string name="hw_upgrade_to_cold_banner_description">Keep your crypto safe with Tangem’s best-in-class hardware wallet.</string>
+  <string name="hw_upgrade_to_cold_banner_title">Upgrade wallet with a hardware backup</string>
   <string name="information_generated_with_ai">This information was generated with AI.\nTap here, if you find any errors.</string>
   <string name="initial_message_change_access_code_body">To change the access code tap the card or ring as shown above and do not remove until the end of the operation</string>
   <string name="initial_message_change_passcode_body">To change the passcode tap the card as shown above and do not remove until the end of the operation</string>
@@ -702,6 +739,9 @@
   <string name="notification_referral_promo_button">Join Now</string>
   <string name="notification_referral_promo_text">Share your code - earn 5 USDT per sale. Your friend gets 10% OFF.</string>
   <string name="notification_referral_promo_title">Get REWARDS for every friend!</string>
+  <string name="notification_sepa_button">Buy crypto</string>
+  <string name="notification_sepa_text">Enjoy zero fees when purchasing crypto via SEPA transfer.</string>
+  <string name="notification_sepa_title">Buy Crypto with SEPA</string>
   <string name="onboarding_access_code_feature_1_description">Set up a single access code to protect all your devices.</string>
   <string name="onboarding_access_code_feature_1_title">Protect</string>
   <string name="onboarding_access_code_feature_2_description">Set an individual access code for each card or ring later.</string>
