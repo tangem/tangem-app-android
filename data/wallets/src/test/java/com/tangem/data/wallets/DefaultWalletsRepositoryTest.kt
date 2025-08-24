@@ -6,12 +6,16 @@ import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.Moshi
 import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.api.common.response.ApiResponse
+import com.tangem.datasource.api.common.response.ApiResponseError.HttpException
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.WalletResponse
+import com.tangem.datasource.api.tangemTech.models.PromocodeActivationBody
+import com.tangem.datasource.api.tangemTech.models.PromocodeActivationResponse
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.wallets.models.errors.ActivatePromoCodeError
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
@@ -234,5 +238,65 @@ class DefaultWalletsRepositoryTest {
                 },
             )
         }
+    }
+
+    @Test
+    fun `GIVEN valid data WHEN activatePromoCode THEN returns Right with status and calls API`() = runTest {
+        // GIVEN
+        val promoCode = "PROMO123"
+        val address = "bc1qexampleaddress"
+        coEvery { tangemTechApi.activatePromoCode(any()) } returns ApiResponse.Success(
+            PromocodeActivationResponse(status = "activated"),
+        )
+
+        // WHEN
+        val result = repository.activatePromoCode(promoCode = promoCode, bitcoinAddress = address)
+
+        // THEN
+        var right: String? = null
+        var left: ActivatePromoCodeError? = null
+        result.fold({ left = it }, { right = it })
+        assertThat(left).isNull()
+        assertThat(right).isEqualTo("activated")
+
+        coVerify(exactly = 1) {
+            tangemTechApi.activatePromoCode(
+                match { it is PromocodeActivationBody && it.promoCode == promoCode && it.address == address },
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN NOT_FOUND error WHEN activatePromoCode THEN returns Left InvalidPromoCode`() = runTest {
+        // GIVEN
+        coEvery { tangemTechApi.activatePromoCode(any()) } returns
+            ApiResponse.Error(
+            HttpException(code = HttpException.Code.NOT_FOUND, message = null, errorBody = null),
+        ) as ApiResponse<PromocodeActivationResponse>
+
+        // WHEN
+        val result = repository.activatePromoCode(promoCode = "PROMO", bitcoinAddress = "addr")
+
+        // THEN
+        var error: ActivatePromoCodeError? = null
+        result.fold({ error = it }, { })
+        assertThat(error).isEqualTo(ActivatePromoCodeError.InvalidPromoCode)
+    }
+
+    @Test
+    fun `GIVEN CONFLICT error WHEN activatePromoCode THEN returns Left PromocodeAlreadyUsed`() = runTest {
+        // GIVEN
+        coEvery { tangemTechApi.activatePromoCode(any()) } returns
+            ApiResponse.Error(
+            HttpException(code = HttpException.Code.CONFLICT, message = null, errorBody = null),
+        ) as ApiResponse<PromocodeActivationResponse>
+
+        // WHEN
+        val result = repository.activatePromoCode(promoCode = "PROMO", bitcoinAddress = "addr")
+
+        // THEN
+        var error: ActivatePromoCodeError? = null
+        result.fold({ error = it }, { })
+        assertThat(error).isEqualTo(ActivatePromoCodeError.PromocodeAlreadyUsed)
     }
 }
