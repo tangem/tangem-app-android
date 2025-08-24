@@ -12,6 +12,7 @@
   <string name="access_code_create_description">ウォレットのロックを解除するには、 %s桁のアクセスコードを設定します。</string>
   <string name="access_code_create_title">アクセスコードの作成</string>
   <string name="access_code_navtitle">アクセスコード</string>
+  <string name="account_archived_accounts">アーカイブされたアカウント</string>
   <string name="account_archived_recover">回復する</string>
   <string name="account_archived_title">アーカイブ済み</string>
   <string name="account_details_archive">アカウントをアーカイブする</string>
@@ -26,6 +27,7 @@
   <string name="account_form_placeholder_new_account">新しいアカウント</string>
   <string name="account_form_title_create">アカウントを追加</string>
   <string name="account_form_title_edit">アカウントを編集</string>
+  <string name="account_reorder_description">アカウントを長押しして並べ替える</string>
   <string name="account_unsaved_dialog_action_first">編集を続ける</string>
   <string name="account_unsaved_dialog_action_second">破棄</string>
   <string name="account_unsaved_dialog_message_create">新しいアカウントを破棄してもよろしいですか？</string>
@@ -71,10 +73,8 @@
   <string name="app_settings_enable_biometrics_description">設定に移動して、Tangemアプリで生体認証を有効にします。</string>
   <string name="app_settings_enable_biometrics_title">生体認証を有効にする</string>
   <string name="app_settings_off_biometrics_alert_message">%1$sが無効になると、アプリのロックを解除してウォレットを操作するために、パスコードを入力する必要があります。</string>
-  <string name="app_settings_off_require_access_code_alert_message">後でウォレットのアクセスコードを入力してもらいます。それを安全に保存し、今後の利用に備えるためです。</string>
   <string name="app_settings_off_saved_access_code_alert_message">これにより、保存されているウォレットアクセスコードがすべて削除されます。ウォレットでの今後の操作には、アクセスコードの送信が必要になります。</string>
   <string name="app_settings_off_saved_wallet_alert_message">保存したデバイスを削除すると、保存されているすべてのウォレットとそのアクセスコードがアプリから削除されます。</string>
-  <string name="app_settings_on_require_access_code_alert_message">これにより、保存されているウォレットアクセスコードがすべて削除されます。今後ウォレットを操作するには、アクセスコードの送信が必要になります。</string>
   <string name="app_settings_require_access_code">アクセスコードを要求する</string>
   <string name="app_settings_require_access_code_footer">このオプションを選択すると、機密性の高い操作における生体認証が無効になります。取引の署名時などには、毎回アクセスコードの入力が必要になります。</string>
   <string name="app_settings_saved_access_codes">アクセスコードを保存</string>
@@ -116,6 +116,12 @@
   <string name="biometric_lockout_warning_description">30秒後に再試行するか、カードまたはリングをスキャンしてください</string>
   <string name="biometric_lockout_warning_title">試行回数が多すぎます</string>
   <string name="biometric_unavailable_warning">お使いの携帯電話で生体認証が無効になっているため、アプリにウォレットを保存できません。ウォレットを保存するには、携帯電話の設定で生体認証機能を有効にしてください。</string>
+  <string name="bitcoin_promo_activation_error">プロモーションコードの処理中にエラーが発生しました。しばらくしてからもう一度お試しください。</string>
+  <string name="bitcoin_promo_activation_success">プロモーションコードが正常に有効化されました。14日以内に10 USDT相当のビットコインボーナスが付与されます。</string>
+  <string name="bitcoin_promo_activation_success_title">プロモーションコードが有効になりました</string>
+  <string name="bitcoin_promo_already_activated">このプロモーションコードは既に使用されているため、再度使うことはできません。</string>
+  <string name="bitcoin_promo_invalid_code">このプロモーションコードは無効であり、有効化できません。</string>
+  <string name="bitcoin_promo_no_address">ボーナスを受け取るにはビットコインアドレスが必要です。ウォレットにビットコインアドレスを追加し、再度アクティベーションをお試しください。</string>
   <string name="button_start_backup_process">バックアップ処理を開始する</string>
   <string name="buy_token_description">銀行カードまたはその他の支払い方法を使用する</string>
   <plurals name="card_label_card_count">
@@ -149,6 +155,7 @@
   <string name="cardano_max_amount_has_token_title">ADAが不足しています。</string>
   <string name="common_accept">受け入れる</string>
   <string name="common_access_denied">アクセスが拒否されました</string>
+  <string name="common_accounts">アカウント</string>
   <string name="common_add">追加</string>
   <string name="common_add_to_portfolio">ポートフォリオに追加</string>
   <string name="common_add_token">トークンを追加</string>
@@ -489,7 +496,6 @@
   <string name="hw_create_seed_description">最新の機能とニュースをお届けします</string>
   <string name="hw_create_seed_title">シードフレーズのバックアップ</string>
   <string name="hw_create_title">モバイルウォレットを作成する</string>
-  <string name="hw_import_seed_phrase_already_imported">このリカバリーフレーズはすでにインポートされています。</string>
   <string name="hw_mobile_wallet">モバイルウォレット</string>
   <string name="information_generated_with_ai">この情報はAIで生成されました。 \nエラーが見つかった場合は、ここをタップしてください。</string>
   <string name="initial_message_change_access_code_body">アクセスコードを変更するには、上図のようにカードまたはリングをタップし、操作が終了するまで取り外さないでください。</string>
