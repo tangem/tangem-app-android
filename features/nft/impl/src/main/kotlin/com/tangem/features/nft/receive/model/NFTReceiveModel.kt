@@ -1,5 +1,7 @@
 package com.tangem.features.nft.receive.model
 
+import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.activate
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -12,12 +14,20 @@ import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.DialogMessage
+import com.tangem.domain.models.Asset
+import com.tangem.domain.models.ReceiveAddressModel
+import com.tangem.domain.models.TokenReceiveConfig
+import com.tangem.domain.models.TokenReceiveNotification
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.nft.FilterNFTAvailableNetworksUseCase
+import com.tangem.domain.nft.GetNFTCurrencyUseCase
 import com.tangem.domain.nft.GetNFTNetworkStatusUseCase
 import com.tangem.domain.nft.GetNFTNetworksUseCase
 import com.tangem.domain.nft.analytics.NFTAnalyticsEvent
+import com.tangem.domain.tokens.GetViewedTokenReceiveWarningUseCase
+import com.tangem.domain.transaction.usecase.GetEnsNameUseCase
 import com.tangem.features.nft.impl.R
 import com.tangem.features.nft.receive.NFTReceiveComponent
 import com.tangem.features.nft.receive.entity.NFTReceiveUM
@@ -25,6 +35,8 @@ import com.tangem.features.nft.receive.entity.transformer.ShowReceiveBottomSheet
 import com.tangem.features.nft.receive.entity.transformer.ToggleSearchBarTransformer
 import com.tangem.features.nft.receive.entity.transformer.UpdateDataStateTransformer
 import com.tangem.features.nft.receive.entity.transformer.UpdateSearchQueryTransformer
+import com.tangem.features.tokenreceive.TokenReceiveFeatureToggle
+import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.*
@@ -43,10 +55,16 @@ internal class NFTReceiveModel @Inject constructor(
     private val shareManager: ShareManager,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val messageSender: UiMessageSender,
+    private val tokenReceiveFeatureToggle: TokenReceiveFeatureToggle,
+    private val getViewedTokenReceiveWarningUseCase: GetViewedTokenReceiveWarningUseCase,
+    private val getEnsNameUseCase: GetEnsNameUseCase,
+    private val getNFTCurrencyUseCase: GetNFTCurrencyUseCase,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
     private val params: NFTReceiveComponent.Params = paramsContainer.require()
+
+    val bottomSheetNavigation: SlotNavigation<TokenReceiveConfig> = SlotNavigation()
 
     private val _state = MutableStateFlow(
         value = NFTReceiveUM(
@@ -138,14 +156,23 @@ internal class NFTReceiveModel @Inject constructor(
 
                 when (val value = networkStatus.value) {
                     is NetworkStatus.Verified -> {
-                        _state.update {
-                            ShowReceiveBottomSheetTransformer(
-                                network = network,
-                                networkAddress = value.address,
-                                onDismissBottomSheet = ::onReceiveBottomSheetDismiss,
-                                onCopyClick = { text -> onCopyClick(text, network) },
-                                onShareClick = { text -> onShareClick(text, network) },
-                            ).transform(it)
+                        if (tokenReceiveFeatureToggle.isNewTokenReceiveEnabled) {
+                            bottomSheetNavigation.activate(
+                                configuration = configureReceiveAddresses(
+                                    addresses = value.address,
+                                    network = network,
+                                ),
+                            )
+                        } else {
+                            _state.update {
+                                ShowReceiveBottomSheetTransformer(
+                                    network = network,
+                                    networkAddress = value.address,
+                                    onDismissBottomSheet = ::onReceiveBottomSheetDismiss,
+                                    onCopyClick = { text -> onCopyClick(text, network) },
+                                    onShareClick = { text -> onShareClick(text, network) },
+                                ).transform(it)
+                            }
                         }
                     }
                     is NetworkStatus.MissedDerivation,
@@ -165,5 +192,57 @@ internal class NFTReceiveModel @Inject constructor(
     private fun onShareClick(text: String, network: Network) {
         analyticsEventHandler.send(NFTAnalyticsEvent.Receive.ShareAddress(network.name))
         shareManager.shareText(text = text)
+    }
+
+    private suspend fun configureReceiveAddresses(addresses: NetworkAddress, network: Network): TokenReceiveConfig {
+        val cryptoCurrency = getNFTCurrencyUseCase.invoke(network)
+
+        val ensName = getEnsNameUseCase.invoke(
+            userWalletId = params.userWalletId,
+            network = network,
+            address = addresses.defaultAddress.value,
+        )
+
+        val receiveAddresses = buildList {
+            ensName?.let { ens ->
+                add(
+                    ReceiveAddressModel(
+                        nameService = ReceiveAddressModel.NameService.Ens,
+                        value = ens,
+                        displayName = ens,
+                    ),
+                )
+            }
+            addresses.availableAddresses.map { address ->
+                add(
+                    ReceiveAddressModel(
+                        nameService = ReceiveAddressModel.NameService.Default,
+                        value = address.value,
+                        displayName = cryptoCurrency.symbol,
+                    ),
+                )
+            }
+        }
+
+        val notifications = buildList {
+            if (BlockchainUtils.isSolana(network.rawId)) {
+                add(
+                    TokenReceiveNotification(
+                        title = R.string.nft_receive_unsupported_types,
+                        subtitle = R.string.nft_receive_unsupported_types_description,
+                    ),
+                )
+            }
+        }
+
+        return TokenReceiveConfig(
+            shouldShowWarning = Asset.NFT.name !in getViewedTokenReceiveWarningUseCase(),
+            cryptoCurrency = cryptoCurrency,
+            userWalletId = params.userWalletId,
+            showMemoDisclaimer = false,
+            receiveAddress = receiveAddresses,
+            tokenReceiveNotification = notifications,
+            asset = Asset.NFT,
+        )
     }
 }

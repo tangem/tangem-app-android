@@ -101,5 +101,8 @@ dependencies {
     implementation(projects.features.swap.api)
     implementation(projects.features.txhistory.api)
     implementation(projects.features.sendV2.api)
+    implementation(projects.features.tokenRecieve.api)
+
+    implementation(deps.decompose.ext.compose)
 
 }
