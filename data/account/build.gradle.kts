@@ -25,18 +25,24 @@ dependencies {
     api(projects.domain.models)
     // endregion
 
-    // Project - Data
+    // region Project - Data
     implementation(projects.data.common)
     // endregion
 
     // region DI
-    implementation(deps.hilt.core)
+    implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
+    // endregion
+
+    // region AndroidX libraries
+    implementation(deps.androidx.datastore)
     // endregion
 
     // region Other Dependencies
     implementation(deps.arrow.core)
     implementation(deps.kotlin.coroutines)
+    implementation(deps.moshi)
+    implementation(deps.moshi.kotlin)
     implementation(deps.timber)
     // endregion
 
