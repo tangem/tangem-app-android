@@ -10,6 +10,7 @@ import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.transaction.FeeRepository
 import com.tangem.domain.transaction.TransactionRepository
+import com.tangem.domain.transaction.WalletAddressServiceRepository
 import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import dagger.Module
@@ -219,5 +220,25 @@ internal object TransactionDomainModule {
         transactionRepository: TransactionRepository,
     ): CreateNFTTransferTransactionUseCase {
         return CreateNFTTransferTransactionUseCase(transactionRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetEnsNameUseCase(
+        walletManagersFacade: WalletManagersFacade,
+        walletAddressServiceRepository: WalletAddressServiceRepository,
+    ): GetEnsNameUseCase {
+        return GetEnsNameUseCase(
+            walletManagersFacade = walletManagersFacade,
+            walletAddressServiceRepository = walletAddressServiceRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetReverseResolvedEnsAddressUseCase(
+        walletAddressServiceRepository: WalletAddressServiceRepository,
+    ): GetReverseResolvedEnsAddressUseCase {
+        return GetReverseResolvedEnsAddressUseCase(walletAddressServiceRepository)
     }
 }

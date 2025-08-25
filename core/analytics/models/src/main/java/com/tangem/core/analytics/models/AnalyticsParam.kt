@@ -192,6 +192,10 @@ sealed class AnalyticsParam {
         Pending(value = "Pending"),
     }
 
+    enum class EnsStatus(val value: String) {
+        EMPTY("Empty"), FULL("Full")
+    }
+
     companion object Key {
         const val BLOCKCHAIN = "Blockchain"
         const val TOKEN_PARAM = "Token"
@@ -240,5 +244,7 @@ sealed class AnalyticsParam {
         const val SEND_BLOCKCHAIN = "Send Blockchain"
         const val RECEIVE_BLOCKCHAIN = "Receive Blockchain"
         const val CHOSEN_TOKEN = "Token Chosen"
+        const val ENS = "ENS"
+        const val ENS_ADDRESS = "ENS Address"
     }
 }
