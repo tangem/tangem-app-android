@@ -50,7 +50,7 @@ class DefaultWalletAddressServiceRepository(
             )
 
             if (walletManager is NameResolver) {
-                walletManager.reverseResolve(address.toByteArray())
+                walletManager.reverseResolve(address)
             } else {
                 ReverseResolveAddressResult.NotSupported
             }
