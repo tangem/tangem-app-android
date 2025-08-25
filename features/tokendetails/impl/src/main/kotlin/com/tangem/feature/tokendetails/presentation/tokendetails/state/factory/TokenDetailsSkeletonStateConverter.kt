@@ -64,14 +64,8 @@ internal class TokenDetailsSkeletonStateConverter(
             marketPriceBlockState = MarketPriceBlockState.Loading(value.symbol),
             stakingBlocksState = StakingBlockUM.Loading(iconState).takeIf { isSupportedInMobileApp },
             notifications = persistentListOf(),
-            pendingTxs = persistentListOf(),
             expressTxs = persistentListOf(),
             expressTxsToDisplay = persistentListOf(),
-            txHistoryState = TxHistoryState.Content(
-                contentItems = MutableStateFlow(
-                    value = TxHistoryState.getDefaultLoadingTransactions(clickIntents::onExploreClick),
-                ),
-            ),
             dialogConfig = null,
             pullToRefreshConfig = createPullToRefresh(),
             bottomSheetConfig = null,
