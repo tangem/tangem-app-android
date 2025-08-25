@@ -19,6 +19,7 @@ dependencies {
     implementation(projects.features.disclaimer.api)
     implementation(projects.features.tester.api)
     implementation(projects.features.createWalletSelection.api)
+    implementation(projects.features.hotWallet.api)
 
     /* Project - Core */
     implementation(projects.core.decompose)
