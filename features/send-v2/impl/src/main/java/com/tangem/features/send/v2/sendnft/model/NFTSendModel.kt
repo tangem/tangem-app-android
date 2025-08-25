@@ -28,6 +28,7 @@ import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.CreateNFTTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.features.nft.entity.NFTSendSuccessTrigger
 import com.tangem.features.send.v2.api.NFTSendComponent
 import com.tangem.features.send.v2.api.SendFeatureToggles
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
@@ -74,6 +75,7 @@ internal class NFTSendModel @Inject constructor(
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val alertFactory: SendConfirmAlertFactory,
     private val sendFeatureToggles: SendFeatureToggles,
+    private val nftSendSuccessTrigger: NFTSendSuccessTrigger,
 ) : Model(), SendNFTComponentCallback, NFTSendSuccessComponent.ModelCallback {
 
     val params: NFTSendComponent.Params = paramsContainer.require()
@@ -119,6 +121,11 @@ internal class NFTSendModel @Inject constructor(
     }
 
     override fun onBackClick() {
+        if (currentRouteFlow.value == ConfirmSuccess) {
+            modelScope.launch {
+                nftSendSuccessTrigger.triggerSuccessNFTSend()
+            }
+        }
         router.pop()
     }
 
