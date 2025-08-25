@@ -62,8 +62,10 @@ internal class NFTSendConfirmationNotificationsTransformer(
         val feeUM = feeUM as? FeeUM.Content
         val fee = (feeUM?.feeSelectorUM as? FeeSelectorUM.Content)?.selectedFee ?: return TextReference.EMPTY
 
+        val fiatFeeValue = feeUM.rate?.let { fee.amount.value?.multiply(it) }
+
         val fiatFee = formatFooterFiatFee(
-            amount = fee.amount,
+            amount = fee.amount.copy(value = fiatFeeValue),
             isFeeConvertibleToFiat = feeUM.isFeeConvertibleToFiat,
             isFeeApproximate = feeUM.isFeeApproximate,
             appCurrency = appCurrency,
