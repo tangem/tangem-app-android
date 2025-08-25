@@ -2,6 +2,7 @@ package com.tangem.feature.wallet.deeplink
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.routing.deeplink.DeeplinkConst.PROMO_CODE_KEY
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.mask
@@ -15,6 +16,7 @@ import com.tangem.domain.wallets.PromoCodeActivationResult.*
 import com.tangem.domain.wallets.models.errors.ActivatePromoCodeError
 import com.tangem.domain.wallets.usecase.ActivateBitcoinPromocodeUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
+import com.tangem.feature.wallet.deeplink.analytics.PromoActivationAnalytics
 import com.tangem.feature.wallet.impl.R
 import com.tangem.features.wallet.deeplink.PromoDeeplinkHandler
 import dagger.assisted.Assisted
@@ -25,6 +27,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
+@Suppress("LongParameterList")
 internal class DefaultPromoDeeplinkHandler @AssistedInject constructor(
     @Assisted private val scope: CoroutineScope,
     @Assisted private val queryParams: Map<String, String>,
@@ -32,9 +35,11 @@ internal class DefaultPromoDeeplinkHandler @AssistedInject constructor(
     private val getMultiCryptoCurrencyStatusUseCase: GetMultiCryptoCurrencyStatusUseCase,
     private val activateBitcoinPromocodeUseCase: ActivateBitcoinPromocodeUseCase,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
+    private val analyticsEventsHandler: AnalyticsEventHandler,
 ) : PromoDeeplinkHandler {
 
     init {
+        analyticsEventsHandler.send(PromoActivationAnalytics.PromoDeepLinkActivationStart)
         val promoCode = queryParams[PROMO_CODE_KEY].orEmpty()
         if (promoCode.isEmpty()) {
             showAlert(InvalidPromoCode)
@@ -103,6 +108,7 @@ internal class DefaultPromoDeeplinkHandler @AssistedInject constructor(
     }
 
     private fun showAlert(type: PromoCodeActivationResult) {
+        analyticsEventsHandler.send(PromoActivationAnalytics.PromoActivation(type))
         val (title, message) = when (type) {
             Failed -> resourceReference(R.string.bitcoin_promo_activation_error_title) to
                 resourceReference(R.string.bitcoin_promo_activation_error)
