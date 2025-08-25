@@ -9,7 +9,7 @@
     },
     {
         "name": "STAKING_TON_ENABLED",
-        "version": "undefined"
+        "version": "5.28.0"
     },
     {
         "name": "NFT_MEDIA_CONTENT_ENABLED",
@@ -17,7 +17,7 @@
     },
     {
         "name": "STAKING_CARDANO_ENABLED",
-        "version": "undefined"
+        "version": "5.28.0"
     },
     {
         "name": "WALLET_CONNECT_REDESIGN_ENABLED",
@@ -33,7 +33,7 @@
     },
     {
         "name": "SEND_VIA_SWAP_ENABLED",
-        "version": "undefined"
+        "version": "5.28.0"
     },
     {
         "name": "SWAP_REDESIGN_ENABLED",
@@ -41,7 +41,7 @@
     },
     {
         "name": "SEND_REDESIGN_ENABLED",
-        "version": "undefined"
+        "version": "5.28.0"
     },
     {
         "name": "WALLET_BALANCE_FETCHER_ENABLED",
@@ -53,10 +53,14 @@
     },
     {
         "name": "NFT_SEND_REDESIGN_ENABLED",
-        "version": "undefined"
+        "version": "5.28.0"
     },
     {
         "name": "TANGEM_PAY_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "NEW_TOKEN_RECEIVE_ENABLED",
+        "version": "5.28.0"
     }
 ]

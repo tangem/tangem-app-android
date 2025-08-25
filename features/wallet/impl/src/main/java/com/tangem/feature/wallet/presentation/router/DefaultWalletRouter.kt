@@ -1,11 +1,13 @@
 package com.tangem.feature.wallet.presentation.router
 
 import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.activate
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRoute.ManageTokens.Source
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
@@ -96,6 +98,12 @@ internal class DefaultWalletRouter @Inject constructor(
                 userWalletId = userWallet.walletId,
                 walletName = userWallet.name,
             ),
+        )
+    }
+
+    override fun openTokenReceiveBottomSheet(tokenReceiveConfig: TokenReceiveConfig) {
+        dialogNavigation.activate(
+            configuration = WalletDialogConfig.TokenReceive(tokenReceiveConfig),
         )
     }
 }
