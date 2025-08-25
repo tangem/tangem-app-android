@@ -4,6 +4,7 @@ import arrow.core.Either
 import com.google.common.truth.Truth
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.routing.deeplink.DeeplinkConst
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.ui.UiMessage
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.TextReference
@@ -22,6 +23,7 @@ import com.tangem.domain.wallets.models.errors.ActivatePromoCodeError
 import com.tangem.domain.wallets.usecase.ActivateBitcoinPromocodeUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.feature.wallet.deeplink.DefaultPromoDeeplinkHandler
+import com.tangem.feature.wallet.deeplink.analytics.PromoActivationAnalytics
 import com.tangem.feature.wallet.impl.R
 import io.mockk.CapturingSlot
 import io.mockk.MockKAnnotations
@@ -32,6 +34,7 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.slot
+import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
@@ -47,6 +50,7 @@ import org.junit.Before
 import org.junit.Test
 import timber.log.Timber
 import java.math.BigDecimal
+import com.tangem.domain.wallets.PromoCodeActivationResult
 
 class DefaultPromoDeeplinkHandlerTest {
 
@@ -62,6 +66,9 @@ class DefaultPromoDeeplinkHandlerTest {
     @MockK
     private lateinit var getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase
 
+    @MockK
+    private lateinit var analyticsEventHandler: AnalyticsEventHandler
+
     private lateinit var messageSlot: CapturingSlot<UiMessage>
     private lateinit var testDispatcher: TestDispatcher
     private lateinit var testScope: TestScope
@@ -75,6 +82,7 @@ class DefaultPromoDeeplinkHandlerTest {
         Dispatchers.setMain(testDispatcher)
 
         MockKAnnotations.init(this)
+        every { analyticsEventHandler.send(any()) } returns Unit
         messageSlot = slot()
         every { uiMessageSender.send(capture(messageSlot)) } just runs
 
@@ -99,11 +107,19 @@ class DefaultPromoDeeplinkHandlerTest {
             getMultiCryptoCurrencyStatusUseCase = getMultiCryptoCurrencyStatusUseCase,
             activateBitcoinPromocodeUseCase = activateBitcoinPromocodeUseCase,
             getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
+            analyticsEventsHandler = analyticsEventHandler,
         )
 
         val sent = messageSlot.captured as DialogMessage
         Truth.assertThat(sent.title).isEqualTo(resourceReference(R.string.bitcoin_promo_invalid_code_title))
         Truth.assertThat(sent.message).isEqualTo(resourceReference(R.string.bitcoin_promo_invalid_code))
+
+        verify(exactly = 1) { analyticsEventHandler.send(PromoActivationAnalytics.PromoDeepLinkActivationStart) }
+        verify(exactly = 1) {
+            analyticsEventHandler.send(
+                PromoActivationAnalytics.PromoActivation(PromoCodeActivationResult.InvalidPromoCode),
+            )
+        }
     }
 
     @Test
@@ -118,11 +134,19 @@ class DefaultPromoDeeplinkHandlerTest {
             getMultiCryptoCurrencyStatusUseCase = getMultiCryptoCurrencyStatusUseCase,
             activateBitcoinPromocodeUseCase = activateBitcoinPromocodeUseCase,
             getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
+            analyticsEventsHandler = analyticsEventHandler,
         )
 
         val sent = messageSlot.captured as DialogMessage
         Truth.assertThat(sent.title).isEqualTo(resourceReference(R.string.bitcoin_promo_activation_error_title))
         Truth.assertThat(sent.message).isEqualTo(resourceReference(R.string.bitcoin_promo_activation_error))
+
+        verify(exactly = 1) { analyticsEventHandler.send(PromoActivationAnalytics.PromoDeepLinkActivationStart) }
+        verify(exactly = 1) {
+            analyticsEventHandler.send(
+                PromoActivationAnalytics.PromoActivation(PromoCodeActivationResult.Failed),
+            )
+        }
     }
 
     @Test
@@ -141,6 +165,7 @@ class DefaultPromoDeeplinkHandlerTest {
             getMultiCryptoCurrencyStatusUseCase = getMultiCryptoCurrencyStatusUseCase,
             activateBitcoinPromocodeUseCase = activateBitcoinPromocodeUseCase,
             getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
+            analyticsEventsHandler = analyticsEventHandler,
         )
 
         advanceUntilIdle()
@@ -148,6 +173,13 @@ class DefaultPromoDeeplinkHandlerTest {
         val sent = messageSlot.captured as DialogMessage
         Truth.assertThat(sent.title).isEqualTo(resourceReference(R.string.bitcoin_promo_activation_error_title))
         Truth.assertThat(sent.message).isEqualTo(resourceReference(R.string.bitcoin_promo_activation_error))
+
+        verify(exactly = 1) { analyticsEventHandler.send(PromoActivationAnalytics.PromoDeepLinkActivationStart) }
+        verify(exactly = 1) {
+            analyticsEventHandler.send(
+                PromoActivationAnalytics.PromoActivation(PromoCodeActivationResult.Failed),
+            )
+        }
     }
 
     @Test
@@ -168,6 +200,7 @@ class DefaultPromoDeeplinkHandlerTest {
             getMultiCryptoCurrencyStatusUseCase = getMultiCryptoCurrencyStatusUseCase,
             activateBitcoinPromocodeUseCase = activateBitcoinPromocodeUseCase,
             getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
+            analyticsEventsHandler = analyticsEventHandler,
         )
 
         advanceUntilIdle()
@@ -175,6 +208,13 @@ class DefaultPromoDeeplinkHandlerTest {
         val sent = messageSlot.captured as DialogMessage
         Truth.assertThat(sent.title).isEqualTo(resourceReference(R.string.bitcoin_promo_no_address_title))
         Truth.assertThat(sent.message).isEqualTo(resourceReference(R.string.bitcoin_promo_no_address))
+
+        verify(exactly = 1) { analyticsEventHandler.send(PromoActivationAnalytics.PromoDeepLinkActivationStart) }
+        verify(exactly = 1) {
+            analyticsEventHandler.send(
+                PromoActivationAnalytics.PromoActivation(PromoCodeActivationResult.NoBitcoinAddress),
+            )
+        }
     }
 
     @Test
@@ -196,6 +236,7 @@ class DefaultPromoDeeplinkHandlerTest {
             getMultiCryptoCurrencyStatusUseCase = getMultiCryptoCurrencyStatusUseCase,
             activateBitcoinPromocodeUseCase = activateBitcoinPromocodeUseCase,
             getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
+            analyticsEventsHandler = analyticsEventHandler,
         )
 
         advanceUntilIdle()
@@ -203,6 +244,13 @@ class DefaultPromoDeeplinkHandlerTest {
         val sent = messageSlot.captured as DialogMessage
         Truth.assertThat(sent.title).isEqualTo(resourceReference(R.string.bitcoin_promo_activation_success_title))
         Truth.assertThat(sent.message).isEqualTo(resourceReference(R.string.bitcoin_promo_activation_success))
+
+        verify(exactly = 1) { analyticsEventHandler.send(PromoActivationAnalytics.PromoDeepLinkActivationStart) }
+        verify(exactly = 1) {
+            analyticsEventHandler.send(
+                PromoActivationAnalytics.PromoActivation(PromoCodeActivationResult.Activated),
+            )
+        }
     }
 
     @Test
@@ -212,6 +260,13 @@ class DefaultPromoDeeplinkHandlerTest {
             expectedTitle = resourceReference(R.string.bitcoin_promo_invalid_code_title),
             expectedMessage = resourceReference(R.string.bitcoin_promo_invalid_code),
         )
+
+        verify(exactly = 1) { analyticsEventHandler.send(PromoActivationAnalytics.PromoDeepLinkActivationStart) }
+        verify(exactly = 1) {
+            analyticsEventHandler.send(
+                PromoActivationAnalytics.PromoActivation(PromoCodeActivationResult.InvalidPromoCode),
+            )
+        }
     }
 
     @Test
@@ -221,6 +276,13 @@ class DefaultPromoDeeplinkHandlerTest {
             expectedTitle = resourceReference(R.string.bitcoin_promo_activation_error_title),
             expectedMessage = resourceReference(R.string.bitcoin_promo_activation_error),
         )
+
+        verify(exactly = 1) { analyticsEventHandler.send(PromoActivationAnalytics.PromoDeepLinkActivationStart) }
+        verify(exactly = 1) {
+            analyticsEventHandler.send(
+                PromoActivationAnalytics.PromoActivation(PromoCodeActivationResult.Failed),
+            )
+        }
     }
 
     @Test
@@ -230,6 +292,13 @@ class DefaultPromoDeeplinkHandlerTest {
             expectedTitle = resourceReference(R.string.bitcoin_promo_no_address_title),
             expectedMessage = resourceReference(R.string.bitcoin_promo_no_address),
         )
+
+        verify(exactly = 1) { analyticsEventHandler.send(PromoActivationAnalytics.PromoDeepLinkActivationStart) }
+        verify(exactly = 1) {
+            analyticsEventHandler.send(
+                PromoActivationAnalytics.PromoActivation(PromoCodeActivationResult.NoBitcoinAddress),
+            )
+        }
     }
 
     @Test
@@ -239,6 +308,13 @@ class DefaultPromoDeeplinkHandlerTest {
             expectedTitle = resourceReference(R.string.bitcoin_promo_already_activated_title),
             expectedMessage = resourceReference(R.string.bitcoin_promo_already_activated),
         )
+
+        verify(exactly = 1) { analyticsEventHandler.send(PromoActivationAnalytics.PromoDeepLinkActivationStart) }
+        verify(exactly = 1) {
+            analyticsEventHandler.send(
+                PromoActivationAnalytics.PromoActivation(PromoCodeActivationResult.PromoCodeAlreadyUsed),
+            )
+        }
     }
 
     private fun runActivationErrorCase(
@@ -263,6 +339,7 @@ class DefaultPromoDeeplinkHandlerTest {
             getMultiCryptoCurrencyStatusUseCase = getMultiCryptoCurrencyStatusUseCase,
             activateBitcoinPromocodeUseCase = activateBitcoinPromocodeUseCase,
             getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
+            analyticsEventsHandler = analyticsEventHandler,
         )
 
         advanceUntilIdle()
