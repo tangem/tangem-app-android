@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -21,6 +22,7 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.core.ui.components.progressbar.TangemLinearProgressIndicator
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.test.WalletConnectScreenTestTags
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.features.details.ui.common.SettingsScreensScaffold
 import com.tangem.wallet.R
@@ -63,7 +65,7 @@ private fun AddSessionFab(onAddSession: () -> Unit, modifier: Modifier = Modifie
         containerColor = TangemTheme.colors.button.primary,
         contentColor = TangemTheme.colors.icon.primary2,
         shape = RoundedCornerShape(16.dp),
-        modifier = modifier,
+        modifier = modifier.testTag(WalletConnectScreenTestTags.ADD_SESSION_BUTTON),
     ) {
         Icon(
             painter = painterResource(id = R.drawable.ic_plus_24),
@@ -92,13 +94,16 @@ private fun EmptyScreen(state: WalletConnectScreenState) {
             contentDescription = "",
             colorFilter = ColorFilter.tint(TangemTheme.colors.icon.inactive),
             contentScale = ContentScale.FillWidth,
-            modifier = Modifier.width(width = 100.dp),
+            modifier = Modifier
+                .width(width = 100.dp)
+                .testTag(WalletConnectScreenTestTags.EMPTY_SCREEN_IMAGE),
         )
         Spacer(modifier = Modifier.size(24.dp))
         Text(
             text = stringResourceSafe(id = R.string.wallet_connect_subtitle),
             style = TangemTheme.typography.body2,
             color = TangemTheme.colors.text.tertiary,
+            modifier = Modifier.testTag(WalletConnectScreenTestTags.EMPTY_SCREEN_TEXT)
         )
     }
 }
@@ -117,7 +122,9 @@ private fun WalletConnectSessions(state: WalletConnectScreenState) {
     }
 
     LazyColumn(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .testTag(WalletConnectScreenTestTags.SESSIONS_LAZY_LIST),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         items(state.sessions) { session ->
@@ -132,13 +139,16 @@ private fun WalletConnectSessions(state: WalletConnectScreenState) {
                     text = session.description,
                     style = TangemTheme.typography.subtitle1,
                     color = TangemTheme.colors.text.primary1,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .testTag(WalletConnectScreenTestTags.SESSION_TITLE),
                 )
                 IconButton(
                     onClick = {
                         Analytics.send(Settings.ButtonStopWalletConnectSession())
                         state.onRemoveSession(session.sessionId)
                     },
+                    modifier = Modifier.testTag(WalletConnectScreenTestTags.CLOSE_SESSION_BUTTON),
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_cross_rounded_24),
