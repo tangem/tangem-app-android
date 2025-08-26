@@ -848,7 +848,7 @@ internal class TokenDetailsModel @Inject constructor(
             analyticsEventsHandler.send(
                 TokenSwapPromoAnalyticsEvent.PromotionBannerClicked(
                     source = AnalyticsParam.ScreensSources.Token,
-                    programName = TokenSwapPromoAnalyticsEvent.ProgramName.Empty, // Use it on new promo action
+                    program = TokenSwapPromoAnalyticsEvent.Program.Empty, // Use it on new promo action
                     action = TokenSwapPromoAnalyticsEvent.PromotionBannerClicked.BannerAction.Closed,
                 ),
             )
@@ -861,7 +861,7 @@ internal class TokenDetailsModel @Inject constructor(
             analyticsEventsHandler.send(
                 TokenSwapPromoAnalyticsEvent.PromotionBannerClicked(
                     source = AnalyticsParam.ScreensSources.Token,
-                    programName = TokenSwapPromoAnalyticsEvent.ProgramName.Empty, // Use it on new promo action
+                    program = TokenSwapPromoAnalyticsEvent.Program.Empty, // Use it on new promo action
                     action = TokenSwapPromoAnalyticsEvent.PromotionBannerClicked.BannerAction.Clicked,
                 ),
             )

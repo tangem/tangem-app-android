@@ -267,15 +267,15 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
 
     override fun onClosePromoClick(promoId: PromoId) {
         analyticsEventHandler.send(
-            if (promoId == PromoId.Referral) {
-                MainScreen.ReferralPromoButtonDismiss
-            } else {
-                TokenSwapPromoAnalyticsEvent.PromotionBannerClicked(
+            when (promoId) {
+                PromoId.Referral -> MainScreen.ReferralPromoButtonDismiss
+                PromoId.Sepa -> TokenSwapPromoAnalyticsEvent.PromotionBannerClicked(
                     source = AnalyticsParam.ScreensSources.Main,
-                    programName = TokenSwapPromoAnalyticsEvent.ProgramName.Empty, // Use it on new promo action
+                    program = TokenSwapPromoAnalyticsEvent.Program.Sepa,
                     action = TokenSwapPromoAnalyticsEvent.PromotionBannerClicked.BannerAction.Closed,
                 )
             },
+
         )
         modelScope.launch(dispatchers.main) {
             shouldShowPromoWalletUseCase.neverToShow(promoId)
@@ -290,6 +290,14 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
                 appRouter.push(AppRoute.ReferralProgram(userWalletId = userWallet.walletId))
             }
             PromoId.Sepa -> {
+                analyticsEventHandler.send(
+                    TokenSwapPromoAnalyticsEvent.PromotionBannerClicked(
+                        source = AnalyticsParam.ScreensSources.Main,
+                        program = TokenSwapPromoAnalyticsEvent.Program.Sepa,
+                        action = TokenSwapPromoAnalyticsEvent.PromotionBannerClicked.BannerAction.Clicked,
+                    ),
+                )
+
                 val userWallet = getSelectedUserWallet() ?: return
                 cryptoCurrency ?: return
                 appRouter.push(
