@@ -39,10 +39,10 @@ internal fun LazyListScope.notifications(configs: ImmutableList<WalletNotificati
                     Notification(
                         config = it.config,
                         modifier = modifier.animateItem(fadeInSpec = null, fadeOutSpec = null),
-                        iconSize = if (it is WalletNotification.ReferralPromo) {
-                            54.dp
-                        } else {
-                            20.dp
+                        iconSize = when (it) {
+                            is WalletNotification.ReferralPromo -> 54.dp
+                            is WalletNotification.Sepa -> 54.dp
+                            else -> 20.dp
                         },
                         iconTint = when (it) {
                             is WalletNotification.Critical -> TangemTheme.colors.icon.warning
