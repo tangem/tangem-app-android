@@ -1,6 +1,7 @@
 package com.tangem.feature.walletsettings.model
 
 import android.os.Build
+import arrow.core.Either
 import arrow.core.getOrElse
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
@@ -44,6 +45,7 @@ import com.tangem.feature.walletsettings.entity.WalletSettingsUM
 import com.tangem.feature.walletsettings.impl.R
 import com.tangem.feature.walletsettings.utils.AccountItemsDelegate
 import com.tangem.feature.walletsettings.utils.ItemsBuilder
+import com.tangem.feature.walletsettings.utils.WalletCardItemDelegate
 import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.PersistentList
@@ -66,7 +68,7 @@ internal class WalletSettingsModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val analyticsContextProxy: AnalyticsContextProxy,
-    private val getShouldSaveUserWalletsSyncUseCase: ShouldSaveUserWalletsSyncUseCase,
+    walletCardItemDelegateFactory: WalletCardItemDelegate.Factory,
     private val isDemoCardUseCase: IsDemoCardUseCase,
     getWalletNFTEnabledUseCase: GetWalletNFTEnabledUseCase,
     private val enableWalletNFTUseCase: EnableWalletNFTUseCase,
@@ -85,6 +87,7 @@ internal class WalletSettingsModel @Inject constructor(
     val params: WalletSettingsComponent.Params = paramsContainer.require()
     val dialogNavigation = SlotNavigation<DialogConfig>()
     val bottomSheetNavigation: SlotNavigation<NetworksAvailableForNotificationBSConfig> = SlotNavigation()
+    private val walletCardItemDelegate = walletCardItemDelegateFactory.create(dialogNavigation)
 
     val state: MutableStateFlow<WalletSettingsUM> = MutableStateFlow(
         value = WalletSettingsUM(
@@ -117,14 +120,12 @@ internal class WalletSettingsModel @Inject constructor(
         }
 
     init {
-        combine(
-            getWalletUseCase.invokeFlow(params.userWalletId).distinctUntilChanged(),
+        fun combineUI(wallet: UserWallet) = combine(
             getWalletNFTEnabledUseCase.invoke(params.userWalletId),
             getWalletNotificationsEnabledUseCase(params.userWalletId),
             isUpgradeWalletNotificationEnabledUseCase(params.userWalletId),
-        ) { maybeWallet, nftEnabled, notificationsEnabled, isUpgradeNotificationEnabled ->
-            val wallet = maybeWallet.getOrNull() ?: return@combine
-            val isRenameWalletAvailable = getShouldSaveUserWalletsSyncUseCase()
+            walletCardItemDelegate.cardItemFlow(wallet),
+        ) { nftEnabled, notificationsEnabled, isUpgradeNotificationEnabled, cardItem ->
             val isWalletBackedUp = when (wallet) {
                 is UserWallet.Hot -> wallet.backedUp
                 is UserWallet.Cold -> true
@@ -135,8 +136,7 @@ internal class WalletSettingsModel @Inject constructor(
                 value.copy(
                     items = buildItems(
                         userWallet = wallet,
-                        dialogNavigation = dialogNavigation,
-                        isRenameWalletAvailable = isRenameWalletAvailable,
+                        cardItem = cardItem,
                         isNFTEnabled = nftEnabled,
                         isNotificationsEnabled = notificationsEnabled,
                         isNotificationsFeatureEnabled = isNeedShowNotifications,
@@ -147,6 +147,10 @@ internal class WalletSettingsModel @Inject constructor(
                 )
             }
         }
+        getWalletUseCase.invokeFlow(params.userWalletId)
+            .distinctUntilChanged()
+            .filterIsInstance<Either.Right<UserWallet>>()
+            .flatMapLatest { combineUI(it.value) }
             .launchIn(modelScope)
     }
 
@@ -162,8 +166,7 @@ internal class WalletSettingsModel @Inject constructor(
 
     private fun buildItems(
         userWallet: UserWallet,
-        dialogNavigation: SlotNavigation<DialogConfig>,
-        isRenameWalletAvailable: Boolean,
+        cardItem: WalletSettingsItemUM.CardBlock,
         isNFTEnabled: Boolean,
         isNotificationsFeatureEnabled: Boolean,
         isNotificationsEnabled: Boolean,
@@ -176,7 +179,7 @@ internal class WalletSettingsModel @Inject constructor(
         }
         return itemsBuilder.buildItems(
             userWallet = userWallet,
-            userWalletName = userWallet.name,
+            cardItem = cardItem,
             isReferralAvailable = when (userWallet) {
                 is UserWallet.Cold -> userWallet.cardTypesResolver.isTangemWallet()
                 is UserWallet.Hot -> false
@@ -186,8 +189,6 @@ internal class WalletSettingsModel @Inject constructor(
                 is UserWallet.Hot -> false
             },
             isManageTokensAvailable = isMultiCurrency,
-            isRenameWalletAvailable = isRenameWalletAvailable,
-            renameWallet = { openRenameWalletDialog(userWallet, dialogNavigation) },
             isNFTFeatureEnabled = isMultiCurrency,
             isNFTEnabled = isNFTEnabled,
             onCheckedNFTChange = ::onCheckedNFTChange,
@@ -224,15 +225,6 @@ internal class WalletSettingsModel @Inject constructor(
             onDismissUpgradeWalletClick = ::onDismissUpgradeWalletClick,
             accountsUM = with(accountItemsDelegate) { listOf() }, // todo account
         )
-    }
-
-    private fun openRenameWalletDialog(userWallet: UserWallet, dialogNavigation: SlotNavigation<DialogConfig>) {
-        val config = DialogConfig.RenameWallet(
-            userWalletId = userWallet.walletId,
-            currentName = userWallet.name,
-        )
-
-        dialogNavigation.activate(config)
     }
 
     private fun forgetWallet() = modelScope.launch {
