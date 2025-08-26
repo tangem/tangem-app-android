@@ -23,6 +23,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.account.AccountRow
+import com.tangem.common.ui.userwallet.CardImage
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerH8
 import com.tangem.core.ui.components.TangemSwitch
@@ -30,10 +31,13 @@ import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.block.BlockCard
 import com.tangem.core.ui.components.block.BlockItem
+import com.tangem.core.ui.components.buttons.SecondarySmallButton
+import com.tangem.core.ui.components.buttons.SmallButtonConfig
 import com.tangem.core.ui.components.items.DescriptionItem
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
@@ -115,7 +119,7 @@ private fun Content(state: WalletSettingsUM, modifier: Modifier = Modifier) {
                     modifier = itemModifier,
                     model = item,
                 )
-                is WalletSettingsItemUM.WithText -> TextBlock(
+                is WalletSettingsItemUM.CardBlock -> CardBlock(
                     modifier = itemModifier,
                     model = item,
                 )
@@ -180,30 +184,40 @@ private fun ItemsBlock(model: WalletSettingsItemUM.WithItems, modifier: Modifier
 }
 
 @Composable
-private fun TextBlock(model: WalletSettingsItemUM.WithText, modifier: Modifier = Modifier) {
+private fun CardBlock(model: WalletSettingsItemUM.CardBlock, modifier: Modifier = Modifier) {
     BlockCard(
         modifier = modifier.fillMaxWidth(),
         enabled = model.isEnabled,
         onClick = model.onClick,
     ) {
-        Column(
+        Row(
             modifier = Modifier.padding(all = TangemTheme.dimens.spacing12),
-            horizontalAlignment = Alignment.Start,
-            verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
+            horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(
-                text = model.title.resolveReference(),
-                color = TangemTheme.colors.text.tertiary,
-                style = TangemTheme.typography.subtitle2,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-
-            Text(
-                text = model.text.resolveReference(),
-                color = TangemTheme.colors.text.primary1,
-                style = TangemTheme.typography.body1,
-                overflow = TextOverflow.Ellipsis,
+            CardImage(model.imageState)
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = model.title.resolveReference(),
+                    color = TangemTheme.colors.text.tertiary,
+                    style = TangemTheme.typography.caption2,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    text = model.text.resolveReference(),
+                    color = TangemTheme.colors.text.primary1,
+                    style = TangemTheme.typography.subtitle1,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 1,
+                )
+            }
+            SecondarySmallButton(
+                config = SmallButtonConfig(
+                    enabled = model.isEnabled,
+                    text = resourceReference(R.string.common_rename),
+                    onClick = model.onClick,
+                ),
             )
         }
     }
