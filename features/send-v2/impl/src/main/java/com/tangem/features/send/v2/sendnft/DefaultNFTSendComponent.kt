@@ -111,7 +111,7 @@ internal class DefaultNFTSendComponent @AssistedInject constructor(
         val stackState by childStack.subscribeAsState()
         val state by model.uiState.collectAsStateWithLifecycle()
 
-        BackHandler(onBack = ::onChildBack)
+        BackHandler(onBack = model::onBackClick)
         SendContent(
             navigationUM = state.navigationUM,
             stackState = stackState,
