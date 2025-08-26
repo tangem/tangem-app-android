@@ -126,8 +126,8 @@
   <string name="biometric_unavailable_warning">You have disabled biometric authentication on your phone and will not be able to save wallets in the app. To save wallets, please enable the biometric authentication function in your phone settings.</string>
   <string name="bitcoin_promo_activation_error">An error occurred while processing your promo code. Please try again later.</string>
   <string name="bitcoin_promo_activation_error_title">Activation error</string>
-  <string name="bitcoin_promo_activation_success">Your promo code has been successfully activated. A bonus of 10 USDT in Bitcoin will be credited in 14 days.</string>
-  <string name="bitcoin_promo_activation_success_title">Promo code activated</string>
+  <string name="bitcoin_promo_activation_success">Your promo code was successfully activated. A bonus of 10 USDT in Bitcoin will be credited to your account within 14 days.</string>
+  <string name="bitcoin_promo_activation_success_title">Promo Code Activated</string>
   <string name="bitcoin_promo_already_activated">This promo code has already been used and cannot be activated again.</string>
   <string name="bitcoin_promo_already_activated_title">Code unavailable</string>
   <string name="bitcoin_promo_invalid_code">This promo code is not valid and cannot be activated.</string>
