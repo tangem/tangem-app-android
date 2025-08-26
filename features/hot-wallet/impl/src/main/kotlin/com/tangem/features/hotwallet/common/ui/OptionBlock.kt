@@ -61,7 +61,7 @@ internal fun OptionBlock(
                 color = backgroundColor,
                 shape = TangemTheme.shapes.roundedCornersXMedium,
             )
-            .conditional(onClick != null) {
+            .conditional(onClick != null && enabled) {
                 onClick?.let { clickableSingle(onClick = it) } ?: Modifier
             }
             .padding(16.dp),
