@@ -139,8 +139,16 @@ internal class SendConfirmModel @Inject constructor(
             reduceAmountBy = amountState?.reduceAmountBy.orZero(),
             isIgnoreReduce = amountState?.isIgnoreReduce == true,
             enteredDestination = destinationUM?.addressTextField?.actualAddress,
-            fee = feeSelectorUM?.selectedFee,
-            feeError = (feeUM?.feeSelectorUM as? FeeSelectorUM.Error)?.error,
+            fee = if (uiState.value.isRedesignEnabled) {
+                feeUMV2?.selectedFeeItem?.fee
+            } else {
+                feeSelectorUM?.selectedFee
+            },
+            feeError = if (uiState.value.isRedesignEnabled) {
+                (uiState.value.feeSelectorUM as? FeeSelectorUMRedesigned.Error)?.error
+            } else {
+                (feeUM?.feeSelectorUM as? FeeSelectorUM.Error)?.error
+            },
         )
 
     private var sendIdleTimer: Long = 0L
