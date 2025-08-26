@@ -23,11 +23,11 @@ import com.tangem.domain.card.analytics.ParamCardCurrencyConverter
 import com.tangem.domain.card.analytics.Shop
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.card.repository.CardSdkConfigRepository
+import com.tangem.domain.core.wallets.UserWalletsListRepository
 import com.tangem.domain.core.wallets.error.SaveWalletError
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
-import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.features.createwalletselection.entity.CreateWalletSelectionUM
@@ -56,7 +56,7 @@ internal class CreateWalletSelectionModel @Inject constructor(
     private val saveWalletUseCase: SaveWalletUseCase,
     private val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase,
     private val urlOpener: UrlOpener,
-    private val userWalletsListManager: UserWalletsListManager,
+    private val userWalletsListRepository: UserWalletsListRepository,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
 ) : Model() {
 
@@ -146,7 +146,7 @@ internal class CreateWalletSelectionModel @Inject constructor(
         )
     }
 
-    private fun sendSignedInCardAnalyticsEvent(scanResponse: ScanResponse) {
+    private suspend fun sendSignedInCardAnalyticsEvent(scanResponse: ScanResponse) {
         val currency = ParamCardCurrencyConverter().convert(value = scanResponse.cardTypesResolver)
         if (currency != null) {
             analyticsEventHandler.send(
@@ -154,7 +154,7 @@ internal class CreateWalletSelectionModel @Inject constructor(
                     currency = currency,
                     batch = scanResponse.card.batchId,
                     signInType = SignInType.Card,
-                    walletsCount = userWalletsListManager.walletsCount.toString(),
+                    walletsCount = userWalletsListRepository.userWalletsSync().size.toString(),
                     hasBackup = scanResponse.card.backupStatus?.isActive,
                 ),
             )

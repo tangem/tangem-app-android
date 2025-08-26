@@ -26,6 +26,7 @@ import com.tangem.domain.card.analytics.ParamCardCurrencyConverter
 import com.tangem.domain.card.analytics.Shop
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.card.repository.CardSdkConfigRepository
+import com.tangem.domain.core.wallets.UserWalletsListRepository
 import com.tangem.domain.core.wallets.error.SaveWalletError
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.settings.repositories.SettingsRepository
@@ -40,6 +41,7 @@ import com.tangem.features.home.api.HomeComponent
 import com.tangem.features.home.impl.ui.state.HomeUM
 import com.tangem.features.home.impl.ui.state.Stories
 import com.tangem.features.home.impl.ui.state.getRestrictedStories
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.delay
@@ -75,6 +77,8 @@ internal class HomeModel @Inject constructor(
     private val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase,
     private val urlOpener: UrlOpener,
     private val userWalletsListManager: UserWalletsListManager,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
+    private val userWalletsListRepository: UserWalletsListRepository,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
 ) : Model() {
 
@@ -213,7 +217,7 @@ internal class HomeModel @Inject constructor(
         )
     }
 
-    private fun sendSignedInCardAnalyticsEvent(scanResponse: ScanResponse) {
+    private suspend fun sendSignedInCardAnalyticsEvent(scanResponse: ScanResponse) {
         val currency = ParamCardCurrencyConverter().convert(value = scanResponse.cardTypesResolver)
         if (currency != null) {
             analyticsEventHandler.send(
@@ -221,10 +225,18 @@ internal class HomeModel @Inject constructor(
                     currency = currency,
                     batch = scanResponse.card.batchId,
                     signInType = SignInType.Card,
-                    walletsCount = userWalletsListManager.walletsCount.toString(),
+                    walletsCount = getWalletsCount().toString(),
                     hasBackup = scanResponse.card.backupStatus?.isActive,
                 ),
             )
+        }
+    }
+
+    private suspend fun getWalletsCount(): Int {
+        return if (hotWalletFeatureToggles.isHotWalletEnabled) {
+            userWalletsListRepository.userWalletsSync().size
+        } else {
+            userWalletsListManager.walletsCount
         }
     }
 

@@ -13,12 +13,14 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.card.common.util.cardTypesResolver
+import com.tangem.domain.core.wallets.UserWalletsListRepository
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.legacy.asLockable
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.features.biometry.AskBiometryComponent
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.onboarding.v2.TitleProvider
 import com.tangem.features.onboarding.v2.common.ui.CantLeaveBackupDialog
 import com.tangem.features.onboarding.v2.done.api.OnboardingDoneComponent
@@ -46,6 +48,8 @@ internal class OnboardingEntryModel @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val uiMessageSender: UiMessageSender,
     private val userWalletsListManager: UserWalletsListManager,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
+    private val userWalletsListRepository: UserWalletsListRepository,
 ) : Model() {
 
     private val params = paramsContainer.require<OnboardingEntryComponent.Params>()
@@ -197,6 +201,19 @@ internal class OnboardingEntryModel @Inject constructor(
     }
 
     private fun exitComponentScreen() {
+        // new flow
+        if (hotWalletFeatureToggles.isHotWalletEnabled) {
+            modelScope.launch {
+                if (userWalletsListRepository.userWalletsSync().isEmpty()) {
+                    router.replaceAll(AppRoute.Home())
+                } else {
+                    router.replaceAll(AppRoute.Wallet)
+                }
+            }
+            return
+        }
+
+        // legacy flow
         if (userWalletsListManager.hasUserWallets) {
             val isLocked = runCatching { userWalletsListManager.asLockable()?.isLockedSync!! }.getOrElse { false }
 
