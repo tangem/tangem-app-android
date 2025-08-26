@@ -12,5 +12,4 @@ internal data class ReceiveAssetsUM(
     val onCopyClick: (id: Int) -> Unit,
     val isEnsResultLoading: Boolean,
     val notificationConfigs: ImmutableList<NotificationUM>,
-    val fullName: String,
 )
