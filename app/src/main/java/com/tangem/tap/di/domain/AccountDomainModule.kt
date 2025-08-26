@@ -44,6 +44,12 @@ internal object AccountDomainModule {
 
     @Provides
     @Singleton
+    fun provideGetArchivedAccountsUseCase(accountsCRUDRepository: AccountsCRUDRepository): GetArchivedAccountsUseCase {
+        return GetArchivedAccountsUseCase(crudRepository = accountsCRUDRepository)
+    }
+
+    @Provides
+    @Singleton
     fun provideGetUnoccupiedAccountIndexUseCase(
         accountsCRUDRepository: AccountsCRUDRepository,
     ): GetUnoccupiedAccountIndexUseCase {

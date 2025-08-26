@@ -11,6 +11,7 @@ import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
+import com.tangem.core.ui.message.ToastMessage
 import com.tangem.domain.account.usecase.ArchiveCryptoPortfolioUseCase
 import com.tangem.features.account.AccountDetailsComponent
 import com.tangem.features.account.createedit.entity.AccountCreateEditUMBuilder.Companion.portfolioIcon
@@ -70,6 +71,11 @@ internal class AccountDetailsModel @Inject constructor(
 
     private fun archiveCryptoPortfolio() = modelScope.launch {
         archiveCryptoPortfolioUseCase(params.account.accountId)
+            .onRight {
+                val message = resourceReference(R.string.account_archive_success_message)
+                messageSender.send(ToastMessage(message = message))
+                router.pop()
+            }
     }
 
     private fun getInitialState(): AccountDetailsUM {

@@ -1,8 +1,9 @@
 package com.tangem.features.account.createedit
 
+import androidx.annotation.StringRes
+import com.tangem.common.ui.account.toDomain
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
-import com.tangem.common.ui.account.toDomain
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -12,6 +13,7 @@ import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
+import com.tangem.core.ui.message.ToastMessage
 import com.tangem.core.ui.utils.showErrorDialog
 import com.tangem.domain.account.usecase.AddCryptoPortfolioUseCase
 import com.tangem.domain.account.usecase.GetUnoccupiedAccountIndexUseCase
@@ -102,7 +104,10 @@ internal class AccountCreateEditModel @Inject constructor(
             accountName = name,
             icon = icon,
             derivationIndex = derivationIndex,
-        )
+        ).onRight {
+            showSuccessRecoverMessage(R.string.account_create_success_message)
+            router.pop()
+        }
     }
 
     private suspend fun editCryptoPortfolio(params: AccountCreateEditComponent.Params.Edit) {
@@ -115,7 +120,15 @@ internal class AccountCreateEditModel @Inject constructor(
             icon = if (isNewIcon) icon else null,
             accountName = if (isNewName) name else null,
             accountId = params.account.accountId,
-        )
+        ).onRight {
+            showSuccessRecoverMessage(R.string.account_edit_success_message)
+            router.pop()
+        }
+    }
+
+    fun showSuccessRecoverMessage(@StringRes id: Int) {
+        val message = resourceReference(id)
+        messageSender.send(ToastMessage(message = message))
     }
 
     private fun onCloseClick() = unsaveChangeDialog()
