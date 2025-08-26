@@ -13,5 +13,8 @@ internal sealed class OnrampChild {
     data object Settings : OnrampChild()
 
     @Serializable
-    data class RedirectPage(val quote: OnrampProviderWithQuote.Data, val cryptoCurrency: CryptoCurrency) : OnrampChild()
+    data class RedirectPage(
+        val quote: OnrampProviderWithQuote.Data,
+        val cryptoCurrency: CryptoCurrency,
+    ) : OnrampChild()
 }

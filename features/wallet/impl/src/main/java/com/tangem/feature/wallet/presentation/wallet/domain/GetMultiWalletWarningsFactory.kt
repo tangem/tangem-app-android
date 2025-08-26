@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.domain
 
+import arrow.core.getOrElse
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.domain.card.CardTypesResolver
 import com.tangem.domain.card.common.util.cardTypesResolver
@@ -9,9 +10,12 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.onramp.GetOnrampCountryUseCase
+import com.tangem.domain.onramp.OnrampSepaAvailableUseCase
 import com.tangem.domain.promo.ShouldShowPromoWalletUseCase
 import com.tangem.domain.promo.models.PromoId
 import com.tangem.domain.settings.IsReadyToShowRateAppUseCase
+import com.tangem.domain.tokens.GetCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TokenList
@@ -20,10 +24,12 @@ import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
 import com.tangem.domain.wallets.usecase.SeedPhraseNotificationUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
+import com.tangem.lib.crypto.BlockchainUtils.isBitcoin
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import timber.log.Timber
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -36,19 +42,25 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
     private val backupValidator: BackupValidator,
     private val seedPhraseNotificationUseCase: SeedPhraseNotificationUseCase,
     private val shouldShowPromoWalletUseCase: ShouldShowPromoWalletUseCase,
+    private val getCryptoCurrenciesUseCase: GetCryptoCurrenciesUseCase,
+    private val onrampSepaAvailableUseCase: OnrampSepaAvailableUseCase,
+    private val getOnrampCountryUseCase: GetOnrampCountryUseCase,
 ) {
 
     @Suppress("MagicNumber", "MaximumLineLength")
     fun create(userWallet: UserWallet, clickIntents: WalletClickIntents): Flow<ImmutableList<WalletNotification>> {
         val cardTypesResolver = (userWallet as? UserWallet.Cold)?.scanResponse?.cardTypesResolver
 
-        return combine(
-            flow = tokenListStore.getOrThrow(userWallet.walletId),
+        return combine6(
+            flow1 = tokenListStore.getOrThrow(userWallet.walletId),
             flow2 = isReadyToShowRateAppUseCase(),
             flow3 = isNeedToBackupUseCase(userWallet.walletId),
             flow4 = seedPhraseNotificationUseCase(userWalletId = userWallet.walletId),
             flow5 = shouldShowPromoWalletUseCase(userWalletId = userWallet.walletId, promoId = PromoId.Referral),
-        ) { maybeTokenList, isReadyToShowRating, isNeedToBackup, seedPhraseIssueStatus, shouldShowReferralPromo ->
+            flow6 = shouldShowPromoWalletUseCase(userWalletId = userWallet.walletId, promoId = PromoId.Sepa),
+        ) {
+                maybeTokenList, isReadyToShowRating, isNeedToBackup,
+                seedPhraseIssueStatus, shouldShowReferralPromo, shouldShowSepaBanner,  ->
             buildList {
                 addUsedOutdatedDataNotification(maybeTokenList)
 
@@ -57,6 +69,8 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
                 addFinishWalletActivationNotification(userWallet, clickIntents)
 
                 addReferralPromoNotification(cardTypesResolver, clickIntents, shouldShowReferralPromo)
+
+                addSepaPromoNotification(userWallet, clickIntents, shouldShowSepaBanner)
 
                 addInformationalNotifications(cardTypesResolver, maybeTokenList, clickIntents)
 
@@ -212,6 +226,36 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
         )
     }
 
+    private suspend fun MutableList<WalletNotification>.addSepaPromoNotification(
+        userWallet: UserWallet,
+        clickIntents: WalletClickIntents,
+        shouldShowSepaPromo: Boolean,
+    ) {
+        val currencies = getCryptoCurrenciesUseCase(userWalletId = userWallet.walletId).getOrElse {
+            Timber.e("Error on getting crypto currency list")
+            return
+        }
+
+        val bitcoinCurrency = currencies.find { isBitcoin(it.network.rawId) } ?: return
+
+        val country = getOnrampCountryUseCase.invokeSync(userWallet).getOrElse { return }
+
+        val available = onrampSepaAvailableUseCase(
+            userWallet = userWallet,
+            country = country,
+            currency = country.defaultCurrency,
+            cryptoCurrency = bitcoinCurrency,
+        )
+
+        addIf(
+            element = WalletNotification.Sepa(
+                onCloseClick = { clickIntents.onClosePromoClick(promoId = PromoId.Sepa) },
+                onClick = { clickIntents.onPromoClick(promoId = PromoId.Sepa, bitcoinCurrency) },
+            ),
+            condition = shouldShowSepaPromo && available,
+        )
+    }
+
     private fun MutableList<WalletNotification>.addWarningNotifications(
         cardTypesResolver: CardTypesResolver?,
         tokenList: Lce<TokenListError, TokenList>,
@@ -274,6 +318,26 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
                 onFinishClick = clickIntents::onFinishWalletActivationClick,
             ),
             condition = shouldShowFinishActivation,
+        )
+    }
+
+    inline fun <T1, T2, T3, T4, T5, T6, R> combine6(
+        flow1: Flow<T1>,
+        flow2: Flow<T2>,
+        flow3: Flow<T3>,
+        flow4: Flow<T4>,
+        flow5: Flow<T5>,
+        flow6: Flow<T6>,
+        crossinline transform: suspend (T1, T2, T3, T4, T5, T6) -> R,
+    ): Flow<R> = combine(flow1, flow2, flow3, flow4, flow5, flow6) { arr ->
+        @Suppress("UNCHECKED_CAST")
+        transform(
+            arr[0] as T1,
+            arr[1] as T2,
+            arr[2] as T3,
+            arr[3] as T4,
+            arr[4] as T5,
+            arr[5] as T6,
         )
     }
 

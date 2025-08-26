@@ -29,11 +29,11 @@ internal class ShakeEventListener(private val action: () -> Unit) : SensorEventL
 
         val currentTime = System.currentTimeMillis()
         val currentShakeInterval = currentTime - lastShakeTime
-
-        if (acceleration > SHAKE_THRESHOLD && currentShakeInterval > SHAKE_INTERVAL_MS) {
-            lastShakeTime = currentTime
-            action()
-        }
+        //
+        // if (acceleration > SHAKE_THRESHOLD && currentShakeInterval > SHAKE_INTERVAL_MS) {
+        //     lastShakeTime = currentTime
+        //     action()
+        // }
     }
 
     private fun calculateAcceleration(event: SensorEvent): Float {

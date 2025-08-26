@@ -261,6 +261,47 @@ internal class DefaultOnrampRepository(
         storeOnrampPairs(pairs = onrampPairs.await(), providers = providers.await())
     }
 
+    override suspend fun hasMercuryoSepaMethod(
+        userWallet: UserWallet,
+        currency: OnrampCurrency,
+        country: OnrampCountry,
+        cryptoCurrency: CryptoCurrency,
+    ): Boolean {
+        return withContext(dispatchers.io) {
+            val onrampPairs =
+                safeApiCall(
+                    call = {
+                        onrampApi.getPairs(
+                            userWalletId = userWallet.walletId.stringValue,
+                            refCode = ExpressUtils.getRefCode(
+                                userWallet = userWallet,
+                                appPreferencesStore = appPreferencesStore,
+                            ),
+                            body = OnrampPairsRequest(
+                                fromCurrencyCode = currency.code,
+                                countryCode = country.code,
+                                to = listOf(
+                                    OnrampDestinationDTO(
+                                        contractAddress = cryptoCurrency.getContractAddress(),
+                                        network = cryptoCurrency.network.backendId,
+                                    ),
+                                ),
+                            ),
+                        ).bind()
+                    },
+                    onError = {
+                        Timber.w(it, "Unable to fetch onramp pairs")
+                        throw it
+                    },
+                )
+
+            val mercuryoProvider = onrampPairs.map { it.providers }.flatten().find { it.providerId == "mercuryo" }
+            val hasSepaMethod = mercuryoProvider?.paymentMethods?.any { it == "sepa" } ?: false
+
+            hasSepaMethod
+        }
+    }
+
     override suspend fun fetchQuotes(userWallet: UserWallet, cryptoCurrency: CryptoCurrency, amount: Amount) =
         withContext(dispatchers.io) {
             val pairs = requireNotNull(pairsStore.getSyncOrNull(PAIRS_KEY)) {

@@ -64,6 +64,8 @@ internal class OnrampMainComponentModel @Inject constructor(
 
     private val params: OnrampMainComponent.Params = paramsContainer.require()
 
+    private var isSepaLaunched = false
+
     val userWallet = getWalletsUseCase.invokeSync().first { it.walletId == params.userWalletId }
 
     private val stateFactory = OnrampStateFactory(
@@ -148,11 +150,17 @@ internal class OnrampMainComponentModel @Inject constructor(
                         if (country == null) return@onEach
                         _state.update {
                             if (it is OnrampMainComponentUM.InitialLoading) {
-                                stateFactory.getReadyState(country.defaultCurrency)
+                                stateFactory.getReadyState(country.defaultCurrency).also {
+                                    if (params.launchSepa) {
+                                        onAmountValueChanged("100")
+                                    }
+                                }
+
                             } else {
                                 amountStateFactory.getUpdatedCurrencyState(country.defaultCurrency)
                             }
                         }
+
                         updatePairsAndQuotes()
                     },
                 )
@@ -315,8 +323,17 @@ internal class OnrampMainComponentModel @Inject constructor(
     private fun selectOrUpdateQuote(quotes: List<OnrampQuote>): OnrampQuote? {
         val quoteToCheck = quotes.firstOrNull { it !is OnrampQuote.Error }
 
+        val sepaQuote = if (params.launchSepa && !isSepaLaunched) {
+            isSepaLaunched = true
+
+            quotes.filterIsInstance<OnrampQuote.Data>().firstOrNull {
+                it.provider.id == "mercuryo" && it.paymentMethod.id == "sepa"
+            }
+
+        } else null
+
         // Check if amount, country or currency has changed
-        val newQuote = if (checkLastInputState(quoteToCheck)) {
+        val newQuote = sepaQuote ?: if (checkLastInputState(quoteToCheck)) {
             quoteToCheck
         } else {
             val state = state.value as? OnrampMainComponentUM.Content
