@@ -120,6 +120,12 @@ class AmountStateConverterV2(
         val crypto = maxEnterAmount.amount.format { crypto(cryptoCurrencyStatus.currency) }
         val noFeeRate = cryptoCurrencyStatus.value.fiatRate.isNullOrZero()
 
+        if (cryptoCurrencyStatus.value is CryptoCurrencyStatus.Loading) {
+            return AmountState.Empty(
+                isRedesignEnabled = isRedesignEnabled,
+            )
+        }
+
         return AmountState.Data(
             title = value.title,
             availableBalance = if (isRedesignEnabled) {
