@@ -127,6 +127,9 @@ internal class FeeSelectorModel @Inject constructor(
             )
         }
         uiState.update(FeeItemSelectedTransformer(feeItem))
+        if (feeItem !is FeeItem.Custom) {
+            onDoneClick()
+        }
     }
 
     override fun onCustomFeeValueChange(index: Int, value: String) {
