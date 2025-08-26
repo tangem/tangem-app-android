@@ -77,7 +77,7 @@ internal class DefaultTokenReceiveComponent @AssistedInject constructor(
             is TokenReceiveRoutes.QrCode -> TokenReceiveQrCodeComponent(
                 appComponentContext = appComponentContext,
                 params = TokenReceiveQrCodeComponent.TokenReceiveQrCodeParams(
-                    network = model.params.config.cryptoCurrency.network.name,
+                    cryptoCurrency = model.params.config.cryptoCurrency,
                     address = model.state.value.addresses[config.addressId] ?: error("Address has to be there"),
                     callback = model,
                     onDismiss = ::dismiss,
