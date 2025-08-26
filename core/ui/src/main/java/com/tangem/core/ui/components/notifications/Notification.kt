@@ -62,6 +62,7 @@ fun Notification(
         NotificationConfig.IconTint.Unspecified -> null
         NotificationConfig.IconTint.Accent -> TangemTheme.colors.icon.accent
         NotificationConfig.IconTint.Attention -> TangemTheme.colors.icon.attention
+        NotificationConfig.IconTint.Warning -> TangemTheme.colors.icon.warning
     },
     isEnabled: Boolean = true,
 ) {
