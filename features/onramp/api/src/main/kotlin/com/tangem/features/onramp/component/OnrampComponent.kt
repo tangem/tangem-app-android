@@ -8,7 +8,12 @@ import com.tangem.domain.models.wallet.UserWalletId
 
 interface OnrampComponent : ComposableContentComponent {
 
-    data class Params(val userWalletId: UserWalletId, val cryptoCurrency: CryptoCurrency, val source: OnrampSource)
+    data class Params(
+        val userWalletId: UserWalletId,
+        val cryptoCurrency: CryptoCurrency,
+        val source: OnrampSource,
+        val launchSepa: Boolean = false,
+    )
 
     interface Factory : ComponentFactory<Params, OnrampComponent>
 }
