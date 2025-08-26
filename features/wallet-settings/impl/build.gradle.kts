@@ -20,6 +20,7 @@ dependencies {
     implementation(projects.features.onboardingV2.api)
     implementation(projects.features.pushNotifications.api)
     implementation(projects.features.hotWallet.api)
+    implementation(projects.features.wallet.api)
 
     /* Project - Core */
     implementation(projects.core.decompose)
@@ -69,4 +70,5 @@ dependencies {
 
     /** Tangem libraries */
     implementation(tangemDeps.hot.core)
+    implementation(tangemDeps.card.core)
 }
