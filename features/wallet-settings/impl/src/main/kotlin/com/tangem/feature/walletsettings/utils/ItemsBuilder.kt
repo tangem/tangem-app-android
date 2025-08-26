@@ -9,7 +9,6 @@ import com.tangem.core.ui.components.block.model.BlockUM
 import com.tangem.core.ui.components.label.entity.LabelStyle
 import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.feature.walletsettings.analytics.Settings
 import com.tangem.feature.walletsettings.entity.WalletSettingsAccountsUM
@@ -30,12 +29,11 @@ internal class ItemsBuilder @Inject constructor(
     @Suppress("LongParameterList")
     fun buildItems(
         userWallet: UserWallet,
-        userWalletName: String,
+        cardItem: WalletSettingsItemUM.CardBlock,
         accountsUM: List<WalletSettingsAccountsUM>,
         isLinkMoreCardsAvailable: Boolean,
         isReferralAvailable: Boolean,
         isManageTokensAvailable: Boolean,
-        isRenameWalletAvailable: Boolean,
         isNFTFeatureEnabled: Boolean,
         isNFTEnabled: Boolean,
         onCheckedNFTChange: (Boolean) -> Unit,
@@ -45,7 +43,6 @@ internal class ItemsBuilder @Inject constructor(
         onCheckedNotificationsChanged: (Boolean) -> Unit,
         onNotificationsDescriptionClick: () -> Unit,
         forgetWallet: () -> Unit,
-        renameWallet: () -> Unit,
         onLinkMoreCardsClick: () -> Unit,
         onReferralClick: () -> Unit,
         onAccessCodeClick: () -> Unit,
@@ -53,7 +50,7 @@ internal class ItemsBuilder @Inject constructor(
         onUpgradeWalletClick: () -> Unit,
         onDismissUpgradeWalletClick: () -> Unit,
     ): PersistentList<WalletSettingsItemUM> = persistentListOf<WalletSettingsItemUM>()
-        .add(buildNameItem(userWalletName, isRenameWalletAvailable, renameWallet))
+        .add(cardItem)
         .addAll(
             buildUpgradeWalletItem(
                 userWallet = userWallet,
@@ -62,8 +59,8 @@ internal class ItemsBuilder @Inject constructor(
                 onDismissUpgradeWalletClick = onDismissUpgradeWalletClick,
             ),
         )
-        .addAll(accountsUM)
         .addAll(buildAccessCodeItem(userWallet, onAccessCodeClick))
+        .addAll(accountsUM)
         .add(
             buildCardItem(
                 userWallet = userWallet,
@@ -120,15 +117,6 @@ internal class ItemsBuilder @Inject constructor(
             add(buildNotificationsDescriptionItem(onNotificationsDescriptionClick))
         }
     }
-
-    private fun buildNameItem(walletName: String, isRenameWalletAvailable: Boolean, renameWallet: () -> Unit) =
-        WalletSettingsItemUM.WithText(
-            id = "wallet_name",
-            title = resourceReference(id = R.string.settings_wallet_name_title),
-            text = stringReference(walletName),
-            isEnabled = isRenameWalletAvailable,
-            onClick = renameWallet,
-        )
 
     private fun buildNFTItem(isNFTEnabled: Boolean, onCheckedNFTChange: (Boolean) -> Unit) =
         WalletSettingsItemUM.WithSwitch(
