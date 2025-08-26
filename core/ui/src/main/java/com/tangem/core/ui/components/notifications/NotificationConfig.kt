@@ -65,5 +65,6 @@ data class NotificationConfig(
         Unspecified,
         Accent,
         Attention,
+        Warning,
     }
 }
