@@ -2,8 +2,8 @@ package com.tangem.common.ui.userwallet.converter
 
 import com.tangem.common.ui.R
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
-import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.components.label.entity.LabelStyle
+import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -12,7 +12,6 @@ import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.card.common.util.getCardsCount
-import com.tangem.domain.models.ArtworkModel
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.wallet.UserWallet
@@ -37,10 +36,10 @@ class UserWalletItemUMConverter(
     private val isBalanceHidden: Boolean = false,
     private val authMode: Boolean = false,
     private val endIcon: UserWalletItemUM.EndIcon = UserWalletItemUM.EndIcon.None,
-    private val artwork: ArtworkModel? = null,
+    artwork: UserWalletItemUM.ImageState? = null,
 ) : Converter<UserWallet, UserWalletItemUM> {
 
-    private val artworkUMConverter = ArtworkUMConverter()
+    private val artwork = artwork ?: UserWalletItemUM.ImageState.Loading
 
     override fun convert(value: UserWallet): UserWalletItemUM {
         return with(value) {
@@ -52,7 +51,7 @@ class UserWalletItemUMConverter(
                 isEnabled = isEnabled(userWallet = this),
                 endIcon = endIcon,
                 onClick = { onClick(value.walletId) },
-                imageState = getImageState(userWallet = value),
+                imageState = artwork,
                 label = getLabelOrNull(userWallet = this),
             )
         }
@@ -70,14 +69,6 @@ class UserWalletItemUMConverter(
             )
         } else {
             null
-        }
-    }
-
-    private fun getImageState(userWallet: UserWallet): UserWalletItemUM.ImageState {
-        return when {
-            userWallet is UserWallet.Hot -> UserWalletItemUM.ImageState.MobileWallet
-            artwork != null -> UserWalletItemUM.ImageState.Image(artworkUMConverter.convert(artwork))
-            else -> UserWalletItemUM.ImageState.Loading
         }
     }
 
