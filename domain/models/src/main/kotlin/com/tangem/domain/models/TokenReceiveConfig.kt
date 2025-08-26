@@ -19,10 +19,9 @@ data class TokenReceiveConfig(
 data class ReceiveAddressModel(
     val nameService: NameService,
     val value: String,
-    val displayName: String,
 ) {
     enum class NameService {
-        Default, Ens
+        Default, Legacy, Ens
     }
 }
 
