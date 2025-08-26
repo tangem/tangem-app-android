@@ -62,6 +62,7 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
             is WalletNotification.UsedOutdatedData,
             is WalletNotification.UnlockVisaAccess,
             is WalletNotification.FinishWalletActivation,
+            is WalletNotification.Sepa, // TODO [REDACTED_TASK_KEY]
             -> null
             is WalletNotification.Critical.SeedPhraseNotification -> MainScreen.NoticeSeedPhraseSupport
             is WalletNotification.Critical.SeedPhraseSecondNotification -> MainScreen.NoticeSeedPhraseSupportSecond

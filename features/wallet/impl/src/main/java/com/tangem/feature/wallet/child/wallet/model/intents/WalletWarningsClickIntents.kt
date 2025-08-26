@@ -28,6 +28,7 @@ import com.tangem.domain.wallets.legacy.UserWalletsListManager.Lockable.UnlockTy
 import com.tangem.domain.wallets.models.UnlockWalletsError
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.requireColdWallet
+import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.SeedPhraseNotificationUseCase
 import com.tangem.domain.wallets.usecase.UnlockWalletsUseCase
@@ -74,7 +75,7 @@ internal interface WalletWarningsClickIntents {
 
     fun onClosePromoClick(promoId: PromoId)
 
-    fun onPromoClick(promoId: PromoId)
+    fun onPromoClick(promoId: PromoId, cryptoCurrency: CryptoCurrency? = null)
 
     fun onSupportClick()
 
@@ -274,11 +275,25 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         }
     }
 
-    override fun onPromoClick(promoId: PromoId) {
-        if (promoId == PromoId.Referral) {
-            val userWallet = getSelectedUserWallet() ?: return
-            analyticsEventHandler.send(MainScreen.ReferralPromoButtonParticipate)
-            appRouter.push(AppRoute.ReferralProgram(userWalletId = userWallet.walletId))
+    override fun onPromoClick(promoId: PromoId, cryptoCurrency: CryptoCurrency?) {
+        when (promoId) {
+            PromoId.Referral -> {
+                val userWallet = getSelectedUserWallet() ?: return
+                analyticsEventHandler.send(MainScreen.ReferralPromoButtonParticipate)
+                appRouter.push(AppRoute.ReferralProgram(userWalletId = userWallet.walletId))
+            }
+            PromoId.Sepa -> {
+                val userWallet = getSelectedUserWallet() ?: return
+                cryptoCurrency ?: return
+                appRouter.push(
+                    AppRoute.Onramp(
+                        userWalletId = userWallet.walletId,
+                        currency = cryptoCurrency,
+                        source = OnrampSource.SEPA_BANNER,
+                        launchSepa = true,
+                    ),
+                )
+            }
         }
     }
 
