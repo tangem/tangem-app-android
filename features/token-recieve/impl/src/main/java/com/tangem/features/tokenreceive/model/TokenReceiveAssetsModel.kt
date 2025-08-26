@@ -44,7 +44,6 @@ internal class TokenReceiveAssetsModel @Inject constructor(
             showMemoDisclaimer = params.showMemoDisclaimer,
             isEnsResultLoading = false,
             notificationConfigs = params.notificationConfigs,
-            fullName = params.fullName,
         ),
     )
 
