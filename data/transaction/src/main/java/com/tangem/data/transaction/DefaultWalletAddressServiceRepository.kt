@@ -31,7 +31,7 @@ class DefaultWalletAddressServiceRepository(
                 blockchain = blockchain,
                 derivationPath = network.derivationPath.value,
             )
-            walletManager?.wallet?.ens
+            walletManager?.wallet?.ens.takeIf { it.isNullOrEmpty().not() }
         }
     }
 
