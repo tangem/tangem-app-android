@@ -34,6 +34,12 @@ internal fun LazyListScope.notifications(configs: ImmutableList<WalletNotificati
                         modifier = modifier.animateItem(fadeInSpec = null, fadeOutSpec = null),
                     )
                 }
+                is WalletNotification.FinishWalletActivation -> {
+                    Notification(
+                        config = it.config,
+                        modifier = modifier.animateItem(fadeInSpec = null, fadeOutSpec = null),
+                    )
+                }
                 else -> {
                     Notification(
                         config = it.config,

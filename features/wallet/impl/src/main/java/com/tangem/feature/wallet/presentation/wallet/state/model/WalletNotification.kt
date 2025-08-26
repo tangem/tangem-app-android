@@ -3,6 +3,8 @@ package com.tangem.feature.wallet.presentation.wallet.state.model
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.notifications.NotificationConfig
+import com.tangem.core.ui.components.notifications.NotificationConfig.ButtonsState
+import com.tangem.core.ui.components.notifications.NotificationConfig.IconTint
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -257,16 +259,15 @@ sealed class WalletNotification(val config: NotificationConfig) {
     )
 
     data class FinishWalletActivation(
-        val onFinishClick: () -> Unit,
+        val iconTint: IconTint,
+        val buttonsState: ButtonsState,
     ) : WalletNotification(
         config = NotificationConfig(
             title = resourceReference(R.string.hw_activation_need_title),
             subtitle = resourceReference(R.string.hw_activation_need_description),
             iconResId = R.drawable.img_knight_shield_32,
-            buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
-                text = resourceReference(R.string.hw_activation_need_finish),
-                onClick = onFinishClick,
-            ),
+            iconTint = iconTint,
+            buttonsState = buttonsState,
         ),
     )
 
