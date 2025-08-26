@@ -1089,16 +1089,17 @@ internal class TokenDetailsModel @Inject constructor(
                     ReceiveAddressModel(
                         nameService = ReceiveAddressModel.NameService.Ens,
                         value = ens,
-                        displayName = ens,
                     ),
                 )
             }
             addresses.availableAddresses.map { address ->
                 add(
                     ReceiveAddressModel(
-                        nameService = ReceiveAddressModel.NameService.Default,
+                        nameService = when (address.type) {
+                            NetworkAddress.Address.Type.Primary -> ReceiveAddressModel.NameService.Default
+                            NetworkAddress.Address.Type.Secondary -> ReceiveAddressModel.NameService.Legacy
+                        },
                         value = address.value,
-                        displayName = "${cryptoCurrency.name} (${cryptoCurrency.symbol})",
                     ),
                 )
             }
