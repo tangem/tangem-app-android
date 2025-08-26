@@ -93,6 +93,13 @@ object AmountStatePreviewData {
         amountTextField = amountWithValueState.amountTextField.copy(isFiatValue = false),
     )
 
+    val amountStateV2WithoutRates = amountState.copy(
+        amountTextField = amountState.amountTextField.copy(
+            fiatAmount = amountState.amountTextField.fiatAmount.copy(
+                value = null,
+            ),
+        ),
+    )
     val amountErrorState = amountWithValueState.copy(
         amountTextField = amountWithValueState.amountTextField.copy(
             isError = true,
