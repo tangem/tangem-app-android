@@ -7,6 +7,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.tokenreceive.entity.ReceiveAddress
 import com.tangem.features.tokenreceive.model.TokenReceiveQrCodeModel
 import com.tangem.features.tokenreceive.ui.TokenReceiveQrCodeContent
@@ -31,7 +32,7 @@ internal class TokenReceiveQrCodeComponent(
 
     data class TokenReceiveQrCodeParams(
         val id: Int,
-        val network: String,
+        val cryptoCurrency: CryptoCurrency,
         val address: ReceiveAddress,
         val callback: TokenReceiveQrCodeModelCallback,
         val onDismiss: () -> Unit,
