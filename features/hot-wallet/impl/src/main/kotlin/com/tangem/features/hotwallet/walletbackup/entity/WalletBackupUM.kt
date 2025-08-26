@@ -4,8 +4,9 @@ import com.tangem.core.ui.components.label.entity.LabelUM
 
 internal data class WalletBackupUM(
     val onBackClick: () -> Unit,
-    val recoveryPhraseStatus: LabelUM?,
-    val googleDriveStatus: LabelUM?,
+    val recoveryPhraseOption: LabelUM?,
+    val googleDriveOption: LabelUM?,
+    val googleDriveStatus: BackupStatus,
     val onRecoveryPhraseClick: () -> Unit,
     val onGoogleDriveClick: () -> Unit,
     val backedUp: Boolean,
