@@ -20,28 +20,13 @@ internal class WcSendTransactionComponent(
     private val feeSelectorBlockComponentFactory: FeeSelectorBlockComponent.Factory,
 ) : AppComponentContext by appComponentContext, ComposableBottomSheetComponent {
 
-    private val feeSelectorBlockComponent by lazy {
-        val state = requireNotNull(model.uiState.value) { "in this step state should be not null" }
-        feeSelectorBlockComponentFactory.create(
-            context = appComponentContext,
-            params = FeeSelectorParams.FeeSelectorBlockParams(
-                state = state.feeSelectorUM,
-                onLoadFee = model::loadFee,
-                cryptoCurrencyStatus = model.cryptoCurrencyStatus,
-                feeCryptoCurrencyStatus = model.cryptoCurrencyStatus,
-                feeStateConfiguration = model.feeStateConfiguration,
-                feeDisplaySource = FeeSelectorParams.FeeDisplaySource.BottomSheet,
-                analyticsCategoryName = WcAnalyticEvents.WC_CATEGORY_NAME,
-            ),
-            onResult = model::updateFee,
-        )
-    }
+    private var feeSelectorBlockComponent: FeeSelectorBlockComponent? = null
 
     init {
         lifecycle.doOnResume {
             val state = model.uiState.value
             if (state?.transaction?.feeState is WcTransactionFeeState.Success) {
-                feeSelectorBlockComponent.updateState(state.feeSelectorUM)
+                feeSelectorBlockComponent?.updateState(state.feeSelectorUM)
             }
         }
     }
@@ -56,8 +41,12 @@ internal class WcSendTransactionComponent(
         val state = content?.transaction
 
         if (state != null) {
-            val feeSelectorBlock =
-                if (state.feeState !is WcTransactionFeeState.None) feeSelectorBlockComponent else null
+            val feeSelectorUM = content?.feeSelectorUM
+            val feeSelectorBlock = if (state.feeState !is WcTransactionFeeState.None && feeSelectorUM != null) {
+                getFeeSelectorBlockComponent(feeSelectorUM)
+            } else {
+                null
+            }
             WcSendTransactionModalBottomSheet(
                 state = state,
                 feeSelectorBlockComponent = feeSelectorBlock,
@@ -67,6 +56,29 @@ internal class WcSendTransactionComponent(
                 onDismiss = ::dismiss,
                 onClickAllowToSpend = model::onClickAllowToSpend,
             )
+        }
+    }
+
+    private fun getFeeSelectorBlockComponent(feeSelectorUM: FeeSelectorUM): FeeSelectorBlockComponent {
+        val local = feeSelectorBlockComponent
+        return if (local != null) {
+            local
+        } else {
+            val component = feeSelectorBlockComponentFactory.create(
+                context = appComponentContext,
+                params = FeeSelectorParams.FeeSelectorBlockParams(
+                    state = feeSelectorUM,
+                    onLoadFee = model::loadFee,
+                    cryptoCurrencyStatus = model.cryptoCurrencyStatus,
+                    feeCryptoCurrencyStatus = model.cryptoCurrencyStatus,
+                    feeStateConfiguration = model.feeStateConfiguration,
+                    feeDisplaySource = FeeSelectorParams.FeeDisplaySource.BottomSheet,
+                    analyticsCategoryName = WcAnalyticEvents.WC_CATEGORY_NAME,
+                ),
+                onResult = model::updateFee,
+            )
+            feeSelectorBlockComponent = component
+            component
         }
     }
 }
