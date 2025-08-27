@@ -4,11 +4,13 @@ import android.os.Bundle
 import com.tangem.common.routing.AppRoute.ManageTokens.Source
 import com.tangem.common.routing.bundle.RouteBundleParams
 import com.tangem.common.routing.bundle.bundle
+import com.tangem.common.routing.entity.InitScreenLaunchMode
 import com.tangem.common.routing.entity.SerializableIntent
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.feedback.models.CardInfo
 import com.tangem.domain.markets.TokenMarketParams
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWalletId
@@ -23,10 +25,16 @@ sealed class AppRoute(val path: String) : Route {
     data object Initial : AppRoute(path = "/initial")
 
     @Serializable
-    data object Home : AppRoute(path = "/home")
+    data class Home(
+        val launchMode: InitScreenLaunchMode = InitScreenLaunchMode.Standard,
+    ) : AppRoute(path = "/home")
 
     @Serializable
     data class Welcome(
+        @Deprecated("No longer used, will be removed in future releases")
+        val launchMode: InitScreenLaunchMode = InitScreenLaunchMode.Standard,
+        // we still have this param to be handled by WalletConnectLinkIntentHandler in WelcomeMiddleware
+        @Deprecated("No longer used, will be removed in future releases")
         val intent: SerializableIntent? = null,
     ) : AppRoute(path = "/welcome"), RouteBundleParams {
 
@@ -129,6 +137,8 @@ sealed class AppRoute(val path: String) : Route {
         val initialCurrency: CryptoCurrency,
         val selectedCurrency: CryptoCurrency?,
         val source: Source,
+        val showSendViaSwapNotification: Boolean,
+        val analyticsCategoryName: String,
     ) : AppRoute(path = "/$source/choose_managed_tokens/$userWalletId/${initialCurrency.id.value}") {
         enum class Source {
             SendViaSwap,
@@ -302,7 +312,27 @@ sealed class AppRoute(val path: String) : Route {
     object CreateMobileWallet : AppRoute(path = "/create_mobile_wallet")
 
     @Serializable
+    data class UpgradeWallet(
+        val userWalletId: UserWalletId,
+    ) : AppRoute(path = "/upgrade_wallet/${userWalletId.stringValue}")
+
+    @Serializable
     object AddExistingWallet : AppRoute(path = "/add_existing_wallet")
+
+    @Serializable
+    data class WalletActivation(
+        val userWalletId: UserWalletId,
+    ) : AppRoute(path = "/wallet_activation/${userWalletId.stringValue}")
+
+    @Serializable
+    data class CreateWalletBackup(
+        val userWalletId: UserWalletId,
+    ) : AppRoute(path = "/create_wallet_backup/${userWalletId.stringValue}")
+
+    @Serializable
+    data class UpdateAccessCode(
+        val userWalletId: UserWalletId,
+    ) : AppRoute(path = "/update_access_code/${userWalletId.stringValue}")
 
     @Serializable
     data class SendEntryPoint(
@@ -317,4 +347,27 @@ sealed class AppRoute(val path: String) : Route {
         val userWalletId: UserWalletId,
         val currency: CryptoCurrency,
     ) : AppRoute(path = "/send_with_swap/${userWalletId.stringValue}/${currency.symbol}")
+
+    @Serializable
+    data class CreateAccount(
+        val userWalletId: UserWalletId,
+    ) : AppRoute(path = "/create_account/${userWalletId.stringValue}")
+
+    @Serializable
+    data class EditAccount(
+        val account: Account,
+    ) : AppRoute(path = "/edit_account/${account.accountId.value}")
+
+    @Serializable
+    data class AccountDetails(
+        val account: Account,
+    ) : AppRoute(path = "/account_details/${account.accountId.value}")
+
+    @Serializable
+    data class ArchivedAccountList(
+        val userWalletId: UserWalletId,
+    ) : AppRoute(path = "/archived_account/${userWalletId.stringValue}")
+
+    @Serializable
+    data object TangemPayDetails : AppRoute(path = "/tangem_pay_details")
 }
