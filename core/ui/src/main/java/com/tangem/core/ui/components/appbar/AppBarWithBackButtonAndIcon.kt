@@ -27,14 +27,14 @@ fun AppBarWithBackButtonAndIcon(
         title = text,
         subtitle = subtitle,
         containerColor = backgroundColor,
-        startButton = TopAppBarButtonUM(
+        startButton = TopAppBarButtonUM.Icon(
             iconRes = backIconRes ?: R.drawable.ic_back_24,
-            onIconClicked = onBackClick,
+            onClicked = onBackClick,
         ),
         endButton = if (iconRes != null && onIconClick != null) {
-            TopAppBarButtonUM(
+            TopAppBarButtonUM.Icon(
                 iconRes = iconRes,
-                onIconClicked = onIconClick,
+                onClicked = onIconClick,
             )
         } else {
             null

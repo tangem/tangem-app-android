@@ -18,17 +18,17 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.features.nft.component.NFTDetailsBlockComponent
 import com.tangem.features.send.v2.api.NFTSendComponent
+import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationComponentParams
 import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.features.send.v2.common.CommonSendRoute
-import com.tangem.features.send.v2.common.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.v2.common.ui.SendContent
 import com.tangem.features.send.v2.common.ui.state.ConfirmUM
 import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.sendnft.confirm.NFTSendConfirmComponent
 import com.tangem.features.send.v2.sendnft.model.NFTSendModel
+import com.tangem.features.send.v2.sendnft.success.NFTSendSuccessComponent
 import com.tangem.features.send.v2.subcomponents.destination.DefaultSendDestinationComponent
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeComponent
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeComponentParams
@@ -42,7 +42,8 @@ import java.math.BigDecimal
 internal class DefaultNFTSendComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted private val params: NFTSendComponent.Params,
-    private val nftDetailsBlockComponentFactory: NFTDetailsBlockComponent.Factory,
+    private val nftSendConfirmComponentFactory: NFTSendConfirmComponent.Factory,
+    private val nftSendSuccessComponentFactory: NFTSendSuccessComponent.Factory,
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) : NFTSendComponent, AppComponentContext by appComponentContext {
 
@@ -121,6 +122,7 @@ internal class DefaultNFTSendComponent @AssistedInject constructor(
         is CommonSendRoute.Destination -> getDestinationComponent(factoryContext)
         is CommonSendRoute.Fee -> getFeeComponent(factoryContext)
         CommonSendRoute.Confirm -> getConfirmComponent(factoryContext)
+        CommonSendRoute.ConfirmSuccess -> getSuccessComponent(factoryContext)
         else -> getStubComponent()
     }
 
@@ -164,9 +166,8 @@ internal class DefaultNFTSendComponent @AssistedInject constructor(
         }
     }
 
-    private fun getConfirmComponent(factoryContext: AppComponentContext) = NFTSendConfirmComponent(
+    private fun getConfirmComponent(factoryContext: AppComponentContext) = nftSendConfirmComponentFactory.create(
         appComponentContext = factoryContext,
-        nftDetailsBlockComponentFactory = nftDetailsBlockComponentFactory,
         params = NFTSendConfirmComponent.Params(
             state = model.uiState.value,
             analyticsCategoryName = analyticsCategoryName,
@@ -180,8 +181,33 @@ internal class DefaultNFTSendComponent @AssistedInject constructor(
             currentRoute = model.currentRouteFlow.filterIsInstance<CommonSendRoute.Confirm>(),
             isBalanceHidingFlow = model.isBalanceHiddenFlow,
             onLoadFee = model::loadFee,
+            onSendTransaction = { innerRouter.replaceAll(CommonSendRoute.ConfirmSuccess) },
         ),
     )
+
+    private fun getSuccessComponent(factoryContext: AppComponentContext): ComposableContentComponent {
+        val txUrl = (model.uiState.value.confirmUM as? ConfirmUM.Success)?.txUrl
+
+        if (txUrl == null) {
+            model.showAlertError()
+            return getStubComponent()
+        }
+
+        return nftSendSuccessComponentFactory.create(
+            appComponentContext = factoryContext,
+            params = NFTSendSuccessComponent.Params(
+                nftSendUMFlow = model.uiState,
+                analyticsCategoryName = analyticsCategoryName,
+                userWallet = model.userWallet,
+                cryptoCurrencyStatus = model.cryptoCurrencyStatus,
+                nftAsset = params.nftAsset,
+                nftCollectionName = params.nftCollectionName,
+                callback = model,
+                currentRoute = model.currentRouteFlow.filterIsInstance<CommonSendRoute.ConfirmSuccess>(),
+                txUrl = txUrl,
+            ),
+        )
+    }
 
     private fun getStubComponent() = ComposableContentComponent { }
 
