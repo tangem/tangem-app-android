@@ -202,7 +202,7 @@
   <string name="common_nft">NFT</string>
   <string name="common_no">No</string>
   <string name="common_no_address">Ninguna dirección</string>
-  <string name="common_not_added">No aregada</string>
+  <string name="common_not_added">No agregada</string>
   <string name="common_not_now">Ahora no</string>
   <string name="common_now">Ahora</string>
   <string name="common_ok">OK</string>
@@ -250,8 +250,8 @@
   <string name="common_terms_of_use">Condiciones de uso</string>
   <string name="common_today">Hoy</string>
   <plurals name="common_tokens_count">
-    <item quantity="one">%d ficha</item>
-    <item quantity="other">%d fichas</item>
+    <item quantity="one">%d token</item>
+    <item quantity="other">%d tokens</item>
   </plurals>
   <string name="common_transaction_failed">Transacción fallida</string>
   <string name="common_transaction_status">Estado de la transacción</string>
@@ -1348,7 +1348,7 @@
   <string name="wc_alert_network_not_connected_description">Para continuar, vuelva a conectar su sesión de dApp con la red requerida %s.</string>
   <string name="wc_alert_network_not_connected_title">Red no conectada</string>
   <string name="wc_alert_request_timeout_description">Verifique su conexión de red</string>
-  <string name="wc_alert_request_timeout_title">Tiempo de espera de la solicitud agotado</string>
+  <string name="wc_alert_request_timeout_title">Tiempo de espera agotado</string>
   <string name="wc_alert_session_disconnected_description">Vuelva a su navegador y vuelva a conectarse a través de WalletConnect.</string>
   <string name="wc_alert_session_disconnected_title">La sesión de Wallet Connect se desconectó</string>
   <string name="wc_alert_sign_anyway">Firmar de todos modos</string>
