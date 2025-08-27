@@ -60,6 +60,16 @@
   <string name="biometric_lockout_warning_description">Veuillez réessayer dans 30 secondes ou scannez la carte/bague</string>
   <string name="biometric_lockout_warning_title">Trop de tentatives</string>
   <string name="biometric_unavailable_warning">Vous avez désactivé l\'authentification biométrique sur votre téléphone et ne pourrez pas enregistrer de portefeuilles dans l\'application. Pour enregistrer des portefeuilles, veuillez activer la fonction d\'authentification biométrique dans les paramètres de votre téléphone.</string>
+  <string name="bitcoin_promo_activation_error">Une erreur s\'est produite lors du traitement de votre code promo. Veuillez réessayer plus tard.</string>
+  <string name="bitcoin_promo_activation_error_title">Erreur d\'activation</string>
+  <string name="bitcoin_promo_activation_success">Votre code promo a été activé avec succès. Un bonus de 10 USDT en Bitcoin sera crédité dans 14 jours.</string>
+  <string name="bitcoin_promo_activation_success_title">Code promo activé</string>
+  <string name="bitcoin_promo_already_activated">Ce code promo a déjà été utilisé et ne peut pas être activé à nouveau.</string>
+  <string name="bitcoin_promo_already_activated_title">Code indisponible</string>
+  <string name="bitcoin_promo_invalid_code">Ce code promo n\'est pas valide et ne peut pas être activé.</string>
+  <string name="bitcoin_promo_invalid_code_title">Code invalide</string>
+  <string name="bitcoin_promo_no_address">Une adresse Bitcoin est nécessaire pour recevoir le bonus. Veuillez en ajouter une à votre portefeuille et réessayer l\'activation.</string>
+  <string name="bitcoin_promo_no_address_title">Adresse Bitcoin requise</string>
   <string name="button_start_backup_process">Démarrer le processus de sauvegarde</string>
   <string name="buy_token_description">Utilisez une carte bancaire ou d\'autres moyens de paiement</string>
   <plurals name="card_label_card_count">
