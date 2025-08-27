@@ -52,7 +52,7 @@ interface SwapRepository {
     ): BigDecimal
 
     @Suppress("LongParameterList")
-    suspend fun getExchangegetExchangeDataData(
+    suspend fun getExchangeData(
         userWallet: UserWallet,
         fromContractAddress: String,
         fromNetwork: String,
