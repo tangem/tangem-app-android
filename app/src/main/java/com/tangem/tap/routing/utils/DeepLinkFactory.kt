@@ -89,6 +89,7 @@ internal class DeepLinkFactory @Inject constructor(
             AppRoute.Initial,
             AppRoute.Home,
             is AppRoute.Welcome,
+            is AppRoute.PushNotification,
             is AppRoute.Disclaimer,
             is AppRoute.Stories,
             is AppRoute.Onboarding,
