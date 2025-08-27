@@ -42,7 +42,7 @@ internal class SwapProviderStateConverter(
 
         val additionalBadge = when {
             needApplyFCARestrictions && provider.isRestrictedByFCA() -> AdditionalBadge.FCAWarningList
-            isNeedBestRateBadge && isBestRate && !needApplyFCARestrictions -> AdditionalBadge.BestTrade
+            isNeedBestRateBadge && isBestRate -> AdditionalBadge.BestTrade
             else -> AdditionalBadge.Empty
         }
 
