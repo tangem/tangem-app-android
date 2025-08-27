@@ -20,6 +20,7 @@ dependencies {
     implementation(projects.features.onboardingV2.api)
     implementation(projects.features.pushNotifications.api)
     implementation(projects.features.hotWallet.api)
+    implementation(projects.features.wallet.api)
 
     /* Project - Core */
     implementation(projects.core.decompose)
@@ -29,6 +30,7 @@ dependencies {
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
     implementation(projects.common.routing)
+    implementation(projects.common.ui)
 
     /* Project - Domain */
     implementation(projects.domain.legacy)
@@ -65,4 +67,8 @@ dependencies {
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.timber)
     implementation(deps.reKotlin)
+
+    /** Tangem libraries */
+    implementation(tangemDeps.hot.core)
+    implementation(tangemDeps.card.core)
 }
