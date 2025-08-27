@@ -96,24 +96,21 @@ val generateComposeMetrics by tasks.registering {
     description = "Build external APK and generates compose metrics to 'build/compose-metrics' directory"
 
     subprojects {
-        tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-            compilerOptions {
+        tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+            if (name.contains("compile")) {
                 val outputDirectory = "${project.buildDir.absolutePath}/compose_metrics"
-                // Metrics
-                freeCompilerArgs.addAll(
-                    "-P",
-                    "plugin:androidx.compose.compiler.plugins.kotlin:metricsDestination=$outputDirectory",
-                )
-                // Reports
-                freeCompilerArgs.addAll(
-                    "-P",
-                    "plugin:androidx.compose.compiler.plugins.kotlin:reportsDestination=$outputDirectory",
-                )
-                // Compose strong skipping mode
-                // freeCompilerArgs.addAll(
-                //     "-P",
-                //     "plugin:androidx.compose.compiler.plugins.kotlin:experimentalStrongSkipping=true",
-                // )
+                compilerOptions {
+                    freeCompilerArgs.addAll(
+                        listOf(
+                            "-P",
+                            "plugin:androidx.compose.compiler.plugins.kotlin:metricsDestination=$outputDirectory",
+                            "-P",
+                            "plugin:androidx.compose.compiler.plugins.kotlin:reportsDestination=$outputDirectory"
+                            //     "-P",
+                            //     "plugin:androidx.compose.compiler.plugins.kotlin:experimentalStrongSkipping=true",
+                        )
+                    )
+                }
             }
         }
     }
