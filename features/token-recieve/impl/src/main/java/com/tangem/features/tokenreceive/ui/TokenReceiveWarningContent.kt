@@ -21,6 +21,7 @@ import com.tangem.core.ui.components.SecondaryButton
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerH12
 import com.tangem.core.ui.components.SpacerH24
+import com.tangem.core.ui.components.SpacerW6
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -98,6 +99,8 @@ fun WarningBlock(networkName: String, networkIcon: Int, modifier: Modifier = Mod
                 tint = Color.Unspecified,
                 contentDescription = null,
             )
+
+            SpacerW6()
 
             Text(
                 textAlign = TextAlign.Center,
