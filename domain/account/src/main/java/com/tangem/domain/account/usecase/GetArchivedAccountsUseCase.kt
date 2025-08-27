@@ -57,7 +57,7 @@ class GetArchivedAccountsUseCase(
 
     private suspend fun getArchivedAccounts(userWalletId: UserWalletId): Either<Throwable, ArchivedAccountList> {
         return Either.catch {
-            crudRepository.getArchivedAccountsSync(userWalletId = userWalletId).getOrElse {
+            crudRepository.getArchivedAccountListSync(userWalletId = userWalletId).getOrElse {
                 error("Archived accounts not found for user wallet: $userWalletId")
             }
         }
@@ -70,7 +70,11 @@ class GetArchivedAccountsUseCase(
     private suspend fun ProducerScope<Lce<Throwable, ArchivedAccountList>>.subscribeOnArchivedAccounts(
         userWalletId: UserWalletId,
     ) {
-        crudRepository.getArchivedAccounts(userWalletId)
+        runCatching { crudRepository.getArchivedAccounts(userWalletId) }
+            .getOrElse {
+                send(it.lceError())
+                return
+            }
             .distinctUntilChanged()
             .retryWhen { cause, _ ->
                 send(cause.lceError())
