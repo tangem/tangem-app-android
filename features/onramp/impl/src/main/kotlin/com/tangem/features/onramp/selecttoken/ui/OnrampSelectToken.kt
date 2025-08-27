@@ -10,10 +10,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.test.BuyTokenScreenTestTags
 import com.tangem.core.ui.utils.rememberHideKeyboardNestedScrollConnection
 import com.tangem.features.onramp.hottokens.HotCryptoComponent
 import com.tangem.features.onramp.impl.R
@@ -36,7 +38,8 @@ internal fun OnrampSelectToken(
             .nestedScroll(nestedScrollConnection)
             .background(TangemTheme.colors.background.secondary)
             .imePadding()
-            .systemBarsPadding(),
+            .systemBarsPadding()
+            .testTag(BuyTokenScreenTestTags.LAZY_LIST),
     ) {
         stickyHeader(key = "header") {
             AppBarWithBackButton(
