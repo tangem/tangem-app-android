@@ -199,7 +199,7 @@ class DefaultWalletsRepositoryTest {
         )
 
         val authProvider = mockk<AuthProvider> {
-            every { getCardsPublicKeys() } returns publicKeys
+            coEvery { getCardsPublicKeys() } returns publicKeys
         }
 
         repository = DefaultWalletsRepository(
