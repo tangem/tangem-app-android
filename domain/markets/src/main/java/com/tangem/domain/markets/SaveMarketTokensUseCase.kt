@@ -1,13 +1,14 @@
 package com.tangem.domain.markets
 
 import arrow.core.Either
-import com.tangem.domain.card.repository.DerivationsRepository
+import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.domain.markets.repositories.MarketsTokenRepository
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
+import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 
@@ -28,6 +29,7 @@ class SaveMarketTokensUseCase(
     private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
     private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
     private val multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
+    private val stakingIdFactory: StakingIdFactory,
 ) {
 
     suspend operator fun invoke(
@@ -89,11 +91,12 @@ class SaveMarketTokensUseCase(
         userWalletId: UserWalletId,
         existingCurrencies: List<CryptoCurrency>,
     ) {
+        val stakingIds = existingCurrencies.mapNotNullTo(hashSetOf()) {
+            stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = it).getOrNull()
+        }
+
         multiYieldBalanceFetcher(
-            params = MultiYieldBalanceFetcher.Params(
-                userWalletId = userWalletId,
-                currencyIdWithNetworkMap = existingCurrencies.associateTo(hashMapOf()) { it.id to it.network },
-            ),
+            params = MultiYieldBalanceFetcher.Params(userWalletId = userWalletId, stakingIds = stakingIds),
         )
     }
 

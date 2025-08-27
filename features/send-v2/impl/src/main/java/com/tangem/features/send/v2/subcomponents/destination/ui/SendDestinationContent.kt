@@ -142,6 +142,7 @@ private fun LazyListScope.addressItem(
                         color = TangemTheme.colors.background.action,
                         shape = TangemTheme.shapes.roundedCornersXMedium,
                     ),
+                resolvedAddress = address.blockchainAddress,
             )
         }
     }

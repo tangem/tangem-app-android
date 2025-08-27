@@ -4,7 +4,6 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import com.tangem.common.core.TangemSdkError
 import com.tangem.core.ui.R
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.crypto.bip39.Mnemonic
 import com.tangem.crypto.bip39.MnemonicErrorResult
@@ -24,6 +23,7 @@ internal class ImportSeedPhraseUiStateBuilder(
     private val readyToImport: (Boolean) -> Unit,
     private val updateUiState: ((AddExistingWalletImportUM) -> AddExistingWalletImportUM) -> Unit,
     private val importWallet: (mnemonic: Mnemonic, passphrase: String?) -> Unit,
+    private val onPassphraseInfoClick: () -> Unit,
 ) {
     private val wordsCheckJobHolder = JobHolder()
     private var importedMnemonic: Mnemonic? = null
@@ -35,8 +35,8 @@ internal class ImportSeedPhraseUiStateBuilder(
             passPhrase = TextFieldValue(""),
             wordsErrorText = null,
             invalidWords = persistentListOf(),
-            createWalletEnabled = false,
-            createWalletProgress = false,
+            importWalletEnabled = false,
+            importWalletProgress = false,
             suggestionsList = persistentListOf(),
             wordsChange = {
                 launchInterceptWords(wordsField = it)
@@ -49,11 +49,10 @@ internal class ImportSeedPhraseUiStateBuilder(
                 passphrase = it.text
                 updateUiState { state -> state.copy(passPhrase = it) }
             },
-            onPassphraseInfoClick = ::showInfoBS,
-            createWalletClick = ::onCreateWallet,
+            onPassphraseInfoClick = onPassphraseInfoClick,
+            importWalletClick = ::onCreateWallet,
             onSuggestionClick = { word -> addSuggestedWord(word) },
             readyToImport = false,
-            infoBottomSheetConfig = TangemBottomSheetConfig.Empty,
         )
     }
 
@@ -115,7 +114,7 @@ internal class ImportSeedPhraseUiStateBuilder(
 
         updateUiState {
             it.copy(
-                createWalletEnabled = false,
+                importWalletEnabled = false,
                 wordsErrorText = null,
             )
         }
@@ -130,7 +129,7 @@ internal class ImportSeedPhraseUiStateBuilder(
                 it.copy(
                     invalidWords = invalidWords.toImmutableList(),
                     wordsErrorText = resourceReference(R.string.onboarding_seed_mnemonic_wrong_words),
-                    createWalletEnabled = false,
+                    importWalletEnabled = false,
                 )
             }
             return
@@ -143,7 +142,7 @@ internal class ImportSeedPhraseUiStateBuilder(
                 it.copy(
                     invalidWords = emptyList<String>().toImmutableList(),
                     wordsErrorText = null,
-                    createWalletEnabled = true,
+                    importWalletEnabled = true,
                 )
             }
             readyToImport(true)
@@ -154,30 +153,17 @@ internal class ImportSeedPhraseUiStateBuilder(
                 updateUiState {
                     it.copy(
                         wordsErrorText = resourceReference(R.string.onboarding_seed_mnemonic_invalid_checksum),
-                        createWalletEnabled = false,
+                        importWalletEnabled = false,
                     )
                 }
             } else {
                 updateUiState {
                     it.copy(
-                        createWalletEnabled = false,
+                        importWalletEnabled = false,
                         wordsErrorText = null,
                     )
                 }
             }
-        }
-    }
-
-    private fun showInfoBS() {
-        updateUiState { state ->
-            state.copy(
-                infoBottomSheetConfig = TangemBottomSheetConfig.Companion.Empty.copy(
-                    isShown = true,
-                    onDismissRequest = {
-                        updateUiState { it.copy(infoBottomSheetConfig = TangemBottomSheetConfig.Companion.Empty) }
-                    },
-                ),
-            )
         }
     }
 

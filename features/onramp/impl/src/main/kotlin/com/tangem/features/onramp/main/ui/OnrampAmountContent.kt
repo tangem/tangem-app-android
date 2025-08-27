@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDirection
@@ -26,6 +27,7 @@ import com.tangem.core.ui.components.fields.AmountTextField
 import com.tangem.core.ui.components.fields.visualtransformations.AmountVisualTransformation
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.test.BuyTokenDetailsScreenTestTags
 import com.tangem.core.ui.utils.rememberDecimalFormat
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.main.entity.OnrampAmountBlockUM
@@ -84,7 +86,8 @@ private fun OnrampAmountField(amountField: AmountFieldModel) {
                 start = TangemTheme.dimens.spacing12,
                 end = TangemTheme.dimens.spacing12,
             )
-            .requiredHeightIn(min = TangemTheme.dimens.size32),
+            .requiredHeightIn(min = TangemTheme.dimens.size32)
+            .testTag(BuyTokenDetailsScreenTestTags.FIAT_AMOUNT_TEXT_FIELD),
     )
 
     LaunchedEffect(key1 = Unit) {
@@ -101,7 +104,8 @@ private fun OnrampAmountSecondary(state: OnrampAmountSecondaryFieldUM) {
                 top = TangemTheme.dimens.spacing8,
                 start = TangemTheme.dimens.spacing12,
                 end = TangemTheme.dimens.spacing12,
-            ),
+            )
+            .testTag(BuyTokenDetailsScreenTestTags.TOKEN_AMOUNT),
         contentAlignment = Alignment.Center,
     ) {
         when (state) {
@@ -138,12 +142,15 @@ private fun OnrampCurrencyIcon(currencyUM: OnrampCurrencyUM, modifier: Modifier 
         AsyncImage(
             modifier = Modifier
                 .size(TangemTheme.dimens.size40)
-                .clip(CircleShape),
+                .clip(CircleShape)
+                .testTag(BuyTokenDetailsScreenTestTags.FIAT_CURRENCY_ICON),
             model = currencyUM.iconUrl,
             contentDescription = null,
         )
         Icon(
-            modifier = Modifier.size(TangemTheme.dimens.size16),
+            modifier = Modifier
+                .size(TangemTheme.dimens.size16)
+                .testTag(BuyTokenDetailsScreenTestTags.EXPAND_FIAT_LIST_BUTTON),
             painter = painterResource(id = R.drawable.ic_chevron_24),
             tint = TangemTheme.colors.icon.informative,
             contentDescription = null,

@@ -22,6 +22,7 @@ import com.tangem.datasource.local.preferences.PreferencesKeys.SEED_FIRST_NOTIFI
 import com.tangem.datasource.local.preferences.utils.get
 import com.tangem.datasource.local.preferences.utils.getObjectMap
 import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
+import com.tangem.datasource.local.preferences.utils.getSyncOrNull
 import com.tangem.datasource.local.preferences.utils.store
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.models.wallet.UserWallet
@@ -36,10 +37,11 @@ import com.tangem.utils.coroutines.runCatching
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.collections.mutableSetOf
 
 typealias SeedPhraseNotificationsStatuses = Map<UserWalletId, SeedPhraseNotificationsStatus>
 
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LargeClass")
 internal class DefaultWalletsRepository(
     private val appPreferencesStore: AppPreferencesStore,
     private val tangemTechApi: TangemTechApi,
@@ -49,16 +51,83 @@ internal class DefaultWalletsRepository(
     private val authProvider: AuthProvider,
 ) : WalletsRepository {
 
+    private val upgradeWalletNotificationDisabled: MutableStateFlow<Set<UserWalletId>> =
+        MutableStateFlow(mutableSetOf<UserWalletId>())
+
     override suspend fun shouldSaveUserWalletsSync(): Boolean {
         return appPreferencesStore.getSyncOrDefault(key = PreferencesKeys.SAVE_USER_WALLETS_KEY, default = false)
     }
 
+    @Deprecated("Hot wallet feature makes app always save user wallets. Do not use this method")
     override fun shouldSaveUserWallets(): Flow<Boolean> {
         return appPreferencesStore.get(key = PreferencesKeys.SAVE_USER_WALLETS_KEY, default = false)
     }
 
+    @Deprecated("Hot wallet feature makes app always save user wallets. Do not use this method")
     override suspend fun saveShouldSaveUserWallets(item: Boolean) {
         appPreferencesStore.store(key = PreferencesKeys.SAVE_USER_WALLETS_KEY, value = item)
+    }
+
+    override suspend fun useBiometricAuthentication(): Boolean {
+        val useBiometricAuthentication = appPreferencesStore.getSyncOrNull(
+            key = PreferencesKeys.USE_BIOMETRIC_AUTHENTICATION_KEY,
+        )
+
+        if (useBiometricAuthentication != null) {
+            return useBiometricAuthentication
+        }
+
+        val legacySaveWalletsInTheApp = appPreferencesStore.getSyncOrNull(
+            key = PreferencesKeys.SAVE_USER_WALLETS_KEY,
+        )
+
+        if (legacySaveWalletsInTheApp != null) {
+            // Migrate legacy setting to new one
+            appPreferencesStore.store(
+                key = PreferencesKeys.USE_BIOMETRIC_AUTHENTICATION_KEY,
+                value = legacySaveWalletsInTheApp,
+            )
+            return legacySaveWalletsInTheApp
+        } else {
+            // Default value for new users
+            setUseBiometricAuthentication(false)
+            return false
+        }
+    }
+
+    override suspend fun setUseBiometricAuthentication(value: Boolean) {
+        appPreferencesStore.store(key = PreferencesKeys.USE_BIOMETRIC_AUTHENTICATION_KEY, value = value)
+    }
+
+    override suspend fun requireAccessCode(): Boolean {
+        val requireAccessCode = appPreferencesStore.getSyncOrNull(
+            key = PreferencesKeys.REQUIRE_ACCESS_CODE_KEY,
+        )
+
+        if (requireAccessCode != null) {
+            return requireAccessCode
+        }
+
+        val legacyShouldSaveAccessCode = appPreferencesStore.getSyncOrNull(
+            key = PreferencesKeys.SHOULD_SAVE_ACCESS_CODES_KEY,
+        )
+
+        if (legacyShouldSaveAccessCode != null) {
+            // Migrate legacy setting to new one
+            appPreferencesStore.store(
+                key = PreferencesKeys.REQUIRE_ACCESS_CODE_KEY,
+                value = legacyShouldSaveAccessCode.not(),
+            )
+            return legacyShouldSaveAccessCode.not()
+        } else {
+            // Default value for new users
+            setRequireAccessCode(true)
+            return true
+        }
+    }
+
+    override suspend fun setRequireAccessCode(value: Boolean) {
+        appPreferencesStore.store(key = PreferencesKeys.REQUIRE_ACCESS_CODE_KEY, value = value)
     }
 
     override suspend fun isWalletWithRing(userWalletId: UserWalletId): Boolean {
@@ -266,6 +335,16 @@ internal class DefaultWalletsRepository(
                     .plus(userWalletId.stringValue to isEnabled),
             )
         }
+    }
+
+    override fun isUpgradeWalletNotificationEnabled(userWalletId: UserWalletId): Flow<Boolean> {
+        return upgradeWalletNotificationDisabled.map {
+            it.contains(userWalletId)
+        }
+    }
+
+    override suspend fun dismissUpgradeWalletNotification(userWalletId: UserWalletId) {
+        upgradeWalletNotificationDisabled.update { it.plus(userWalletId) }
     }
 
     override suspend fun setWalletName(walletId: String, walletName: String) = withContext(dispatchers.io) {

@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -19,6 +20,7 @@ import com.tangem.common.ui.R
 import com.tangem.common.ui.amountScreen.utils.getFiatReference
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.rows.SelectorRowItem
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.format.bigdecimal.crypto
@@ -26,9 +28,10 @@ import com.tangem.core.ui.format.bigdecimal.fee
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.utils.BigDecimalFormatter
+import com.tangem.core.ui.test.StakingSendDetailsScreenTestTags
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.features.staking.impl.presentation.state.FeeState
+import com.tangem.utils.StringsSigns.DASH_SIGN
 import java.math.BigDecimal
 
 @Composable
@@ -38,7 +41,8 @@ internal fun StakingFeeBlock(feeState: FeeState) {
             .fillMaxWidth()
             .clip(TangemTheme.shapes.roundedCornersXMedium)
             .background(TangemTheme.colors.background.action)
-            .padding(TangemTheme.dimens.spacing12),
+            .padding(TangemTheme.dimens.spacing12)
+            .testTag(StakingSendDetailsScreenTestTags.NETWORK_FEE_BLOCK),
     ) {
         Text(
             text = stringResourceSafe(R.string.common_network_fee_title),
@@ -51,7 +55,7 @@ internal fun StakingFeeBlock(feeState: FeeState) {
                 is FeeState.Content -> {
                     val feeAmount = feeState.fee?.amount
                     SelectorRowItem(
-                        titleRes = R.string.common_fee_selector_option_market,
+                        title = resourceReference(R.string.common_fee_selector_option_market),
                         iconRes = R.drawable.ic_bird_24,
                         preDot = stringReference(
                             feeAmount?.value.format {
@@ -75,7 +79,7 @@ internal fun StakingFeeBlock(feeState: FeeState) {
                 }
                 is FeeState.Loading -> {
                     SelectorRowItem(
-                        titleRes = R.string.common_fee_selector_option_market,
+                        title = resourceReference(R.string.common_fee_selector_option_market),
                         iconRes = R.drawable.ic_bird_24,
                         isSelected = true,
                         paddingValues = PaddingValues(),
@@ -85,7 +89,7 @@ internal fun StakingFeeBlock(feeState: FeeState) {
                 }
                 is FeeState.Error -> {
                     SelectorRowItem(
-                        titleRes = R.string.common_fee_selector_option_market,
+                        title = resourceReference(R.string.common_fee_selector_option_market),
                         iconRes = R.drawable.ic_bird_24,
                         isSelected = true,
                         paddingValues = PaddingValues(),
@@ -126,7 +130,7 @@ private fun BoxScope.FeeError(feeState: FeeState) {
     ) {
         if (it == FeeState.Error) {
             Text(
-                text = BigDecimalFormatter.EMPTY_BALANCE_SIGN,
+                text = DASH_SIGN,
                 color = TangemTheme.colors.text.primary1,
                 style = TangemTheme.typography.body1,
             )

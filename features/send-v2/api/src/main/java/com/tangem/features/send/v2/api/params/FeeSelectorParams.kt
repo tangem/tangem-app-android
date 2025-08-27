@@ -4,7 +4,7 @@ import arrow.core.Either
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.features.send.v2.api.callbacks.FeeSelectorModelCallback
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
@@ -16,6 +16,7 @@ sealed class FeeSelectorParams {
     abstract val feeCryptoCurrencyStatus: CryptoCurrencyStatus
     abstract val feeStateConfiguration: FeeStateConfiguration
     abstract val feeDisplaySource: FeeDisplaySource
+    abstract val analyticsCategoryName: String
 
     data class FeeSelectorBlockParams(
         override val state: FeeSelectorUM,
@@ -24,6 +25,7 @@ sealed class FeeSelectorParams {
         override val feeCryptoCurrencyStatus: CryptoCurrencyStatus,
         override val feeStateConfiguration: FeeStateConfiguration,
         override val feeDisplaySource: FeeDisplaySource,
+        override val analyticsCategoryName: String,
     ) : FeeSelectorParams()
 
     data class FeeSelectorDetailsParams(
@@ -33,6 +35,7 @@ sealed class FeeSelectorParams {
         override val feeCryptoCurrencyStatus: CryptoCurrencyStatus,
         override val feeStateConfiguration: FeeStateConfiguration,
         override val feeDisplaySource: FeeDisplaySource,
+        override val analyticsCategoryName: String,
         val callback: FeeSelectorModelCallback,
     ) : FeeSelectorParams()
 

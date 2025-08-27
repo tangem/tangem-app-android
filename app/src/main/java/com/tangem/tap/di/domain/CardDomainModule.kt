@@ -2,13 +2,18 @@ package com.tangem.tap.di.domain
 
 import com.tangem.domain.card.*
 import com.tangem.domain.card.repository.CardRepository
-import com.tangem.domain.card.repository.DerivationsRepository
+import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
+import com.tangem.domain.core.wallets.UserWalletsListRepository
+import com.tangem.domain.wallets.usecase.DerivePublicKeysUseCase
+import com.tangem.domain.wallets.usecase.GetExtendedPublicKeyForCurrencyUseCase
+import com.tangem.domain.wallets.usecase.HasMissedDerivationsUseCase
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
 import com.tangem.domain.wallets.usecase.NetworkHasDerivationUseCase
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.domain.card.DefaultDeleteSavedAccessCodesUseCase
 import com.tangem.tap.domain.card.DefaultResetCardUseCase
@@ -39,9 +44,16 @@ internal object CardDomainModule {
     }
 
     @Provides
-    @Singleton
-    fun provideIsNeedToBackupUseCase(userWalletsListManager: UserWalletsListManager): IsNeedToBackupUseCase {
-        return IsNeedToBackupUseCase(userWalletsListManager = userWalletsListManager)
+    fun provideIsNeedToBackupUseCase(
+        userWalletsListManager: UserWalletsListManager,
+        userWalletsListRepository: UserWalletsListRepository,
+        hotWalletFeatureToggles: HotWalletFeatureToggles,
+    ): IsNeedToBackupUseCase {
+        return IsNeedToBackupUseCase(
+            userWalletsListManager = userWalletsListManager,
+            userWalletsListRepository = userWalletsListRepository,
+            useNewRepository = hotWalletFeatureToggles.isHotWalletEnabled,
+        )
     }
 
     @Provides

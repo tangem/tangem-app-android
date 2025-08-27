@@ -6,7 +6,9 @@ import com.tangem.common.doOnSuccess
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.Analytics
 import com.tangem.domain.apptheme.model.AppThemeMode
+import com.tangem.domain.core.wallets.UserWalletsListRepository.LockMethod
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.extensions.dispatchNavigationAction
@@ -64,6 +66,14 @@ class DetailsMiddleware {
                     when (action.setting) {
                         AppSetting.SaveWallets -> toggleSaveWallets(state, enable = action.enable)
                         AppSetting.SaveAccessCode -> toggleSaveAccessCodes(state, enable = action.enable)
+                        AppSetting.RequireAccessCode -> toggleRequireAccessCode(
+                            state = state,
+                            enable = action.enable,
+                        )
+                        AppSetting.BiometricAuthentication -> toggleBiometricsAuthentication(
+                            state = state,
+                            enable = action.enable,
+                        )
                     }
                 }
                 is DetailsAction.AppSettings.CheckBiometricsStatus -> {
@@ -87,6 +97,91 @@ class DetailsMiddleware {
                 is DetailsAction.AppSettings.BiometricsStatusChanged,
                 is DetailsAction.AppSettings.Prepare,
                 -> Unit
+            }
+        }
+
+        private fun toggleBiometricsAuthentication(state: DetailsState, enable: Boolean) {
+            scope.launch {
+                val walletsRepository = store.inject(DaggerGraphState::walletsRepository)
+
+                // Nothing to change
+                if (walletsRepository.useBiometricAuthentication() == enable) {
+                    store.dispatchWithMain(DetailsAction.AppSettings.SwitchPrivacySetting.Success)
+                    return@launch
+                }
+
+                toggleRequireAccessCode(
+                    state = state,
+                    enable = true,
+                )
+
+                if (enable) {
+                    setBiometricLockForAllWallets()
+                } else {
+                    // Remove all biometric-related data
+                    removeAllBiometricData()
+                }
+
+                walletsRepository.setUseBiometricAuthentication(value = enable)
+                store.dispatchWithMain(DetailsAction.AppSettings.SwitchPrivacySetting.Success)
+            }
+        }
+
+        private fun toggleRequireAccessCode(state: DetailsState, enable: Boolean) {
+            scope.launch {
+                val walletsRepository = store.inject(DaggerGraphState::walletsRepository)
+
+                // Nothing to change
+                if (walletsRepository.requireAccessCode() == enable) {
+                    store.dispatchWithMain(DetailsAction.AppSettings.SwitchPrivacySetting.Success)
+                    return@launch
+                }
+
+                if (enable) {
+                    // Remove all biometric sign data
+                    removeAllBiometricSingData()
+                    toggleSaveAccessCodes(state, enable = false)
+                } else {
+                    toggleSaveAccessCodes(state, enable = true)
+                }
+
+                walletsRepository.setRequireAccessCode(value = enable)
+                store.dispatchWithMain(DetailsAction.AppSettings.SwitchPrivacySetting.Success)
+            }
+        }
+
+        private suspend fun setBiometricLockForAllWallets() {
+            val userWalletsListRepository = store.inject(DaggerGraphState::userWalletsListRepository)
+            val userWallets = userWalletsListRepository.userWalletsSync()
+            userWallets.forEach {
+                userWalletsListRepository.setLock(
+                    userWalletId = it.walletId,
+                    lockMethod = LockMethod.Biometric,
+                    changeUnsecured = false,
+                )
+            }
+        }
+
+        private suspend fun removeAllBiometricData() {
+            val userWalletsListRepository = store.inject(DaggerGraphState::userWalletsListRepository)
+            userWalletsListRepository.userWalletsSync().forEach {
+                userWalletsListRepository.removeBiometricLock(it.walletId)
+            }
+            removeAllBiometricSingData()
+        }
+
+        private suspend fun removeAllBiometricSingData() {
+            deleteSavedAccessCodes()
+            val userWalletsListRepository = store.inject(DaggerGraphState::userWalletsListRepository)
+            val tangemHotSdk = store.inject(DaggerGraphState::tangemHotSdk)
+            userWalletsListRepository.userWalletsSync().forEach {
+                if (it is UserWallet.Hot) {
+                    userWalletsListRepository.saveWithoutLock(
+                        userWallet = it.copy(
+                            hotWalletId = tangemHotSdk.removeBiometryAuthIfPresented(it.hotWalletId),
+                        ),
+                    )
+                }
             }
         }
 
@@ -233,7 +328,7 @@ class DetailsMiddleware {
             deleteSavedAccessCodes()
             store.inject(DaggerGraphState::walletsRepository).saveShouldSaveUserWallets(item = false)
 
-            store.dispatchNavigationAction { replaceAll(AppRoute.Home) }
+            store.dispatchNavigationAction { replaceAll(AppRoute.Home()) }
 
             return CompletionResult.Success(Unit)
         }

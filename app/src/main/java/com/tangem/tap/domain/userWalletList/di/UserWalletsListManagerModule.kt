@@ -11,14 +11,19 @@ import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.models.scan.serialization.*
 import com.tangem.domain.visa.model.VisaActivationRemoteState
 import com.tangem.domain.visa.model.VisaCardActivationStatus
+import com.tangem.domain.wallets.hot.HotWalletPasswordRequester
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
+import com.tangem.domain.core.wallets.UserWalletsListRepository
+import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository
 import com.tangem.sdk.storage.AndroidSecureStorage
 import com.tangem.sdk.storage.AndroidSecureStorageV2
 import com.tangem.sdk.storage.createEncryptedSharedPreferences
 import com.tangem.tap.domain.userWalletList.implementation.BiometricUserWalletsListManager
 import com.tangem.tap.domain.userWalletList.implementation.GeneralUserWalletsListManager
 import com.tangem.tap.domain.userWalletList.implementation.RuntimeUserWalletsListManager
+import com.tangem.tap.domain.userWalletList.repository.DefaultUserWalletsListRepository
 import com.tangem.tap.domain.userWalletList.repository.DelegatedKeystoreManager
+import com.tangem.tap.domain.userWalletList.repository.UserWalletEncryptionKeysRepository
 import com.tangem.tap.domain.userWalletList.repository.UserWalletsKeysStoreDecorator
 import com.tangem.tap.domain.userWalletList.repository.implementation.BiometricUserWalletsKeysRepository
 import com.tangem.tap.domain.userWalletList.repository.implementation.DefaultSelectedUserWalletRepository
@@ -26,6 +31,7 @@ import com.tangem.tap.domain.userWalletList.repository.implementation.DefaultUse
 import com.tangem.tap.domain.userWalletList.repository.implementation.DefaultUserWalletsSensitiveInformationRepository
 import com.tangem.tap.tangemSdkManager
 import com.tangem.utils.Provider
+import com.tangem.utils.ProviderSuspend
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -40,6 +46,7 @@ internal object UserWalletsListManagerModule {
 
     @Provides
     @Singleton
+    @Deprecated("Use UserWalletsListRepository instead")
     fun provideGeneralUserWalletsListManager(
         @ApplicationContext applicationContext: Context,
         appPreferencesStore: AppPreferencesStore,
@@ -58,42 +65,14 @@ internal object UserWalletsListManagerModule {
         )
     }
 
+    @Deprecated("Use UserWalletsListRepository instead")
     private fun createBiometricUserWalletsListManager(
         applicationContext: Context,
         analyticsEventHandler: AnalyticsEventHandler,
         dispatchers: CoroutineDispatcherProvider,
     ): UserWalletsListManager {
-        val moshi = Moshi.Builder()
-            .add(WalletDerivedKeysMapAdapter())
-            .add(ScanResponseDerivedKeysMapAdapter())
-            .add(ByteArrayKeyAdapter())
-            .add(ExtendedPublicKeysMapAdapter())
-            .add(CardBackupStatusAdapter())
-            .add(DerivationPathAdapterWithMigration())
-            .add(TangemSdkAdapter.DateAdapter())
-            .add(TangemSdkAdapter.DerivationNodeAdapter())
-            .add(TangemSdkAdapter.FirmwareVersionAdapter()) // For PrimaryCard model
-            .add(VisaActivationRemoteState.jsonAdapter)
-            .add(VisaCardActivationStatus.jsonAdapter)
-            .addLast(KotlinJsonAdapterFactory())
-            .build()
-
-        val secureStorage = AndroidSecureStorage(
-            preferences = SecureStorage.createEncryptedSharedPreferences(
-                context = applicationContext,
-                storageName = "user_wallets_storage",
-            ),
-            androidSecureStorageV2 = AndroidSecureStorageV2(
-                appContext = applicationContext,
-                useStrongBox = true,
-                name = "user_wallets_storage2",
-            ),
-            androidSecureStorageV3 = AndroidSecureStorageV2(
-                appContext = applicationContext,
-                useStrongBox = false,
-                name = "user_wallets_storage3",
-            ),
-        )
+        val moshi = buildMoshi()
+        val secureStorage = buildSecureStorage(applicationContext = applicationContext)
 
         val authenticatedStorage = AuthenticatedStorage(
             secureStorage = UserWalletsKeysStoreDecorator(
@@ -132,6 +111,99 @@ internal object UserWalletsListManagerModule {
             publicInformationRepository = publicInformationRepository,
             sensitiveInformationRepository = sensitiveInformationRepository,
             selectedUserWalletRepository = selectedUserWalletRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideUserWalletsListRepository(
+        @ApplicationContext applicationContext: Context,
+        dispatchers: CoroutineDispatcherProvider,
+        passwordRequester: HotWalletPasswordRequester,
+        appPreferencesStore: AppPreferencesStore,
+        hotWalletAccessCodeAttemptsRepository: HotWalletAccessCodeAttemptsRepository,
+    ): UserWalletsListRepository {
+        val moshi = buildMoshi()
+        val secureStorage = buildSecureStorage(applicationContext = applicationContext)
+
+        val authenticatedStorage = AuthenticatedStorage(
+            secureStorage = UserWalletsKeysStoreDecorator(
+                featureStorage = secureStorage,
+                cardSdkStorageProvider = Provider { tangemSdkManager.secureStorage },
+            ),
+            keystoreManager = DelegatedKeystoreManager(
+                keystoreManagerProvider = Provider { tangemSdkManager.keystoreManager },
+            ),
+        )
+
+        val publicInformationRepository = DefaultUserWalletsPublicInformationRepository(
+            moshi = moshi,
+            secureStorage = secureStorage,
+        )
+
+        val sensitiveInformationRepository = DefaultUserWalletsSensitiveInformationRepository(
+            moshi = moshi,
+            secureStorage = secureStorage,
+        )
+
+        val selectedUserWalletRepository = DefaultSelectedUserWalletRepository(
+            secureStorage = secureStorage,
+            dispatchers = dispatchers,
+        )
+
+        val userWalletEncryptionKeysRepository = UserWalletEncryptionKeysRepository(
+            moshi = moshi,
+            authenticatedStorage = authenticatedStorage,
+            dispatchers = dispatchers,
+            secureStorage = secureStorage,
+        )
+
+        return DefaultUserWalletsListRepository(
+            publicInformationRepository = publicInformationRepository,
+            sensitiveInformationRepository = sensitiveInformationRepository,
+            selectedUserWalletRepository = selectedUserWalletRepository,
+            passwordRequester = passwordRequester,
+            userWalletEncryptionKeysRepository = userWalletEncryptionKeysRepository,
+            tangemSdkManagerProvider = Provider { tangemSdkManager },
+            appPreferencesStore = appPreferencesStore,
+            savePersistentInformation = ProviderSuspend { true }, // Always save persistent information for now
+            hotWalletAccessCodeAttemptsRepository = hotWalletAccessCodeAttemptsRepository,
+        )
+    }
+
+    fun buildMoshi(): Moshi {
+        return Moshi.Builder()
+            .add(WalletDerivedKeysMapAdapter())
+            .add(ScanResponseDerivedKeysMapAdapter())
+            .add(ByteArrayKeyAdapter())
+            .add(ExtendedPublicKeysMapAdapter())
+            .add(CardBackupStatusAdapter())
+            .add(DerivationPathAdapterWithMigration())
+            .add(TangemSdkAdapter.DateAdapter())
+            .add(TangemSdkAdapter.DerivationNodeAdapter())
+            .add(TangemSdkAdapter.FirmwareVersionAdapter()) // For PrimaryCard model
+            .add(VisaActivationRemoteState.jsonAdapter)
+            .add(VisaCardActivationStatus.jsonAdapter)
+            .addLast(KotlinJsonAdapterFactory())
+            .build()
+    }
+
+    fun buildSecureStorage(@ApplicationContext applicationContext: Context): SecureStorage {
+        return AndroidSecureStorage(
+            preferences = SecureStorage.createEncryptedSharedPreferences(
+                context = applicationContext,
+                storageName = "user_wallets_storage",
+            ),
+            androidSecureStorageV2 = AndroidSecureStorageV2(
+                appContext = applicationContext,
+                useStrongBox = true,
+                name = "user_wallets_storage2",
+            ),
+            androidSecureStorageV3 = AndroidSecureStorageV2(
+                appContext = applicationContext,
+                useStrongBox = false,
+                name = "user_wallets_storage3",
+            ),
         )
     }
 }

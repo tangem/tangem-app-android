@@ -1,19 +1,7 @@
 package com.tangem.datasource.api.pay
 
 import com.tangem.datasource.api.common.response.ApiResponse
-import com.tangem.datasource.api.pay.models.request.ActivationByCardWalletRequest
-import com.tangem.datasource.api.pay.models.request.ActivationByCustomerWalletRequest
-import com.tangem.datasource.api.pay.models.request.ActivationStatusRequest
-import com.tangem.datasource.api.pay.models.request.ExchangeAccessTokenRequest
-import com.tangem.datasource.api.pay.models.request.GenerateNoneByCardIdRequest
-import com.tangem.datasource.api.pay.models.request.GenerateNoneByCardWalletRequest
-import com.tangem.datasource.api.pay.models.request.GetAccessTokenByCardIdRequest
-import com.tangem.datasource.api.pay.models.request.GetAccessTokenByCardWalletRequest
-import com.tangem.datasource.api.pay.models.request.GetCardWalletAcceptanceRequest
-import com.tangem.datasource.api.pay.models.request.GetCustomerWalletAcceptanceRequest
-import com.tangem.datasource.api.pay.models.request.RefreshTokenByCardIdRequest
-import com.tangem.datasource.api.pay.models.request.RefreshTokenByCardWalletRequest
-import com.tangem.datasource.api.pay.models.request.SetPinCodeRequest
+import com.tangem.datasource.api.pay.models.request.*
 import com.tangem.datasource.api.pay.models.response.*
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -33,8 +21,16 @@ interface TangemPayApi {
         @Body request: GenerateNoneByCardWalletRequest,
     ): ApiResponse<GenerateNonceResponse>
 
+    @POST("v1/auth/challenge")
+    suspend fun generateNonceByCustomerWallet(
+        @Body request: GenerateNonceByCustomerWalletRequest,
+    ): ApiResponse<GenerateNonceResponse>
+
     @POST("v1/auth/token")
     suspend fun getAccessTokenByCardId(@Body request: GetAccessTokenByCardIdRequest): ApiResponse<JWTResponse>
+
+    @POST("v1/auth/token")
+    suspend fun getTokenByCustomerWallet(@Body request: GetTokenByCustomerWalletRequest): ApiResponse<JWTResponse>
 
     @POST("v1/auth/token")
     suspend fun getAccessTokenByCardWallet(@Body request: GetAccessTokenByCardWalletRequest): ApiResponse<JWTResponse>

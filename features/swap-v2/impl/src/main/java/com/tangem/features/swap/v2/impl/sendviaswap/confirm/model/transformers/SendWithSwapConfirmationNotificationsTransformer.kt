@@ -5,6 +5,7 @@ import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
@@ -12,6 +13,8 @@ import com.tangem.domain.swap.models.SwapDirection.Companion.withSwapDirection
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.features.send.v2.api.subcomponents.feeSelector.utils.FeeCalculationUtils.checkIfCustomFeeTooHigh
 import com.tangem.features.send.v2.api.subcomponents.feeSelector.utils.FeeCalculationUtils.checkIfCustomFeeTooLow
+import com.tangem.features.send.v2.api.utils.formatFooterFiatFee
+import com.tangem.features.send.v2.api.utils.getTronTokenFeeSendingText
 import com.tangem.features.swap.v2.impl.R
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
 import com.tangem.features.swap.v2.impl.common.entity.ConfirmUM
@@ -27,6 +30,7 @@ internal class SendWithSwapConfirmationNotificationsTransformer : Transformer<Se
         return prevState.copy(
             confirmUM = confirmUM.copy(
                 sendingFooter = getSendingFooterText(feeSelectorUM, prevState.amountUM),
+                tosUM = createTosUM(prevState.amountUM),
                 notifications = buildList {
                     addTooHighNotification(feeSelectorUM = feeSelectorUM)
                     addTooLowNotification(feeSelectorUM = feeSelectorUM)
@@ -75,23 +79,20 @@ internal class SendWithSwapConfirmationNotificationsTransformer : Transformer<Se
                 fiatCurrencySymbol = appCurrency.symbol,
             )
         }
-        val fiatFee = TextReference.EMPTY
-        // todo send with swap footer
-        // formatFooterFiatFee(
-        //     amount = feeItem.fee.amount.copy(value = fiatFeeValue),
-        //     isFeeConvertibleToFiat = feeSelectorUM.feeExtraInfo.isFeeConvertibleToFiat,
-        //     isFeeApproximate = feeSelectorUM.feeExtraInfo.isFeeApproximate,
-        //     appCurrency = appCurrency,
-        // )
+        val fee = feeItem.fee
+        val fiatFee = formatFooterFiatFee(
+            amount = fee.amount.copy(value = fiatFeeValue),
+            isFeeConvertibleToFiat = feeSelectorUM.feeExtraInfo.isFeeConvertibleToFiat,
+            isFeeApproximate = feeSelectorUM.feeExtraInfo.isFeeApproximate,
+            appCurrency = appCurrency,
+        )
 
-        return if (feeSelectorUM.feeExtraInfo.isTronToken && feeItem.fee is Fee.Tron) {
-            // todo send with swap footer
-            // getTronTokenFeeSendingText(
-            //     fee = feeItem.fee,
-            //     fiatFee = fiatFee,
-            //     fiatSending = stringReference(fiatSending),
-            // )
-            TextReference.EMPTY
+        return if (feeSelectorUM.feeExtraInfo.isTronToken && fee is Fee.Tron) {
+            getTronTokenFeeSendingText(
+                fee = fee,
+                fiatFee = fiatFee,
+                fiatSending = stringReference(fiatSending),
+            )
         } else {
             resourceReference(
                 id = if (feeSelectorUM.feeExtraInfo.isFeeConvertibleToFiat) {
@@ -102,5 +103,24 @@ internal class SendWithSwapConfirmationNotificationsTransformer : Transformer<Se
                 formatArgs = wrappedList(fiatSending, fiatFee),
             )
         }
+    }
+
+    private fun createTosUM(swapAmountUM: SwapAmountUM): ConfirmUM.Content.TosUM? {
+        val expressProvider = (swapAmountUM as? SwapAmountUM.Content)?.selectedQuote?.provider ?: return null
+
+        return ConfirmUM.Content.TosUM(
+            tosLink = expressProvider.termsOfUse?.let {
+                ConfirmUM.Content.LegalUM(
+                    title = resourceReference(R.string.common_terms_of_use),
+                    link = it,
+                )
+            },
+            policyLink = expressProvider.privacyPolicy?.let {
+                ConfirmUM.Content.LegalUM(
+                    title = resourceReference(R.string.common_privacy_policy),
+                    link = it,
+                )
+            },
+        )
     }
 }

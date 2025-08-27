@@ -1,16 +1,18 @@
 package com.tangem.domain.staking
 
-import arrow.core.Either
-import com.tangem.domain.staking.model.stakekit.action.StakingActionType
-import com.tangem.domain.staking.repositories.StakingRepository
+import com.tangem.domain.staking.model.StakingIntegrationID
+import com.tangem.domain.models.staking.action.StakingActionType
 import java.math.BigDecimal
 
-class GetActionRequirementAmountUseCase(
-    private val stakingRepository: StakingRepository,
-) {
+class GetActionRequirementAmountUseCase {
 
-    operator fun invoke(integrationId: String, actionType: StakingActionType): Either<Throwable, BigDecimal?> =
-        Either.catch {
-            stakingRepository.getActionRequirementAmount(integrationId, actionType)
+    operator fun invoke(integrationId: String, actionType: StakingActionType): BigDecimal? {
+        return if (StakingIntegrationID.EthereumToken.Polygon.value == integrationId &&
+            actionType == StakingActionType.CLAIM_REWARDS
+        ) {
+            BigDecimal.ONE
+        } else {
+            null
         }
+    }
 }

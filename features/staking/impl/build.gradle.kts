@@ -17,6 +17,7 @@ dependencies {
     implementation(deps.androidx.paging.runtime)
 
     /** Other dependencies */
+    implementation(deps.kotlin.datetime)
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.material)
     implementation(deps.arrow.core)
@@ -27,7 +28,6 @@ dependencies {
     /** Compose */
     implementation(deps.compose.accompanist.systemUiController)
     implementation(deps.compose.material3)
-    implementation(deps.compose.material)
     implementation(deps.compose.foundation)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
