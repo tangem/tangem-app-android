@@ -12,12 +12,12 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.models.TokensSortType
+import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.tokens.ApplyTokenListSortingUseCase
 import com.tangem.domain.tokens.GetTokenListUseCase
 import com.tangem.domain.tokens.ToggleTokenListGroupingUseCase
 import com.tangem.domain.tokens.ToggleTokenListSortingUseCase
 import com.tangem.domain.tokens.error.TokenListError
-import com.tangem.domain.tokens.model.TokenList
 import com.tangem.feature.wallet.child.organizetokens.OrganizeTokensComponent
 import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensIntents
 import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensStateHolder
