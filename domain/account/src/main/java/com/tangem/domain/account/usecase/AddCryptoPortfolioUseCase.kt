@@ -55,7 +55,7 @@ class AddCryptoPortfolioUseCase(
         newAccount
     }
 
-    private fun Raise<Error>.createAccount(
+    private fun createAccount(
         userWalletId: UserWalletId,
         accountName: AccountName,
         icon: CryptoPortfolioIcon,
@@ -72,7 +72,7 @@ class AddCryptoPortfolioUseCase(
 
     private suspend fun Raise<Error>.getAccountList(userWalletId: UserWalletId): Option<AccountList> {
         return catch(
-            block = { crudRepository.getAccounts(userWalletId = userWalletId) },
+            block = { crudRepository.getAccountListSync(userWalletId = userWalletId) },
             catch = { raise(Error.DataOperationFailed(cause = it)) },
         )
     }
