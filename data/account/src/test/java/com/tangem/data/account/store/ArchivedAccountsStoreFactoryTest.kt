@@ -9,7 +9,7 @@ import org.junit.jupiter.api.TestInstance
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ArchivedAccountsStoreFactoryTest {
 
-    private val factory = ArchivedAccountsStoreFactory()
+    private val factory = ArchivedAccountsStoreFactory
 
     @AfterEach
     fun tearDownEach() {
