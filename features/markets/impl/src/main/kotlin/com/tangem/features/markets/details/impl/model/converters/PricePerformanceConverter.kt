@@ -1,7 +1,9 @@
 package com.tangem.features.markets.details.impl.model.converters
 
 import androidx.compose.runtime.Stable
-import com.tangem.core.ui.utils.BigDecimalFormatter
+import com.tangem.core.ui.format.bigdecimal.fiat
+import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.format.bigdecimal.price
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.PriceChangeInterval
 import com.tangem.domain.markets.TokenMarketInfo
@@ -45,11 +47,12 @@ internal class PricePerformanceConverter(
     private fun BigDecimal?.convert(): String {
         val currency = appCurrency()
 
-        return BigDecimalFormatter.formatFiatPriceUncapped(
-            fiatAmount = this,
-            fiatCurrencyCode = currency.code,
-            fiatCurrencySymbol = currency.symbol,
-        )
+        return format {
+            fiat(
+                fiatCurrencyCode = currency.code,
+                fiatCurrencySymbol = currency.symbol,
+            ).price()
+        }
     }
 
     private fun TokenMarketInfo.Range.calculateFraction(currentPrice: BigDecimal): Float {
