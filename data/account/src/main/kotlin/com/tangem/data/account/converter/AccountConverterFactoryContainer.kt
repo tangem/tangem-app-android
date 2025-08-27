@@ -1,5 +1,7 @@
 package com.tangem.data.account.converter
 
+import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.models.wallet.UserWalletId
 import javax.inject.Inject
 
 /**
@@ -14,7 +16,21 @@ import javax.inject.Inject
 [REDACTED_AUTHOR]
  */
 internal class AccountConverterFactoryContainer @Inject constructor(
-    val accountsListCF: AccountListConverter.Factory,
     val getWalletAccountsResponseCF: GetWalletAccountsResponseConverter.Factory,
-    val cryptoPortfolioCF: CryptoPortfolioConverter.Factory,
-)
+    private val accountsListCF: AccountListConverter.Factory,
+    private val cryptoPortfolioCF: CryptoPortfolioConverter.Factory,
+    private val userWalletsStore: UserWalletsStore,
+) {
+
+    fun createAccountListConverter(userWalletId: UserWalletId): AccountListConverter {
+        val userWallet = userWalletsStore.getSyncStrict(key = userWalletId)
+
+        return accountsListCF.create(userWallet)
+    }
+
+    fun createCryptoPortfolioConverter(userWalletId: UserWalletId): CryptoPortfolioConverter {
+        val userWallet = userWalletsStore.getSyncStrict(key = userWalletId)
+
+        return cryptoPortfolioCF.create(userWallet)
+    }
+}
