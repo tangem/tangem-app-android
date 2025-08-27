@@ -46,7 +46,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
         is BackupAction.ResumeFoundUnfinishedBackup -> {
             if (action.unfinishedBackupScanResponse != null) {
                 store.dispatchNavigationAction {
-                    push(
+                    replaceAll(
                         AppRoute.Onboarding(
                             scanResponse = action.unfinishedBackupScanResponse,
                             mode = AppRoute.Onboarding.Mode.ContinueFinalize,

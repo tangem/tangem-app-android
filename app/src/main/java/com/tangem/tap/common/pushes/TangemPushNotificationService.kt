@@ -18,7 +18,6 @@ import com.google.firebase.messaging.RemoteMessage
 import com.tangem.domain.common.LogConfig
 import com.tangem.tap.MainActivity
 import com.tangem.tap.common.images.createCoilImageLoader
-import com.tangem.tap.features.intentHandler.handlers.OnPushClickedIntentHandler
 import com.tangem.wallet.R
 import timber.log.Timber
 
@@ -40,7 +39,7 @@ internal class TangemPushNotificationService : FirebaseMessagingService() {
             message.data.forEach {
                 putExtra(it.key, it.value)
             }
-            putExtra(OnPushClickedIntentHandler.OPENED_FROM_GCM_PUSH, true)
+            putExtra(OPENED_FROM_GCM_PUSH, true)
             addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
         }
         val pendingIntent = PendingIntent.getActivity(
@@ -104,5 +103,6 @@ internal class TangemPushNotificationService : FirebaseMessagingService() {
     private companion object {
         const val TANGEM_CHANNEL_ID = "Tangem General" // General channel for notifications
         const val PUSH_NOTIFICATION_REQUEST_CODE = 123
+        const val OPENED_FROM_GCM_PUSH = "google.sent_time" // every bundle from FCM contains this key
     }
 }

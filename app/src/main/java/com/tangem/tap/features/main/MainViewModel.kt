@@ -28,7 +28,6 @@ import com.tangem.domain.notifications.GetApplicationIdUseCase
 import com.tangem.domain.notifications.SendPushTokenUseCase
 import com.tangem.domain.notifications.models.ApplicationId
 import com.tangem.domain.notifications.toggles.NotificationsFeatureToggles
-import com.tangem.domain.onboarding.repository.OnboardingRepository
 import com.tangem.domain.onramp.FetchHotCryptoUseCase
 import com.tangem.domain.promo.GetStoryContentUseCase
 import com.tangem.domain.promo.models.StoryContentIds
@@ -43,12 +42,10 @@ import com.tangem.domain.wallets.usecase.GetSavedWalletsCountUseCase
 import com.tangem.domain.wallets.usecase.UpdateRemoteWalletsInfoUseCase
 import com.tangem.feature.swap.analytics.StoriesEvents
 import com.tangem.tap.common.extensions.setContext
-import com.tangem.tap.common.redux.global.GlobalAction
-import com.tangem.tap.features.onboarding.products.wallet.redux.BackupDialog
 import com.tangem.tap.network.exchangeServices.ExchangeService
 import com.tangem.tap.network.exchangeServices.moonpay.MoonPayService
 import com.tangem.tap.proxy.AppStateHolder
-import com.tangem.tap.store
+import com.tangem.tap.routing.configurator.AppRouterConfig
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.wallet.BuildConfig
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -79,7 +76,6 @@ internal class MainViewModel @Inject constructor(
     private val getStoryContentUseCase: GetStoryContentUseCase,
     private val imagePreloader: ImagePreloader,
     private val fetchHotCryptoUseCase: FetchHotCryptoUseCase,
-    private val onboardingRepository: OnboardingRepository,
     private val notificationsToggles: NotificationsFeatureToggles,
     private val getApplicationIdUseCase: GetApplicationIdUseCase,
     private val subscribeOnWalletsUseCase: GetSavedWalletsCountUseCase,
@@ -90,6 +86,7 @@ internal class MainViewModel @Inject constructor(
     private val multiQuoteUpdater: MultiQuoteUpdater,
     private val appStateHolder: AppStateHolder,
     private val environmentConfigStorage: EnvironmentConfigStorage,
+    private val appRouterConfig: AppRouterConfig,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
 ) : ViewModel() {
 
@@ -140,13 +137,6 @@ internal class MainViewModel @Inject constructor(
         multiQuoteUpdater.unsubscribe()
     }
 
-    fun checkForUnfinishedBackup() {
-        viewModelScope.launch(dispatchers.main) {
-            val onboardingScanResponse = onboardingRepository.getUnfinishedFinalizeOnboarding() ?: return@launch
-            store.dispatch(GlobalAction.ShowDialog(BackupDialog.UnfinishedBackupFound(onboardingScanResponse)))
-        }
-    }
-
     /** Loading the resources needed to run the application */
     private fun loadApplicationResources() {
         viewModelScope.launch {
@@ -159,6 +149,9 @@ internal class MainViewModel @Inject constructor(
             }
 
             prepareSelectedWalletFeedback()
+
+            // await while initial route stack is initialized
+            appRouterConfig.isInitialized.first { it }
 
             isSplashScreenShown = false
         }

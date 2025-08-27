@@ -15,7 +15,7 @@ import java.net.URLDecoder
  */
 class WalletConnectLinkIntentHandler : IntentHandler, AffectsNavigation {
 
-    override fun handleIntent(intent: Intent?, isFromForeground: Boolean): Boolean {
+    override fun handleIntent(intent: Intent?): Boolean {
         val intentData = intent?.data ?: return false
         val scheme = intent.scheme ?: return false
 

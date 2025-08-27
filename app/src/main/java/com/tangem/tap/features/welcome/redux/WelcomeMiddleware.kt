@@ -1,6 +1,5 @@
 package com.tangem.tap.features.welcome.redux
 
-import android.content.Intent
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnResult
@@ -20,7 +19,6 @@ import com.tangem.domain.wallets.legacy.unlockIfLockable
 import com.tangem.tap.*
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.AppState
-import com.tangem.tap.features.intentHandler.handlers.WalletConnectLinkIntentHandler
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
@@ -32,52 +30,25 @@ internal class WelcomeMiddleware {
             { action ->
                 val appState = appStateProvider()
                 if (action is WelcomeAction && appState != null) {
-                    handleAction(action, appState.welcomeState)
+                    handleAction(action)
                 }
                 next(action)
             }
         }
     }
 
-    private fun handleAction(action: WelcomeAction, state: WelcomeState) {
+    private fun handleAction(action: WelcomeAction) {
         mainScope.launch {
             when (action) {
-                is WelcomeAction.ProceedWithIntent -> proceedWithIntent(action.intent)
-                is WelcomeAction.ProceedWithBiometrics -> proceedWithBiometrics(
-                    afterUnlockIntent = action.afterUnlockIntent ?: state.intent,
-                )
-                is WelcomeAction.ProceedWithCard -> proceedWithCard(afterScanIntent = state.intent)
+                is WelcomeAction.ProceedWithBiometrics -> proceedWithBiometrics()
+                is WelcomeAction.ProceedWithCard -> proceedWithCard()
                 is WelcomeAction.ClearUserWallets -> disableUserWalletsSaving()
                 else -> Unit
             }
         }
     }
 
-    private suspend fun proceedWithIntent(initialIntent: Intent) {
-        Timber.d(
-            """
-                Proceeding with intent
-                |- Intent: $initialIntent
-            """.trimIndent(),
-        )
-
-        val hasUncompletedBackup = backupService.hasIncompletedBackup
-
-        if (!hasUncompletedBackup) {
-            store.dispatchWithMain(WelcomeAction.ProceedWithBiometrics(initialIntent))
-        } else {
-            store.dispatchWithMain(WelcomeAction.ProceedWithCard)
-        }
-    }
-
-    private suspend fun proceedWithBiometrics(afterUnlockIntent: Intent?) {
-        Timber.d(
-            """
-                Proceeding with biometry
-                |- Intent: $afterUnlockIntent
-            """.trimIndent(),
-        )
-
+    private suspend fun proceedWithBiometrics() {
         val userWalletsListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
         userWalletsListManager.unlockIfLockable(type = UnlockType.ANY)
             .doOnFailure { error ->
@@ -93,21 +64,10 @@ internal class WelcomeMiddleware {
                 store.dispatchNavigationAction { replaceAll(AppRoute.Wallet) }
                 store.dispatchWithMain(WelcomeAction.ProceedWithBiometrics.Success)
                 store.onUserWalletSelected(userWallet = selectedUserWallet)
-
-                afterUnlockIntent?.let {
-                    WalletConnectLinkIntentHandler().handleIntent(it, false)
-                }
             }
     }
 
-    private suspend fun proceedWithCard(afterScanIntent: Intent?) {
-        Timber.d(
-            """
-                Proceeding with card
-                |- Intent: $afterScanIntent
-            """.trimIndent(),
-        )
-
+    private suspend fun proceedWithCard() {
         scanCardInternal { scanResponse ->
             val userWalletBuilder = store.inject(DaggerGraphState::coldUserWalletBuilderFactory).create(scanResponse)
 
@@ -125,10 +85,6 @@ internal class WelcomeMiddleware {
                     store.dispatchNavigationAction { replaceAll(AppRoute.Wallet) }
                     store.dispatchWithMain(WelcomeAction.ProceedWithCard.Success)
                     store.onUserWalletSelected(userWallet = userWallet)
-
-                    afterScanIntent?.let {
-                        WalletConnectLinkIntentHandler().handleIntent(it, false)
-                    }
                 }
         }
     }
