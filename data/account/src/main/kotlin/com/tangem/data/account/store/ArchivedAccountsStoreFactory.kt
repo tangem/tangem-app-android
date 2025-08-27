@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap
  *
 [REDACTED_AUTHOR]
  */
-internal class ArchivedAccountsStoreFactory {
+internal object ArchivedAccountsStoreFactory {
 
     private val createdRuntimeStores = ConcurrentHashMap<UserWalletId, ArchivedAccountsStore>()
 
