@@ -38,6 +38,7 @@ class GetUnoccupiedAccountIndexUseCase(
             block = { crudRepository.getTotalAccountsCount(userWalletId = userWalletId) },
             catch = { raise(Error.DataOperationFailed(cause = it)) },
         )
+            .getOrElse { raise(Error.DataNotFound) }
     }
 
     /**
@@ -47,6 +48,10 @@ class GetUnoccupiedAccountIndexUseCase(
 
         val tag: String
             get() = this::class.simpleName ?: "GetUnoccupiedAccountIndexUseCase.Error"
+
+        data object DataNotFound : Error {
+            override fun toString(): String = "$tag: Data not found"
+        }
 
         /** Error indicating that the derivation index is invalid */
         data class InvalidDerivationIndex(val cause: DerivationIndex.Error) : Error {
