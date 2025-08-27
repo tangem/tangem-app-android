@@ -23,7 +23,6 @@ dependencies {
     implementation(deps.compose.accompanist.permission)
     implementation(deps.compose.accompanist.webView)
     implementation(deps.compose.material3)
-    implementation(deps.compose.material)
 
     /** Core modules */
     implementation(projects.core.ui)
