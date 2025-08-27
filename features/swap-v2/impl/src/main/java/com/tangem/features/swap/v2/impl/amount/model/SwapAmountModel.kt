@@ -536,18 +536,17 @@ internal class SwapAmountModel @Inject constructor(
         } as? AmountState.Data
 
         val fromAmountValue = fromAmount?.amountTextField?.cryptoAmount?.value.orZero()
-
-        if (fromAmount?.amountTextField?.isError == true || fromAmountValue.isNullOrZero()) {
+        val isAmountScreen = params is SwapAmountComponentParams.AmountParams
+        val isAmountError = fromAmount?.amountTextField?.isError == true || fromAmountValue.isNullOrZero()
+        if (isAmountScreen && isAmountError) {
             uiState.transformerUpdate(SwapQuoteEmptyStateTransformer)
             return
         }
 
-        val swapGroups = state.swapCurrencies.getGroupWithDirection(state.swapDirection)
-
-        uiState.transformerUpdate(SwapQuoteLoadingStateTransformer)
+        if (!isSilentReload) { uiState.transformerUpdate(SwapQuoteLoadingStateTransformer) }
 
         modelScope.launch {
-            val quotes = swapGroups.available.filter {
+            val quotes = state.swapCurrencies.getGroupWithDirection(state.swapDirection).available.filter {
                 it.currencyStatus.currency.id == toCryptoCurrency.id
             }.flatMap {
                 it.providers
@@ -594,7 +593,6 @@ internal class SwapAmountModel @Inject constructor(
                     needApplyFcaRestrictions = userCountry.needApplyFCARestrictions(),
                 ),
             )
-
             feeSelectorReloadTrigger.triggerUpdate()
         }
     }
