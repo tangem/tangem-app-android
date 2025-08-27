@@ -80,6 +80,7 @@ configurations.androidTestImplementation {
 dependencies {
     implementation(projects.domain.legacy)
     implementation(projects.libs.blockchainSdk)
+    implementation(projects.domain.account)
     implementation(projects.domain.models)
     implementation(projects.domain.core)
     implementation(projects.domain.card)
@@ -144,6 +145,7 @@ dependencies {
     implementation(projects.libs.blockchainSdk)
     implementation(projects.libs.tangemSdkApi)
 
+    implementation(projects.data.account)
     implementation(projects.data.appCurrency)
     implementation(projects.data.appTheme)
     implementation(projects.data.balanceHiding)
@@ -226,13 +228,23 @@ dependencies {
     implementation(projects.features.usedesk.impl)
     implementation(projects.features.hotWallet.api)
     implementation(projects.features.hotWallet.impl)
+    implementation(projects.features.kyc.api)
     //TODO disable for release because of the permissions
-    // implementation(projects.features.kyc.api)
     // implementation(projects.features.kyc.impl)
     implementation(projects.features.welcome.api)
     implementation(projects.features.welcome.impl)
     implementation(projects.features.createWalletSelection.api)
     implementation(projects.features.createWalletSelection.impl)
+    implementation(projects.features.home.api)
+    implementation(projects.features.home.impl)
+    implementation(projects.features.account.api)
+    implementation(projects.features.account.impl)
+    implementation(projects.features.tangempay.details.api)
+    implementation(projects.features.tangempay.details.impl)
+    implementation(projects.features.tangempay.main.api)
+    implementation(projects.features.tangempay.main.impl)
+    implementation(projects.features.tokenRecieve.api)
+    implementation(projects.features.tokenRecieve.impl)
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)
@@ -255,13 +267,11 @@ dependencies {
 
     /** Compose libraries */
     implementation(deps.compose.constraintLayout)
-    implementation(deps.compose.material)
     implementation(deps.compose.material3)
     implementation(deps.compose.animation)
     implementation(deps.compose.coil)
     implementation(deps.compose.constraintLayout)
     implementation(deps.compose.foundation)
-    implementation(deps.compose.material)
     implementation(deps.compose.navigation.hilt)
     implementation(deps.compose.shimmer)
     implementation(deps.compose.ui)
@@ -346,7 +356,7 @@ dependencies {
 
     /** Chucker */
     debugImplementation(deps.chucker)
-    mockedImplementation(deps.chuckerStub)
+    mockedImplementation(deps.chucker)
     externalImplementation(deps.chuckerStub)
     internalImplementation(deps.chuckerStub)
     releaseImplementation(deps.chuckerStub)
