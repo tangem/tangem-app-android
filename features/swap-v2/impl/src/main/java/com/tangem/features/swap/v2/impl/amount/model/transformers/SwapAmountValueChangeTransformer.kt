@@ -45,6 +45,7 @@ internal class SwapAmountValueChangeTransformer(
         )
 
         return (updatedState as? SwapAmountUM.Content)?.copy(
+            isPrimaryButtonEnabled = false,
             selectedQuote = if (updatedState.isPrimaryButtonEnabled) {
                 SwapQuoteUM.Empty
             } else {
