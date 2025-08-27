@@ -29,7 +29,11 @@ import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.wallet.requireColdWallet
 import com.tangem.domain.promo.GetStoryContentUseCase
 import com.tangem.domain.promo.ShouldShowStoriesUseCase
 import com.tangem.domain.promo.models.StoryContentIds
@@ -40,11 +44,7 @@ import com.tangem.domain.tokens.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.tokens.GetMinimumTransactionAmountSyncUseCase
 import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.UpdateDelayedNetworkStatusUseCase
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
-import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.models.wallet.requireColdWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.swap.analytics.StoriesEvents
 import com.tangem.feature.swap.analytics.SwapEvents
@@ -1351,8 +1351,6 @@ internal class SwapModel @Inject constructor(
             val transaction = dataState.swapDataModel?.transaction
             val fromCurrencyStatus = dataState.fromCryptoCurrency ?: initialFromStatus
             val network = fromCurrencyStatus.currency.network
-            val cardInfo = getCardInfoUseCase(userWallet.requireColdWallet().scanResponse) // TODO [REDACTED_TASK_KEY]
-                .getOrElse { error("CardInfo must be not null") }
 
             saveBlockchainErrorUseCase(
                 error = BlockchainErrorInfo(
@@ -1365,6 +1363,13 @@ internal class SwapModel @Inject constructor(
                     fee = dataState.selectedFee?.feeCryptoFormatted.orEmpty(),
                 ),
             )
+
+            if (userWallet is UserWallet.Hot) {
+                return@launch // TODO [REDACTED_TASK_KEY] [Hot Wallet] Email feedback flow
+            }
+
+            val cardInfo = getCardInfoUseCase(userWallet.requireColdWallet().scanResponse)
+                .getOrElse { error("CardInfo must be not null") }
 
             val email = FeedbackEmailType.SwapProblem(
                 cardInfo = cardInfo,
