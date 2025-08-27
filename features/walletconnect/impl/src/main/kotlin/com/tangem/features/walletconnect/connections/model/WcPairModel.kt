@@ -186,7 +186,7 @@ internal class WcPairModel @Inject constructor(
             source = WcAnalyticEvents.NoticeSecurityAlert.Source.Domain,
         )
         analytics.send(event)
-        stackNavigation.pushNew(WcAppInfoRoutes.Alert(WcAppInfoRoutes.Alert.Type.UnknownDomain))
+        stackNavigation.pushNew(WcAppInfoRoutes.Alert.UnknownDomain)
     }
 
     private fun showSecurityRiskAlert() {
@@ -196,11 +196,11 @@ internal class WcPairModel @Inject constructor(
             source = WcAnalyticEvents.NoticeSecurityAlert.Source.Domain,
         )
         analytics.send(event)
-        stackNavigation.pushNew(WcAppInfoRoutes.Alert(WcAppInfoRoutes.Alert.Type.UnsafeDomain))
+        stackNavigation.pushNew(WcAppInfoRoutes.Alert.UnsafeDomain)
     }
 
     private fun showVerifiedAlert(appName: String) {
-        stackNavigation.pushNew(WcAppInfoRoutes.Alert(WcAppInfoRoutes.Alert.Type.Verified(appName)))
+        stackNavigation.pushNew(WcAppInfoRoutes.Alert.Verified(appName))
     }
 
     private fun processSuccessfullyConnected(session: WcSession) {
@@ -216,18 +216,18 @@ internal class WcPairModel @Inject constructor(
 
     private fun processError(error: WcPairError) {
         val alert = when (error) {
-            is WcPairError.InvalidDomainURL -> WcAppInfoRoutes.Alert.Type.InvalidDomain
-            is WcPairError.UnsupportedDApp -> WcAppInfoRoutes.Alert.Type.UnsupportedDApp(error.appName)
-            is WcPairError.UnsupportedBlockchains -> WcAppInfoRoutes.Alert.Type.UnsupportedNetwork(error.appName)
-            is WcPairError.UriAlreadyUsed -> WcAppInfoRoutes.Alert.Type.UriAlreadyUsed
-            is WcPairError.TimeoutException -> WcAppInfoRoutes.Alert.Type.TimeoutException
+            is WcPairError.InvalidDomainURL -> WcAppInfoRoutes.Alert.InvalidDomain
+            is WcPairError.UnsupportedDApp -> WcAppInfoRoutes.Alert.UnsupportedDApp(error.appName)
+            is WcPairError.UnsupportedBlockchains -> WcAppInfoRoutes.Alert.UnsupportedNetwork(error.appName)
+            is WcPairError.UriAlreadyUsed -> WcAppInfoRoutes.Alert.UriAlreadyUsed
+            is WcPairError.TimeoutException -> WcAppInfoRoutes.Alert.TimeoutException
             else -> {
                 messageSender.send(ToastMessage(message = stringReference(error.message)))
                 router.pop()
                 null
             }
         }
-        alert?.let { stackNavigation.pushNew(WcAppInfoRoutes.Alert(it)) }
+        alert?.let { stackNavigation.pushNew(it) }
     }
 
     override fun onWalletSelected(userWalletId: UserWalletId) {

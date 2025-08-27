@@ -125,11 +125,15 @@
   <string name="biometric_lockout_warning_title">Too many attempts</string>
   <string name="biometric_unavailable_warning">You have disabled biometric authentication on your phone and will not be able to save wallets in the app. To save wallets, please enable the biometric authentication function in your phone settings.</string>
   <string name="bitcoin_promo_activation_error">An error occurred while processing your promo code. Please try again later.</string>
-  <string name="bitcoin_promo_activation_success">Your promo code has been successfully activated. A bonus of 10 USDT in Bitcoin will be credited in 14 days.</string>
-  <string name="bitcoin_promo_activation_success_title">Promo code activated</string>
+  <string name="bitcoin_promo_activation_error_title">Activation error</string>
+  <string name="bitcoin_promo_activation_success">Your promo code was successfully activated. A bonus of 10 USDT in Bitcoin will be credited to your account within 14 days.</string>
+  <string name="bitcoin_promo_activation_success_title">Promo Code Activated</string>
   <string name="bitcoin_promo_already_activated">This promo code has already been used and cannot be activated again.</string>
+  <string name="bitcoin_promo_already_activated_title">Code unavailable</string>
   <string name="bitcoin_promo_invalid_code">This promo code is not valid and cannot be activated.</string>
+  <string name="bitcoin_promo_invalid_code_title">Invalid code</string>
   <string name="bitcoin_promo_no_address">A Bitcoin address is required to receive the bonus. Please add one to your wallet and retry the activation.</string>
+  <string name="bitcoin_promo_no_address_title">Bitcoin address required</string>
   <string name="button_start_backup_process">Start backup process</string>
   <string name="buy_token_description">Use a bank card or other payment methods</string>
   <plurals name="card_label_card_count">
@@ -735,6 +739,9 @@
   <string name="notification_referral_promo_button">Join Now</string>
   <string name="notification_referral_promo_text">Share your code - earn 5 USDT per sale. Your friend gets 10% OFF.</string>
   <string name="notification_referral_promo_title">Get REWARDS for every friend!</string>
+  <string name="notification_sepa_button">Buy crypto</string>
+  <string name="notification_sepa_text">Enjoy zero fees when purchasing crypto via SEPA transfer.</string>
+  <string name="notification_sepa_title">Buy Crypto with SEPA</string>
   <string name="onboarding_access_code_feature_1_description">Set up a single access code to protect all your devices.</string>
   <string name="onboarding_access_code_feature_1_title">Protect</string>
   <string name="onboarding_access_code_feature_2_description">Set an individual access code for each card or ring later.</string>
