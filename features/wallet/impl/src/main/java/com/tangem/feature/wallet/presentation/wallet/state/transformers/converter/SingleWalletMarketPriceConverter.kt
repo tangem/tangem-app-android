@@ -4,11 +4,13 @@ import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.marketprice.PriceChangeState
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.components.marketprice.utils.PriceChangeConverter
+import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
-import com.tangem.core.ui.utils.BigDecimalFormatter
+import com.tangem.core.ui.format.bigdecimal.uncapped
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.utils.StringsSigns.DASH_SIGN
 import com.tangem.utils.converter.Converter
 
 internal class SingleWalletMarketPriceConverter(
@@ -47,17 +49,18 @@ internal class SingleWalletMarketPriceConverter(
     }
 
     private fun formatPrice(status: CryptoCurrencyStatus.Value, appCurrency: AppCurrency): String {
-        val fiatRate = status.fiatRate ?: return BigDecimalFormatter.EMPTY_BALANCE_SIGN
+        val fiatRate = status.fiatRate ?: return DASH_SIGN
 
-        return BigDecimalFormatter.formatFiatAmountUncapped(
-            fiatAmount = fiatRate,
-            fiatCurrencyCode = appCurrency.code,
-            fiatCurrencySymbol = appCurrency.symbol,
-        )
+        return fiatRate.format {
+            fiat(
+                fiatCurrencyCode = appCurrency.code,
+                fiatCurrencySymbol = appCurrency.symbol,
+            ).uncapped()
+        }
     }
 
     private fun formatPriceChange(status: CryptoCurrencyStatus.Value): String {
-        val priceChange = status.priceChange ?: return BigDecimalFormatter.EMPTY_BALANCE_SIGN
+        val priceChange = status.priceChange ?: return DASH_SIGN
 
         return priceChange.format { percent() }
     }
