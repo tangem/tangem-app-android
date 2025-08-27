@@ -4,6 +4,8 @@ import androidx.compose.runtime.Stable
 import androidx.paging.cachedIn
 import arrow.core.getOrElse
 import arrow.core.merge
+import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.activate
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
@@ -33,23 +35,26 @@ import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
-import com.tangem.domain.card.GetExtendedPublicKeyForCurrencyUseCase
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
+import com.tangem.domain.models.ReceiveAddressModel
+import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkAddress
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.promo.ShouldShowPromoTokenUseCase
 import com.tangem.domain.promo.models.PromoId
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.staking.GetStakingAvailabilityUseCase
 import com.tangem.domain.staking.GetStakingEntryInfoUseCase
-import com.tangem.domain.staking.GetStakingIntegrationIdUseCase
 import com.tangem.domain.staking.GetYieldUseCase
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.tokens.model.analytics.TokenReceiveAnalyticsEvent
@@ -60,16 +65,12 @@ import com.tangem.domain.transaction.error.AssociateAssetError
 import com.tangem.domain.transaction.error.IncompleteTransactionError
 import com.tangem.domain.transaction.error.OpenTrustlineError
 import com.tangem.domain.transaction.error.SendTransactionError
-import com.tangem.domain.transaction.usecase.AssociateAssetUseCase
-import com.tangem.domain.transaction.usecase.DismissIncompleteTransactionUseCase
-import com.tangem.domain.transaction.usecase.OpenTrustlineUseCase
-import com.tangem.domain.transaction.usecase.RetryIncompleteTransactionUseCase
+import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
-import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
+import com.tangem.domain.wallets.usecase.GetExtendedPublicKeyForCurrencyUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.NetworkHasDerivationUseCase
 import com.tangem.feature.tokendetails.deeplink.TokenDetailsDeepLinkActionListener
@@ -83,6 +84,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.e
 import com.tangem.features.send.v2.api.SendFeatureToggles
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.tokendetails.impl.R
+import com.tangem.features.tokenreceive.TokenReceiveFeatureToggle
 import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
@@ -133,12 +135,14 @@ internal class TokenDetailsModel @Inject constructor(
     paramsContainer: ParamsContainer,
     expressStatusFactory: ExpressStatusFactory.Factory,
     getUserWalletUseCase: GetUserWalletUseCase,
-    getStakingIntegrationIdUseCase: GetStakingIntegrationIdUseCase,
     private val appRouter: AppRouter,
     private val router: InnerTokenDetailsRouter,
     private val tokenDetailsDeepLinkActionListener: TokenDetailsDeepLinkActionListener,
     private val analyticsExceptionHandler: AnalyticsExceptionHandler,
     private val sendFeatureToggles: SendFeatureToggles,
+    private val tokenReceiveFeatureToggle: TokenReceiveFeatureToggle,
+    private val getViewedTokenReceiveWarningUseCase: GetViewedTokenReceiveWarningUseCase,
+    private val getEnsNameUseCase: GetEnsNameUseCase,
 ) : Model(), TokenDetailsClickIntents {
 
     private val params = paramsContainer.require<TokenDetailsComponent.Params>()
@@ -161,6 +165,8 @@ internal class TokenDetailsModel @Inject constructor(
     /** Transaction id to check for status */
     private val waitForFirstExpressStatusEmmit = MutableStateFlow(false)
 
+    val bottomSheetNavigation: SlotNavigation<TokenReceiveConfig> = SlotNavigation()
+
     private val stateFactory = TokenDetailsStateFactory(
         currentStateProvider = Provider { uiState.value },
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
@@ -169,7 +175,6 @@ internal class TokenDetailsModel @Inject constructor(
         networkHasDerivationUseCase = networkHasDerivationUseCase,
         getUserWalletUseCase = getUserWalletUseCase,
         userWalletId = userWalletId,
-        getStakingIntegrationIdUseCase = getStakingIntegrationIdUseCase,
         symbol = cryptoCurrency.symbol,
         decimals = cryptoCurrency.decimals,
     )
@@ -597,20 +602,27 @@ internal class TokenDetailsModel @Inject constructor(
         }
 
         modelScope.launch {
-            analyticsEventsHandler.send(TokenReceiveAnalyticsEvent.ReceiveScreenOpened(cryptoCurrency.symbol))
-
-            internalUiState.value = stateFactory.getStateWithReceiveBottomSheet(
-                currency = cryptoCurrency,
-                networkAddress = networkAddress,
-                onCopyClick = {
-                    analyticsEventsHandler.send(TokenReceiveAnalyticsEvent.ButtonCopyAddress(cryptoCurrency.symbol))
-                    clipboardManager.setText(text = it, isSensitive = true)
-                },
-                onShareClick = {
-                    analyticsEventsHandler.send(TokenReceiveAnalyticsEvent.ButtonShareAddress(cryptoCurrency.symbol))
-                    shareManager.shareText(text = it)
-                },
-            )
+            if (tokenReceiveFeatureToggle.isNewTokenReceiveEnabled) {
+                bottomSheetNavigation.activate(
+                    configuration = configureReceiveAddresses(addresses = networkAddress),
+                )
+            } else {
+                analyticsEventsHandler.send(TokenReceiveAnalyticsEvent.ReceiveScreenOpened(cryptoCurrency.symbol))
+                internalUiState.value = stateFactory.getStateWithReceiveBottomSheet(
+                    currency = cryptoCurrency,
+                    networkAddress = networkAddress,
+                    onCopyClick = {
+                        analyticsEventsHandler.send(TokenReceiveAnalyticsEvent.ButtonCopyAddress(cryptoCurrency.symbol))
+                        clipboardManager.setText(text = it, isSensitive = true)
+                    },
+                    onShareClick = {
+                        analyticsEventsHandler.send(
+                            TokenReceiveAnalyticsEvent.ButtonShareAddress(cryptoCurrency.symbol),
+                        )
+                        shareManager.shareText(text = it)
+                    },
+                )
+            }
         }
     }
 
@@ -1062,6 +1074,43 @@ internal class TokenDetailsModel @Inject constructor(
         ) { transactionId, _ -> transactionId }
             .onEach(::onExpressTransactionClick)
             .launchIn(modelScope)
+    }
+
+    private suspend fun configureReceiveAddresses(addresses: NetworkAddress): TokenReceiveConfig {
+        val ensName = getEnsNameUseCase.invoke(
+            userWalletId = userWalletId,
+            network = cryptoCurrency.network,
+            address = addresses.defaultAddress.value,
+        )
+
+        val receiveAddresses = buildList {
+            ensName?.let { ens ->
+                add(
+                    ReceiveAddressModel(
+                        nameService = ReceiveAddressModel.NameService.Ens,
+                        value = ens,
+                        displayName = ens,
+                    ),
+                )
+            }
+            addresses.availableAddresses.map { address ->
+                add(
+                    ReceiveAddressModel(
+                        nameService = ReceiveAddressModel.NameService.Default,
+                        value = address.value,
+                        displayName = "${cryptoCurrency.name} (${cryptoCurrency.symbol})",
+                    ),
+                )
+            }
+        }
+
+        return TokenReceiveConfig(
+            shouldShowWarning = cryptoCurrency.name !in getViewedTokenReceiveWarningUseCase(),
+            cryptoCurrency = cryptoCurrency,
+            userWalletId = userWalletId,
+            showMemoDisclaimer = cryptoCurrency.network.transactionExtrasType != Network.TransactionExtrasType.NONE,
+            receiveAddress = receiveAddresses,
+        )
     }
 
     private companion object {
