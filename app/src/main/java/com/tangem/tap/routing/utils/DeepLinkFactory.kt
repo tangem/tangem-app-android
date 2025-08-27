@@ -85,7 +85,7 @@ internal class DeepLinkFactory @Inject constructor(
     fun checkRoutingReadiness(appRoute: AppRoute) {
         permittedAppRoute.value = when (appRoute) {
             AppRoute.Initial,
-            AppRoute.Home,
+            is AppRoute.Home,
             is AppRoute.Welcome,
             is AppRoute.Disclaimer,
             is AppRoute.Stories,
