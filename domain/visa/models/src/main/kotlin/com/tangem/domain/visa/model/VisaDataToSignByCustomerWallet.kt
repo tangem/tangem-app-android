@@ -4,8 +4,8 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class VisaDataToSignByCustomerWallet(
-    val request: VisaCustomerWalletDataToSignRequest,
     val hashToSign: String,
+    val request: VisaCustomerWalletDataToSignRequest? = null,
 )
 
 fun VisaDataToSignByCustomerWallet.sign(signature: String, customerWalletAddress: String) =
