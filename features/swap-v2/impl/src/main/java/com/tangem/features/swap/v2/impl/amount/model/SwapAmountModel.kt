@@ -105,10 +105,10 @@ internal class SwapAmountModel @Inject constructor(
     private var secondaryMaximumAmountBoundary: EnterAmountBoundary? = null
     private var secondaryMinimumAmountBoundary: EnterAmountBoundary? = null
 
-    var userCountry: UserCountry = UserCountry.Other(Locale.getDefault().country)
+    private var userCountry: UserCountry = UserCountry.Other(Locale.getDefault().country)
     val bottomSheetNavigation: SlotNavigation<SwapChooseProviderConfig> = SlotNavigation()
 
-    var showBestRateAnimation: Boolean = false
+    private var showBestRateAnimation: Boolean = false
 
     val uiState: StateFlow<SwapAmountUM>
     field = MutableStateFlow(params.amountUM)
@@ -134,7 +134,10 @@ internal class SwapAmountModel @Inject constructor(
     }
 
     fun onStart() {
-        startLoadingQuotesTask(isSilentReload = false)
+        quoteTaskScheduler.scheduleTask(
+            scope = modelScope,
+            task = loadQuotesTask(),
+        )
     }
 
     fun onStop() {
