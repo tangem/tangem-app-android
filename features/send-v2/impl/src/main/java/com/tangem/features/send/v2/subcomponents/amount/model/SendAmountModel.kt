@@ -22,22 +22,22 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.exchange.RampStateManager
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.tokens.GetMinimumTransactionAmountSyncUseCase
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.v2.api.SendFeatureToggles
 import com.tangem.features.send.v2.api.entity.PredefinedValues
+import com.tangem.features.send.v2.api.subcomponents.amount.analytics.CommonSendAmountAnalyticEvents
+import com.tangem.features.send.v2.api.subcomponents.amount.analytics.CommonSendAmountAnalyticEvents.SelectedCurrencyType
 import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
 import com.tangem.features.send.v2.common.CommonSendRoute
 import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponentParams
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountReduceListener
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountUpdateListener
-import com.tangem.features.send.v2.subcomponents.amount.analytics.SendAmountAnalyticEvents
-import com.tangem.features.send.v2.subcomponents.amount.analytics.SendAmountAnalyticEvents.SelectedCurrencyType
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeData
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeReloadTrigger
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -218,7 +218,7 @@ internal class SendAmountModel @Inject constructor(
             ),
         )
         analyticsEventHandler.send(
-            SendAmountAnalyticEvents.MaxAmountButtonClicked(categoryName = analyticsCategoryName),
+            CommonSendAmountAnalyticEvents.MaxAmountButtonClicked(categoryName = analyticsCategoryName),
         )
     }
 
@@ -229,7 +229,7 @@ internal class SendAmountModel @Inject constructor(
     override fun onAmountNext() {
         (uiState.value as? AmountState.Data)?.amountTextField?.isFiatValue?.let { isFiatSelected ->
             analyticsEventHandler.send(
-                SendAmountAnalyticEvents.SelectedCurrency(
+                CommonSendAmountAnalyticEvents.SelectedCurrency(
                     categoryName = analyticsCategoryName,
                     type = if (isFiatSelected) {
                         SelectedCurrencyType.AppCurrency
