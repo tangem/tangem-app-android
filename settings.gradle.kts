@@ -183,6 +183,9 @@ include(":libs:tangem-sdk-api")
 include(":features:onboarding-v2:api")
 include(":features:onboarding-v2:impl")
 
+include(":features:home:api")
+include(":features:home:impl")
+
 include(":features:referral:api")
 include(":features:referral:data")
 include(":features:referral:domain")
@@ -257,15 +260,27 @@ include(":features:walletconnect:impl")
 include(":features:hot-wallet:api")
 include(":features:hot-wallet:impl")
 
+include(":features:kyc:api")
 //TODO disable for release because of the permissions
-// include(":features:kyc:api")
 // include(":features:kyc:impl")
+
+include(":features:tangempay:main:api")
+include(":features:tangempay:main:impl")
+
+include(":features:tangempay:details:api")
+include(":features:tangempay:details:impl")
 
 include(":features:create-wallet-selection:api")
 include(":features:create-wallet-selection:impl")
 
 include(":features:welcome:api")
 include(":features:welcome:impl")
+
+include(":features:account:api")
+include(":features:account:impl")
+
+include(":features:token-recieve:api")
+include(":features:token-recieve:impl")
 // endregion Feature modules
 
 // region Domain modules
@@ -273,6 +288,7 @@ include(":features:welcome:impl")
 include(":domain:models")
 include(":domain:legacy")
 
+include(":domain:account")
 include(":domain:card")
 include(":domain:core")
 include(":domain:demo")
@@ -330,6 +346,7 @@ include(":domain:wallet-manager:models")
 // endregion Domain modules
 
 // region Data modules
+include(":data:account")
 include(":data:app-currency")
 include(":data:app-theme")
 include(":data:balance-hiding")
