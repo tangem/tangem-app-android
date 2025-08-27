@@ -13,9 +13,19 @@ interface WalletsRepository {
 
     suspend fun shouldSaveUserWalletsSync(): Boolean
 
+    @Deprecated("Hot wallet make always save user wallets. Do not use this method")
     fun shouldSaveUserWallets(): Flow<Boolean>
 
+    @Deprecated("Hot wallet make always save user wallets. Do not use this method")
     suspend fun saveShouldSaveUserWallets(item: Boolean)
+
+    suspend fun useBiometricAuthentication(): Boolean
+
+    suspend fun setUseBiometricAuthentication(value: Boolean)
+
+    suspend fun requireAccessCode(): Boolean
+
+    suspend fun setRequireAccessCode(value: Boolean)
 
     suspend fun isWalletWithRing(userWalletId: UserWalletId): Boolean
 
@@ -48,6 +58,10 @@ interface WalletsRepository {
     suspend fun isNotificationsEnabled(userWalletId: UserWalletId): Boolean
 
     suspend fun setNotificationsEnabled(userWalletId: UserWalletId, isEnabled: Boolean)
+
+    fun isUpgradeWalletNotificationEnabled(userWalletId: UserWalletId): Flow<Boolean>
+
+    suspend fun dismissUpgradeWalletNotification(userWalletId: UserWalletId)
 
     @Throws
     suspend fun setWalletName(walletId: String, walletName: String)

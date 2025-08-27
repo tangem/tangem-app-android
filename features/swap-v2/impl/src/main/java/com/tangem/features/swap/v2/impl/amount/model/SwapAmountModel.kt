@@ -2,6 +2,7 @@ package com.tangem.features.swap.v2.impl.amount.model
 
 import arrow.core.getOrElse
 import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.activate
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.amountScreen.converters.MaxEnterAmountConverter
@@ -9,14 +10,22 @@ import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
 import com.tangem.common.ui.navigationButtons.NavigationButton
 import com.tangem.common.ui.navigationButtons.NavigationUM
+import com.tangem.common.ui.notifications.NotificationId
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.datasource.local.swap.SwapBestRateAnimationStore
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.express.models.ExpressError
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.notifications.ShouldShowNotificationUseCase
+import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
+import com.tangem.domain.settings.usercountry.models.UserCountry
+import com.tangem.domain.settings.usercountry.models.needApplyFCARestrictions
 import com.tangem.domain.swap.models.SwapCurrencies
 import com.tangem.domain.swap.models.SwapDirection
 import com.tangem.domain.swap.models.SwapDirection.Companion.withSwapDirection
@@ -25,8 +34,8 @@ import com.tangem.domain.swap.models.getGroupWithDirection
 import com.tangem.domain.swap.usecase.GetSwapQuoteUseCase
 import com.tangem.domain.swap.usecase.SelectInitialPairUseCase
 import com.tangem.domain.tokens.GetMinimumTransactionAmountSyncUseCase
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.transaction.usecase.GetAllowanceUseCase
+import com.tangem.features.send.v2.api.subcomponents.amount.analytics.CommonSendAmountAnalyticEvents
 import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
 import com.tangem.features.swap.v2.api.choosetoken.SwapChooseTokenNetworkListener
 import com.tangem.features.swap.v2.impl.R
@@ -34,6 +43,7 @@ import com.tangem.features.swap.v2.impl.amount.SwapAmountBlockComponent.SwapChoo
 import com.tangem.features.swap.v2.impl.amount.SwapAmountComponentParams
 import com.tangem.features.swap.v2.impl.amount.SwapAmountReduceListener
 import com.tangem.features.swap.v2.impl.amount.SwapAmountUpdateListener
+import com.tangem.features.swap.v2.impl.amount.analytics.SwapAmountAnalyticEvents
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountFieldUM
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountType
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
@@ -47,6 +57,7 @@ import com.tangem.utils.coroutines.Debouncer
 import com.tangem.utils.coroutines.PeriodicTask
 import com.tangem.utils.coroutines.SingleTaskScheduler
 import com.tangem.utils.extensions.orZero
+import com.tangem.utils.isNullOrZero
 import com.tangem.utils.transformer.update
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -54,6 +65,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.math.BigDecimal
+import java.util.Locale
 import javax.inject.Inject
 import kotlin.properties.Delegates
 import com.tangem.utils.transformer.update as transformerUpdate
@@ -69,12 +81,16 @@ internal class SwapAmountModel @Inject constructor(
     private val swapChooseTokenNetworkListener: SwapChooseTokenNetworkListener,
     private val getAllowanceUseCase: GetAllowanceUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
+    private val getUserCountryUseCase: GetUserCountryUseCase,
+    private val swapBestRateAnimationStore: SwapBestRateAnimationStore,
     private val appRouter: AppRouter,
     private val swapAmountAlertFactory: SwapAmountAlertFactory,
     private val swapAlertFactory: SwapAlertFactory,
     private val swapAmountUpdateListener: SwapAmountUpdateListener,
     private val swapAmountReduceListener: SwapAmountReduceListener,
     private val feeSelectorReloadTrigger: FeeSelectorReloadTrigger,
+    private val shouldShowNotificationUseCase: ShouldShowNotificationUseCase,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model(), SwapAmountClickIntents, SwapChooseProviderComponent.ModelCallback {
 
     private val params: SwapAmountComponentParams = paramsContainer.require()
@@ -89,7 +105,10 @@ internal class SwapAmountModel @Inject constructor(
     private var secondaryMaximumAmountBoundary: EnterAmountBoundary? = null
     private var secondaryMinimumAmountBoundary: EnterAmountBoundary? = null
 
+    var userCountry: UserCountry = UserCountry.Other(Locale.getDefault().country)
     val bottomSheetNavigation: SlotNavigation<SwapChooseProviderConfig> = SlotNavigation()
+
+    var showBestRateAnimation: Boolean = false
 
     val uiState: StateFlow<SwapAmountUM>
     field = MutableStateFlow(params.amountUM)
@@ -100,6 +119,9 @@ internal class SwapAmountModel @Inject constructor(
     init {
         modelScope.launch {
             appCurrency = getSelectedAppCurrencyUseCase.invokeSync().getOrElse { AppCurrency.Default }
+            userCountry = getUserCountryUseCase.invokeSync().getOrNull()
+                ?: UserCountry.Other(Locale.getDefault().country)
+            showBestRateAnimation = swapBestRateAnimationStore.getSyncOrNull()
         }
         configAmountNavigation()
         subscribeOnCryptoCurrencyStatusFlow()
@@ -129,11 +151,18 @@ internal class SwapAmountModel @Inject constructor(
     }
 
     override fun onProviderResult(quoteUM: SwapQuoteUM) {
+        analyticsEventHandler.send(
+            SwapAmountAnalyticEvents.ProviderChosen(
+                categoryName = params.analyticsCategoryName,
+                providerName = quoteUM.provider?.name.orEmpty(),
+            ),
+        )
         uiState.transformerUpdate(
             SwapAmountSelectQuoteTransformer(
                 quoteUM = quoteUM,
                 secondaryMaximumAmountBoundary = secondaryMaximumAmountBoundary,
                 secondaryMinimumAmountBoundary = secondaryMinimumAmountBoundary,
+                needApplyFCARestrictions = userCountry.needApplyFCARestrictions(),
             ),
         )
     }
@@ -168,10 +197,10 @@ internal class SwapAmountModel @Inject constructor(
                 value = value,
             ),
         )
+        quoteTaskScheduler.cancelTask()
         amountDebouncer.debounce(
             coroutineScope = modelScope,
             waitMs = DEBOUNCE_AMOUNT_DELAY,
-            forceUpdate = true,
             destinationFunction = {
                 startLoadingQuotesTask(isSilentReload = false)
             },
@@ -183,6 +212,9 @@ internal class SwapAmountModel @Inject constructor(
     }
 
     override fun onMaxValueClick() {
+        analyticsEventHandler.send(
+            CommonSendAmountAnalyticEvents.MaxAmountButtonClicked(categoryName = params.analyticsCategoryName),
+        )
         uiState.transformerUpdate(
             SwapAmountValueMaxTransformer(
                 primaryMaximumAmountBoundary = primaryMaximumAmountBoundary,
@@ -203,12 +235,32 @@ internal class SwapAmountModel @Inject constructor(
     }
 
     override fun onAmountNext() {
+        val amountState = uiState.value.swapDirection.withSwapDirection(
+            onDirect = { uiState.value.primaryAmount.amountField },
+            onReverse = { uiState.value.secondaryAmount.amountField },
+        ) as? AmountState.Data
+
+        amountState?.amountTextField?.isFiatValue?.let { isFiatSelected ->
+            analyticsEventHandler.send(
+                CommonSendAmountAnalyticEvents.SelectedCurrency(
+                    categoryName = params.analyticsCategoryName,
+                    type = if (isFiatSelected) {
+                        CommonSendAmountAnalyticEvents.SelectedCurrencyType.AppCurrency
+                    } else {
+                        CommonSendAmountAnalyticEvents.SelectedCurrencyType.Token
+                    },
+                ),
+            )
+        }
         saveResult()
     }
 
     override fun onSelectTokenClick() {
         val amountParams = params as? SwapAmountComponentParams.AmountParams ?: return
         modelScope.launch {
+            val showSendViaSwapNotification = shouldShowNotificationUseCase(
+                NotificationId.SendViaSwapTokenSelectorNotification.key,
+            )
             val isEditMode = amountParams.currentRoute.firstOrNull()?.isEditMode == true
             val selectedCurrency = (uiState.value as? SwapAmountUM.Content)?.secondaryCryptoCurrencyStatus?.currency
             appRouter.push(
@@ -217,6 +269,8 @@ internal class SwapAmountModel @Inject constructor(
                     initialCurrency = primaryCryptoCurrency,
                     selectedCurrency = selectedCurrency.takeIf { isEditMode },
                     source = AppRoute.ChooseManagedTokens.Source.SendViaSwap,
+                    showSendViaSwapNotification = showSendViaSwapNotification,
+                    analyticsCategoryName = params.analyticsCategoryName,
                 ),
             )
         }
@@ -238,6 +292,33 @@ internal class SwapAmountModel @Inject constructor(
         }
     }
 
+    fun onFinishAnimation() {
+        uiState.update {
+            (it as? SwapAmountUM.Content)?.copy(showBestRateAnimation = false) ?: it
+        }
+    }
+
+    override fun onProviderClick() {
+        val amountUM = uiState.value as? SwapAmountUM.Content ?: return
+        val selectedProvider = amountUM.selectedQuote.provider ?: return
+        val cryptoCurrency = params.secondaryCryptoCurrency ?: return
+
+        analyticsEventHandler.send(
+            SwapAmountAnalyticEvents.ProviderSelectorClicked(
+                categoryName = params.analyticsCategoryName,
+            ),
+        )
+
+        bottomSheetNavigation.activate(
+            SwapChooseProviderConfig(
+                providers = amountUM.swapQuotes,
+                cryptoCurrency = cryptoCurrency,
+                selectedProvider = selectedProvider,
+                userCountry = userCountry,
+            ),
+        )
+    }
+
     private fun confirmSendWithSwapClose() {
         val amountParams = params as? SwapAmountComponentParams.AmountParams ?: return
         val amountFieldData = uiState.value.primaryAmount.amountField as? AmountState.Data
@@ -252,6 +333,7 @@ internal class SwapAmountModel @Inject constructor(
                     swapDirection = swapDirection,
                     clickIntents = this,
                     isBalanceHidden = params.isBalanceHidingFlow.value,
+                    showBestRateAnimation = showBestRateAnimation,
                 ),
             )
         }
@@ -285,6 +367,7 @@ internal class SwapAmountModel @Inject constructor(
                             swapDirection = swapDirection,
                             clickIntents = this,
                             isBalanceHidden = params.isBalanceHidingFlow.value,
+                            showBestRateAnimation = showBestRateAnimation,
                         ),
                     )
                 }
@@ -392,6 +475,7 @@ internal class SwapAmountModel @Inject constructor(
                         swapDirection = swapDirection,
                         clickIntents = this@SwapAmountModel,
                         isBalanceHidden = params.isBalanceHidingFlow.value,
+                        showBestRateAnimation = showBestRateAnimation,
                     ),
                 )
                 startLoadingQuotesTask(isSilentReload = false)
@@ -448,9 +532,12 @@ internal class SwapAmountModel @Inject constructor(
             SwapDirection.Reverse -> state.secondaryAmount.amountField
         } as? AmountState.Data
 
-        if (fromAmount?.amountTextField?.isError == true) return
+        val fromAmountValue = fromAmount?.amountTextField?.cryptoAmount?.value.orZero()
 
-        val fromAmountValue = fromAmount?.amountTextField?.cryptoAmount?.value ?: return
+        if (fromAmount?.amountTextField?.isError == true || fromAmountValue.isNullOrZero()) {
+            uiState.transformerUpdate(SwapQuoteEmptyStateTransformer)
+            return
+        }
 
         val swapGroups = state.swapCurrencies.getGroupWithDirection(state.swapDirection)
 
@@ -501,6 +588,7 @@ internal class SwapAmountModel @Inject constructor(
                     secondaryMaximumAmountBoundary = secondaryMaximumAmountBoundary,
                     secondaryMinimumAmountBoundary = secondaryMinimumAmountBoundary,
                     isSilentReload = isSilentReload,
+                    needApplyFcaRestrictions = userCountry.needApplyFCARestrictions(),
                 ),
             )
 
@@ -574,7 +662,7 @@ internal class SwapAmountModel @Inject constructor(
         ).onEach { (state, route) ->
             params.callback.onNavigationResult(
                 NavigationUM.Content(
-                    title = resourceReference(R.string.common_swap),
+                    title = resourceReference(R.string.common_amount),
                     subtitle = null,
                     backIconRes = if (route.isEditMode) {
                         R.drawable.ic_back_24
@@ -590,7 +678,7 @@ internal class SwapAmountModel @Inject constructor(
                         },
                         isEnabled = state.isPrimaryButtonEnabled,
                         onClick = {
-                            saveResult()
+                            onAmountNext()
                             params.callback.onNextClick()
                         },
                     ),
@@ -600,7 +688,7 @@ internal class SwapAmountModel @Inject constructor(
     }
 
     private companion object {
-        const val DEBOUNCE_AMOUNT_DELAY = 1000L
+        const val DEBOUNCE_AMOUNT_DELAY = 500L
         const val QUOTES_UPDATE_DELAY = 10000L
     }
 }

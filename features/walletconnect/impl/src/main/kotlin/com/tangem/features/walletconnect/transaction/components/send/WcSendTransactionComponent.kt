@@ -6,6 +6,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.essenty.lifecycle.doOnResume
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
+import com.tangem.domain.walletconnect.WcAnalyticEvents
 import com.tangem.features.send.v2.api.FeeSelectorBlockComponent
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.features.send.v2.api.params.FeeSelectorParams
@@ -72,6 +73,7 @@ internal class WcSendTransactionComponent(
                     feeCryptoCurrencyStatus = model.cryptoCurrencyStatus,
                     feeStateConfiguration = model.feeStateConfiguration,
                     feeDisplaySource = FeeSelectorParams.FeeDisplaySource.BottomSheet,
+                    analyticsCategoryName = WcAnalyticEvents.WC_CATEGORY_NAME,
                 ),
                 onResult = model::updateFee,
             )

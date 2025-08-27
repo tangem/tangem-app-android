@@ -125,6 +125,12 @@ sealed class AnalyticsParam {
             override val token: String,
             override val feeType: FeeType,
         ) : TxSentFrom("NFT"), TxData
+
+        data class SendWithSwap(
+            override val blockchain: String,
+            override val token: String,
+            override val feeType: FeeType,
+        ) : TxSentFrom("Send&Swap"), TxData
     }
 
     sealed interface TxData {
@@ -186,6 +192,10 @@ sealed class AnalyticsParam {
         Pending(value = "Pending"),
     }
 
+    enum class EnsStatus(val value: String) {
+        EMPTY("Empty"), FULL("Full")
+    }
+
     companion object Key {
         const val BLOCKCHAIN = "Blockchain"
         const val TOKEN_PARAM = "Token"
@@ -229,5 +239,12 @@ sealed class AnalyticsParam {
         const val STANDARD = "Standard"
         const val NO_COLLECTION = "No collection"
         const val EMULATION_STATUS = "Emulation Status"
+        const val SEND_TOKEN = "Send Token"
+        const val RECEIVE_TOKEN = "Receive Token"
+        const val SEND_BLOCKCHAIN = "Send Blockchain"
+        const val RECEIVE_BLOCKCHAIN = "Receive Blockchain"
+        const val CHOSEN_TOKEN = "Token Chosen"
+        const val ENS = "ENS"
+        const val ENS_ADDRESS = "ENS Address"
     }
 }
