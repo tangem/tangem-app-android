@@ -12,8 +12,12 @@
   <string name="access_code_create_description">ウォレットのロックを解除するには、 %s桁のアクセスコードを設定します。</string>
   <string name="access_code_create_title">アクセスコードの作成</string>
   <string name="access_code_navtitle">アクセスコード</string>
+  <string name="account_add_limit_dialog_description">%1$s個を超えるアカウントは作成できません。新しいアカウントを追加するには、1つをアーカイブしてください。</string>
+  <string name="account_add_limit_dialog_title">新しいアカウントを追加できません</string>
   <string name="account_archived_accounts">アーカイブされたアカウント</string>
   <string name="account_archived_recover">回復する</string>
+  <string name="account_archived_recover_dialog_description">「 %1$s 」を回復しようとしています。</string>
+  <string name="account_archived_recover_dialog_title">アカウントを回復する</string>
   <string name="account_archived_title">アーカイブ済み</string>
   <string name="account_details_archive">アカウントをアーカイブする</string>
   <string name="account_details_archive_action">アーカイブ</string>
@@ -27,6 +31,7 @@
   <string name="account_form_placeholder_new_account">新しいアカウント</string>
   <string name="account_form_title_create">アカウントを追加</string>
   <string name="account_form_title_edit">アカウントを編集</string>
+  <string name="account_label_tokens_info">%1$s ( %2$s内)</string>
   <string name="account_reorder_description">アカウントを長押しして並べ替える</string>
   <string name="account_unsaved_dialog_action_first">編集を続ける</string>
   <string name="account_unsaved_dialog_action_second">破棄</string>
@@ -119,11 +124,15 @@
   <string name="biometric_lockout_warning_title">試行回数が多すぎます</string>
   <string name="biometric_unavailable_warning">お使いの携帯電話で生体認証が無効になっているため、アプリにウォレットを保存できません。ウォレットを保存するには、携帯電話の設定で生体認証機能を有効にしてください。</string>
   <string name="bitcoin_promo_activation_error">プロモーションコードの処理中にエラーが発生しました。しばらくしてからもう一度お試しください。</string>
+  <string name="bitcoin_promo_activation_error_title">アクティベーションエラー</string>
   <string name="bitcoin_promo_activation_success">プロモーションコードが正常に有効化されました。14日以内に10 USDT相当のビットコインボーナスが付与されます。</string>
   <string name="bitcoin_promo_activation_success_title">プロモーションコードが有効になりました</string>
   <string name="bitcoin_promo_already_activated">このプロモーションコードは既に使用されているため、再度使うことはできません。</string>
+  <string name="bitcoin_promo_already_activated_title">コードが利用できません</string>
   <string name="bitcoin_promo_invalid_code">このプロモーションコードは無効であり、有効化できません。</string>
+  <string name="bitcoin_promo_invalid_code_title">無効なコード</string>
   <string name="bitcoin_promo_no_address">ボーナスを受け取るにはビットコインアドレスが必要です。ウォレットにビットコインアドレスを追加し、再度アクティベーションをお試しください。</string>
+  <string name="bitcoin_promo_no_address_title">ビットコインアドレスが必要です</string>
   <string name="button_start_backup_process">バックアップ処理を開始する</string>
   <string name="buy_token_description">銀行カードまたはその他の支払い方法を使用する</string>
   <plurals name="card_label_card_count">
@@ -243,6 +252,9 @@
   <string name="common_month">月</string>
   <string name="common_network_fee_title">ネットワーク手数料</string>
   <string name="common_network_fee_warning_content">送金額は、選択された手数料レベルをカバーするため、%1$s (%2$s) 減額されます。</string>
+  <plurals name="common_networks_count">
+    <item quantity="other">%dネットワーク</item>
+  </plurals>
   <string name="common_next">次</string>
   <string name="common_nft">NFT</string>
   <string name="common_no">いいえ</string>
@@ -369,8 +381,8 @@
   <string name="domain_receive_assets_onboarding_description">他のネットワークで資産を送金すると、永久に失われます。</string>
   <string name="domain_receive_assets_onboarding_network_name">%sネットワーク</string>
   <string name="domain_receive_assets_onboarding_title">下記のみを使用して資金を送金する</string>
-  <string name="email_preface_wc_error">サポートチームの皆様、コード %s のエラーが発生しました。</string>
-  <string name="email_subject_wc_error">WalletConnect エラー</string>
+  <string name="email_preface_wc_error">こんにちは、サポートチームの皆さん、コード %s のエラーが発生しました。</string>
+  <string name="email_subject_wc_error">WalletConnectエラー</string>
   <string name="error_wrong_wallet_tapped">別のウォレットのカードまたはリングを使用しました。このウォレットにリンクしているカードまたはリングをタップしてください。</string>
   <string name="eth_gas_required_exceeds_allowance">取引に必要な資金が不足しています。アカウントに入金してください。</string>
   <string name="exchange_tokens_available_tokens_header">マイトークン</string>
@@ -714,6 +726,9 @@
   <string name="notification_referral_promo_button">今すぐ参加</string>
   <string name="notification_referral_promo_text">コードを共有すると、販売ごとに5 USDTを獲得できます。お友達は10%割引になります。</string>
   <string name="notification_referral_promo_title">友達への紹介で報酬を獲得しよう！</string>
+  <string name="notification_sepa_button">暗号資産を買い付ける</string>
+  <string name="notification_sepa_text">SEPA送金で暗号資産を買い付けると、手数料はかかりません。</string>
+  <string name="notification_sepa_title">SEPAで暗号資産を買い付ける</string>
   <string name="onboarding_access_code_feature_1_description">すべてのデバイスを保護するには、単一のアクセスコードを設定してください。</string>
   <string name="onboarding_access_code_feature_1_title">保護する</string>
   <string name="onboarding_access_code_feature_2_description">後で各カードおよびリングに個別のアクセスコードを設定できます。</string>
@@ -1305,10 +1320,10 @@
   <string name="wallet_connect_bnb_sign_message">Dapp%1$s 、BNB取引の署名を要求しています\n\n%2$s</string>
   <string name="wallet_connect_bnb_trade_order_message">%1$sの取引注文\n価格: %2$s\n受取金額: %3$s\n支払金額: %4$s</string>
   <string name="wallet_connect_bnb_transaction_message">取引の詳細:\n送信元: %1$s\n受取先: %2$s\n量: %3$s</string>
-  <string name="wallet_connect_clipboard_alert">クリップボードには WalletConnect コードが含まれています。コピーした値を使用するか、QRコードをスキャンしてください。</string>
+  <string name="wallet_connect_clipboard_alert">クリップボードには WalletConnectコードが含まれています。コピーした値を使用するか、QRコードをスキャンしてください。</string>
   <string name="wallet_connect_create_tx_message">%1$sの取引を作成するリクエスト\n%2$s\n\n金額: %3$s\n手数料: %4$s\n合計: %5$s\n残高: %6$s</string>
   <string name="wallet_connect_create_tx_not_enough_funds">取引を送信できません。資金が足りません。</string>
-  <string name="wallet_connect_error_failed_to_connect">WalletConnect セッションを確立できませんでした。しばらくしてからもう一度お試しください。</string>
+  <string name="wallet_connect_error_failed_to_connect">WalletConnectセッションを確立できませんでした。しばらくしてからもう一度お試しください。</string>
   <string name="wallet_connect_error_missing_blockchains">すべてのトークンがリストには追加されませんでした。まず追加してから、もう一度お試しください。不足しているトークン: \n</string>
   <string name="wallet_connect_error_sing_failed">メッセージの署名に失敗しました。\nもう一度お試しください。</string>
   <string name="wallet_connect_error_timeout">WalletConnectセッションの確立に失敗しました：タイムアウトエラー。しばらくしてもう一度お試しください。</string>
@@ -1487,7 +1502,7 @@
   <string name="wc_alert_unsupported_dapps_title">サポートされていないdApp</string>
   <string name="wc_alert_unsupported_method_description">エラーコード: 8 005。問題が解決しない場合は、お気軽にサポートまでお問い合わせください。</string>
   <string name="wc_alert_unsupported_method_title">不明なエラーが発生しました</string>
-  <string name="wc_alert_unsupported_network_description">このネットワーク %s はTangem Walletでサポートされておらず、接続できません。</string>
+  <string name="wc_alert_unsupported_network_description">このネットワーク%sはTangemウォレットでサポートされておらず、接続できません。</string>
   <string name="wc_alert_unsupported_network_title">サポートされていないネットワーク</string>
   <string name="wc_alert_unsupported_networks_description">Tangemは現在%sで必要なネットワークをサポートしていません。</string>
   <string name="wc_alert_unsupported_networks_title">未対応のネットワーク</string>
