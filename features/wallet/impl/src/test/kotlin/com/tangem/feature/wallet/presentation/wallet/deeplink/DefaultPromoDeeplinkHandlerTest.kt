@@ -10,14 +10,13 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
-import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkAddress
+import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.tokens.GetMultiCryptoCurrencyStatusUseCase
-import com.tangem.domain.tokens.error.TokenListError
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
 import com.tangem.domain.wallets.models.GetUserWalletError
 import com.tangem.domain.wallets.models.errors.ActivatePromoCodeError
 import com.tangem.domain.wallets.usecase.ActivateBitcoinPromocodeUseCase
@@ -25,7 +24,6 @@ import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.feature.wallet.deeplink.DefaultPromoDeeplinkHandler
 import com.tangem.feature.wallet.deeplink.analytics.PromoActivationAnalytics
 import com.tangem.feature.wallet.impl.R
-import io.mockk.CapturingSlot
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
 import io.mockk.every
@@ -33,32 +31,31 @@ import io.mockk.impl.annotations.MockK
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
-import io.mockk.slot
 import io.mockk.verify
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.TestDispatcher
-import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.TestCoroutineScheduler
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
-import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
-import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import timber.log.Timber
-import java.math.BigDecimal
 import com.tangem.domain.wallets.PromoCodeActivationResult
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class DefaultPromoDeeplinkHandlerTest {
 
     @MockK(relaxed = true)
     private lateinit var uiMessageSender: UiMessageSender
 
     @MockK
-    private lateinit var getMultiCryptoCurrencyStatusUseCase: GetMultiCryptoCurrencyStatusUseCase
+    private lateinit var multiNetworkStatusSupplier: MultiNetworkStatusSupplier
 
     @MockK
     private lateinit var activateBitcoinPromocodeUseCase: ActivateBitcoinPromocodeUseCase
@@ -69,31 +66,60 @@ class DefaultPromoDeeplinkHandlerTest {
     @MockK
     private lateinit var analyticsEventHandler: AnalyticsEventHandler
 
-    private lateinit var messageSlot: CapturingSlot<UiMessage>
-    private lateinit var testDispatcher: TestDispatcher
-    private lateinit var testScope: TestScope
+    private lateinit var messages: MutableList<UiMessage>
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     @Before
     fun setUp() {
-        testDispatcher = StandardTestDispatcher()
-        testScope = TestScope(testDispatcher)
-
-        Dispatchers.setMain(testDispatcher)
-
         MockKAnnotations.init(this)
         every { analyticsEventHandler.send(any()) } returns Unit
-        messageSlot = slot()
-        every { uiMessageSender.send(capture(messageSlot)) } just runs
+        messages = mutableListOf()
+        every { uiMessageSender.send(capture(messages)) } just runs
 
-        Timber.uprootAll() // Disable Timber logging for tests
+        Timber.uprootAll()
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    @After
-    fun tearDown() {
-        Dispatchers.resetMain()
-        testScope.cancel()
+    @Test
+    fun `GIVEN empty and non-BTC then BTC WHEN supplier emits THEN activated dialog is shown`() = runTest {
+        val promoCode = "PROMO123"
+        val queryParams = mapOf(DeeplinkConst.PROMO_CODE_KEY to promoCode)
+        val userWallet = mockUserWallet("ABCDEF")
+        every { getSelectedWalletSyncUseCase.invoke() } returns Either.Right(userWallet)
+
+        val ethStatus = buildNetworkStatus(rawNetworkId = "ethereum", address = "0x123")
+        val btcStatus = buildNetworkStatus(rawNetworkId = Blockchain.Bitcoin.id, address = "bc1qxyz")
+        coEvery { multiNetworkStatusSupplier.invoke(any()) } returns flow {
+            emit(emptySet())
+            emit(setOf(ethStatus))
+            emit(setOf(btcStatus))
+        }
+        coEvery { activateBitcoinPromocodeUseCase.invoke("bc1qxyz", promoCode) } returns Either.Right("ok")
+        val dispatcherProvider = testDispatcherProvider(testScheduler)
+
+        DefaultPromoDeeplinkHandler(
+            scope = this,
+            queryParams = queryParams,
+            uiMessageSender = uiMessageSender,
+            multiNetworkStatusSupplier = multiNetworkStatusSupplier,
+            activateBitcoinPromocodeUseCase = activateBitcoinPromocodeUseCase,
+            getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
+            analyticsEventsHandler = analyticsEventHandler,
+            dispatchers = dispatcherProvider,
+        )
+
+        advanceUntilIdle()
+        advanceTimeBy(500)
+        advanceUntilIdle()
+
+        val sent = messages.last { it is DialogMessage } as DialogMessage
+        Truth.assertThat(sent.title).isEqualTo(resourceReference(R.string.bitcoin_promo_activation_success_title))
+        Truth.assertThat(sent.message).isEqualTo(resourceReference(R.string.bitcoin_promo_activation_success))
+
+        verify(exactly = 1) { analyticsEventHandler.send(PromoActivationAnalytics.PromoDeepLinkActivationStart) }
+        verify(exactly = 1) {
+            analyticsEventHandler.send(
+                PromoActivationAnalytics.PromoActivation(PromoCodeActivationResult.Activated),
+            )
+        }
     }
 
     @Test
@@ -104,13 +130,14 @@ class DefaultPromoDeeplinkHandlerTest {
             scope = this,
             queryParams = queryParams,
             uiMessageSender = uiMessageSender,
-            getMultiCryptoCurrencyStatusUseCase = getMultiCryptoCurrencyStatusUseCase,
+            multiNetworkStatusSupplier = multiNetworkStatusSupplier,
             activateBitcoinPromocodeUseCase = activateBitcoinPromocodeUseCase,
             getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
             analyticsEventsHandler = analyticsEventHandler,
+            dispatchers = TestingCoroutineDispatcherProvider(),
         )
 
-        val sent = messageSlot.captured as DialogMessage
+        val sent = messages.last { it is DialogMessage } as DialogMessage
         Truth.assertThat(sent.title).isEqualTo(resourceReference(R.string.bitcoin_promo_invalid_code_title))
         Truth.assertThat(sent.message).isEqualTo(resourceReference(R.string.bitcoin_promo_invalid_code))
 
@@ -131,46 +158,14 @@ class DefaultPromoDeeplinkHandlerTest {
             scope = this,
             queryParams = queryParams,
             uiMessageSender = uiMessageSender,
-            getMultiCryptoCurrencyStatusUseCase = getMultiCryptoCurrencyStatusUseCase,
+            multiNetworkStatusSupplier = multiNetworkStatusSupplier,
             activateBitcoinPromocodeUseCase = activateBitcoinPromocodeUseCase,
             getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
             analyticsEventsHandler = analyticsEventHandler,
+            dispatchers = TestingCoroutineDispatcherProvider(),
         )
 
-        val sent = messageSlot.captured as DialogMessage
-        Truth.assertThat(sent.title).isEqualTo(resourceReference(R.string.bitcoin_promo_activation_error_title))
-        Truth.assertThat(sent.message).isEqualTo(resourceReference(R.string.bitcoin_promo_activation_error))
-
-        verify(exactly = 1) { analyticsEventHandler.send(PromoActivationAnalytics.PromoDeepLinkActivationStart) }
-        verify(exactly = 1) {
-            analyticsEventHandler.send(
-                PromoActivationAnalytics.PromoActivation(PromoCodeActivationResult.Failed),
-            )
-        }
-    }
-
-    @Test
-    fun `GIVEN token status error WHEN getWalletCurrenciesScreen THEN failed dialog is shown`() = runTest {
-        val queryParams = mapOf(DeeplinkConst.PROMO_CODE_KEY to "PROMO123")
-        val userWallet = mockUserWallet("ABCDEF")
-        every { getSelectedWalletSyncUseCase.invoke() } returns Either.Right(userWallet)
-        coEvery { getMultiCryptoCurrencyStatusUseCase.invokeMultiWalletSync(userWallet.walletId) } returns Either.Left(
-            TokenListError.DataError(Exception("boom")),
-        )
-
-        DefaultPromoDeeplinkHandler(
-            scope = this,
-            queryParams = queryParams,
-            uiMessageSender = uiMessageSender,
-            getMultiCryptoCurrencyStatusUseCase = getMultiCryptoCurrencyStatusUseCase,
-            activateBitcoinPromocodeUseCase = activateBitcoinPromocodeUseCase,
-            getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
-            analyticsEventsHandler = analyticsEventHandler,
-        )
-
-        advanceUntilIdle()
-
-        val sent = messageSlot.captured as DialogMessage
+        val sent = messages.last { it is DialogMessage } as DialogMessage
         Truth.assertThat(sent.title).isEqualTo(resourceReference(R.string.bitcoin_promo_activation_error_title))
         Truth.assertThat(sent.message).isEqualTo(resourceReference(R.string.bitcoin_promo_activation_error))
 
@@ -187,25 +182,26 @@ class DefaultPromoDeeplinkHandlerTest {
         val queryParams = mapOf(DeeplinkConst.PROMO_CODE_KEY to "PROMO123")
         val userWallet = mockUserWallet("ABCDEF")
         every { getSelectedWalletSyncUseCase.invoke() } returns Either.Right(userWallet)
-        // Return only ETH status so BTC is not found
-        val ethStatus = buildStatusForNetwork(rawNetworkId = "ethereum", address = "0x123")
-        coEvery { getMultiCryptoCurrencyStatusUseCase.invokeMultiWalletSync(userWallet.walletId) } returns Either.Right(
-            listOf(ethStatus),
-        )
+        val btcUnreachable = buildUnreachableNetworkStatus(rawNetworkId = Blockchain.Bitcoin.id)
+        coEvery { multiNetworkStatusSupplier.invoke(any()) } returns flowOf(setOf(btcUnreachable))
+        val dispatcherProvider = testDispatcherProvider(testScheduler)
 
         DefaultPromoDeeplinkHandler(
             scope = this,
             queryParams = queryParams,
             uiMessageSender = uiMessageSender,
-            getMultiCryptoCurrencyStatusUseCase = getMultiCryptoCurrencyStatusUseCase,
+            multiNetworkStatusSupplier = multiNetworkStatusSupplier,
             activateBitcoinPromocodeUseCase = activateBitcoinPromocodeUseCase,
             getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
             analyticsEventsHandler = analyticsEventHandler,
+            dispatchers = dispatcherProvider,
         )
 
         advanceUntilIdle()
+        advanceTimeBy(500)
+        advanceUntilIdle()
 
-        val sent = messageSlot.captured as DialogMessage
+        val sent = messages.last { it is DialogMessage } as DialogMessage
         Truth.assertThat(sent.title).isEqualTo(resourceReference(R.string.bitcoin_promo_no_address_title))
         Truth.assertThat(sent.message).isEqualTo(resourceReference(R.string.bitcoin_promo_no_address))
 
@@ -223,25 +219,27 @@ class DefaultPromoDeeplinkHandlerTest {
         val queryParams = mapOf(DeeplinkConst.PROMO_CODE_KEY to promoCode)
         val userWallet = mockUserWallet("ABCDEF")
         every { getSelectedWalletSyncUseCase.invoke() } returns Either.Right(userWallet)
-        val btcStatus = buildStatusForNetwork(rawNetworkId = Blockchain.Bitcoin.id, address = "bc1qxyz")
-        coEvery { getMultiCryptoCurrencyStatusUseCase.invokeMultiWalletSync(userWallet.walletId) } returns Either.Right(
-            listOf(btcStatus),
-        )
+        val btcStatus = buildNetworkStatus(rawNetworkId = Blockchain.Bitcoin.id, address = "bc1qxyz")
+        coEvery { multiNetworkStatusSupplier.invoke(any()) } returns flowOf(setOf(btcStatus))
         coEvery { activateBitcoinPromocodeUseCase.invoke("bc1qxyz", promoCode) } returns Either.Right("ok")
+        val dispatcherProvider = testDispatcherProvider(testScheduler)
 
         DefaultPromoDeeplinkHandler(
             scope = this,
             queryParams = queryParams,
             uiMessageSender = uiMessageSender,
-            getMultiCryptoCurrencyStatusUseCase = getMultiCryptoCurrencyStatusUseCase,
+            multiNetworkStatusSupplier = multiNetworkStatusSupplier,
             activateBitcoinPromocodeUseCase = activateBitcoinPromocodeUseCase,
             getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
             analyticsEventsHandler = analyticsEventHandler,
+            dispatchers = dispatcherProvider,
         )
 
         advanceUntilIdle()
+        advanceTimeBy(500)
+        advanceUntilIdle()
 
-        val sent = messageSlot.captured as DialogMessage
+        val sent = messages.last { it is DialogMessage } as DialogMessage
         Truth.assertThat(sent.title).isEqualTo(resourceReference(R.string.bitcoin_promo_activation_success_title))
         Truth.assertThat(sent.message).isEqualTo(resourceReference(R.string.bitcoin_promo_activation_success))
 
@@ -326,25 +324,27 @@ class DefaultPromoDeeplinkHandlerTest {
         val queryParams = mapOf(DeeplinkConst.PROMO_CODE_KEY to promoCode)
         val userWallet = mockUserWallet("ABCDEF")
         every { getSelectedWalletSyncUseCase.invoke() } returns Either.Right(userWallet)
-        val btcStatus = buildStatusForNetwork(rawNetworkId = Blockchain.Bitcoin.id, address = "bc1qxyz")
-        coEvery { getMultiCryptoCurrencyStatusUseCase.invokeMultiWalletSync(userWallet.walletId) } returns Either.Right(
-            listOf(btcStatus),
-        )
+        val btcStatus = buildNetworkStatus(rawNetworkId = Blockchain.Bitcoin.id, address = "bc1qxyz")
+        coEvery { multiNetworkStatusSupplier.invoke(any()) } returns flowOf(setOf(btcStatus))
         coEvery { activateBitcoinPromocodeUseCase.invoke("bc1qxyz", promoCode) } returns Either.Left(error)
+        val dispatcherProvider = testDispatcherProvider(testScheduler)
 
         DefaultPromoDeeplinkHandler(
             scope = this,
             queryParams = queryParams,
             uiMessageSender = uiMessageSender,
-            getMultiCryptoCurrencyStatusUseCase = getMultiCryptoCurrencyStatusUseCase,
+            multiNetworkStatusSupplier = multiNetworkStatusSupplier,
             activateBitcoinPromocodeUseCase = activateBitcoinPromocodeUseCase,
             getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
             analyticsEventsHandler = analyticsEventHandler,
+            dispatchers = dispatcherProvider,
         )
 
         advanceUntilIdle()
+        advanceTimeBy(500)
+        advanceUntilIdle()
 
-        val sent = messageSlot.captured as DialogMessage
+        val sent = messages.last { it is DialogMessage } as DialogMessage
         Truth.assertThat(sent.title).isEqualTo(expectedTitle)
         Truth.assertThat(sent.message).isEqualTo(expectedMessage)
     }
@@ -355,7 +355,7 @@ class DefaultPromoDeeplinkHandlerTest {
         return userWallet
     }
 
-    private fun buildStatusForNetwork(rawNetworkId: String, address: String): CryptoCurrencyStatus {
+    private fun buildNetworkStatus(rawNetworkId: String, address: String): NetworkStatus {
         val networkId = Network.ID(Network.RawID(rawNetworkId), Network.DerivationPath.None)
         val network = Network(
             id = networkId,
@@ -370,39 +370,49 @@ class DefaultPromoDeeplinkHandlerTest {
             transactionExtrasType = Network.TransactionExtrasType.NONE,
         )
 
-        val currencyId = CryptoCurrency.ID(
-            prefix = CryptoCurrency.ID.Prefix.TOKEN_PREFIX,
-            body = CryptoCurrency.ID.Body.NetworkId(rawNetworkId),
-            suffix = CryptoCurrency.ID.Suffix.RawID(rawNetworkId),
-        )
-
-        val coin = CryptoCurrency.Coin(
-            id = currencyId,
-            network = network,
-            name = rawNetworkId,
-            symbol = network.currencySymbol,
-            decimals = 8,
-            iconUrl = null,
-            isCustom = false,
-        )
-
-        val value = CryptoCurrencyStatus.NoQuote(
-            amount = BigDecimal.ZERO,
-            yieldBalance = null,
-            hasCurrentNetworkTransactions = false,
-            pendingTransactions = emptySet(),
-            networkAddress = NetworkAddress.Single(
+        val value = NetworkStatus.Verified(
+            address = NetworkAddress.Single(
                 defaultAddress = NetworkAddress.Address(
                     value = address,
                     type = NetworkAddress.Address.Type.Primary,
                 ),
             ),
-            sources = CryptoCurrencyStatus.Sources(),
+            amounts = emptyMap(),
+            pendingTransactions = emptyMap(),
+            source = StatusSource.ACTUAL,
         )
 
-        return CryptoCurrencyStatus(
-            currency = coin,
-            value = value,
+        return NetworkStatus(network = network, value = value)
+    }
+
+    private fun buildUnreachableNetworkStatus(rawNetworkId: String): NetworkStatus {
+        val networkId = Network.ID(Network.RawID(rawNetworkId), Network.DerivationPath.None)
+        val network = Network(
+            id = networkId,
+            backendId = rawNetworkId,
+            name = rawNetworkId,
+            currencySymbol = rawNetworkId.take(3).uppercase(),
+            derivationPath = Network.DerivationPath.None,
+            isTestnet = false,
+            standardType = Network.StandardType.Unspecified("UNSPECIFIED"),
+            hasFiatFeeRate = false,
+            canHandleTokens = false,
+            transactionExtrasType = Network.TransactionExtrasType.NONE,
         )
+
+        val value = NetworkStatus.Unreachable(address = null)
+
+        return NetworkStatus(network = network, value = value)
+    }
+
+    private fun testDispatcherProvider(scheduler: TestCoroutineScheduler): CoroutineDispatcherProvider {
+        val dispatcher: CoroutineDispatcher = StandardTestDispatcher(scheduler)
+        return object : CoroutineDispatcherProvider {
+            override val main: CoroutineDispatcher = dispatcher
+            override val mainImmediate: CoroutineDispatcher = dispatcher
+            override val io: CoroutineDispatcher = dispatcher
+            override val default: CoroutineDispatcher = dispatcher
+            override val single: CoroutineDispatcher = dispatcher
+        }
     }
 }
