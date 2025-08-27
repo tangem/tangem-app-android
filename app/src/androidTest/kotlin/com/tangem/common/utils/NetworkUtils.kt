@@ -18,8 +18,6 @@ fun getWcUri(
 ): String? {
     Timber.i("Getting WC URI for network: $network")
 
-    val cookies = "CF_AppSession=ncc11a9cf4a877b6f; CF_Authorization=eyJhbGciOiJSUzI1NiIsImtpZCI6IjA3ZTBkYWRjMmU0ZWE5OTcxYThiYThkNmU0OTQxNzVhOTg3Njg1ZjhlOWQ1OTZlOGFhYzMxNmE1YmY2MGE1ZWEifQ.eyJhdWQiOlsiNWQ0YjA0YTM2YmRhMTI5MDE4NWJkY2RmZmI4ZTAyYmFmYTZmMzE3ODFjMWExMDE0MmM1ZWQ3M2U3N2NiYjU2ZSJdLCJlbWFpbCI6ImRwb2RveW5pa292QHRhbmdlbS5jb20iLCJleHAiOjE3NTU5NTU2MjIsImlhdCI6MTc1NTg2OTIyMiwibmJmIjoxNzU1ODY5MjIyLCJpc3MiOiJodHRwczovL3RhbmdlbS5jbG91ZGZsYXJlYWNjZXNzLmNvbSIsInR5cGUiOiJhcHAiLCJpZGVudGl0eV9ub25jZSI6IlpFYVpCTTlRbUtWYXNBUVIiLCJzdWIiOiIwMzcyYjhlYi01ZTJlLTU1MTUtOGUzYi0zZTY4NTA2NjhmN2MiLCJjb3VudHJ5IjoiREUifQ.emrjJMjCaoh9j7vt5KrAU7nSzTK4wT5-tlId8evB4pVNUtsoG83bHJRz4Oj7Ts8Th3IEI5Kcxf4eXvXl1NyrRo07pDA0tWR-DmtvniImy4YXE522-LSyd44XGUQMWVrmOPRCPpGJF9xvIkAxOGP-JeUPgKuKAYZsmsQAKYTL-KBdJ2Qw4BHWU3WnEPm9o8y4tScun19R_6gGV0rCkksHWaBRh68NGYutTtzclrXvJkbwpAUqCpWK0qY0x22S5GnjKC0fhWEQ11Hz5d1AN6f-lX7lkAMmzyLfBYUkgv1I29nwJHwCqbfEP8rcNgmdhZt4DQ2bTpycCCI63Vifl-pmhA"
-
     val client = OkHttpClient.Builder()
         .connectTimeout(30, TimeUnit.SECONDS)    // Таймаут подключения
         .readTimeout(60, TimeUnit.SECONDS)       // Таймаут чтения ответа
@@ -29,7 +27,6 @@ fun getWcUri(
 
     val request = Request.Builder()
         .url("$baseUrl/wc_uri?network=$network")
-        .addHeader("Cookie", cookies)
         .get()
         .build()
 

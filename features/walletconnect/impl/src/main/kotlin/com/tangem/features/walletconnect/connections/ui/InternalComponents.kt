@@ -10,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -17,6 +18,7 @@ import coil.compose.AsyncImage
 import com.tangem.core.ui.extensions.clickableSingle
 import com.tangem.core.ui.extensions.conditional
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.test.WalletConnectBottomSheetTestTags
 import com.tangem.features.walletconnect.connections.entity.VerifiedDAppState
 import com.tangem.features.walletconnect.impl.R
 
@@ -43,7 +45,8 @@ internal fun WcAppInfoItem(
         AsyncImage(
             modifier = Modifier
                 .size(TangemTheme.dimens.size48)
-                .clip(RoundedCornerShape(TangemTheme.dimens.radius8)),
+                .clip(RoundedCornerShape(TangemTheme.dimens.radius8))
+                .testTag(WalletConnectBottomSheetTestTags.APP_ICON),
             model = iconUrl,
             contentDescription = title,
             error = painterResource(R.drawable.img_wc_dapp_icon_placeholder_48),
@@ -58,7 +61,9 @@ internal fun WcAppInfoItem(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    modifier = Modifier.weight(1f, fill = false),
+                    modifier = Modifier
+                        .weight(1f, fill = false)
+                        .testTag(WalletConnectBottomSheetTestTags.APP_NAME),
                     text = title,
                     color = TangemTheme.colors.text.primary1,
                     style = TangemTheme.typography.h3,
@@ -67,7 +72,9 @@ internal fun WcAppInfoItem(
                 )
                 if (verifiedDAppState is VerifiedDAppState.Verified) {
                     Icon(
-                        modifier = Modifier.size(20.dp),
+                        modifier = Modifier
+                            .size(20.dp)
+                            .testTag(WalletConnectBottomSheetTestTags.APPROVE_ICON),
                         painter = painterResource(R.drawable.img_approvale2_20),
                         contentDescription = null,
                         tint = Color.Unspecified,
@@ -78,6 +85,7 @@ internal fun WcAppInfoItem(
                 text = subtitle,
                 color = TangemTheme.colors.text.tertiary,
                 style = TangemTheme.typography.body2,
+                modifier = Modifier.testTag(WalletConnectBottomSheetTestTags.APP_URL)
             )
         }
     }

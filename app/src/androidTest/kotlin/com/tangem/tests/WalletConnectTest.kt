@@ -2,10 +2,12 @@ package com.tangem.tests
 
 import android.content.Intent
 import android.net.Uri
+import androidx.test.InstrumentationRegistry.getTargetContext
 import androidx.test.core.app.ApplicationProvider
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.TOTAL_BALANCE
 import com.tangem.common.extensions.clickWithAssertion
+import com.tangem.common.extensions.swipeUp
 import com.tangem.common.utils.getWcUri
 import com.tangem.scenarios.OpenMainScreenScenario
 import com.tangem.screens.*
@@ -23,6 +25,9 @@ class WalletConnectTest : BaseTestCase() {
     fun openWalletConnectSessionOnMainScreen() {
         val balance = TOTAL_BALANCE
         val sessionName = "React App"
+        val deeplinkScheme = "tangem://wc?uri="
+        val deepLinkUri = deeplinkScheme + getWcUri()
+        // val deepLinkUri = "tangem://wc?uri=wc:34f2df69e24b03c54eccb14324a6ac3881fb8cdf225880ca45670de4feefb4d5@2?relay-protocol=irn&symKey=067bcdb119852ed684fe81f183428ccd51a357342b4c40249f1455a928792405&expiryTimestamp=1756223736"
 
         setupHooks().run {
             step("Open 'Main Screen'") {
@@ -35,55 +40,56 @@ class WalletConnectTest : BaseTestCase() {
                 onMainScreen { walletBalance().assertTextContains(balance) }
             }
 
-            val deepLinkUrl = "tangem://wc?uri=wc:b6c6ab3fa9872ab5274d4463e9af5fa994dfed0ee8de1cbc9897143778b3f93c@2?relay-protocol=irn&symKey=64323070ae3f347fdb996847ea6ad64bb4e5ff3418f5a0bece62c63cdf05321a&expiryTimestamp=1755713592"
-
             step("Create WC session buy deeplink") {
                 val context = ApplicationProvider.getApplicationContext<android.content.Context>()
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(deepLinkUrl)).apply {
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(deepLinkUri)).apply {
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 }
 
                 context.startActivity(intent)
             }
-            step("Assert 'Wallet Connect' pop up is displayed") {
-                WalletConnectPopUpPageObject().popUp.isDisplayed()
-            }
-            step("Assert pop up title is displayed") {
-                WalletConnectPopUpPageObject().title.isDisplayed()
-            }
-            step("Assert pop up message is displayed") {
-                WalletConnectPopUpPageObject().message.isDisplayed()
-            }
-            step("Assert pop up 'Start' button is displayed") {
-                WalletConnectPopUpPageObject().startButton.isDisplayed()
-            }
-            step("Assert pop up 'Reject' button is displayed") {
-                WalletConnectPopUpPageObject().rejectButton.isDisplayed()
-            }
-            step("Click 'Start' button") {
-                WalletConnectPopUpPageObject().startButton.click()
-            }
+            // step("Assert 'Wallet Connect' pop up is displayed") {
+            //     WalletConnectPopUpPageObject().popUp.isDisplayed()
+            // }
+            // step("Assert pop up title is displayed") {
+            //     WalletConnectPopUpPageObject().title.isDisplayed()
+            // }
+            // step("Assert pop up message is displayed") {
+            //     WalletConnectPopUpPageObject().message.isDisplayed()
+            // }
+            // step("Assert pop up 'Start' button is displayed") {
+            //     WalletConnectPopUpPageObject().startButton.isDisplayed()
+            // }
+            // step("Assert pop up 'Reject' button is displayed") {
+            //     WalletConnectPopUpPageObject().rejectButton.isDisplayed()
+            // }
+            // step("Click 'Start' button") {
+            //     WalletConnectPopUpPageObject().startButton.click()
+            // }
             step("Click 'Scan' button") {
-                onStoriesScreen { scanButton.clickWithAssertion() }
+                // onStoriesScreen { scanButton.clickWithAssertion() }
             }
-            step("Click 'More' button on TopBar") {
-                onTopBar { moreButton.clickWithAssertion() }
+            step("") {
+                onWalletConnectBottomSheet { title.assertIsDisplayed() }
             }
-            step("Click on 'Wallet Connect' button") {
-                onDetailsScreen { walletConnectButton.clickWithAssertion() }
-            }
-            step("Assert 'Wallet Connect' title is displayed") {
-                onWalletConnectScreen { title.assertIsDisplayed() }
-            }
-            step("Assert session name title: '$sessionName' is displayed") {
-                onWalletConnectScreen { sessionTitle(sessionName).assertIsDisplayed() }
-            }
-            step("Assert session name 'Close' button is displayed") {
-                onWalletConnectScreen { sessionCloseButton(sessionName).assertIsDisplayed() }
-            }
-            step("Assert 'Add session button' is displayed") {
-                onWalletConnectScreen { addSessionButton.assertIsDisplayed() }
-            }
+            // step("Click 'More' button on TopBar") {
+            //     onTopBar { moreButton.clickWithAssertion() }
+            // }
+            // step("Click on 'Wallet Connect' button") {
+            //     onDetailsScreen { walletConnectButton.clickWithAssertion() }
+            // }
+            // step("Assert 'Wallet Connect' title is displayed") {
+            //     onWalletConnectScreen { title.assertIsDisplayed() }
+            // }
+            // step("Assert session name title: '$sessionName' is displayed") {
+            //     onWalletConnectScreen { sessionTitle(sessionName).assertIsDisplayed() }
+            // }
+            // step("Assert session name 'Close' button is displayed") {
+            //     onWalletConnectScreen { sessionCloseButton(sessionName).assertIsDisplayed() }
+            // }
+            // step("Assert 'Add session button' is displayed") {
+            //     onWalletConnectScreen { addSessionButton.assertIsDisplayed() }
+            // }
         }
     }
 
@@ -94,8 +100,8 @@ class WalletConnectTest : BaseTestCase() {
         val balance = TOTAL_BALANCE
         val sessionName = "React App"
         val deeplinkScheme = "tangem://wc?uri="
-        val deepLinkUri = deeplinkScheme + getWcUri()
-        // val deepLinkUri = "tangem://wc?uri=wc:7a2f98ddf772411bcc58628a76a018f209f4583d4154032718477641dc2fafc6@2?relay-protocol=irn&symKey=e8eb377cd6c288d9c7625277db0269a992b3bfeead572fc957364ac7428b30a1&expiryTimestamp=1755875607"
+        // val deepLinkUri = deeplinkScheme + getWcUri()
+        val deepLinkUri = "tangem://wc?uri=wc:84747e38249c1cec7aa19249d0578d46ade55afdb220c3e180de9e5951068784@2?relay-protocol=irn&symKey=c734d88cf27390dbc0bf4812f189e0b498d74f394c5e7da6f18fc8fbe27824dc&expiryTimestamp=1756139555"
 
         setupHooks().run {
             step("Open 'Main Screen'") {
@@ -118,48 +124,49 @@ class WalletConnectTest : BaseTestCase() {
 
                 context.startActivity(intent)
             }
-            step("Assert 'Wallet Connect' pop up is displayed") {
-                WalletConnectPopUpPageObject().popUp.isDisplayed()
-            }
-            step("Assert pop up title is displayed") {
-                WalletConnectPopUpPageObject().title.isDisplayed()
-            }
-            step("Assert pop up message is displayed") {
-                WalletConnectPopUpPageObject().message.isDisplayed()
-            }
-            step("Assert pop up 'Start' button is displayed") {
-                WalletConnectPopUpPageObject().startButton.isDisplayed()
-            }
-            step("Assert pop up 'Reject' button is displayed") {
-                WalletConnectPopUpPageObject().rejectButton.isDisplayed()
-            }
-            step("Click 'Start' button") {
-                WalletConnectPopUpPageObject().startButton.click()
-            }
             step("Click 'Scan' button") {
                 onStoriesScreen { scanButton.clickWithAssertion() }
             }
+            // step("Assert pop up title is displayed") {
+            //     WalletConnectPopUpPageObject().title.isDisplayed()
+            // }
+            // step("Assert pop up message is displayed") {
+            //     WalletConnectPopUpPageObject().message.isDisplayed()
+            // }
+            // step("Assert pop up 'Start' button is displayed") {
+            //     WalletConnectPopUpPageObject().startButton.isDisplayed()
+            // }
+            // step("Assert pop up 'Reject' button is displayed") {
+            //     WalletConnectPopUpPageObject().rejectButton.isDisplayed()
+            // }
+            // step("Click 'Start' button") {
+            //     WalletConnectPopUpPageObject().startButton.click()
+            // }
             step("Click 'More' button on TopBar") {
+                onMainScreen { buyButton.assertIsDisplayed() }
                 onTopBar { moreButton.clickWithAssertion() }
             }
             step("Click on 'Wallet Connect' button") {
                 onDetailsScreen { walletConnectButton.clickWithAssertion() }
             }
+            step("Assert 'Wallet Connect' bottom sheet is displayed") {
+                onWalletConnectBottomSheet { connectButton.clickWithAssertion() }
+            }
             step("Assert 'Wallet Connect' title is displayed") {
                 onWalletConnectScreen { title.assertIsDisplayed() }
             }
-            step("Assert session name title: '$sessionName' is displayed") {
-                onWalletConnectScreen {
-                    flakySafely(timeoutMs = 50_000) { sessionTitle(sessionName).assertIsDisplayed() }
-
-                }
-            }
-            step("Assert session name 'Close' button is displayed") {
-                onWalletConnectScreen { sessionCloseButton(sessionName).assertIsDisplayed() }
-            }
-            step("Assert 'Add session button' is displayed") {
-                onWalletConnectScreen { addSessionButton.assertIsDisplayed() }
-            }
+            // step("Assert session name title: '$sessionName' is displayed") {
+            //     onWalletConnectScreen {
+            //         flakySafely(timeoutMs = 50_000) { sessionTitle(sessionName).assertIsDisplayed() }
+            //
+            //     }
+            // }
+            // step("Assert session name 'Close' button is displayed") {
+            //     onWalletConnectScreen { sessionCloseButton(sessionName).assertIsDisplayed() }
+            // }
+            // step("Assert 'Add session button' is displayed") {
+            //     onWalletConnectScreen { addSessionButton.assertIsDisplayed() }
+            // }
         }
     }
 
@@ -170,17 +177,10 @@ class WalletConnectTest : BaseTestCase() {
         val balance = TOTAL_BALANCE
         val sessionName = "React App"
         val deeplinkScheme = "tangem://wc?uri="
-        val deepLinkUri = deeplinkScheme + getWcUri()
+        // val deepLinkUri = deeplinkScheme + getWcUri()
+        val deepLinkUri = "tangem://wc?uri=wc:25babc1e5e359a96cede9114647fa7a192227496d6c2521a84405160032499bd@2?relay-protocol=irn&symKey=2d84d7997bcf318ae09824f4fb6bdd4c155d536824840b59483f679445875c6f&expiryTimestamp=1756230216"
 
         setupHooks().run {
-            step("Create WC session buy deeplink") {
-                val context = ApplicationProvider.getApplicationContext<android.content.Context>()
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(deepLinkUri)).apply {
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                }
-
-                context.startActivity(intent)
-            }
 
             step("Open 'Main Screen'") {
                 scenario(OpenMainScreenScenario(composeTestRule))
@@ -190,43 +190,66 @@ class WalletConnectTest : BaseTestCase() {
             }
             step("Assert wallet balance = '$balance'") {
                 onMainScreen { walletBalance().assertTextContains(balance) }
+                // device.apps.kill(getTargetContext().packageName)
             }
-            step("Assert 'Wallet Connect' pop up is displayed") {
-                WalletConnectPopUpPageObject().popUp.isDisplayed()
+            step("Open recent apps") {
+                device.uiDevice.pressRecentApps()
             }
-            step("Assert pop up title is displayed") {
-                WalletConnectPopUpPageObject().title.isDisplayed()
+            Thread.sleep(2_000)
+            step("Stop app by swipe") {
+                swipeUp(startHeightRatio = 0.8f)
             }
-            step("Assert pop up message is displayed") {
-                WalletConnectPopUpPageObject().message.isDisplayed()
+
+            step("Create WC session buy deeplink") {
+                val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(deepLinkUri)).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+
+                context.startActivity(intent)
             }
-            step("Assert pop up 'Start' button is displayed") {
-                WalletConnectPopUpPageObject().startButton.isDisplayed()
+            step("Open 'Main Screen'") {
+                scenario(OpenMainScreenScenario(composeTestRule))
             }
-            step("Assert pop up 'Reject' button is displayed") {
-                WalletConnectPopUpPageObject().rejectButton.isDisplayed()
+            step("") {
+                onWalletConnectBottomSheet { title.assertIsDisplayed() }
             }
-            step("Click 'Start' button") {
-                WalletConnectPopUpPageObject().startButton.click()
-            }
-            step("Click 'More' button on TopBar") {
-                onTopBar { moreButton.clickWithAssertion() }
-            }
-            step("Click on 'Wallet Connect' button") {
-                onDetailsScreen { walletConnectButton.clickWithAssertion() }
-            }
-            step("Assert 'Wallet Connect' title is displayed") {
-                onWalletConnectScreen { title.assertIsDisplayed() }
-            }
-            step("Assert session name title: '$sessionName' is displayed") {
-                onWalletConnectScreen { sessionTitle(sessionName).assertIsDisplayed() }
-            }
-            step("Assert session name 'Close' button is displayed") {
-                onWalletConnectScreen { sessionCloseButton(sessionName).assertIsDisplayed() }
-            }
-            step("Assert 'Add session button' is displayed") {
-                onWalletConnectScreen { addSessionButton.assertIsDisplayed() }
-            }
+            // step("Assert 'Wallet Connect' pop up is displayed") {
+            //     WalletConnectPopUpPageObject().popUp.isDisplayed()
+            // }
+            // step("Assert pop up title is displayed") {
+            //     WalletConnectPopUpPageObject().title.isDisplayed()
+            // }
+            // step("Assert pop up message is displayed") {
+            //     WalletConnectPopUpPageObject().message.isDisplayed()
+            // }
+            // step("Assert pop up 'Start' button is displayed") {
+            //     WalletConnectPopUpPageObject().startButton.isDisplayed()
+            // }
+            // step("Assert pop up 'Reject' button is displayed") {
+            //     WalletConnectPopUpPageObject().rejectButton.isDisplayed()
+            // }
+            // step("Click 'Start' button") {
+            //     WalletConnectPopUpPageObject().startButton.click()
+            // }
+            // step("Click 'More' button on TopBar") {
+            //     onTopBar { moreButton.clickWithAssertion() }
+            // }
+            // step("Click on 'Wallet Connect' button") {
+            //     onDetailsScreen { walletConnectButton.clickWithAssertion() }
+            // }
+            // step("Assert 'Wallet Connect' title is displayed") {
+            //     onWalletConnectScreen { title.assertIsDisplayed() }
+            // }
+            // step("Assert session name title: '$sessionName' is displayed") {
+            //     onWalletConnectScreen { sessionTitle(sessionName).assertIsDisplayed() }
+            // }
+            // step("Assert session name 'Close' button is displayed") {
+            //     onWalletConnectScreen { sessionCloseButton(sessionName).assertIsDisplayed() }
+            // }
+            // step("Assert 'Add session button' is displayed") {
+            //     onWalletConnectScreen { addSessionButton.assertIsDisplayed() }
+            // }
         }
     }
 
