@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -14,6 +15,7 @@ import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.ui.amountScreen.utils.getFiatReference
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.rows.SelectorRowItem
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.format.bigdecimal.BigDecimalFormatConstants.EMPTY_BALANCE_SIGN
@@ -62,20 +64,24 @@ internal fun FeeBlock(feeUM: FeeUM, isClickEnabled: Boolean, onClick: () -> Unit
                 R.string.common_fee_selector_option_market to R.drawable.ic_bird_24
             }
             SelectorRowItem(
-                titleRes = title,
+                title = resourceReference(title),
                 iconRes = icon,
-                preDot = stringReference(
-                    feeAmount?.value.format {
-                        crypto(
-                            symbol = feeAmount?.currencySymbol.orEmpty(),
-                            decimals = feeAmount?.decimals ?: 0,
-                        ).fee(canBeLower = feeUM.isFeeApproximate)
-                    },
-                ),
-                postDot = if (feeUM.isFeeConvertibleToFiat) {
-                    getFiatReference(feeAmount?.value, feeUM.rate, feeUM.appCurrency)
-                } else {
-                    null
+                preDot = remember {
+                    stringReference(
+                        feeAmount?.value.format {
+                            crypto(
+                                symbol = feeAmount?.currencySymbol.orEmpty(),
+                                decimals = feeAmount?.decimals ?: 0,
+                            ).fee(canBeLower = feeUM.isFeeApproximate)
+                        },
+                    )
+                },
+                postDot = remember {
+                    if (feeUM.isFeeConvertibleToFiat) {
+                        getFiatReference(feeAmount?.value, feeUM.rate, feeUM.appCurrency)
+                    } else {
+                        null
+                    }
                 },
                 ellipsizeOffset = feeAmount?.currencySymbol?.length,
                 isSelected = true,

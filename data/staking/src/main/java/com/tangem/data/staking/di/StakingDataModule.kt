@@ -10,7 +10,6 @@ import com.tangem.data.staking.DefaultStakingTransactionHashRepository
 import com.tangem.data.staking.converters.error.StakeKitErrorConverter
 import com.tangem.data.staking.store.YieldsBalancesStore
 import com.tangem.data.staking.toggles.DefaultStakingFeatureToggles
-import com.tangem.data.staking.utils.StakingIdFactory
 import com.tangem.datasource.api.stakekit.StakeKitApi
 import com.tangem.datasource.api.stakekit.models.response.model.error.StakeKitErrorResponse
 import com.tangem.datasource.di.NetworkMoshi
@@ -45,7 +44,6 @@ internal object StakingDataModule {
         walletManagersFacade: WalletManagersFacade,
         getUserWalletUseCase: GetUserWalletUseCase,
         stakingFeatureToggles: StakingFeatureToggles,
-        stakingIdFactory: StakingIdFactory,
         @NetworkMoshi moshi: Moshi,
     ): StakingRepository {
         return DefaultStakingRepository(
@@ -57,7 +55,6 @@ internal object StakingDataModule {
             getUserWalletUseCase = getUserWalletUseCase,
             stakingFeatureToggles = stakingFeatureToggles,
             moshi = moshi,
-            stakingIdFactory = stakingIdFactory,
         )
     }
 

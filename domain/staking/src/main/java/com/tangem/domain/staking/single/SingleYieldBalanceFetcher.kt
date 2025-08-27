@@ -1,9 +1,8 @@
 package com.tangem.domain.staking.single
 
 import com.tangem.domain.core.flow.FlowFetcher
-import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.staking.StakingID
 
 /**
  * Fetcher of yield balance
@@ -16,12 +15,10 @@ interface SingleYieldBalanceFetcher : FlowFetcher<SingleYieldBalanceFetcher.Para
      * Params for fetching single yield balance
      *
      * @property userWalletId user wallet ID
-     * @property currencyId   currency ID
-     * @property network      network
+     * @property stakingId    staking ID
      */
     data class Params(
         val userWalletId: UserWalletId,
-        val currencyId: CryptoCurrency.ID,
-        val network: Network,
+        val stakingId: StakingID,
     )
 }

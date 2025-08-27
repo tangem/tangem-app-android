@@ -28,6 +28,7 @@ internal class SendAnalyticHelper @Inject constructor(
                 feeType = feeType,
                 blockchain = cryptoCurrency.network.name,
                 nonceNotEmpty = feeSelectorUM.nonce != null,
+                ensStatus = getEnsStatus(sendUM),
             ),
         )
         analyticsEventHandler.send(
@@ -50,6 +51,16 @@ internal class SendAnalyticHelper @Inject constructor(
             memo?.isBlank() == true -> Basic.TransactionSent.MemoType.Empty
             memo?.isNotBlank() == true -> Basic.TransactionSent.MemoType.Full
             else -> Basic.TransactionSent.MemoType.Null
+        }
+    }
+
+    private fun getEnsStatus(sendUM: SendUM): AnalyticsParam.EnsStatus {
+        val blockchainAddressForEns =
+            (sendUM.destinationUM as? DestinationUM.Content)?.addressTextField?.blockchainAddress
+        return if (blockchainAddressForEns != null) {
+            AnalyticsParam.EnsStatus.FULL
+        } else {
+            AnalyticsParam.EnsStatus.EMPTY
         }
     }
 }
