@@ -3,9 +3,9 @@ package com.tangem.features.send.v2.subcomponents.fee
 import arrow.core.Either
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.features.send.v2.common.CommonSendRoute
 import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeUM
 import kotlinx.coroutines.flow.Flow
