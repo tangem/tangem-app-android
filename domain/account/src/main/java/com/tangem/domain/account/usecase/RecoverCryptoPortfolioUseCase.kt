@@ -44,7 +44,7 @@ class RecoverCryptoPortfolioUseCase(
 
     private suspend fun Raise<Error>.getAccountList(userWalletId: UserWalletId): AccountList {
         return catch(
-            block = { crudRepository.getAccounts(userWalletId = userWalletId) },
+            block = { crudRepository.getAccountListSync(userWalletId = userWalletId) },
             catch = { raise(Error.DataOperationFailed(cause = it)) },
         )
             .getOrElse { raise(Error.CriticalTechError.AccountsNotCreated(userWalletId = userWalletId)) }
@@ -52,7 +52,7 @@ class RecoverCryptoPortfolioUseCase(
 
     private suspend fun Raise<Error>.getArchivedAccount(accountId: AccountId): ArchivedAccount {
         return catch(
-            block = { crudRepository.getArchivedAccount(accountId = accountId) },
+            block = { crudRepository.getArchivedAccountSync(accountId = accountId) },
             catch = { raise(Error.DataOperationFailed(cause = it)) },
         )
             .getOrElse {

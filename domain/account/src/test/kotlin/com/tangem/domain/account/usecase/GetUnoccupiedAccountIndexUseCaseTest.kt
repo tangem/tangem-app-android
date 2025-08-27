@@ -1,6 +1,7 @@
 package com.tangem.domain.account.usecase
 
 import arrow.core.left
+import arrow.core.toOption
 import com.google.common.truth.Truth
 import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.models.account.DerivationIndex
@@ -29,7 +30,7 @@ class GetUnoccupiedAccountIndexUseCaseTest {
     @Test
     fun `invoke should return next unoccupied index when repository returns count`() = runTest {
         // Arrange
-        coEvery { crudRepository.getTotalAccountsCount(userWalletId) } returns 3
+        coEvery { crudRepository.getTotalAccountsCount(userWalletId) } returns 3.toOption()
 
         // Act
         val actual = useCase(userWalletId = userWalletId)
