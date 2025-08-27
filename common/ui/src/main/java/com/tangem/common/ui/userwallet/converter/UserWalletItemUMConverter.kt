@@ -91,8 +91,9 @@ class UserWalletItemUMConverter(
 
     private fun getBalanceInfo(userWallet: UserWallet): UserWalletItemUM.Balance {
         return when {
-            isBalanceHidden -> UserWalletItemUM.Balance.Hidden
             userWallet.isLocked -> UserWalletItemUM.Balance.Locked
+            authMode -> UserWalletItemUM.Balance.NotShowing
+            isBalanceHidden -> UserWalletItemUM.Balance.Hidden
             balance == null -> UserWalletItemUM.Balance.Loading
             else -> {
                 when (balance) {
