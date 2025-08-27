@@ -6,7 +6,6 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.firstOrNull
 
 // FIXME: Workaround, remove it once the normal UserWalletsStore has been implemented
 // [REDACTED_JIRA]
@@ -26,10 +25,6 @@ internal class RuntimeUserWalletsStore(
 
     override fun getSyncStrict(key: UserWalletId): UserWallet {
         return requireNotNull(getSyncOrNull(key)) { "Unable to find user wallet with provided ID: $key" }
-    }
-
-    override suspend fun getAllSyncOrNull(): List<UserWallet>? {
-        return userWalletsListManager.userWallets.firstOrNull()
     }
 
     override suspend fun update(
