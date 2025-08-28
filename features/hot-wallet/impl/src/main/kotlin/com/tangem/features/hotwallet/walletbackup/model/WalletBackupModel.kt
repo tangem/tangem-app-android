@@ -52,6 +52,7 @@ internal class WalletBackupModel @Inject constructor(
             googleDriveStatus = BackupStatus.ComingSoon,
             onRecoveryPhraseClick = ::onRecoveryPhraseClick,
             onGoogleDriveClick = { },
+            onHardwareWalletClick = ::onHardwareWalletClick,
             backedUp = false,
         ),
     )
@@ -121,5 +122,9 @@ internal class WalletBackupModel @Inject constructor(
         } else {
             uiMessageSender.send(makeBackupAtFirstAlertBS)
         }
+    }
+
+    private fun onHardwareWalletClick() {
+        router.push(AppRoute.UpgradeWallet(params.userWalletId))
     }
 }
