@@ -6,5 +6,11 @@ import com.squareup.moshi.JsonClass
 @JsonClass(generateAdapter = true)
 data class WcEthSignTypedDataParams(
     @Json(name = "message")
-    val message: String?,
-)
+    val message: Message?,
+) {
+    @JsonClass(generateAdapter = true)
+    data class Message(
+        @Json(name = "contents")
+        val contents: String?,
+    )
+}

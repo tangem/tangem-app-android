@@ -9,8 +9,10 @@ import com.tangem.core.ui.extensions.mask
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.GlobalLoadingMessage
+import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.tokens.GetMultiCryptoCurrencyStatusUseCase
+import com.tangem.domain.networks.multi.MultiNetworkStatusProducer
+import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
 import com.tangem.domain.wallets.PromoCodeActivationResult
 import com.tangem.domain.wallets.PromoCodeActivationResult.*
 import com.tangem.domain.wallets.models.errors.ActivatePromoCodeError
@@ -19,23 +21,28 @@ import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.feature.wallet.deeplink.analytics.PromoActivationAnalytics
 import com.tangem.feature.wallet.impl.R
 import com.tangem.features.wallet.deeplink.PromoDeeplinkHandler
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import timber.log.Timber
+import kotlin.time.Duration.Companion.seconds
 
 @Suppress("LongParameterList")
 internal class DefaultPromoDeeplinkHandler @AssistedInject constructor(
     @Assisted private val scope: CoroutineScope,
     @Assisted private val queryParams: Map<String, String>,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
-    private val getMultiCryptoCurrencyStatusUseCase: GetMultiCryptoCurrencyStatusUseCase,
+    private val multiNetworkStatusSupplier: MultiNetworkStatusSupplier,
     private val activateBitcoinPromocodeUseCase: ActivateBitcoinPromocodeUseCase,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val analyticsEventsHandler: AnalyticsEventHandler,
+    private val dispatchers: CoroutineDispatcherProvider,
 ) : PromoDeeplinkHandler {
 
     init {
@@ -62,13 +69,30 @@ internal class DefaultPromoDeeplinkHandler @AssistedInject constructor(
     }
 
     private fun findBitcoinAddress(userWallet: UserWallet, promoCode: String) {
-        scope.launch {
-            getMultiCryptoCurrencyStatusUseCase.invokeMultiWalletSync(userWallet.walletId).onRight { currencies ->
-                val bitcoinAddress = currencies.find { it.currency.id.rawNetworkId == Blockchain.Bitcoin.id }
-                    ?.value
-                    ?.networkAddress
-                    ?.defaultAddress
-                    ?.value
+        scope.launch(context = dispatchers.default) {
+            val bitcoinStatus = withTimeoutOrNull(
+                FETCH_TIMEOUT_SECONDS.seconds,
+                {
+                    multiNetworkStatusSupplier
+                        .invoke(MultiNetworkStatusProducer.Params(userWallet.walletId))
+                        .first { statuses ->
+                            statuses.any { status -> status.network.rawId == Blockchain.Bitcoin.id }
+                        }.first { status -> status.network.rawId == Blockchain.Bitcoin.id }
+                },
+            )
+
+            if (bitcoinStatus == null) {
+                Timber.tag(LOG_TAG).d("No bitcoin, bitcoin network status == null")
+                showAlert(NoBitcoinAddress)
+            } else {
+                val networkAddress = when (bitcoinStatus.value) {
+                    is NetworkStatus.Verified -> (bitcoinStatus.value as NetworkStatus.Verified).address
+                    is NetworkStatus.NoAccount -> (bitcoinStatus.value as NetworkStatus.NoAccount).address
+                    else -> null
+                }
+
+                val bitcoinAddress = networkAddress
+                    ?.defaultAddress?.value
 
                 if (bitcoinAddress != null) {
                     Timber.tag(LOG_TAG).d(
@@ -76,12 +100,11 @@ internal class DefaultPromoDeeplinkHandler @AssistedInject constructor(
                     )
                     activatePromoCode(bitcoinAddress = bitcoinAddress, promoCode = promoCode)
                 } else {
-                    Timber.tag(LOG_TAG).d("no Bitcoin address")
+                    uiMessageSender.send(GlobalLoadingMessage(false))
+                    delay(DEFAULT_MESSAGE_SENDER_DELAY)
+                    Timber.tag(LOG_TAG).d("No Bitcoin address $bitcoinStatus.value")
                     showAlert(NoBitcoinAddress)
                 }
-            }.onLeft {
-                Timber.tag(LOG_TAG).e("Error on getting userWallet currencies: $it")
-                showAlert(Failed)
             }
         }
     }
@@ -144,5 +167,6 @@ internal class DefaultPromoDeeplinkHandler @AssistedInject constructor(
     companion object {
         private const val LOG_TAG = "PromoCodeActivation"
         private const val DEFAULT_MESSAGE_SENDER_DELAY = 500L
+        private const val FETCH_TIMEOUT_SECONDS = 5
     }
 }
