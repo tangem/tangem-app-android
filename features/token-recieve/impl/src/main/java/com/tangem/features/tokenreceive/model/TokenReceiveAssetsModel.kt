@@ -6,6 +6,7 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.domain.tokens.model.analytics.TokenReceiveCopyActionSource
 import com.tangem.domain.tokens.model.analytics.TokenReceiveNewAnalyticsEvent
 import com.tangem.features.tokenreceive.component.TokenReceiveAssetsComponent
 import com.tangem.features.tokenreceive.entity.ReceiveAddress
@@ -38,7 +39,12 @@ internal class TokenReceiveAssetsModel @Inject constructor(
     internal val state: StateFlow<ReceiveAssetsUM>
     field = MutableStateFlow<ReceiveAssetsUM>(
         ReceiveAssetsUM(
-            onCopyClick = params.callback::onCopyClick,
+            onCopyClick = {
+                params.callback.onCopyClick(
+                    id = it,
+                    source = TokenReceiveCopyActionSource.Receive,
+                )
+            },
             onOpenQrCodeClick = params.callback::onQrCodeClick,
             addresses = params.addresses,
             showMemoDisclaimer = params.showMemoDisclaimer,
