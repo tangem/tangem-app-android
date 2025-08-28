@@ -1,10 +1,7 @@
 package com.tangem.features.hotwallet.walletbackup.ui
 
 import android.content.res.Configuration
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,8 +10,6 @@ import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -28,7 +23,11 @@ import com.tangem.features.hotwallet.walletbackup.entity.BackupStatus
 import com.tangem.features.hotwallet.walletbackup.entity.WalletBackupUM
 import com.tangem.features.hotwallet.common.ui.OptionBlock
 import com.tangem.core.ui.R
-import com.tangem.features.hotwallet.common.ui.DISABLED_COLORS_ALPHA
+import com.tangem.core.ui.components.label.Label
+import com.tangem.core.ui.components.label.entity.LabelStyle
+import com.tangem.core.ui.components.label.entity.LabelUM
+import com.tangem.core.ui.components.rows.NetworkTitle
+import com.tangem.core.ui.extensions.resourceReference
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,11 +49,12 @@ internal fun WalletBackupContent(state: WalletBackupUM, modifier: Modifier = Mod
                 .padding(horizontal = 16.dp),
         ) {
             OptionBlock(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .padding(top = 8.dp),
                 title = stringResourceSafe(R.string.hw_backup_seed_title),
                 description = stringResourceSafe(R.string.hw_backup_seed_description),
                 badge = {
-                    BackupStatusBadge(status = state.recoveryPhraseStatus)
+                    state.recoveryPhraseOption?.let { Label(it) }
                 },
                 onClick = state.onRecoveryPhraseClick,
                 enabled = true,
@@ -62,58 +62,36 @@ internal fun WalletBackupContent(state: WalletBackupUM, modifier: Modifier = Mod
             )
 
             OptionBlock(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .padding(top = 8.dp),
                 title = stringResourceSafe(R.string.hw_backup_google_drive_title),
                 description = stringResourceSafe(R.string.hw_backup_google_drive_description),
                 badge = {
-                    BackupStatusBadge(status = state.googleDriveStatus)
+                    state.googleDriveOption?.let { Label(it) }
                 },
                 onClick = state.onGoogleDriveClick,
                 enabled = state.googleDriveStatus != BackupStatus.ComingSoon,
                 backgroundColor = TangemTheme.colors.background.primary,
             )
-        }
-    }
-}
 
-@Composable
-private fun BackupStatusBadge(status: BackupStatus, modifier: Modifier = Modifier) {
-    val text = when (status) {
-        BackupStatus.Done -> stringResourceSafe(R.string.common_done)
-        BackupStatus.ComingSoon -> stringResourceSafe(R.string.common_coming_soon)
-        BackupStatus.NoBackup -> stringResourceSafe(R.string.hw_backup_no_backup)
-    }
-
-    val backgroundColor by animateColorAsState(
-        targetValue = when (status) {
-            BackupStatus.Done -> TangemTheme.colors.text.accent.copy(alpha = 0.1f)
-            BackupStatus.ComingSoon -> TangemTheme.colors.control.unchecked.copy(DISABLED_COLORS_ALPHA)
-            BackupStatus.NoBackup -> TangemTheme.colors.text.warning.copy(alpha = 0.1f)
-        },
-    )
-
-    val textColor by animateColorAsState(
-        targetValue = when (status) {
-            BackupStatus.Done -> TangemTheme.colors.text.accent
-            BackupStatus.ComingSoon -> TangemTheme.colors.text.secondary.copy(DISABLED_COLORS_ALPHA)
-            BackupStatus.NoBackup -> TangemTheme.colors.text.warning
-        },
-    )
-
-    AnimatedContent(targetState = text) { text ->
-        Box(
-            modifier = modifier
-                .padding(horizontal = 4.dp)
-                .background(
-                    color = backgroundColor,
-                    shape = TangemTheme.shapes.roundedCorners8,
-                )
-                .padding(horizontal = 8.dp, vertical = 4.dp),
-        ) {
-            Text(
-                text = text,
-                style = TangemTheme.typography.caption1,
-                color = textColor,
+            NetworkTitle(
+                title = {
+                    Text(
+                        modifier = Modifier,
+                        text = stringResourceSafe(R.string.express_provider_recommended),
+                        style = TangemTheme.typography.subtitle2,
+                        color = TangemTheme.colors.text.tertiary,
+                    )
+                },
+            )
+            OptionBlock(
+                modifier = Modifier.fillMaxWidth(),
+                title = stringResourceSafe(R.string.hw_backup_hardware_title),
+                description = stringResourceSafe(R.string.hw_backup_hardware_description),
+                badge = null,
+                onClick = state.onHardwareWalletClick,
+                enabled = true,
+                backgroundColor = TangemTheme.colors.background.primary,
             )
         }
     }
@@ -131,25 +109,52 @@ private fun WalletBackupContentPreview(@PreviewParameter(WalletBackupUMProvider:
 private class WalletBackupUMProvider : CollectionPreviewParameterProvider<WalletBackupUM>(
     collection = listOf(
         WalletBackupUM(
-            recoveryPhraseStatus = BackupStatus.NoBackup,
+            recoveryPhraseOption = LabelUM(
+                text = resourceReference(R.string.hw_backup_no_backup),
+                style = LabelStyle.WARNING,
+            ),
+            googleDriveOption = LabelUM(
+                text = resourceReference(R.string.common_coming_soon),
+                style = LabelStyle.REGULAR,
+            ),
             googleDriveStatus = BackupStatus.ComingSoon,
             onBackClick = {},
             onRecoveryPhraseClick = {},
             onGoogleDriveClick = {},
+            onHardwareWalletClick = {},
+            backedUp = false,
         ),
         WalletBackupUM(
-            recoveryPhraseStatus = BackupStatus.NoBackup,
+            recoveryPhraseOption = LabelUM(
+                text = resourceReference(R.string.hw_backup_no_backup),
+                style = LabelStyle.WARNING,
+            ),
+            googleDriveOption = LabelUM(
+                text = resourceReference(R.string.hw_backup_no_backup),
+                style = LabelStyle.WARNING,
+            ),
             googleDriveStatus = BackupStatus.NoBackup,
             onBackClick = {},
             onRecoveryPhraseClick = {},
             onGoogleDriveClick = {},
+            onHardwareWalletClick = {},
+            backedUp = false,
         ),
         WalletBackupUM(
-            recoveryPhraseStatus = BackupStatus.Done,
+            recoveryPhraseOption = LabelUM(
+                text = resourceReference(R.string.common_done),
+                style = LabelStyle.ACCENT,
+            ),
+            googleDriveOption = LabelUM(
+                text = resourceReference(R.string.common_done),
+                style = LabelStyle.ACCENT,
+            ),
             googleDriveStatus = BackupStatus.Done,
             onBackClick = {},
             onRecoveryPhraseClick = {},
             onGoogleDriveClick = {},
+            onHardwareWalletClick = {},
+            backedUp = false,
         ),
     ),
 )

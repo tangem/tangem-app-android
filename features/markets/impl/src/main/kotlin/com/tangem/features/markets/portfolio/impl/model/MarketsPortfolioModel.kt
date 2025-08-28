@@ -2,6 +2,9 @@ package com.tangem.features.markets.portfolio.impl.model
 
 import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
+import com.tangem.common.ui.userwallet.state.UserWalletItemUM
+import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.activate
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -15,35 +18,41 @@ import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.card.HasMissedDerivationsUseCase
 import com.tangem.domain.managetokens.CheckCurrencyUnsupportedUseCase
 import com.tangem.domain.managetokens.model.CurrencyUnsupportedState
 import com.tangem.domain.markets.SaveMarketTokensUseCase
 import com.tangem.domain.markets.TokenMarketInfo
-import com.tangem.domain.models.ArtworkModel
+import com.tangem.domain.models.ReceiveAddressModel
+import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isMultiCurrency
-import com.tangem.domain.wallets.usecase.GetCardImageUseCase
+import com.tangem.domain.tokens.GetViewedTokenReceiveWarningUseCase
+import com.tangem.domain.transaction.usecase.GetEnsNameUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
+import com.tangem.domain.wallets.usecase.HasMissedDerivationsUseCase
 import com.tangem.features.markets.impl.R
 import com.tangem.features.markets.portfolio.api.MarketsPortfolioComponent
 import com.tangem.features.markets.portfolio.impl.analytics.PortfolioAnalyticsEvent
 import com.tangem.features.markets.portfolio.impl.loader.PortfolioData
 import com.tangem.features.markets.portfolio.impl.loader.PortfolioDataLoader
 import com.tangem.features.markets.portfolio.impl.ui.state.MyPortfolioUM
+import com.tangem.features.markets.portfolio.impl.ui.state.TokenActionsBSContentUM
+import com.tangem.features.tokenreceive.TokenReceiveFeatureToggle
+import com.tangem.features.wallet.utils.UserWalletImageFetcher
 import com.tangem.lib.crypto.BlockchainUtils
+import com.tangem.operations.attestation.ArtworkSize
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import timber.log.Timber
 import javax.inject.Inject
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 @Stable
 @ModelScoped
 internal class MarketsPortfolioModel @Inject constructor(
@@ -57,17 +66,16 @@ internal class MarketsPortfolioModel @Inject constructor(
     private val portfolioDataLoader: PortfolioDataLoader,
     private val hasMissedDerivationsUseCase: HasMissedDerivationsUseCase,
     private val saveMarketTokensUseCase: SaveMarketTokensUseCase,
-    private val getCardImageUseCase: GetCardImageUseCase,
     private val addToPortfolioManager: AddToPortfolioManager,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val tokenReceiveFeatureToggle: TokenReceiveFeatureToggle,
+    private val getViewedTokenReceiveWarningUseCase: GetViewedTokenReceiveWarningUseCase,
+    private val getEnsNameUseCase: GetEnsNameUseCase,
+    private val userWalletImageFetcher: UserWalletImageFetcher,
 ) : Model() {
 
     val state: StateFlow<MyPortfolioUM> get() = _state
     private val _state: MutableStateFlow<MyPortfolioUM> = MutableStateFlow(value = MyPortfolioUM.Loading)
-
-    private val loadedArtworks: HashMap<UserWalletId, ArtworkModel> = hashMapOf()
-    private val artworksState: MutableStateFlow<HashMap<UserWalletId, ArtworkModel>> = MutableStateFlow(hashMapOf())
-    private val loadArtworksMutex = Mutex()
 
     private val params = paramsContainer.require<MarketsPortfolioComponent.Params>()
     private val analyticsEventBuilder = PortfolioAnalyticsEvent.EventBuilder(
@@ -79,6 +87,8 @@ internal class MarketsPortfolioModel @Inject constructor(
     private val selectedMultiWalletIdFlow = MutableStateFlow<UserWalletId?>(value = null)
 
     private val portfolioBSVisibilityModelFlow = MutableStateFlow(value = PortfolioBSVisibilityModel())
+
+    val bottomSheetNavigation: SlotNavigation<TokenReceiveConfig> = SlotNavigation()
 
     private val currentAppCurrency = getSelectedAppCurrencyUseCase()
         .map { maybeAppCurrency ->
@@ -128,7 +138,11 @@ internal class MarketsPortfolioModel @Inject constructor(
         tokenActionsHandler = tokenActionsIntentsFactory.create(
             currentAppCurrency = Provider { currentAppCurrency.value },
             updateTokenReceiveBSConfig = { updateBlock ->
-                updateTokensState { it.copy(tokenReceiveBSConfig = updateBlock(it.tokenReceiveBSConfig)) }
+                if (tokenReceiveFeatureToggle.isNewTokenReceiveEnabled.not()) {
+                    updateTokensState {
+                        it.copy(tokenReceiveBSConfig = updateBlock(it.tokenReceiveBSConfig))
+                    }
+                }
             },
             onHandleQuickAction = { handledAction ->
                 analyticsEventHandler.send(
@@ -137,6 +151,9 @@ internal class MarketsPortfolioModel @Inject constructor(
                         blockchainName = handledAction.cryptoCurrencyData.status.currency.network.name,
                     ),
                 )
+                if (tokenReceiveFeatureToggle.isNewTokenReceiveEnabled) {
+                    configureReceiveAddresses(handledAction)
+                }
             },
         ),
         updateTokens = { updateBlock ->
@@ -175,38 +192,33 @@ internal class MarketsPortfolioModel @Inject constructor(
 
     private fun subscribeOnStateUpdates() {
         combine(
-            flow = loadPortfolioData(params.token.id),
+            flow = loadPortfolioDataWithArtworks(params.token.id),
             flow2 = getPortfolioUIDataFlow(),
-            flow3 = artworksState,
-            transform = factory::create,
+            transform = { pair, portfolioUIData ->
+                val (portfolioData, artworks) = pair
+                factory.create(portfolioData, portfolioUIData, artworks)
+            },
         )
             .onEach { _state.value = it }
             .launchIn(modelScope)
     }
 
-    private fun loadPortfolioData(currencyRawId: CryptoCurrency.RawID): Flow<PortfolioData> {
-        portfolioDataLoader.load(currencyRawId).onEach {
-            loadArtworks(it.walletsWithCurrencies.keys.toList())
-        }.also { return it }
-    }
+    private fun loadPortfolioDataWithArtworks(
+        currencyRawId: CryptoCurrency.RawID,
+    ): Flow<Pair<PortfolioData, Map<UserWalletId, UserWalletItemUM.ImageState>>> {
+        val wallets = Channel<Set<UserWallet>>()
+        val portfolioFlow = portfolioDataLoader
+            .load(currencyRawId)
+            .onEach { wallets.trySend(it.walletsWithCurrencies.keys) }
 
-    private fun loadArtworks(wallets: List<UserWallet>) {
-        modelScope.launch {
-            loadArtworksMutex.withLock {
-                wallets.filterIsInstance<UserWallet.Cold>().forEach { wallet ->
-                    if (!loadedArtworks.containsKey(wallet.walletId)) {
-                        val artwork = getCardImageUseCase(
-                            cardId = wallet.cardId,
-                            manufacturerName = wallet.scanResponse.card.manufacturer.name,
-                            firmwareVersion = wallet.scanResponse.card.firmwareVersion.toSdkFirmwareVersion(),
-                            cardPublicKey = wallet.scanResponse.card.cardPublicKey,
-                        )
-                        loadedArtworks[wallet.walletId] = artwork
-                        artworksState.emit(loadedArtworks)
-                    }
-                }
-            }
-        }
+        val artworksFlow = wallets.receiveAsFlow()
+            .distinctUntilChanged()
+            .flatMapLatest { userWalletImageFetcher.walletsImage(wallets = it, size = ArtworkSize.SMALL) }
+
+        return combine(
+            flow = portfolioFlow,
+            flow2 = artworksFlow,
+        ) { portfolioData, artworks -> portfolioData to artworks }
     }
 
     private fun getPortfolioUIDataFlow(): Flow<PortfolioUIData> {
@@ -357,6 +369,53 @@ internal class MarketsPortfolioModel @Inject constructor(
         _state.update { stateToUpdate ->
             val tokensState = stateToUpdate as? MyPortfolioUM.Tokens ?: return@update stateToUpdate
             block(tokensState)
+        }
+    }
+
+    private fun configureReceiveAddresses(quickAction: TokenActionsHandler.HandledQuickAction) {
+        when (quickAction.action) {
+            TokenActionsBSContentUM.Action.Receive -> {
+                val addresses = quickAction.cryptoCurrencyData.status.value.networkAddress ?: return
+                val cryptoCurrency = quickAction.cryptoCurrencyData.status.currency
+                modelScope.launch {
+                    val ensName = getEnsNameUseCase.invoke(
+                        userWalletId = quickAction.cryptoCurrencyData.userWallet.walletId,
+                        network = cryptoCurrency.network,
+                        address = addresses.defaultAddress.value,
+                    )
+
+                    val receiveAddresses = buildList {
+                        ensName?.let { ens ->
+                            add(
+                                ReceiveAddressModel(
+                                    nameService = ReceiveAddressModel.NameService.Ens,
+                                    value = ens,
+                                    displayName = ens,
+                                ),
+                            )
+                        }
+                        addresses.availableAddresses.map { address ->
+                            add(
+                                ReceiveAddressModel(
+                                    nameService = ReceiveAddressModel.NameService.Default,
+                                    value = address.value,
+                                    displayName = "${cryptoCurrency.name} (${cryptoCurrency.symbol})",
+                                ),
+                            )
+                        }
+                    }
+                    val tokenConfig = TokenReceiveConfig(
+                        shouldShowWarning = cryptoCurrency.name !in getViewedTokenReceiveWarningUseCase(),
+                        cryptoCurrency = cryptoCurrency,
+                        userWalletId = quickAction.cryptoCurrencyData.userWallet.walletId,
+                        showMemoDisclaimer = cryptoCurrency.network.transactionExtrasType != Network
+                            .TransactionExtrasType.NONE,
+                        receiveAddress = receiveAddresses,
+                    )
+                    bottomSheetNavigation.activate(tokenConfig)
+                }
+            }
+            else -> Unit
         }
     }
 }

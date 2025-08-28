@@ -206,11 +206,10 @@ internal class DefaultManageTokensRepository(
         )
 
     private fun getSupportedBlockchains(userWallet: UserWallet?): List<Blockchain> {
-        return (userWallet as? UserWallet.Cold)?.scanResponse?.let {
-            it.card.supportedBlockchains(it.cardTypesResolver, excludedBlockchains) // TODO [REDACTED_TASK_KEY]
-        } ?: Blockchain.entries.filter {
-            !it.isTestnet() && it !in excludedBlockchains
-        }
+        return userWallet?.supportedBlockchains(excludedBlockchains)
+            ?: Blockchain.entries.filter {
+                !it.isTestnet() && it !in excludedBlockchains
+            }
     }
     // endregion
 

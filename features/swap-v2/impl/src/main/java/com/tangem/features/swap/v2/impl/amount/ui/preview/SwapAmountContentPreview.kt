@@ -9,10 +9,10 @@ import com.tangem.domain.express.models.ExpressProvider
 import com.tangem.domain.express.models.ExpressProviderType
 import com.tangem.domain.express.models.ExpressRateType
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.swap.models.SwapCurrencies
 import com.tangem.domain.swap.models.SwapDirection
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountFieldUM
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountType
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
@@ -39,6 +39,7 @@ internal data object SwapAmountContentPreview {
                 hasFiatFeeRate = false,
                 canHandleTokens = false,
                 transactionExtrasType = Network.TransactionExtrasType.NONE,
+                nameResolvingType = Network.NameResolvingType.NONE,
 
             ),
             name = "Bitcoin",
@@ -68,6 +69,7 @@ internal data object SwapAmountContentPreview {
         quoteAmountValue = stringReference("123"),
         rate = stringReference("1 USD ≈ 123.123 POL"),
         diffPercent = SwapQuoteUM.Content.DifferencePercent.Best,
+        isSingleProvider = false,
     )
 
     val emptyState = SwapAmountUM.Content(
@@ -87,6 +89,8 @@ internal data object SwapAmountContentPreview {
         secondaryCryptoCurrencyStatus = cryptoCurrencyStatus,
         swapRateType = ExpressRateType.Float,
         appCurrency = AppCurrency.Default,
+        showBestRateAnimation = false,
+        showFCAWarning = false,
     )
 
     val defaultState = SwapAmountUM.Content(
@@ -123,5 +127,7 @@ internal data object SwapAmountContentPreview {
         secondaryCryptoCurrencyStatus = cryptoCurrencyStatus,
         swapRateType = ExpressRateType.Float,
         isPrimaryButtonEnabled = true,
+        showBestRateAnimation = false,
+        showFCAWarning = true,
     )
 }

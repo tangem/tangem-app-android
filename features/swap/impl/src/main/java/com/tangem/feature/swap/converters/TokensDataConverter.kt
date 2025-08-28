@@ -3,11 +3,11 @@ package com.tangem.feature.swap.converters
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
-import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.feature.swap.domain.models.domain.CryptoCurrencySwapInfo
 import com.tangem.feature.swap.models.CurrenciesGroupWithFromCurrency
 import com.tangem.feature.swap.models.SwapSelectTokenStateHolder
@@ -111,10 +111,11 @@ class TokensDataConverter(
     }
 
     private fun formatFiatAmount(cryptoCurrencyStatus: CryptoCurrencyStatus, appCurrency: AppCurrency): String {
-        return BigDecimalFormatter.formatFiatAmount(
-            fiatAmount = cryptoCurrencyStatus.value.fiatAmount,
-            fiatCurrencyCode = appCurrency.code,
-            fiatCurrencySymbol = appCurrency.symbol,
-        )
+        return cryptoCurrencyStatus.value.fiatAmount.format {
+            fiat(
+                fiatCurrencyCode = appCurrency.code,
+                fiatCurrencySymbol = appCurrency.symbol,
+            )
+        }
     }
 }
