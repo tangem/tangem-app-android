@@ -49,6 +49,8 @@ import com.tangem.domain.tokens.RemoveCurrencyUseCase
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.analytics.TokenReceiveAnalyticsEvent
+import com.tangem.domain.tokens.model.analytics.TokenReceiveCopyActionSource
+import com.tangem.domain.tokens.model.analytics.TokenReceiveNewAnalyticsEvent
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent.Companion.AVAILABLE
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent.Companion.toReasonAnalyticsText
@@ -174,10 +176,6 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
             ),
         )
 
-        analyticsEventHandler.send(
-            event = TokenReceiveAnalyticsEvent.ReceiveScreenOpened(cryptoCurrencyStatus.currency.symbol),
-        )
-
         event?.let { analyticsEventHandler.send(it) }
 
         if (tokenReceiveFeatureToggle.isNewTokenReceiveEnabled) {
@@ -188,6 +186,9 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
                 }
             }
         } else {
+            analyticsEventHandler.send(
+                event = TokenReceiveAnalyticsEvent.ReceiveScreenOpened(cryptoCurrencyStatus.currency.symbol),
+            )
             stateHolder.showBottomSheet(
                 createReceiveBottomSheetContent(
                     currency = cryptoCurrencyStatus.currency,
@@ -206,7 +207,13 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
 
         vibratorHapticManager.performOneTime(TangemHapticEffect.OneTime.Click)
         clipboardManager.setText(text = defaultAddress, isSensitive = true)
-        analyticsEventHandler.send(TokenReceiveAnalyticsEvent.ButtonCopyAddress(cryptoCurrency.symbol))
+        analyticsEventHandler.send(
+            TokenReceiveNewAnalyticsEvent.ButtonCopyAddress(
+                token = cryptoCurrency.symbol,
+                blockchainName = cryptoCurrency.network.name,
+                tokenReceiveSource = TokenReceiveCopyActionSource.Main,
+            ),
+        )
         return resourceReference(R.string.wallet_notification_address_copied)
     }
 
@@ -235,7 +242,11 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
 
     override fun onCopyAddressClick(cryptoCurrencyStatus: CryptoCurrencyStatus) {
         analyticsEventHandler.send(
-            event = TokenScreenAnalyticsEvent.ButtonCopyAddress(cryptoCurrencyStatus.currency.symbol),
+            event = TokenReceiveNewAnalyticsEvent.ButtonCopyAddress(
+                token = cryptoCurrencyStatus.currency.symbol,
+                blockchainName = cryptoCurrencyStatus.currency.network.name,
+                tokenReceiveSource = TokenReceiveCopyActionSource.Main,
+            ),
         )
 
         modelScope.launch(dispatchers.main) {
