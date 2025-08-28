@@ -22,6 +22,7 @@ import com.tangem.features.nft.details.info.NFTDetailsInfoComponent
 import com.tangem.features.nft.entity.NFTSendSuccessListener
 import com.tangem.features.nft.receive.NFTReceiveComponent
 import com.tangem.features.nft.traits.NFTAssetTraitsComponent
+import com.tangem.features.tokenreceive.TokenReceiveComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -35,6 +36,7 @@ internal class DefaultNFTComponent @AssistedInject constructor(
     @Assisted private val params: NFTComponent.Params,
     private val nftDetailsInfoComponentFactory: NFTDetailsInfoComponent.Factory,
     nftSendSuccessListener: NFTSendSuccessListener,
+    private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
 ) : NFTComponent, AppComponentContext by appComponentContext {
 
     private val stackNavigation = StackNavigation<NFTRoute>()
@@ -134,6 +136,7 @@ internal class DefaultNFTComponent @AssistedInject constructor(
             walletName = params.walletName,
             onBackClick = ::onChildBack,
         ),
+        tokenReceiveComponentFactory = tokenReceiveComponentFactory,
     )
 
     private fun getDetailsComponent(
