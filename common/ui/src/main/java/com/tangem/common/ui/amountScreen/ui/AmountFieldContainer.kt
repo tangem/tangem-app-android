@@ -15,6 +15,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.R
@@ -29,6 +30,7 @@ import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.test.StakingSendScreenTestTags
 
 private const val AMOUNT_FIELD_KEY = "amountFieldKey"
 
@@ -52,7 +54,8 @@ internal fun LazyListScope.amountField(
                 style = TangemTheme.typography.subtitle2,
                 color = TangemTheme.colors.text.tertiary,
                 modifier = Modifier
-                    .padding(top = TangemTheme.dimens.spacing14),
+                    .padding(top = TangemTheme.dimens.spacing14)
+                    .testTag(StakingSendScreenTestTags.AMOUNT_CONTAINER_TITLE),
             )
 
             val balance = amountState.availableBalance.orMaskWithStars(isBalanceHidden).resolveReference()
@@ -66,7 +69,8 @@ internal fun LazyListScope.amountField(
                     color = TangemTheme.colors.text.tertiary,
                     textAlign = TextAlign.Center,
                     modifier = Modifier
-                        .padding(top = TangemTheme.dimens.spacing2),
+                        .padding(top = TangemTheme.dimens.spacing2)
+                        .testTag(StakingSendScreenTestTags.AMOUNT_CONTAINER_TEXT),
                 )
             }
             CurrencyIcon(
@@ -113,7 +117,7 @@ internal fun LazyListScope.amountFieldV2(
                 } else {
                     Text(
                         text = amountState.title.resolveReference(),
-                        style = TangemTheme.typography.caption2,
+                        style = TangemTheme.typography.subtitle2,
                         color = TangemTheme.colors.text.tertiary,
                     )
                 }
@@ -164,7 +168,7 @@ private fun AmountInfo(amountUM: AmountState, onMaxAmountClick: () -> Unit, modi
             modifier = Modifier
                 .padding(end = 16.dp)
                 .clip(RoundedCornerShape(16.dp))
-                .background(TangemTheme.colors.background.secondary)
+                .background(TangemTheme.colors.button.secondary)
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = ripple(),
