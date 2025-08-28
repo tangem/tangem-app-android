@@ -28,6 +28,7 @@ import com.tangem.domain.apptheme.repository.AppThemeModeRepository
 import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.card.repository.CardRepository
+import com.tangem.domain.core.wallets.UserWalletsListRepository
 import com.tangem.domain.feedback.GetCardInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.onboarding.SaveTwinsOnboardingShownUseCase
@@ -38,7 +39,9 @@ import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.repository.WalletsRepository
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
+import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.tap.common.analytics.handlers.BlockchainExceptionHandler
 import com.tangem.tap.common.log.TangemAppLoggerInitializer
 import com.tangem.tap.domain.scanCard.CardScanningFeatureToggles
@@ -142,4 +145,10 @@ interface ApplicationEntryPoint {
     fun getApiConfigsManager(): ApiConfigsManager
 
     fun getUserTokensResponseStore(): UserTokensResponseStore
+
+    fun getUserWalletsListRepository(): UserWalletsListRepository
+
+    fun getTangemHotSdk(): TangemHotSdk
+
+    fun getHotWalletFeatureToggles(): HotWalletFeatureToggles
 }
