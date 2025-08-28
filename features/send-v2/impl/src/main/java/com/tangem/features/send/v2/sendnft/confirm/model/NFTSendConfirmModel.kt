@@ -120,8 +120,16 @@ internal class NFTSendConfirmModel @Inject constructor(
         get() = ConfirmData(
             enteredDestination = destinationUM?.addressTextField?.actualAddress,
             enteredMemo = destinationUM?.memoTextField?.value,
-            fee = feeSelectorUM?.selectedFee,
-            feeError = (feeUM?.feeSelectorUM as? FeeSelectorUM.Error)?.error,
+            fee = if (uiState.value.isRedesignEnabled) {
+                (uiState.value.feeSelectorUM as? FeeSelectorUMRedesigned.Content)?.selectedFeeItem?.fee
+            } else {
+                feeSelectorUM?.selectedFee
+            },
+            feeError = if (uiState.value.isRedesignEnabled) {
+                (uiState.value.feeSelectorUM as? FeeSelectorUMRedesigned.Error)?.error
+            } else {
+                (feeUM?.feeSelectorUM as? FeeSelectorUM.Error)?.error
+            },
         )
 
     private var sendIdleTimer: Long = 0L
@@ -255,11 +263,15 @@ internal class NFTSendConfirmModel @Inject constructor(
 
     private fun initialState() {
         val confirmUM = uiState.value.confirmUM
-        val feeUM = uiState.value.feeUM
+        val isEmptyFee = if (uiState.value.isRedesignEnabled) {
+            uiState.value.feeSelectorUM !is FeeSelectorUMRedesigned.Content
+        } else {
+            uiState.value.feeUM is FeeUM.Empty
+        }
 
         modelScope.launch {
             val isShowTapHelp = isSendTapHelpEnabledUseCase().getOrElse { false }
-            if (confirmUM is ConfirmUM.Empty || feeUM is FeeUM.Empty) {
+            if (confirmUM is ConfirmUM.Empty || isEmptyFee) {
                 _uiState.update {
                     it.copy(
                         confirmUM = NFTSendConfirmInitialStateTransformer(
@@ -277,11 +289,17 @@ internal class NFTSendConfirmModel @Inject constructor(
         notificationsUpdateListener.hasErrorFlow
             .onEach { hasError ->
                 _uiState.update {
-                    val feeUM = it.feeUM as? FeeUM.Content
-                    val feeSelectorUM = feeUM?.feeSelectorUM as? FeeSelectorUM.Content
+                    val isFeeNotNull = if (uiState.value.isRedesignEnabled) {
+                        it.feeSelectorUM is FeeSelectorUMRedesigned.Content
+                    } else {
+                        val feeUM = it.feeUM as? FeeUM.Content
+                        val feeSelectorUM = feeUM?.feeSelectorUM as? FeeSelectorUM.Content
+                        feeSelectorUM != null
+                    }
+
                     it.copy(
                         confirmUM = (it.confirmUM as? ConfirmUM.Content)?.copy(
-                            isPrimaryButtonEnabled = !hasError && feeSelectorUM != null,
+                            isPrimaryButtonEnabled = !hasError && isFeeNotNull,
                         ) ?: it.confirmUM,
                     )
                 }
@@ -290,9 +308,8 @@ internal class NFTSendConfirmModel @Inject constructor(
     }
 
     private fun verifyAndSendTransaction() {
-        val destination = destinationUM?.addressTextField?.actualAddress ?: return
-        val memo = destinationUM?.memoTextField?.value
-        val fee = feeSelectorUM?.selectedFee ?: return
+        val destination = confirmData.enteredDestination ?: return
+        val fee = confirmData.fee ?: return
         val ownerAddress = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value ?: return
 
         val sdkNFTAsset = NFTSdkAssetConverter.convertBack(params.nftAsset)
@@ -302,7 +319,7 @@ internal class NFTSendConfirmModel @Inject constructor(
                 ownerAddress = ownerAddress,
                 nftAsset = sdkNFTAsset.second,
                 fee = fee,
-                memo = memo,
+                memo = confirmData.enteredMemo,
                 destinationAddress = destination,
                 userWalletId = userWallet.walletId,
                 network = cryptoCurrency.network,
