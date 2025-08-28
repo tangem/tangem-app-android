@@ -8,6 +8,7 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.tokens.model.analytics.TokenReceiveCopyActionSource
 import com.tangem.features.tokenreceive.entity.ReceiveAddress
 import com.tangem.features.tokenreceive.model.TokenReceiveQrCodeModel
 import com.tangem.features.tokenreceive.ui.TokenReceiveQrCodeContent
@@ -26,7 +27,7 @@ internal class TokenReceiveQrCodeComponent(
     }
 
     internal interface TokenReceiveQrCodeModelCallback {
-        fun onCopyClick(id: Int)
+        fun onCopyClick(id: Int, source: TokenReceiveCopyActionSource)
         fun onShareClick(address: String)
     }
 
