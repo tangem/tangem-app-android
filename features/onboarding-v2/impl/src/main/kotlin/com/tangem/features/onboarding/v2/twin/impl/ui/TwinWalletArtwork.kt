@@ -1,12 +1,10 @@
 package com.tangem.features.onboarding.v2.twin.impl.ui
 
+import android.annotation.SuppressLint
 import android.content.res.Configuration
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Transition
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.updateTransition
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
@@ -16,21 +14,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.zIndex
-import com.tangem.core.ui.components.SpacerH8
-import com.tangem.core.ui.components.SpacerHMax
 import com.tangem.core.ui.components.artwork.ArtworkUM
-import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.domain.wallets.models.Artwork
-import com.tangem.features.onboarding.v2.common.ui.RefreshButton
 import com.tangem.features.onboarding.v2.common.ui.WalletCard
-import com.tangem.features.onboarding.v2.impl.R
 import kotlinx.coroutines.delay
 import java.util.concurrent.TimeUnit
 
@@ -45,8 +37,6 @@ internal sealed class TwinWalletArtworkUM {
             FirstCard, SecondCard
         }
     }
-
-    data object TopUp : TwinWalletArtworkUM()
 }
 
 private data class CardsTransitionState(
@@ -64,15 +54,10 @@ private data class WalletCardTransitionState(
     val zIndex: Float = 0f,
 )
 
+@SuppressLint("UnusedBoxWithConstraintsScope")
 @Suppress("LongMethod")
 @Composable
-internal fun TwinWalletArtworks(
-    state: TwinWalletArtworkUM,
-    balance: String,
-    isRefreshing: Boolean,
-    onRefreshBalanceClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+internal fun TwinWalletArtworks(state: TwinWalletArtworkUM, modifier: Modifier = Modifier) {
     BoxWithConstraints(
         modifier
             .heightIn(min = 180.dp)
@@ -110,22 +95,6 @@ internal fun TwinWalletArtworks(
             }
         }
 
-        AnimatedVisibility(
-            visible = state == TwinWalletArtworkUM.TopUp,
-            enter = fadeIn(),
-            exit = fadeOut(),
-        ) {
-            Box(
-                modifier = Modifier
-                    .padding(vertical = 24.dp, horizontal = 16.dp)
-                    .fillMaxSize()
-                    .background(
-                        TangemTheme.colors.button.secondary,
-                        shape = TangemTheme.shapes.roundedCornersMedium,
-                    ),
-            )
-        }
-
         AnimatedTwinCards(
             transition1 = transition1,
             transition2 = transition2,
@@ -133,46 +102,6 @@ internal fun TwinWalletArtworks(
                 .widthIn(max = 450.dp)
                 .matchParentSize(),
         )
-
-        AnimatedVisibility(
-            modifier = Modifier.align(Alignment.Center),
-            visible = state == TwinWalletArtworkUM.TopUp,
-            enter = fadeIn(),
-            exit = fadeOut(),
-        ) {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                SpacerHMax()
-                Text(
-                    text = stringResourceSafe(R.string.common_balance_title),
-                    style = TangemTheme.typography.body2,
-                    color = TangemTheme.colors.text.secondary,
-                    textAlign = TextAlign.Center,
-                )
-                SpacerH8()
-                Text(
-                    text = balance,
-                    style = TangemTheme.typography.h2,
-                    color = TangemTheme.colors.text.primary1,
-                    textAlign = TextAlign.Center,
-                )
-                SpacerHMax()
-            }
-        }
-
-        AnimatedVisibility(
-            modifier = Modifier.align(Alignment.BottomCenter),
-            visible = state == TwinWalletArtworkUM.TopUp,
-            enter = fadeIn(),
-            exit = fadeOut(),
-        ) {
-            RefreshButton(
-                isRefreshing = isRefreshing,
-                onRefreshBalanceClick = onRefreshBalanceClick,
-            )
-        }
     }
 }
 
@@ -308,26 +237,6 @@ private fun TwinWalletArtworkUM.toTransitionSetState(
             )
         }
     }
-    TwinWalletArtworkUM.TopUp -> {
-        val scale = 0.4f
-        val yTranslation = -maxHeightDp * density - 24 * density
-        listOf(
-            CardsTransitionState(
-                walletCard1 = WalletCardTransitionState(
-                    yTranslation = yTranslation,
-                    xScale = scale,
-                    yScale = scale,
-                    zIndex = 2f,
-                ),
-                walletCard2 = WalletCardTransitionState(
-                    yTranslation = yTranslation * 0.35f,
-                    xScale = scale * 0.8f,
-                    yScale = scale * 0.8f,
-                    zIndex = 1f,
-                ),
-            ),
-        )
-    }
 }
 
 @Preview(showBackground = true, widthDp = 360, heightDp = 640)
@@ -341,16 +250,13 @@ private fun Preview() {
                 .fillMaxSize(),
             contentAlignment = Alignment.Center,
         ) {
-            var state: TwinWalletArtworkUM by remember { mutableStateOf(TwinWalletArtworkUM.TopUp) }
+            var state: TwinWalletArtworkUM by remember { mutableStateOf(TwinWalletArtworkUM.Spread) }
 
             TwinWalletArtworks(
                 state = state,
                 modifier = Modifier
                     .padding(top = 250.dp)
                     .fillMaxWidth(),
-                balance = "1 USD",
-                isRefreshing = false,
-                onRefreshBalanceClick = {},
             )
 
             var index by remember { mutableIntStateOf(0) }
@@ -366,7 +272,6 @@ private fun Preview() {
                         TwinWalletArtworkUM.Leapfrog(step = TwinWalletArtworkUM.Leapfrog.Step.SecondCard),
                         TwinWalletArtworkUM.Leapfrog(step = TwinWalletArtworkUM.Leapfrog.Step.FirstCard),
                         TwinWalletArtworkUM.Leapfrog(step = TwinWalletArtworkUM.Leapfrog.Step.SecondCard),
-                        TwinWalletArtworkUM.TopUp,
                     )
 
                     state = list[index % list.size]
