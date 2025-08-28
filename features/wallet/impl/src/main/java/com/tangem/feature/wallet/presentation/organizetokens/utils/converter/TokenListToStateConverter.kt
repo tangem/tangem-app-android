@@ -1,7 +1,7 @@
 package com.tangem.feature.wallet.presentation.organizetokens.utils.converter
 
 import com.tangem.domain.models.TokensSortType
-import com.tangem.domain.tokens.model.TokenList
+import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensListState
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensState
 import com.tangem.feature.wallet.presentation.organizetokens.utils.converter.items.TokenListToListStateConverter
