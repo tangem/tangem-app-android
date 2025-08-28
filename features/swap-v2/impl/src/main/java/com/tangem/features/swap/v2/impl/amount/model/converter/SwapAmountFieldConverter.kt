@@ -48,6 +48,7 @@ internal class SwapAmountFieldConverter(
                 maxEnterAmount = maxEnterAmountConverter.convert(cryptoCurrencyStatus),
                 iconStateConverter = iconStateConverter,
                 isRedesignEnabled = true,
+                isBalanceHidden = isBalanceHidden,
             ).convert(
                 AmountParameters(
                     title = combinedReference(
