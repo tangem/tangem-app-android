@@ -1,7 +1,7 @@
 package com.tangem.features.send.v2.api.subcomponents.feeSelector.utils
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
