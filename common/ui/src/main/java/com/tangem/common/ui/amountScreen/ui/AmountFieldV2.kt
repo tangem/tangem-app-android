@@ -127,7 +127,7 @@ private fun AmountSecondary(amountUM: AmountState, onCurrencyChange: (Boolean) -
         modifier = Modifier
             .fillMaxWidth()
             .animateContentSize()
-            .padding(top = 8.dp),
+            .padding(top = 4.dp),
     ) {
         if (amountUM is AmountState.Empty) {
             TextShimmer(
@@ -141,6 +141,7 @@ private fun AmountSecondary(amountUM: AmountState, onCurrencyChange: (Boolean) -
             AmountFieldCurrencyInfo(
                 amountUM = amountUM,
                 onCurrencyChange = onCurrencyChange,
+
             )
             AmountFieldError(
                 isError = amountUM.amountTextField.isError,
@@ -148,7 +149,7 @@ private fun AmountSecondary(amountUM: AmountState, onCurrencyChange: (Boolean) -
                 error = amountUM.amountTextField.error,
                 modifier = Modifier
                     .align(BottomCenter)
-                    .padding(top = 20.dp),
+                    .padding(top = 24.dp),
             )
         }
     }
@@ -161,12 +162,13 @@ private fun BoxScope.AmountFieldCurrencyInfo(amountUM: AmountState.Data, onCurre
         horizontalArrangement = Arrangement.spacedBy(4.dp),
         modifier = Modifier
             .align(TopCenter)
-            .padding(bottom = 20.dp)
+            .padding(bottom = 16.dp)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
                 onClick = { onCurrencyChange(!amountUM.amountTextField.isFiatValue) },
-            ),
+            )
+            .padding(4.dp),
     ) {
         val iconRotateState by animateFloatAsState(
             targetValue = if (amountUM.amountTextField.isFiatValue) ROTATED_DEGREE else INITIAL_DEGREE,
@@ -324,6 +326,7 @@ private class AmountFieldV2PreviewProvider : PreviewParameterProvider<AmountStat
         get() = sequenceOf(
             AmountStatePreviewData.emptyState,
             AmountStatePreviewData.amountState,
+            AmountStatePreviewData.amountErrorState,
         )
 }
 // endregion
