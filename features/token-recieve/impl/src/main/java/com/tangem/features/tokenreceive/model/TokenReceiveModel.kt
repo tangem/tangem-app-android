@@ -20,6 +20,7 @@ import com.tangem.domain.models.ReceiveAddressModel
 import com.tangem.domain.models.ens.EnsAddress
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.tokens.SaveViewedTokenReceiveWarningUseCase
+import com.tangem.domain.tokens.model.analytics.TokenReceiveCopyActionSource
 import com.tangem.domain.tokens.model.analytics.TokenReceiveNewAnalyticsEvent
 import com.tangem.domain.transaction.usecase.GetReverseResolvedEnsAddressUseCase
 import com.tangem.features.tokenreceive.TokenReceiveComponent
@@ -76,9 +77,9 @@ internal class TokenReceiveModel @Inject constructor(
         stackNavigation.push(configuration = TokenReceiveRoutes.QrCode(addressId = id))
     }
 
-    override fun onCopyClick(id: Int) {
+    override fun onCopyClick(id: Int, source: TokenReceiveCopyActionSource) {
         val addressToCopy = state.value.addresses[id] ?: return
-        sendCopyActionAnalytic(addressToCopy)
+        sendCopyActionAnalytic(addressToCopy, source)
         clipboardManager.setText(text = addressToCopy.value, isSensitive = true)
     }
 
@@ -228,12 +229,13 @@ internal class TokenReceiveModel @Inject constructor(
         )
     }
 
-    private fun sendCopyActionAnalytic(receiveAddress: ReceiveAddress) {
+    private fun sendCopyActionAnalytic(receiveAddress: ReceiveAddress, source: TokenReceiveCopyActionSource) {
         val event = when (receiveAddress.type) {
             is Primary -> {
                 TokenReceiveNewAnalyticsEvent.ButtonCopyAddress(
                     token = getTokenName(),
                     blockchainName = params.config.cryptoCurrency.network.name,
+                    tokenReceiveSource = source,
                 )
             }
             Ens -> {
