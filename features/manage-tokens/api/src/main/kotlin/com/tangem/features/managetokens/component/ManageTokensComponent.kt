@@ -7,9 +7,16 @@ import com.tangem.domain.models.wallet.UserWalletId
 interface ManageTokensComponent : ComposableContentComponent {
 
     data class Params(
-        val userWalletId: UserWalletId?,
+        val mode: ManageTokensMode,
         val source: ManageTokensSource,
-    )
+    ) {
+        constructor(userWalletId: UserWalletId?, source: ManageTokensSource) : this(
+            source = source,
+            mode = userWalletId
+                ?.let { ManageTokensMode.Wallet(userWalletId) }
+                ?: ManageTokensMode.None,
+        )
+    }
 
     interface Factory : ComponentFactory<Params, ManageTokensComponent>
 }
