@@ -62,7 +62,7 @@
             android:name="com.tangem.tap.MainActivity"
             android:configChanges="uiMode"
             android:exported="true"
-            android:launchMode="singleTop"
+            android:launchMode="singleInstance"
             android:screenOrientation="portrait"
             android:theme="@style/SplashTheme"
             android:windowSoftInputMode="adjustResize">
