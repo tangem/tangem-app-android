@@ -5,6 +5,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.domain.tokens.model.analytics.TokenReceiveCopyActionSource
 import com.tangem.features.tokenreceive.component.TokenReceiveQrCodeComponent
 import com.tangem.features.tokenreceive.ui.state.QrCodeUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -27,7 +28,12 @@ internal class TokenReceiveQrCodeModel @Inject constructor(
             network = params.cryptoCurrency.network.name,
             addressValue = params.address.value,
             addressName = TextReference.Str("${params.cryptoCurrency.name} (${params.cryptoCurrency.symbol})"),
-            onCopyClick = { params.callback.onCopyClick(params.id) },
+            onCopyClick = {
+                params.callback.onCopyClick(
+                    id = params.id,
+                    source = TokenReceiveCopyActionSource.QR,
+                )
+            },
             onShareClick = params.callback::onShareClick,
         ),
     )
