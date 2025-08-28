@@ -20,7 +20,7 @@ sealed class PromoActivationAnalytics(
                 PromoCodeActivationResult.Failed -> "Error"
                 PromoCodeActivationResult.InvalidPromoCode -> "Invalid"
                 PromoCodeActivationResult.NoBitcoinAddress -> "No Address"
-                PromoCodeActivationResult.PromoCodeAlreadyUsed -> "Already Use"
+                PromoCodeActivationResult.PromoCodeAlreadyUsed -> "Already Used"
                 PromoCodeActivationResult.Activated -> "Activated"
             },
         ),
