@@ -14,15 +14,18 @@
   <string name="access_code_navtitle">Access code</string>
   <string name="account_add_limit_dialog_description">You cannot create more than %1$s accounts. Archive one to add new.</string>
   <string name="account_add_limit_dialog_title">Can’t add new account</string>
+  <string name="account_archive_success_message">Account archived</string>
   <string name="account_archived_accounts">Archived accounts</string>
   <string name="account_archived_recover">Recover</string>
   <string name="account_archived_recover_dialog_description">You’re about to recover “%1$s”.</string>
   <string name="account_archived_recover_dialog_title">Recover account</string>
   <string name="account_archived_title">Archived</string>
+  <string name="account_create_success_message">Account created</string>
   <string name="account_details_archive">Archive account</string>
   <string name="account_details_archive_action">Archive</string>
   <string name="account_details_archive_description">You are archiving this account, but you can always get it back.</string>
   <string name="account_details_title">Account</string>
+  <string name="account_edit_success_message">Account saved</string>
   <string name="account_form_account_index">Account #%s — used for address derivation.</string>
   <string name="account_form_create_button">Add account</string>
   <string name="account_form_edit_button">Save</string>
@@ -32,6 +35,7 @@
   <string name="account_form_title_create">Add account</string>
   <string name="account_form_title_edit">Edit account</string>
   <string name="account_label_tokens_info">%1$s in %2$s</string>
+  <string name="account_recover_success_message">Account recovered</string>
   <string name="account_reorder_description">Long tap on an account to reorder accounts</string>
   <string name="account_unsaved_dialog_action_first">Keep Editing</string>
   <string name="account_unsaved_dialog_action_second">Discard</string>
@@ -252,6 +256,7 @@
   <string name="common_in_progress">In progress</string>
   <string name="common_later">Later</string>
   <string name="common_left">%1$s left</string>
+  <string name="common_legacy_bitcoin_address">Legacy Bitcoin</string>
   <string name="common_locked">Locked</string>
   <string name="common_main_network">Main network</string>
   <string name="common_month">month</string>
@@ -261,6 +266,7 @@
     <item quantity="one">%d network</item>
     <item quantity="other">%d networks</item>
   </plurals>
+  <string name="common_new_address">New address</string>
   <string name="common_next">Next</string>
   <string name="common_nft">NFT</string>
   <string name="common_no">No</string>
@@ -310,6 +316,7 @@
   <string name="common_support">Support</string>
   <string name="common_supported_networks">Supported networks</string>
   <string name="common_swap">Swap</string>
+  <string name="common_tangem">Tangem</string>
   <string name="common_tangem_wallet">Tangem Wallet</string>
   <string name="common_terms_and_conditions">terms and conditions</string>
   <string name="common_terms_of_use">Terms of Use</string>
@@ -385,6 +392,7 @@
   <string name="details_title">Details</string>
   <string name="disclaimer_error_loading">Check your internet connection or switch to a different network</string>
   <string name="disclaimer_title">Terms of service</string>
+  <string name="domain_receive_assets_default_address">Default Address</string>
   <string name="domain_receive_assets_navigation_title">Receive assets</string>
   <string name="domain_receive_assets_onboarding_description">Sending assets in other networks will result in permanent loss.</string>
   <string name="domain_receive_assets_onboarding_network_name">%s network</string>
@@ -534,7 +542,7 @@
   <string name="hw_upgrade_start_title">Tangem Wallet</string>
   <string name="hw_upgrade_title">Upgrade to Hardware Wallet</string>
   <string name="hw_upgrade_to_cold_banner_description">Keep your crypto safe with Tangem’s best-in-class hardware wallet.</string>
-  <string name="hw_upgrade_to_cold_banner_title">Upgrade wallet with a hardware backup</string>
+  <string name="hw_upgrade_to_cold_banner_title">Upgrade wallet with a hardware backup</string>
   <string name="information_generated_with_ai">This information was generated with AI.\nTap here, if you find any errors.</string>
   <string name="initial_message_change_access_code_body">To change the access code tap the card or ring as shown above and do not remove until the end of the operation</string>
   <string name="initial_message_change_passcode_body">To change the passcode tap the card as shown above and do not remove until the end of the operation</string>
@@ -864,6 +872,7 @@
   <string name="onramp_statuses_view_footer">You can close this screen and check the transaction status on the token details screen.</string>
   <string name="onramp_transaction_status_footer_text">You can close this screen and check the transaction status on the token details screen.</string>
   <string name="onramp_via">Via</string>
+  <string name="onramp_you_will_pay_title">You will pay</string>
   <string name="organize_tokens_group">Group</string>
   <string name="organize_tokens_sort_by_balance">By balance</string>
   <string name="organize_tokens_title">Organize tokens</string>
