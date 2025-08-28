@@ -4,6 +4,7 @@ import android.content.Context
 import android.view.View
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
+import androidx.compose.ui.text.intl.Locale
 import androidx.core.view.isVisible
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.models.AnalyticsParam
@@ -14,8 +15,6 @@ import com.tangem.tap.common.analytics.events.ScanFailsDialogAnalytics
 import com.tangem.tap.common.extensions.dispatchDialogHide
 import com.tangem.tap.common.extensions.dispatchOpenUrl
 import com.tangem.tap.common.extensions.inject
-import com.tangem.tap.features.home.LocaleRegionProvider
-import com.tangem.tap.features.home.RUSSIA_COUNTRY_CODE
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
 import com.tangem.tap.store
@@ -29,6 +28,7 @@ internal object ScanFailsDialog {
 
     private const val HOW_TO_SCAN_RU_LINK = "https://tangem.com/ru/blog/post/scan-tangem-card/"
     private const val HOW_TO_SCAN_LINK = "https://tangem.com/en/blog/post/scan-tangem-card/"
+    private const val RUSSIA_LOCALE = "ru"
 
     fun create(context: Context, source: StateDialog.ScanFailsSource, onTryAgain: (() -> Unit)? = null): AlertDialog {
         return AlertDialog.Builder(context, R.style.CustomMaterialDialog).apply {
@@ -62,8 +62,8 @@ internal object ScanFailsDialog {
                         source = sourceAnalytics,
                     ),
                 )
-                val locale = LocaleRegionProvider().getRegion()
-                val link = if (locale.lowercase() == RUSSIA_COUNTRY_CODE) HOW_TO_SCAN_RU_LINK else HOW_TO_SCAN_LINK
+                val locale = Locale.current.region
+                val link = if (locale.lowercase() == RUSSIA_LOCALE) HOW_TO_SCAN_RU_LINK else HOW_TO_SCAN_LINK
                 store.dispatchOpenUrl(link)
             }
             customView.findViewById<TextView>(R.id.request_support_button)?.setOnClickListener {

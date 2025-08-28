@@ -24,7 +24,7 @@ fun Analytics.setContext(scanResponse: ScanResponse) {
 
 fun Analytics.setContext(userWallet: UserWallet) {
     setUserId(userWallet.walletId.stringValue)
-    // TODO add product type for hot ([REDACTED_TASK_KEY])
+    // TODO add product type for hot ([REDACTED_TASK_KEY] [Hot Wallet] Analytics)
 
     if (userWallet is UserWallet.Cold) {
         addParamsInterceptor(LinkedCardContextInterceptor(userWallet.scanResponse))
