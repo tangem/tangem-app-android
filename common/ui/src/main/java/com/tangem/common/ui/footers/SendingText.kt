@@ -49,10 +49,10 @@ fun SendingText(footerText: TextReference, modifier: Modifier = Modifier) {
             text = footerText.resolveAnnotatedReference(),
             textAlign = TextAlign.Center,
             style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors.text.tertiary,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
+                .padding(16.dp),
         )
     }
 }
