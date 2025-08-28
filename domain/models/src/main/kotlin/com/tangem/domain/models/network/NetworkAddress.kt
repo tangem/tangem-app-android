@@ -1,6 +1,9 @@
 package com.tangem.domain.models.network
 
+import kotlinx.serialization.Serializable
+
 /** Represents a network address */
+@Serializable
 sealed class NetworkAddress {
 
     /** The default or currently selected network address */
@@ -14,6 +17,7 @@ sealed class NetworkAddress {
      *
      * @property defaultAddress the static network address
      */
+    @Serializable
     data class Single(override val defaultAddress: Address) : NetworkAddress() {
 
         override val availableAddresses: Set<Address> = setOf(defaultAddress)
@@ -25,6 +29,7 @@ sealed class NetworkAddress {
      * @property defaultAddress     the currently selected or default network address
      * @property availableAddresses the set of available network addresses to choose from
      */
+    @Serializable
     data class Selectable(
         override val defaultAddress: Address,
         override val availableAddresses: Set<Address>,
@@ -41,6 +46,7 @@ sealed class NetworkAddress {
      * @property value string representation of the address
      * @property type  address type
      */
+    @Serializable
     data class Address(
         val value: String,
         val type: Type,

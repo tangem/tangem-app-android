@@ -17,6 +17,7 @@ dependencies {
     implementation(projects.features.manageTokens.api)
     implementation(projects.features.biometry.api)
     implementation(projects.features.hotWallet.api)
+    implementation(projects.features.tokenRecieve.api)
 
     /** Core modules */
     implementation(projects.core.configToggles)
@@ -49,6 +50,7 @@ dependencies {
     implementation(projects.domain.tokens)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.onramp)
+    implementation(projects.domain.transaction)
 
     /** Tangem libraries */
     implementation(projects.libs.tangemSdkApi)
@@ -62,7 +64,6 @@ dependencies {
     implementation(deps.lifecycle.runtime.ktx)
 
     /** Compose libraries */
-    implementation(deps.compose.material)  // to use buttons and text field in MultiWalletSeedPhraseImport.kt
     implementation(deps.compose.material3)
     implementation(deps.compose.animation)
     implementation(deps.compose.foundation)

@@ -1,7 +1,6 @@
 package com.tangem.features.swap.v2.impl.sendviaswap.success.ui
 
 import android.content.res.Configuration
-import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -10,14 +9,9 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.blockchain.common.transaction.Fee
@@ -25,9 +19,9 @@ import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.utils.getFiatReference
 import com.tangem.common.ui.navigationButtons.NavigationButton
+import com.tangem.common.ui.navigationButtons.NavigationButtonsBlockV2
 import com.tangem.common.ui.navigationButtons.NavigationUM
-import com.tangem.core.ui.components.SecondaryButtonIconStart
-import com.tangem.core.ui.components.SpacerW12
+import com.tangem.core.ui.components.BottomFade
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.icons.identicon.IdentIcon
 import com.tangem.core.ui.components.inputrow.InputRowBestRate
@@ -41,7 +35,6 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.DateTimeFormatters
-import com.tangem.core.ui.utils.singleEvent
 import com.tangem.core.ui.utils.toTimeFormat
 import com.tangem.domain.express.models.ExpressProvider
 import com.tangem.domain.express.models.ExpressProviderType
@@ -63,8 +56,6 @@ import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
 import com.tangem.features.swap.v2.impl.sendviaswap.entity.SendWithSwapUM
 import kotlinx.collections.immutable.persistentListOf
 import java.math.BigDecimal
-
-private const val GRADIENT_ALPHA = 0.3f
 
 @Composable
 internal fun SendWithSwapSuccessContent(sendWithSwapUM: SendWithSwapUM) {
@@ -112,22 +103,16 @@ internal fun SendWithSwapSuccessContent(sendWithSwapUM: SendWithSwapUM) {
             FeeBlock(feeSelectorUM = feeSelectorUM)
             Spacer(Modifier.height(60.dp))
         }
-        DoneButtons(
-            pairButtonsUM = sendWithSwapUM.navigationUM.secondaryPairButtonsUM,
+        BottomFade(Modifier.align(Alignment.BottomCenter), TangemTheme.colors.background.tertiary)
+        NavigationButtonsBlockV2(
+            navigationUM = sendWithSwapUM.navigationUM,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            Color.Transparent,
-                            TangemTheme.colors.background.tertiary.copy(GRADIENT_ALPHA),
-                            TangemTheme.colors.background.tertiary,
-                        ),
-                    ),
-                )
-                .padding(top = 24.dp)
-                .padding(horizontal = 16.dp),
-
+                .padding(
+                    start = 16.dp,
+                    end = 16.dp,
+                    bottom = 16.dp,
+                ),
         )
     }
 }
@@ -217,16 +202,17 @@ private fun FeeBlock(feeSelectorUM: FeeSelectorUM.Content) {
             .padding(TangemTheme.dimens.spacing12),
     ) {
         Text(
-            text = stringResourceSafe(com.tangem.common.ui.R.string.common_network_fee_title),
+            text = stringResourceSafe(R.string.common_network_fee_title),
             style = TangemTheme.typography.subtitle2,
             color = TangemTheme.colors.text.tertiary,
         )
 
         Box(modifier = Modifier.padding(top = TangemTheme.dimens.spacing8)) {
-            val feeAmount = feeSelectorUM.selectedFeeItem.fee.amount
+            val feeItemUM = feeSelectorUM.selectedFeeItem
+            val feeAmount = feeItemUM.fee.amount
             SelectorRowItem(
-                titleRes = com.tangem.common.ui.R.string.common_fee_selector_option_market,
-                iconRes = com.tangem.common.ui.R.drawable.ic_bird_24,
+                title = feeItemUM.title,
+                iconRes = feeItemUM.iconRes,
                 preDot = stringReference(
                     feeAmount.value.format {
                         crypto(
@@ -281,46 +267,6 @@ private fun DestinationBlock(address: DestinationTextFieldUM.RecipientAddress, m
                     .size(TangemTheme.dimens.size36)
                     .clip(RoundedCornerShape(18.dp))
                     .background(TangemTheme.colors.background.tertiary),
-            )
-        }
-    }
-}
-
-// TODO remove [REDACTED_TASK_KEY]
-@Composable
-private fun DoneButtons(pairButtonsUM: Pair<NavigationButton, NavigationButton>?, modifier: Modifier = Modifier) {
-    val hapticFeedback = LocalHapticFeedback.current
-
-    AnimatedVisibility(
-        visible = pairButtonsUM != null,
-        modifier = modifier,
-        enter = slideInVertically().plus(fadeIn()),
-        exit = slideOutVertically().plus(fadeOut()),
-        label = "Animate show sent state buttons",
-    ) {
-        val (leftButton, rightButton) = remember(this) { requireNotNull(pairButtonsUM) }
-        Row {
-            SecondaryButtonIconStart(
-                text = leftButton.textReference.resolveReference(),
-                iconResId = requireNotNull(leftButton.iconRes),
-                onClick = {
-                    singleEvent {
-                        leftButton.onClick()
-                    }
-                },
-                modifier = Modifier.weight(1f),
-            )
-            SpacerW12()
-            SecondaryButtonIconStart(
-                text = rightButton.textReference.resolveReference(),
-                iconResId = requireNotNull(rightButton.iconRes),
-                onClick = {
-                    singleEvent {
-                        hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                        rightButton.onClick()
-                    }
-                },
-                modifier = Modifier.weight(1f),
             )
         }
     }
