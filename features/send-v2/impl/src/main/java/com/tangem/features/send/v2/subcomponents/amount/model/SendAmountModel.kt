@@ -257,6 +257,11 @@ internal class SendAmountModel @Inject constructor(
     private fun confirmConvertToToken() {
         val amountParams = params as? SendAmountComponentParams.AmountParams ?: return
         val amountFieldData = uiState.value as? AmountState.Data
+        _uiState.update {
+            (it as? AmountState.Data)?.copy(
+                isPrimaryButtonEnabled = false,
+            ) ?: it
+        }
         amountParams.callback.onConvertToAnotherToken(amountFieldData?.amountTextField?.value.orEmpty())
     }
 
