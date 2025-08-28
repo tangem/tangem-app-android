@@ -19,7 +19,7 @@ sealed class PromoActivationAnalytics(
             "State" to when (result) {
                 PromoCodeActivationResult.Failed -> "Error"
                 PromoCodeActivationResult.InvalidPromoCode -> "Invalid"
-                PromoCodeActivationResult.NoBitcoinAddress -> "No Address "
+                PromoCodeActivationResult.NoBitcoinAddress -> "No Address"
                 PromoCodeActivationResult.PromoCodeAlreadyUsed -> "Already Use"
                 PromoCodeActivationResult.Activated -> "Activated"
             },
