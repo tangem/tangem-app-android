@@ -1,6 +1,6 @@
 package com.tangem.domain.tokens.error
 
-import com.tangem.domain.tokens.model.TokenList
+import com.tangem.domain.models.tokenlist.TokenList
 
 sealed class TokenListError {
 
