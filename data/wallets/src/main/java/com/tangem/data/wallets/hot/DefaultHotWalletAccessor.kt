@@ -30,6 +30,11 @@ class DefaultHotWalletAccessor @Inject constructor(
         tangemHotSdk.derivePublicKey(unlockHotWallet = unlock, request = request)
     }
 
+    override suspend fun exportSeedPhrase(hotWalletId: HotWalletId): SeedPhrasePrivateInfo =
+        hotSdkRequest(hotWalletId) { unlock ->
+            tangemHotSdk.exportMnemonic(unlockHotWallet = unlock)
+        }
+
     private suspend fun <T> hotSdkRequest(hotWalletId: HotWalletId, block: suspend (unlock: UnlockHotWallet) -> T): T {
         val isAccessCodeRequired = walletsRepository.requireAccessCode()
 

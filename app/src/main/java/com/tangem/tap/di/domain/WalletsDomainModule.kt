@@ -11,6 +11,7 @@ import com.tangem.domain.wallets.delegate.DefaultUserWalletsSyncDelegate
 import com.tangem.domain.wallets.delegate.UserWalletsSyncDelegate
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.core.wallets.UserWalletsListRepository
+import com.tangem.domain.wallets.hot.HotWalletAccessor
 import com.tangem.domain.wallets.repository.WalletNamesMigrationRepository
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.*
@@ -370,6 +371,14 @@ internal object WalletsDomainModule {
     ): DismissUpgradeWalletNotificationUseCase {
         return DismissUpgradeWalletNotificationUseCase(
             walletsRepository = walletsRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providesExportSeedPhraseUseCase(hotWalletAccessor: HotWalletAccessor): ExportSeedPhraseUseCase {
+        return ExportSeedPhraseUseCase(
+            hotWalletAccessor = hotWalletAccessor,
         )
     }
 }
