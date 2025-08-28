@@ -369,7 +369,7 @@ internal class WalletSettingsModel @Inject constructor(
     }
 
     private fun onUpgradeWalletClick() {
-        // TODO [REDACTED_TASK_KEY]
+        router.push(AppRoute.UpgradeWallet(params.userWalletId))
     }
 
     private fun onDismissUpgradeWalletClick() {
