@@ -24,8 +24,10 @@ interface SettingsRepository {
 
     suspend fun setShouldOpenWelcomeScreenOnResume(value: Boolean)
 
+    @Deprecated("Use walletsRepository.requireAccessCode instead")
     suspend fun shouldSaveAccessCodes(): Boolean
 
+    @Deprecated("Use walletsRepository.requireAccessCode instead")
     suspend fun setShouldSaveAccessCodes(value: Boolean)
 
     suspend fun incrementAppLaunchCounter()
