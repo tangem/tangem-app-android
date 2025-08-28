@@ -131,6 +131,7 @@ internal class SwapAmountModel @Inject constructor(
         subscribeOnAmountReduceByTriggerUpdates()
         subscribeOnAmountIgnoreReduceTriggerUpdates()
         subscribeOnReloadQuotesTriggerUpdates()
+        subscribeOnBalanceHiddenUpdates()
     }
 
     fun onStart() {
@@ -320,6 +321,25 @@ internal class SwapAmountModel @Inject constructor(
                 userCountry = userCountry,
             ),
         )
+    }
+
+    private fun subscribeOnBalanceHiddenUpdates() {
+        params.isBalanceHidingFlow.onEach {
+            val primaryCryptoCurrencyStatus = (uiState.value as? SwapAmountUM.Content)?.primaryCryptoCurrencyStatus
+            if (primaryCryptoCurrencyStatus != null) {
+                uiState.transformerUpdate(
+                    SwapAmountPrimaryReadyStateTransformer(
+                        userWallet = userWallet,
+                        primaryCryptoCurrencyStatus = primaryCryptoCurrencyStatus,
+                        appCurrency = appCurrency,
+                        swapDirection = swapDirection,
+                        clickIntents = this,
+                        isBalanceHidden = params.isBalanceHidingFlow.value,
+                        showBestRateAnimation = showBestRateAnimation,
+                    ),
+                )
+            }
+        }.launchIn(modelScope)
     }
 
     private fun confirmSendWithSwapClose() {
