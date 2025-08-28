@@ -14,7 +14,7 @@ import com.tangem.common.map
 import com.tangem.crypto.bip39.Mnemonic
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.card.CardTypesResolver
-import com.tangem.domain.card.DerivationStyleProvider
+import com.tangem.domain.wallets.derivations.DerivationStyleProvider
 import com.tangem.domain.card.common.TapWorkarounds.isTestCard
 import com.tangem.domain.card.configs.CardConfig
 import com.tangem.domain.models.scan.CardDTO
