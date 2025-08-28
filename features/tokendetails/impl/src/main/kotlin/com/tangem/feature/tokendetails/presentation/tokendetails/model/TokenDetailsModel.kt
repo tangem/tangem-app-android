@@ -58,6 +58,8 @@ import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.tokens.model.analytics.TokenReceiveAnalyticsEvent
+import com.tangem.domain.tokens.model.analytics.TokenReceiveCopyActionSource
+import com.tangem.domain.tokens.model.analytics.TokenReceiveNewAnalyticsEvent
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent.Companion.toReasonAnalyticsText
 import com.tangem.domain.tokens.model.analytics.TokenSwapPromoAnalyticsEvent
@@ -876,7 +878,13 @@ internal class TokenDetailsModel @Inject constructor(
 
         vibratorHapticManager.performOneTime(TangemHapticEffect.OneTime.Click)
         clipboardManager.setText(text = defaultAddress, isSensitive = true)
-        analyticsEventsHandler.send(TokenReceiveAnalyticsEvent.ButtonCopyAddress(cryptoCurrency.symbol))
+        analyticsEventsHandler.send(
+            TokenReceiveNewAnalyticsEvent.ButtonCopyAddress(
+                token = cryptoCurrency.symbol,
+                blockchainName = cryptoCurrency.network.name,
+                tokenReceiveSource = TokenReceiveCopyActionSource.Token,
+            ),
+        )
         return resourceReference(R.string.wallet_notification_address_copied)
     }
 
