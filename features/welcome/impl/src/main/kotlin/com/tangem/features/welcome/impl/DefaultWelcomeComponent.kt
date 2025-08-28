@@ -15,10 +15,10 @@ import dagger.assisted.AssistedInject
 
 internal class DefaultWelcomeComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
-    @Assisted params: WelcomeComponent.Params,
+    @Assisted val params: Unit,
 ) : WelcomeComponent, AppComponentContext by context {
 
-    private val model: WelcomeModel = getOrCreateModel(params)
+    private val model: WelcomeModel = getOrCreateModel()
 
     @Composable
     override fun Content(modifier: Modifier) {
@@ -32,6 +32,6 @@ internal class DefaultWelcomeComponent @AssistedInject constructor(
 
     @AssistedFactory
     interface Factory : WelcomeComponent.Factory {
-        override fun create(context: AppComponentContext, params: WelcomeComponent.Params): DefaultWelcomeComponent
+        override fun create(context: AppComponentContext, params: Unit): DefaultWelcomeComponent
     }
 }

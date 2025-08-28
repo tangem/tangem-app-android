@@ -2,8 +2,8 @@ package com.tangem.features.onboarding.v2.twin.impl
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -42,7 +42,6 @@ internal class DefaultOnboardingTwinComponent @AssistedInject constructor(
     @Composable
     override fun Content(modifier: Modifier) {
         BackHandler { model.onBack() }
-
         val state by model.uiState.collectAsStateWithLifecycle()
 
         OnboardingTwin(

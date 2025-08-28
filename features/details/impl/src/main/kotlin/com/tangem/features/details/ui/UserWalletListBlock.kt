@@ -15,9 +15,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.common.ui.userwallet.UserWalletItem
+import com.tangem.core.ui.R.*
 import com.tangem.core.ui.components.block.BlockCard
+import com.tangem.core.ui.components.bottomsheets.OptionsBottomSheet
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.details.component.UserWalletListComponent
@@ -44,6 +48,8 @@ internal fun UserWalletListBlock(state: UserWalletListUM, modifier: Modifier = M
             onClick = state.onAddNewWalletClick,
         )
     }
+
+    AddWalletBottomSheet(state.addWalletBottomSheet)
 }
 
 @Composable
@@ -92,6 +98,15 @@ private fun AddWalletButton(
             )
         }
     }
+}
+
+@Composable
+private fun AddWalletBottomSheet(config: TangemBottomSheetConfig) {
+    OptionsBottomSheet(
+        config = config,
+        title = resourceReference(string.auth_info_add_wallet_title),
+        containerColor = TangemTheme.colors.background.tertiary,
+    )
 }
 
 // region Preview

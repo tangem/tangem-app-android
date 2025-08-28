@@ -13,7 +13,6 @@ import com.tangem.domain.walletconnect.model.legacy.Account
 import com.tangem.domain.walletconnect.model.legacy.Session
 import com.tangem.domain.walletconnect.model.legacy.WalletConnectSessionsRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.features.walletconnect.components.WalletConnectFeatureToggles
 import com.tangem.tap.common.extensions.dispatchOnMain
@@ -38,17 +37,13 @@ class WalletConnectInteractor(
     private val dispatchers: CoroutineDispatcherProvider,
     private val walletManagersFacade: WalletManagersFacade,
     private val currenciesRepository: CurrenciesRepository,
-    private val userWalletsListManager: UserWalletsListManager,
     private val walletConnectFeatureToggles: WalletConnectFeatureToggles,
+    private val getSelectedWalletUseCase: GetSelectedWalletUseCase,
     val blockchainHelper: WcBlockchainHelper,
 ) {
     private val isNewWc by lazy { walletConnectFeatureToggles.isRedesignedWalletConnectEnabled }
 
     private var isWalletConnectReadyForDeepLinks = false
-
-    private val getSelectedWalletUseCase by lazy(LazyThreadSafetyMode.NONE) {
-        GetSelectedWalletUseCase(userWalletsListManager)
-    }
 
     private val wcScope = CoroutineScope(
         SupervisorJob() + dispatchers.io + CoroutineExceptionHandler { _, throwable ->

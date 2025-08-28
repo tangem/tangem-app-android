@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
@@ -24,6 +26,8 @@ import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.BuyTokenScreenTestTags
+import com.tangem.core.ui.utils.lazyListItemPosition
 import com.tangem.features.onramp.tokenlist.entity.TokenListUM
 import com.tangem.features.onramp.tokenlist.ui.preview.PreviewTokenListUMProvider
 import kotlinx.collections.immutable.ImmutableList
@@ -90,7 +94,9 @@ private fun ItemsBlock(items: ImmutableList<TokensListItemUM>, isBalanceHidden: 
                         lastIndex = items.lastIndex,
                         addDefaultPadding = false,
                         backgroundColor = TangemTheme.colors.background.primary,
-                    ),
+                    )
+                    .testTag(BuyTokenScreenTestTags.LAZY_LIST_ITEM)
+                    .semantics { lazyListItemPosition = index },
             )
         }
     }

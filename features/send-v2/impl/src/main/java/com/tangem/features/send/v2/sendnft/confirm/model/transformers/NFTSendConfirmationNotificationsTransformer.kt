@@ -10,10 +10,10 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.features.send.v2.common.analytics.CommonSendAnalyticEvents
+import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
+import com.tangem.features.send.v2.api.utils.formatFooterFiatFee
+import com.tangem.features.send.v2.api.utils.getTronTokenFeeSendingText
 import com.tangem.features.send.v2.common.ui.state.ConfirmUM
-import com.tangem.features.send.v2.common.utils.formatFooterFiatFee
-import com.tangem.features.send.v2.common.utils.getTronTokenFeeSendingText
 import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.subcomponents.fee.model.checkIfFeeTooHigh
 import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeSelectorUM
@@ -62,8 +62,10 @@ internal class NFTSendConfirmationNotificationsTransformer(
         val feeUM = feeUM as? FeeUM.Content
         val fee = (feeUM?.feeSelectorUM as? FeeSelectorUM.Content)?.selectedFee ?: return TextReference.EMPTY
 
+        val fiatFeeValue = feeUM.rate?.let { fee.amount.value?.multiply(it) }
+
         val fiatFee = formatFooterFiatFee(
-            amount = fee.amount,
+            amount = fee.amount.copy(value = fiatFeeValue),
             isFeeConvertibleToFiat = feeUM.isFeeConvertibleToFiat,
             isFeeApproximate = feeUM.isFeeApproximate,
             appCurrency = appCurrency,

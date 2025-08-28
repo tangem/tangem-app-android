@@ -45,10 +45,9 @@ internal class CreateMobileWalletModel @Inject constructor(
             runCatching {
                 val hotWalletId = tangemHotSdk.generateWallet(HotAuth.NoAuth, mnemonicType = MnemonicType.Words12)
                 val hotUserWalletBuilder = hotUserWalletBuilderFactory.create(hotWalletId)
-                saveUserWalletUseCase(
-                    hotUserWalletBuilder.build(),
-                )
-                router.push(AppRoute.Wallet)
+                val userWallet = hotUserWalletBuilder.build()
+                saveUserWalletUseCase(userWallet)
+                router.replaceAll(AppRoute.Wallet)
             }.onFailure {
                 Timber.e(it)
 

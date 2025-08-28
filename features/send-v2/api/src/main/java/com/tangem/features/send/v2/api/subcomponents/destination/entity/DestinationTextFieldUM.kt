@@ -3,6 +3,7 @@ package com.tangem.features.send.v2.api.subcomponents.destination.entity
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.utils.toBriefAddressFormat
 
 @Immutable
 sealed class DestinationTextFieldUM {
@@ -27,6 +28,10 @@ sealed class DestinationTextFieldUM {
 
         val actualAddress: String
             get() = blockchainAddress ?: value
+
+        // if value is human-readable address, this field contains the actual brief blockchain address
+        val briefBlockchainAddress: String?
+            get() = blockchainAddress?.toBriefAddressFormat(BRIEF_ADDRESS_EDGE_LENGTH, BRIEF_ADDRESS_EDGE_LENGTH)
     }
 
     data class RecipientMemo(
@@ -40,4 +45,8 @@ sealed class DestinationTextFieldUM {
         val isEnabled: Boolean,
         val isValuePasted: Boolean,
     ) : DestinationTextFieldUM()
+
+    private companion object {
+        const val BRIEF_ADDRESS_EDGE_LENGTH = 13
+    }
 }

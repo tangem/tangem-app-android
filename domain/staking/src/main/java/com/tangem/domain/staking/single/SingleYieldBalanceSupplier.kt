@@ -2,7 +2,7 @@ package com.tangem.domain.staking.single
 
 import com.tangem.domain.core.flow.FlowCachingSupplier
 import com.tangem.domain.core.flow.FlowProducer
-import com.tangem.domain.staking.model.stakekit.YieldBalance
+import com.tangem.domain.models.staking.YieldBalance
 
 /**
  * Supplier of yield balance for selected wallet [SingleYieldBalanceProducer.Params]

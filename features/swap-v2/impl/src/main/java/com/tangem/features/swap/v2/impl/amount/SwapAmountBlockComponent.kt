@@ -6,7 +6,6 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
-import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.childSlot
 import com.arkivanov.decompose.router.slot.dismiss
 import com.arkivanov.essenty.lifecycle.subscribe
@@ -17,6 +16,7 @@ import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.express.models.ExpressProvider
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.features.swap.v2.impl.amount.SwapAmountComponentParams.AmountBlockParams
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
 import com.tangem.features.swap.v2.impl.amount.model.SwapAmountModel
@@ -67,19 +67,8 @@ internal class SwapAmountBlockComponent(
             onInfoClick = model::onInfoClick,
             isClickEnabled = isClickEnabled,
             onClick = onClick,
-            onProviderSelectClick = {
-                val amountUM = model.uiState.value as? SwapAmountUM.Content ?: return@SwapAmountBlockContent
-                val selectedProvider = amountUM.selectedQuote.provider ?: return@SwapAmountBlockContent
-                val cryptoCurrency = params.secondaryCryptoCurrency ?: return@SwapAmountBlockContent
-
-                model.bottomSheetNavigation.activate(
-                    SwapChooseProviderConfig(
-                        providers = amountUM.swapQuotes,
-                        cryptoCurrency = cryptoCurrency,
-                        selectedProvider = selectedProvider,
-                    ),
-                )
-            },
+            onFinishAnimation = model::onFinishAnimation,
+            onProviderSelectClick = model::onProviderClick,
         )
 
         bottomSheet.child?.instance?.BottomSheet()
@@ -95,6 +84,7 @@ internal class SwapAmountBlockComponent(
                 providers = config.providers,
                 cryptoCurrency = config.cryptoCurrency,
                 selectedProvider = config.selectedProvider,
+                userCountry = config.userCountry,
                 callback = model,
                 onDismiss = { model.bottomSheetNavigation.dismiss() },
             ),
@@ -105,5 +95,6 @@ internal class SwapAmountBlockComponent(
         val providers: ImmutableList<SwapQuoteUM>,
         val cryptoCurrency: CryptoCurrency,
         val selectedProvider: ExpressProvider,
+        val userCountry: UserCountry,
     )
 }

@@ -13,14 +13,15 @@ import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.express.models.ExpressError
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.swap.models.SwapDirection
 import com.tangem.domain.tokens.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.error.CurrencyStatusError
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationComponent
 import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
@@ -58,6 +59,7 @@ internal class SendWithSwapModel @Inject constructor(
 
     private val params: SendWithSwapComponent.Params = paramsContainer.require()
 
+    val analyticCategoryName = CommonSendAnalyticEvents.SEND_CATEGORY
     val initialRoute = SendWithSwapRoute.Amount(false)
     val currentRoute = MutableStateFlow<SendWithSwapRoute>(initialRoute)
 

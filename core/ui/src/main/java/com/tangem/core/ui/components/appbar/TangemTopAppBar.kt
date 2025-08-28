@@ -10,6 +10,7 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -20,6 +21,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.TopAppBarTestTags
 
 /**
  * [TangemTopAppBar] height options.
@@ -127,6 +129,7 @@ fun TangemTopAppBar(
                 TopAppBarButton(
                     button = endButton,
                     tint = iconTint,
+                    modifier = Modifier.testTag(TopAppBarTestTags.MORE_BUTTON),
                 )
             }
         },
@@ -172,6 +175,7 @@ fun TangemTopAppBar(
                 TopAppBarButton(
                     button = startButton,
                     tint = iconTint,
+                    modifier = Modifier.testTag(TopAppBarTestTags.CLOSE_BUTTON),
                 )
             }
         }
@@ -222,6 +226,7 @@ private fun TopAppBarTitle(
                     color = textColor,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.testTag(TopAppBarTestTags.TITLE),
                 )
 
                 AnimatedVisibility(
@@ -296,25 +301,25 @@ private class BasicTopAppBarPMPreviewProvider : PreviewParameterProvider<BasicTo
                 height = TangemTopAppBarHeight.BOTTOM_SHEET,
             ),
             BasicTopAppBarPM(
-                startButton = TopAppBarButtonUM(
+                startButton = TopAppBarButtonUM.Icon(
                     iconRes = R.drawable.ic_scan_24,
-                    onIconClicked = {},
+                    onClicked = {},
                 ),
-                endButton = TopAppBarButtonUM(
+                endButton = TopAppBarButtonUM.Icon(
                     iconRes = R.drawable.ic_more_vertical_24,
-                    onIconClicked = {},
+                    onClicked = {},
                 ),
             ),
             BasicTopAppBarPM(
-                startButton = TopAppBarButtonUM(
+                startButton = TopAppBarButtonUM.Icon(
                     iconRes = R.drawable.ic_scan_24,
-                    onIconClicked = {},
+                    onClicked = {},
                 ),
             ),
             BasicTopAppBarPM(
-                endButton = TopAppBarButtonUM(
+                endButton = TopAppBarButtonUM.Icon(
                     iconRes = R.drawable.ic_more_vertical_24,
-                    onIconClicked = {},
+                    onClicked = {},
                 ),
                 height = TangemTopAppBarHeight.BOTTOM_SHEET,
             ),
@@ -322,13 +327,13 @@ private class BasicTopAppBarPMPreviewProvider : PreviewParameterProvider<BasicTo
                 title = "1234567891011121314151617181920",
                 subtitle = "12345678910111213141516171819202122232425",
                 titleAlignment = Alignment.Start,
-                startButton = TopAppBarButtonUM(
+                startButton = TopAppBarButtonUM.Icon(
                     iconRes = R.drawable.ic_scan_24,
-                    onIconClicked = {},
+                    onClicked = {},
                 ),
-                endButton = TopAppBarButtonUM(
+                endButton = TopAppBarButtonUM.Icon(
                     iconRes = R.drawable.ic_more_vertical_24,
-                    onIconClicked = {},
+                    onClicked = {},
                 ),
             ),
         )

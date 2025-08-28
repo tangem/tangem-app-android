@@ -7,6 +7,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -17,6 +18,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.TokenDetailsScreenTestTags
 import com.tangem.feature.tokendetails.presentation.tokendetails.TokenDetailsPreviewData.stakingBalanceBlock
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.StakingBlockUM
 import com.tangem.features.tokendetails.impl.R
@@ -30,7 +32,9 @@ internal fun StakingBalanceBlock(
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .testTag(TokenDetailsScreenTestTags.STAKING_BLOCK),
     ) {
         Column(
             verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4),
@@ -47,16 +51,19 @@ internal fun StakingBalanceBlock(
                     text = state.fiatValue.orMaskWithStars(isBalanceHidden).resolveReference(),
                     style = TangemTheme.typography.body2,
                     color = TangemTheme.colors.text.primary1,
+                    modifier = Modifier.testTag(TokenDetailsScreenTestTags.STAKING_FIAT_AMOUNT),
                 )
                 Text(
                     text = StringsSigns.DOT,
                     style = TangemTheme.typography.body2,
                     color = TangemTheme.colors.text.primary1,
+                    modifier = Modifier.testTag(TokenDetailsScreenTestTags.STAKING_DOT),
                 )
                 Text(
                     text = state.cryptoValue.orMaskWithStars(isBalanceHidden).resolveReference(),
                     style = TangemTheme.typography.body2,
                     color = TangemTheme.colors.text.tertiary,
+                    modifier = Modifier.testTag(TokenDetailsScreenTestTags.STAKING_TOKEN_AMOUNT),
                 )
             }
             if (state.rewardValue != TextReference.EMPTY) {
@@ -64,6 +71,7 @@ internal fun StakingBalanceBlock(
                     text = state.rewardValue.orMaskWithStars(isBalanceHidden).resolveReference(),
                     style = TangemTheme.typography.caption2,
                     color = TangemTheme.colors.text.tertiary,
+                    modifier = Modifier.testTag(TokenDetailsScreenTestTags.STAKING_REWARD_VALUE),
                 )
             }
         }
@@ -71,6 +79,7 @@ internal fun StakingBalanceBlock(
             painter = painterResource(id = R.drawable.ic_chevron_right_24),
             contentDescription = null,
             tint = TangemTheme.colors.icon.informative,
+            modifier = Modifier.testTag(TokenDetailsScreenTestTags.STAKING_CHEVRON_ICON),
         )
     }
 }

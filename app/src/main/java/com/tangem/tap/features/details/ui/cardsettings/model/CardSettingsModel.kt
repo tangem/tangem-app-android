@@ -87,9 +87,10 @@ internal class CardSettingsModel @Inject constructor(
 
             val userWallet = getUserWalletUseCase(userWalletId)
                 .getOrElse { error("User wallet $userWalletId not found") }
+                .requireColdWallet()
 
             cardSdkConfigRepository.isBiometricsRequestPolicy =
-                userWallet.requireColdWallet().scanResponse.card.isAccessCodeSet && // TODO [REDACTED_TASK_KEY]
+                userWallet.scanResponse.card.isAccessCodeSet &&
                 settingsRepository.shouldSaveAccessCodes()
         }
     }

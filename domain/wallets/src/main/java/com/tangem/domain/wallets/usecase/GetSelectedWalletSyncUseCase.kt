@@ -6,6 +6,7 @@ import arrow.core.raise.ensureNotNull
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.models.GetUserWalletError
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.core.wallets.UserWalletsListRepository
 
 /**
  * Use case for getting selected wallet.
@@ -15,10 +16,20 @@ import com.tangem.domain.models.wallet.UserWallet
  *
 [REDACTED_AUTHOR]
  */
-class GetSelectedWalletSyncUseCase(private val userWalletsListManager: UserWalletsListManager) {
+class GetSelectedWalletSyncUseCase(
+    private val userWalletsListManager: UserWalletsListManager,
+    private val userWalletsListRepository: UserWalletsListRepository,
+    private val useNewRepository: Boolean = false,
+) {
 
     @Deprecated("You should provide the selected wallet via routing parameters due to the scalability of the features")
     operator fun invoke(): Either<GetUserWalletError, UserWallet> {
+        if (useNewRepository) {
+            return either {
+                userWalletsListRepository.selectedUserWallet.value ?: raise(GetUserWalletError.UserWalletNotFound)
+            }
+        }
+
         return either {
             ensureNotNull(
                 value = userWalletsListManager.selectedUserWalletSync,
