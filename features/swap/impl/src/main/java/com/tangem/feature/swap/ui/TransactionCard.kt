@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
@@ -39,6 +40,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.SwapTokenScreenTestTags
 import com.tangem.core.ui.utils.ImageBackgroundContrastChecker
 import com.tangem.feature.swap.domain.models.ui.PriceImpact
 import com.tangem.feature.swap.models.TransactionCardType
@@ -181,7 +183,8 @@ private fun Header(type: TransactionCardType, balance: String, modifier: Modifie
                 top = TangemTheme.dimens.spacing14,
                 start = TangemTheme.dimens.spacing12,
                 end = TangemTheme.dimens.spacing12,
-            ),
+            )
+            .testTag(SwapTokenScreenTestTags.SWAP_BLOCK_HEADER),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -206,7 +209,8 @@ private fun Header(type: TransactionCardType, balance: String, modifier: Modifie
                     color = TangemTheme.colors.text.tertiary,
                     style = TangemTheme.typography.body2,
                     modifier = Modifier
-                        .align(Alignment.CenterVertically),
+                        .align(Alignment.CenterVertically)
+                        .testTag(SwapTokenScreenTestTags.BALANCE),
                 )
             }
         } else {
@@ -254,7 +258,7 @@ private fun Content(
                             color = TangemTheme.colors.text.primary1,
                             style = TangemTheme.typography.h2,
                             fontSizeRange = FontSizeRange(min = 16.sp, max = TangemTheme.typography.h2.fontSize),
-                            modifier = sumTextModifier,
+                            modifier = sumTextModifier.testTag(SwapTokenScreenTestTags.RECEIVE_TEXT_FIELD),
                         )
                     } else {
                         RectangleShimmer(
@@ -269,7 +273,7 @@ private fun Content(
                     val focusRequester = remember { FocusRequester() }
 
                     AutoSizeTextField(
-                        modifier = sumTextModifier,
+                        modifier = sumTextModifier.testTag(SwapTokenScreenTestTags.SWAP_TEXT_FIELD),
                         focusRequester = focusRequester,
                         textFieldValue = textFieldValue ?: TextFieldValue(),
                         onAmountChange = { type.onAmountChanged(it) },
@@ -344,7 +348,8 @@ private fun Content(
                     modifier = Modifier
                         .padding(vertical = TangemTheme.dimens.spacing4)
                         .width(TangemTheme.dimens.size40)
-                        .height(TangemTheme.dimens.size12),
+                        .height(TangemTheme.dimens.size12)
+                        .testTag(SwapTokenScreenTestTags.RECEIVE_AMOUNT_SHIMMER),
                     radius = TangemTheme.dimens.radius3,
                 )
             }
@@ -365,7 +370,8 @@ fun Token(
             .padding(
                 end = TangemTheme.dimens.spacing12,
                 bottom = TangemTheme.dimens.spacing12,
-            ),
+            )
+            .testTag(SwapTokenScreenTestTags.TOKEN),
         verticalArrangement = Arrangement.Bottom,
         horizontalAlignment = Alignment.End,
     ) {
@@ -382,7 +388,9 @@ fun Token(
             maxLines = 1,
             style = TangemTheme.typography.subtitle2,
             textAlign = TextAlign.Center,
-            modifier = Modifier.defaultMinSize(minWidth = TangemTheme.dimens.size80),
+            modifier = Modifier
+                .defaultMinSize(minWidth = TangemTheme.dimens.size80)
+                .testTag(SwapTokenScreenTestTags.TOKEN_NAME),
         )
     }
 }
@@ -403,7 +411,8 @@ private fun TokenIcon(
     Box(
         modifier = Modifier
             .padding(end = TangemTheme.dimens.spacing16)
-            .size(TangemTheme.dimens.size42),
+            .size(TangemTheme.dimens.size42)
+            .testTag(SwapTokenScreenTestTags.TOKEN_ICON),
     ) {
         val tokenImageModifier = Modifier
             .align(Alignment.BottomStart)
