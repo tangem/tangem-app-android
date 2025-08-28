@@ -215,7 +215,8 @@ internal class OnboardingVisaModel @Inject constructor(
     private fun tryToFindExistingWalletCardId(targetAddress: String): String? {
         val wallets = getWalletsUseCase.invokeSync().filter { it.isLocked.not() }
 
-        return wallets.filterIsInstance<UserWallet.Cold>().firstOrNull { wallet -> // TODO [REDACTED_TASK_KEY]
+        // TODO [REDACTED_TASK_KEY] [Hot Wallet] Visa 1.0 flow. Hot wallet as a customer wallet
+        return wallets.filterIsInstance<UserWallet.Cold>().firstOrNull { wallet ->
             wallet.scanResponse.card.wallets.any {
                 val derivedKey = it.derivedKeys[VisaUtilities.visaDefaultDerivationPath] ?: return@any false
 

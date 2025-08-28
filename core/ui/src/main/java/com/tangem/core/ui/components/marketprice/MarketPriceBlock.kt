@@ -20,7 +20,7 @@ import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.utils.BigDecimalFormatter
+import com.tangem.utils.StringsSigns.DASH_SIGN
 
 /**
  * Market price block
@@ -120,7 +120,7 @@ private fun PriceBlock(state: MarketPriceBlockState, priceWidthDp: Dp) {
                 )
             }
         } else {
-            Price(price = BigDecimalFormatter.EMPTY_BALANCE_SIGN, modifier = priceModifier)
+            Price(price = DASH_SIGN, modifier = priceModifier)
         }
     }
 }
