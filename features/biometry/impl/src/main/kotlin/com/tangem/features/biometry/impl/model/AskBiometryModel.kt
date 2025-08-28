@@ -13,13 +13,15 @@ import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.card.repository.CardSdkConfigRepository
+import com.tangem.domain.core.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.settings.SetSaveWalletScreenShownUseCase
 import com.tangem.domain.settings.repositories.SettingsRepository
-import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.repository.WalletsRepository
+import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.biometry.impl.ui.state.AskBiometryUM
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.delay
@@ -40,11 +42,13 @@ internal class AskBiometryModel @Inject constructor(
     private val setSaveWalletScreenShownUseCase: SetSaveWalletScreenShownUseCase,
     private val settingsRepository: SettingsRepository,
     private val tangemSdkManager: TangemSdkManager,
-    private val userWalletsListManager: UserWalletsListManager,
+    private val getSelectedWalletUseCase: GetSelectedWalletUseCase,
     private val walletsRepository: WalletsRepository,
     private val cardSdkConfigRepository: CardSdkConfigRepository,
     private val settingsManager: SettingsManager,
     private val uiMessageSender: UiMessageSender,
+    private val userWalletsListRepository: UserWalletsListRepository,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
 ) : Model() {
 
     private val params = paramsContainer.require<AskBiometryComponent.Params>()
@@ -87,7 +91,7 @@ internal class AskBiometryModel @Inject constructor(
 
              * because it will be automatically saved on UserWalletsListManager switch
              */
-            val selectedUserWallet = userWalletsListManager.selectedUserWalletSync ?: run {
+            val selectedUserWallet = getSelectedWalletUseCase.sync().getOrNull() ?: run {
                 Timber.e("Unable to save user wallet")
                 uiMessageSender.send(
                     SnackbarMessage(stringReference("No selected user wallet")),
@@ -107,12 +111,20 @@ internal class AskBiometryModel @Inject constructor(
 
     private suspend fun handleSuccessAllowing(userWallet: UserWallet) {
         walletsRepository.saveShouldSaveUserWallets(item = true)
-        settingsRepository.setShouldSaveAccessCodes(value = true)
 
-        if (userWallet is UserWallet.Cold) {
+        if (hotWalletFeatureToggles.isHotWalletEnabled) {
+            walletsRepository.setUseBiometricAuthentication(value = true)
+            setBiometryLockForAllWallets()
             cardSdkConfigRepository.setAccessCodeRequestPolicy(
-                isBiometricsRequestPolicy = userWallet.hasAccessCode,
+                isBiometricsRequestPolicy = walletsRepository.requireAccessCode().not(),
             )
+        } else {
+            settingsRepository.setShouldSaveAccessCodes(value = true)
+            if (userWallet is UserWallet.Cold) {
+                cardSdkConfigRepository.setAccessCodeRequestPolicy(
+                    isBiometricsRequestPolicy = userWallet.hasAccessCode,
+                )
+            }
         }
 
         if (_uiState.value.bottomSheetVariant) {
@@ -121,6 +133,18 @@ internal class AskBiometryModel @Inject constructor(
         }
 
         params.modelCallbacks.onAllowed()
+    }
+
+    private fun setBiometryLockForAllWallets() {
+        modelScope.launch {
+            userWalletsListRepository.userWalletsSync().forEach { userWallet ->
+                userWalletsListRepository.setLock(
+                    userWalletId = userWallet.walletId,
+                    lockMethod = UserWalletsListRepository.LockMethod.Biometric,
+                    changeUnsecured = false,
+                )
+            }
+        }
     }
 
     private fun showEnrollBiometricsDialog() {
