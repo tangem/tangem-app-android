@@ -62,7 +62,7 @@ internal fun AddExistingWalletStartContent(state: AddExistingWalletStartUM, modi
             )
             OptionBlock(
                 modifier = Modifier
-                    .padding(top = 24.dp),
+                    .padding(top = 32.dp),
                 backgroundColor = TangemTheme.colors.background.secondary,
                 title = stringResourceSafe(R.string.wallet_import_seed_title),
                 description = stringResourceSafe(R.string.wallet_import_seed_description),
@@ -71,6 +71,8 @@ internal fun AddExistingWalletStartContent(state: AddExistingWalletStartUM, modi
                 enabled = true,
             )
             OptionBlock(
+                modifier = Modifier
+                    .padding(top = 8.dp),
                 backgroundColor = TangemTheme.colors.background.secondary,
                 title = stringResourceSafe(R.string.wallet_import_scan_title),
                 description = stringResourceSafe(R.string.wallet_import_scan_description),
@@ -99,6 +101,8 @@ internal fun AddExistingWalletStartContent(state: AddExistingWalletStartUM, modi
                 enabled = true,
             )
             OptionBlock(
+                modifier = Modifier
+                    .padding(top = 8.dp),
                 backgroundColor = TangemTheme.colors.background.secondary,
                 title = stringResourceSafe(R.string.wallet_import_google_drive_title),
                 description = stringResourceSafe(R.string.wallet_import_google_drive_description),
