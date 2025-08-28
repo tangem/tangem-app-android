@@ -1,6 +1,7 @@
 package com.tangem.core.ui.components.block.model
 
 import androidx.annotation.DrawableRes
+import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.extensions.TextReference
 
 data class BlockUM(
@@ -8,6 +9,7 @@ data class BlockUM(
     @DrawableRes val iconRes: Int,
     val onClick: () -> Unit,
     val accentType: AccentType = AccentType.NONE,
+    val label: LabelUM? = null,
 ) {
 
     enum class AccentType {
