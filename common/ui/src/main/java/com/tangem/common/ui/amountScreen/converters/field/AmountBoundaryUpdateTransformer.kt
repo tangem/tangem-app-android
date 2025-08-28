@@ -7,6 +7,7 @@ import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
@@ -28,6 +29,7 @@ class AmountBoundaryUpdateTransformer(
     private val maxEnterAmount: EnterAmountBoundary,
     private val appCurrency: AppCurrency,
     private val isRedesignEnabled: Boolean,
+    private val isBalanceHidden: Boolean,
 ) : Transformer<AmountState> {
 
     override fun transform(prevState: AmountState): AmountState {
@@ -47,8 +49,8 @@ class AmountBoundaryUpdateTransformer(
         }
 
         return prevState.copy(
-            availableBalance = availableBalance,
-            availableBalanceShort = stringReference(crypto),
+            availableBalance = availableBalance.orMaskWithStars(isBalanceHidden),
+            availableBalanceShort = stringReference(crypto).orMaskWithStars(isBalanceHidden),
         )
     }
 }
