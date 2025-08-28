@@ -6,8 +6,8 @@ import arrow.core.right
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.transaction.TransactionRepository
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.transaction.TransactionRepository
 
 class ValidateTransactionUseCase(
     private val transactionRepository: TransactionRepository,
@@ -21,8 +21,8 @@ class ValidateTransactionUseCase(
         destination: String,
         userWalletId: UserWalletId,
         network: Network,
-    ): Either<Throwable, Unit> {
-        return transactionRepository.validateTransaction(
+    ): Either<Throwable, Unit> = Either.catch {
+        transactionRepository.validateTransaction(
             amount = amount,
             fee = fee,
             memo = memo,

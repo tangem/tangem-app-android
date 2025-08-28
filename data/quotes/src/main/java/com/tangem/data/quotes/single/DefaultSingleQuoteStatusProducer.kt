@@ -7,10 +7,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.*
 
 /**
  * Default implementation of [SingleQuoteStatusProducer]
@@ -28,7 +25,7 @@ internal class DefaultSingleQuoteStatusProducer @AssistedInject constructor(
 
     override fun produce(): Flow<QuoteStatus> {
         return quotesStatusesStore.get()
-            .mapNotNull { quotes -> quotes.firstOrNull { it.rawCurrencyId == params.rawCurrencyId } }
+            .mapNotNull { quotes -> quotes.firstOrNull { it.rawCurrencyId == params.rawCurrencyId } ?: fallback }
             .distinctUntilChanged()
             .flowOn(dispatchers.default)
     }

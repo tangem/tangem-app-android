@@ -9,4 +9,5 @@ internal interface SwapAmountClickIntents : AmountScreenClickIntents {
     fun onInfoClick()
     fun onSelectTokenClick()
     fun onSeparatorClick()
+    fun onProviderClick()
 }
