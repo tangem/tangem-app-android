@@ -1,6 +1,8 @@
 package com.tangem.core.ui.components.notifications
 
 import androidx.annotation.DrawableRes
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.extensions.TextReference
 
 /**
@@ -26,6 +28,7 @@ data class NotificationConfig(
     val onCloseClick: (() -> Unit)? = null,
     val showArrowIcon: Boolean = onClick != null,
     val iconTint: IconTint = IconTint.Unspecified,
+    val iconSize: Dp = 20.dp,
 ) {
 
     sealed class ButtonsState {
@@ -62,5 +65,6 @@ data class NotificationConfig(
         Unspecified,
         Accent,
         Attention,
+        Warning,
     }
 }
