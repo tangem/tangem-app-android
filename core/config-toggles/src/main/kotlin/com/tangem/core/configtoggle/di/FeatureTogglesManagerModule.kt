@@ -5,9 +5,8 @@ import com.tangem.core.configtoggle.BuildConfig
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.configtoggle.feature.impl.DevFeatureTogglesManager
 import com.tangem.core.configtoggle.feature.impl.ProdFeatureTogglesManager
-import com.tangem.core.configtoggle.storage.LocalTogglesStorage
+import com.tangem.core.configtoggle.storage.FeatureTogglesLocalStorage
 import com.tangem.core.configtoggle.version.DefaultVersionProvider
-import com.tangem.datasource.asset.loader.AssetLoader
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import dagger.Module
 import dagger.Provides
@@ -24,23 +23,17 @@ internal object FeatureTogglesManagerModule {
     @Singleton
     fun provideFeatureTogglesManager(
         @ApplicationContext context: Context,
-        assetLoader: AssetLoader,
         appPreferencesStore: AppPreferencesStore,
     ): FeatureTogglesManager {
-        val localTogglesStorage = LocalTogglesStorage(assetLoader)
         val versionProvider = DefaultVersionProvider(context)
 
         return if (BuildConfig.TESTER_MENU_ENABLED) {
             DevFeatureTogglesManager(
-                localTogglesStorage = localTogglesStorage,
-                appPreferencesStore = appPreferencesStore,
                 versionProvider = versionProvider,
+                featureTogglesLocalStorage = FeatureTogglesLocalStorage(appPreferencesStore),
             )
         } else {
-            ProdFeatureTogglesManager(
-                localTogglesStorage = localTogglesStorage,
-                versionProvider = versionProvider,
-            )
+            ProdFeatureTogglesManager(versionProvider = versionProvider)
         }
     }
 }
