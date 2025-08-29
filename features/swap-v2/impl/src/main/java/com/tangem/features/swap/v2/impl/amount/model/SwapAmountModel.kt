@@ -217,7 +217,11 @@ internal class SwapAmountModel @Inject constructor(
 
     override fun onMaxValueClick() {
         analyticsEventHandler.send(
-            CommonSendAmountAnalyticEvents.MaxAmountButtonClicked(categoryName = params.analyticsCategoryName),
+            CommonSendAmountAnalyticEvents.MaxAmountButtonClicked(
+                categoryName = params.analyticsCategoryName,
+                token = primaryCryptoCurrency.symbol,
+                blockchain = primaryCryptoCurrency.network.name,
+            ),
         )
         uiState.transformerUpdate(
             SwapAmountValueMaxTransformer(
