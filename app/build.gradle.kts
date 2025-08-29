@@ -11,7 +11,12 @@ plugins {
     alias(deps.plugins.firebase.crashlytics)
     alias(deps.plugins.firebase.perf)
     alias(deps.plugins.ksp)
+    id(deps.plugins.agconnect.get().pluginId)
     id("configuration")
+}
+
+agcp {
+    manifest = false
 }
 
 android {
@@ -53,12 +58,35 @@ android {
             keyPassword = keystoreProperties["key_password"] as String
         }
     }
+    
+    flavorDimensions += "services"
+    
+    productFlavors {
+        create("google") {
+            dimension = "services"
+            buildConfigField("String", "FLAVOR_NAME", "\"google\"")
+        }
+        create("huawei") {
+            dimension = "services"
+            buildConfigField("String", "FLAVOR_NAME", "\"huawei\"")
+        }
+    }
+
+    buildTypes {
+        debug {
+            buildConfigField("String", "BUILD_TYPE", "\"debug\"")
+        }
+        release {
+            buildConfigField("String", "BUILD_TYPE", "\"release\"")
+        }
+    }
 
 }
 
 configurations.all {
     exclude(group = "org.bouncycastle", module = "bcprov-jdk15to18")
     exclude(group = "com.github.komputing.kethereum")
+    exclude(group = "com.android.tools.build", module = "gradle")
 
     resolutionStrategy {
         dependencySubstitution {
@@ -379,4 +407,9 @@ dependencies {
         // excludes version 9999.0-empty-to-avoid-conflict-with-guava
         exclude(group = "com.google.guava", module = "listenablefuture")
     }
+
+    /** Huawei flavor-specific dependencies */
+    "huaweiImplementation"(deps.huawei.push)
+    "huaweiImplementation"(deps.agconnect.agcp)
+    "huaweiImplementation"(deps.agconnect.core)
 }
