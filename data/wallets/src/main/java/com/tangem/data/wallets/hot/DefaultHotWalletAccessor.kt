@@ -3,7 +3,7 @@ package com.tangem.data.wallets.hot
 import com.tangem.common.core.TangemSdkError
 import com.tangem.domain.core.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.models.wallet.copy
+import com.tangem.domain.wallets.hot.HotWalletAccessor
 import com.tangem.domain.wallets.hot.HotWalletPasswordRequester
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.hot.sdk.TangemHotSdk
@@ -11,22 +11,24 @@ import com.tangem.hot.sdk.exception.WrongPasswordException
 import com.tangem.hot.sdk.model.*
 import javax.inject.Inject
 
-class HotWalletAccessor @Inject constructor(
+class DefaultHotWalletAccessor @Inject constructor(
     private val tangemHotSdk: TangemHotSdk,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val hotWalletPasswordRequester: HotWalletPasswordRequester,
     private val walletsRepository: WalletsRepository,
-) {
+) : HotWalletAccessor {
 
-    suspend fun signHashes(hotWalletId: HotWalletId, dataToSign: List<DataToSign>): List<SignedData> =
+    override suspend fun signHashes(hotWalletId: HotWalletId, dataToSign: List<DataToSign>): List<SignedData> =
         hotSdkRequest(hotWalletId) { unlock ->
             tangemHotSdk.signHashes(unlockHotWallet = unlock, dataToSign = dataToSign)
         }
 
-    suspend fun derivePublicKeys(hotWalletId: HotWalletId, request: DeriveWalletRequest): DerivedPublicKeyResponse =
-        hotSdkRequest(hotWalletId) { unlock ->
-            tangemHotSdk.derivePublicKey(unlockHotWallet = unlock, request = request)
-        }
+    override suspend fun derivePublicKeys(
+        hotWalletId: HotWalletId,
+        request: DeriveWalletRequest,
+    ): DerivedPublicKeyResponse = hotSdkRequest(hotWalletId) { unlock ->
+        tangemHotSdk.derivePublicKey(unlockHotWallet = unlock, request = request)
+    }
 
     private suspend fun <T> hotSdkRequest(hotWalletId: HotWalletId, block: suspend (unlock: UnlockHotWallet) -> T): T {
         val isAccessCodeRequired = walletsRepository.requireAccessCode()
