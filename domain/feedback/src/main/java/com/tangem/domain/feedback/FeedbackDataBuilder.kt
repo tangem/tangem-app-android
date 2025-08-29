@@ -44,13 +44,14 @@ internal class FeedbackDataBuilder {
         builder.appendKeyValue("Total saved wallets", userWalletsInfo.totalUserWallets.toString())
     }
 
-    fun addCardInfo(cardInfo: CardInfo) {
-        builder.appendKeyValue("Card ID", cardInfo.cardId)
-        builder.appendKeyValue("Firmware version", cardInfo.firmwareVersion)
-        builder.appendKeyValue("Linked cards count", cardInfo.cardsCount)
-        builder.appendKeyValue("Has seed phrase", cardInfo.isImported.toString())
-        builder.appendKeyValue("Card Blockchain", cardInfo.cardBlockchain)
-        builder.appendSignedHashes(cardInfo.signedHashesList)
+    fun addUserWalletMetaInfo(walletMetaInfo: WalletMetaInfo) {
+        walletMetaInfo.hotWalletIsBackedUp?.let { builder.appendKeyValue("Mobile Wallet is backed up", it.toString()) }
+        walletMetaInfo.cardId?.let { builder.appendKeyValue("Card ID", it) }
+        walletMetaInfo.firmwareVersion?.let { builder.appendKeyValue("Firmware version", it) }
+        walletMetaInfo.cardsCount?.let { builder.appendKeyValue("Linked cards count", it) }
+        walletMetaInfo.isImported?.let { builder.appendKeyValue("Has seed phrase", it.toString()) }
+        walletMetaInfo.cardBlockchain?.let { builder.appendKeyValue("Card Blockchain", it) }
+        walletMetaInfo.signedHashesList?.let { builder.appendSignedHashes(it) }
     }
 
     fun addBlockchainInfoList(blockchainInfoList: List<BlockchainInfo>) {
@@ -146,7 +147,7 @@ internal class FeedbackDataBuilder {
         append("$keyValuePrefix$value\n")
     }
 
-    private fun StringBuilder.appendSignedHashes(signedHashesList: List<CardInfo.SignedHashes>) {
+    private fun StringBuilder.appendSignedHashes(signedHashesList: List<WalletMetaInfo.SignedHashes>) {
         signedHashesList.forEach {
             appendKeyValue("Signed hashes [${it.curve}]", it.total)
         }

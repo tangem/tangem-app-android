@@ -10,7 +10,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.domain.card.common.TapWorkarounds.isVisa
-import com.tangem.domain.feedback.GetCardInfoUseCase
+import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.features.onboarding.v2.stepper.api.OnboardingStepperComponent
@@ -24,7 +24,7 @@ import kotlinx.coroutines.launch
 internal class DefaultOnboardingStepperComponent @AssistedInject constructor(
     @Assisted val context: AppComponentContext,
     @Assisted val params: OnboardingStepperComponent.Params,
-    private val getCardInfoUseCase: GetCardInfoUseCase,
+    private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val analyticsHandler: AnalyticsEventHandler,
 ) : OnboardingStepperComponent, AppComponentContext by context {
@@ -40,7 +40,7 @@ internal class DefaultOnboardingStepperComponent @AssistedInject constructor(
         )
 
         componentScope.launch {
-            val cardInfo = getCardInfoUseCase(params.scanResponse).getOrNull() ?: return@launch
+            val cardInfo = getWalletMetaInfoUseCase(params.scanResponse).getOrNull() ?: return@launch
             sendFeedbackEmailUseCase(
                 if (params.scanResponse.card.isVisa) {
                     FeedbackEmailType.Visa.Activation(cardInfo)
