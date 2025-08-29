@@ -78,6 +78,16 @@
   <string name="biometric_lockout_warning_description">Por favor, inténtelo de nuevo en 30 segundos o escanee la tarjeta/anillo</string>
   <string name="biometric_lockout_warning_title">Demasiados intentos</string>
   <string name="biometric_unavailable_warning">Ha desactivado la autenticación biométrica en su teléfono y no podrá guardar billeteras en la aplicación. Para guardar billeteras, active la función de autenticación biométrica en los ajustes de su teléfono.</string>
+  <string name="bitcoin_promo_activation_error">Se produjo un error al procesar tu código promocional. Inténtalo de nuevo más tarde.</string>
+  <string name="bitcoin_promo_activation_error_title">Error de activación</string>
+  <string name="bitcoin_promo_activation_success">Su código promocional se ha activado correctamente. Un bono de 10 USDT en Bitcoin se abonará en su cuenta en un plazo de 14 días.</string>
+  <string name="bitcoin_promo_activation_success_title">Código promocional activado</string>
+  <string name="bitcoin_promo_already_activated">Este código promocional ya ha sido utilizado y no puede activarse de nuevo.</string>
+  <string name="bitcoin_promo_already_activated_title">Código no disponible</string>
+  <string name="bitcoin_promo_invalid_code">Este código promocional no es válido y no puede activarse.</string>
+  <string name="bitcoin_promo_invalid_code_title">Código inválido</string>
+  <string name="bitcoin_promo_no_address">Se requiere una dirección de Bitcoin para recibir el bono. Añade una a tu billetera y vuelve a intentar la activación.</string>
+  <string name="bitcoin_promo_no_address_title">Se requiere una dirección de Bitcoin</string>
   <string name="button_start_backup_process">Iniciar proceso de backup</string>
   <string name="buy_token_description">Utilice una tarjeta bancaria u otros métodos de pago</string>
   <plurals name="card_label_card_count">
