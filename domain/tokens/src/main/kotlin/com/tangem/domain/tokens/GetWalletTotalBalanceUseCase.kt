@@ -9,10 +9,10 @@ import com.tangem.domain.core.lce.lce
 import com.tangem.domain.core.utils.lceContent
 import com.tangem.domain.core.utils.lceLoading
 import com.tangem.domain.models.TotalFiatBalance
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.error.TokenListError
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.operations.BaseCurrenciesStatusesOperations
+import com.tangem.domain.tokens.operations.BaseCurrencyStatusOperations
 import com.tangem.domain.tokens.operations.TokenListFiatBalanceOperations
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -20,7 +20,7 @@ import timber.log.Timber
 import java.util.concurrent.ConcurrentHashMap
 
 class GetWalletTotalBalanceUseCase(
-    private val currenciesStatusesOperations: BaseCurrenciesStatusesOperations,
+    private val currenciesStatusesOperations: BaseCurrencyStatusOperations,
 ) {
 
     private val walletBalanceCache = ConcurrentHashMap<UserWalletId, TotalFiatBalance.Loaded>()

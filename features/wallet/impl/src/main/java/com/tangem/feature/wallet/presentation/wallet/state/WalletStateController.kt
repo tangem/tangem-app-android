@@ -90,6 +90,16 @@ internal class WalletStateController @Inject constructor() {
         )
     }
 
+    fun hideBottomSheet() {
+        update(
+            transformer = OpenBottomSheetTransformer(
+                userWalletId = getSelectedWalletId(),
+                content = TangemBottomSheetConfigContent.Empty,
+                onDismissBottomSheet = {},
+            ),
+        )
+    }
+
     private fun getInitialState(): WalletScreenState {
         return WalletScreenState(
             topBarConfig = WalletTopBarConfig(onDetailsClick = {}),
