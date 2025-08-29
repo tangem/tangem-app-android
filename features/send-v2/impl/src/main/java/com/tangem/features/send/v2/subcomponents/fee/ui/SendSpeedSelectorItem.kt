@@ -16,6 +16,7 @@ import com.tangem.common.ui.amountScreen.utils.getFiatReference
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.components.rows.SelectorRowItem
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.BigDecimalFormatConstants.EMPTY_BALANCE_SIGN
 import com.tangem.core.ui.format.bigdecimal.crypto
@@ -52,7 +53,7 @@ internal fun SendSpeedSelectorItem(
                 .clickable { onSelect() },
         ) {
             SelectorRowItem(
-                titleRes = titleRes,
+                title = resourceReference(titleRes),
                 iconRes = iconRes,
                 onSelect = onSelect,
                 modifier = modifier,
