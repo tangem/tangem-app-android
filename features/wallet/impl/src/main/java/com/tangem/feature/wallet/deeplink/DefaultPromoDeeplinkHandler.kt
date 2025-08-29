@@ -13,6 +13,8 @@ import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.networks.multi.MultiNetworkStatusProducer
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
+import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesProducer
+import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
 import com.tangem.domain.wallets.PromoCodeActivationResult
 import com.tangem.domain.wallets.PromoCodeActivationResult.*
 import com.tangem.domain.wallets.models.errors.ActivatePromoCodeError
@@ -39,6 +41,7 @@ internal class DefaultPromoDeeplinkHandler @AssistedInject constructor(
     @Assisted private val queryParams: Map<String, String>,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
     private val multiNetworkStatusSupplier: MultiNetworkStatusSupplier,
+    private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
     private val activateBitcoinPromocodeUseCase: ActivateBitcoinPromocodeUseCase,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val analyticsEventsHandler: AnalyticsEventHandler,
@@ -70,16 +73,37 @@ internal class DefaultPromoDeeplinkHandler @AssistedInject constructor(
 
     private fun findBitcoinAddress(userWallet: UserWallet, promoCode: String) {
         scope.launch(context = dispatchers.default) {
-            val bitcoinStatus = withTimeoutOrNull(
+            val networkStatuses = withTimeoutOrNull(
                 FETCH_TIMEOUT_SECONDS.seconds,
                 {
                     multiNetworkStatusSupplier
                         .invoke(MultiNetworkStatusProducer.Params(userWallet.walletId))
                         .first { statuses ->
                             statuses.any { status -> status.network.rawId == Blockchain.Bitcoin.id }
-                        }.first { status -> status.network.rawId == Blockchain.Bitcoin.id }
+                        }
                 },
             )
+
+            Timber.tag(LOG_TAG).d("All user network statuses ${networkStatuses?.size}")
+
+            val cryptoCurrencies = multiWalletCryptoCurrenciesSupplier
+                .getSyncOrNull(
+                    MultiWalletCryptoCurrenciesProducer.Params(
+                        userWallet
+                            .walletId,
+                    ),
+                )
+
+            Timber.tag(LOG_TAG).d("All user cryptoCurrencies on main ${cryptoCurrencies?.size}")
+
+            val bitcoinCurrency = cryptoCurrencies?.firstOrNull { it.id.rawNetworkId == Blockchain.Bitcoin.id }
+            Timber.tag(LOG_TAG).d("BitcoinCurrency $bitcoinCurrency")
+
+            val bitcoinStatus = networkStatuses?.firstOrNull { status ->
+                status.network.id == bitcoinCurrency
+                    ?.network?.id
+            }
+            Timber.tag(LOG_TAG).d("BitcoinStatus $bitcoinStatus")
 
             if (bitcoinStatus == null) {
                 Timber.tag(LOG_TAG).d("No bitcoin, bitcoin network status == null")
@@ -112,11 +136,13 @@ internal class DefaultPromoDeeplinkHandler @AssistedInject constructor(
     private suspend fun activatePromoCode(bitcoinAddress: String, promoCode: String) {
         uiMessageSender.send(GlobalLoadingMessage(true))
         activateBitcoinPromocodeUseCase(bitcoinAddress, promoCode).onRight {
+            delay(DEFAULT_MESSAGE_SENDER_DELAY)
             uiMessageSender.send(GlobalLoadingMessage(false))
             delay(DEFAULT_MESSAGE_SENDER_DELAY)
             Timber.tag(LOG_TAG).d("${promoCode.mask()} activation success on address ${bitcoinAddress.mask()}")
             showAlert(Activated)
         }.onLeft { error ->
+            delay(DEFAULT_MESSAGE_SENDER_DELAY)
             uiMessageSender.send(GlobalLoadingMessage(false))
             delay(DEFAULT_MESSAGE_SENDER_DELAY)
             Timber.tag(LOG_TAG).d("${promoCode.mask()} activation failed $error")
