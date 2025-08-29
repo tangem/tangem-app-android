@@ -11,3 +11,13 @@ internal fun List<ConfigToggle>.associateToggles(currentVersion: String): Map<St
         )
     }
 }
+
+internal fun Map<String, String>.defineTogglesAvailability(appVersion: String?): Map<String, Boolean> {
+    return if (appVersion == null) {
+        mapValues { false }
+    } else {
+        mapValues { (_, version) ->
+            VersionAvailabilityContract(currentVersion = appVersion, localVersion = version)
+        }
+    }
+}
