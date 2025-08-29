@@ -56,8 +56,6 @@ object PreferencesKeys {
 
     val LAST_SWAPPED_CRYPTOCURRENCY_ID_KEY by lazy { stringPreferencesKey(name = "lastSwappedCryptoCurrency") }
 
-    val FEATURE_TOGGLES_KEY by lazy { stringPreferencesKey(name = "featureToggles") }
-
     val EXCLUDED_BLOCKCHAINS_KEY by lazy { stringPreferencesKey(name = "excludedBlockchainsV2") }
 
     val WAS_TWINS_ONBOARDING_SHOWN by lazy { booleanPreferencesKey(name = "twinsOnboardingShown") }
@@ -83,6 +81,10 @@ object PreferencesKeys {
     val SHOULD_OPEN_WELCOME_ON_RESUME_KEY by lazy { booleanPreferencesKey(name = "openWelcomeOnResume") }
 
     val SHOULD_SAVE_ACCESS_CODES_KEY by lazy { booleanPreferencesKey(name = "saveAccessCodes") }
+
+    val REQUIRE_ACCESS_CODE_KEY by lazy { booleanPreferencesKey(name = "requireAccessCode") }
+
+    val USE_BIOMETRIC_AUTHENTICATION_KEY by lazy { booleanPreferencesKey(name = "useBiometricAuthentication") }
 
     val SHOULD_SHOW_MARKETS_TOOLTIP_KEY by lazy { booleanPreferencesKey(name = "shouldShowMarketsTooltip") }
 
@@ -149,6 +151,8 @@ object PreferencesKeys {
     val TRON_NETWORK_FEE_NOTIFICATION_SHOW_COUNT_KEY by lazy {
         intPreferencesKey(name = "tronNetworkFeeNotificationShowCount")
     }
+
+    fun getShouldShowNotificationKey(key: String) = booleanPreferencesKey("showShowNotificationUM_$key")
     // endregion
 
     // region Promo
@@ -162,6 +166,18 @@ object PreferencesKeys {
 
     fun getShouldShowInitialPermissionScreen(permission: String) =
         booleanPreferencesKey("shouldShowInitialPushPermissionScreen_$permission")
+    // endregion
+
+    // region Hot Wallet unlock attempts
+
+    fun getHotWalletUnlockAttemptsKey(attemptId: String) =
+        intPreferencesKey(name = "hotWalletUnlockAttempts_$attemptId")
+
+    fun getHotWalletUnlockBootKey(attemptId: String) = intPreferencesKey(name = "hotWalletUnlockBootCount_$attemptId")
+
+    fun getHotWalletUnlockDeadlineKey(attemptId: String) =
+        longPreferencesKey(name = "hotWalletUnlockDeadline_$attemptId")
+
     // endregion
 }
 
