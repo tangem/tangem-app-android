@@ -316,6 +316,7 @@
   <string name="common_support">Support</string>
   <string name="common_supported_networks">Supported networks</string>
   <string name="common_swap">Swap</string>
+  <string name="common_tangem">Tangem</string>
   <string name="common_tangem_wallet">Tangem Wallet</string>
   <string name="common_terms_and_conditions">terms and conditions</string>
   <string name="common_terms_of_use">Terms of Use</string>
@@ -545,7 +546,7 @@
   <string name="hw_upgrade_start_title">Tangem Wallet</string>
   <string name="hw_upgrade_title">Upgrade to Hardware Wallet</string>
   <string name="hw_upgrade_to_cold_banner_description">Keep your crypto safe with Tangem’s best-in-class hardware wallet.</string>
-  <string name="hw_upgrade_to_cold_banner_title">Upgrade wallet with a hardware backup</string>
+  <string name="hw_upgrade_to_cold_banner_title">Upgrade wallet with a hardware backup</string>
   <string name="information_generated_with_ai">This information was generated with AI.\nTap here, if you find any errors.</string>
   <string name="initial_message_change_access_code_body">To change the access code tap the card or ring as shown above and do not remove until the end of the operation</string>
   <string name="initial_message_change_passcode_body">To change the passcode tap the card as shown above and do not remove until the end of the operation</string>
@@ -875,6 +876,7 @@
   <string name="onramp_statuses_view_footer">You can close this screen and check the transaction status on the token details screen.</string>
   <string name="onramp_transaction_status_footer_text">You can close this screen and check the transaction status on the token details screen.</string>
   <string name="onramp_via">Via</string>
+  <string name="onramp_you_will_pay_title">You will pay</string>
   <string name="organize_tokens_group">Group</string>
   <string name="organize_tokens_sort_by_balance">By balance</string>
   <string name="organize_tokens_title">Organize tokens</string>
@@ -1062,7 +1064,7 @@
   <string name="send_with_swap_convert_token_alert_title">Confirm Conversion</string>
   <string name="send_with_swap_correct_recipient_network_notification_message">Sending any other currency will result in its irreversible loss.</string>
   <string name="send_with_swap_correct_recipient_network_notification_title">Select the correct recipient network</string>
-  <string name="send_with_swap_notification_text">Send any token, and we’ll convert it on the way. Your recipient gets exactly what they need—seamlessly.</string>
+  <string name="send_with_swap_notification_text">Choose any token to receive. Your recipient gets exactly what you selected—seamlessly.</string>
   <string name="send_with_swap_recipient_amount_success_title">Recipient will receive</string>
   <string name="send_with_swap_recipient_amount_text">To recipient</string>
   <string name="send_with_swap_recipient_amount_title">Amount to receive</string>
