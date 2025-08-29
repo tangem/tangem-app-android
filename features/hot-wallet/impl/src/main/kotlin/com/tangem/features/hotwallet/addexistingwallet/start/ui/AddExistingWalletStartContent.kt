@@ -3,6 +3,7 @@ package com.tangem.features.hotwallet.addexistingwallet.start.ui
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -61,7 +62,7 @@ internal fun AddExistingWalletStartContent(state: AddExistingWalletStartUM, modi
             )
             OptionBlock(
                 modifier = Modifier
-                    .padding(top = 24.dp),
+                    .padding(top = 32.dp),
                 backgroundColor = TangemTheme.colors.background.secondary,
                 title = stringResourceSafe(R.string.wallet_import_seed_title),
                 description = stringResourceSafe(R.string.wallet_import_seed_description),
@@ -70,23 +71,38 @@ internal fun AddExistingWalletStartContent(state: AddExistingWalletStartUM, modi
                 enabled = true,
             )
             OptionBlock(
+                modifier = Modifier
+                    .padding(top = 8.dp),
                 backgroundColor = TangemTheme.colors.background.secondary,
                 title = stringResourceSafe(R.string.wallet_import_scan_title),
                 description = stringResourceSafe(R.string.wallet_import_scan_description),
                 badge = {
-                    Icon(
-                        modifier = Modifier
-                            .padding(top = 2.dp)
-                            .size(20.dp),
-                        painter = painterResource(R.drawable.ic_tangem_24),
-                        contentDescription = null,
-                        tint = TangemTheme.colors.icon.secondary,
-                    )
+                    if (state.isScanInProgress) {
+                        CircularProgressIndicator(
+                            modifier = Modifier
+                                .padding(top = 2.dp)
+                                .size(20.dp)
+                                .padding(2.dp),
+                            color = TangemTheme.colors.text.primary1,
+                            strokeWidth = TangemTheme.dimens.size2,
+                        )
+                    } else {
+                        Icon(
+                            modifier = Modifier
+                                .padding(top = 2.dp)
+                                .size(20.dp),
+                            painter = painterResource(R.drawable.ic_tangem_24),
+                            contentDescription = null,
+                            tint = TangemTheme.colors.icon.secondary,
+                        )
+                    }
                 },
                 onClick = state.onScanCardClick,
                 enabled = true,
             )
             OptionBlock(
+                modifier = Modifier
+                    .padding(top = 8.dp),
                 backgroundColor = TangemTheme.colors.background.secondary,
                 title = stringResourceSafe(R.string.wallet_import_google_drive_title),
                 description = stringResourceSafe(R.string.wallet_import_google_drive_description),
@@ -160,6 +176,7 @@ private fun PreviewCreateWalletContent() {
     TangemThemePreview {
         AddExistingWalletStartContent(
             state = AddExistingWalletStartUM(
+                isScanInProgress = true,
                 onBackClick = {},
                 onImportPhraseClick = {},
                 onScanCardClick = {},
