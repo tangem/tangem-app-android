@@ -11,9 +11,10 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.components.marketprice.PriceChangeType
+import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
-import com.tangem.core.ui.utils.BigDecimalFormatter
+import com.tangem.core.ui.format.bigdecimal.price
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.GetCurrencyQuotesUseCase
@@ -86,13 +87,14 @@ internal class TokenMarketBlockModel @Inject constructor(
                     )
 
                     state.value = state.value.copy(
-                        currentPrice = BigDecimalFormatter.formatFiatPriceUncapped(
-                            fiatAmount = res.fiatRate,
-                            // TODO get currency from quotes use case [REDACTED_TASK_KEY]
-                            fiatCurrencyCode = currentAppCurrency.value.code,
-                            // TODO get currency from quotes use case [REDACTED_TASK_KEY]
-                            fiatCurrencySymbol = currentAppCurrency.value.symbol,
-                        ),
+                        currentPrice = res.fiatRate.format {
+                            fiat(
+                                // TODO get currency from quotes use case [REDACTED_TASK_KEY]
+                                fiatCurrencyCode = currentAppCurrency.value.code,
+                                // TODO get currency from quotes use case [REDACTED_TASK_KEY]
+                                fiatCurrencySymbol = currentAppCurrency.value.symbol,
+                            ).price()
+                        },
                         h24Percent = res.priceChange.format { percent() },
                         priceChangeType = PriceChangeType.fromBigDecimal(res.priceChange),
                     )
