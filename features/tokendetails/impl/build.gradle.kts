@@ -21,7 +21,6 @@ dependencies {
     implementation(deps.compose.accompanist.systemUiController)
     implementation(deps.compose.coil)
     implementation(deps.compose.foundation)
-    implementation(deps.compose.material)
     implementation(deps.compose.material3)
     implementation(deps.compose.navigation)
     implementation(deps.compose.navigation.hilt)
@@ -102,5 +101,8 @@ dependencies {
     implementation(projects.features.swap.api)
     implementation(projects.features.txhistory.api)
     implementation(projects.features.sendV2.api)
+    implementation(projects.features.tokenRecieve.api)
+
+    implementation(deps.decompose.ext.compose)
 
 }
