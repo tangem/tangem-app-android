@@ -105,10 +105,10 @@ internal class SwapAmountModel @Inject constructor(
     private var secondaryMaximumAmountBoundary: EnterAmountBoundary? = null
     private var secondaryMinimumAmountBoundary: EnterAmountBoundary? = null
 
-    var userCountry: UserCountry = UserCountry.Other(Locale.getDefault().country)
+    private var userCountry: UserCountry = UserCountry.Other(Locale.getDefault().country)
     val bottomSheetNavigation: SlotNavigation<SwapChooseProviderConfig> = SlotNavigation()
 
-    var showBestRateAnimation: Boolean = false
+    private var showBestRateAnimation: Boolean = false
 
     val uiState: StateFlow<SwapAmountUM>
     field = MutableStateFlow(params.amountUM)
@@ -131,10 +131,14 @@ internal class SwapAmountModel @Inject constructor(
         subscribeOnAmountReduceByTriggerUpdates()
         subscribeOnAmountIgnoreReduceTriggerUpdates()
         subscribeOnReloadQuotesTriggerUpdates()
+        subscribeOnBalanceHiddenUpdates()
     }
 
     fun onStart() {
-        startLoadingQuotesTask(isSilentReload = false)
+        quoteTaskScheduler.scheduleTask(
+            scope = modelScope,
+            task = loadQuotesTask(),
+        )
     }
 
     fun onStop() {
@@ -317,6 +321,25 @@ internal class SwapAmountModel @Inject constructor(
                 userCountry = userCountry,
             ),
         )
+    }
+
+    private fun subscribeOnBalanceHiddenUpdates() {
+        params.isBalanceHidingFlow.onEach {
+            val primaryCryptoCurrencyStatus = (uiState.value as? SwapAmountUM.Content)?.primaryCryptoCurrencyStatus
+            if (primaryCryptoCurrencyStatus != null) {
+                uiState.transformerUpdate(
+                    SwapAmountPrimaryReadyStateTransformer(
+                        userWallet = userWallet,
+                        primaryCryptoCurrencyStatus = primaryCryptoCurrencyStatus,
+                        appCurrency = appCurrency,
+                        swapDirection = swapDirection,
+                        clickIntents = this,
+                        isBalanceHidden = params.isBalanceHidingFlow.value,
+                        showBestRateAnimation = showBestRateAnimation,
+                    ),
+                )
+            }
+        }.launchIn(modelScope)
     }
 
     private fun confirmSendWithSwapClose() {
@@ -533,18 +556,17 @@ internal class SwapAmountModel @Inject constructor(
         } as? AmountState.Data
 
         val fromAmountValue = fromAmount?.amountTextField?.cryptoAmount?.value.orZero()
-
-        if (fromAmount?.amountTextField?.isError == true || fromAmountValue.isNullOrZero()) {
+        val isAmountScreen = params is SwapAmountComponentParams.AmountParams
+        val isAmountError = fromAmount?.amountTextField?.isError == true || fromAmountValue.isNullOrZero()
+        if (isAmountScreen && isAmountError) {
             uiState.transformerUpdate(SwapQuoteEmptyStateTransformer)
             return
         }
 
-        val swapGroups = state.swapCurrencies.getGroupWithDirection(state.swapDirection)
-
-        uiState.transformerUpdate(SwapQuoteLoadingStateTransformer)
+        if (!isSilentReload) { uiState.transformerUpdate(SwapQuoteLoadingStateTransformer) }
 
         modelScope.launch {
-            val quotes = swapGroups.available.filter {
+            val quotes = state.swapCurrencies.getGroupWithDirection(state.swapDirection).available.filter {
                 it.currencyStatus.currency.id == toCryptoCurrency.id
             }.flatMap {
                 it.providers
@@ -591,7 +613,6 @@ internal class SwapAmountModel @Inject constructor(
                     needApplyFcaRestrictions = userCountry.needApplyFCARestrictions(),
                 ),
             )
-
             feeSelectorReloadTrigger.triggerUpdate()
         }
     }

@@ -2,6 +2,7 @@ package com.tangem.features.swap.v2.impl.sendviaswap.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.AnalyticsParam.Key.FEE_TYPE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.PROVIDER
 import com.tangem.core.analytics.models.AnalyticsParam.Key.RECEIVE_BLOCKCHAIN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.RECEIVE_TOKEN
@@ -24,7 +25,7 @@ internal sealed class SendWithSwapAnalyticEvents(
         event = "Send With Swap In Progress Screen Opened",
         params = mapOf(
             PROVIDER to providerName,
-            "Commission" to if (feeType is AnalyticsParam.FeeType.Normal) "Market" else "Fast",
+            FEE_TYPE to if (feeType is AnalyticsParam.FeeType.Normal) "Market" else "Fast",
             SEND_TOKEN to fromToken.symbol,
             RECEIVE_TOKEN to toToken.symbol,
             SEND_BLOCKCHAIN to fromToken.network.name,

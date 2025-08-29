@@ -102,6 +102,7 @@ internal class SendAmountModel @Inject constructor(
         subscribeOnAmountReduceToTriggerUpdates()
         subscribeOnAmountIgnoreReduceTriggerUpdates()
         subscribeOnAmountUpdateTriggerUpdates()
+        subscribeOnBalanceHiddenUpdates()
     }
 
     private fun initAppCurrency() {
@@ -117,6 +118,20 @@ internal class SendAmountModel @Inject constructor(
                     },
                 )
             }.launchIn(modelScope)
+    }
+
+    private fun subscribeOnBalanceHiddenUpdates() {
+        params.isBalanceHidingFlow.onEach { isBalanceHidden ->
+            _uiState.update(
+                AmountBoundaryUpdateTransformer(
+                    cryptoCurrencyStatus = cryptoCurrencyStatus,
+                    maxEnterAmount = maxAmountBoundary,
+                    appCurrency = appCurrency,
+                    isRedesignEnabled = sendFeatureToggles.isSendRedesignEnabled,
+                    isBalanceHidden = params.isBalanceHidingFlow.value,
+                ),
+            )
+        }.launchIn(modelScope)
     }
 
     private fun subscribeOnCryptoCurrencyStatusFlow() {
@@ -150,6 +165,7 @@ internal class SendAmountModel @Inject constructor(
                         maxEnterAmount = maxAmountBoundary,
                         appCurrency = appCurrency,
                         isRedesignEnabled = sendFeatureToggles.isSendRedesignEnabled,
+                        isBalanceHidden = params.isBalanceHidingFlow.value,
                     ),
                 )
             } else {
@@ -168,6 +184,7 @@ internal class SendAmountModel @Inject constructor(
                     maxEnterAmount = maxAmountBoundary,
                     iconStateConverter = CryptoCurrencyToIconStateConverter(),
                     isRedesignEnabled = sendFeatureToggles.isSendRedesignEnabled,
+                    isBalanceHidden = params.isBalanceHidingFlow.value,
                 ).convert(
                     AmountParameters(
                         title = resourceReference(
@@ -257,6 +274,11 @@ internal class SendAmountModel @Inject constructor(
     private fun confirmConvertToToken() {
         val amountParams = params as? SendAmountComponentParams.AmountParams ?: return
         val amountFieldData = uiState.value as? AmountState.Data
+        _uiState.update {
+            (it as? AmountState.Data)?.copy(
+                isPrimaryButtonEnabled = false,
+            ) ?: it
+        }
         amountParams.callback.onConvertToAnotherToken(amountFieldData?.amountTextField?.value.orEmpty())
     }
 
