@@ -28,6 +28,7 @@ import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.tokens.GetMinimumTransactionAmountSyncUseCase
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.send.v2.api.SendFeatureToggles
 import com.tangem.features.send.v2.api.entity.PredefinedValues
 import com.tangem.features.send.v2.api.subcomponents.amount.analytics.CommonSendAmountAnalyticEvents
@@ -66,6 +67,7 @@ internal class SendAmountModel @Inject constructor(
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val rampStateManager: RampStateManager,
     private val sendAmountAlertFactory: SendAmountAlertFactory,
+    private val getWalletsUseCase: GetWalletsUseCase,
 ) : Model(), SendAmountClickIntents {
 
     private val params: SendAmountComponentParams = paramsContainer.require()
@@ -176,6 +178,7 @@ internal class SendAmountModel @Inject constructor(
 
     private fun initialState() {
         if (uiState.value is AmountState.Empty && userWallet != null) {
+            val isSingleWallet = getWalletsUseCase.invokeSync().size == 1
             _uiState.update {
                 AmountStateConverterV2(
                     clickIntents = this,
@@ -187,10 +190,14 @@ internal class SendAmountModel @Inject constructor(
                     isBalanceHidden = params.isBalanceHidingFlow.value,
                 ).convert(
                     AmountParameters(
-                        title = resourceReference(
-                            R.string.send_from_wallet_name,
-                            WrappedList(listOf(userWallet?.name.orEmpty())), // TODO [REDACTED_TASK_KEY]
-                        ),
+                        title = if (isSingleWallet) {
+                            resourceReference(R.string.send_from_title)
+                        } else {
+                            resourceReference(
+                                R.string.send_from_wallet_name,
+                                WrappedList(listOf(userWallet?.name.orEmpty())), // TODO [REDACTED_TASK_KEY]
+                            )
+                        },
                         value = "",
                     ),
                 )
