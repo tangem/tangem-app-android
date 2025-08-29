@@ -11,7 +11,7 @@ import java.util.Locale
 import kotlin.properties.Delegates
 
 /**
- * Feature toggles manager implementation in DEV build
+ * Feature toggles manager implementation in dev or mocked build
  *
  * @property versionProvider            application version provider
  * @property featureTogglesLocalStorage local storage for feature toggles
