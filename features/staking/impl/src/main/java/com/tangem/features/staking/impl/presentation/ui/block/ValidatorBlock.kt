@@ -10,11 +10,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import com.tangem.core.ui.components.inputrow.InputRowImageInfo
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.test.StakingSendDetailsScreenTestTags
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.ui.ValidatorImagePlaceholder
@@ -35,7 +37,8 @@ internal fun ValidatorBlock(validatorState: StakingStates.ValidatorState, isClic
                 interactionSource = remember { MutableInteractionSource() },
                 indication = ripple(),
                 onClick = onClick,
-            ),
+            )
+            .testTag(StakingSendDetailsScreenTestTags.VALIDATOR_BLOCK),
     ) {
         InputRowImageInfo(
             title = resourceReference(R.string.staking_validator),
