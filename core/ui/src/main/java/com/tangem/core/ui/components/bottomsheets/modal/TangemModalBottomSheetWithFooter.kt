@@ -1,6 +1,7 @@
 package com.tangem.core.ui.components.bottomsheets.modal
 
 import android.content.res.Configuration
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -32,6 +33,7 @@ import com.tangem.core.ui.res.LocalBottomSheetAlwaysVisible
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.WindowInsetsZero
+import com.tangem.core.ui.utils.toPx
 
 /**
  * Modal bottom sheet with [content], [footer] and optional [title].
@@ -48,7 +50,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> TangemModalBottomSheetWi
     noinline onBack: (() -> Unit)? = null,
     crossinline title: @Composable BoxScope.(T) -> Unit = {},
     crossinline content: @Composable (T) -> Unit,
-    crossinline footer: @Composable (BoxScope.(T) -> Unit),
+    noinline footer: @Composable (BoxScope.(T) -> Unit)?,
 ) {
     val isAlwaysVisible = LocalBottomSheetAlwaysVisible.current
 
@@ -83,7 +85,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> DefaultModalBottomSheetW
     noinline onBack: (() -> Unit)? = null,
     crossinline title: @Composable BoxScope.(T) -> Unit,
     crossinline content: @Composable (T) -> Unit,
-    crossinline footer: @Composable (BoxScope.(T) -> Unit),
+    noinline footer: @Composable (BoxScope.(T) -> Unit)?,
 ) {
     var isVisible by remember { mutableStateOf(value = config.isShown) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = skipPartiallyExpanded)
@@ -117,7 +119,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> PreviewModalBottomSheetW
     skipPartiallyExpanded: Boolean = true,
     crossinline title: @Composable BoxScope.(T) -> Unit,
     crossinline content: @Composable (T) -> Unit,
-    crossinline footer: @Composable BoxScope.(T) -> Unit,
+    noinline footer: @Composable (BoxScope.(T) -> Unit)?,
 ) {
     BasicModalBottomSheetWithFooter<T>(
         config = config,
@@ -144,7 +146,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicModalBottomSheetWit
     noinline onBack: (() -> Unit)? = null,
     crossinline title: @Composable BoxScope.(T) -> Unit,
     crossinline content: @Composable (T) -> Unit,
-    crossinline footer: @Composable (BoxScope.(T) -> Unit),
+    noinline footer: @Composable (BoxScope.(T) -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     val model = config.content as? T ?: return
@@ -153,6 +155,26 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicModalBottomSheetWit
         val maxHeight = LocalConfiguration.current.screenHeightDp * MODAL_SHEET_MAX_HEIGHT
         val initial = 0
         val scrollState = rememberScrollState(initial = initial)
+
+        val isKeyboardOpen by rememberIsKeyboardVisible()
+        val buttonHeight by animateDpAsState(
+            if (footer != null) {
+                80.dp
+            } else {
+                0.dp
+            },
+        )
+        // Offset calculation for keyboard scroll adjustment:
+        // 1) Button height (footer)
+        // 2) Column content bottom padding
+        // 3) Additional spacing (40dp) for visual comfort when keyboard is open
+        val scrollOffset = buttonHeight.toPx() + buttonHeight.toPx() + 40.dp.toPx()
+
+        LaunchedEffect(isKeyboardOpen) {
+            if (isKeyboardOpen) {
+                scrollState.animateScrollTo(scrollState.value + scrollOffset.toInt())
+            }
+        }
 
         Column(
             modifier = Modifier
@@ -186,7 +208,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicModalBottomSheetWit
                 Column(
                     modifier = Modifier
                         .verticalScroll(state = scrollState)
-                        .padding(bottom = TangemTheme.dimens.spacing80),
+                        .padding(bottom = buttonHeight),
                 ) {
                     content(model)
                 }
@@ -199,10 +221,12 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicModalBottomSheetWit
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(80.dp)
+                        .height(buttonHeight)
                         .align(Alignment.BottomCenter),
                 ) {
-                    footer(model)
+                    if (footer != null) {
+                        footer(model)
+                    }
                 }
             }
         }
@@ -219,6 +243,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicModalBottomSheetWit
             onBack = onBack,
             dragHandle = null,
             content = bsContent,
+            scrimColor = TangemTheme.colors.overlay.secondary,
         )
     } else {
         ModalBottomSheet(
@@ -230,6 +255,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicModalBottomSheetWit
             contentWindowInsets = { WindowInsetsZero },
             dragHandle = null,
             content = bsContent,
+            scrimColor = TangemTheme.colors.overlay.secondary,
         )
     }
 }

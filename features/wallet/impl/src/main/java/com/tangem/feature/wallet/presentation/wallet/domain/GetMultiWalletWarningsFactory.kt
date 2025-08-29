@@ -1,6 +1,9 @@
 package com.tangem.feature.wallet.presentation.wallet.domain
 
 import com.tangem.core.decompose.di.ModelScoped
+import com.tangem.core.ui.components.notifications.NotificationConfig.ButtonsState
+import com.tangem.core.ui.components.notifications.NotificationConfig.IconTint
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.card.CardTypesResolver
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.core.lce.Lce
@@ -8,18 +11,20 @@ import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.promo.ShouldShowPromoWalletUseCase
 import com.tangem.domain.promo.models.PromoId
 import com.tangem.domain.settings.IsReadyToShowRateAppUseCase
 import com.tangem.domain.tokens.error.TokenListError
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.wallets.models.SeedPhraseNotificationsStatus
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
 import com.tangem.domain.wallets.usecase.SeedPhraseNotificationUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
+import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
+import com.tangem.utils.extensions.isPositive
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
@@ -54,7 +59,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
 
                 addCriticalNotifications(userWallet, seedPhraseIssueStatus, clickIntents)
 
-                addFinishWalletActivationNotification(userWallet, clickIntents)
+                addFinishWalletActivationNotification(userWallet, maybeTokenList, clickIntents)
 
                 addReferralPromoNotification(cardTypesResolver, clickIntents, shouldShowReferralPromo)
 
@@ -256,25 +261,53 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
         )
     }
 
-    private fun MutableList<WalletNotification>.addIf(element: WalletNotification, condition: Boolean) {
-        if (condition) add(element = element)
-    }
-
     private fun MutableList<WalletNotification>.addFinishWalletActivationNotification(
         userWallet: UserWallet,
+        maybeTokenList: Lce<TokenListError, TokenList>,
         clickIntents: WalletClickIntents,
     ) {
         if (userWallet !is UserWallet.Hot) return
 
-        // TODO [REDACTED_TASK_KEY] set an actual value
-        val shouldShowFinishActivation = false
+        val shouldShowFinishActivation = !userWallet.backedUp
+
+        val iconTint = maybeTokenList.fold(
+            ifLoading = {
+                if ((it?.totalFiatBalance as? TotalFiatBalance.Loaded)?.amount?.isPositive() == true) {
+                    IconTint.Warning
+                } else {
+                    IconTint.Attention
+                }
+            },
+            ifContent = {
+                if ((it.totalFiatBalance as? TotalFiatBalance.Loaded)?.amount?.isPositive() == true) {
+                    IconTint.Warning
+                } else {
+                    IconTint.Attention
+                }
+            },
+            ifError = { IconTint.Attention },
+        )
 
         addIf(
             element = WalletNotification.FinishWalletActivation(
-                onFinishClick = clickIntents::onFinishWalletActivationClick,
+                iconTint = iconTint,
+                buttonsState = when (iconTint) {
+                    IconTint.Warning -> ButtonsState.PrimaryButtonConfig(
+                        text = resourceReference(R.string.hw_activation_need_finish),
+                        onClick = clickIntents::onFinishWalletActivationClick,
+                    )
+                    else -> ButtonsState.SecondaryButtonConfig(
+                        text = resourceReference(R.string.hw_activation_need_finish),
+                        onClick = clickIntents::onFinishWalletActivationClick,
+                    )
+                },
             ),
             condition = shouldShowFinishActivation,
         )
+    }
+
+    private fun MutableList<WalletNotification>.addIf(element: WalletNotification, condition: Boolean) {
+        if (condition) add(element = element)
     }
 
     private companion object {

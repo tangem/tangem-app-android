@@ -7,10 +7,10 @@ import com.tangem.common.test.domain.card.MockScanResponseFactory
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
 import com.tangem.common.test.utils.ProvideTestModels
-import com.tangem.domain.card.DerivationStyleProvider
+import com.tangem.domain.wallets.derivations.DerivationStyleProvider
 import com.tangem.domain.card.configs.GenericCardConfig
 import com.tangem.domain.card.configs.MultiWalletCardConfig
-import com.tangem.domain.card.common.util.derivationStyleProvider
+import com.tangem.domain.wallets.derivations.derivationStyleProvider
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet

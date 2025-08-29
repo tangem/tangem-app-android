@@ -12,7 +12,6 @@ import com.tangem.features.send.v2.common.CommonSendRoute
 import com.tangem.features.send.v2.send.success.model.SendConfirmSuccessModel
 import com.tangem.features.send.v2.send.success.ui.SendConfirmSuccessContent
 import com.tangem.features.send.v2.send.ui.state.SendUM
-import com.tangem.features.send.v2.subcomponents.fee.SendFeeBlockComponent
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -23,7 +22,6 @@ internal class SendConfirmSuccessComponent(
 
     private val model: SendConfirmSuccessModel = getOrCreateModel(params = params)
     private val destinationBlockComponent: SendDestinationBlockComponent = params.destinationBlockComponent
-    private val feeBlockComponent: SendFeeBlockComponent = params.feeBlockComponent
 
     @Composable
     override fun Content(modifier: Modifier) {
@@ -31,14 +29,12 @@ internal class SendConfirmSuccessComponent(
         SendConfirmSuccessContent(
             sendUM = state,
             destinationBlockComponent = destinationBlockComponent,
-            feeBlockComponent = feeBlockComponent,
         )
     }
 
     data class Params(
         val sendUMFlow: StateFlow<SendUM>,
         val destinationBlockComponent: SendDestinationBlockComponent,
-        val feeBlockComponent: SendFeeBlockComponent,
         val analyticsCategoryName: String,
         val currentRoute: Flow<CommonSendRoute>,
         val txUrl: String,

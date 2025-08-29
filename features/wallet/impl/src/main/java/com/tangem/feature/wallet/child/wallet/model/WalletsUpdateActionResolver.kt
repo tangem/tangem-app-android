@@ -25,6 +25,10 @@ internal class WalletsUpdateActionResolver @Inject constructor(
 ) {
 
     fun resolve(wallets: List<UserWallet>, currentState: WalletScreenState): Action {
+        if (wallets.isEmpty()) {
+            return Action.EmptyWallets
+        }
+
         val selectedWallet = getSelectedWalletSyncUseCase().getOrElse {
             /* Selected user wallet can be null after reset if remaining user wallets is locked */
             return Action.Unknown
@@ -318,6 +322,8 @@ internal class WalletsUpdateActionResolver @Inject constructor(
                 return "UpdateWalletCardCount(selectedWallet = ${selectedWallet.walletId})"
             }
         }
+
+        data object EmptyWallets : Action()
 
         data object Unknown : Action()
     }

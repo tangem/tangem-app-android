@@ -14,6 +14,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import com.google.accompanist.web.WebView
 import com.google.accompanist.web.WebViewNavigator
@@ -62,9 +64,8 @@ internal fun DisclaimerScreen(state: DisclaimerUM) {
         ) {
             TangemTopAppBar(
                 title = resourceReference(R.string.disclaimer_title),
-                startButton = TopAppBarButtonUM(
-                    iconRes = R.drawable.ic_back_24,
-                    onIconClicked = state.popBack,
+                startButton = TopAppBarButtonUM.Back(
+                    onBackClicked = state.popBack,
                 ).takeIf { state.isTosAccepted },
                 titleAlignment = Alignment.CenterHorizontally,
                 textColor = textColor,
@@ -108,7 +109,11 @@ private fun DisclaimerContent(url: String) {
             state = webViewState,
             modifier = Modifier
                 .fillMaxSize()
-                .background(TangemTheme.colors.background.primary),
+                .background(TangemTheme.colors.background.primary)
+                .testTag(DisclaimerScreenTestTags.WEB_VIEW)
+                .semantics {
+                    contentDescription = "WebView URL: ${webViewState.content.getCurrentUrl() ?: url}"
+                },
             captureBackPresses = false,
             navigator = webViewNavigator,
             onCreated = WebView::applySafeSettings,

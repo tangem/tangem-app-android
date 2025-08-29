@@ -3,6 +3,9 @@ package com.tangem.domain.tokens
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.promo.PromoRepository
 import com.tangem.domain.promo.models.StoryContent
 import com.tangem.domain.promo.models.StoryContentIds
@@ -12,11 +15,8 @@ import com.tangem.domain.tokens.actions.CommonActionsFactory
 import com.tangem.domain.tokens.actions.MissedDerivationsActionsFactory
 import com.tangem.domain.tokens.actions.OutdatedDataActionsFactory
 import com.tangem.domain.tokens.actions.UnreachableActionsFactory
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*

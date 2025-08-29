@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -29,6 +30,7 @@ import com.tangem.core.ui.res.LocalWindowSize
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.SwapStoriesScreenTestTags
 import kotlinx.collections.immutable.persistentListOf
 
 private val SubtitleColor = Color(0xFFB0B0B0)
@@ -46,7 +48,8 @@ fun SwapStoriesScreen(config: SwapStoriesUM) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(TangemColorPalette.Black),
+                .background(TangemColorPalette.Black)
+                .testTag(SwapStoriesScreenTestTags.SCREEN_CONTAINER),
         ) {
             SubcomposeAsyncImage(
                 modifier = Modifier.fillMaxSize(),

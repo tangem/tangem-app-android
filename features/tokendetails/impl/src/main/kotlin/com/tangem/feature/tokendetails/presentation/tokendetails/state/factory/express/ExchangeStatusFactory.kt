@@ -2,8 +2,8 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.
 
 import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheetConfig
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.datasource.local.swaptx.ExpressAnalyticsStatus
-import com.tangem.datasource.local.swaptx.SwapTransactionStatusStore
+import com.tangem.datasource.local.swap.ExpressAnalyticsStatus
+import com.tangem.datasource.local.swap.SwapTransactionStatusStore
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.quote.QuoteStatus

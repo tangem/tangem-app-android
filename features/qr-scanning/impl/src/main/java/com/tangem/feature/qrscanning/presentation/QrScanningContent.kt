@@ -66,9 +66,9 @@ internal fun QrScanningContent(
         TangemTopAppBar(
             modifier = Modifier.statusBarsPadding(),
             title = uiState.topBarConfig.title?.resolveReference(),
-            startButton = TopAppBarButtonUM(
+            startButton = TopAppBarButtonUM.Icon(
                 iconRes = uiState.topBarConfig.startIcon,
-                onIconClicked = uiState.onBackClick,
+                onClicked = uiState.onBackClick,
             ),
             textColor = TangemTheme.colors.text.constantWhite,
             iconTint = TangemColorPalette.White,
@@ -80,9 +80,9 @@ internal fun QrScanningContent(
                     label = "Flash Change",
                 ) {
                     TopAppBarButton(
-                        button = TopAppBarButtonUM(
+                        button = TopAppBarButtonUM.Icon(
                             iconRes = if (it) R.drawable.ic_flash_on_24 else R.drawable.ic_flash_off_24,
-                            onIconClicked = {
+                            onClicked = {
                                 isFlash = !isFlash
                             },
                         ),
@@ -91,9 +91,9 @@ internal fun QrScanningContent(
                 }
 
                 TopAppBarButton(
-                    button = TopAppBarButtonUM(
+                    button = TopAppBarButtonUM.Icon(
                         iconRes = R.drawable.ic_gallery_24,
-                        onIconClicked = uiState.onGalleryClick,
+                        onClicked = uiState.onGalleryClick,
                     ),
                     tint = TangemColorPalette.White,
                 )

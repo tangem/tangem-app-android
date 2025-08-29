@@ -92,21 +92,37 @@ internal class DefaultSwapTransactionRepository(
                 key = PreferencesKeys.SWAP_TRANSACTIONS_STATUSES_KEY,
             ),
         ) { savedTransactions, txStatuses ->
-            val currencyTxs = savedTransactions?.filter {
-                it.userWalletId == userWallet.walletId.stringValue &&
-                    (
-                        it.toCryptoCurrencyId == cryptoCurrencyId.value ||
-                            it.fromCryptoCurrencyId == cryptoCurrencyId.value
-                        )
+
+            val currencyToTxs = savedTransactions?.filter {
+                val isUserWallet = it.userWalletId == userWallet.walletId.stringValue
+                val toCurrency = it.toCryptoCurrencyId == cryptoCurrencyId.value
+                isUserWallet && toCurrency
             }
 
-            currencyTxs?.mapNotNull {
+            val currencyFromTxs = savedTransactions?.filter {
+                val isUserWallet = it.userWalletId == userWallet.walletId.stringValue
+                val fromCurrency = it.fromCryptoCurrencyId == cryptoCurrencyId.value
+                isUserWallet && fromCurrency
+            }
+
+            val toTxs = currencyToTxs?.mapNotNull {
+                converter.convertBack(
+                    value = it,
+                    userWallet = userWallet,
+                    txStatuses = txStatuses,
+                    onFilter = { it.swapTxTypeDTO == SwapTxTypeDTO.Swap },
+                )
+            }.orEmpty()
+
+            val fromTxs = currencyFromTxs?.mapNotNull {
                 converter.convertBack(
                     value = it,
                     userWallet = userWallet,
                     txStatuses = txStatuses,
                 )
-            }
+            }.orEmpty()
+
+            fromTxs + toTxs
         }
             .flowOn(dispatchers.default)
     }
