@@ -6,7 +6,7 @@ import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.datasource.local.token.UserTokensResponseStore
-import com.tangem.domain.card.DerivationStyleProvider
+import com.tangem.domain.wallets.derivations.DerivationStyleProvider
 import com.tangem.domain.card.common.TapWorkarounds.useOldStyleDerivation
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.wallet.UserWalletId
