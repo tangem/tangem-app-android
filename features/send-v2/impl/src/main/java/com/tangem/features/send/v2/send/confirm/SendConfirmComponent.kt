@@ -72,6 +72,7 @@ internal class SendConfirmComponent(
             userWalletId = params.userWallet.walletId,
             cryptoCurrency = params.cryptoCurrencyStatus.currency,
             cryptoCurrencyStatusFlow = params.cryptoCurrencyStatusFlow,
+            isBalanceHidingFlow = params.isBalanceHidingFlow,
         ),
         onResult = model::onAmountResult,
         onClick = model::showEditAmount,
