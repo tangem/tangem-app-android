@@ -1,26 +1,42 @@
 package com.tangem.domain.notifications.repository
 
-import com.tangem.domain.notifications.models.ApplicationId
-import com.tangem.domain.notifications.models.NotificationsEligibleNetwork
-
+/**
+ * Repository interface for managing local notification logic and state.
+ *
+ * This interface provides methods to check and update whether specific notifications should be shown,
+ * as well as to track the display count for certain notifications (e.g., Tron token fee).
+ *
+ * Note: This repository is responsible only for the local logic and state (such as preferences and counters)
+ * regarding notifications. It does **not** directly show or hide notifications to the user.
+ * The actual display and hiding of notifications in the UI is handled by [NotificationsUM],
+ * which uses this repository to determine the appropriate behavior.
+ */
 interface NotificationsRepository {
 
-    @Throws
-    suspend fun createApplicationId(pushToken: String? = null): ApplicationId
+    /**
+     * Checks whether a notification with the given [key] should be shown to the user.
+     * @param key The unique identifier for the notification.
+     * @return true if the notification should be shown, false otherwise.
+     */
+    suspend fun shouldShowNotification(key: String): Boolean
 
-    suspend fun saveApplicationId(appId: ApplicationId)
+    /**
+     * Sets whether a notification with the given [key] should be shown to the user.
+     * @param key The unique identifier for the notification.
+     * @param value true if the notification should be shown, false otherwise.
+     */
+    suspend fun setShouldShowNotifications(key: String, value: Boolean)
 
-    suspend fun getApplicationId(): ApplicationId?
-
+    /**
+     * Gets the number of times the Tron token fee notification has been shown.
+     * @return The current show counter for the Tron token fee notification.
+     */
     suspend fun getTronTokenFeeNotificationShowCounter(): Int
 
+    /**
+     * Increments the counter tracking how many times the Tron token fee notification has been shown.
+     */
     suspend fun incrementTronTokenFeeNotificationShowCounter()
-
-    @Throws
-    suspend fun sendPushToken(appId: ApplicationId, pushToken: String)
-
-    @Throws
-    suspend fun getEligibleNetworks(): List<NotificationsEligibleNetwork>
 
     suspend fun shouldShowSubscribeOnNotificationsAfterUpdate(): Boolean
 
