@@ -5,10 +5,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -18,6 +20,7 @@ import com.tangem.core.ui.components.buttons.common.TangemButton
 import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
 import com.tangem.core.ui.components.buttons.common.TangemButtonSize
 import com.tangem.core.ui.components.buttons.common.TangemButtonsDefaults
+import com.tangem.core.ui.extensions.conditional
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -179,6 +182,9 @@ private fun AlreadyHaveTangemWalletBlock(
     isScanInProgress: Boolean,
     modifier: Modifier = Modifier,
 ) {
+    var buttonWidth by remember { mutableStateOf(0) }
+    val density = LocalDensity.current
+
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -201,9 +207,17 @@ private fun AlreadyHaveTangemWalletBlock(
             style = TangemTheme.typography.button,
             color = TangemTheme.colors.text.primary1,
         )
+
         TangemButton(
             modifier = Modifier
-                .wrapContentWidth(),
+                .conditional(buttonWidth > 0) {
+                    width(with(density) { buttonWidth.toDp() })
+                }
+                .onGloballyPositioned { coordinates ->
+                    if (buttonWidth == 0) {
+                        buttonWidth = coordinates.size.width
+                    }
+                },
             text = stringResourceSafe(R.string.wallet_create_scan_title),
             onClick = onScanClick,
             icon = TangemButtonIconPosition.End(iconResId = R.drawable.ic_tangem_24),

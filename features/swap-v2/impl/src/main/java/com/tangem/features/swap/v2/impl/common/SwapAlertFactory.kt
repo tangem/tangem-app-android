@@ -96,8 +96,12 @@ internal class SwapAlertFactory @Inject constructor(
             ),
         )
 
+        if (userWallet is UserWallet.Hot) {
+            return // TODO [REDACTED_TASK_KEY] [Hot Wallet] Email feedback flow
+        }
+
         val cardInfo =
-            getCardInfoUseCase(userWallet.requireColdWallet().scanResponse).getOrNull() ?: return // TODO [REDACTED_TASK_KEY]
+            getCardInfoUseCase(userWallet.requireColdWallet().scanResponse).getOrNull() ?: return
 
         sendFeedbackEmailUseCase(
             type = FeedbackEmailType.SwapProblem(

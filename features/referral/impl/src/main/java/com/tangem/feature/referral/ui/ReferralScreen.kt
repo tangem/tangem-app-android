@@ -16,6 +16,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
@@ -34,6 +35,7 @@ import com.tangem.core.ui.components.snackbar.TangemSnackbar
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.ReferralProgramScreenTestTags
 import com.tangem.feature.referral.domain.models.ExpectedAward
 import com.tangem.feature.referral.domain.models.ExpectedAwards
 import com.tangem.feature.referral.models.DemoModeException
@@ -138,7 +140,8 @@ private fun Header() {
             modifier = Modifier
                 .padding(horizontal = TangemTheme.dimens.spacing32)
                 .fillMaxWidth()
-                .height(TangemTheme.dimens.size200),
+                .height(TangemTheme.dimens.size200)
+                .testTag(ReferralProgramScreenTestTags.IMAGE),
         )
         SpacerH24()
         Text(
@@ -233,7 +236,9 @@ private fun LoadingCondition(@DrawableRes iconResId: Int) {
 @Composable
 private fun Condition(@DrawableRes iconResId: Int, infoBlock: @Composable () -> Unit) {
     Row(
-        modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16),
+        modifier = Modifier
+            .padding(horizontal = TangemTheme.dimens.spacing16)
+            .testTag(ReferralProgramScreenTestTags.CONDITION_BLOCK),
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
         verticalAlignment = Alignment.Top,
     ) {
@@ -268,6 +273,7 @@ private fun InfoForYou(award: String, networkName: String, address: String? = nu
             ),
             color = TangemTheme.colors.text.tertiary,
             style = TangemTheme.typography.body2,
+            modifier = Modifier.testTag(ReferralProgramScreenTestTags.INFO_FOR_YOU_TEXT),
         )
     }
 }
@@ -332,6 +338,7 @@ private fun ConditionInfo(title: String, subtitleContent: @Composable () -> Unit
             text = title,
             color = TangemTheme.colors.text.primary1,
             style = TangemTheme.typography.subtitle1,
+            modifier = Modifier.testTag(ReferralProgramScreenTestTags.INFO_FOR_YOUR_FRIEND_TEXT),
         )
         subtitleContent()
     }
