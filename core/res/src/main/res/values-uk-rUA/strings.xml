@@ -59,6 +59,16 @@
   <string name="biometric_lockout_warning_description">Будь ласка, спробуйте знову через 30 секунд або відскануйте картку або кільце</string>
   <string name="biometric_lockout_warning_title">Забагато спроб</string>
   <string name="biometric_unavailable_warning">Ви вимкнули біометричну автентифікацію на своєму телефоні і не зможете зберігати гаманці в додатку. Щоб зберегти гаманці, будь ласка, увімкніть функцію біометричної автентифікації в налаштуваннях телефону.</string>
+  <string name="bitcoin_promo_activation_error">Під час обробки промокоду сталася помилка. Будь ласка, спробуйте пізніше.</string>
+  <string name="bitcoin_promo_activation_error_title">Помилка активації</string>
+  <string name="bitcoin_promo_activation_success">Ваш промокод успішно активовано. Бонус 10 USDT у Bitcoin буде зараховано через 14 днів.</string>
+  <string name="bitcoin_promo_activation_success_title">Промокод активовано</string>
+  <string name="bitcoin_promo_already_activated">Цей промокод уже був використаний і не може бути активований повторно.</string>
+  <string name="bitcoin_promo_already_activated_title">Код недоступний</string>
+  <string name="bitcoin_promo_invalid_code">Цей промокод недійсний і не може бути активований.</string>
+  <string name="bitcoin_promo_invalid_code_title">Невірний код</string>
+  <string name="bitcoin_promo_no_address">Для зарахування бонусу потрібна Bitcoin-адреса. Додайте її до портфеля та повторіть активацію.</string>
+  <string name="bitcoin_promo_no_address_title">Потрібна Bitcoin-адреса</string>
   <string name="button_start_backup_process">Почніть процес резервного копіювання</string>
   <string name="buy_token_description">Використовуйте банківську картку або інші способи оплати</string>
   <plurals name="card_label_card_count">
@@ -906,6 +916,7 @@
   <string name="send_validation_invalid_amount">Недопустима сума</string>
   <string name="send_validation_invalid_fee">Комісія перевищує залишок</string>
   <string name="send_validation_invalid_total">Сума, що відправляється, перевищує залишок</string>
+  <string name="send_with_swap_notification_text">Виберіть будь-який токен. Той, кому ви його надішлете, отримає саме те, що ви обрали — без жодних ускладнень.</string>
   <string name="sent_transaction_sent_title">Трансакцію надіслано</string>
   <string name="settings_card_settings_footer">Підготуйтеся до сканування кільця або картки, яку ви хочете налаштувати.</string>
   <string name="settings_forget_wallet">Забути гаманець</string>
