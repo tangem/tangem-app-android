@@ -1,9 +1,11 @@
 package com.tangem.datasource.api.tangemTech
 
 import com.tangem.datasource.api.common.response.ApiResponse
-import com.tangem.datasource.api.promotion.models.PromotionInfoResponse
 import com.tangem.datasource.api.promotion.models.StoryContentResponse
 import com.tangem.datasource.api.tangemTech.models.*
+import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
+import com.tangem.datasource.api.tangemTech.models.account.GetWalletArchivedAccountsResponse
+import com.tangem.datasource.api.tangemTech.models.account.SaveWalletAccountsResponse
 import com.tangem.datasource.api.utils.ReadTimeout
 import com.tangem.datasource.local.config.providers.models.ProviderModel
 import retrofit2.http.*
@@ -29,9 +31,6 @@ interface TangemTechApi {
         @Query("offset") offset: Int? = null,
         @Query("limit") limit: Int? = null,
     ): ApiResponse<CoinsResponse>
-
-    @GET("v1/rates")
-    suspend fun getRates(@Query("currencyId") currencyId: String, @Query("coinIds") coinIds: String): RatesResponse
 
     @GET("v1/currencies")
     suspend fun getCurrencyList(
@@ -68,45 +67,10 @@ interface TangemTechApi {
         @Query("fields") fields: String,
     ): ApiResponse<QuotesResponse>
 
-    @GET("v1/promotion")
-    suspend fun getPromotionInfo(
-        @Query("programName") name: String,
-        @Header("Cache-Control") cacheControl: String = "max-age=600",
-    ): ApiResponse<PromotionInfoResponse>
-
-    @GET("v1/settings/{wallet_id}")
-    suspend fun getUserTokensSettings(@Path("wallet_id") walletId: String): ApiResponse<UserTokensSettingsResponse>
-
-    @PUT("v1/settings/{wallet_id}")
-    suspend fun saveUserTokensSettings(
-        @Path("wallet_id") walletId: String,
-        @Body userTokensSettings: UserTokensSettingsResponse,
-    ): ApiResponse<Unit>
-
     @POST("v1/user-network-account")
     suspend fun createUserNetworkAccount(
         @Body body: CreateUserNetworkAccountBody,
     ): ApiResponse<CreateUserNetworkAccountResponse>
-
-    @POST("v1/account")
-    suspend fun createUserTokensAccount(
-        @Body body: CreateUserTokensAccountBody,
-    ): ApiResponse<UserTokensAccountResponse>
-
-    @PUT("v1/account/{account_id}")
-    suspend fun updateUserTokensAccount(
-        @Path("account_id") accountId: Int,
-        @Body body: UpdateUserTokensAccountBody,
-    ): ApiResponse<UserTokensAccountResponse>
-
-    @PUT("v1/account/{account_id}/archive")
-    suspend fun archiveUserTokensAccount(@Path("account_id") accountId: Int): ApiResponse<UserTokensAccountResponse>
-
-    @PUT("v1/account/{account_id}/unarchive")
-    suspend fun restoreUserTokensAccount(@Path("account_id") accountId: Int): ApiResponse<UserTokensAccountResponse>
-
-    @GET("v1/features")
-    suspend fun getFeatures(): ApiResponse<FeaturesResponse>
 
     @ReadTimeout(duration = 5, unit = TimeUnit.SECONDS)
     @GET("v1/networks/providers")
@@ -160,7 +124,7 @@ interface TangemTechApi {
     suspend fun setNotificationsEnabled(@Path("wallet_id") walletId: String, @Body body: WalletBody): ApiResponse<Unit>
     // endregion
 
-    // region wallets
+    // region user-wallets
     @PATCH("v1/user-wallets/wallets/{wallet_id}")
     suspend fun updateWallet(@Path("wallet_id") walletId: String, @Body body: WalletBody): ApiResponse<Unit>
 
@@ -180,5 +144,22 @@ interface TangemTechApi {
     // promo
     @POST("promo/v1/promo-codes/activate")
     suspend fun activatePromoCode(@Body body: PromocodeActivationBody): ApiResponse<PromocodeActivationResponse>
+    // endregion
+
+    // region account
+    @GET("/v1/wallets/{walletId}/accounts")
+    suspend fun getWalletAccounts(@Path("walletId") walletId: String): ApiResponse<GetWalletAccountsResponse>
+
+    @PUT("/v1/wallets/{walletId}/accounts")
+    suspend fun saveWalletAccounts(
+        @Path("walletId") walletId: String,
+        @Header("If-Match") ifMatch: String,
+        @Body body: SaveWalletAccountsResponse,
+    ): ApiResponse<Unit>
+
+    @GET("/v1/wallets/{walletId}/accounts/archived")
+    suspend fun getWalletArchivedAccounts(
+        @Path("walletId") walletId: String,
+    ): ApiResponse<GetWalletArchivedAccountsResponse>
     // endregion
 }
