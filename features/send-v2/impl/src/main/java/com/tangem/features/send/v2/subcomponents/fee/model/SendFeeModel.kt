@@ -11,14 +11,13 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
-import com.tangem.features.send.v2.common.analytics.CommonSendAnalyticEvents.NonceInserted
+import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
+import com.tangem.features.send.v2.api.subcomponents.feeSelector.analytics.CommonSendFeeAnalyticEvents
 import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeCheckReloadListener
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeCheckReloadTrigger
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeComponentParams
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeReloadListener
-import com.tangem.features.send.v2.subcomponents.fee.analytics.SendFeeAnalyticEvents
-import com.tangem.features.send.v2.subcomponents.fee.analytics.SendFeeAnalyticEvents.GasPriceInserter
 import com.tangem.features.send.v2.subcomponents.fee.model.transformers.*
 import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeSelectorUM
 import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeType
@@ -112,7 +111,7 @@ internal class SendFeeModel @Inject constructor(
         updateFeeNotifications()
         if (feeType == FeeType.Custom) {
             analyticsEventHandler.send(
-                SendFeeAnalyticEvents.CustomFeeButtonClicked(categoryName = analyticsCategoryName),
+                CommonSendFeeAnalyticEvents.CustomFeeButtonClicked(categoryName = analyticsCategoryName),
             )
         }
     }
@@ -155,10 +154,12 @@ internal class SendFeeModel @Inject constructor(
                 val isCustomFeeEdited =
                     feeSelectorUM.selectedFee?.amount?.value != feeSelectorUM.fees.normal.amount.value
                 if (feeSelectorUM.selectedType == FeeType.Custom && isCustomFeeEdited) {
-                    analyticsEventHandler.send(GasPriceInserter(categoryName = analyticsCategoryName))
+                    analyticsEventHandler.send(
+                        CommonSendFeeAnalyticEvents.GasPriceInserter(categoryName = analyticsCategoryName),
+                    )
                 }
                 analyticsEventHandler.send(
-                    SendFeeAnalyticEvents.SelectedFee(
+                    CommonSendFeeAnalyticEvents.SelectedFee(
                         categoryName = analyticsCategoryName,
                         feeType = feeSelectorUM.selectedType.toAnalyticType(feeSelectorUM),
                     ),
@@ -166,7 +167,7 @@ internal class SendFeeModel @Inject constructor(
 
                 if (feeSelectorUM.nonce != null) {
                     analyticsEventHandler.send(
-                        NonceInserted(
+                        CommonSendAnalyticEvents.NonceInserted(
                             categoryName = analyticsCategoryName,
                             token = cryptoCurrencyStatus.currency.symbol,
                             blockchain = cryptoCurrencyStatus.currency.network.name,
