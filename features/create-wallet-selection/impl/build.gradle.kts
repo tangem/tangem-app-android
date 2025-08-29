@@ -18,6 +18,12 @@ dependencies {
     /** Hot Wallet Feature */
     implementation(projects.features.hotWallet.api)
 
+    /** Project - Domain */
+    implementation(projects.domain.card)
+    implementation(projects.domain.settings)
+    implementation(projects.domain.wallets)
+    implementation(projects.domain.models)
+
     /** Core modules */
     implementation(projects.core.configToggles)
     implementation(projects.core.analytics)
@@ -45,7 +51,6 @@ dependencies {
     implementation(deps.lifecycle.runtime.ktx)
 
     /** Compose libraries */
-    implementation(deps.compose.material)
     implementation(deps.compose.material3)
     implementation(deps.compose.animation)
     implementation(deps.compose.foundation)

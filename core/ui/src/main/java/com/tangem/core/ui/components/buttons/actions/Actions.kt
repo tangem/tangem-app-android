@@ -20,6 +20,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -33,6 +34,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.TokenDetailsScreenTestTags
 
 /**
  * Rounded action button
@@ -98,7 +100,7 @@ fun ActionButton(
                 ),
             )
         },
-        modifier = modifier,
+        modifier = modifier.testTag(TokenDetailsScreenTestTags.ACTION_BUTTON),
         color = color,
         containerColor = containerColor,
     )
