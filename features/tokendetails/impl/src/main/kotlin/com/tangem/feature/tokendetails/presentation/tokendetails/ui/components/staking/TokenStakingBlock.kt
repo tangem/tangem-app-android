@@ -13,6 +13,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
@@ -23,6 +24,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.TokenDetailsScreenTestTags
 import com.tangem.core.ui.utils.getGreyScaleColorFilter
 import com.tangem.feature.tokendetails.presentation.tokendetails.TokenDetailsPreviewData.stakingAvailableBlock
 import com.tangem.feature.tokendetails.presentation.tokendetails.TokenDetailsPreviewData.stakingBalanceBlock
@@ -77,7 +79,9 @@ internal fun TokenStakingBlock(state: StakingBlockUM, isBalanceHidden: Boolean, 
 @Composable
 private fun StakingAvailableContent(state: StakingBlockUM.StakeAvailable, modifier: Modifier = Modifier) {
     Column(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .testTag(TokenDetailsScreenTestTags.STAKING_AVAILABLE_BLOCK),
     ) {
         Row {
             val (alpha, colorFilter) = remember(state.iconState.isGrayscale) {
@@ -87,7 +91,8 @@ private fun StakingAvailableContent(state: StakingBlockUM.StakeAvailable, modifi
                 modifier = Modifier
                     .size(TangemTheme.dimens.size20)
                     .clip(TangemTheme.shapes.roundedCorners8)
-                    .align(Alignment.CenterVertically),
+                    .align(Alignment.CenterVertically)
+                    .testTag(TokenDetailsScreenTestTags.STAKING_CURRENCY_ICON),
                 icon = state.iconState,
                 alpha = alpha,
                 colorFilter = colorFilter,
@@ -98,6 +103,7 @@ private fun StakingAvailableContent(state: StakingBlockUM.StakeAvailable, modifi
                     text = state.titleText.resolveReference(),
                     color = TangemTheme.colors.text.primary1,
                     style = TangemTheme.typography.subtitle2,
+                    modifier = Modifier.testTag(TokenDetailsScreenTestTags.STAKING_SERVICE_TITLE),
                 )
 
                 Spacer(modifier = Modifier.size(TangemTheme.dimens.size4))
@@ -106,6 +112,7 @@ private fun StakingAvailableContent(state: StakingBlockUM.StakeAvailable, modifi
                     text = state.subtitleText.resolveReference(),
                     color = TangemTheme.colors.text.tertiary,
                     style = TangemTheme.typography.body2,
+                    modifier = Modifier.testTag(TokenDetailsScreenTestTags.STAKING_SERVICE_TEXT),
                 )
 
                 Spacer(modifier = Modifier.size(TangemTheme.dimens.size8))
