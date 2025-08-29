@@ -110,26 +110,28 @@ internal class TokenReceiveModel @Inject constructor(
         addresses: List<ReceiveAddressModel>,
         networkName: String,
     ): ImmutableMap<Int, ReceiveAddress> {
-        val conditionToUseTitle = addresses.any { it.nameService == ReceiveAddressModel.NameService.Legacy }
+        val needUseToLegacyAndDefaultName = addresses.any { it.nameService == ReceiveAddressModel.NameService.Legacy }
         return buildMap {
             addresses.mapIndexed { index, model ->
                 val type = when (model.nameService) {
                     ReceiveAddressModel.NameService.Default -> {
                         Primary.Default(
-                            displayName = TextReference.Res(
-                                id = R.string.domain_receive_assets_onboarding_network_name,
-                                formatArgs = wrappedList(networkName),
-                            ),
-                            title = if (conditionToUseTitle) {
+                            displayName = if (needUseToLegacyAndDefaultName) {
                                 TextReference.Res(R.string.domain_receive_assets_default_address)
                             } else {
-                                null
+                                TextReference.Combined(
+                                    wrappedList(
+                                        TextReference.Str(networkName),
+                                        TextReference.Str(" "),
+                                        TextReference.Res(R.string.common_address),
+                                    ),
+                                )
                             },
                         )
                     }
                     ReceiveAddressModel.NameService.Ens -> Ens
                     ReceiveAddressModel.NameService.Legacy -> Primary.Legacy(
-                        displayName = TextReference.Res(R.string.common_legacy_bitcoin_address),
+                        displayName = TextReference.Res(R.string.domain_receive_assets_legacy_address),
                     )
                 }
 
