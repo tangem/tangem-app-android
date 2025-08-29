@@ -16,10 +16,7 @@ internal data class ReceiveAddress(
 
             val displayName: TextReference
 
-            data class Default(
-                val title: TextReference?,
-                override val displayName: TextReference,
-            ) : Primary
+            data class Default(override val displayName: TextReference) : Primary
 
             data class Legacy(override val displayName: TextReference) : Primary
         }
