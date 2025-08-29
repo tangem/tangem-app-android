@@ -235,7 +235,11 @@ internal class SendAmountModel @Inject constructor(
             ),
         )
         analyticsEventHandler.send(
-            CommonSendAmountAnalyticEvents.MaxAmountButtonClicked(categoryName = analyticsCategoryName),
+            CommonSendAmountAnalyticEvents.MaxAmountButtonClicked(
+                categoryName = analyticsCategoryName,
+                token = params.cryptoCurrency.symbol,
+                blockchain = params.cryptoCurrency.network.name,
+            ),
         )
     }
 
