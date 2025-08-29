@@ -283,9 +283,9 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     }
 
     override fun onPromoClick(promoId: PromoId, cryptoCurrency: CryptoCurrency?) {
+        val userWallet = getSelectedUserWallet() ?: return
         when (promoId) {
             PromoId.Referral -> {
-                val userWallet = getSelectedUserWallet() ?: return
                 analyticsEventHandler.send(MainScreen.ReferralPromoButtonParticipate)
                 appRouter.push(AppRoute.ReferralProgram(userWalletId = userWallet.walletId))
             }
@@ -297,8 +297,6 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
                         action = TokenSwapPromoAnalyticsEvent.PromotionBannerClicked.BannerAction.Clicked,
                     ),
                 )
-
-                val userWallet = getSelectedUserWallet() ?: return
                 cryptoCurrency ?: return
                 appRouter.push(
                     AppRoute.Onramp(

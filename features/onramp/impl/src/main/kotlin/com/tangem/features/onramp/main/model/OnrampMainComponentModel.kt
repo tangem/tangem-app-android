@@ -151,11 +151,11 @@ internal class OnrampMainComponentModel @Inject constructor(
                         if (country == null) return@onEach
                         _state.update {
                             if (it is OnrampMainComponentUM.InitialLoading) {
-                                stateFactory.getReadyState(country.defaultCurrency).also {
-                                    if (params.launchSepa) {
-                                        onAmountValueChanged(PREDEFINED_SEPA_AMOUNT)
-                                    }
+                                val state = stateFactory.getReadyState(country.defaultCurrency)
+                                if (params.launchSepa) {
+                                    onAmountValueChanged(PREDEFINED_SEPA_AMOUNT)
                                 }
+                                state
                             } else {
                                 amountStateFactory.getUpdatedCurrencyState(country.defaultCurrency)
                             }
