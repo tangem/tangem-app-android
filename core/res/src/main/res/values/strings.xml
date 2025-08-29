@@ -392,6 +392,7 @@
   <string name="disclaimer_error_loading">Check your internet connection or switch to a different network</string>
   <string name="disclaimer_title">Terms of service</string>
   <string name="domain_receive_assets_default_address">Default Address</string>
+  <string name="domain_receive_assets_legacy_address">Legacy Address</string>
   <string name="domain_receive_assets_navigation_title">Receive assets</string>
   <string name="domain_receive_assets_onboarding_description">Sending assets in other networks will result in permanent loss.</string>
   <string name="domain_receive_assets_onboarding_network_name">%s network</string>
