@@ -3,6 +3,7 @@ pluginManagement {
         gradlePluginPortal()
         google()
         mavenCentral()
+        maven { url = uri("https://developer.huawei.com/repo/") }
     }
 
     includeBuild("plugins/configuration")
@@ -35,6 +36,7 @@ dependencyResolutionManagement {
             }
         }
         mavenCentral()
+        maven { url = uri("https://developer.huawei.com/repo/") }
         mavenLocal {
             content {
                 includeGroupAndSubgroups("com.tangem.tangem-sdk-kotlin")
