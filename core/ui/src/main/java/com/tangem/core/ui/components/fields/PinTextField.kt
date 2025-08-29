@@ -2,6 +2,7 @@ package com.tangem.core.ui.components.fields
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -24,7 +25,6 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.utils.StringsSigns.PASSWORD_VISUAL_CHAR
@@ -36,9 +36,9 @@ fun PinTextField(
     value: String,
     length: Int,
     isPasswordVisual: Boolean,
+    pinTextColor: PinTextColor,
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
-    wrongCode: Boolean = false,
 ) {
     val focusRequester = remember { FocusRequester() }
     val textFieldValue = remember(value) {
@@ -72,7 +72,7 @@ fun PinTextField(
             CellDecoration(
                 length = length,
                 isPasswordVisual = isPasswordVisual,
-                wrongCode = wrongCode,
+                pinTextColor = pinTextColor,
                 value = value,
             )
         },
@@ -84,17 +84,25 @@ fun PinTextField(
     }
 }
 
-@Suppress("MagicNumber")
+enum class PinTextColor {
+    Primary,
+    WrongCode,
+    Success,
+}
+
+@Suppress("MagicNumber", "LongMethod")
 @Composable
 private fun CellDecoration(
     length: Int,
-    wrongCode: Boolean,
+    pinTextColor: PinTextColor,
     value: String,
     modifier: Modifier = Modifier,
     isPasswordVisual: Boolean = false,
 ) {
     val textMeasurer = rememberTextMeasurer()
-    val width = textMeasurer.measure("0")
+    val minSize = textMeasurer.measure("0")
+    val minWidth = maxOf(minSize.size.width.dp + 8.dp, 24.dp + 3.dp) // 24.dp is the minimum width of a pin cell
+    val minHeight = maxOf(minSize.size.height.dp, 48.dp) // 48.dp is the minimum height of a pin cell
 
     Row(
         modifier = modifier,
@@ -105,6 +113,18 @@ private fun CellDecoration(
                 if (isPasswordVisual) PASSWORD_VISUAL_CHAR.toString() else value[it].toString()
             } else {
                 ""
+            }
+
+            val color = when (pinTextColor) {
+                PinTextColor.Primary -> {
+                    if (isPasswordVisual) {
+                        TangemTheme.colors.icon.informative
+                    } else {
+                        TangemTheme.colors.text.primary1
+                    }
+                }
+                PinTextColor.WrongCode -> TangemTheme.colors.icon.warning
+                PinTextColor.Success -> TangemTheme.colors.icon.accent
             }
 
             Box(
@@ -119,26 +139,37 @@ private fun CellDecoration(
                     targetState = char,
                     transitionSpec = {
                         (
-                            fadeIn(animationSpec = tween(220, delayMillis = 90)) +
-                                slideInVertically(animationSpec = tween(330, delayMillis = 0))
+                            fadeIn(animationSpec = tween(90, delayMillis = 90)) +
+                                slideInVertically(animationSpec = tween(220, delayMillis = 0))
                             )
                             .togetherWith(
                                 fadeOut(animationSpec = tween(90)) + slideOutVertically(tween(220)),
                             )
                     },
                 ) { text ->
-                    Text(
-                        modifier = Modifier.sizeIn(minWidth = width.size.width.dp + 8.dp, minHeight = 48.dp),
-                        text = text,
-                        style = TangemTheme.typography.h3,
-                        color = if (wrongCode) {
-                            TangemTheme.colors.text.warning
-                        } else {
-                            TangemTheme.colors.text.primary1
-                        },
-                        textAlign = TextAlign.Center,
-                        lineHeight = 48.sp,
-                    )
+                    if (isPasswordVisual && text.isNotEmpty()) {
+                        Canvas(
+                            Modifier.sizeIn(minWidth = minWidth, minHeight = minHeight),
+                        ) {
+                            drawCircle(
+                                color = color,
+                                radius = 4.dp.toPx(),
+                                center = center,
+                            )
+                        }
+                    } else {
+                        Box(
+                            modifier = Modifier.sizeIn(minWidth = minWidth, minHeight = minHeight),
+                        ) {
+                            Text(
+                                modifier = Modifier.align(Alignment.Center),
+                                text = text,
+                                style = TangemTheme.typography.h3,
+                                color = color,
+                                textAlign = TextAlign.Center,
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -155,7 +186,15 @@ private fun Preview() {
             PinTextField(
                 value = text,
                 onValueChange = { text = it },
+                isPasswordVisual = true,
+                pinTextColor = PinTextColor.Success,
+                length = 6,
+            )
+            PinTextField(
+                value = text,
+                onValueChange = { text = it },
                 isPasswordVisual = false,
+                pinTextColor = PinTextColor.Primary,
                 length = 6,
             )
 
