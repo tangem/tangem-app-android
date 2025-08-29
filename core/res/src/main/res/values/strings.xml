@@ -530,6 +530,9 @@
   <string name="hw_create_title">Create Mobile Wallet</string>
   <string name="hw_import_seed_phrase_already_imported">This recovery phrase has already been imported</string>
   <string name="hw_mobile_wallet">Mobile Wallet</string>
+  <string name="hw_upgrade_error_card_already_has_wallet">This device can’t be used for upgrade, it already contains another wallet.</string>
+  <string name="hw_upgrade_error_card_key_import">Choose another device, this one can’t be used for upgrade.</string>
+  <string name="hw_upgrade_error_wallet2_card_required">An error occurred during the operation.</string>
   <string name="hw_upgrade_funds_access_description">Your funds stay safe and fully accessible during the process</string>
   <string name="hw_upgrade_funds_access_title">Funds access</string>
   <string name="hw_upgrade_general_security_description">All private wallet data will be removed from the mobile app and stored securely on your Tangem device only</string>
@@ -981,6 +984,7 @@
   <string name="send_extras_hint_memo">Memo</string>
   <string name="send_fee_unreachable_error_text">Check your network connection</string>
   <string name="send_fee_unreachable_error_title">Network fee info unreachable</string>
+  <string name="send_from_title">You send</string>
   <string name="send_from_wallet_android">From</string>
   <string name="send_from_wallet_name">From %s</string>
   <string name="send_gas_limit">Gas limit</string>
