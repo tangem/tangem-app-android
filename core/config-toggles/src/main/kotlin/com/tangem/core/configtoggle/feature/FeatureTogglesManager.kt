@@ -7,9 +7,6 @@ package com.tangem.core.configtoggle.feature
  */
 interface FeatureTogglesManager {
 
-    /** Initialize manager */
-    suspend fun init()
-
     /** Check feature toggle availability by name [name] */
     fun isFeatureEnabled(name: String): Boolean
 }

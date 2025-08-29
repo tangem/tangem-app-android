@@ -1,7 +1,7 @@
 package com.tangem.feature.swap.domain.models.ui
 
 import com.tangem.blockchain.common.transaction.Fee
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
 import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.SwapAmount
