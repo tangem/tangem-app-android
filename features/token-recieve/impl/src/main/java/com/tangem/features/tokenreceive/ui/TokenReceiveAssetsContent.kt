@@ -27,7 +27,6 @@ import androidx.compose.ui.util.fastForEach
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.res.getStringSafe
 import com.tangem.core.ui.R
-import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerH12
 import com.tangem.core.ui.components.SpacerH8
 import com.tangem.core.ui.components.SpacerW12
@@ -198,20 +197,6 @@ private fun AddressItem(
         Column(
             modifier = Modifier.padding(vertical = 14.dp, horizontal = 12.dp),
         ) {
-            when (primaryType) {
-                is ReceiveAddress.Type.Primary.Default -> {
-                    primaryType.title?.let {
-                        Text(
-                            text = it.resolveReference(),
-                            style = TangemTheme.typography.subtitle2,
-                            color = TangemTheme.colors.text.tertiary,
-                        )
-                        SpacerH(12.dp)
-                    }
-                }
-                is ReceiveAddress.Type.Primary.Legacy -> Unit
-            }
-
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -336,7 +321,6 @@ private class TokenReceiveAssetsContentProvider : PreviewParameterProvider<Recei
         value = "0xe5178c7d4d0e861ed2e9414e045b501226b0de8d",
         type = ReceiveAddress.Type.Primary.Default(
             displayName = stringReference("Etherium address"),
-            title = null,
         ),
     )
     private val config = ReceiveAssetsUM(
