@@ -59,6 +59,16 @@
   <string name="biometric_lockout_warning_description">Пожалуйста, попробуйте снова через 30 секунд или отсканируйте карту или кольцо</string>
   <string name="biometric_lockout_warning_title">Слишком много попыток</string>
   <string name="biometric_unavailable_warning">Вы отключили биометрическую аутентификацию на вашем телефоне и не сможете сохранять кошельки в приложении. Для сохранения кошельков, пожалуйста, включите функцию биометрической аутентификации в настройках телефона.</string>
+  <string name="bitcoin_promo_activation_error">При обработке промокода произошла ошибка. Пожалуйста, попробуйте позже.</string>
+  <string name="bitcoin_promo_activation_error_title">Ошибка активации</string>
+  <string name="bitcoin_promo_activation_success">Ваш промокод успешно активирован. Бонус 10 USDT в Bitcoin будет зачислен через 14 дней.</string>
+  <string name="bitcoin_promo_activation_success_title">Промокод активирован</string>
+  <string name="bitcoin_promo_already_activated">Этот промокод уже был использован и не может быть активирован повторно.</string>
+  <string name="bitcoin_promo_already_activated_title">Код недоступен</string>
+  <string name="bitcoin_promo_invalid_code">Этот промокод недействителен и не может быть активирован.</string>
+  <string name="bitcoin_promo_invalid_code_title">Неверный код</string>
+  <string name="bitcoin_promo_no_address">Для зачисления бонуса нужен Bitcoin-адрес. Добавьте его в портфель и повторите активацию.</string>
+  <string name="bitcoin_promo_no_address_title">Требуется Bitcoin-адрес</string>
   <string name="button_start_backup_process">Начать резервное копирование</string>
   <string name="buy_token_description">Используйте банковскую карту или другие методы оплаты</string>
   <plurals name="card_label_card_count">
@@ -294,6 +304,8 @@
   <string name="details_title">Подробности</string>
   <string name="disclaimer_error_loading">Проверьте подключение с интернетом или переключитесь на другую сеть</string>
   <string name="disclaimer_title">Условия использования</string>
+  <string name="domain_receive_assets_legacy_address">Legacy адрес</string>
+  <string name="domain_receive_assets_onboarding_description">Отправка средств в другой сети может повлечь потерю средств.</string>
   <string name="email_preface_wc_error">Привет, команда поддержки, у меня возникла ошибка с кодом: %s</string>
   <string name="email_subject_wc_error">Ошибка WalletConnect</string>
   <string name="error_wrong_wallet_tapped">Вы использовали карту или кольцо от другого кошелька. Приложите карту или кольцо, связанную с этим кошельком.</string>
@@ -848,7 +860,7 @@
   <string name="send_gas_limit_footer">Это максимальное количество газа, которое будет потрачено на выполнение транзакции или контракта. Лимит газа предотвращает неожиданные или неограниченные расходы при выполнении транзакции.</string>
   <string name="send_gas_price">Цена газа</string>
   <string name="send_gas_price_footer">Это стоимость, которую вы готовы заплатить за каждую единицу газа. Чем выше цена газа, тем быстрее ваша транзакция будет обработана.</string>
-  <string name="send_max_amount">Всё</string>
+  <string name="send_max_amount">Макс</string>
   <string name="send_max_amount_label">Максимальная сумма</string>
   <string name="send_max_fee">Комиссия не превысит</string>
   <string name="send_memo_destination_tag_error">Недопустимый Memo</string>
@@ -912,7 +924,7 @@
   <string name="send_with_swap_confirm_title">Обмен и отправка</string>
   <string name="send_with_swap_convert_token_alert_message">Продолжить с конвертацией? Это действие удалит предыдущие данные</string>
   <string name="send_with_swap_convert_token_alert_title">Подтвердить конвертацию</string>
-  <string name="send_with_swap_notification_text">Отправьте любой токен, и мы конвертируем его по пути. Адресат получит именно то, что нужно — без лишних действий.</string>
+  <string name="send_with_swap_notification_text">Выберите любой токен к получению. Ваш адресат получит ровно то, что вы выбрали — без лишних сложностей.</string>
   <string name="send_with_swap_recipient_amount_success_title">Будет получено</string>
   <string name="send_with_swap_recipient_amount_text">Получателю</string>
   <string name="send_with_swap_recipient_amount_title">Сумма к получению</string>
@@ -1071,6 +1083,7 @@
   <string name="swap_story_second_title">Лучшие курсы</string>
   <string name="swap_story_third_subtitle">Интуитивный обмен в пару касаний — без сложностей и ожидания</string>
   <string name="swap_story_third_title">Проще простого</string>
+  <string name="swap_via_provider">Обмен через провайдера</string>
   <string name="swapping_alert_cex_description">В сумму включено: \n• комиссия провайдера сервиса\n• комиссия сети за отправку %s от биржи обратно на адрес пользователя.</string>
   <string name="swapping_alert_cex_description_with_slippage">В сумму включено: \n• комиссия провайдера сервиса\n• комиссия сети за отправку %1$s от биржи обратно на адрес пользователя \n\nПроскальзывание провайдера составляет до %2$s</string>
   <string name="swapping_alert_dex_description">В сумму включена комиссия провайдера сервиса.</string>
