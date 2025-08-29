@@ -107,5 +107,6 @@ class ExpressStatusBottomSheetStateProvider : PreviewParameterProvider<ExpressSt
         hasFiatFeeRate = true,
         canHandleTokens = true,
         transactionExtrasType = Network.TransactionExtrasType.NONE,
+        nameResolvingType = Network.NameResolvingType.NONE,
     )
 }
