@@ -9,8 +9,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.welcome.impl.R
 
 @Composable
@@ -20,10 +22,20 @@ internal fun WelcomePlain(modifier: Modifier = Modifier) {
         contentAlignment = Alignment.Center,
     ) {
         Icon(
-            modifier = Modifier.size(84.dp),
-            imageVector = ImageVector.vectorResource(R.drawable.ic_tangem_24),
+            modifier = Modifier.size(82.dp + 11.dp),
+            imageVector = ImageVector.vectorResource(R.drawable.splash_logo),
             tint = TangemTheme.colors.icon.primary1,
             contentDescription = null,
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun Preview() {
+    TangemThemePreview {
+        WelcomePlain(
+            modifier = Modifier.fillMaxSize(),
         )
     }
 }
