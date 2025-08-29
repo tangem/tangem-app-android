@@ -14,9 +14,14 @@ import com.kaspersky.kaspresso.kaspresso.Kaspresso
 import com.kaspersky.kaspresso.testcases.api.testcase.TestCase
 import com.tangem.common.allure.FailedStepScreenshotInterceptor
 import com.tangem.common.rules.ApiEnvironmentRule
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
+import com.tangem.core.configtoggle.feature.MutableFeatureTogglesManager
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
+import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.tap.MainActivity
 import dagger.hilt.android.testing.HiltAndroidRule
+import kotlinx.coroutines.runBlocking
 import org.junit.Rule
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
@@ -39,6 +44,12 @@ abstract class BaseTestCase : TestCase(
 
     @Inject
     lateinit var apiConfigsManager: ApiConfigsManager
+
+    @Inject
+    lateinit var appPreferencesStore: AppPreferencesStore
+
+    @Inject
+    lateinit var featureTogglesManager: FeatureTogglesManager
 
     private val hiltRule = HiltAndroidRule(this)
     private val apiEnvironmentRule = ApiEnvironmentRule()
@@ -73,9 +84,18 @@ abstract class BaseTestCase : TestCase(
         additionalAfterSection: () -> Unit = {},
     ) = before {
         hiltRule.inject()
+        runBlocking {
+            appPreferencesStore.editData { mutablePreferences ->
+                mutablePreferences.set(
+                    key = PreferencesKeys.NOTIFICATIONS_USER_ALLOW_SEND_ADDRESSES_KEY,
+                    value = false
+                )
+            }
+        }
         apiEnvironmentRule.setup(apiConfigsManager)
         ActivityScenario.launch(MainActivity::class.java)
         Intents.init()
+        setFeatureToggles()
         additionalBeforeSection()
     }.after {
         additionalAfterSection()
@@ -98,5 +118,15 @@ abstract class BaseTestCase : TestCase(
         maxDepth: Int = Int.MAX_VALUE)
     {
         composeTestRule.onRoot(useUnmergedTree = useUnmergedTree).printToLog(tag, maxDepth)
+    }
+
+
+    private fun setFeatureToggles() {
+        runBlocking {
+            with(featureTogglesManager as MutableFeatureTogglesManager) {
+                changeToggle("WALLET_CONNECT_REDESIGN_ENABLED", true)
+                changeToggle("WALLET_BALANCE_FETCHER_ENABLED", true)
+            }
+        }
     }
 }
