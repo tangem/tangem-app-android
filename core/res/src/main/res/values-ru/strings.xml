@@ -922,7 +922,7 @@
   <string name="send_with_swap_confirm_title">Обмен и отправка</string>
   <string name="send_with_swap_convert_token_alert_message">Продолжить с конвертацией? Это действие удалит предыдущие данные</string>
   <string name="send_with_swap_convert_token_alert_title">Подтвердить конвертацию</string>
-  <string name="send_with_swap_notification_text">Отправьте любой токен, и мы конвертируем его по пути. Адресат получит именно то, что нужно — без лишних действий.</string>
+  <string name="send_with_swap_notification_text">Выберите любой токен к получению. Ваш адресат получит ровно то, что вы выбрали — без лишних сложностей.</string>
   <string name="send_with_swap_recipient_amount_success_title">Будет получено</string>
   <string name="send_with_swap_recipient_amount_text">Получателю</string>
   <string name="send_with_swap_recipient_amount_title">Сумма к получению</string>
