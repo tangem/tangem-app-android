@@ -22,14 +22,15 @@ import com.tangem.domain.express.models.ExpressProvider
 import com.tangem.domain.express.models.ExpressProviderType
 import com.tangem.domain.express.models.ExpressRateType
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.NetworkStatus
+import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.quotes.single.SingleQuoteStatusFetcher
 import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.swap.SwapRepositoryV2
 import com.tangem.domain.swap.models.*
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.utils.CurrencyStatusProxyCreator
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.CoroutineScope
@@ -65,13 +66,15 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
         initialCurrency: CryptoCurrency,
         cryptoCurrencyStatusList: List<CryptoCurrencyStatus>,
         filterProviderTypes: List<ExpressProviderType>,
-    ): List<SwapPairModel> = withContext(coroutineDispatcher.io) {
+        swapTxType: SwapTxType,
+    ): List<SwapPairModel> = withContext(coroutineDispatcher.default) {
         val cryptoCurrencyList = cryptoCurrencyStatusList.map { it.currency }
 
         val allPairs = getPairsInternal(
             userWallet = userWallet,
             initialCurrency = initialCurrency,
             cryptoCurrencyList = cryptoCurrencyList,
+            swapTxType = swapTxType,
         )
 
         val providers = expressRepository.getProviders(
@@ -113,11 +116,13 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
         initialCurrency: CryptoCurrency,
         cryptoCurrencyList: List<CryptoCurrency>,
         filterProviderTypes: List<ExpressProviderType>,
-    ): List<SwapPairModel> = withContext(coroutineDispatcher.io) {
+        swapTxType: SwapTxType,
+    ): List<SwapPairModel> = withContext(coroutineDispatcher.default) {
         val allPairs = getPairsInternal(
             userWallet = userWallet,
             initialCurrency = initialCurrency,
             cryptoCurrencyList = cryptoCurrencyList,
+            swapTxType = swapTxType,
         )
 
         val providers = expressRepository.getProviders(
@@ -307,48 +312,60 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
         userWallet: UserWallet,
         initialCurrency: CryptoCurrency,
         cryptoCurrencyList: List<CryptoCurrency>,
-    ) = awaitAll(
-        // original pairs
-        async {
+        swapTxType: SwapTxType,
+    ) = when (swapTxType) {
+        SwapTxType.Swap -> awaitAll(
+            // original pairs
+            async {
+                invokePairRequest(
+                    userWallet = userWallet,
+                    from = arrayListOf(initialCurrency),
+                    to = cryptoCurrencyList,
+                )
+            },
+            // reversed pairs
+            async {
+                invokePairRequest(
+                    userWallet = userWallet,
+                    from = cryptoCurrencyList,
+                    to = arrayListOf(initialCurrency),
+                )
+            },
+        ).flatten()
+        SwapTxType.SendWithSwap -> {
             invokePairRequest(
                 userWallet = userWallet,
                 from = arrayListOf(initialCurrency),
                 to = cryptoCurrencyList,
             )
-        },
-        // reversed pairs
-        async {
-            invokePairRequest(
-                userWallet = userWallet,
-                from = cryptoCurrencyList,
-                to = arrayListOf(initialCurrency),
-            )
-        },
-    ).flatten()
+        }
+    }
 
     private suspend fun invokePairRequest(
         userWallet: UserWallet,
         from: List<CryptoCurrency>,
         to: List<CryptoCurrency>,
-    ) = safeApiCall(
-        call = {
-            tangemExpressApi.getPairs(
-                userWalletId = userWallet.walletId.stringValue,
-                refCode = ExpressUtils.getRefCode(
-                    userWallet = userWallet,
-                    appPreferencesStore = appPreferencesStore,
-                ),
-                body = PairsRequestBody(
-                    from = tokenInfoConverter.convertList(from),
-                    to = tokenInfoConverter.convertList(to),
-                ),
-            ).getOrThrow()
-        },
-        onError = {
-            Timber.w(it, "Unable to get pairs")
-            throw it
-        },
-    )
+    ) = withContext(coroutineDispatcher.io) {
+        safeApiCall(
+            call = {
+                tangemExpressApi.getPairs(
+                    userWalletId = userWallet.walletId.stringValue,
+                    refCode = ExpressUtils.getRefCode(
+                        userWallet = userWallet,
+                        appPreferencesStore = appPreferencesStore,
+                    ),
+                    body = PairsRequestBody(
+                        from = tokenInfoConverter.convertList(from),
+                        to = tokenInfoConverter.convertList(to),
+                    ),
+                ).getOrThrow()
+            },
+            onError = {
+                Timber.w(it, "Unable to get pairs")
+                throw it
+            },
+        )
+    }
 
     /**
      * Send with swap specific currency status creation
@@ -360,9 +377,9 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
 
         val quote = singleQuoteStatusSupplier.getSyncOrNull(
             params = SingleQuoteStatusProducer.Params(rawCurrencyId = rawCurrencyId),
-        )?.right()
+        )
 
-        if (quote == null) {
+        if (quote == null || quote.value is QuoteStatus.Empty) {
             singleQuoteStatusFetcher.invoke(
                 params = SingleQuoteStatusFetcher.Params(
                     rawCurrencyId = rawCurrencyId,
@@ -373,7 +390,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
 
         return currencyStatusProxyCreator.createCurrencyStatus(
             currency = cryptoCurrency,
-            maybeQuoteStatus = quote ?: singleQuoteStatusSupplier.getSyncOrNull(
+            maybeQuoteStatus = quote?.right() ?: singleQuoteStatusSupplier.getSyncOrNull(
                 params = SingleQuoteStatusProducer.Params(rawCurrencyId = rawCurrencyId),
             ).right(),
             maybeNetworkStatus = NetworkStatus(

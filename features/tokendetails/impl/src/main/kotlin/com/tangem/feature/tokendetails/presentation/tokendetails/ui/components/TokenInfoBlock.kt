@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -18,6 +19,7 @@ import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameter
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.TokenDetailsScreenTestTags
 import com.tangem.core.ui.utils.getGreyScaleColorFilter
 import com.tangem.feature.tokendetails.presentation.tokendetails.TokenDetailsPreviewData
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenInfoBlockState
@@ -39,6 +41,7 @@ internal fun TokenInfoBlock(state: TokenInfoBlockState, modifier: Modifier = Mod
                 text = state.name,
                 style = TangemTheme.typography.head,
                 color = TangemTheme.colors.text.primary1,
+                modifier = Modifier.testTag(TokenDetailsScreenTestTags.TOKEN_TITLE),
             )
             NetworkInfoText(state.currency)
         }
