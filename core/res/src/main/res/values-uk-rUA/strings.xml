@@ -916,6 +916,7 @@
   <string name="send_validation_invalid_amount">Недопустима сума</string>
   <string name="send_validation_invalid_fee">Комісія перевищує залишок</string>
   <string name="send_validation_invalid_total">Сума, що відправляється, перевищує залишок</string>
+  <string name="send_with_swap_notification_text">Виберіть будь-який токен. Той, кому ви його надішлете, отримає саме те, що ви обрали — без жодних ускладнень.</string>
   <string name="sent_transaction_sent_title">Трансакцію надіслано</string>
   <string name="settings_card_settings_footer">Підготуйтеся до сканування кільця або картки, яку ви хочете налаштувати.</string>
   <string name="settings_forget_wallet">Забути гаманець</string>
