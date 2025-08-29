@@ -1,6 +1,6 @@
-package com.tangem.tap.di.data
+package com.tangem.tap.di
 
-import com.tangem.tap.data.FirebasePushNotificationsTokenProvider
+import com.tangem.tap.FirebasePushNotificationsTokenProvider
 import com.tangem.utils.notifications.PushNotificationsTokenProvider
 import dagger.Binds
 import dagger.Module
@@ -10,7 +10,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-internal interface PushNotificationsModule {
+internal interface GooglePushModule {
 
     @Binds
     @Singleton
