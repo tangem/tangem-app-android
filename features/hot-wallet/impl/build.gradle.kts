@@ -28,6 +28,7 @@ dependencies {
     implementation(projects.core.datasource)
 
     /** Domain */
+    implementation(projects.domain.card)
     implementation(projects.domain.models)
     implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
@@ -52,7 +53,6 @@ dependencies {
     implementation(deps.lifecycle.runtime.ktx)
 
     /** Compose libraries */
-    implementation(deps.compose.material)  // to use buttons and text field in MultiWalletSeedPhraseImport.kt
     implementation(deps.compose.material3)
     implementation(deps.compose.animation)
     implementation(deps.compose.foundation)
