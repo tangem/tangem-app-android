@@ -64,22 +64,19 @@ internal class SwapAmountAlertFactory @Inject constructor(
     }
 
     fun showCloseSendWithSwapAlert(onConfirm: () -> Unit) {
-        // todo fix localization [REDACTED_TASK_KEY]
         uiMessageSender.send(
             DialogMessage(
-                title = stringReference("Confirm cancellation"),
-                message = stringReference(
-                    "Are you sure you want to cancel the conversion? After changing, previous data will be reset.",
-                ),
+                title = resourceReference(R.string.send_with_swap_remove_convert_alert_title),
+                message = resourceReference(R.string.send_with_swap_remove_convert_alert_message),
                 firstActionBuilder = {
                     EventMessageAction(
-                        title = stringReference("Confirm"),
+                        title = resourceReference(R.string.common_confirm),
                         onClick = onConfirm,
                     )
                 },
                 secondActionBuilder = {
                     EventMessageAction(
-                        title = stringReference("Not Now"),
+                        title = resourceReference(R.string.common_not_now),
                         onClick = onDismissRequest,
                     )
                 },
