@@ -71,7 +71,12 @@ sealed class WalletScreenAnalyticsEvent {
         params: Map<String, String> = mapOf(),
     ) : AnalyticsEvent(category = "Main Screen", event = event, params = params) {
 
-        data object ScreenOpened : MainScreen(event = "Screen opened")
+        data class ScreenOpened(val isWalletImported: Boolean) : MainScreen(
+            event = "Screen opened",
+            params = mapOf(
+                "Wallet Type" to if (isWalletImported) "Seed phrase" else "Seedless",
+            ),
+        )
 
         class EnableBiometrics(state: AnalyticsParam.OnOffState) : MainScreen(
             event = "Enable Biometric",
