@@ -140,13 +140,13 @@ internal class CreateWalletSelectionModel @Inject constructor(
             },
             ifRight = {
                 setLoading(false)
-                sendSignedInCardAnalyticsEvent(scanResponse)
+                sendSignedInCardAnalyticsEvent(scanResponse, userWallet.isImported)
                 appRouter.replaceAll(AppRoute.Wallet)
             },
         )
     }
 
-    private fun sendSignedInCardAnalyticsEvent(scanResponse: ScanResponse) {
+    private fun sendSignedInCardAnalyticsEvent(scanResponse: ScanResponse, isImported: Boolean) {
         val currency = ParamCardCurrencyConverter().convert(value = scanResponse.cardTypesResolver)
         if (currency != null) {
             analyticsEventHandler.send(
@@ -155,6 +155,7 @@ internal class CreateWalletSelectionModel @Inject constructor(
                     batch = scanResponse.card.batchId,
                     signInType = SignInType.Card,
                     walletsCount = userWalletsListManager.walletsCount.toString(),
+                    isImported = isImported,
                     hasBackup = scanResponse.card.backupStatus?.isActive,
                 ),
             )
