@@ -17,8 +17,12 @@ dependencies {
     implementation(projects.core.ui)
     implementation(projects.core.configToggles)
 
+    /** Common */
+    implementation(projects.common.routing)
+
     /** Features api */
     implementation(projects.features.tangempay.details.api)
+    implementation(projects.features.tangempay.main.api)
 
     /** Compose */
     implementation(deps.compose.foundation)

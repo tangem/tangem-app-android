@@ -1,8 +1,10 @@
 package com.tangem.data.visa.di
 
+import com.tangem.data.pay.DefaultCustomerWalletAuthRepository
 import com.tangem.data.visa.DefaultVisaActivationRepository
 import com.tangem.data.visa.DefaultVisaAuthRepository
 import com.tangem.data.visa.MockVisaRepository
+import com.tangem.domain.pay.repository.CustomerWalletAuthRepository
 import com.tangem.domain.visa.repository.VisaActivationRepository
 import com.tangem.domain.visa.repository.VisaAuthRepository
 import com.tangem.domain.visa.repository.VisaRepository
@@ -39,4 +41,8 @@ internal interface VisaDataModule {
     // Mocked
     @Binds
     fun bindVisaRepository(repository: MockVisaRepository): VisaRepository
+
+    @Binds
+    @Singleton
+    fun bindCustomerWalletAuthRepository(repository: DefaultCustomerWalletAuthRepository): CustomerWalletAuthRepository
 }
