@@ -336,8 +336,8 @@ sealed class AppRoute(val path: String) : Route {
 
     @Serializable
     data class ViewPhrase(
-        val words: List<String>,
-    ) : AppRoute(path = "/view_phrase/${words.joinToString()}")
+        val userWalletId: UserWalletId,
+    ) : AppRoute(path = "/view_seed_phrase/${userWalletId.stringValue}")
 
     @Serializable
     data class SendEntryPoint(

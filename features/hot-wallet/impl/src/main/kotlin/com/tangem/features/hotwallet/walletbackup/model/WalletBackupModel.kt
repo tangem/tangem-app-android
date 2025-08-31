@@ -11,7 +11,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.common.routing.AppRoute
-import com.tangem.domain.wallets.usecase.ExportSeedPhraseUseCase
+import com.tangem.domain.wallets.usecase.UnlockHotWalletContextualUseCase
 import com.tangem.features.hotwallet.WalletBackupComponent
 import com.tangem.features.hotwallet.walletbackup.entity.BackupStatus
 import com.tangem.features.hotwallet.walletbackup.entity.WalletBackupUM
@@ -25,7 +25,7 @@ import javax.inject.Inject
 internal class WalletBackupModel @Inject constructor(
     paramsContainer: ParamsContainer,
     private val getWalletUseCase: GetUserWalletUseCase,
-    private val exportSeedPhraseUseCase: ExportSeedPhraseUseCase,
+    private val unlockHotWalletContextualUseCase: UnlockHotWalletContextualUseCase,
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
 ) : Model() {
@@ -117,13 +117,13 @@ internal class WalletBackupModel @Inject constructor(
 
     private fun showSeedPhrase(hotWallet: UserWallet.Hot) {
         modelScope.launch {
-            exportSeedPhraseUseCase.invoke(hotWallet.hotWalletId)
+            unlockHotWalletContextualUseCase.invoke(hotWallet.hotWalletId)
                 .fold(
                     ifLeft = {
                         Timber.e("Error while export seed phrase: $it")
                     },
                     ifRight = { seedPhrasePrivateInfo ->
-                        router.push(AppRoute.ViewPhrase(seedPhrasePrivateInfo.mnemonic.mnemonicComponents))
+                        router.push(AppRoute.ViewPhrase(params.userWalletId))
                     },
                 )
         }

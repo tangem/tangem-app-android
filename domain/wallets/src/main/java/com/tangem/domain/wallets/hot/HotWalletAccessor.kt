@@ -9,4 +9,8 @@ interface HotWalletAccessor {
     suspend fun derivePublicKeys(hotWalletId: HotWalletId, request: DeriveWalletRequest): DerivedPublicKeyResponse
 
     suspend fun exportSeedPhrase(hotWalletId: HotWalletId): SeedPhrasePrivateInfo
+
+    suspend fun unlockContextual(hotWalletId: HotWalletId): UnlockHotWallet
+
+    fun clearContextualUnlock(hotWalletId: HotWalletId)
 }

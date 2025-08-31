@@ -2,11 +2,12 @@ package com.tangem.features.hotwallet
 
 import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.domain.models.wallet.UserWalletId
 
 interface ViewPhraseComponent : ComposableContentComponent {
 
     data class Params(
-        val words: List<String>,
+        val userWalletId: UserWalletId,
     )
 
     interface Factory : ComponentFactory<Params, ViewPhraseComponent>

@@ -537,7 +537,7 @@ internal class ChildFactory @Inject constructor(
                 createComponentChild(
                     context = context,
                     params = ViewPhraseComponent.Params(
-                        words = route.words,
+                        userWalletId = route.userWalletId,
                     ),
                     componentFactory = viewPhraseComponentFactory,
                 )
