@@ -69,6 +69,9 @@ internal class SendEntryPointModel @Inject constructor(
     }
 
     override fun onBack() {
-        router.pop()
+        modelScope.launch {
+            sendAmountUpdateTrigger.triggerUpdateAmount(lastSavedAmount)
+            router.pop()
+        }
     }
 }
