@@ -9,14 +9,25 @@ import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.hot.sdk.exception.WrongPasswordException
 import com.tangem.hot.sdk.model.*
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
+import kotlin.collections.set
 
 class DefaultHotWalletAccessor @Inject constructor(
     private val tangemHotSdk: TangemHotSdk,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val hotWalletPasswordRequester: HotWalletPasswordRequester,
     private val walletsRepository: WalletsRepository,
+    dispatchers: CoroutineDispatcherProvider,
 ) : HotWalletAccessor {
+
+    private val scope = CoroutineScope(context = SupervisorJob() + dispatchers.io)
+
+    private var contextualUnlockHotWallet: ConcurrentHashMap<HotWalletId, UnlockHotWallet?> = ConcurrentHashMap()
 
     override suspend fun signHashes(hotWalletId: HotWalletId, dataToSign: List<DataToSign>): List<SignedData> =
         hotSdkRequest(hotWalletId) { unlock ->
@@ -28,6 +39,24 @@ class DefaultHotWalletAccessor @Inject constructor(
         request: DeriveWalletRequest,
     ): DerivedPublicKeyResponse = hotSdkRequest(hotWalletId) { unlock ->
         tangemHotSdk.derivePublicKey(unlockHotWallet = unlock, request = request)
+    }
+
+    override suspend fun exportSeedPhrase(hotWalletId: HotWalletId): SeedPhrasePrivateInfo {
+        val unlockHotWallet = contextualUnlockHotWallet[hotWalletId] ?: hotSdkRequest(hotWalletId) { it }
+        return tangemHotSdk.exportMnemonic(unlockHotWallet = unlockHotWallet)
+    }
+
+    override suspend fun unlockContextual(hotWalletId: HotWalletId): UnlockHotWallet = hotSdkRequest(hotWalletId) {
+        tangemHotSdk.getContextUnlock(it).also { unlockHotWallet ->
+            contextualUnlockHotWallet[hotWalletId] = unlockHotWallet
+        }
+    }
+
+    override fun clearContextualUnlock(hotWalletId: HotWalletId) {
+        contextualUnlockHotWallet[hotWalletId] = null
+        scope.launch {
+            tangemHotSdk.clearUnlockContext(hotWalletId)
+        }
     }
 
     private suspend fun <T> hotSdkRequest(hotWalletId: HotWalletId, block: suspend (unlock: UnlockHotWallet) -> T): T {
