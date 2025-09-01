@@ -3,11 +3,7 @@ package com.tangem.common.ui.amountScreen.converters.field
 import com.tangem.common.ui.R
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
-import com.tangem.core.ui.extensions.combinedReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.core.ui.extensions.orMaskWithStars
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
@@ -50,7 +46,15 @@ class AmountBoundaryUpdateTransformer(
 
         return prevState.copy(
             availableBalance = availableBalance.orMaskWithStars(isBalanceHidden),
-            availableBalanceShort = stringReference(crypto).orMaskWithStars(isBalanceHidden),
+            availableBalanceCrypto = stringReference(crypto).orMaskWithStars(isBalanceHidden),
+            availableBalanceFiat = if (isBalanceHidden) {
+                TextReference.EMPTY
+            } else {
+                combinedReference(
+                    stringReference(" $DOT "),
+                    stringReference(fiat),
+                )
+            },
         )
     }
 }
