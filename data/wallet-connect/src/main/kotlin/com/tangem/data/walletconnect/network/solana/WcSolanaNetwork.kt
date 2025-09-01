@@ -112,9 +112,9 @@ internal class WcSolanaNetwork(
             WcSolanaMethodName.SignTransaction -> moshi.fromJson<WcSolanaSignTransactionRequest>(rawParams)
                 .getOrElse { return it.left() }
                 ?.let { request -> WcSolanaMethod.SignTransaction(request.transaction, request.feePayer) }
-            WcSolanaMethodName.SendAllTransaction -> moshi.fromJson<List<String>>(rawParams)
+            WcSolanaMethodName.SendAllTransaction -> moshi.fromJson<WcSolanaSignAllTransactionRequest>(rawParams)
                 .getOrElse { return it.left() }
-                ?.let { list -> WcSolanaMethod.SignAllTransaction(list) }
+                ?.let { request -> WcSolanaMethod.SignAllTransaction(request.transactions) }
         }.right()
     }
 
