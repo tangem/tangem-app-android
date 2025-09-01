@@ -13,9 +13,9 @@ android {
 
 dependencies {
     /** Core */
+    implementation(projects.core.configToggles)
     implementation(projects.core.decompose)
     implementation(projects.core.ui)
-    implementation(projects.core.configToggles)
 
     /** Features api */
     implementation(projects.features.tangempay.details.api)
@@ -29,4 +29,8 @@ dependencies {
     /** DI */
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
+
+    /** Other */
+    implementation(deps.kotlin.immutable.collections)
+    implementation(deps.timber)
 }
