@@ -1,12 +1,17 @@
 package com.tangem.data.wallets
 
+import arrow.core.Either
+import arrow.core.left
+import arrow.core.right
 import com.tangem.data.wallets.converters.UserWalletRemoteInfoConverter
 import com.tangem.data.wallets.converters.WalletIdBodyConverter
 import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.api.common.response.ApiResponseError.HttpException
+import com.tangem.datasource.api.common.response.fold
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.MarkUserWalletWasCreatedBody
+import com.tangem.datasource.api.tangemTech.models.PromocodeActivationBody
 import com.tangem.datasource.api.tangemTech.models.SeedPhraseNotificationDTO
 import com.tangem.datasource.api.tangemTech.models.SeedPhraseNotificationDTO.Status
 import com.tangem.datasource.api.tangemTech.models.WalletBody
@@ -23,6 +28,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.models.SeedPhraseNotificationsStatus
 import com.tangem.domain.wallets.models.UserWalletRemoteInfo
+import com.tangem.domain.wallets.models.errors.ActivatePromoCodeError
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.utils.WEEK_MILLIS
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -308,4 +314,28 @@ internal class DefaultWalletsRepository(
                 body = walletsBody,
             ).getOrThrow()
         }
+
+    override suspend fun activatePromoCode(
+        promoCode: String,
+        bitcoinAddress: String,
+    ): Either<ActivatePromoCodeError, String> = withContext(dispatchers.io) {
+        tangemTechApi.activatePromoCode(
+            body = PromocodeActivationBody(
+                promoCode = promoCode,
+                address = bitcoinAddress,
+            ),
+        ).fold({
+            return@fold it.status.right()
+        }, { error ->
+            val error = when (error) {
+                is HttpException -> when (error.code) {
+                    HttpException.Code.NOT_FOUND -> ActivatePromoCodeError.InvalidPromoCode
+                    HttpException.Code.CONFLICT -> ActivatePromoCodeError.PromocodeAlreadyUsed
+                    else -> ActivatePromoCodeError.ActivationFailed
+                }
+                else -> ActivatePromoCodeError.ActivationFailed
+            }
+            return@fold error.left()
+        },)
+    }
 }
