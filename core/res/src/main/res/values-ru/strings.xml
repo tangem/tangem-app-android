@@ -59,6 +59,16 @@
   <string name="biometric_lockout_warning_description">Пожалуйста, попробуйте снова через 30 секунд или отсканируйте карту или кольцо</string>
   <string name="biometric_lockout_warning_title">Слишком много попыток</string>
   <string name="biometric_unavailable_warning">Вы отключили биометрическую аутентификацию на вашем телефоне и не сможете сохранять кошельки в приложении. Для сохранения кошельков, пожалуйста, включите функцию биометрической аутентификации в настройках телефона.</string>
+  <string name="bitcoin_promo_activation_error">При обработке промокода произошла ошибка. Пожалуйста, попробуйте позже.</string>
+  <string name="bitcoin_promo_activation_error_title">Ошибка активации</string>
+  <string name="bitcoin_promo_activation_success">Ваш промокод успешно активирован. Бонус 10 USDT в Bitcoin будет зачислен через 14 дней.</string>
+  <string name="bitcoin_promo_activation_success_title">Промокод активирован</string>
+  <string name="bitcoin_promo_already_activated">Этот промокод уже был использован и не может быть активирован повторно.</string>
+  <string name="bitcoin_promo_already_activated_title">Код недоступен</string>
+  <string name="bitcoin_promo_invalid_code">Этот промокод недействителен и не может быть активирован.</string>
+  <string name="bitcoin_promo_invalid_code_title">Неверный код</string>
+  <string name="bitcoin_promo_no_address">Для зачисления бонуса нужен Bitcoin-адрес. Добавьте его в портфель и повторите активацию.</string>
+  <string name="bitcoin_promo_no_address_title">Требуется Bitcoin-адрес</string>
   <string name="button_start_backup_process">Начать резервное копирование</string>
   <string name="buy_token_description">Используйте банковскую карту или другие методы оплаты</string>
   <plurals name="card_label_card_count">
@@ -912,7 +922,7 @@
   <string name="send_with_swap_confirm_title">Обмен и отправка</string>
   <string name="send_with_swap_convert_token_alert_message">Продолжить с конвертацией? Это действие удалит предыдущие данные</string>
   <string name="send_with_swap_convert_token_alert_title">Подтвердить конвертацию</string>
-  <string name="send_with_swap_notification_text">Отправьте любой токен, и мы конвертируем его по пути. Адресат получит именно то, что нужно — без лишних действий.</string>
+  <string name="send_with_swap_notification_text">Выберите любой токен к получению. Ваш адресат получит ровно то, что вы выбрали — без лишних сложностей.</string>
   <string name="send_with_swap_recipient_amount_success_title">Будет получено</string>
   <string name="send_with_swap_recipient_amount_text">Получателю</string>
   <string name="send_with_swap_recipient_amount_title">Сумма к получению</string>
