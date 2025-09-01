@@ -5,9 +5,9 @@ import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrap
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
 import com.tangem.datasource.local.token.converter.YieldBalanceConverter
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.staking.StakingID
+import com.tangem.domain.models.staking.YieldBalance
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.staking.model.StakingID
-import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.addOrReplace
 import kotlinx.coroutines.CoroutineScope
@@ -46,6 +46,8 @@ internal class DefaultYieldsBalancesStore(
                 value = cachedStatuses.map { (stringWalletId, wrappers) ->
                     val key = UserWalletId(stringWalletId)
                     val value = YieldBalanceConverter(isCached = true).convertSet(input = wrappers)
+                        .filterNotNull()
+                        .toSet()
 
                     key to value
                 }
@@ -61,7 +63,7 @@ internal class DefaultYieldsBalancesStore(
     override suspend fun getSyncOrNull(userWalletId: UserWalletId, stakingId: StakingID): YieldBalance? {
         return runtimeStore.getSyncOrNull()
             ?.get(userWalletId)
-            ?.firstOrNull { stakingId == it.getStakingId() }
+            ?.firstOrNull { it.stakingId == stakingId }
     }
 
     override suspend fun getAllSyncOrNull(userWalletId: UserWalletId): Set<YieldBalance>? {
@@ -96,11 +98,13 @@ internal class DefaultYieldsBalancesStore(
 
     private suspend fun storeInRuntime(userWalletId: UserWalletId, values: Set<YieldBalanceWrapperDTO>) {
         val newBalances = YieldBalanceConverter(isCached = false).convertSet(input = values)
+            .filterNotNull()
+            .toSet()
 
         runtimeStore.update(default = emptyMap()) { saved ->
             saved.toMutableMap().apply {
                 this[userWalletId] = saved[userWalletId]
-                    ?.addOrReplace(newBalances) { old, new -> old.getStakingId() == new.getStakingId() }
+                    ?.addOrReplace(newBalances) { old, new -> old.stakingId == new.stakingId }
                     ?: newBalances
             }
         }
@@ -135,7 +139,7 @@ internal class DefaultYieldsBalancesStore(
 
                 val balances = stakingIds.mapNotNullTo(hashSetOf()) { stakingId ->
                     val balance = portfolioBalances
-                        .firstOrNull { stakingId == it.getStakingId() }
+                        .firstOrNull { it.stakingId == stakingId }
                         ?: ifNotFound(stakingId)
                         ?: return@mapNotNullTo null
 
@@ -143,7 +147,7 @@ internal class DefaultYieldsBalancesStore(
                 }
 
                 val updatedBalances = portfolioBalances.addOrReplace(items = balances) { old, new ->
-                    old.getStakingId() == new.getStakingId()
+                    old.stakingId == new.stakingId
                 }
 
                 put(key = userWalletId, value = updatedBalances)
@@ -151,9 +155,7 @@ internal class DefaultYieldsBalancesStore(
         }
     }
 
-    private fun createErrorYieldBalance(id: StakingID): YieldBalance {
-        return YieldBalance.Error(integrationId = id.integrationId, address = id.address)
-    }
+    private fun createErrorYieldBalance(id: StakingID): YieldBalance = YieldBalance.Error(stakingId = id)
 
     private fun YieldBalanceWrapperDTO.getStakingId(): StakingID? {
         val integrationId = integrationId
