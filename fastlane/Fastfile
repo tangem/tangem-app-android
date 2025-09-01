@@ -74,7 +74,7 @@ platform :android do
 
     gradle(
       task: "assemble",
-      build_type: "Internal",
+      build_type: "GoogleInternal",
       properties: {
         'versionCode' => ENV['version_code'],
         'versionName' => ENV['version_name'],
