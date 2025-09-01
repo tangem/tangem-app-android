@@ -3,11 +3,11 @@ package com.tangem.core.configtoggle.feature.impl
 import androidx.annotation.VisibleForTesting
 import com.tangem.core.configtoggle.FeatureToggles
 import com.tangem.core.configtoggle.feature.MutableFeatureTogglesManager
-import com.tangem.core.configtoggle.storage.FeatureTogglesLocalStorage
+import com.tangem.core.configtoggle.storage.LocalTogglesStorage
 import com.tangem.core.configtoggle.utils.defineTogglesAvailability
+import com.tangem.core.configtoggle.utils.toTableString
 import com.tangem.core.configtoggle.version.VersionProvider
 import kotlinx.coroutines.runBlocking
-import java.util.Locale
 import kotlin.properties.Delegates
 
 /**
@@ -18,7 +18,7 @@ import kotlin.properties.Delegates
  */
 internal class DevFeatureTogglesManager(
     private val versionProvider: VersionProvider,
-    private val featureTogglesLocalStorage: FeatureTogglesLocalStorage,
+    private val featureTogglesLocalStorage: LocalTogglesStorage,
 ) : MutableFeatureTogglesManager {
 
     private var fileFeatureTogglesMap: Map<String, Boolean> = getFileFeatureToggles()
@@ -52,16 +52,7 @@ internal class DevFeatureTogglesManager(
     }
 
     override fun toString(): String {
-        return buildString {
-            append("DevFeatureTogglesManager:\n")
-            append("|------------------------------------------|-----------|\n")
-            append(String.format(Locale.getDefault(), "| %-40s | %-9s |\n", "name", "isEnabled"))
-            append("|------------------------------------------|-----------|\n")
-            featureTogglesMap.entries.forEachIndexed { index, (name, isEnabled) ->
-                append(String.format(Locale.getDefault(), "| %-40s | %-9s |\n", name, isEnabled))
-            }
-            append("|------------------------------------------|-----------|")
-        }
+        return featureTogglesMap.toTableString(tableName = this@DevFeatureTogglesManager::class.java.simpleName)
     }
 
     private fun getFileFeatureToggles(): Map<String, Boolean> {
