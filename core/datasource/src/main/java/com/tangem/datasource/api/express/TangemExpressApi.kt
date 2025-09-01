@@ -66,6 +66,7 @@ interface TangemExpressApi {
         @Query("requestId") requestId: String,
         @Query("refundAddress") refundAddress: String?, // for cex only
         @Query("refundExtraId") refundExtraId: String?, // for cex only
+        @Query("partnerOperationType") partnerOperationType: String?, // swap/ swap-and-send
     ): ApiResponse<ExchangeDataResponse>
 
     @GET("exchange-status")
