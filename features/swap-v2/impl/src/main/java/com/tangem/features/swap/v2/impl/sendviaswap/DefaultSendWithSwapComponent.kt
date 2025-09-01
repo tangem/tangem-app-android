@@ -94,13 +94,15 @@ internal class DefaultSendWithSwapComponent @AssistedInject constructor(
                         )
                         activeComponent.updateState(model.uiState.value.destinationUM)
                     }
-                    is SendWithSwapConfirmComponent -> if (model.currentRoute.value.isEditMode) {
+                    is SendWithSwapConfirmComponent -> {
                         analyticsEventHandler.send(
                             CommonSendAnalyticEvents.ConfirmationScreenOpened(
                                 categoryName = model.analyticCategoryName,
                             ),
                         )
-                        activeComponent.updateState(model.uiState.value)
+                        if (model.currentRoute.value.isEditMode) {
+                            activeComponent.updateState(model.uiState.value)
+                        }
                     }
                 }
                 model.currentRoute.emit(stack.active.configuration)
