@@ -17,12 +17,10 @@ import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.SnackbarMessage
-import com.tangem.domain.managetokens.SaveManagedTokensUseCase
-import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.wallets.usecase.HasMissedDerivationsUseCase
 import com.tangem.features.managetokens.analytics.CustomTokenAnalyticsEvent
 import com.tangem.features.managetokens.analytics.ManageTokensAnalyticEvent
 import com.tangem.features.managetokens.component.ManageTokensComponent
+import com.tangem.features.managetokens.component.ManageTokensMode
 import com.tangem.features.managetokens.entity.item.CurrencyItemUM
 import com.tangem.features.managetokens.entity.managetokens.ManageTokensBottomSheetConfig
 import com.tangem.features.managetokens.entity.managetokens.ManageTokensTopBarUM
@@ -30,6 +28,7 @@ import com.tangem.features.managetokens.entity.managetokens.ManageTokensUM
 import com.tangem.features.managetokens.impl.R
 import com.tangem.features.managetokens.utils.list.ChangedCurrencies
 import com.tangem.features.managetokens.utils.list.ManageTokensListManager
+import com.tangem.features.managetokens.utils.list.ManageTokensUseCasesFacade
 import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.PaginationStatus
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -47,18 +46,24 @@ internal class ManageTokensModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
     private val messageSender: UiMessageSender,
-    private val hasMissedDerivationsUseCase: HasMissedDerivationsUseCase,
-    private val saveManagedTokensUseCase: SaveManagedTokensUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     manageTokensListManagerFactory: ManageTokensListManager.Factory,
+    manageTokensUseCasesFacadeFactory: ManageTokensUseCasesFacade.Factory,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
     private val params: ManageTokensComponent.Params = paramsContainer.require()
+    private val useCasesFacade: ManageTokensUseCasesFacade = manageTokensUseCasesFacadeFactory
+        .create(mode = params.mode)
 
-    private val manageTokensListManager = manageTokensListManagerFactory.create()
+    private val manageTokensListManager = manageTokensListManagerFactory.create(
+        scope = modelScope,
+        source = params.source,
+        mode = params.mode,
+        useCasesFacade = useCasesFacade,
+    )
 
-    val state: MutableStateFlow<ManageTokensUM> = MutableStateFlow(getInitialState(params.userWalletId))
+    val state: MutableStateFlow<ManageTokensUM> = MutableStateFlow(getInitialState())
     val bottomSheetNavigation: SlotNavigation<ManageTokensBottomSheetConfig> = SlotNavigation()
 
     init {
@@ -79,23 +84,24 @@ internal class ManageTokensModel @Inject constructor(
         observeSearchQueryChanges()
 
         modelScope.launch {
-            manageTokensListManager.launchPagination(source = params.source, userWalletId = params.userWalletId)
+            manageTokensListManager.launchPagination()
         }
     }
 
     fun reloadList() {
         modelScope.launch {
-            manageTokensListManager.reload(params.userWalletId)
+            manageTokensListManager.reload()
         }
     }
 
-    private fun getInitialState(userWalletId: UserWalletId?): ManageTokensUM {
+    private fun getInitialState(): ManageTokensUM {
         analyticsEventHandler.send(ManageTokensAnalyticEvent.ScreenOpened(params.source))
 
-        return if (userWalletId == null) {
-            createReadContentModel()
-        } else {
-            createManageContentModel()
+        return when (params.mode) {
+            is ManageTokensMode.Wallet,
+            is ManageTokensMode.Account,
+            -> createManageContentModel()
+            ManageTokensMode.None -> createReadContentModel()
         }
     }
 
@@ -164,7 +170,7 @@ internal class ManageTokensModel @Inject constructor(
                 }
             }
             .sample(periodMillis = 1_000)
-            .onEach { query -> manageTokensListManager.search(userWalletId = params.userWalletId, query = query) }
+            .onEach { query -> manageTokensListManager.search(query = query) }
             .launchIn(modelScope)
     }
 
@@ -261,19 +267,16 @@ internal class ManageTokensModel @Inject constructor(
 
     private fun updateChangedItems(currenciesToAdd: ChangedCurrencies, currenciesToRemove: ChangedCurrencies) {
         modelScope.launch {
-            val hasMissedDerivations = params.userWalletId?.let { walletId ->
-                val networks = currenciesToAdd.values
-                    .flatten()
-                    .toSet()
-                    .associate { it.backendId to null }
-
-                hasMissedDerivationsUseCase(walletId, networks)
-            }
+            val networks = currenciesToAdd.values
+                .flatten()
+                .toSet()
+                .associate { it.backendId to null }
+            val hasMissedDerivations = useCasesFacade.hasMissedDerivationsUseCase(networks)
 
             state.update { state ->
                 state.copySealed(
                     hasChanges = currenciesToAdd.isNotEmpty() || currenciesToRemove.isNotEmpty(),
-                    needToAddDerivations = hasMissedDerivations ?: false,
+                    needToAddDerivations = hasMissedDerivations,
                 )
             }
         }
@@ -284,7 +287,7 @@ internal class ManageTokensModel @Inject constructor(
         if (state.isInitialBatchLoading || state.isNextBatchLoading) return false
 
         modelScope.launch {
-            manageTokensListManager.loadMore(userWalletId = params.userWalletId, query = state.search.query)
+            manageTokensListManager.loadMore(query = state.search.query)
         }
 
         return true
@@ -292,9 +295,14 @@ internal class ManageTokensModel @Inject constructor(
 
     private fun navigateToAddCustomToken() {
         analyticsEventHandler.send(CustomTokenAnalyticsEvent.ButtonCustomToken(params.source))
-
-        params.userWalletId?.let {
-            bottomSheetNavigation.activate(ManageTokensBottomSheetConfig.AddCustomToken(it))
+        when (val portfolio = params.mode) {
+            is ManageTokensMode.Wallet ->
+                bottomSheetNavigation
+                    .activate(ManageTokensBottomSheetConfig.AddWalletCustomToken(portfolio.userWalletId))
+            is ManageTokensMode.Account ->
+                bottomSheetNavigation
+                    .activate(ManageTokensBottomSheetConfig.AddAccountCustomToken(portfolio.accountId))
+            ManageTokensMode.None -> Unit
         }
     }
 
@@ -308,8 +316,7 @@ internal class ManageTokensModel @Inject constructor(
         )
         analyticsEventHandler.send(event)
 
-        saveManagedTokensUseCase(
-            userWalletId = requireNotNull(params.userWalletId),
+        useCasesFacade.saveManagedTokensUseCase(
             currenciesToAdd = manageTokensListManager.currenciesToAdd.value,
             currenciesToRemove = manageTokensListManager.currenciesToRemove.value,
         ).getOrElse {
