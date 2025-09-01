@@ -304,6 +304,8 @@
   <string name="details_title">Подробности</string>
   <string name="disclaimer_error_loading">Проверьте подключение с интернетом или переключитесь на другую сеть</string>
   <string name="disclaimer_title">Условия использования</string>
+  <string name="domain_receive_assets_legacy_address">Legacy адрес</string>
+  <string name="domain_receive_assets_onboarding_description">Отправка средств в другой сети может повлечь потерю средств.</string>
   <string name="email_preface_wc_error">Привет, команда поддержки, у меня возникла ошибка с кодом: %s</string>
   <string name="email_subject_wc_error">Ошибка WalletConnect</string>
   <string name="error_wrong_wallet_tapped">Вы использовали карту или кольцо от другого кошелька. Приложите карту или кольцо, связанную с этим кошельком.</string>
@@ -858,7 +860,7 @@
   <string name="send_gas_limit_footer">Это максимальное количество газа, которое будет потрачено на выполнение транзакции или контракта. Лимит газа предотвращает неожиданные или неограниченные расходы при выполнении транзакции.</string>
   <string name="send_gas_price">Цена газа</string>
   <string name="send_gas_price_footer">Это стоимость, которую вы готовы заплатить за каждую единицу газа. Чем выше цена газа, тем быстрее ваша транзакция будет обработана.</string>
-  <string name="send_max_amount">Всё</string>
+  <string name="send_max_amount">Макс</string>
   <string name="send_max_amount_label">Максимальная сумма</string>
   <string name="send_max_fee">Комиссия не превысит</string>
   <string name="send_memo_destination_tag_error">Недопустимый Memo</string>
@@ -1081,6 +1083,7 @@
   <string name="swap_story_second_title">Лучшие курсы</string>
   <string name="swap_story_third_subtitle">Интуитивный обмен в пару касаний — без сложностей и ожидания</string>
   <string name="swap_story_third_title">Проще простого</string>
+  <string name="swap_via_provider">Обмен через провайдера</string>
   <string name="swapping_alert_cex_description">В сумму включено: \n• комиссия провайдера сервиса\n• комиссия сети за отправку %s от биржи обратно на адрес пользователя.</string>
   <string name="swapping_alert_cex_description_with_slippage">В сумму включено: \n• комиссия провайдера сервиса\n• комиссия сети за отправку %1$s от биржи обратно на адрес пользователя \n\nПроскальзывание провайдера составляет до %2$s</string>
   <string name="swapping_alert_dex_description">В сумму включена комиссия провайдера сервиса.</string>
