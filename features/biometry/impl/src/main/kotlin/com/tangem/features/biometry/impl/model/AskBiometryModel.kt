@@ -111,7 +111,6 @@ internal class AskBiometryModel @Inject constructor(
 
     private suspend fun handleSuccessAllowing(userWallet: UserWallet) {
         walletsRepository.saveShouldSaveUserWallets(item = true)
-        settingsRepository.setShouldSaveAccessCodes(value = true)
 
         if (hotWalletFeatureToggles.isHotWalletEnabled) {
             walletsRepository.setUseBiometricAuthentication(value = true)
@@ -120,6 +119,7 @@ internal class AskBiometryModel @Inject constructor(
                 isBiometricsRequestPolicy = walletsRepository.requireAccessCode().not(),
             )
         } else {
+            settingsRepository.setShouldSaveAccessCodes(value = true)
             if (userWallet is UserWallet.Cold) {
                 cardSdkConfigRepository.setAccessCodeRequestPolicy(
                     isBiometricsRequestPolicy = userWallet.hasAccessCode,
