@@ -13,11 +13,10 @@ import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.SnackbarMessage
-import com.tangem.domain.managetokens.SaveManagedTokensUseCase
 import com.tangem.domain.redux.OnboardingManageTokensAction
 import com.tangem.domain.redux.ReduxStateHolder
-import com.tangem.domain.wallets.usecase.HasMissedDerivationsUseCase
 import com.tangem.features.managetokens.analytics.ManageTokensAnalyticEvent
+import com.tangem.features.managetokens.component.ManageTokensMode
 import com.tangem.features.managetokens.component.ManageTokensSource
 import com.tangem.features.managetokens.component.OnboardingManageTokensComponent
 import com.tangem.features.managetokens.entity.item.CurrencyItemUM
@@ -25,6 +24,7 @@ import com.tangem.features.managetokens.entity.managetokens.OnboardingManageToke
 import com.tangem.features.managetokens.impl.R
 import com.tangem.features.managetokens.utils.list.ChangedCurrencies
 import com.tangem.features.managetokens.utils.list.ManageTokensListManager
+import com.tangem.features.managetokens.utils.list.ManageTokensUseCasesFacade
 import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.PaginationStatus
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -42,15 +42,22 @@ internal class OnboardingManageTokensModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val messageSender: UiMessageSender,
     private val reduxStateHolder: ReduxStateHolder,
-    private val saveManagedTokensUseCase: SaveManagedTokensUseCase,
-    private val hasMissedDerivationsUseCase: HasMissedDerivationsUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     manageTokensListManagerFactory: ManageTokensListManager.Factory,
+    manageTokensUseCasesFacadeFactory: ManageTokensUseCasesFacade.Factory,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
     private val params: OnboardingManageTokensComponent.Params = paramsContainer.require()
-    private val manageTokensListManager = manageTokensListManagerFactory.create()
+    private val portfolio = ManageTokensMode.Wallet(params.userWalletId)
+    private val useCasesFacade: ManageTokensUseCasesFacade = manageTokensUseCasesFacadeFactory
+        .create(mode = portfolio)
+    private val manageTokensListManager = manageTokensListManagerFactory.create(
+        scope = modelScope,
+        source = ManageTokensSource.ONBOARDING,
+        useCasesFacade = useCasesFacade,
+        mode = portfolio,
+    )
 
     val state: MutableStateFlow<OnboardingManageTokensUM> = MutableStateFlow(getInitialState())
     val returnToParentComponentFlow = MutableSharedFlow<Unit>()
@@ -73,10 +80,7 @@ internal class OnboardingManageTokensModel @Inject constructor(
         observeSearchQueryChanges()
 
         modelScope.launch {
-            manageTokensListManager.launchPagination(
-                source = ManageTokensSource.ONBOARDING,
-                userWalletId = params.userWalletId,
-            )
+            manageTokensListManager.launchPagination()
         }
     }
 
@@ -119,7 +123,7 @@ internal class OnboardingManageTokensModel @Inject constructor(
                 }
             }
             .sample(periodMillis = 1_000)
-            .onEach { query -> manageTokensListManager.search(userWalletId = params.userWalletId, query = query) }
+            .onEach { query -> manageTokensListManager.search(query = query) }
             .launchIn(modelScope)
     }
 
@@ -208,13 +212,11 @@ internal class OnboardingManageTokensModel @Inject constructor(
                 )
             }
         } else {
-            val hasMissedDerivations = hasMissedDerivationsUseCase.invoke(
-                userWalletId = params.userWalletId,
-                networksWithDerivationPath = currenciesToAdd.values
-                    .flatten()
-                    .toSet()
-                    .associate { it.backendId to null },
-            )
+            val network = currenciesToAdd.values
+                .flatten()
+                .toSet()
+                .associate { it.backendId to null }
+            val hasMissedDerivations = useCasesFacade.hasMissedDerivationsUseCase(network = network)
             state.update { state ->
                 state.copy(
                     actionButtonConfig = OnboardingManageTokensUM.ActionButtonConfig.Continue(
@@ -231,7 +233,7 @@ internal class OnboardingManageTokensModel @Inject constructor(
         if (state.isInitialBatchLoading || state.isNextBatchLoading) return false
 
         modelScope.launch {
-            manageTokensListManager.loadMore(userWalletId = params.userWalletId, query = state.search.query)
+            manageTokensListManager.loadMore(query = state.search.query)
         }
 
         return true
@@ -255,8 +257,7 @@ internal class OnboardingManageTokensModel @Inject constructor(
         )
         analyticsEventHandler.send(event)
 
-        saveManagedTokensUseCase(
-            userWalletId = requireNotNull(params.userWalletId),
+        useCasesFacade.saveManagedTokensUseCase(
             currenciesToAdd = manageTokensListManager.currenciesToAdd.value,
             currenciesToRemove = manageTokensListManager.currenciesToRemove.value,
         ).getOrElse {
@@ -281,8 +282,7 @@ internal class OnboardingManageTokensModel @Inject constructor(
     ) {
         analyticsEventHandler.send(ManageTokensAnalyticEvent.ButtonLater)
 
-        saveManagedTokensUseCase(
-            userWalletId = requireNotNull(params.userWalletId),
+        useCasesFacade.saveManagedTokensUseCase(
             currenciesToAdd = manageTokensListManager.currenciesToAdd.value,
             currenciesToRemove = manageTokensListManager.currenciesToRemove.value,
         ).getOrElse {
