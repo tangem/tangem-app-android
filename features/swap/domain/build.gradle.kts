@@ -35,6 +35,7 @@ dependencies {
     implementation(projects.domain.txhistory.models)
     implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
+    implementation(projects.domain.express.models)
 
     implementation(projects.features.swap.domain.api)
     implementation(projects.features.swap.domain.models)
