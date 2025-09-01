@@ -1,6 +1,5 @@
 package com.tangem.data.walletconnect.pair
 
-import androidx.core.net.toUri
 import com.tangem.domain.walletconnect.WcPairService
 import com.tangem.domain.walletconnect.model.WcPairRequest
 import com.tangem.domain.walletconnect.repository.WcSessionsManager
@@ -38,8 +37,19 @@ class DefaultWcPairService @Inject constructor(
     }
 
     private suspend fun existSessionTopic(uri: String) = runCatching {
-        val sessionTopic = uri.toUri().getQueryParameter("sessionTopic") ?: return@runCatching false
+        val deeplinkRegex = Regex(WC_PARAM_REGEX)
+        val matched = deeplinkRegex.findAll(uri)
+        val sessionTopic = matched
+            .firstOrNull { it.value.contains(WC_TOPIC_QUERY_NAME) }
+            ?.groupValues
+            ?.lastOrNull()
+            ?: return@runCatching false
         val isExistSession = sessionsManager.findSessionByTopic(sessionTopic) != null
         return@runCatching isExistSession
+    }
+
+    private companion object {
+        const val WC_TOPIC_QUERY_NAME = "sessionTopic"
+        const val WC_PARAM_REGEX = "([a-zA-Z\\d-]+)=([a-zA-Z\\d]+)"
     }
 }
