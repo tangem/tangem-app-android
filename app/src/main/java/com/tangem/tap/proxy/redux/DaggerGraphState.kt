@@ -22,7 +22,7 @@ import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.core.wallets.UserWalletsListRepository
-import com.tangem.domain.feedback.GetCardInfoUseCase
+import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.onboarding.SaveTwinsOnboardingShownUseCase
 import com.tangem.domain.onboarding.WasTwinsOnboardingShownUseCase
@@ -63,7 +63,7 @@ data class DaggerGraphState(
     val settingsRepository: SettingsRepository? = null,
     val blockchainSDKFactory: BlockchainSDKFactory? = null,
     val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase? = null,
-    val getCardInfoUseCase: GetCardInfoUseCase? = null,
+    val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase? = null,
     val issuersConfigStorage: IssuersConfigStorage? = null,
     val urlOpener: UrlOpener? = null,
     val shareManager: ShareManager? = null,
