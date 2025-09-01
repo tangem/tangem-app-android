@@ -4,6 +4,7 @@ import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.AnalyticsParam.Key.BLOCKCHAIN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ENS
+import com.tangem.core.analytics.models.AnalyticsParam.Key.SOURCE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
 
 sealed class TokenReceiveNewAnalyticsEvent(
@@ -27,11 +28,13 @@ sealed class TokenReceiveNewAnalyticsEvent(
     class ButtonCopyAddress(
         token: String,
         blockchainName: String,
+        tokenReceiveSource: TokenReceiveCopyActionSource,
     ) : TokenReceiveNewAnalyticsEvent(
         event = "Button - Copy Address",
         params = mapOf(
             TOKEN_PARAM to token,
             BLOCKCHAIN to blockchainName,
+            SOURCE to tokenReceiveSource.name,
         ),
     )
 
@@ -56,4 +59,8 @@ sealed class TokenReceiveNewAnalyticsEvent(
             BLOCKCHAIN to blockchainName,
         ),
     )
+}
+
+enum class TokenReceiveCopyActionSource {
+    Main, Token, Receive, QR
 }

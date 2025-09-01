@@ -3,15 +3,12 @@ package com.tangem.features.tokenreceive.ui
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -21,6 +18,7 @@ import com.tangem.core.ui.components.SecondaryButton
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerH12
 import com.tangem.core.ui.components.SpacerH24
+import com.tangem.core.ui.components.SpacerW6
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -46,15 +44,17 @@ internal fun TokenReceiveWarningContent(warningUM: WarningUM) {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         CurrencyIcon(
-            modifier = Modifier.size(size = 56.dp),
+            modifier = Modifier
+                .padding(8.dp)
+                .size(size = 64.dp),
             state = warningUM.iconState,
-            shouldDisplayNetwork = false,
+            shouldDisplayNetwork = true,
             iconSize = 56.dp,
         )
 
         SpacerH24()
 
-        WarningBlock(networkIcon = warningUM.networkIcon, networkName = warningUM.network)
+        WarningBlock(networkName = warningUM.network)
 
         SpacerH12()
 
@@ -79,7 +79,7 @@ internal fun TokenReceiveWarningContent(warningUM: WarningUM) {
 }
 
 @Composable
-fun WarningBlock(networkName: String, networkIcon: Int, modifier: Modifier = Modifier) {
+fun WarningBlock(networkName: String, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -91,21 +91,14 @@ fun WarningBlock(networkName: String, networkIcon: Int, modifier: Modifier = Mod
             color = TangemTheme.colors.text.primary1,
         )
 
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                modifier = Modifier.size(20.dp),
-                painter = painterResource(id = networkIcon),
-                tint = Color.Unspecified,
-                contentDescription = null,
-            )
+        SpacerW6()
 
-            Text(
-                textAlign = TextAlign.Center,
-                text = stringResourceSafe(R.string.domain_receive_assets_onboarding_network_name, networkName),
-                style = TangemTheme.typography.h3,
-                color = TangemTheme.colors.text.primary1,
-            )
-        }
+        Text(
+            textAlign = TextAlign.Center,
+            text = stringResourceSafe(R.string.domain_receive_assets_onboarding_network_name, networkName),
+            style = TangemTheme.typography.h3,
+            color = TangemTheme.colors.text.primary1,
+        )
     }
 }
 
@@ -136,7 +129,6 @@ private class TokenReceiveWarningContentProvider : PreviewParameterProvider<Warn
                 iconState = iconState,
                 onWarningAcknowledged = {},
                 network = "Etherium",
-                networkIcon = R.drawable.ic_eth_16,
             ),
         )
 }
