@@ -3,6 +3,7 @@ pluginManagement {
         gradlePluginPortal()
         google()
         mavenCentral()
+        maven { url = uri("https://developer.huawei.com/repo/") }
     }
 
     includeBuild("plugins/configuration")
@@ -35,6 +36,7 @@ dependencyResolutionManagement {
             }
         }
         mavenCentral()
+        maven { url = uri("https://developer.huawei.com/repo/") }
         mavenLocal {
             content {
                 includeGroupAndSubgroups("com.tangem.tangem-sdk-kotlin")
@@ -281,6 +283,9 @@ include(":features:account:impl")
 
 include(":features:token-recieve:api")
 include(":features:token-recieve:impl")
+
+include(":features:yield-lending:api")
+include(":features:yield-lending:impl")
 // endregion Feature modules
 
 // region Domain modules
