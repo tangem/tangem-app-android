@@ -1,7 +1,6 @@
 package com.tangem.features.send.v2.sendnft.success.model
 
 import androidx.compose.runtime.Stable
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.navigationButtons.NavigationButton
 import com.tangem.common.ui.navigationButtons.NavigationUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -31,7 +30,6 @@ internal class NFTSendSuccessModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val appRouter: AppRouter,
     private val urlOpener: UrlOpener,
     private val shareManager: ShareManager,
 ) : Model() {
@@ -64,16 +62,14 @@ internal class NFTSendSuccessModel @Inject constructor(
                                     isValid = true,
                                 ),
                             )
-                            appRouter.pop()
+                            params.callback.onBackClick()
                         },
                         primaryButton = NavigationButton(
                             textReference = resourceReference(R.string.common_close),
                             iconRes = null,
                             isEnabled = true,
                             isHapticClick = false,
-                            onClick = {
-                                appRouter.pop()
-                            },
+                            onClick = params.callback::onBackClick,
                         ),
                         prevButton = null,
                         secondaryPairButtonsUM = NavigationButton(

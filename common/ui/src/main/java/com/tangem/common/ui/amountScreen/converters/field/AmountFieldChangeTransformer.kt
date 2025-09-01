@@ -39,7 +39,7 @@ class AmountFieldChangeTransformer(
 
         val amountTextField = prevState.amountTextField
 
-        if (value.isEmpty()) return prevState.emptyState()
+        if (value.isEmpty()) return prevState.emptyState(maxEnterAmount.fiatRate)
         val cryptoDecimals = amountTextField.cryptoAmount.decimals
         val fiatDecimals = amountTextField.fiatAmount.decimals
 
@@ -75,7 +75,7 @@ class AmountFieldChangeTransformer(
                 error = when {
                     isExceedBalance -> resourceReference(R.string.send_validation_amount_exceeds_balance)
                     isLessThanMinimumIfProvided -> {
-                        val minimumAmount = minimumTransactionAmount?.amount.format {
+                        val minimumAmount = minimumTransactionAmount.amount.format {
                             crypto(cryptoCurrencyStatus.currency)
                         }
 
@@ -96,7 +96,7 @@ class AmountFieldChangeTransformer(
         )
     }
 
-    private fun AmountState.Data.emptyState(): AmountState.Data {
+    private fun AmountState.Data.emptyState(fiatRate: BigDecimal?): AmountState.Data {
         return copy(
             isPrimaryButtonEnabled = false,
             reduceAmountBy = BigDecimal.ZERO,
@@ -104,7 +104,7 @@ class AmountFieldChangeTransformer(
                 value = "",
                 fiatValue = "",
                 cryptoAmount = amountTextField.cryptoAmount.copy(value = BigDecimal.ZERO),
-                fiatAmount = amountTextField.fiatAmount.copy(value = BigDecimal.ZERO),
+                fiatAmount = amountTextField.fiatAmount.copy(value = if (fiatRate != null) BigDecimal.ZERO else null),
                 isError = false,
                 keyboardOptions = KeyboardOptions(
                     imeAction = ImeAction.None,

@@ -106,8 +106,8 @@ internal class SendDestinationModel @Inject constructor(
                     ),
                 )
             }
-            initSenderAddress()
         }
+        initSenderAddress()
     }
 
     fun updateState(destinationUM: DestinationUM) {

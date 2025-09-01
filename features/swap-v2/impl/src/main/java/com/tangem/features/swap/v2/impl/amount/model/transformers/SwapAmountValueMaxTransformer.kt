@@ -16,31 +16,34 @@ internal class SwapAmountValueMaxTransformer(
     override fun transform(prevState: SwapAmountUM): SwapAmountUM {
         if (prevState !is SwapAmountUM.Content) return prevState
 
-        return prevState
-            .copy(selectedQuote = SwapQuoteUM.Loading)
-            .updateAmount(
-                onPrimaryAmount = { primaryStatus ->
+        val updatedState = prevState.updateAmount(
+            onPrimaryAmount = { primaryStatus ->
+                copy(
+                    amountField = AmountFieldSetMaxAmountTransformer(
+                        cryptoCurrencyStatus = primaryStatus,
+                        maxAmount = primaryMaximumAmountBoundary,
+                        minAmount = primaryMinimumAmountBoundary,
+                    ).transform(prevState.primaryAmount.amountField),
+                )
+            },
+            onSecondaryAmount = { secondaryStatus ->
+                if (secondaryMaximumAmountBoundary != null) {
                     copy(
                         amountField = AmountFieldSetMaxAmountTransformer(
-                            cryptoCurrencyStatus = primaryStatus,
-                            maxAmount = primaryMaximumAmountBoundary,
-                            minAmount = primaryMinimumAmountBoundary,
-                        ).transform(prevState.primaryAmount.amountField),
+                            cryptoCurrencyStatus = secondaryStatus,
+                            maxAmount = secondaryMaximumAmountBoundary,
+                            minAmount = secondaryMinimumAmountBoundary,
+                        ).transform(prevState.secondaryAmount.amountField),
                     )
-                },
-                onSecondaryAmount = { secondaryStatus ->
-                    if (secondaryMaximumAmountBoundary != null) {
-                        copy(
-                            amountField = AmountFieldSetMaxAmountTransformer(
-                                cryptoCurrencyStatus = secondaryStatus,
-                                maxAmount = secondaryMaximumAmountBoundary,
-                                minAmount = secondaryMinimumAmountBoundary,
-                            ).transform(prevState.secondaryAmount.amountField),
-                        )
-                    } else {
-                        this
-                    }
-                },
-            )
+                } else {
+                    this
+                }
+            },
+        )
+
+        return (updatedState as? SwapAmountUM.Content)?.copy(
+            isPrimaryButtonEnabled = false,
+            selectedQuote = SwapQuoteUM.Loading,
+        ) ?: updatedState
     }
 }

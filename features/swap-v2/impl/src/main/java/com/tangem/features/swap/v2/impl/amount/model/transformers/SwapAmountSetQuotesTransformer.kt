@@ -34,8 +34,10 @@ internal class SwapAmountSetQuotesTransformer(
 
         val sortedQuotes = quotes.sortedWith(SwapQuotesComparator)
         val bestQuote = findBestQuote(quotes) ?: SwapQuoteUM.Empty
+        val quotesWithDiff = getQuotesWithDiff(sortedQuotes, bestQuote, isSingleProvider)
         val selectedQuote = if (isSilentReload && prevState.selectedQuote !is SwapQuoteUM.Loading) {
-            prevState.selectedQuote
+            quotesWithDiff.firstOrNull { it.provider?.providerId == prevState.selectedQuote.provider?.providerId }
+                ?: prevState.selectedQuote
         } else {
             (bestQuote as? SwapQuoteUM.Content)?.copy(
                 diffPercent = DifferencePercent.Best,
@@ -55,7 +57,7 @@ internal class SwapAmountSetQuotesTransformer(
         if (updatedState !is SwapAmountUM.Content) return prevState
 
         return updatedState.copy(
-            isPrimaryButtonEnabled = updatedState.isPrimaryButtonEnabled && quotes.isNotEmpty(),
+            isPrimaryButtonEnabled = updatedState.isPrimaryButtonEnabled && quotesWithDiff.isNotEmpty(),
             swapQuotes = getQuotesWithDiff(sortedQuotes, bestQuote, isSingleProvider),
         )
     }

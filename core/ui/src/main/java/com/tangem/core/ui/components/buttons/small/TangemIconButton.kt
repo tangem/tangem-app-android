@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.res.TangemTheme
@@ -30,6 +31,7 @@ import com.tangem.core.ui.res.TangemThemePreview
  * @param shape         icon button shape
  * @param background    background color
  * @param iconTint      icon color
+ * @param innerPadding  icon padding inside background area
  *
  * [Show in Figma](https://www.figma.com/design/14ISV23YB1yVW1uNVwqrKv/Android?node-id=4105-1439&t=nnYBX1qCZmUNhBDf-4)
  */
@@ -41,6 +43,7 @@ fun TangemIconButton(
     shape: RoundedCornerShape = RoundedCornerShape(24.dp),
     background: Color = TangemTheme.colors.button.secondary,
     iconTint: Color = TangemTheme.colors.icon.secondary,
+    innerPadding: Dp = 4.dp,
 ) {
     Icon(
         painter = rememberVectorPainter(ImageVector.vectorResource(iconRes)),
@@ -50,7 +53,7 @@ fun TangemIconButton(
             .size(24.dp)
             .clip(shape)
             .background(background)
-            .padding(4.dp)
+            .padding(innerPadding)
             .clickable(
                 onClick = onClick,
             ),

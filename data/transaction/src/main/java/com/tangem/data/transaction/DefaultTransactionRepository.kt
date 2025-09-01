@@ -240,15 +240,19 @@ internal class DefaultTransactionRepository(
         val validator = walletManager as? TransactionValidator
 
         if (validator != null) {
-            val transactionData = walletManager.createTransaction(
-                amount = amount,
-                fee = fee ?: Fee.Common(amount = amount),
-                destination = destination,
-            ).copy(
-                extras = getMemoExtras(networkId = network.rawId, memo = memo),
-            )
+            try {
+                val transactionData = walletManager.createTransaction(
+                    amount = amount,
+                    fee = fee ?: Fee.Common(amount = amount),
+                    destination = destination,
+                ).copy(
+                    extras = getMemoExtras(networkId = network.rawId, memo = memo),
+                )
 
-            validator.validate(transactionData = transactionData)
+                validator.validate(transactionData = transactionData)
+            } catch (ex: Exception) {
+                Result.failure(ex)
+            }
         } else {
             Timber.e("${walletManager?.wallet?.blockchain} does not support transaction validation")
             Result.success(Unit)
