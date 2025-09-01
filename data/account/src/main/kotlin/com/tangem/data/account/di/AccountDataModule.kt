@@ -1,9 +1,13 @@
 package com.tangem.data.account.di
 
+import com.tangem.data.account.converter.AccountConverterFactoryContainer
 import com.tangem.data.account.repository.DefaultAccountsCRUDRepository
-import com.tangem.datasource.local.datastore.RuntimeSharedStore
+import com.tangem.data.account.store.AccountsResponseStoreFactory
+import com.tangem.data.account.store.ArchivedAccountsStoreFactory
+import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.account.repository.AccountsCRUDRepository
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -16,10 +20,20 @@ internal object AccountDataModule {
 
     @Provides
     @Singleton
-    fun provideAccountsCRUDRepository(userWalletsStore: UserWalletsStore): AccountsCRUDRepository {
+    fun provideAccountsCRUDRepository(
+        tangemTechApi: TangemTechApi,
+        accountsResponseStoreFactory: AccountsResponseStoreFactory,
+        userWalletsStore: UserWalletsStore,
+        accountConverterFactoryContainer: AccountConverterFactoryContainer,
+        dispatchers: CoroutineDispatcherProvider,
+    ): AccountsCRUDRepository {
         return DefaultAccountsCRUDRepository(
-            runtimeStore = RuntimeSharedStore(),
+            tangemTechApi = tangemTechApi,
+            accountsResponseStoreFactory = accountsResponseStoreFactory,
+            archivedAccountsStoreFactory = ArchivedAccountsStoreFactory,
             userWalletsStore = userWalletsStore,
+            convertersContainer = accountConverterFactoryContainer,
+            dispatchers = dispatchers,
         )
     }
 }
