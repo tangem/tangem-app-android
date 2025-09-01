@@ -331,11 +331,11 @@ internal class SwapAmountModel @Inject constructor(
 
     private fun subscribeOnBalanceHiddenUpdates() {
         params.isBalanceHidingFlow.onEach { isHidden ->
-            val isSingleWallet = getWalletsUseCase.invokeSync().size == 1
+            val isOnlyOneWallet = getWalletsUseCase.invokeSync().size == 1
             uiState.transformerUpdate(
                 SwapAmountBalanceHiddenTransformer(
                     isBalanceHidden = isHidden,
-                    isSingleWallet = isSingleWallet,
+                    isSingleWallet = isOnlyOneWallet,
                     userWallet = userWallet,
                     appCurrency = appCurrency,
                     swapDirection = swapDirection,
@@ -351,7 +351,7 @@ internal class SwapAmountModel @Inject constructor(
 
         val primaryCryptoCurrencyStatus = (uiState.value as? SwapAmountUM.Content)?.primaryCryptoCurrencyStatus
         if (primaryCryptoCurrencyStatus != null) {
-            val isSingleWallet = getWalletsUseCase.invokeSync().size == 1
+            val isOnlyOneWallet = getWalletsUseCase.invokeSync().size == 1
             uiState.transformerUpdate(
                 SwapAmountPrimaryReadyStateTransformer(
                     userWallet = userWallet,
@@ -361,7 +361,7 @@ internal class SwapAmountModel @Inject constructor(
                     clickIntents = this,
                     isBalanceHidden = params.isBalanceHidingFlow.value,
                     showBestRateAnimation = showBestRateAnimation,
-                    isSingleWallet = isSingleWallet,
+                    isSingleWallet = isOnlyOneWallet,
                 ),
             )
         }
@@ -387,7 +387,7 @@ internal class SwapAmountModel @Inject constructor(
                         ),
                     )
                 } else {
-                    val isSingleWallet = getWalletsUseCase.invokeSync().size == 1
+                    val isOnlyOneWallet = getWalletsUseCase.invokeSync().size == 1
                     uiState.transformerUpdate(
                         SwapAmountPrimaryReadyStateTransformer(
                             userWallet = userWallet,
@@ -397,7 +397,7 @@ internal class SwapAmountModel @Inject constructor(
                             clickIntents = this,
                             isBalanceHidden = params.isBalanceHidingFlow.value,
                             showBestRateAnimation = showBestRateAnimation,
-                            isSingleWallet = isSingleWallet,
+                            isSingleWallet = isOnlyOneWallet,
                         ),
                     )
                 }
@@ -495,7 +495,7 @@ internal class SwapAmountModel @Inject constructor(
             val primaryStatus = (uiState.value as? SwapAmountUM.Content)?.primaryCryptoCurrencyStatus
             if (secondaryStatus != null && primaryStatus != null) {
                 initCurrencies(primaryStatus, secondaryStatus)
-                val isSingleWallet = getWalletsUseCase.invokeSync().size == 1
+                val isOnlyOneWallet = getWalletsUseCase.invokeSync().size == 1
                 uiState.transformerUpdate(
                     SwapAmountSecondaryReadyStateTransformer(
                         userWallet = userWallet,
@@ -507,7 +507,7 @@ internal class SwapAmountModel @Inject constructor(
                         clickIntents = this@SwapAmountModel,
                         isBalanceHidden = params.isBalanceHidingFlow.value,
                         showBestRateAnimation = showBestRateAnimation,
-                        isSingleWallet = isSingleWallet,
+                        isSingleWallet = isOnlyOneWallet,
                     ),
                 )
                 startLoadingQuotesTask(isSilentReload = false)
