@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.BottomCenter
 import androidx.compose.ui.Alignment.Companion.TopCenter
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.graphicsLayer
@@ -141,7 +142,6 @@ private fun AmountSecondary(amountUM: AmountState, onCurrencyChange: (Boolean) -
             AmountFieldCurrencyInfo(
                 amountUM = amountUM,
                 onCurrencyChange = onCurrencyChange,
-
             )
             AmountFieldError(
                 isError = amountUM.amountTextField.isError,
@@ -157,6 +157,8 @@ private fun AmountSecondary(amountUM: AmountState, onCurrencyChange: (Boolean) -
 
 @Composable
 private fun BoxScope.AmountFieldCurrencyInfo(amountUM: AmountState.Data, onCurrencyChange: (Boolean) -> Unit) {
+    val isFiatAvailable = amountUM.amountTextField.fiatAmount.value != null
+
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -168,6 +170,7 @@ private fun BoxScope.AmountFieldCurrencyInfo(amountUM: AmountState.Data, onCurre
                 indication = null,
                 onClick = { onCurrencyChange(!amountUM.amountTextField.isFiatValue) },
             )
+            .alpha(if (isFiatAvailable) 1f else 0f)
             .padding(4.dp),
     ) {
         val iconRotateState by animateFloatAsState(
@@ -327,6 +330,7 @@ private class AmountFieldV2PreviewProvider : PreviewParameterProvider<AmountStat
             AmountStatePreviewData.emptyState,
             AmountStatePreviewData.amountState,
             AmountStatePreviewData.amountErrorState,
+            AmountStatePreviewData.amountStateV2WithoutRates,
         )
 }
 // endregion
