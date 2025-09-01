@@ -9,6 +9,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.common.ui.R
 import com.tangem.core.ui.extensions.TextReference
@@ -73,6 +74,8 @@ private fun Title(title: TextReference) {
         text = title.resolveReference(),
         style = TangemTheme.typography.subtitle2,
         color = TangemTheme.colors.text.primary1,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
     )
 }
 
@@ -82,6 +85,8 @@ private fun Subtitle(subtitle: TextReference) {
         color = TangemTheme.colors.text.tertiary,
         style = TangemTheme.typography.caption2,
         text = subtitle.resolveReference(),
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
     )
 }
 
