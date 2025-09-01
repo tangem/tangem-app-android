@@ -5,7 +5,7 @@ import com.tangem.core.configtoggle.BuildConfig
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.configtoggle.feature.impl.DevFeatureTogglesManager
 import com.tangem.core.configtoggle.feature.impl.ProdFeatureTogglesManager
-import com.tangem.core.configtoggle.storage.FeatureTogglesLocalStorage
+import com.tangem.core.configtoggle.storage.LocalTogglesStorage
 import com.tangem.core.configtoggle.version.DefaultVersionProvider
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import dagger.Module
@@ -30,7 +30,10 @@ internal object FeatureTogglesManagerModule {
         return if (BuildConfig.TESTER_MENU_ENABLED) {
             DevFeatureTogglesManager(
                 versionProvider = versionProvider,
-                featureTogglesLocalStorage = FeatureTogglesLocalStorage(appPreferencesStore),
+                featureTogglesLocalStorage = LocalTogglesStorage(
+                    appPreferencesStore = appPreferencesStore,
+                    preferencesKey = LocalTogglesStorage.FEATURE_TOGGLES_KEY,
+                ),
             )
         } else {
             ProdFeatureTogglesManager(versionProvider = versionProvider)
