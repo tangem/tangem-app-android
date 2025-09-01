@@ -1,14 +1,13 @@
 package com.tangem.common.routing
 
 import android.os.Bundle
-import com.tangem.common.routing.AppRoute.ManageTokens.Source
 import com.tangem.common.routing.bundle.RouteBundleParams
 import com.tangem.common.routing.bundle.bundle
 import com.tangem.common.routing.entity.InitScreenLaunchMode
 import com.tangem.common.routing.entity.SerializableIntent
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.feedback.models.CardInfo
+import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -83,8 +82,8 @@ sealed class AppRoute(val path: String) : Route {
 
     @Serializable
     data class Usedesk(
-        val cardInfo: CardInfo,
-    ) : AppRoute(path = "/usedesk/${cardInfo.cardId}")
+        val walletMetaInfo: WalletMetaInfo,
+    ) : AppRoute(path = "/usedesk/${walletMetaInfo.userWalletId}")
 
     @Serializable
     data class CardSettings(
