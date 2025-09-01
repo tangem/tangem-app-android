@@ -10,31 +10,41 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.nft.models.NFTAsset
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.nft.models.NFTAsset
+import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.features.nft.component.NFTDetailsBlockComponent
+import com.tangem.features.send.v2.api.FeeSelectorBlockComponent
 import com.tangem.features.send.v2.api.SendNotificationsComponent
-import com.tangem.features.send.v2.common.CommonSendRoute
 import com.tangem.features.send.v2.api.entity.PredefinedValues
+import com.tangem.features.send.v2.api.params.FeeSelectorParams
+import com.tangem.features.send.v2.api.params.FeeSelectorParams.FeeStateConfiguration
+import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationComponentParams.DestinationBlockParams
+import com.tangem.features.send.v2.common.CommonSendRoute
 import com.tangem.features.send.v2.common.ui.state.ConfirmUM
+import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.sendnft.confirm.model.NFTSendConfirmModel
 import com.tangem.features.send.v2.sendnft.confirm.ui.NFTSendConfirmContent
 import com.tangem.features.send.v2.sendnft.ui.state.NFTSendUM
 import com.tangem.features.send.v2.subcomponents.destination.DefaultSendDestinationBlockComponent
-import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationComponentParams.DestinationBlockParams
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeBlockComponent
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeComponentParams
 import com.tangem.features.send.v2.subcomponents.notifications.DefaultSendNotificationsComponent
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.*
 import java.math.BigDecimal
 
-internal class NFTSendConfirmComponent(
-    appComponentContext: AppComponentContext,
-    params: Params,
+internal class NFTSendConfirmComponent @AssistedInject constructor(
+    @Assisted appComponentContext: AppComponentContext,
+    @Assisted params: Params,
     nftDetailsBlockComponentFactory: NFTDetailsBlockComponent.Factory,
+    feeSelectorComponentFactory: FeeSelectorBlockComponent.Factory,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
     private val model: NFTSendConfirmModel = getOrCreateModel(params = params)
@@ -74,12 +84,28 @@ internal class NFTSendConfirmComponent(
         onClick = model::showEditFee,
     )
 
+    private val feeSelectorBlockComponent = feeSelectorComponentFactory.create(
+        context = child("NFTSendConfirmFeeSelectorBlock"),
+        params = FeeSelectorParams.FeeSelectorBlockParams(
+            state = model.uiState.value.feeSelectorUM,
+            onLoadFee = params.onLoadFee,
+            feeCryptoCurrencyStatus = params.feeCryptoCurrencyStatus,
+            cryptoCurrencyStatus = params.cryptoCurrencyStatus,
+            feeStateConfiguration = FeeStateConfiguration.None,
+            feeDisplaySource = FeeSelectorParams.FeeDisplaySource.Screen,
+            analyticsCategoryName = params.analyticsCategoryName,
+        ),
+        onResult = model::onFeeResult,
+    )
+
     private val nftDetailsBlockComponent = nftDetailsBlockComponentFactory.create(
         context = child("NFTDetailsBlock"),
         params = NFTDetailsBlockComponent.Params(
             userWalletId = params.userWallet.walletId,
             nftAsset = params.nftAsset,
             nftCollectionName = params.nftCollectionName,
+            isSuccessScreen = false,
+            title = resourceReference(R.string.send_from_wallet_name, wrappedList(params.userWallet.name)),
         ),
     )
 
@@ -126,6 +152,7 @@ internal class NFTSendConfirmComponent(
             nftSendUM = state,
             destinationBlockComponent = destinationBlockComponent,
             feeBlockComponent = feeBlockComponent,
+            feeSelectorBlockComponent = feeSelectorBlockComponent,
             nftDetailsBlockComponent = nftDetailsBlockComponent,
             notificationsComponent = notificationsComponent,
             notificationsUM = notificationState,
@@ -145,9 +172,15 @@ internal class NFTSendConfirmComponent(
         val currentRoute: Flow<CommonSendRoute.Confirm>,
         val isBalanceHidingFlow: StateFlow<Boolean>,
         val onLoadFee: suspend () -> Either<GetFeeError, TransactionFee>,
+        val onSendTransaction: () -> Unit,
     )
 
     interface ModelCallback {
         fun onResult(nftSendUM: NFTSendUM)
+    }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(appComponentContext: AppComponentContext, params: Params): NFTSendConfirmComponent
     }
 }

@@ -84,7 +84,7 @@ internal class OnboardingNoteModel @Inject constructor(
         return if (card.wallets.isEmpty()) {
             OnboardingNoteRoute.CreateWallet
         } else {
-            OnboardingNoteRoute.TopUp
+            OnboardingNoteRoute.Done
         }
     }
 
