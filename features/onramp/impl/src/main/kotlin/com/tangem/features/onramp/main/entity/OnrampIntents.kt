@@ -10,4 +10,5 @@ interface OnrampIntents {
     fun openProviders()
     fun onRefresh()
     fun onLinkClick(link: String)
+    fun onContinueClick()
 }
