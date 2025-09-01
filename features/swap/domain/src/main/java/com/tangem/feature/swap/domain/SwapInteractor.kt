@@ -1,5 +1,6 @@
 package com.tangem.feature.swap.domain
 
+import com.tangem.domain.express.models.ExpressOperationType
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
@@ -65,6 +66,7 @@ interface SwapInteractor {
         amountToSwap: String,
         includeFeeInAmount: IncludeFeeInAmount,
         fee: TxFee,
+        expressOperationType: ExpressOperationType,
     ): SwapTransactionState
 
     // suspend fun updateQuotesStateWithSelectedFee(
