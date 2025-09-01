@@ -335,6 +335,11 @@ sealed class AppRoute(val path: String) : Route {
     ) : AppRoute(path = "/update_access_code/${userWalletId.stringValue}")
 
     @Serializable
+    data class ViewPhrase(
+        val userWalletId: UserWalletId,
+    ) : AppRoute(path = "/view_seed_phrase/${userWalletId.stringValue}")
+
+    @Serializable
     data class SendEntryPoint(
         val userWalletId: UserWalletId,
         val currency: CryptoCurrency,
