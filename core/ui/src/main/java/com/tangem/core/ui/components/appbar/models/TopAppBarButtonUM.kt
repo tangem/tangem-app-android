@@ -32,6 +32,12 @@ sealed class TopAppBarButtonUM(
             enabled = enabled,
         )
 
+        fun Close(enabled: Boolean = true, onCloseClick: () -> Unit) = Icon(
+            iconRes = R.drawable.ic_close_24,
+            onClicked = onCloseClick,
+            enabled = enabled,
+        )
+
         fun Text(text: TextReference, onTextClicked: () -> Unit, enabled: Boolean = true) = Text(
             text = text,
             onClicked = onTextClicked,
