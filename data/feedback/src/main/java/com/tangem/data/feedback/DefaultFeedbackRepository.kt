@@ -12,6 +12,7 @@ import com.tangem.domain.feedback.repository.FeedbackRepository
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
+import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.utils.version.AppVersionProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -35,6 +36,7 @@ internal class DefaultFeedbackRepository(
     private val walletManagersStore: WalletManagersStore,
     private val emailSender: EmailSender,
     private val appVersionProvider: AppVersionProvider,
+    private val getSelectedWalletUseCase: GetSelectedWalletUseCase,
 ) : FeedbackRepository {
 
     private val blockchainsErrors = MutableStateFlow<Map<UserWalletId, BlockchainErrorInfo>>(emptyMap())
@@ -77,7 +79,7 @@ internal class DefaultFeedbackRepository(
     }
 
     override fun saveBlockchainErrorInfo(error: BlockchainErrorInfo) {
-        val userWallet = userWalletsListManager.selectedUserWalletSync ?: error("UserWallet is not selected")
+        val userWallet = getSelectedWalletUseCase.sync().getOrNull() ?: error("UserWallet is not selected")
 
         blockchainsErrors.update {
             it.toMutableMap().apply {
