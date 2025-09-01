@@ -9,11 +9,7 @@ import com.tangem.common.ui.amountScreen.models.AmountSegmentedButtonsConfig
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
-import com.tangem.core.ui.extensions.combinedReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.core.ui.extensions.orMaskWithStars
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
@@ -61,7 +57,8 @@ class AmountStateConverter(
         return AmountState.Data(
             title = value.title,
             availableBalance = resourceReference(R.string.common_crypto_fiat_format, wrappedList(crypto, fiat)),
-            availableBalanceShort = stringReference(crypto),
+            availableBalanceCrypto = stringReference(crypto),
+            availableBalanceFiat = stringReference(fiat),
             tokenName = stringReference(status.currency.name),
             tokenIconState = iconStateConverter.convert(status),
             amountTextField = amountFieldConverter.convert(value.value),
@@ -142,7 +139,15 @@ class AmountStateConverterV2(
                 resourceReference(R.string.common_crypto_fiat_format, wrappedList(crypto, fiat))
                     .orMaskWithStars(isBalanceHidden)
             },
-            availableBalanceShort = stringReference(crypto).orMaskWithStars(isBalanceHidden),
+            availableBalanceCrypto = stringReference(crypto).orMaskWithStars(isBalanceHidden),
+            availableBalanceFiat = if (isBalanceHidden) {
+                TextReference.EMPTY
+            } else {
+                combinedReference(
+                    stringReference(" $DOT "),
+                    stringReference(fiat),
+                )
+            },
             tokenName = stringReference(cryptoCurrencyStatus.currency.name),
             tokenIconState = iconStateConverter.convert(cryptoCurrencyStatus.currency),
             amountTextField = amountFieldConverter.convert(value.value),

@@ -25,7 +25,6 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.ui.AmountFieldV2
 import com.tangem.core.ui.components.SpacerH2
-import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.atoms.text.EllipsisText
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
@@ -248,8 +247,8 @@ private fun SwapAmountInfo(
             amountFieldUM = amountFieldUM,
             selectedQuote = selectedQuote,
             isSelectedAmountType = isSelectedAmountType,
+            modifier = Modifier.weight(1f),
         )
-        SpacerWMax()
         AnimatedContent(
             targetState = isSelectedAmountType,
         ) { isSelected ->
@@ -294,12 +293,21 @@ private fun SwapAmountInfoMain(
         AnimatedContent(isSelectedAmountType) { isSelected ->
             if (isSelected && amountFieldUM is SwapAmountFieldUM.Content) {
                 SpacerH2()
-                EllipsisText(
-                    text = amountFieldUM.subtitle.resolveReference(),
-                    style = TangemTheme.typography.caption2,
-                    color = TangemTheme.colors.text.tertiary,
-                    ellipsis = amountFieldUM.subtitleEllipsis,
-                )
+                Row {
+                    EllipsisText(
+                        text = amountFieldUM.subtitleLeft.resolveReference(),
+                        style = TangemTheme.typography.caption2,
+                        color = TangemTheme.colors.text.tertiary,
+                        ellipsis = amountFieldUM.subtitleEllipsisLeft,
+                        modifier = Modifier.weight(1f, fill = false),
+                    )
+                    EllipsisText(
+                        text = amountFieldUM.subtitleRight.resolveReference(),
+                        style = TangemTheme.typography.caption2,
+                        color = TangemTheme.colors.text.tertiary,
+                        ellipsis = amountFieldUM.subtitleEllipsisRight,
+                    )
+                }
             } else {
                 AnimatedContent(selectedQuote) { quote ->
                     when (quote) {

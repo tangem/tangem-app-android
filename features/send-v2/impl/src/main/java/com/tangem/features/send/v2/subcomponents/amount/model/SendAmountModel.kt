@@ -178,7 +178,7 @@ internal class SendAmountModel @Inject constructor(
 
     private fun initialState() {
         if (uiState.value is AmountState.Empty && userWallet != null) {
-            val isSingleWallet = getWalletsUseCase.invokeSync().size == 1
+            val isOnlyOneWallet = getWalletsUseCase.invokeSync().size == 1
             _uiState.update {
                 AmountStateConverterV2(
                     clickIntents = this,
@@ -190,7 +190,7 @@ internal class SendAmountModel @Inject constructor(
                     isBalanceHidden = params.isBalanceHidingFlow.value,
                 ).convert(
                     AmountParameters(
-                        title = if (isSingleWallet) {
+                        title = if (isOnlyOneWallet) {
                             resourceReference(R.string.send_from_title)
                         } else {
                             resourceReference(
