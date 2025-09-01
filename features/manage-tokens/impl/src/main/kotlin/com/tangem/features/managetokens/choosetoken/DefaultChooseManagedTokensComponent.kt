@@ -59,9 +59,11 @@ internal class DefaultChooseManagedTokensComponent @AssistedInject constructor(
             context = childByContext(componentContext),
             params = SwapChooseTokenNetworkComponent.Params(
                 userWalletId = config.userWalletId,
+                analyticsCategoryName = params.analyticsCategoryName,
                 initialCurrency = config.initialCurrency,
                 selectedCurrency = config.selectedCurrency,
                 token = config.token,
+                isSearchedToken = config.isSearchedToken,
                 onDismiss = model.bottomSheetNavigation::dismiss,
                 onResult = { swapCurrencies, cryptoCurrency ->
                     componentScope.launch {
@@ -70,7 +72,8 @@ internal class DefaultChooseManagedTokensComponent @AssistedInject constructor(
                             cryptoCurrency = cryptoCurrency,
                             shouldResetNavigation = params.selectedCurrency != null,
                         )
-                        router.pop()
+                        model.bottomSheetNavigation.dismiss()
+                        params.callback?.onResult() ?: router.pop()
                     }
                 },
             ),

@@ -28,6 +28,7 @@ import androidx.compose.ui.util.fastForEach
 import coil.compose.AsyncImage
 import com.tangem.core.ui.components.BottomFade
 import com.tangem.core.ui.components.PrimaryButton
+import com.tangem.core.ui.components.appbar.TopAppBarButton
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownItem
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenu
 import com.tangem.core.ui.components.snackbar.TangemSnackbarHost
@@ -255,13 +256,10 @@ private fun ConnectionsTopBar(
             actionIconContentColor = TangemTheme.colors.icon.primary1,
         ),
         navigationIcon = {
-            IconButton(onClick = config.startButtonUM.onIconClicked) {
-                Icon(
-                    painter = painterResource(id = config.startButtonUM.iconRes),
-                    tint = TangemTheme.colors.icon.primary1,
-                    contentDescription = "Back",
-                )
-            }
+            TopAppBarButton(
+                button = config.startButtonUM,
+                tint = TangemTheme.colors.icon.primary1,
+            )
         },
         title = {
             Text(
