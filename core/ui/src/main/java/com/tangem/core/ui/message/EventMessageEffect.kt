@@ -2,13 +2,23 @@ package com.tangem.core.ui.message
 
 import android.content.Context
 import android.widget.Toast
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.tangem.core.ui.components.BasicDialog
 import com.tangem.core.ui.components.DialogButtonUM
+import com.tangem.core.ui.components.SpacerHMax
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheet
 import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUM
@@ -17,6 +27,7 @@ import com.tangem.core.ui.event.EventEffect
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.LocalEventMessageHandler
 import com.tangem.core.ui.res.LocalSnackbarHostState
+import com.tangem.core.ui.res.TangemTheme
 
 @Composable
 fun EventMessageEffect(
@@ -33,6 +44,7 @@ fun EventMessageEffect(
     var dialogMessage: DialogMessage? by remember { mutableStateOf(value = null) }
     var bottomSheetMessage: BottomSheetMessage? by remember { mutableStateOf(value = null) }
     var bottomSheetMessageV2: BottomSheetMessageV2? by remember { mutableStateOf(value = null) }
+    var loadingMessage: GlobalLoadingMessage? by remember { mutableStateOf(value = null) }
 
     EventEffect(event = messageEvent) { message ->
         when (message) {
@@ -50,6 +62,13 @@ fun EventMessageEffect(
             }
             is ToastMessage -> {
                 onShowToast(message, context)
+            }
+            is GlobalLoadingMessage -> {
+                loadingMessage = if (message.isShow) {
+                    message
+                } else {
+                    null
+                }
             }
         }
     }
@@ -79,6 +98,34 @@ fun EventMessageEffect(
             state = message.messageBottomSheetUMV2,
             onDismissRequest = { bottomSheetMessageV2 = null },
         )
+    }
+
+    loadingMessage?.let {
+        LoadingDialog()
+    }
+}
+
+@Composable
+private fun LoadingDialog() {
+    Dialog(
+        onDismissRequest = {},
+        properties = DialogProperties(
+            dismissOnBackPress = false,
+            dismissOnClickOutside = false,
+        ),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            SpacerHMax()
+            CircularProgressIndicator(
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+                color = TangemTheme.colors.icon.primary1,
+            )
+            SpacerHMax()
+        }
     }
 }
 
