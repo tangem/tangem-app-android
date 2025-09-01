@@ -5,7 +5,7 @@ import com.tangem.common.test.utils.ProvideTestModels
 import com.tangem.core.configtoggle.FeatureToggles
 import com.tangem.core.configtoggle.feature.impl.DevFeatureTogglesManager
 import com.tangem.core.configtoggle.manager.ProdFeatureTogglesManagerTest.IsFeatureEnabledModel
-import com.tangem.core.configtoggle.storage.FeatureTogglesLocalStorage
+import com.tangem.core.configtoggle.storage.LocalTogglesStorage
 import com.tangem.core.configtoggle.version.VersionProvider
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
@@ -19,7 +19,7 @@ import org.junit.jupiter.params.ParameterizedTest
 internal class DevFeatureTogglesManagerTest {
 
     private val versionProvider = mockk<VersionProvider>()
-    private val featureTogglesLocalStorage = mockk<FeatureTogglesLocalStorage>(relaxUnitFun = true)
+    private val featureTogglesLocalStorage = mockk<LocalTogglesStorage>(relaxUnitFun = true)
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
