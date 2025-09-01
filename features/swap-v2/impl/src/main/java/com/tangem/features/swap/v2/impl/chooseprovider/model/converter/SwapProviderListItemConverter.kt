@@ -15,16 +15,28 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.swap.v2.impl.R
 import com.tangem.features.swap.v2.impl.chooseprovider.entity.SwapProviderListItem
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
+import com.tangem.features.swap.v2.impl.common.isRestrictedByFCA
 import com.tangem.utils.converter.Converter
 
 internal class SwapProviderListItemConverter(
     private val cryptoCurrency: CryptoCurrency,
     private val selectedProvider: ExpressProvider,
+    private val needApplyFCARestrictions: Boolean,
+    needBestRateBadge: Boolean,
 ) : Converter<SwapQuoteUM, SwapProviderListItem?> {
+
+    private val providerStateConverter = SwapProviderStateConverter(
+        cryptoCurrency = cryptoCurrency,
+        selectedProvider = selectedProvider,
+        needApplyFCARestrictions = needApplyFCARestrictions,
+        isNeedBestRateBadge = needBestRateBadge,
+    )
+
     override fun convert(value: SwapQuoteUM): SwapProviderListItem? {
         val provider = value.provider ?: return null
 
         return SwapProviderListItem(
+            swapProviderState = providerStateConverter.convert(value),
             providerUM = ProviderChooseUM(
                 title = stringReference(provider.name),
                 subtitle = stringReference(provider.type.typeName),
@@ -66,9 +78,15 @@ internal class SwapProviderListItemConverter(
                 },
             )
         }
+        is SwapQuoteUM.Content -> if (needApplyFCARestrictions && value.provider.isRestrictedByFCA()) {
+            ProviderChooseUM.ExtraUM.Action(
+                text = resourceReference(R.string.express_provider_fca_warning_list),
+            )
+        } else {
+            ProviderChooseUM.ExtraUM.Empty
+        }
         SwapQuoteUM.Empty,
         SwapQuoteUM.Loading,
-        is SwapQuoteUM.Content,
         -> ProviderChooseUM.ExtraUM.Empty
     }
 
