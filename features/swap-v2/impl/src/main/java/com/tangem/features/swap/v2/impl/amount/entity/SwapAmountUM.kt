@@ -84,8 +84,10 @@ sealed class SwapAmountFieldUM {
         override val amountField: AmountState,
         val priceImpact: TextReference?,
         val title: TextReference,
-        val subtitle: TextReference,
-        val subtitleEllipsis: TextEllipsis,
+        val subtitleLeft: TextReference,
+        val subtitleRight: TextReference,
+        val subtitleEllipsisLeft: TextEllipsis,
+        val subtitleEllipsisRight: TextEllipsis,
         val isClickEnabled: Boolean,
     ) : SwapAmountFieldUM()
 }
