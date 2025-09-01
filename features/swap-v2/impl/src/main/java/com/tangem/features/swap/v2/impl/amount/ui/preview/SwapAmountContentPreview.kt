@@ -17,6 +17,7 @@ import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountFieldUM
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountType
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
+import com.tangem.utils.StringsSigns
 import kotlinx.collections.immutable.persistentListOf
 import java.math.BigDecimal
 
@@ -100,10 +101,12 @@ internal data object SwapAmountContentPreview {
                 availableBalance = stringReference("Balance: 100 BTC"),
             ),
             title = stringReference("Tether"),
-            subtitle = stringReference("Balance: 100 BTC"),
+            subtitleLeft = stringReference("11 101,123123456 BTC"),
+            subtitleRight = stringReference(" ${StringsSigns.DOT} 1 212,12 $"),
             priceImpact = null,
             isClickEnabled = false,
-            subtitleEllipsis = TextEllipsis.OffsetEnd(3),
+            subtitleEllipsisLeft = TextEllipsis.OffsetEnd(3),
+            subtitleEllipsisRight = TextEllipsis.OffsetEnd(1),
         ),
         secondaryAmount = SwapAmountFieldUM.Content(
             amountType = SwapAmountType.To,
@@ -113,9 +116,11 @@ internal data object SwapAmountContentPreview {
             ),
             title = stringReference("Shiba Inu"),
             priceImpact = stringReference("(-10%)"),
-            subtitle = TextReference.EMPTY,
+            subtitleLeft = TextReference.EMPTY,
+            subtitleRight = TextReference.EMPTY,
             isClickEnabled = false,
-            subtitleEllipsis = TextEllipsis.OffsetEnd(3),
+            subtitleEllipsisLeft = TextEllipsis.End,
+            subtitleEllipsisRight = TextEllipsis.End,
         ),
         appCurrency = AppCurrency.Default,
         swapDirection = SwapDirection.Direct,
