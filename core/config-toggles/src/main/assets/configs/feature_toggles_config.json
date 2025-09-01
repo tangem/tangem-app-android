@@ -62,5 +62,13 @@
     {
         "name": "NEW_TOKEN_RECEIVE_ENABLED",
         "version": "5.28.0"
+    },
+    {
+        "name": "YIELD_LENDING_FEATURE_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "NEW_ONRAMP_MAIN_ENABLED",
+        "version": "undefined"
     }
 ]
