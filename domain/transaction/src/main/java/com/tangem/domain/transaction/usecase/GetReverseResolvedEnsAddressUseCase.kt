@@ -35,7 +35,13 @@ class GetReverseResolvedEnsAddressUseCase(private val walletAddressServiceReposi
         return when (reverseResolveAddressResult) {
             is ReverseResolveAddressResult.Error -> EnsAddress.Error(reverseResolveAddressResult.error)
             ReverseResolveAddressResult.NotSupported -> EnsAddress.NotSupported
-            is ReverseResolveAddressResult.Resolved -> EnsAddress.Address(reverseResolveAddressResult.name)
+            is ReverseResolveAddressResult.Resolved -> {
+                if (reverseResolveAddressResult.name.isEmpty()) {
+                    EnsAddress.NotSupported
+                } else {
+                    EnsAddress.Address(reverseResolveAddressResult.name)
+                }
+            }
         }
     }
 }
