@@ -293,16 +293,13 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
         Timber.i("APP STARTED")
         if (BuildConfig.TESTER_MENU_ENABLED) {
             Timber.i(featureTogglesManager.toString())
+            Timber.i(excludedBlockchainsManager.toString())
         }
 
         foregroundActivityObserver = ForegroundActivityObserver()
         registerActivityLifecycleCallbacks(foregroundActivityObserver.callbacks)
 
-        // We need to initialize the toggles and excludedBlockchainsManager before the MainActivity starts using them.
         runBlocking {
-            awaitAll(
-                async { excludedBlockchainsManager.init() },
-            )
             initWithConfigDependency(environmentConfig = environmentConfigStorage.initialize())
         }
 
