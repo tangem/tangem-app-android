@@ -18,6 +18,7 @@ import com.tangem.datasource.exchangeservice.swap.ExpressUtils
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.express.ExpressRepository
 import com.tangem.domain.express.models.ExpressError
+import com.tangem.domain.express.models.ExpressOperationType
 import com.tangem.domain.express.models.ExpressProvider
 import com.tangem.domain.express.models.ExpressProviderType
 import com.tangem.domain.express.models.ExpressRateType
@@ -208,6 +209,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
         toAddress: String,
         expressProvider: ExpressProvider,
         rateType: ExpressRateType,
+        expressOperationType: ExpressOperationType,
     ): SwapDataModel = withContext(coroutineDispatcher.io) {
         val requestId = UUID.randomUUID().toString()
         val fromCryptoCurrency = fromCryptoCurrencyStatus.currency
@@ -239,6 +241,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
             refundAddress = refundData?.refundAddress,
             refundExtraId = refundData?.refundExtraId,
             userWalletId = userWallet.walletId.stringValue,
+            partnerOperationType = expressOperationType.value,
             refCode = ExpressUtils.getRefCode(
                 userWallet = userWallet,
                 appPreferencesStore = appPreferencesStore,

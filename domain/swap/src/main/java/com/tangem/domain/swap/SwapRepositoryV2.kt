@@ -1,5 +1,6 @@
 package com.tangem.domain.swap
 
+import com.tangem.domain.express.models.ExpressOperationType
 import com.tangem.domain.express.models.ExpressProvider
 import com.tangem.domain.express.models.ExpressProviderType
 import com.tangem.domain.express.models.ExpressRateType
@@ -74,6 +75,7 @@ interface SwapRepositoryV2 {
      * @param toAddress                 destination address
      * @param expressProvider           selected swap provider
      * @param rateType                  selected provider rate type
+     * @param expressOperationType      operation type swap or send with swap
      */
     suspend fun getSwapData(
         userWallet: UserWallet,
@@ -83,6 +85,7 @@ interface SwapRepositoryV2 {
         toAddress: String,
         expressProvider: ExpressProvider,
         rateType: ExpressRateType,
+        expressOperationType: ExpressOperationType,
     ): SwapDataModel
 
     /**
