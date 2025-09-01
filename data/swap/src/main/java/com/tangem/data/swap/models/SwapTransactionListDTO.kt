@@ -4,7 +4,6 @@ import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.domain.express.models.ExpressProvider
-import com.tangem.domain.swap.models.SwapStatusModel
 import java.math.BigDecimal
 
 @JsonClass(generateAdapter = true)
@@ -36,5 +35,7 @@ internal data class SwapTransactionDTO(
     @Json(name = "provider")
     val provider: ExpressProvider,
     @Json(name = "status")
-    val status: SwapStatusModel? = null,
+    val status: SwapStatusDTO? = null,
+    @Json(name = "swapTxType")
+    val swapTxType: SwapTxTypeDTO? = SwapTxTypeDTO.Swap,
 )
