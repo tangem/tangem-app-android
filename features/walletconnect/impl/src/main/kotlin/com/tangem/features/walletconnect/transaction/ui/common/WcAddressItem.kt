@@ -30,7 +30,7 @@ internal fun WcAddressItem(address: String, modifier: Modifier = Modifier) {
         )
         Text(
             modifier = Modifier.padding(start = TangemTheme.dimens.spacing8),
-            text = stringResourceSafe(R.string.wc_common_address),
+            text = stringResourceSafe(R.string.common_address),
             style = TangemTheme.typography.body1,
             color = TangemTheme.colors.text.primary1,
             maxLines = 1,

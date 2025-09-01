@@ -7,9 +7,9 @@ import com.tangem.data.staking.toDomain
 import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.staking.StakingID
+import com.tangem.domain.models.staking.YieldBalance
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.staking.model.StakingID
-import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.test.runTest
@@ -129,12 +129,7 @@ internal class YieldsBalancesStoreUpdateMethodsTest {
         store.storeError(userWalletId = userWalletId, stakingIds = setOf(stakingId))
 
         val runtimeExpected = mapOf(
-            userWalletId to setOf(
-                YieldBalance.Error(
-                    integrationId = stakingId.integrationId,
-                    address = stakingId.address,
-                ),
-            ),
+            userWalletId to setOf(YieldBalance.Error(stakingId)),
         )
 
         Truth.assertThat(runtimeStore.getSyncOrNull()).isEqualTo(runtimeExpected)

@@ -6,10 +6,10 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
-import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.FeeState
 import com.tangem.features.staking.impl.presentation.state.StakingStates
@@ -38,11 +38,12 @@ internal class ShowApprovalBottomSheetTransformer(
         val feeCryptoValue = fee.amount.value.format {
             crypto(fee.amount.currencySymbol, fee.amount.decimals)
         }
-        val feeFiatValue = BigDecimalFormatter.formatFiatAmount(
-            fiatAmount = feeCryptoCurrencyStatus?.value?.fiatRate?.multiply(fee.amount.value),
-            fiatCurrencyCode = appCurrencyProvider().code,
-            fiatCurrencySymbol = appCurrencyProvider().symbol,
-        )
+        val feeFiatValue = feeCryptoCurrencyStatus?.value?.fiatRate?.multiply(fee.amount.value).format {
+            fiat(
+                fiatCurrencyCode = appCurrencyProvider().code,
+                fiatCurrencySymbol = appCurrencyProvider().symbol,
+            )
+        }
         return prevState.copy(
             bottomSheetConfig = TangemBottomSheetConfig(
                 isShown = true,
