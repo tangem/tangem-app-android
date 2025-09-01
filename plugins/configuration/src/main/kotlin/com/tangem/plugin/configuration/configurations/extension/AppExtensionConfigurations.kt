@@ -75,6 +75,7 @@ private fun AndroidBuildType.configureBuildVariant(appExtension: AppExtension, b
         }
         BuildType.Debug -> {
             isDebuggable = true
+            signingConfig = appExtension.signingConfigs.getByName(BuildType.Debug.id)
         }
         BuildType.Internal,
         BuildType.External
