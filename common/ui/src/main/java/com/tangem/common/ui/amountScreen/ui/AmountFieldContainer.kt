@@ -20,7 +20,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.R
 import com.tangem.common.ui.amountScreen.models.AmountState
-import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.atoms.text.EllipsisText
 import com.tangem.core.ui.components.atoms.text.TextEllipsis
@@ -159,8 +158,10 @@ private fun AmountInfo(amountUM: AmountState, onMaxAmountClick: () -> Unit, modi
                 bottom = 16.dp,
             ),
         )
-        AmountInfoMain(amountUM = amountUM)
-        SpacerWMax()
+        AmountInfoMain(
+            amountUM = amountUM,
+            modifier = Modifier.weight(1f),
+        )
         Text(
             text = stringResourceSafe(R.string.send_max_amount),
             style = TangemTheme.typography.caption1,
@@ -209,12 +210,21 @@ private fun AmountInfoMain(amountUM: AmountState, modifier: Modifier = Modifier)
                     color = TangemTheme.colors.text.primary1,
                     maxLines = 1,
                 )
-                EllipsisText(
-                    text = amountUM.availableBalance.resolveReference(),
-                    style = TangemTheme.typography.caption2,
-                    color = TangemTheme.colors.text.tertiary,
-                    ellipsis = TextEllipsis.OffsetEnd(amountUM.amountTextField.cryptoAmount.currencySymbol.length),
-                )
+                Row {
+                    EllipsisText(
+                        text = amountUM.availableBalanceCrypto.resolveReference(),
+                        style = TangemTheme.typography.caption2,
+                        color = TangemTheme.colors.text.tertiary,
+                        ellipsis = TextEllipsis.OffsetEnd(amountUM.amountTextField.cryptoAmount.currencySymbol.length),
+                        modifier = Modifier.weight(1f, fill = false),
+                    )
+                    EllipsisText(
+                        text = amountUM.availableBalanceFiat.resolveReference(),
+                        style = TangemTheme.typography.caption2,
+                        color = TangemTheme.colors.text.tertiary,
+                        ellipsis = TextEllipsis.OffsetEnd(amountUM.amountTextField.fiatAmount.currencySymbol.length),
+                    )
+                }
             }
         }
     }
