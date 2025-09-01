@@ -10,19 +10,21 @@ import com.tangem.domain.express.ExpressRepository
 import com.tangem.domain.express.models.ExpressProvider
 import com.tangem.domain.express.models.ExpressProviderType
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.filterIf
 import timber.log.Timber
 
 internal class DefaultExpressRepository(
     private val tangemExpressApi: TangemExpressApi,
     private val appPreferencesStore: AppPreferencesStore,
+    private val dispatchers: CoroutineDispatcherProvider,
 ) : ExpressRepository {
 
     override suspend fun getProviders(
         userWallet: UserWallet,
         filterProviderTypes: List<ExpressProviderType>,
-    ): List<ExpressProvider> {
-        return safeApiCall(
+    ): List<ExpressProvider> = with(dispatchers.io) {
+        safeApiCall(
             call = {
                 tangemExpressApi.getProviders(
                     userWalletId = userWallet.walletId.stringValue,
