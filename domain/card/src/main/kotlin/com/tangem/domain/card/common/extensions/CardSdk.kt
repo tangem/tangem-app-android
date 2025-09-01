@@ -100,6 +100,20 @@ fun UserWallet.canHandleToken(blockchain: Blockchain, excludedBlockchains: Exclu
     }
 }
 
+fun UserWallet.canHandleBlockchain(blockchain: Blockchain, excludedBlockchains: ExcludedBlockchains): Boolean {
+    return when (this) {
+        is UserWallet.Cold -> {
+            scanResponse.card.canHandleBlockchain(
+                blockchain = blockchain,
+                excludedBlockchains = excludedBlockchains,
+                cardTypesResolver = scanResponse.cardTypesResolver,
+            )
+        }
+        is UserWallet.Hot -> blockchain.isTestnet().not() &&
+            blockchain !in excludedBlockchains
+    }
+}
+
 /**
  * The same as [CardDTO.supportedTokens] but with supportedTokens input, if previously calculated
  */
