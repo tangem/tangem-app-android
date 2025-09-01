@@ -17,6 +17,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.express.models.ExpressOperationType
 import com.tangem.domain.express.models.ExpressProviderType
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -293,6 +294,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                     }
                     router.replaceAll(SendWithSwapRoute.Success)
                 },
+                expressOperationType = ExpressOperationType.SEND_WITH_SWAP,
             )
         }
     }
