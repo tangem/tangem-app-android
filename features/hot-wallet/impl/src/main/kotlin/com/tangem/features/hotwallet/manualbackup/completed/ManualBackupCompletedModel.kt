@@ -20,7 +20,7 @@ internal class ManualBackupCompletedModel @Inject constructor(
     internal val uiState: StateFlow<ManualBackupCompletedUM>
     field = MutableStateFlow(
         ManualBackupCompletedUM(
-            onContinueClick = params.callbacks::onContinueClick,
+            onContinueClick = { params.callbacks.onContinueClick(params.userWalletId) },
         ),
     )
 }
