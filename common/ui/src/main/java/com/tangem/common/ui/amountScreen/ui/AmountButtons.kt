@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.testTag
 import com.tangem.common.ui.R
 import com.tangem.common.ui.amountScreen.AmountScreenClickIntents
 import com.tangem.common.ui.amountScreen.models.AmountSegmentedButtonsConfig
@@ -22,6 +23,7 @@ import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.test.StakingSendScreenTestTags
 import kotlinx.collections.immutable.PersistentList
 
 private const val AMOUNT_BUTTONS_KEY = "amountButtonsKey"
@@ -77,7 +79,8 @@ internal fun LazyListScope.buttons(
                     .padding(
                         vertical = TangemTheme.dimens.spacing10,
                         horizontal = TangemTheme.dimens.spacing34,
-                    ),
+                    )
+                    .testTag(StakingSendScreenTestTags.MAX_BUTTON),
             )
         }
     }
@@ -90,7 +93,8 @@ private fun AmountCurrencyButton(button: AmountSegmentedButtonsConfig, isSegment
             .fillMaxSize()
             .padding(
                 horizontal = TangemTheme.dimens.spacing10,
-            ),
+            )
+            .testTag(StakingSendScreenTestTags.CURRENCY_BUTTON),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -102,13 +106,13 @@ private fun AmountCurrencyButton(button: AmountSegmentedButtonsConfig, isSegment
                 url = button.iconUrl,
                 size = TangemTheme.dimens.size18,
                 isGrayscale = !isSegmentedButtonsEnabled,
-                modifier = iconModifier,
+                modifier = iconModifier.testTag(StakingSendScreenTestTags.FIAT_ICON),
             )
         } else if (button.iconState != null) {
             CurrencyIcon(
                 state = button.iconState,
                 shouldDisplayNetwork = false,
-                modifier = iconModifier,
+                modifier = iconModifier.testTag(StakingSendScreenTestTags.CURRENCY_ICON),
             )
         }
         Text(
