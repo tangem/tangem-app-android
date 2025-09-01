@@ -10,17 +10,30 @@ android {
     namespace = "com.tangem.lib.crypto"
 }
 
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+}
+
 dependencies {
 
-    /** Coroutines */
-    implementation(deps.kotlin.coroutines)
-
-    /** SDK */
-    implementation(tangemDeps.blockchain)
-
-    /** Core */
+    // region Project
     implementation(projects.core.utils)
-
-    /** Libs */
     implementation(projects.libs.blockchainSdk)
+    // endregion
+
+    // region Tangem SDKs
+    implementation(tangemDeps.card.core)
+    implementation(tangemDeps.blockchain)
+    // endregion
+
+    // region Other deps
+    implementation(deps.kotlin.coroutines)
+    implementation(deps.timber)
+    // endregion
+
+    // region Test libraries
+    testImplementation(deps.test.junit5)
+    testRuntimeOnly(deps.test.junit5.engine)
+    testImplementation(deps.test.truth)
+    // endregion
 }
