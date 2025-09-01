@@ -6,6 +6,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
+import timber.log.Timber
 import javax.inject.Inject
 
 internal class SelectedWalletAnalyticsSender @Inject constructor(
@@ -14,6 +15,7 @@ internal class SelectedWalletAnalyticsSender @Inject constructor(
 ) {
 
     fun send(userWallet: UserWallet) {
+        Timber.tag("SelectedWalletAnalyticsSender").e(userWallet.walletId.stringValue)
         if (screenLifecycleProvider.isBackgroundState.value) return
 
         val event = getEvent(userWallet)
@@ -29,6 +31,14 @@ internal class SelectedWalletAnalyticsSender @Inject constructor(
      * */
     private fun getEvent(userWallet: UserWallet): AnalyticsEvent? = when {
         userWallet.isLocked -> WalletScreenAnalyticsEvent.MainScreen.WalletUnlock
-        else -> null
+
+        else -> WalletScreenAnalyticsEvent.MainScreen.WalletSelected(userWallet.isImported())
+    }
+
+    private fun UserWallet.isImported(): Boolean {
+        return when (this) {
+            is UserWallet.Cold -> isImported
+            is UserWallet.Hot -> true
+        }
     }
 }

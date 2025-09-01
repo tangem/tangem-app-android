@@ -71,10 +71,12 @@ sealed class WalletScreenAnalyticsEvent {
         params: Map<String, String> = mapOf(),
     ) : AnalyticsEvent(category = "Main Screen", event = event, params = params) {
 
-        data class ScreenOpened(val isWalletImported: Boolean) : MainScreen(
-            event = "Screen opened",
+        data object ScreenOpened : MainScreen(event = "Screen opened")
+
+        class WalletSelected(val isImported: Boolean) : MainScreen(
+            event = "Wallet Selected",
             params = mapOf(
-                "Wallet Type" to if (isWalletImported) "Seed phrase" else "Seedless",
+                "Wallet Type" to if (isImported) "Seed phrase" else "Seedless",
             ),
         )
 
