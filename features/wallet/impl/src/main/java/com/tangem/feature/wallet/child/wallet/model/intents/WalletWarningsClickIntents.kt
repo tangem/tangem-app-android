@@ -11,6 +11,7 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.wallets.usecase.DerivePublicKeysUseCase
 import com.tangem.domain.card.SetCardWasScannedUseCase
+import com.tangem.domain.core.wallets.UserWalletsListRepository
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
@@ -43,6 +44,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletBottomShe
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.CloseBottomSheetTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -92,7 +94,7 @@ internal interface WalletWarningsClickIntents {
     fun onFinishWalletActivationClick()
 }
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 @ModelScoped
 internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val stateHolder: WalletStateController,
@@ -116,6 +118,8 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
     private val stakingIdFactory: StakingIdFactory,
     private val appRouter: AppRouter,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
+    private val userWalletsListRepository: UserWalletsListRepository,
 ) : BaseWalletClickIntents(), WalletWarningsClickIntents {
 
     override fun onAddBackupCardClick() {
@@ -167,6 +171,22 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     override fun onOpenUnlockWalletsBottomSheetClick() {
         analyticsEventHandler.send(MainScreen.WalletUnlockTapped)
 
+        if (hotWalletFeatureToggles.isHotWalletEnabled) {
+            modelScope.launch {
+                userWalletsListRepository.unlockAllWallets()
+                    .onLeft {
+                        val selectedUserWallet = getSelectedUserWallet() ?: return@onLeft
+                        val method = when (selectedUserWallet) {
+                            is UserWallet.Cold -> UserWalletsListRepository.UnlockMethod.Scan
+                            is UserWallet.Hot -> UserWalletsListRepository.UnlockMethod.AccessCode
+                        }
+                        userWalletsListRepository.unlock(stateHolder.getSelectedWalletId(), method)
+                    }
+            }
+            return
+        }
+
+        // Will be removed after hot wallet release
         stateHolder.showBottomSheet(
             WalletBottomSheetConfig.UnlockWallets(
                 onUnlockClick = this::onUnlockWalletClick,
@@ -175,6 +195,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         )
     }
 
+    @Deprecated("Will be removed with hot wallet release")
     override fun onUnlockWalletClick() {
         analyticsEventHandler.send(MainScreen.UnlockAllWithBiometrics)
 
@@ -202,6 +223,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         walletEventSender.send(event)
     }
 
+    @Deprecated("Will be removed with hot wallet release")
     override fun onScanToUnlockWalletClick() {
         analyticsEventHandler.send(MainScreen.UnlockWithCardScan)
         openScanCardDialog()
