@@ -3,6 +3,7 @@ package com.tangem.tap.features.details.redux.walletconnect
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.common.routing.AppRoute
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.tap.common.extensions.dispatchNavigationAction
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.inject
@@ -183,9 +184,19 @@ class WalletConnectMiddleware {
 
     private suspend fun getWalletManagers(): List<WalletManager> {
         val walletManagerFacade = store.inject(DaggerGraphState::walletManagersFacade)
-        val userWalletsListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
-        val userWallet = userWalletsListManager.selectedUserWalletSync ?: return emptyList()
-
+        val userWallet = getSelectedWallet() ?: return emptyList()
         return walletManagerFacade.getStoredWalletManagers(userWallet.walletId)
+    }
+
+    private suspend fun getSelectedWallet(): UserWallet? {
+        val userWalletsListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
+        val userWalletsListRepository = store.inject(DaggerGraphState::userWalletsListRepository)
+        val hotWalletFeatureToggles = store.inject(DaggerGraphState::hotWalletFeatureToggles)
+
+        return if (hotWalletFeatureToggles.isHotWalletEnabled) {
+            userWalletsListRepository.selectedUserWalletSync()
+        } else {
+            userWalletsListManager.selectedUserWalletSync
+        }
     }
 }
