@@ -141,6 +141,11 @@ interface TangemTechApi {
     suspend fun getWallets(@Path("app_id") appId: String): ApiResponse<List<WalletResponse>>
     // endregion
 
+    // promo
+    @POST("promo/v1/promo-codes/activate")
+    suspend fun activatePromoCode(@Body body: PromocodeActivationBody): ApiResponse<PromocodeActivationResponse>
+    // endregion
+
     // region account
     @GET("/v1/wallets/{walletId}/accounts")
     suspend fun getWalletAccounts(@Path("walletId") walletId: String): ApiResponse<GetWalletAccountsResponse>
