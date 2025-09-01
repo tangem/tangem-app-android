@@ -9,7 +9,6 @@ import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectSyncOrNull
 import com.tangem.datasource.local.preferences.utils.storeObject
-import kotlin.properties.Delegates
 
 /**
  * Feature toggles manager implementation in DEV build
@@ -24,10 +23,14 @@ internal class DevFeatureTogglesManager(
     private val versionProvider: VersionProvider,
 ) : MutableFeatureTogglesManager {
 
-    private var featureTogglesMap: MutableMap<String, Boolean> by Delegates.notNull()
-    private var localFeatureTogglesMap: Map<String, Boolean> by Delegates.notNull()
+    private var featureTogglesMap: MutableMap<String, Boolean>? = null
+    private var localFeatureTogglesMap: Map<String, Boolean>? = null
 
     override suspend fun init() {
+        if (featureTogglesMap != null && localFeatureTogglesMap != null) {
+            return // Already initialized
+        }
+
         localTogglesStorage.populate(FeatureTogglesConstants.LOCAL_CONFIG_PATH)
 
         val savedFeatureToggles = appPreferencesStore.getObjectSyncOrNull<Map<String, Boolean>>(
@@ -46,21 +49,21 @@ internal class DevFeatureTogglesManager(
             .toMutableMap()
     }
 
-    override fun isFeatureEnabled(name: String): Boolean = featureTogglesMap[name] ?: false
+    override fun isFeatureEnabled(name: String): Boolean = featureTogglesMap!![name] ?: false
 
     override fun isMatchLocalConfig(): Boolean = featureTogglesMap == localFeatureTogglesMap
 
-    override fun getFeatureToggles(): Map<String, Boolean> = featureTogglesMap
+    override fun getFeatureToggles(): Map<String, Boolean> = featureTogglesMap!!
 
     override suspend fun changeToggle(name: String, isEnabled: Boolean) {
-        featureTogglesMap[name] ?: return
-        featureTogglesMap[name] = isEnabled
-        appPreferencesStore.storeFeatureToggles(value = featureTogglesMap)
+        featureTogglesMap!![name] ?: return
+        featureTogglesMap!![name] = isEnabled
+        appPreferencesStore.storeFeatureToggles(value = featureTogglesMap!!)
     }
 
     override suspend fun recoverLocalConfig() {
-        featureTogglesMap = localFeatureTogglesMap.toMutableMap()
-        appPreferencesStore.storeFeatureToggles(value = localFeatureTogglesMap)
+        featureTogglesMap = localFeatureTogglesMap!!.toMutableMap()
+        appPreferencesStore.storeFeatureToggles(value = localFeatureTogglesMap!!)
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
