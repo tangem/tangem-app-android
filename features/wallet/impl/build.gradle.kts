@@ -123,6 +123,8 @@ dependencies {
     implementation(projects.common.ui)
 
     /** Test libraries */
-    implementation(deps.test.junit)
-    implementation(deps.test.truth)
+    testImplementation(deps.test.junit)
+    testImplementation(deps.test.coroutine)
+    testImplementation(deps.test.truth)
+    testImplementation(deps.test.mockk)
 }
