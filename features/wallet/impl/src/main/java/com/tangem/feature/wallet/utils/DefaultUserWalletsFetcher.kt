@@ -14,16 +14,15 @@ import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.core.lce.lce
 import com.tangem.domain.core.utils.toLce
-import com.tangem.domain.models.ArtworkModel
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.tokens.GetWalletTotalBalanceUseCase
 import com.tangem.domain.tokens.error.TokenListError
-import com.tangem.domain.wallets.usecase.GetCardImageUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.feature.wallet.impl.R
+import com.tangem.features.wallet.utils.UserWalletImageFetcher
 import com.tangem.features.wallet.utils.UserWalletsFetcher
 import com.tangem.operations.attestation.ArtworkSize
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -45,11 +44,10 @@ internal class DefaultUserWalletsFetcher @AssistedInject constructor(
     @Assisted private val messageSender: UiMessageSender,
     @Assisted("onlyMultiCurrency") private val onlyMultiCurrency: Boolean,
     @Assisted("authMode") private val authMode: Boolean,
-    private val getCardImageUseCase: GetCardImageUseCase,
+    private val userWalletImageFetcher: UserWalletImageFetcher,
     dispatchers: CoroutineDispatcherProvider,
 ) : UserWalletsFetcher {
 
-    private var loadedArtworks: HashMap<UserWalletId, ArtworkModel> = hashMapOf()
     private val walletsFlow =
         if (onlyMultiCurrency) getWalletsUseCase().map { it.filter { it.isMultiCurrency } } else getWalletsUseCase()
 
@@ -67,7 +65,7 @@ internal class DefaultUserWalletsFetcher @AssistedInject constructor(
             flow = getSelectedAppCurrencyUseCase().distinctUntilChanged(),
             flow2 = getBalanceHidingSettingsUseCase().distinctUntilChanged(),
             flow3 = getWalletTotalBalanceUseCase(wallets.map(UserWallet::walletId)).distinctUntilChanged(),
-            flow4 = loadArtworks(wallets),
+            flow4 = userWalletImageFetcher.walletsImage(wallets, ArtworkSize.SMALL),
         ) { maybeAppCurrency, balanceHidingSettings, maybeBalances, artworks ->
             createUiModels(
                 wallets = wallets,
@@ -90,29 +88,12 @@ internal class DefaultUserWalletsFetcher @AssistedInject constructor(
     }
         .flowOn(dispatchers.default)
 
-    private fun loadArtworks(wallets: List<UserWallet>): Flow<HashMap<UserWalletId, ArtworkModel>> {
-        return flow {
-            emit(hashMapOf()) // emits right away so the transform doesn't wait for the images' loading to finish
-            wallets.filterIsInstance<UserWallet.Cold>().forEach { wallet ->
-                val artwork = getCardImageUseCase(
-                    cardId = wallet.cardId,
-                    manufacturerName = wallet.scanResponse.card.manufacturer.name,
-                    firmwareVersion = wallet.scanResponse.card.firmwareVersion.toSdkFirmwareVersion(),
-                    cardPublicKey = wallet.scanResponse.card.cardPublicKey,
-                    size = ArtworkSize.SMALL,
-                )
-                loadedArtworks[wallet.walletId] = artwork
-                emit(loadedArtworks)
-            }
-        }
-    }
-
     private fun createUiModels(
         wallets: List<UserWallet>,
         maybeAppCurrency: Either<SelectedAppCurrencyError, AppCurrency>,
         maybeBalances: Lce<TokenListError, Map<UserWalletId, TotalFiatBalance>>,
         balanceHidingSettings: BalanceHidingSettings,
-        artworks: HashMap<UserWalletId, ArtworkModel>,
+        artworks: Map<UserWalletId, UserWalletItemUM.ImageState>,
     ): Lce<Error, ImmutableList<UserWalletItemUM>> = lce {
         val balances = withError(
             transform = { Error.UnableToGetBalances },
