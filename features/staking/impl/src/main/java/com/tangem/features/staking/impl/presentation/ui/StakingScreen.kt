@@ -11,6 +11,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import com.tangem.common.ui.amountScreen.AmountScreenContent
 import com.tangem.common.ui.bottomsheet.permission.GiveTxPermissionBottomSheet
 import com.tangem.common.ui.bottomsheet.permission.state.GiveTxPermissionBottomSheetConfig
@@ -20,6 +21,7 @@ import com.tangem.core.ui.components.appbar.AppBarWithBackButtonAndIcon
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.test.StakingSendScreenTestTags
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.state.StakingStep
@@ -44,7 +46,8 @@ internal fun StakingScreen(uiState: StakingUiState) {
             .background(color = TangemTheme.colors.background.secondary)
             .fillMaxSize()
             .imePadding()
-            .systemBarsPadding(),
+            .systemBarsPadding()
+            .testTag(StakingSendScreenTestTags.SCREEN_CONTAINER),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         StakingAppBar(
