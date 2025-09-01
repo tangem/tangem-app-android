@@ -1,6 +1,7 @@
 package com.tangem.features.tokenreceive.ui
 
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -83,7 +84,7 @@ internal fun TokenReceiveContent(
 ) {
     Children(
         stack = stackState,
-        animation = stackAnimation(fade()),
+        animation = stackAnimation(fade(animationSpec = tween(durationMillis = 100))),
         modifier = modifier
             .fillMaxSize()
             .animateContentSize(),
