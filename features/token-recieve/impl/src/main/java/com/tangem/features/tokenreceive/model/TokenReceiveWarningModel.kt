@@ -4,7 +4,6 @@ import androidx.compose.runtime.Stable
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.core.ui.extensions.iconResId
 import com.tangem.features.tokenreceive.component.TokenReceiveWarningComponent
 import com.tangem.features.tokenreceive.ui.state.WarningUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -27,7 +26,6 @@ internal class TokenReceiveWarningModel @Inject constructor(
             iconState = params.iconState,
             onWarningAcknowledged = params.callback::onWarningAcknowledged,
             network = params.network.name,
-            networkIcon = params.network.iconResId,
         ),
     )
 }
