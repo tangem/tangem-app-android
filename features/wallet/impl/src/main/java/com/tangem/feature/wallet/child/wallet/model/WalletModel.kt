@@ -363,6 +363,9 @@ internal class WalletModel @Inject constructor(
             is WalletsUpdateActionResolver.Action.RenameWallets -> {
                 stateHolder.update(transformer = RenameWalletsTransformer(renamedWallets = action.renamedWallets))
             }
+            WalletsUpdateActionResolver.Action.EmptyWallets -> {
+                Timber.w("Wallets list is empty!")
+            }
             is WalletsUpdateActionResolver.Action.Unknown -> {
                 Timber.w("Unable to perform action: $action")
             }
