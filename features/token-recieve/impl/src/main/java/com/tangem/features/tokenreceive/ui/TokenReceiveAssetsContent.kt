@@ -230,6 +230,7 @@ private fun AddressItem(
 
                 TangemIconButton(
                     modifier = Modifier.size(TangemTheme.dimens.size28),
+                    innerPadding = 6.dp,
                     iconRes = R.drawable.ic_qrcode_new_24,
                     onClick = onOpenQrCodeClick,
                 )
@@ -239,6 +240,7 @@ private fun AddressItem(
                 TangemIconButton(
                     modifier = Modifier.size(TangemTheme.dimens.size28),
                     iconRes = R.drawable.ic_copy_new_24,
+                    innerPadding = 6.dp,
                     onClick = onCopyClick,
                 )
             }
@@ -276,8 +278,9 @@ private fun EnsItem(onCopyClick: () -> Unit, address: String, modifier: Modifier
             )
 
             TangemIconButton(
-                modifier = Modifier.size(28.dp),
+                modifier = Modifier.size(TangemTheme.dimens.size28),
                 iconRes = R.drawable.ic_copy_new_24,
+                innerPadding = 6.dp,
                 onClick = onCopyClick,
             )
         }
