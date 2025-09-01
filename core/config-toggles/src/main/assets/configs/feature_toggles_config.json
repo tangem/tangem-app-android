@@ -70,5 +70,9 @@
     {
         "name": "NEW_ONRAMP_MAIN_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "ACCOUNTS_FEATURE_ENABLED",
+        "version": "undefined"
     }
 ]
