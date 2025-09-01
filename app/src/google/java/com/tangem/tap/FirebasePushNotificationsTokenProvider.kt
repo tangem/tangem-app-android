@@ -1,4 +1,4 @@
-package com.tangem.tap.data
+package com.tangem.tap
 
 import com.google.firebase.messaging.FirebaseMessaging
 import com.tangem.utils.notifications.PushNotificationsTokenProvider
