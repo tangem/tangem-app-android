@@ -393,6 +393,7 @@
   <string name="disclaimer_error_loading">Check your internet connection or switch to a different network</string>
   <string name="disclaimer_title">Terms of service</string>
   <string name="domain_receive_assets_default_address">Default Address</string>
+  <string name="domain_receive_assets_legacy_address">Legacy Address</string>
   <string name="domain_receive_assets_navigation_title">Receive assets</string>
   <string name="domain_receive_assets_onboarding_description">Sending assets in other networks will result in permanent loss.</string>
   <string name="domain_receive_assets_onboarding_network_name">%s network</string>
@@ -985,6 +986,7 @@
   <string name="send_extras_hint_memo">Memo</string>
   <string name="send_fee_unreachable_error_text">Check your network connection</string>
   <string name="send_fee_unreachable_error_title">Network fee info unreachable</string>
+  <string name="send_from_title">You send</string>
   <string name="send_from_wallet_android">From</string>
   <string name="send_from_wallet_name">From %s</string>
   <string name="send_gas_limit">Gas limit</string>
