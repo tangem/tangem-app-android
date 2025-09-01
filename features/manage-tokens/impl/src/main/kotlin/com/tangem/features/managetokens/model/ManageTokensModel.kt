@@ -298,8 +298,10 @@ internal class ManageTokensModel @Inject constructor(
         when (val portfolio = params.mode) {
             is ManageTokensMode.Wallet ->
                 bottomSheetNavigation
-                    .activate(ManageTokensBottomSheetConfig.AddCustomToken(portfolio.userWalletId))
-            is ManageTokensMode.Account -> TODO()
+                    .activate(ManageTokensBottomSheetConfig.AddWalletCustomToken(portfolio.userWalletId))
+            is ManageTokensMode.Account ->
+                bottomSheetNavigation
+                    .activate(ManageTokensBottomSheetConfig.AddAccountCustomToken(portfolio.accountId))
             ManageTokensMode.None -> Unit
         }
     }

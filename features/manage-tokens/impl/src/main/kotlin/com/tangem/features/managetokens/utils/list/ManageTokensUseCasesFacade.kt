@@ -31,7 +31,7 @@ internal class ManageTokensUseCasesFacade @AssistedInject constructor(
 
     fun manageTokensListConfig(searchText: String?): ManageTokensListConfig {
         val userWalletId: UserWalletId? = when (mode) {
-            is ManageTokensMode.Account -> TODO()
+            is ManageTokensMode.Account -> TODO("Account")
             ManageTokensMode.None -> null
             is ManageTokensMode.Wallet -> mode.userWalletId
         }
@@ -40,7 +40,7 @@ internal class ManageTokensUseCasesFacade @AssistedInject constructor(
 
     suspend fun removeCustomCurrencyUseCase(customCurrency: ManagedCryptoCurrency.Custom): Either<Throwable, Unit> {
         return when (mode) {
-            is ManageTokensMode.Account -> TODO()
+            is ManageTokensMode.Account -> TODO("Account")
             is ManageTokensMode.Wallet -> removeCustomCurrencyUseCase.invoke(
                 userWalletId = mode.userWalletId,
                 customCurrency = customCurrency,
@@ -55,7 +55,7 @@ internal class ManageTokensUseCasesFacade @AssistedInject constructor(
         tempRemovedTokens: Map<ManagedCryptoCurrency.Token, Set<Network>>,
     ): Either<Throwable, Boolean> {
         return when (mode) {
-            is ManageTokensMode.Account -> TODO()
+            is ManageTokensMode.Account -> TODO("Account")
             is ManageTokensMode.Wallet -> checkHasLinkedTokensUseCase.invoke(
                 userWalletId = mode.userWalletId,
                 network = network,
@@ -70,7 +70,7 @@ internal class ManageTokensUseCasesFacade @AssistedInject constructor(
         sourceNetwork: ManagedCryptoCurrency.SourceNetwork,
     ): Either<Throwable, CurrencyUnsupportedState?> {
         return when (mode) {
-            is ManageTokensMode.Account -> TODO()
+            is ManageTokensMode.Account -> TODO("Account")
             is ManageTokensMode.Wallet -> checkCurrencyUnsupportedUseCase.invoke(
                 userWalletId = mode.userWalletId,
                 sourceNetwork = sourceNetwork,
@@ -80,7 +80,7 @@ internal class ManageTokensUseCasesFacade @AssistedInject constructor(
     }
 
     suspend fun hasMissedDerivationsUseCase(network: Map<String, Nothing?>): Boolean = when (mode) {
-        is ManageTokensMode.Account -> TODO()
+        is ManageTokensMode.Account -> TODO("Account")
         is ManageTokensMode.Wallet -> hasMissedDerivationsUseCase.invoke(
             userWalletId = mode.userWalletId,
             networksWithDerivationPath = network,
@@ -92,7 +92,7 @@ internal class ManageTokensUseCasesFacade @AssistedInject constructor(
         currenciesToAdd: Map<ManagedCryptoCurrency.Token, Set<Network>>,
         currenciesToRemove: Map<ManagedCryptoCurrency.Token, Set<Network>>,
     ): Either<Throwable, Unit> = when (mode) {
-        is ManageTokensMode.Account -> TODO()
+        is ManageTokensMode.Account -> TODO("Account")
         is ManageTokensMode.Wallet -> saveManagedTokensUseCase.invoke(
             userWalletId = mode.userWalletId,
             currenciesToAdd = currenciesToAdd,
