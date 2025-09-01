@@ -47,6 +47,14 @@ class WalletConnectSdkHelper {
         store.inject(DaggerGraphState::generalUserWalletsListManager)
     }
 
+    private val userWalletsListRepository by lazy {
+        store.inject(DaggerGraphState::userWalletsListRepository)
+    }
+
+    private val hotWalletFeatureToggles by lazy {
+        store.inject(DaggerGraphState::hotWalletFeatureToggles)
+    }
+
     @Suppress("MagicNumber")
     suspend fun prepareTransactionData(data: EthTransactionData): WcTransactionData {
         val transaction = data.transaction
@@ -128,13 +136,13 @@ class WalletConnectSdkHelper {
         )
     }
 
-    fun isDemoCard(): Boolean {
-        val userWallet = userWalletsListManager.selectedUserWalletSync ?: return false
+    suspend fun isDemoCard(): Boolean {
+        val userWallet = getSelectedWallet() ?: return false
         return userWallet is UserWallet.Cold && userWallet.scanResponse.isDemoCard()
     }
 
     private suspend fun getWalletManager(blockchain: Blockchain, derivationPath: String?): WalletManager? {
-        val userWallet = userWalletsListManager.selectedUserWalletSync ?: return null
+        val userWallet = getSelectedWallet() ?: return null
         val walletManagerFacade = store.inject(DaggerGraphState::walletManagersFacade)
         return walletManagerFacade.getOrCreateWalletManager(
             userWalletId = userWallet.walletId,
@@ -478,6 +486,14 @@ class WalletConnectSdkHelper {
             else -> {
                 null
             }
+        }
+    }
+
+    private suspend fun getSelectedWallet(): UserWallet? {
+        return if (hotWalletFeatureToggles.isHotWalletEnabled) {
+            userWalletsListRepository.selectedUserWalletSync()
+        } else {
+            userWalletsListManager.selectedUserWalletSync
         }
     }
 
