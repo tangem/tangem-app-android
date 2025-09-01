@@ -1,9 +1,11 @@
 package com.tangem.domain.wallets.repository
 
+import arrow.core.Either
 import com.tangem.domain.wallets.models.SeedPhraseNotificationsStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.models.UserWalletRemoteInfo
+import com.tangem.domain.wallets.models.errors.ActivatePromoCodeError
 import kotlinx.coroutines.flow.Flow
 
 @Suppress("TooManyFunctions")
@@ -58,4 +60,6 @@ interface WalletsRepository {
 
     @Throws
     suspend fun associateWallets(applicationId: String, wallets: List<UserWallet>)
+
+    suspend fun activatePromoCode(promoCode: String, bitcoinAddress: String): Either<ActivatePromoCodeError, String>
 }
