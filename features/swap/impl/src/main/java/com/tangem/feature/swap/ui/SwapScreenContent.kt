@@ -19,6 +19,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
@@ -36,6 +37,7 @@ import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.SwapTokenScreenTestTags
 import com.tangem.feature.swap.domain.models.ui.FeeType
 import com.tangem.feature.swap.domain.models.ui.PriceImpact
 import com.tangem.feature.swap.models.*
@@ -275,7 +277,8 @@ private fun SwapButton(state: SwapStateHolder, modifier: Modifier = Modifier) {
                 onClick = state.onChangeCardsClicked,
                 indication = ripple(),
                 interactionSource = remember { MutableInteractionSource() },
-            ),
+            )
+            .testTag(SwapTokenScreenTestTags.SWAP_BUTTON),
     ) {
         when (state.changeCardsButtonState) {
             ChangeCardsButtonState.UPDATE_IN_PROGRESS -> {
