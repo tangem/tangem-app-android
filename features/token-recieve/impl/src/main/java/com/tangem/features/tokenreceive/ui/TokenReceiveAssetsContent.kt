@@ -36,6 +36,7 @@ import com.tangem.core.ui.components.atoms.text.TextEllipsis
 import com.tangem.core.ui.components.buttons.small.TangemIconButton
 import com.tangem.core.ui.components.icons.identicon.IdentIcon
 import com.tangem.core.ui.components.notifications.Notification
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -78,7 +79,6 @@ internal fun TokenReceiveAssetsContent(assetsUM: ReceiveAssetsUM) {
                 onOpenQrCodeClick = assetsUM.onOpenQrCodeClick,
                 addresses = assetsUM.addresses,
                 snackbarHostState = snackbarHostState,
-                fullName = assetsUM.fullName,
             )
 
             if (assetsUM.isEnsResultLoading) {
@@ -125,7 +125,6 @@ private fun AddressBlock(
     onCopyClick: (id: Int) -> Unit,
     addresses: ImmutableMap<Int, ReceiveAddress>,
     snackbarHostState: SnackbarHostState,
-    fullName: String,
 ) {
     val hapticFeedback = LocalHapticFeedback.current
     val coroutineScope = rememberCoroutineScope()
@@ -133,8 +132,8 @@ private fun AddressBlock(
     val resources = context.resources
 
     addresses.entries.toList().fastForEach { entry ->
-        when (entry.value.type) {
-            is ReceiveAddress.Type.Default -> {
+        when (val type = entry.value.type) {
+            is ReceiveAddress.Type.Primary -> {
                 key(entry.key) {
                     AddressItem(
                         onCopyClick = {
@@ -152,8 +151,8 @@ private fun AddressBlock(
                             hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                             onOpenQrCodeClick(entry.key)
                         },
-                        fullName = fullName,
                         address = entry.value.value,
+                        primaryType = type,
                     )
                     SpacerH8()
                 }
@@ -184,9 +183,9 @@ private fun AddressBlock(
 @Composable
 private fun AddressItem(
     onOpenQrCodeClick: () -> Unit,
-    fullName: String,
     onCopyClick: () -> Unit,
     address: String,
+    primaryType: ReceiveAddress.Type.Primary,
     modifier: Modifier = Modifier,
 ) {
     Card(
@@ -195,52 +194,56 @@ private fun AddressItem(
         colors = CardDefaults.cardColors(containerColor = TangemTheme.colors.background.action),
         onClick = onOpenQrCodeClick,
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 14.dp, horizontal = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
+        Column(
+            modifier = Modifier.padding(vertical = 14.dp, horizontal = 12.dp),
         ) {
-            IdentIcon(
-                address = address,
-                modifier = Modifier
-                    .size(size = 36.dp)
-                    .clip(shape = RoundedCornerShape(18.dp)),
-            )
-
-            SpacerW12()
-
-            Column(modifier = Modifier.weight(1f)) {
-                EllipsisText(
-                    text = stringResourceSafe(R.string.domain_receive_assets_onboarding_network_name, fullName),
-                    ellipsis = TextEllipsis.Middle,
-                    color = TangemTheme.colors.text.primary1,
-                    style = TangemTheme.typography.subtitle1,
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                IdentIcon(
+                    address = address,
+                    modifier = Modifier
+                        .size(size = 36.dp)
+                        .clip(shape = RoundedCornerShape(18.dp)),
                 )
 
-                EllipsisText(
-                    text = address,
-                    ellipsis = TextEllipsis.Middle,
-                    color = TangemTheme.colors.text.tertiary,
-                    style = TangemTheme.typography.caption2,
+                SpacerW12()
+
+                Column(modifier = Modifier.weight(1f)) {
+                    EllipsisText(
+                        text = primaryType.displayName.resolveReference(),
+                        ellipsis = TextEllipsis.Middle,
+                        color = TangemTheme.colors.text.primary1,
+                        style = TangemTheme.typography.subtitle1,
+                    )
+
+                    EllipsisText(
+                        text = address,
+                        ellipsis = TextEllipsis.Middle,
+                        color = TangemTheme.colors.text.tertiary,
+                        style = TangemTheme.typography.caption2,
+                    )
+                }
+
+                SpacerW12()
+
+                TangemIconButton(
+                    modifier = Modifier.size(TangemTheme.dimens.size28),
+                    innerPadding = 6.dp,
+                    iconRes = R.drawable.ic_qrcode_new_24,
+                    onClick = onOpenQrCodeClick,
+                )
+
+                SpacerW8()
+
+                TangemIconButton(
+                    modifier = Modifier.size(TangemTheme.dimens.size28),
+                    iconRes = R.drawable.ic_copy_new_24,
+                    innerPadding = 6.dp,
+                    onClick = onCopyClick,
                 )
             }
-
-            SpacerW12()
-
-            TangemIconButton(
-                modifier = Modifier.size(TangemTheme.dimens.size28),
-                iconRes = R.drawable.ic_qrcode_new_24,
-                onClick = onOpenQrCodeClick,
-            )
-
-            SpacerW8()
-
-            TangemIconButton(
-                modifier = Modifier.size(TangemTheme.dimens.size28),
-                iconRes = R.drawable.ic_copy_new_24,
-                onClick = onCopyClick,
-            )
         }
     }
 }
@@ -275,8 +278,9 @@ private fun EnsItem(onCopyClick: () -> Unit, address: String, modifier: Modifier
             )
 
             TangemIconButton(
-                modifier = Modifier.size(28.dp),
+                modifier = Modifier.size(TangemTheme.dimens.size28),
                 iconRes = R.drawable.ic_copy_new_24,
+                innerPadding = 6.dp,
                 onClick = onCopyClick,
             )
         }
@@ -318,7 +322,7 @@ private fun Preview_TokenReceiveAssetsContent(
 private class TokenReceiveAssetsContentProvider : PreviewParameterProvider<ReceiveAssetsUM> {
     val address = ReceiveAddress(
         value = "0xe5178c7d4d0e861ed2e9414e045b501226b0de8d",
-        type = ReceiveAddress.Type.Default(
+        type = ReceiveAddress.Type.Primary.Default(
             displayName = stringReference("Etherium address"),
         ),
     )
@@ -338,7 +342,6 @@ private class TokenReceiveAssetsContentProvider : PreviewParameterProvider<Recei
         onCopyClick = {},
         onOpenQrCodeClick = {},
         isEnsResultLoading = true,
-        fullName = "Etherium",
     )
 
     override val values: Sequence<ReceiveAssetsUM>

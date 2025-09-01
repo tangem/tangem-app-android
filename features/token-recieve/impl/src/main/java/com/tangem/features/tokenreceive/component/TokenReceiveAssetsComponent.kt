@@ -8,6 +8,7 @@ import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.domain.tokens.model.analytics.TokenReceiveCopyActionSource
 import com.tangem.features.tokenreceive.entity.ReceiveAddress
 import com.tangem.features.tokenreceive.model.TokenReceiveAssetsModel
 import com.tangem.features.tokenreceive.ui.TokenReceiveAssetsContent
@@ -29,7 +30,7 @@ internal class TokenReceiveAssetsComponent(
 
     internal interface TokenReceiveAssetsModelCallback {
         fun onQrCodeClick(id: Int)
-        fun onCopyClick(id: Int)
+        fun onCopyClick(id: Int, source: TokenReceiveCopyActionSource)
     }
 
     data class TokenReceiveAssetsParams(
