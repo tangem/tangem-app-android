@@ -47,6 +47,7 @@ import com.tangem.feature.walletsettings.utils.AccountItemsDelegate
 import com.tangem.feature.walletsettings.utils.ItemsBuilder
 import com.tangem.feature.walletsettings.utils.WalletCardItemDelegate
 import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
+import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
@@ -58,7 +59,6 @@ import javax.inject.Inject
 @Suppress("LongParameterList", "LargeClass")
 @ModelScoped
 internal class WalletSettingsModel @Inject constructor(
-    getWalletUseCase: GetUserWalletUseCase,
     paramsContainer: ParamsContainer,
     private val router: Router,
     private val messageSender: UiMessageSender,
@@ -75,6 +75,7 @@ internal class WalletSettingsModel @Inject constructor(
     private val disableWalletNFTUseCase: DisableWalletNFTUseCase,
     private val notificationsToggles: NotificationsFeatureToggles,
     getWalletNotificationsEnabledUseCase: GetWalletNotificationsEnabledUseCase,
+    private val getUserWalletUseCase: GetUserWalletUseCase,
     private val setNotificationsEnabledUseCase: SetNotificationsEnabledUseCase,
     private val settingsManager: SettingsManager,
     private val permissionsRepository: PermissionRepository,
@@ -82,6 +83,7 @@ internal class WalletSettingsModel @Inject constructor(
     private val getIsHuaweiDeviceWithoutGoogleServicesUseCase: GetIsHuaweiDeviceWithoutGoogleServicesUseCase,
     private val isUpgradeWalletNotificationEnabledUseCase: IsUpgradeWalletNotificationEnabledUseCase,
     private val dismissUpgradeWalletNotificationUseCase: DismissUpgradeWalletNotificationUseCase,
+    private val unlockHotWalletContextualUseCase: UnlockHotWalletContextualUseCase,
 ) : Model() {
 
     val params: WalletSettingsComponent.Params = paramsContainer.require()
@@ -147,7 +149,7 @@ internal class WalletSettingsModel @Inject constructor(
                 )
             }
         }
-        getWalletUseCase.invokeFlow(params.userWalletId)
+        getUserWalletUseCase.invokeFlow(params.userWalletId)
             .distinctUntilChanged()
             .filterIsInstance<Either.Right<UserWallet>>()
             .flatMapLatest { combineUI(it.value) }
@@ -364,7 +366,27 @@ internal class WalletSettingsModel @Inject constructor(
         if (!state.value.isWalletBackedUp) {
             messageSender.send(makeBackupAtFirstAlertBS)
         } else {
-            router.push(AppRoute.UpdateAccessCode(params.userWalletId))
+            val userWallet = getUserWalletUseCase(params.userWalletId)
+                .getOrElse { error("User wallet with id ${params.userWalletId} not found") }
+            if (userWallet is UserWallet.Hot) {
+                val hotWalletId = userWallet.hotWalletId
+                when (hotWalletId.authType) {
+                    HotWalletId.AuthType.NoPassword -> {
+                        router.push(AppRoute.UpdateAccessCode(params.userWalletId))
+                    }
+                    HotWalletId.AuthType.Password,
+                    HotWalletId.AuthType.Biometry,
+                    -> modelScope.launch {
+                        unlockHotWalletContextualUseCase.invoke(hotWalletId)
+                            .onLeft {
+                                Timber.e("Unable to unlock wallet with id ${params.userWalletId}")
+                            }
+                            .onRight {
+                                router.push(AppRoute.UpdateAccessCode(params.userWalletId))
+                            }
+                    }
+                }
+            }
         }
     }
 

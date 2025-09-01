@@ -9,10 +9,13 @@ import com.tangem.domain.core.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.repository.WalletsRepository
+import com.tangem.domain.wallets.usecase.ClearHotWalletContextualUnlockUseCase
+import com.tangem.domain.wallets.usecase.GetHotWalletContextualUnlockUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.hotwallet.accesscode.entity.AccessCodeUM
 import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.hot.sdk.model.HotAuth
+import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.hot.sdk.model.UnlockHotWallet
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,12 +25,15 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @Stable
 @ModelScoped
 internal class AccessCodeModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val getUserWalletUseCase: GetUserWalletUseCase,
+    private val getHotWalletContextualUnlockUseCase: GetHotWalletContextualUnlockUseCase,
+    private val clearHotWalletContextualUnlockUseCase: ClearHotWalletContextualUnlockUseCase,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val walletsRepository: WalletsRepository,
     private val tangemHotSdk: TangemHotSdk,
@@ -35,13 +41,15 @@ internal class AccessCodeModel @Inject constructor(
 
     private val params = paramsContainer.require<AccessCodeComponent.Params>()
 
+    private var hotWalletId: HotWalletId? = null
+
     internal val uiState: StateFlow<AccessCodeUM>
     field = MutableStateFlow(getInitialState())
 
     private fun getInitialState() = AccessCodeUM(
         accessCode = "",
         onAccessCodeChange = ::onAccessCodeChange,
-        isConfirmMode = params.isConfirmMode,
+        isConfirmMode = params.accessCodeToConfirm != null,
         buttonEnabled = false,
         buttonInProgress = false,
         onButtonClick = ::onButtonClick,
@@ -51,7 +59,7 @@ internal class AccessCodeModel @Inject constructor(
         uiState.update {
             it.copy(
                 accessCode = value,
-                buttonEnabled = if (params.isConfirmMode) {
+                buttonEnabled = if (params.accessCodeToConfirm != null) {
                     value == params.accessCodeToConfirm
                 } else {
                     value.length == uiState.value.accessCodeLength
@@ -61,12 +69,10 @@ internal class AccessCodeModel @Inject constructor(
     }
 
     private fun onButtonClick() {
-        if (!params.isConfirmMode) {
-            params.callbacks.onAccessCodeSet(params.userWalletId, uiState.value.accessCode)
+        if (params.accessCodeToConfirm == null) {
+            params.callbacks.onNewAccessCodeInput(params.userWalletId, uiState.value.accessCode)
         } else {
-            params.accessCodeToConfirm?.let {
-                setCode(params.userWalletId, it)
-            }
+            setCode(params.userWalletId, params.accessCodeToConfirm)
         }
     }
 
@@ -81,7 +87,9 @@ internal class AccessCodeModel @Inject constructor(
                     .getOrElse { error("User wallet with id $userWalletId not found") }
                 if (userWallet !is UserWallet.Hot) return@launch
 
-                val unlockHotWallet = UnlockHotWallet(userWallet.hotWalletId, HotAuth.NoAuth)
+                val unlockHotWallet = getHotWalletContextualUnlockUseCase(userWallet.hotWalletId)
+                    .getOrNull()
+                    ?: UnlockHotWallet(userWallet.hotWalletId, HotAuth.NoAuth)
                 var updatedHotWalletId = tangemHotSdk.changeAuth(
                     unlockHotWallet = unlockHotWallet,
                     auth = HotAuth.Password(accessCode.toCharArray()),
@@ -117,7 +125,7 @@ internal class AccessCodeModel @Inject constructor(
                     )
                 }
 
-                params.callbacks.onAccessCodeConfirmed(params.userWalletId)
+                params.callbacks.onAccessCodeUpdated(params.userWalletId)
             }.onFailure {
                 Timber.e(it)
 
@@ -126,5 +134,10 @@ internal class AccessCodeModel @Inject constructor(
                 }
             }
         }
+    }
+
+    override fun onDestroy() {
+        hotWalletId?.let { clearHotWalletContextualUnlockUseCase.invoke(it) }
+        super.onDestroy()
     }
 }

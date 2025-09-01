@@ -19,7 +19,6 @@ internal class UpdateAccessCodeChildFactory @Inject constructor(
             is UpdateAccessCodeRoute.SetAccessCode -> accessCodeComponentFactory.create(
                 context = childContext,
                 params = AccessCodeComponent.Params(
-                    isConfirmMode = false,
                     userWalletId = route.userWalletId,
                     callbacks = model,
                 ),
@@ -27,7 +26,6 @@ internal class UpdateAccessCodeChildFactory @Inject constructor(
             is UpdateAccessCodeRoute.ConfirmAccessCode -> accessCodeComponentFactory.create(
                 context = childContext,
                 params = AccessCodeComponent.Params(
-                    isConfirmMode = true,
                     accessCodeToConfirm = route.accessCode,
                     userWalletId = route.userWalletId,
                     callbacks = model,
