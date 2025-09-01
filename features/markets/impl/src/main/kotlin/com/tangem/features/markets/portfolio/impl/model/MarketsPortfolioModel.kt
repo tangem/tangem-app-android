@@ -26,6 +26,7 @@ import com.tangem.domain.models.ReceiveAddressModel
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isMultiCurrency
@@ -390,16 +391,17 @@ internal class MarketsPortfolioModel @Inject constructor(
                                 ReceiveAddressModel(
                                     nameService = ReceiveAddressModel.NameService.Ens,
                                     value = ens,
-                                    displayName = ens,
                                 ),
                             )
                         }
                         addresses.availableAddresses.map { address ->
                             add(
                                 ReceiveAddressModel(
-                                    nameService = ReceiveAddressModel.NameService.Default,
+                                    nameService = when (address.type) {
+                                        NetworkAddress.Address.Type.Primary -> ReceiveAddressModel.NameService.Default
+                                        NetworkAddress.Address.Type.Secondary -> ReceiveAddressModel.NameService.Legacy
+                                    },
                                     value = address.value,
-                                    displayName = "${cryptoCurrency.name} (${cryptoCurrency.symbol})",
                                 ),
                             )
                         }
