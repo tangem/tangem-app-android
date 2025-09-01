@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.BottomCenter
 import androidx.compose.ui.Alignment.Companion.TopCenter
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.graphicsLayer
@@ -127,7 +128,7 @@ private fun AmountSecondary(amountUM: AmountState, onCurrencyChange: (Boolean) -
         modifier = Modifier
             .fillMaxWidth()
             .animateContentSize()
-            .padding(top = 8.dp),
+            .padding(top = 4.dp),
     ) {
         if (amountUM is AmountState.Empty) {
             TextShimmer(
@@ -148,7 +149,7 @@ private fun AmountSecondary(amountUM: AmountState, onCurrencyChange: (Boolean) -
                 error = amountUM.amountTextField.error,
                 modifier = Modifier
                     .align(BottomCenter)
-                    .padding(top = 20.dp),
+                    .padding(top = 24.dp),
             )
         }
     }
@@ -156,17 +157,21 @@ private fun AmountSecondary(amountUM: AmountState, onCurrencyChange: (Boolean) -
 
 @Composable
 private fun BoxScope.AmountFieldCurrencyInfo(amountUM: AmountState.Data, onCurrencyChange: (Boolean) -> Unit) {
+    val isFiatAvailable = amountUM.amountTextField.fiatAmount.value != null
+
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
         modifier = Modifier
             .align(TopCenter)
-            .padding(bottom = 20.dp)
+            .padding(bottom = 16.dp)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
                 onClick = { onCurrencyChange(!amountUM.amountTextField.isFiatValue) },
-            ),
+            )
+            .alpha(if (isFiatAvailable) 1f else 0f)
+            .padding(4.dp),
     ) {
         val iconRotateState by animateFloatAsState(
             targetValue = if (amountUM.amountTextField.isFiatValue) ROTATED_DEGREE else INITIAL_DEGREE,
@@ -324,6 +329,8 @@ private class AmountFieldV2PreviewProvider : PreviewParameterProvider<AmountStat
         get() = sequenceOf(
             AmountStatePreviewData.emptyState,
             AmountStatePreviewData.amountState,
+            AmountStatePreviewData.amountErrorState,
+            AmountStatePreviewData.amountStateV2WithoutRates,
         )
 }
 // endregion
