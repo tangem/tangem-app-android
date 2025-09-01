@@ -28,6 +28,7 @@ import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.requireColdWallet
+import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.settings.IsSendTapHelpEnabledUseCase
 import com.tangem.domain.settings.NeverShowTapHelpUseCase
 import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
@@ -105,6 +106,7 @@ internal class SendConfirmModel @Inject constructor(
     private val feeSelectorReloadTrigger: FeeSelectorReloadTrigger,
     private val feeReloadTrigger: SendFeeReloadTrigger,
     private val sendAmountReduceTrigger: SendAmountReduceTrigger,
+    private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     sendBalanceUpdaterFactory: SendBalanceUpdater.Factory,
 ) : Model(), SendConfirmClickIntents, FeeSelectorModelCallback, SendNotificationsComponent.ModelCallback {
 
@@ -120,6 +122,9 @@ internal class SendConfirmModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(params.state)
     val uiState = _uiState.asStateFlow()
+
+    val isBalanceHiddenFlow: StateFlow<Boolean>
+    field = MutableStateFlow(false)
 
     private val amountState
         get() = uiState.value.amountUM as? AmountState.Data
@@ -139,8 +144,16 @@ internal class SendConfirmModel @Inject constructor(
             reduceAmountBy = amountState?.reduceAmountBy.orZero(),
             isIgnoreReduce = amountState?.isIgnoreReduce == true,
             enteredDestination = destinationUM?.addressTextField?.actualAddress,
-            fee = feeSelectorUM?.selectedFee,
-            feeError = (feeUM?.feeSelectorUM as? FeeSelectorUM.Error)?.error,
+            fee = if (uiState.value.isRedesignEnabled) {
+                feeUMV2?.selectedFeeItem?.fee
+            } else {
+                feeSelectorUM?.selectedFee
+            },
+            feeError = if (uiState.value.isRedesignEnabled) {
+                (uiState.value.feeSelectorUM as? FeeSelectorUMRedesigned.Error)?.error
+            } else {
+                (feeUM?.feeSelectorUM as? FeeSelectorUM.Error)?.error
+            },
         )
 
     private var sendIdleTimer: Long = 0L
@@ -156,6 +169,7 @@ internal class SendConfirmModel @Inject constructor(
         subscribeOnNotificationsUpdateTrigger()
         subscribeOnCheckFeeResultUpdates()
         initialState()
+        subscribeOnBalanceHidden()
     }
 
     fun updateState(state: SendUM) {
@@ -509,6 +523,16 @@ internal class SendConfirmModel @Inject constructor(
                 _uiState.update(SendConfirmSendingStateTransformer(isSending = false))
             }
         }.launchIn(modelScope)
+    }
+
+    private fun subscribeOnBalanceHidden() {
+        getBalanceHidingSettingsUseCase()
+            .conflate()
+            .distinctUntilChanged()
+            .onEach { balanceHidingSettings ->
+                isBalanceHiddenFlow.update { balanceHidingSettings.isBalanceHidden }
+            }
+            .launchIn(modelScope)
     }
 
     private fun updateConfirmNotifications() {
