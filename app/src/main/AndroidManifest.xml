@@ -51,18 +51,23 @@
             property to make the "android:screenOrientation" work on API <37
             https://developer.android.com/about/versions/16/behavior-changes-16
          -->
-        <property android:name="android.window.PROPERTY_COMPAT_ALLOW_RESTRICTED_RESIZABILITY"
+        <property
+            android:name="android.window.PROPERTY_COMPAT_ALLOW_RESTRICTED_RESIZABILITY"
             android:value="true" />
 
         <meta-data
             android:name="com.google.android.gms.wallet.api.enabled"
             android:value="true" />
 
+        <!--
+            Use android:launchMode="singleInstance" to ensure a single MainActivity instance in its own task;
+            Prevents duplicate launches from deep links/external intents
+        -->
         <activity
             android:name="com.tangem.tap.MainActivity"
             android:configChanges="uiMode"
             android:exported="true"
-            android:launchMode="singleTop"
+            android:launchMode="singleInstance"
             android:screenOrientation="portrait"
             android:theme="@style/SplashTheme"
             android:windowSoftInputMode="adjustResize">
@@ -246,6 +251,17 @@
 
                 <data
                     android:host="swap"
+                    android:scheme="tangem" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:host="promo"
                     android:scheme="tangem" />
             </intent-filter>
         </activity>
