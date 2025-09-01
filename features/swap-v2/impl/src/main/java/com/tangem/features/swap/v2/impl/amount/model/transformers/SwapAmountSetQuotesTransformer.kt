@@ -8,8 +8,10 @@ import com.tangem.domain.express.models.ExpressError
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM.Content.DifferencePercent
+import com.tangem.features.swap.v2.impl.common.isRestrictedByFCA
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.extensions.isPositive
+import com.tangem.utils.extensions.isSingleItem
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toPersistentList
@@ -20,44 +22,65 @@ internal class SwapAmountSetQuotesTransformer(
     private val secondaryMaximumAmountBoundary: EnterAmountBoundary?,
     private val secondaryMinimumAmountBoundary: EnterAmountBoundary?,
     private val isSilentReload: Boolean,
+    private val needApplyFcaRestrictions: Boolean,
 ) : Transformer<SwapAmountUM> {
     override fun transform(prevState: SwapAmountUM): SwapAmountUM {
         if (prevState !is SwapAmountUM.Content) return prevState
 
+        val isSingleProvider = quotes.filter {
+            it is SwapQuoteUM.Content || it is SwapQuoteUM.Allowance ||
+                (it as? SwapQuoteUM.Error)?.expressError is ExpressError.AmountError
+        }.isSingleItem()
+
         val sortedQuotes = quotes.sortedWith(SwapQuotesComparator)
         val bestQuote = findBestQuote(quotes) ?: SwapQuoteUM.Empty
-        val selectedQuote = if (isSilentReload) {
-            prevState.selectedQuote
+        val quotesWithDiff = getQuotesWithDiff(sortedQuotes, bestQuote, isSingleProvider)
+        val selectedQuote = if (isSilentReload && prevState.selectedQuote !is SwapQuoteUM.Loading) {
+            quotesWithDiff.firstOrNull { it.provider?.providerId == prevState.selectedQuote.provider?.providerId }
+                ?: prevState.selectedQuote
         } else {
-            bestQuote
+            (bestQuote as? SwapQuoteUM.Content)?.copy(
+                diffPercent = DifferencePercent.Best,
+                isSingleProvider = isSingleProvider,
+            ) ?: bestQuote
         }
 
         val selectQuoteTransformer = SwapAmountSelectQuoteTransformer(
             quoteUM = selectedQuote,
             secondaryMaximumAmountBoundary = secondaryMaximumAmountBoundary,
             secondaryMinimumAmountBoundary = secondaryMinimumAmountBoundary,
+            needApplyFCARestrictions = needApplyFcaRestrictions &&
+                selectedQuote.provider?.isRestrictedByFCA() == true,
         )
 
         val updatedState = selectQuoteTransformer.transform(prevState = prevState)
         if (updatedState !is SwapAmountUM.Content) return prevState
 
         return updatedState.copy(
-            isPrimaryButtonEnabled = updatedState.isPrimaryButtonEnabled && quotes.isNotEmpty(),
-            swapQuotes = getQuotesWithDiff(sortedQuotes, bestQuote),
+            isPrimaryButtonEnabled = updatedState.isPrimaryButtonEnabled && quotesWithDiff.isNotEmpty(),
+            swapQuotes = getQuotesWithDiff(sortedQuotes, bestQuote, isSingleProvider),
         )
     }
 
-    private fun getQuotesWithDiff(sortedQuotes: List<SwapQuoteUM>, bestQuote: SwapQuoteUM): ImmutableList<SwapQuoteUM> {
+    private fun getQuotesWithDiff(
+        sortedQuotes: List<SwapQuoteUM>,
+        bestQuote: SwapQuoteUM,
+        isSingleProvider: Boolean,
+    ): ImmutableList<SwapQuoteUM> {
         return sortedQuotes.sortedWith(SwapQuotesComparator)
             .map { quote ->
                 if (quote is SwapQuoteUM.Content && bestQuote is SwapQuoteUM.Content) {
                     if (quote.provider.providerId == bestQuote.provider.providerId) {
-                        quote.copy(diffPercent = DifferencePercent.Best)
+                        quote.copy(
+                            diffPercent = DifferencePercent.Best,
+                            isSingleProvider = isSingleProvider,
+                        )
                     } else {
                         // current / selected - 1
                         val percent = quote.quoteAmount / bestQuote.quoteAmount - BigDecimal.ONE
                         quote.copy(
                             diffPercent = DifferencePercent.Diff(
+                                isPositive = percent.isPositive(),
                                 percent = stringReference(
                                     if (percent.isPositive()) {
                                         "${StringsSigns.PLUS}${percent.format { percent() }}"

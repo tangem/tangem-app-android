@@ -2,9 +2,9 @@ package com.tangem.domain.onramp
 
 import arrow.core.Either
 import arrow.core.raise.either
-import com.tangem.domain.onramp.repositories.LegacyTopUpRepository
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.onramp.model.error.OnrampError
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.onramp.repositories.LegacyTopUpRepository
 
 class GetLegacyTopUpUrlUseCase(
     private val legacyTopUpRepository: LegacyTopUpRepository,
