@@ -25,6 +25,7 @@ internal class SwapAmountFieldConverter(
     private val userWallet: UserWallet,
     private val appCurrency: AppCurrency,
     private val clickIntents: AmountScreenClickIntents,
+    private val isSingleWallet: Boolean,
 ) {
 
     private val iconStateConverter = CryptoCurrencyToIconStateConverter()
@@ -51,11 +52,15 @@ internal class SwapAmountFieldConverter(
                 isBalanceHidden = isBalanceHidden,
             ).convert(
                 AmountParameters(
-                    title = combinedReference(
-                        resourceReference(R.string.send_from_wallet_android),
-                        stringReference(" "),
-                        stringReference(userWallet.name),
-                    ),
+                    title = if (isSingleWallet) {
+                        resourceReference(R.string.send_from_title)
+                    } else {
+                        combinedReference(
+                            resourceReference(R.string.send_from_wallet_android),
+                            stringReference(" "),
+                            stringReference(userWallet.name),
+                        )
+                    },
                     value = "",
                 ),
             ),

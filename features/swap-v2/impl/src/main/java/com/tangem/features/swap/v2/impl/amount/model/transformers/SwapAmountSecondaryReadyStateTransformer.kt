@@ -25,6 +25,7 @@ internal class SwapAmountSecondaryReadyStateTransformer(
     private val swapDirection: SwapDirection,
     private val isBalanceHidden: Boolean,
     private val showBestRateAnimation: Boolean,
+    private val isSingleWallet: Boolean,
 ) : Transformer<SwapAmountUM> {
 
     private val amountFieldConverter = SwapAmountFieldConverter(
@@ -33,6 +34,7 @@ internal class SwapAmountSecondaryReadyStateTransformer(
         userWallet = userWallet,
         appCurrency = appCurrency,
         clickIntents = clickIntents,
+        isSingleWallet = isSingleWallet,
     )
 
     override fun transform(prevState: SwapAmountUM): SwapAmountUM {
