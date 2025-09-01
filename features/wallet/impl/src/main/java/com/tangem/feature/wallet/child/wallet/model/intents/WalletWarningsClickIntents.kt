@@ -11,7 +11,7 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.wallets.usecase.DerivePublicKeysUseCase
 import com.tangem.domain.card.SetCardWasScannedUseCase
-import com.tangem.domain.feedback.GetCardInfoUseCase
+import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -107,7 +107,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val dispatchers: CoroutineDispatcherProvider,
     private val shouldShowPromoWalletUseCase: ShouldShowPromoWalletUseCase,
-    private val getCardInfoUseCase: GetCardInfoUseCase,
+    private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val seedPhraseNotificationUseCase: SeedPhraseNotificationUseCase,
     private val urlOpener: UrlOpener,
@@ -244,15 +244,9 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
             neverToSuggestRateAppUseCase()
 
             val userWallet = getSelectedUserWallet() ?: return@launch
+            val cardInfo = getWalletMetaInfoUseCase(userWallet.walletId).getOrNull() ?: return@launch
 
-            if (userWallet is UserWallet.Hot) {
-                return@launch // TODO [REDACTED_TASK_KEY] [Hot Wallet] Email feedback flow
-            }
-
-            val scanResponse = userWallet.requireColdWallet().scanResponse
-            val cardInfo = getCardInfoUseCase(scanResponse).getOrNull() ?: return@launch
-
-            sendFeedbackEmailUseCase(type = FeedbackEmailType.RateCanBeBetter(cardInfo = cardInfo))
+            sendFeedbackEmailUseCase(type = FeedbackEmailType.RateCanBeBetter(walletMetaInfo = cardInfo))
         }
     }
 
@@ -292,15 +286,9 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     override fun onSupportClick() {
         val userWallet = getSelectedUserWallet() ?: return
 
-        if (userWallet is UserWallet.Hot) {
-            return // TODO [REDACTED_TASK_KEY] [Hot Wallet] Email feedback flow
-        }
-
-        val scanResponse = userWallet.requireColdWallet().scanResponse
-        val cardInfo = getCardInfoUseCase(scanResponse).getOrNull() ?: return
-
         modelScope.launch {
-            sendFeedbackEmailUseCase(type = FeedbackEmailType.DirectUserRequest(cardInfo = cardInfo))
+            val metaInfo = getWalletMetaInfoUseCase(userWallet.walletId).getOrNull() ?: return@launch
+            sendFeedbackEmailUseCase(type = FeedbackEmailType.DirectUserRequest(walletMetaInfo = metaInfo))
         }
     }
 
