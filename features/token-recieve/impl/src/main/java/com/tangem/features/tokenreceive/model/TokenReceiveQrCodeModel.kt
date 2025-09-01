@@ -5,8 +5,8 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.domain.tokens.model.analytics.TokenReceiveCopyActionSource
 import com.tangem.features.tokenreceive.component.TokenReceiveQrCodeComponent
-import com.tangem.features.tokenreceive.entity.ReceiveAddress
 import com.tangem.features.tokenreceive.ui.state.QrCodeUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,10 +25,15 @@ internal class TokenReceiveQrCodeModel @Inject constructor(
     internal val state: StateFlow<QrCodeUM>
     field = MutableStateFlow<QrCodeUM>(
         QrCodeUM(
-            network = params.network,
+            network = params.cryptoCurrency.network.name,
             addressValue = params.address.value,
-            addressName = (params.address.type as? ReceiveAddress.Type.Default)?.displayName ?: TextReference.EMPTY,
-            onCopyClick = { params.callback.onCopyClick(params.id) },
+            addressName = TextReference.Str("${params.cryptoCurrency.name} (${params.cryptoCurrency.symbol})"),
+            onCopyClick = {
+                params.callback.onCopyClick(
+                    id = params.id,
+                    source = TokenReceiveCopyActionSource.QR,
+                )
+            },
             onShareClick = params.callback::onShareClick,
         ),
     )

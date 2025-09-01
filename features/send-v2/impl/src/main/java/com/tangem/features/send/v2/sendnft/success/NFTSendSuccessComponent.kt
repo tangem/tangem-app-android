@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.tangem.common.ui.navigationButtons.NavigationModelCallback
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -85,7 +86,7 @@ internal class NFTSendSuccessComponent @AssistedInject constructor(
         val callback: ModelCallback,
     )
 
-    interface ModelCallback {
+    interface ModelCallback : NavigationModelCallback {
         fun onResult(nftSendUM: NFTSendUM)
     }
 

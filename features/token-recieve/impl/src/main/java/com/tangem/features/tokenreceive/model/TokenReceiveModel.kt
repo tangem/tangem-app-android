@@ -12,19 +12,22 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.notifications.NotificationConfig
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.models.Asset
 import com.tangem.domain.models.ReceiveAddressModel
 import com.tangem.domain.models.ens.EnsAddress
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.tokens.SaveViewedTokenReceiveWarningUseCase
+import com.tangem.domain.tokens.model.analytics.TokenReceiveCopyActionSource
 import com.tangem.domain.tokens.model.analytics.TokenReceiveNewAnalyticsEvent
 import com.tangem.domain.transaction.usecase.GetReverseResolvedEnsAddressUseCase
 import com.tangem.features.tokenreceive.TokenReceiveComponent
 import com.tangem.features.tokenreceive.component.TokenReceiveModelCallback
 import com.tangem.features.tokenreceive.entity.ReceiveAddress
+import com.tangem.features.tokenreceive.entity.ReceiveAddress.Type.Ens
+import com.tangem.features.tokenreceive.entity.ReceiveAddress.Type.Primary
 import com.tangem.features.tokenreceive.route.TokenReceiveRoutes
 import com.tangem.features.tokenreceive.ui.state.TokenReceiveUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -74,9 +77,9 @@ internal class TokenReceiveModel @Inject constructor(
         stackNavigation.push(configuration = TokenReceiveRoutes.QrCode(addressId = id))
     }
 
-    override fun onCopyClick(id: Int) {
+    override fun onCopyClick(id: Int, source: TokenReceiveCopyActionSource) {
         val addressToCopy = state.value.addresses[id] ?: return
-        sendCopyActionAnalytic(addressToCopy)
+        sendCopyActionAnalytic(addressToCopy, source)
         clipboardManager.setText(text = addressToCopy.value, isSensitive = true)
     }
 
@@ -103,17 +106,35 @@ internal class TokenReceiveModel @Inject constructor(
         }
     }
 
-    private fun mapAddresses(addresses: List<ReceiveAddressModel>): ImmutableMap<Int, ReceiveAddress> {
+    private fun mapAddresses(
+        addresses: List<ReceiveAddressModel>,
+        networkName: String,
+    ): ImmutableMap<Int, ReceiveAddress> {
+        val needUseToLegacyAndDefaultName = addresses.any { it.nameService == ReceiveAddressModel.NameService.Legacy }
         return buildMap {
             addresses.mapIndexed { index, model ->
                 val type = when (model.nameService) {
                     ReceiveAddressModel.NameService.Default -> {
-                        ReceiveAddress.Type.Default(
-                            displayName = stringReference(model.displayName),
+                        Primary.Default(
+                            displayName = if (needUseToLegacyAndDefaultName) {
+                                TextReference.Res(R.string.domain_receive_assets_default_address)
+                            } else {
+                                TextReference.Combined(
+                                    wrappedList(
+                                        TextReference.Str(networkName),
+                                        TextReference.Str(" "),
+                                        TextReference.Res(R.string.common_address),
+                                    ),
+                                )
+                            },
                         )
                     }
-                    ReceiveAddressModel.NameService.Ens -> ReceiveAddress.Type.Ens
+                    ReceiveAddressModel.NameService.Ens -> Ens
+                    ReceiveAddressModel.NameService.Legacy -> Primary.Legacy(
+                        displayName = TextReference.Res(R.string.domain_receive_assets_legacy_address),
+                    )
                 }
+
                 put(
                     key = index,
                     value = ReceiveAddress(
@@ -146,10 +167,18 @@ internal class TokenReceiveModel @Inject constructor(
         val newEnsAddresses = reverseResolveResult
             .filterIsInstance<EnsAddress.Address>()
             .filterNot { it.name in currentAddressValues }
-            .map { ensAddress -> ReceiveAddress(value = ensAddress.name, type = ReceiveAddress.Type.Ens) }
+            .map { ensAddress -> ReceiveAddress(value = ensAddress.name, type = Ens) }
 
         val combinedAddresses = (state.value.addresses.values + newEnsAddresses)
-            .sortedWith(compareByDescending { it.type is ReceiveAddress.Type.Ens })
+            .sortedWith(
+                compareBy { address ->
+                    when (address.type) {
+                        is Ens -> 0
+                        is Primary.Default -> 1
+                        is Primary.Legacy -> 2
+                    }
+                },
+            )
 
         val updatedAddresses = combinedAddresses
             .mapIndexed { index, address -> index to address }
@@ -191,7 +220,10 @@ internal class TokenReceiveModel @Inject constructor(
 
     private fun getInitState(): TokenReceiveUM {
         return TokenReceiveUM(
-            addresses = mapAddresses(params.config.receiveAddress),
+            addresses = mapAddresses(
+                addresses = params.config.receiveAddress,
+                networkName = params.config.cryptoCurrency.network.name,
+            ),
             iconState = iconStateConverter.convert(params.config.cryptoCurrency),
             network = params.config.cryptoCurrency.network.name,
             isEnsResultLoading = false,
@@ -199,15 +231,16 @@ internal class TokenReceiveModel @Inject constructor(
         )
     }
 
-    private fun sendCopyActionAnalytic(receiveAddress: ReceiveAddress) {
+    private fun sendCopyActionAnalytic(receiveAddress: ReceiveAddress, source: TokenReceiveCopyActionSource) {
         val event = when (receiveAddress.type) {
-            is ReceiveAddress.Type.Default -> {
+            is Primary -> {
                 TokenReceiveNewAnalyticsEvent.ButtonCopyAddress(
                     token = getTokenName(),
                     blockchainName = params.config.cryptoCurrency.network.name,
+                    tokenReceiveSource = source,
                 )
             }
-            ReceiveAddress.Type.Ens -> {
+            Ens -> {
                 TokenReceiveNewAnalyticsEvent.ButtonCopyEns(
                     token = getTokenName(),
                     blockchainName = params.config.cryptoCurrency.network.name,
