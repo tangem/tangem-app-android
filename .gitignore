@@ -9,6 +9,10 @@ local.properties
 
 # Google services
 
+
+# Huawei services
+app/agconnect-services.json
+
 app/src/debug/google-services.json
 app/src/internal/google-services.json
 app/src/external/google-services.json
