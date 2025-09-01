@@ -1,5 +1,6 @@
 package com.tangem.tap.di.domain
 
+import com.tangem.domain.core.wallets.UserWalletsListRepository
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.transaction.WalletAddressServiceRepository
@@ -9,8 +10,8 @@ import com.tangem.domain.transaction.usecase.ValidateWalletMemoUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.delegate.DefaultUserWalletsSyncDelegate
 import com.tangem.domain.wallets.delegate.UserWalletsSyncDelegate
+import com.tangem.domain.wallets.hot.HotWalletAccessor
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
-import com.tangem.domain.core.wallets.UserWalletsListRepository
 import com.tangem.domain.wallets.repository.WalletNamesMigrationRepository
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.*
@@ -370,6 +371,34 @@ internal object WalletsDomainModule {
     ): DismissUpgradeWalletNotificationUseCase {
         return DismissUpgradeWalletNotificationUseCase(
             walletsRepository = walletsRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providesUnlockHotWalletContextualUseCase(
+        hotWalletAccessor: HotWalletAccessor,
+    ): UnlockHotWalletContextualUseCase {
+        return UnlockHotWalletContextualUseCase(
+            hotWalletAccessor = hotWalletAccessor,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providesClearHotWalletContextualUnlockUseCase(
+        hotWalletAccessor: HotWalletAccessor,
+    ): ClearHotWalletContextualUnlockUseCase {
+        return ClearHotWalletContextualUnlockUseCase(
+            hotWalletAccessor = hotWalletAccessor,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providesExportSeedPhraseUseCase(hotWalletAccessor: HotWalletAccessor): ExportSeedPhraseUseCase {
+        return ExportSeedPhraseUseCase(
+            hotWalletAccessor = hotWalletAccessor,
         )
     }
 }
