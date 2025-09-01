@@ -1,7 +1,6 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.model
 
 import androidx.compose.runtime.Stable
-import androidx.paging.cachedIn
 import arrow.core.getOrElse
 import arrow.core.merge
 import com.arkivanov.decompose.router.slot.SlotNavigation
@@ -24,7 +23,6 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.ui.clipboard.ClipboardManager
-import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -69,8 +67,6 @@ import com.tangem.domain.transaction.error.OpenTrustlineError
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
-import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
-import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
 import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
 import com.tangem.domain.wallets.usecase.GetExtendedPublicKeyForCurrencyUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
@@ -107,8 +103,6 @@ internal class TokenDetailsModel @Inject constructor(
     private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
-    private val txHistoryItemsCountUseCase: GetTxHistoryItemsCountUseCase,
-    private val txHistoryItemsUseCase: GetTxHistoryItemsUseCase,
     private val getExploreUrlUseCase: GetExploreUrlUseCase,
     private val getCryptoCurrencyActionsUseCase: GetCryptoCurrencyActionsUseCase,
     private val removeCurrencyUseCase: RemoveCurrencyUseCase,
@@ -177,8 +171,6 @@ internal class TokenDetailsModel @Inject constructor(
         networkHasDerivationUseCase = networkHasDerivationUseCase,
         getUserWalletUseCase = getUserWalletUseCase,
         userWalletId = userWalletId,
-        symbol = cryptoCurrency.symbol,
-        decimals = cryptoCurrency.decimals,
     )
 
     private val expressStatusFactory by lazy(mode = LazyThreadSafetyMode.NONE) {
@@ -251,7 +243,6 @@ internal class TokenDetailsModel @Inject constructor(
     private fun updateContent() {
         subscribeOnCurrencyStatusUpdates()
         subscribeOnExpressTransactionsUpdates()
-        updateTxHistory(refresh = false, showItemsLoading = true, initialUpdating = true)
     }
 
     private fun handleBalanceHiding() {
@@ -382,39 +373,8 @@ internal class TokenDetailsModel @Inject constructor(
         }
     }
 
-    /**
-     * @param refresh - invalidate cache and get data from remote
-     * @param showItemsLoading - show loading items placeholder.
-     */
-    private fun updateTxHistory(refresh: Boolean, showItemsLoading: Boolean, initialUpdating: Boolean = false) {
-        modelScope.launch {
-            if (!initialUpdating) {
-                txHistoryContentUpdateEmitter.triggerUpdate()
-            } else {
-                val txHistoryItemsCountEither = txHistoryItemsCountUseCase(
-                    userWalletId = userWalletId,
-                    currency = cryptoCurrency,
-                )
-
-                // if countEither is left, handling error state run inside getLoadingTxHistoryState
-                if (showItemsLoading || txHistoryItemsCountEither.isLeft()) {
-                    internalUiState.value = stateFactory.getLoadingTxHistoryState(
-                        itemsCountEither = txHistoryItemsCountEither,
-                        pendingTransactions = internalUiState.value.pendingTxs,
-                    )
-                }
-
-                txHistoryItemsCountEither.onRight {
-                    val maybeTxHistory = txHistoryItemsUseCase(
-                        userWalletId = userWalletId,
-                        currency = cryptoCurrency,
-                        refresh = refresh,
-                    ).map { it.cachedIn(modelScope) }
-
-                    internalUiState.value = stateFactory.getLoadedTxHistoryState(maybeTxHistory)
-                }
-            }
-        }
+    private fun updateTxHistory() {
+        modelScope.launch { txHistoryContentUpdateEmitter.triggerUpdate() }
     }
 
     private fun subscribeOnUpdateStakingInfo(cryptoCurrencyStatus: CryptoCurrencyStatus) {
@@ -552,8 +512,7 @@ internal class TokenDetailsModel @Inject constructor(
 
     override fun onReloadClick() {
         analyticsEventsHandler.send(TokenScreenAnalyticsEvent.ButtonReload(cryptoCurrency.symbol))
-        internalUiState.value = stateFactory.getLoadingTxHistoryState()
-        updateTxHistory(refresh = true, showItemsLoading = true)
+        updateTxHistory()
     }
 
     override fun onSendClick(unavailabilityReason: ScenarioUnavailabilityReason) {
@@ -800,10 +759,7 @@ internal class TokenDetailsModel @Inject constructor(
             listOf(
                 async { fetchCurrencyStatusUseCase(userWalletId = userWalletId, id = cryptoCurrency.id) },
                 async {
-                    updateTxHistory(
-                        refresh = true,
-                        showItemsLoading = internalUiState.value.txHistoryState !is TxHistoryState.Content,
-                    )
+                    updateTxHistory()
                     subscribeOnExpressTransactionsUpdates()
                 },
             ).awaitAll()
