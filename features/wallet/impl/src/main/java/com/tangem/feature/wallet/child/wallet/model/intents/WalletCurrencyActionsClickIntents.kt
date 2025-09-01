@@ -29,27 +29,33 @@ import com.tangem.domain.core.utils.lceError
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.markets.TokenMarketParams
+import com.tangem.domain.models.ReceiveAddressModel
+import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkAddress
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.promo.GetStoryContentUseCase
 import com.tangem.domain.promo.models.StoryContentIds
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
+import com.tangem.domain.tokens.GetViewedTokenReceiveWarningUseCase
 import com.tangem.domain.tokens.IsCryptoCurrencyCoinCouldHideUseCase
 import com.tangem.domain.tokens.RemoveCurrencyUseCase
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.analytics.TokenReceiveAnalyticsEvent
+import com.tangem.domain.tokens.model.analytics.TokenReceiveCopyActionSource
+import com.tangem.domain.tokens.model.analytics.TokenReceiveNewAnalyticsEvent
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent.Companion.AVAILABLE
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent.Companion.toReasonAnalyticsText
+import com.tangem.domain.transaction.usecase.GetEnsNameUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.feature.wallet.impl.R
@@ -61,6 +67,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.CloseBottomSheetTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
+import com.tangem.features.tokenreceive.TokenReceiveFeatureToggle
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
@@ -128,6 +135,9 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     private val shareManager: ShareManager,
     private val appRouter: AppRouter,
     private val rampStateManager: RampStateManager,
+    private val tokenReceiveFeatureToggle: TokenReceiveFeatureToggle,
+    private val getViewedTokenReceiveWarningUseCase: GetViewedTokenReceiveWarningUseCase,
+    private val getEnsNameUseCase: GetEnsNameUseCase,
 ) : BaseWalletClickIntents(), WalletCurrencyActionsClickIntents {
 
     override fun onSendClick(
@@ -166,19 +176,27 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
             ),
         )
 
-        analyticsEventHandler.send(
-            event = TokenReceiveAnalyticsEvent.ReceiveScreenOpened(cryptoCurrencyStatus.currency.symbol),
-        )
-
         event?.let { analyticsEventHandler.send(it) }
 
-        stateHolder.showBottomSheet(
-            createReceiveBottomSheetContent(
-                currency = cryptoCurrencyStatus.currency,
-                addresses = cryptoCurrencyStatus.value.networkAddress ?: return,
-            ),
-            userWalletId,
-        )
+        if (tokenReceiveFeatureToggle.isNewTokenReceiveEnabled) {
+            stateHolder.hideBottomSheet()
+            modelScope.launch {
+                configureReceiveAddresses(cryptoCurrencyStatus = cryptoCurrencyStatus)?.let {
+                    router.openTokenReceiveBottomSheet(it)
+                }
+            }
+        } else {
+            analyticsEventHandler.send(
+                event = TokenReceiveAnalyticsEvent.ReceiveScreenOpened(cryptoCurrencyStatus.currency.symbol),
+            )
+            stateHolder.showBottomSheet(
+                createReceiveBottomSheetContent(
+                    currency = cryptoCurrencyStatus.currency,
+                    addresses = cryptoCurrencyStatus.value.networkAddress ?: return,
+                ),
+                userWalletId,
+            )
+        }
     }
 
     override fun onCopyAddressLongClick(cryptoCurrencyStatus: CryptoCurrencyStatus): TextReference? {
@@ -189,7 +207,13 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
 
         vibratorHapticManager.performOneTime(TangemHapticEffect.OneTime.Click)
         clipboardManager.setText(text = defaultAddress, isSensitive = true)
-        analyticsEventHandler.send(TokenReceiveAnalyticsEvent.ButtonCopyAddress(cryptoCurrency.symbol))
+        analyticsEventHandler.send(
+            TokenReceiveNewAnalyticsEvent.ButtonCopyAddress(
+                token = cryptoCurrency.symbol,
+                blockchainName = cryptoCurrency.network.name,
+                tokenReceiveSource = TokenReceiveCopyActionSource.Main,
+            ),
+        )
         return resourceReference(R.string.wallet_notification_address_copied)
     }
 
@@ -218,7 +242,11 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
 
     override fun onCopyAddressClick(cryptoCurrencyStatus: CryptoCurrencyStatus) {
         analyticsEventHandler.send(
-            event = TokenScreenAnalyticsEvent.ButtonCopyAddress(cryptoCurrencyStatus.currency.symbol),
+            event = TokenReceiveNewAnalyticsEvent.ButtonCopyAddress(
+                token = cryptoCurrencyStatus.currency.symbol,
+                blockchainName = cryptoCurrencyStatus.currency.network.name,
+                tokenReceiveSource = TokenReceiveCopyActionSource.Main,
+            ),
         )
 
         modelScope.launch(dispatchers.main) {
@@ -638,5 +666,47 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         } else {
             targetRoute
         }
+    }
+
+    private suspend fun configureReceiveAddresses(cryptoCurrencyStatus: CryptoCurrencyStatus): TokenReceiveConfig? {
+        val networkAddress = cryptoCurrencyStatus.value.networkAddress ?: return null
+        val userWalletId = stateHolder.getSelectedWalletId()
+
+        val ensName = getEnsNameUseCase.invoke(
+            userWalletId = userWalletId,
+            network = cryptoCurrencyStatus.currency.network,
+            address = networkAddress.defaultAddress.value,
+        )
+
+        val receiveAddresses = buildList {
+            ensName?.let { ens ->
+                add(
+                    ReceiveAddressModel(
+                        nameService = ReceiveAddressModel.NameService.Ens,
+                        value = ens,
+                    ),
+                )
+            }
+            networkAddress.availableAddresses.map { address ->
+                add(
+                    ReceiveAddressModel(
+                        nameService = when (address.type) {
+                            NetworkAddress.Address.Type.Primary -> ReceiveAddressModel.NameService.Default
+                            NetworkAddress.Address.Type.Secondary -> ReceiveAddressModel.NameService.Legacy
+                        },
+                        value = address.value,
+                    ),
+                )
+            }
+        }
+
+        return TokenReceiveConfig(
+            shouldShowWarning = cryptoCurrencyStatus.currency.name !in getViewedTokenReceiveWarningUseCase(),
+            cryptoCurrency = cryptoCurrencyStatus.currency,
+            userWalletId = userWalletId,
+            showMemoDisclaimer = cryptoCurrencyStatus.currency.network.transactionExtrasType != Network
+                .TransactionExtrasType.NONE,
+            receiveAddress = receiveAddresses,
+        )
     }
 }

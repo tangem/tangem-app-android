@@ -8,14 +8,16 @@ import com.tangem.core.ui.components.atoms.text.TextEllipsis
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.models.SwapDirection
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.swap.v2.impl.R
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountFieldUM
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountType
+import com.tangem.utils.StringsSigns.DOT
 
 internal class SwapAmountFieldConverter(
     private val swapDirection: SwapDirection,
@@ -23,6 +25,7 @@ internal class SwapAmountFieldConverter(
     private val userWallet: UserWallet,
     private val appCurrency: AppCurrency,
     private val clickIntents: AmountScreenClickIntents,
+    private val isSingleWallet: Boolean,
 ) {
 
     private val iconStateConverter = CryptoCurrencyToIconStateConverter()
@@ -46,13 +49,18 @@ internal class SwapAmountFieldConverter(
                 maxEnterAmount = maxEnterAmountConverter.convert(cryptoCurrencyStatus),
                 iconStateConverter = iconStateConverter,
                 isRedesignEnabled = true,
+                isBalanceHidden = isBalanceHidden,
             ).convert(
                 AmountParameters(
-                    title = combinedReference(
-                        resourceReference(R.string.send_from_wallet_android),
-                        stringReference(" "),
-                        stringReference(userWallet.name),
-                    ),
+                    title = if (isSingleWallet) {
+                        resourceReference(R.string.send_from_title)
+                    } else {
+                        combinedReference(
+                            resourceReference(R.string.send_from_wallet_android),
+                            stringReference(" "),
+                            stringReference(userWallet.name),
+                        )
+                    },
                     value = "",
                 ),
             ),
@@ -60,15 +68,26 @@ internal class SwapAmountFieldConverter(
     }
 
     private fun getSubtitle(selectedType: SwapAmountType, cryptoCurrencyStatus: CryptoCurrencyStatus) = when {
-        selectedType.isEnteringField() -> resourceReference(
-            R.string.common_balance,
-            wrappedList(
+        selectedType.isEnteringField() -> combinedReference(
+            stringReference(
                 cryptoCurrencyStatus.value.amount.format {
                     crypto(cryptoCurrency = cryptoCurrencyStatus.currency)
                 },
             ),
+            stringReference(value = " $DOT "),
+            stringReference(
+                cryptoCurrencyStatus.value.fiatAmount.format {
+                    fiat(
+                        fiatCurrencyCode = appCurrency.code,
+                        fiatCurrencySymbol = appCurrency.symbol,
+                    )
+                },
+            ),
         ).orMaskWithStars(isBalanceHidden)
-        selectedType.isViewingField() -> resourceReference(R.string.send_with_swap_recipient_amount_text)
+        selectedType.isViewingField() -> resourceReference(
+            R.string.send_with_swap_recipient_get_amount,
+
+        )
         else -> TextReference.Companion.EMPTY
     }
 
