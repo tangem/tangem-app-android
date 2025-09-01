@@ -77,6 +77,7 @@ import com.tangem.wallet.BuildConfig
 import dagger.hilt.EntryPoints
 import kotlinx.coroutines.*
 import org.rekotlin.Store
+import timber.log.Timber
 import com.tangem.tap.domain.walletconnect2.domain.LegacyWalletConnectRepository as WalletConnect2Repository
 
 lateinit var store: Store<AppState>
@@ -289,13 +290,17 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
 
         tangemAppLoggerInitializer.initialize()
 
+        Timber.i("APP STARTED")
+        if (BuildConfig.TESTER_MENU_ENABLED) {
+            Timber.i(featureTogglesManager.toString())
+        }
+
         foregroundActivityObserver = ForegroundActivityObserver()
         registerActivityLifecycleCallbacks(foregroundActivityObserver.callbacks)
 
         // We need to initialize the toggles and excludedBlockchainsManager before the MainActivity starts using them.
         runBlocking {
             awaitAll(
-                async { featureTogglesManager.init() },
                 async { excludedBlockchainsManager.init() },
             )
             initWithConfigDependency(environmentConfig = environmentConfigStorage.initialize())
