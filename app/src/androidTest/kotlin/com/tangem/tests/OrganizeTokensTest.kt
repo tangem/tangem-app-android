@@ -2,7 +2,9 @@ package com.tangem.tests
 
 import androidx.compose.ui.test.onAllNodesWithText
 import com.tangem.common.BaseTestCase
+import com.tangem.common.constants.TestConstants.TOTAL_BALANCE
 import com.tangem.common.extensions.clickWithAssertion
+import com.tangem.common.extensions.swipeUp
 import com.tangem.scenarios.OpenMainScreenScenario
 import com.tangem.screens.onMainScreen
 import com.tangem.screens.onOrganizeTokensScreen
@@ -27,6 +29,10 @@ class OrganizeTokensTest : BaseTestCase() {
             step("Click on 'Synchronize addresses' button" ) {
                 onMainScreen { synchronizeAddressesButton.clickWithAssertion() }
             }
+            step("Swipe to 'Organize tokens' button") {
+                swipeUp()
+                swipeUp()
+            }
             step("Click 'Organize tokens' button") {
                 onMainScreen { organizeTokensButton().clickWithAssertion() }
             }
@@ -47,6 +53,10 @@ class OrganizeTokensTest : BaseTestCase() {
             }
             step("Assert tokens were grouped on 'Main screen'") {
                 onMainScreen { tokenNetworkGroupTitle(tokenNetwork).assertIsDisplayed() }
+            }
+            step("Swipe to 'Organize tokens' button") {
+                swipeUp()
+                swipeUp()
             }
             step("Click 'Organize tokens' button") {
                 onMainScreen { organizeTokensButton().clickWithAssertion() }
@@ -79,17 +89,25 @@ class OrganizeTokensTest : BaseTestCase() {
         setupHooks().run {
             val ethereumTitle = "Ethereum"
             val bitcoinTitle = "Bitcoin"
+            val balance = TOTAL_BALANCE
             step("Open 'Main Screen'") {
                 scenario(OpenMainScreenScenario(composeTestRule))
             }
             step("Click on 'Synchronize addresses' button" ) {
                 onMainScreen { synchronizeAddressesButton.clickWithAssertion() }
             }
+            step("Assert wallet balance = '$balance'") {
+                onMainScreen { walletBalance().assertTextContains(balance) }
+            }
             step("Check positions of tokens on 'Main Screen'") {
                 onMainScreen {
                     tokenWithTitleAndPosition(bitcoinTitle, 0).assertIsDisplayed()
                     tokenWithTitleAndPosition(ethereumTitle, 1).assertIsDisplayed()
                 }
+            }
+            step("Swipe to 'Organize tokens' button") {
+                swipeUp()
+                swipeUp()
             }
             step("Click 'Organize tokens' button") {
                 onMainScreen { organizeTokensButton().clickWithAssertion() }
@@ -123,6 +141,10 @@ class OrganizeTokensTest : BaseTestCase() {
                     tokenWithTitleAndPosition(ethereumTitle, 1).assertIsDisplayed()
                 }
             }
+            step("Swipe to 'Organize tokens' button") {
+                swipeUp()
+                swipeUp()
+            }
             step("Click 'Organize tokens' button") {
                 onMainScreen { organizeTokensButton().clickWithAssertion() }
             }
@@ -154,11 +176,16 @@ class OrganizeTokensTest : BaseTestCase() {
             val ethereumTitle = "Ethereum"
             val bitcoinTitle = "Bitcoin"
             val polygonTitle = "Polygon"
+            val polExMaticTitle = "POL (ex-MATIC)"
+            val balance = TOTAL_BALANCE
             step("Open 'Main Screen'") {
                 scenario(OpenMainScreenScenario(composeTestRule))
             }
             step("Click on 'Synchronize addresses' button" ) {
                 onMainScreen { synchronizeAddressesButton.clickWithAssertion() }
+            }
+            step("Assert wallet balance = '$balance'") {
+                onMainScreen { walletBalance().assertTextContains(balance) }
             }
             step("Check positions of tokens on 'Main Screen'") {
                 onMainScreen {
@@ -166,6 +193,10 @@ class OrganizeTokensTest : BaseTestCase() {
                     tokenWithTitleAndPosition(ethereumTitle, 1).assertIsDisplayed()
                     tokenWithTitleAndPosition(polygonTitle, 2).assertIsDisplayed()
                 }
+            }
+            step("Swipe to 'Organize tokens' button") {
+                swipeUp()
+                swipeUp()
             }
             step("Click 'Organize tokens' button") {
                 onMainScreen { organizeTokensButton().clickWithAssertion() }
@@ -175,6 +206,7 @@ class OrganizeTokensTest : BaseTestCase() {
                     tokenWithTitleAndPosition(bitcoinTitle, 1).assertIsDisplayed()
                     tokenWithTitleAndPosition(ethereumTitle, 2).assertIsDisplayed()
                     tokenWithTitleAndPosition(polygonTitle, 3).assertIsDisplayed()
+                    tokenWithTitleAndPosition(polExMaticTitle, 4).assertIsDisplayed()
                 }
             }
             step("Click 'By Balance' button") {
@@ -185,8 +217,9 @@ class OrganizeTokensTest : BaseTestCase() {
             step("Check positions of tokens by balance on 'Organize tokens' screen") {
                 onOrganizeTokensScreen {
                     tokenWithTitleAndPosition(ethereumTitle, 1).assertIsDisplayed()
-                    tokenWithTitleAndPosition(polygonTitle, 2).assertIsDisplayed()
-                    tokenWithTitleAndPosition(bitcoinTitle, 3).assertIsDisplayed()
+                    tokenWithTitleAndPosition(polExMaticTitle, 2).assertIsDisplayed()
+                    tokenWithTitleAndPosition(polygonTitle, 3).assertIsDisplayed()
+                    tokenWithTitleAndPosition(bitcoinTitle, 4).assertIsDisplayed()
                 }
             }
             step("Click 'Apply' button") {
@@ -195,8 +228,9 @@ class OrganizeTokensTest : BaseTestCase() {
             step("Check positions of tokens by balance on 'Organize tokens' screen") {
                 onMainScreen {
                     tokenWithTitleAndPosition(ethereumTitle, 0).assertIsDisplayed()
-                    tokenWithTitleAndPosition(polygonTitle, 1).assertIsDisplayed()
-                    tokenWithTitleAndPosition(bitcoinTitle, 2).assertIsDisplayed()
+                    tokenWithTitleAndPosition(polExMaticTitle, 1).assertIsDisplayed()
+                    tokenWithTitleAndPosition(polygonTitle, 2).assertIsDisplayed()
+                    tokenWithTitleAndPosition(bitcoinTitle, 3).assertIsDisplayed()
                 }
             }
         }
