@@ -20,15 +20,18 @@ import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.requireColdWallet
 import com.tangem.domain.tokens.*
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.CreateNFTTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.features.nft.entity.NFTSendSuccessTrigger
 import com.tangem.features.send.v2.api.NFTSendComponent
+import com.tangem.features.send.v2.api.SendFeatureToggles
+import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationComponent
 import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.features.send.v2.common.CommonSendRoute
@@ -36,6 +39,7 @@ import com.tangem.features.send.v2.common.CommonSendRoute.*
 import com.tangem.features.send.v2.common.SendConfirmAlertFactory
 import com.tangem.features.send.v2.common.ui.state.ConfirmUM
 import com.tangem.features.send.v2.sendnft.confirm.NFTSendConfirmComponent
+import com.tangem.features.send.v2.sendnft.success.NFTSendSuccessComponent
 import com.tangem.features.send.v2.sendnft.ui.state.NFTSendUM
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeComponent
 import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeUM
@@ -70,7 +74,9 @@ internal class NFTSendModel @Inject constructor(
     private val getCardInfoUseCase: GetCardInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val alertFactory: SendConfirmAlertFactory,
-) : Model(), SendNFTComponentCallback {
+    private val sendFeatureToggles: SendFeatureToggles,
+    private val nftSendSuccessTrigger: NFTSendSuccessTrigger,
+) : Model(), SendNFTComponentCallback, NFTSendSuccessComponent.ModelCallback {
 
     val params: NFTSendComponent.Params = paramsContainer.require()
 
@@ -115,6 +121,11 @@ internal class NFTSendModel @Inject constructor(
     }
 
     override fun onBackClick() {
+        if (currentRouteFlow.value == ConfirmSuccess) {
+            modelScope.launch {
+                nftSendSuccessTrigger.triggerSuccessNFTSend()
+            }
+        }
         router.pop()
     }
 
@@ -124,7 +135,7 @@ internal class NFTSendModel @Inject constructor(
         } else {
             when (currentRouteFlow.value) {
                 is Destination -> router.push(Confirm)
-                Confirm -> router.push(ConfirmSuccess)
+                Confirm -> router.replaceAll(ConfirmSuccess)
                 else -> onBackClick()
             }
         }
@@ -193,6 +204,13 @@ internal class NFTSendModel @Inject constructor(
         }
     }
 
+    fun showAlertError() {
+        alertFactory.getGenericErrorState(
+            onFailedTxEmailClick = ::onFailedTxEmailClick,
+            popBack = router::pop,
+        )
+    }
+
     private fun onFailedTxEmailClick(errorMessage: String? = null) {
         saveBlockchainErrorUseCase(
             error = BlockchainErrorInfo(
@@ -206,8 +224,12 @@ internal class NFTSendModel @Inject constructor(
             ),
         )
 
+        if (userWallet is UserWallet.Hot) {
+            return // TODO [REDACTED_TASK_KEY] [Hot Wallet] Email feedback flow
+        }
+
         val cardInfo =
-            getCardInfoUseCase(userWallet.requireColdWallet().scanResponse).getOrNull() ?: return // TODO [REDACTED_TASK_KEY]
+            getCardInfoUseCase(userWallet.requireColdWallet().scanResponse).getOrNull() ?: return
 
         modelScope.launch {
             sendFeedbackEmailUseCase(type = FeedbackEmailType.TransactionSendingProblem(cardInfo = cardInfo))
@@ -245,7 +267,9 @@ internal class NFTSendModel @Inject constructor(
     private fun initialState(): NFTSendUM = NFTSendUM(
         destinationUM = DestinationUM.Empty(),
         feeUM = FeeUM.Empty(),
+        feeSelectorUM = FeeSelectorUM.Loading,
         confirmUM = ConfirmUM.Empty,
         navigationUM = NavigationUM.Empty,
+        isRedesignEnabled = sendFeatureToggles.isNFTSendRedesignEnabled,
     )
 }
