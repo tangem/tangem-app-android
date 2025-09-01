@@ -24,7 +24,7 @@ android {
 }
 
 tasks.named("preBuild") {
-    dependsOn(generateFeatureToggles /*generateExcludedBlockchainToggles*/)
+    dependsOn(generateFeatureToggles, generateExcludedBlockchainToggles)
 }
 
 tasks.withType<Test>().configureEach {
