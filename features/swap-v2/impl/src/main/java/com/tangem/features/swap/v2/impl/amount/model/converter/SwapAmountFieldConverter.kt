@@ -35,11 +35,13 @@ internal class SwapAmountFieldConverter(
         return SwapAmountFieldUM.Content(
             amountType = selectedType,
             title = stringReference(cryptoCurrencyStatus.currency.name),
-            subtitle = getSubtitle(selectedType = selectedType, cryptoCurrencyStatus = cryptoCurrencyStatus),
-            subtitleEllipsis = getSubtitleEllipsis(
+            subtitleLeft = getSubtitleLeft(selectedType = selectedType, cryptoCurrencyStatus = cryptoCurrencyStatus),
+            subtitleEllipsisLeft = getSubtitleEllipsisLeft(
                 selectedType = selectedType,
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
             ),
+            subtitleRight = getSubtitleRight(selectedType = selectedType, cryptoCurrencyStatus = cryptoCurrencyStatus),
+            subtitleEllipsisRight = TextEllipsis.OffsetEnd(appCurrency.symbol.length),
             priceImpact = null,
             isClickEnabled = selectedType.isViewingField(),
             amountField = AmountStateConverterV2(
@@ -67,35 +69,43 @@ internal class SwapAmountFieldConverter(
         )
     }
 
-    private fun getSubtitle(selectedType: SwapAmountType, cryptoCurrencyStatus: CryptoCurrencyStatus) = when {
+    private fun getSubtitleLeft(selectedType: SwapAmountType, cryptoCurrencyStatus: CryptoCurrencyStatus) = when {
         selectedType.isEnteringField() -> combinedReference(
             stringReference(
                 cryptoCurrencyStatus.value.amount.format {
                     crypto(cryptoCurrency = cryptoCurrencyStatus.currency)
                 },
             ),
-            stringReference(value = " $DOT "),
-            stringReference(
-                cryptoCurrencyStatus.value.fiatAmount.format {
-                    fiat(
-                        fiatCurrencyCode = appCurrency.code,
-                        fiatCurrencySymbol = appCurrency.symbol,
-                    )
-                },
-            ),
         ).orMaskWithStars(isBalanceHidden)
-        selectedType.isViewingField() -> resourceReference(
-            R.string.send_with_swap_recipient_get_amount,
-
-        )
+        selectedType.isViewingField() -> resourceReference(R.string.send_with_swap_recipient_get_amount)
         else -> TextReference.Companion.EMPTY
     }
 
-    private fun getSubtitleEllipsis(selectedType: SwapAmountType, cryptoCurrencyStatus: CryptoCurrencyStatus) = when {
-        selectedType.isEnteringField() -> TextEllipsis.OffsetEnd(cryptoCurrencyStatus.currency.symbol.length)
-        selectedType.isViewingField() -> TextEllipsis.End
-        else -> TextEllipsis.End
+    private fun getSubtitleRight(selectedType: SwapAmountType, cryptoCurrencyStatus: CryptoCurrencyStatus) = when {
+        selectedType.isEnteringField() -> if (isBalanceHidden) {
+            TextReference.EMPTY
+        } else {
+            combinedReference(
+                stringReference(value = " $DOT "),
+                stringReference(
+                    cryptoCurrencyStatus.value.fiatAmount.format {
+                        fiat(
+                            fiatCurrencyCode = appCurrency.code,
+                            fiatCurrencySymbol = appCurrency.symbol,
+                        )
+                    },
+                ),
+            )
+        }
+        else -> TextReference.EMPTY
     }
+
+    private fun getSubtitleEllipsisLeft(selectedType: SwapAmountType, cryptoCurrencyStatus: CryptoCurrencyStatus) =
+        when {
+            selectedType.isEnteringField() -> TextEllipsis.OffsetEnd(cryptoCurrencyStatus.currency.symbol.length)
+            selectedType.isViewingField() -> TextEllipsis.End
+            else -> TextEllipsis.End
+        }
 
     private fun SwapAmountType.isEnteringField(): Boolean {
         return this == SwapAmountType.From && swapDirection == SwapDirection.Direct ||
