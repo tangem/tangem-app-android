@@ -13,6 +13,7 @@ import com.tangem.features.onramp.deeplink.SwapDeepLinkHandler
 import com.tangem.features.send.v2.api.deeplink.SellRedirectDeepLinkHandler
 import com.tangem.features.staking.api.deeplink.StakingDeepLinkHandler
 import com.tangem.features.tokendetails.deeplink.TokenDetailsDeepLinkHandler
+import com.tangem.features.wallet.deeplink.PromoDeeplinkHandler
 import com.tangem.features.wallet.deeplink.WalletDeepLinkHandler
 import com.tangem.features.walletconnect.components.deeplink.WalletConnectDeepLinkHandler
 import io.mockk.every
@@ -68,6 +69,10 @@ class DeepLinkFactoryTest {
         every { create() } returns mockk()
     }
 
+    private val promoDeepLinkFactory = mockk<PromoDeeplinkHandler.Factory>(relaxed = true) {
+        every { create(any(), any()) } returns mockk()
+    }
+
     private val cardSdkProvider = mockk<CardSdkProvider>(relaxed = true) {
         every { sdk.uiVisibility() } returns MutableStateFlow(false)
     }
@@ -91,6 +96,7 @@ class DeepLinkFactoryTest {
         buyDeepLink = buyDeepLinkFactory,
         sellDeepLink = sellDeepLinkFactory,
         swapDeepLink = swapDeepLinkFactory,
+        promoDeepLink = promoDeepLinkFactory,
     )
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -303,13 +309,19 @@ class DeepLinkFactoryTest {
         every { mockedUri.host } returns "swap"
         deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
         advanceUntilIdle()
-        verify { sellDeepLinkFactory.create() }
+        verify { swapDeepLinkFactory.create() }
 
         // Test Buy
         every { mockedUri.host } returns "buy"
         deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
         advanceUntilIdle()
         verify { buyDeepLinkFactory.create() }
+
+        // Test Promo
+        every { mockedUri.host } returns "promo"
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+        verify { promoDeepLinkFactory.create(eq(testScope), eq(emptyMap())) }
     }
 
     @Test
@@ -332,6 +344,7 @@ class DeepLinkFactoryTest {
             buyDeepLinkFactory.create()
             sellDeepLinkFactory.create()
             swapDeepLinkFactory.create()
+            promoDeepLinkFactory.create(any(), any())
         }
     }
 
@@ -399,5 +412,23 @@ class DeepLinkFactoryTest {
         deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
         advanceUntilIdle()
         verify { onrampDeepLinkFactory.create(eq(testScope), eq(emptyMap())) }
+    }
+
+    @Test
+    fun `handleTangemDeepLinks routes to promo handler`() = runTest {
+        every { mockedUri.scheme } returns "tangem"
+        every { mockedUri.host } returns "promo"
+        every { mockedUri.query } returns "promo_code=PROMO123"
+        every { mockedUri.queryParameterNames } returns setOf("promo_code")
+        every { mockedUri.getQueryParameter("promo_code") } returns "PROMO123"
+
+        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+
+        advanceUntilIdle()
+
+        verify {
+            promoDeepLinkFactory.create(eq(testScope), eq(mapOf("promo_code" to "PROMO123")))
+        }
     }
 }
