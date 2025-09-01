@@ -55,6 +55,10 @@ sealed class DeepLinkRoute {
     data object WalletConnect : DeepLinkRoute() {
         override val host: String = "wc"
     }
+
+    data object Promo : DeepLinkRoute() {
+        override val host: String = "promo"
+    }
 }
 
 enum class DeepLinkScheme(val scheme: String) {
