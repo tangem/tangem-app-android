@@ -47,7 +47,7 @@ import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.common.LogConfig
-import com.tangem.domain.feedback.GetCardInfoUseCase
+import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.onboarding.SaveTwinsOnboardingShownUseCase
 import com.tangem.domain.onboarding.WasTwinsOnboardingShownUseCase
@@ -166,8 +166,8 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase
         get() = entryPoint.getSendFeedbackEmailUseCase()
 
-    private val getCardInfoUseCase: GetCardInfoUseCase
-        get() = entryPoint.getGetCardInfoUseCase()
+    private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase
+        get() = entryPoint.getWalletMetaInfoUseCase()
 
     private val urlOpener
         get() = entryPoint.getUrlOpener()
@@ -359,7 +359,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
                     settingsRepository = settingsRepository,
                     blockchainSDKFactory = blockchainSDKFactory,
                     sendFeedbackEmailUseCase = sendFeedbackEmailUseCase,
-                    getCardInfoUseCase = getCardInfoUseCase,
+                    getWalletMetaInfoUseCase = getWalletMetaInfoUseCase,
                     issuersConfigStorage = issuersConfigStorage,
                     urlOpener = urlOpener,
                     shareManager = shareManager,
