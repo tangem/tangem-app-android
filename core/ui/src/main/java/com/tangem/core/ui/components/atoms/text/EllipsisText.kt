@@ -21,6 +21,8 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.Constraints
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import java.text.NumberFormat
+import java.util.Locale
 
 sealed class TextEllipsis {
 
@@ -126,13 +128,27 @@ fun EllipsisText(
                         )
                     }
                     is TextEllipsis.OffsetEnd -> {
-                        offsetEndEllipsisText(
-                            availableWidth = availableWidth,
-                            startCounter = startCounter,
-                            endCounter = endCounter,
-                            offsetEnd = ellipsis.offsetEnd,
-                            withSeparator = ellipsis.hasSeparator,
-                        )
+                        val locale = Locale.getDefault()
+                        val formatter = NumberFormat.getCurrencyInstance(locale)
+                        val formattedValue = formatter.format(1)
+
+                        val isPrefixSymbol = formattedValue.startsWith(formatter.currency?.symbol.orEmpty())
+
+                        if (isPrefixSymbol) {
+                            offsetEndEllipsisText(
+                                availableWidth = availableWidth,
+                                startCounter = startCounter,
+                                endCounter = endCounter,
+                            )
+                        } else {
+                            offsetEndEllipsisText(
+                                availableWidth = availableWidth,
+                                startCounter = startCounter,
+                                endCounter = endCounter,
+                                offsetEnd = ellipsis.offsetEnd,
+                                withSeparator = ellipsis.hasSeparator,
+                            )
+                        }
                     }
                 }
             }
