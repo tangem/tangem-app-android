@@ -18,7 +18,8 @@ sealed class AmountState {
      * @param isPrimaryButtonEnabled indicates if next state button enabled
      * @param title title
      * @param availableBalance user crypto currency balance with fiat balance
-     * @param availableBalanceShort user crypto currency balance without fiat balance
+     * @param availableBalanceCrypto user crypto currency balance in crypto
+     * @param availableBalanceFiat user crypto currency balance in fiat
      * @param tokenIconState crypto currency icon state
      * @param segmentedButtonConfig currency switcher config
      * @param selectedButton selected currency index
@@ -33,8 +34,10 @@ sealed class AmountState {
         override val isPrimaryButtonEnabled: Boolean,
         override val isRedesignEnabled: Boolean,
         val title: TextReference,
+        @Deprecated("Remove with SEND_REDESIGNED toggle")
         val availableBalance: TextReference,
-        val availableBalanceShort: TextReference,
+        val availableBalanceCrypto: TextReference,
+        val availableBalanceFiat: TextReference,
         val tokenName: TextReference,
         val tokenIconState: CurrencyIconState,
         val segmentedButtonConfig: PersistentList<AmountSegmentedButtonsConfig>,
