@@ -1,4 +1,4 @@
-package com.tangem.features.onramp.newmain
+package com.tangem.features.onramp.mainv2
 
 import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.ui.decompose.ComposableContentComponent
@@ -7,7 +7,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.onramp.model.OnrampProviderWithQuote
 import com.tangem.domain.onramp.model.OnrampSource
 
-internal interface OnrampNewMainComponent : ComposableContentComponent {
+internal interface OnrampV2MainComponent : ComposableContentComponent {
 
     data class Params(
         val userWalletId: UserWalletId,
@@ -17,5 +17,5 @@ internal interface OnrampNewMainComponent : ComposableContentComponent {
         val openRedirectPage: (quote: OnrampProviderWithQuote.Data) -> Unit,
     )
 
-    interface Factory : ComponentFactory<Params, OnrampNewMainComponent>
+    interface Factory : ComponentFactory<Params, OnrampV2MainComponent>
 }
