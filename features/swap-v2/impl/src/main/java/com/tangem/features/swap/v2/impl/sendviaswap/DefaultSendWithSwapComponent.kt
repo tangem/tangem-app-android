@@ -136,7 +136,7 @@ internal class DefaultSendWithSwapComponent @AssistedInject constructor(
             params = SwapAmountComponentParams.AmountParams(
                 amountUM = model.uiState.value.amountUM,
                 title = resourceReference(R.string.common_send),
-                currentRoute = model.currentRoute.filterIsInstance<SendWithSwapRoute.Amount>(),
+                currentRoute = model.currentRoute,
                 isBalanceHidingFlow = model.isBalanceHiddenFlow,
                 analyticsCategoryName = model.analyticCategoryName,
                 primaryCryptoCurrencyStatusFlow = model.primaryCryptoCurrencyStatusFlow,
