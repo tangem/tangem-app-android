@@ -19,6 +19,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.requireColdWallet
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
+import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.promo.ShouldShowPromoWalletUseCase
 import com.tangem.domain.promo.models.PromoId
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
@@ -75,7 +76,7 @@ internal interface WalletWarningsClickIntents {
 
     fun onClosePromoClick(promoId: PromoId)
 
-    fun onPromoClick(promoId: PromoId)
+    fun onPromoClick(promoId: PromoId, cryptoCurrency: CryptoCurrency? = null)
 
     fun onSupportClick()
 
@@ -92,7 +93,7 @@ internal interface WalletWarningsClickIntents {
     fun onFinishWalletActivationClick()
 }
 
-@Suppress("LongParameterList")
+@Suppress("LargeClass", "LongParameterList")
 @ModelScoped
 internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val stateHolder: WalletStateController,
@@ -260,26 +261,46 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
 
     override fun onClosePromoClick(promoId: PromoId) {
         analyticsEventHandler.send(
-            if (promoId == PromoId.Referral) {
-                MainScreen.ReferralPromoButtonDismiss
-            } else {
-                TokenSwapPromoAnalyticsEvent.PromotionBannerClicked(
+            when (promoId) {
+                PromoId.Referral -> MainScreen.ReferralPromoButtonDismiss
+                PromoId.Sepa -> TokenSwapPromoAnalyticsEvent.PromotionBannerClicked(
                     source = AnalyticsParam.ScreensSources.Main,
-                    programName = TokenSwapPromoAnalyticsEvent.ProgramName.Empty, // Use it on new promo action
+                    program = TokenSwapPromoAnalyticsEvent.Program.Sepa,
                     action = TokenSwapPromoAnalyticsEvent.PromotionBannerClicked.BannerAction.Closed,
                 )
             },
+
         )
         modelScope.launch(dispatchers.main) {
             shouldShowPromoWalletUseCase.neverToShow(promoId)
         }
     }
 
-    override fun onPromoClick(promoId: PromoId) {
-        if (promoId == PromoId.Referral) {
-            val userWallet = getSelectedUserWallet() ?: return
-            analyticsEventHandler.send(MainScreen.ReferralPromoButtonParticipate)
-            appRouter.push(AppRoute.ReferralProgram(userWalletId = userWallet.walletId))
+    override fun onPromoClick(promoId: PromoId, cryptoCurrency: CryptoCurrency?) {
+        val userWallet = getSelectedUserWallet() ?: return
+        when (promoId) {
+            PromoId.Referral -> {
+                analyticsEventHandler.send(MainScreen.ReferralPromoButtonParticipate)
+                appRouter.push(AppRoute.ReferralProgram(userWalletId = userWallet.walletId))
+            }
+            PromoId.Sepa -> {
+                analyticsEventHandler.send(
+                    TokenSwapPromoAnalyticsEvent.PromotionBannerClicked(
+                        source = AnalyticsParam.ScreensSources.Main,
+                        program = TokenSwapPromoAnalyticsEvent.Program.Sepa,
+                        action = TokenSwapPromoAnalyticsEvent.PromotionBannerClicked.BannerAction.Clicked,
+                    ),
+                )
+                cryptoCurrency ?: return
+                appRouter.push(
+                    AppRoute.Onramp(
+                        userWalletId = userWallet.walletId,
+                        currency = cryptoCurrency,
+                        source = OnrampSource.SEPA_BANNER,
+                        launchSepa = true,
+                    ),
+                )
+            }
         }
     }
 
