@@ -54,6 +54,7 @@ internal class SendDestinationValidationResultTransformer(
             wallets = state.wallets.map { wallet ->
                 wallet.copy(isVisible = !isValidAddress && (wallet.isLoading || wallet.title != TextReference.EMPTY))
             }.toPersistentList(),
+            isRecentHidden = isValidAddress,
         )
     }
 
