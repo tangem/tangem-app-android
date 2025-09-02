@@ -7,7 +7,7 @@ import com.tangem.utils.transformer.Transformer
 
 internal object SwapAmountPasteTransformer : Transformer<SwapAmountUM> {
     override fun transform(prevState: SwapAmountUM): SwapAmountUM {
-        return prevState.updateAmount(
+        val updatedState = prevState.updateAmount(
             onPrimaryAmount = {
                 copy(
                     amountField = AmountPastedTriggerDismissTransformer.transform(
@@ -23,5 +23,9 @@ internal object SwapAmountPasteTransformer : Transformer<SwapAmountUM> {
                 )
             },
         )
+
+        return (updatedState as? SwapAmountUM.Content)?.copy(
+            isPrimaryButtonEnabled = prevState.isPrimaryButtonEnabled,
+        ) ?: updatedState
     }
 }
