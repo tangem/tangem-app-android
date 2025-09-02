@@ -60,7 +60,7 @@ internal class DefaultWcPairUseCaseTest {
     private val sdkVerifyContext: Wallet.Model.VerifyContext
         get() = Wallet.Model.VerifyContext(
             id = 9259,
-            origin = "vituperata",
+            origin = "https://react-app.walletconnect.com/",
             validation = Wallet.Model.Validation.VALID,
             verifyUrl = "https://search.yahoo.com/search?p=id",
             isScam = false,
@@ -68,6 +68,7 @@ internal class DefaultWcPairUseCaseTest {
 
     private val unsupportedDAppUrl = "dydx.trade"
     private val unsupportedSdkProposal get() = sdkProposal.copy(url = unsupportedDAppUrl)
+    private val unsupportedSdkVerifyContext get() = sdkVerifyContext.copy(origin = unsupportedDAppUrl)
 
     private val sessionForApprove: WcSessionApprove
         get() = WcSessionApprove(
@@ -100,7 +101,12 @@ internal class DefaultWcPairUseCaseTest {
     private val Wallet.Model.Session.sessionForSave: WcSession
         get() = WcSession(
             wallet = sessionForApprove.wallet,
-            sdkModel = WcSdkSessionConverter.convert(this),
+            sdkModel = WcSdkSessionConverter.convert(
+                value = WcSdkSessionConverter.Input(
+                    originUrl = sdkVerifyContext.origin,
+                    session = this,
+                ),
+            ),
             securityStatus = CheckDAppResult.SAFE,
             networks = setOf(),
             connectingTime = null,
@@ -138,7 +144,7 @@ internal class DefaultWcPairUseCaseTest {
             assertEquals(loading, awaitItem())
             coVerifyOrder {
                 sdkDelegate.pair(url)
-                blockAidVerifier.verifyDApp(DAppData(sdkProposal.url))
+                blockAidVerifier.verifyDApp(DAppData(sdkVerifyContext.origin))
             }
             assert(awaitItem() is WcPairState.Proposal)
             expectNoEvents()
@@ -161,7 +167,7 @@ internal class DefaultWcPairUseCaseTest {
             assertEquals(loading, awaitItem())
             coVerifyOrder {
                 sdkDelegate.pair(url)
-                blockAidVerifier.verifyDApp(DAppData(sdkProposal.url))
+                blockAidVerifier.verifyDApp(DAppData(sdkVerifyContext.origin))
             }
             assert(awaitItem() is WcPairState.Proposal)
             useCase.approve(sessionForApprove)
@@ -194,7 +200,7 @@ internal class DefaultWcPairUseCaseTest {
             assertEquals(loading, awaitItem())
             coVerifyOrder {
                 sdkDelegate.pair(url)
-                blockAidVerifier.verifyDApp(DAppData(sdkProposal.url))
+                blockAidVerifier.verifyDApp(DAppData(sdkVerifyContext.origin))
             }
             assert(awaitItem() is WcPairState.Proposal)
             useCase.reject()
@@ -207,7 +213,7 @@ internal class DefaultWcPairUseCaseTest {
 
     @Test
     fun `success pair and reject unsupported dApp`() = runTest {
-        coEvery { sdkDelegate.pair(url) } returns (unsupportedSdkProposal to sdkVerifyContext).right()
+        coEvery { sdkDelegate.pair(url) } returns (unsupportedSdkProposal to unsupportedSdkVerifyContext).right()
         val unsupportedDAppError = WcPairState.Error(WcPairError.UnsupportedDApp(unsupportedSdkProposal.name))
 
         val useCase = useCaseFactory()
@@ -255,7 +261,7 @@ internal class DefaultWcPairUseCaseTest {
             coVerifyOrder {
                 sdkDelegate.pair(url)
                 associateNetworksDelegate.associate(sdkProposal)
-                blockAidVerifier.verifyDApp(DAppData(sdkProposal.url))
+                blockAidVerifier.verifyDApp(DAppData(sdkVerifyContext.origin))
             }
             assert(awaitItem() is WcPairState.Proposal)
             useCase.approve(sessionForApprove)
