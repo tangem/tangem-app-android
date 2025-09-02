@@ -112,8 +112,9 @@ internal class WcPairSdkDelegate : WcSdkObserver {
         sessionProposal: Wallet.Model.SessionProposal,
         verifyContext: Wallet.Model.VerifyContext,
     ) {
+        val sessionProposalWithRealUrl = sessionProposal.copy(url = verifyContext.origin)
         // Triggered when wallet receives the session proposal sent by a Dapp
-        onSessionProposal.trySend(sessionProposal to verifyContext)
+        onSessionProposal.trySend(sessionProposalWithRealUrl to verifyContext)
     }
 
     override fun onSessionSettleResponse(settleSessionResponse: Wallet.Model.SettledSessionResponse) {
