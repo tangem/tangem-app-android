@@ -25,12 +25,12 @@ import com.tangem.core.ui.components.containers.FooterContainer
 import com.tangem.core.ui.components.inputrow.InputRowRecipient
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.features.send.v2.impl.R
-import com.tangem.features.send.v2.subcomponents.destination.analytics.EnterAddressSource
-import com.tangem.features.send.v2.subcomponents.destination.model.SendDestinationClickIntents
 import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationRecipientListUM
 import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationTextFieldUM
 import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
+import com.tangem.features.send.v2.impl.R
+import com.tangem.features.send.v2.subcomponents.destination.analytics.EnterAddressSource
+import com.tangem.features.send.v2.subcomponents.destination.model.SendDestinationClickIntents
 import kotlinx.collections.immutable.ImmutableList
 
 private const val ADDRESS_FIELD_KEY = "ADDRESS_FIELD_KEY"
@@ -74,13 +74,14 @@ internal fun SendDestinationContent(
         )
         listHeaderItem(
             titleRes = R.string.send_recipient_wallets_title,
-            isVisible = wallets.isNotEmpty() && wallets.first().isVisible,
+            isVisible = wallets.isNotEmpty() && wallets.first().isVisible && !state.isRecentHidden,
             isFirst = true,
         )
         listItem(
             list = wallets,
             isLast = recipients.any { !it.isVisible },
             isBalanceHidden = isBalanceHidden,
+            isRecentHidden = state.isRecentHidden,
             onClick = { title ->
                 clickIntents.onRecipientAddressValueChange(
                     title,
@@ -90,13 +91,14 @@ internal fun SendDestinationContent(
         )
         listHeaderItem(
             titleRes = R.string.send_recent_transactions,
-            isVisible = recipients.isNotEmpty() && recipients.first().isVisible,
+            isVisible = recipients.isNotEmpty() && recipients.first().isVisible && !state.isRecentHidden,
             isFirst = wallets.any { !it.isVisible },
         )
         listItem(
             list = recipients,
             isLast = true,
             isBalanceHidden = isBalanceHidden,
+            isRecentHidden = state.isRecentHidden,
             onClick = { title ->
                 clickIntents.onRecipientAddressValueChange(
                     title,
@@ -257,6 +259,7 @@ private fun LazyListScope.listItem(
     list: ImmutableList<DestinationRecipientListUM>,
     isLast: Boolean,
     isBalanceHidden: Boolean,
+    isRecentHidden: Boolean,
     onClick: (String) -> Unit,
 ) {
     items(
@@ -267,7 +270,7 @@ private fun LazyListScope.listItem(
         val item = list[index]
         val title = item.title.resolveReference()
 
-        if (item.isVisible) {
+        if (item.isVisible && !isRecentHidden) {
             ListItemWithIcon(
                 title = title,
                 subtitle = item.subtitle.orMaskWithStars(isBalanceHidden).resolveReference(),
