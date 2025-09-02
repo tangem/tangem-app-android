@@ -408,6 +408,7 @@ internal class WcSendTransactionModel @Inject constructor(
                 rawRequest = useCase.rawSdkRequest,
                 network = useCase.network,
                 emulationStatus = emulationStatus,
+                securityStatus = useCase.session.securityStatus,
             ),
         )
 
