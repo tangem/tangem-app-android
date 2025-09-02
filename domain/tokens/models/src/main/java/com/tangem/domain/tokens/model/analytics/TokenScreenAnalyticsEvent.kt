@@ -2,6 +2,7 @@ package com.tangem.domain.tokens.model.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ACTION
+import com.tangem.core.analytics.models.AnalyticsParam.Key.BALANCE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.BLOCKCHAIN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.STATUS
 import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
@@ -16,11 +17,26 @@ sealed class TokenScreenAnalyticsEvent(
 ) : AnalyticsEvent("Token", event, params) {
 
     /** Legacy event. It has a unique category, but it also is sent on TokenScreen */
-    class DetailsScreenOpened(token: String) : AnalyticsEvent(
+    class DetailsScreenOpened(
+        blockchain: String,
+        token: String,
+        tokenBalance: TokenBalance,
+    ) : AnalyticsEvent(
         category = "Details Screen",
         event = "Details Screen Opened",
-        params = mapOf("Token" to token),
-    )
+        params = mapOf(
+            BLOCKCHAIN to blockchain,
+            TOKEN_PARAM to token,
+            BALANCE to tokenBalance.name,
+        ),
+    ) {
+        sealed class TokenBalance(val name: String) {
+            data object Full : TokenBalance("Full")
+            data object Error : TokenBalance("Error")
+            data object Empty : TokenBalance("Empty")
+            data object NoAddress : TokenBalance("No Address")
+        }
+    }
 
     class ButtonRemoveToken(token: String) : TokenScreenAnalyticsEvent(
         "Button - Remove Token",
