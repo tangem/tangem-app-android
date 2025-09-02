@@ -28,6 +28,7 @@ import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.onramp.main.OnrampMainComponent
 import com.tangem.features.onramp.main.entity.*
 import com.tangem.features.onramp.main.entity.factory.OnrampStateFactory
+import com.tangem.features.onramp.main.entity.factory.OnrampStateFactory.Companion.PREDEFINED_SEPA_AMOUNT
 import com.tangem.features.onramp.main.entity.factory.amount.OnrampAmountStateFactory
 import com.tangem.features.onramp.providers.entity.SelectProviderResult
 import com.tangem.features.onramp.utils.sendOnrampErrorEvent
@@ -63,6 +64,8 @@ internal class OnrampMainComponentModel @Inject constructor(
 ) : Model(), OnrampIntents {
 
     private val params: OnrampMainComponent.Params = paramsContainer.require()
+
+    private var isSepaLaunched = false
 
     val userWallet = getWalletsUseCase.invokeSync().first { it.walletId == params.userWalletId }
 
@@ -148,11 +151,16 @@ internal class OnrampMainComponentModel @Inject constructor(
                         if (country == null) return@onEach
                         _state.update {
                             if (it is OnrampMainComponentUM.InitialLoading) {
-                                stateFactory.getReadyState(country.defaultCurrency)
+                                val state = stateFactory.getReadyState(country.defaultCurrency)
+                                if (params.launchSepa) {
+                                    onAmountValueChanged(PREDEFINED_SEPA_AMOUNT)
+                                }
+                                state
                             } else {
                                 amountStateFactory.getUpdatedCurrencyState(country.defaultCurrency)
                             }
                         }
+
                         updatePairsAndQuotes()
                     },
                 )
@@ -317,8 +325,18 @@ internal class OnrampMainComponentModel @Inject constructor(
     private fun selectOrUpdateQuote(quotes: List<OnrampQuote>): OnrampQuote? {
         val quoteToCheck = quotes.firstOrNull { it !is OnrampQuote.Error }
 
+        val sepaQuote = if (params.launchSepa && !isSepaLaunched) {
+            isSepaLaunched = true
+
+            quotes.filterIsInstance<OnrampQuote.Data>().firstOrNull {
+                it.provider.id == MERCURYO_PROVIDER_ID && it.paymentMethod.id == SEPA_METHOD_ID
+            }
+        } else {
+            null
+        }
+
         // Check if amount, country or currency has changed
-        val newQuote = if (checkLastInputState(quoteToCheck)) {
+        val newQuote = sepaQuote ?: if (checkLastInputState(quoteToCheck)) {
             quoteToCheck
         } else {
             val state = state.value as? OnrampMainComponentUM.Content
@@ -420,5 +438,8 @@ internal class OnrampMainComponentModel @Inject constructor(
 
     private companion object {
         const val UPDATE_DELAY = 10_000L
+
+        const val MERCURYO_PROVIDER_ID = "mercuryo"
+        const val SEPA_METHOD_ID = "sepa"
     }
 }
