@@ -1060,7 +1060,7 @@
   <string name="send_with_swap_change_token_alert_message">Are you sure you want to change the receiving token? This will reset your previously entered data.</string>
   <string name="send_with_swap_change_token_alert_title">Changing token</string>
   <string name="send_with_swap_confirm_title">Swap and send</string>
-  <string name="send_with_swap_convert_token_alert_message">Proceed with conversion? This will clear your previous data.</string>
+  <string name="send_with_swap_convert_token_alert_message">Proceed with swap? This will clear your previous data.</string>
   <string name="send_with_swap_convert_token_alert_title">Confirm Conversion</string>
   <string name="send_with_swap_correct_recipient_network_notification_message">Sending any other currency will result in its irreversible loss.</string>
   <string name="send_with_swap_correct_recipient_network_notification_title">Select the correct recipient network</string>
