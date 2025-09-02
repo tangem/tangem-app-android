@@ -1367,6 +1367,7 @@
   <string name="wc_errors_proposal_expired_subtitle">Будь ласка, згенеруйте новий URI та спробуйте ще раз</string>
   <string name="wc_errors_proposal_expired_title">Термін для з’єднання минув</string>
   <string name="wc_estimated_wallet_changes">Прогнозовані зміни</string>
+  <string name="wc_fee_suggested">Пропоновано %s</string>
   <string name="wc_insufficient_warning_subtitle">Поповніть баланс, щоб покрити комісію мережі</string>
   <string name="wc_insufficient_warning_title">Недостатньо %1$s</string>
   <string name="wc_missing_required_network_description">Додайте %s мережі до вашого портфелю для цього гаманця</string>
