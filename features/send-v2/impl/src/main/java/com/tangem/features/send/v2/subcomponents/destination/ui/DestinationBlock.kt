@@ -211,6 +211,7 @@ private class DestinationBlockPreviewProvider : PreviewParameterProvider<Destina
         isValidating = false,
         isInitialized = true,
         isRedesignEnabled = false,
+        isRecentHidden = false,
     )
 
     override val values: Sequence<DestinationUM.Content>
