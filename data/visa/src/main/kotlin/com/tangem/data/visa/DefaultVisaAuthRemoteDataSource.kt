@@ -13,17 +13,16 @@ import com.tangem.domain.visa.model.VisaAuthChallenge
 import com.tangem.domain.visa.model.VisaAuthSession
 import com.tangem.domain.visa.model.VisaAuthSignedChallenge
 import com.tangem.domain.visa.model.VisaAuthTokens
-import com.tangem.domain.visa.repository.VisaAuthRepository
+import com.tangem.domain.visa.datasource.VisaAuthRemoteDataSource
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
-@Suppress("UnusedPrivateMember")
-internal class DefaultVisaAuthRepository @Inject constructor(
+internal class DefaultVisaAuthRemoteDataSource @Inject constructor(
     @NetworkMoshi private val moshi: Moshi,
     private val visaAuthApi: TangemPayApi,
     private val dispatchers: CoroutineDispatcherProvider,
-) : VisaAuthRepository {
+) : VisaAuthRemoteDataSource {
 
     private val visaErrorAdapter = VisaErrorResponseJsonAdapter(moshi)
 
