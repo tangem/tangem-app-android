@@ -1,10 +1,10 @@
-package com.tangem.features.onramp.newmain
+package com.tangem.features.onramp.mainv2
 
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 
-class DefaultOnrampNewMainFeatureToggle(
+class DefaultOnrampV2MainFeatureToggle(
     private val featureTogglesManager: FeatureTogglesManager,
-) : OnrampNewMainFeatureToggle {
+) : OnrampV2MainFeatureToggle {
     override val isOnrampNewMainEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled("NEW_ONRAMP_RECEIVE_ENABLED")
 }
