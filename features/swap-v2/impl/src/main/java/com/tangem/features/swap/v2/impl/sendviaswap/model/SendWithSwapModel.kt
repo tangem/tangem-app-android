@@ -110,8 +110,8 @@ internal class SendWithSwapModel @Inject constructor(
         uiState.update { it.copy(navigationUM = navigationUM) }
     }
 
-    override fun onSeparatorClick(lastAmount: String) {
-        params.callback?.onCloseSwap(lastAmount)
+    override fun onSeparatorClick(lastAmount: String, isEnterInFiatSelected: Boolean) {
+        params.callback?.onCloseSwap(lastAmount, isEnterInFiatSelected)
         router.popTo(initialRoute)
     }
 
