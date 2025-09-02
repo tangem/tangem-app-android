@@ -22,7 +22,7 @@ import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.visa.error.VisaActivationError
 import com.tangem.domain.visa.model.*
 import com.tangem.domain.visa.repository.VisaActivationRepository
-import com.tangem.domain.visa.repository.VisaAuthRepository
+import com.tangem.domain.visa.datasource.VisaAuthRemoteDataSource
 import com.tangem.operations.GenerateOTPCommand
 import com.tangem.operations.attestation.AttestCardKeyCommand
 import com.tangem.operations.pins.SetUserCodeCommand
@@ -46,7 +46,7 @@ class VisaCardActivationTask @AssistedInject constructor(
     @Assisted private val coroutineScope: CoroutineScope,
     private val otpStorage: VisaOTPStorage,
     private val visaAuthTokenStorage: VisaAuthTokenStorage,
-    private val visaAuthRepository: VisaAuthRepository,
+    private val visaAuthRemoteDataSource: VisaAuthRemoteDataSource,
     private val visaActivationRepositoryFactory: VisaActivationRepository.Factory,
 ) : CardSessionRunnable<VisaCardActivationResponse> {
 
@@ -168,7 +168,7 @@ class VisaCardActivationTask @AssistedInject constructor(
         signedChallenge: VisaAuthSignedChallenge,
         cardWalletAddress: String,
     ): Either<TangemError, VisaDataToSignByCardWallet> = either {
-        val tokens = visaAuthRepository.getAccessTokens(signedChallenge)
+        val tokens = visaAuthRemoteDataSource.getAccessTokens(signedChallenge)
             .getOrElse { raise(it.tangemError) }
 
         visaAuthTokenStorage.store(cardId, tokens)
