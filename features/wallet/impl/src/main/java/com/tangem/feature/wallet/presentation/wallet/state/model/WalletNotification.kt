@@ -287,4 +287,21 @@ sealed class WalletNotification(val config: NotificationConfig) {
             iconSize = 54.dp,
         ),
     )
+
+    data class Sepa(
+        val onCloseClick: () -> Unit,
+        val onClick: () -> Unit,
+    ) : WalletNotification(
+        config = NotificationConfig(
+            title = resourceReference(R.string.notification_sepa_title),
+            subtitle = resourceReference(R.string.notification_sepa_text),
+            iconResId = R.drawable.img_notification_sepa,
+            onCloseClick = onCloseClick,
+            buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
+                text = resourceReference(R.string.notification_sepa_button),
+                onClick = onClick,
+            ),
+            iconSize = 54.dp,
+        ),
+    )
 }

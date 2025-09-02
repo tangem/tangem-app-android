@@ -81,6 +81,7 @@ internal class DefaultOnrampComponent @AssistedInject constructor(
                             ),
                         )
                     },
+                    launchSepa = params.launchSepa,
                 ),
             )
             is OnrampChild.RedirectPage -> onrampRedirectComponentFactory.create(
