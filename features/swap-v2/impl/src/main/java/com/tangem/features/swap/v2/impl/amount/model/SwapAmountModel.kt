@@ -348,7 +348,10 @@ internal class SwapAmountModel @Inject constructor(
 
     private fun confirmSendWithSwapClose() {
         val amountParams = params as? SwapAmountComponentParams.AmountParams ?: return
-        val amountFieldData = uiState.value.primaryAmount.amountField as? AmountState.Data
+        val amountField = uiState.value.swapDirection.withSwapDirection(
+            onDirect = { uiState.value.primaryAmount },
+            onReverse = { uiState.value.secondaryAmount },
+        ).amountField as? AmountState.Data
 
         val primaryCryptoCurrencyStatus = (uiState.value as? SwapAmountUM.Content)?.primaryCryptoCurrencyStatus
         if (primaryCryptoCurrencyStatus != null) {
@@ -367,7 +370,16 @@ internal class SwapAmountModel @Inject constructor(
             )
         }
 
-        amountParams.callback.onSeparatorClick(lastAmount = amountFieldData?.amountTextField?.value.orEmpty())
+        val isEnterInFiatSelected = amountField?.amountTextField?.isFiatValue == true
+        val lastAmount = if (isEnterInFiatSelected) {
+            amountField.amountTextField.fiatValue
+        } else {
+            amountField?.amountTextField?.value
+        }
+        amountParams.callback.onSeparatorClick(
+            lastAmount = lastAmount.orEmpty(),
+            isEnterInFiatSelected = isEnterInFiatSelected,
+        )
     }
 
     private fun subscribeOnCryptoCurrencyStatusFlow() {
@@ -407,9 +419,10 @@ internal class SwapAmountModel @Inject constructor(
 
     private fun subscribeOnAmountUpdateTriggerUpdates() {
         swapAmountUpdateListener.updateAmountTriggerFlow
-            .onEach {
+            .onEach { (amount, isEnterInFiat) ->
                 if (uiState.value is SwapAmountUM.Content) {
-                    onAmountValueChange(it)
+                    onCurrencyChangeClick(isEnterInFiat)
+                    onAmountValueChange(amount)
                     saveResult()
                 }
             }
