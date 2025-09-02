@@ -1,58 +1,48 @@
-package com.tangem.data.pay
+package com.tangem.data.pay.repository
 
 import arrow.core.Either
 import com.squareup.moshi.Moshi
-import com.tangem.common.map
 import com.tangem.core.error.UniversalError
 import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.pay.TangemPayApi
 import com.tangem.datasource.api.pay.models.response.VisaErrorResponseJsonAdapter
 import com.tangem.datasource.di.NetworkMoshi
+import com.tangem.datasource.local.visa.TangemPayStorage
 import com.tangem.domain.pay.KycStartInfo
+import com.tangem.domain.pay.datasource.TangemPayAuthDataSource
 import com.tangem.domain.pay.repository.KycRepository
 import com.tangem.domain.visa.error.VisaApiError
-import com.tangem.domain.visa.model.VisaDataForApprove
-import com.tangem.domain.visa.model.VisaDataToSignByCustomerWallet
-import com.tangem.domain.visa.repository.VisaAuthRepository
-import com.tangem.sdk.api.TangemSdkManager
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 
 class DefaultKycRepository @AssistedInject constructor(
     @NetworkMoshi moshi: Moshi,
     private val tangemPayApi: TangemPayApi,
-    private val visaAuthRepository: VisaAuthRepository,
-    private val tangemSdkManager: TangemSdkManager,
+    private val authDataSource: TangemPayAuthDataSource,
+    private val tangemPayStorage: TangemPayStorage,
 ) : KycRepository {
 
     private val visaErrorAdapter = VisaErrorResponseJsonAdapter(moshi)
 
     override suspend fun getKycStartInfo(address: String, cardId: String): Either<UniversalError, KycStartInfo> {
-        var authHeader = ""
-        visaAuthRepository.getCustomerWalletAuthChallenge(address).getOrNull()?.let { result ->
-            tangemSdkManager.visaCustomerWalletApprove(
-                VisaDataForApprove(
-                    customerWalletCardId = cardId,
-                    targetAddress = address,
-                    dataToSign = VisaDataToSignByCustomerWallet(hashToSign = result.challenge),
-                ),
-            ).map { signResult ->
-                visaAuthRepository.getTokenWithCustomerWallet(
-                    sessionId = result.session.sessionId,
-                    signature = signResult.signature,
-                    nonce = signResult.dataToSign.hashToSign,
-                ).getOrNull()?.let { authHeader = it }
-            }
-        }
+        val authHeader = authDataSource.generateNewAuthHeader(address, cardId)
+            .getOrNull()
+            .takeIf { !it.isNullOrEmpty() }
+            ?: return Either.Left(VisaApiError.UnknownWithoutCode)
+        tangemPayStorage.store(authHeader)
+        return getKycInfo(authHeader)
+    }
+
+    override suspend fun getKycStartInfo(authHeader: String): Either<UniversalError, KycStartInfo> {
+        return getKycInfo(authHeader)
+    }
+
+    private suspend fun getKycInfo(authHeader: String): Either<UniversalError, KycStartInfo> {
         return request {
-            authHeader.ifEmpty { error("Cannot get auth header for KYC") }
             tangemPayApi.getKycAccess(authHeader = authHeader).getOrThrow().result
         }.map {
-            KycStartInfo(
-                token = it.token,
-                locale = it.locale,
-            )
+            KycStartInfo(token = it.token, locale = it.locale)
         }
     }
 
