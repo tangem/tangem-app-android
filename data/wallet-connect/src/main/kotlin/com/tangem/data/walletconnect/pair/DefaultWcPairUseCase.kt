@@ -114,8 +114,9 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
                 sessionsManager.saveSession(newSession)
                 analytics.send(
                     WcAnalyticEvents.DAppConnected(
-                        proposalState.dAppSession,
-                        sessionForApprove,
+                        sessionProposal = proposalState.dAppSession,
+                        sessionForApprove = sessionForApprove,
+                        securityStatus = proposalState.dAppSession.securityStatus,
                     ),
                 )
                 newSession
