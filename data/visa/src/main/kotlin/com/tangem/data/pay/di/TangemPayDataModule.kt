@@ -1,6 +1,6 @@
 package com.tangem.data.pay.di
 
-import com.tangem.data.pay.DefaultKycRepository
+import com.tangem.data.pay.repository.DefaultKycRepository
 import com.tangem.domain.pay.repository.KycRepository
 import dagger.Binds
 import dagger.Module
