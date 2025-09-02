@@ -1,0 +1,10 @@
+package com.tangem.core.ui.test
+
+object WalletConnectScreenTestTags {
+    const val MORE_BUTTON = "WALLET_CONNECT_SCREEN_MORE_BUTTON"
+    const val WALLET_NAME = "WALLET_CONNECT_SCREEN_WALLET_NAME"
+    const val APP_ICON = "WALLET_CONNECT_SCREEN_APP_ICON"
+    const val APP_NAME = "WALLET_CONNECT_SCREEN_APP_NAME"
+    const val APPROVE_ICON = "WALLET_CONNECT_SCREEN_APPROVE_ICON"
+    const val APP_URL = "WALLET_CONNECT_SCREEN_APP_URL"
+}
