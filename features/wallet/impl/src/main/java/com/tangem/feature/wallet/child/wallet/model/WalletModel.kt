@@ -363,12 +363,26 @@ internal class WalletModel @Inject constructor(
             is WalletsUpdateActionResolver.Action.RenameWallets -> {
                 stateHolder.update(transformer = RenameWalletsTransformer(renamedWallets = action.renamedWallets))
             }
+            is WalletsUpdateActionResolver.Action.ReloadWarningsForWallets -> {
+                reloadWarnings(action)
+            }
             WalletsUpdateActionResolver.Action.EmptyWallets -> {
                 Timber.w("Wallets list is empty!")
             }
             is WalletsUpdateActionResolver.Action.Unknown -> {
                 Timber.w("Unable to perform action: $action")
             }
+        }
+    }
+
+    private fun reloadWarnings(action: WalletsUpdateActionResolver.Action.ReloadWarningsForWallets) {
+        action.wallets.forEach {
+            walletScreenContentLoader.load(
+                userWallet = it,
+                clickIntents = clickIntents,
+                coroutineScope = modelScope,
+                isRefresh = true,
+            )
         }
     }
 
