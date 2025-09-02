@@ -1,4 +1,4 @@
-package com.tangem.domain.visa.repository
+package com.tangem.domain.visa.datasource
 
 import arrow.core.Either
 import com.tangem.domain.visa.error.VisaApiError
@@ -6,7 +6,7 @@ import com.tangem.domain.visa.model.VisaAuthChallenge
 import com.tangem.domain.visa.model.VisaAuthSignedChallenge
 import com.tangem.domain.visa.model.VisaAuthTokens
 
-interface VisaAuthRepository {
+interface VisaAuthRemoteDataSource {
 
     suspend fun getCardAuthChallenge(
         cardId: String,
