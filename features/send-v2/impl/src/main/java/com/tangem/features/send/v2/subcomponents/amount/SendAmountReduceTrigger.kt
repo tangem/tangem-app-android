@@ -30,7 +30,7 @@ interface SendAmountReduceListener {
  * Different from another triggers because it takes raw string instead of BigDecimal
  */
 interface SendAmountUpdateTrigger {
-    suspend fun triggerUpdateAmount(amountValue: String)
+    suspend fun triggerUpdateAmount(amountValue: String, isEnterInFiatSelected: Boolean?)
 }
 
 /**
@@ -38,7 +38,7 @@ interface SendAmountUpdateTrigger {
  * Different from another triggers because it takes raw string instead of BigDecimal
  */
 interface SendAmountUpdateListener {
-    val updateAmountTriggerFlow: Flow<String>
+    val updateAmountTriggerFlow: Flow<Pair<String, Boolean?>>
 }
 
 @Singleton
@@ -51,7 +51,7 @@ internal class DefaultSendAmountReduceTrigger @Inject constructor() :
     override val reduceToTriggerFlow = MutableSharedFlow<BigDecimal>()
     override val reduceByTriggerFlow = MutableSharedFlow<ReduceByData>()
     override val ignoreReduceTriggerFlow = MutableSharedFlow<Unit>()
-    override val updateAmountTriggerFlow = MutableSharedFlow<String>()
+    override val updateAmountTriggerFlow = MutableSharedFlow<Pair<String, Boolean?>>()
 
     override suspend fun triggerReduceBy(reduceBy: ReduceByData) {
         reduceByTriggerFlow.emit(reduceBy)
@@ -65,7 +65,7 @@ internal class DefaultSendAmountReduceTrigger @Inject constructor() :
         ignoreReduceTriggerFlow.emit(Unit)
     }
 
-    override suspend fun triggerUpdateAmount(amountValue: String) {
-        updateAmountTriggerFlow.emit(amountValue)
+    override suspend fun triggerUpdateAmount(amountValue: String, isEnterInFiatSelected: Boolean?) {
+        updateAmountTriggerFlow.emit(amountValue to isEnterInFiatSelected)
     }
 }
