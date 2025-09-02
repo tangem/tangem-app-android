@@ -3,6 +3,14 @@
 # Built application files
 /build
 /buildSrc
+**/build/.transforms/**
+**/build/classes/**
+**/build/generated/**
+**/build/intermediates/**
+**/build/kotlin/**
+**/build/libs/**
+**/build/outputs/**
+**/build/tmp/**
 
 # Local configuration file (sdk path, etc)
 local.properties
