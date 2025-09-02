@@ -126,6 +126,10 @@ abstract class BaseTestCase : TestCase(
             with(featureTogglesManager as MutableFeatureTogglesManager) {
                 changeToggle("WALLET_CONNECT_REDESIGN_ENABLED", true)
                 changeToggle("WALLET_BALANCE_FETCHER_ENABLED", true)
+                changeToggle("SEND_VIA_SWAP_ENABLED", true)
+                changeToggle("SWAP_REDESIGN_ENABLED", true)
+                changeToggle("SEND_REDESIGN_ENABLED", true)
+                changeToggle("NEW_ONRAMP_MAIN_ENABLED", true)
             }
         }
     }
