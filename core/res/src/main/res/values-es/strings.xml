@@ -332,6 +332,7 @@
   <string name="domain_receive_assets_default_address">Dirección por defecto</string>
   <string name="domain_receive_assets_legacy_address">Dirección Legacy</string>
   <string name="domain_receive_assets_navigation_title">Recibir activos</string>
+  <string name="domain_receive_assets_network_name_address">%s dirección</string>
   <string name="domain_receive_assets_onboarding_description">Enviar activos a otras redes resultará en una pérdida permanente.</string>
   <string name="domain_receive_assets_onboarding_title">Envíe fondos utilizando solo</string>
   <string name="email_preface_wc_error">Hola equipo de soporte, he encontrado un error con el código: %s</string>
