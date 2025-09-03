@@ -41,7 +41,7 @@ internal class TokenReceiveAssetsModel @Inject constructor(
         ReceiveAssetsUM(
             onCopyClick = {
                 params.callback.onCopyClick(
-                    id = it,
+                    address = it,
                     source = TokenReceiveCopyActionSource.Receive,
                 )
             },
@@ -54,7 +54,7 @@ internal class TokenReceiveAssetsModel @Inject constructor(
     )
 
     private fun configureEnsStatus(): AnalyticsParam.EnsStatus {
-        val hasEnsAddress = params.addresses.values.any { it.type == ReceiveAddress.Type.Ens }
+        val hasEnsAddress = params.addresses.any { it.type == ReceiveAddress.Type.Ens }
         return if (hasEnsAddress) {
             AnalyticsParam.EnsStatus.FULL
         } else {
