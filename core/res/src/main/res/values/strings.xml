@@ -395,6 +395,7 @@
   <string name="domain_receive_assets_default_address">Default Address</string>
   <string name="domain_receive_assets_legacy_address">Legacy Address</string>
   <string name="domain_receive_assets_navigation_title">Receive assets</string>
+  <string name="domain_receive_assets_network_name_address">%s address</string>
   <string name="domain_receive_assets_onboarding_description">Sending assets in other networks will result in permanent loss.</string>
   <string name="domain_receive_assets_onboarding_network_name">%s network</string>
   <string name="domain_receive_assets_onboarding_title">Send funds using only</string>
