@@ -9,7 +9,6 @@ import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
-import com.tangem.domain.notifications.toggles.NotificationsFeatureToggles
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -42,13 +41,11 @@ internal object DataCommonModule {
     @Provides
     @Singleton
     fun provideUserTokensEncricher(
-        notificationsFeatureToggles: NotificationsFeatureToggles,
         walletsRepository: WalletsRepository,
         multiNetworkStatusSupplier: MultiNetworkStatusSupplier,
         dispatchers: CoroutineDispatcherProvider,
     ): UserTokensResponseAddressesEnricher {
         return UserTokensResponseAddressesEnricher(
-            notificationsFeatureToggles = notificationsFeatureToggles,
             walletsRepository = walletsRepository,
             multiNetworkStatusSupplier = multiNetworkStatusSupplier,
             dispatchers = dispatchers,

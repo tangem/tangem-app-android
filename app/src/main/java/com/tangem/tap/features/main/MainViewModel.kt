@@ -28,7 +28,6 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.notifications.GetApplicationIdUseCase
 import com.tangem.domain.notifications.SendPushTokenUseCase
 import com.tangem.domain.notifications.models.ApplicationId
-import com.tangem.domain.notifications.toggles.NotificationsFeatureToggles
 import com.tangem.domain.onboarding.repository.OnboardingRepository
 import com.tangem.domain.onramp.FetchHotCryptoUseCase
 import com.tangem.domain.promo.GetStoryContentUseCase
@@ -80,7 +79,6 @@ internal class MainViewModel @Inject constructor(
     private val imagePreloader: ImagePreloader,
     private val fetchHotCryptoUseCase: FetchHotCryptoUseCase,
     private val onboardingRepository: OnboardingRepository,
-    private val notificationsToggles: NotificationsFeatureToggles,
     private val getApplicationIdUseCase: GetApplicationIdUseCase,
     private val subscribeOnWalletsUseCase: GetSavedWalletsCountUseCase,
     private val associateWalletsWithApplicationIdUseCase: AssociateWalletsWithApplicationIdUseCase,
@@ -415,18 +413,20 @@ internal class MainViewModel @Inject constructor(
     }
 
     private suspend fun initPushNotifications() {
-        if (notificationsToggles.isNotificationsEnabled) {
-            getApplicationIdUseCase().onRight { applicationId ->
+        getApplicationIdUseCase()
+            .onRight { applicationId ->
                 sendPushTokenUseCase(applicationId = applicationId)
                 associateWalletsWithApplicationId(applicationId = applicationId)
                 updateRemoteWalletsInfoUseCase(applicationId = applicationId)
-            }.onLeft { Timber.e(it.toString()) }
-        }
+            }
+            .onLeft(Timber::e)
     }
 
     private fun associateWalletsWithApplicationId(applicationId: ApplicationId) {
-        subscribeOnWalletsUseCase().onEach { wallets ->
-            associateWalletsWithApplicationIdUseCase(applicationId, wallets)
-        }.launchIn(viewModelScope)
+        subscribeOnWalletsUseCase()
+            .onEach { wallets ->
+                associateWalletsWithApplicationIdUseCase(applicationId, wallets)
+            }
+            .launchIn(viewModelScope)
     }
 }

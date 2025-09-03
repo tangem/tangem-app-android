@@ -17,7 +17,6 @@ import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.nft.ObserveAndClearNFTCacheIfNeedUseCase
 import com.tangem.domain.notifications.GetIsHuaweiDeviceWithoutGoogleServicesUseCase
 import com.tangem.domain.notifications.repository.NotificationsRepository
-import com.tangem.domain.notifications.toggles.NotificationsFeatureToggles
 import com.tangem.domain.settings.*
 import com.tangem.domain.tokens.RefreshMultiCurrencyWalletQuotesUseCase
 import com.tangem.domain.wallets.usecase.*
@@ -79,7 +78,6 @@ internal class WalletModel @Inject constructor(
     private val notificationsRepository: NotificationsRepository,
     private val getWalletsListForEnablingUseCase: GetWalletsForAutomaticallyPushEnablingUseCase,
     private val setNotificationsEnabledUseCase: SetNotificationsEnabledUseCase,
-    private val notificationsFeatureToggles: NotificationsFeatureToggles,
     private val shouldSaveUserWalletsSyncUseCase: ShouldSaveUserWalletsSyncUseCase,
     private val getIsHuaweiDeviceWithoutGoogleServicesUseCase: GetIsHuaweiDeviceWithoutGoogleServicesUseCase,
     val screenLifecycleProvider: ScreenLifecycleProvider,
@@ -575,7 +573,6 @@ internal class WalletModel @Inject constructor(
     }
 
     private fun enableNotificationsIfNeeded() {
-        if (!notificationsFeatureToggles.isNotificationsEnabled) return
         modelScope.launch {
             val isUserAllowToEnableNotifications = notificationsRepository.isUserAllowToSubscribeOnPushNotifications()
             if (isUserAllowToEnableNotifications) {

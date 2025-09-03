@@ -41,7 +41,6 @@ dependencies {
     implementation(projects.domain.demo)
     implementation(projects.domain.nft)
     implementation(projects.domain.settings)
-    implementation(projects.domain.notifications.toggles)
     implementation(projects.domain.notifications.models)
     implementation(projects.domain.notifications)
 
