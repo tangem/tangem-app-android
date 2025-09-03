@@ -32,7 +32,6 @@ import com.tangem.domain.nft.EnableWalletNFTUseCase
 import com.tangem.domain.nft.GetWalletNFTEnabledUseCase
 import com.tangem.domain.notifications.GetIsHuaweiDeviceWithoutGoogleServicesUseCase
 import com.tangem.domain.notifications.repository.NotificationsRepository
-import com.tangem.domain.notifications.toggles.NotificationsFeatureToggles
 import com.tangem.domain.settings.repositories.PermissionRepository
 import com.tangem.domain.wallets.usecase.*
 import com.tangem.feature.walletsettings.analytics.Settings
@@ -73,7 +72,6 @@ internal class WalletSettingsModel @Inject constructor(
     getWalletNFTEnabledUseCase: GetWalletNFTEnabledUseCase,
     private val enableWalletNFTUseCase: EnableWalletNFTUseCase,
     private val disableWalletNFTUseCase: DisableWalletNFTUseCase,
-    private val notificationsToggles: NotificationsFeatureToggles,
     getWalletNotificationsEnabledUseCase: GetWalletNotificationsEnabledUseCase,
     private val setNotificationsEnabledUseCase: SetNotificationsEnabledUseCase,
     private val settingsManager: SettingsManager,
@@ -130,8 +128,7 @@ internal class WalletSettingsModel @Inject constructor(
                 is UserWallet.Hot -> wallet.backedUp
                 is UserWallet.Cold -> true
             }
-            val isNeedShowNotifications = notificationsToggles.isNotificationsEnabled &&
-                !getIsHuaweiDeviceWithoutGoogleServicesUseCase()
+            val isNeedShowNotifications = !getIsHuaweiDeviceWithoutGoogleServicesUseCase()
             state.update { value ->
                 value.copy(
                     items = buildItems(
