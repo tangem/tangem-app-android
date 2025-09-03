@@ -356,10 +356,6 @@ internal class DefaultCurrenciesRepository(
             getMultiCurrencyWalletCurrencies(userWallet)
                 .onEach { send(it) }
                 .launchIn(scope = this + dispatchers.io)
-
-            withContext(dispatchers.io) {
-                fetchTokensIfCacheExpired(userWallet, refresh = false)
-            }
         }
     }
 
