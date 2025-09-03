@@ -24,10 +24,6 @@
         "version": "5.27.0"
     },
     {
-        "name": "PUSH_NOTIFICATIONS_ENABLED",
-        "version": "5.26.2"
-    },
-    {
         "name": "USEDESK_ENABLED",
         "version": "undefined"
     },
