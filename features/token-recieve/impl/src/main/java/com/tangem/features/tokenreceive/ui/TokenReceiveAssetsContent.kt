@@ -29,8 +29,8 @@ import com.tangem.core.res.getStringSafe
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH12
 import com.tangem.core.ui.components.SpacerH8
+import com.tangem.core.ui.components.SpacerW
 import com.tangem.core.ui.components.SpacerW12
-import com.tangem.core.ui.components.SpacerW8
 import com.tangem.core.ui.components.atoms.text.EllipsisText
 import com.tangem.core.ui.components.atoms.text.TextEllipsis
 import com.tangem.core.ui.components.buttons.small.TangemIconButton
@@ -211,9 +211,9 @@ private fun AddressItem(
                 Column(modifier = Modifier.weight(1f)) {
                     EllipsisText(
                         text = primaryType.displayName.resolveReference(),
-                        ellipsis = TextEllipsis.Middle,
+                        ellipsis = TextEllipsis.End,
                         color = TangemTheme.colors.text.primary1,
-                        style = TangemTheme.typography.subtitle1,
+                        style = TangemTheme.typography.subtitle2,
                     )
 
                     EllipsisText(
@@ -227,16 +227,16 @@ private fun AddressItem(
                 SpacerW12()
 
                 TangemIconButton(
-                    modifier = Modifier.size(TangemTheme.dimens.size28),
+                    modifier = Modifier.size(TangemTheme.dimens.size32),
                     innerPadding = 6.dp,
                     iconRes = R.drawable.ic_qrcode_new_24,
                     onClick = onOpenQrCodeClick,
                 )
 
-                SpacerW8()
+                SpacerW(12.dp)
 
                 TangemIconButton(
-                    modifier = Modifier.size(TangemTheme.dimens.size28),
+                    modifier = Modifier.size(TangemTheme.dimens.size32),
                     iconRes = R.drawable.ic_copy_new_24,
                     innerPadding = 6.dp,
                     onClick = onCopyClick,
