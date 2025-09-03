@@ -21,8 +21,6 @@ import com.tangem.datasource.di.SdkMoshi
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.datasource.local.walletconnect.WalletConnectStore
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
-import com.tangem.domain.tokens.TokensFeatureToggles
-import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletconnect.WcPairService
 import com.tangem.domain.walletconnect.WcRequestService
 import com.tangem.domain.walletconnect.WcRequestUseCaseFactory
@@ -177,15 +175,11 @@ internal object WalletConnectDataModule {
     fun wcNetworksConverter(
         namespaceConverters: Set<@JvmSuppressWildcards WcNamespaceConverter>,
         walletManagersFacade: WalletManagersFacade,
-        currenciesRepository: CurrenciesRepository,
         multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
-        tokensFeatureToggles: TokensFeatureToggles,
     ): WcNetworksConverter = WcNetworksConverter(
         namespaceConverters = namespaceConverters,
         walletManagersFacade = walletManagersFacade,
-        currenciesRepository = currenciesRepository,
         multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
-        tokensFeatureToggles = tokensFeatureToggles,
     )
 
     @Provides
@@ -193,15 +187,11 @@ internal object WalletConnectDataModule {
     fun associateNetworksDelegate(
         namespaceConverters: Set<@JvmSuppressWildcards WcNamespaceConverter>,
         getWallets: GetWalletsUseCase,
-        currenciesRepository: CurrenciesRepository,
         multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
-        tokensFeatureToggles: TokensFeatureToggles,
     ): AssociateNetworksDelegate = AssociateNetworksDelegate(
         namespaceConverters = namespaceConverters,
         getWallets = getWallets,
-        currenciesRepository = currenciesRepository,
         multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
-        tokensFeatureToggles = tokensFeatureToggles,
     )
 
     @Provides
