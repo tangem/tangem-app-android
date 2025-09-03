@@ -22,7 +22,10 @@ import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.tokens.*
+import com.tangem.domain.tokens.GetFeePaidCryptoCurrencyStatusSyncUseCase
+import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
+import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesProducer
+import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.CreateNFTTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
@@ -62,9 +65,7 @@ internal class NFTSendModel @Inject constructor(
     private val router: Router,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
-    private val getCryptoCurrenciesUseCase: GetCryptoCurrenciesUseCase,
     private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
-    private val tokensFeatureToggles: TokensFeatureToggles,
     private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
     private val createNFTTransferTransactionUseCase: CreateNFTTransferTransactionUseCase,
@@ -178,16 +179,10 @@ internal class NFTSendModel @Inject constructor(
                 ifRight = { wallet ->
                     userWallet = wallet
 
-                    cryptoCurrency = if (tokensFeatureToggles.isWalletBalanceFetcherEnabled) {
-                        multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
-                            params = MultiWalletCryptoCurrenciesProducer.Params(userWalletId),
-                        )
-                            ?.firstOrNull { it is CryptoCurrency.Coin && it.network == nftAsset.network }
-                    } else {
-                        getCryptoCurrenciesUseCase(userWalletId).getOrNull()
-                            ?.filterIsInstance<CryptoCurrency.Coin>()
-                            ?.firstOrNull { it.network == nftAsset.network }
-                    }
+                    cryptoCurrency = multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
+                        params = MultiWalletCryptoCurrenciesProducer.Params(userWalletId),
+                    )
+                        ?.firstOrNull { it is CryptoCurrency.Coin && it.network == nftAsset.network }
                         ?: return@launch
 
                     getCurrenciesStatusUpdates(
@@ -244,7 +239,7 @@ internal class NFTSendModel @Inject constructor(
                     ).getOrNull() ?: cryptoStatus
 
                     if (uiState.value.destinationUM is DestinationUM.Empty) {
-                        router.replaceAll(CommonSendRoute.Destination(isEditMode = false))
+                        router.replaceAll(Destination(isEditMode = false))
                     }
                 },
                 ifLeft = {
