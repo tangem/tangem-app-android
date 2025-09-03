@@ -13,7 +13,6 @@ import com.tangem.features.tokenreceive.entity.ReceiveAddress
 import com.tangem.features.tokenreceive.model.TokenReceiveAssetsModel
 import com.tangem.features.tokenreceive.ui.TokenReceiveAssetsContent
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.ImmutableMap
 
 internal class TokenReceiveAssetsComponent(
     appComponentContext: AppComponentContext,
@@ -29,13 +28,13 @@ internal class TokenReceiveAssetsComponent(
     }
 
     internal interface TokenReceiveAssetsModelCallback {
-        fun onQrCodeClick(id: Int)
-        fun onCopyClick(id: Int, source: TokenReceiveCopyActionSource)
+        fun onQrCodeClick(address: String)
+        fun onCopyClick(address: ReceiveAddress, source: TokenReceiveCopyActionSource)
     }
 
     data class TokenReceiveAssetsParams(
         val notificationConfigs: ImmutableList<NotificationUM>,
-        val addresses: ImmutableMap<Int, ReceiveAddress>,
+        val addresses: ImmutableList<ReceiveAddress>,
         val callback: TokenReceiveAssetsModelCallback,
         val onDismiss: () -> Unit,
         val showMemoDisclaimer: Boolean,
