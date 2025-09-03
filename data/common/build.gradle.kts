@@ -19,6 +19,7 @@ dependencies {
     implementation(projects.core.utils)
 
     /* Domain */
+    implementation(projects.domain.account)
     implementation(projects.domain.demo)
     implementation(projects.domain.legacy)
     implementation(projects.domain.card)
@@ -31,6 +32,7 @@ dependencies {
     /* Libs - SDK */
     implementation(tangemDeps.blockchain)
     implementation(tangemDeps.card.core)
+    implementation(projects.libs.crypto)
     implementation(projects.libs.blockchainSdk)
 
     /* DI */
