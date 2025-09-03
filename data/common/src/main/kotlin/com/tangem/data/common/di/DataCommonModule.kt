@@ -7,6 +7,7 @@ import com.tangem.data.common.quote.QuotesFetcher
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
 import com.tangem.domain.wallets.repository.WalletsRepository
@@ -58,13 +59,15 @@ internal object DataCommonModule {
         tangemTechApi: TangemTechApi,
         userTokensResponseStore: UserTokensResponseStore,
         dispatchers: CoroutineDispatcherProvider,
-        enricher: UserTokensResponseAddressesEnricher,
+        addressesEnricher: UserTokensResponseAddressesEnricher,
+        accountsFeatureToggles: AccountsFeatureToggles,
     ): UserTokensSaver {
         return UserTokensSaver(
             tangemTechApi = tangemTechApi,
             userTokensResponseStore = userTokensResponseStore,
             dispatchers = dispatchers,
-            userTokensResponseAddressesEnricher = enricher,
+            addressesEnricher = addressesEnricher,
+            accountsFeatureToggles = accountsFeatureToggles,
         )
     }
 
