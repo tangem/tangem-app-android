@@ -44,10 +44,6 @@
         "version": "5.28.0"
     },
     {
-        "name": "WALLET_BALANCE_FETCHER_ENABLED",
-        "version": "5.27.0"
-    },
-    {
         "name": "HOT_WALLET_ENABLED",
         "version": "undefined"
     },
