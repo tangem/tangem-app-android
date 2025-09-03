@@ -5,6 +5,7 @@ import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.local.token.UserTokensResponseStore
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
@@ -19,12 +20,16 @@ class UserTokensSaverTest {
     private val tangemTechApi: TangemTechApi = mockk()
     private val userTokensResponseStore: UserTokensResponseStore = mockk(relaxed = true)
     private val enricher: UserTokensResponseAddressesEnricher = mockk()
+    private val accountsFeatureToggles = mockk<AccountsFeatureToggles> {
+        every { this@mockk.isFeatureEnabled } returns true
+    }
 
     private val userTokensSaver: UserTokensSaver = UserTokensSaver(
         tangemTechApi = tangemTechApi,
         userTokensResponseStore = userTokensResponseStore,
-        userTokensResponseAddressesEnricher = enricher,
         dispatchers = TestingCoroutineDispatcherProvider(),
+        addressesEnricher = enricher,
+        accountsFeatureToggles = accountsFeatureToggles,
     )
 
     @BeforeEach
