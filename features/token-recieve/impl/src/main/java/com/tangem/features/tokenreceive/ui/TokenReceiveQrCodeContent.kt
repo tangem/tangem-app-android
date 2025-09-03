@@ -3,7 +3,9 @@ package com.tangem.features.tokenreceive.ui
 import android.content.res.Configuration
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -87,12 +89,23 @@ private fun QrCodePage(addressFullName: TextReference, addressValue: String, net
 
             SpacerH(20.dp)
 
-            Image(
-                painter = qrCodePainter,
-                contentDescription = null,
-                contentScale = ContentScale.Fit,
-                modifier = Modifier.size(248.dp),
-            )
+            Box(
+                modifier = Modifier
+                    .border(
+                        width = 8.dp,
+                        color = TangemTheme.colors.icon.constant,
+                        shape = RoundedCornerShape(8.dp),
+                    )
+                    .padding(8.dp),
+
+            ) {
+                Image(
+                    painter = qrCodePainter,
+                    contentDescription = null,
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.sizeIn(minWidth = 148.dp),
+                )
+            }
 
             SpacerH24()
         }
