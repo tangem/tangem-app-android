@@ -142,6 +142,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
         configConfirmNavigation()
         initialState()
         subscribeOnNotificationUpdates()
+        subscribeOnTapHelpUpdates()
     }
 
     override fun onFeeResult(feeSelectorUM: FeeSelectorUM) {
@@ -313,7 +314,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
         val confirmUM = uiState.value.confirmUM
 
         modelScope.launch {
-            val isShowTapHelp = isSendTapHelpEnabledUseCase().getOrElse { false }
+            val isShowTapHelp = isSendTapHelpEnabledUseCase.invokeSync().getOrElse { false }
             if (confirmUM is ConfirmUM.Empty) {
                 uiState.update {
                     it.copy(
@@ -325,6 +326,16 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                 updateConfirmNotifications()
             }
         }
+    }
+
+    private fun subscribeOnTapHelpUpdates() {
+        isSendTapHelpEnabledUseCase().getOrNull()
+            ?.onEach { showTapHelp ->
+                uiState.update {
+                    val confirmUM = it.confirmUM as? ConfirmUM.Content
+                    it.copy(confirmUM = confirmUM?.copy(showTapHelp = showTapHelp) ?: it.confirmUM)
+                }
+            }?.launchIn(modelScope)
     }
 
     private fun updateConfirmNotifications() {
