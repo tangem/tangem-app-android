@@ -308,6 +308,7 @@
   <string name="domain_receive_assets_default_address">Основной адрес</string>
   <string name="domain_receive_assets_legacy_address">Legacy адрес</string>
   <string name="domain_receive_assets_navigation_title">Получить активы</string>
+  <string name="domain_receive_assets_network_name_address">%s адрес</string>
   <string name="domain_receive_assets_onboarding_description">Отправка средств в другой сети может повлечь потерю средств.</string>
   <string name="domain_receive_assets_onboarding_title">Отправляйте средства, используя только</string>
   <string name="email_preface_wc_error">Привет, команда поддержки, у меня возникла ошибка с кодом: %s</string>
