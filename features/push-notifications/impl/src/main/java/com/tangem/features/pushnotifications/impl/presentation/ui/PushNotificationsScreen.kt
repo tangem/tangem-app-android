@@ -18,7 +18,6 @@ internal fun PushNotificationsScreen(
     onLaterClick: () -> Unit,
     onAllowPermission: () -> Unit,
     onDenyPermission: () -> Unit,
-    showNotificationsInfo: Boolean,
 ) {
     val requestPushPermission = requestPermission(
         onAllow = onAllowPermission,
@@ -38,18 +37,11 @@ internal fun PushNotificationsScreen(
                 R.drawable.ic_storefront_24,
                 resourceReference(R.string.user_push_notification_agreement_argument_two),
             ),
-        ).let { baseItems ->
-            if (showNotificationsInfo) {
-                baseItems.add(
-                    ShowcaseItemModel(
-                        R.drawable.ic_notifications_24,
-                        resourceReference(R.string.user_push_notification_agreement_argument_three),
-                    ),
-                )
-            } else {
-                baseItems
-            }
-        },
+            ShowcaseItemModel(
+                R.drawable.ic_notifications_24,
+                resourceReference(R.string.user_push_notification_agreement_argument_three),
+            ),
+        ),
         primaryButton = ShowcaseButtonModel(
             buttonText = resourceReference(R.string.common_allow),
             onClick = {
