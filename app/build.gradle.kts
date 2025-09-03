@@ -149,7 +149,6 @@ dependencies {
     implementation(projects.domain.quotes)
     implementation(projects.domain.notifications)
     implementation(projects.domain.notifications.models)
-    implementation(projects.domain.notifications.toggles)
     implementation(projects.domain.swap.models)
     implementation(projects.domain.swap)
     implementation(projects.domain.walletManager)
