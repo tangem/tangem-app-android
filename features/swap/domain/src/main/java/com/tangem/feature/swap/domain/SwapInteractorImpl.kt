@@ -72,7 +72,6 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     private val appCurrencyRepository: AppCurrencyRepository,
     private val currenciesRepository: CurrenciesRepository,
     private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
-    private val tokensFeatureToggles: TokensFeatureToggles,
     private val initialToCurrencyResolver: InitialToCurrencyResolver,
     private val validateTransactionUseCase: ValidateTransactionUseCase,
     private val estimateFeeUseCase: EstimateFeeUseCase,
@@ -1761,14 +1760,10 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 if (feePaidCurrency.balance > fee.multiply(percentsToFeeIncrease)) {
                     SwapFeeState.Enough
                 } else {
-                    val tokens = if (tokensFeatureToggles.isWalletBalanceFetcherEnabled) {
-                        multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
-                            params = MultiWalletCryptoCurrenciesProducer.Params(userWalletId),
-                        )
-                            .orEmpty()
-                    } else {
-                        currenciesRepository.getMultiCurrencyWalletCurrenciesSync(userWalletId)
-                    }
+                    val tokens = multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
+                        params = MultiWalletCryptoCurrenciesProducer.Params(userWalletId),
+                    )
+                        .orEmpty()
 
                     val token = tokens
                         .filterIsInstance<CryptoCurrency.Token>()
