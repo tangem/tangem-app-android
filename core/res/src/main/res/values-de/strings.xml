@@ -394,6 +394,7 @@
   <string name="domain_receive_assets_default_address">Standardadresse</string>
   <string name="domain_receive_assets_legacy_address">Legacy adresse</string>
   <string name="domain_receive_assets_navigation_title">Empfangen von Vermögenswerten</string>
+  <string name="domain_receive_assets_network_name_address">%s Adresse</string>
   <string name="domain_receive_assets_onboarding_description">Das Senden von Vermögenswerten in anderen Netzwerken führt zu dauerhaftem Verlust.</string>
   <string name="domain_receive_assets_onboarding_network_name">%s Netzwerk</string>
   <string name="domain_receive_assets_onboarding_title">Sende Geld nur mit</string>
