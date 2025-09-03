@@ -4,10 +4,16 @@ import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.router.stack.replaceAll
+import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.R
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.settings.ShouldAskPermissionUseCase
 import com.tangem.features.hotwallet.manualbackup.check.ManualBackupCheckComponent
@@ -32,6 +38,7 @@ internal class WalletActivationModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
     private val shouldAskPermissionUseCase: ShouldAskPermissionUseCase,
+    @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
 ) : Model() {
 
     val params = paramsContainer.require<WalletActivationComponent.Params>()
@@ -79,13 +86,31 @@ internal class WalletActivationModel @Inject constructor(
         stackNavigation.replaceAll(WalletActivationRoute.SetupFinished)
     }
 
+    private fun showSkipAccessCodeWarningDialog() {
+        uiMessageSender.send(
+            DialogMessage(
+                message = resourceReference(R.string.access_code_alert_skip_description),
+                title = resourceReference(R.string.access_code_alert_skip_title),
+                firstAction = EventMessageAction(
+                    title = resourceReference(R.string.common_cancel),
+                    onClick = {},
+                ),
+                secondAction = EventMessageAction(
+                    title = resourceReference(R.string.access_code_alert_skip_ok),
+                    onClick = { navigateToPushNotificationsOrNext() },
+                ),
+                dismissOnFirstAction = true,
+            ),
+        )
+    }
+
     inner class HotWalletStepperComponentModelCallback : HotWalletStepperComponent.ModelCallback {
         override fun onBackClick() {
             onChildBack()
         }
 
         override fun onSkipClick() {
-            navigateToPushNotificationsOrNext()
+            showSkipAccessCodeWarningDialog()
         }
     }
 
