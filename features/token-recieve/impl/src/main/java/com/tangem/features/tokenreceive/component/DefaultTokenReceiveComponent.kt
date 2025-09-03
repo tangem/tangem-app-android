@@ -78,10 +78,11 @@ internal class DefaultTokenReceiveComponent @AssistedInject constructor(
                 appComponentContext = appComponentContext,
                 params = TokenReceiveQrCodeComponent.TokenReceiveQrCodeParams(
                     cryptoCurrency = model.params.config.cryptoCurrency,
-                    address = model.state.value.addresses[config.addressId] ?: error("Address has to be there"),
+                    address = model.state.value.addresses.find { it.value == config.address } ?: error(
+                        "Address has to be there",
+                    ),
                     callback = model,
                     onDismiss = ::dismiss,
-                    id = config.addressId,
                 ),
             )
             TokenReceiveRoutes.ReceiveAssets -> TokenReceiveAssetsComponent(
