@@ -5,19 +5,16 @@ import arrow.core.getOrElse
 import arrow.core.raise.catch
 import arrow.core.raise.either
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.tokens.error.QuotesError
-import com.tangem.domain.tokens.repository.CurrenciesRepository
-import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 
 class RefreshMultiCurrencyWalletQuotesUseCase(
-    private val currenciesRepository: CurrenciesRepository,
     private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
     private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
-    private val tokensFeatureToggles: TokensFeatureToggles,
 ) {
 
     suspend operator fun invoke(userWalletId: UserWalletId): Either<QuotesError, Unit> {
@@ -41,15 +38,11 @@ class RefreshMultiCurrencyWalletQuotesUseCase(
         return either {
             catch(
                 block = {
-                    if (tokensFeatureToggles.isWalletBalanceFetcherEnabled) {
-                        multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
-                            params = MultiWalletCryptoCurrenciesProducer.Params(userWalletId),
-                        )
-                            .orEmpty()
-                            .toList()
-                    } else {
-                        currenciesRepository.getMultiCurrencyWalletCachedCurrenciesSync(userWalletId)
-                    }
+                    multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
+                        params = MultiWalletCryptoCurrenciesProducer.Params(userWalletId),
+                    )
+                        .orEmpty()
+                        .toList()
                 },
                 catch = ::raise,
             )
