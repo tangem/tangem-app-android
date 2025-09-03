@@ -309,6 +309,7 @@
   <string name="domain_receive_assets_default_address">Adresse par défaut</string>
   <string name="domain_receive_assets_legacy_address">Legacy adresse</string>
   <string name="domain_receive_assets_navigation_title">Recevoir des actifs</string>
+  <string name="domain_receive_assets_network_name_address">%s adresse</string>
   <string name="domain_receive_assets_onboarding_description">L’envoi d’actifs sur d’autres réseaux entraînera une perte définitive.</string>
   <string name="domain_receive_assets_onboarding_title">Envoyez des fonds en utilisant uniquement</string>
   <string name="email_preface_wc_error">Bonjour équipe de support, j’ai rencontré une erreur avec le code : %s</string>
