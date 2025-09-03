@@ -13,6 +13,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.settings.NeverShowTapHelpUseCase
 import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
 import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents.NonceInserted
@@ -46,6 +47,7 @@ internal class FeeSelectorModel @Inject constructor(
     private val urlOpener: UrlOpener,
     private val isFeeApproximateUseCase: IsFeeApproximateUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
+    private val neverShowTapHelpUseCase: NeverShowTapHelpUseCase,
     private val feeSelectorReloadListener: FeeSelectorReloadListener,
     private val feeSelectorCheckReloadListener: FeeSelectorCheckReloadListener,
     private val feeSelectorCheckReloadTrigger: FeeSelectorCheckReloadTrigger,
@@ -185,7 +187,10 @@ internal class FeeSelectorModel @Inject constructor(
                 source = SendScreenSource.Fee,
             ),
         )
-        feeSelectorBottomSheet.activate(Unit)
+        modelScope.launch {
+            neverShowTapHelpUseCase()
+            feeSelectorBottomSheet.activate(Unit)
+        }
     }
 
     private fun subscribeOnFeeReloadTriggerUpdates() {
