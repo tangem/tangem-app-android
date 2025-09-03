@@ -25,7 +25,6 @@ dependencies {
     implementation(projects.domain.models)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets.models)
-    implementation(projects.domain.notifications.toggles)
     implementation(projects.domain.networks)
     implementation(projects.domain.wallets)
 
