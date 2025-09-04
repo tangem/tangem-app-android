@@ -136,6 +136,7 @@ internal class NFTSendConfirmModel @Inject constructor(
         configConfirmNavigation()
         subscribeOnNotificationsUpdateTrigger()
         subscribeOnCheckFeeResultUpdates()
+        subscribeOnTapHelpUpdates()
         initialState()
     }
 
@@ -176,10 +177,6 @@ internal class NFTSendConfirmModel @Inject constructor(
     override fun showEditDestination() {
         modelScope.launch {
             neverShowTapHelpUseCase()
-            _uiState.update {
-                val confirmUM = it.confirmUM as? ConfirmUM.Content
-                it.copy(confirmUM = confirmUM?.copy(showTapHelp = false) ?: it.confirmUM)
-            }
             analyticsEventHandler.send(
                 CommonSendAnalyticEvents.ScreenReopened(
                     categoryName = analyticsCategoryName,
@@ -193,10 +190,6 @@ internal class NFTSendConfirmModel @Inject constructor(
     override fun showEditFee() {
         modelScope.launch {
             neverShowTapHelpUseCase()
-            _uiState.update {
-                val confirmUM = it.confirmUM as? ConfirmUM.Content
-                it.copy(confirmUM = confirmUM?.copy(showTapHelp = false) ?: it.confirmUM)
-            }
             analyticsEventHandler.send(
                 CommonSendAnalyticEvents.ScreenReopened(
                     categoryName = analyticsCategoryName,
@@ -262,7 +255,7 @@ internal class NFTSendConfirmModel @Inject constructor(
         }
 
         modelScope.launch {
-            val isShowTapHelp = isSendTapHelpEnabledUseCase().getOrElse { false }
+            val isShowTapHelp = isSendTapHelpEnabledUseCase.invokeSync().getOrElse { false }
             if (confirmUM is ConfirmUM.Empty || isEmptyFee) {
                 _uiState.update {
                     it.copy(
@@ -275,6 +268,16 @@ internal class NFTSendConfirmModel @Inject constructor(
                 updateConfirmNotifications()
             }
         }
+    }
+
+    private fun subscribeOnTapHelpUpdates() {
+        isSendTapHelpEnabledUseCase().getOrNull()
+            ?.onEach { showTapHelp ->
+                _uiState.update {
+                    val confirmUM = it.confirmUM as? ConfirmUM.Content
+                    it.copy(confirmUM = confirmUM?.copy(showTapHelp = showTapHelp) ?: it.confirmUM)
+                }
+            }?.launchIn(modelScope)
     }
 
     private fun subscribeOnNotificationsUpdateTrigger() {
