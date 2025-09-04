@@ -15,5 +15,5 @@ internal sealed interface TokenReceiveRoutes : Route {
     data object ReceiveAssets : TokenReceiveRoutes
 
     @Serializable
-    data class QrCode(val addressId: Int) : TokenReceiveRoutes
+    data class QrCode(val address: String) : TokenReceiveRoutes
 }
