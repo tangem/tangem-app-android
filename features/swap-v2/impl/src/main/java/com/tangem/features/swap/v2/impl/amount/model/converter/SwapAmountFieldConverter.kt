@@ -57,11 +57,7 @@ internal class SwapAmountFieldConverter(
                     title = if (isSingleWallet) {
                         resourceReference(R.string.send_from_title)
                     } else {
-                        combinedReference(
-                            resourceReference(R.string.send_from_wallet_android),
-                            stringReference(" "),
-                            stringReference(userWallet.name),
-                        )
+                        resourceReference(R.string.send_from_wallet_name, wrappedList(userWallet.name))
                     },
                     value = "",
                 ),
