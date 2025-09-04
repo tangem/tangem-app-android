@@ -4,7 +4,7 @@ import com.reown.android.Core
 import com.tangem.domain.walletconnect.model.sdkcopy.WcAppMetaData
 import com.tangem.utils.converter.Converter
 
-internal object WcAppMetaDataConverter : Converter<Core.Model.AppMetaData, WcAppMetaData> {
+internal object WcAppMetaDataConverter : Converter<WcAppMetaDataConverter.Input, WcAppMetaData> {
 
     val empty
         get() = WcAppMetaData(
@@ -18,16 +18,18 @@ internal object WcAppMetaDataConverter : Converter<Core.Model.AppMetaData, WcApp
             verifyUrl = null,
         )
 
-    override fun convert(value: Core.Model.AppMetaData): WcAppMetaData {
+    override fun convert(value: Input): WcAppMetaData {
         return WcAppMetaData(
-            name = value.name,
-            description = value.description,
-            url = value.url,
-            icons = value.icons,
-            redirect = value.redirect,
-            appLink = value.appLink,
-            linkMode = value.linkMode,
-            verifyUrl = value.verifyUrl,
+            name = value.peerMetaData.name,
+            description = value.peerMetaData.description,
+            url = value.originUrl,
+            icons = value.peerMetaData.icons,
+            redirect = value.peerMetaData.redirect,
+            appLink = value.peerMetaData.appLink,
+            linkMode = value.peerMetaData.linkMode,
+            verifyUrl = value.peerMetaData.verifyUrl,
         )
     }
+
+    internal data class Input(val originUrl: String, val peerMetaData: Core.Model.AppMetaData)
 }
