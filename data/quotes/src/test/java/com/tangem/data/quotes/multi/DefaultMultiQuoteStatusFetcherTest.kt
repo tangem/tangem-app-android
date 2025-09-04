@@ -215,6 +215,50 @@ internal class DefaultMultiQuoteStatusFetcherTest {
         }
     }
 
+    @Test
+    fun `fetch successfully if not all quotes are fetched`() = runTest {
+        // Arrange
+        val params = MultiQuoteStatusFetcher.Params(currenciesIds = currenciesIds, appCurrencyId = null)
+
+        coEvery { appCurrencyResponseStore.getSyncOrNull() } returns usdAppCurrency
+
+        val currenciesIds = setOf("BTC", "ETH")
+        val response = QuotesResponse(
+            quotes = mapOf(
+                "BTC" to MockQuoteResponseFactory.createSinglePrice(value = BigDecimal.ONE),
+            ),
+        )
+
+        coEvery {
+            quotesFetcher.fetch(fiatCurrencyId = "usd", currenciesIds = currenciesIds, fields = fields)
+        } returns response.right()
+
+        // Act
+        val actual = fetcher(params)
+
+        // Assert
+        val expected = Unit.right()
+        Truth.assertThat(actual).isEqualTo(expected)
+
+        val storedQuotes = QuotesResponse(
+            quotes = mapOf(
+                "BTC" to MockQuoteResponseFactory.createSinglePrice(value = BigDecimal.ONE),
+                "ETH" to QuotesResponse.Quote.EMPTY,
+            ),
+        )
+
+        coVerifyOrder {
+            quotesStore.setSourceAsCache(currenciesIds = params.currenciesIds)
+            appCurrencyResponseStore.getSyncOrNull()
+            quotesFetcher.fetch(fiatCurrencyId = "usd", currenciesIds = currenciesIds, fields = fields)
+            quotesStore.store(values = storedQuotes.quotes)
+        }
+
+        coVerify(inverse = true) {
+            quotesStore.setSourceAsOnlyCache(currenciesIds = any())
+        }
+    }
+
     private companion object {
 
         val currenciesIds = setOf(
