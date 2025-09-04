@@ -75,6 +75,7 @@ internal class WcSignUseCaseDelegate<MiddleAction, SignModel>(
                         WcAnalyticEvents.SignatureRequestHandled(
                             rawRequest = context.rawSdkRequest,
                             network = context.network,
+                            securityStatus = context.session.securityStatus,
                         )
                     },
                 )

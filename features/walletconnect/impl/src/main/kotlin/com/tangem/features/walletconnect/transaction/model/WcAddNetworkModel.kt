@@ -132,6 +132,7 @@ internal class WcAddNetworkModel @Inject constructor(
                 rawRequest = useCase.rawSdkRequest,
                 network = useCase.network,
                 emulationStatus = null,
+                securityStatus = null,
             ),
         )
 
