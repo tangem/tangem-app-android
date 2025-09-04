@@ -27,6 +27,7 @@ import com.tangem.datasource.exchangeservice.swap.ExpressUtils
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.exchange.RampStateManager
+import com.tangem.domain.express.models.ExpressOperationType
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -283,6 +284,7 @@ internal class DefaultSwapRepository(
         providerId: String,
         rateType: RateType,
         toAddress: String,
+        expressOperationType: ExpressOperationType,
         refundAddress: String?, // for cex only
         refundExtraId: String?, // for cex only
     ): Either<ExpressDataError, SwapDataModel> {
@@ -304,6 +306,7 @@ internal class DefaultSwapRepository(
                     requestId = requestId,
                     refundAddress = refundAddress,
                     refundExtraId = refundExtraId,
+                    partnerOperationType = expressOperationType.value,
                     userWalletId = userWallet.walletId.stringValue,
                     refCode = ExpressUtils.getRefCode(
                         userWallet = userWallet,
