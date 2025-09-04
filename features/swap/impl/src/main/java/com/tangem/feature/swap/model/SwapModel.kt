@@ -23,6 +23,7 @@ import com.tangem.core.ui.utils.InputNumberFormatter
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
+import com.tangem.domain.express.models.ExpressOperationType
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
@@ -612,6 +613,7 @@ internal class SwapModel @Inject constructor(
                     amountToSwap = requireNotNull(dataState.amount),
                     includeFeeInAmount = lastLoadedQuotesState.preparedSwapConfigState.includeFeeInAmount,
                     fee = fee,
+                    expressOperationType = ExpressOperationType.SWAP,
                 )
             }.onSuccess {
                 when (it) {
