@@ -20,6 +20,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.common.routing.AppRoute
 import com.tangem.features.hotwallet.WalletBackupComponent
+import com.tangem.features.hotwallet.walletbackup.entity.BackupStatus
 import com.tangem.features.hotwallet.walletbackup.entity.WalletBackupUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
@@ -40,16 +41,18 @@ internal class WalletBackupModel @Inject constructor(
     field = MutableStateFlow(
         WalletBackupUM(
             onBackClick = { router.pop() },
-            recoveryPhraseStatus = LabelUM(
+            recoveryPhraseOption = LabelUM(
                 text = resourceReference(R.string.hw_backup_no_backup),
                 style = LabelStyle.WARNING,
             ),
-            googleDriveStatus = LabelUM(
+            googleDriveOption = LabelUM(
                 text = resourceReference(R.string.common_coming_soon),
                 style = LabelStyle.REGULAR,
             ),
+            googleDriveStatus = BackupStatus.ComingSoon,
             onRecoveryPhraseClick = ::onRecoveryPhraseClick,
             onGoogleDriveClick = { },
+            onHardwareWalletClick = ::onHardwareWalletClick,
             backedUp = false,
         ),
     )
@@ -95,7 +98,7 @@ internal class WalletBackupModel @Inject constructor(
     }
 
     private fun WalletBackupUM.updateBackupStatusesHotWallet(userWallet: UserWallet.Hot): WalletBackupUM = copy(
-        recoveryPhraseStatus = if (userWallet.backedUp) {
+        recoveryPhraseOption = if (userWallet.backedUp) {
             LabelUM(
                 text = resourceReference(R.string.common_done),
                 style = LabelStyle.ACCENT,
@@ -106,7 +109,7 @@ internal class WalletBackupModel @Inject constructor(
                 style = LabelStyle.WARNING,
             )
         },
-        googleDriveStatus = LabelUM(
+        googleDriveOption = LabelUM(
             text = resourceReference(R.string.common_coming_soon),
             style = LabelStyle.REGULAR,
         ),
@@ -119,5 +122,9 @@ internal class WalletBackupModel @Inject constructor(
         } else {
             uiMessageSender.send(makeBackupAtFirstAlertBS)
         }
+    }
+
+    private fun onHardwareWalletClick() {
+        router.push(AppRoute.UpgradeWallet(params.userWalletId))
     }
 }
