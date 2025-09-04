@@ -69,8 +69,7 @@ internal class WcPairSdkDelegate : WcSdkObserver {
             ifRight = { result ->
                 when (result) {
                     is Wallet.Model.SettledSessionResponse.Result -> result.right()
-                    is Wallet.Model.SettledSessionResponse.Error ->
-                        ApprovalFailed(result.errorMessage).left()
+                    is Wallet.Model.SettledSessionResponse.Error -> ApprovalFailed(result.errorMessage).left()
                 }
             },
         )
@@ -113,8 +112,9 @@ internal class WcPairSdkDelegate : WcSdkObserver {
         sessionProposal: Wallet.Model.SessionProposal,
         verifyContext: Wallet.Model.VerifyContext,
     ) {
+        val sessionProposalWithRealUrl = sessionProposal.copy(url = verifyContext.origin)
         // Triggered when wallet receives the session proposal sent by a Dapp
-        onSessionProposal.trySend(sessionProposal to verifyContext)
+        onSessionProposal.trySend(sessionProposalWithRealUrl to verifyContext)
     }
 
     override fun onSessionSettleResponse(settleSessionResponse: Wallet.Model.SettledSessionResponse) {
@@ -147,7 +147,7 @@ internal class WcPairSdkDelegate : WcSdkObserver {
         else -> WcPairError.PairingFailed(this.localizedMessage.orEmpty())
     }
 
-    private fun Throwable.toApproveError() = WcPairError.ApprovalFailed(this.localizedMessage.orEmpty()).left()
+    private fun Throwable.toApproveError() = ApprovalFailed(this.localizedMessage.orEmpty()).left()
 
     companion object {
         private const val CALLBACK_TIMEOUT = 15
