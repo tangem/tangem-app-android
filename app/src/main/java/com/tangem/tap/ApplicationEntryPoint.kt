@@ -29,7 +29,7 @@ import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.core.wallets.UserWalletsListRepository
-import com.tangem.domain.feedback.GetCardInfoUseCase
+import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.onboarding.SaveTwinsOnboardingShownUseCase
 import com.tangem.domain.onboarding.WasTwinsOnboardingShownUseCase
@@ -107,7 +107,7 @@ interface ApplicationEntryPoint {
 
     fun getSendFeedbackEmailUseCase(): SendFeedbackEmailUseCase
 
-    fun getGetCardInfoUseCase(): GetCardInfoUseCase
+    fun getWalletMetaInfoUseCase(): GetWalletMetaInfoUseCase
 
     fun getUrlOpener(): UrlOpener
 

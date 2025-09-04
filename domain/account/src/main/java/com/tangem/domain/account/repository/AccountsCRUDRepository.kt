@@ -22,7 +22,7 @@ interface AccountsCRUDRepository {
      * @param userWalletId the unique identifier of the user wallet
      * @return an [Option] containing the [AccountList] if found, or `Option.None` if not
      */
-    suspend fun getAccounts(userWalletId: UserWalletId): Option<AccountList>
+    suspend fun getAccountListSync(userWalletId: UserWalletId): Option<AccountList>
 
     /**
      * Retrieves a specific account by its unique identifier
@@ -30,14 +30,14 @@ interface AccountsCRUDRepository {
      * @param accountId the unique identifier of the account
      * @return an [Option] containing the [Account.CryptoPortfolio] if found, or `Option.None` if not
      */
-    suspend fun getAccount(accountId: AccountId): Option<Account.CryptoPortfolio>
+    suspend fun getAccountSync(accountId: AccountId): Option<Account.CryptoPortfolio>
 
     /**
      * Retrieves a archived account by its unique identifier
      *
      * @param accountId the unique identifier of the account
      */
-    suspend fun getArchivedAccount(accountId: AccountId): Option<ArchivedAccount>
+    suspend fun getArchivedAccountSync(accountId: AccountId): Option<ArchivedAccount>
 
     /**
      * Retrieves a list of archived accounts associated with a specific user wallet
@@ -45,7 +45,7 @@ interface AccountsCRUDRepository {
      * @param userWalletId the unique identifier of the user wallet
      * @return an [Option] containing a list of [ArchivedAccount] if found, or `Option.None` if not
      */
-    suspend fun getArchivedAccountsSync(userWalletId: UserWalletId): Option<List<ArchivedAccount>>
+    suspend fun getArchivedAccountListSync(userWalletId: UserWalletId): Option<List<ArchivedAccount>>
 
     /**
      * Provides a flow of archived accounts associated with a specific user wallet
@@ -73,7 +73,7 @@ interface AccountsCRUDRepository {
      *
      * @param userWalletId the unique identifier of the user wallet
      */
-    suspend fun getTotalAccountsCount(userWalletId: UserWalletId): Int
+    suspend fun getTotalAccountsCount(userWalletId: UserWalletId): Option<Int>
 
     /**
      * Retrieves a user wallet by its unique identifier
