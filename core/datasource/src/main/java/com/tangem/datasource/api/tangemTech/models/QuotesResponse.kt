@@ -20,5 +20,16 @@ data class QuotesResponse(
         val priceChange1w: BigDecimal?,
         @Json(name = "priceChange30d")
         val priceChange30d: BigDecimal?,
-    )
+    ) {
+
+        companion object {
+
+            val EMPTY = Quote(
+                price = null,
+                priceChange24h = null,
+                priceChange1w = null,
+                priceChange30d = null,
+            )
+        }
+    }
 }
