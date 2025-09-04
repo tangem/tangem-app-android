@@ -30,9 +30,11 @@ internal class SendEntryPointModel @Inject constructor(
     ChooseManagedTokensComponent.ModelCallback {
 
     private var lastSavedAmount = ""
+    private var isEnterInFiat = false
 
-    override fun onConvertToAnotherToken(lastAmount: String) {
+    override fun onConvertToAnotherToken(lastAmount: String, isEnterInFiatSelected: Boolean) {
         lastSavedAmount = lastAmount
+        isEnterInFiat = isEnterInFiatSelected
         modelScope.launch {
             val showSendViaSwapNotification = shouldShowNotificationUseCase(
                 NotificationId.SendViaSwapTokenSelectorNotification.key,
@@ -45,12 +47,11 @@ internal class SendEntryPointModel @Inject constructor(
         }
     }
 
-    override fun onCloseSwap(lastAmount: String) {
+    override fun onCloseSwap(lastAmount: String, isEnterInFiatSelected: Boolean) {
         lastSavedAmount = lastAmount
+        isEnterInFiat = isEnterInFiatSelected
         modelScope.launch {
-            if (lastAmount.isNotBlank()) {
-                sendAmountUpdateTrigger.triggerUpdateAmount(lastAmount)
-            }
+            sendAmountUpdateTrigger.triggerUpdateAmount(lastAmount, isEnterInFiat)
             router.replaceAll(SendEntryRoute.Send)
         }
     }
@@ -58,9 +59,7 @@ internal class SendEntryPointModel @Inject constructor(
     @Suppress("MagicNumber")
     override fun onResult() {
         modelScope.launch {
-            if (lastSavedAmount.isNotBlank()) {
-                swapAmountUpdateTrigger.triggerUpdateAmount(lastSavedAmount)
-            }
+            swapAmountUpdateTrigger.triggerUpdateAmount(lastSavedAmount, isEnterInFiat)
             // Workaround in order to execute correct exit animation on SendEntryRoute.ChooseToken
             router.pop()
             delay(10L)
@@ -70,7 +69,7 @@ internal class SendEntryPointModel @Inject constructor(
 
     override fun onBack() {
         modelScope.launch {
-            sendAmountUpdateTrigger.triggerUpdateAmount(lastSavedAmount)
+            sendAmountUpdateTrigger.triggerUpdateAmount(lastSavedAmount, isEnterInFiat)
             router.pop()
         }
     }
