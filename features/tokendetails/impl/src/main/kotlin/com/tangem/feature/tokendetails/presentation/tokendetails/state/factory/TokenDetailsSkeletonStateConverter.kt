@@ -4,7 +4,6 @@ import arrow.core.getOrElse
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenuItem
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
-import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.networkIconResId
 import com.tangem.core.ui.extensions.resourceReference
@@ -24,7 +23,6 @@ import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.flow.MutableStateFlow
 
 internal class TokenDetailsSkeletonStateConverter(
     private val clickIntents: TokenDetailsClickIntents,
@@ -64,14 +62,8 @@ internal class TokenDetailsSkeletonStateConverter(
             marketPriceBlockState = MarketPriceBlockState.Loading(value.symbol),
             stakingBlocksState = StakingBlockUM.Loading(iconState).takeIf { isSupportedInMobileApp },
             notifications = persistentListOf(),
-            pendingTxs = persistentListOf(),
             expressTxs = persistentListOf(),
             expressTxsToDisplay = persistentListOf(),
-            txHistoryState = TxHistoryState.Content(
-                contentItems = MutableStateFlow(
-                    value = TxHistoryState.getDefaultLoadingTransactions(clickIntents::onExploreClick),
-                ),
-            ),
             dialogConfig = null,
             pullToRefreshConfig = createPullToRefresh(),
             bottomSheetConfig = null,
