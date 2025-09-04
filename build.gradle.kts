@@ -16,6 +16,13 @@ plugins {
     alias(deps.plugins.ksp) apply false
 }
 
+buildscript {
+    dependencies {
+        classpath(deps.gradle.android)
+        classpath(deps.agconnect.agcp)
+    }
+}
+
 val clean by tasks.registering {
     delete(rootProject.buildDir)
 }
