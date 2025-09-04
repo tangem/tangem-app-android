@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
+  <string name="account_details_archive_action">Архив</string>
+  <string name="account_details_archive_description">Вы архивируете свой аккаунт, но в любое время можете вернуть его обратно</string>
+  <string name="account_form_placeholder_edit_account">Аккаунт</string>
+  <string name="account_form_placeholder_new_account">Новый аккаунт</string>
+  <string name="account_unsaved_dialog_action_first">Продолжить редактирование</string>
+  <string name="account_unsaved_dialog_title">Несохраненные изменения</string>
   <string name="action_buttons_buy_empty_search_message">Не нашли свой токен? Перейдите в раздел «Рынок» на главной странице и добавьте его в свой портфель для покупки.</string>
   <string name="action_buttons_sell_empty_search_message">Не нашли свой токен? Перейдите в раздел «Рынок» на главной странице и добавьте его в свой портфель для продажи.</string>
   <string name="action_buttons_sell_navigation_bar_title">Продать</string>
@@ -310,6 +316,7 @@
   <string name="domain_receive_assets_navigation_title">Получить активы</string>
   <string name="domain_receive_assets_network_name_address">%s адрес</string>
   <string name="domain_receive_assets_onboarding_description">Отправка средств в другой сети может повлечь потерю средств.</string>
+  <string name="domain_receive_assets_onboarding_network_name">%s сети</string>
   <string name="domain_receive_assets_onboarding_title">Отправляйте средства, используя только</string>
   <string name="email_preface_wc_error">Привет, команда поддержки, у меня возникла ошибка с кодом: %s</string>
   <string name="email_subject_wc_error">Ошибка WalletConnect</string>
@@ -411,7 +418,16 @@
   <string name="home_button_scan">Сканировать</string>
   <string name="hot_crypto_add_token_subtitle">в %s</string>
   <string name="hot_crypto_token_network">В сети %s</string>
+  <string name="hw_access_code_create_alert_title">Вы уверены, что хотите прервать процесс создания кода доступа?</string>
+  <string name="hw_backup_hardware_title">Аппаратный кошелёк</string>
   <string name="hw_create_seed_description">Будьте в курсе новых функций и новостей</string>
+  <string name="hw_upgrade_error_card_already_has_wallet">Это устройство не может быть использовано для апгрейда, оно уже содержит другой кошелек.</string>
+  <string name="hw_upgrade_error_wallet2_card_required">Во время операции произошла ошибка.</string>
+  <string name="hw_upgrade_key_migration_description">Приватные ключи будут перемещены из приложения в вашу Tangem карту или кольцо</string>
+  <string name="hw_upgrade_key_migration_title">Миграция ключей</string>
+  <string name="hw_upgrade_start_action">Начать апгрейд</string>
+  <string name="hw_upgrade_start_title">Tangem кошелек</string>
+  <string name="hw_upgrade_to_cold_banner_title">Сделать апгрейд кошелька до аппаратной версии.</string>
   <string name="information_generated_with_ai">Эта информация была сгенерирована ИИ.\nНажмите здесь, если обнаружили ошибку.</string>
   <string name="initial_message_change_access_code_body">Чтобы изменить код доступа, приложите карту или кольцо как показано выше и не убирайте до окончания операции</string>
   <string name="initial_message_change_passcode_body">Чтобы изменить пароль, приложите карту как показано выше и не убирайте до окончания операции</string>
@@ -929,7 +945,7 @@
   <string name="send_with_swap_change_token_alert_message">Вы уверены, что хотите изменить токен для получения? Это действие сбросит ранее введённые данные.</string>
   <string name="send_with_swap_change_token_alert_title">Изменение токена</string>
   <string name="send_with_swap_confirm_title">Обмен и отправка</string>
-  <string name="send_with_swap_convert_token_alert_message">Продолжить с конвертацией? Это действие удалит предыдущие данные</string>
+  <string name="send_with_swap_convert_token_alert_message">Продолжить с обменом? Это действие удалит предыдущие данные</string>
   <string name="send_with_swap_convert_token_alert_title">Подтвердить конвертацию</string>
   <string name="send_with_swap_notification_text">Выберите любой токен к получению. Ваш адресат получит ровно то, что вы выбрали — без лишних сложностей.</string>
   <string name="send_with_swap_recipient_amount_success_title">Будет получено</string>
@@ -1101,6 +1117,7 @@
   <string name="swapping_fee_estimation_error_text">Ошибка расчета комиссии. Пожалуйста, отправьте информацию в поддержку.</string>
   <string name="swapping_from_title">Вы отправляете</string>
   <string name="swapping_high_price_impact_description">Обмен этой суммы выбранных токенов может вызвать значительные колебания цены и уменьшить получаемую сумму.</string>
+  <string name="swapping_high_price_impact_title">Высокое влияние на цену</string>
   <string name="swapping_insufficient_funds">Недостаточно средств</string>
   <string name="swapping_permission_header">Дать разрешение</string>
   <string name="swapping_swap_action">Обменять</string>
@@ -1229,9 +1246,11 @@
   <string name="wallet_promo_banner_button_title">Получить с 10% скидкой</string>
   <string name="wallet_promo_banner_description">Получите доступ к более чем 13 000 криптовалют. Покупайте, продавайте, обменивайте и стейкайте в один клик. Свяжите до трех карт для резервного копирования. </string>
   <string name="wallet_promo_banner_title">Откройте Tangem Wallet</string>
+  <string name="wallet_settings_change_access_code_title">Изменить Код Доступа</string>
   <string name="wallet_settings_push_notifications_description">Получайте уведомления о входящих транзакциях в кошельке и обновлениях Tangem.</string>
   <string name="wallet_settings_push_notifications_huawei_warning">В настоящий момент push-уведомления могут не работать на устройствах Huawei. Мы уже работаем над решением этой проблемы и планируем исправление в ближайших обновлениях. Спасибо за понимание!</string>
   <string name="wallet_settings_push_notifications_title">Уведомления о транзакциях</string>
+  <string name="wallet_settings_set_access_code_title">Установить Код Доступа</string>
   <string name="wallet_settings_title">Настройки кошелька</string>
   <string name="wallet_title">Tangem</string>
   <string name="warning_access_denied_message">Используйте %s или отсканируйте карту/кольцо, чтобы разблокировать доступ к вашему кошельку</string>
