@@ -12,6 +12,7 @@ dependencies {
     implementation(projects.features.swap.domain.models)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets.models)
+    implementation(projects.domain.express.models)
 
     implementation(deps.arrow.core)
 
