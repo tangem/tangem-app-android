@@ -56,10 +56,6 @@ object PreferencesKeys {
 
     val LAST_SWAPPED_CRYPTOCURRENCY_ID_KEY by lazy { stringPreferencesKey(name = "lastSwappedCryptoCurrency") }
 
-    val FEATURE_TOGGLES_KEY by lazy { stringPreferencesKey(name = "featureToggles") }
-
-    val EXCLUDED_BLOCKCHAINS_KEY by lazy { stringPreferencesKey(name = "excludedBlockchainsV2") }
-
     val WAS_TWINS_ONBOARDING_SHOWN by lazy { booleanPreferencesKey(name = "twinsOnboardingShown") }
 
     val IS_TANGEM_TOS_ACCEPTED_KEY by lazy { booleanPreferencesKey(name = "tangem_tos_accepted") }
