@@ -4,15 +4,25 @@ import com.reown.walletkit.client.Wallet
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
 import com.tangem.utils.converter.Converter
 
-internal object WcSdkSessionRequestConverter : Converter<Wallet.Model.SessionRequest, WcSdkSessionRequest> {
+internal object WcSdkSessionRequestConverter : Converter<WcSdkSessionRequestConverter.Input, WcSdkSessionRequest> {
 
-    override fun convert(value: Wallet.Model.SessionRequest): WcSdkSessionRequest {
+    override fun convert(value: Input): WcSdkSessionRequest {
         return WcSdkSessionRequest(
-            topic = value.topic,
-            chainId = value.chainId,
-            dAppMetaData = value.peerMetaData?.let { WcAppMetaDataConverter.convert(it) }
+            topic = value.sessionRequest.topic,
+            chainId = value.sessionRequest.chainId,
+            dAppMetaData = value.sessionRequest.peerMetaData
+                ?.let {
+                    WcAppMetaDataConverter.convert(
+                        value = WcAppMetaDataConverter.Input(
+                            originUrl = value.originUrl,
+                            peerMetaData = it,
+                        ),
+                    )
+                }
                 ?: WcAppMetaDataConverter.empty,
-            request = JSONRPCRequestConverter.convert(value.request),
+            request = JSONRPCRequestConverter.convert(value.sessionRequest.request),
         )
     }
+
+    internal data class Input(val originUrl: String, val sessionRequest: Wallet.Model.SessionRequest)
 }

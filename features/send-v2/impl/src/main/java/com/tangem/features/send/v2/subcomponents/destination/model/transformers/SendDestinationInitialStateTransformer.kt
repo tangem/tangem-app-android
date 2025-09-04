@@ -60,6 +60,7 @@ internal class SendDestinationInitialStateTransformer(
             networkName = cryptoCurrency.network.name,
             isValidating = false,
             isRedesignEnabled = isRedesignEnabled,
+            isRecentHidden = false,
         )
     }
 }

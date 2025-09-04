@@ -215,11 +215,13 @@ internal class DefaultNFTSendComponent @AssistedInject constructor(
         val isEmptyRoute = childStack.value.active.configuration == CommonSendRoute.Empty
         val isEmptyStack = childStack.value.backStack.isEmpty()
         val isSuccess = model.uiState.value.confirmUM is ConfirmUM.Success
+        val isSendingInProgress = (model.uiState.value.confirmUM as? ConfirmUM.Content)?.isSending == true
 
-        if (isEmptyRoute || isEmptyStack || isSuccess) {
-            router.pop()
-        } else {
-            stackNavigation.pop()
+        val isPopSend = isEmptyRoute || isEmptyStack || isSuccess
+        when {
+            isSendingInProgress -> Unit // Do not anything while transaction sending in progress
+            isPopSend -> router.pop()
+            else -> stackNavigation.pop()
         }
     }
 

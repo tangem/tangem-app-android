@@ -20,6 +20,6 @@ interface SendComponent : ComposableContentComponent {
     interface Factory : ComponentFactory<Params, SendComponent>
 
     interface ModelCallback {
-        fun onConvertToAnotherToken(lastAmount: String)
+        fun onConvertToAnotherToken(lastAmount: String, isEnterInFiatSelected: Boolean)
     }
 }

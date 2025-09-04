@@ -27,12 +27,11 @@ internal class TokenReceiveQrCodeComponent(
     }
 
     internal interface TokenReceiveQrCodeModelCallback {
-        fun onCopyClick(id: Int, source: TokenReceiveCopyActionSource)
+        fun onCopyClick(address: ReceiveAddress, source: TokenReceiveCopyActionSource)
         fun onShareClick(address: String)
     }
 
     data class TokenReceiveQrCodeParams(
-        val id: Int,
         val cryptoCurrency: CryptoCurrency,
         val address: ReceiveAddress,
         val callback: TokenReceiveQrCodeModelCallback,

@@ -100,7 +100,12 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
             ).map { settledSession ->
                 val newSession = WcSession(
                     wallet = sessionForApprove.wallet,
-                    sdkModel = WcSdkSessionConverter.convert(settledSession.session),
+                    sdkModel = WcSdkSessionConverter.convert(
+                        value = WcSdkSessionConverter.Input(
+                            originUrl = sdkVerifyContext.origin,
+                            session = settledSession.session,
+                        ),
+                    ),
                     securityStatus = proposalState.dAppSession.securityStatus,
                     networks = sessionForApprove.network.toSet(),
                     connectingTime = DateTime.now().millis,
@@ -109,8 +114,9 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
                 sessionsManager.saveSession(newSession)
                 analytics.send(
                     WcAnalyticEvents.DAppConnected(
-                        proposalState.dAppSession,
-                        sessionForApprove,
+                        sessionProposal = proposalState.dAppSession,
+                        sessionForApprove = sessionForApprove,
+                        securityStatus = proposalState.dAppSession.securityStatus,
                     ),
                 )
                 newSession

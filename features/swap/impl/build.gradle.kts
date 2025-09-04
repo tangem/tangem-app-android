@@ -43,6 +43,7 @@ dependencies {
     implementation(projects.domain.promo.models)
     implementation(projects.domain.txhistory)
     implementation(projects.domain.txhistory.models)
+    implementation(projects.domain.express.models)
 
     /** Feature modules */
     implementation(projects.features.swap.domain)

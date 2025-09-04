@@ -60,6 +60,7 @@ import com.tangem.domain.tokens.model.analytics.TokenReceiveCopyActionSource
 import com.tangem.domain.tokens.model.analytics.TokenReceiveNewAnalyticsEvent
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent.Companion.toReasonAnalyticsText
+import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent.DetailsScreenOpened.TokenBalance
 import com.tangem.domain.tokens.model.analytics.TokenSwapPromoAnalyticsEvent
 import com.tangem.domain.transaction.error.AssociateAssetError
 import com.tangem.domain.transaction.error.IncompleteTransactionError
@@ -86,6 +87,7 @@ import com.tangem.features.tokenreceive.TokenReceiveFeatureToggle
 import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
+import com.tangem.utils.extensions.isZero
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.async
@@ -156,6 +158,7 @@ internal class TokenDetailsModel @Inject constructor(
     private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
 
     private var cryptoCurrencyStatus: CryptoCurrencyStatus? = null
+    private var isBalanceLoadedEventSent = false
     private var expressTxStatusTaskScheduler = SingleTaskScheduler<PersistentList<ExpressTransactionStateUM>>()
 
     /** Transaction id to check for status */
@@ -199,9 +202,6 @@ internal class TokenDetailsModel @Inject constructor(
     val uiState: StateFlow<TokenDetailsState> = internalUiState
 
     init {
-        analyticsEventsHandler.send(
-            event = TokenScreenAnalyticsEvent.DetailsScreenOpened(token = cryptoCurrency.symbol),
-        )
         updateTopBarMenu()
         initButtons()
         updateContent()
@@ -317,6 +317,7 @@ internal class TokenDetailsModel @Inject constructor(
             .onEach { maybeCurrencyStatus ->
                 internalUiState.value = stateFactory.getCurrencyLoadedBalanceState(maybeCurrencyStatus)
                 maybeCurrencyStatus.onRight { status ->
+                    sendOneTimeBalanceLoadedAnalyticsEvent(status)
                     cryptoCurrencyStatus = status
                     updateButtons(currencyStatus = status)
                     updateWarnings(status)
@@ -1076,6 +1077,44 @@ internal class TokenDetailsModel @Inject constructor(
             showMemoDisclaimer = cryptoCurrency.network.transactionExtrasType != Network.TransactionExtrasType.NONE,
             receiveAddress = receiveAddresses,
         )
+    }
+
+    private fun sendOneTimeBalanceLoadedAnalyticsEvent(cryptoCurrencyStatus: CryptoCurrencyStatus?) {
+        if (isBalanceLoadedEventSent || cryptoCurrencyStatus == null) return
+
+        val tokenBalance = when (val value = cryptoCurrencyStatus.value) {
+            is CryptoCurrencyStatus.Custom,
+            is CryptoCurrencyStatus.Loaded,
+            is CryptoCurrencyStatus.NoQuote,
+            -> {
+                if (value.sources.networkSource.isActual()) {
+                    val amount = value.amount
+                    if (amount != null && !amount.isZero()) {
+                        TokenBalance.Full
+                    } else {
+                        TokenBalance.Empty
+                    }
+                } else {
+                    return
+                }
+            }
+            is CryptoCurrencyStatus.NoAccount,
+            is CryptoCurrencyStatus.MissedDerivation,
+            -> TokenBalance.NoAddress
+
+            is CryptoCurrencyStatus.NoAmount,
+            is CryptoCurrencyStatus.Unreachable,
+            -> TokenBalance.Error
+            CryptoCurrencyStatus.Loading -> return
+        }
+        analyticsEventsHandler.send(
+            event = TokenScreenAnalyticsEvent.DetailsScreenOpened(
+                blockchain = cryptoCurrency.network.name,
+                token = cryptoCurrency.symbol,
+                tokenBalance = tokenBalance,
+            ),
+        )
+        isBalanceLoadedEventSent = true
     }
 
     private companion object {

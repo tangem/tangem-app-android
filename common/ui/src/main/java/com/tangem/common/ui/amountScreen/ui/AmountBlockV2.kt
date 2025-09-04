@@ -121,7 +121,7 @@ private fun AmountBlockV2(
         ) {
             Column(
                 verticalArrangement = Arrangement.spacedBy(4.dp),
-                modifier = Modifier.padding(top = 8.dp),
+                modifier = Modifier.padding(top = 8.dp).weight(1f),
             ) {
                 ResizableText(
                     text = firstAmount,

@@ -30,7 +30,7 @@ internal class TokenReceiveQrCodeModel @Inject constructor(
             addressName = TextReference.Str("${params.cryptoCurrency.name} (${params.cryptoCurrency.symbol})"),
             onCopyClick = {
                 params.callback.onCopyClick(
-                    id = params.id,
+                    address = params.address,
                     source = TokenReceiveCopyActionSource.QR,
                 )
             },

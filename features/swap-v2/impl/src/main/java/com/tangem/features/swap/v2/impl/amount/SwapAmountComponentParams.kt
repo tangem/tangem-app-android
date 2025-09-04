@@ -7,6 +7,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.models.SwapDirection
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
+import com.tangem.features.swap.v2.impl.sendviaswap.SendWithSwapRoute
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -32,7 +33,7 @@ internal sealed class SwapAmountComponentParams {
         override val filterProviderTypes: List<ExpressProviderType> = emptyList(),
         val title: TextReference,
         val callback: SwapAmountComponent.ModelCallback,
-        val currentRoute: Flow<SwapAmountRoute>,
+        val currentRoute: Flow<SendWithSwapRoute>,
     ) : SwapAmountComponentParams()
 
     data class AmountBlockParams(
