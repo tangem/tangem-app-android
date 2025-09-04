@@ -16,6 +16,6 @@ interface SendWithSwapComponent : ComposableContentComponent {
     interface Factory : ComponentFactory<Params, SendWithSwapComponent>
 
     interface ModelCallback {
-        fun onCloseSwap(lastAmount: String)
+        fun onCloseSwap(lastAmount: String, isEnterInFiatSelected: Boolean)
     }
 }
