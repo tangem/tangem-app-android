@@ -19,6 +19,12 @@ dependencies {
 
     /** Features api */
     implementation(projects.features.tangempay.details.api)
+    implementation(projects.features.txhistory.api)
+
+    /** Domain */
+    implementation(projects.domain.balanceHiding)
+    implementation(projects.domain.balanceHiding.models)
+    implementation(projects.domain.models)
 
     /** Compose */
     implementation(deps.compose.foundation)
