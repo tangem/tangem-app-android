@@ -10,7 +10,6 @@ android {
 }
 
 dependencies {
-
     // region AndroidX libraries
     implementation(deps.androidx.datastore)
     // endregion
@@ -37,6 +36,8 @@ dependencies {
 
     // endregion
 
+    // Feature modules
+    implementation(projects.features.hotWallet.api)
 
     implementation(projects.domain.feedback)
     implementation(projects.domain.feedback.models)

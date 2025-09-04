@@ -7,7 +7,9 @@ import java.io.File
 
 interface FeedbackRepository {
 
-    fun getCardInfo(scanResponse: ScanResponse): CardInfo
+    suspend fun getUserWalletMetaInfo(userWalletId: UserWalletId): WalletMetaInfo
+
+    fun getUserWalletMetaInfo(scanResponse: ScanResponse): WalletMetaInfo
 
     fun getUserWalletsInfo(userWalletId: UserWalletId?): UserWalletsInfo
 

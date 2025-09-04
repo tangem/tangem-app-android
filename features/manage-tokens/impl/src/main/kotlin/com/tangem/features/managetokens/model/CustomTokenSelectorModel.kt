@@ -11,7 +11,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.managetokens.GetSupportedNetworksUseCase
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.managetokens.component.AddCustomTokenMode
 import com.tangem.features.managetokens.component.CustomTokenSelectorComponent
 import com.tangem.features.managetokens.component.CustomTokenSelectorComponent.Params.DerivationPathSelector
 import com.tangem.features.managetokens.component.CustomTokenSelectorComponent.Params.NetworkSelector
@@ -83,7 +83,7 @@ internal class CustomTokenSelectorModel @Inject constructor(
     }
 
     private suspend fun loadNetworks(selector: NetworkSelector): List<SelectableItemUM> {
-        return getSupportedNetworks(selector.userWalletId).map { network ->
+        return getSupportedNetworks(selector.mode).map { network ->
             network.toCurrencyNetworkModel(
                 isSelected = network.id == selector.selectedNetwork?.id,
                 onSelectedStateChange = {
@@ -122,7 +122,7 @@ internal class CustomTokenSelectorModel @Inject constructor(
             derivationPaths.add(defaultPath)
         }
 
-        getSupportedNetworks(selector.userWalletId)
+        getSupportedNetworks(selector.mode)
             .mapNotNullTo(derivationPaths) { network ->
                 if (network.id == selector.selectedNetwork.id) {
                     return@mapNotNullTo null // Skip default path
@@ -146,8 +146,9 @@ internal class CustomTokenSelectorModel @Inject constructor(
         return derivationPaths
     }
 
-    private suspend fun getSupportedNetworks(userWalletId: UserWalletId): List<Network> {
-        return getSupportedNetworksUseCase(userWalletId).getOrElse { e ->
+    private suspend fun getSupportedNetworks(mode: AddCustomTokenMode): List<Network> = when (mode) {
+        is AddCustomTokenMode.Account -> TODO("Account")
+        is AddCustomTokenMode.Wallet -> getSupportedNetworksUseCase(mode.userWalletId).getOrElse { e ->
             val message = SnackbarMessage(message = resourceReference(R.string.common_unknown_error))
             messageSender.send(message)
 
@@ -158,7 +159,7 @@ internal class CustomTokenSelectorModel @Inject constructor(
     private fun showCustomDerivationInput() {
         val config = when (params) {
             is NetworkSelector -> return
-            is DerivationPathSelector -> CustomTokenSelectorDialogConfig.CustomDerivationInput(params.userWalletId)
+            is DerivationPathSelector -> CustomTokenSelectorDialogConfig.CustomDerivationInput(params.mode)
         }
 
         dialogNavigation.activate(config)

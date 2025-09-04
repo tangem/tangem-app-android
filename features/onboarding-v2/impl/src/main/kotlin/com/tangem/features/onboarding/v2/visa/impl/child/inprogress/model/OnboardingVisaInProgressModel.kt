@@ -18,7 +18,7 @@ import com.tangem.domain.visa.model.VisaAuthTokens
 import com.tangem.domain.visa.model.VisaCardActivationStatus
 import com.tangem.domain.visa.model.VisaCardId
 import com.tangem.domain.visa.repository.VisaActivationRepository
-import com.tangem.domain.visa.repository.VisaAuthRepository
+import com.tangem.domain.visa.datasource.VisaAuthRemoteDataSource
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
@@ -42,7 +42,7 @@ internal class OnboardingVisaInProgressModel @Inject constructor(
     paramsContainer: ParamsContainer,
     visaActivationRepositoryFactory: VisaActivationRepository.Factory,
     override val dispatchers: CoroutineDispatcherProvider,
-    private val visaAuthRepository: VisaAuthRepository,
+    private val visaAuthRemoteDataSource: VisaAuthRemoteDataSource,
     private val visaAuthTokenStorage: VisaAuthTokenStorage,
     private val otpStorage: VisaOTPStorage,
     private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory,
@@ -166,7 +166,7 @@ internal class OnboardingVisaInProgressModel @Inject constructor(
         val authTokens = visaAuthTokenStorage.get(params.scanResponse.card.cardId)
             ?: error("Auth tokens are not found. This should not happen.")
 
-        val newTokens = visaAuthRepository.exchangeAccessToken(authTokens)
+        val newTokens = visaAuthRemoteDataSource.exchangeAccessToken(authTokens)
             .getOrElse {
                 uiMessageSender.showErrorDialog(it)
                 return

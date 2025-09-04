@@ -10,7 +10,6 @@ import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
-import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
@@ -20,9 +19,7 @@ import com.tangem.domain.notifications.GetIsHuaweiDeviceWithoutGoogleServicesUse
 import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.notifications.toggles.NotificationsFeatureToggles
 import com.tangem.domain.settings.*
-import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
 import com.tangem.domain.tokens.RefreshMultiCurrencyWalletQuotesUseCase
-import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.wallets.usecase.*
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
@@ -76,9 +73,7 @@ internal class WalletModel @Inject constructor(
     private val tokenListStore: MultiWalletTokenListStore,
     private val onrampStatusFactory: OnrampStatusFactory,
     private val analyticsEventsHandler: AnalyticsEventHandler,
-    private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
     private val walletContentFetcher: WalletContentFetcher,
-    private val tokensFeatureToggles: TokensFeatureToggles,
     private val observeAndClearNFTCacheIfNeedUseCase: ObserveAndClearNFTCacheIfNeedUseCase,
     private val walletDeepLinkActionListener: WalletDeepLinkActionListener,
     private val notificationsRepository: NotificationsRepository,
@@ -363,9 +358,26 @@ internal class WalletModel @Inject constructor(
             is WalletsUpdateActionResolver.Action.RenameWallets -> {
                 stateHolder.update(transformer = RenameWalletsTransformer(renamedWallets = action.renamedWallets))
             }
+            is WalletsUpdateActionResolver.Action.ReloadWarningsForWallets -> {
+                reloadWarnings(action)
+            }
+            WalletsUpdateActionResolver.Action.EmptyWallets -> {
+                Timber.w("Wallets list is empty!")
+            }
             is WalletsUpdateActionResolver.Action.Unknown -> {
                 Timber.w("Unable to perform action: $action")
             }
+        }
+    }
+
+    private fun reloadWarnings(action: WalletsUpdateActionResolver.Action.ReloadWarningsForWallets) {
+        action.wallets.forEach {
+            walletScreenContentLoader.load(
+                userWallet = it,
+                clickIntents = clickIntents,
+                coroutineScope = modelScope,
+                isRefresh = true,
+            )
         }
     }
 
@@ -389,13 +401,11 @@ internal class WalletModel @Inject constructor(
 
         val otherWallets = action.wallets.minus(action.selectedWallet)
 
-        if (tokensFeatureToggles.isWalletBalanceFetcherEnabled) {
-            otherWallets
-                .filterNot(UserWallet::isLocked)
-                .onEach { userWallet ->
-                    modelScope.launch { walletContentFetcher(userWalletId = userWallet.walletId) }
-                }
-        }
+        otherWallets
+            .filterNot(UserWallet::isLocked)
+            .onEach { userWallet ->
+                modelScope.launch { walletContentFetcher(userWalletId = userWallet.walletId) }
+            }
 
         if (action.wallets.size > 1 && isWalletsScrollPreviewEnabled()) {
             val direction = if (action.selectedWalletIndex == action.wallets.lastIndex) {
@@ -553,27 +563,14 @@ internal class WalletModel @Inject constructor(
     }
 
     private suspend fun fetchWalletContent(userWallet: UserWallet) {
-        if (tokensFeatureToggles.isWalletBalanceFetcherEnabled) {
-            if (userWallet.isLocked) return
+        if (userWallet.isLocked) return
 
-            /*
-             * Updating the balance of the current wallet is an essential part of InitializationWallets,
-             * so the coroutine is launched in the current context
-             */
-            supervisorScope {
-                launch { walletContentFetcher(userWalletId = userWallet.walletId) }
-            }
-        } else {
-            fetchIfSingleWallet(userWallet = userWallet)
-        }
-    }
-
-    private fun fetchIfSingleWallet(userWallet: UserWallet) {
-        if (userWallet is UserWallet.Cold && userWallet.scanResponse.cardTypesResolver.isSingleWallet()) {
-            modelScope.launch {
-                fetchCurrencyStatusUseCase(userWalletId = userWallet.walletId)
-                    .onLeft { Timber.e(it.toString()) }
-            }
+        /*
+         * Updating the balance of the current wallet is an essential part of InitializationWallets,
+         * so the coroutine is launched in the current context
+         */
+        supervisorScope {
+            launch { walletContentFetcher(userWalletId = userWallet.walletId) }
         }
     }
 

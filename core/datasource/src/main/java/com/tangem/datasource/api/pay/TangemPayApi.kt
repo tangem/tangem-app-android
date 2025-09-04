@@ -103,4 +103,7 @@ interface TangemPayApi {
 
     @GET("v1/customer/kyc")
     suspend fun getKycAccess(@Header("Authorization") authHeader: String): ApiResponse<KycAccessInfoResponse>
+
+    @GET("v1/customer/me")
+    suspend fun getCustomerMe(@Header("Authorization") authHeader: String): ApiResponse<CustomerMeResponse>
 }

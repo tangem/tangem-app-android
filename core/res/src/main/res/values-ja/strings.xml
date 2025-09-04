@@ -1043,13 +1043,13 @@
   <string name="send_with_swap_change_token_alert_message">受信トークンを変更してもよろしいですか？ 変更すると、以前入力したデータがリセットされます。</string>
   <string name="send_with_swap_change_token_alert_title">トークンの変更</string>
   <string name="send_with_swap_confirm_title">スワップして送信</string>
-  <string name="send_with_swap_convert_token_alert_message">変換を続行しますか? これにより以前のデータは消去されます。</string>
+  <string name="send_with_swap_convert_token_alert_message">スワップを実行しますか？これにより以前のデータは消去されます。</string>
   <string name="send_with_swap_convert_token_alert_title">変換を確定</string>
   <string name="send_with_swap_correct_recipient_network_notification_message">その他の通貨を送信すると、取り返しのつかない損失が発生します。</string>
   <string name="send_with_swap_correct_recipient_network_notification_title">正しい受信者ネットワークを選択してください</string>
-  <string name="send_with_swap_notification_text">受け取るトークンを自由に選んでください。受信者は、あなたが選択したトークンをシームレスに受け取ります。</string>
-  <string name="send_with_swap_recipient_amount_success_title">受信者は受け取ります</string>
-  <string name="send_with_swap_recipient_amount_text">受取人へ</string>
+  <string name="send_with_swap_notification_text">受け取るトークンを選んでください。受信者は、あなたが選択したトークンをシームレスに受け取ります。</string>
+  <string name="send_with_swap_recipient_amount_success_title">受信者が受け取ります</string>
+  <string name="send_with_swap_recipient_amount_text">受信者へ</string>
   <string name="send_with_swap_recipient_amount_title">受取金額</string>
   <string name="send_with_swap_recipient_get_amount">受信者は%sを取得します</string>
   <string name="send_with_swap_remove_convert_alert_message">変換をキャンセルしてもよろしいですか？以前のデータは消去されます。</string>

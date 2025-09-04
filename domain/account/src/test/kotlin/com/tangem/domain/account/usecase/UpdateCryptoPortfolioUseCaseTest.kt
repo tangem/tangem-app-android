@@ -48,7 +48,7 @@ class UpdateCryptoPortfolioUseCaseTest {
         val updatedAccount = accountList.mainAccount.copy(accountName = newAccountName)
         val updatedAccountList = (accountList + updatedAccount).getOrNull()!!
 
-        coEvery { crudRepository.getAccounts(userWalletId = userWalletId) } returns accountList.toOption()
+        coEvery { crudRepository.getAccountListSync(userWalletId = userWalletId) } returns accountList.toOption()
 
         // Act
         val actual = useCase(accountId = accountId, accountName = newAccountName)
@@ -58,7 +58,7 @@ class UpdateCryptoPortfolioUseCaseTest {
         Truth.assertThat(actual).isEqualTo(expected)
 
         coVerifyOrder {
-            crudRepository.getAccounts(userWalletId = userWalletId)
+            crudRepository.getAccountListSync(userWalletId = userWalletId)
             crudRepository.saveAccounts(accountList = updatedAccountList)
         }
     }
@@ -76,7 +76,7 @@ class UpdateCryptoPortfolioUseCaseTest {
         val updatedAccount = accountList.mainAccount.copy(icon = newAccountIcon)
         val updatedAccountList = (accountList + updatedAccount).getOrNull()!!
 
-        coEvery { crudRepository.getAccounts(userWalletId = userWalletId) } returns accountList.toOption()
+        coEvery { crudRepository.getAccountListSync(userWalletId = userWalletId) } returns accountList.toOption()
 
         // Act
         val actual = useCase(accountId = accountId, icon = newAccountIcon)
@@ -86,7 +86,7 @@ class UpdateCryptoPortfolioUseCaseTest {
         Truth.assertThat(actual).isEqualTo(expected)
 
         coVerifyOrder {
-            crudRepository.getAccounts(userWalletId = userWalletId)
+            crudRepository.getAccountListSync(userWalletId = userWalletId)
             crudRepository.saveAccounts(accountList = updatedAccountList)
         }
     }
@@ -105,7 +105,7 @@ class UpdateCryptoPortfolioUseCaseTest {
         val updatedAccount = accountList.mainAccount.copy(accountName = newAccountName, icon = newAccountIcon)
         val updatedAccountList = (accountList + updatedAccount).getOrNull()!!
 
-        coEvery { crudRepository.getAccounts(userWalletId = userWalletId) } returns accountList.toOption()
+        coEvery { crudRepository.getAccountListSync(userWalletId = userWalletId) } returns accountList.toOption()
 
         // Act
         val actual = useCase(accountId = accountId, accountName = newAccountName, icon = newAccountIcon)
@@ -115,7 +115,7 @@ class UpdateCryptoPortfolioUseCaseTest {
         Truth.assertThat(actual).isEqualTo(expected)
 
         coVerifyOrder {
-            crudRepository.getAccounts(userWalletId = userWalletId)
+            crudRepository.getAccountListSync(userWalletId = userWalletId)
             crudRepository.saveAccounts(accountList = updatedAccountList)
         }
     }
@@ -126,7 +126,7 @@ class UpdateCryptoPortfolioUseCaseTest {
         val accountList = AccountList.empty(userWallet = userWallet)
         val accountId = accountList.mainAccount.accountId
 
-        coEvery { crudRepository.getAccounts(userWalletId = userWalletId) } returns accountList.toOption()
+        coEvery { crudRepository.getAccountListSync(userWalletId = userWalletId) } returns accountList.toOption()
 
         // Act
         val actual = useCase(accountId = accountId)
@@ -136,7 +136,7 @@ class UpdateCryptoPortfolioUseCaseTest {
         Truth.assertThat(actual).isEqualTo(expected)
 
         coVerify(inverse = true) {
-            crudRepository.getAccounts(userWalletId = any())
+            crudRepository.getAccountListSync(userWalletId = any())
             crudRepository.saveAccounts(accountList = any())
         }
     }
@@ -151,7 +151,7 @@ class UpdateCryptoPortfolioUseCaseTest {
 
         val exception = IllegalStateException("Test exception")
 
-        coEvery { crudRepository.getAccounts(userWalletId = userWalletId) } throws exception
+        coEvery { crudRepository.getAccountListSync(userWalletId = userWalletId) } throws exception
 
         // Act
         val actual = useCase(accountId = accountId, accountName = newAccountName)
@@ -160,7 +160,7 @@ class UpdateCryptoPortfolioUseCaseTest {
         val expected = Error.DataOperationFailed(cause = exception).left()
         Truth.assertThat(actual).isEqualTo(expected)
 
-        coVerifyOrder { crudRepository.getAccounts(userWalletId = userWalletId) }
+        coVerifyOrder { crudRepository.getAccountListSync(userWalletId = userWalletId) }
         coVerify(inverse = true) { crudRepository.saveAccounts(accountList = any()) }
     }
 
@@ -175,7 +175,7 @@ class UpdateCryptoPortfolioUseCaseTest {
 
         val newAccountName = AccountName("New name").getOrNull()!!
 
-        coEvery { crudRepository.getAccounts(userWalletId = userWalletId) } returns accountList
+        coEvery { crudRepository.getAccountListSync(userWalletId = userWalletId) } returns accountList
 
         // Act
         val actual = useCase(accountId = accountId, accountName = newAccountName)
@@ -184,7 +184,7 @@ class UpdateCryptoPortfolioUseCaseTest {
         val expected = Error.CriticalTechError.AccountsNotCreated(userWalletId = userWalletId).left()
         Truth.assertThat(actual).isEqualTo(expected)
 
-        coVerifyOrder { crudRepository.getAccounts(userWalletId = userWalletId) }
+        coVerifyOrder { crudRepository.getAccountListSync(userWalletId = userWalletId) }
         coVerify(inverse = true) { crudRepository.saveAccounts(accountList = any()) }
     }
 
@@ -199,7 +199,7 @@ class UpdateCryptoPortfolioUseCaseTest {
 
         val newAccountName = AccountName("New name").getOrNull()!!
 
-        coEvery { crudRepository.getAccounts(userWalletId = userWalletId) } returns accountList.toOption()
+        coEvery { crudRepository.getAccountListSync(userWalletId = userWalletId) } returns accountList.toOption()
 
         // Act
         val actual = useCase(accountId = accountId, accountName = newAccountName)
@@ -208,7 +208,7 @@ class UpdateCryptoPortfolioUseCaseTest {
         val expected = Error.CriticalTechError.AccountNotFound(accountId = accountId).left()
         Truth.assertThat(actual).isEqualTo(expected)
 
-        coVerifyOrder { crudRepository.getAccounts(userWalletId = userWalletId) }
+        coVerifyOrder { crudRepository.getAccountListSync(userWalletId = userWalletId) }
         coVerify(inverse = true) { crudRepository.saveAccounts(accountList = any()) }
     }
 
@@ -224,7 +224,7 @@ class UpdateCryptoPortfolioUseCaseTest {
 
         val exception = IllegalStateException("Save failed")
 
-        coEvery { crudRepository.getAccounts(userWalletId = userWalletId) } returns accountList.toOption()
+        coEvery { crudRepository.getAccountListSync(userWalletId = userWalletId) } returns accountList.toOption()
         coEvery { crudRepository.saveAccounts(accountList = updatedAccountList) } throws exception
 
         // Act
@@ -235,7 +235,7 @@ class UpdateCryptoPortfolioUseCaseTest {
         Truth.assertThat(actual).isEqualTo(expected)
 
         coVerifyOrder {
-            crudRepository.getAccounts(userWalletId = userWalletId)
+            crudRepository.getAccountListSync(userWalletId = userWalletId)
             crudRepository.saveAccounts(accountList = updatedAccountList)
         }
     }

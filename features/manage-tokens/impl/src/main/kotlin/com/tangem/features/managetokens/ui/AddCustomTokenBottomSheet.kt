@@ -19,6 +19,7 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.managetokens.component.AddCustomTokenComponent
+import com.tangem.features.managetokens.component.AddCustomTokenMode
 import com.tangem.features.managetokens.component.preview.PreviewAddCustomTokenComponent
 import com.tangem.features.managetokens.entity.customtoken.AddCustomTokenConfig
 import com.tangem.features.managetokens.entity.customtoken.AddCustomTokenUM
@@ -68,12 +69,13 @@ private fun Preview_AddCustomTokenBottomSheet(
 }
 
 private class AddCustomTokenComponentPreviewProvider : PreviewParameterProvider<AddCustomTokenComponent> {
+    private val mode: AddCustomTokenMode get() = AddCustomTokenMode.Wallet(UserWalletId(stringValue = "321"))
     override val values: Sequence<AddCustomTokenComponent>
         get() = sequenceOf(
             PreviewAddCustomTokenComponent(),
             PreviewAddCustomTokenComponent(
                 initialState = AddCustomTokenConfig(
-                    userWalletId = UserWalletId(stringValue = "321"),
+                    mode = mode,
                     step = AddCustomTokenConfig.Step.FORM,
                     selectedNetwork = SelectedNetwork(
                         id = Network.ID(value = "1", derivationPath = Network.DerivationPath.None),
@@ -85,7 +87,7 @@ private class AddCustomTokenComponentPreviewProvider : PreviewParameterProvider<
             ),
             PreviewAddCustomTokenComponent(
                 initialState = AddCustomTokenConfig(
-                    userWalletId = UserWalletId(stringValue = "321"),
+                    mode = mode,
                     step = AddCustomTokenConfig.Step.NETWORK_SELECTOR,
                     selectedNetwork = SelectedNetwork(
                         id = Network.ID(value = "0", derivationPath = Network.DerivationPath.None),
@@ -97,7 +99,7 @@ private class AddCustomTokenComponentPreviewProvider : PreviewParameterProvider<
             ),
             PreviewAddCustomTokenComponent(
                 initialState = AddCustomTokenConfig(
-                    userWalletId = UserWalletId(stringValue = "321"),
+                    mode = mode,
                     step = AddCustomTokenConfig.Step.DERIVATION_PATH_SELECTOR,
                     selectedDerivationPath = SelectedDerivationPath(
                         id = Network.ID(value = "0", derivationPath = Network.DerivationPath.None),
