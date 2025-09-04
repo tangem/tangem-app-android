@@ -452,7 +452,7 @@
   <string name="express_fetch_best_rates">Aktuelle Preise werden abgerufen ...</string>
   <string name="express_floating_rate">Variabler Zinssatz</string>
   <string name="express_legal_one_placeholder">Durch die Nutzung der Swap-Funktion erklärst du dich mit den folgenden Bedingungen des Anbieters einverstanden %s</string>
-  <string name="express_legal_two_placeholders">Durch die Nutzung der Swap-Funktionalität erklärst du dich mit des Anbieters %1$s und %2$s einverstanden</string>
+  <string name="express_legal_two_placeholders">Durch die Nutzung der Swap-Funktionalität erklärst du dich mit des Anbieters %1$s und %2$s einverstanden.</string>
   <string name="express_more_providers_soon">Weitere Anbieter folgen in Kürze</string>
   <string name="express_provider">Anbieter</string>
   <string name="express_provider_best_rate">Bester Preis</string>
@@ -1039,7 +1039,7 @@
   <string name="send_sending">Senden...</string>
   <string name="send_summary_tap_hint">Berühre an beliebiger Stelle für Änderungen</string>
   <string name="send_summary_title">Versende %s</string>
-  <string name="send_summary_transaction_description">Du sendest **%1$s** inklusive der Netzwerkgebühr %2$s</string>
+  <string name="send_summary_transaction_description">Du sendest **%1$s** inklusive der Netzwerkgebühr %2$s.</string>
   <string name="send_summary_transaction_description_no_fiat_fee">Du sendest **%1$s** und %2$s</string>
   <string name="send_summary_transaction_description_prefix">Du sendest **%1$s**</string>
   <string name="send_summary_transaction_description_suffix_fee_covered">Die Netzwerkgebühr wird durch die Nutzung von %1$s Energieträgern gedeckt.</string>
