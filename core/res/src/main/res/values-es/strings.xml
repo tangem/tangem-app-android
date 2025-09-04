@@ -879,7 +879,7 @@
   <string name="send_extras_hint_memo">Memo</string>
   <string name="send_fee_unreachable_error_text">Compruebe su conexión de red</string>
   <string name="send_fee_unreachable_error_title">Información de tarifa de red no accesible</string>
-  <string name="send_from_title">Tú envías</string>
+  <string name="send_from_title">Envía</string>
   <string name="send_from_wallet_android">Desde</string>
   <string name="send_from_wallet_name">De %s</string>
   <string name="send_gas_limit">Límite de gas</string>
@@ -952,10 +952,13 @@
   <string name="send_with_swap_confirm_title">Intercambiar y enviar</string>
   <string name="send_with_swap_convert_token_alert_message">¿Continuar con la conversión? Esto borrará sus datos anteriores.</string>
   <string name="send_with_swap_convert_token_alert_title">Confirmar Conversión</string>
+  <string name="send_with_swap_correct_recipient_network_notification_message">El envío de cualquier otra moneda supondrá su pérdida irreversible.</string>
+  <string name="send_with_swap_correct_recipient_network_notification_title">Seleccione la red de destino correcta</string>
   <string name="send_with_swap_notification_text">Envía cualquier token y lo convertiremos en el camino. Su destinatario obtiene exactamente lo que necesita, sin problemas.</string>
   <string name="send_with_swap_recipient_amount_success_title">El destinatario recibirá</string>
   <string name="send_with_swap_recipient_amount_text">Al destinatario</string>
   <string name="send_with_swap_recipient_amount_title">Cantidad a recibir</string>
+  <string name="send_with_swap_recipient_get_amount">El destinatario recibe %s</string>
   <string name="send_with_swap_remove_convert_alert_message">¿Seguro que desea cancelar la conversión? Se borrarán sus datos anteriores.</string>
   <string name="send_with_swap_title">Enviar con swap</string>
   <string name="sent_transaction_sent_title">Transacción enviada</string>
