@@ -303,12 +303,13 @@ internal class DefaultSendComponent @AssistedInject constructor(
         val isEmptyStack = childStack.value.backStack.isEmpty()
         val isSuccess = model.uiState.value.confirmUM is ConfirmUM.Success
         val isStubComponent = childStack.value.active.instance is StubComponent
+        val isSendingInProgress = (model.uiState.value.confirmUM as? ConfirmUM.Content)?.isSending == true
 
         val isPopSend = isEmptyRoute || isEmptyStack || isSuccess || isStubComponent
-        if (isPopSend) {
-            router.pop()
-        } else {
-            stackNavigation.pop()
+        when {
+            isSendingInProgress -> Unit // Do not anything while transaction sending in progress
+            isPopSend -> router.pop()
+            else -> stackNavigation.pop()
         }
     }
 
