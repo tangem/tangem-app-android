@@ -5,8 +5,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
+import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.NavigationBar3ButtonsScrim
+import com.tangem.features.tangempay.components.txHistory.DefaultTangemPayTxHistoryComponent
 import com.tangem.features.tangempay.model.TangemPayDetailsModel
 import com.tangem.features.tangempay.ui.TangemPayDetailsScreen
 import dagger.assisted.Assisted
@@ -19,12 +21,16 @@ internal class DefaultTangemPayDetailsComponent @AssistedInject constructor(
 ) : AppComponentContext by appComponentContext, TangemPayDetailsComponent {
 
     private val model: TangemPayDetailsModel = getOrCreateModel(params = params)
+    private val txHistoryComponent = DefaultTangemPayTxHistoryComponent(
+        appComponentContext = child("txHistoryComponent"),
+        params = DefaultTangemPayTxHistoryComponent.Params(userWalletId = params.userWalletId),
+    )
 
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
         NavigationBar3ButtonsScrim()
-        TangemPayDetailsScreen(state = state, modifier = modifier)
+        TangemPayDetailsScreen(state = state, txHistoryComponent = txHistoryComponent, modifier = modifier)
     }
 
     @AssistedFactory

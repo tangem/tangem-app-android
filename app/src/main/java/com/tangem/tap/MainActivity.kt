@@ -525,8 +525,11 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
         // Workaround to navigate to TangemPayDetails screen. Will be deleted in next PRs
         if (tangemPayFeatureToggles.isTangemPayEnabled) {
-            store.dispatchNavigationAction {
-                replaceAll(AppRoute.TangemPayDetails)
+            lifecycleScope.launch {
+                val selectedUserWalledId = userWalletsListRepository.selectedUserWalletSync()?.walletId
+                store.dispatchNavigationAction {
+                    replaceAll(AppRoute.TangemPayDetails(requireNotNull(selectedUserWalledId)))
+                }
             }
         } else if (userWalletsListManager.isLockable && userWalletsListManager.hasUserWallets) {
             store.dispatchNavigationAction {
