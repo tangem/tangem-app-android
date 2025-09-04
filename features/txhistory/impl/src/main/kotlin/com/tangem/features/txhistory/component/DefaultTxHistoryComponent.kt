@@ -2,7 +2,6 @@ package com.tangem.features.txhistory.component
 
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.runtime.*
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.features.txhistory.entity.TxHistoryUM
