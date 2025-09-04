@@ -1,20 +1,16 @@
 package com.tangem.features.txhistory.ui
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.tangem.core.ui.components.list.InfiniteListHandler
 import com.tangem.core.ui.components.transactions.PendingTxsBlock
 import com.tangem.core.ui.components.transactions.Transaction
+import com.tangem.core.ui.components.transactions.TxHistoryGroupTitle
 import com.tangem.core.ui.components.transactions.TxHistoryTitle
 import com.tangem.core.ui.components.transactions.empty.EmptyTransactionBlock
 import com.tangem.core.ui.components.transactions.empty.EmptyTransactionsBlockState
@@ -25,7 +21,7 @@ import com.tangem.features.txhistory.entity.TxHistoryUM
 
 private const val LOAD_ITEMS_BUFFER = 20
 
-internal fun LazyListScope.txHistoryItems(listState: LazyListState, state: TxHistoryUM) {
+fun LazyListScope.txHistoryItems(listState: LazyListState, state: TxHistoryUM) {
     when (state) {
         is TxHistoryUM.Content -> contentItems(listState, state)
         is TxHistoryUM.Empty -> nonContentItem(state = EmptyTransactionsBlockState.Empty(state.onExploreClick))
@@ -127,7 +123,7 @@ internal fun TxHistoryListItem(
 ) {
     when (state) {
         is TxHistoryUM.TxHistoryItemUM.GroupTitle -> {
-            TxHistoryGroupTitle(config = state, modifier = modifier)
+            TxHistoryGroupTitle(config = state.legacyGroupTitle, modifier = modifier)
         }
         is TxHistoryUM.TxHistoryItemUM.Title -> {
             TxHistoryTitle(onExploreClick = state.onExploreClick, modifier = modifier)
@@ -139,26 +135,5 @@ internal fun TxHistoryListItem(
                 modifier = modifier,
             )
         }
-    }
-}
-
-@Composable
-private fun TxHistoryGroupTitle(config: TxHistoryUM.TxHistoryItemUM.GroupTitle, modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .background(TangemTheme.colors.background.primary)
-            .padding(
-                vertical = TangemTheme.dimens.spacing8,
-                horizontal = TangemTheme.dimens.spacing12,
-            )
-            .fillMaxWidth()
-            .heightIn(min = TangemTheme.dimens.size24),
-        contentAlignment = Alignment.CenterStart,
-    ) {
-        Text(
-            text = config.title,
-            color = TangemTheme.colors.text.tertiary,
-            style = TangemTheme.typography.body2,
-        )
     }
 }
