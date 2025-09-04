@@ -198,7 +198,7 @@
   <string name="common_origin_ring">Bague principale</string>
   <string name="common_passphrase">Passphrase</string>
   <string name="common_paste">Coller</string>
-  <string name="common_privacy_policy">Politique de confidentialité</string>
+  <string name="common_privacy_policy">Politique de confidentialité</string>
   <string name="common_range">%1$s-%2$s</string>
   <string name="common_range_with_space">%1$s — %2$s</string>
   <string name="common_read_more">En savoir plus</string>
@@ -234,7 +234,7 @@
   <string name="common_supported_networks">Réseaux pris en charge</string>
   <string name="common_swap">Échanger</string>
   <string name="common_terms_and_conditions">termes et conditions</string>
-  <string name="common_terms_of_use">Conditions d\'utilisation</string>
+  <string name="common_terms_of_use">Conditions d\'utilisation</string>
   <string name="common_today">Aujourd\'hui</string>
   <plurals name="common_tokens_count">
     <item quantity="one">%d jeton</item>
@@ -311,6 +311,7 @@
   <string name="domain_receive_assets_navigation_title">Recevoir des actifs</string>
   <string name="domain_receive_assets_network_name_address">%s adresse</string>
   <string name="domain_receive_assets_onboarding_description">L’envoi d’actifs sur d’autres réseaux entraînera une perte définitive.</string>
+  <string name="domain_receive_assets_onboarding_network_name">%s réseau</string>
   <string name="domain_receive_assets_onboarding_title">Envoyez des fonds en utilisant uniquement</string>
   <string name="email_preface_wc_error">Bonjour équipe de support, j’ai rencontré une erreur avec le code : %s</string>
   <string name="email_subject_wc_error">Erreur WalletConnect</string>
@@ -365,7 +366,7 @@
   <string name="express_fetch_best_rates">En cherche des meilleurs taux</string>
   <string name="express_floating_rate">Taux flottant</string>
   <string name="express_legal_one_placeholder">En utilisant la fonctionnalité d\'échange, vous acceptez les %s</string>
-  <string name="express_legal_two_placeholders">En utilisant la fonctionnalité d\'échange, vous acceptez les conditions %1$s et %2$s du fournisseur</string>
+  <string name="express_legal_two_placeholders">En utilisant la fonctionnalité d\'échange, vous acceptez les conditions %1$s et %2$s du fournisseur.</string>
   <string name="express_more_providers_soon">D\'autres fournisseurs arriveront bientôt.\nRestez branchés !</string>
   <string name="express_provider">Fournisseur</string>
   <string name="express_provider_best_rate">Meilleur taux</string>
@@ -908,7 +909,7 @@
   <string name="send_sending">En cours d\'envoi</string>
   <string name="send_summary_tap_hint">Appuyez sur n\'importe quel champ pour le modifier</string>
   <string name="send_summary_title">Envoyer %s</string>
-  <string name="send_summary_transaction_description">Vous envoyez **%1$s** incluant des frais de réseau de %2$s</string>
+  <string name="send_summary_transaction_description">Vous envoyez **%1$s** incluant des frais de réseau de %2$s.</string>
   <string name="send_summary_transaction_description_no_fiat_fee">Vous envoyez **%1$s** et %2$s</string>
   <string name="send_summary_transaction_description_prefix">Vous envoyez **%1$s**</string>
   <string name="send_summary_transaction_description_suffix_fee_covered">les frais de réseau seront couverts en utilisant %1$s énergie</string>
@@ -923,11 +924,20 @@
   <string name="send_validation_invalid_amount">Montant invalide</string>
   <string name="send_validation_invalid_fee">Les frais de commissions dépassent le solde</string>
   <string name="send_validation_invalid_total">Le total dépasse le solde</string>
+  <string name="send_with_swap_change_token_alert_message">Êtes-vous sûr de vouloir modifier le token de réception ? Cela réinitialisera les données que vous avez saisies précédemment.</string>
+  <string name="send_with_swap_change_token_alert_title">Changement de token</string>
   <string name="send_with_swap_confirm_title">Échanger et envoyer</string>
+  <string name="send_with_swap_convert_token_alert_message">Poursuivre l\'échange ? Cela effacera vos données précédentes.</string>
+  <string name="send_with_swap_convert_token_alert_title">Confirmer la conversion</string>
+  <string name="send_with_swap_correct_recipient_network_notification_message">L\'envoi de toute autre crypto entraînera sa perte irréversible.</string>
+  <string name="send_with_swap_correct_recipient_network_notification_title">Sélectionnez le réseau destinataire approprié.</string>
   <string name="send_with_swap_notification_text">Envoyez n\'importe quel jeton et nous le convertirons en cours de route. Votre destinataire reçoit exactement ce dont il a besoin, en toute simplicité.</string>
   <string name="send_with_swap_recipient_amount_success_title">Le destinataire recevra</string>
   <string name="send_with_swap_recipient_amount_text">Un destinataire sera envoyé</string>
   <string name="send_with_swap_recipient_amount_title">Montant à recevoir</string>
+  <string name="send_with_swap_recipient_get_amount">Le destinataire reçoit %s</string>
+  <string name="send_with_swap_remove_convert_alert_message">Êtes-vous sûr de vouloir annuler la conversion ? Vos données précédentes seront effacées.</string>
+  <string name="send_with_swap_remove_convert_alert_title">Supprimer la conversion</string>
   <string name="send_with_swap_title">Envoyer avec swap</string>
   <string name="sent_transaction_sent_title">Transaction envoyée</string>
   <string name="settings_card_settings_footer">Scannez la carte/ bague que vous souhaitez configurer.</string>
