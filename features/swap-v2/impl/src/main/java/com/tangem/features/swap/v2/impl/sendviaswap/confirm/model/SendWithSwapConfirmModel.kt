@@ -52,6 +52,8 @@ import com.tangem.features.swap.v2.impl.sendviaswap.SendWithSwapRoute
 import com.tangem.features.swap.v2.impl.sendviaswap.analytics.SendWithSwapAnalyticEvents
 import com.tangem.features.swap.v2.impl.sendviaswap.confirm.SendWithSwapConfirmComponent
 import com.tangem.features.swap.v2.impl.sendviaswap.confirm.model.transformers.SendWithSwapConfirmInitialStateTransformer
+import com.tangem.features.swap.v2.impl.sendviaswap.confirm.model.transformers.SendWithSwapConfirmSendingStateTransformer
+import com.tangem.features.swap.v2.impl.sendviaswap.confirm.model.transformers.SendWithSwapConfirmSentStateTransformer
 import com.tangem.features.swap.v2.impl.sendviaswap.confirm.model.transformers.SendWithSwapConfirmationNotificationsTransformer
 import com.tangem.features.swap.v2.impl.sendviaswap.entity.SendWithSwapUM
 import com.tangem.lib.crypto.BlockchainFeeUtils.patchTransactionFeeForSwap
@@ -241,10 +243,12 @@ internal class SendWithSwapConfirmModel @Inject constructor(
     private fun onSendClick() {
         val provider = confirmData.quote?.provider ?: return
         modelScope.launch {
+            uiState.transformerUpdate(SendWithSwapConfirmSendingStateTransformer(true))
             swapTransactionSender.sendTransaction(
                 confirmData = confirmData,
                 isAmountSubtractAvailable = isAmountSubtractAvailable,
                 onExpressError = { expressError ->
+                    uiState.transformerUpdate(SendWithSwapConfirmSendingStateTransformer(false))
                     swapAlertFactory.getGenericErrorState(
                         expressError = expressError,
                         onFailedTxEmailClick = {
@@ -261,6 +265,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                     )
                 },
                 onSendError = { error ->
+                    uiState.transformerUpdate(SendWithSwapConfirmSendingStateTransformer(false))
                     swapAlertFactory.getSendTransactionErrorState(
                         error = error,
                         onFailedTxEmailClick = {
@@ -282,17 +287,14 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                         networkId = primaryCurrencyStatus.currency.network.id,
                     ).getOrNull().orEmpty()
                     sendSuccessAnalytics()
-                    uiState.update {
-                        it.copy(
-                            confirmUM = ConfirmUM.Success(
-                                isPrimaryButtonEnabled = true,
-                                transactionDate = timestamp,
-                                txUrl = txUrl,
-                                provider = provider,
-                                swapDataModel = data,
-                            ),
-                        )
-                    }
+                    uiState.transformerUpdate(
+                        SendWithSwapConfirmSentStateTransformer(
+                            timestamp = timestamp,
+                            txUrl = txUrl,
+                            provider = provider,
+                            swapDataModel = data,
+                        ),
+                    )
                     router.replaceAll(SendWithSwapRoute.Success)
                 },
                 expressOperationType = ExpressOperationType.SEND_WITH_SWAP,
@@ -428,7 +430,15 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                         backIconRes = R.drawable.ic_back_24,
                         backIconClick = router::pop,
                         primaryButton = NavigationButton(
-                            textReference = resourceReference(R.string.common_send),
+                            textReference = when (confirmUM) {
+                                is ConfirmUM.Success -> resourceReference(R.string.common_close)
+                                is ConfirmUM.Content -> if (confirmUM.isTransactionInProcess) {
+                                    resourceReference(R.string.send_sending)
+                                } else {
+                                    resourceReference(R.string.common_send)
+                                }
+                                else -> resourceReference(R.string.common_send)
+                            },
                             iconRes = R.drawable.ic_tangem_24,
                             isIconVisible = isReadyToSend,
                             isHapticClick = isReadyToSend,
