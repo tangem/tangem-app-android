@@ -23,7 +23,7 @@ import com.tangem.core.ui.haptic.VibratorHapticManager
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
-import com.tangem.domain.feedback.GetCardInfoUseCase
+import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
@@ -34,7 +34,6 @@ import com.tangem.domain.models.staking.*
 import com.tangem.domain.models.staking.action.StakingActionType
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.models.wallet.requireColdWallet
 import com.tangem.domain.staking.*
 import com.tangem.domain.staking.analytics.StakeScreenSource
 import com.tangem.domain.staking.analytics.StakingAnalyticsEvent
@@ -107,7 +106,7 @@ internal class StakingModel @Inject constructor(
     private val createApprovalTransactionUseCase: CreateApprovalTransactionUseCase,
     private val getAllowanceUseCase: GetAllowanceUseCase,
     private val vibratorHapticManager: VibratorHapticManager,
-    private val getCardInfoUseCase: GetCardInfoUseCase,
+    private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
     private val saveBlockchainErrorUseCase: SaveBlockchainErrorUseCase,
     private val getBalanceNotEnoughForFeeWarningUseCase: GetBalanceNotEnoughForFeeWarningUseCase,
     private val getCurrencyCheckUseCase: GetCurrencyCheckUseCase,
@@ -859,13 +858,8 @@ internal class StakingModel @Inject constructor(
         modelScope.launch {
             val network = cryptoCurrencyStatus.currency.network
 
-            if (userWallet is UserWallet.Hot) {
-                return@launch // TODO [REDACTED_TASK_KEY] [Hot Wallet] Email feedback flow
-            }
-
-            val cardInfo =
-                getCardInfoUseCase(userWallet.requireColdWallet().scanResponse)
-                    .getOrElse { error("CardInfo must be not null") }
+            val metaInfo =
+                getWalletMetaInfoUseCase(userWallet.walletId).getOrElse { error("CardInfo must be not null") }
             val amountState = uiState.value.amountState as? AmountState.Data
             val confirmationState = uiState.value.confirmationState as? StakingStates.ConfirmationState.Data
             val validatorState = uiState.value.validatorState as? StakingStates.ValidatorState.Data
@@ -887,7 +881,7 @@ internal class StakingModel @Inject constructor(
             )
 
             val email = FeedbackEmailType.StakingProblem(
-                cardInfo = cardInfo,
+                walletMetaInfo = metaInfo,
                 validatorName = validator?.name,
                 transactionTypes = transactionsInProgress.map { it.type.name },
                 unsignedTransactions = transactionsInProgress.map { it.unsignedTransaction },

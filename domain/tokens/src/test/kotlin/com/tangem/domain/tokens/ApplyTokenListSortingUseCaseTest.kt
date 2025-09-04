@@ -188,7 +188,6 @@ internal class ApplyTokenListSortingUseCaseTest {
             currenciesRepository = tokensRepository,
             dispatchers = TestingCoroutineDispatcherProvider(),
             multiWalletCryptoCurrenciesSupplier = mockk(),
-            tokensFeatureToggles = mockk(),
         )
 
     private fun getTokensRepository(
