@@ -53,6 +53,7 @@ import com.tangem.features.swap.v2.impl.amount.model.transformers.*
 import com.tangem.features.swap.v2.impl.chooseprovider.SwapChooseProviderComponent
 import com.tangem.features.swap.v2.impl.common.SwapAlertFactory
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
+import com.tangem.features.swap.v2.impl.sendviaswap.SendWithSwapRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.Debouncer
 import com.tangem.utils.coroutines.PeriodicTask
@@ -347,7 +348,10 @@ internal class SwapAmountModel @Inject constructor(
 
     private fun confirmSendWithSwapClose() {
         val amountParams = params as? SwapAmountComponentParams.AmountParams ?: return
-        val amountFieldData = uiState.value.primaryAmount.amountField as? AmountState.Data
+        val amountField = uiState.value.swapDirection.withSwapDirection(
+            onDirect = { uiState.value.primaryAmount },
+            onReverse = { uiState.value.secondaryAmount },
+        ).amountField as? AmountState.Data
 
         val primaryCryptoCurrencyStatus = (uiState.value as? SwapAmountUM.Content)?.primaryCryptoCurrencyStatus
         if (primaryCryptoCurrencyStatus != null) {
@@ -366,7 +370,16 @@ internal class SwapAmountModel @Inject constructor(
             )
         }
 
-        amountParams.callback.onSeparatorClick(lastAmount = amountFieldData?.amountTextField?.value.orEmpty())
+        val isEnterInFiatSelected = amountField?.amountTextField?.isFiatValue == true
+        val lastAmount = if (isEnterInFiatSelected) {
+            amountField.amountTextField.fiatValue
+        } else {
+            amountField?.amountTextField?.value
+        }
+        amountParams.callback.onSeparatorClick(
+            lastAmount = lastAmount.orEmpty(),
+            isEnterInFiatSelected = isEnterInFiatSelected,
+        )
     }
 
     private fun subscribeOnCryptoCurrencyStatusFlow() {
@@ -406,9 +419,10 @@ internal class SwapAmountModel @Inject constructor(
 
     private fun subscribeOnAmountUpdateTriggerUpdates() {
         swapAmountUpdateListener.updateAmountTriggerFlow
-            .onEach {
+            .onEach { (amount, isEnterInFiat) ->
                 if (uiState.value is SwapAmountUM.Content) {
-                    onAmountValueChange(it)
+                    onCurrencyChangeClick(isEnterInFiat)
+                    onAmountValueChange(amount)
                     saveResult()
                 }
             }
@@ -689,7 +703,7 @@ internal class SwapAmountModel @Inject constructor(
             flow = uiState,
             flow2 = params.currentRoute,
             transform = { state, route -> state to route },
-        ).onEach { (state, route) ->
+        ).filter { (_, route) -> route is SendWithSwapRoute.Amount }.onEach { (state, route) ->
             params.callback.onNavigationResult(
                 NavigationUM.Content(
                     title = resourceReference(R.string.common_amount),
