@@ -29,8 +29,8 @@ import com.tangem.core.res.getStringSafe
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH12
 import com.tangem.core.ui.components.SpacerH8
+import com.tangem.core.ui.components.SpacerW
 import com.tangem.core.ui.components.SpacerW12
-import com.tangem.core.ui.components.SpacerW8
 import com.tangem.core.ui.components.atoms.text.EllipsisText
 import com.tangem.core.ui.components.atoms.text.TextEllipsis
 import com.tangem.core.ui.components.buttons.small.TangemIconButton
@@ -45,9 +45,7 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.tokenreceive.entity.ReceiveAddress
 import com.tangem.features.tokenreceive.ui.state.ReceiveAssetsUM
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.coroutines.launch
 
 @Composable
@@ -121,9 +119,9 @@ private fun Info(
 
 @Composable
 private fun AddressBlock(
-    onOpenQrCodeClick: (id: Int) -> Unit,
-    onCopyClick: (id: Int) -> Unit,
-    addresses: ImmutableMap<Int, ReceiveAddress>,
+    onOpenQrCodeClick: (address: String) -> Unit,
+    onCopyClick: (address: ReceiveAddress) -> Unit,
+    addresses: ImmutableList<ReceiveAddress>,
     snackbarHostState: SnackbarHostState,
 ) {
     val hapticFeedback = LocalHapticFeedback.current
@@ -131,13 +129,13 @@ private fun AddressBlock(
     val context = LocalContext.current
     val resources = context.resources
 
-    addresses.entries.toList().fastForEach { entry ->
-        when (val type = entry.value.type) {
+    addresses.fastForEach { address ->
+        when (val type = address.type) {
             is ReceiveAddress.Type.Primary -> {
-                key(entry.key) {
+                key(address.value) {
                     AddressItem(
                         onCopyClick = {
-                            onCopyClick(entry.key)
+                            onCopyClick(address)
                             hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                             coroutineScope.launch {
                                 snackbarHostState.showSnackbar(
@@ -149,19 +147,19 @@ private fun AddressBlock(
                         },
                         onOpenQrCodeClick = {
                             hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                            onOpenQrCodeClick(entry.key)
+                            onOpenQrCodeClick(address.value)
                         },
-                        address = entry.value.value,
+                        address = address.value,
                         primaryType = type,
                     )
                     SpacerH8()
                 }
             }
             ReceiveAddress.Type.Ens -> {
-                key(entry.key) {
+                key(address.value) {
                     EnsItem(
                         onCopyClick = {
-                            onCopyClick(entry.key)
+                            onCopyClick(address)
                             hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                             coroutineScope.launch {
                                 snackbarHostState.showSnackbar(
@@ -171,7 +169,7 @@ private fun AddressBlock(
                                 )
                             }
                         },
-                        address = entry.value.value,
+                        address = address.value,
                     )
                     SpacerH8()
                 }
@@ -213,9 +211,9 @@ private fun AddressItem(
                 Column(modifier = Modifier.weight(1f)) {
                     EllipsisText(
                         text = primaryType.displayName.resolveReference(),
-                        ellipsis = TextEllipsis.Middle,
+                        ellipsis = TextEllipsis.End,
                         color = TangemTheme.colors.text.primary1,
-                        style = TangemTheme.typography.subtitle1,
+                        style = TangemTheme.typography.subtitle2,
                     )
 
                     EllipsisText(
@@ -229,16 +227,16 @@ private fun AddressItem(
                 SpacerW12()
 
                 TangemIconButton(
-                    modifier = Modifier.size(TangemTheme.dimens.size28),
+                    modifier = Modifier.size(TangemTheme.dimens.size32),
                     innerPadding = 6.dp,
                     iconRes = R.drawable.ic_qrcode_new_24,
                     onClick = onOpenQrCodeClick,
                 )
 
-                SpacerW8()
+                SpacerW(12.dp)
 
                 TangemIconButton(
-                    modifier = Modifier.size(TangemTheme.dimens.size28),
+                    modifier = Modifier.size(TangemTheme.dimens.size32),
                     iconRes = R.drawable.ic_copy_new_24,
                     innerPadding = 6.dp,
                     onClick = onCopyClick,
@@ -334,9 +332,9 @@ private class TokenReceiveAssetsContentProvider : PreviewParameterProvider<Recei
                 subtitle = resourceReference(R.string.receive_bottom_sheet_warning_message_description),
             ),
         ),
-        addresses = persistentMapOf(
-            0 to address,
-            1 to address.copy(type = ReceiveAddress.Type.Ens, value = "papasha.eth"),
+        addresses = persistentListOf(
+            address,
+            address.copy(type = ReceiveAddress.Type.Ens, value = "papasha.eth"),
         ),
         showMemoDisclaimer = false,
         onCopyClick = {},
