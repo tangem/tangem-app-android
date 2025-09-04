@@ -75,7 +75,10 @@ private fun QrCodePage(addressFullName: TextReference, addressValue: String, net
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Column(modifier = Modifier.padding(horizontal = TangemTheme.dimens.size36)) {
+        Column(
+            modifier = Modifier.padding(horizontal = TangemTheme.dimens.size36),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
             Text(
                 text = stringResourceSafe(
                     R.string.receive_bottom_sheet_warning_message_compact,
