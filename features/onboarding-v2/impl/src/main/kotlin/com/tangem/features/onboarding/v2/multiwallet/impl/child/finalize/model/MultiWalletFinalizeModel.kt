@@ -7,21 +7,22 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
-import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.card.common.util.cardTypesResolver
+import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.scan.isRing
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.requireColdWallet
 import com.tangem.domain.onboarding.repository.OnboardingRepository
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
-import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.models.wallet.requireColdWallet
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
+import com.tangem.domain.wallets.usecase.UpdateWalletUseCase
 import com.tangem.features.onboarding.v2.common.ui.CantLeaveBackupDialog
 import com.tangem.features.onboarding.v2.impl.R
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
@@ -53,6 +54,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
     private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory,
     private val userWalletsListManager: UserWalletsListManager,
     private val saveWalletUseCase: SaveWalletUseCase,
+    private val updateWalletUseCase: UpdateWalletUseCase,
     private val cardRepository: CardRepository,
     private val onboardingRepository: OnboardingRepository,
     private val walletsRepository: WalletsRepository,
@@ -77,7 +79,8 @@ internal class MultiWalletFinalizeModel @Inject constructor(
             // sets proper artwork state for initial step
             // (if we start from backup cards, we need to show proper artwork) ([REDACTED_TASK_KEY])
             when (getInitialStep()) {
-                MultiWalletFinalizeUM.Step.Primary -> { /* state is already set */ }
+                MultiWalletFinalizeUM.Step.Primary -> { /* state is already set */
+                }
                 MultiWalletFinalizeUM.Step.BackupDevice1 -> {
                     onEvent.emit(MultiWalletFinalizeComponent.Event.OneBackupCardAdded)
                 }
@@ -249,11 +252,13 @@ internal class MultiWalletFinalizeModel @Inject constructor(
                         }
                         ?: userWalletCreated
 
-                    saveWalletUseCase(
-                        userWallet = userWallet.requireColdWallet().copy(
-                            scanResponse = scanResponse.updateScanResponseAfterBackup(),
-                        ),
-                        canOverride = true,
+                    updateWalletUseCase(
+                        userWalletId = userWallet.walletId,
+                        update = {
+                            it.requireColdWallet().copy(
+                                scanResponse = scanResponse.updateScanResponseAfterBackup(),
+                            )
+                        },
                     )
 
                     userWallet
