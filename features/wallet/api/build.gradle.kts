@@ -15,6 +15,9 @@ dependencies {
     /** Project - Domain */
     implementation(projects.domain.models)
 
+    /** Tangem libraries */
+    implementation(tangemDeps.card.core)
+
     /** Core */
     implementation(projects.core.ui)
     implementation(projects.core.decompose)
