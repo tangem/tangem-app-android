@@ -9,7 +9,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.card.repository.CardRepository
-import com.tangem.domain.feedback.GetCardInfoUseCase
+import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.scan.CardDTO
@@ -49,7 +49,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val backupServiceHolder: BackupServiceHolder,
     private val tangemSdkManager: TangemSdkManager,
-    private val getCardInfoUseCase: GetCardInfoUseCase,
+    private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory,
     private val userWalletsListManager: UserWalletsListManager,
@@ -79,7 +79,8 @@ internal class MultiWalletFinalizeModel @Inject constructor(
             // sets proper artwork state for initial step
             // (if we start from backup cards, we need to show proper artwork) ([REDACTED_TASK_KEY])
             when (getInitialStep()) {
-                MultiWalletFinalizeUM.Step.Primary -> { /* state is already set */ }
+                MultiWalletFinalizeUM.Step.Primary -> { /* state is already set */
+                }
                 MultiWalletFinalizeUM.Step.BackupDevice1 -> {
                     onEvent.emit(MultiWalletFinalizeComponent.Event.OneBackupCardAdded)
                 }
@@ -333,7 +334,8 @@ internal class MultiWalletFinalizeModel @Inject constructor(
 
     private fun navigateToSupportScreen() {
         modelScope.launch {
-            val cardInfo = getCardInfoUseCase(multiWalletState.value.currentScanResponse).getOrNull() ?: return@launch
+            val cardInfo =
+                getWalletMetaInfoUseCase(multiWalletState.value.currentScanResponse).getOrNull() ?: return@launch
             sendFeedbackEmailUseCase(FeedbackEmailType.DirectUserRequest(cardInfo))
         }
     }
