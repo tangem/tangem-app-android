@@ -47,7 +47,7 @@ import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.common.LogConfig
-import com.tangem.domain.feedback.GetCardInfoUseCase
+import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.onboarding.SaveTwinsOnboardingShownUseCase
 import com.tangem.domain.onboarding.WasTwinsOnboardingShownUseCase
@@ -77,6 +77,7 @@ import com.tangem.wallet.BuildConfig
 import dagger.hilt.EntryPoints
 import kotlinx.coroutines.*
 import org.rekotlin.Store
+import timber.log.Timber
 import com.tangem.tap.domain.walletconnect2.domain.LegacyWalletConnectRepository as WalletConnect2Repository
 
 lateinit var store: Store<AppState>
@@ -165,8 +166,8 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase
         get() = entryPoint.getSendFeedbackEmailUseCase()
 
-    private val getCardInfoUseCase: GetCardInfoUseCase
-        get() = entryPoint.getGetCardInfoUseCase()
+    private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase
+        get() = entryPoint.getWalletMetaInfoUseCase()
 
     private val urlOpener
         get() = entryPoint.getUrlOpener()
@@ -289,15 +290,16 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
 
         tangemAppLoggerInitializer.initialize()
 
+        Timber.i("APP STARTED")
+        if (BuildConfig.TESTER_MENU_ENABLED) {
+            Timber.i(featureTogglesManager.toString())
+            Timber.i(excludedBlockchainsManager.toString())
+        }
+
         foregroundActivityObserver = ForegroundActivityObserver()
         registerActivityLifecycleCallbacks(foregroundActivityObserver.callbacks)
 
-        // We need to initialize the toggles and excludedBlockchainsManager before the MainActivity starts using them.
         runBlocking {
-            awaitAll(
-                async { featureTogglesManager.init() },
-                async { excludedBlockchainsManager.init() },
-            )
             initWithConfigDependency(environmentConfig = environmentConfigStorage.initialize())
         }
 
@@ -357,7 +359,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
                     settingsRepository = settingsRepository,
                     blockchainSDKFactory = blockchainSDKFactory,
                     sendFeedbackEmailUseCase = sendFeedbackEmailUseCase,
-                    getCardInfoUseCase = getCardInfoUseCase,
+                    getWalletMetaInfoUseCase = getWalletMetaInfoUseCase,
                     issuersConfigStorage = issuersConfigStorage,
                     urlOpener = urlOpener,
                     shareManager = shareManager,

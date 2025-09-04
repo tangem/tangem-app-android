@@ -14,10 +14,17 @@ interface RuntimeStateStore<T> {
     /** Get flow of elements [T] */
     fun get(): StateFlow<T>
 
+    /** Get element [T] synchronously or null */
+    suspend fun getSyncOrNull(): T?
+
     /** Store [value] */
     suspend fun store(value: T)
 
+    /** Update current value by [function] */
     suspend fun update(function: (T) -> T)
+
+    /** Clear stored value */
+    fun clear()
 
     companion object {
 
@@ -32,12 +39,18 @@ interface RuntimeStateStore<T> {
 
             override fun get(): StateFlow<T> = flow
 
+            override suspend fun getSyncOrNull(): T? = flow.value
+
             override suspend fun store(value: T) {
                 flow.value = value
             }
 
             override suspend fun update(function: (T) -> T) {
                 flow.update(function)
+            }
+
+            override fun clear() {
+                flow.value = defaultValue
             }
         }
     }
