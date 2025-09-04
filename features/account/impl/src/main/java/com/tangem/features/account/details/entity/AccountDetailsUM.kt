@@ -2,7 +2,7 @@ package com.tangem.features.account.details.entity
 
 import com.tangem.common.ui.account.CryptoPortfolioIconUM
 
-data class AccountDetailsUM(
+internal data class AccountDetailsUM(
     val accountName: String,
     val accountIcon: CryptoPortfolioIconUM,
     val onCloseClick: () -> Unit,
