@@ -19,11 +19,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.buttons.HorizontalActionChips
 import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
@@ -37,6 +39,8 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.TokenDetailsTopBarTestTags
+import com.tangem.features.tangempay.components.txHistory.PreviewTangemPayTxHistoryComponent
+import com.tangem.features.tangempay.components.txHistory.TangemPayTxHistoryComponent
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.TangemPayCardDetailsUM
 import com.tangem.features.tangempay.entity.TangemPayDetailsBalanceBlockState
@@ -46,7 +50,11 @@ import com.tangem.utils.StringsSigns.DASH_SIGN
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
-internal fun TangemPayDetailsScreen(state: TangemPayDetailsUM, modifier: Modifier = Modifier) {
+internal fun TangemPayDetailsScreen(
+    state: TangemPayDetailsUM,
+    txHistoryComponent: TangemPayTxHistoryComponent,
+    modifier: Modifier = Modifier,
+) {
     Scaffold(
         modifier = modifier,
         topBar = { TangemPayDetailsTopAppBar(config = state.topBarConfig) },
@@ -55,6 +63,7 @@ internal fun TangemPayDetailsScreen(state: TangemPayDetailsUM, modifier: Modifie
     ) { scaffoldPaddings ->
         val listState = rememberLazyListState()
         val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
+        val txHistoryState by txHistoryComponent.state.collectAsStateWithLifecycle()
 
         TangemPullToRefreshContainer(
             config = state.pullToRefreshConfig,
@@ -91,6 +100,8 @@ internal fun TangemPayDetailsScreen(state: TangemPayDetailsUM, modifier: Modifie
                         )
                     },
                 )
+
+                with(txHistoryComponent) { txHistoryContent(listState = listState, state = txHistoryState) }
             }
         }
     }
@@ -317,14 +328,19 @@ private fun TangemPayDetailsTopAppBar(config: TangemPayDetailsTopBarConfig, modi
     )
 }
 
-@Preview(showBackground = true, widthDp = 360)
-@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Preview(device = Devices.PIXEL_7_PRO, group = "day")
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, device = Devices.PIXEL_7_PRO, group = "night")
 @Composable
 private fun TangemPayDetailsScreenPreview(
     @PreviewParameter(TangemPayDetailsUMProvider::class) state: TangemPayDetailsUM,
 ) {
     TangemThemePreview {
-        TangemPayDetailsScreen(state = state)
+        TangemPayDetailsScreen(
+            state = state,
+            txHistoryComponent = PreviewTangemPayTxHistoryComponent(
+                txHistoryUM = PreviewTangemPayTxHistoryComponent.contentUM,
+            ),
+        )
     }
 }
 
