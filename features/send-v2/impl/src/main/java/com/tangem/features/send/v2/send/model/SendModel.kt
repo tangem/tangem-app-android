@@ -226,14 +226,14 @@ internal class SendModel @Inject constructor(
         }
     }
 
-    override fun onConvertToAnotherToken(lastAmount: String) {
+    override fun onConvertToAnotherToken(lastAmount: String, isEnterInFiatSelected: Boolean) {
         analyticsEventHandler.send(
             SendAnalyticEvents.ConvertTokenButtonClicked(
                 token = cryptoCurrency.symbol,
                 blockchain = cryptoCurrency.network.name,
             ),
         )
-        params.callback?.onConvertToAnotherToken(lastAmount = lastAmount)
+        params.callback?.onConvertToAnotherToken(lastAmount = lastAmount, isEnterInFiatSelected = isEnterInFiatSelected)
     }
 
     override fun resetSendNavigation() {
@@ -454,7 +454,7 @@ internal class SendModel @Inject constructor(
         )
         // If it is in active state use flow to update value in amount component
         modelScope.launch {
-            amount?.let { sendAmountUpdateTrigger.triggerUpdateAmount(it) }
+            amount?.let { sendAmountUpdateTrigger.triggerUpdateAmount(it, null) }
         }
     }
 
