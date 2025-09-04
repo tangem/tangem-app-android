@@ -139,33 +139,59 @@ private fun NameAndInfo(
                     )
                 }
             }
-            Text(
-                text = " $DOT ",
-                style = TangemTheme.typography.caption2,
-                color = TangemTheme.colors.text.tertiary,
-                maxLines = 1,
-            )
 
-            AnimatedContent(
-                targetState = balance,
-                label = "Balance content",
-            ) { balance ->
-                val (balanceValue, isFlickering) = getBalanceValueAndFlickerState(balance)
+            BalanceContent(balance)
+        }
+    }
+}
 
-                if (balanceValue == null) {
-                    TextShimmer(
-                        style = TangemTheme.typography.caption2,
-                        text = "aaaaa",
-                    )
-                } else {
+@Composable
+private fun BalanceContent(balance: UserWalletItemUM.Balance, modifier: Modifier = Modifier) {
+    AnimatedContent(
+        modifier = modifier,
+        targetState = balance,
+        label = "Balance content",
+    ) { balance ->
+        when (balance) {
+            UserWalletItemUM.Balance.Locked -> {
+                Icon(
+                    modifier = Modifier
+                        .padding(start = 4.dp, bottom = 2.dp, top = 2.dp)
+                        .size(12.dp),
+                    imageVector = ImageVector.vectorResource(R.drawable.ic_lock_24),
+                    tint = TangemTheme.colors.icon.informative,
+                    contentDescription = null,
+                )
+            }
+            UserWalletItemUM.Balance.NotShowing -> {
+                /** No balance and no dot */
+            }
+            else -> {
+                Row {
                     Text(
-                        text = balanceValue,
-                        style = TangemTheme.typography.caption2.applyBladeBrush(
-                            isEnabled = isFlickering,
-                            textColor = TangemTheme.colors.text.tertiary,
-                        ),
+                        text = " $DOT ",
+                        style = TangemTheme.typography.caption2,
+                        color = TangemTheme.colors.text.tertiary,
                         maxLines = 1,
                     )
+
+                    val (balanceValue, isFlickering) = getBalanceValueAndFlickerState(balance)
+
+                    if (balanceValue == null) {
+                        TextShimmer(
+                            style = TangemTheme.typography.caption2,
+                            text = "aaaaa",
+                        )
+                    } else {
+                        Text(
+                            text = balanceValue,
+                            style = TangemTheme.typography.caption2.applyBladeBrush(
+                                isEnabled = isFlickering,
+                                textColor = TangemTheme.colors.text.tertiary,
+                            ),
+                            maxLines = 1,
+                        )
+                    }
                 }
             }
         }
@@ -246,9 +272,8 @@ fun getBalanceValueAndFlickerState(balance: UserWalletItemUM.Balance): Pair<Stri
     return when (balance) {
         is UserWalletItemUM.Balance.Failed -> DASH_SIGN to false
         is UserWalletItemUM.Balance.Hidden -> THREE_STARS to false
-        is UserWalletItemUM.Balance.Loading -> null to false
-        is UserWalletItemUM.Balance.Locked -> stringResourceSafe(R.string.common_locked) to false
         is UserWalletItemUM.Balance.Loaded -> balance.value to balance.isFlickering
+        else -> null to false
     }
 }
 
@@ -388,6 +413,15 @@ private class UserWalletItemUMPreviewProvider : PreviewParameterProvider<UserWal
                     value = "1.2345 BTC",
                     isFlickering = false,
                 ),
+                imageState = UserWalletItemUM.ImageState.MobileWallet,
+                isEnabled = true,
+                onClick = {},
+            ),
+            UserWalletItemUM(
+                id = UserWalletId("user_wallet_3".encodeToByteArray()),
+                name = stringReference("Multi Card"),
+                information = getInformation(cardCount = 3),
+                balance = UserWalletItemUM.Balance.NotShowing,
                 imageState = UserWalletItemUM.ImageState.MobileWallet,
                 isEnabled = true,
                 onClick = {},

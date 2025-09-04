@@ -1,7 +1,7 @@
 package com.tangem.domain.feedback.utils
 
 import com.tangem.domain.feedback.FeedbackDataBuilder
-import com.tangem.domain.feedback.models.CardInfo
+import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.feedback.repository.FeedbackRepository
 import com.tangem.domain.visa.model.VisaTxDetails
@@ -20,37 +20,40 @@ internal class EmailMessageBodyResolver(
     /** Resolve email message body by [type] */
     suspend fun resolve(type: FeedbackEmailType): String = with(FeedbackDataBuilder()) {
         when (type) {
-            is FeedbackEmailType.DirectUserRequest -> addUserRequestBody(type.cardInfo)
-            is FeedbackEmailType.RateCanBeBetter -> addCardAndPhoneInfo(type.cardInfo)
-            is FeedbackEmailType.TransactionSendingProblem -> addTransactionSendingProblemBody(type.cardInfo)
+            is FeedbackEmailType.DirectUserRequest -> addUserRequestBody(type.walletMetaInfo)
+            is FeedbackEmailType.RateCanBeBetter -> addCardAndPhoneInfo(type.walletMetaInfo)
+            is FeedbackEmailType.TransactionSendingProblem -> addTransactionSendingProblemBody(type.walletMetaInfo)
             is FeedbackEmailType.StakingProblem -> addStakingProblemBody(type)
             is FeedbackEmailType.SwapProblem -> addSwapProblemBody(type)
             is FeedbackEmailType.CurrencyDescriptionError -> addTokenInfo(type)
-            is FeedbackEmailType.PreActivatedWallet -> addUserRequestBody(type.cardInfo)
+            is FeedbackEmailType.PreActivatedWallet -> addUserRequestBody(type.walletMetaInfo)
             is FeedbackEmailType.ScanningProblem,
             is FeedbackEmailType.CardAttestationFailed,
             -> addPhoneInfoBody()
-            is FeedbackEmailType.Visa.Activation -> addUserRequestBody(type.cardInfo)
-            is FeedbackEmailType.Visa.DirectUserRequest -> addUserRequestBody(type.cardInfo)
-            is FeedbackEmailType.Visa.Dispute -> addVisaRequestBody(type.cardInfo, type.visaTxDetails)
+            is FeedbackEmailType.Visa.Activation -> addUserRequestBody(type.walletMetaInfo)
+            is FeedbackEmailType.Visa.DirectUserRequest -> addUserRequestBody(type.walletMetaInfo)
+            is FeedbackEmailType.Visa.Dispute -> addVisaRequestBody(type.walletMetaInfo, type.visaTxDetails)
         }
 
         return build()
     }
 
-    private suspend fun FeedbackDataBuilder.addVisaRequestBody(cardInfo: CardInfo, visaTxDetails: VisaTxDetails) {
-        addUserRequestBody(cardInfo)
+    private suspend fun FeedbackDataBuilder.addVisaRequestBody(
+        walletMetaInfo: WalletMetaInfo,
+        visaTxDetails: VisaTxDetails,
+    ) {
+        addUserRequestBody(walletMetaInfo)
         addDelimiter()
         addVisaTxInfo(visaTxDetails)
     }
 
-    private suspend fun FeedbackDataBuilder.addUserRequestBody(cardInfo: CardInfo) {
-        addUserWalletsInfo(userWalletsInfo = feedbackRepository.getUserWalletsInfo(cardInfo.userWalletId))
+    private suspend fun FeedbackDataBuilder.addUserRequestBody(walletMetaInfo: WalletMetaInfo) {
+        addUserWalletsInfo(userWalletsInfo = feedbackRepository.getUserWalletsInfo(walletMetaInfo.userWalletId))
         addDelimiter()
-        addCardInfo(cardInfo)
+        addUserWalletMetaInfo(walletMetaInfo)
         addDelimiter()
 
-        val userWalletId = cardInfo.userWalletId
+        val userWalletId = walletMetaInfo.userWalletId
 
         if (userWalletId != null) {
             val blockchainInfoList = feedbackRepository.getBlockchainInfoList(userWalletId)
@@ -68,11 +71,11 @@ internal class EmailMessageBodyResolver(
         addPhoneInfo(phoneInfo = feedbackRepository.getPhoneInfo())
     }
 
-    private suspend fun FeedbackDataBuilder.addTransactionSendingProblemBody(cardInfo: CardInfo) {
-        addCardInfo(cardInfo)
+    private suspend fun FeedbackDataBuilder.addTransactionSendingProblemBody(walletMetaInfo: WalletMetaInfo) {
+        addUserWalletMetaInfo(walletMetaInfo)
         addDelimiter()
 
-        val userWalletId = requireNotNull(cardInfo.userWalletId) { "UserWalletId must be not null" }
+        val userWalletId = requireNotNull(walletMetaInfo.userWalletId) { "UserWalletId must be not null" }
         val blockchainError = feedbackRepository.getBlockchainErrorInfo(userWalletId = userWalletId)
         val blockchainInfo = blockchainError?.let {
             feedbackRepository.getBlockchainInfo(
@@ -91,10 +94,10 @@ internal class EmailMessageBodyResolver(
     }
 
     private suspend fun FeedbackDataBuilder.addStakingProblemBody(type: FeedbackEmailType.StakingProblem) {
-        addCardInfo(type.cardInfo)
+        addUserWalletMetaInfo(type.walletMetaInfo)
         addDelimiter()
 
-        val userWalletId = requireNotNull(type.cardInfo.userWalletId) { "UserWalletId must be not null" }
+        val userWalletId = requireNotNull(type.walletMetaInfo.userWalletId) { "UserWalletId must be not null" }
         val blockchainError = feedbackRepository.getBlockchainErrorInfo(userWalletId = userWalletId)
         val blockchainInfo = blockchainError?.let {
             feedbackRepository.getBlockchainInfo(
@@ -120,10 +123,10 @@ internal class EmailMessageBodyResolver(
     }
 
     private suspend fun FeedbackDataBuilder.addSwapProblemBody(type: FeedbackEmailType.SwapProblem) {
-        addCardInfo(type.cardInfo)
+        addUserWalletMetaInfo(type.walletMetaInfo)
         addDelimiter()
 
-        val userWalletId = requireNotNull(type.cardInfo.userWalletId) { "UserWalletId must be not null" }
+        val userWalletId = requireNotNull(type.walletMetaInfo.userWalletId) { "UserWalletId must be not null" }
         val blockchainError = feedbackRepository.getBlockchainErrorInfo(userWalletId = userWalletId)
         val blockchainInfo = blockchainError?.let {
             feedbackRepository.getBlockchainInfo(
@@ -144,8 +147,8 @@ internal class EmailMessageBodyResolver(
         addPhoneInfo(phoneInfo = feedbackRepository.getPhoneInfo())
     }
 
-    private fun FeedbackDataBuilder.addCardAndPhoneInfo(cardInfo: CardInfo) {
-        addCardInfo(cardInfo)
+    private fun FeedbackDataBuilder.addCardAndPhoneInfo(walletMetaInfo: WalletMetaInfo) {
+        addUserWalletMetaInfo(walletMetaInfo)
         addDelimiter()
         addPhoneInfo(phoneInfo = feedbackRepository.getPhoneInfo())
     }
