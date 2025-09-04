@@ -40,19 +40,19 @@ object AmountStatePreviewData {
         appCurrency = AppCurrency.Default,
         tokenName = stringReference("Tether"),
         amountTextField = AmountFieldModel(
-            value = "",
+            value = "2 130,81231238",
             onValueChange = {},
             keyboardOptions = KeyboardOptions.Default,
             keyboardActions = KeyboardActions.Default,
             cryptoAmount = Amount(
                 currencySymbol = "USDT",
-                value = BigDecimal.ZERO,
+                value = "2112312330.81212331238".toBigDecimal(),
                 decimals = 18,
                 type = AmountType.CoinType,
             ),
             fiatAmount = Amount(
                 currencySymbol = "$",
-                value = BigDecimal.ZERO,
+                value = "2111232330.81".toBigDecimal(),
                 decimals = 2,
                 type = AmountType.CoinType,
             ),
