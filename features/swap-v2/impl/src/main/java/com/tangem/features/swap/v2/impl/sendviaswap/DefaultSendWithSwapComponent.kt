@@ -31,6 +31,7 @@ import com.tangem.features.swap.v2.impl.amount.SwapAmountComponent
 import com.tangem.features.swap.v2.impl.amount.SwapAmountComponentParams
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
 import com.tangem.features.swap.v2.impl.common.SwapUtils.SEND_WITH_SWAP_PROVIDER_TYPES
+import com.tangem.features.swap.v2.impl.common.entity.ConfirmUM
 import com.tangem.features.swap.v2.impl.sendviaswap.confirm.SendWithSwapConfirmComponent
 import com.tangem.features.swap.v2.impl.sendviaswap.model.SendWithSwapModel
 import com.tangem.features.swap.v2.impl.sendviaswap.success.SendWithSwapSuccessComponent
@@ -136,7 +137,7 @@ internal class DefaultSendWithSwapComponent @AssistedInject constructor(
             params = SwapAmountComponentParams.AmountParams(
                 amountUM = model.uiState.value.amountUM,
                 title = resourceReference(R.string.common_send),
-                currentRoute = model.currentRoute.filterIsInstance<SendWithSwapRoute.Amount>(),
+                currentRoute = model.currentRoute,
                 isBalanceHidingFlow = model.isBalanceHiddenFlow,
                 analyticsCategoryName = model.analyticCategoryName,
                 primaryCryptoCurrencyStatusFlow = model.primaryCryptoCurrencyStatusFlow,
@@ -202,11 +203,15 @@ internal class DefaultSendWithSwapComponent @AssistedInject constructor(
 
     private fun onChildBack() {
         val isEmptyStack = childStack.value.backStack.isEmpty()
+        val isSuccess = model.uiState.value.confirmUM is ConfirmUM.Success
+        val isSendingInProgress = (model.uiState.value.confirmUM as? ConfirmUM.Content)?.isTransactionInProcess == true
 
-        if (isEmptyStack) {
-            router.pop()
-        } else {
-            stackNavigation.pop()
+        val isPopSend = isEmptyStack || isSuccess
+
+        when {
+            isSendingInProgress -> Unit // Do not anything while transaction sending in progress
+            isPopSend -> router.pop()
+            else -> stackNavigation.pop()
         }
     }
 
