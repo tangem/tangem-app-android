@@ -5,6 +5,7 @@ import androidx.compose.ui.Modifier
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.managetokens.component.AddCustomTokenMode
 import com.tangem.features.managetokens.component.CustomTokenSelectorComponent
 import com.tangem.features.managetokens.component.CustomTokenSelectorComponent.Params
 import com.tangem.features.managetokens.entity.customtoken.CustomTokenSelectorUM
@@ -18,7 +19,7 @@ import kotlinx.collections.immutable.toImmutableList
 
 internal class PreviewCustomTokenSelectorComponent(
     private val params: Params = Params.NetworkSelector(
-        userWalletId = UserWalletId(stringValue = "321"),
+        mode = AddCustomTokenMode.Wallet(UserWalletId(stringValue = "321")),
         selectedNetwork = null,
         onNetworkSelected = {},
     ),
