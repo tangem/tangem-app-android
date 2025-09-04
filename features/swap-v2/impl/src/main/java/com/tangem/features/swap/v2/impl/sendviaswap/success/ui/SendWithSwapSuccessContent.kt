@@ -301,6 +301,7 @@ private fun SendWithSwapSuccessContent_Preview() {
                     isValidating = false,
                     isInitialized = false,
                     isRedesignEnabled = false,
+                    isRecentHidden = false,
                 ),
                 feeSelectorUM = FeeSelectorUM.Content(
                     fees = TransactionFee.Single(
