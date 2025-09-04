@@ -35,6 +35,10 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
         }
     )
 
+    val screenContainer: KNode = child {
+        hasTestTag(MainScreenTestTags.SCREEN_CONTAINER)
+    }
+
     val synchronizeAddressesButton: KNode = child {
         hasText(getResourceString(R.string.common_generate_addresses))
     }

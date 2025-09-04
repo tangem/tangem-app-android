@@ -62,7 +62,7 @@ internal class DefaultUserWalletsListRepository(
             // If we don't save persistent information, we don't need to load user wallets
             // and we should clear any existing data
             clearPersistentData()
-            userWallets.value = emptyList()
+            updateWallets { emptyList() }
             return
         }
 
@@ -118,7 +118,7 @@ internal class DefaultUserWalletsListRepository(
         }
 
         // update the userWallets state and add if it doesn't exist
-        userWallets.update { currentWallets ->
+        updateWallets { currentWallets ->
             val wallets = currentWallets ?: emptyList()
             if (wallets.any { it.walletId == userWallet.walletId }) {
                 wallets.map { if (it.walletId == userWallet.walletId) userWallet else it }
@@ -248,7 +248,7 @@ internal class DefaultUserWalletsListRepository(
                 removePasswordAttempts(userWallet)
 
                 sensitiveInformationRepository.getAll(listOf(encryptionKey))
-                    .doOnSuccess { sensitiveInfo -> userWallets.update { it?.updateWith(sensitiveInfo) } }
+                    .doOnSuccess { sensitiveInfo -> updateWallets { it?.updateWith(sensitiveInfo) } }
                     .doOnFailure { error ->
                         raise(UnlockWalletError.UnableToUnlock)
                     }
@@ -306,7 +306,7 @@ internal class DefaultUserWalletsListRepository(
 
         sensitiveInformationRepository.getAll(allKeys)
             .doOnSuccess { sensitiveInfo ->
-                userWallets.update { it?.updateWith(sensitiveInfo) }
+                updateWallets { it?.updateWith(sensitiveInfo) }
             }
             .doOnFailure { raise(UnlockWalletError.UnableToUnlock) }
     }
@@ -318,7 +318,7 @@ internal class DefaultUserWalletsListRepository(
             raise(LockWalletsError.NothingToLock)
         }
 
-        userWallets.update {
+        updateWallets {
             it?.map {
                 if (it.walletId !in unsecuredWalletIds) {
                     it.lock()
@@ -387,6 +387,15 @@ internal class DefaultUserWalletsListRepository(
         )
 
         return tangemSdkManagerProvider.invoke().canUseBiometry && useBiometricAuthentication
+    }
+
+    private fun updateWallets(block: (List<UserWallet>?) -> List<UserWallet>?) {
+        userWallets.update(block)
+
+        selectedUserWallet.update { currentSelected ->
+            if (currentSelected == null) return@update null
+            userWallets.value?.find { it.walletId == currentSelected.walletId }
+        }
     }
 
     /**

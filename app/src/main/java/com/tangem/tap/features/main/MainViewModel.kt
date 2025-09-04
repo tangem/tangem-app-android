@@ -24,6 +24,7 @@ import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.balancehiding.ListenToFlipsUseCase
 import com.tangem.domain.balancehiding.UpdateBalanceHidingSettingsUseCase
 import com.tangem.domain.common.LogConfig
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.notifications.GetApplicationIdUseCase
 import com.tangem.domain.notifications.SendPushTokenUseCase
 import com.tangem.domain.notifications.models.ApplicationId
@@ -37,9 +38,9 @@ import com.tangem.domain.settings.DeleteDeprecatedLogsUseCase
 import com.tangem.domain.settings.IncrementAppLaunchCounterUseCase
 import com.tangem.domain.settings.usercountry.FetchUserCountryUseCase
 import com.tangem.domain.staking.FetchStakingTokensUseCase
-import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.usecase.AssociateWalletsWithApplicationIdUseCase
 import com.tangem.domain.wallets.usecase.GetSavedWalletsCountUseCase
+import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.domain.wallets.usecase.UpdateRemoteWalletsInfoUseCase
 import com.tangem.feature.swap.analytics.StoriesEvents
 import com.tangem.tap.common.extensions.setContext
@@ -69,7 +70,6 @@ internal class MainViewModel @Inject constructor(
     deleteDeprecatedLogsUseCase: DeleteDeprecatedLogsUseCase,
     private val incrementAppLaunchCounterUseCase: IncrementAppLaunchCounterUseCase,
     private val blockchainSDKFactory: BlockchainSDKFactory,
-    private val userWalletsListManager: UserWalletsListManager,
     private val dispatchers: CoroutineDispatcherProvider,
     private val fetchStakingTokensUseCase: FetchStakingTokensUseCase,
     private val fetchUserCountryUseCase: FetchUserCountryUseCase,
@@ -90,6 +90,7 @@ internal class MainViewModel @Inject constructor(
     private val multiQuoteUpdater: MultiQuoteUpdater,
     private val appStateHolder: AppStateHolder,
     private val environmentConfigStorage: EnvironmentConfigStorage,
+    private val getSelectedWalletUseCase: GetSelectedWalletUseCase,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
 ) : ViewModel() {
 
@@ -185,13 +186,16 @@ internal class MainViewModel @Inject constructor(
     }
 
     private fun prepareSelectedWalletFeedback() {
-        userWalletsListManager.selectedUserWallet
-            .distinctUntilChanged()
-            .onEach { userWallet ->
-                Analytics.setContext(userWallet)
+        getSelectedWalletUseCase.invoke()
+            .mapLeft { emptyFlow<UserWallet>() }
+            .onRight {
+                it.distinctUntilChanged()
+                    .onEach { userWallet ->
+                        Analytics.setContext(userWallet)
+                    }
+                    .flowOn(dispatchers.io)
+                    .launchIn(viewModelScope)
             }
-            .flowOn(dispatchers.io)
-            .launchIn(viewModelScope)
     }
 
     private suspend fun fetchStakingTokens() {
@@ -214,7 +218,7 @@ internal class MainViewModel @Inject constructor(
             apiKey = environmentConfig.moonPayApiKey,
             secretKey = environmentConfig.moonPayApiSecretKey,
             logEnabled = LogConfig.network.moonPayService,
-            userWalletProvider = { userWalletsListManager.selectedUserWalletSync },
+            userWalletProvider = { getSelectedWalletUseCase.sync().getOrNull() },
         )
     }
 

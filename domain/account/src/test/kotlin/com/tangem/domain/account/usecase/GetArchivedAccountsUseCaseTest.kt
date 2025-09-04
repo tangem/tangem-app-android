@@ -43,7 +43,7 @@ class GetArchivedAccountsUseCaseTest {
             mockk<ArchivedAccount>(),
             mockk<ArchivedAccount>(),
         )
-        coEvery { crudRepository.getArchivedAccountsSync(userWalletId) } returns archivedAccounts.toOption()
+        coEvery { crudRepository.getArchivedAccountListSync(userWalletId) } returns archivedAccounts.toOption()
         every { crudRepository.getArchivedAccounts(userWalletId) } returns flowOf(archivedAccounts)
 
         // Act
@@ -54,7 +54,7 @@ class GetArchivedAccountsUseCaseTest {
         Truth.assertThat(actual).isEqualTo(expected)
 
         coVerifyOrder {
-            crudRepository.getArchivedAccountsSync(userWalletId)
+            crudRepository.getArchivedAccountListSync(userWalletId)
             crudRepository.getArchivedAccounts(userWalletId)
         }
 
@@ -69,7 +69,7 @@ class GetArchivedAccountsUseCaseTest {
             mockk<ArchivedAccount>(),
         )
 
-        coEvery { crudRepository.getArchivedAccountsSync(userWalletId) } returns None
+        coEvery { crudRepository.getArchivedAccountListSync(userWalletId) } returns None
         every { crudRepository.getArchivedAccounts(userWalletId) } returns flowOf(archivedAccounts)
 
         // Act
@@ -83,7 +83,7 @@ class GetArchivedAccountsUseCaseTest {
         Truth.assertThat(actual).isEqualTo(expected)
 
         coVerify(exactly = 1) {
-            crudRepository.getArchivedAccountsSync(userWalletId)
+            crudRepository.getArchivedAccountListSync(userWalletId)
             crudRepository.fetchArchivedAccounts(userWalletId)
             crudRepository.getArchivedAccounts(userWalletId)
         }
@@ -98,7 +98,7 @@ class GetArchivedAccountsUseCaseTest {
             mockk<ArchivedAccount>(),
         )
 
-        coEvery { crudRepository.getArchivedAccountsSync(userWalletId) } throws exception
+        coEvery { crudRepository.getArchivedAccountListSync(userWalletId) } throws exception
         every { crudRepository.getArchivedAccounts(userWalletId) } returns flowOf(archivedAccounts)
 
         // Act
@@ -112,7 +112,7 @@ class GetArchivedAccountsUseCaseTest {
         Truth.assertThat(actual).isEqualTo(expected)
 
         coVerify(exactly = 1) {
-            crudRepository.getArchivedAccountsSync(userWalletId)
+            crudRepository.getArchivedAccountListSync(userWalletId)
             crudRepository.fetchArchivedAccounts(userWalletId)
             crudRepository.getArchivedAccounts(userWalletId)
         }
@@ -123,7 +123,7 @@ class GetArchivedAccountsUseCaseTest {
         // Arrange
         val exception = IllegalStateException("Fetch error")
 
-        coEvery { crudRepository.getArchivedAccountsSync(userWalletId) } returns None
+        coEvery { crudRepository.getArchivedAccountListSync(userWalletId) } returns None
         every { crudRepository.getArchivedAccounts(userWalletId) } returns emptyFlow()
         coEvery { crudRepository.fetchArchivedAccounts(userWalletId) } throws exception
 
@@ -139,7 +139,7 @@ class GetArchivedAccountsUseCaseTest {
         Truth.assertThat(actual).isEqualTo(expected)
 
         coVerify(exactly = 1) {
-            crudRepository.getArchivedAccountsSync(userWalletId)
+            crudRepository.getArchivedAccountListSync(userWalletId)
             crudRepository.fetchArchivedAccounts(userWalletId)
             crudRepository.getArchivedAccounts(userWalletId)
         }

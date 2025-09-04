@@ -24,6 +24,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.transformers.CloseBot
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.OpenBottomSheetTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.MultiWalletCurrencyActionsConverter
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.take
@@ -76,9 +77,16 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
     private val reduxStateHolder: ReduxStateHolder,
     private val walletEventSender: WalletEventSender,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
 ) : BaseWalletClickIntents(), WalletContentClickIntents {
 
     override fun onDetailsClick() {
+        if (hotWalletFeatureToggles.isHotWalletEnabled) {
+            router.openDetailsScreen(stateHolder.getSelectedWalletId())
+            return
+        }
+
+        // Will be removed after Hot Wallet release
         modelScope.launch(dispatchers.main) {
             val userWalletId = stateHolder.getSelectedWalletId()
             val userWallet = getUserWalletUseCase(userWalletId).getOrElse {
