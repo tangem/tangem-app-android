@@ -17,10 +17,7 @@ import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.exchangeservice.swap.ExpressUtils
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.express.ExpressRepository
-import com.tangem.domain.express.models.ExpressError
-import com.tangem.domain.express.models.ExpressProvider
-import com.tangem.domain.express.models.ExpressProviderType
-import com.tangem.domain.express.models.ExpressRateType
+import com.tangem.domain.express.models.*
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.NetworkStatus
@@ -96,13 +93,15 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
                             it.currency.network.backendId == pair.to.network
                     }
 
-                if (statusFrom != null && statusTo != null) {
+                val mappedProviders = pair.providers.mapNotNull {
+                    mappedProviders[it.providerId]
+                }
+
+                if (statusFrom != null && statusTo != null && mappedProviders.isNotEmpty()) {
                     SwapPairModel(
                         from = statusFrom,
                         to = statusTo,
-                        providers = pair.providers.mapNotNull {
-                            mappedProviders[it.providerId]
-                        },
+                        providers = mappedProviders,
                     )
                 } else {
                     null
@@ -151,13 +150,15 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
                 val currencyStatusFrom = createSendWithSwapCryptoCurrencyStatus(statusFromDeferred.await())
                 val currencyStatusTo = createSendWithSwapCryptoCurrencyStatus(statusToDeferred.await())
 
-                if (currencyStatusFrom != null && currencyStatusTo != null) {
+                val mappedProvider = pair.providers.mapNotNull {
+                    mappedProviders[it.providerId]
+                }
+
+                if (currencyStatusFrom != null && currencyStatusTo != null && mappedProvider.isNotEmpty()) {
                     SwapPairModel(
                         from = currencyStatusFrom,
                         to = currencyStatusTo,
-                        providers = pair.providers.mapNotNull {
-                            mappedProviders[it.providerId]
-                        },
+                        providers = mappedProvider,
                     )
                 } else {
                     null
@@ -208,6 +209,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
         toAddress: String,
         expressProvider: ExpressProvider,
         rateType: ExpressRateType,
+        expressOperationType: ExpressOperationType,
     ): SwapDataModel = withContext(coroutineDispatcher.io) {
         val requestId = UUID.randomUUID().toString()
         val fromCryptoCurrency = fromCryptoCurrencyStatus.currency
@@ -239,6 +241,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
             refundAddress = refundData?.refundAddress,
             refundExtraId = refundData?.refundExtraId,
             userWalletId = userWallet.walletId.stringValue,
+            partnerOperationType = expressOperationType.value,
             refCode = ExpressUtils.getRefCode(
                 userWallet = userWallet,
                 appPreferencesStore = appPreferencesStore,

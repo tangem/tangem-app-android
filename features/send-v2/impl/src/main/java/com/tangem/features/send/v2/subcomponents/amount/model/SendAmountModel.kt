@@ -290,7 +290,15 @@ internal class SendAmountModel @Inject constructor(
                 isPrimaryButtonEnabled = false,
             ) ?: it
         }
-        amountParams.callback.onConvertToAnotherToken(amountFieldData?.amountTextField?.value.orEmpty())
+
+        val isEnterInFiatSelected = amountFieldData?.amountTextField?.isFiatValue == true
+        val lastAmount = if (isEnterInFiatSelected) {
+            amountFieldData.amountTextField.fiatValue
+        } else {
+            amountFieldData?.amountTextField?.value
+        }
+
+        amountParams.callback.onConvertToAnotherToken(lastAmount.orEmpty(), isEnterInFiatSelected)
     }
 
     private fun subscribeOnAmountReduceToTriggerUpdates() {
@@ -346,7 +354,8 @@ internal class SendAmountModel @Inject constructor(
 
     private fun subscribeOnAmountUpdateTriggerUpdates() {
         sendAmountUpdateListener.updateAmountTriggerFlow
-            .onEach { amount ->
+            .onEach { (amount, isEnterInFiat) ->
+                isEnterInFiat?.let { onCurrencyChangeClick(isEnterInFiat) }
                 onAmountValueChange(amount)
                 saveResult()
             }.launchIn(modelScope)
