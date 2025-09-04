@@ -158,6 +158,7 @@ internal class WcSignTransactionModel @Inject constructor(
                 rawRequest = useCase.rawSdkRequest,
                 network = useCase.network,
                 emulationStatus = null,
+                securityStatus = null,
             ),
         )
 
