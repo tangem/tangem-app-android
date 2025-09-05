@@ -4,6 +4,7 @@
   <string name="account_details_archive_description">Вы архивируете свой аккаунт, но в любое время можете вернуть его обратно</string>
   <string name="account_form_placeholder_edit_account">Аккаунт</string>
   <string name="account_form_placeholder_new_account">Новый аккаунт</string>
+  <string name="account_main_account_title">Основной аккаунт</string>
   <string name="account_unsaved_dialog_action_first">Продолжить редактирование</string>
   <string name="account_unsaved_dialog_title">Несохраненные изменения</string>
   <string name="action_buttons_buy_empty_search_message">Не нашли свой токен? Перейдите в раздел «Рынок» на главной странице и добавьте его в свой портфель для покупки.</string>
@@ -204,7 +205,7 @@
   <string name="common_origin_ring">Основное кольцо</string>
   <string name="common_passphrase">Парольная фраза</string>
   <string name="common_paste">Вставить</string>
-  <string name="common_privacy_policy">Политикой конфиденциальности</string>
+  <string name="common_privacy_policy">Политикой конфиденциальности</string>
   <string name="common_range">%1$s-%2$s</string>
   <string name="common_range_with_space">%1$s — %2$s</string>
   <string name="common_read_more">Подробнее</string>
@@ -237,7 +238,7 @@
   <string name="common_support">Поддержка</string>
   <string name="common_swap">Обменять</string>
   <string name="common_terms_and_conditions">условия участия</string>
-  <string name="common_terms_of_use">Условиями использования</string>
+  <string name="common_terms_of_use">Условиями использования</string>
   <string name="common_today">Сегодня</string>
   <plurals name="common_tokens_count">
     <item quantity="one">%d токен</item>
@@ -316,7 +317,7 @@
   <string name="domain_receive_assets_navigation_title">Получить активы</string>
   <string name="domain_receive_assets_network_name_address">%s адрес</string>
   <string name="domain_receive_assets_onboarding_description">Отправка средств в другой сети может повлечь потерю средств.</string>
-  <string name="domain_receive_assets_onboarding_network_name">%s сети</string>
+  <string name="domain_receive_assets_onboarding_network_name">%s сеть</string>
   <string name="domain_receive_assets_onboarding_title">Отправляйте средства, используя только</string>
   <string name="email_preface_wc_error">Привет, команда поддержки, у меня возникла ошибка с кодом: %s</string>
   <string name="email_subject_wc_error">Ошибка WalletConnect</string>
@@ -337,7 +338,7 @@
   <string name="express_exchange_by">Обмен через %s</string>
   <string name="express_exchange_notification_failed_text">Чтобы вернуть ваши деньги, посетите сайт провайдера</string>
   <string name="express_exchange_notification_failed_title">Операция не выполнена провайдером</string>
-  <string name="express_exchange_notification_long_transaction_time_text">Ваш обмен занимает больше времени, чем ожидалось. Пожалуйста, обратитесь в службу поддержки провайдера для уточнения.</string>
+  <string name="express_exchange_notification_long_transaction_time_text">Ваш обмен занимает больше времени, чем обычно, но ваши средства полностью в безопасности и будут доставлены. Если возникли вопросы, вы всегда можете связаться с поддержкой провайдера.</string>
   <string name="express_exchange_notification_refund_text">Отправленные средства были возвращены в %1$s на ваш кошелек в соответствии с правилами OKX или моста обмена. %2$s</string>
   <string name="express_exchange_notification_refund_title">Сумма была возвращена в %1$s (%2$s сети)</string>
   <string name="express_exchange_notification_verification_text">Посетите сайт провайдера для проверки</string>
@@ -370,7 +371,7 @@
   <string name="express_fetch_best_rates">Получение наилучших курсов...</string>
   <string name="express_floating_rate">Плавающая ставка</string>
   <string name="express_legal_one_placeholder">Пользуясь сервисом, вы соглашаетесь с %s</string>
-  <string name="express_legal_two_placeholders">Пользуясь сервисом, вы соглашаетесь с %1$s и %2$s</string>
+  <string name="express_legal_two_placeholders">Пользуясь сервисом, вы соглашаетесь с %1$s и %2$s.</string>
   <string name="express_more_providers_soon">Больше провайдеров на подходе.\nСледите за обновлениями!</string>
   <string name="express_provider">Провайдер</string>
   <string name="express_provider_best_rate">Лучший курс</string>
@@ -929,7 +930,7 @@
   <string name="send_sending">Отправка</string>
   <string name="send_summary_tap_hint">Нажмите на любое поле, чтобы изменить его</string>
   <string name="send_summary_title">Отправка %s</string>
-  <string name="send_summary_transaction_description">Вы отправляете **%1$s**, включая комиссию сети %2$s</string>
+  <string name="send_summary_transaction_description">Вы отправляете **%1$s**, включая комиссию сети %2$s.</string>
   <string name="send_summary_transaction_description_no_fiat_fee">Вы отправляете **%1$s** и %2$s</string>
   <string name="send_summary_transaction_description_prefix">Вы отправляете **%1$s**</string>
   <string name="send_summary_transaction_description_suffix_fee_covered">Комиссия сети будет покрыта за счет использования %1$s энергии</string>
