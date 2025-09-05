@@ -55,6 +55,7 @@ import com.tangem.tap.features.details.ui.securitymode.api.SecurityModeComponent
 import com.tangem.tap.features.details.ui.walletconnect.api.WalletConnectComponent
 import com.tangem.tap.features.welcome.component.WelcomeComponent
 import com.tangem.tap.routing.component.RoutingComponent.Child
+import com.tangem.features.tangempay.components.TangemPayOnboardingComponent
 import dagger.hilt.android.scopes.ActivityScoped
 import javax.inject.Inject
 import com.tangem.features.walletconnect.components.WalletConnectEntryComponent as RedesignedWalletConnectComponent
@@ -114,6 +115,7 @@ internal class ChildFactory @Inject constructor(
     private val sendWithSwapComponentFactory: SendWithSwapComponent.Factory,
     private val sendEntryPointComponentFactory: SendEntryPointComponent.Factory,
     private val tangemPayDetailsComponentFactory: TangemPayDetailsComponent.Factory,
+    private val tangemPayOnboardingComponentFactory: TangemPayOnboardingComponent.Factory,
     private val walletConnectFeatureToggles: WalletConnectFeatureToggles,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
 ) {
@@ -604,6 +606,13 @@ internal class ChildFactory @Inject constructor(
                     context = context,
                     params = TangemPayDetailsComponent.Params(userWalletId = route.userWalletId),
                     componentFactory = tangemPayDetailsComponentFactory,
+                )
+            }
+            is AppRoute.TangemPayOnboarding -> {
+                createComponentChild(
+                    context = context,
+                    params = TangemPayOnboardingComponent.Params(route.deeplink),
+                    componentFactory = tangemPayOnboardingComponentFactory,
                 )
             }
         }
