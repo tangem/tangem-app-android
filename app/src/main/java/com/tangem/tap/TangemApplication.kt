@@ -75,10 +75,12 @@ import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.wallet.BuildConfig
 import dagger.hilt.EntryPoints
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.rekotlin.Store
 import timber.log.Timber
-import com.tangem.tap.domain.walletconnect2.domain.LegacyWalletConnectRepository as WalletConnect2Repository
 
 lateinit var store: Store<AppState>
 
@@ -111,9 +113,6 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
 
     private val cardScanningFeatureToggles: CardScanningFeatureToggles
         get() = entryPoint.getCardScanningFeatureToggles()
-
-    private val walletConnect2Repository: WalletConnect2Repository
-        get() = entryPoint.getWalletConnect2Repository()
 
     private val scanCardProcessor: ScanCardProcessor
         get() = entryPoint.getScanCardProcessor()
@@ -237,6 +236,9 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
     private val hotWalletFeatureToggles
         get() = entryPoint.getHotWalletFeatureToggles()
 
+    private val wcInitializeUseCase
+        get() = entryPoint.getWcInitializeUseCase()
+
     // endregion
 
     private val appScope = MainScope()
@@ -331,7 +333,8 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
         )
 
         appStateHolder.mainStore = store
-        walletConnect2Repository.init(
+
+        wcInitializeUseCase.init(
             projectId = environmentConfigStorage.getConfigSync().walletConnectProjectId,
         )
     }
@@ -344,7 +347,6 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
                 daggerGraphState = DaggerGraphState(
                     networkConnectionManager = networkConnectionManager,
                     cardScanningFeatureToggles = cardScanningFeatureToggles,
-                    walletConnectRepository = walletConnect2Repository,
                     scanCardProcessor = scanCardProcessor,
                     appCurrencyRepository = appCurrencyRepository,
                     walletManagersFacade = walletManagersFacade,
