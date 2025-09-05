@@ -35,6 +35,7 @@ import com.tangem.domain.onboarding.SaveTwinsOnboardingShownUseCase
 import com.tangem.domain.onboarding.WasTwinsOnboardingShownUseCase
 import com.tangem.domain.onboarding.repository.OnboardingRepository
 import com.tangem.domain.settings.repositories.SettingsRepository
+import com.tangem.domain.walletconnect.usecase.initialize.WcInitializeUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
@@ -50,7 +51,6 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import com.tangem.tap.domain.walletconnect2.domain.LegacyWalletConnectRepository as WalletConnect2Repository
 
 @EntryPoint
 @InstallIn(SingletonComponent::class)
@@ -70,8 +70,6 @@ interface ApplicationEntryPoint {
     fun getNetworkConnectionManager(): NetworkConnectionManager
 
     fun getCardScanningFeatureToggles(): CardScanningFeatureToggles
-
-    fun getWalletConnect2Repository(): WalletConnect2Repository
 
     fun getScanCardProcessor(): ScanCardProcessor
 
@@ -151,4 +149,6 @@ interface ApplicationEntryPoint {
     fun getTangemHotSdk(): TangemHotSdk
 
     fun getHotWalletFeatureToggles(): HotWalletFeatureToggles
+
+    fun getWcInitializeUseCase(): WcInitializeUseCase
 }
