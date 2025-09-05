@@ -8,22 +8,14 @@ import com.tangem.feature.referral.api.ReferralComponent
 import com.tangem.feature.stories.api.StoriesComponent
 import com.tangem.feature.usedesk.api.UsedeskComponent
 import com.tangem.feature.walletsettings.component.WalletSettingsComponent
-import com.tangem.features.account.ArchivedAccountListComponent
 import com.tangem.features.account.AccountCreateEditComponent
 import com.tangem.features.account.AccountDetailsComponent
+import com.tangem.features.account.ArchivedAccountListComponent
 import com.tangem.features.createwalletselection.CreateWalletSelectionComponent
 import com.tangem.features.details.component.DetailsComponent
 import com.tangem.features.disclaimer.api.components.DisclaimerComponent
 import com.tangem.features.home.api.HomeComponent
-import com.tangem.features.hotwallet.AddExistingWalletComponent
-import com.tangem.features.hotwallet.CreateMobileWalletComponent
-import com.tangem.features.hotwallet.UpgradeWalletComponent
-import com.tangem.features.hotwallet.WalletActivationComponent
-import com.tangem.features.hotwallet.CreateWalletBackupComponent
-import com.tangem.features.hotwallet.UpdateAccessCodeComponent
-import com.tangem.features.hotwallet.HotWalletFeatureToggles
-import com.tangem.features.hotwallet.WalletBackupComponent
-import com.tangem.features.hotwallet.ViewPhraseComponent
+import com.tangem.features.hotwallet.*
 import com.tangem.features.managetokens.component.ChooseManagedTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensSource
@@ -45,14 +37,12 @@ import com.tangem.features.tangempay.components.TangemPayDetailsComponent
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.wallet.WalletEntryComponent
 import com.tangem.features.walletconnect.components.WalletConnectEntryComponent
-import com.tangem.features.walletconnect.components.WalletConnectFeatureToggles
 import com.tangem.tap.features.details.ui.appcurrency.api.AppCurrencySelectorComponent
 import com.tangem.tap.features.details.ui.appsettings.api.AppSettingsComponent
 import com.tangem.tap.features.details.ui.cardsettings.api.CardSettingsComponent
 import com.tangem.tap.features.details.ui.cardsettings.coderecovery.api.AccessCodeRecoveryComponent
 import com.tangem.tap.features.details.ui.resetcard.api.ResetCardComponent
 import com.tangem.tap.features.details.ui.securitymode.api.SecurityModeComponent
-import com.tangem.tap.features.details.ui.walletconnect.api.WalletConnectComponent
 import com.tangem.tap.features.welcome.component.WelcomeComponent
 import com.tangem.tap.routing.component.RoutingComponent.Child
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent
@@ -84,7 +74,6 @@ internal class ChildFactory @Inject constructor(
     private val swapComponentFactory: SwapComponent.Factory,
     private val homeComponentFactory: HomeComponent.Factory,
     private val tokenDetailsComponentFactory: TokenDetailsComponent.Factory,
-    private val walletConnectComponentFactory: WalletConnectComponent.Factory,
     private val qrScanningComponentFactory: QrScanningComponent.Factory,
     private val accessCodeRecoveryComponentFactory: AccessCodeRecoveryComponent.Factory,
     private val cardSettingsComponentFactory: CardSettingsComponent.Factory,
@@ -116,7 +105,6 @@ internal class ChildFactory @Inject constructor(
     private val sendEntryPointComponentFactory: SendEntryPointComponent.Factory,
     private val tangemPayDetailsComponentFactory: TangemPayDetailsComponent.Factory,
     private val tangemPayOnboardingComponentFactory: TangemPayOnboardingComponent.Factory,
-    private val walletConnectFeatureToggles: WalletConnectFeatureToggles,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
 ) {
 
@@ -329,19 +317,11 @@ internal class ChildFactory @Inject constructor(
                 )
             }
             is AppRoute.WalletConnectSessions -> {
-                if (walletConnectFeatureToggles.isRedesignedWalletConnectEnabled) {
-                    createComponentChild(
-                        context = context,
-                        params = RedesignedWalletConnectComponent.Params(route.userWalletId),
-                        componentFactory = redesignedWalletConnectComponentFactory,
-                    )
-                } else {
-                    createComponentChild(
-                        context = context,
-                        params = WalletConnectComponent.Params(route.userWalletId),
-                        componentFactory = walletConnectComponentFactory,
-                    )
-                }
+                createComponentChild(
+                    context = context,
+                    params = RedesignedWalletConnectComponent.Params(route.userWalletId),
+                    componentFactory = redesignedWalletConnectComponentFactory,
+                )
             }
             is AppRoute.QrScanning -> {
                 val source = when (route.source) {
