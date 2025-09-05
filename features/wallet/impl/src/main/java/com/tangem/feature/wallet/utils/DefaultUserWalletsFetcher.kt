@@ -43,7 +43,7 @@ internal class DefaultUserWalletsFetcher @AssistedInject constructor(
     @Assisted private val onWalletClick: (UserWalletId) -> Unit,
     @Assisted private val messageSender: UiMessageSender,
     @Assisted("onlyMultiCurrency") private val onlyMultiCurrency: Boolean,
-    @Assisted("authMode") private val authMode: Boolean,
+    @Assisted("isAuthMode") private val isAuthMode: Boolean,
     private val userWalletImageFetcher: UserWalletImageFetcher,
     dispatchers: CoroutineDispatcherProvider,
 ) : UserWalletsFetcher {
@@ -55,7 +55,7 @@ internal class DefaultUserWalletsFetcher @AssistedInject constructor(
     override val userWallets: Flow<ImmutableList<UserWalletItemUM>> = walletsFlow.transformLatest { wallets ->
         val uiModels = UserWalletItemUMConverter(
             onClick = onWalletClick,
-            authMode = authMode,
+            isAuthMode = isAuthMode,
         ).convertList(wallets)
             .toImmutableList()
 
@@ -64,7 +64,7 @@ internal class DefaultUserWalletsFetcher @AssistedInject constructor(
         combine(
             flow = getSelectedAppCurrencyUseCase().distinctUntilChanged(),
             flow2 = getBalanceHidingSettingsUseCase().distinctUntilChanged(),
-            flow3 = getWalletTotalBalanceUseCase(wallets.map(UserWallet::walletId)).distinctUntilChanged(),
+            flow3 = getTotalBalanceFlow(wallets),
             flow4 = userWalletImageFetcher.walletsImage(wallets, ArtworkSize.SMALL),
         ) { maybeAppCurrency, balanceHidingSettings, maybeBalances, artworks ->
             createUiModels(
@@ -87,6 +87,19 @@ internal class DefaultUserWalletsFetcher @AssistedInject constructor(
             }
     }
         .flowOn(dispatchers.default)
+
+    private fun getTotalBalanceFlow(
+        wallets: List<UserWallet>,
+    ): Flow<Lce<TokenListError, Map<UserWalletId, TotalFiatBalance>>> {
+        val walletIds = wallets.map(UserWallet::walletId)
+
+        return if (isAuthMode) {
+            // We should not load balances in auth mode
+            flowOf(Lce.Loading(walletIds.associateWith { TotalFiatBalance.Loading }))
+        } else {
+            getWalletTotalBalanceUseCase(walletIds).distinctUntilChanged()
+        }
+    }
 
     private fun createUiModels(
         wallets: List<UserWallet>,
@@ -117,7 +130,7 @@ internal class DefaultUserWalletsFetcher @AssistedInject constructor(
                     balance = balance,
                     isBalanceHidden = balanceHidingSettings.isBalanceHidden,
                     artwork = artworks[userWallet.walletId],
-                    authMode = authMode,
+                    isAuthMode = isAuthMode,
                 )
                     .convert(userWallet)
             }
@@ -136,7 +149,7 @@ internal class DefaultUserWalletsFetcher @AssistedInject constructor(
         override fun create(
             messageSender: UiMessageSender,
             @Assisted("onlyMultiCurrency") onlyMultiCurrency: Boolean,
-            @Assisted("authMode") authMode: Boolean,
+            @Assisted("isAuthMode") isAuthMode: Boolean,
             onWalletClick: (UserWalletId) -> Unit,
         ): DefaultUserWalletsFetcher
     }
