@@ -1,11 +1,7 @@
 package com.tangem.tap.di.domain
 
-import com.tangem.domain.onramp.repositories.LegacyTopUpRepository
 import com.tangem.domain.onramp.*
-import com.tangem.domain.onramp.repositories.HotCryptoRepository
-import com.tangem.domain.onramp.repositories.OnrampErrorResolver
-import com.tangem.domain.onramp.repositories.OnrampRepository
-import com.tangem.domain.onramp.repositories.OnrampTransactionRepository
+import com.tangem.domain.onramp.repositories.*
 import com.tangem.domain.settings.repositories.SettingsRepository
 import dagger.Module
 import dagger.Provides
@@ -236,5 +232,33 @@ internal object OnrampDomainModule {
     @Singleton
     fun provideGetLegacyTopUpUrlUseCase(legacyTopUpRepository: LegacyTopUpRepository): GetLegacyTopUpUrlUseCase {
         return GetLegacyTopUpUrlUseCase(legacyTopUpRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetOnrampAllOffersUseCase(
+        onrampRepository: OnrampRepository,
+        onrampErrorResolver: OnrampErrorResolver,
+        settingsRepository: SettingsRepository,
+    ): GetOnrampAllOffersUseCase {
+        return GetOnrampAllOffersUseCase(
+            onrampRepository = onrampRepository,
+            errorResolver = onrampErrorResolver,
+            settingsRepository = settingsRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetOnrampOffersUseCase(
+        onrampRepository: OnrampRepository,
+        onrampErrorResolver: OnrampErrorResolver,
+        onrampTransactionRepository: OnrampTransactionRepository,
+    ): GetOnrampOffersUseCase {
+        return GetOnrampOffersUseCase(
+            onrampRepository = onrampRepository,
+            errorResolver = onrampErrorResolver,
+            onrampTransactionRepository = onrampTransactionRepository,
+        )
     }
 }
