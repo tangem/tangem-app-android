@@ -12,6 +12,7 @@ import com.tangem.domain.onramp.model.OnrampQuote
 import com.tangem.domain.onramp.model.error.OnrampError
 import com.tangem.domain.onramp.repositories.OnrampErrorResolver
 import com.tangem.domain.onramp.repositories.OnrampRepository
+import com.tangem.domain.onramp.utils.calculateRateDif
 import com.tangem.domain.settings.repositories.SettingsRepository
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
@@ -38,6 +39,7 @@ class GetOnrampAllOffersUseCase(
         val isGooglePayAvailable = settingsRepository.isGooglePayAvailability()
 
         val overallBestRateQuote = validQuotes.maxByOrNull { it.toAmount.value }
+        val bestRate = overallBestRateQuote?.toAmount?.value
 
         val offersByPaymentMethod = validQuotes.groupBy { it.paymentMethod }
 
@@ -48,7 +50,8 @@ class GetOnrampAllOffersUseCase(
                 } else {
                     OnrampOfferAdvantages.Default
                 }
-                OnrampOffer(quote = quote, advantages = advantages)
+                val rateDif = calculateRateDif(quote.toAmount.value, bestRate)
+                OnrampOffer(quote = quote, rateDif = rateDif, advantages = advantages)
             }
 
             val groupBestRateOfferData = methodQuotes.maxByOrNull { it.toAmount.value }

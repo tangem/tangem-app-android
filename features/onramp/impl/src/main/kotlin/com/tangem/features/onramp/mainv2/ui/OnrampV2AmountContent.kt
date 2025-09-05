@@ -1,5 +1,6 @@
 package com.tangem.features.onramp.mainv2.ui
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -51,6 +52,7 @@ internal fun OnrampV2AmountContent(state: OnrampV2MainComponentUM.Content, modif
 
     Column(
         modifier = modifier
+            .fillMaxWidth()
             .background(
                 color = TangemTheme.colors.background.action,
                 shape = RoundedCornerShape(size = TangemTheme.dimens.radius16),
@@ -61,16 +63,14 @@ internal fun OnrampV2AmountContent(state: OnrampV2MainComponentUM.Content, modif
     ) {
         OnrampHeaderTitle()
 
-        SpacerH(12.dp)
-
         OnrampAmountField(
             amountField = state.amountBlockState.amountFieldModel,
             currencyCode = state.amountBlockState.currencyUM.code,
         )
 
-        SpacerH(8.dp)
-
-        OnrampAmountSecondary(state = state.amountBlockState.secondaryFieldModel)
+        AnimatedVisibility(!state.offersBlockState.isBlockVisible) {
+            OnrampAmountSecondary(state = state.amountBlockState.secondaryFieldModel)
+        }
 
         SpacerH(20.dp)
 
@@ -115,7 +115,8 @@ private fun OnrampAmountField(amountField: AmountFieldModel, currencyCode: Strin
         modifier = Modifier
             .focusRequester(requester)
             .padding(
-                top = TangemTheme.dimens.spacing24,
+                top = TangemTheme.dimens.spacing8,
+                bottom = TangemTheme.dimens.spacing4,
                 start = TangemTheme.dimens.spacing12,
                 end = TangemTheme.dimens.spacing12,
             )
