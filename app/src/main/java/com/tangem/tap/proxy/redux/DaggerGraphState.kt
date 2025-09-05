@@ -37,8 +37,6 @@ import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.operations.attestation.CardArtworksProvider
 import com.tangem.tap.domain.scanCard.CardScanningFeatureToggles
-import com.tangem.tap.domain.walletconnect2.domain.LegacyWalletConnectRepository
-import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
 import com.tangem.tap.proxy.AppStateHolder
 import org.rekotlin.StateType
 
@@ -46,8 +44,6 @@ data class DaggerGraphState(
     val networkConnectionManager: NetworkConnectionManager? = null,
     val cardScanningFeatureToggles: CardScanningFeatureToggles? = null,
     val scanCardUseCase: ScanCardUseCase? = null,
-    val walletConnectRepository: LegacyWalletConnectRepository? = null,
-    val walletConnectInteractor: WalletConnectInteractor? = null,
     val scanCardProcessor: ScanCardProcessor? = null,
     val cardSdkConfigRepository: CardSdkConfigRepository? = null,
     val appCurrencyRepository: AppCurrencyRepository? = null,
