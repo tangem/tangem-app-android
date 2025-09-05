@@ -10,6 +10,7 @@ import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
+import com.tangem.domain.core.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
@@ -35,6 +36,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.transformers.*
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
 import com.tangem.features.biometry.AskBiometryComponent
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.features.wallet.deeplink.WalletDeepLinkActionListener
@@ -58,7 +60,7 @@ internal class WalletModel @Inject constructor(
     private val walletScreenContentLoader: WalletScreenContentLoader,
     private val getSelectedWalletUseCase: GetSelectedWalletUseCase,
     private val getWalletsUseCase: GetWalletsUseCase,
-    private val shouldShowSaveWalletScreenUseCase: ShouldShowSaveWalletScreenUseCase,
+    private val shouldShowAskBiometryUseCase: ShouldShowAskBiometryUseCase,
     private val shouldShowMarketsTooltipUseCase: ShouldShowMarketsTooltipUseCase,
     private val setWalletFirstTimeUsageUseCase: SetWalletFirstTimeUsageUseCase,
     private val canUseBiometryUseCase: CanUseBiometryUseCase,
@@ -80,6 +82,8 @@ internal class WalletModel @Inject constructor(
     private val setNotificationsEnabledUseCase: SetNotificationsEnabledUseCase,
     private val shouldSaveUserWalletsSyncUseCase: ShouldSaveUserWalletsSyncUseCase,
     private val getIsHuaweiDeviceWithoutGoogleServicesUseCase: GetIsHuaweiDeviceWithoutGoogleServicesUseCase,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
+    private val userWalletsListRepository: UserWalletsListRepository,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
 ) : Model() {
@@ -137,7 +141,7 @@ internal class WalletModel @Inject constructor(
         modelScope.launch(dispatchers.main) {
             withContext(dispatchers.io) { delay(timeMillis = 1_800) }
 
-            if (isShowSaveWalletScreenEnabled()) {
+            if (shouldShowAskBiometryBottomSheet()) {
                 innerWalletRouter.dialogNavigation.activate(
                     configuration = WalletDialogConfig.AskForBiometry,
                 )
@@ -159,8 +163,15 @@ internal class WalletModel @Inject constructor(
         }
     }
 
-    private suspend fun isShowSaveWalletScreenEnabled(): Boolean {
-        return innerWalletRouter.isWalletLastScreen() && shouldShowSaveWalletScreenUseCase() && canUseBiometryUseCase()
+    private suspend fun shouldShowAskBiometryBottomSheet(): Boolean {
+        return if (hotWalletFeatureToggles.isHotWalletEnabled) {
+            userWalletsListRepository.userWalletsSync().any { it is UserWallet.Cold } &&
+                innerWalletRouter.isWalletLastScreen() &&
+                shouldShowAskBiometryUseCase() &&
+                canUseBiometryUseCase()
+        } else {
+            innerWalletRouter.isWalletLastScreen() && shouldShowAskBiometryUseCase() && canUseBiometryUseCase()
+        }
     }
 
     private fun subscribeToUserWalletsUpdates() = channelFlow<Unit> {
