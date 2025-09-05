@@ -7,34 +7,51 @@ package com.tangem.datasource.api.common.response
  */
 sealed class ApiResponse<T : Any> {
 
-    /**
-     * Represents a successful response from the API.
-     *
-     * @property data The data returned by the API.
-     */
-    data class Success<T : Any>(val data: T) : ApiResponse<T>()
+    /** Map of headers (header name with list of values) */
+    abstract val headers: Map<String, List<String>>
 
     /**
-     * Represents an error response or failure from the API.
+     * Represents a successful response from the API
      *
-     * @property cause The cause of the error.
+     * @property data    the data returned by the API
+     * @property headers the headers returned by the API
      */
-    data class Error(val cause: ApiResponseError) : ApiResponse<Nothing>()
+    data class Success<T : Any>(
+        val data: T,
+        override val headers: Map<String, List<String>> = emptyMap(),
+    ) : ApiResponse<T>()
+
+    /**
+     * Represents an error response or failure from the API
+     *
+     * @property cause   the cause of the error
+     * @property headers the headers returned by the API
+     */
+    data class Error(
+        val cause: ApiResponseError,
+        override val headers: Map<String, List<String>> = emptyMap(),
+    ) : ApiResponse<Nothing>()
 }
 
 /**
- * Wraps data in a [ApiResponse.Success] instance.
+ * Wraps data in a [ApiResponse.Success] instance
  *
- * @param data The data to wrap.
- * @return A [ApiResponse.Success] instance containing the provided data.
+ * @param data    the data to wrap
+ * @param headers the headers returned by the API
+ * @return a [ApiResponse.Success] instance containing the provided data
  */
-internal fun <T : Any> apiSuccess(data: T): ApiResponse<T> = ApiResponse.Success(data)
+internal fun <T : Any> apiSuccess(data: T, headers: Map<String, List<String>>): ApiResponse<T> {
+    return ApiResponse.Success(data, headers)
+}
 
 /**
- * Wraps an [ApiResponseError] in a [ApiResponse.Error] instance.
+ * Wraps an [ApiResponseError] in a [ApiResponse.Error] instance
  *
- * @param cause The error to wrap.
- * @return A [ApiResponse.Error] instance containing the provided error.
+ * @param cause   the error to wrap
+ * @param headers the headers returned by the API
+ * @return a [ApiResponse.Error] instance containing the provided error
  */
 @Suppress("UNCHECKED_CAST")
-internal fun <T : Any> apiError(cause: ApiResponseError): ApiResponse<T> = ApiResponse.Error(cause) as ApiResponse<T>
+internal fun <T : Any> apiError(cause: ApiResponseError, headers: Map<String, List<String>>): ApiResponse<T> {
+    return ApiResponse.Error(cause, headers) as ApiResponse<T>
+}
