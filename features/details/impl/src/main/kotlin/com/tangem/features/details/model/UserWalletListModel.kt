@@ -48,7 +48,7 @@ internal class UserWalletListModel @Inject constructor(
     private val userWalletsFetcher = userWalletsFetcherFactory.create(
         messageSender = messageSender,
         onlyMultiCurrency = false,
-        authMode = false,
+        isAuthMode = false,
         onWalletClick = { userWalletId -> router.push(AppRoute.WalletSettings(userWalletId)) },
     )
 
