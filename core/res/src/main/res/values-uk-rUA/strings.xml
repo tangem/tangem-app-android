@@ -173,6 +173,7 @@
   <string name="common_generate_addresses">Синхронізувати адреси</string>
   <string name="common_go_to_provider">Перейти до провайдера</string>
   <string name="common_go_to_token">Перейти до токену</string>
+  <string name="common_got_it">Зrozуміло</string>
   <string name="common_hide">Приховати</string>
   <string name="common_hour">година</string>
   <string name="common_import">Імпортувати</string>
@@ -196,7 +197,7 @@
   <string name="common_origin_ring">Основне кільце</string>
   <string name="common_passphrase">Парольна фраза</string>
   <string name="common_paste">Вставити</string>
-  <string name="common_privacy_policy">Політикою конфіденційності</string>
+  <string name="common_privacy_policy">Політикою конфіденційності</string>
   <string name="common_range">%1$s-%2$s</string>
   <string name="common_range_with_space">%1$s — %2$s</string>
   <string name="common_read_more">Детальніше</string>
@@ -230,7 +231,7 @@
   <string name="common_support">Підтримка</string>
   <string name="common_swap">Обмін</string>
   <string name="common_terms_and_conditions">умови участі</string>
-  <string name="common_terms_of_use">Умовами використання</string>
+  <string name="common_terms_of_use">Умовами використання</string>
   <string name="common_today">Сьогодні</string>
   <plurals name="common_tokens_count">
     <item quantity="one">%d токен</item>
@@ -307,6 +308,7 @@
   <string name="domain_receive_assets_navigation_title">Отримати активи</string>
   <string name="domain_receive_assets_network_name_address">%s адреса</string>
   <string name="domain_receive_assets_onboarding_description">Надсилання активів в інші мережі призведе до безповоротної втрати.</string>
+  <string name="domain_receive_assets_onboarding_network_name">%s мережа</string>
   <string name="domain_receive_assets_onboarding_title">Надсилайте кошти, використовуючи лише</string>
   <string name="email_preface_wc_error">Привіт, команда підтримки, я зіткнувся з помилкою з кодом: %s</string>
   <string name="email_subject_wc_error">Помилка WalletConnect</string>
@@ -327,7 +329,7 @@
   <string name="express_exchange_by">Обмін через %s</string>
   <string name="express_exchange_notification_failed_text">Щоб повернути ваші кошти, відвідайте сайт провайдера</string>
   <string name="express_exchange_notification_failed_title">Операція не виконана провайдером</string>
-  <string name="express_exchange_notification_long_transaction_time_text">Ваш обмін триває довше, ніж очікувалося. Будь ласка, зверніться до служби підтримки постачальника послуг, для уточнення.</string>
+  <string name="express_exchange_notification_long_transaction_time_text">Ваш обмін триває довше, ніж зазвичай, але ваші кошти повністю в безпеці та будуть доставлені. Якщо ви хвилюєтесь, ви завжди можете звернутися до служби підтримки провайдера.</string>
   <string name="express_exchange_notification_long_transaction_time_title">Тривалий час транзакції</string>
   <string name="express_exchange_notification_refund_text">Сума транзакції була повернута в %1$s на ваш гаманець відповідно до правил OKX або мосту обміну. %2$s</string>
   <string name="express_exchange_notification_refund_title">Сума була повернута в %1$s (%2$s мережі)</string>
@@ -361,7 +363,7 @@
   <string name="express_fetch_best_rates">Шукаємо найвигідніший курс...</string>
   <string name="express_floating_rate">Плаваюча ставка</string>
   <string name="express_legal_one_placeholder">Використовуючи сервіс обміну, ви погоджуєтеся з його %s</string>
-  <string name="express_legal_two_placeholders">Використовуючи сервіс обміну, ви погоджуєтеся з його %1$s та %2$s</string>
+  <string name="express_legal_two_placeholders">Використовуючи сервіс обміну, ви погоджуєтеся з його %1$s та %2$s.</string>
   <string name="express_more_providers_soon">Незабаром з\'являться нові провайдери.\nСлідкуйте за новинами!</string>
   <string name="express_provider">Провайдер</string>
   <string name="express_provider_best_rate">Найкращий курс</string>
@@ -910,7 +912,7 @@
   <string name="send_sending">Надсилання...</string>
   <string name="send_summary_tap_hint">Торкніться будь-якого поля, щоб змінити його</string>
   <string name="send_summary_title">Надіслати %s</string>
-  <string name="send_summary_transaction_description">Ви надсилаєте **%1$s**, включно з комісію мережі %2$s</string>
+  <string name="send_summary_transaction_description">Ви надсилаєте **%1$s**, включно з комісію мережі %2$s.</string>
   <string name="send_summary_transaction_description_no_fiat_fee">Ви надсилаєте **%1$s** і %2$s</string>
   <string name="send_summary_transaction_description_prefix">Ви надсилаєте **%1$s**</string>
   <string name="send_summary_transaction_description_suffix_fee_covered">комісія мережі буде покрита, використовуючи %1$s енергію</string>
