@@ -375,4 +375,9 @@ sealed class AppRoute(val path: String) : Route {
 
     @Serializable
     data class TangemPayDetails(val userWalletId: UserWalletId) : AppRoute(path = "/tangem_pay_details")
+
+    @Serializable
+    data class TangemPayOnboarding(
+        val deeplink: String,
+    ) : AppRoute(path = "/tangem_pay_onboarding/$deeplink")
 }
