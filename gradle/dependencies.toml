@@ -63,7 +63,6 @@ hilt-work = "1.0.0"
 hilt-compilerx = "1.0.0"
 jodatime = "2.12.1"
 kotlin-immutable-collections = "0.3.5"
-kotsonGsonExt = "2.5.0"
 lottie = "3.4.0"
 lottie-compose = "6.6.0"
 moshi = "1.15.1"
@@ -252,7 +251,6 @@ hilt-core = { module = "com.google.dagger:hilt-core", version.ref = "hilt" }
 hilt-kapt = { module = "com.google.dagger:hilt-compiler", version.ref = "hilt" }
 hilt-compilerx = { module = "androidx.hilt:hilt-compiler", version.ref = "hilt-compilerx" }
 jodatime = { module = "joda-time:joda-time", version.ref = "jodatime" }
-kotsonGson = { module = "com.github.salomonbrys.kotson:kotson", version.ref = "kotsonGsonExt" }
 lottie = { module = "com.airbnb.android:lottie", version.ref = "lottie" }
 lottie-compose = { module = "com.airbnb.android:lottie-compose", version.ref = "lottie-compose" }
 material = { module = "com.google.android.material:material", version.ref = "googleMaterialComponent" }
