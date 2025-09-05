@@ -10,4 +10,7 @@ sealed interface OnrampV2MainBottomSheetConfig {
 
     @Serializable
     data object CurrenciesList : OnrampV2MainBottomSheetConfig
+
+    @Serializable
+    data object AllOffers : OnrampV2MainBottomSheetConfig
 }
