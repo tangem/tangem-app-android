@@ -32,4 +32,16 @@ internal sealed class SendWithSwapAnalyticEvents(
             RECEIVE_BLOCKCHAIN to toToken.network.name,
         ),
     )
+
+    data class NoticeCanNotSwapToken(
+        val fromToken: CryptoCurrency,
+        val toTokenSymbol: String,
+    ) : SendWithSwapAnalyticEvents(
+        event = "Notice - Can`t Swap This Token",
+        params = mapOf(
+            SEND_TOKEN to fromToken.symbol,
+            RECEIVE_TOKEN to toTokenSymbol,
+            SEND_BLOCKCHAIN to fromToken.network.name,
+        ),
+    )
 }
