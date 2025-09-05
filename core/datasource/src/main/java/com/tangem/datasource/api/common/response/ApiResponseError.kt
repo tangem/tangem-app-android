@@ -20,6 +20,8 @@ sealed class ApiResponseError : Exception() {
 
         // region Error Codes
         enum class Code(val numericCode: Int) {
+            // 3xx Server Errors
+            NOT_MODIFIED(numericCode = 304),
             // 4xx Server Errors
             BAD_REQUEST(numericCode = 400),
             UNAUTHORIZED(numericCode = 401),
@@ -64,10 +66,6 @@ sealed class ApiResponseError : Exception() {
             ;
 
             override fun toString(): String = "$numericCode - $name"
-
-            companion object {
-                val values = values()
-            }
         }
         // endregion Error Codes
     }
