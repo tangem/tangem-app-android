@@ -39,7 +39,7 @@ class DetailsMiddleware {
     val detailsMiddleware: Middleware<AppState> = { _, stateProvider ->
         { next ->
             { action ->
-                if (!DemoHelper.tryHandle(stateProvider, action)) {
+                if (!DemoHelper.tryHandle(stateProvider)) {
                     val detailsState = stateProvider()?.detailsState
                     if (detailsState != null) {
                         handleAction(detailsState, action)
