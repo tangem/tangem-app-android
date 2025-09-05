@@ -24,7 +24,6 @@ import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
 import com.tangem.domain.walletconnect.WcPairService
 import com.tangem.domain.walletconnect.WcRequestService
 import com.tangem.domain.walletconnect.WcRequestUseCaseFactory
-import com.tangem.domain.walletconnect.model.legacy.WalletConnectSessionsRepository
 import com.tangem.domain.walletconnect.repository.WalletConnectRepository
 import com.tangem.domain.walletconnect.repository.WcSessionsManager
 import com.tangem.domain.walletconnect.usecase.disconnect.WcDisconnectUseCase
@@ -88,7 +87,6 @@ internal object WalletConnectDataModule {
     fun defaultWcSessionsManager(
         store: WalletConnectStore,
         dispatchers: CoroutineDispatcherProvider,
-        legacyStore: WalletConnectSessionsRepository,
         getWallets: GetWalletsUseCase,
         wcNetworksConverter: WcNetworksConverter,
         analytics: AnalyticsEventHandler,
@@ -97,7 +95,6 @@ internal object WalletConnectDataModule {
         return DefaultWcSessionsManager(
             store = store,
             dispatchers = dispatchers,
-            legacyStore = legacyStore,
             getWallets = getWallets,
             wcNetworksConverter = wcNetworksConverter,
             analytics = analytics,
