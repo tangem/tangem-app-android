@@ -876,7 +876,10 @@
   <string name="onramp_payment_method_subtitle">Payment method</string>
   <string name="onramp_provider_max_amount">Available up to %s</string>
   <string name="onramp_provider_min_amount">Available from %s</string>
-  <string name="onramp_providers_count">%d providers</string>
+  <plurals name="onramp_providers_count">
+    <item quantity="one">%d provider</item>
+    <item quantity="other">%d providers</item>
+  </plurals>
   <string name="onramp_providers_subtitle">Providers</string>
   <string name="onramp_recently_used_title">Recently used</string>
   <string name="onramp_recommended_title">Recommended</string>

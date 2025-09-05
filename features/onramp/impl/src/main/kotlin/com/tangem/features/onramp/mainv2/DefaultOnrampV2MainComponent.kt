@@ -12,6 +12,7 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
+import com.tangem.features.onramp.alloffers.AllOffersComponent
 import com.tangem.features.onramp.confirmresidency.ConfirmResidencyComponent
 import com.tangem.features.onramp.mainv2.entity.OnrampV2MainBottomSheetConfig
 import com.tangem.features.onramp.mainv2.model.OnrampV2MainComponentModel
@@ -26,6 +27,7 @@ internal class DefaultOnrampV2MainComponent @AssistedInject constructor(
     @Assisted private val params: OnrampV2MainComponent.Params,
     private val confirmResidencyComponentFactory: ConfirmResidencyComponent.Factory,
     private val selectCurrencyComponentFactory: SelectCurrencyComponent.Factory,
+    private val allOffersComponentFactory: AllOffersComponent.Factory,
 ) : OnrampV2MainComponent, AppComponentContext by appComponentContext {
 
     private val model: OnrampV2MainComponentModel = getOrCreateModel(params)
@@ -62,6 +64,14 @@ internal class DefaultOnrampV2MainComponent @AssistedInject constructor(
         is OnrampV2MainBottomSheetConfig.CurrenciesList -> selectCurrencyComponentFactory.create(
             context = childByContext(componentContext),
             params = SelectCurrencyComponent.Params(
+                userWallet = model.userWallet,
+                cryptoCurrency = params.cryptoCurrency,
+                onDismiss = model.bottomSheetNavigation::dismiss,
+            ),
+        )
+        OnrampV2MainBottomSheetConfig.AllOffers -> allOffersComponentFactory.create(
+            context = childByContext(componentContext),
+            params = AllOffersComponent.Params(
                 userWallet = model.userWallet,
                 cryptoCurrency = params.cryptoCurrency,
                 onDismiss = model.bottomSheetNavigation::dismiss,

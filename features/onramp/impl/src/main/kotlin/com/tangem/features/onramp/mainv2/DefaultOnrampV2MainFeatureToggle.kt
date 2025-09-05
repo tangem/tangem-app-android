@@ -6,5 +6,5 @@ class DefaultOnrampV2MainFeatureToggle(
     private val featureTogglesManager: FeatureTogglesManager,
 ) : OnrampV2MainFeatureToggle {
     override val isOnrampNewMainEnabled: Boolean
-        get() = featureTogglesManager.isFeatureEnabled("NEW_ONRAMP_RECEIVE_ENABLED")
+        get() = featureTogglesManager.isFeatureEnabled("NEW_ONRAMP_MAIN_ENABLED")
 }

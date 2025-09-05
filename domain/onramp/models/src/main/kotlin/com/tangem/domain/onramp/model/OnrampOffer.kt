@@ -1,13 +1,16 @@
 package com.tangem.domain.onramp.model
 
+import java.math.BigDecimal
+
 data class OnrampOffersBlock(
     val category: OnrampOfferCategory,
     val offers: List<OnrampOffer>,
-    val isVisible: Boolean = offers.isNotEmpty(),
+    val hasMoreOffers: Boolean,
 )
 
 data class OnrampOffer(
     val quote: OnrampQuote,
+    val rateDif: BigDecimal?,
     val advantages: OnrampOfferAdvantages = OnrampOfferAdvantages.Default,
 )
 
