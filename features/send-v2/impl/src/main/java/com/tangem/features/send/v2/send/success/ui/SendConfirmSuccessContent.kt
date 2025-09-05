@@ -2,10 +2,9 @@ package com.tangem.features.send.v2.send.success.ui
 
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -54,10 +53,7 @@ internal fun SendConfirmSuccessContent(sendUM: SendUM, destinationBlockComponent
             Column(
                 modifier = Modifier
                     .padding(horizontal = TangemTheme.dimens.spacing16)
-                    .scrollable(
-                        state = rememberScrollState(),
-                        orientation = Orientation.Vertical,
-                    ),
+                    .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 if (sendUM.confirmUM is ConfirmUM.Success) {
@@ -81,7 +77,7 @@ internal fun SendConfirmSuccessContent(sendUM: SendUM, destinationBlockComponent
                 )
                 destinationBlockComponent.Content(modifier = Modifier)
                 FeeBlock(feeSelectorUM = sendUM.feeSelectorUM)
-                Spacer(Modifier.height(60.dp))
+                Spacer(Modifier.height(128.dp))
             }
             BottomFade(Modifier.align(Alignment.BottomCenter), TangemTheme.colors.background.tertiary)
             NavigationButtonsBlockV2(
