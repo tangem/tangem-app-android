@@ -34,7 +34,7 @@ class UserWalletItemUMConverter(
     private val appCurrency: AppCurrency? = null,
     private val balance: TotalFiatBalance? = null,
     private val isBalanceHidden: Boolean = false,
-    private val authMode: Boolean = false,
+    private val isAuthMode: Boolean = false,
     private val endIcon: UserWalletItemUM.EndIcon = UserWalletItemUM.EndIcon.None,
     artwork: UserWalletItemUM.ImageState? = null,
 ) : Converter<UserWallet, UserWalletItemUM> {
@@ -58,11 +58,11 @@ class UserWalletItemUMConverter(
     }
 
     private fun isEnabled(userWallet: UserWallet): Boolean {
-        return authMode || userWallet.isLocked.not()
+        return isAuthMode || userWallet.isLocked.not()
     }
 
     private fun getLabelOrNull(userWallet: UserWallet): LabelUM? {
-        return if (authMode.not() && userWallet is UserWallet.Hot && !userWallet.backedUp) {
+        return if (isAuthMode.not() && userWallet is UserWallet.Hot && !userWallet.backedUp) {
             LabelUM(
                 text = resourceReference(R.string.hw_backup_no_backup),
                 style = LabelStyle.WARNING,
@@ -92,7 +92,7 @@ class UserWalletItemUMConverter(
     private fun getBalanceInfo(userWallet: UserWallet): UserWalletItemUM.Balance {
         return when {
             userWallet.isLocked -> UserWalletItemUM.Balance.Locked
-            authMode -> UserWalletItemUM.Balance.NotShowing
+            isAuthMode -> UserWalletItemUM.Balance.NotShowing
             isBalanceHidden -> UserWalletItemUM.Balance.Hidden
             balance == null -> UserWalletItemUM.Balance.Loading
             else -> {

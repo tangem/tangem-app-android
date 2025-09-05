@@ -19,8 +19,8 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.requireColdWallet
 import com.tangem.domain.onboarding.repository.OnboardingRepository
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
-import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.repository.WalletsRepository
+import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.domain.wallets.usecase.UpdateWalletUseCase
 import com.tangem.features.onboarding.v2.common.ui.CantLeaveBackupDialog
@@ -37,7 +37,10 @@ import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.NonCancellable
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -52,8 +55,8 @@ internal class MultiWalletFinalizeModel @Inject constructor(
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory,
-    private val userWalletsListManager: UserWalletsListManager,
     private val saveWalletUseCase: SaveWalletUseCase,
+    private val getUserWalletsUseCase: GetWalletsUseCase,
     private val updateWalletUseCase: UpdateWalletUseCase,
     private val cardRepository: CardRepository,
     private val onboardingRepository: OnboardingRepository,
@@ -79,8 +82,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
             // sets proper artwork state for initial step
             // (if we start from backup cards, we need to show proper artwork) ([REDACTED_TASK_KEY])
             when (getInitialStep()) {
-                MultiWalletFinalizeUM.Step.Primary -> { /* state is already set */
-                }
+                MultiWalletFinalizeUM.Step.Primary -> { /* state is already set */ }
                 MultiWalletFinalizeUM.Step.BackupDevice1 -> {
                     onEvent.emit(MultiWalletFinalizeComponent.Event.OneBackupCardAdded)
                 }
@@ -245,7 +247,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
                     userWalletCreated
                 }
                 OnboardingMultiWalletComponent.Mode.AddBackup -> {
-                    val userWallet = userWalletsListManager.userWallets.first()
+                    val userWallet = getUserWalletsUseCase.invokeSync()
                         .firstOrNull {
                             it is UserWallet.Cold &&
                                 it.scanResponse.primaryCard?.cardId == scanResponse.primaryCard?.cardId
