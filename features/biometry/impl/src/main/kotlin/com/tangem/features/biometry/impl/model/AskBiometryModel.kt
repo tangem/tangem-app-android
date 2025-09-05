@@ -15,7 +15,7 @@ import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.core.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.settings.SetSaveWalletScreenShownUseCase
+import com.tangem.domain.settings.SetAskBiometryShownUseCase
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
@@ -39,7 +39,7 @@ import javax.inject.Inject
 internal class AskBiometryModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     paramsContainer: ParamsContainer,
-    private val setSaveWalletScreenShownUseCase: SetSaveWalletScreenShownUseCase,
+    private val setAskBiometryShownUseCase: SetAskBiometryShownUseCase,
     private val settingsRepository: SettingsRepository,
     private val tangemSdkManager: TangemSdkManager,
     private val getSelectedWalletUseCase: GetSelectedWalletUseCase,
@@ -66,7 +66,7 @@ internal class AskBiometryModel @Inject constructor(
 
     init {
         modelScope.launch {
-            setSaveWalletScreenShownUseCase()
+            setAskBiometryShownUseCase()
         }
     }
 
