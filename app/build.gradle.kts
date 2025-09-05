@@ -347,7 +347,6 @@ dependencies {
     implementation(deps.coil.gif)
     implementation(deps.coil.svg)
     implementation(deps.amplitude)
-    implementation(deps.kotsonGson)
     implementation(deps.spongecastle.core)
     implementation(deps.lottie)
     implementation(deps.compose.accompanist.appCompatTheme)
