@@ -101,7 +101,7 @@ internal fun SendWithSwapSuccessContent(sendWithSwapUM: SendWithSwapUM) {
             )
             DestinationBlock(destinationUM.addressTextField)
             FeeBlock(feeSelectorUM = feeSelectorUM)
-            Spacer(Modifier.height(60.dp))
+            Spacer(Modifier.height(128.dp))
         }
         BottomFade(Modifier.align(Alignment.BottomCenter), TangemTheme.colors.background.tertiary)
         NavigationButtonsBlockV2(
