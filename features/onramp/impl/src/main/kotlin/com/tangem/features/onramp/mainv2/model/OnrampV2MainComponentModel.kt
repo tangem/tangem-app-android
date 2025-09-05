@@ -20,6 +20,7 @@ import com.tangem.features.onramp.main.entity.OnrampLastUpdate
 import com.tangem.features.onramp.mainv2.OnrampV2MainComponent
 import com.tangem.features.onramp.mainv2.entity.*
 import com.tangem.features.onramp.mainv2.entity.factory.OnrampAmountButtonUMStateFactory
+import com.tangem.features.onramp.mainv2.entity.factory.OnrampOffersStateFactory
 import com.tangem.features.onramp.mainv2.entity.factory.OnrampV2AmountStateFactory
 import com.tangem.features.onramp.mainv2.entity.factory.OnrampV2StateFactory
 import com.tangem.features.onramp.utils.sendOnrampErrorEvent
@@ -32,7 +33,7 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 internal class OnrampV2MainComponentModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val analyticsEventHandler: AnalyticsEventHandler,
@@ -44,6 +45,7 @@ internal class OnrampV2MainComponentModel @Inject constructor(
     private val getOnrampQuotesUseCase: GetOnrampQuotesUseCase,
     private val fetchPairsUseCase: OnrampFetchPairsUseCase,
     private val amountInputManager: InputManager,
+    private val getOnrampOffersUseCase: GetOnrampOffersUseCase,
     paramsContainer: ParamsContainer,
     getWalletsUseCase: GetWalletsUseCase,
 ) : Model(), OnrampIntents {
@@ -56,6 +58,13 @@ internal class OnrampV2MainComponentModel @Inject constructor(
 
     private val onrampAmountButtonUMStateFactory: OnrampAmountButtonUMStateFactory by lazy(LazyThreadSafetyMode.NONE) {
         OnrampAmountButtonUMStateFactory()
+    }
+
+    private val onrampOffersStateFactory: OnrampOffersStateFactory by lazy(LazyThreadSafetyMode.NONE) {
+        OnrampOffersStateFactory(
+            currentStateProvider = Provider { _state.value },
+            onrampIntents = this,
+        )
     }
 
     private val stateFactory = OnrampV2StateFactory(
@@ -94,6 +103,7 @@ internal class OnrampV2MainComponentModel @Inject constructor(
         subscribeToAmountChanges()
         subscribeToCountryAndCurrencyUpdates()
         subscribeToQuotesUpdate()
+        subscribeOnOffers()
     }
 
     override fun onDestroy() {
@@ -117,11 +127,19 @@ internal class OnrampV2MainComponentModel @Inject constructor(
     }
 
     override fun onBuyClick(quote: OnrampProviderWithQuote.Data) {
-        // TODO in [REDACTED_TASK_KEY] to be continued
+        val currentContentState = state.value as? OnrampV2MainComponentUM.Content ?: return
+        analyticsEventHandler.send(
+            OnrampAnalyticsEvent.OnBuyClick(
+                providerName = quote.provider.info.name,
+                currency = currentContentState.amountBlockState.currencyUM.code,
+                tokenSymbol = params.cryptoCurrency.symbol,
+            ),
+        )
+        params.openRedirectPage(quote)
     }
 
     override fun openProviders() {
-        // TODO in [REDACTED_TASK_KEY] to be continued
+        bottomSheetNavigation.activate(OnrampV2MainBottomSheetConfig.AllOffers)
     }
 
     override fun onRefresh() {
@@ -170,6 +188,20 @@ internal class OnrampV2MainComponentModel @Inject constructor(
     private fun onCloseClick() {
         analyticsEventHandler.send(OnrampAnalyticsEvent.CloseOnramp)
         router.pop()
+    }
+
+    private fun subscribeOnOffers() = modelScope.launch {
+        getOnrampOffersUseCase.invoke(
+            userWalletId = userWallet.walletId,
+            cryptoCurrencyId = params.cryptoCurrency.id,
+        ).collectLatest { maybeOffers ->
+            maybeOffers.fold(
+                ifLeft = ::handleOnrampError,
+                ifRight = { offers ->
+                    _state.update { onrampOffersStateFactory.getOnShowOffersState(offers) }
+                },
+            )
+        }
     }
 
     private fun subscribeToAmountChanges() = modelScope.launch {
