@@ -76,18 +76,19 @@ internal class WalletsUpdateActionResolver @Inject constructor(
             isAnyWalletNameChanged(state, wallets) -> {
                 getRenameWalletsAction(state, wallets)
             }
-            isAnyHotWalletBackedUp(state, wallets) -> {
+            isAnyHotWalletBackedUpChange(state, wallets) -> {
                 getHotWalletsBackedUpAction(state, wallets)
             }
             else -> getUpdateSelectedWalletAction(state, wallets, selectedWallet)
         }
     }
 
-    private fun isAnyHotWalletBackedUp(state: WalletScreenState, wallets: List<UserWallet>): Boolean {
+    private fun isAnyHotWalletBackedUpChange(state: WalletScreenState, wallets: List<UserWallet>): Boolean {
         val incompleteActivationWalletIds = state.incompleteActivationWalletIds()
-        return incompleteActivationWalletIds.mapNotNull { walletId ->
-            wallets.firstOrNull { it.walletId == walletId && it is UserWallet.Hot && it.backedUp }
-        }.isNotEmpty()
+        val walletsToUpdate = wallets.filter {
+            it is UserWallet.Hot && it.backedUp == incompleteActivationWalletIds.contains(it.walletId)
+        }
+        return walletsToUpdate.isNotEmpty()
     }
 
     private fun isWalletsCountChanged(state: WalletScreenState, wallets: List<UserWallet>): Boolean {
@@ -163,8 +164,7 @@ internal class WalletsUpdateActionResolver @Inject constructor(
         val incompleteActivationWalletIds = state.incompleteActivationWalletIds()
 
         val walletsToUpdate = wallets.filter {
-            it is UserWallet.Hot && it.backedUp &&
-                incompleteActivationWalletIds.contains(it.walletId)
+            it is UserWallet.Hot && it.backedUp == incompleteActivationWalletIds.contains(it.walletId)
         }
 
         return Action.ReloadWarningsForWallets(walletsToUpdate)
