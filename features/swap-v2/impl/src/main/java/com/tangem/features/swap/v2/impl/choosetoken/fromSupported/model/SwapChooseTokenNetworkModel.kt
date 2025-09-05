@@ -21,6 +21,7 @@ import com.tangem.features.swap.v2.impl.choosetoken.fromSupported.model.SwapChoo
 import com.tangem.features.swap.v2.impl.choosetoken.fromSupported.model.transformers.SwapChooseContentStateTransformer
 import com.tangem.features.swap.v2.impl.choosetoken.fromSupported.model.transformers.SwapChooseErrorStateTransformer
 import com.tangem.features.swap.v2.impl.common.SwapUtils.SEND_WITH_SWAP_PROVIDER_TYPES
+import com.tangem.features.swap.v2.impl.sendviaswap.analytics.SendWithSwapAnalyticEvents
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.transformer.update
 import kotlinx.coroutines.delay
@@ -97,6 +98,14 @@ internal class SwapChooseTokenNetworkModel @Inject constructor(
                 return@launch
             }
             delay(MINIMUM_LOADING_TIME)
+            if (pairs.fromGroup.available.isEmpty()) {
+                analyticsEventHandler.send(
+                    SendWithSwapAnalyticEvents.NoticeCanNotSwapToken(
+                        fromToken = params.initialCurrency,
+                        toTokenSymbol = params.token.symbol,
+                    ),
+                )
+            }
             uiState.update(
                 SwapChooseContentStateTransformer(
                     pairs = pairs,
