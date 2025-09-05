@@ -151,7 +151,7 @@ sealed class WcAnalyticEvents(
             AnalyticsParam.Key.METHOD_NAME to rawRequest.request.method,
             AnalyticsParam.Key.BLOCKCHAIN to network.name,
             AnalyticsParam.Key.ERROR_CODE to errorCode,
-            AnalyticsParam.Key.ERROR_MESSAGE to errorMessage,
+            AnalyticsParam.Key.ERROR_DESCRIPTION to errorMessage,
         ),
     )
 
