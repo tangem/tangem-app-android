@@ -149,7 +149,7 @@ internal class OnboardingEntryModel @Inject constructor(
         doneMode: OnboardingDoneComponent.Mode = OnboardingDoneComponent.Mode.WalletCreated,
     ) {
         modelScope.launch {
-            if (tangemSdkManager.checkCanUseBiometry() && settingsRepository.shouldShowSaveUserWalletScreen()) {
+            if (tangemSdkManager.checkCanUseBiometry() && settingsRepository.shouldShowAskBiometry()) {
                 doIfVisa {
                     analyticsEventHandler.send(OnboardingVisaAnalyticsEvent.BiometricScreenOpened)
                 }
