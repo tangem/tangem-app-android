@@ -17,6 +17,8 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.onramp.component.OnrampComponent
 import com.tangem.features.onramp.main.OnrampMainComponent
+import com.tangem.features.onramp.mainv2.OnrampV2MainComponent
+import com.tangem.features.onramp.mainv2.OnrampV2MainFeatureToggle
 import com.tangem.features.onramp.redirect.OnrampRedirectComponent
 import com.tangem.features.onramp.root.entity.OnrampChild
 import com.tangem.features.onramp.settings.OnrampSettingsComponent
@@ -24,13 +26,15 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 
-@Suppress("UnusedPrivateMember")
+@Suppress("LongParameterList")
 internal class DefaultOnrampComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
     @Assisted private val params: OnrampComponent.Params,
     private val settingsComponentFactory: OnrampSettingsComponent.Factory,
     private val onrampMainComponentFactory: OnrampMainComponent.Factory,
+    private val onrampMainV2ComponentFactory: OnrampV2MainComponent.Factory,
     private val onrampRedirectComponentFactory: OnrampRedirectComponent.Factory,
+    private val onrampV2MainFeatureToggle: OnrampV2MainFeatureToggle,
 ) : OnrampComponent, AppComponentContext by context {
 
     private val navigation = StackNavigation<OnrampChild>()
@@ -66,24 +70,44 @@ internal class DefaultOnrampComponent @AssistedInject constructor(
                     onBack = navigation::pop,
                 ),
             )
-            OnrampChild.Main -> onrampMainComponentFactory.create(
-                context = childByContext(componentContext),
-                params = OnrampMainComponent.Params(
-                    userWalletId = params.userWalletId,
-                    cryptoCurrency = params.cryptoCurrency,
-                    openSettings = { navigation.push(OnrampChild.Settings) },
-                    source = params.source,
-                    openRedirectPage = {
-                        navigation.push(
-                            OnrampChild.RedirectPage(
-                                quote = it,
-                                cryptoCurrency = params.cryptoCurrency,
-                            ),
-                        )
-                    },
-                    launchSepa = params.launchSepa,
-                ),
-            )
+            OnrampChild.Main -> if (onrampV2MainFeatureToggle.isOnrampNewMainEnabled) {
+                onrampMainV2ComponentFactory.create(
+                    context = childByContext(componentContext),
+                    params = OnrampV2MainComponent.Params(
+                        userWalletId = params.userWalletId,
+                        cryptoCurrency = params.cryptoCurrency,
+                        openSettings = { navigation.push(OnrampChild.Settings) },
+                        source = params.source,
+                        openRedirectPage = {
+                            navigation.push(
+                                OnrampChild.RedirectPage(
+                                    quote = it,
+                                    cryptoCurrency = params.cryptoCurrency,
+                                ),
+                            )
+                        },
+                    ),
+                )
+            } else {
+                onrampMainComponentFactory.create(
+                    context = childByContext(componentContext),
+                    params = OnrampMainComponent.Params(
+                        userWalletId = params.userWalletId,
+                        cryptoCurrency = params.cryptoCurrency,
+                        openSettings = { navigation.push(OnrampChild.Settings) },
+                        source = params.source,
+                        openRedirectPage = {
+                            navigation.push(
+                                OnrampChild.RedirectPage(
+                                    quote = it,
+                                    cryptoCurrency = params.cryptoCurrency,
+                                ),
+                            )
+                        },
+                        launchSepa = params.launchSepa,
+                    ),
+                )
+            }
             is OnrampChild.RedirectPage -> onrampRedirectComponentFactory.create(
                 context = childByContext(componentContext),
                 params = OnrampRedirectComponent.Params(

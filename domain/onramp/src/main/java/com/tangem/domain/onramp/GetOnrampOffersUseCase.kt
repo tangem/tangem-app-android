@@ -11,6 +11,7 @@ import com.tangem.domain.onramp.model.error.OnrampError
 import com.tangem.domain.onramp.repositories.OnrampErrorResolver
 import com.tangem.domain.onramp.repositories.OnrampRepository
 import com.tangem.domain.onramp.repositories.OnrampTransactionRepository
+import com.tangem.domain.onramp.utils.calculateRateDif
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
@@ -43,8 +44,12 @@ class GetOnrampOffersUseCase(
         val validQuotes = quotes.filterIsInstance<OnrampQuote.Data>()
         if (validQuotes.isEmpty()) return emptyList()
 
+        val bestRateQuote = validQuotes.maxByOrNull { it.toAmount.value }
+        val bestRate = bestRateQuote?.toAmount?.value
+
         val offers = validQuotes.map { quote ->
-            OnrampOffer(quote = quote)
+            val rateDif = calculateRateDif(quote.toAmount.value, bestRate)
+            OnrampOffer(quote = quote, rateDif = rateDif)
         }
 
         val recentOffer = findRecentOffer(offers, transactions)
@@ -107,6 +112,15 @@ class GetOnrampOffersUseCase(
         fastestOffer: OnrampOffer?,
         allOffers: List<OnrampOffer>,
     ): List<OnrampOffersBlock> {
+        val recommendedOffers = buildRecommendedOffers(
+            recentOffer = recentOffer,
+            bestRateOffer = bestRateOffer,
+            fastestOffer = fastestOffer,
+        )
+
+        val shownOffersCount = (if (recentOffer != null) 1 else 0) + recommendedOffers.size
+        val hasMoreOffers = allOffers.size > shownOffersCount
+
         return buildList {
             if (recentOffer != null) {
                 add(
@@ -119,23 +133,20 @@ class GetOnrampOffersUseCase(
                                     bestRateOffer,
                                     fastestOffer,
                                 ),
+                                rateDif = if (bestRateOffer != null) recentOffer.rateDif else null,
                             ),
                         ),
+                        hasMoreOffers = false,
                     ),
                 )
             }
-
-            val recommendedOffers = buildRecommendedOffers(
-                recentOffer = recentOffer,
-                bestRateOffer = bestRateOffer,
-                fastestOffer = fastestOffer,
-            )
 
             if (recommendedOffers.isNotEmpty() && hasOnlyOneMethodAndProvider(allOffers).not()) {
                 add(
                     OnrampOffersBlock(
                         category = OnrampOfferCategory.Recommended,
                         offers = recommendedOffers,
+                        hasMoreOffers = hasMoreOffers,
                     ),
                 )
             }
@@ -167,17 +178,32 @@ class GetOnrampOffersUseCase(
         return buildList {
             if (isSameOffer(bestRateOffer, fastestOffer)) {
                 bestRateOffer?.let { offer ->
-                    add(offer.copy(advantages = OnrampOfferAdvantages.BestRate))
+                    add(
+                        offer.copy(
+                            advantages = OnrampOfferAdvantages.BestRate,
+                            rateDif = null,
+                        ),
+                    )
                 }
             } else {
                 if (bestRateOffer != null && !isSameOffer(bestRateOffer, recentOffer)) {
-                    add(bestRateOffer.copy(advantages = OnrampOfferAdvantages.BestRate))
+                    add(
+                        bestRateOffer.copy(
+                            advantages = OnrampOfferAdvantages.BestRate,
+                            rateDif = null,
+                        ),
+                    )
                 }
 
                 if (fastestOffer != null && !isSameOffer(fastestOffer, recentOffer) &&
                     !isSameOffer(fastestOffer, bestRateOffer)
                 ) {
-                    add(fastestOffer.copy(advantages = OnrampOfferAdvantages.Fastest))
+                    add(
+                        fastestOffer.copy(
+                            advantages = OnrampOfferAdvantages.Fastest,
+                            rateDif = if (bestRateOffer != null) fastestOffer.rateDif else null,
+                        ),
+                    )
                 }
             }
         }
