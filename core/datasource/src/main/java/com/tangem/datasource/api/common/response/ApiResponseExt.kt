@@ -21,12 +21,7 @@ inline fun <T> catchApiResponseError(onError: (ApiResponseError) -> Unit, block:
     }
 }
 
-/**
- * Checks if the [ApiResponseError] is a network-related error.
- * You can provide a custom predicate [codePredicate] to check for specific HTTP status codes.
- */
-inline fun ApiResponseError.isNetworkError(
-    codePredicate: (ApiResponseError.HttpException.Code) -> Boolean = { true },
-): Boolean {
-    return this is ApiResponseError.HttpException && codePredicate(this.code)
+/** Checks if the ApiResponseError is a network error with the specified HTTP status [code] */
+fun ApiResponseError.isNetworkError(code: ApiResponseError.HttpException.Code): Boolean {
+    return this is ApiResponseError.HttpException && this.code == code
 }

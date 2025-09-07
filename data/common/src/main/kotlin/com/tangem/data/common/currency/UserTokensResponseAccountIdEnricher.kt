@@ -24,23 +24,36 @@ object UserTokensResponseAccountIdEnricher {
      * @param response     the [UserTokensResponse] containing tokens to be enriched
      */
     operator fun invoke(userWalletId: UserWalletId, response: UserTokensResponse): UserTokensResponse {
-        val hasUnassignedTokens = response.tokens.any { it.accountId == null }
-        if (!hasUnassignedTokens) return response
+        val enrichedTokens = invoke(userWalletId = userWalletId, tokens = response.tokens)
 
-        val enrichedTokens = response.tokens
+        return response.copy(tokens = enrichedTokens)
+    }
+
+    /**
+     * Enriches the given list of tokens with accountId values
+     *
+     * @param userWalletId the ID of the user wallet
+     * @param tokens       the list of tokens to be enriched
+     */
+    operator fun invoke(
+        userWalletId: UserWalletId,
+        tokens: List<UserTokensResponse.Token>,
+    ): List<UserTokensResponse.Token> {
+        val hasUnassignedTokens = tokens.any { it.accountId == null }
+        if (!hasUnassignedTokens) return tokens
+
+        val enrichedTokens = tokens
             .filter { it.accountId == null }
             .groupByAccountIndex()
             .mapKeysToAccountId(userWalletId)
             .mapToEnrichedTokens()
 
-        if (enrichedTokens.isEmpty()) return response
+        if (enrichedTokens.isEmpty()) return tokens
 
-        return response.copy(
-            tokens = response.tokens.map { token ->
-                val enrichedToken = enrichedTokens.find { it == token }
-                enrichedToken ?: token
-            },
-        )
+        return tokens.map { token ->
+            val enrichedToken = enrichedTokens.firstOrNull { it == token }
+            enrichedToken ?: token
+        }
     }
 
     private fun List<UserTokensResponse.Token>.groupByAccountIndex(): Map<Long?, List<UserTokensResponse.Token>> {
