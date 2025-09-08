@@ -26,7 +26,6 @@ class GetWalletAccountsResponseConverterTest {
     private val cryptoPortfolioConverter = mockk<CryptoPortfolioConverter>()
     private val converter = GetWalletAccountsResponseConverter(
         userWallet = userWallet,
-        version = 0,
         cryptoPortfolioConverterFactory = cryptoPortfolioConverterFactory,
     )
 
