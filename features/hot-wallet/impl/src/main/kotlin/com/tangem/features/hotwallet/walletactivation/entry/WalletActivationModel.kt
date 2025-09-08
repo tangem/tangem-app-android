@@ -141,11 +141,11 @@ internal class WalletActivationModel @Inject constructor(
     }
 
     inner class AccessCodeModelCallbacks : AccessCodeComponent.ModelCallbacks {
-        override fun onAccessCodeSet(userWalletId: UserWalletId, accessCode: String) {
+        override fun onNewAccessCodeInput(userWalletId: UserWalletId, accessCode: String) {
             stackNavigation.push(WalletActivationRoute.ConfirmAccessCode(accessCode))
         }
 
-        override fun onAccessCodeConfirmed(userWalletId: UserWalletId) {
+        override fun onAccessCodeUpdated(userWalletId: UserWalletId) {
             navigateToPushNotificationsOrNext()
         }
     }

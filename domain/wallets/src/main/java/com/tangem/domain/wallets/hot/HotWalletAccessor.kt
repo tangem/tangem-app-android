@@ -12,5 +12,9 @@ interface HotWalletAccessor {
 
     suspend fun unlockContextual(hotWalletId: HotWalletId): UnlockHotWallet
 
+    fun getContextualUnlock(hotWalletId: HotWalletId): UnlockHotWallet?
+
     fun clearContextualUnlock(hotWalletId: HotWalletId)
+
+    fun clearAllContextualUnlock()
 }
