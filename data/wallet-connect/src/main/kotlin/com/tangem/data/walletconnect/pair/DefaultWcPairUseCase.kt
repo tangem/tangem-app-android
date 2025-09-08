@@ -188,8 +188,10 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
             .values.map { it.available.plus(it.required) }.flatten().toSet()
         analytics.send(
             WcAnalyticEvents.PairRequested(
+                dAppName = sessionProposal.name,
+                dAppUrl = sessionProposal.url,
                 network = requestedNetworks,
-                verificationInfo,
+                domainVerification = verificationInfo,
             ),
         )
         val appMetaData = WcAppMetaData(
