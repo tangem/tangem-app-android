@@ -112,10 +112,7 @@ internal class DefaultAccountsCRUDRepository(
                     .getOrThrow()
             }
 
-            val converter = convertersContainer.getWalletAccountsResponseCF.create(
-                userWallet = accountList.userWallet,
-                version = version,
-            )
+            val converter = convertersContainer.getWalletAccountsResponseCF.create(userWallet = accountList.userWallet)
 
             val accountsResponse = converter.convert(value = accountList)
 
