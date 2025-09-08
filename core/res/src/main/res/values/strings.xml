@@ -249,6 +249,7 @@
   <string name="common_finish">Finish</string>
   <string name="common_free">Free</string>
   <string name="common_generate_addresses">Synchronize addresses</string>
+  <string name="common_get_started">Get started</string>
   <string name="common_go_to_provider">Go to provider</string>
   <string name="common_go_to_token">Go to token</string>
   <string name="common_got_it">Got it</string>
@@ -1011,7 +1012,6 @@
   <string name="send_fee_unreachable_error_text">Check your network connection</string>
   <string name="send_fee_unreachable_error_title">Network fee info unreachable</string>
   <string name="send_from_title">You send</string>
-  <string name="send_from_wallet_android">From</string>
   <string name="send_from_wallet_name">From %s</string>
   <string name="send_gas_limit">Gas limit</string>
   <string name="send_gas_limit_footer">This is the maximum amount of gas that will be spent to complete a transaction or contract. A gas limit prevents unexpected or unlimited charges when executing a transaction.</string>
@@ -1092,7 +1092,7 @@
   <string name="send_with_swap_recipient_amount_success_title">Recipient will receive</string>
   <string name="send_with_swap_recipient_amount_text">To recipient</string>
   <string name="send_with_swap_recipient_amount_title">Amount to receive</string>
-  <string name="send_with_swap_recipient_get_amount">Recipient get %s</string>
+  <string name="send_with_swap_recipient_get_amount">Recipient gets %s</string>
   <string name="send_with_swap_remove_convert_alert_message">Are you sure you want to cancel the conversion? Your previous data will be cleared.</string>
   <string name="send_with_swap_remove_convert_alert_title">Remove Conversion</string>
   <string name="send_with_swap_title">Send with swap</string>
@@ -1168,7 +1168,7 @@
   <string name="staking_notification_ton_activate_account">To start staking in TON, first make an outgoing transaction of any amount — this will activate your wallet.</string>
   <string name="staking_notification_ton_extra_reserve_info">Up to 0.2 TON may be required in addition to the network fee to complete the transaction. Any unused amount will be refunded.</string>
   <string name="staking_notification_ton_extra_reserve_is_required">0.2 TON is required to proceed with this operation, in addition to the network fee. Please top up your balance.</string>
-  <string name="staking_notification_ton_extra_reserve_title">0.2 Ton Reserved</string>
+  <string name="staking_notification_ton_extra_reserve_title">TON reserve required</string>
   <string name="staking_notification_ton_have_to_unstake_all_text">This action will close other positions or switch them to withdrawal status, according to network rules.</string>
   <string name="staking_notification_ton_have_to_unstake_all_title">Positions status</string>
   <string name="staking_notification_unlock_text">Unlock your money to withdraw it from staking process. Unlocking takes %s.</string>
@@ -1693,7 +1693,7 @@
   <string name="xtz_withdrawal_message_warning">To avoid paying an increased commission the next time you top up your wallet, reduce the amount by %s XTZ</string>
   <string name="yield_module_approve_needed_notification_cta">Give Approve</string>
   <string name="yield_module_approve_needed_notification_description">Something went wrong with your previous approval, so we need a new one. Choose how you’d like to proceed.</string>
-  <string name="yield_module_approve_needed_notification_title">Approve nedeed</string>
+  <string name="yield_module_approve_needed_notification_title">Approve needed</string>
   <string name="yield_module_approve_sheet_fee_note">The fee will be taken out, and your assets will be lent again.</string>
   <string name="yield_module_approve_sheet_subtitle">To continue earning, approval is required.</string>
   <string name="yield_module_approve_sheet_title">Confirm approval</string>
@@ -1704,16 +1704,12 @@
   <string name="yield_module_earn_sheet_current_apy_title">Current APY</string>
   <string name="yield_module_earn_sheet_my_funds_title">My Funds</string>
   <string name="yield_module_earn_sheet_provider_description">Your %1$s is now deposited in Aave and earning interest. You hold a%2$s token, which represents your balance and grows over time. When you top up, funds go to Aave to earn interest, minus a transaction fee.</string>
-  <string name="yield_module_earn_sheet_read_more">Read more</string>
   <string name="yield_module_earn_sheet_status_active">Active</string>
-  <string name="yield_module_earn_sheet_stop_earning_button_title">Stop earning</string>
   <string name="yield_module_earn_sheet_title">Earn</string>
   <string name="yield_module_earn_sheet_total_earnings_title">Total earnings</string>
-  <string name="yield_module_earn_sheet_transfers_mode">Automatic</string>
   <string name="yield_module_earn_sheet_transfers_title">Transfers to Aave</string>
   <string name="yield_module_explore_sheet_description">Text explaining that your savings are located in the protocol</string>
   <string name="yield_module_explore_sheet_explore_aave_button_title">Explore Aave</string>
-  <string name="yield_module_explore_sheet_explore_default_button_title">Explore default</string>
   <string name="yield_module_explore_sheet_title">Your %s is deposited in Aave </string>
   <string name="yield_module_fee_policy_sheet_current_fee_note">This is the current supply fee on %s. The live cost will be shown on the Receive Screen.</string>
   <string name="yield_module_fee_policy_sheet_current_fee_title">Current fee</string>
@@ -1740,20 +1736,19 @@
   <string name="yield_module_rate_info_sheet_powered_by">Powered by</string>
   <string name="yield_module_rate_info_sheet_title">Interest rate is variable</string>
   <string name="yield_module_receive_sheet_description">When you top up, your funds will be automatically sent to Aave to start earning interest. A small fee equal to %s will be deducted to cover the transaction.</string>
-  <string name="yield_module_start_earning_sheet_bottom_button_title">Start earning</string>
+  <string name="yield_module_start_earning">Start earning</string>
   <string name="yield_module_start_earning_sheet_description">Your %s will be supplied to Aave and will stay instantly available</string>
   <string name="yield_module_start_earning_sheet_fee_policy">See fee policy</string>
-  <string name="yield_module_start_earning_sheet_network_fee_title">Network fee</string>
   <string name="yield_module_start_earning_sheet_next_deposits">Your next deposits will be automatically supplied to Aave.</string>
-  <string name="yield_module_start_earning_sheet_title">Start earning</string>
+  <string name="yield_module_stop_earning">Stop earning</string>
   <string name="yield_module_stop_earning_sheet_description">Turning off will withdraw your funds from Aave, return them to %s in your wallet, and stop earning rewards.</string>
   <string name="yield_module_stop_earning_sheet_fee_note">The network fee will be deducted from the amount you withdraw.</string>
-  <string name="yield_module_stop_earning_sheet_title">Stop earning</string>
   <string name="yield_module_token_details_earn_notification_apy">APY</string>
   <string name="yield_module_token_details_earn_notification_description">Make your money work — earn interest on your balance.</string>
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">Earning on your balance</string>
   <string name="yield_module_token_details_earn_notification_processing">Processing your deposit</string>
-  <string name="yield_module_token_details_earn_notification_title">Earn %s% per year</string>
+  <string name="yield_module_token_details_earn_notification_title">Earn %1$s%% per year</string>
+  <string name="yield_module_transfer_mode_automatic">Automatic</string>
   <string name="yield_module_unable_to_cover_fee_description">Deposit some %1$s %2$s to cover the network fee for transactions</string>
   <string name="yield_module_unable_to_cover_fee_title">Unable to cover %s fee</string>
 </resources>
