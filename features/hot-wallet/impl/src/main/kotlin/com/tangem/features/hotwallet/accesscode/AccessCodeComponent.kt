@@ -34,12 +34,11 @@ internal class AccessCodeComponent @AssistedInject constructor(
     }
 
     interface ModelCallbacks {
-        fun onAccessCodeSet(userWalletId: UserWalletId, accessCode: String)
-        fun onAccessCodeConfirmed(userWalletId: UserWalletId)
+        fun onNewAccessCodeInput(userWalletId: UserWalletId, accessCode: String)
+        fun onAccessCodeUpdated(userWalletId: UserWalletId)
     }
 
     data class Params(
-        val isConfirmMode: Boolean,
         val accessCodeToConfirm: String? = null,
         val userWalletId: UserWalletId,
         val callbacks: ModelCallbacks,
