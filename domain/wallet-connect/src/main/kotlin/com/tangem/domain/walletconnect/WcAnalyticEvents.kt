@@ -37,11 +37,15 @@ sealed class WcAnalyticEvents(
     )
 
     class PairRequested(
+        dAppName: String,
+        dAppUrl: String,
         network: Set<Network>,
         domainVerification: CheckDAppResult,
     ) : WcAnalyticEvents(
         event = "dApp Connection Requested",
         params = mapOf(
+            AnalyticsParam.DAPP_NAME to dAppName,
+            AnalyticsParam.DAPP_URL to dAppUrl,
             NETWORKS to network.joinToString(",") { it.name },
             DOMAIN_VERIFICATION to domainVerification.toAnalyticVerificationStatus(),
         ),
