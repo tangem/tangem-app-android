@@ -50,9 +50,9 @@ object UserTokensResponseAccountIdEnricher {
 
         if (enrichedTokens.isEmpty()) return tokens
 
+        val enrichedTokenMap = enrichedTokens.associateBy { it }
         return tokens.map { token ->
-            val enrichedToken = enrichedTokens.firstOrNull { it == token }
-            enrichedToken ?: token
+            enrichedTokenMap[token] ?: token
         }
     }
 
