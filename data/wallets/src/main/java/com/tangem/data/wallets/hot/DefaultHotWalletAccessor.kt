@@ -52,10 +52,21 @@ class DefaultHotWalletAccessor @Inject constructor(
         }
     }
 
+    override fun getContextualUnlock(hotWalletId: HotWalletId): UnlockHotWallet? =
+        contextualUnlockHotWallet[hotWalletId]
+
     override fun clearContextualUnlock(hotWalletId: HotWalletId) {
         contextualUnlockHotWallet[hotWalletId] = null
         scope.launch {
             tangemHotSdk.clearUnlockContext(hotWalletId)
+        }
+    }
+
+    override fun clearAllContextualUnlock() {
+        val hotWalletsIds = contextualUnlockHotWallet.keys.toList()
+        contextualUnlockHotWallet.clear()
+        scope.launch {
+            hotWalletsIds.forEach { tangemHotSdk.clearUnlockContext(it) }
         }
     }
 
