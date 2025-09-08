@@ -274,6 +274,8 @@ dependencies {
     implementation(projects.features.tangempay.onboarding.impl)
     implementation(projects.features.tokenRecieve.api)
     implementation(projects.features.tokenRecieve.impl)
+    implementation(projects.features.yieldLending.api)
+    implementation(projects.features.yieldLending.impl)
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)

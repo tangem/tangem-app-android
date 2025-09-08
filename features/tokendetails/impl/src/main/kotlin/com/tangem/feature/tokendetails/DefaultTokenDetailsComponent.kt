@@ -23,6 +23,7 @@ import com.tangem.features.markets.token.block.TokenMarketBlockComponent
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
 import com.tangem.features.txhistory.component.TxHistoryComponent
+import com.tangem.features.yieldlending.api.YieldLendingComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -34,6 +35,7 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
     tokenMarketBlockComponentFactory: TokenMarketBlockComponent.Factory,
     txHistoryComponentFactory: TxHistoryComponent.Factory,
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
+    yieldLendingComponentFactory: YieldLendingComponent.Factory,
 ) : TokenDetailsComponent, AppComponentContext by appComponentContext {
 
     private val model: TokenDetailsModel = getOrCreateModel(params)
@@ -67,6 +69,14 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
         )
     }
 
+    private val yieldLendingComponent = yieldLendingComponentFactory.create(
+        context = child("tokenYieldLendingComponent"),
+        params = YieldLendingComponent.Params(
+            userWalletId = params.userWalletId,
+            cryptoCurrency = params.currency,
+        ),
+    )
+
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
@@ -76,6 +86,7 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
             state = state,
             tokenMarketBlockComponent = tokenMarketBlockComponent,
             txHistoryComponent = txHistoryComponent,
+            yieldLendingComponent = yieldLendingComponent,
         )
         bottomSheet.child?.instance?.BottomSheet()
     }

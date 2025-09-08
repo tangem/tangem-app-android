@@ -29,6 +29,7 @@ internal object SimpleNetworkStatusConverter : Converter<NetworkStatusDM, Simple
                     amounts = NetworkAmountsConverter.convert(value = value.amounts),
                     pendingTransactions = emptyMap(),
                     source = StatusSource.CACHE,
+                    yieldLendingStatuses = emptyMap(),
                 )
             }
             is NetworkStatusDM.NoAccount -> {
