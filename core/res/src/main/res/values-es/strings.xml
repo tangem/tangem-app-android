@@ -880,8 +880,7 @@
   <string name="send_extras_hint_memo">Memo</string>
   <string name="send_fee_unreachable_error_text">Compruebe su conexión de red</string>
   <string name="send_fee_unreachable_error_title">Información de tarifa de red no accesible</string>
-  <string name="send_from_title">Envía</string>
-  <string name="send_from_wallet_android">Desde</string>
+  <string name="send_from_title">Usted envía</string>
   <string name="send_from_wallet_name">De %s</string>
   <string name="send_gas_limit">Límite de gas</string>
   <string name="send_gas_limit_footer">Este es el máximo de gas que se gastará para completar una transacción o contrato. Un límite de gas evita cargos inesperados o ilimitados al ejecutar una transacción.</string>
@@ -895,7 +894,7 @@
   <string name="send_network_fee_warning_title">Cobertura de tarifa de red</string>
   <string name="send_nonce">Nonce</string>
   <string name="send_nonce_footer">Número único para cada transacción. Utilícelo para reenviar o cancelar una transacción pendiente.</string>
-  <string name="send_nonce_hint">Introduzca nonce..</string>
+  <string name="send_nonce_hint">Introduzca nonce...</string>
   <string name="send_notification_exceed_balance_text">Fondos insuficientes para la transferencia, ya que el total de la tarifa y el importe de la transferencia supera el saldo existente</string>
   <string name="send_notification_exceed_balance_title">El total supera el saldo</string>
   <string name="send_notification_existential_deposit_text">Se requiere un saldo de al menos %s para mantener su cuenta en blockchain para evitar riesgos de seguridad. Este monto permanecerá en su saldo y no podrá retirarse.</string>
@@ -950,6 +949,8 @@
   <string name="send_validation_invalid_amount">Cantidad no válida</string>
   <string name="send_validation_invalid_fee">La tarifa excede el saldo</string>
   <string name="send_validation_invalid_total">La cantidad total excede el saldo</string>
+  <string name="send_with_swap_change_token_alert_message">¿Está seguro que desea cambiar el token a recibir? Esto restablecerá los datos introducidos previamente.</string>
+  <string name="send_with_swap_change_token_alert_title">Cambio de token</string>
   <string name="send_with_swap_confirm_title">Intercambiar y enviar</string>
   <string name="send_with_swap_convert_token_alert_message">¿Continuar con la conversión? Esto borrará sus datos anteriores.</string>
   <string name="send_with_swap_convert_token_alert_title">Confirmar Conversión</string>
@@ -961,6 +962,7 @@
   <string name="send_with_swap_recipient_amount_title">Cantidad a recibir</string>
   <string name="send_with_swap_recipient_get_amount">El destinatario recibe %s</string>
   <string name="send_with_swap_remove_convert_alert_message">¿Seguro que desea cancelar la conversión? Se borrarán sus datos anteriores.</string>
+  <string name="send_with_swap_remove_convert_alert_title">Eliminar conversión</string>
   <string name="send_with_swap_title">Enviar con swap</string>
   <string name="sent_transaction_sent_title">Transacción enviada</string>
   <string name="settings_card_settings_footer">Escanee la tarjeta/anillo que quiere configurar</string>
@@ -968,10 +970,10 @@
   <string name="settings_forget_wallet_footer">Esto eliminará la wallet de la aplicación. La wallet en sí puede\nañadirse de nuevo.</string>
   <string name="settings_wallet_name_title">Nombre</string>
   <string name="stake_token_description">Haga que su token trabaje para Ud.</string>
-  <string name="staking_amount_requirement_error">El monto del staking debe ser al menos %s</string>
-  <string name="staking_amount_tron_integer_error">El monto del staking se redondeará a %1$s TRX debido a las reglas de la red.</string>
+  <string name="staking_amount_requirement_error">La cantidad del staking debe ser al menos %s</string>
+  <string name="staking_amount_tron_integer_error">La cantidad de staking se redondeará a %1$s TRX debido a las reglas de la red.</string>
   <string name="staking_amount_tron_integer_error_unstaking">El monto de cancelación del staking se redondeará a %1$s TRX debido a las reglas de la red.</string>
-  <string name="staking_claim_unstaked">Unstaking de la reclamación</string>
+  <string name="staking_claim_unstaked">Reclamar lo que no está en staking</string>
   <string name="staking_details_account_fee">Tarifa de staking de la cuenta </string>
   <string name="staking_details_account_fee_info">Una cuenta de staking es una cuenta especial donde se almacenan los tokens SOL de staking. Se crea cuando delegas sus tokens a un validador para participar en la validación de transacciones y ganar recompensas. Se cobra una pequeña tarifa por crear la cuenta de staking, que se devuelve una vez que se completa el staking.</string>
   <string name="staking_details_annual_percentage_rate">Porcentaje de rendimiento anual</string>
@@ -1007,7 +1009,7 @@
   <string name="staking_no_validators_error_message">No hay validadores activos disponibles para hacer staking en este momento. Por favor, inténtalo de nuevo más tarde.</string>
   <string name="staking_notification_additional_ada_deposit_text">Al hacer staking en la red Cardano, se utiliza todo su saldo. Se reservarán 2 ADA adicionales y se devolverán después del staking. Su ADA permanece desbloqueado mientras hace staking.</string>
   <string name="staking_notification_additional_ada_deposit_title">Detalles del staking de ADA</string>
-  <string name="staking_notification_claim_rewards_text">Recomp. won se le enviará y estará disponible para su uso inmediato</string>
+  <string name="staking_notification_claim_rewards_text">Las recompensas obtenidas se enviarán a su billetera y estarán disponibles para su uso inmediato</string>
   <string name="staking_notification_earn_rewards_text">Haga staking de forma segura y comience a ganar recompensas</string>
   <string name="staking_notification_earn_rewards_text_daily">Tangem permite a los usuarios hacer staking de sus criptomonedas</string>
   <string name="staking_notification_earn_rewards_text_hourly">Tangem permite a los usuarios hacer staking de sus criptomonedas</string>
@@ -1034,7 +1036,7 @@
   <string name="staking_notification_ton_activate_account">Para empezar a hacer staking en TON, realice primero una transacción de salida de cualquier importe - esto activará su billetera.</string>
   <string name="staking_notification_ton_extra_reserve_info">Es posible que se requieran hasta 0.2 TON además de la tarifa de red para completar la transacción. Cualquier cantidad no utilizada será reembolsada.</string>
   <string name="staking_notification_ton_extra_reserve_is_required">Se requieren 0.2 TON para realizar esta operación, además de la tarifa de red. Por favor, recargue su saldo.</string>
-  <string name="staking_notification_ton_extra_reserve_title">0.2 Ton Reservado</string>
+  <string name="staking_notification_ton_extra_reserve_title">Se requiere reserva de TON</string>
   <string name="staking_notification_ton_have_to_unstake_all_text">Esta acción cerrará otras posiciones o las cambiará al estado de retiro, de acuerdo con las reglas de la red.</string>
   <string name="staking_notification_ton_have_to_unstake_all_title">Estado de las posiciones</string>
   <string name="staking_notification_unlock_text">Desbloquee su dinero para retirarlo del proceso de staking. El desbloqueo demora %s minuto.</string>
@@ -1044,9 +1046,9 @@
   <string name="staking_notifications_revote_tron_text">Hacer staking en la red Tron con un nuevo validador transferirá automáticamente todos los fondos de staking a este validador.</string>
   <string name="staking_preparing">Preparando</string>
   <string name="staking_ready_to_withdraw">Listo para retirar</string>
-  <string name="staking_rebond">Reunir</string>
-  <string name="staking_restake">Haga el staking de nuevo</string>
-  <string name="staking_restake_rewards">Restaking de las recompensas</string>
+  <string name="staking_rebond">Volver a unir</string>
+  <string name="staking_restake">Hacer staking de nuevo</string>
+  <string name="staking_restake_rewards">Hacer restaking de las recompensas</string>
   <string name="staking_revoke">Revocar</string>
   <string name="staking_revote">Revotar</string>
   <string name="staking_reward_claiming_auto">Auto</string>
@@ -1080,7 +1082,7 @@
   <string name="staking_unstake_amount_requirement_error">La cantidad para el unstaking debe ser al menos %s</string>
   <string name="staking_unstake_amount_validation_error">El monto excede el saldo apostado</string>
   <string name="staking_unstaked">Sin staking</string>
-  <string name="staking_unstaking">Unstaking</string>
+  <string name="staking_unstaking">Deshacer el staking</string>
   <string name="staking_unstaking_item_name">Detenando el staking de activos %s</string>
   <string name="staking_validator">Validador</string>
   <string name="staking_validators">Validadores</string>
@@ -1358,8 +1360,8 @@
   <string name="warning_token_trustline_button_title">Habilitar Trustline (línea de confianza)</string>
   <string name="warning_token_trustline_subtitle">Una trustline (línea de confianza) debe estar habilitada para recibir este token. La red requiere un %1$s %2$s reserva.</string>
   <string name="warning_token_trustline_title">Se requiere trustline (línea de confianza)</string>
-  <string name="wc_alert_add_network_to_portfolio_description">La red requerida %s no está añadida a su portafolio. Añádala primero y luego continúe con la conexión.</string>
-  <string name="wc_alert_add_network_to_portfolio_title">Agregue red al portafolio</string>
+  <string name="wc_alert_add_network_to_portfolio_description">La red requerida %s no está agregada a su portafolio. Agréguela primero y luego continúe con la conexión.</string>
+  <string name="wc_alert_add_network_to_portfolio_title">Agregar red al portafolio</string>
   <string name="wc_alert_audit_malicious_domain">Dominio malicioso</string>
   <string name="wc_alert_audit_unknown_domain">Dominio desconocido</string>
   <string name="wc_alert_connect_anyway">Conectarse de todas formas</string>
