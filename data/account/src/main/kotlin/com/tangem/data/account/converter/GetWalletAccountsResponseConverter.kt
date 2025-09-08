@@ -14,7 +14,6 @@ import dagger.assisted.AssistedInject
  */
 internal class GetWalletAccountsResponseConverter @AssistedInject constructor(
     @Assisted private val userWallet: UserWallet,
-    @Assisted val version: Int,
     cryptoPortfolioConverterFactory: CryptoPortfolioConverter.Factory,
 ) : Converter<AccountList, GetWalletAccountsResponse> {
 
@@ -25,7 +24,6 @@ internal class GetWalletAccountsResponseConverter @AssistedInject constructor(
     override fun convert(value: AccountList): GetWalletAccountsResponse {
         return GetWalletAccountsResponse(
             wallet = GetWalletAccountsResponse.Wallet(
-                version = version,
                 group = TokensGroupTypeConverter.convertBack(value.groupType),
                 sort = TokensSortTypeConverter.convertBack(value.sortType),
                 totalAccounts = value.totalAccounts,
@@ -39,6 +37,6 @@ internal class GetWalletAccountsResponseConverter @AssistedInject constructor(
 
     @AssistedFactory
     interface Factory {
-        fun create(userWallet: UserWallet, version: Int): GetWalletAccountsResponseConverter
+        fun create(userWallet: UserWallet): GetWalletAccountsResponseConverter
     }
 }
