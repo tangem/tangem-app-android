@@ -758,11 +758,17 @@
   <string name="onramp_max_amount_restriction">Сумма покупки не может быть больше, чем %s</string>
   <string name="onramp_min_amount_restriction">Сумма покупки должна составлять минимум %s</string>
   <string name="onramp_no_available_providers">Нет доступных провайдеров для выбранной валюты</string>
-  <string name="onramp_offer_type_fastet">Быстрейший</string>
+  <string name="onramp_offer_type_fastet">Самый быстрый</string>
   <string name="onramp_pay_with">Оплата с</string>
   <string name="onramp_payment_method_subtitle">Платежный метод</string>
   <string name="onramp_provider_max_amount">Доступно до %s</string>
   <string name="onramp_provider_min_amount">Доступно от %s</string>
+  <plurals name="onramp_providers_count">
+    <item quantity="one">%d провайдер</item>
+    <item quantity="few">%d провайдера</item>
+    <item quantity="many">%d провайдеров</item>
+    <item quantity="other">%d провайдеров</item>
+  </plurals>
   <string name="onramp_providers_subtitle">Провайдеры</string>
   <string name="onramp_recently_used_title">Ранее используемый</string>
   <string name="onramp_recommended_title">Рекомендуемый</string>
@@ -774,10 +780,18 @@
   <string name="onramp_settings_residence_description">Пожалуйста, укажите правильную страну, чтобы обеспечить точность доступных способов оплаты и услуг.</string>
   <string name="onramp_settings_title">Настройки</string>
   <string name="onramp_statuses_view_footer">You can close this screen and check the transaction status on the token details screen.</string>
+  <plurals name="onramp_timing_days">
+    <item quantity="one">до %d дня</item>
+    <item quantity="few">до %d дней</item>
+    <item quantity="many">до %d дней</item>
+    <item quantity="other">до %d дней</item>
+  </plurals>
   <string name="onramp_timing_minutes">%s мин</string>
   <string name="onramp_title_you_get">Вы получите</string>
   <string name="onramp_transaction_status_footer_text">Вы можете закрыть этот экран и проверить статус транзакции на экране информации о токене.</string>
+  <string name="onramp_up_to_rate">До</string>
   <string name="onramp_via">Через</string>
+  <string name="onramp_you_will_pay_title">Вы заплатите</string>
   <string name="organize_tokens_group">Группы</string>
   <string name="organize_tokens_sort_by_balance">По балансу</string>
   <string name="organize_tokens_title">Упорядочить токены</string>
@@ -891,7 +905,7 @@
   <string name="send_fee_unreachable_error_text">Проверьте своё интернет соединение</string>
   <string name="send_fee_unreachable_error_title">Информация о комиссии сети недоступна</string>
   <string name="send_from_title">Вы отправляете</string>
-  <string name="send_from_wallet_android">Из</string>
+  <string name="send_from_wallet_name">Из %s</string>
   <string name="send_gas_limit">Лимит газа</string>
   <string name="send_gas_limit_footer">Это максимальное количество газа, которое будет потрачено на выполнение транзакции или контракта. Лимит газа предотвращает неожиданные или неограниченные расходы при выполнении транзакции.</string>
   <string name="send_gas_price">Цена газа</string>
@@ -1042,7 +1056,7 @@
   <string name="staking_notification_ton_activate_account">Чтобы начать стейкинг в TON, сначала осуществите исходящую транзакцию на любую сумму — это активирует ваш кошелек.</string>
   <string name="staking_notification_ton_extra_reserve_info">До 0.2 TON может потребоваться сверх сетевой комиссии для завершения транзакции. Неиспользованная часть будет возвращена.</string>
   <string name="staking_notification_ton_extra_reserve_is_required">Для выполнения операции требуется дополнительно 0.2 TON, помимо сетевой комиссии. Пожалуйста, пополните баланс.</string>
-  <string name="staking_notification_ton_extra_reserve_title">Зарезервировано 0.2 TON</string>
+  <string name="staking_notification_ton_extra_reserve_title">Требуется резерв TON</string>
   <string name="staking_notification_ton_have_to_unstake_all_text">Это действие закроет другие позиции или переведёт их в статус вывода средств в соответствии с правилами сети.</string>
   <string name="staking_notification_ton_have_to_unstake_all_title">Статус позиций</string>
   <string name="staking_notification_unlock_text">Разблокируйте свои средства, чтобы вывести их из стейкинга. Разблокировка займёт %s.</string>
