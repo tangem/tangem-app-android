@@ -13,6 +13,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.common.ui.bottomsheet.chooseaddress.ChooseAddressBottomSheet
 import com.tangem.common.ui.bottomsheet.chooseaddress.ChooseAddressBottomSheetConfig
@@ -40,6 +41,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.s
 import com.tangem.features.markets.token.block.TokenMarketBlockComponent
 import com.tangem.features.txhistory.component.TxHistoryComponent
 import com.tangem.features.txhistory.entity.TxHistoryUM
+import com.tangem.features.yieldlending.api.YieldLendingComponent
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -50,6 +52,7 @@ internal fun TokenDetailsScreen(
     state: TokenDetailsState,
     tokenMarketBlockComponent: TokenMarketBlockComponent?,
     txHistoryComponent: TxHistoryComponent,
+    yieldLendingComponent: YieldLendingComponent,
 ) {
     val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
 
@@ -144,6 +147,11 @@ internal fun TokenDetailsScreen(
                         },
                     )
                 }
+                item(
+                    key = "yield_lending"
+                ) {
+                    yieldLendingComponent.Content(modifier = itemModifier)
+                }
 
                 expressTransactionsItems(
                     expressTxs = state.expressTxsToDisplay,
@@ -189,6 +197,11 @@ private fun TokenDetailsScreenPreview(
                 )
 
                 override fun LazyListScope.txHistoryContent(listState: LazyListState, state: TxHistoryUM) = Unit
+            },
+            yieldLendingComponent = object : YieldLendingComponent {
+                @Composable
+                override fun Content(modifier: Modifier) {
+                }
             },
         )
     }

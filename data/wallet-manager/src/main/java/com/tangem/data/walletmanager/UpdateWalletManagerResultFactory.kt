@@ -1,24 +1,20 @@
 package com.tangem.data.walletmanager
 
-import com.tangem.blockchain.common.Amount
-import com.tangem.blockchain.common.AmountType
-import com.tangem.blockchain.common.Token
-import com.tangem.blockchain.common.TransactionData
-import com.tangem.blockchain.common.TransactionStatus
-import com.tangem.blockchain.common.WalletManager
+import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.address.Address
 import com.tangem.blockchainsdk.models.UpdateWalletManagerResult
 import com.tangem.blockchainsdk.utils.amountToCreateAccount
 import com.tangem.data.walletmanager.utils.SdkAddressToAddressConverter
 import com.tangem.data.walletmanager.utils.TransactionDataToTxHistoryItemConverter
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.yieldlending.YieldLendingStatus
 import timber.log.Timber
 import java.math.BigDecimal
 
-/** Factory for creating [com.tangem.blockchainsdk.models.UpdateWalletManagerResult] */
+/** Factory for creating [UpdateWalletManagerResult] */
 internal class UpdateWalletManagerResultFactory {
 
-    /** Get [com.tangem.blockchainsdk.models.UpdateWalletManagerResult.Verified] result for [walletManager] */
+    /** Get [UpdateWalletManagerResult.Verified] result for [walletManager] */
     fun getResult(walletManager: WalletManager): UpdateWalletManagerResult.Verified {
         val wallet = walletManager.wallet
         val addresses = getAvailableAddresses(wallet.addresses)
@@ -107,19 +103,33 @@ internal class UpdateWalletManagerResultFactory {
 
     private fun createCurrencyAmount(amount: Amount): UpdateWalletManagerResult.CryptoCurrencyAmount? {
         return when (val type = amount.type) {
+            is AmountType.Coin -> {
+                val value = getCurrencyAmountValue(amount) ?: return null
+
+                UpdateWalletManagerResult.CryptoCurrencyAmount.Coin(value = value)
+            }
             is AmountType.Token -> {
                 val value = getCurrencyAmountValue(amount) ?: return null
 
-                UpdateWalletManagerResult.CryptoCurrencyAmount.Token(
+                UpdateWalletManagerResult.CryptoCurrencyAmount.Token.BasicToken(
                     currencyRawId = type.token.id?.let(CryptoCurrency::RawID),
                     contractAddress = type.token.contractAddress,
                     value = value,
                 )
             }
-            is AmountType.Coin -> {
+            is AmountType.YieldLend -> {
                 val value = getCurrencyAmountValue(amount) ?: return null
 
-                UpdateWalletManagerResult.CryptoCurrencyAmount.Coin(value = value)
+                UpdateWalletManagerResult.CryptoCurrencyAmount.Token.YieldLentToken(
+                    value = value,
+                    currencyRawId = type.token.id?.let(CryptoCurrency::RawID),
+                    contractAddress = type.token.contractAddress,
+                    yieldLendingStatus = YieldLendingStatus(
+                        isActive = type.isActive,
+                        isInitialized = type.isInitialized,
+                        isAllowedToSpend = type.isAllowedToSpend,
+                    )
+                )
             }
             is AmountType.FeeResource,
             is AmountType.Reserve,
@@ -147,7 +157,7 @@ internal class UpdateWalletManagerResultFactory {
         )
 
         return tokens.mapTo(demoAmounts) { token ->
-            UpdateWalletManagerResult.CryptoCurrencyAmount.Token(
+            UpdateWalletManagerResult.CryptoCurrencyAmount.Token.BasicToken(
                 currencyRawId = token.id?.let(CryptoCurrency::RawID),
                 contractAddress = token.contractAddress,
                 value = amountValue,
@@ -180,6 +190,15 @@ internal class UpdateWalletManagerResultFactory {
                 UpdateWalletManagerResult.CryptoCurrencyTransaction.Coin(txInfo = txHistoryItem)
             }
             is AmountType.Token -> {
+                val txHistoryItem = txHistoryItemConverter.convert(data) ?: return null
+
+                UpdateWalletManagerResult.CryptoCurrencyTransaction.Token(
+                    tokenId = type.token.id,
+                    contractAddress = type.token.contractAddress,
+                    txInfo = txHistoryItem,
+                )
+            }
+            is AmountType.YieldLend -> {
                 val txHistoryItem = txHistoryItemConverter.convert(data) ?: return null
 
                 UpdateWalletManagerResult.CryptoCurrencyTransaction.Token(

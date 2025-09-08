@@ -196,7 +196,7 @@
   <string name="common_generate_addresses">Sincronizar direcciones</string>
   <string name="common_go_to_provider">Ir al proveedor</string>
   <string name="common_go_to_token">Ir al token</string>
-  <string name="common_got_it">Entiendo</string>
+  <string name="common_got_it">Entendido</string>
   <string name="common_hide">Ocultar</string>
   <string name="common_hour">hora</string>
   <string name="common_import">Importe</string>
@@ -1195,7 +1195,7 @@
   <string name="twins_recreate_toolbar">Tangem Twin</string>
   <string name="twins_recreate_warning">Esta acción es irreversible. No tendrá acceso la billetera antigua.</string>
   <string name="twins_scan_twin_with_number">Toque la tarjeta gemela con el número %s y no la retira hasta el final de la operación</string>
-  <string name="unexpected_error_description">Por favor, inténtelo de nuevo más tarde. Si el problema persiste, póngase en contacto con el servicio de asistencia.</string>
+  <string name="unexpected_error_description">Por favor, inténtelo de nuevo más tarde. Si el problema persiste, póngase en contacto con el servicio de soporte.</string>
   <string name="unexpected_error_title">¡Algo salió mal!</string>
   <string name="universal_error">Hemos encontrado un error. Código de error: %s. Póngase en contacto con nuestro servicio de soporte.</string>
   <string name="unlock_wallet_description_full">Use %s o escanee una tarjeta/anillo para tener acceso a su billetera</string>

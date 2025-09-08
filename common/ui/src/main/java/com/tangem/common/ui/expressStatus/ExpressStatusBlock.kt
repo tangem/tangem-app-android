@@ -98,7 +98,7 @@ fun ExpressStatusBlock(state: ExpressStatusUM, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun ExpressStatusStep(status: ExpressStatusItemUM, isLast: Boolean) {
+fun ExpressStatusStep(status: ExpressStatusItemUM, isLast: Boolean) {
     AnimatedContent(
         targetState = status,
         label = "Exchange Step Change Success",

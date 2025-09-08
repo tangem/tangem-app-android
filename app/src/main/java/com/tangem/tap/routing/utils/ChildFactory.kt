@@ -37,6 +37,7 @@ import com.tangem.features.tangempay.components.TangemPayDetailsComponent
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.wallet.WalletEntryComponent
 import com.tangem.features.walletconnect.components.WalletConnectEntryComponent
+import com.tangem.features.yieldlending.api.YieldLendingPromoComponent
 import com.tangem.tap.features.details.ui.appcurrency.api.AppCurrencySelectorComponent
 import com.tangem.tap.features.details.ui.appsettings.api.AppSettingsComponent
 import com.tangem.tap.features.details.ui.cardsettings.api.CardSettingsComponent
@@ -105,6 +106,7 @@ internal class ChildFactory @Inject constructor(
     private val sendEntryPointComponentFactory: SendEntryPointComponent.Factory,
     private val tangemPayDetailsComponentFactory: TangemPayDetailsComponent.Factory,
     private val tangemPayOnboardingComponentFactory: TangemPayOnboardingComponent.Factory,
+    private val yieldLendingPromoComponentFactory: YieldLendingPromoComponent.Factory,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
 ) {
 
@@ -593,6 +595,16 @@ internal class ChildFactory @Inject constructor(
                     context = context,
                     params = TangemPayOnboardingComponent.Params(route.deeplink),
                     componentFactory = tangemPayOnboardingComponentFactory,
+                )
+            }
+            is AppRoute.YieldLendingPromo -> {
+                createComponentChild(
+                    context = context,
+                    params = YieldLendingPromoComponent.Params(
+                        userWalletId = route.userWalletId,
+                        currency = route.cryptoCurrency,
+                    ),
+                    componentFactory = yieldLendingPromoComponentFactory,
                 )
             }
         }
