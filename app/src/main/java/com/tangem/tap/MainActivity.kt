@@ -50,6 +50,7 @@ import com.tangem.domain.staking.SendUnsubmittedHashesUseCase
 import com.tangem.domain.tokens.GetPolkadotCheckHasImmortalUseCase
 import com.tangem.domain.tokens.GetPolkadotCheckHasResetUseCase
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
+import com.tangem.domain.wallets.usecase.ClearAllHotWalletContextualUnlockUseCase
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.tangempay.TangemPayFeatureToggles
@@ -187,6 +188,9 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     internal lateinit var hotWalletFeatureToggles: HotWalletFeatureToggles
 
     @Inject
+    internal lateinit var clearAllHotWalletContextualUnlockUseCase: ClearAllHotWalletContextualUnlockUseCase
+
+    @Inject
     internal lateinit var tangemPayFeatureToggles: TangemPayFeatureToggles
 
     private val viewModel: MainViewModel by viewModels()
@@ -274,6 +278,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
             coroutineScope = mainScope,
             userWalletsListRepository = userWalletsListRepository,
             hotWalletFeatureToggles = hotWalletFeatureToggles,
+            clearAllHotWalletContextualUnlockUseCase = clearAllHotWalletContextualUnlockUseCase,
         )
 
         initIntentHandlers()
