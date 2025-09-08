@@ -104,9 +104,10 @@ internal class FetchWalletAccountsErrorHandler @Inject constructor(
     ): UserTokensResponse? {
         if (this != null) return this
 
-        return userTokensResponseStore.getSyncOrNull(
-            userWalletId = userWalletProvider().walletId,
-        )
+        val userWalletId = userWalletProvider().walletId
+
+        return userTokensResponseStore.getSyncOrNull(userWalletId)
+            .also { userTokensResponseStore.clear(userWalletId) }
     }
 
     private fun UserTokensResponse?.orDefault(userWalletProvider: Provider<UserWallet>): UserTokensResponse {
