@@ -386,10 +386,30 @@ internal object WalletsDomainModule {
 
     @Provides
     @Singleton
+    fun providesGetHotWalletContextualUnlockUseCase(
+        hotWalletAccessor: HotWalletAccessor,
+    ): GetHotWalletContextualUnlockUseCase {
+        return GetHotWalletContextualUnlockUseCase(
+            hotWalletAccessor = hotWalletAccessor,
+        )
+    }
+
+    @Provides
+    @Singleton
     fun providesClearHotWalletContextualUnlockUseCase(
         hotWalletAccessor: HotWalletAccessor,
     ): ClearHotWalletContextualUnlockUseCase {
         return ClearHotWalletContextualUnlockUseCase(
+            hotWalletAccessor = hotWalletAccessor,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providesClearAllHotWalletContextualUnlockUseCase(
+        hotWalletAccessor: HotWalletAccessor,
+    ): ClearAllHotWalletContextualUnlockUseCase {
+        return ClearAllHotWalletContextualUnlockUseCase(
             hotWalletAccessor = hotWalletAccessor,
         )
     }
