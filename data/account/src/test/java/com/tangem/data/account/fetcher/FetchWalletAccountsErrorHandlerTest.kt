@@ -30,7 +30,7 @@ class FetchWalletAccountsErrorHandlerTest {
 
     private val userTokensSaver: UserTokensSaver = mockk(relaxUnitFun = true)
     private val userWalletsStore: UserWalletsStore = mockk()
-    private val userTokensResponseStore: UserTokensResponseStore = mockk()
+    private val userTokensResponseStore: UserTokensResponseStore = mockk(relaxUnitFun = true)
     private val cryptoPortfolioCF: CryptoPortfolioConverter.Factory = mockk()
     private val cryptoPortfolioConverter = mockk<CryptoPortfolioConverter>()
     private val userTokensResponseFactory: UserTokensResponseFactory = mockk()
