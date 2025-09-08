@@ -863,7 +863,6 @@
   <string name="send_fee_unreachable_error_text">Перевірте підключення до мережі</string>
   <string name="send_fee_unreachable_error_title">Інформація щодо комісії в мережі недоступна</string>
   <string name="send_from_title">Ви надсилаєте</string>
-  <string name="send_from_wallet_android">Із</string>
   <string name="send_gas_limit">Ліміт газу</string>
   <string name="send_gas_limit_footer">Це максимальна кількість газу, яка буде витрачена на здійснення транзакції чи контракту. Ліміт газу запобігає несподіваним або необмеженим стягненням під час виконання транзакції.</string>
   <string name="send_gas_price">Вартість газу</string>
@@ -1016,7 +1015,7 @@
   <string name="staking_notification_ton_activate_account">Щоб почати стейкінг в TON, спочатку здійсніть вихідну транзакцію на будь-яку суму — це активує ваш гаманець.</string>
   <string name="staking_notification_ton_extra_reserve_info">До 0.2 TON може знадобитися додатково мережевої комісії для завершення транзакції. Невикористана частина буде повернута.</string>
   <string name="staking_notification_ton_extra_reserve_is_required">Для виконання операції потребується додатково 0.2 TON, крім мережевої комісії. Будь ласка, поповніть баланс.</string>
-  <string name="staking_notification_ton_extra_reserve_title">Зарезервовано 0.2 TON</string>
+  <string name="staking_notification_ton_extra_reserve_title">Потрібен резерв TON</string>
   <string name="staking_notification_ton_have_to_unstake_all_text">Ця дія закриє інші позиції або переведе їх у статус виведення, відповідно до правил мережі.</string>
   <string name="staking_notification_ton_have_to_unstake_all_title">Статус позицій</string>
   <string name="staking_notification_unlock_text">Розблокуйте свої кошти, щоб вивести їх зі стейкінгу. Розблокування займе %s.</string>
