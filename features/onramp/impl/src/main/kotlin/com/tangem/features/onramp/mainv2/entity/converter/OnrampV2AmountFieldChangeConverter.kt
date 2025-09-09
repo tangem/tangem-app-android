@@ -45,6 +45,7 @@ internal class OnrampV2AmountFieldChangeConverter(
             continueButtonConfig = state.continueButtonConfig.copy(enabled = false),
             onrampProviderState = OnrampV2ProvidersUM.Loading,
             onrampAmountButtonUMState = OnrampV2AmountButtonUMState.None,
+            offersBlockState = OnrampOffersBlockUM.Empty,
         )
     }
 
