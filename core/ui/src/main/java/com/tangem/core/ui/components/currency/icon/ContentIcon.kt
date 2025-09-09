@@ -13,6 +13,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import com.tangem.core.ui.R
+import com.tangem.core.ui.components.account.AccountCharIcon
+import com.tangem.core.ui.components.account.AccountIconSize
+import com.tangem.core.ui.components.account.AccountResIcon
 import com.tangem.core.ui.components.currency.DefaultCurrencyIcon
 import com.tangem.core.ui.res.TangemTheme
 
@@ -57,6 +60,18 @@ internal fun ContentIcon(
             tint = icon.tint,
             background = icon.background,
             alpha = alpha,
+        )
+        is CurrencyIconState.CryptoPortfolio.Icon -> AccountResIcon(
+            modifier = modifier,
+            resId = icon.resId,
+            color = icon.color,
+            size = AccountIconSize.Default,
+        )
+        is CurrencyIconState.CryptoPortfolio.Letter -> AccountCharIcon(
+            modifier = modifier,
+            char = icon.char,
+            color = icon.color,
+            size = AccountIconSize.Default,
         )
         CurrencyIconState.Loading,
         CurrencyIconState.Locked,
