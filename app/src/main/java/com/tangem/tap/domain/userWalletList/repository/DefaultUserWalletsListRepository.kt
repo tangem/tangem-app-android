@@ -11,22 +11,16 @@ import com.tangem.common.map
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
-import com.tangem.domain.card.ScanCardProcessor
+import com.tangem.domain.core.wallets.UserWalletsListRepository
+import com.tangem.domain.core.wallets.UserWalletsListRepository.LockMethod
+import com.tangem.domain.core.wallets.error.*
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.wallets.R
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
-import com.tangem.domain.wallets.hot.HotWalletPasswordRequester
-import com.tangem.domain.core.wallets.error.DeleteWalletError
-import com.tangem.domain.core.wallets.error.LockWalletsError
-import com.tangem.domain.core.wallets.error.SaveWalletError
-import com.tangem.domain.core.wallets.error.SelectWalletError
-import com.tangem.domain.core.wallets.error.SetLockError
-import com.tangem.domain.core.wallets.error.UnlockWalletError
-import com.tangem.domain.core.wallets.UserWalletsListRepository
-import com.tangem.domain.core.wallets.UserWalletsListRepository.LockMethod
 import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository
+import com.tangem.domain.wallets.hot.HotWalletPasswordRequester
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.domain.userWalletList.model.UserWalletEncryptionKey
@@ -39,7 +33,6 @@ import com.tangem.utils.ProviderSuspend
 import com.tangem.utils.extensions.indexOfFirstOrNull
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
-import com.tangem.core.analytics.models.AnalyticsParam
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -54,7 +47,6 @@ internal class DefaultUserWalletsListRepository(
     private val savePersistentInformation: ProviderSuspend<Boolean>,
     private val appPreferencesStore: AppPreferencesStore,
     private val hotWalletAccessCodeAttemptsRepository: HotWalletAccessCodeAttemptsRepository,
-    private val scanCardProcessor: ScanCardProcessor,
 ) : UserWalletsListRepository {
 
     override val userWallets = MutableStateFlow<List<UserWallet>?>(null)
@@ -270,7 +262,7 @@ internal class DefaultUserWalletsListRepository(
                     raise(UnlockWalletError.UnableToUnlock)
                 }
 
-                scanCardProcessor.scan(analyticsSource = AnalyticsParam.ScreensSources.SignIn)
+                tangemSdkManagerProvider().scanProduct()
                     .doOnSuccess { scanResponse ->
                         val expectedId = UserWalletIdBuilder.scanResponse(scanResponse).build()
 
