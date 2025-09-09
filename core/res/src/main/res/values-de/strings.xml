@@ -984,7 +984,6 @@
   <string name="send_fee_unreachable_error_text">Überprüfe deine Netzwerkverbindung</string>
   <string name="send_fee_unreachable_error_title">Informationen zur Netzwerkgebühr nicht erreichbar</string>
   <string name="send_from_title">Sie senden</string>
-  <string name="send_from_wallet_android">Von</string>
   <string name="send_from_wallet_name">Von %s</string>
   <string name="send_gas_limit">Grenzwert Gasgebühr</string>
   <string name="send_gas_limit_footer">Dies ist die maximale Gasgebühr, die für den Abschluss einer Transaktion oder eines Vertrags ausgegeben wird. Ein Gaslimit verhindert unerwartete oder unbegrenzte Gebühren bei der Ausführung einer Transaktion.</string>
@@ -1141,7 +1140,7 @@
   <string name="staking_notification_ton_activate_account">Um mit dem Staking bei TON zu beginnen, führe zunächst eine ausgehende Transaktion in beliebiger Höhe durch – dadurch wird Deine Wallet aktiviert.</string>
   <string name="staking_notification_ton_extra_reserve_info">Für den Abschluss der Transaktion können zusätzlich zur Netzwerkgebühr bis zu 0,2 TON erforderlich sein. Nicht genutzte Beträge werden zurückerstattet.</string>
   <string name="staking_notification_ton_extra_reserve_is_required">Für diesen Vorgang sind zusätzlich zur Netzwerkgebühr 0,2 TON erforderlich. Bitte lade Dein Guthaben auf.</string>
-  <string name="staking_notification_ton_extra_reserve_title">0,2 Ton reserviert</string>
+  <string name="staking_notification_ton_extra_reserve_title">TON-Reserve erforderlich</string>
   <string name="staking_notification_ton_have_to_unstake_all_text">Durch diese Aktion werden andere Positionen geschlossen oder gemäß den Netzwerkregeln in den Auszahlungsstatus versetzt.</string>
   <string name="staking_notification_ton_have_to_unstake_all_title">Positionsstatus</string>
   <string name="staking_notification_unlock_text">Entsperre dein Geld, um es aus dem Staking-Prozess abzuheben. Das Freischalten nimmt %s.</string>
