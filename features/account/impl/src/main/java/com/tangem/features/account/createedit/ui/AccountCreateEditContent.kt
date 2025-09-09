@@ -31,6 +31,7 @@ import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerH24
 import com.tangem.core.ui.components.SpacerH8
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
+import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.components.fields.AutoSizeTextField
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
