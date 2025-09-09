@@ -1026,7 +1026,7 @@
   <string name="send_recipient">Empfänger</string>
   <string name="send_recipient_address_error">Keine gültige Adresse</string>
   <string name="send_recipient_address_footer">Stelle sicher, dass sich die empfangende Wallet-Adresse im ** %s -Netzwerk** befindet, um den Verlust Deiner Token zu vermeiden.</string>
-  <string name="send_recipient_address_footer_highlighted_part">senden an %s</string>
+  <string name="send_recipient_address_footer_highlighted_part">%s Netzwerkadresse</string>
   <string name="send_recipient_address_footer_v2">Stelle sicher, dass Du %s Netzwerkadresse hast, da Fehler zu verlorenen Übertragungen führen können</string>
   <string name="send_recipient_label">Senden an</string>
   <string name="send_recipient_memo_footer">Ein Memo/Destination Tag ist eine eindeutige ID zur Unterscheidung von Transaktionen, die an denselben Empfänger im selben Netzwerk gesendet werden. Vorsicht! Das Weglassen eines Vermerks kann dazu führen, dass Gelder für immer verloren sind!</string>
