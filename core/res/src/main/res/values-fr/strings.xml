@@ -854,7 +854,6 @@
   <string name="send_fee_unreachable_error_text">Vérifiez votre connexion réseau</string>
   <string name="send_fee_unreachable_error_title">Informations sur les frais de réseau inaccessibles</string>
   <string name="send_from_title">Vous envoyez</string>
-  <string name="send_from_wallet_android">De</string>
   <string name="send_from_wallet_name">De %s</string>
   <string name="send_gas_limit">Limite de gaz</string>
   <string name="send_gas_limit_footer">Il s\'agit du montant maximal de gaz qui sera dépensé pour effectuer une transaction ou un contrat. Une limite de gaz empêche des frais imprévus ou illimités lors de l\'exécution d\'une transaction.</string>
@@ -1011,7 +1010,7 @@
   <string name="staking_notification_ton_activate_account">Pour commencer à staker TON, effectuez d\'abord une transaction sortante de n\'importe quel montant — cela activera votre portefeuille.</string>
   <string name="staking_notification_ton_extra_reserve_info">Jusqu\'à 0,2 TON peuvent être requis en plus des frais de réseau pour terminer la transaction. Tout montant non utilisé sera remboursé.</string>
   <string name="staking_notification_ton_extra_reserve_is_required">0,2 TON requis pour effectuer cette opération, en plus des frais de réseau. Veuillez recharger votre solde.</string>
-  <string name="staking_notification_ton_extra_reserve_title">0,2 Ton réservés</string>
+  <string name="staking_notification_ton_extra_reserve_title">Réserve de TON requise</string>
   <string name="staking_notification_ton_have_to_unstake_all_text">Cette action fermera d\'autres positions ou les fera passer au statut de retrait, conformément aux règles du réseau.</string>
   <string name="staking_notification_ton_have_to_unstake_all_title">Statut des positions</string>
   <string name="staking_notification_unlock_text">Débloquez votre argent pour le retirer du processus de staking. Le déverrouillage prend %s.</string>
