@@ -903,6 +903,7 @@
   <string name="send_recipient">Одержувач</string>
   <string name="send_recipient_address_error">Недійсна адреса</string>
   <string name="send_recipient_address_footer">Переконайтеся, що адреса гаманця одержувача знаходиться в мережі %s, щоб уникнути втрати ваших токенів</string>
+  <string name="send_recipient_address_footer_highlighted_part">в мережі %s</string>
   <string name="send_recipient_address_footer_v2">Переконайтеся, що ви надсилаєте на адресу в мережі %s. Помилка може призвести до втрати коштів.</string>
   <string name="send_recipient_label">Надіслати до</string>
   <string name="send_recipient_memo_footer">Memo/ Тег призначення — це унікальний ідентифікатор для розрізнення транзакцій, надісланих тому самому одержувачу в тій самій мережі. Застереження: відсутність тегу може призвести до втрати коштів.</string>
