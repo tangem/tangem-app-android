@@ -896,7 +896,7 @@
   <string name="send_recipient">Destinataire</string>
   <string name="send_recipient_address_error">Adresse non valide</string>
   <string name="send_recipient_address_footer">Assurez-vous que l\'adresse du portefeuille de réception est sur le réseau %s pour éviter de perdre vos jetons</string>
-  <string name="send_recipient_address_footer_highlighted_part">envoyer à %s</string>
+  <string name="send_recipient_address_footer_highlighted_part">%s une adresse réseau</string>
   <string name="send_recipient_address_footer_v2">Assurez-vous de %s une adresse réseau, car des erreurs peuvent entraîner des transferts perdus</string>
   <string name="send_recipient_label">Envoyer à</string>
   <string name="send_recipient_memo_footer">Un Memo/Destination Tag est un identifiant unique permettant de différencier les transactions envoyées au même destinataire sur le même réseau. Attention : L\'omission d\'un mémo peut entraîner des fonds mal placés</string>
