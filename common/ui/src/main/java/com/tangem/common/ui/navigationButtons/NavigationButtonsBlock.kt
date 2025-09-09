@@ -36,7 +36,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.singleEvent
-import com.tangem.core.ui.test.StakingSendScreenTestTags
+import com.tangem.core.ui.test.SendScreenTestTags
 
 @Composable
 fun NavigationButtonsBlock(
@@ -149,7 +149,7 @@ private fun PreviousButton(prevButton: NavigationButton?) {
                     .background(TangemTheme.colors.button.secondary)
                     .clickable(onClick = button.onClick)
                     .padding(TangemTheme.dimens.spacing12)
-                    .testTag(StakingSendScreenTestTags.PREVIOUS_BUTTON),
+                    .testTag(SendScreenTestTags.PREVIOUS_BUTTON),
             )
         }
     }
