@@ -1035,7 +1035,7 @@
   <string name="send_recipient">受取人</string>
   <string name="send_recipient_address_error">有効なアドレスではありません</string>
   <string name="send_recipient_address_footer">トークンの損失を避けるために、受信ウォレットアドレスが** %sネットワーク**上にあることを確認してください</string>
-  <string name="send_recipient_address_footer_highlighted_part">%s に送信</string>
+  <string name="send_recipient_address_footer_highlighted_part">%s</string>
   <string name="send_recipient_address_footer_v2">%sネットワーク上のアドレスに送信していることを確認してください。エラーが発生すると資金が失われる可能性があります。</string>
   <string name="send_recipient_label">送金先</string>
   <string name="send_recipient_memo_footer">メモ/宛先タグは、同じネットワーク上の同じ受信者に送信された取引を区別するためのユニークなIDです。注意：メモを省略すると、資金の行き違いにつながる可能性があります。</string>
