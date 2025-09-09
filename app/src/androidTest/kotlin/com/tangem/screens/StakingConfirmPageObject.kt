@@ -3,6 +3,7 @@ package com.tangem.screens
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.tangem.common.BaseTestCase
 import com.tangem.core.ui.R
+import com.tangem.core.ui.test.BaseAmountBlockTestTags
 import com.tangem.core.ui.test.BaseButtonTestTags
 import com.tangem.core.ui.test.StakingSendDetailsScreenTestTags
 import com.tangem.core.ui.test.TopAppBarTestTags
@@ -11,8 +12,8 @@ import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onCompose
 import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 
-class StakingSendDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
-    ComposeScreen<StakingSendDetailsPageObject>(semanticsProvider = semanticsProvider) {
+class StakingConfirmPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
+    ComposeScreen<StakingConfirmPageObject>(semanticsProvider = semanticsProvider) {
 
     val title: KNode = child {
         hasTestTag(TopAppBarTestTags.TITLE)
@@ -20,12 +21,12 @@ class StakingSendDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsP
     }
 
     val primaryAmount: KNode = child {
-        hasTestTag(StakingSendDetailsScreenTestTags.PRIMARY_AMOUNT)
+        hasTestTag(BaseAmountBlockTestTags.PRIMARY_AMOUNT)
         useUnmergedTree = true
     }
 
     val secondaryAmount: KNode = child {
-        hasTestTag(StakingSendDetailsScreenTestTags.SECONDARY_AMOUNT)
+        hasTestTag(BaseAmountBlockTestTags.SECONDARY_AMOUNT)
         useUnmergedTree = true
     }
 
@@ -47,5 +48,5 @@ class StakingSendDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsP
 
 }
 
-internal fun BaseTestCase.onStakingSendDetailsScreen(function: StakingSendDetailsPageObject.() -> Unit) =
+internal fun BaseTestCase.onStakingConfirmScreen(function: StakingConfirmPageObject.() -> Unit) =
     onComposeScreen(composeTestRule, function)
