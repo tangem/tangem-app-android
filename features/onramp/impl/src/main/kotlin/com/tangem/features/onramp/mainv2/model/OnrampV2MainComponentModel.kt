@@ -138,7 +138,7 @@ internal class OnrampV2MainComponentModel @Inject constructor(
             cryptoCurrencySymbol = params.cryptoCurrency.symbol,
             providerName = quote.provider.info.name,
             paymentMethodName = quote.paymentMethod.name,
-        )?.let { analyticsEventHandler.send(it) }
+        )?.let { analyticsEventHandler::send }
         params.openRedirectPage(quote)
     }
 
