@@ -1,4 +1,4 @@
-package com.tangem.steps
+package com.tangem.scenarios
 
 import com.tangem.common.BaseTestCase
 import com.tangem.screens.onWalletConnectBottomSheet
