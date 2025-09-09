@@ -12,6 +12,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
@@ -80,9 +81,11 @@ internal fun OnrampOffersContent(state: OnrampOffersBlockUM) {
 
                 SpacerH(8.dp)
 
-                state.recommended.fastForEach {
-                    Offer(it)
-                    SpacerH(8.dp)
+                state.recommended.fastForEach { offer ->
+                    key("${offer.paymentMethod.id} ${offer.providerName} ${offer.rate}") {
+                        Offer(offer)
+                        SpacerH(8.dp)
+                    }
                 }
 
                 state.onrampAllOffersButtonConfig?.let {
@@ -99,7 +102,7 @@ internal fun OnrampOffersContent(state: OnrampOffersBlockUM) {
 }
 
 @Composable
-private fun Offer(onrampOfferUM: OnrampOfferUM, modifier: Modifier = Modifier) {
+internal fun Offer(onrampOfferUM: OnrampOfferUM, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -263,7 +266,7 @@ private fun PaymentBlockInOffer(paymentMethod: OnrampPaymentMethod, providerName
 }
 
 @Composable
-private fun TimingBlock(speed: PaymentMethodType.PaymentSpeed) {
+internal fun TimingBlock(speed: PaymentMethodType.PaymentSpeed) {
     val timingText = when (speed) {
         PaymentMethodType.PaymentSpeed.Instant -> {
             stringResourceSafe(id = R.string.onramp_instant_status)
