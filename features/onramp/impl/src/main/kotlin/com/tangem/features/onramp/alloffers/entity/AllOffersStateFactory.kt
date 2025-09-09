@@ -1,10 +1,12 @@
 package com.tangem.features.onramp.alloffers.entity
 
 import com.tangem.common.ui.notifications.NotificationUM
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
+import com.tangem.domain.onramp.analytics.OnrampAnalyticsEvent
 import com.tangem.domain.onramp.model.*
 import com.tangem.domain.onramp.model.error.OnrampError
 import com.tangem.features.onramp.mainv2.entity.OnrampOfferAdvantagesUM
@@ -16,6 +18,7 @@ import kotlinx.collections.immutable.toPersistentList
 import java.math.BigDecimal
 
 internal class AllOffersStateFactory(
+    private val analyticsEventHandler: AnalyticsEventHandler,
     private val currentStateProvider: Provider<AllOffersStateUM>,
     private val allOffersIntents: AllOffersIntents,
 ) {
@@ -59,6 +62,7 @@ internal class AllOffersStateFactory(
     fun getPaymentsState(): AllOffersStateUM {
         return when (val currentState = currentStateProvider.invoke()) {
             is AllOffersStateUM.Content -> {
+                analyticsEventHandler.send(OnrampAnalyticsEvent.PaymentMethodsScreenOpened)
                 currentState.copy(currentMethod = null)
             }
             AllOffersStateUM.Loading,
@@ -133,12 +137,13 @@ internal class AllOffersStateFactory(
                                     },
                                 onBuyClicked = {
                                     allOffersIntents.onBuyClick(
-                                        OnrampProviderWithQuote.Data(
+                                        quote = OnrampProviderWithQuote.Data(
                                             provider = quote.provider,
                                             paymentMethod = quote.paymentMethod,
                                             toAmount = quote.toAmount,
                                             fromAmount = quote.fromAmount,
                                         ),
+                                        onrampOfferAdvantagesUM = mapOfferAdvantagesDTOtoUM(offer.advantages),
                                     )
                                 },
                             ),

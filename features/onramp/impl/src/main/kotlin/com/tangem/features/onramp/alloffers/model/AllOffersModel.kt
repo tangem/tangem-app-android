@@ -11,6 +11,7 @@ import com.tangem.features.onramp.alloffers.AllOffersComponent
 import com.tangem.features.onramp.alloffers.entity.AllOffersIntents
 import com.tangem.features.onramp.alloffers.entity.AllOffersStateFactory
 import com.tangem.features.onramp.alloffers.entity.AllOffersStateUM
+import com.tangem.features.onramp.mainv2.entity.OnrampOfferAdvantagesUM
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.Job
@@ -30,6 +31,7 @@ internal class AllOffersModel @Inject constructor(
 
     private val stateFactory: AllOffersStateFactory by lazy(LazyThreadSafetyMode.NONE) {
         AllOffersStateFactory(
+            analyticsEventHandler = analyticsEventHandler,
             currentStateProvider = Provider { state.value },
             allOffersIntents = this,
         )
@@ -42,6 +44,8 @@ internal class AllOffersModel @Inject constructor(
 
     init {
         subscribeOnAllOffers()
+        analyticsEventHandler.send(OnrampAnalyticsEvent.PaymentMethodsScreenOpened)
+        analyticsEventHandler.send(OnrampAnalyticsEvent.AllOffersClicked)
     }
 
     fun dismiss() {
@@ -51,10 +55,13 @@ internal class AllOffersModel @Inject constructor(
     override fun onPaymentMethodClicked(paymentMethodId: String) {
         val contentState = state.value as? AllOffersStateUM.Content ?: return
         val method = contentState.methods.firstOrNull { it.methodConfig.method.id == paymentMethodId } ?: return
+        analyticsEventHandler.send(
+            event = OnrampAnalyticsEvent.OnPaymentMethodChosen(paymentMethod = method.methodConfig.method.name),
+        )
         _state.update { contentState.copy(currentMethod = method) }
     }
 
-    override fun onBuyClick(quote: OnrampProviderWithQuote.Data) {
+    override fun onBuyClick(quote: OnrampProviderWithQuote.Data, onrampOfferAdvantagesUM: OnrampOfferAdvantagesUM) {
         analyticsEventHandler.send(
             OnrampAnalyticsEvent.OnBuyClick(
                 providerName = quote.provider.info.name,
@@ -62,6 +69,11 @@ internal class AllOffersModel @Inject constructor(
                 tokenSymbol = params.cryptoCurrency.symbol,
             ),
         )
+        onrampOfferAdvantagesUM.toAnalyticsEvent(
+            cryptoCurrencySymbol = params.cryptoCurrency.symbol,
+            providerName = quote.provider.info.name,
+            paymentMethodName = quote.paymentMethod.name,
+        )?.let { analyticsEventHandler.send(it) }
         params.openRedirectPage(quote)
     }
 
