@@ -946,6 +946,7 @@
   <string name="send_recipient">Получатель</string>
   <string name="send_recipient_address_error">Неверный адрес</string>
   <string name="send_recipient_address_footer">Убедитесь, что вы отправляете средства на адрес кошелька %s. Ошибки могут привести к потере ваших токенов.</string>
+  <string name="send_recipient_address_footer_highlighted_part">в сети %s</string>
   <string name="send_recipient_address_footer_v2">Убедитесь, что отправляете на адрес в сети %s, ошибки могут привести к потере средств.</string>
   <string name="send_recipient_label">Отправить</string>
   <string name="send_recipient_memo_footer">Мемо/ Код назначения - это код, разделяющий транзакции к общему получателю в сети криптовалют. Внимание: отсутствие мемо может привести к потере средств.</string>
