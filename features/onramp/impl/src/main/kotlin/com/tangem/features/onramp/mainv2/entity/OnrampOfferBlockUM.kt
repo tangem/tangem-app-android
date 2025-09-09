@@ -2,6 +2,7 @@ package com.tangem.features.onramp.mainv2.entity
 
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.domain.onramp.analytics.OnrampAnalyticsEvent
 import com.tangem.domain.onramp.model.OnrampPaymentMethod
 import kotlinx.collections.immutable.ImmutableList
 
@@ -43,7 +44,27 @@ internal enum class OnrampOfferCategoryUM {
 }
 
 internal enum class OnrampOfferAdvantagesUM {
-    Default, BestRate, Fastest
+    Default, BestRate, Fastest;
+
+    fun toAnalyticsEvent(
+        cryptoCurrencySymbol: String,
+        providerName: String,
+        paymentMethodName: String,
+    ): OnrampAnalyticsEvent? {
+        return when (this) {
+            BestRate -> OnrampAnalyticsEvent.BestRateClicked(
+                tokenSymbol = cryptoCurrencySymbol,
+                providerName = providerName,
+                paymentMethod = paymentMethodName,
+            )
+            Fastest -> OnrampAnalyticsEvent.FastestBuyMethodClicked(
+                tokenSymbol = cryptoCurrencySymbol,
+                providerName = providerName,
+                paymentMethod = paymentMethodName,
+            )
+            Default -> null
+        }
+    }
 }
 
 internal data class OnrampAllOffersButtonConfig(
