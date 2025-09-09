@@ -20,7 +20,6 @@ import com.tangem.domain.tokens.model.Amount
 import com.tangem.domain.tokens.model.AmountType
 import com.tangem.domain.tokens.model.convertToAmount
 import com.tangem.features.onramp.impl.R
-import com.tangem.features.onramp.main.entity.OnrampIntents
 import com.tangem.features.onramp.mainv2.entity.*
 import com.tangem.utils.Provider
 import java.math.BigDecimal
@@ -29,7 +28,7 @@ internal class OnrampV2StateFactory(
     private val currentStateProvider: Provider<OnrampV2MainComponentUM>,
     private val onrampAmountButtonUMStateFactory: OnrampAmountButtonUMStateFactory,
     private val cryptoCurrency: CryptoCurrency,
-    private val onrampIntents: OnrampIntents,
+    private val onrampIntents: OnrampV2Intents,
 ) {
 
     fun getInitialState(
