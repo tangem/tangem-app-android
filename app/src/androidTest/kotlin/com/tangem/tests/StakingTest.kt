@@ -5,8 +5,9 @@ import com.tangem.common.constants.TestConstants.TOTAL_BALANCE
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
-import com.tangem.scenarios.OpenMainScreenScenario
 import com.tangem.screens.*
+import com.tangem.scenarios.openMainScreen
+import com.tangem.scenarios.synchronizeAddresses
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
@@ -20,7 +21,7 @@ class StakingTest : BaseTestCase() {
     @Test
     fun validateStakingBlockTest() {
         val tokenTitle = "POL (ex-MATIC)"
-        val balance = TOTAL_BALANCE
+        val balance = "$3,299.37"
         val scenarioName = "staking_eth_pol_balances_android"
         val scenarioState = "Staked"
 
@@ -35,13 +36,13 @@ class StakingTest : BaseTestCase() {
             }
 
             step("Open 'Main Screen'") {
-                scenario(OpenMainScreenScenario(composeTestRule))
+                openMainScreen()
             }
-            step("Click on 'Synchronize addresses' button") {
-                onMainScreen { synchronizeAddressesButton.clickWithAssertion() }
+            step("Synchronize addresses") {
+                synchronizeAddresses(balance)
             }
-            step("Assert wallet balance = $balance") {
-                onMainScreen { walletBalance().assertTextContains(balance) }
+            step("Assert 'Organize tokens' button is displayed") {
+                onMainScreen { organizeTokensButton().assertIsDisplayed() }
             }
             step("Click on token with name: '$tokenTitle'") {
                 onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
@@ -75,7 +76,7 @@ class StakingTest : BaseTestCase() {
     @Test
     fun validateStakingMoreScreensTest() {
         val tokenTitle = "POL (ex-MATIC)"
-        val balance = TOTAL_BALANCE
+        val balance = "$3,299.37"
         val scenarioName = "staking_eth_pol_balances_android"
         val scenarioState = "Staked"
         val stakingAmount = "1"
@@ -91,13 +92,13 @@ class StakingTest : BaseTestCase() {
             }
 
             step("Open 'Main Screen'") {
-                scenario(OpenMainScreenScenario(composeTestRule))
+                openMainScreen()
             }
-            step("Click on 'Synchronize addresses' button") {
-                onMainScreen { synchronizeAddressesButton.clickWithAssertion() }
+            step("Synchronize addresses") {
+                synchronizeAddresses(balance)
             }
-            step("Assert wallet balance = $balance") {
-                onMainScreen { walletBalance().assertTextContains(balance) }
+            step("Assert 'Organize tokens' button is displayed") {
+                onMainScreen { organizeTokensButton().assertIsDisplayed() }
             }
             step("Click on token with name: '$tokenTitle'") {
                 onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
@@ -151,73 +152,73 @@ class StakingTest : BaseTestCase() {
                 onStakingDetailsScreen { stakeMoreButton.performClick() }
             }
             step("Assert 'Send' screen is displayed") {
-                onStakingSendScreen { screenContainer.assertIsDisplayed() }
+                onSendScreen { screenContainer.assertIsDisplayed() }
             }
             step("Assert 'Send' screen title is displayed") {
-                onStakingSendScreen { title.assertIsDisplayed() }
+                onSendScreen { title.assertIsDisplayed() }
             }
             step("Assert amount container title is displayed") {
-                onStakingSendScreen { amountContainerTitle.assertIsDisplayed() }
+                onSendScreen { amountContainerTitle.assertIsDisplayed() }
             }
             step("Assert amount container text is displayed") {
-                onStakingSendScreen { amountContainerText.assertIsDisplayed() }
+                onSendScreen { amountContainerText.assertIsDisplayed() }
             }
             step("Assert input text field is displayed") {
-                onStakingSendScreen { amountInputTextField.assertIsDisplayed() }
+                onSendScreen { amountInputTextField.assertIsDisplayed() }
             }
             step("Assert secondary amount is displayed") {
-                onStakingSendScreen { secondaryAmount.assertIsDisplayed() }
+                onSendScreen { secondaryAmount.assertIsDisplayed() }
             }
             step("Type '$stakingAmount' in input text field") {
-                onStakingSendScreen {
+                onSendScreen {
                     amountInputTextField.performClick()
                     amountInputTextField.performTextReplacement(stakingAmount)
                 }
             }
             step("Assert input text field has value: '$stakingAmount'") {
-                onStakingSendScreen { amountInputTextField.assertTextContains(value = stakingAmount, substring = true) }
+                onSendScreen { amountInputTextField.assertTextContains(value = stakingAmount, substring = true) }
             }
             step("Assert currency button is displayed") {
-                onStakingSendScreen { currencyButton.assertIsDisplayed() }
+                onSendScreen { currencyButton.assertIsDisplayed() }
             }
             step("Assert fiat button is displayed") {
-                onStakingSendScreen { fiatButton.assertIsDisplayed() }
+                onSendScreen { fiatButton.assertIsDisplayed() }
             }
             step("Assert currency button is displayed") {
-                onStakingSendScreen { currencyButton.assertIsDisplayed() }
+                onSendScreen { currencyButton.assertIsDisplayed() }
             }
             step("Assert fiat button is displayed") {
-                onStakingSendScreen { fiatButton.assertIsDisplayed() }
+                onSendScreen { fiatButton.assertIsDisplayed() }
             }
             step("Assert 'Max' button is displayed") {
-                onStakingSendScreen { maxButton.assertIsDisplayed() }
+                onSendScreen { maxButton.assertIsDisplayed() }
             }
             step("Assert previous button is displayed") {
-                onStakingSendScreen { previousButton.assertIsDisplayed() }
+                onSendScreen { previousButton.assertIsDisplayed() }
             }
             step("Assert 'Next' button is displayed") {
-                onStakingSendScreen { nextButton.assertIsDisplayed() }
+                onSendScreen { nextButton.assertIsDisplayed() }
             }
             step("Click on 'Next' button") {
-                onStakingSendScreen { nextButton.performClick() }
+                onSendScreen { nextButton.performClick() }
             }
             step("Assert 'Send details' screen title is displayed") {
-                onStakingSendDetailsScreen { title.assertIsDisplayed() }
+                onStakingConfirmScreen { title.assertIsDisplayed() }
             }
             step("Assert primary amount is displayed") {
-                onStakingSendDetailsScreen { primaryAmount.assertIsDisplayed() }
+                onStakingConfirmScreen { primaryAmount.assertIsDisplayed() }
             }
             step("Assert secondary amount is displayed") {
-                onStakingSendDetailsScreen { secondaryAmount.assertIsDisplayed() }
+                onStakingConfirmScreen { secondaryAmount.assertIsDisplayed() }
             }
             step("Assert 'Validator' block is displayed") {
-                onStakingSendDetailsScreen { validatorBlock.assertIsDisplayed() }
+                onStakingConfirmScreen { validatorBlock.assertIsDisplayed() }
             }
             step("Assert 'Network Fee' block is displayed") {
-                onStakingSendDetailsScreen { networkFeeBlock.assertIsDisplayed() }
+                onStakingConfirmScreen { networkFeeBlock.assertIsDisplayed() }
             }
             step("Assert 'Stake' button is displayed") {
-                onStakingSendDetailsScreen { stakeButton.assertIsDisplayed() }
+                onStakingConfirmScreen { stakeButton.assertIsDisplayed() }
             }
         }
     }
@@ -243,13 +244,13 @@ class StakingTest : BaseTestCase() {
             }
 
             step("Open 'Main Screen'") {
-                scenario(OpenMainScreenScenario(composeTestRule))
+                openMainScreen()
             }
-            step("Click on 'Synchronize addresses' button") {
-                onMainScreen { synchronizeAddressesButton.clickWithAssertion() }
+            step("Synchronize addresses") {
+                synchronizeAddresses(balance)
             }
-            step("Assert wallet balance = $balance") {
-                onMainScreen { walletBalance().assertTextContains(balance) }
+            step("Assert 'Organize tokens' button is displayed") {
+                onMainScreen { organizeTokensButton().assertIsDisplayed() }
             }
             step("Click on token with name: '$tokenTitle'") {
                 onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
@@ -306,73 +307,73 @@ class StakingTest : BaseTestCase() {
                 onStakingDetailsScreen { stakeButton.performClick() }
             }
             step("Assert 'Send' screen is displayed") {
-                onStakingSendScreen { screenContainer.assertIsDisplayed() }
+                onSendScreen { screenContainer.assertIsDisplayed() }
             }
             step("Assert 'Send' screen title is displayed") {
-                onStakingSendScreen { title.assertIsDisplayed() }
+                onSendScreen { title.assertIsDisplayed() }
             }
             step("Assert amount container title is displayed") {
-                onStakingSendScreen { amountContainerTitle.assertIsDisplayed() }
+                onSendScreen { amountContainerTitle.assertIsDisplayed() }
             }
             step("Assert amount container text is displayed") {
-                onStakingSendScreen { amountContainerText.assertIsDisplayed() }
+                onSendScreen { amountContainerText.assertIsDisplayed() }
             }
             step("Assert input text field is displayed") {
-                onStakingSendScreen { amountInputTextField.assertIsDisplayed() }
+                onSendScreen { amountInputTextField.assertIsDisplayed() }
             }
             step("Assert secondary amount is displayed") {
-                onStakingSendScreen { secondaryAmount.assertIsDisplayed() }
+                onSendScreen { secondaryAmount.assertIsDisplayed() }
             }
             step("Type '$stakingAmount' in input text field") {
-                onStakingSendScreen {
+                onSendScreen {
                     amountInputTextField.performClick()
                     amountInputTextField.performTextReplacement(stakingAmount)
                 }
             }
             step("Assert input text field has value: '$stakingAmount'") {
-                onStakingSendScreen { amountInputTextField.assertTextContains(value = stakingAmount, substring = true) }
+                onSendScreen { amountInputTextField.assertTextContains(value = stakingAmount, substring = true) }
             }
             step("Assert currency button is displayed") {
-                onStakingSendScreen { currencyButton.assertIsDisplayed() }
+                onSendScreen { currencyButton.assertIsDisplayed() }
             }
             step("Assert fiat button is displayed") {
-                onStakingSendScreen { fiatButton.assertIsDisplayed() }
+                onSendScreen { fiatButton.assertIsDisplayed() }
             }
             step("Assert currency button is displayed") {
-                onStakingSendScreen { currencyButton.assertIsDisplayed() }
+                onSendScreen { currencyButton.assertIsDisplayed() }
             }
             step("Assert fiat button is displayed") {
-                onStakingSendScreen { fiatButton.assertIsDisplayed() }
+                onSendScreen { fiatButton.assertIsDisplayed() }
             }
             step("Assert 'Max' button is displayed") {
-                onStakingSendScreen { maxButton.assertIsDisplayed() }
+                onSendScreen { maxButton.assertIsDisplayed() }
             }
             step("Assert previous button is displayed") {
-                onStakingSendScreen { previousButton.assertIsDisplayed() }
+                onSendScreen { previousButton.assertIsDisplayed() }
             }
             step("Assert 'Next' button is displayed") {
-                onStakingSendScreen { nextButton.assertIsDisplayed() }
+                onSendScreen { nextButton.assertIsDisplayed() }
             }
             step("Click on 'Next' button") {
-                onStakingSendScreen { nextButton.performClick() }
+                onSendScreen { nextButton.performClick() }
             }
             step("Assert 'Send details' screen title is displayed") {
-                onStakingSendDetailsScreen { title.assertIsDisplayed() }
+                onStakingConfirmScreen { title.assertIsDisplayed() }
             }
             step("Assert primary amount is displayed") {
-                onStakingSendDetailsScreen { primaryAmount.assertIsDisplayed() }
+                onStakingConfirmScreen { primaryAmount.assertIsDisplayed() }
             }
             step("Assert secondary amount is displayed") {
-                onStakingSendDetailsScreen { secondaryAmount.assertIsDisplayed() }
+                onStakingConfirmScreen { secondaryAmount.assertIsDisplayed() }
             }
             step("Assert 'Validator' block is displayed") {
-                onStakingSendDetailsScreen { validatorBlock.assertIsDisplayed() }
+                onStakingConfirmScreen { validatorBlock.assertIsDisplayed() }
             }
             step("Assert 'Network Fee' block is displayed") {
-                onStakingSendDetailsScreen { networkFeeBlock.assertIsDisplayed() }
+                onStakingConfirmScreen { networkFeeBlock.assertIsDisplayed() }
             }
             step("Assert 'Stake' button is displayed") {
-                onStakingSendDetailsScreen { stakeButton.assertIsDisplayed() }
+                onStakingConfirmScreen { stakeButton.assertIsDisplayed() }
             }
         }
     }
