@@ -7,7 +7,6 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.domain.onramp.model.*
 import com.tangem.features.onramp.impl.R
-import com.tangem.features.onramp.main.entity.OnrampIntents
 import com.tangem.features.onramp.mainv2.entity.*
 import com.tangem.utils.Provider
 import com.tangem.utils.StringsSigns.MINUS
@@ -15,7 +14,7 @@ import kotlinx.collections.immutable.toPersistentList
 
 internal class OnrampOffersStateFactory(
     private val currentStateProvider: Provider<OnrampV2MainComponentUM>,
-    private val onrampIntents: OnrampIntents,
+    private val onrampIntents: OnrampV2Intents,
 ) {
 
     fun getOnShowOffersState(offers: List<OnrampOffersBlock>): OnrampV2MainComponentUM {
@@ -65,6 +64,7 @@ internal class OnrampOffersStateFactory(
                                             toAmount = currentQuote.toAmount,
                                             fromAmount = currentQuote.fromAmount,
                                         ),
+                                        onrampOfferAdvantagesUM = mapOfferAdvantagesDTOtoUM(offer.advantages),
                                     )
                                 },
                             ),
