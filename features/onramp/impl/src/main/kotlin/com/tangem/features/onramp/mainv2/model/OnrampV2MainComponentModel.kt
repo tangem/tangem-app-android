@@ -118,7 +118,7 @@ internal class OnrampV2MainComponentModel @Inject constructor(
     }
 
     override fun openSettings() {
-        params.openSettings
+        params.openSettings.invoke()
     }
 
     override fun openCurrenciesList() {
@@ -139,7 +139,9 @@ internal class OnrampV2MainComponentModel @Inject constructor(
     }
 
     override fun openProviders() {
-        bottomSheetNavigation.activate(OnrampV2MainBottomSheetConfig.AllOffers)
+        val currentContentState = state.value as? OnrampV2MainComponentUM.Content ?: return
+        val amountCurrentCode = currentContentState.amountBlockState.currencyUM.code
+        bottomSheetNavigation.activate(OnrampV2MainBottomSheetConfig.AllOffers(amountCurrentCode))
     }
 
     override fun onRefresh() {

@@ -12,5 +12,5 @@ sealed interface OnrampV2MainBottomSheetConfig {
     data object CurrenciesList : OnrampV2MainBottomSheetConfig
 
     @Serializable
-    data object AllOffers : OnrampV2MainBottomSheetConfig
+    data class AllOffers(val amountCurrencyCode: String) : OnrampV2MainBottomSheetConfig
 }
