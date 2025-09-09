@@ -8,7 +8,6 @@ import com.tangem.common.json.TangemSdkAdapter
 import com.tangem.common.services.secure.SecureStorage
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.models.scan.serialization.*
 import com.tangem.domain.visa.model.VisaActivationRemoteState
 import com.tangem.domain.visa.model.VisaCardActivationStatus
@@ -123,7 +122,6 @@ internal object UserWalletsListManagerModule {
         passwordRequester: HotWalletPasswordRequester,
         appPreferencesStore: AppPreferencesStore,
         hotWalletAccessCodeAttemptsRepository: HotWalletAccessCodeAttemptsRepository,
-        scanCardProcessor: ScanCardProcessor,
     ): UserWalletsListRepository {
         val moshi = buildMoshi()
         val secureStorage = buildSecureStorage(applicationContext = applicationContext)
@@ -170,7 +168,6 @@ internal object UserWalletsListManagerModule {
             appPreferencesStore = appPreferencesStore,
             savePersistentInformation = ProviderSuspend { true }, // Always save persistent information for now
             hotWalletAccessCodeAttemptsRepository = hotWalletAccessCodeAttemptsRepository,
-            scanCardProcessor = scanCardProcessor,
         )
     }
 
