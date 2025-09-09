@@ -69,12 +69,14 @@ internal class DefaultOnrampV2MainComponent @AssistedInject constructor(
                 onDismiss = model.bottomSheetNavigation::dismiss,
             ),
         )
-        OnrampV2MainBottomSheetConfig.AllOffers -> allOffersComponentFactory.create(
+        is OnrampV2MainBottomSheetConfig.AllOffers -> allOffersComponentFactory.create(
             context = childByContext(componentContext),
             params = AllOffersComponent.Params(
                 userWallet = model.userWallet,
                 cryptoCurrency = params.cryptoCurrency,
                 onDismiss = model.bottomSheetNavigation::dismiss,
+                openRedirectPage = params.openRedirectPage,
+                amountCurrencyCode = config.amountCurrencyCode,
             ),
         )
     }
