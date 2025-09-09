@@ -86,6 +86,24 @@ sealed class CurrencyIconState {
         override val topBadgeIconResId: Int? = null
     }
 
+    sealed class CryptoPortfolio : CurrencyIconState() {
+        override val showCustomBadge: Boolean = false
+        override val topBadgeIconResId: Int? = null
+        abstract val color: Color
+
+        data class Icon(
+            @DrawableRes val resId: Int,
+            override val color: Color,
+            override val isGrayscale: Boolean,
+        ) : CryptoPortfolio()
+
+        data class Letter(
+            val char: Char,
+            override val color: Color,
+            override val isGrayscale: Boolean,
+        ) : CryptoPortfolio()
+    }
+
     data object Loading : CurrencyIconState() {
         override val isGrayscale: Boolean = false
         override val showCustomBadge: Boolean = false
@@ -124,6 +142,12 @@ sealed class CurrencyIconState {
             isGrayscale = isGrayscale,
             showCustomBadge = showCustomBadge,
             topBadgeIconResId = topBadgeIconResId,
+        )
+        is CryptoPortfolio.Icon -> copy(
+            isGrayscale = isGrayscale,
+        )
+        is CryptoPortfolio.Letter -> copy(
+            isGrayscale = isGrayscale,
         )
         is Loading,
         is Locked,
