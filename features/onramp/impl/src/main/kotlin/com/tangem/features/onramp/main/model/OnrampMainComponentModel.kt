@@ -289,8 +289,6 @@ internal class OnrampMainComponentModel @Inject constructor(
 
     override fun onLinkClick(link: String) = urlOpener.openUrl(link)
 
-    override fun onContinueClick() = Unit
-
     override fun onDestroy() {
         modelScope.launch { clearOnrampCacheUseCase.invoke() }
         quotesTaskScheduler.cancelTask()
