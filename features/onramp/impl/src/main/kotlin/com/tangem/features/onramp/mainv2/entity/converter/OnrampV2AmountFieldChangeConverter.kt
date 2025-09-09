@@ -8,7 +8,6 @@ import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.utils.parseBigDecimalOrNull
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.features.onramp.main.entity.OnrampIntents
 import com.tangem.features.onramp.mainv2.entity.*
 import com.tangem.features.onramp.mainv2.entity.factory.OnrampAmountButtonUMStateFactory
 import com.tangem.utils.Provider
@@ -18,7 +17,7 @@ import java.math.BigDecimal
 internal class OnrampV2AmountFieldChangeConverter(
     private val currentStateProvider: Provider<OnrampV2MainComponentUM>,
     private val onrampAmountButtonUMStateFactory: OnrampAmountButtonUMStateFactory,
-    private val onrampIntents: OnrampIntents,
+    private val onrampIntents: OnrampV2Intents,
     private val cryptoCurrency: CryptoCurrency,
 ) : Converter<String, OnrampV2MainComponentUM> {
 
