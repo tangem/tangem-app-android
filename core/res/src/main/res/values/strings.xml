@@ -1054,7 +1054,7 @@
   <string name="send_recipient">Recipient</string>
   <string name="send_recipient_address_error">Not a valid address</string>
   <string name="send_recipient_address_footer">Ensure the receiving wallet address is on **the %s network** to avoid losing your tokens</string>
-  <string name="send_recipient_address_footer_highlighted_part">send to %s</string>
+  <string name="send_recipient_address_footer_highlighted_part">%s network</string>
   <string name="send_recipient_address_footer_v2">Make sure you are sending to an address on the %s network. An error may result in the loss of funds.</string>
   <string name="send_recipient_label">Send to</string>
   <string name="send_recipient_memo_footer">A Memo/Destination Tag is a unique ID for differentiating transactions sent to the same recipient on the same network. Caution: Omitting a memo may lead to misplaced funds</string>
