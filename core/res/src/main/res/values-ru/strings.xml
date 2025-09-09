@@ -142,6 +142,7 @@
   <string name="common_confirm">Подтвердить</string>
   <string name="common_connecting">Подключение</string>
   <string name="common_continue">Продолжить</string>
+  <string name="common_convert">Конвертировать</string>
   <string name="common_copy">Копировать</string>
   <string name="common_copy_address">Скопировать адрес</string>
   <string name="common_create">Создать</string>
@@ -236,6 +237,7 @@
   <string name="common_submit">Отправить</string>
   <string name="common_success">Успешно</string>
   <string name="common_support">Поддержка</string>
+  <string name="common_supported_networks">Поддерживаемые сети</string>
   <string name="common_swap">Обменять</string>
   <string name="common_terms_and_conditions">условия участия</string>
   <string name="common_terms_of_use">Условиями использования</string>
@@ -743,6 +745,7 @@
   <string name="onboarding_wallet_info_title_fourth">Восстановление кода доступа</string>
   <string name="onboarding_wallet_info_title_second">Идентичные карты</string>
   <string name="onboarding_wallet_info_title_third">Код доступа</string>
+  <string name="onramp_all_offers_button_title">Все предложения</string>
   <string name="onramp_avaiable_with_payment_methods">Доступно с %s</string>
   <string name="onramp_choose_provider_title_hint">Tangem предоставляет доступ к покупке через сторонних провайдеров в соответствии с их правилами</string>
   <string name="onramp_country_search">Поиск по стране</string>
@@ -750,13 +753,25 @@
   <string name="onramp_currency_other">Другие валюты</string>
   <string name="onramp_currency_popular">Популярные фиаты</string>
   <string name="onramp_currency_search">Поиск по валюте</string>
+  <string name="onramp_instant_status">Моментально</string>
   <string name="onramp_legal">Пользуясь сервисом покупки, вы соглашаетесь с %1$s и %2$s</string>
   <string name="onramp_max_amount_restriction">Сумма покупки не может быть больше, чем %s</string>
   <string name="onramp_min_amount_restriction">Сумма покупки должна составлять минимум %s</string>
   <string name="onramp_no_available_providers">Нет доступных провайдеров для выбранной валюты</string>
+  <string name="onramp_offer_type_fastet">Самый быстрый</string>
   <string name="onramp_pay_with">Оплата с</string>
+  <string name="onramp_payment_method_subtitle">Платежный метод</string>
   <string name="onramp_provider_max_amount">Доступно до %s</string>
   <string name="onramp_provider_min_amount">Доступно от %s</string>
+  <plurals name="onramp_providers_count">
+    <item quantity="one">%d провайдер</item>
+    <item quantity="few">%d провайдера</item>
+    <item quantity="many">%d провайдеров</item>
+    <item quantity="other">%d провайдеров</item>
+  </plurals>
+  <string name="onramp_providers_subtitle">Провайдеры</string>
+  <string name="onramp_recently_used_title">Ранее используемый</string>
+  <string name="onramp_recommended_title">Рекомендуемый</string>
   <string name="onramp_redirecting_to_provider_subtitle">Вы сможете продолжить транзакцию через сервис стороннего провайдера, %s</string>
   <string name="onramp_redirecting_to_provider_title">Переход к %s...</string>
   <string name="onramp_residency_bottomsheet_country_not_supported">Наши сервисы недоступны в данной стране</string>
@@ -765,8 +780,18 @@
   <string name="onramp_settings_residence_description">Пожалуйста, укажите правильную страну, чтобы обеспечить точность доступных способов оплаты и услуг.</string>
   <string name="onramp_settings_title">Настройки</string>
   <string name="onramp_statuses_view_footer">You can close this screen and check the transaction status on the token details screen.</string>
+  <plurals name="onramp_timing_days">
+    <item quantity="one">до %d дня</item>
+    <item quantity="few">до %d дней</item>
+    <item quantity="many">до %d дней</item>
+    <item quantity="other">до %d дней</item>
+  </plurals>
+  <string name="onramp_timing_minutes">%s мин</string>
+  <string name="onramp_title_you_get">Вы получите</string>
   <string name="onramp_transaction_status_footer_text">Вы можете закрыть этот экран и проверить статус транзакции на экране информации о токене.</string>
+  <string name="onramp_up_to_rate">До</string>
   <string name="onramp_via">Через</string>
+  <string name="onramp_you_will_pay_title">Вы заплатите</string>
   <string name="organize_tokens_group">Группы</string>
   <string name="organize_tokens_sort_by_balance">По балансу</string>
   <string name="organize_tokens_title">Упорядочить токены</string>
@@ -854,6 +879,7 @@
   <string name="send_alert_fee_too_low_text">Вы указали комиссию ниже рекомендуемой, это может привести к задержке исполнения вашей транзакции. Продолжить?</string>
   <string name="send_alert_transaction_failed_text">Причина: %1$s\nКод: %2$s</string>
   <string name="send_alert_transaction_failed_title">Транзакция не выполнена</string>
+  <string name="send_amount_convert_to_another_token">Конвертировать в другой токен</string>
   <string name="send_amount_label">Сумма</string>
   <string name="send_bitcoin_custom_fee_footer">Вы можете установить комиссию за транзакцию, изменив значение в поле Satoshi per vByte.</string>
   <string name="send_custom_amount_fee_footer">Комиссия, которая будет взята за вашу транзакцию. Вы можете выставить своё собственное значение.</string>
@@ -879,7 +905,7 @@
   <string name="send_fee_unreachable_error_text">Проверьте своё интернет соединение</string>
   <string name="send_fee_unreachable_error_title">Информация о комиссии сети недоступна</string>
   <string name="send_from_title">Вы отправляете</string>
-  <string name="send_from_wallet_android">Из</string>
+  <string name="send_from_wallet_name">Из %s</string>
   <string name="send_gas_limit">Лимит газа</string>
   <string name="send_gas_limit_footer">Это максимальное количество газа, которое будет потрачено на выполнение транзакции или контракта. Лимит газа предотвращает неожиданные или неограниченные расходы при выполнении транзакции.</string>
   <string name="send_gas_price">Цена газа</string>
@@ -920,6 +946,7 @@
   <string name="send_recipient">Получатель</string>
   <string name="send_recipient_address_error">Неверный адрес</string>
   <string name="send_recipient_address_footer">Убедитесь, что вы отправляете средства на адрес кошелька %s. Ошибки могут привести к потере ваших токенов.</string>
+  <string name="send_recipient_address_footer_v2">Убедитесь, что отправляете на адрес в сети %s, ошибки могут привести к потере средств.</string>
   <string name="send_recipient_label">Отправить</string>
   <string name="send_recipient_memo_footer">Мемо/ Код назначения - это код, разделяющий транзакции к общему получателю в сети криптовалют. Внимание: отсутствие мемо может привести к потере средств.</string>
   <string name="send_recipient_memo_footer_v2">Memo / Destination Tag — это код, разделяющий транзакции, отправляемые одному и тому же получателю в криптовалютной сети.</string>
@@ -948,10 +975,13 @@
   <string name="send_with_swap_confirm_title">Обмен и отправка</string>
   <string name="send_with_swap_convert_token_alert_message">Продолжить с обменом? Это действие удалит предыдущие данные</string>
   <string name="send_with_swap_convert_token_alert_title">Подтвердить конвертацию</string>
+  <string name="send_with_swap_correct_recipient_network_notification_message">Отправка любой другой валюты приведёт к её безвозвратной потере.</string>
+  <string name="send_with_swap_correct_recipient_network_notification_title">Выберите правильную сеть получателя</string>
   <string name="send_with_swap_notification_text">Выберите любой токен к получению. Ваш адресат получит ровно то, что вы выбрали — без лишних сложностей.</string>
   <string name="send_with_swap_recipient_amount_success_title">Будет получено</string>
   <string name="send_with_swap_recipient_amount_text">Получателю</string>
   <string name="send_with_swap_recipient_amount_title">Сумма к получению</string>
+  <string name="send_with_swap_recipient_get_amount">К получению %s</string>
   <string name="send_with_swap_remove_convert_alert_message">Вы уверены, что хотите отменить конвертацию? Ваши предыдущие данные будут удалены.</string>
   <string name="send_with_swap_remove_convert_alert_title">Убрать конвертацию</string>
   <string name="send_with_swap_title">Отправка с обменом</string>
@@ -1026,7 +1056,7 @@
   <string name="staking_notification_ton_activate_account">Чтобы начать стейкинг в TON, сначала осуществите исходящую транзакцию на любую сумму — это активирует ваш кошелек.</string>
   <string name="staking_notification_ton_extra_reserve_info">До 0.2 TON может потребоваться сверх сетевой комиссии для завершения транзакции. Неиспользованная часть будет возвращена.</string>
   <string name="staking_notification_ton_extra_reserve_is_required">Для выполнения операции требуется дополнительно 0.2 TON, помимо сетевой комиссии. Пожалуйста, пополните баланс.</string>
-  <string name="staking_notification_ton_extra_reserve_title">Зарезервировано 0.2 TON</string>
+  <string name="staking_notification_ton_extra_reserve_title">Требуется резерв TON</string>
   <string name="staking_notification_ton_have_to_unstake_all_text">Это действие закроет другие позиции или переведёт их в статус вывода средств в соответствии с правилами сети.</string>
   <string name="staking_notification_ton_have_to_unstake_all_title">Статус позиций</string>
   <string name="staking_notification_unlock_text">Разблокируйте свои средства, чтобы вывести их из стейкинга. Разблокировка займёт %s.</string>
@@ -1187,6 +1217,7 @@
   <string name="twins_recreate_toolbar">Tangem Twin</string>
   <string name="twins_recreate_warning">Это действие необратимо. У вас не будет доступа к старому кошельку.</string>
   <string name="twins_scan_twin_with_number">Приложите twin-карту с номером %s и не убирайте до окончания операции</string>
+  <string name="unexpected_error_description">Пожалуйста, попробуйте позже. Если проблема сохранится, обратитесь в поддержку.</string>
   <string name="universal_error">Произошла ошибка. Код ошибки: %s. Попробуйте, пожалуйста, снова. Если проблема будет продолжать возникать — обратитесь в службу поддержки.</string>
   <string name="unlock_wallet_description_full">Используйте %s или отсканируйте карту/кольцо, чтобы получить доступ к своему кошельку</string>
   <string name="unsupported_wc_version">Соединение не удалось: это dApp использует Wallet Connect версии 1.0, которая не поддерживается. Убедитесь, что dApp поддерживает Wallet Connect версии 2.0 для успешного подключения.</string>
