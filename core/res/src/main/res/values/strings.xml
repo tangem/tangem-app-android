@@ -898,6 +898,7 @@
   <string name="onramp_timing_minutes">%s min</string>
   <string name="onramp_title_you_get">You get</string>
   <string name="onramp_transaction_status_footer_text">You can close this screen and check the transaction status on the token details screen.</string>
+  <string name="onramp_up_to_rate">Up to</string>
   <string name="onramp_via">Via</string>
   <string name="onramp_you_will_pay_title">You will pay</string>
   <string name="organize_tokens_group">Group</string>

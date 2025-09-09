@@ -8,6 +8,7 @@ import com.tangem.domain.onramp.model.cache.OnrampTransaction
 import com.tangem.domain.onramp.repositories.OnrampErrorResolver
 import com.tangem.domain.onramp.repositories.OnrampRepository
 import com.tangem.domain.onramp.repositories.OnrampTransactionRepository
+import com.tangem.domain.settings.repositories.SettingsRepository
 import io.mockk.*
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
@@ -22,6 +23,7 @@ class GetOnrampOffersUseCaseTest {
     private val onrampRepository: OnrampRepository = mockk(relaxUnitFun = true)
     private val onrampTransactionRepository: OnrampTransactionRepository = mockk(relaxUnitFun = true)
     private val errorResolver: OnrampErrorResolver = mockk(relaxUnitFun = true)
+    private val settingsRepository: SettingsRepository = mockk(relaxUnitFun = true)
     private val cryptoCurrencyId: CryptoCurrency.ID = mockk(relaxUnitFun = true)
     private val userWalletId: UserWalletId = mockk(relaxUnitFun = true)
 
@@ -34,6 +36,7 @@ class GetOnrampOffersUseCaseTest {
             onrampRepository = onrampRepository,
             onrampTransactionRepository = onrampTransactionRepository,
             errorResolver = errorResolver,
+            settingsRepository = settingsRepository,
         )
     }
 
@@ -42,6 +45,7 @@ class GetOnrampOffersUseCaseTest {
         val emptyQuotes = listOf<OnrampQuote>()
         val emptyTransactions = listOf<OnrampTransaction>()
 
+        coEvery { settingsRepository.isGooglePayAvailability() } returns false
         coEvery { onrampRepository.getQuotes() } returns flowOf(emptyQuotes)
         coEvery { onrampTransactionRepository.getTransactions(userWalletId, cryptoCurrencyId) } returns flowOf(
             emptyTransactions,
@@ -77,6 +81,7 @@ class GetOnrampOffersUseCaseTest {
             createMockTransaction("provider1", "card", 1000L),
         )
 
+        coEvery { settingsRepository.isGooglePayAvailability() } returns false
         coEvery { onrampRepository.getQuotes() } returns flowOf(quotes)
         coEvery { onrampTransactionRepository.getTransactions(userWalletId, cryptoCurrencyId) } returns flowOf(
             transactions,
@@ -121,6 +126,7 @@ class GetOnrampOffersUseCaseTest {
 
         val transactions = emptyList<OnrampTransaction>()
 
+        coEvery { settingsRepository.isGooglePayAvailability() } returns false
         coEvery { onrampRepository.getQuotes() } returns flowOf(quotes)
         coEvery { onrampTransactionRepository.getTransactions(userWalletId, cryptoCurrencyId) } returns flowOf(
             transactions,
@@ -165,6 +171,7 @@ class GetOnrampOffersUseCaseTest {
 
         val transactions = emptyList<OnrampTransaction>()
 
+        coEvery { settingsRepository.isGooglePayAvailability() } returns false
         coEvery { onrampRepository.getQuotes() } returns flowOf(quotes)
         coEvery { onrampTransactionRepository.getTransactions(userWalletId, cryptoCurrencyId) } returns flowOf(
             transactions,
@@ -218,6 +225,7 @@ class GetOnrampOffersUseCaseTest {
 
         val transactions = emptyList<OnrampTransaction>()
 
+        coEvery { settingsRepository.isGooglePayAvailability() } returns false
         coEvery { onrampRepository.getQuotes() } returns flowOf(quotes)
         coEvery { onrampTransactionRepository.getTransactions(userWalletId, cryptoCurrencyId) } returns flowOf(
             transactions,
