@@ -5,9 +5,10 @@ import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.TOTAL_BALANCE
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.swipeUp
-import com.tangem.scenarios.OpenMainScreenScenario
 import com.tangem.screens.onMainScreen
 import com.tangem.screens.onOrganizeTokensScreen
+import com.tangem.scenarios.openMainScreen
+import com.tangem.scenarios.synchronizeAddresses
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
@@ -23,8 +24,9 @@ class OrganizeTokensTest : BaseTestCase() {
         setupHooks().run {
             val tokenTitle = "Ethereum"
             val tokenNetwork = "Ethereum network"
+
             step("Open 'Main Screen'") {
-                scenario(OpenMainScreenScenario(composeTestRule))
+                openMainScreen()
             }
             step("Click on 'Synchronize addresses' button" ) {
                 onMainScreen { synchronizeAddressesButton.clickWithAssertion() }
@@ -90,14 +92,12 @@ class OrganizeTokensTest : BaseTestCase() {
             val ethereumTitle = "Ethereum"
             val bitcoinTitle = "Bitcoin"
             val balance = TOTAL_BALANCE
+
             step("Open 'Main Screen'") {
-                scenario(OpenMainScreenScenario(composeTestRule))
+                openMainScreen()
             }
-            step("Click on 'Synchronize addresses' button" ) {
-                onMainScreen { synchronizeAddressesButton.clickWithAssertion() }
-            }
-            step("Assert wallet balance = '$balance'") {
-                onMainScreen { walletBalance().assertTextContains(balance) }
+            step("Synchronize addresses") {
+                synchronizeAddresses(balance)
             }
             step("Check positions of tokens on 'Main Screen'") {
                 onMainScreen {
@@ -129,8 +129,9 @@ class OrganizeTokensTest : BaseTestCase() {
         setupHooks().run {
             val ethereumTitle = "Ethereum"
             val bitcoinTitle = "Bitcoin"
+
             step("Open 'Main Screen'") {
-                scenario(OpenMainScreenScenario(composeTestRule))
+                openMainScreen()
             }
             step("Click on 'Synchronize addresses' button" ) {
                 onMainScreen { synchronizeAddressesButton.clickWithAssertion() }
@@ -178,14 +179,12 @@ class OrganizeTokensTest : BaseTestCase() {
             val polygonTitle = "Polygon"
             val polExMaticTitle = "POL (ex-MATIC)"
             val balance = TOTAL_BALANCE
+
             step("Open 'Main Screen'") {
-                scenario(OpenMainScreenScenario(composeTestRule))
+                openMainScreen()
             }
-            step("Click on 'Synchronize addresses' button" ) {
-                onMainScreen { synchronizeAddressesButton.clickWithAssertion() }
-            }
-            step("Assert wallet balance = '$balance'") {
-                onMainScreen { walletBalance().assertTextContains(balance) }
+            step("Synchronize addresses") {
+                synchronizeAddresses(balance)
             }
             step("Check positions of tokens on 'Main Screen'") {
                 onMainScreen {
