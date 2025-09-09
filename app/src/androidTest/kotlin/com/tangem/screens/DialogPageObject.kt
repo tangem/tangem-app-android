@@ -4,7 +4,7 @@ import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.tangem.common.BaseTestCase
 import com.tangem.core.ui.R
 import com.tangem.core.ui.test.BaseButtonTestTags
-import com.tangem.core.ui.test.DialogTestTags
+import com.tangem.core.ui.test.BaseDialogTestTags
 import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
@@ -14,7 +14,7 @@ class DialogPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<DialogPageObject>(semanticsProvider = semanticsProvider) {
 
     val dialogContainer: KNode = child {
-        hasTestTag(DialogTestTags.DIALOG_CONTAINER)
+        hasTestTag(BaseDialogTestTags.CONTAINER)
     }
 
     val cancelButton: KNode = child {
