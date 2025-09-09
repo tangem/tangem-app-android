@@ -16,5 +16,5 @@ internal interface OnrampMainV2ComponentModelModule {
     @Binds
     @IntoMap
     @ClassKey(OnrampV2MainComponentModel::class)
-    fun bindOnrampSelectCountryModel(model: OnrampV2MainComponentModel): Model
+    fun bindOnrampV2MainComponentModel(model: OnrampV2MainComponentModel): Model
 }
