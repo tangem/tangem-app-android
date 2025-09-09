@@ -19,6 +19,8 @@ import com.tangem.core.configtoggle.feature.MutableFeatureTogglesManager
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.domain.promo.PromoRepository
+import com.tangem.domain.promo.models.PromoId
 import com.tangem.tap.MainActivity
 import dagger.hilt.android.testing.HiltAndroidRule
 import kotlinx.coroutines.runBlocking
@@ -50,6 +52,9 @@ abstract class BaseTestCase : TestCase(
 
     @Inject
     lateinit var featureTogglesManager: FeatureTogglesManager
+
+    @Inject
+    lateinit var promoRepository: PromoRepository
 
     private val hiltRule = HiltAndroidRule(this)
     private val apiEnvironmentRule = ApiEnvironmentRule()
@@ -91,6 +96,7 @@ abstract class BaseTestCase : TestCase(
                     value = false
                 )
             }
+            promoRepository.setNeverToShowWalletPromo(PromoId.Sepa)
         }
         apiEnvironmentRule.setup(apiConfigsManager)
         ActivityScenario.launch(MainActivity::class.java)
