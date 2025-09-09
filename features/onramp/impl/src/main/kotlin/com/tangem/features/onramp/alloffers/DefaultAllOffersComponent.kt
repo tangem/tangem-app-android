@@ -1,9 +1,12 @@
 package com.tangem.features.onramp.alloffers
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.features.onramp.alloffers.model.AllOffersModel
+import com.tangem.features.onramp.alloffers.ui.AllOffersContentSheet
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -21,7 +24,11 @@ internal class DefaultAllOffersComponent @AssistedInject constructor(
 
     @Composable
     override fun BottomSheet() {
-        // TODO to be continued in [REDACTED_TASK_KEY]
+        val state by model.state.collectAsState()
+        AllOffersContentSheet(
+            state = state,
+            onCloseClick = { dismiss() },
+        )
     }
 
     @AssistedFactory
