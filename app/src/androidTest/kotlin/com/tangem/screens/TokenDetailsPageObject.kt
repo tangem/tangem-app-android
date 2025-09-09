@@ -111,6 +111,12 @@ class TokenDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvide
         hasText(getResourceString(R.string.common_buy))
     }
 
+    @OptIn(ExperimentalTestApi::class)
+    val sendButton: LazyListItemNode = horizontalActionChips.childWith<LazyListItemNode> {
+        hasTestTag(TokenDetailsScreenTestTags.ACTION_BUTTON)
+        hasText(getResourceString(R.string.common_send))
+    }
+
 }
 
 internal fun BaseTestCase.onTokenDetailsScreen(function: TokenDetailsPageObject.() -> Unit) =

@@ -39,7 +39,7 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
         hasTestTag(MainScreenTestTags.SCREEN_CONTAINER)
     }
 
-    val synchronizeAddressesButton: KNode = child {
+    val synchronizeAddressesButton: KNode = lazyList.child {
         hasText(getResourceString(R.string.common_generate_addresses))
     }
 
