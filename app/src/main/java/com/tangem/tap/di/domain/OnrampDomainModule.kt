@@ -254,11 +254,13 @@ internal object OnrampDomainModule {
         onrampRepository: OnrampRepository,
         onrampErrorResolver: OnrampErrorResolver,
         onrampTransactionRepository: OnrampTransactionRepository,
+        settingsRepository: SettingsRepository,
     ): GetOnrampOffersUseCase {
         return GetOnrampOffersUseCase(
             onrampRepository = onrampRepository,
             errorResolver = onrampErrorResolver,
             onrampTransactionRepository = onrampTransactionRepository,
+            settingsRepository = settingsRepository,
         )
     }
 }
