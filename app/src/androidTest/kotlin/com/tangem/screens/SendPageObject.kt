@@ -3,7 +3,7 @@ package com.tangem.screens
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.tangem.common.BaseTestCase
 import com.tangem.core.ui.test.BaseButtonTestTags
-import com.tangem.core.ui.test.StakingSendScreenTestTags
+import com.tangem.core.ui.test.SendScreenTestTags
 import com.tangem.core.ui.test.TopAppBarTestTags
 import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
@@ -12,11 +12,11 @@ import io.github.kakaocup.kakao.common.utilities.getResourceString
 import com.tangem.features.send.v2.impl.R as SendR
 import androidx.compose.ui.test.hasTestTag as withTestTag
 
-class StakingSendPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
-    ComposeScreen<StakingSendPageObject>(semanticsProvider = semanticsProvider) {
+class SendPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
+    ComposeScreen<SendPageObject>(semanticsProvider = semanticsProvider) {
 
     val screenContainer: KNode = child {
-        hasTestTag(StakingSendScreenTestTags.SCREEN_CONTAINER)
+        hasTestTag(SendScreenTestTags.SCREEN_CONTAINER)
     }
 
     val title: KNode = child {
@@ -25,44 +25,44 @@ class StakingSendPageObject(semanticsProvider: SemanticsNodeInteractionsProvider
     }
 
     val amountContainerTitle: KNode = child {
-        hasTestTag(StakingSendScreenTestTags.AMOUNT_CONTAINER_TITLE)
+        hasTestTag(SendScreenTestTags.AMOUNT_CONTAINER_TITLE)
         useUnmergedTree = true
     }
 
     val amountContainerText: KNode = child {
-        hasTestTag(StakingSendScreenTestTags.AMOUNT_CONTAINER_TEXT)
+        hasTestTag(SendScreenTestTags.AMOUNT_CONTAINER_TEXT)
         useUnmergedTree = true
     }
 
     val amountInputTextField: KNode = child {
-        hasTestTag(StakingSendScreenTestTags.INPUT_TEXT_FIELD)
+        hasTestTag(SendScreenTestTags.INPUT_TEXT_FIELD)
         useUnmergedTree = true
     }
 
     val secondaryAmount: KNode = child {
-        hasTestTag(StakingSendScreenTestTags.SECONDARY_AMOUNT)
+        hasTestTag(SendScreenTestTags.SECONDARY_AMOUNT)
         useUnmergedTree = true
     }
 
     val currencyButton: KNode = child {
-        hasTestTag(StakingSendScreenTestTags.CURRENCY_BUTTON)
-        hasAnyChild(withTestTag(StakingSendScreenTestTags.CURRENCY_ICON))
+        hasTestTag(SendScreenTestTags.CURRENCY_BUTTON)
+        hasAnyChild(withTestTag(SendScreenTestTags.CURRENCY_ICON))
         useUnmergedTree = true
     }
 
     val fiatButton: KNode = child {
-        hasTestTag(StakingSendScreenTestTags.CURRENCY_BUTTON)
-        hasAnyChild(withTestTag(StakingSendScreenTestTags.FIAT_ICON))
+        hasTestTag(SendScreenTestTags.CURRENCY_BUTTON)
+        hasAnyChild(withTestTag(SendScreenTestTags.FIAT_ICON))
         useUnmergedTree = true
     }
 
     val maxButton: KNode = child {
-        hasTestTag(StakingSendScreenTestTags.MAX_BUTTON)
+        hasTestTag(SendScreenTestTags.MAX_BUTTON)
         useUnmergedTree = true
     }
 
     val previousButton: KNode = child {
-        hasTestTag(StakingSendScreenTestTags.PREVIOUS_BUTTON)
+        hasTestTag(SendScreenTestTags.PREVIOUS_BUTTON)
         useUnmergedTree = true
     }
 
@@ -74,5 +74,5 @@ class StakingSendPageObject(semanticsProvider: SemanticsNodeInteractionsProvider
 
 }
 
-internal fun BaseTestCase.onStakingSendScreen(function: StakingSendPageObject.() -> Unit) =
+internal fun BaseTestCase.onSendScreen(function: SendPageObject.() -> Unit) =
     onComposeScreen(composeTestRule, function)
