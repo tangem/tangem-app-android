@@ -15,7 +15,6 @@ import com.tangem.domain.onramp.model.OnrampQuote
 import com.tangem.domain.onramp.model.error.OnrampError
 import com.tangem.domain.tokens.model.AmountType
 import com.tangem.features.onramp.impl.R
-import com.tangem.features.onramp.main.entity.OnrampIntents
 import com.tangem.features.onramp.mainv2.entity.*
 import com.tangem.features.onramp.mainv2.entity.converter.OnrampV2AmountFieldChangeConverter
 import com.tangem.utils.Provider
@@ -24,7 +23,7 @@ import java.math.BigDecimal
 internal class OnrampV2AmountStateFactory(
     private val currentStateProvider: Provider<OnrampV2MainComponentUM>,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val onrampIntents: OnrampIntents,
+    private val onrampIntents: OnrampV2Intents,
     private val cryptoCurrency: CryptoCurrency,
     private val onrampAmountButtonUMStateFactory: OnrampAmountButtonUMStateFactory,
 ) {
