@@ -12,15 +12,17 @@ import com.tangem.domain.onramp.repositories.OnrampErrorResolver
 import com.tangem.domain.onramp.repositories.OnrampRepository
 import com.tangem.domain.onramp.repositories.OnrampTransactionRepository
 import com.tangem.domain.onramp.utils.calculateRateDif
+import com.tangem.domain.onramp.utils.compareOffersByRateSpeedAndPriority
+import com.tangem.domain.settings.repositories.SettingsRepository
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
-import java.math.BigDecimal
 
 class GetOnrampOffersUseCase(
     private val onrampRepository: OnrampRepository,
     private val onrampTransactionRepository: OnrampTransactionRepository,
     private val errorResolver: OnrampErrorResolver,
+    private val settingsRepository: SettingsRepository,
 ) {
 
     operator fun invoke(
@@ -37,14 +39,15 @@ class GetOnrampOffersUseCase(
             .catch { throwable -> errorResolver.resolve(throwable).left() }
     }
 
-    private fun processOffers(
+    private suspend fun processOffers(
         quotes: List<OnrampQuote>,
         transactions: List<OnrampTransaction>,
     ): List<OnrampOffersBlock> {
         val validQuotes = quotes.filterIsInstance<OnrampQuote.Data>()
         if (validQuotes.isEmpty()) return emptyList()
 
-        val bestRateQuote = validQuotes.maxByOrNull { it.toAmount.value }
+        val isGooglePayAvailable = settingsRepository.isGooglePayAvailability()
+        val bestRateQuote = validQuotes.maxWithOrNull(compareOffersByRateSpeedAndPriority(isGooglePayAvailable))
         val bestRate = bestRateQuote?.toAmount?.value
 
         val offers = validQuotes.map { quote ->
@@ -53,8 +56,8 @@ class GetOnrampOffersUseCase(
         }
 
         val recentOffer = findRecentOffer(offers, transactions)
-        val bestRateOffer = findBestRateOffer(offers)
-        val fastestOffer = findFastestOffer(offers)
+        val bestRateOffer = findBestRateOffer(offers, isGooglePayAvailable)
+        val fastestOffer = findFastestOffer(offers, isGooglePayAvailable)
 
         return buildOffersBlocks(
             recentOffer = recentOffer,
@@ -73,36 +76,35 @@ class GetOnrampOffersUseCase(
         }
     }
 
-    private fun findBestRateOffer(offers: List<OnrampOffer>): OnrampOffer? {
-        return offers.maxByOrNull { offer ->
-            when (val quote = offer.quote) {
-                is OnrampQuote.Data -> quote.toAmount.value
-                else -> BigDecimal.ZERO
-            }
-        }
+    private fun findBestRateOffer(offers: List<OnrampOffer>, isGooglePayAvailable: Boolean): OnrampOffer? {
+        return offers.maxWithOrNull(offerComparator(isGooglePayAvailable))
     }
 
-    private fun findFastestOffer(offers: List<OnrampOffer>): OnrampOffer? {
+    private fun findFastestOffer(offers: List<OnrampOffer>, isGooglePayAvailable: Boolean): OnrampOffer? {
         val instantOffers = offers.filter { it.quote.paymentMethod.type.isInstant() }
         return if (instantOffers.isNotEmpty()) {
-            instantOffers.maxByOrNull { offer ->
-                when (val quote = offer.quote) {
-                    is OnrampQuote.Data -> quote.toAmount.value
-                    else -> BigDecimal.ZERO
-                }
-            }
+            instantOffers.maxWithOrNull(offerComparator(isGooglePayAvailable))
         } else {
             val offersBySpeed = offers.groupBy { offer ->
                 offer.quote.paymentMethod.type.getProcessingSpeed().speed
             }
             val fastestSpeed = offersBySpeed.keys.minOrNull() ?: return null
             val fastestOffers = offersBySpeed[fastestSpeed] ?: return null
-            fastestOffers.maxByOrNull { offer ->
-                when (val quote = offer.quote) {
-                    is OnrampQuote.Data -> quote.toAmount.value
-                    else -> BigDecimal.ZERO
+            fastestOffers.maxWithOrNull(offerComparator(isGooglePayAvailable))
+        }
+    }
+
+    private fun offerComparator(isGooglePayAvailable: Boolean): Comparator<OnrampOffer> = Comparator { offer1, offer2 ->
+        when (val quote1 = offer1.quote) {
+            is OnrampQuote.Data -> {
+                when (val quote2 = offer2.quote) {
+                    is OnrampQuote.Data -> {
+                        compareOffersByRateSpeedAndPriority(isGooglePayAvailable).compare(quote1, quote2)
+                    }
+                    else -> 1
                 }
             }
+            else -> -1
         }
     }
 
