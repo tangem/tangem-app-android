@@ -5,9 +5,8 @@ import com.tangem.common.constants.TestConstants.TOTAL_BALANCE
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.swipeUp
 import com.tangem.common.utils.getWcUri
-import com.tangem.scenarios.OpenMainScreenScenario
 import com.tangem.screens.*
-import com.tangem.steps.*
+import com.tangem.scenarios.*
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
@@ -147,7 +146,7 @@ class WalletConnectTest : BaseTestCase() {
                 openAppByDeepLink(deepLinkUri)
             }
             step("Open 'Main Screen'") {
-                scenario(OpenMainScreenScenario(composeTestRule))
+                openMainScreen()
             }
             step("Check 'Wallet Connect' bottom sheet") {
                 checkWalletConnectBottomSheet()
