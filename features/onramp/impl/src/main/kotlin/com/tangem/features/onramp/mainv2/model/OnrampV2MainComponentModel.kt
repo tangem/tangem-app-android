@@ -15,7 +15,6 @@ import com.tangem.domain.onramp.model.OnrampProviderWithQuote
 import com.tangem.domain.onramp.model.OnrampQuote
 import com.tangem.domain.onramp.model.error.OnrampError
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
-import com.tangem.features.onramp.main.entity.OnrampIntents
 import com.tangem.features.onramp.main.entity.OnrampLastUpdate
 import com.tangem.features.onramp.mainv2.OnrampV2MainComponent
 import com.tangem.features.onramp.mainv2.entity.*
@@ -48,7 +47,7 @@ internal class OnrampV2MainComponentModel @Inject constructor(
     private val getOnrampOffersUseCase: GetOnrampOffersUseCase,
     paramsContainer: ParamsContainer,
     getWalletsUseCase: GetWalletsUseCase,
-) : Model(), OnrampIntents {
+) : Model(), OnrampV2Intents {
 
     val params = paramsContainer.require<OnrampV2MainComponent.Params>()
 
@@ -126,7 +125,7 @@ internal class OnrampV2MainComponentModel @Inject constructor(
         bottomSheetNavigation.activate(OnrampV2MainBottomSheetConfig.CurrenciesList)
     }
 
-    override fun onBuyClick(quote: OnrampProviderWithQuote.Data) {
+    override fun onBuyClick(quote: OnrampProviderWithQuote.Data, onrampOfferAdvantagesUM: OnrampOfferAdvantagesUM) {
         val currentContentState = state.value as? OnrampV2MainComponentUM.Content ?: return
         analyticsEventHandler.send(
             OnrampAnalyticsEvent.OnBuyClick(
@@ -135,6 +134,11 @@ internal class OnrampV2MainComponentModel @Inject constructor(
                 tokenSymbol = params.cryptoCurrency.symbol,
             ),
         )
+        onrampOfferAdvantagesUM.toAnalyticsEvent(
+            cryptoCurrencySymbol = params.cryptoCurrency.symbol,
+            providerName = quote.provider.info.name,
+            paymentMethodName = quote.paymentMethod.name,
+        )?.let { analyticsEventHandler.send(it) }
         params.openRedirectPage(quote)
     }
 
@@ -157,10 +161,6 @@ internal class OnrampV2MainComponentModel @Inject constructor(
             clearOnrampCacheUseCase.invoke()
             checkResidenceCountry()
         }
-    }
-
-    override fun onLinkClick(link: String) {
-        // TODO in [REDACTED_TASK_KEY] will be deleted
     }
 
     override fun onContinueClick() {
