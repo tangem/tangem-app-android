@@ -49,6 +49,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> TangemModalBottomSheet(
     config: TangemBottomSheetConfig,
     containerColor: Color = TangemTheme.colors.background.primary,
     skipPartiallyExpanded: Boolean = true,
+    dismissOnClickOutside: Boolean = true,
     noinline onBack: (() -> Unit)? = null,
     crossinline title: @Composable BoxScope.(T) -> Unit = {},
     crossinline content: @Composable ColumnScope.(T) -> Unit,
@@ -69,6 +70,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> TangemModalBottomSheet(
             containerColor = containerColor,
             title = title,
             content = content,
+            dismissOnClickOutside = dismissOnClickOutside,
             onBack = onBack,
             skipPartiallyExpanded = skipPartiallyExpanded,
         )
@@ -81,12 +83,22 @@ inline fun <reified T : TangemBottomSheetConfigContent> DefaultModalBottomSheet(
     config: TangemBottomSheetConfig,
     containerColor: Color,
     skipPartiallyExpanded: Boolean = true,
+    dismissOnClickOutside: Boolean = true,
     noinline onBack: (() -> Unit)? = null,
     crossinline title: @Composable (BoxScope.(T) -> Unit),
     crossinline content: @Composable (ColumnScope.(T) -> Unit),
 ) {
     var isVisible by remember { mutableStateOf(value = config.isShown) }
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = skipPartiallyExpanded)
+    val sheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = skipPartiallyExpanded,
+        confirmValueChange = {
+            if (!dismissOnClickOutside) {
+                it != SheetValue.Hidden // Ignore transitions to hidden (prevents dismiss on outside click/back press)
+            } else {
+                true
+            }
+        },
+    )
 
     if (isVisible && config.content is T) {
         BasicModalBottomSheet<T>(
