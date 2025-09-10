@@ -47,3 +47,10 @@ interface WcApproval {
     fun getAmount(): WcApprovedAmount?
     fun updateAmount(amount: WcApprovedAmount?)
 }
+
+/**
+ * Defines if multiple signatures are required for the transaction
+ */
+interface SignRequirements {
+    fun isMultipleSignRequired(): Boolean
+}
