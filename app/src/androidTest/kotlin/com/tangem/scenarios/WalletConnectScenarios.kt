@@ -128,7 +128,7 @@ fun BaseTestCase.checkWalletConnectDetailsBottomSheet(dAppName: String) {
         onWalletConnectDetailsBottomSheet { connectedNetworkIcon.assertIsDisplayed() }
     }
     step("Assert connected dApp name: '$dAppName'") {
-        onWalletConnectDetailsBottomSheet { connectedNetworkName.assertTextContains(dAppName) }
+        onWalletConnectDetailsBottomSheet { appName.assertTextContains(dAppName) }
     }
     step("Assert connected network symbol is displayed") {
         onWalletConnectDetailsBottomSheet { connectedNetworkSymbol.assertIsDisplayed() }

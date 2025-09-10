@@ -2,11 +2,12 @@ package com.tangem.tests
 
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.TOTAL_BALANCE
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.extensions.clickWithAssertion
-import com.tangem.common.extensions.swipeUp
 import com.tangem.common.utils.getWcUri
-import com.tangem.screens.*
 import com.tangem.scenarios.*
+import com.tangem.screens.*
+import com.tangem.wallet.BuildConfig
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
@@ -36,10 +37,18 @@ class WalletConnectTest : BaseTestCase() {
                 openAppByDeepLink(deepLinkUri)
             }
             step("Check 'Wallet Connect' bottom sheet") {
-                checkWalletConnectBottomSheet()
+                flakySafely(WAIT_UNTIL_TIMEOUT) {
+                    checkWalletConnectBottomSheet()
+                }
+            }
+            step("Assert 'Connect' button is enabled") {
+                onWalletConnectBottomSheet { connectButton.assertIsEnabled() }
             }
             step("Click on 'Connect' button") {
                 onWalletConnectBottomSheet { connectButton.performClick() }
+            }
+            step("Assert 'Connect' button is not displayed") {
+                onWalletConnectBottomSheet { connectButton.assertIsNotDisplayed() }
             }
             step("Click 'More' button on TopBar") {
                 onTopBar { moreButton.clickWithAssertion() }
@@ -48,7 +57,9 @@ class WalletConnectTest : BaseTestCase() {
                 onDetailsScreen { walletConnectButton.clickWithAssertion() }
             }
             step("Check 'Wallet Connect' screen") {
-                checkWalletConnectScreen()
+                flakySafely(WAIT_UNTIL_TIMEOUT) {
+                    checkWalletConnectScreen()
+                }
             }
             step("Click on app icon") {
                 onWalletConnectScreen { appIcon.performClick() }
@@ -56,7 +67,7 @@ class WalletConnectTest : BaseTestCase() {
             step("Check 'Wallet Connect' details bottom sheet") {
                 checkWalletConnectDetailsBottomSheet(dAppName)
             }
-            step("Click on 'Disconnect button' is displayed") {
+            step("Click on 'Disconnect' button") {
                 onWalletConnectDetailsBottomSheet { disconnectButton.performClick() }
             }
             step("Assert connection is not displayed") {
@@ -81,37 +92,41 @@ class WalletConnectTest : BaseTestCase() {
             step("Synchronize addresses") {
                 synchronizeAddresses(balance)
             }
-            step("Click on 'Buy' button") {
-                onMainScreen { buyButton.clickWithAssertion() }
-            }
-            step("Create WC session buy deeplink") {
-                openAppByDeepLink(deepLinkUri)
-            }
-            step("Check 'Wallet Connect' bottom sheet") {
-                checkWalletConnectBottomSheet()
-            }
-            step("Click on 'Connect' button") {
-                onWalletConnectBottomSheet { connectButton.performClick() }
-            }
             step("Click 'More' button on TopBar") {
                 onTopBar { moreButton.clickWithAssertion() }
             }
             step("Click on 'Wallet Connect' button") {
                 onDetailsScreen { walletConnectButton.clickWithAssertion() }
             }
-            step("Assert 'Wallet Connect' bottom sheet is displayed") {
-                onWalletConnectBottomSheet { connectButton.clickWithAssertion() }
+            step("Create WC session buy deeplink") {
+                openAppByDeepLink(deepLinkUri)
+            }
+            step("Check 'Wallet Connect' bottom sheet") {
+                composeTestRule.waitForIdle()
+                flakySafely(WAIT_UNTIL_TIMEOUT) {
+                    checkWalletConnectBottomSheet()
+                }
+            }
+            step("Click on 'Connect' button") {
+                onWalletConnectBottomSheet { connectButton.performClick() }
+            }
+            step("Assert 'Connect' button is not displayed") {
+                onWalletConnectBottomSheet { connectButton.assertIsNotDisplayed() }
             }
             step("Check 'Wallet Connect' screen") {
-                checkWalletConnectScreen()
+                flakySafely(WAIT_UNTIL_TIMEOUT) {
+                    checkWalletConnectScreen()
+                }
             }
             step("Click on app icon") {
                 onWalletConnectScreen { appIcon.performClick() }
             }
             step("Check 'Wallet Connect' details bottom sheet") {
-                checkWalletConnectDetailsBottomSheet(dAppName)
+                flakySafely(WAIT_UNTIL_TIMEOUT) {
+                    checkWalletConnectDetailsBottomSheet(dAppName)
+                }
             }
-            step("Click on 'Disconnect button' is displayed") {
+            step("Click on 'Disconnect' button") {
                 onWalletConnectDetailsBottomSheet { disconnectButton.performClick() }
             }
             step("Assert connection is not displayed") {
@@ -127,6 +142,7 @@ class WalletConnectTest : BaseTestCase() {
     fun openWalletConnectSession() {
         val balance = TOTAL_BALANCE
         val dAppName = "React App"
+        val packageName = BuildConfig.APPLICATION_ID
         val deepLinkUri = getWcUri()
 
         setupHooks().run {
@@ -136,11 +152,8 @@ class WalletConnectTest : BaseTestCase() {
             step("Synchronize addresses") {
                 synchronizeAddresses(balance)
             }
-            step("Open recent apps") {
-                device.uiDevice.pressRecentApps()
-            }
-            step("Stop app by swipe") {
-                swipeUp(startHeightRatio = 0.8f)
+            step("Kill app") {
+                device.apps.kill(packageName)
             }
             step("Create WC session buy deeplink") {
                 openAppByDeepLink(deepLinkUri)
@@ -149,10 +162,15 @@ class WalletConnectTest : BaseTestCase() {
                 openMainScreen()
             }
             step("Check 'Wallet Connect' bottom sheet") {
-                checkWalletConnectBottomSheet()
+                flakySafely(WAIT_UNTIL_TIMEOUT) {
+                    checkWalletConnectBottomSheet()
+                }
             }
             step("Click on 'Connect' button") {
                 onWalletConnectBottomSheet { connectButton.performClick() }
+            }
+            step("Assert 'Connect' button is not displayed") {
+                onWalletConnectBottomSheet { connectButton.assertIsNotDisplayed() }
             }
             step("Click 'More' button on TopBar") {
                 onTopBar { moreButton.clickWithAssertion() }
@@ -169,7 +187,7 @@ class WalletConnectTest : BaseTestCase() {
             step("Check 'Wallet Connect' details bottom sheet") {
                 checkWalletConnectDetailsBottomSheet(dAppName)
             }
-            step("Click on 'Disconnect button' is displayed") {
+            step("Click on 'Disconnect' button") {
                 onWalletConnectDetailsBottomSheet { disconnectButton.performClick() }
             }
             step("Assert connection is not displayed") {

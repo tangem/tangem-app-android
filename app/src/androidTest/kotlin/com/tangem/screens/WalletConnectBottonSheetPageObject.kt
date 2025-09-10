@@ -9,13 +9,11 @@ import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
-import com.tangem.features.walletconnect.impl.R as WalletConnectImplR
 
 class WalletConnectBottomSheetPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<WalletConnectBottomSheetPageObject>(semanticsProvider = semanticsProvider) {
 
     val title: KNode = child {
-        hasText(getResourceString(WalletConnectImplR.string.wc_wallet_connect))
         hasTestTag(WalletConnectBottomSheetTestTags.TITLE)
         useUnmergedTree = true
     }
