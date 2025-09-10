@@ -1034,7 +1034,7 @@
   <string name="send_recent_transactions">最近の取引</string>
   <string name="send_recipient">受取人</string>
   <string name="send_recipient_address_error">有効なアドレスではありません</string>
-  <string name="send_recipient_address_footer">トークンの損失を避けるために、受信ウォレットアドレスが** %sネットワーク**上にあることを確認してください</string>
+  <string name="send_recipient_address_footer">トークンの損失を避けるために、受信ウォレットアドレスが**%sネットワーク**上にあることを確認してください</string>
   <string name="send_recipient_label">送金先</string>
   <string name="send_recipient_memo_footer">メモ/宛先タグは、同じネットワーク上の同じ受信者に送信された取引を区別するためのユニークなIDです。注意：メモを省略すると、資金の行き違いにつながる可能性があります。</string>
   <string name="send_recipient_memo_footer_v2">メモ / 宛先タグは、暗号資産ネットワーク内の共有受信者への取引を分離するコードです。</string>
