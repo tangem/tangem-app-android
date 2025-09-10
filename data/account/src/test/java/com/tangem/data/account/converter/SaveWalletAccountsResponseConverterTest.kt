@@ -5,6 +5,7 @@ import com.tangem.datasource.api.tangemTech.models.account.SaveWalletAccountsRes
 import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import io.mockk.every
@@ -37,7 +38,7 @@ class SaveWalletAccountsResponseConverterTest {
             accounts = listOf(
                 WalletAccountDTO(
                     id = accountList.mainAccount.accountId.value,
-                    name = accountList.mainAccount.accountName.value,
+                    name = (accountList.mainAccount.accountName as? AccountName.Custom)?.value,
                     derivationIndex = accountList.mainAccount.derivationIndex.value,
                     icon = accountList.mainAccount.icon.value.name,
                     iconColor = accountList.mainAccount.icon.color.name,
