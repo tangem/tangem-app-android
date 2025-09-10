@@ -82,15 +82,19 @@ internal fun FeeSelectorModalBottomSheet(
                 modifier = Modifier.padding(vertical = 4.dp, horizontal = 12.dp),
             )
         },
-        footer = {
-            PrimaryButton(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                enabled = state.isPrimaryButtonEnabled,
-                text = stringResourceSafe(R.string.common_done),
-                onClick = feeSelectorIntents::onDoneClick,
-            )
+        footer = if (state.selectedFeeItem is FeeItem.Custom) {
+            {
+                PrimaryButton(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    enabled = state.isPrimaryButtonEnabled,
+                    text = stringResourceSafe(R.string.common_done),
+                    onClick = feeSelectorIntents::onDoneClick,
+                )
+            }
+        } else {
+            null
         },
     )
 }
@@ -426,7 +430,14 @@ private class FeeSelectorUMContentProvider : CollectionPreviewParameterProvider<
                 FeeItem.Fast(fee = Fee.Common(Amount(value = BigDecimal("0.03"), blockchain = Blockchain.Ethereum))),
                 customFeeItem,
             ),
-            selectedFeeItem = customFeeItem,
+            selectedFeeItem = FeeItem.Slow(
+                fee = Fee.Common(
+                    Amount(
+                        value = BigDecimal("0.01"),
+                        blockchain = Blockchain.Ethereum,
+                    ),
+                ),
+            ),
             feeExtraInfo = FeeExtraInfo(
                 isFeeApproximate = true,
                 isFeeConvertibleToFiat = true,
