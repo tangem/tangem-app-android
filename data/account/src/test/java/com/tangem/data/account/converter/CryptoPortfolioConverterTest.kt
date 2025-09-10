@@ -76,6 +76,14 @@ class CryptoPortfolioConverterTest {
                     ),
                 ),
                 ConvertModel(
+                    value = createWalletAccountDTO(userWalletId = userWallet.walletId, accountName = null),
+                    expected = Result.success(
+                        createCryptoPortfolio(userWalletId = userWallet.walletId).copy(
+                            accountName = AccountName.DefaultMain,
+                        ),
+                    ),
+                ),
+                ConvertModel(
                     value = createWalletAccountDTO(userWalletId = userWallet.walletId, accountName = ""),
                     expected = Result.failure(
                         IllegalStateException(
