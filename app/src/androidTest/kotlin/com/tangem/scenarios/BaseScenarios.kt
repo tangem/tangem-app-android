@@ -50,3 +50,15 @@ fun BaseTestCase.synchronizeAddresses(balance: String) {
         onMainScreen { walletBalance().assertTextContains(balance) }
     }
 }
+
+fun BaseTestCase.openDeviceSettingsScreen() {
+    step("Open wallet details") {
+        onTopBar { moreButton.clickWithAssertion() }
+    }
+    step("Open 'Wallet settings' screen") {
+        onDetailsScreen { walletNameButton.performClick() }
+    }
+    step("Click on 'Device settings' button") {
+        onWalletSettingsScreen { deviceSettingsButton.clickWithAssertion() }
+    }
+}
