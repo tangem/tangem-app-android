@@ -55,13 +55,9 @@ import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState
-import com.tangem.domain.tokens.model.analytics.TokenReceiveAnalyticsEvent
-import com.tangem.domain.tokens.model.analytics.TokenReceiveCopyActionSource
-import com.tangem.domain.tokens.model.analytics.TokenReceiveNewAnalyticsEvent
-import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent
+import com.tangem.domain.tokens.model.analytics.*
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent.Companion.toReasonAnalyticsText
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent.DetailsScreenOpened.TokenBalance
-import com.tangem.domain.tokens.model.analytics.TokenSwapPromoAnalyticsEvent
 import com.tangem.domain.transaction.error.AssociateAssetError
 import com.tangem.domain.transaction.error.IncompleteTransactionError
 import com.tangem.domain.transaction.error.OpenTrustlineError
@@ -1098,9 +1094,8 @@ internal class TokenDetailsModel @Inject constructor(
                     return
                 }
             }
-            is CryptoCurrencyStatus.NoAccount,
-            is CryptoCurrencyStatus.MissedDerivation,
-            -> TokenBalance.NoAddress
+            is CryptoCurrencyStatus.NoAccount -> TokenBalance.Empty
+            is CryptoCurrencyStatus.MissedDerivation -> TokenBalance.NoAddress
 
             is CryptoCurrencyStatus.NoAmount,
             is CryptoCurrencyStatus.Unreachable,
