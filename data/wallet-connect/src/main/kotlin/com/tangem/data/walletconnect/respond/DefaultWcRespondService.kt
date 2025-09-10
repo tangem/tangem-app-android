@@ -36,7 +36,12 @@ internal class DefaultWcRespondService : WcRespondService {
                         }
                         is Wallet.Model.JsonRpcResponse.JsonRpcResult -> {
                             Timber.tag(WC_TAG).i("Successful respond $response for request $request")
-                            response.result.right()
+                            if (response.result == null) {
+                                Timber.tag(WC_TAG).e(
+                                    "Response result is null, but it should be String. Casted to empty",
+                                )
+                            }
+                            (response.result ?: "").right()
                         }
                     }
                     continuation.resume(result)
