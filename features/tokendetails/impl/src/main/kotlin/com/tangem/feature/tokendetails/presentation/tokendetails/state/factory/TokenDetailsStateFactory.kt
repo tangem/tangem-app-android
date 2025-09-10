@@ -1,14 +1,11 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory
 
-import androidx.paging.PagingData
 import arrow.core.Either
 import com.tangem.common.ui.bottomsheet.chooseaddress.ChooseAddressBottomSheetConfig
 import com.tangem.common.ui.bottomsheet.receive.TokenReceiveBottomSheetConfig
 import com.tangem.common.ui.tokens.getUnavailabilityReasonText
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenuItem
-import com.tangem.core.ui.components.transactions.state.TransactionState
-import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
@@ -18,7 +15,6 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkAddress
-import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.model.StakingAvailability
@@ -27,8 +23,6 @@ import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
-import com.tangem.domain.txhistory.models.TxHistoryListError
-import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.NetworkHasDerivationUseCase
 import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
@@ -36,14 +30,9 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenBala
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsAppBarMenuConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsDialogConfig
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsLoadedTxHistoryConverter
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsLoadingTxHistoryConverter
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsLoadingTxHistoryConverter.TokenDetailsLoadingTxHistoryModel
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.utils.Provider
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 
 @Suppress("TooManyFunctions", "LargeClass", "LongParameterList")
 internal class TokenDetailsStateFactory(
@@ -54,8 +43,6 @@ internal class TokenDetailsStateFactory(
     private val networkHasDerivationUseCase: NetworkHasDerivationUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val userWalletId: UserWalletId,
-    symbol: String,
-    decimals: Int,
 ) {
 
     private val skeletonStateConverter by lazy {
@@ -75,8 +62,6 @@ internal class TokenDetailsStateFactory(
         TokenDetailsLoadedBalanceConverter(
             currentStateProvider = currentStateProvider,
             appCurrencyProvider = appCurrencyProvider,
-            symbol = symbol,
-            decimals = decimals,
             clickIntents = clickIntents,
         )
     }
@@ -85,22 +70,6 @@ internal class TokenDetailsStateFactory(
         TokenDetailsActionButtonsConverter(
             currentStateProvider = currentStateProvider,
             clickIntents = clickIntents,
-        )
-    }
-
-    private val loadingTransactionsStateConverter by lazy {
-        TokenDetailsLoadingTxHistoryConverter(
-            currentStateProvider = currentStateProvider,
-            clickIntents = clickIntents,
-        )
-    }
-
-    private val loadedTxHistoryConverter by lazy {
-        TokenDetailsLoadedTxHistoryConverter(
-            currentStateProvider = currentStateProvider,
-            clickIntents = clickIntents,
-            symbol = symbol,
-            decimals = decimals,
         )
     }
 
@@ -145,36 +114,6 @@ internal class TokenDetailsStateFactory(
 
     fun getManageButtonsState(actions: List<TokenActionsState.ActionState>): TokenDetailsState {
         return tokenDetailsButtonsConverter.convert(actions)
-    }
-
-    fun getLoadingTxHistoryState(): TokenDetailsState {
-        return currentStateProvider().copy(
-            txHistoryState = TxHistoryState.Content(
-                contentItems = MutableStateFlow(
-                    value = TxHistoryState.getDefaultLoadingTransactions(clickIntents::onExploreClick),
-                ),
-            ),
-        )
-    }
-
-    fun getLoadingTxHistoryState(
-        itemsCountEither: Either<TxHistoryStateError, Int>,
-        pendingTransactions: List<TransactionState>,
-    ): TokenDetailsState {
-        return loadingTransactionsStateConverter.convert(
-            value = TokenDetailsLoadingTxHistoryModel(
-                historyLoadingState = itemsCountEither,
-                pendingTransactions = pendingTransactions,
-            ),
-        )
-    }
-
-    fun getLoadedTxHistoryState(
-        txHistoryEither: Either<TxHistoryListError, Flow<PagingData<TxInfo>>>,
-    ): TokenDetailsState {
-        return currentStateProvider().copy(
-            txHistoryState = loadedTxHistoryConverter.convert(txHistoryEither),
-        )
     }
 
     fun getStateWithClosedDialog(): TokenDetailsState {
