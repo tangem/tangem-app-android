@@ -8,6 +8,7 @@ import com.tangem.common.extensions.hasLazyListItemPosition
 import com.tangem.common.utils.LazyListItemNode
 import com.tangem.core.ui.test.TokenElementsTestTags
 import com.tangem.core.ui.test.MainScreenTestTags
+import com.tangem.core.ui.test.NotificationTestTags
 import com.tangem.core.ui.utils.LazyListItemPositionSemantics
 import com.tangem.feature.wallet.impl.R
 import io.github.kakaocup.compose.node.element.ComposeScreen
@@ -46,6 +47,29 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
     val buyButton: KNode = child {
         hasTestTag(MainScreenTestTags.MULTI_CURRENCY_ACTION_BUTTON)
         hasText(getResourceString(R.string.common_buy))
+    }
+
+    val notificationContainer: KNode = child {
+        hasTestTag(NotificationTestTags.CONTAINER)
+        useUnmergedTree = true
+    }
+
+    val devCardNotificationIcon: KNode = child {
+        hasAnySibling(withText(getResourceString(R.string.warning_developer_card_title)))
+        hasTestTag(NotificationTestTags.ICON)
+        useUnmergedTree = true
+    }
+
+    val devCardNotificationTitle: KNode = child {
+        hasTestTag(NotificationTestTags.TITLE)
+        hasText(getResourceString(R.string.warning_developer_card_title))
+        useUnmergedTree = true
+    }
+
+    val devCardNotificationMessage: KNode = child {
+        hasTestTag(NotificationTestTags.MESSAGE)
+        hasText(getResourceString(R.string.warning_developer_card_message))
+        useUnmergedTree = true
     }
 
     /**
