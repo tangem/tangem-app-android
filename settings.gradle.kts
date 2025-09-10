@@ -3,6 +3,7 @@ pluginManagement {
         gradlePluginPortal()
         google()
         mavenCentral()
+        maven { url = uri("https://developer.huawei.com/repo/") }
     }
 
     includeBuild("plugins/configuration")
@@ -35,6 +36,7 @@ dependencyResolutionManagement {
             }
         }
         mavenCentral()
+        maven { url = uri("https://developer.huawei.com/repo/") }
         mavenLocal {
             content {
                 includeGroupAndSubgroups("com.tangem.tangem-sdk-kotlin")
@@ -270,6 +272,9 @@ include(":features:tangempay:main:impl")
 include(":features:tangempay:details:api")
 include(":features:tangempay:details:impl")
 
+include(":features:tangempay:onboarding:api")
+include(":features:tangempay:onboarding:impl")
+
 include(":features:create-wallet-selection:api")
 include(":features:create-wallet-selection:impl")
 
@@ -281,6 +286,9 @@ include(":features:account:impl")
 
 include(":features:token-recieve:api")
 include(":features:token-recieve:impl")
+
+include(":features:yield-lending:api")
+include(":features:yield-lending:impl")
 // endregion Feature modules
 
 // region Domain modules
@@ -336,7 +344,6 @@ include(":domain:blockaid")
 include(":domain:blockaid:models")
 include(":domain:notifications")
 include(":domain:notifications:models")
-include(":domain:notifications:toggles")
 include(":domain:express")
 include(":domain:express:models")
 include(":domain:swap")
@@ -377,3 +384,4 @@ include(":data:swap")
 include(":data:express")
 include(":data:wallet-manager")
 // endregion Data modules
+include(":features:tangempay:onboarding")
