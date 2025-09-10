@@ -34,7 +34,7 @@
   <string name="alert_failed_to_send_transaction_message">Razón: %s</string>
   <string name="alert_failed_to_send_transaction_title">No se puede completar una transacción</string>
   <string name="alert_manage_tokens_unsupported_blockchain_by_card_message">El seleccionado no admite la red %1$s</string>
-  <string name="alert_manage_tokens_unsupported_curve_message">Para activar el %1$s cifrado criptográfico de la blockchain, necesitarás reiniciar la billetera a los ajustes de fábrica. Por favor, retire sus fondos antes de hacerlo para asegurarse no perderlos, y luego complete el proceso de reinicio. El acceso a la billetera actual no será posible después del reinicio.</string>
+  <string name="alert_manage_tokens_unsupported_curve_message">Para activar el cifrado criptográfico de la blockchain %1$s, tendrá que restablecer la configuración de fábrica de la billetera. Por favor, retire tus fondos antes de hacerlo para asegurarse de que no los pierda, y luego complete el proceso de restablecimiento. El acceso a la billetera actual no será posible tras el restablecimiento.</string>
   <string name="alert_manage_tokens_unsupported_message">Esta tarjeta no admite tokens en la red %1$s debido a una limitación del firmware.</string>
   <string name="alert_troubleshooting_scan_card_title">¿Tiene dificultades para escanear su tarjeta/anillo?</string>
   <string name="alert_unsupported_card">Esta tarjeta no está diseñada para funcionar con Tangem</string>
@@ -185,7 +185,7 @@
   <string name="common_exchange">Intercambiar</string>
   <string name="common_explore">Explore</string>
   <string name="common_explore_transaction_history">Explore historial de transacciones</string>
-  <string name="common_explorer">Explorador(a)</string>
+  <string name="common_explorer">Explorador</string>
   <string name="common_fee_error">No se pudo obtener la tarifa</string>
   <string name="common_fee_selector_footer">Las tarifas de red son cargos que los usuarios pagan para procesar y confirmar transacciones. El importe de la tarifa puede verse afectado por la congestión de la red, el tamaño de la transacción y la prioridad de ejecución. %s</string>
   <string name="common_fee_selector_option_fast">Rápido</string>
@@ -255,7 +255,7 @@
   <string name="common_success">Con éxito</string>
   <string name="common_support">Soporte</string>
   <string name="common_supported_networks">Redes soportadas</string>
-  <string name="common_swap">Swap</string>
+  <string name="common_swap">Intercambiar</string>
   <string name="common_terms_and_conditions">términos y condiciones</string>
   <string name="common_terms_of_use">Condiciones de uso</string>
   <string name="common_today">Hoy</string>
@@ -276,23 +276,23 @@
   <string name="common_week">semana</string>
   <string name="common_with">con</string>
   <string name="common_yes">Sí</string>
-  <string name="contract_address_copied_message">Dirección del contract copiada</string>
+  <string name="contract_address_copied_message">Dirección de contrato copiada</string>
   <string name="currency_subtitle_expanded">Redes disponibles</string>
-  <string name="custom_token_contract_address_input_title">Dirección del contract</string>
-  <string name="custom_token_creation_error_invalid_contract_address">La dirección del contract no es válida</string>
+  <string name="custom_token_contract_address_input_title">Dirección de contrato</string>
+  <string name="custom_token_creation_error_invalid_contract_address">La dirección de contrato es incorrecta</string>
   <string name="custom_token_creation_error_network_not_selected">Por favor, seleccione la red</string>
   <string name="custom_token_creation_error_token_already_exist_message">Este token ya ha sido agregado a la lista</string>
   <string name="custom_token_creation_error_token_already_exist_title">Este token ya existe</string>
   <string name="custom_token_creation_error_wrong_decimals">Los decimales deben ser un número entero válido, hasta %d</string>
   <string name="custom_token_custom_derivation">Derivación personalizada</string>
   <string name="custom_token_custom_derivation_placeholder">Por ejemplo m/00\'/0000\'/0\'/0/0</string>
-  <string name="custom_token_custom_derivation_title">Introduzque una derivación personalizada</string>
+  <string name="custom_token_custom_derivation_title">Introduzca una derivación personalizada</string>
   <string name="custom_token_decimals_input_title">Decimales</string>
   <string name="custom_token_derivation_path">Ruta de derivación</string>
   <string name="custom_token_derivation_path_default">Por defecto</string>
-  <string name="custom_token_derivation_path_input_title">Coin de tipo BIP44</string>
+  <string name="custom_token_derivation_path_input_title">Tipo de moneda BIP44</string>
   <string name="custom_token_invalid_derivation_path">La ruta de derivación que ha ingresado no es válida</string>
-  <string name="custom_token_name_input_placeholder">Por ejemplo USD coin</string>
+  <string name="custom_token_name_input_placeholder">Por ejemplo moneda USD</string>
   <string name="custom_token_name_input_title">Nombre</string>
   <string name="custom_token_network_input_not_selected">No elegida</string>
   <string name="custom_token_network_input_title">Red</string>
@@ -341,12 +341,12 @@
   <string name="error_wrong_wallet_tapped">Ha usado una tarjeta de otra billetera. Toque la tarjeta asociada con esta billetera</string>
   <string name="eth_gas_required_exceeds_allowance">No hay fondos suficientes para la transacción. Por favor, recargue su cuenta.</string>
   <string name="exchange_tokens_available_tokens_header">Mis tokens</string>
-  <string name="exchange_tokens_empty_tokens">Aún no ha añadido ningún token. Agregue tokens a través de Market para hacer swap</string>
+  <string name="exchange_tokens_empty_tokens">Aún no ha añadido ningún token. Agregue tokens a través de Mercados para hacer intercambios</string>
   <string name="exchange_tokens_unavailable_tokens_header">No se puede intercambiar por %s</string>
   <string name="express_by_provider">Proporcionado por</string>
   <string name="express_cex_status_button_title">Estado</string>
   <string name="express_choose_provider">Elegir proveedor</string>
-  <string name="express_choose_providers_subtitle">Tangem ofrece swaps de tokens a través de proveedores externos</string>
+  <string name="express_choose_providers_subtitle">Tangem ofrece intercambios de tokens a través de proveedores externos</string>
   <string name="express_choose_providers_title">Elija proveedor</string>
   <string name="express_error_code">Ha ocurrido un error. Código: %s</string>
   <string name="express_error_provider_amount_roundup">Error %1$s. El proveedor seleccionado no puede procesar la transacción especificada. Por favor, redondee el valor a %2$s o cámbielo</string>
@@ -389,7 +389,7 @@
   <string name="express_exchange_token_list_subtitle">Lista de todos los tokens agregados a su billetera</string>
   <string name="express_fetch_best_rates">Buscar tarifas actuales...</string>
   <string name="express_floating_rate">Tasa flotante</string>
-  <string name="express_legal_one_placeholder">Al utilizar la función de intercambio, acepta el %s</string>
+  <string name="express_legal_one_placeholder">Al utilizar la función de intercambio, acepta los %s</string>
   <string name="express_legal_two_placeholders">Al utilizar la función de intercambio, aceptas las condiciones de %1$s y %2$s del proveedor.</string>
   <string name="express_more_providers_soon">Pronto habrá más proveedores disponibles</string>
   <string name="express_provider">Proveedor</string>
@@ -434,7 +434,7 @@
   <string name="give_permission_rows_amount">Montante %s</string>
   <string name="give_permission_staking_footer">La función Aprobar es necesaria para otorgar permiso a otra dirección para usar una cantidad específica de sus tokens. Por diseño, los contratos inteligentes no pueden acceder a sus tokens sin su aprobación. Al \"desbloquear\" sus tokens, autoriza al contrato inteligente de StakeKit a usarlos. Los mineros de la red reciben una tarifa de gas (pagada por usted) por registrar esta acción en la cadena de bloques. Puede apostar su token después de dar su aprobación.</string>
   <string name="give_permission_staking_subtitle">Para continuar, debe autorizar el contrato inteligente de Polygon para utilizar su %s</string>
-  <string name="give_permission_swap_subtitle" formatted="false">Para continuar, de autorización a los smart contracts de %1s para usar su %2s</string>
+  <string name="give_permission_swap_subtitle" formatted="false">Para continuar, conceda a los contratos inteligentes de %1s permiso para utilizar su %2s</string>
   <string name="give_permission_title">Dar autorización</string>
   <string name="give_permission_unlimited">Ilimitado</string>
   <string name="home_button_add_existing_wallet">Agregar Billetera Existente</string>
@@ -464,7 +464,7 @@
   <string name="koinos_mana_exceeds_koin_balance_title">Límite de Mana</string>
   <string name="koinos_mana_level_description">La red Koinos requiere Mana para las tarifas de red. Tienes %1$s/%2$s Mana</string>
   <string name="koinos_mana_level_title">Nivel de Mana</string>
-  <string name="main_empty_tokens_list_message">Para comenzar a seguir tus activos crypto y transacciones, agregue tokens</string>
+  <string name="main_empty_tokens_list_message">Para hacer un seguimiento de sus criptomonedas y transacciones, agregue tokens</string>
   <string name="main_manage_tokens">Gestionar tokens</string>
   <string name="main_scan_card_warning_view_subtitle">Para acceder a todas las redes necesita escanear la tarjeta</string>
   <string name="main_scan_card_warning_view_title">Escanee su tarjeta o anillo</string>
@@ -476,7 +476,7 @@
   <string name="manage_tokens_list_header_title">Capitalización de mercado de la moneda</string>
   <string name="manage_tokens_network_selector_native_subtitle">Blockchain en la que se creó inicialmente la criptomoneda</string>
   <string name="manage_tokens_network_selector_native_title">Red nativa</string>
-  <string name="manage_tokens_network_selector_non_native_info">El uso de redes no nativas para tokens permite la interoperabilidad entre blockchains, permitiendo que los activos se utilicen en diversas aplicaciones descentralizadas y smart contracts en diferentes plataformas. Sin embargo, esto a menudo implica un custodio o smart contract para mantener el activo original de forma segura, introduciendo centralización y riesgo de contraparte.</string>
+  <string name="manage_tokens_network_selector_non_native_info">El uso de redes no nativas para tokens permite la interoperabilidad entre cadenas de bloques, lo que permite el uso de activos en diversas aplicaciones descentralizadas y contratos inteligentes en distintas plataformas. Sin embargo, esto suele implicar un custodio o un contrato inteligente que mantenga el activo original de forma segura, lo que introduce centralización y riesgo de contraparte.</string>
   <string name="manage_tokens_network_selector_non_native_subtitle">No es la blockchain original o primaria donde se aloja el token</string>
   <string name="manage_tokens_network_selector_non_native_title">Redes no nativas</string>
   <string name="manage_tokens_network_selector_title">Elegir redes</string>
@@ -555,7 +555,7 @@
   <string name="markets_token_details_fully_diluted_valuation">Valoración totalmente diluida</string>
   <string name="markets_token_details_fully_diluted_valuation_description">El valor teórico total de una criptomoneda si todas las monedas que podrían existir estuvieran en circulación, incluidas las que actualmente no circulan.</string>
   <string name="markets_token_details_fully_diluted_valuation_full">Valoración totalmente diluida</string>
-  <string name="markets_token_details_genesis_date">Dato de Genesis</string>
+  <string name="markets_token_details_genesis_date">Fecha de génesis</string>
   <string name="markets_token_details_high">Alto</string>
   <string name="markets_token_details_holders">Titulares</string>
   <string name="markets_token_details_holders_description">El cambio en el número de poseedores de tokens dentro de un período de tiempo específico</string>
@@ -650,11 +650,11 @@
   <string name="notification_referral_promo_button">Únase ahora</string>
   <string name="notification_referral_promo_text">Comparta su código y gane 5 USDT por venta. Su amigo obtiene un 10% de descuento.</string>
   <string name="notification_referral_promo_title">¡Obtenga RECOMPENSAS por cada amigo!</string>
-  <string name="onboarding_access_code_feature_1_description">Deba configurar un único código de acceso para proteger todss sus dispositivos.</string>
+  <string name="onboarding_access_code_feature_1_description">Configure un código de acceso único para proteger todos sus dispositivos.</string>
   <string name="onboarding_access_code_feature_1_title">Proteger</string>
   <string name="onboarding_access_code_feature_2_description">Puede configurar un código de acceso individual en cada tarjeta más adelante</string>
   <string name="onboarding_access_code_feature_2_title">Personalizar</string>
-  <string name="onboarding_access_code_feature_3_description">El código de acceso se puede recuperar con una tarjeta o un anillo vinculada(o). No guarde todos los dispositivos en el mismo lugar.</string>
+  <string name="onboarding_access_code_feature_3_description">El código de acceso puede restaurarse con una tarjeta o un anillo vinculados. No guarde todos sus dispositivos en el mismo lugar.</string>
   <string name="onboarding_access_code_feature_3_title">Restaurar</string>
   <string name="onboarding_access_code_hint">Elige cualquier palabra, frase o número que quieras como su código de acceso</string>
   <string name="onboarding_access_code_intro_title">Crear un código de acceso</string>
@@ -704,19 +704,19 @@
     <item quantity="one"></item>
     <item quantity="other">%d palabras</item>
   </plurals>
-  <string name="onboarding_seed_import_message">Para importar su billetera, ingrese su seed phrase en el campo de abajo</string>
+  <string name="onboarding_seed_import_message">Para importar su billetera, introduzca su seed phrase en el campo a continuación</string>
   <string name="onboarding_seed_intro_button_generate">Generar seed phrase</string>
   <string name="onboarding_seed_intro_button_import">Importe una billetera</string>
-  <string name="onboarding_seed_intro_message">Una seed phrase es una serie de palabras que se permite recuperar su billetera. A diferencia de las claves generadas por la tarjeta, las seed phrases no están protegidas y pueden ser copiadas y robadas. Use esta opción bajo su propia responsabilidad.</string>
+  <string name="onboarding_seed_intro_message">Una seed phrase (o frase semilla) es una serie de palabras que permite recuperar su billetera. A diferencia de las claves generadas por la tarjeta, las seed phrases no están protegidas y pueden ser copiadas y robadas. Use esta opción bajo su propia responsabilidad.</string>
   <string name="onboarding_seed_intro_title">Usar seed phrase</string>
-  <string name="onboarding_seed_mnemonic_invalid_checksum">Seed phrase no válida. Por favor, comprueba el orden de las palabras.</string>
-  <string name="onboarding_seed_mnemonic_wrong_words">Seed phrase no válida. Por favor, comprueba tu ortografía.</string>
+  <string name="onboarding_seed_mnemonic_invalid_checksum">Seed phrase incorrecta. Por favor, comprueba el orden de las palabras.</string>
+  <string name="onboarding_seed_mnemonic_wrong_words">Seed phrase incorrecta. Por favor, compruebe la ortografía.</string>
   <string name="onboarding_seed_phrase_intro_legacy">Legado</string>
-  <string name="onboarding_seed_user_validation_message">Para comprobar si has escrito correctamente su seed phrase, por favor introduce las palabras 2ª, 7ª y 11ª</string>
+  <string name="onboarding_seed_user_validation_message">Para comprobar si ha escrito correctamente su seed phrase, por favor introduzca las palabras 2ª, 7ª y 11ª</string>
   <string name="onboarding_seed_user_validation_title">Bien, vamos a comprobar</string>
   <string name="onboarding_subtitle_no_backup_cards">Para iniciar el proceso de backup, agregue hasta dos tarjetas/anillos de backup.</string>
   <string name="onboarding_subtitle_one_backup_card">Puede agregar una tarjeta/anillo más o finalizar el proceso de backup</string>
-  <string name="onboarding_subtitle_scan_backup_card_format">Prepare su tarjeta de backup con el no.%s</string>
+  <string name="onboarding_subtitle_scan_backup_card_format">Prepare su tarjeta de backup con el número %s</string>
   <string name="onboarding_subtitle_scan_primary">Escanee la tarjeta principal o el anillo para iniciar el proceso de backup.</string>
   <string name="onboarding_subtitle_scan_primary_card_format">Prepare la tarjeta principal con el número %s</string>
   <string name="onboarding_subtitle_scan_ring">Prepare el anillo y presione el botón de escaneo a continuación</string>
@@ -805,7 +805,7 @@
     <item quantity="one">para %d billetera </item>
     <item quantity="other">para %d billeteras</item>
   </plurals>
-  <string name="referral_point_currencies_description">Obtendrá ^^%1$s^^ por cada wallet comprada por su amigo en su dirección %3$s de la red %2$s ^^30 días después^^</string>
+  <string name="referral_point_currencies_description">Obtendrá ^^%1$s^^ por cada wallet comprada por sus amigos en su dirección %3$s de la red %2$s ^^30 días después^^ de la compra</string>
   <string name="referral_point_currencies_title">Usted</string>
   <string name="referral_point_discount_description_prefix">Obtendrá un</string>
   <string name="referral_point_discount_description_suffix">al comprar una billetera en tangem.com</string>
@@ -816,7 +816,7 @@
   <string name="referral_share_link">¡Compra Tangem Wallet con descuento!\n%s</string>
   <string name="referral_title">Recomiende Tangem a sus amigos</string>
   <string name="referral_tos_enroled_prefix">Ha aceptado</string>
-  <string name="referral_tos_not_enroled_prefix">Al tocar este botón, ud. acepta</string>
+  <string name="referral_tos_not_enroled_prefix">Al pulsar este botón acepta</string>
   <string name="referral_tos_suffix">del programa de referidos</string>
   <plurals name="referral_wallets_purchased_count">
     <item quantity="one">%d billetera</item>
@@ -914,16 +914,14 @@
   <string name="send_notification_reduce_to">Reducir a %s</string>
   <string name="send_notification_transaction_delay_text">Tenga en cuenta que su transacción puede experimentar retrasos bajo configuraciones específicas de tarifas</string>
   <string name="send_notification_transaction_delay_title">Es posible que haya retrasos en las transacciones</string>
-  <string name="send_notification_transaction_limit_text">Debido a las limitaciones de %1$s solo %2$s UTXO pueden usarse en una sola transacción. Esto significa que solo puedes enviar %3$s o menos. Debes reducir la cantidad.</string>
+  <string name="send_notification_transaction_limit_text">Debido a las limitaciones de %1$s solo %2$s UTXO pueden usarse en una sola transacción. Esto significa que solo puede enviar %3$s o menos. Debe reducir la cantidad.</string>
   <string name="send_notification_transaction_limit_title">Limitación de transacciones</string>
   <string name="send_optional_field">Opcional</string>
   <string name="send_qrcode_scan_info">Por favor, alinee su código QR con el cuadrado para escanearlo. Asegúrese de escanear la dirección de la red %s.</string>
   <string name="send_recent_transactions">Reciente</string>
   <string name="send_recipient">Destinatario</string>
   <string name="send_recipient_address_error">No es una dirección válida</string>
-  <string name="send_recipient_address_footer">Asegúrese de que la dirección de la billetera receptora esté en la red %s para evitar perder sus tokens</string>
-  <string name="send_recipient_address_footer_highlighted_part">%s dirección de red</string>
-  <string name="send_recipient_address_footer_v2">Asegúrese de que %s dirección de red, ya que los errores pueden resultar en transferencias perdidas</string>
+  <string name="send_recipient_address_footer">Asegúrese de que la dirección de la billetera receptora esté en **la red %s** para evitar perder sus tokens</string>
   <string name="send_recipient_label">Destinatario</string>
   <string name="send_recipient_memo_footer">Un Memo/ID de destino es un ID único para diferenciar transacciones enviadas al mismo destinatario en la misma red. Precaución: Omitir un memo puede llevar a la pérdida de fondos</string>
   <string name="send_recipient_memo_footer_v2">Memo / Destination Tag es un código que separa las transacciones dirigidas a un destinatario compartido en una red de criptomonedas.</string>
@@ -1005,7 +1003,7 @@
   <string name="staking_legal">Al utilizar la función de staking, usted acepta %1$s y %2$s del proveedor</string>
   <string name="staking_locked">Bloqueado</string>
   <string name="staking_migrate">Migrar</string>
-  <string name="staking_native">Native staking</string>
+  <string name="staking_native">Staking nativo</string>
   <string name="staking_no_validators_error_message">No hay validadores activos disponibles para hacer staking en este momento. Por favor, inténtalo de nuevo más tarde.</string>
   <string name="staking_notification_additional_ada_deposit_text">Al hacer staking en la red Cardano, se utiliza todo su saldo. Se reservarán 2 ADA adicionales y se devolverán después del staking. Su ADA permanece desbloqueado mientras hace staking.</string>
   <string name="staking_notification_additional_ada_deposit_title">Detalles del staking de ADA</string>
@@ -1105,7 +1103,7 @@
   <string name="sui_not_enough_coin_for_fee_description">Se requiere una transacción entrante de al menos %1$s para proceder</string>
   <string name="sui_not_enough_coin_for_fee_title">Fondos insuficientes</string>
   <string name="swap_fixed_rate">Tasa Fija</string>
-  <string name="swap_give_permission_fee_footer">La red cobrará una tarifa de aprobación de token para verificar que está autorizando el uso de su token para el swap.</string>
+  <string name="swap_give_permission_fee_footer">La red cobrará una tasa de aprobación del token para verificar que usted autoriza el uso de su token para el intercambio.</string>
   <string name="swap_promo_text">Intercambie más tokens a mejores tasas directamente en su billetera.</string>
   <string name="swap_promo_title">¡Nuevo proveedor de intercambio disponible!</string>
   <string name="swap_story_fifth_subtitle">Siéntase seguro con una asistencia permanente que le ayudará con cualquier problema</string>
@@ -1124,11 +1122,11 @@
   <string name="swapping_alert_dex_description">El importe incluye los honorarios del proveedor de servicios.</string>
   <string name="swapping_alert_dex_description_with_slippage">El importe incluye las tarifas del proveedor de servicios. \n\nEl deslizamiento (slippage) del proveedor puede llegar a %s</string>
   <string name="swapping_alert_title">Información</string>
-  <string name="swapping_approve_information_text">Todos los exchanges descentralizados requieren aprobaciones para evitar que los smart contracts accedan a su billetera sin su permiso. Por diseño, los smart contracts no pueden acceder a tus tokens a menos que lo apruebes. Al \"desbloquear\" sus tokens, autoriza al smart contract de 1-inch a gastarlos. Los mineros de la red reciben una tarifa de gas (pagada por voz) para registrar esta acción en la blockchain. Puede intercambiar su token después de dar la aprobación.</string>
+  <string name="swapping_approve_information_text">Todos los intercambios descentralizados requieren aprobaciones para evitar que los contratos inteligentes accedan a su billetera sin su permiso. Por diseño, los contratos inteligentes no pueden acceder a sus tokens a menos que lo apruebe. Al \"desbloquear\" sus tokens, autoriza al contrato inteligente de 1-inch a gastarlos. Los mineros de la red reciben una tarifa de gas (pagada por usted) para registrar esta acción en la blockchain. Puede intercambiar su token después de dar su aprobación.</string>
   <string name="swapping_approve_information_title">Aprobar</string>
   <string name="swapping_fee_estimation_error_text">Error en la estimación de la tarifa. Envíe sus comentarios al servicio de asistencia.</string>
   <string name="swapping_from_title">Usted intercambia</string>
-  <string name="swapping_high_price_impact_description">Hacer swap de esta cantidad de tokens seleccionados causará un impacto significativo en el precio y reducirá su resultado.</string>
+  <string name="swapping_high_price_impact_description">Hacer un intercambio de esta cantidad del token seleccionado causará un impacto significativo en el precio y reducirá su resultado.</string>
   <string name="swapping_insufficient_funds">Fondos insuficientes</string>
   <string name="swapping_permission_header">Dar autorización</string>
   <string name="swapping_swap_action">Intercambiar</string>
@@ -1148,7 +1146,7 @@
   <string name="token_button_unavailability_reason_not_exchangeable">El servicio de intercambio %s no está compatible con los proveedores actuales pero estamos trabajando para agregar más opciones.</string>
   <string name="token_button_unavailability_reason_out_of_date_balance">Es posible que el saldo mostrado esté desactualizado debido al almacenamiento en caché.</string>
   <string name="token_button_unavailability_reason_pending_transaction_sell">La venta de fondos estará disponible una vez que la(s) transacción(es) pendiente(s) en la red %s se completen</string>
-  <string name="token_button_unavailability_reason_pending_transaction_send">El envío de fondos estará disponible una vez que se complete(n) la(s) transaccion(es) pendiente(s) en la red %s</string>
+  <string name="token_button_unavailability_reason_pending_transaction_send">El envío de fondos estará disponible una vez que se complete(n) la(s) transacción(es) pendiente(s) en la red %s</string>
   <string name="token_button_unavailability_reason_sell_unavailable">Vender %s no es compatible con los proveedores actuales, pero estamos trabajando para agregar más opciones.</string>
   <string name="token_button_unavailability_reason_staking_unavailable">El staking de %s no es compatible con los proveedores actuales, pero estamos trabajando para agregar más opciones.</string>
   <string name="token_details_generate_xpub">Generar XPUB</string>
@@ -1353,7 +1351,7 @@
   <string name="warning_some_networks_unreachable_title">Algunas redes no están disponibles</string>
   <string name="warning_some_token_balances_not_updated">No se han podido actualizar los saldos de algunos tokens</string>
   <string name="warning_stellar_token_trustline_not_enough_xlm">No hay suficiente %s. Recargue su cuenta XLM para abrir trustline</string>
-  <string name="warning_testnet_card_message">Esta es una tarjeta de Testnet. No puede procesar transacciones y solo deba usarse para pruebas y desarrollo.</string>
+  <string name="warning_testnet_card_message">Esta es una tarjeta de Testnet. No puede procesar transacciones y solo debe usarse para fines de prueba y desarrollo.</string>
   <string name="warning_testnet_card_title">Solo para fines de prueba</string>
   <string name="warning_token_balance_not_updated">El saldo podría estar desactualizado. Actualice la página.</string>
   <string name="warning_token_required_min_coin_reserve">No hay suficiente %1$s. Recargue su cuenta %2$s para asociar este token</string>
@@ -1373,7 +1371,7 @@
   <string name="wc_alert_request_timeout_description">Verifique su conexión de red</string>
   <string name="wc_alert_request_timeout_title">Tiempo de espera agotado</string>
   <string name="wc_alert_session_disconnected_description">Vuelva a su navegador y vuelva a conectarse a través de WalletConnect.</string>
-  <string name="wc_alert_session_disconnected_title">La sesión de Wallet Connect se desconectó</string>
+  <string name="wc_alert_session_disconnected_title">La sesión de Wallet Connect fue desconectada</string>
   <string name="wc_alert_sign_anyway">Firmar de todos modos</string>
   <string name="wc_alert_unknown_error_description">Código de error: %s. Si el problema persiste - no dude en ponerse en contacto con nuestro soporte.</string>
   <string name="wc_alert_unknown_error_description_no_error_code">Si el problema persiste, no dude en contactar con nuestro soporte.</string>
