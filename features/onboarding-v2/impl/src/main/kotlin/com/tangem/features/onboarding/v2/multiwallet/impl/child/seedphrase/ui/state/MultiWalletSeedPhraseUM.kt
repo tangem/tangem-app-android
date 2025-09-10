@@ -3,6 +3,7 @@ package com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.ui.s
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.text.input.TextFieldValue
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.components.grid.entity.EnumeratedTwoColumnGridItem
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.features.onboarding.v2.common.ui.OnboardingDialogUM
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.model.GeneratedWordsType
@@ -22,15 +23,10 @@ internal sealed class MultiWalletSeedPhraseUM(
 
     data class GenerateSeedPhrase(
         val option: GeneratedWordsType = GeneratedWordsType.Words12,
-        val words: ImmutableList<MnemonicGridItem> = persistentListOf(),
+        val words: ImmutableList<EnumeratedTwoColumnGridItem> = persistentListOf(),
         val onOptionChange: (GeneratedWordsType) -> Unit = {},
         val onContinueClick: () -> Unit = {},
-    ) : MultiWalletSeedPhraseUM(order = 1) {
-        data class MnemonicGridItem(
-            val index: Int,
-            val mnemonic: String,
-        )
-    }
+    ) : MultiWalletSeedPhraseUM(order = 1)
 
     data class GeneratedWordsCheck(
         val wordFields: ImmutableList<WordField> = persistentListOf(),
