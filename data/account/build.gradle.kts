@@ -9,9 +9,15 @@ android {
     namespace = "com.tangem.data.account"
 }
 
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+}
+
 dependencies {
 
     // region Project - Core
+    implementation(projects.core.datasource)
+    implementation(projects.core.configToggles)
     api(projects.core.utils)
     // endregion
 
@@ -20,18 +26,43 @@ dependencies {
     api(projects.domain.models)
     // endregion
 
-    // Project - Data
-    implementation(projects.core.datasource)
+    // region Project - Data
+    implementation(projects.data.common)
+    // endregion
+
+    // region Project - Libs
+    implementation(projects.libs.crypto)
+    implementation(projects.libs.blockchainSdk)
+    // endregion
+
+    // region Tangem dependencies
+    implementation(tangemDeps.card.core)
+    implementation(tangemDeps.blockchain)
     // endregion
 
     // region DI
-    implementation(deps.hilt.core)
+    implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
+    // endregion
+
+    // region AndroidX libraries
+    implementation(deps.androidx.datastore)
     // endregion
 
     // region Other Dependencies
     implementation(deps.arrow.core)
     implementation(deps.kotlin.coroutines)
+    implementation(deps.moshi)
+    implementation(deps.moshi.kotlin)
     implementation(deps.timber)
+    // endregion
+
+    // region Test
+    testImplementation(deps.test.coroutine)
+    testImplementation(deps.test.junit5)
+    testRuntimeOnly(deps.test.junit5.engine)
+    testImplementation(deps.test.mockk)
+    testImplementation(deps.test.truth)
+    testImplementation(projects.common.test)
     // endregion
 }

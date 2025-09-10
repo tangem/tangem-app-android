@@ -154,7 +154,8 @@ interface TangemTechApi {
     suspend fun saveWalletAccounts(
         @Path("walletId") walletId: String,
         @Header("If-Match") ifMatch: String,
-    ): ApiResponse<SaveWalletAccountsResponse>
+        @Body body: SaveWalletAccountsResponse,
+    ): ApiResponse<Unit>
 
     @GET("/v1/wallets/{walletId}/accounts/archived")
     suspend fun getWalletArchivedAccounts(

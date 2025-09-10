@@ -5,7 +5,7 @@ import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.domain.tokens.model.analytics.TokenSwapPromoAnalyticsEvent
-import com.tangem.domain.tokens.model.analytics.TokenSwapPromoAnalyticsEvent.ProgramName
+import com.tangem.domain.tokens.model.analytics.TokenSwapPromoAnalyticsEvent.Program
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.MainScreen
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
@@ -51,7 +51,11 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
             is WalletNotification.NoteMigration -> MainScreen.NotePromo
             is WalletNotification.SwapPromo -> TokenSwapPromoAnalyticsEvent.NoticePromotionBanner(
                 source = AnalyticsParam.ScreensSources.Main,
-                programName = ProgramName.Empty, // Use it on new promo action
+                program = Program.Empty, // Use it on new promo action
+            )
+            is WalletNotification.Sepa -> TokenSwapPromoAnalyticsEvent.NoticePromotionBanner(
+                source = AnalyticsParam.ScreensSources.Main,
+                program = Program.Sepa,
             )
             is WalletNotification.ReferralPromo -> MainScreen.ReferralPromo
             is WalletNotification.UnlockWallets -> null // See [SelectedWalletAnalyticsSender]
