@@ -56,6 +56,7 @@ internal class DefaultWcPairUseCaseTest {
             proposerPublicKey = "",
             relayProtocol = "",
             relayData = "",
+            scopedProperties = null,
         )
     private val sdkVerifyContext: Wallet.Model.VerifyContext
         get() = Wallet.Model.VerifyContext(
