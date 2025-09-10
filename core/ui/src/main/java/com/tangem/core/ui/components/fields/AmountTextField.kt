@@ -24,7 +24,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.core.ui.components.fields.visualtransformations.AmountVisualTransformation
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.test.StakingSendScreenTestTags
+import com.tangem.core.ui.test.SendScreenTestTags
 import com.tangem.core.ui.utils.*
 import java.math.BigDecimal
 import java.text.DecimalFormat
@@ -106,7 +106,7 @@ fun AmountTextField(
             visualTransformation = visualTransformation,
             modifier = Modifier
                 .background(backgroundColor)
-                .testTag(StakingSendScreenTestTags.INPUT_TEXT_FIELD),
+                .testTag(SendScreenTestTags.INPUT_TEXT_FIELD),
         )
     }
 }

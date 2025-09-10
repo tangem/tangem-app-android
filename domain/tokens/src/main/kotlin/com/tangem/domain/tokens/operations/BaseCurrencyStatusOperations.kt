@@ -28,7 +28,6 @@ import com.tangem.domain.staking.single.SingleYieldBalanceProducer
 import com.tangem.domain.staking.single.SingleYieldBalanceSupplier
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesProducer
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
-import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations.Error
 import com.tangem.domain.tokens.repository.CurrenciesRepository
@@ -53,7 +52,6 @@ abstract class BaseCurrencyStatusOperations(
     private val multiYieldBalanceSupplier: MultiYieldBalanceSupplier,
     private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
     private val stakingIdFactory: StakingIdFactory,
-    private val tokensFeatureToggles: TokensFeatureToggles,
 ) {
 
     protected val currencyStatusProxyCreator = CurrencyStatusProxyCreator()
@@ -61,13 +59,6 @@ abstract class BaseCurrencyStatusOperations(
     abstract fun getCurrenciesStatuses(userWalletId: UserWalletId): LceFlow<TokenListError, List<CryptoCurrencyStatus>>
 
     protected abstract fun getQuotes(id: CryptoCurrency.RawID): Flow<Either<Error, Set<QuoteStatus>>>
-
-    protected abstract suspend fun fetchComponents(
-        userWalletId: UserWalletId,
-        networks: Set<Network>,
-        currenciesIds: Set<CryptoCurrency.ID>,
-        currencies: List<CryptoCurrency>,
-    ): Either<Throwable, Unit>
 
     suspend fun getCurrencyStatusFlow(
         userWalletId: UserWalletId,
@@ -262,14 +253,10 @@ abstract class BaseCurrencyStatusOperations(
         return either {
             catch(
                 block = {
-                    val nonEmptyCurrencies = if (tokensFeatureToggles.isWalletBalanceFetcherEnabled) {
-                        multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
-                            params = MultiWalletCryptoCurrenciesProducer.Params(userWalletId),
-                        )
-                            ?.toNonEmptyListOrNull()
-                    } else {
-                        currenciesRepository.getMultiCurrencyWalletCurrenciesSync(userWalletId).toNonEmptyListOrNull()
-                    }
+                    val nonEmptyCurrencies = multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
+                        params = MultiWalletCryptoCurrenciesProducer.Params(userWalletId),
+                    )
+                        ?.toNonEmptyListOrNull()
                         ?: return emptyList<CryptoCurrencyStatus>().right()
 
                     val (_, currenciesIds) = getIds(nonEmptyCurrencies)
@@ -332,15 +319,11 @@ abstract class BaseCurrencyStatusOperations(
         currencyId: CryptoCurrency.ID,
     ): CryptoCurrency {
         return Either.catch {
-            if (tokensFeatureToggles.isWalletBalanceFetcherEnabled) {
-                multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
-                    params = MultiWalletCryptoCurrenciesProducer.Params(userWalletId),
-                )
-                    ?.firstOrNull { it.id == currencyId }
-                    ?: error("Unable to find currency with ID: $currencyId")
-            } else {
-                currenciesRepository.getMultiCurrencyWalletCurrency(userWalletId = userWalletId, id = currencyId)
-            }
+            multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
+                params = MultiWalletCryptoCurrenciesProducer.Params(userWalletId),
+            )
+                ?.firstOrNull { it.id == currencyId }
+                ?: error("Unable to find currency with ID: $currencyId")
         }
             .mapLeft(Error::DataError)
             .bind()
@@ -382,16 +365,12 @@ abstract class BaseCurrencyStatusOperations(
         derivationPath: Network.DerivationPath,
     ): CryptoCurrency {
         return Either.catch {
-            if (tokensFeatureToggles.isWalletBalanceFetcherEnabled) {
-                multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
-                    params = MultiWalletCryptoCurrenciesProducer.Params(userWalletId),
-                )
-                    ?.filterIsInstance<CryptoCurrency.Coin>()
-                    ?.firstOrNull { it.network.id == networkId }
-                    ?: error("Unable to create network coin with ID: $networkId")
-            } else {
-                currenciesRepository.getNetworkCoin(userWalletId, networkId, derivationPath)
-            }
+            multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
+                params = MultiWalletCryptoCurrenciesProducer.Params(userWalletId),
+            )
+                ?.filterIsInstance<CryptoCurrency.Coin>()
+                ?.firstOrNull { it.network.id == networkId && it.network.derivationPath == derivationPath }
+                ?: error("Unable to create network coin with ID: $networkId")
         }
             .mapLeft { Error.DataError(it) }
             .bind()
