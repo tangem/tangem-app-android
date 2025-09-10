@@ -1,6 +1,6 @@
 package com.tangem.features.managetokens.entity.customtoken
 
-import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.managetokens.component.AddCustomTokenMode
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -8,6 +8,6 @@ internal sealed class CustomTokenSelectorDialogConfig {
 
     @Serializable
     data class CustomDerivationInput(
-        val userWalletId: UserWalletId,
+        val mode: AddCustomTokenMode,
     ) : CustomTokenSelectorDialogConfig()
 }
