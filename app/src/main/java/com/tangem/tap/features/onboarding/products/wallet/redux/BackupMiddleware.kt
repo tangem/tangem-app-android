@@ -2,12 +2,15 @@ package com.tangem.tap.features.onboarding.products.wallet.redux
 
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.Analytics
-import com.tangem.tap.*
-import com.tangem.tap.common.analytics.events.Onboarding.*
-import com.tangem.tap.common.extensions.*
+import com.tangem.tap.backupService
+import com.tangem.tap.common.analytics.events.Onboarding.Finished
+import com.tangem.tap.common.extensions.dispatchNavigationAction
+import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.demo.DemoHelper
+import com.tangem.tap.mainScope
 import com.tangem.tap.proxy.redux.DaggerGraphState
+import com.tangem.tap.store
 import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
 
@@ -24,7 +27,7 @@ class BackupMiddleware {
 
 @Suppress("LongMethod", "ComplexMethod", "MagicNumber")
 private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) {
-    if (DemoHelper.tryHandle(appState, action)) return
+    if (DemoHelper.tryHandle(appState)) return
 
     when (action) {
         is BackupAction.DiscardBackup -> {
