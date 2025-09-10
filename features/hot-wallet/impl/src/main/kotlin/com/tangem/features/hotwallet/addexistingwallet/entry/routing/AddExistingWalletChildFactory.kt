@@ -46,7 +46,6 @@ internal class AddExistingWalletChildFactory @Inject constructor(
             is AddExistingWalletRoute.SetAccessCode -> accessCodeComponentFactory.create(
                 context = childContext,
                 params = AccessCodeComponent.Params(
-                    isConfirmMode = false,
                     userWalletId = route.userWalletId,
                     callbacks = model.accessCodeModelCallbacks,
                 ),
@@ -54,7 +53,6 @@ internal class AddExistingWalletChildFactory @Inject constructor(
             is AddExistingWalletRoute.ConfirmAccessCode -> accessCodeComponentFactory.create(
                 context = childContext,
                 params = AccessCodeComponent.Params(
-                    isConfirmMode = true,
                     accessCodeToConfirm = route.accessCode,
                     userWalletId = route.userWalletId,
                     callbacks = model.accessCodeModelCallbacks,
