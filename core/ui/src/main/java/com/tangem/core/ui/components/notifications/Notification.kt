@@ -116,7 +116,9 @@ internal fun NotificationBaseContainer(
     ) {
         Box {
             Column(
-                modifier = Modifier.padding(all = TangemTheme.dimens.spacing12),
+                modifier = Modifier
+                    .padding(all = TangemTheme.dimens.spacing12)
+                    .testTag(NotificationTestTags.CONTAINER),
                 verticalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing12),
             ) {
                 content()
@@ -151,7 +153,8 @@ private fun MainContent(
             tint = iconTint,
             modifier = Modifier
                 .size(size = iconSize)
-                .align(alignment = Alignment.Top),
+                .align(alignment = Alignment.Top)
+                .testTag(NotificationTestTags.ICON),
         )
 
         SpacerW(width = TangemTheme.dimens.spacing10)
@@ -219,7 +222,7 @@ internal fun TextsBlock(
                 text = subtitleText,
                 color = subtitleColor,
                 style = TangemTheme.typography.caption2,
-                modifier = Modifier.testTag(NotificationTestTags.TEXT),
+                modifier = Modifier.testTag(NotificationTestTags.MESSAGE),
             )
         }
     }
