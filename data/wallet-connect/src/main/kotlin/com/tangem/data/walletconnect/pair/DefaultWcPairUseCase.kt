@@ -51,7 +51,12 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
             val pairResult = sdkDelegate.pair(uri)
                 .onLeft {
                     Timber.tag(WC_TAG).e(it, "Failed to call pair $pairRequest")
-                    analytics.send(WcAnalyticEvents.PairFailed(it.code))
+                    analytics.send(
+                        WcAnalyticEvents.PairFailed(
+                            errorCode = it.code,
+                            errorMessage = it.message,
+                        ),
+                    )
                     emit(WcPairState.Error(it))
                 }
                 .getOrNull() ?: return@flow
@@ -73,7 +78,12 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
 
             val proposalState = buildProposalState(sdkSessionProposal, sdkVerifyContext)
                 .onLeft {
-                    analytics.send(WcAnalyticEvents.PairFailed(it.code))
+                    analytics.send(
+                        WcAnalyticEvents.PairFailed(
+                            errorCode = it.code,
+                            errorMessage = it.message,
+                        ),
+                    )
                     emit(WcPairState.Error(it))
                 }
                 .getOrNull() ?: return@flow
@@ -121,7 +131,12 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
                 )
                 newSession
             }.onLeft {
-                analytics.send(WcAnalyticEvents.DAppConnectionFailed(it.code))
+                analytics.send(
+                    WcAnalyticEvents.DAppConnectionFailed(
+                        errorCode = it.code,
+                        errorMessage = it.message,
+                    ),
+                )
                 sdkDelegate.rejectSession(sdkSessionProposal.proposerPublicKey)
                 Timber.tag(WC_TAG).e(it, "Failed to approve session ${sdkSessionProposal.name}")
             }
@@ -188,8 +203,10 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
             .values.map { it.available.plus(it.required) }.flatten().toSet()
         analytics.send(
             WcAnalyticEvents.PairRequested(
+                dAppName = sessionProposal.name,
+                dAppUrl = sessionProposal.url,
                 network = requestedNetworks,
-                verificationInfo,
+                domainVerification = verificationInfo,
             ),
         )
         val appMetaData = WcAppMetaData(
