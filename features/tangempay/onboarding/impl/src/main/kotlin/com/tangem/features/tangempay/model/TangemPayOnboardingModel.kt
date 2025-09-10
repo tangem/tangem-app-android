@@ -8,7 +8,7 @@ import com.tangem.features.tangempay.components.TangemPayOnboardingComponent
 import com.tangem.features.tangempay.ui.TangemPayOnboardingScreenState
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
 
 @Stable
@@ -21,8 +21,6 @@ internal class TangemPayOnboardingModel @Inject constructor(
     @Suppress("UnusedPrivateMember")
     private val params = paramsContainer.require<TangemPayOnboardingComponent.Params>()
 
-    private val _screenState: MutableStateFlow<TangemPayOnboardingScreenState> = MutableStateFlow(getInitState())
-    val screenState = _screenState.asStateFlow()
-
-    private fun getInitState() = TangemPayOnboardingScreenState
+    val screenState: StateFlow<TangemPayOnboardingScreenState>
+    field = MutableStateFlow(TangemPayOnboardingScreenState())
 }
