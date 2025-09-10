@@ -18,7 +18,7 @@ class DefaultKycComponent @AssistedInject constructor(
 
     private val model: DefaultKycModel = getOrCreateModel()
 
-    override fun launch(params: KycComponent.Params) {
+    override fun launch() {
         componentScope.launch {
             model.uiState.collect {
                 it?.let { startInfo ->
@@ -35,7 +35,7 @@ class DefaultKycComponent @AssistedInject constructor(
                 }
             }
         }
-        model.getKycToken(params)
+        model.getKycToken()
     }
 
     @AssistedFactory
