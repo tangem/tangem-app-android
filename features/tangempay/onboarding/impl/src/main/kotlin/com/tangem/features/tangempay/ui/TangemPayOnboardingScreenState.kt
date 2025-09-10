@@ -1,3 +1,9 @@
 package com.tangem.features.tangempay.ui
 
-internal object TangemPayOnboardingScreenState
+import javax.annotation.concurrent.Immutable
+
+@Immutable
+internal data class TangemPayOnboardingScreenState(
+    val fullScreenLoading: Boolean = true,
+    val buttonLoading: Boolean = false,
+)
