@@ -10,7 +10,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.crypto.bip39.Mnemonic
 import com.tangem.domain.card.repository.CardRepository
-import com.tangem.domain.feedback.GetCardInfoUseCase
+import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.features.hotwallet.MnemonicRepository
@@ -44,7 +44,7 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
     private val urlOpener: UrlOpener,
     private val tangemSdkManager: TangemSdkManager,
     private val cardRepository: CardRepository,
-    private val getCardInfoUseCase: GetCardInfoUseCase,
+    private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val analyticsHandler: AnalyticsEventHandler,
 ) : Model() {
@@ -257,7 +257,8 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
 
     fun navigateToSupportScreen() {
         modelScope.launch {
-            val cardInfo = getCardInfoUseCase(multiWalletState.value.currentScanResponse).getOrNull() ?: return@launch
+            val cardInfo =
+                getWalletMetaInfoUseCase(multiWalletState.value.currentScanResponse).getOrNull() ?: return@launch
             sendFeedbackEmailUseCase(FeedbackEmailType.DirectUserRequest(cardInfo))
         }
     }
