@@ -1414,6 +1414,14 @@
   <string name="visa_unlock_notification_button">Unlock</string>
   <string name="visa_unlock_notification_subtitle">Scan your card to unlock access</string>
   <string name="visa_unlock_notification_title">Needed unlock</string>
+  <string name="tangempay_onboarding_title">Get your free Crypto Card\nin minutes</string>
+  <string name="tangempay_onboarding_security_title">Built-in security</string>
+  <string name="tangempay_onboarding_security_description">Your card details are protected — full control in the app.</string>
+  <string name="tangempay_onboarding_purchases_title">Everyday purchases</string>
+  <string name="tangempay_onboarding_purchases_description">Use your USDC balance to pay for everyday purchases seamlessly.</string>
+  <string name="tangempay_onboarding_pay_title">Apple Pay &amp; Google Pay</string>
+  <string name="tangempay_onboarding_pay_description">Add to your wallet and pay with your phone anywhere.</string>
+  <string name="tangempay_onboarding_get_card_button_text">Get card</string>
   <string name="wallet_balance_blockchain_unreachable_try_later">Blockchain is unreachable. Try later</string>
   <string name="wallet_balance_missing_derivation">Scan card or ring</string>
   <string name="wallet_been_activated_message">This wallet has already been activated earlier.\nIf it was not done by you, please contact support.\nTangem never sells wallets along with pre-generated access codes.</string>
