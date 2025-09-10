@@ -50,6 +50,7 @@ internal class DefaultWcRequestUseCaseFactory @Inject constructor(
             rawRequest = request,
             errorCode = error.code().orEmpty(),
             blockchain = blockchainName,
+            errorMessage = error.message,
         )
         analytics.send(event)
     }
