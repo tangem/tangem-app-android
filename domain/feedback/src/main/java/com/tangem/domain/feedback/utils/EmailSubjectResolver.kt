@@ -18,7 +18,7 @@ internal class EmailSubjectResolver(private val resources: Resources) {
     fun resolve(type: FeedbackEmailType): String {
         return when (type) {
             is FeedbackEmailType.DirectUserRequest -> {
-                if (type.cardInfo.isStart2Coin) {
+                if (type.walletMetaInfo.isStart2Coin == true) {
                     resources.getStringSafe(R.string.feedback_subject_support)
                 } else {
                     resources.getStringSafe(R.string.feedback_subject_support_tangem)
