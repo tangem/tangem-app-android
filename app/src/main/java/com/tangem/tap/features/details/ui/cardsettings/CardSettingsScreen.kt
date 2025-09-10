@@ -13,11 +13,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.DeviceSettingsScreenTestTags
 import com.tangem.tap.features.details.ui.common.DetailsMainButton
 import com.tangem.tap.features.details.ui.common.SettingsScreensScaffold
 import com.tangem.wallet.R
@@ -49,7 +51,8 @@ private fun CardSettingsReadCard(onScanCardClick: () -> Unit) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = TangemTheme.dimens.spacing40),
+                .padding(bottom = TangemTheme.dimens.spacing40)
+                .testTag(DeviceSettingsScreenTestTags.IMAGE_BLOCK),
         ) {
             Image(
                 modifier = Modifier
@@ -116,7 +119,9 @@ private fun CardSettings(state: CardSettingsScreenState) {
     if (state.cardDetails == null) return
 
     LazyColumn(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag(DeviceSettingsScreenTestTags.LAZY_LIST),
     ) {
         items(state.cardDetails) {
             val paddingBottom = when (it) {
@@ -164,12 +169,14 @@ private fun CardSettings(state: CardSettingsScreenState) {
                     text = it.titleRes.resolveReference(),
                     color = titleColor,
                     style = TangemTheme.typography.subtitle1,
+                    modifier = Modifier.testTag(DeviceSettingsScreenTestTags.ITEM_TITLE),
                 )
                 Spacer(modifier = Modifier.size(TangemTheme.dimens.size4))
                 Text(
                     text = it.subtitle.resolveReference(),
                     color = subtitleColor,
                     style = TangemTheme.typography.body2,
+                    modifier = Modifier.testTag(DeviceSettingsScreenTestTags.ITEM_SUBTITLE),
                 )
             }
         }

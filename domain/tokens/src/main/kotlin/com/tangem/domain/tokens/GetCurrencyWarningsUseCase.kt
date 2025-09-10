@@ -29,7 +29,6 @@ class GetCurrencyWarningsUseCase(
     private val currencyChecksRepository: CurrencyChecksRepository,
     private val currencyStatusOperations: BaseCurrencyStatusOperations,
     private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
-    private val tokensFeatureToggles: TokensFeatureToggles,
 ) {
 
     suspend operator fun invoke(
@@ -152,14 +151,10 @@ class GetCurrencyWarningsUseCase(
         tokenStatus: CryptoCurrencyStatus,
         feePaidToken: FeePaidCurrency.Token,
     ): CryptoCurrencyWarning {
-        val tokens = if (tokensFeatureToggles.isWalletBalanceFetcherEnabled) {
-            multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
-                params = MultiWalletCryptoCurrenciesProducer.Params(userWalletId),
-            )
-                .orEmpty()
-        } else {
-            currenciesRepository.getMultiCurrencyWalletCurrenciesSync(userWalletId)
-        }
+        val tokens = multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
+            params = MultiWalletCryptoCurrenciesProducer.Params(userWalletId),
+        )
+            .orEmpty()
 
         val token = tokens.find {
             it is CryptoCurrency.Token &&
