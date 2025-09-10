@@ -1,5 +1,6 @@
 package com.tangem.features.account.createedit.entity
 
+import com.tangem.common.ui.account.AccountNameUM
 import com.tangem.common.ui.account.CryptoPortfolioIconUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.account.CryptoPortfolioIcon
@@ -15,11 +16,11 @@ internal data class AccountCreateEditUM(
 ) {
 
     data class Account(
-        val name: String,
+        val name: AccountNameUM,
         val portfolioIcon: CryptoPortfolioIconUM,
         val derivationInfo: DerivationInfo,
         val inputPlaceholder: TextReference,
-        val onNameChange: (String) -> Unit,
+        val onNameChange: (AccountNameUM) -> Unit,
     )
 
     sealed interface DerivationInfo {

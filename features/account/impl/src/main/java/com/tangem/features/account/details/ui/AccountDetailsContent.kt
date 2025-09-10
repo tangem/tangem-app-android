@@ -143,7 +143,7 @@ private fun AccountRow(state: AccountDetailsUM) {
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
     ) {
         AccountRow(
-            title = stringReference(state.accountName),
+            title = state.accountName,
             subtitle = resourceReference(R.string.account_form_name),
             icon = state.accountIcon,
             modifier = Modifier.weight(1f),
@@ -177,7 +177,7 @@ private class PreviewStateProvider : CollectionPreviewParameterProvider<AccountD
             onAccountEditClick = {},
             onManageTokensClick = {},
             onArchiveAccountClick = {},
-            accountName = accountName,
+            accountName = stringReference(value = accountName),
             accountIcon = portfolioIcon,
         )
         add(first)

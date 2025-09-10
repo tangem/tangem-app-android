@@ -24,7 +24,7 @@ internal object SaveWalletAccountsResponseConverter : Converter<AccountList, Sav
     private fun toDTO(account: Account.CryptoPortfolio): WalletAccountDTO {
         return WalletAccountDTO(
             id = account.accountId.value,
-            name = account.accountName.value,
+            name = AccountNameConverter.convert(value = account.accountName),
             derivationIndex = account.derivationIndex.value,
             icon = account.icon.value.name,
             iconColor = account.icon.color.name,

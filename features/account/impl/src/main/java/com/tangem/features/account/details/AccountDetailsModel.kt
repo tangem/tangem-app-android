@@ -74,7 +74,7 @@ internal class AccountDetailsModel @Inject constructor(
 
     private fun getInitialState(): AccountDetailsUM {
         return AccountDetailsUM(
-            accountName = params.account.accountName.value,
+            accountName = params.account.accountName.toUM().value,
             accountIcon = params.account.portfolioIcon.toUM(),
             onCloseClick = { router.pop() },
             onAccountEditClick = ::onEditAccountClick,

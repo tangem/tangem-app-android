@@ -1,6 +1,8 @@
 package com.tangem.features.account.createedit
 
+import com.tangem.common.ui.account.AccountNameUM
 import com.tangem.common.ui.account.toDomain
+import com.tangem.common.ui.account.toUM
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
@@ -16,7 +18,6 @@ import com.tangem.core.ui.utils.showErrorDialog
 import com.tangem.domain.account.usecase.AddCryptoPortfolioUseCase
 import com.tangem.domain.account.usecase.GetUnoccupiedAccountIndexUseCase
 import com.tangem.domain.account.usecase.UpdateCryptoPortfolioUseCase
-import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.wallet.UserWalletId
@@ -92,7 +93,7 @@ internal class AccountCreateEditModel @Inject constructor(
 
     private suspend fun createNewCryptoPortfolio(params: AccountCreateEditComponent.Params.Create) {
         val state = uiState.value
-        val name = AccountName(value = state.account.name).getOrNull() ?: return
+        val name = state.account.name.toDomain().getOrNull() ?: return
         val icon = state.account.portfolioIcon.toDomain()
         val index = state.account.derivationInfo.index ?: return
         val derivationIndex = DerivationIndex(value = index).getOrNull() ?: return
@@ -107,7 +108,7 @@ internal class AccountCreateEditModel @Inject constructor(
 
     private suspend fun editCryptoPortfolio(params: AccountCreateEditComponent.Params.Edit) {
         val state = uiState.value
-        val name = AccountName(state.account.name).getOrNull() ?: return
+        val name = state.account.name.toDomain().getOrNull() ?: return
         val icon = state.account.portfolioIcon.toDomain()
         val isNewName = name != params.account.accountName
         val isNewIcon = icon != params.account.portfolioIcon
@@ -132,18 +133,20 @@ internal class AccountCreateEditModel @Inject constructor(
             .validateNewState()
     }
 
-    private fun onNameChange(name: String) {
+    private fun onNameChange(name: AccountNameUM) {
         uiState.value = uiState.value
             .updateName(name)
             .validateNewState()
     }
 
     private fun AccountCreateEditUM.validateNewState(): AccountCreateEditUM {
-        val isValidName = AccountName(this.account.name).isRight()
+        val isValidName = this.account.name.toDomain().isRight()
         val isAvailableForConfirm = when (params) {
             is AccountCreateEditComponent.Params.Create -> isValidName
             is AccountCreateEditComponent.Params.Edit -> {
-                val isNewName = this.account.name != params.account.accountName.value
+                val oldName = params.account.accountName.toUM()
+
+                val isNewName = this.account.name != oldName
                 val isNewIcon = this.account.portfolioIcon != params.account.portfolioIcon
                 isValidName && (isNewName || isNewIcon)
             }
