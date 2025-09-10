@@ -17,6 +17,7 @@ dependencies {
     api(projects.features.onramp.api)
     api(projects.features.sendV2.api)
     api(projects.features.tokenRecieve.api)
+    api(projects.features.wallet.api)
 
     /* Data */
     implementation(projects.data.common)
