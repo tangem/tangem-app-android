@@ -121,11 +121,7 @@ private fun LazyListScope.addressItem(
 ) {
     item(key = ADDRESS_FIELD_KEY) {
         FooterContainer(
-            footer = if (isRedesignEnabled) {
-                buildHighlightedFooterText(networkName)
-            } else {
-                resourceReference(R.string.send_recipient_address_footer, wrappedList(networkName))
-            },
+            footer = resourceReference(R.string.send_recipient_address_footer, wrappedList(networkName)),
         ) {
             InputRowRecipient(
                 value = address.value,
@@ -148,33 +144,6 @@ private fun LazyListScope.addressItem(
             )
         }
     }
-}
-
-@Composable
-private fun buildHighlightedFooterText(networkName: String): TextReference {
-    return annotatedReference(
-        buildAnnotatedString {
-            val styledText = stringResourceSafe(
-                R.string.send_recipient_address_footer_highlighted_part,
-                networkName,
-            )
-            val styledColor = TangemTheme.colors.text.secondary
-            appendWithStyledPlaceholder(
-                template = stringResourceSafe(
-                    R.string.send_recipient_address_footer_v2,
-                    networkName,
-                ),
-                placeholder = networkName,
-            ) {
-                withStyle(SpanStyle(fontWeight = FontWeight.Medium)) {
-                    appendColored(
-                        text = styledText,
-                        color = styledColor,
-                    )
-                }
-            }
-        },
-    )
 }
 
 private fun LazyListScope.memoField(
