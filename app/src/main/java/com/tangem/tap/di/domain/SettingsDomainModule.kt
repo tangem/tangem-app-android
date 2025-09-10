@@ -54,8 +54,8 @@ internal object SettingsDomainModule {
     @Singleton
     fun providesShouldShowSaveWalletScreenUseCase(
         settingsRepository: SettingsRepository,
-    ): ShouldShowSaveWalletScreenUseCase {
-        return ShouldShowSaveWalletScreenUseCase(settingsRepository = settingsRepository)
+    ): ShouldShowAskBiometryUseCase {
+        return ShouldShowAskBiometryUseCase(settingsRepository = settingsRepository)
     }
 
     @Provides
@@ -138,10 +138,8 @@ internal object SettingsDomainModule {
 
     @Provides
     @Singleton
-    fun provideSetSaveWalletScreenShownUseCase(
-        settingsRepository: SettingsRepository,
-    ): SetSaveWalletScreenShownUseCase {
-        return SetSaveWalletScreenShownUseCase(settingsRepository = settingsRepository)
+    fun provideSetSaveWalletScreenShownUseCase(settingsRepository: SettingsRepository): SetAskBiometryShownUseCase {
+        return SetAskBiometryShownUseCase(settingsRepository = settingsRepository)
     }
 
     @Provides
