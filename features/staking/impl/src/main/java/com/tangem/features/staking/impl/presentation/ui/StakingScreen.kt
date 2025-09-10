@@ -21,7 +21,7 @@ import com.tangem.core.ui.components.appbar.AppBarWithBackButtonAndIcon
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.test.StakingSendScreenTestTags
+import com.tangem.core.ui.test.SendScreenTestTags
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.state.StakingStep
@@ -47,7 +47,7 @@ internal fun StakingScreen(uiState: StakingUiState) {
             .fillMaxSize()
             .imePadding()
             .systemBarsPadding()
-            .testTag(StakingSendScreenTestTags.SCREEN_CONTAINER),
+            .testTag(SendScreenTestTags.SCREEN_CONTAINER),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         StakingAppBar(

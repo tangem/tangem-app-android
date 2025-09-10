@@ -12,8 +12,6 @@ import com.tangem.domain.networks.single.SingleNetworkStatusProducer
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesProducer
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
-import com.tangem.domain.tokens.TokensFeatureToggles
-import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.transaction.error.AssociateAssetError
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.isNullOrZero
@@ -22,10 +20,8 @@ import kotlinx.coroutines.flow.firstOrNull
 class AssociateAssetUseCase(
     private val cardSdkConfigRepository: CardSdkConfigRepository,
     private val walletManagersFacade: WalletManagersFacade,
-    private val currenciesRepository: CurrenciesRepository,
     private val singleNetworkStatusSupplier: SingleNetworkStatusSupplier,
     private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
-    private val tokensFeatureToggles: TokensFeatureToggles,
 ) {
 
     suspend operator fun invoke(
@@ -33,25 +29,19 @@ class AssociateAssetUseCase(
         currency: CryptoCurrency,
     ): Either<AssociateAssetError, Unit> {
         return either {
-            val networkCoin = if (tokensFeatureToggles.isWalletBalanceFetcherEnabled) {
-                multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
-                    params = MultiWalletCryptoCurrenciesProducer.Params(userWalletId),
-                )
-                    ?.firstOrNull {
-                        val network = currency.network
-                        it.network.id == network.id && it.network.derivationPath == network.derivationPath
-                    }
-                    ?: error("Unable to create network coin for currencyID: ${currency.id}")
-            } else {
-                currenciesRepository.getNetworkCoin(
-                    userWalletId = userWalletId,
-                    networkId = currency.network.id,
-                    derivationPath = currency.network.derivationPath,
-                )
-            }
+            val networkCoin = multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
+                params = MultiWalletCryptoCurrenciesProducer.Params(userWalletId),
+            )
+                ?.firstOrNull {
+                    val network = currency.network
+                    it.network.id == network.id && it.network.derivationPath == network.derivationPath
+                }
+                ?: error("Unable to create network coin for currencyID: ${currency.id}")
+
             if (isBalanceZero(userWalletId, networkCoin)) {
                 raise(AssociateAssetError.NotEnoughBalance(networkCoin))
             }
+
             val signer = cardSdkConfigRepository.getCommonSigner(
                 cardId = null,
                 twinKey = null, // use null here because no assets support for Twin cards
