@@ -1,5 +1,6 @@
 package com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.model.builder
 
+import com.tangem.core.ui.components.grid.entity.EnumeratedTwoColumnGridItem
 import com.tangem.crypto.bip39.Mnemonic
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.model.GeneratedWordsType
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.ui.state.MultiWalletSeedPhraseUM
@@ -20,10 +21,10 @@ internal class GenerateSeedPhraseUiStateBuilder(
         option: GeneratedWordsType,
     ): MultiWalletSeedPhraseUM.GenerateSeedPhrase {
         val words12 = generatedWords12.mnemonicComponents.mapIndexed { index, s ->
-            MultiWalletSeedPhraseUM.GenerateSeedPhrase.MnemonicGridItem(index + 1, s)
+            EnumeratedTwoColumnGridItem(index + 1, s)
         }.toImmutableList()
         val words24 = generatedWords24.mnemonicComponents.mapIndexed { index, s ->
-            MultiWalletSeedPhraseUM.GenerateSeedPhrase.MnemonicGridItem(index + 1, s)
+            EnumeratedTwoColumnGridItem(index + 1, s)
         }.toImmutableList()
 
         return MultiWalletSeedPhraseUM.GenerateSeedPhrase(
@@ -45,8 +46,8 @@ internal class GenerateSeedPhraseUiStateBuilder(
 
     private fun switchType(
         newType: GeneratedWordsType,
-        generatedWords12: ImmutableList<MultiWalletSeedPhraseUM.GenerateSeedPhrase.MnemonicGridItem>,
-        generatedWords24: ImmutableList<MultiWalletSeedPhraseUM.GenerateSeedPhrase.MnemonicGridItem>,
+        generatedWords12: ImmutableList<EnumeratedTwoColumnGridItem>,
+        generatedWords24: ImmutableList<EnumeratedTwoColumnGridItem>,
     ) {
         updateUiState { uiSt ->
             changeGeneratedWordsType(newType)

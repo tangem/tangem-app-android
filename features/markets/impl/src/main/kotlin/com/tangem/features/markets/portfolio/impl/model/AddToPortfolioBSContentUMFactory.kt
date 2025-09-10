@@ -7,7 +7,6 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.rows.model.BlockchainRowUM
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.markets.TokenMarketParams
-import com.tangem.domain.models.ArtworkModel
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -56,7 +55,7 @@ internal class AddToPortfolioBSContentUMFactory(
         portfolioUIData: PortfolioUIData,
         selectedWallet: UserWallet?,
         alreadyAddedNetworks: Set<String>?,
-        artworks: HashMap<UserWalletId, ArtworkModel>,
+        artworks: Map<UserWalletId, UserWalletItemUM.ImageState>,
     ): TangemBottomSheetConfig {
         return (currentState ?: TangemBottomSheetConfig.Empty).copy(
             isShown = portfolioUIData.portfolioBSVisibilityModel.addToPortfolioBSVisibility,
@@ -110,7 +109,7 @@ internal class AddToPortfolioBSContentUMFactory(
     }
 
     private fun UserWallet.toSelectedUserWalletItemUM(
-        artwork: ArtworkModel? = null,
+        artwork: UserWalletItemUM.ImageState? = null,
         portfolioData: PortfolioData,
         balance: TotalFiatBalance?,
     ): UserWalletItemUM {
@@ -128,7 +127,7 @@ internal class AddToPortfolioBSContentUMFactory(
         isShow: Boolean,
         portfolioData: PortfolioData,
         selectedWalletId: UserWalletId,
-        artworks: HashMap<UserWalletId, ArtworkModel>,
+        artworks: Map<UserWalletId, UserWalletItemUM.ImageState>,
     ): TangemBottomSheetConfig {
         return TangemBottomSheetConfig(
             isShown = isShow,
