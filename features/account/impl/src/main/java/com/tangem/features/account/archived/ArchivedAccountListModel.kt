@@ -1,5 +1,6 @@
 package com.tangem.features.account.archived
 
+import com.tangem.common.ui.account.toUM
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
@@ -50,7 +51,7 @@ internal class ArchivedAccountListModel @Inject constructor(
                 title = resourceReference(R.string.account_archived_recover_dialog_title),
                 message = resourceReference(
                     id = R.string.account_archived_recover_dialog_description,
-                    formatArgs = wrappedList(account.accountName.value),
+                    formatArgs = wrappedList(account.accountName.toUM().value),
                 ),
                 firstActionBuilder = { firstAction },
                 secondActionBuilder = { secondAction },
