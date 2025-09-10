@@ -6,6 +6,7 @@ import arrow.core.raise.ensure
 import com.tangem.domain.models.TokensGroupType
 import com.tangem.domain.models.TokensSortType
 import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.utils.extensions.addOrReplace
@@ -119,8 +120,8 @@ data class AccountList private constructor(
         }
 
         @Serializable
-        data object DuplicateAccountNames : Error {
-            override fun toString(): String = "$tag: Account list contains duplicate account names"
+        data class DuplicateAccountNames(val message: String) : Error {
+            override fun toString(): String = "$tag: Account list contains duplicate account names. $message"
         }
     }
 
@@ -160,8 +161,18 @@ data class AccountList private constructor(
             val uniqueAccountIdsCount = accounts.map { it.accountId.value }.distinct().size
             ensure(accounts.size == uniqueAccountIdsCount) { Error.DuplicateAccountIds }
 
-            val uniqueAccountNameCount = accounts.map { it.accountName.value }.distinct().size
-            ensure(accounts.size == uniqueAccountNameCount) { Error.DuplicateAccountNames }
+            val defaultMainNameCount = accounts.count { it.accountName is AccountName.DefaultMain }
+
+            val customNames = accounts.mapNotNull { (it.accountName as? AccountName.Custom)?.value }
+            val uniqueCustomNameCount = customNames.distinct().size
+
+            ensure(defaultMainNameCount == 0 || defaultMainNameCount == 1) {
+                Error.DuplicateAccountNames("Only one account can have the default main name.")
+            }
+
+            ensure(customNames.size == uniqueCustomNameCount) {
+                Error.DuplicateAccountNames("Custom account names must be unique.")
+            }
 
             AccountList(
                 userWallet = userWallet,
