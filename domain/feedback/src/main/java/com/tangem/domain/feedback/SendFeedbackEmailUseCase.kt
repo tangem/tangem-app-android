@@ -37,8 +37,8 @@ class SendFeedbackEmailUseCase(
 
     private fun getAddress(type: FeedbackEmailType): String {
         return when {
-            type is FeedbackEmailType.Visa || type.cardInfo?.isVisa == true -> TANGEM_VISA_SUPPORT_EMAIL
-            type.cardInfo?.isStart2Coin == true -> START2COIN_SUPPORT_EMAIL
+            type is FeedbackEmailType.Visa || type.walletMetaInfo?.isVisa == true -> TANGEM_VISA_SUPPORT_EMAIL
+            type.walletMetaInfo?.isStart2Coin == true -> START2COIN_SUPPORT_EMAIL
             else -> TANGEM_SUPPORT_EMAIL
         }
     }
