@@ -6,8 +6,9 @@ import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
-import com.tangem.scenarios.OpenMainScreenScenario
 import com.tangem.screens.*
+import com.tangem.scenarios.openMainScreen
+import com.tangem.scenarios.synchronizeAddresses
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
@@ -36,13 +37,10 @@ class BuyTokenTest : BaseTestCase() {
                 setWireMockScenarioState(scenarioName, "Error")
             }
             step("Open 'Main Screen'") {
-                scenario(OpenMainScreenScenario(composeTestRule))
+                openMainScreen()
             }
-            step("Click on 'Synchronize addresses' button") {
-                onMainScreen { synchronizeAddressesButton.clickWithAssertion() }
-            }
-            step("Assert wallet balance = $balance") {
-                onMainScreen { walletBalance().assertTextContains(balance) }
+            step("Synchronize addresses") {
+                synchronizeAddresses(balance)
             }
             step("Click on 'Buy' button") {
                 onMainScreen { buyButton.clickWithAssertion() }
@@ -84,13 +82,10 @@ class BuyTokenTest : BaseTestCase() {
             }
 
             step("Open 'Main Screen'") {
-                scenario(OpenMainScreenScenario(composeTestRule))
+                openMainScreen()
             }
-            step("Click on 'Synchronize addresses' button") {
-                onMainScreen { synchronizeAddressesButton.clickWithAssertion() }
-            }
-            step("Assert wallet balance = '$balance'") {
-                onMainScreen { walletBalance().assertTextContains(balance) }
+            step("Synchronize addresses") {
+                synchronizeAddresses(balance)
             }
             step("Click on 'Buy' button") {
                 onMainScreen { buyButton.clickWithAssertion() }
@@ -175,13 +170,10 @@ class BuyTokenTest : BaseTestCase() {
             }
 
             step("Open 'Main Screen'") {
-                scenario(OpenMainScreenScenario(composeTestRule))
+                openMainScreen()
             }
-            step("Click on 'Synchronize addresses' button") {
-                onMainScreen { synchronizeAddressesButton.clickWithAssertion() }
-            }
-            step("Assert wallet balance = '$balance'") {
-                onMainScreen { walletBalance().assertTextContains(balance) }
+            step("Synchronize addresses") {
+                synchronizeAddresses(balance)
             }
             step("Click on 'Buy' button") {
                 onMainScreen { buyButton.clickWithAssertion() }
@@ -250,13 +242,10 @@ class BuyTokenTest : BaseTestCase() {
             }
 
             step("Open 'Main Screen'") {
-                scenario(OpenMainScreenScenario(composeTestRule))
+                openMainScreen()
             }
-            step("Click on 'Synchronize addresses' button") {
-                onMainScreen { synchronizeAddressesButton.clickWithAssertion() }
-            }
-            step("Assert wallet balance = '$balance'") {
-                onMainScreen { walletBalance().assertTextContains(balance) }
+            step("Synchronize addresses") {
+                synchronizeAddresses(balance)
             }
             step("Click on 'Buy' button") {
                 onMainScreen { buyButton.clickWithAssertion() }
@@ -339,13 +328,10 @@ class BuyTokenTest : BaseTestCase() {
             }
 
             step("Open 'Main Screen'") {
-                scenario(OpenMainScreenScenario(composeTestRule))
+                openMainScreen()
             }
-            step("Click on 'Synchronize addresses' button") {
-                onMainScreen { synchronizeAddressesButton.clickWithAssertion() }
-            }
-            step("Assert wallet balance = '$balance'") {
-                onMainScreen { walletBalance().assertTextContains(balance) }
+            step("Synchronize addresses") {
+                synchronizeAddresses(balance)
             }
             step("Click on 'Buy' button") {
                 onMainScreen { buyButton.clickWithAssertion() }
@@ -437,13 +423,10 @@ class BuyTokenTest : BaseTestCase() {
             }
 
             step("Open 'Main Screen'") {
-                scenario(OpenMainScreenScenario(composeTestRule))
+                openMainScreen()
             }
-            step("Click on 'Synchronize addresses' button") {
-                onMainScreen { synchronizeAddressesButton.clickWithAssertion() }
-            }
-            step("Assert wallet balance = '$balance'") {
-                onMainScreen { walletBalance().assertTextContains(balance) }
+            step("Synchronize addresses") {
+                synchronizeAddresses(balance)
             }
             step("Click on 'Buy' button") {
                 onMainScreen { buyButton.clickWithAssertion() }
