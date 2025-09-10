@@ -53,10 +53,12 @@ sealed class WcAnalyticEvents(
 
     class PairFailed(
         errorCode: String,
+        errorMessage: String,
     ) : WcAnalyticEvents(
         event = "Session Failed",
         params = mapOf(
             AnalyticsParam.Key.ERROR_CODE to errorCode,
+            AnalyticsParam.Key.ERROR_DESCRIPTION to errorMessage,
         ),
     )
 
@@ -76,10 +78,12 @@ sealed class WcAnalyticEvents(
 
     class DAppConnectionFailed(
         errorCode: String,
+        errorMessage: String,
     ) : WcAnalyticEvents(
         event = "dApp Connection Failed",
         params = mapOf(
             AnalyticsParam.Key.ERROR_CODE to errorCode,
+            AnalyticsParam.Key.ERROR_DESCRIPTION to errorMessage,
         ),
     )
 
@@ -163,6 +167,7 @@ sealed class WcAnalyticEvents(
         rawRequest: WcSdkSessionRequest,
         blockchain: String,
         errorCode: String,
+        errorMessage: String,
     ) : WcAnalyticEvents(
         event = "Signature Request Received with Failed",
         params = mapOf(
@@ -171,6 +176,7 @@ sealed class WcAnalyticEvents(
             AnalyticsParam.Key.METHOD_NAME to rawRequest.request.method,
             AnalyticsParam.Key.BLOCKCHAIN to blockchain,
             AnalyticsParam.Key.ERROR_CODE to errorCode,
+            AnalyticsParam.Key.ERROR_DESCRIPTION to errorMessage,
         ),
     )
 
