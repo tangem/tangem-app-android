@@ -149,7 +149,7 @@ private fun WalletBlock(
             .padding(top = 8.dp)
             .clip(TangemTheme.shapes.roundedCornersXMedium)
             .background(
-                color = TangemTheme.colors.background.secondary,
+                color = TangemTheme.colors.field.primary,
                 shape = TangemTheme.shapes.roundedCornersXMedium,
             )
             .clickable(onClick = onClick)
