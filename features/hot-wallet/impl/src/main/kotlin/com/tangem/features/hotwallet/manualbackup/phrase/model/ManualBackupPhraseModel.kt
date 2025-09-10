@@ -5,6 +5,7 @@ import arrow.core.getOrElse
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.ui.components.grid.entity.EnumeratedTwoColumnGridItem
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.hotwallet.manualbackup.phrase.ManualBackupPhraseComponent
@@ -51,7 +52,7 @@ internal class ManualBackupPhraseModel @Inject constructor(
                     uiState.update {
                         it.copy(
                             words = seedPhrasePrivateInfo.mnemonic.mnemonicComponents.mapIndexed { index, s ->
-                                ManualBackupPhraseUM.MnemonicGridItem(index + 1, s)
+                                EnumeratedTwoColumnGridItem(index + 1, s)
                             }.toImmutableList(),
                         )
                     }
