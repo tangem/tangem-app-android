@@ -163,4 +163,35 @@ sealed class OnrampAnalyticsEvent(
             ERROR_DESCRIPTION to errorDescription,
         ),
     )
+
+    data class FastestBuyMethodClicked(
+        private val tokenSymbol: String,
+        private val providerName: String,
+        private val paymentMethod: String,
+    ) : OnrampAnalyticsEvent(
+        event = "Fastest Method Clicked",
+        params = mapOf(
+            TOKEN_PARAM to tokenSymbol,
+            PROVIDER to providerName,
+            PAYMENT_METHOD to paymentMethod,
+        ),
+    )
+
+    data class BestRateClicked(
+        private val tokenSymbol: String,
+        private val providerName: String,
+        private val paymentMethod: String,
+    ) : OnrampAnalyticsEvent(
+        event = "Best Rate Clicked",
+        params = mapOf(
+            TOKEN_PARAM to tokenSymbol,
+            PROVIDER to providerName,
+            PAYMENT_METHOD to paymentMethod,
+        ),
+    )
+
+    data object AllOffersClicked : OnrampAnalyticsEvent(
+        event = "Button - All Offers",
+        params = emptyMap(),
+    )
 }

@@ -39,5 +39,13 @@ internal class DefaultUserTokensResponseStore(
         )
     }
 
+    override suspend fun clear(userWalletId: UserWalletId) {
+        appPreferencesStore.updateData { preferences ->
+            val key = createPreferencesKey(userWalletId = userWalletId.stringValue)
+
+            preferences.toMutablePreferences().apply { remove(key) }
+        }
+    }
+
     private fun createPreferencesKey(userWalletId: String) = stringPreferencesKey(name = "user_tokens_$userWalletId")
 }

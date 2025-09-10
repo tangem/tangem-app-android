@@ -57,7 +57,7 @@ class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
     }
 
     val errorNotificationText: KNode = child {
-        hasTestTag(NotificationTestTags.TEXT)
+        hasTestTag(NotificationTestTags.MESSAGE)
         useUnmergedTree = true
     }
 

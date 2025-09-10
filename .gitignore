@@ -3,11 +3,23 @@
 # Built application files
 /build
 /buildSrc
+**/build/.transforms/**
+**/build/classes/**
+**/build/generated/**
+**/build/intermediates/**
+**/build/kotlin/**
+**/build/libs/**
+**/build/outputs/**
+**/build/tmp/**
 
 # Local configuration file (sdk path, etc)
 local.properties
 
 # Google services
+
+
+# Huawei services
+app/agconnect-services.json
 
 app/src/debug/google-services.json
 app/src/internal/google-services.json

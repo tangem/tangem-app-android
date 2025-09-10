@@ -5,7 +5,4 @@ package com.tangem.domain.tokens
  *
 [REDACTED_AUTHOR]
  */
-interface TokensFeatureToggles {
-
-    val isWalletBalanceFetcherEnabled: Boolean
-}
+interface TokensFeatureToggles
