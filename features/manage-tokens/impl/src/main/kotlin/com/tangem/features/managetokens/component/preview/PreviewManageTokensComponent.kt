@@ -13,6 +13,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.features.managetokens.component.ManageTokensComponent
+import com.tangem.features.managetokens.component.ManageTokensMode
 import com.tangem.features.managetokens.entity.item.CurrencyItemUM
 import com.tangem.features.managetokens.entity.item.CurrencyNetworkUM
 import com.tangem.features.managetokens.entity.managetokens.ManageTokensTopBarUM
@@ -38,8 +39,10 @@ internal class PreviewManageTokensComponent(
         value = ManageTokensUM.ManageContent(
             popBack = {},
             items = items,
-            topBar = if (params.userWalletId != null) {
-                ManageTokensTopBarUM.ManageContent(
+            topBar = when (params.mode) {
+                is ManageTokensMode.Account,
+                is ManageTokensMode.Wallet,
+                -> ManageTokensTopBarUM.ManageContent(
                     title = resourceReference(id = R.string.main_manage_tokens),
                     onBackButtonClick = {},
                     endButton = TopAppBarButtonUM.Icon(
@@ -47,8 +50,7 @@ internal class PreviewManageTokensComponent(
                         onClicked = {},
                     ),
                 )
-            } else {
-                ManageTokensTopBarUM.ReadContent(
+                ManageTokensMode.None -> ManageTokensTopBarUM.ReadContent(
                     title = resourceReference(R.string.common_search_tokens),
                     onBackButtonClick = {},
                 )
