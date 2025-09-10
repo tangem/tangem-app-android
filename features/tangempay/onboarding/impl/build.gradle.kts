@@ -18,9 +18,11 @@ dependencies {
 
     /** Common */
     implementation(projects.common.routing)
+    implementation(projects.common.ui)
 
     /** Features api */
     implementation(projects.features.tangempay.onboarding.api)
+    implementation(projects.features.kyc.api)
 
     /** Compose */
     implementation(deps.compose.foundation)
