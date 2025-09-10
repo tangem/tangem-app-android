@@ -52,8 +52,8 @@ class RecoverCryptoPortfolioUseCaseTest {
 
         val updatedAccountList = (accountList + account).getOrNull()!!
 
-        coEvery { crudRepository.getAccounts(userWalletId) } returns accountList.toOption()
-        coEvery { crudRepository.getArchivedAccount(account.accountId) } returns archivedAccount.toOption()
+        coEvery { crudRepository.getAccountListSync(userWalletId) } returns accountList.toOption()
+        coEvery { crudRepository.getArchivedAccountSync(account.accountId) } returns archivedAccount.toOption()
 
         // Act
         val actual = useCase(account.accountId)
@@ -63,8 +63,8 @@ class RecoverCryptoPortfolioUseCaseTest {
         Truth.assertThat(actual).isEqualTo(expected)
 
         coVerifyOrder {
-            crudRepository.getAccounts(userWalletId)
-            crudRepository.getArchivedAccount(account.accountId)
+            crudRepository.getAccountListSync(userWalletId)
+            crudRepository.getArchivedAccountSync(account.accountId)
             crudRepository.saveAccounts(updatedAccountList)
         }
     }
@@ -77,7 +77,7 @@ class RecoverCryptoPortfolioUseCaseTest {
             derivationIndex = DerivationIndex.Main,
         )
 
-        coEvery { crudRepository.getAccounts(userWalletId) } returns None
+        coEvery { crudRepository.getAccountListSync(userWalletId) } returns None
 
         // Act
         val actual = useCase(accountId)
@@ -86,9 +86,9 @@ class RecoverCryptoPortfolioUseCaseTest {
         val expected = Error.CriticalTechError.AccountsNotCreated(userWalletId).left()
         Truth.assertThat(actual).isEqualTo(expected)
 
-        coVerifyOrder { crudRepository.getAccounts(userWalletId) }
+        coVerifyOrder { crudRepository.getAccountListSync(userWalletId) }
         coVerify(inverse = true) {
-            crudRepository.getArchivedAccount(any())
+            crudRepository.getArchivedAccountSync(any())
             crudRepository.saveAccounts(any())
         }
     }
@@ -102,7 +102,7 @@ class RecoverCryptoPortfolioUseCaseTest {
         )
         val exception = IllegalStateException("Test error")
 
-        coEvery { crudRepository.getAccounts(userWalletId) } throws exception
+        coEvery { crudRepository.getAccountListSync(userWalletId) } throws exception
 
         // Act
         val actual = useCase(accountId)
@@ -111,9 +111,9 @@ class RecoverCryptoPortfolioUseCaseTest {
         val expected = Error.DataOperationFailed(exception).left()
         Truth.assertThat(actual).isEqualTo(expected)
 
-        coVerifyOrder { crudRepository.getAccounts(userWalletId) }
+        coVerifyOrder { crudRepository.getAccountListSync(userWalletId) }
         coVerify(inverse = true) {
-            crudRepository.getArchivedAccount(any())
+            crudRepository.getArchivedAccountSync(any())
             crudRepository.saveAccounts(any())
         }
     }
@@ -125,8 +125,8 @@ class RecoverCryptoPortfolioUseCaseTest {
         val accountList = AccountList.empty(userWallet)
         val exception = IllegalStateException("Test error")
 
-        coEvery { crudRepository.getAccounts(userWalletId) } returns accountList.toOption()
-        coEvery { crudRepository.getArchivedAccount(account.accountId) } throws exception
+        coEvery { crudRepository.getAccountListSync(userWalletId) } returns accountList.toOption()
+        coEvery { crudRepository.getArchivedAccountSync(account.accountId) } throws exception
 
         // Act
         val actual = useCase(account.accountId)
@@ -136,8 +136,8 @@ class RecoverCryptoPortfolioUseCaseTest {
         Truth.assertThat(actual).isEqualTo(expected)
 
         coVerifyOrder {
-            crudRepository.getAccounts(userWalletId)
-            crudRepository.getArchivedAccount(account.accountId)
+            crudRepository.getAccountListSync(userWalletId)
+            crudRepository.getArchivedAccountSync(account.accountId)
         }
         coVerify(inverse = true) { crudRepository.saveAccounts(any()) }
     }
@@ -148,8 +148,8 @@ class RecoverCryptoPortfolioUseCaseTest {
         val account = createAccount(userWalletId)
         val accountList = AccountList.empty(userWallet)
 
-        coEvery { crudRepository.getAccounts(userWalletId) } returns accountList.toOption()
-        coEvery { crudRepository.getArchivedAccount(account.accountId) } returns None
+        coEvery { crudRepository.getAccountListSync(userWalletId) } returns accountList.toOption()
+        coEvery { crudRepository.getArchivedAccountSync(account.accountId) } returns None
 
         // Act
         val actual = useCase(account.accountId)
@@ -159,8 +159,8 @@ class RecoverCryptoPortfolioUseCaseTest {
         Truth.assertThat(actual).isEqualTo(expected)
 
         coVerifyOrder {
-            crudRepository.getAccounts(userWalletId)
-            crudRepository.getArchivedAccount(account.accountId)
+            crudRepository.getAccountListSync(userWalletId)
+            crudRepository.getArchivedAccountSync(account.accountId)
         }
         coVerify(inverse = true) { crudRepository.saveAccounts(any()) }
     }
@@ -182,8 +182,8 @@ class RecoverCryptoPortfolioUseCaseTest {
         val updatedAccountList = (accountList + account).getOrNull()!!
         val exception = IllegalStateException("Save failed")
 
-        coEvery { crudRepository.getAccounts(userWalletId) } returns accountList.toOption()
-        coEvery { crudRepository.getArchivedAccount(account.accountId) } returns archivedAccount.toOption()
+        coEvery { crudRepository.getAccountListSync(userWalletId) } returns accountList.toOption()
+        coEvery { crudRepository.getArchivedAccountSync(account.accountId) } returns archivedAccount.toOption()
         coEvery { crudRepository.saveAccounts(updatedAccountList) } throws exception
 
         // Act
@@ -194,8 +194,8 @@ class RecoverCryptoPortfolioUseCaseTest {
         Truth.assertThat(actual).isEqualTo(expected)
 
         coVerifyOrder {
-            crudRepository.getAccounts(userWalletId)
-            crudRepository.getArchivedAccount(account.accountId)
+            crudRepository.getAccountListSync(userWalletId)
+            crudRepository.getArchivedAccountSync(account.accountId)
             crudRepository.saveAccounts(updatedAccountList)
         }
     }
