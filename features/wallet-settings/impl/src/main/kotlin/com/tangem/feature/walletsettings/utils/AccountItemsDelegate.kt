@@ -8,7 +8,6 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.components.block.model.BlockUM
 import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
@@ -59,7 +58,7 @@ internal class AccountItemsDelegate @Inject constructor(
     private fun Account.CryptoPortfolio.mapCryptoPortfolio(): WalletSettingsAccountsUM {
         return WalletSettingsAccountsUM.Account(
             id = accountId.value,
-            accountName = stringReference(accountName.value),
+            accountName = accountName.toUM().value,
             accountIconUM = icon.toUM(),
             tokensInfo = pluralReference(
                 R.plurals.common_tokens_count,

@@ -157,7 +157,7 @@ class AccountListTest {
                     createAccount(userWalletId = userWalletId, name = "Name", derivationIndex = 0),
                     createAccount(userWalletId = userWalletId, name = "Name", derivationIndex = 1),
                 ),
-                expected = AccountList.Error.DuplicateAccountNames.left(),
+                expected = AccountList.Error.DuplicateAccountNames("Custom account names must be unique.").left(),
             ),
         )
     }
