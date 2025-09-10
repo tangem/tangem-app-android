@@ -4,12 +4,24 @@ import com.tangem.common.BaseTestCase
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.screens.*
+import com.tangem.screens.onDisclaimerScreen
+import com.tangem.screens.onMainScreen
+import com.tangem.screens.onMarketsTooltipScreen
+import com.tangem.screens.onStoriesScreen
+import com.tangem.tap.domain.sdk.mocks.MockContent
 import com.tangem.tap.domain.sdk.mocks.MockProvider
 import io.qameta.allure.kotlin.Allure.step
 
-fun BaseTestCase.openMainScreen(productType: ProductType? = null, alreadyActivatedDialogIsShown : Boolean = false) {
+fun BaseTestCase.openMainScreen(
+    productType: ProductType? = null,
+    mockContent: MockContent? = null,
+    alreadyActivatedDialogIsShown : Boolean = false
+) {
     if (productType != null) {
         MockProvider.setMocks(productType)
+    }
+    if (mockContent != null) {
+        MockProvider.setMocks(mockContent)
     }
     step("Click on 'Accept' button") {
         onDisclaimerScreen { acceptButton.clickWithAssertion() }
