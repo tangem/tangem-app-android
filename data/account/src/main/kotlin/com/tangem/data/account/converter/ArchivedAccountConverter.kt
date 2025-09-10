@@ -19,7 +19,7 @@ internal class ArchivedAccountConverter(
     override fun convert(value: WalletAccountDTO): ArchivedAccount {
         return ArchivedAccount(
             accountId = value.id.toAccountId(userWalletId = userWalletId),
-            name = value.name.toAccountName(),
+            name = AccountNameConverter.convertBack(value = value.name),
             icon = value.toIcon(),
             derivationIndex = value.derivationIndex.toDerivationIndex(),
             tokensCount = value.totalTokens ?: error("Total tokens should not be null"),
