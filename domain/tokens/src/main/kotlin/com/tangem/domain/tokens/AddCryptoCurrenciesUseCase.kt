@@ -33,7 +33,6 @@ class AddCryptoCurrenciesUseCase(
     private val singleYieldBalanceFetcher: SingleYieldBalanceFetcher,
     private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
     private val stakingIdFactory: StakingIdFactory,
-    private val tokensFeatureToggles: TokensFeatureToggles,
 ) {
 
     /**
@@ -92,15 +91,11 @@ class AddCryptoCurrenciesUseCase(
     ): Either<Throwable, CryptoCurrency> = either {
         val existingCurrencies = catch(
             block = {
-                if (tokensFeatureToggles.isWalletBalanceFetcherEnabled) {
-                    multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
-                        params = MultiWalletCryptoCurrenciesProducer.Params(userWalletId),
-                    )
-                        .orEmpty()
-                        .toList()
-                } else {
-                    currenciesRepository.getMultiCurrencyWalletCurrenciesSync(userWalletId)
-                }
+                multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
+                    params = MultiWalletCryptoCurrenciesProducer.Params(userWalletId),
+                )
+                    .orEmpty()
+                    .toList()
             },
             catch = ::raise,
         )
