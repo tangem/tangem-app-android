@@ -30,7 +30,7 @@ import com.tangem.core.ui.components.fields.SimpleDialogTextField
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.test.DialogTestTags
+import com.tangem.core.ui.test.BaseDialogTestTags
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -219,13 +219,14 @@ private fun TangemDialog(
                     color = TangemTheme.colors.background.primary,
                 )
                 .padding(vertical = TangemTheme.dimens.spacing24)
-                .testTag(DialogTestTags.DIALOG_CONTAINER),
+                .testTag(BaseDialogTestTags.CONTAINER),
         ) {
             if (title != null) {
                 Text(
                     modifier = Modifier
                         .padding(horizontal = TangemTheme.dimens.spacing24)
-                        .fillMaxWidth(),
+                        .fillMaxWidth()
+                        .testTag(BaseDialogTestTags.TITLE),
                     text = title,
                     style = when (type) {
                         is DialogType.Message -> TangemTheme.typography.h2
@@ -262,7 +263,8 @@ private fun DialogContent(type: DialogType, modifier: Modifier = Modifier) {
                 Text(
                     modifier = Modifier
                         .padding(horizontal = TangemTheme.dimens.spacing24)
-                        .fillMaxWidth(),
+                        .fillMaxWidth()
+                        .testTag(BaseDialogTestTags.TEXT),
                     text = type.message,
                     style = TangemTheme.typography.body2,
                     color = TangemTheme.colors.text.secondary,

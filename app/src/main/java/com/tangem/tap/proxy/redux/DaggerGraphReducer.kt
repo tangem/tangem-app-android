@@ -14,7 +14,6 @@ object DaggerGraphReducer {
         return when (action) {
             is DaggerGraphAction.SetActivityDependencies -> state.daggerGraphState.copy(
                 scanCardUseCase = action.scanCardUseCase,
-                walletConnectInteractor = action.walletConnectInteractor,
                 cardSdkConfigRepository = action.cardSdkConfigRepository,
             )
         }
