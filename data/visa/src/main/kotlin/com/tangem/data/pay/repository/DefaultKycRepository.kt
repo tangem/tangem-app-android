@@ -13,10 +13,9 @@ import com.tangem.domain.pay.KycStartInfo
 import com.tangem.domain.pay.datasource.TangemPayAuthDataSource
 import com.tangem.domain.pay.repository.KycRepository
 import com.tangem.domain.visa.error.VisaApiError
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
+import javax.inject.Inject
 
-class DefaultKycRepository @AssistedInject constructor(
+class DefaultKycRepository @Inject constructor(
     @NetworkMoshi moshi: Moshi,
     private val tangemPayApi: TangemPayApi,
     private val authDataSource: TangemPayAuthDataSource,
@@ -64,10 +63,5 @@ class DefaultKycRepository @AssistedInject constructor(
 
             return Either.Left(VisaApiError.UnknownWithoutCode)
         }
-    }
-
-    @AssistedFactory
-    interface Factory : KycRepository.Factory {
-        override fun create(): DefaultKycRepository
     }
 }
