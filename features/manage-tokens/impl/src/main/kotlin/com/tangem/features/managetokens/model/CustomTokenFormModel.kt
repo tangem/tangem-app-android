@@ -12,9 +12,6 @@ import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.managetokens.model.exceptoin.CustomTokenFormValidationException
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
-import com.tangem.domain.wallets.usecase.DerivePublicKeysUseCase
-import com.tangem.domain.wallets.usecase.HasMissedDerivationsUseCase
 import com.tangem.features.managetokens.analytics.CustomTokenAnalyticsEvent
 import com.tangem.features.managetokens.component.CustomTokenFormComponent
 import com.tangem.features.managetokens.entity.customtoken.ClickableFieldUM
@@ -25,6 +22,7 @@ import com.tangem.features.managetokens.entity.customtoken.TextInputFieldUM
 import com.tangem.features.managetokens.impl.R
 import com.tangem.features.managetokens.utils.CustomCurrencyFormBuilder
 import com.tangem.features.managetokens.utils.CustomCurrencyValidator
+import com.tangem.features.managetokens.utils.list.CustomTokenFormUseCasesFacade
 import com.tangem.features.managetokens.utils.mapper.mapToDomainModel
 import com.tangem.features.managetokens.utils.ui.*
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -40,18 +38,17 @@ import javax.inject.Inject
 @ModelScoped
 internal class CustomTokenFormModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
-    private val customCurrencyValidator: CustomCurrencyValidator,
-    private val addCryptoCurrenciesUseCase: AddCryptoCurrenciesUseCase,
-    private val derivePublicKeysUseCase: DerivePublicKeysUseCase,
-    private val hasMissedDerivationsUseCase: HasMissedDerivationsUseCase,
     private val messageSender: UiMessageSender,
     private val customTokenFormManager: CustomCurrencyFormBuilder,
     private val analyticsEventHandler: AnalyticsEventHandler,
     paramsContainer: ParamsContainer,
+    customTokenFormUseCasesFacadeFactory: CustomTokenFormUseCasesFacade.Factory,
 ) : Model() {
 
     private val params: CustomTokenFormComponent.Params = paramsContainer.require()
     private var createdCurrency: CryptoCurrency? = null
+    private var useCasesFacade: CustomTokenFormUseCasesFacade = customTokenFormUseCasesFacadeFactory.create(params.mode)
+    private val customCurrencyValidator = CustomCurrencyValidator(useCasesFacade)
 
     val state: MutableStateFlow<CustomTokenFormUM> = MutableStateFlow(
         value = getInitialState(),
@@ -117,7 +114,6 @@ internal class CustomTokenFormModel @Inject constructor(
             .drop(count = 1) // Skip initial state
             .onEach { formValues ->
                 customCurrencyValidator.validateForm(
-                    userWalletId = params.userWalletId,
                     networkId = params.network.id,
                     derivationPath = getDerivationPath(),
                     formValues = formValues,
@@ -156,7 +152,6 @@ internal class CustomTokenFormModel @Inject constructor(
 
     private fun validatePrefilledForm() = modelScope.launch {
         customCurrencyValidator.validateForm(
-            userWalletId = params.userWalletId,
             networkId = params.network.id,
             derivationPath = getDerivationPath(),
             formValues = state.value.tokenForm.mapToDomainModel(),
@@ -169,8 +164,7 @@ internal class CustomTokenFormModel @Inject constructor(
         isAlreadyAdded: Boolean,
         isCustom: Boolean,
     ) = modelScope.launch {
-        val needToAddDerivation = hasMissedDerivationsUseCase(
-            userWalletId = params.userWalletId,
+        val needToAddDerivation = useCasesFacade.hasMissedDerivationsUseCase(
             networksWithDerivationPath = mapOf(currency.network.backendId to getDerivationPath().value),
         )
 
@@ -343,13 +337,13 @@ internal class CustomTokenFormModel @Inject constructor(
         )
         analyticsEventHandler.send(event)
 
-        derivePublicKeysUseCase(params.userWalletId, listOf(currency)).getOrElse {
+        useCasesFacade.derivePublicKeysUseCase(listOf(currency)).getOrElse {
             Timber.e(it, "Failed to derive public keys")
             showErrorDialog()
             return@resource
         }
 
-        addCryptoCurrenciesUseCase(params.userWalletId, currency).getOrElse {
+        useCasesFacade.addCryptoCurrenciesUseCase(currency).getOrElse {
             Timber.e(it, "Failed to add currency")
             showErrorDialog()
             return@resource

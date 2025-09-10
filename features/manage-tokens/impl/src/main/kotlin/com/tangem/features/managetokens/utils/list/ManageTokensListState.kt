@@ -3,7 +3,7 @@ package com.tangem.features.managetokens.utils.list
 import com.tangem.domain.managetokens.model.ManageTokensListConfig
 import com.tangem.domain.managetokens.model.ManageTokensUpdateAction
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
-import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.managetokens.component.ManageTokensMode
 import com.tangem.features.managetokens.entity.item.CurrencyItemUM
 import com.tangem.pagination.Batch
 import com.tangem.pagination.BatchAction
@@ -13,7 +13,7 @@ internal typealias ManageTokensBatchAction = BatchAction<Int, ManageTokensListCo
 
 internal data class ManageTokensListState(
     val status: PaginationStatus<*> = PaginationStatus.None,
-    val userWalletId: UserWalletId? = null,
+    val mode: ManageTokensMode,
     val uiBatches: List<Batch<Int, List<CurrencyItemUM>>> = mutableListOf(),
     val currencyBatches: List<Batch<Int, List<ManagedCryptoCurrency>>> = mutableListOf(),
     val canEditItems: Boolean = true,
