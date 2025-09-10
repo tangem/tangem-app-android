@@ -12,13 +12,15 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.notifications.models.NotificationType
-import com.tangem.domain.tokens.*
-import com.tangem.domain.tokens.wallet.WalletBalanceFetcher
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.models.wallet.isMultiCurrency
+import com.tangem.domain.notifications.models.NotificationType
+import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
+import com.tangem.domain.tokens.GetCryptoCurrenciesUseCase
+import com.tangem.domain.tokens.GetCryptoCurrencyUseCase
+import com.tangem.domain.tokens.wallet.WalletBalanceFetcher
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.SelectWalletUseCase
 import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
@@ -45,9 +47,7 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
     private val walletDeepLinkActionTrigger: WalletDeepLinkActionTrigger,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val getUserWalletUseCase: GetUserWalletUseCase,
-    private val tokensFeatureToggles: TokensFeatureToggles,
     private val walletBalanceFetcher: WalletBalanceFetcher,
-    private val fetchCardTokenListUseCase: FetchCardTokenListUseCase,
 ) : TokenDetailsDeepLinkHandler {
 
     init {
@@ -119,24 +119,15 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
     private suspend fun fetchCurrency(userWallet: UserWallet, cryptoCurrency: CryptoCurrency) {
         val isMultiCurrency = userWallet.isMultiCurrency
         // single-currency wallet with token (NODL)
-        val isSingleWalletWithToken = userWallet is UserWallet.Cold &&
+        userWallet is UserWallet.Cold &&
             userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()
         when {
             isMultiCurrency -> fetchCurrencyStatusUseCase.invoke(
                 userWalletId = userWallet.walletId,
                 id = cryptoCurrency.id,
             )
-            !isMultiCurrency && tokensFeatureToggles.isWalletBalanceFetcherEnabled ->
-                walletBalanceFetcher(params = WalletBalanceFetcher.Params(userWalletId = userWallet.walletId))
-            // remove below after delete tokensFeatureToggles.isWalletBalanceFetcherEnabled
-            !isMultiCurrency && userWallet is UserWallet.Cold && isSingleWalletWithToken ->
-                fetchCardTokenListUseCase.invoke(
-                    userWalletId = userWallet.walletId,
-                    refresh = true,
-                )
-            !isMultiCurrency -> fetchCurrencyStatusUseCase.invoke(
-                userWalletId = userWallet.walletId,
-                refresh = true,
+            !isMultiCurrency -> walletBalanceFetcher(
+                params = WalletBalanceFetcher.Params(userWalletId = userWallet.walletId),
             )
         }
     }

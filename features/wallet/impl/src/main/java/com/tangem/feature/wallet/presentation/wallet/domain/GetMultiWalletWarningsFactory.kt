@@ -1,6 +1,12 @@
+@file:Suppress("MaximumLineLength")
+
 package com.tangem.feature.wallet.presentation.wallet.domain
 
+import arrow.core.getOrElse
 import com.tangem.core.decompose.di.ModelScoped
+import com.tangem.core.ui.components.notifications.NotificationConfig.ButtonsState
+import com.tangem.core.ui.components.notifications.NotificationConfig.IconTint
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.card.CardTypesResolver
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.core.lce.Lce
@@ -11,19 +17,26 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.onramp.GetOnrampCountryUseCase
+import com.tangem.domain.onramp.OnrampSepaAvailableUseCase
 import com.tangem.domain.promo.ShouldShowPromoWalletUseCase
 import com.tangem.domain.promo.models.PromoId
 import com.tangem.domain.settings.IsReadyToShowRateAppUseCase
+import com.tangem.domain.tokens.GetCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.wallets.models.SeedPhraseNotificationsStatus
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
 import com.tangem.domain.wallets.usecase.SeedPhraseNotificationUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
+import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
+import com.tangem.lib.crypto.BlockchainUtils.isBitcoin
+import com.tangem.utils.coroutines.combine6
+import com.tangem.utils.extensions.isPositive
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
+import timber.log.Timber
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -36,27 +49,32 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
     private val backupValidator: BackupValidator,
     private val seedPhraseNotificationUseCase: SeedPhraseNotificationUseCase,
     private val shouldShowPromoWalletUseCase: ShouldShowPromoWalletUseCase,
+    private val getCryptoCurrenciesUseCase: GetCryptoCurrenciesUseCase,
+    private val onrampSepaAvailableUseCase: OnrampSepaAvailableUseCase,
+    private val getOnrampCountryUseCase: GetOnrampCountryUseCase,
 ) {
 
-    @Suppress("MagicNumber", "MaximumLineLength")
     fun create(userWallet: UserWallet, clickIntents: WalletClickIntents): Flow<ImmutableList<WalletNotification>> {
         val cardTypesResolver = (userWallet as? UserWallet.Cold)?.scanResponse?.cardTypesResolver
 
-        return combine(
-            flow = tokenListStore.getOrThrow(userWallet.walletId),
+        return combine6(
+            flow1 = tokenListStore.getOrThrow(userWallet.walletId),
             flow2 = isReadyToShowRateAppUseCase(),
             flow3 = isNeedToBackupUseCase(userWallet.walletId),
             flow4 = seedPhraseNotificationUseCase(userWalletId = userWallet.walletId),
             flow5 = shouldShowPromoWalletUseCase(userWalletId = userWallet.walletId, promoId = PromoId.Referral),
-        ) { maybeTokenList, isReadyToShowRating, isNeedToBackup, seedPhraseIssueStatus, shouldShowReferralPromo ->
+            flow6 = shouldShowPromoWalletUseCase(userWalletId = userWallet.walletId, promoId = PromoId.Sepa),
+        ) { maybeTokenList, isReadyToShowRating, isNeedToBackup, seedPhraseIssueStatus, shouldShowReferralPromo, shouldShowSepaBanner ->
             buildList {
                 addUsedOutdatedDataNotification(maybeTokenList)
 
                 addCriticalNotifications(userWallet, seedPhraseIssueStatus, clickIntents)
 
-                addFinishWalletActivationNotification(userWallet, clickIntents)
+                addFinishWalletActivationNotification(userWallet, maybeTokenList, clickIntents)
 
                 addReferralPromoNotification(cardTypesResolver, clickIntents, shouldShowReferralPromo)
+
+                addSepaPromoNotification(userWallet, clickIntents, shouldShowSepaBanner)
 
                 addInformationalNotifications(cardTypesResolver, maybeTokenList, clickIntents)
 
@@ -212,6 +230,39 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
         )
     }
 
+    private suspend fun MutableList<WalletNotification>.addSepaPromoNotification(
+        userWallet: UserWallet,
+        clickIntents: WalletClickIntents,
+        shouldShowSepaPromo: Boolean,
+    ) {
+        val currencies = getCryptoCurrenciesUseCase(userWalletId = userWallet.walletId).getOrElse {
+            Timber.e("Error on getting crypto currency list")
+            return
+        }
+
+        val bitcoinCurrency = currencies.find { isBitcoin(it.network.rawId) } ?: return
+
+        val country = getOnrampCountryUseCase.invokeSync(userWallet).getOrElse {
+            Timber.e("Error on getting onramp country")
+            return
+        }
+
+        val isSepaAvailable = onrampSepaAvailableUseCase(
+            userWallet = userWallet,
+            country = country,
+            currency = country.defaultCurrency,
+            cryptoCurrency = bitcoinCurrency,
+        )
+
+        addIf(
+            element = WalletNotification.Sepa(
+                onCloseClick = { clickIntents.onClosePromoClick(promoId = PromoId.Sepa) },
+                onClick = { clickIntents.onPromoClick(promoId = PromoId.Sepa, bitcoinCurrency) },
+            ),
+            condition = shouldShowSepaPromo && isSepaAvailable,
+        )
+    }
+
     private fun MutableList<WalletNotification>.addWarningNotifications(
         cardTypesResolver: CardTypesResolver?,
         tokenList: Lce<TokenListError, TokenList>,
@@ -256,24 +307,53 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
         )
     }
 
-    private fun MutableList<WalletNotification>.addIf(element: WalletNotification, condition: Boolean) {
-        if (condition) add(element = element)
-    }
-
     private fun MutableList<WalletNotification>.addFinishWalletActivationNotification(
         userWallet: UserWallet,
+        maybeTokenList: Lce<TokenListError, TokenList>,
         clickIntents: WalletClickIntents,
     ) {
         if (userWallet !is UserWallet.Hot) return
 
         val shouldShowFinishActivation = !userWallet.backedUp
 
+        val iconTint = maybeTokenList.fold(
+            ifLoading = {
+                if ((it?.totalFiatBalance as? TotalFiatBalance.Loaded)?.amount?.isPositive() == true) {
+                    IconTint.Warning
+                } else {
+                    IconTint.Attention
+                }
+            },
+            ifContent = {
+                if ((it.totalFiatBalance as? TotalFiatBalance.Loaded)?.amount?.isPositive() == true) {
+                    IconTint.Warning
+                } else {
+                    IconTint.Attention
+                }
+            },
+            ifError = { IconTint.Attention },
+        )
+
         addIf(
             element = WalletNotification.FinishWalletActivation(
-                onFinishClick = clickIntents::onFinishWalletActivationClick,
+                iconTint = iconTint,
+                buttonsState = when (iconTint) {
+                    IconTint.Warning -> ButtonsState.PrimaryButtonConfig(
+                        text = resourceReference(R.string.hw_activation_need_finish),
+                        onClick = clickIntents::onFinishWalletActivationClick,
+                    )
+                    else -> ButtonsState.SecondaryButtonConfig(
+                        text = resourceReference(R.string.hw_activation_need_finish),
+                        onClick = clickIntents::onFinishWalletActivationClick,
+                    )
+                },
             ),
             condition = shouldShowFinishActivation,
         )
+    }
+
+    private fun MutableList<WalletNotification>.addIf(element: WalletNotification, condition: Boolean) {
+        if (condition) add(element = element)
     }
 
     private companion object {
