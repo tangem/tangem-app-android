@@ -100,13 +100,13 @@ internal class DefaultAccountsCRUDRepository(
         saveAccountsMutex.withLock {
             val store = getAccountsResponseStore(userWalletId = accountList.userWallet.walletId)
 
-            val version = store.data.firstOrNull()?.wallet?.version ?: 0
+            store.data.firstOrNull()?.wallet?.version ?: 0
             val body = SaveWalletAccountsResponseConverter.convert(value = accountList)
 
             withContext(dispatchers.io) {
                 tangemTechApi.saveWalletAccounts(
                     walletId = accountList.userWallet.walletId.stringValue,
-                    ifMatch = version.toString(),
+                    eTag = "", // TODO("[REDACTED_JIRA]")
                     body = body,
                 )
                     .getOrThrow()
