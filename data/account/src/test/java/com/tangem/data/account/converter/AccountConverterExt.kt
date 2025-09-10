@@ -46,6 +46,7 @@ internal fun createGetWalletAccountsResponse(
     iconColor: String? = null,
     derivationIndex: Int? = null,
     tokens: List<UserTokensResponse.Token>? = emptyList(),
+    unassignedTokens: List<UserTokensResponse.Token> = emptyList(),
 ): GetWalletAccountsResponse {
     return GetWalletAccountsResponse(
         wallet = GetWalletAccountsResponse.Wallet(
@@ -66,7 +67,7 @@ internal fun createGetWalletAccountsResponse(
             )
                 .let(::add)
         },
-        unassignedTokens = emptyList(),
+        unassignedTokens = unassignedTokens,
     )
 }
 
