@@ -9,8 +9,9 @@ import com.tangem.data.account.store.AccountsResponseStore
 import com.tangem.data.account.store.AccountsResponseStoreFactory
 import com.tangem.data.account.store.ArchivedAccountsStore
 import com.tangem.data.account.store.ArchivedAccountsStoreFactory
+import com.tangem.data.common.account.WalletAccountsSaver
+import com.tangem.data.common.cache.etag.ETagsStore
 import com.tangem.datasource.api.common.response.ApiResponse
-import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletArchivedAccountsResponse
@@ -40,6 +41,7 @@ import kotlin.time.Duration.Companion.minutes
 class DefaultAccountsCRUDRepositoryTest {
 
     private val tangemTechApi: TangemTechApi = mockk()
+    private val walletAccountsSaver: WalletAccountsSaver = mockk(relaxUnitFun = true)
 
     private val accountsResponseStoreFactory: AccountsResponseStoreFactory = mockk()
     private val accountsResponseStore: AccountsResponseStore = mockk()
@@ -50,6 +52,7 @@ class DefaultAccountsCRUDRepositoryTest {
     private val archivedAccountsStore = ArchivedAccountsStore(runtimeStore = archivedAccountsInnerStore)
 
     private val userWalletsStore: UserWalletsStore = mockk()
+    private val eTagsStore: ETagsStore = mockk()
 
     private val convertersContainer: AccountConverterFactoryContainer = mockk()
     private val accountListConverter: AccountListConverter = mockk()
@@ -57,9 +60,11 @@ class DefaultAccountsCRUDRepositoryTest {
 
     private val repository = DefaultAccountsCRUDRepository(
         tangemTechApi = tangemTechApi,
+        walletAccountsSaver = walletAccountsSaver,
         accountsResponseStoreFactory = accountsResponseStoreFactory,
         archivedAccountsStoreFactory = archivedAccountsStoreFactory,
         userWalletsStore = userWalletsStore,
+        eTagsStore = eTagsStore,
         convertersContainer = convertersContainer,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
@@ -517,14 +522,17 @@ class DefaultAccountsCRUDRepositoryTest {
                 totalTokens = 0,
             )
 
+            val eTag = "etag123"
             val apiResponse = mockk<GetWalletArchivedAccountsResponse> {
                 every { this@mockk.accounts } returns listOf(accountDTO)
             }
 
             val archivedAccount = ArchivedAccountConverter(userWalletId).convert(accountDTO)
 
+            coEvery { eTagsStore.getSyncOrNull(userWalletId, ETagsStore.Key.WalletAccounts) } returns eTag
+
             coEvery {
-                tangemTechApi.getWalletArchivedAccounts(userWalletId.stringValue)
+                tangemTechApi.getWalletArchivedAccounts(userWalletId.stringValue, eTag)
             } returns ApiResponse.Success(apiResponse)
 
             // Act
@@ -535,15 +543,20 @@ class DefaultAccountsCRUDRepositoryTest {
             Truth.assertThat(actual).containsExactly(archivedAccount)
 
             coVerifyOrder {
-                tangemTechApi.getWalletArchivedAccounts(userWalletId.stringValue)
+                eTagsStore.getSyncOrNull(userWalletId, ETagsStore.Key.WalletAccounts)
+                tangemTechApi.getWalletArchivedAccounts(userWalletId.stringValue, eTag)
                 archivedAccountsStoreFactory.create(userWalletId)
             }
         }
 
         @Test
-        fun `fetchArchivedAccounts should throw exception if API returns error`() = runTest { // Arrange
+        fun `fetchArchivedAccounts should throw exception if API returns error`() = runTest {
+            // Arrange
+            val eTag = "etag123"
             val exception = Exception("API error")
-            coEvery { tangemTechApi.getWalletArchivedAccounts(userWalletId.stringValue) } throws exception
+
+            coEvery { eTagsStore.getSyncOrNull(userWalletId, ETagsStore.Key.WalletAccounts) } returns eTag
+            coEvery { tangemTechApi.getWalletArchivedAccounts(userWalletId.stringValue, eTag) } throws exception
 
             // Act
             val actual = runCatching { repository.fetchArchivedAccounts(userWalletId) }.exceptionOrNull()!!
@@ -553,15 +566,16 @@ class DefaultAccountsCRUDRepositoryTest {
             Truth.assertThat(actual).hasMessageThat().isEqualTo(exception.message)
             Truth.assertThat(archivedAccountsStore.getSyncOrNull()).isNull()
 
-            coVerify { tangemTechApi.getWalletArchivedAccounts(userWalletId.stringValue) }
+            coVerifyOrder {
+                eTagsStore.getSyncOrNull(userWalletId, ETagsStore.Key.WalletAccounts)
+                tangemTechApi.getWalletArchivedAccounts(userWalletId.stringValue, eTag)
+            }
         }
     }
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class SaveAccounts {
-
-        private val version = 1
 
         @Test
         fun `saveAccounts should call API and update store`() = runTest {
@@ -572,23 +586,8 @@ class DefaultAccountsCRUDRepositoryTest {
 
             val accountList = AccountList.empty(userWallet = userWallet)
 
-            val accountsResponse = mockk<GetWalletAccountsResponse> {
-                every { this@mockk.wallet.version } returns version
-            }
-
+            val accountsResponse = mockk<GetWalletAccountsResponse>()
             accountsResponseStoreFlow.value = accountsResponse
-
-            val body = SaveWalletAccountsResponseConverter.convert(value = accountList)
-
-            val apiResponse = ApiResponse.Success(Unit)
-
-            coEvery {
-                tangemTechApi.saveWalletAccounts(
-                    walletId = userWalletId.stringValue,
-                    eTag = "",
-                    body = body,
-                )
-            } returns apiResponse
 
             val converter = mockk<GetWalletAccountsResponseConverter> {
                 every { this@mockk.convert(accountList) } returns accountsResponse
@@ -598,8 +597,6 @@ class DefaultAccountsCRUDRepositoryTest {
                 convertersContainer.getWalletAccountsResponseCF.create(userWallet = userWallet)
             } returns converter
 
-            coEvery { accountsResponseStore.updateData(transform = any()) } returns accountsResponse
-
             // Act
             repository.saveAccounts(accountList)
 
@@ -607,12 +604,9 @@ class DefaultAccountsCRUDRepositoryTest {
             Truth.assertThat(accountsResponseStoreFlow.value).isEqualTo(accountsResponse)
 
             coVerifyOrder {
-                accountsResponseStoreFactory.create(userWalletId)
-                accountsResponseStore.data
-                tangemTechApi.saveWalletAccounts(userWalletId.stringValue, "", body)
                 convertersContainer.getWalletAccountsResponseCF.create(userWallet)
                 converter.convert(accountList)
-                accountsResponseStore.updateData(any())
+                walletAccountsSaver.pushAndStore(userWalletId, accountsResponse)
             }
         }
 
@@ -625,39 +619,32 @@ class DefaultAccountsCRUDRepositoryTest {
 
             val accountList = AccountList.empty(userWallet = userWallet)
 
-            val accountsResponse = mockk<GetWalletAccountsResponse> {
-                every { this@mockk.wallet.version } returns version
-            }
-
+            val accountsResponse = mockk<GetWalletAccountsResponse>()
             accountsResponseStoreFlow.value = accountsResponse
 
-            val body = SaveWalletAccountsResponseConverter.convert(value = accountList)
+            val converter = mockk<GetWalletAccountsResponseConverter> {
+                every { this@mockk.convert(accountList) } returns accountsResponse
+            }
 
-            val apiResponse = ApiResponse.Error(cause = ApiResponseError.NetworkException) as ApiResponse<Unit>
+            every {
+                convertersContainer.getWalletAccountsResponseCF.create(userWallet = userWallet)
+            } returns converter
 
-            coEvery {
-                tangemTechApi.saveWalletAccounts(
-                    walletId = userWalletId.stringValue,
-                    eTag = "",
-                    body = body,
-                )
-            } returns apiResponse
+            val exception = Exception("Test error")
+
+            coEvery { walletAccountsSaver.pushAndStore(userWalletId, accountsResponse) } throws exception
 
             // Act
             val actual = runCatching { repository.saveAccounts(accountList) }.exceptionOrNull()!!
 
             // Assert
-            Truth.assertThat(actual).isEqualTo(ApiResponseError.NetworkException)
+            Truth.assertThat(actual).isInstanceOf(exception::class.java)
+            Truth.assertThat(actual).hasMessageThat().isEqualTo(exception.message)
 
             coVerifyOrder {
-                accountsResponseStoreFactory.create(userWalletId)
-                accountsResponseStore.data
-                tangemTechApi.saveWalletAccounts(userWalletId.stringValue, "", body)
-            }
-
-            coVerify(inverse = true) {
-                convertersContainer.getWalletAccountsResponseCF.create(any())
-                accountsResponseStore.updateData(any())
+                convertersContainer.getWalletAccountsResponseCF.create(userWallet)
+                converter.convert(accountList)
+                walletAccountsSaver.pushAndStore(userWalletId, accountsResponse)
             }
         }
     }
