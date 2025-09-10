@@ -3,6 +3,7 @@ package com.tangem.feature.tester.presentation.excludedblockchains
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.core.configtoggle.blockchain.ExcludedBlockchainsManager
 import com.tangem.core.configtoggle.blockchain.MutableExcludedBlockchainsManager
 import com.tangem.core.navigation.finisher.AppFinisher
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
@@ -25,11 +26,11 @@ import javax.inject.Inject
 @HiltViewModel
 internal class ExcludedBlockchainsViewModel @Inject constructor(
     private val appVersionProvider: AppVersionProvider,
-    excludedBlockchainsManager: MutableExcludedBlockchainsManager?,
+    excludedBlockchainsManager: ExcludedBlockchainsManager,
 ) : ViewModel() {
 
     private val excludedBlockchainsManager: MutableExcludedBlockchainsManager =
-        requireNotNull(excludedBlockchainsManager) {
+        requireNotNull(excludedBlockchainsManager as? MutableExcludedBlockchainsManager) {
             "Mutable excluded blockchains manager can't be null when tester actions is available"
         }
 
