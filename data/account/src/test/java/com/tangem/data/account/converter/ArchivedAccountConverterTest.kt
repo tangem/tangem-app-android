@@ -55,6 +55,12 @@ class ArchivedAccountConverterTest {
                 ),
             ),
             TestModel(
+                value = createDTO(name = null),
+                expected = Result.success(
+                    createDomain().copy(name = AccountName.DefaultMain),
+                ),
+            ),
+            TestModel(
                 value = createDTO(name = ""),
                 expected = Result.failure(
                     IllegalStateException(
@@ -104,7 +110,7 @@ class ArchivedAccountConverterTest {
 
     private fun createDTO(
         accountId: String = "957B88B12730E646E0F33D3618B77DFA579E8231E3C59C7104BE7165611C8027",
-        name: String = "Test Account",
+        name: String? = "Test Account",
         icon: String = "Letter",
         iconColor: String = "Azure",
         derivationIndex: Int = 0,
@@ -126,7 +132,7 @@ class ArchivedAccountConverterTest {
     private fun createDomain(): ArchivedAccount {
         return ArchivedAccount(
             accountId = AccountId.forCryptoPortfolio(userWalletId, DerivationIndex(0).getOrNull()!!),
-            name = "Test Account".toAccountName(),
+            name = AccountName("Test Account").getOrNull()!!,
             derivationIndex = 0.toDerivationIndex(),
             icon = CryptoPortfolioIcon.ofCustomAccount(
                 value = CryptoPortfolioIcon.Icon.Letter,

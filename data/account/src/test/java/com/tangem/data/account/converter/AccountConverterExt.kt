@@ -7,6 +7,7 @@ import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.models.TokensGroupType
 import com.tangem.domain.models.TokensSortType
 import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 
@@ -23,7 +24,7 @@ internal fun createWalletAccountDTO(
 
     return WalletAccountDTO(
         id = accountId ?: mainAccount.accountId.value,
-        name = accountName ?: mainAccount.accountName.value,
+        name = accountName ?: (mainAccount.accountName as? AccountName.Custom)?.value,
         derivationIndex = derivationIndex ?: mainAccount.derivationIndex.value,
         icon = icon ?: mainAccount.icon.value.name,
         iconColor = iconColor ?: mainAccount.icon.color.name,
