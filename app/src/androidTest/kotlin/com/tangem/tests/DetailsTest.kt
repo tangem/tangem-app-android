@@ -55,7 +55,7 @@ class DetailsTest : BaseTestCase() {
                     linkMoreCardsButton.assertIsDisplayed()
                 }
                 step("Assert 'Card Settings' button is visible") {
-                    cardSettingsButton.assertIsDisplayed()
+                    deviceSettingsButton.assertIsDisplayed()
                 }
                 step("Assert 'Referral program' button is visible") {
                     referralProgramButton.assertIsDisplayed()
@@ -105,7 +105,7 @@ class DetailsTest : BaseTestCase() {
                     linkMoreCardsButton.assertIsNotDisplayed()
                 }
                 step("Assert 'Card Settings' button is visible") {
-                    cardSettingsButton.assertIsDisplayed()
+                    deviceSettingsButton.assertIsDisplayed()
                 }
                 step("Assert 'Referral program' button is visible") {
                     referralProgramButton.assertIsDisplayed()
@@ -152,7 +152,7 @@ class DetailsTest : BaseTestCase() {
             }
             onWalletSettingsScreen {
                 step("Assert 'Card Settings' button is visible") {
-                    cardSettingsButton.assertIsDisplayed()
+                    deviceSettingsButton.assertIsDisplayed()
                 }
                 step("Assert 'Referral program' button does not exist") {
                     referralProgramButton.assertIsNotDisplayed()
