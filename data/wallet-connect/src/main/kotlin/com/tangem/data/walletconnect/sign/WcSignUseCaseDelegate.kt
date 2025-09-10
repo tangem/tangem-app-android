@@ -64,25 +64,16 @@ internal class WcSignUseCaseDelegate<MiddleAction, SignModel>(
             }
             .onEach { state ->
                 val step = state.domainStep as? WcSignStep.Result ?: return@onEach
-                val event = step.result.fold(
-                    ifLeft = { error ->
-                        val errorMessage = error.message() ?: ""
-                        WcAnalyticEvents.SignatureRequestFailed(
-                            rawRequest = context.rawSdkRequest,
-                            network = context.network,
-                            errorCode = error.code() ?: error::class.simpleName.orEmpty(),
-                            errorMessage = errorMessage,
-                        )
-                    },
-                    ifRight = {
-                        WcAnalyticEvents.SignatureRequestHandled(
-                            rawRequest = context.rawSdkRequest,
-                            network = context.network,
-                            securityStatus = context.session.securityStatus,
-                        )
-                    },
-                )
-                analytics.send(event)
+                step.result.leftOrNull()?.let { error ->
+                    val errorMessage = error.message() ?: ""
+                    val event = WcAnalyticEvents.SignatureRequestFailed(
+                        rawRequest = context.rawSdkRequest,
+                        network = context.network,
+                        errorCode = error.code() ?: error::class.simpleName.orEmpty(),
+                        errorMessage = errorMessage,
+                    )
+                    analytics.send(event)
+                }
             }
 
         var signJob: Job? = null
