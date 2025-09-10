@@ -112,7 +112,7 @@ sealed class WcAnalyticEvents(
         rawRequest: WcSdkSessionRequest,
         network: Network,
         emulationStatus: EmulationStatus?,
-        securityStatus: CheckDAppResult?,
+        securityStatus: CheckDAppResult,
     ) : WcAnalyticEvents(
         event = "Signature Request Received",
         params = mapOf(
@@ -121,7 +121,7 @@ sealed class WcAnalyticEvents(
             AnalyticsParam.Key.METHOD_NAME to rawRequest.request.method,
             AnalyticsParam.Key.BLOCKCHAIN to network.name,
             AnalyticsParam.Key.EMULATION_STATUS to emulationStatus?.status,
-            AnalyticsParam.Key.TYPE to securityStatus?.toAnalyticVerificationStatus(),
+            AnalyticsParam.Key.TYPE to securityStatus.toAnalyticVerificationStatus(),
         ).mapNotNullValues { it.value },
     ) {
         enum class EmulationStatus(val status: String) {
