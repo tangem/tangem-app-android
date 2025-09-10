@@ -15,8 +15,4 @@ interface KycRepository {
      * Returns KYC data to continue the survey. Used when KYC wasn't finished by the user
      */
     suspend fun getKycStartInfo(authHeader: String): Either<UniversalError, KycStartInfo>
-
-    interface Factory {
-        fun create(): KycRepository
-    }
 }
