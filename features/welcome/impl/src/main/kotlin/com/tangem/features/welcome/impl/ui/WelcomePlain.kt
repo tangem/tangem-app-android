@@ -22,8 +22,8 @@ internal fun WelcomePlain(modifier: Modifier = Modifier) {
         contentAlignment = Alignment.Center,
     ) {
         Icon(
-            modifier = Modifier.size(84.dp),
-            imageVector = ImageVector.vectorResource(R.drawable.ic_tangem_24),
+            modifier = Modifier.size(82.dp + 11.dp),
+            imageVector = ImageVector.vectorResource(R.drawable.splash_logo),
             tint = TangemTheme.colors.icon.primary1,
             contentDescription = null,
         )
