@@ -1,8 +1,8 @@
 package com.tangem.features.account.createedit
 
+import com.tangem.common.ui.account.toDomain
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
-import com.tangem.common.ui.account.toDomain
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -170,10 +170,14 @@ internal class AccountCreateEditModel @Inject constructor(
                         it.updateDerivationIndex(derivationIndex = derivationIndex.value)
                     }
                 }
-                .onLeft {
+                .onLeft { cause ->
                     handleError(
                         error = AccountFeatureError.CreateAccount.UnableToGetDerivationIndex,
-                        params = mapOf("userWalletId" to userWalletId.stringValue),
+                        message = cause.toString(),
+                        params = mapOf(
+                            "userWalletId" to userWalletId.stringValue,
+                            "cause" to cause.toString(),
+                        ),
                     )
 
                     return@launch
@@ -181,8 +185,12 @@ internal class AccountCreateEditModel @Inject constructor(
         }
     }
 
-    private fun handleError(error: AccountFeatureError, params: Map<String, String> = mapOf()) {
-        val exception = IllegalStateException(error.toString())
+    private fun handleError(
+        error: AccountFeatureError,
+        message: String? = null,
+        params: Map<String, String> = mapOf(),
+    ) {
+        val exception = IllegalStateException("$error. Cause: $message")
 
         Timber.e(exception)
 
