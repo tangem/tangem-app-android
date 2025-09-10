@@ -585,7 +585,7 @@ class DefaultAccountsCRUDRepositoryTest {
             coEvery {
                 tangemTechApi.saveWalletAccounts(
                     walletId = userWalletId.stringValue,
-                    ifMatch = version.toString(),
+                    eTag = "",
                     body = body,
                 )
             } returns apiResponse
@@ -609,7 +609,7 @@ class DefaultAccountsCRUDRepositoryTest {
             coVerifyOrder {
                 accountsResponseStoreFactory.create(userWalletId)
                 accountsResponseStore.data
-                tangemTechApi.saveWalletAccounts(userWalletId.stringValue, version.toString(), body)
+                tangemTechApi.saveWalletAccounts(userWalletId.stringValue, "", body)
                 convertersContainer.getWalletAccountsResponseCF.create(userWallet)
                 converter.convert(accountList)
                 accountsResponseStore.updateData(any())
@@ -638,7 +638,7 @@ class DefaultAccountsCRUDRepositoryTest {
             coEvery {
                 tangemTechApi.saveWalletAccounts(
                     walletId = userWalletId.stringValue,
-                    ifMatch = version.toString(),
+                    eTag = "",
                     body = body,
                 )
             } returns apiResponse
@@ -652,7 +652,7 @@ class DefaultAccountsCRUDRepositoryTest {
             coVerifyOrder {
                 accountsResponseStoreFactory.create(userWalletId)
                 accountsResponseStore.data
-                tangemTechApi.saveWalletAccounts(userWalletId.stringValue, version.toString(), body)
+                tangemTechApi.saveWalletAccounts(userWalletId.stringValue, "", body)
             }
 
             coVerify(inverse = true) {
