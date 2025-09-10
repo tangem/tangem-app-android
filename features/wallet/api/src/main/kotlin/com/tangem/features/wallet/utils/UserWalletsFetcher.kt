@@ -14,7 +14,7 @@ interface UserWalletsFetcher {
         fun create(
             messageSender: UiMessageSender,
             onlyMultiCurrency: Boolean,
-            authMode: Boolean,
+            isAuthMode: Boolean,
             onWalletClick: (UserWalletId) -> Unit,
         ): UserWalletsFetcher
     }
