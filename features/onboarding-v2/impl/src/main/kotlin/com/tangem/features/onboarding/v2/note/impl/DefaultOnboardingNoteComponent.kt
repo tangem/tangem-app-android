@@ -9,7 +9,6 @@ import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.childStack
-import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.decompose.value.subscribe
 import com.arkivanov.essenty.instancekeeper.getOrCreateSimple
@@ -59,7 +58,7 @@ internal class DefaultOnboardingNoteComponent @AssistedInject constructor(
             key = "innerStack",
             source = model.stackNavigation,
             serializer = null,
-            initialConfiguration = model.initialRoute,
+            initialConfiguration = OnboardingNoteRoute.CreateWallet,
             handleBackButton = true,
             childFactory = { configuration, factoryContext ->
                 createChild(
@@ -99,15 +98,8 @@ internal class DefaultOnboardingNoteComponent @AssistedInject constructor(
                     childParams = childParams,
                     onWalletCreated = { userWallet ->
                         model.onWalletCreated(userWallet)
-                        model.stackNavigation.push(OnboardingNoteRoute.Done)
+                        params.onDone()
                     },
-                ),
-            )
-            OnboardingNoteRoute.Done -> onboardingDoneComponentFactory.create(
-                context = factoryContext,
-                params = OnboardingDoneComponent.Params(
-                    mode = OnboardingDoneComponent.Mode.WalletCreated,
-                    onDone = { params.onDone() },
                 ),
             )
         }
