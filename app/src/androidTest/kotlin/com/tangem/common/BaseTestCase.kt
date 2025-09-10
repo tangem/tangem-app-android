@@ -135,7 +135,6 @@ abstract class BaseTestCase : TestCase(
                 changeToggle("SEND_VIA_SWAP_ENABLED", true)
                 changeToggle("SWAP_REDESIGN_ENABLED", true)
                 changeToggle("SEND_REDESIGN_ENABLED", true)
-                changeToggle("NEW_ONRAMP_MAIN_ENABLED", true)
             }
         }
     }
