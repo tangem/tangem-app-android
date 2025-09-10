@@ -55,7 +55,7 @@ internal class WelcomeModel @Inject constructor(
     private val walletsFetcher = userWalletsFetcherFactory.create(
         messageSender = uiMessageSender,
         onlyMultiCurrency = false,
-        authMode = true,
+        isAuthMode = true,
         onWalletClick = { walletId ->
             modelScope.launch {
                 val userWallets = userWalletsListRepository.userWalletsSync()
