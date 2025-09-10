@@ -29,7 +29,7 @@ internal class CryptoPortfolioConverter @AssistedInject constructor(
 
         return Account.CryptoPortfolio(
             accountId = value.id.toAccountId(userWallet.walletId),
-            accountName = value.name.toAccountName(),
+            accountName = AccountNameConverter.convertBack(value = value.name),
             icon = value.toIcon(),
             derivationIndex = value.derivationIndex.toDerivationIndex(),
             cryptoCurrencies = if (tokens.isNotEmpty()) {
@@ -46,7 +46,7 @@ internal class CryptoPortfolioConverter @AssistedInject constructor(
     override fun convertBack(value: Account.CryptoPortfolio): WalletAccountDTO {
         return WalletAccountDTO(
             id = value.accountId.value,
-            name = value.accountName.value,
+            name = AccountNameConverter.convert(value = value.accountName),
             derivationIndex = value.derivationIndex.value,
             icon = value.icon.value.name,
             iconColor = value.icon.color.name,
