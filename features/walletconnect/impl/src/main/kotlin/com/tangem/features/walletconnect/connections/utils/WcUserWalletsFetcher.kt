@@ -29,7 +29,7 @@ internal class WcUserWalletsFetcher(
     private val userWalletsFetcher = userWalletsFetcherFactory.create(
         messageSender = messageSender,
         onlyMultiCurrency = true,
-        authMode = false,
+        isAuthMode = false,
         onWalletClick = { onWalletSelected(it) },
     )
 

@@ -40,6 +40,7 @@ import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.card.repository.CardSdkConfigRepository
+import com.tangem.domain.core.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.settings.SetGooglePayAvailabilityUseCase
 import com.tangem.domain.settings.SetGoogleServicesAvailabilityUseCase
@@ -49,12 +50,11 @@ import com.tangem.domain.staking.SendUnsubmittedHashesUseCase
 import com.tangem.domain.tokens.GetPolkadotCheckHasImmortalUseCase
 import com.tangem.domain.tokens.GetPolkadotCheckHasResetUseCase
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
-import com.tangem.domain.core.wallets.UserWalletsListRepository
+import com.tangem.domain.wallets.usecase.ClearAllHotWalletContextualUnlockUseCase
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tester.api.TesterMenuLauncher
-import com.tangem.features.walletconnect.components.WalletConnectFeatureToggles
 import com.tangem.google.GoogleServicesHelper
 import com.tangem.operations.backup.BackupService
 import com.tangem.sdk.api.BackupServiceHolder
@@ -64,11 +64,9 @@ import com.tangem.tap.common.DialogManager
 import com.tangem.tap.common.OnActivityResultCallback
 import com.tangem.tap.common.apptheme.MutableAppThemeModeHolder
 import com.tangem.tap.common.extensions.dispatchNavigationAction
-import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
 import com.tangem.tap.features.intentHandler.IntentProcessor
 import com.tangem.tap.features.intentHandler.handlers.BackgroundScanIntentHandler
 import com.tangem.tap.features.intentHandler.handlers.OnPushClickedIntentHandler
-import com.tangem.tap.features.intentHandler.handlers.WalletConnectLinkIntentHandler
 import com.tangem.tap.features.main.MainViewModel
 import com.tangem.tap.proxy.redux.DaggerGraphAction
 import com.tangem.tap.routing.component.RoutingComponent
@@ -115,9 +113,6 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
     @Inject
     lateinit var scanCardUseCase: ScanCardUseCase
-
-    @Inject
-    lateinit var walletConnectInteractor: WalletConnectInteractor
 
     @Inject
     lateinit var settingsRepository: SettingsRepository
@@ -172,9 +167,6 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     internal lateinit var deeplinkFactory: DeepLinkFactory
 
     @Inject
-    internal lateinit var walletConnectFeatureToggles: WalletConnectFeatureToggles
-
-    @Inject
     internal lateinit var urlOpener: UrlOpener
 
     @Inject
@@ -182,9 +174,6 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
     @Inject
     internal lateinit var intentProcessor: IntentProcessor
-
-    @Inject
-    internal lateinit var walletConnectLinkIntentHandler: WalletConnectLinkIntentHandler
 
     @Inject
     internal lateinit var onPushClickedIntentHandler: OnPushClickedIntentHandler
@@ -199,9 +188,12 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     internal lateinit var hotWalletFeatureToggles: HotWalletFeatureToggles
 
     @Inject
+    internal lateinit var clearAllHotWalletContextualUnlockUseCase: ClearAllHotWalletContextualUnlockUseCase
+
+    @Inject
     internal lateinit var tangemPayFeatureToggles: TangemPayFeatureToggles
 
-    internal val viewModel: MainViewModel by viewModels()
+    private val viewModel: MainViewModel by viewModels()
 
     private lateinit var appThemeModeFlow: SharedFlow<AppThemeMode>
 
@@ -286,6 +278,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
             coroutineScope = mainScope,
             userWalletsListRepository = userWalletsListRepository,
             hotWalletFeatureToggles = hotWalletFeatureToggles,
+            clearAllHotWalletContextualUnlockUseCase = clearAllHotWalletContextualUnlockUseCase,
         )
 
         initIntentHandlers()
@@ -293,7 +286,6 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         store.dispatch(
             DaggerGraphAction.SetActivityDependencies(
                 scanCardUseCase = scanCardUseCase,
-                walletConnectInteractor = walletConnectInteractor,
                 cardSdkConfigRepository = cardSdkConfigRepository,
             ),
         )
@@ -369,10 +361,6 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
     private fun initIntentHandlers() {
         intentProcessor.addHandler(onPushClickedIntentHandler)
-
-        if (!walletConnectFeatureToggles.isRedesignedWalletConnectEnabled) {
-            intentProcessor.addHandler(walletConnectLinkIntentHandler)
-        }
     }
 
     private fun updateAppTheme(appThemeMode: AppThemeMode) {
@@ -525,8 +513,11 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
         // Workaround to navigate to TangemPayDetails screen. Will be deleted in next PRs
         if (tangemPayFeatureToggles.isTangemPayEnabled) {
-            store.dispatchNavigationAction {
-                replaceAll(AppRoute.TangemPayDetails)
+            lifecycleScope.launch {
+                val selectedUserWalledId = userWalletsListRepository.selectedUserWalletSync()?.walletId
+                store.dispatchNavigationAction {
+                    replaceAll(AppRoute.TangemPayDetails(requireNotNull(selectedUserWalledId)))
+                }
             }
         } else if (userWalletsListManager.isLockable && userWalletsListManager.hasUserWallets) {
             store.dispatchNavigationAction {

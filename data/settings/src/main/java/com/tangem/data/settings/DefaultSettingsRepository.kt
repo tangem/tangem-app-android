@@ -29,15 +29,15 @@ internal class DefaultSettingsRepository(
 
     private val userCountryFlow = MutableStateFlow<UserCountry?>(value = null)
 
-    override suspend fun shouldShowSaveUserWalletScreen(): Boolean {
+    override suspend fun shouldShowAskBiometry(): Boolean {
         return appPreferencesStore.getSyncOrDefault(
-            key = PreferencesKeys.SHOULD_SHOW_SAVE_USER_WALLET_SCREEN_KEY,
+            key = PreferencesKeys.SHOULD_SHOW_ASK_BIOMETRY_KEY,
             default = true,
         )
     }
 
-    override suspend fun setShouldShowSaveUserWalletScreen(value: Boolean) {
-        appPreferencesStore.store(key = PreferencesKeys.SHOULD_SHOW_SAVE_USER_WALLET_SCREEN_KEY, value = value)
+    override suspend fun setShouldShowAskBiometry(value: Boolean) {
+        appPreferencesStore.store(key = PreferencesKeys.SHOULD_SHOW_ASK_BIOMETRY_KEY, value = value)
     }
 
     override suspend fun isWalletScrollPreviewEnabled(): Boolean {

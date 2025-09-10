@@ -8,14 +8,13 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.domain.express.models.ExpressError
-import com.tangem.domain.feedback.GetCardInfoUseCase
+import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.models.wallet.requireColdWallet
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.features.swap.v2.impl.R
 import javax.inject.Inject
@@ -24,7 +23,7 @@ import javax.inject.Inject
 internal class SwapAlertFactory @Inject constructor(
     private val uiMessageSender: UiMessageSender,
     private val saveBlockchainErrorUseCase: SaveBlockchainErrorUseCase,
-    private val getCardInfoUseCase: GetCardInfoUseCase,
+    private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
 ) {
     fun getGenericErrorState(expressError: ExpressError, onFailedTxEmailClick: () -> Unit, popBack: () -> Unit = {}) {
@@ -96,16 +95,11 @@ internal class SwapAlertFactory @Inject constructor(
             ),
         )
 
-        if (userWallet is UserWallet.Hot) {
-            return // TODO [REDACTED_TASK_KEY] [Hot Wallet] Email feedback flow
-        }
-
-        val cardInfo =
-            getCardInfoUseCase(userWallet.requireColdWallet().scanResponse).getOrNull() ?: return
+        val metaInfo = getWalletMetaInfoUseCase(userWallet.walletId).getOrNull() ?: return
 
         sendFeedbackEmailUseCase(
             type = FeedbackEmailType.SwapProblem(
-                cardInfo = cardInfo,
+                walletMetaInfo = metaInfo,
                 providerName = confirmData?.quote?.provider?.name.orEmpty(),
                 txId = txId.orEmpty(),
             ),
