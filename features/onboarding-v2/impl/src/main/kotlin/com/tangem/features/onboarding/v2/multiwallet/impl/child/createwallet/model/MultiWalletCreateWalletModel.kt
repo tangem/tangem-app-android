@@ -9,7 +9,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.card.repository.CardRepository
-import com.tangem.domain.feedback.GetCardInfoUseCase
+import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.scan.ScanResponse
@@ -39,7 +39,7 @@ internal class MultiWalletCreateWalletModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val tangemSdkManager: TangemSdkManager,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
-    private val getCardInfoUseCase: GetCardInfoUseCase,
+    private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
     private val cardRepository: CardRepository,
     private val analyticsHandler: AnalyticsEventHandler,
     private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory,
@@ -168,7 +168,8 @@ internal class MultiWalletCreateWalletModel @Inject constructor(
 
     fun navigateToSupportScreen() {
         modelScope.launch {
-            val cardInfo = getCardInfoUseCase(multiWalletState.value.currentScanResponse).getOrNull() ?: return@launch
+            val cardInfo =
+                getWalletMetaInfoUseCase(multiWalletState.value.currentScanResponse).getOrNull() ?: return@launch
             sendFeedbackEmailUseCase(FeedbackEmailType.DirectUserRequest(cardInfo))
         }
     }
