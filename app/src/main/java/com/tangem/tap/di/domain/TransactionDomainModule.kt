@@ -235,4 +235,13 @@ internal object TransactionDomainModule {
     ): GetReverseResolvedEnsAddressUseCase {
         return GetReverseResolvedEnsAddressUseCase(walletAddressServiceRepository)
     }
+
+    @Provides
+    @Singleton
+    fun sendLargeSolanaTransactionUseCase(
+        cardSdkConfigRepository: CardSdkConfigRepository,
+        walletManagersFacade: WalletManagersFacade,
+    ): SendLargeSolanaTransactionUseCase {
+        return SendLargeSolanaTransactionUseCase(cardSdkConfigRepository, walletManagersFacade)
+    }
 }
