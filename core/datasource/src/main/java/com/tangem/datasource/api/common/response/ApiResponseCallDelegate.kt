@@ -47,7 +47,8 @@ internal class ApiResponseCallDelegate<T : Any>(
                 Timber.e(e, "onFailure UnknownException")
                 ApiResponseError.UnknownException(e)
             }
-            val safeResponse = apiError<T>(error)
+
+            val safeResponse = apiError<T>(cause = error, headers = emptyMap())
 
             responseCallback.onResponse(this@ApiResponseCallDelegate, Response.success(safeResponse))
         }
