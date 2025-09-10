@@ -160,6 +160,7 @@ interface TangemTechApi {
     @GET("/v1/wallets/{walletId}/accounts/archived")
     suspend fun getWalletArchivedAccounts(
         @Path("walletId") walletId: String,
+        @Header("If-None-Match") eTag: String? = null,
     ): ApiResponse<GetWalletArchivedAccountsResponse>
     // endregion
 }
