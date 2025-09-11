@@ -25,6 +25,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
 /**
@@ -108,7 +109,7 @@ internal class DefaultAccountsCRUDRepository(
         walletAccountsSaver.pushAndStore(userWalletId = userWalletId, response = accountsResponse)
     }
 
-    override suspend fun getTotalAccountsCount(userWalletId: UserWalletId): Option<Int> = option {
+    override suspend fun getTotalAccountsCountSync(userWalletId: UserWalletId): Option<Int> = option {
         val accountListResponse = getAccountsResponseSync(userWalletId = userWalletId)
 
         ensureNotNull(accountListResponse)
@@ -116,9 +117,18 @@ internal class DefaultAccountsCRUDRepository(
         return accountListResponse.wallet.totalAccounts.toOption()
     }
 
+    override fun getTotalAccountsCount(userWalletId: UserWalletId): Flow<Option<Int>> {
+        return getAccountsResponseStore(userWalletId = userWalletId).data
+            .map { it?.wallet?.totalAccounts.toOption() }
+    }
+
     override fun getUserWallet(userWalletId: UserWalletId): UserWallet {
         return userWalletsStore.getSyncStrict(userWalletId)
     }
+
+    override fun getUserWallets(): Flow<List<UserWallet>> = userWalletsStore.userWallets
+
+    override fun getUserWalletsSync(): List<UserWallet> = userWalletsStore.userWalletsSync
 
     private suspend fun getETag(userWalletId: UserWalletId): String? {
         return eTagsStore.getSyncOrNull(userWalletId = userWalletId, key = ETagsStore.Key.WalletAccounts)
