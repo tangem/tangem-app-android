@@ -25,6 +25,7 @@ import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.hot.sdk.model.HotAuth
 import com.tangem.hot.sdk.model.UnlockHotWallet
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -32,6 +33,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import timber.log.Timber
 import javax.inject.Inject
+import kotlin.coroutines.resume
 
 @Suppress("LongParameterList")
 @Stable
@@ -148,6 +150,7 @@ internal class AccessCodeModel @Inject constructor(
         }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     private suspend fun tryToAskForBiometry() {
         if (!shouldAskForBiometry()) return
 
@@ -163,7 +166,9 @@ internal class AccessCodeModel @Inject constructor(
                                 setAskBiometryShownUseCase()
                                 walletsRepository.setUseBiometricAuthentication(true)
                                 walletsRepository.setRequireAccessCode(false)
-                                continuation.resumeWith(Result.success(Unit))
+                                if (continuation.isActive) {
+                                    continuation.resume(Unit)
+                                }
                             }
                         },
                     ),
@@ -172,13 +177,17 @@ internal class AccessCodeModel @Inject constructor(
                         onClick = {
                             modelScope.launch {
                                 setAskBiometryShownUseCase()
-                                continuation.resumeWith(Result.success(Unit))
+                                if (continuation.isActive) {
+                                    continuation.resume(Unit)
+                                }
                             }
                         },
                     ),
                     onDismissRequest = {
                         modelScope.launch {
-                            continuation.resumeWith(Result.success(Unit))
+                            if (continuation.isActive) {
+                                continuation.resume(Unit)
+                            }
                         }
                     },
                 ),
