@@ -4,10 +4,6 @@ import com.tangem.common.BaseTestCase
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.screens.*
-import com.tangem.screens.onDisclaimerScreen
-import com.tangem.screens.onMainScreen
-import com.tangem.screens.onMarketsTooltipScreen
-import com.tangem.screens.onStoriesScreen
 import com.tangem.tap.domain.sdk.mocks.MockContent
 import com.tangem.tap.domain.sdk.mocks.MockProvider
 import io.qameta.allure.kotlin.Allure.step
@@ -47,7 +43,7 @@ fun BaseTestCase.synchronizeAddresses(balance: String) {
         onMainScreen { synchronizeAddressesButton.clickWithAssertion() }
     }
     step("Assert wallet balance = '$balance'") {
-        onMainScreen { walletBalance().assertTextContains(balance) }
+        onMainScreen { totalBalanceText.assertTextContains(balance) }
     }
 }
 
