@@ -661,7 +661,7 @@ object AccountItemPreviewData {
         )
     val accountLetterIcon: CurrencyIconState.CryptoPortfolio.Letter
         get() = CurrencyIconState.CryptoPortfolio.Letter(
-            char = 'A',
+            char = stringReference("A"),
             color = Color.Blue,
             isGrayscale = false,
         )
