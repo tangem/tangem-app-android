@@ -274,14 +274,16 @@ sealed class AppRoute(val path: String) : Route {
     data class Onboarding(
         val scanResponse: ScanResponse,
         val mode: Mode = Mode.Onboarding,
-    ) : AppRoute(path = "/onboarding_v2/${mode.name}") {
+    ) : AppRoute(path = "/onboarding_v2/$mode") {
 
-        enum class Mode {
-            Onboarding, // general Mode
-            AddBackupWallet1, // continue backup process for existing wallet 1
-            WelcomeOnlyTwin, // show welcome screen and then navigate to wallet for twins
-            RecreateWalletTwin, // reset twins
-            ContinueFinalize, // continue finalize process (unfinished backup dialog)
+        @Serializable
+        sealed class Mode {
+            data object Onboarding : Mode() // general Mode
+            data object AddBackupWallet1 : Mode() // continue backup process for existing wallet 1
+            data object WelcomeOnlyTwin : Mode() // show welcome screen and then navigate to wallet for twins
+            data object RecreateWalletTwin : Mode() // reset twins
+            data object ContinueFinalize : Mode() // continue finalize process (unfinished backup dialog)
+            data class UpgradeHotWallet(val userWalletId: UserWalletId) : Mode() // upgrade hot wallet
         }
     }
 
