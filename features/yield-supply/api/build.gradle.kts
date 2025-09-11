@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.tangem.features.yieldlending.api"
+    namespace = "com.tangem.features.yield.supply.api"
 }
 
 dependencies {
