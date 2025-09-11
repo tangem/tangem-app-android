@@ -3,11 +3,12 @@ package com.tangem.screens
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
+import androidx.compose.ui.test.hasAnyAncestor
 import com.tangem.common.BaseTestCase
 import com.tangem.common.extensions.hasLazyListItemPosition
 import com.tangem.common.utils.LazyListItemNode
-import com.tangem.core.ui.test.TokenElementsTestTags
 import com.tangem.core.ui.test.MainScreenTestTags
+import com.tangem.core.ui.test.TokenElementsTestTags
 import com.tangem.core.ui.test.NotificationTestTags
 import com.tangem.core.ui.utils.LazyListItemPositionSemantics
 import com.tangem.feature.wallet.impl.R
@@ -72,6 +73,24 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
         useUnmergedTree = true
     }
 
+    val totalBalanceContainer: KNode = child {
+        hasTestTag(MainScreenTestTags.WALLET_LIST_ITEM)
+    }
+
+    val totalBalanceMenuRenameWallet: KNode = child {
+        hasTestTag(MainScreenTestTags.TOTAL_BALANCE_MENU_ITEM)
+        hasText(getResourceString(R.string.common_rename))
+    }
+
+    val totalBalanceMenuDeleteWallet: KNode = child {
+        hasTestTag(MainScreenTestTags.TOTAL_BALANCE_MENU_ITEM)
+        hasText(getResourceString(R.string.common_delete))
+    }
+
+    val totalBalanceText: KNode = child {
+        hasParent(withTestTag(MainScreenTestTags.WALLET_BALANCE))
+    }
+
     /**
      * Find token list item with title and address
      */
@@ -82,19 +101,6 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
             hasText(tokenTitle)
         }.child<KNode> {
             hasTestTag(TokenElementsTestTags.TOKEN_FIAT_AMOUNT)
-            useUnmergedTree = true
-        }
-    }
-
-    /**
-     * Find node with wallet balance using lazyList. This construction doesn't affect next step with lazyList.
-     */
-    @OptIn(ExperimentalTestApi::class)
-    fun walletBalance(): KNode {
-        return lazyList.childWith<LazyListItemNode> {
-            hasAnyDescendant(withTestTag(MainScreenTestTags.WALLET_LIST_ITEM))
-        }.child<KNode> {
-            hasTestTag(MainScreenTestTags.WALLET_BALANCE)
             useUnmergedTree = true
         }
     }
@@ -129,6 +135,12 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
         }
     }
 
+    fun KNode.assertIsUnreachable() {
+        this {
+            hasAnyAncestor(withText(getResourceString(R.string.common_unreachable)))
+            assertIsDisplayed()
+        }
+    }
 
     /**
      * This assertion is required to properly verify the token's absence in the semantic tree.
