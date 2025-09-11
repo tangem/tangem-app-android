@@ -15,6 +15,8 @@ interface UserWalletsStore {
 
     val userWallets: Flow<List<UserWallet>>
 
+    val userWalletsSync: List<UserWallet>
+
     fun getSyncOrNull(key: UserWalletId): UserWallet?
 
     fun getSyncStrict(key: UserWalletId): UserWallet
