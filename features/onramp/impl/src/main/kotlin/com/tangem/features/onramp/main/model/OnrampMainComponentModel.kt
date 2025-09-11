@@ -149,19 +149,21 @@ internal class OnrampMainComponentModel @Inject constructor(
                     ifLeft = ::handleOnrampError,
                     ifRight = { country ->
                         if (country == null) return@onEach
+
+                        val wasInitialLoading = _state.value is OnrampMainComponentUM.InitialLoading
                         _state.update {
                             if (it is OnrampMainComponentUM.InitialLoading) {
-                                val state = stateFactory.getReadyState(country.defaultCurrency)
-                                if (params.launchSepa) {
-                                    onAmountValueChanged(PREDEFINED_SEPA_AMOUNT)
-                                }
-                                state
+                                stateFactory.getReadyState(country.defaultCurrency)
                             } else {
                                 amountStateFactory.getUpdatedCurrencyState(country.defaultCurrency)
                             }
                         }
 
                         updatePairsAndQuotes()
+
+                        if (wasInitialLoading && params.launchSepa) {
+                            onAmountValueChanged(PREDEFINED_SEPA_AMOUNT)
+                        }
                     },
                 )
             }
@@ -326,9 +328,9 @@ internal class OnrampMainComponentModel @Inject constructor(
         val sepaQuote = if (params.launchSepa && !isSepaLaunched) {
             isSepaLaunched = true
 
-            quotes.filterIsInstance<OnrampQuote.Data>().firstOrNull {
-                it.provider.id == MERCURYO_PROVIDER_ID && it.paymentMethod.id == SEPA_METHOD_ID
-            }
+            quotes.filterIsInstance<OnrampQuote.Data>()
+                .filter { it.paymentMethod.id == SEPA_METHOD_ID }
+                .maxByOrNull { it.toAmount.value }
         } else {
             null
         }
@@ -437,7 +439,6 @@ internal class OnrampMainComponentModel @Inject constructor(
     private companion object {
         const val UPDATE_DELAY = 10_000L
 
-        const val MERCURYO_PROVIDER_ID = "mercuryo"
         const val SEPA_METHOD_ID = "sepa"
     }
 }
