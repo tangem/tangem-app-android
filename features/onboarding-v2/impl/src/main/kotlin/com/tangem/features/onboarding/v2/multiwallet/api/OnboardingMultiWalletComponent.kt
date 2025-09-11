@@ -5,6 +5,7 @@ import com.tangem.core.decompose.navigation.inner.InnerNavigationHolder
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.onboarding.v2.TitleProvider
 
 interface OnboardingMultiWalletComponent : ComposableContentComponent, InnerNavigationHolder {
@@ -17,10 +18,11 @@ interface OnboardingMultiWalletComponent : ComposableContentComponent, InnerNavi
         val onDone: (UserWallet.Cold) -> Unit,
     )
 
-    enum class Mode {
-        Onboarding,
-        AddBackup,
-        ContinueFinalize,
+    sealed class Mode {
+        data object Onboarding : Mode()
+        data object AddBackup : Mode()
+        data object ContinueFinalize : Mode()
+        data class UpgradeHotWallet(val userWalletId: UserWalletId) : Mode()
     }
 
     interface Factory : ComponentFactory<Params, OnboardingMultiWalletComponent>
