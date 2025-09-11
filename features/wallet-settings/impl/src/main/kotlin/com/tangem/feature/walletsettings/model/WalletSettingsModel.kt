@@ -363,37 +363,45 @@ internal class WalletSettingsModel @Inject constructor(
         if (!state.value.isWalletBackedUp) {
             messageSender.send(makeBackupAtFirstAlertBS)
         } else {
-            val userWallet = getUserWalletUseCase(params.userWalletId)
-                .getOrElse { error("User wallet with id ${params.userWalletId} not found") }
-            if (userWallet is UserWallet.Hot) {
-                val hotWalletId = userWallet.hotWalletId
-                when (hotWalletId.authType) {
-                    HotWalletId.AuthType.NoPassword -> {
-                        router.push(AppRoute.UpdateAccessCode(params.userWalletId))
-                    }
-                    HotWalletId.AuthType.Password,
-                    HotWalletId.AuthType.Biometry,
-                    -> modelScope.launch {
-                        unlockHotWalletContextualUseCase.invoke(hotWalletId)
-                            .onLeft {
-                                Timber.e("Unable to unlock wallet with id ${params.userWalletId}")
-                            }
-                            .onRight {
-                                router.push(AppRoute.UpdateAccessCode(params.userWalletId))
-                            }
-                    }
-                }
+            unlockWalletIfNeedAndProceed {
+                router.push(AppRoute.UpdateAccessCode(params.userWalletId))
             }
         }
     }
 
     private fun onUpgradeWalletClick() {
-        router.push(AppRoute.UpgradeWallet(params.userWalletId))
+        unlockWalletIfNeedAndProceed {
+            router.push(AppRoute.UpgradeWallet(params.userWalletId))
+        }
     }
 
     private fun onDismissUpgradeWalletClick() {
         modelScope.launch {
             dismissUpgradeWalletNotificationUseCase.invoke(params.userWalletId)
+        }
+    }
+
+    private fun unlockWalletIfNeedAndProceed(action: () -> Unit) {
+        val userWallet = getUserWalletUseCase(params.userWalletId)
+            .getOrElse { error("User wallet with id ${params.userWalletId} not found") }
+        if (userWallet is UserWallet.Hot) {
+            val hotWalletId = userWallet.hotWalletId
+            when (hotWalletId.authType) {
+                HotWalletId.AuthType.NoPassword -> {
+                    action()
+                }
+                HotWalletId.AuthType.Password,
+                HotWalletId.AuthType.Biometry,
+                -> modelScope.launch {
+                    unlockHotWalletContextualUseCase.invoke(hotWalletId)
+                        .onLeft {
+                            Timber.e("Unable to unlock wallet with id ${params.userWalletId}")
+                        }
+                        .onRight {
+                            action()
+                        }
+                }
+            }
         }
     }
 }
