@@ -237,14 +237,19 @@ internal class ChildFactory @Inject constructor(
                     context = context,
                     params = OnboardingEntryComponent.Params(
                         scanResponse = route.scanResponse,
-                        mode = when (route.mode) {
-                            AppRoute.Onboarding.Mode.Onboarding -> OnboardingEntryComponent.Mode.Onboarding
-                            AppRoute.Onboarding.Mode.AddBackupWallet1 -> OnboardingEntryComponent.Mode.AddBackupWallet1
-                            AppRoute.Onboarding.Mode.WelcomeOnlyTwin -> OnboardingEntryComponent.Mode.WelcomeOnlyTwin
-                            AppRoute.Onboarding.Mode.RecreateWalletTwin ->
+                        mode = when (val mode = route.mode) {
+                            is AppRoute.Onboarding.Mode.Onboarding ->
+                                OnboardingEntryComponent.Mode.Onboarding
+                            is AppRoute.Onboarding.Mode.AddBackupWallet1 ->
+                                OnboardingEntryComponent.Mode.AddBackupWallet1
+                            is AppRoute.Onboarding.Mode.WelcomeOnlyTwin ->
+                                OnboardingEntryComponent.Mode.WelcomeOnlyTwin
+                            is AppRoute.Onboarding.Mode.RecreateWalletTwin ->
                                 OnboardingEntryComponent.Mode.RecreateWalletTwin
-                            AppRoute.Onboarding.Mode.ContinueFinalize ->
+                            is AppRoute.Onboarding.Mode.ContinueFinalize ->
                                 OnboardingEntryComponent.Mode.ContinueFinalize
+                            is AppRoute.Onboarding.Mode.UpgradeHotWallet ->
+                                OnboardingEntryComponent.Mode.UpgradeHotWallet(mode.userWalletId)
                         },
                     ),
                     componentFactory = onboardingEntryComponentFactory,

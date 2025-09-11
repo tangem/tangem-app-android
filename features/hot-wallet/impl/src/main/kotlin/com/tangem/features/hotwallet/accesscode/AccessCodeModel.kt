@@ -23,7 +23,6 @@ import com.tangem.features.hotwallet.accesscode.entity.AccessCodeUM
 import com.tangem.features.hotwallet.impl.R
 import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.hot.sdk.model.HotAuth
-import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.hot.sdk.model.UnlockHotWallet
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -53,8 +52,6 @@ internal class AccessCodeModel @Inject constructor(
 ) : Model() {
 
     private val params = paramsContainer.require<AccessCodeComponent.Params>()
-
-    private var hotWalletId: HotWalletId? = null
 
     internal val uiState: StateFlow<AccessCodeUM>
     field = MutableStateFlow(getInitialState())
@@ -197,7 +194,7 @@ internal class AccessCodeModel @Inject constructor(
     }
 
     override fun onDestroy() {
-        hotWalletId?.let { clearHotWalletContextualUnlockUseCase.invoke(it) }
+        clearHotWalletContextualUnlockUseCase.invoke(params.userWalletId)
         super.onDestroy()
     }
 }
