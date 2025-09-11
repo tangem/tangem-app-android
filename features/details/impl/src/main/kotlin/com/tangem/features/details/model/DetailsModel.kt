@@ -120,9 +120,16 @@ internal class DetailsModel @Inject constructor(
 
             val scanResponse =
                 getSelectedWalletSyncUseCase().getOrNull()?.requireColdWallet()?.scanResponse // TODO [REDACTED_TASK_KEY]
-                    ?: error("Selected wallet is null")
+                    ?: {
+                        Timber.e("DetailsModel: Selected wallet is null")
+                        error("Selected wallet is null")
+                    }()
 
-            val cardInfo = getCardInfoUseCase(scanResponse).getOrNull() ?: return@launch
+            val cardInfo = getCardInfoUseCase(scanResponse).getOrNull()
+            if (cardInfo == null) {
+                Timber.e("DetailsModel: Failed to get card info")
+                return@launch
+            }
 
             val feedbackType = when {
                 userWallets.all { it is UserWallet.Cold && it.scanResponse.card.isVisa } ->
@@ -130,6 +137,7 @@ internal class DetailsModel @Inject constructor(
                 userWallets.all { it !is UserWallet.Cold || it.scanResponse.card.isVisa.not() } ->
                     FeedbackEmailType.DirectUserRequest(cardInfo)
                 else -> {
+                    Timber.e("DetailsModel: Multiple card types, need to show email type selection")
                     showFeedbackEmailTypeOptionBS(cardInfo)
                     return@launch
                 }
@@ -158,7 +166,7 @@ internal class DetailsModel @Inject constructor(
                         state.update {
                             it.copy(
                                 selectFeedbackEmailTypeBSConfig =
-                                it.selectFeedbackEmailTypeBSConfig.copy(isShown = false),
+                                    it.selectFeedbackEmailTypeBSConfig.copy(isShown = false),
                             )
                         }
                     },
@@ -172,7 +180,7 @@ internal class DetailsModel @Inject constructor(
                             state.update {
                                 it.copy(
                                     selectFeedbackEmailTypeBSConfig =
-                                    it.selectFeedbackEmailTypeBSConfig.copy(isShown = false),
+                                        it.selectFeedbackEmailTypeBSConfig.copy(isShown = false),
                                 )
                             }
                         },
