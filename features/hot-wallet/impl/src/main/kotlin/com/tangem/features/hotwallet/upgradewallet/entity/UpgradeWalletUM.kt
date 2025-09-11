@@ -4,4 +4,5 @@ internal data class UpgradeWalletUM(
     val onBackClick: () -> Unit,
     val onBuyTangemWalletClick: () -> Unit,
     val onScanDeviceClick: () -> Unit,
+    val isLoading: Boolean = false,
 )
