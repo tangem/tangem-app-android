@@ -6,6 +6,7 @@ import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.tangem.common.BaseTestCase
 import com.tangem.core.ui.test.BaseButtonTestTags
 import com.tangem.common.utils.LazyListItemNode
+import com.tangem.core.ui.test.NotificationTestTags
 import com.tangem.core.ui.test.TokenDetailsScreenTestTags
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.core.ui.utils.LazyListItemPositionSemantics
@@ -14,6 +15,7 @@ import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onCompose
 import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.github.kakaocup.compose.node.element.lazylist.KLazyListNode
+import androidx.compose.ui.test.hasText as withText
 
 class TokenDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<TokenDetailsPageObject>(semanticsProvider = semanticsProvider) {
@@ -115,6 +117,44 @@ class TokenDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvide
     val sendButton: LazyListItemNode = horizontalActionChips.childWith<LazyListItemNode> {
         hasTestTag(TokenDetailsScreenTestTags.ACTION_BUTTON)
         hasText(getResourceString(R.string.common_send))
+    }
+
+    fun networkFeeNotificationIcon(feeCurrencyName: String): KNode = child {
+        hasAnySibling(withText(getResourceString(R.string.warning_send_blocked_funds_for_fee_title, feeCurrencyName)))
+        hasTestTag(NotificationTestTags.ICON)
+        useUnmergedTree = true
+    }
+
+    fun networkFeeNotificationTitle(feeCurrencyName: String): KNode = child {
+        hasTestTag(NotificationTestTags.TITLE)
+        hasText(getResourceString(R.string.warning_send_blocked_funds_for_fee_title, feeCurrencyName))
+        useUnmergedTree = true
+    }
+
+    fun networkFeeNotificationMessage(
+        currencyName: String,
+        networkName: String,
+        feeCurrencyName: String,
+        feeCurrencySymbol: String,
+    ): KNode = child {
+        hasTestTag(NotificationTestTags.MESSAGE)
+        hasText(
+            getResourceString(
+                R.string.warning_send_blocked_funds_for_fee_message,
+                currencyName,
+                networkName,
+                currencyName,
+                feeCurrencyName,
+                feeCurrencySymbol
+            )
+        )
+        useUnmergedTree = true
+    }
+
+    fun goToBuyCurrencyButton(feeCurrencySymbol: String): KNode = child {
+        hasTestTag(BaseButtonTestTags.TEXT)
+        hasText(getResourceString(R.string.common_buy_currency, feeCurrencySymbol))
+        useUnmergedTree = true
     }
 
 }
