@@ -265,6 +265,16 @@ internal class MultiWalletFinalizeModel @Inject constructor(
 
                     userWallet
                 }
+                is OnboardingMultiWalletComponent.Mode.UpgradeHotWallet -> {
+                    saveWalletUseCase(
+                        userWallet = userWalletCreated.copy(
+                            scanResponse = scanResponse.updateScanResponseAfterBackup(),
+                        ),
+                        canOverride = true,
+                    )
+                    // TODO [REDACTED_TASK_KEY] remove hot wallet after upgrade
+                    userWalletCreated
+                }
             }.requireColdWallet()
 
             if (hasRing) {
