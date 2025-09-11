@@ -1,5 +1,6 @@
 package com.tangem.domain.wallets.hot
 
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.hot.sdk.model.*
 
 interface HotWalletAccessor {
@@ -15,6 +16,8 @@ interface HotWalletAccessor {
     fun getContextualUnlock(hotWalletId: HotWalletId): UnlockHotWallet?
 
     fun clearContextualUnlock(hotWalletId: HotWalletId)
+
+    fun clearContextualUnlock(userWalletId: UserWalletId)
 
     fun clearAllContextualUnlock()
 }
