@@ -13,7 +13,6 @@ import com.tangem.domain.wallets.usecase.ExportSeedPhraseUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.hotwallet.ViewPhraseComponent
 import com.tangem.features.hotwallet.viewphrase.entity.ViewPhraseUM
-import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -35,8 +34,6 @@ internal class ViewPhraseModel @Inject constructor(
 
     private val params = paramsContainer.require<ViewPhraseComponent.Params>()
 
-    private var hotWalletId: HotWalletId? = null
-
     internal val uiState: StateFlow<ViewPhraseUM>
     field = MutableStateFlow(
         ViewPhraseUM(
@@ -52,7 +49,6 @@ internal class ViewPhraseModel @Inject constructor(
         val userWallet = getUserWalletUseCase(params.userWalletId)
             .getOrElse { error("User wallet with id ${params.userWalletId} not found") }
         if (userWallet is UserWallet.Hot) {
-            hotWalletId = userWallet.hotWalletId
             modelScope.launch {
                 val words = exportSeedPhraseUseCase.invoke(userWallet.hotWalletId)
                     .getOrElse { error("Unable to export seed phrase for wallet with id ${params.userWalletId}") }
@@ -70,7 +66,7 @@ internal class ViewPhraseModel @Inject constructor(
     }
 
     override fun onDestroy() {
-        hotWalletId?.let { clearHotWalletContextualUnlockUseCase.invoke(it) }
+        clearHotWalletContextualUnlockUseCase.invoke(params.userWalletId)
         super.onDestroy()
     }
 }
