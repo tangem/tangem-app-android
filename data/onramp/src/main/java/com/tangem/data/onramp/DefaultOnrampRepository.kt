@@ -295,9 +295,10 @@ internal class DefaultOnrampRepository(
                     },
                 )
 
-            val mercuryoProvider = onrampPairs.map { it.providers }.flatten()
-                .find { it.providerId == MERCURYO_PROVIDER_ID }
-            val hasSepaMethod = mercuryoProvider?.paymentMethods?.any { it == SEPA_METHOD_ID } ?: false
+            val hasSepaMethod = onrampPairs
+                .flatMap { it.providers }
+                .flatMap { it.paymentMethods }
+                .any { it == SEPA_METHOD_ID }
 
             hasSepaMethod
         }
@@ -598,6 +599,5 @@ internal class DefaultOnrampRepository(
         const val REDIRECT_URL = "https://tangem.com/onramp"
 
         const val SEPA_METHOD_ID = "sepa"
-        const val MERCURYO_PROVIDER_ID = "mercuryo"
     }
 }
