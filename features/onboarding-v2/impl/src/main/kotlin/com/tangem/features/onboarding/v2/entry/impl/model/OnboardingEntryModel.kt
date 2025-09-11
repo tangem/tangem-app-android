@@ -73,16 +73,20 @@ internal class OnboardingEntryModel @Inject constructor(
         uiMessageSender.send(CantLeaveBackupDialog)
     }
 
+    @Suppress("CyclomaticComplexMethod")
     private fun routeByProductType(scanResponse: ScanResponse): OnboardingRoute {
         return when (scanResponse.productType) {
             ProductType.Wallet,
             ProductType.Wallet2,
             ProductType.Ring,
             -> {
-                val multiWalletNavigationMode = when (params.mode) {
-                    Mode.Onboarding -> OnboardingMultiWalletComponent.Mode.Onboarding
-                    Mode.AddBackupWallet1 -> OnboardingMultiWalletComponent.Mode.AddBackup
-                    Mode.ContinueFinalize -> OnboardingMultiWalletComponent.Mode.ContinueFinalize
+                val multiWalletNavigationMode = when (val mode = params.mode) {
+                    is Mode.Onboarding -> OnboardingMultiWalletComponent.Mode.Onboarding
+                    is Mode.AddBackupWallet1 -> OnboardingMultiWalletComponent.Mode.AddBackup
+                    is Mode.ContinueFinalize -> OnboardingMultiWalletComponent.Mode.ContinueFinalize
+                    is Mode.UpgradeHotWallet -> OnboardingMultiWalletComponent.Mode.UpgradeHotWallet(
+                        userWalletId = mode.userWalletId,
+                    )
                     else -> error("Incorrect onboarding type")
                 }
 
