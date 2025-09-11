@@ -164,6 +164,7 @@ private fun CardContainer(
         modifier = modifier
             .defaultMinSize(minHeight = TangemTheme.dimens.size108)
             .onSizeChanged { itemSize = it }
+            .testTag(MainScreenTestTags.TOTAL_BALANCE_CONTAINER)
             .then(
                 if (isLockedState || dropDownItems.isEmpty()) {
                     Modifier
@@ -244,7 +245,9 @@ private fun ManageWalletContextMenu(
 private fun MenuItem(text: TextReference, imageVector: ImageVector, onClick: () -> Unit) {
     DropdownMenuItem(
         text = { Text(text = text.resolveReference(), style = TangemTheme.typography.subtitle2) },
-        modifier = Modifier.background(color = TangemTheme.colors.background.secondary),
+        modifier = Modifier
+            .background(color = TangemTheme.colors.background.secondary)
+            .testTag(MainScreenTestTags.TOTAL_BALANCE_MENU_ITEM),
         trailingIcon = { Icon(imageVector = imageVector, contentDescription = null) },
         onClick = onClick,
         colors = MenuDefaults.itemColors(
@@ -271,7 +274,7 @@ private fun Balance(state: WalletCardState, isBalanceHidden: Boolean, modifier: 
     AnimatedContent(
         targetState = (state as? WalletCardState.Content)?.balance?.orMaskWithStars(isBalanceHidden).orEmpty(),
         label = "Update the balance",
-        modifier = modifier,
+        modifier = modifier.testTag(MainScreenTestTags.WALLET_BALANCE),
         transitionSpec = {
             fadeIn(animationSpec = tween(durationMillis = 220, delayMillis = 90)) togetherWith
                 fadeOut(animationSpec = tween(durationMillis = 90))
@@ -280,9 +283,7 @@ private fun Balance(state: WalletCardState, isBalanceHidden: Boolean, modifier: 
         when (state) {
             is WalletCardState.Content -> {
                 ResizableText(
-                    modifier = Modifier
-                        .defaultMinSize(minHeight = TangemTheme.dimens.size32)
-                        .testTag(MainScreenTestTags.WALLET_BALANCE),
+                    modifier = Modifier.defaultMinSize(minHeight = TangemTheme.dimens.size32),
                     text = balance,
                     fontSizeRange = FontSizeRange(min = 16.sp, max = TangemTheme.typography.h2.fontSize),
                     overflow = TextOverflow.Ellipsis,
