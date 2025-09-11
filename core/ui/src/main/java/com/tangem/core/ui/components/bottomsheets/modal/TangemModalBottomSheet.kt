@@ -50,6 +50,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> TangemModalBottomSheet(
     containerColor: Color = TangemTheme.colors.background.primary,
     skipPartiallyExpanded: Boolean = true,
     dismissOnClickOutside: Boolean = true,
+    scrollableContent: Boolean = true,
     noinline onBack: (() -> Unit)? = null,
     crossinline title: @Composable BoxScope.(T) -> Unit = {},
     crossinline content: @Composable ColumnScope.(T) -> Unit,
@@ -62,6 +63,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> TangemModalBottomSheet(
             containerColor = containerColor,
             title = title,
             content = content,
+            scrollableContent = scrollableContent,
             skipPartiallyExpanded = skipPartiallyExpanded,
         )
     } else {
@@ -71,6 +73,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> TangemModalBottomSheet(
             title = title,
             content = content,
             dismissOnClickOutside = dismissOnClickOutside,
+            scrollableContent = scrollableContent,
             onBack = onBack,
             skipPartiallyExpanded = skipPartiallyExpanded,
         )
@@ -84,6 +87,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> DefaultModalBottomSheet(
     containerColor: Color,
     skipPartiallyExpanded: Boolean = true,
     dismissOnClickOutside: Boolean = true,
+    scrollableContent: Boolean = true,
     noinline onBack: (() -> Unit)? = null,
     crossinline title: @Composable (BoxScope.(T) -> Unit),
     crossinline content: @Composable (ColumnScope.(T) -> Unit),
@@ -104,10 +108,16 @@ inline fun <reified T : TangemBottomSheetConfigContent> DefaultModalBottomSheet(
         BasicModalBottomSheet<T>(
             config = config,
             sheetState = sheetState,
-            containerColor = containerColor,
-            title = title,
             onBack = onBack,
-            content = content,
+            bsContent = {
+                BsContent(
+                    config = config,
+                    containerColor = containerColor,
+                    scrollableContent = scrollableContent,
+                    title = title,
+                    content = content,
+                )
+            },
         )
     }
 
@@ -126,6 +136,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> PreviewModalBottomSheet(
     config: TangemBottomSheetConfig,
     containerColor: Color,
     skipPartiallyExpanded: Boolean = true,
+    scrollableContent: Boolean = true,
     crossinline title: @Composable (BoxScope.(T) -> Unit),
     crossinline content: @Composable (ColumnScope.(T) -> Unit),
 ) {
@@ -137,10 +148,52 @@ inline fun <reified T : TangemBottomSheetConfigContent> PreviewModalBottomSheet(
             density = LocalDensity.current,
         ),
         onBack = null,
-        containerColor = containerColor,
-        title = title,
-        content = content,
+        bsContent = {
+            BsContent(
+                config = config,
+                containerColor = containerColor,
+                scrollableContent = scrollableContent,
+                title = title,
+                content = content,
+            )
+        },
     )
+}
+
+@Composable
+inline fun <reified T : TangemBottomSheetConfigContent> BsContent(
+    config: TangemBottomSheetConfig,
+    containerColor: Color,
+    scrollableContent: Boolean = true,
+    crossinline title: @Composable (BoxScope.(T) -> Unit),
+    crossinline content: @Composable (ColumnScope.(T) -> Unit),
+) {
+    val model = config.content as? T ?: return
+
+    val maxHeight = LocalConfiguration.current.screenHeightDp * MODAL_SHEET_MAX_HEIGHT
+
+    Column(
+        modifier = Modifier
+            .systemBarsPadding()
+            .padding(horizontal = 8.dp, vertical = 8.dp)
+            .clip(TangemTheme.shapes.roundedCornersLarge)
+            .background(containerColor)
+            .heightIn(max = maxHeight.dp)
+            .fillMaxWidth(),
+    ) {
+        Box(modifier = Modifier.fillMaxWidth()) {
+            title(model)
+        }
+        if (scrollableContent) {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+            ) {
+                content(model)
+            }
+        } else {
+            content(model)
+        }
+    }
 }
 
 @Suppress("LongParameterList")
@@ -149,37 +202,10 @@ inline fun <reified T : TangemBottomSheetConfigContent> PreviewModalBottomSheet(
 inline fun <reified T : TangemBottomSheetConfigContent> BasicModalBottomSheet(
     config: TangemBottomSheetConfig,
     sheetState: SheetState,
-    containerColor: Color,
     noinline onBack: (() -> Unit)? = null,
-    crossinline title: @Composable (BoxScope.(T) -> Unit),
-    crossinline content: @Composable (ColumnScope.(T) -> Unit),
+    noinline bsContent: @Composable ColumnScope.() -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val model = config.content as? T ?: return
-
-    val bsContent: @Composable ColumnScope.() -> Unit = {
-        val maxHeight = LocalConfiguration.current.screenHeightDp * MODAL_SHEET_MAX_HEIGHT
-
-        Column(
-            modifier = Modifier
-                .systemBarsPadding()
-                .padding(horizontal = 8.dp, vertical = 8.dp)
-                .clip(TangemTheme.shapes.roundedCornersLarge)
-                .background(containerColor)
-                .heightIn(max = maxHeight.dp)
-                .fillMaxWidth(),
-        ) {
-            Box(modifier = Modifier.fillMaxWidth()) {
-                title(model)
-            }
-            Column(
-                modifier = Modifier.verticalScroll(rememberScrollState()),
-            ) {
-                content(model)
-            }
-        }
-    }
-
     if (onBack != null) {
         ModalBottomSheetWithBackHandling(
             modifier = modifier,
