@@ -17,6 +17,7 @@ import com.tangem.core.ui.components.account.AccountCharIcon
 import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.components.account.AccountResIcon
 import com.tangem.core.ui.components.currency.DefaultCurrencyIcon
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 
 @Composable
@@ -69,7 +70,7 @@ internal fun ContentIcon(
         )
         is CurrencyIconState.CryptoPortfolio.Letter -> AccountCharIcon(
             modifier = modifier,
-            char = icon.char,
+            char = icon.char.resolveReference().first(),
             color = icon.color,
             size = AccountIconSize.Default,
         )
