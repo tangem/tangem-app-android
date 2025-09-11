@@ -1,5 +1,6 @@
 package com.tangem.tap.di.domain
 
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.account.usecase.*
 import dagger.Module
@@ -48,5 +49,17 @@ internal object AccountDomainModule {
         accountsCRUDRepository: AccountsCRUDRepository,
     ): GetUnoccupiedAccountIndexUseCase {
         return GetUnoccupiedAccountIndexUseCase(crudRepository = accountsCRUDRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideIsAccountsModeEnabledUseCase(
+        accountsCRUDRepository: AccountsCRUDRepository,
+        accountsFeatureToggles: AccountsFeatureToggles,
+    ): IsAccountsModeEnabledUseCase {
+        return IsAccountsModeEnabledUseCase(
+            crudRepository = accountsCRUDRepository,
+            accountsFeatureToggles = accountsFeatureToggles,
+        )
     }
 }
