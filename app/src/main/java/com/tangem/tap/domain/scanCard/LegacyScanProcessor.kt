@@ -193,7 +193,7 @@ internal class LegacyScanProcessor @Inject constructor(
         }
     }
 
-    @Suppress("LongMethod", "MagicNumber")
+    @Suppress("LongMethod", "LongParameterList", "MagicNumber")
     private suspend inline fun onScanSuccess(
         scanResponse: ScanResponse,
         crossinline onProgressStateChange: suspend (showProgress: Boolean) -> Unit,
