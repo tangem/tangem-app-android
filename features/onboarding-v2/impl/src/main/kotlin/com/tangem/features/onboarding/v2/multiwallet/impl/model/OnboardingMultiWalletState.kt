@@ -32,7 +32,14 @@ data class OnboardingMultiWalletState(
      *              -> AddBackupDevice -> Finalize -> [Done]
      */
     enum class Step {
-        CreateWallet, ChooseBackupOption, SeedPhrase, ScanPrimary, AddBackupDevice, Finalize, Done
+        UpgradeWallet,
+        CreateWallet,
+        ChooseBackupOption,
+        SeedPhrase,
+        ScanPrimary,
+        AddBackupDevice,
+        Finalize,
+        Done,
     }
 
     @JvmInline
