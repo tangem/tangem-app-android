@@ -4,6 +4,7 @@ import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 import com.tangem.core.ui.R
+import com.tangem.core.ui.extensions.TextReference
 
 /**
  * Represents the various states an icon can be in.
@@ -86,6 +87,7 @@ sealed class CurrencyIconState {
         override val topBadgeIconResId: Int? = null
     }
 
+    @Immutable
     sealed class CryptoPortfolio : CurrencyIconState() {
         override val showCustomBadge: Boolean = false
         override val topBadgeIconResId: Int? = null
@@ -98,7 +100,7 @@ sealed class CurrencyIconState {
         ) : CryptoPortfolio()
 
         data class Letter(
-            val char: Char,
+            val char: TextReference,
             override val color: Color,
             override val isGrayscale: Boolean,
         ) : CryptoPortfolio()
