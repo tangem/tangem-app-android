@@ -3,6 +3,7 @@ package com.tangem.data.wallets.hot
 import com.tangem.common.core.TangemSdkError
 import com.tangem.domain.core.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.hot.HotWalletAccessor
 import com.tangem.domain.wallets.hot.HotWalletPasswordRequester
 import com.tangem.domain.wallets.repository.WalletsRepository
@@ -56,9 +57,19 @@ class DefaultHotWalletAccessor @Inject constructor(
         contextualUnlockHotWallet[hotWalletId]
 
     override fun clearContextualUnlock(hotWalletId: HotWalletId) {
-        contextualUnlockHotWallet[hotWalletId] = null
+        contextualUnlockHotWallet.remove(hotWalletId)
         scope.launch {
             tangemHotSdk.clearUnlockContext(hotWalletId)
+        }
+    }
+
+    override fun clearContextualUnlock(userWalletId: UserWalletId) {
+        scope.launch {
+            val userWallet = userWalletsListRepository.userWalletsSync()
+                .find { it is UserWallet.Hot && it.walletId == userWalletId }
+                as? UserWallet.Hot
+                ?: return@launch
+            clearContextualUnlock(userWallet.hotWalletId)
         }
     }
 
