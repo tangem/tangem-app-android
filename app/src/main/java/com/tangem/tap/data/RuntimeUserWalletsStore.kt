@@ -19,6 +19,9 @@ internal class RuntimeUserWalletsStore(
     override val userWallets: Flow<List<UserWallet>>
         get() = userWalletsListManager.userWallets
 
+    override val userWalletsSync: List<UserWallet>
+        get() = userWalletsListManager.userWalletsSync
+
     override fun getSyncOrNull(key: UserWalletId): UserWallet? {
         return userWalletsListManager.userWalletsSync.firstOrNull { it.walletId == key }
     }
