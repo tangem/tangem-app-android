@@ -155,6 +155,7 @@ internal class AccessCodeModel @Inject constructor(
         if (!shouldAskForBiometry()) return
 
         suspendCancellableCoroutine { continuation ->
+            var buttonClicked = false
             uiMessageSender.send(
                 DialogMessage(
                     title = resourceReference(R.string.common_attention),
@@ -162,6 +163,7 @@ internal class AccessCodeModel @Inject constructor(
                     firstAction = EventMessageAction(
                         title = resourceReference(R.string.common_allow),
                         onClick = {
+                            buttonClicked = true
                             modelScope.launch {
                                 setAskBiometryShownUseCase()
                                 walletsRepository.setUseBiometricAuthentication(true)
@@ -175,6 +177,7 @@ internal class AccessCodeModel @Inject constructor(
                     secondAction = EventMessageAction(
                         title = resourceReference(R.string.save_user_wallet_agreement_dont_allow),
                         onClick = {
+                            buttonClicked = true
                             modelScope.launch {
                                 setAskBiometryShownUseCase()
                                 if (continuation.isActive) {
@@ -184,10 +187,8 @@ internal class AccessCodeModel @Inject constructor(
                         },
                     ),
                     onDismissRequest = {
-                        modelScope.launch {
-                            if (continuation.isActive) {
-                                continuation.resume(Unit)
-                            }
+                        if (continuation.isActive && buttonClicked.not()) {
+                            continuation.resume(Unit)
                         }
                     },
                 ),
