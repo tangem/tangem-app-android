@@ -70,6 +70,17 @@ internal class CreateWalletSelectionModel @Inject constructor(
         ),
     )
 
+    init {
+        showAlreadyHaveWalletWithDelay()
+    }
+
+    private fun showAlreadyHaveWalletWithDelay() {
+        modelScope.launch {
+            delay(SHOW_ALREADY_HAVE_WALLET_DELAY)
+            uiState.update { it.copy(showAlreadyHaveWallet = true) }
+        }
+    }
+
     private fun onMobileWalletClick() {
         router.push(AppRoute.CreateMobileWallet)
     }
@@ -180,5 +191,9 @@ internal class CreateWalletSelectionModel @Inject constructor(
                 title = resourceReference(id = R.string.common_error),
             ),
         )
+    }
+
+    companion object {
+        private const val SHOW_ALREADY_HAVE_WALLET_DELAY = 3000L
     }
 }
