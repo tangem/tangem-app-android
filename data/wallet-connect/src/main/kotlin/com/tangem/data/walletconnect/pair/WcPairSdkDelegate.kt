@@ -112,7 +112,12 @@ internal class WcPairSdkDelegate : WcSdkObserver {
         sessionProposal: Wallet.Model.SessionProposal,
         verifyContext: Wallet.Model.VerifyContext,
     ) {
-        val sessionProposalWithRealUrl = sessionProposal.copy(url = verifyContext.origin)
+        val url = if (verifyContext.validation == Wallet.Model.Validation.INVALID || verifyContext.isScam == true) {
+            verifyContext.origin
+        } else {
+            verifyContext.origin.ifEmpty { verifyContext.verifyUrl }
+        }
+        val sessionProposalWithRealUrl = sessionProposal.copy(url = url)
         // Triggered when wallet receives the session proposal sent by a Dapp
         onSessionProposal.trySend(sessionProposalWithRealUrl to verifyContext)
     }
