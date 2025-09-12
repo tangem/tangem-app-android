@@ -13,6 +13,7 @@ import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.network.NetworkStatus.Amount
 import com.tangem.domain.models.network.TxInfo
+import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
@@ -222,6 +223,57 @@ internal class NetworkStatusFactoryTest(private val model: Model) {
                         currencies.last().id to setOf(),
                     ),
                     source = StatusSource.ACTUAL,
+                    yieldSupplyStatuses = mapOf(),
+                ),
+            ),
+            createSuccess(
+                result = updateWalletManagerResultFactory.createVerifiedWithToken(),
+                currencies = currencies,
+                status = NetworkStatus.Verified(
+                    address = NetworkAddress.Single(
+                        defaultAddress = NetworkAddress.Address(
+                            value = "0x1",
+                            type = NetworkAddress.Address.Type.Primary,
+                        ),
+                    ),
+                    amounts = mapOf(
+                        currencies.first().id to Amount.Loaded(BigDecimal.ONE),
+                        currencies.last().id to Amount.NotFound,
+                    ),
+                    pendingTransactions = mapOf(
+                        currencies.first().id to setOf(txInfo),
+                        currencies.last().id to setOf(txInfo),
+                    ),
+                    source = StatusSource.ACTUAL,
+                    yieldSupplyStatuses = mapOf(),
+                ),
+            ),
+            createSuccess(
+                result = updateWalletManagerResultFactory.createVerifiedWithSuppliedToken(),
+                currencies = currencies,
+                status = NetworkStatus.Verified(
+                    address = NetworkAddress.Single(
+                        defaultAddress = NetworkAddress.Address(
+                            value = "0x1",
+                            type = NetworkAddress.Address.Type.Primary,
+                        ),
+                    ),
+                    amounts = mapOf(
+                        currencies.first().id to Amount.Loaded(BigDecimal.ONE),
+                        currencies.last().id to Amount.NotFound,
+                    ),
+                    pendingTransactions = mapOf(
+                        currencies.first().id to setOf(txInfo),
+                        currencies.last().id to setOf(txInfo),
+                    ),
+                    source = StatusSource.ACTUAL,
+                    yieldSupplyStatuses = mapOf(
+                        currencies.first().id to YieldSupplyStatus(
+                            isActive = false,
+                            isInitialized = false,
+                            isAllowedToSpend = false,
+                        ),
+                    ),
                 ),
             ),
             // endregion
