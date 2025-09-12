@@ -263,8 +263,8 @@ include(":features:hot-wallet:api")
 include(":features:hot-wallet:impl")
 
 include(":features:kyc:api")
-//TODO disable for release because of the permissions
-// include(":features:kyc:impl")
+include(":features:kyc:impl")
+include(":features:kyc:mock")
 
 include(":features:tangempay:main:api")
 include(":features:tangempay:main:impl")
