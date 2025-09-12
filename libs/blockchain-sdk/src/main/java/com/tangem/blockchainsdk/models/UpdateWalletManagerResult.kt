@@ -2,6 +2,7 @@ package com.tangem.blockchainsdk.models
 
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.TxInfo
+import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import java.math.BigDecimal
 
 /** Result of updating wallet manager */
@@ -65,18 +66,38 @@ sealed class UpdateWalletManagerResult {
          */
         data class Coin(override val value: BigDecimal) : CryptoCurrencyAmount
 
-        /**
-         * Token
-         *
-         * @property currencyRawId   crypto currency id
-         * @property contractAddress token contract address
-         * @property value           amount value
-         */
-        data class Token(
-            override val value: BigDecimal,
-            val currencyRawId: CryptoCurrency.RawID?,
-            val contractAddress: String,
-        ) : CryptoCurrencyAmount
+        sealed interface Token : CryptoCurrencyAmount {
+            val currencyRawId: CryptoCurrency.RawID?
+            val contractAddress: String
+
+            /**
+             * Basic Token
+             *
+             * @property currencyRawId   crypto currency id
+             * @property contractAddress token contract address
+             * @property value           amount value
+             */
+            data class BasicToken(
+                override val value: BigDecimal,
+                override val currencyRawId: CryptoCurrency.RawID?,
+                override val contractAddress: String,
+            ) : Token
+
+            /**
+             * Yield Supply Token
+             *
+             * @property currencyRawId      crypto currency id
+             * @property contractAddress    token contract address
+             * @property value              amount value
+             * @property yieldSupplyStatus  status of the yield token
+             */
+            data class YieldSupplyToken(
+                override val value: BigDecimal,
+                override val currencyRawId: CryptoCurrency.RawID?,
+                override val contractAddress: String,
+                val yieldSupplyStatus: YieldSupplyStatus,
+            ) : Token
+        }
     }
 
     /** Crypto currency transaction */
