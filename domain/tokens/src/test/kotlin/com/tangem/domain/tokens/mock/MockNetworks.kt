@@ -97,6 +97,7 @@ internal object MockNetworks {
                     defaultAddress = NetworkAddress.Address(value = "mock", NetworkAddress.Address.Type.Primary),
                 ),
                 source = StatusSource.ACTUAL,
+                yieldSupplyStatuses = mapOf(),
             ),
         )
 
@@ -113,6 +114,7 @@ internal object MockNetworks {
                     defaultAddress = NetworkAddress.Address(value = "mock", NetworkAddress.Address.Type.Primary),
                 ),
                 source = StatusSource.ACTUAL,
+                yieldSupplyStatuses = mapOf(),
             ),
         )
 
@@ -130,6 +132,7 @@ internal object MockNetworks {
                     defaultAddress = NetworkAddress.Address(value = "mock", NetworkAddress.Address.Type.Primary),
                 ),
                 source = StatusSource.ACTUAL,
+                yieldSupplyStatuses = mapOf(),
             ),
         )
 }
