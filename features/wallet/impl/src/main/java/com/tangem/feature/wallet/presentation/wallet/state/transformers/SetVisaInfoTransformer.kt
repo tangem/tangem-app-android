@@ -135,6 +135,7 @@ internal class SetVisaInfoTransformer(
                 fiatRate = visaCurrency.fiatRate,
                 priceChange = visaCurrency.priceChange,
                 yieldBalance = null,
+                yieldSupplyStatus = null,
                 hasCurrentNetworkTransactions = false,
                 pendingTransactions = emptySet(),
                 networkAddress = visaCurrency.paymentAccountAddress,
