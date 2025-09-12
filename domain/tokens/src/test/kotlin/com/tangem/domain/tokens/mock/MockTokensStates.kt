@@ -156,6 +156,7 @@ internal object MockTokensStates {
                 ).address,
                 yieldBalance = null,
                 sources = CryptoCurrencyStatus.Sources(),
+                yieldSupplyStatus = null,
             )
             is QuoteStatus.Data -> CryptoCurrencyStatus.Loaded(
                 amount = amount,
@@ -167,6 +168,7 @@ internal object MockTokensStates {
                 networkAddress = requireNotNull(networkStatus.value as? NetworkStatus.Verified).address,
                 yieldBalance = null,
                 sources = CryptoCurrencyStatus.Sources(),
+                yieldSupplyStatus = null,
             )
         }
         status.copy(value = value)
@@ -185,6 +187,7 @@ internal object MockTokensStates {
                 ).address,
                 yieldBalance = null,
                 sources = CryptoCurrencyStatus.Sources(),
+                yieldSupplyStatus = null,
             ),
         )
     }
