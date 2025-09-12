@@ -2,6 +2,7 @@ package com.tangem.domain.models.network
 
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import java.math.BigDecimal
 
 /**
@@ -58,6 +59,7 @@ data class NetworkStatus(val network: Network, val value: Value) {
         val address: NetworkAddress,
         val amounts: Map<CryptoCurrency.ID, Amount>,
         val pendingTransactions: Map<CryptoCurrency.ID, Set<TxInfo>>,
+        val yieldSupplyStatuses: Map<CryptoCurrency.ID, YieldSupplyStatus?>,
         override val source: StatusSource,
     ) : Value()
 
