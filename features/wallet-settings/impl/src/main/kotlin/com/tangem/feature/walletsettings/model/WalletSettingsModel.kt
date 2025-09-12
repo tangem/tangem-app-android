@@ -395,7 +395,7 @@ internal class WalletSettingsModel @Inject constructor(
                 -> modelScope.launch {
                     unlockHotWalletContextualUseCase.invoke(hotWalletId)
                         .onLeft {
-                            Timber.e("Unable to unlock wallet with id ${params.userWalletId}")
+                            Timber.e(it, "Unable to unlock wallet with id ${params.userWalletId}")
                         }
                         .onRight {
                             action()

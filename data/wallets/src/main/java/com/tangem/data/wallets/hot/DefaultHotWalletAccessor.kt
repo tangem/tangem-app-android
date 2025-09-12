@@ -104,6 +104,7 @@ class DefaultHotWalletAccessor @Inject constructor(
 
         return runCatchingSdkErrors(hotWalletId, auth) {
             block(UnlockHotWallet(hotWalletId, it)).also {
+                hotWalletPasswordRequester.successfulAuthentication()
                 hotWalletPasswordRequester.dismiss()
             }
         }
