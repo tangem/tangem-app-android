@@ -22,6 +22,7 @@ dependencies {
 
     /** Features api */
     implementation(projects.features.tangempay.onboarding.api)
+    implementation(projects.features.tangempay.details.api)
     implementation(projects.features.kyc.api)
 
     /** Compose */
