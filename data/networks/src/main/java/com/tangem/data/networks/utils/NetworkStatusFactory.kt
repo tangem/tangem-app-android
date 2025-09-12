@@ -8,6 +8,7 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.network.TxInfo
+import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import timber.log.Timber
 
 /** Factory for creating [NetworkStatus] */
@@ -70,6 +71,10 @@ object NetworkStatusFactory {
                 transactions = result.currentTransactions,
                 currencies = addedCurrencies,
             ),
+            yieldSupplyStatuses = formatYieldSupplyStatuses(
+                amounts = result.currenciesAmounts,
+                currencies = addedCurrencies,
+            ),
             source = StatusSource.ACTUAL,
         )
     }
@@ -103,6 +108,31 @@ object NetworkStatusFactory {
                 currency.id to NetworkStatus.Amount.NotFound
             } else {
                 currency.id to NetworkStatus.Amount.Loaded(amount.value)
+            }
+        }
+    }
+
+    private fun formatYieldSupplyStatuses(
+        amounts: Set<CryptoCurrencyAmount>,
+        currencies: Set<CryptoCurrency>,
+    ): Map<CryptoCurrency.ID, YieldSupplyStatus?> {
+        return currencies.associate { currency ->
+            val amount = when (currency) {
+                is CryptoCurrency.Coin -> null
+                is CryptoCurrency.Token -> {
+                    amounts.filterIsInstance<CryptoCurrencyAmount.Token.YieldSupplyToken>()
+                        .firstOrNull { amount ->
+                            currency.id.rawCurrencyId == amount.currencyRawId &&
+                                currency.contractAddress.equals(amount.contractAddress, ignoreCase = true)
+                        }
+                }
+            }
+
+            if (amount == null) {
+                Timber.w("Unable to find amount for cryptocurrency: $currency")
+                currency.id to null
+            } else {
+                currency.id to amount.yieldSupplyStatus
             }
         }
     }
