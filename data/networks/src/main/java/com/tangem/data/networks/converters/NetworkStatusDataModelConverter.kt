@@ -22,6 +22,7 @@ internal object NetworkStatusDataModelConverter : Converter<NetworkStatus, Netwo
                     selectedAddress = address.selectedAddress,
                     availableAddresses = address.addresses,
                     amounts = NetworkAmountsConverter.convertBack(value = status.amounts),
+                    yieldSupplyStatuses = NetworkYieldSupplyStatusConverter.convertBack(status.yieldSupplyStatuses),
                 )
             }
             is NetworkStatus.NoAccount -> {
