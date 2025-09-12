@@ -188,7 +188,7 @@ internal class UpdateWalletManagerResultFactoryTest {
                     ),
                     currenciesAmounts = setOf(
                         UpdateWalletManagerResult.CryptoCurrencyAmount.Coin(value = BigDecimal.ONE),
-                        UpdateWalletManagerResult.CryptoCurrencyAmount.Token(
+                        UpdateWalletManagerResult.CryptoCurrencyAmount.Token.BasicToken(
                             value = BigDecimal.ZERO,
                             currencyRawId = usdtToken.id?.let(CryptoCurrency::RawID),
                             contractAddress = usdtToken.contractAddress,
@@ -416,7 +416,7 @@ internal class UpdateWalletManagerResultFactoryTest {
                         ),
                         currenciesAmounts = setOf(
                             UpdateWalletManagerResult.CryptoCurrencyAmount.Coin(value = BigDecimal.ZERO),
-                            UpdateWalletManagerResult.CryptoCurrencyAmount.Token(
+                            UpdateWalletManagerResult.CryptoCurrencyAmount.Token.BasicToken(
                                 value = BigDecimal.ZERO,
                                 currencyRawId = usdtToken.id?.let(CryptoCurrency::RawID),
                                 contractAddress = usdtToken.contractAddress,
@@ -477,7 +477,7 @@ internal class UpdateWalletManagerResultFactoryTest {
                         ),
                         currenciesAmounts = setOf(
                             UpdateWalletManagerResult.CryptoCurrencyAmount.Coin(value = BigDecimal.TEN),
-                            UpdateWalletManagerResult.CryptoCurrencyAmount.Token(
+                            UpdateWalletManagerResult.CryptoCurrencyAmount.Token.BasicToken(
                                 value = BigDecimal.TEN,
                                 currencyRawId = usdtToken.id?.let(CryptoCurrency::RawID),
                                 contractAddress = usdtToken.contractAddress,
