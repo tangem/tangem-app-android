@@ -43,6 +43,8 @@ import com.tangem.features.send.v2.api.callbacks.FeeSelectorModelCallback
 import com.tangem.features.send.v2.api.entity.FeeNonce
 import com.tangem.features.send.v2.api.params.FeeSelectorParams.FeeStateConfiguration
 import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
+import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorCheckReloadListener
+import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorCheckReloadTrigger
 import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
 import com.tangem.features.send.v2.api.subcomponents.notifications.SendNotificationsUpdateListener
 import com.tangem.features.send.v2.api.subcomponents.notifications.SendNotificationsUpdateTrigger
@@ -95,6 +97,8 @@ internal class SendConfirmModel @Inject constructor(
     private val isAmountSubtractAvailableUseCase: IsAmountSubtractAvailableUseCase,
     private val sendFeeCheckReloadTrigger: SendFeeCheckReloadTrigger,
     private val sendFeeCheckReloadListener: SendFeeCheckReloadListener,
+    private val feeSelectorCheckReloadListener: FeeSelectorCheckReloadListener,
+    private val feeSelectorCheckReloadTrigger: FeeSelectorCheckReloadTrigger,
     private val notificationsUpdateTrigger: SendNotificationsUpdateTrigger,
     private val notificationsUpdateListener: SendNotificationsUpdateListener,
     private val alertFactory: SendConfirmAlertFactory,
@@ -275,7 +279,11 @@ internal class SendConfirmModel @Inject constructor(
             verifyAndSendTransaction()
         } else {
             modelScope.launch {
-                sendFeeCheckReloadTrigger.triggerCheckUpdate()
+                if (uiState.value.isRedesignEnabled) {
+                    feeSelectorCheckReloadTrigger.triggerCheckUpdate()
+                } else {
+                    sendFeeCheckReloadTrigger.triggerCheckUpdate()
+                }
             }
         }
     }
@@ -506,8 +514,17 @@ internal class SendConfirmModel @Inject constructor(
 
     private fun subscribeOnCheckFeeResultUpdates() {
         sendFeeCheckReloadListener.checkReloadResultFlow.onEach { isFeeResultSuccess ->
+            sendIdleTimer = SystemClock.elapsedRealtime()
             if (isFeeResultSuccess) {
-                sendIdleTimer = SystemClock.elapsedRealtime()
+                _uiState.update(SendConfirmSendingStateTransformer(isSending = true))
+                verifyAndSendTransaction()
+            } else {
+                _uiState.update(SendConfirmSendingStateTransformer(isSending = false))
+            }
+        }.launchIn(modelScope)
+        feeSelectorCheckReloadListener.checkReloadResultFlow.onEach { isFeeResultSuccess ->
+            sendIdleTimer = SystemClock.elapsedRealtime()
+            if (isFeeResultSuccess) {
                 _uiState.update(SendConfirmSendingStateTransformer(isSending = true))
                 verifyAndSendTransaction()
             } else {
