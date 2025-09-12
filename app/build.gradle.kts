@@ -275,7 +275,7 @@ dependencies {
     implementation(projects.features.tokenRecieve.api)
     implementation(projects.features.tokenRecieve.impl)
     implementation(projects.features.yieldSupply.api)
-    implementation(projects.features.yieldSupply.api)
+    implementation(projects.features.yieldSupply.impl)
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)
