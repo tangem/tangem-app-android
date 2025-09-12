@@ -149,6 +149,11 @@ internal class CommonNetworkStatusFetcherTest {
                     pendingTransactions = mapOf(
                         CryptoCurrency.ID.fromValue(value = "token⟨ETH⟩NEVER-MIND⚓NEVER-MIND") to emptySet(),
                     ),
+                    yieldSupplyStatuses = mapOf(
+                        CryptoCurrency.ID.fromValue(
+                            value = "token⟨ETH⟩NEVER-MIND⚓NEVER-MIND",
+                        ) to null,
+                    ),
                 )
             },
         ),
