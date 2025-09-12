@@ -17,6 +17,7 @@ import com.tangem.blockchainsdk.providers.BlockchainProvidersTypesManager
 import com.tangem.blockchainsdk.providers.DevBlockchainProvidersTypesManager
 import com.tangem.blockchainsdk.providers.ProdBlockchainProvidersTypesManager
 import com.tangem.blockchainsdk.providers.dev.BlockchainProvidersResponseSerializer
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
@@ -90,11 +91,13 @@ internal object BlockchainSDKFactoryModule {
         tangemTechApi: TangemTechApi,
         appPreferencesStore: AppPreferencesStore,
         blockchainSDKLogger: BlockchainSDKLogger,
+        featureTogglesManager: FeatureTogglesManager,
     ): WalletManagerFactoryCreator {
         return WalletManagerFactoryCreator(
             accountCreator = DefaultAccountCreator(tangemTechApi),
             blockchainDataStorage = DefaultBlockchainDataStorage(appPreferencesStore),
             blockchainSDKLogger = blockchainSDKLogger,
+            featureTogglesManager = featureTogglesManager,
         )
     }
 }
