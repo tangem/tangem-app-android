@@ -1,6 +1,7 @@
 package com.tangem.features.hotwallet.addexistingwallet.start.ui
 
 import android.content.res.Configuration
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.CircularProgressIndicator
@@ -127,9 +128,11 @@ internal fun AddExistingWalletStartContent(state: AddExistingWalletStartUM, modi
                 enabled = false,
             )
         }
-        BuyTangemWalletBlock(
-            onScanClick = state.onBuyCardClick,
-        )
+        AnimatedVisibility(state.showWantToPurchaseBlock) {
+            BuyTangemWalletBlock(
+                onScanClick = state.onBuyCardClick,
+            )
+        }
     }
 }
 
@@ -176,6 +179,7 @@ private fun PreviewCreateWalletContent() {
     TangemThemePreview {
         AddExistingWalletStartContent(
             state = AddExistingWalletStartUM(
+                showWantToPurchaseBlock = true,
                 isScanInProgress = true,
                 onBackClick = {},
                 onImportPhraseClick = {},
