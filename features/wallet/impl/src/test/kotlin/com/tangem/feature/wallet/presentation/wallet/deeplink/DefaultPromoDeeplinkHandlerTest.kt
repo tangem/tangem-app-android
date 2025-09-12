@@ -795,6 +795,7 @@ class DefaultPromoDeeplinkHandlerTest {
             amounts = emptyMap(),
             pendingTransactions = emptyMap(),
             source = StatusSource.ACTUAL,
+            yieldSupplyStatuses = emptyMap(),
         )
 
         return NetworkStatus(network = network, value = value)
