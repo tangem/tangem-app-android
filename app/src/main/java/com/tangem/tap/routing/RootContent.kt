@@ -41,10 +41,10 @@ internal fun RootContent(
     stack: Value<ChildStack<AppRoute, RoutingComponent.Child>>,
     backHandler: BackHandler,
     uiDependencies: UiDependencies,
-    wcContent: @Composable (modifier: Modifier) -> Unit,
-    hotAccessCodeContent: @Composable (modifier: Modifier) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    wcContent: @Composable (modifier: Modifier) -> Unit,
+    hotAccessCodeContent: @Composable (modifier: Modifier) -> Unit,
 ) {
     val context = LocalContext.current
 

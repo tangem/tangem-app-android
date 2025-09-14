@@ -8,9 +8,9 @@ import com.tangem.tap.features.intentHandler.IntentHandler
 internal class OnPushClickedIntentHandler(val analyticsEventHandler: AnalyticsEventHandler) : IntentHandler {
 
     override fun handleIntent(intent: Intent?, isFromForeground: Boolean): Boolean {
-        val fromPush = intent?.extras?.containsKey(OPENED_FROM_GCM_PUSH) ?: false
+        val isFromPush = intent?.extras?.containsKey(OPENED_FROM_GCM_PUSH) == true
 
-        return if (fromPush) {
+        return if (isFromPush) {
             analyticsEventHandler.send(Push.PushNotificationOpened)
             true
         } else {

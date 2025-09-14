@@ -18,9 +18,9 @@ internal class ManualBackupStartModel @Inject constructor(
     private val params: ManualBackupStartComponent.Params = paramsContainer.require()
 
     internal val uiState: StateFlow<ManualBackupStartUM>
-    field = MutableStateFlow(
-        ManualBackupStartUM(
-            onContinueClick = params.callbacks::onContinueClick,
-        ),
-    )
+        field = MutableStateFlow(
+            ManualBackupStartUM(
+                onContinueClick = params.callbacks::onContinueClick,
+            ),
+        )
 }

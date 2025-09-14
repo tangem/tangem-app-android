@@ -57,7 +57,7 @@ internal class CardSettingsModel @Inject constructor(
 
     private val params = paramsContainer.require<CardSettingsComponent.Params>()
 
-    private var previousBiometricsRequestPolicy: Boolean = false
+    private var isBiometricsRequestPolicyPrevious: Boolean = false
 
     private val userWalletId = params.userWalletId
 
@@ -77,13 +77,13 @@ internal class CardSettingsModel @Inject constructor(
         // Reset card scanned data
         cardSettingsInteractor.clear()
         // Restore the previous value of access code request policy
-        cardSdkConfigRepository.isBiometricsRequestPolicy = previousBiometricsRequestPolicy
+        cardSdkConfigRepository.isBiometricsRequestPolicy = isBiometricsRequestPolicyPrevious
     }
 
     private fun updateAccessCodeRequestPolicy() {
         runBlocking {
             // !!!IMPORTANT!!!: Do not forget to restore the previous value in onCleared() method
-            previousBiometricsRequestPolicy = cardSdkConfigRepository.isBiometricsRequestPolicy
+            isBiometricsRequestPolicyPrevious = cardSdkConfigRepository.isBiometricsRequestPolicy
 
             val userWallet = getUserWalletUseCase(userWalletId)
                 .getOrElse { error("User wallet $userWalletId not found") }

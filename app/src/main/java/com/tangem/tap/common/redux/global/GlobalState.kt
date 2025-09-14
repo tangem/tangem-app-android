@@ -20,6 +20,6 @@ data class GlobalState(
 typealias CryptoCurrencyName = String
 
 data class OnboardingState(
-    val onboardingStarted: Boolean = false,
+    val isOnboardingStarted: Boolean = false,
     val shouldResetOnCreate: Boolean = false,
 )

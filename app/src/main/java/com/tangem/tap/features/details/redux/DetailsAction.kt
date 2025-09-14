@@ -32,7 +32,7 @@ sealed class DetailsAction : Action {
 
         data object EnrollBiometrics : AppSettings()
         data class BiometricsStatusChanged(
-            val needEnrollBiometrics: Boolean,
+            val isEnrollBiometricsNeeded: Boolean,
         ) : AppSettings()
 
         data class ChangeAppThemeMode(
@@ -40,7 +40,7 @@ sealed class DetailsAction : Action {
         ) : AppSettings()
 
         data class ChangeBalanceHiding(
-            val hideBalance: Boolean,
+            val shouldHideBalance: Boolean,
         ) : AppSettings()
 
         data class ChangeAppCurrency(

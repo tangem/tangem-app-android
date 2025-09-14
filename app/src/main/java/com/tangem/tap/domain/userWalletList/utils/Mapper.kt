@@ -54,14 +54,14 @@ internal fun UserWalletPublicInformation.toUserWallet(): UserWallet {
             walletId = walletId,
             hotWalletId = hotWalletId,
             wallets = null,
-            backedUp = backedUp!!,
+            backedUp = requireNotNull(backedUp),
         )
     } else {
         UserWallet.Cold(
             name = name,
             walletId = walletId,
             cardsInWallet = cardsInWallet,
-            scanResponse = scanResponse!!,
+            scanResponse = requireNotNull(scanResponse),
             isMultiCurrency = isMultiCurrency,
             hasBackupError = hasBackupError,
         )
@@ -78,7 +78,7 @@ internal fun UserWallet.updateWith(sensitiveInformation: UserWalletSensitiveInfo
             copy(
                 scanResponse = scanResponse.copy(
                     card = scanResponse.card.copy(
-                        wallets = sensitiveInformation.wallets!!,
+                        wallets = requireNotNull(sensitiveInformation.wallets),
                     ),
                     visaCardActivationStatus = sensitiveInformation.visaCardActivationStatus,
                 ),

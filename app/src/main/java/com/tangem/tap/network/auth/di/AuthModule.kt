@@ -32,7 +32,7 @@ internal class AuthModule {
         return DefaultAuthProvider(
             userWalletsListManager = userWalletsListManager,
             userWalletsListRepository = userWalletsListRepository,
-            useNewListRepository = hotWalletFeatureToggles.isHotWalletEnabled,
+            shouldUseNewListRepository = hotWalletFeatureToggles.isHotWalletEnabled,
         )
     }
 

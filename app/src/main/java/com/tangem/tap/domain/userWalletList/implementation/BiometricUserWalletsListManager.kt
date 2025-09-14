@@ -57,12 +57,12 @@ internal class BiometricUserWalletsListManager(
     override val selectedUserWalletSync: UserWallet?
         get() = findSelectedUserWallet()
 
-    override val isLocked: Flow<Boolean>
+    override val lockedState: Flow<Boolean>
         get() = state
             .mapLatest { it.isLocked }
             .distinctUntilChanged()
 
-    override val isLockedSync: Boolean
+    override val isLocked: Boolean
         get() = state.value.isLocked
 
     override val hasUserWallets: Boolean
@@ -103,7 +103,9 @@ internal class BiometricUserWalletsListManager(
 
     override suspend fun select(userWalletId: UserWalletId): CompletionResult<UserWallet> = catching {
         if (state.value.selectedUserWalletId == userWalletId) {
-            return@catching findSelectedUserWallet()!!
+            return@catching requireNotNull(findSelectedUserWallet()) {
+                "Wallet is not found"
+            }
         }
 
         selectedUserWalletRepository.set(userWalletId)

@@ -280,7 +280,7 @@ internal class AppSettingsModel @Inject constructor(
         val param = AnalyticsParam.OnOffState(enable)
         analyticsEventHandler.send(Settings.AppSettings.HideBalanceChanged(param))
 
-        store.dispatch(DetailsAction.AppSettings.ChangeBalanceHiding(hideBalance = enable))
+        store.dispatch(DetailsAction.AppSettings.ChangeBalanceHiding(shouldHideBalance = enable))
     }
 
     private fun dismissDialog() {
@@ -290,10 +290,10 @@ internal class AppSettingsModel @Inject constructor(
     private fun bootstrapAppCurrencyUpdates() {
         appCurrencyRepository
             .getSelectedAppCurrency()
-            .onEach {
-                if (it.code == store.state.globalState.appCurrency.code) return@onEach
+            .onEach { appCurrency ->
+                if (appCurrency.code == store.state.globalState.appCurrency.code) return@onEach
 
-                store.dispatchWithMain(DetailsAction.AppSettings.ChangeAppCurrency(it))
+                store.dispatchWithMain(DetailsAction.AppSettings.ChangeAppCurrency(appCurrency))
             }
             .launchIn(scope)
             .saveIn(appCurrencyUpdatesJobHolder)

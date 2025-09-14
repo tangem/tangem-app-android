@@ -186,11 +186,9 @@ internal class MainViewModel @Inject constructor(
     private fun prepareSelectedWalletFeedback() {
         getSelectedWalletUseCase.invoke()
             .mapLeft { emptyFlow<UserWallet>() }
-            .onRight {
-                it.distinctUntilChanged()
-                    .onEach { userWallet ->
-                        Analytics.setContext(userWallet)
-                    }
+            .onRight { wallet ->
+                wallet.distinctUntilChanged()
+                    .onEach { Analytics.setContext(it) }
                     .flowOn(dispatchers.io)
                     .launchIn(viewModelScope)
             }
@@ -215,7 +213,7 @@ internal class MainViewModel @Inject constructor(
         return MoonPayService(
             apiKey = environmentConfig.moonPayApiKey,
             secretKey = environmentConfig.moonPayApiSecretKey,
-            logEnabled = LogConfig.network.moonPayService,
+            isLogEnabled = LogConfig.network.moonPayService,
             userWalletProvider = { getSelectedWalletUseCase.sync().getOrNull() },
         )
     }
@@ -231,8 +229,8 @@ internal class MainViewModel @Inject constructor(
             .filter {
                 it.isBalanceHidingNotificationEnabled && it.isBalanceHidden
             }
-            .onEach {
-                if (!it.isUpdateFromToast) {
+            .onEach { settings ->
+                if (!settings.isUpdateFromToast) {
                     listenToFlipsUseCase.changeUpdateEnabled(false)
 
                     val message = BottomSheetMessage.invoke(

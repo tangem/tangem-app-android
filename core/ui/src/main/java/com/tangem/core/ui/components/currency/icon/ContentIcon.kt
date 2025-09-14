@@ -97,8 +97,8 @@ private fun TokenIcon(
     url: String?,
     alpha: Float,
     colorFilter: ColorFilter?,
-    errorIcon: @Composable () -> Unit,
     modifier: Modifier = Modifier,
+    errorIcon: @Composable () -> Unit,
 ) {
     if (url == null) {
         errorIcon()

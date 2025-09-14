@@ -23,9 +23,9 @@ internal class CardSettingsInteractor @Inject constructor() {
     }
 
     fun update(transform: (ScanResponse) -> ScanResponse) {
-        _scannedScanResponse.update {
-            requireNotNull(it)
-            transform(it)
+        _scannedScanResponse.update { scanResponse ->
+            requireNotNull(scanResponse)
+            transform(scanResponse)
         }
     }
 

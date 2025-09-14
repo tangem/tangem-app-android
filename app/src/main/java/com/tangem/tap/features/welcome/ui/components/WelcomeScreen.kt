@@ -39,8 +39,8 @@ internal fun WelcomeScreen(state: WelcomeScreenState, modifier: Modifier = Modif
             .systemBarsPadding(),
     ) {
         WelcomeScreenContent(
-            showUnlockProgress = state.showUnlockWithBiometricsProgress,
-            showScanCardProgress = state.showUnlockWithCardProgress,
+            showUnlockProgress = state.isUnlockWithBiometricsProgressVisible,
+            showScanCardProgress = state.isUnlockWithCardProgressVisible,
             onUnlockClick = state.onUnlockClick,
             onScanCardClick = state.onScanCardClick,
         )
@@ -57,8 +57,8 @@ internal fun WelcomeScreen(state: WelcomeScreenState, modifier: Modifier = Modif
     WarningDialog(warning)
 
     LaunchedEffect(errorMessage, state.onCloseError) {
-        errorMessage?.let {
-            snackbarHostState.showSnackbar(it)
+        errorMessage?.let { message ->
+            snackbarHostState.showSnackbar(message)
             state.onCloseError()
         }
     }
@@ -82,8 +82,8 @@ private class WelcomeComponentPreviewProvider : PreviewParameterProvider<Welcome
             PreviewWelcomeComponent(),
             PreviewWelcomeComponent(
                 initialState = WelcomeScreenState(
-                    showUnlockWithBiometricsProgress = true,
-                    showUnlockWithCardProgress = true,
+                    isUnlockWithBiometricsProgressVisible = true,
+                    isUnlockWithCardProgressVisible = true,
                 ),
             ),
             PreviewWelcomeComponent(

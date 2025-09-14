@@ -182,10 +182,10 @@ internal class ChildFactory @Inject constructor(
                         token = route.token,
                         appCurrency = route.appCurrency,
                         showPortfolio = route.showPortfolio,
-                        analyticsParams = route.analyticsParams?.let {
+                        analyticsParams = route.analyticsParams?.let { params ->
                             MarketsTokenDetailsComponent.AnalyticsParams(
-                                blockchain = it.blockchain,
-                                source = it.source,
+                                blockchain = params.blockchain,
+                                source = params.source,
                             )
                         },
                     ),
