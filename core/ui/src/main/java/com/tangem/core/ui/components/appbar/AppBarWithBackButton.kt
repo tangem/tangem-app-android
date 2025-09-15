@@ -32,9 +32,9 @@ fun AppBarWithBackButton(
     TangemTopAppBar(
         modifier = modifier,
         title = text,
-        startButton = TopAppBarButtonUM(
+        startButton = TopAppBarButtonUM.Icon(
             iconRes = iconRes ?: R.drawable.ic_back_24,
-            onIconClicked = onBackClick,
+            onClicked = onBackClick,
         ),
         containerColor = containerColor,
     )

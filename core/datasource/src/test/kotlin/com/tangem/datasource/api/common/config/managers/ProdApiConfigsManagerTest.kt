@@ -18,6 +18,7 @@ import com.tangem.utils.ProviderSuspend
 import com.tangem.utils.info.AppInfoProvider
 import com.tangem.utils.version.AppVersionProvider
 import io.mockk.clearMocks
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
@@ -55,8 +56,8 @@ internal class ProdApiConfigsManagerTest {
         every { appVersionProvider.versionName } returns VERSION_NAME
         every { expressAuthProvider.getSessionId() } returns EXPRESS_SESSION_ID
         every { stakeKitAuthProvider.getApiKey() } returns STAKE_KIT_API_KEY
-        every { appAuthProvider.getCardId() } returns APP_CARD_ID
-        every { appAuthProvider.getCardPublicKey() } returns APP_CARD_PUBLIC_KEY
+        coEvery { appAuthProvider.getCardId() } returns APP_CARD_ID
+        coEvery { appAuthProvider.getCardPublicKey() } returns APP_CARD_PUBLIC_KEY
         every { appInfoProvider.osVersion } returns "Android 16"
     }
 
