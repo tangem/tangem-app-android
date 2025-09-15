@@ -1,6 +1,7 @@
 package com.tangem.features.swap.v2.impl.choosetoken.fromSupported.model
 
 import arrow.core.getOrElse
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -8,8 +9,11 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.domain.managetokens.CreateCryptoCurrencyUseCase
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.swap.models.SwapCurrencies
+import com.tangem.domain.swap.models.SwapTxType
 import com.tangem.domain.swap.usecase.GetSwapSupportedPairsUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.features.managetokens.component.analytics.CommonManageTokensAnalyticEvents
+import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.swap.v2.api.choosetoken.SwapChooseTokenNetworkComponent
 import com.tangem.features.swap.v2.impl.choosetoken.fromSupported.entity.SwapChooseTokenNetworkContentUM
 import com.tangem.features.swap.v2.impl.choosetoken.fromSupported.entity.SwapChooseTokenNetworkUM
@@ -17,6 +21,7 @@ import com.tangem.features.swap.v2.impl.choosetoken.fromSupported.model.SwapChoo
 import com.tangem.features.swap.v2.impl.choosetoken.fromSupported.model.transformers.SwapChooseContentStateTransformer
 import com.tangem.features.swap.v2.impl.choosetoken.fromSupported.model.transformers.SwapChooseErrorStateTransformer
 import com.tangem.features.swap.v2.impl.common.SwapUtils.SEND_WITH_SWAP_PROVIDER_TYPES
+import com.tangem.features.swap.v2.impl.sendviaswap.analytics.SendWithSwapAnalyticEvents
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.transformer.update
 import kotlinx.coroutines.delay
@@ -26,6 +31,7 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @ModelScoped
 internal class SwapChooseTokenNetworkModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
@@ -34,6 +40,7 @@ internal class SwapChooseTokenNetworkModel @Inject constructor(
     private val createCryptoCurrencyUseCase: CreateCryptoCurrencyUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val swapChooseTokenAlertFactory: SwapChooseTokenAlertFactory,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
     private val params: SwapChooseTokenNetworkComponent.Params = paramsContainer.require()
@@ -79,6 +86,7 @@ internal class SwapChooseTokenNetworkModel @Inject constructor(
                 initialCurrency = params.initialCurrency,
                 cryptoCurrencyList = cryptoCurrencyList + params.initialCurrency,
                 filterProviderTypes = SEND_WITH_SWAP_PROVIDER_TYPES,
+                swapTxType = SwapTxType.SendWithSwap,
             ).getOrElse {
                 Timber.e(it.toString())
                 uiState.update(
@@ -90,6 +98,14 @@ internal class SwapChooseTokenNetworkModel @Inject constructor(
                 return@launch
             }
             delay(MINIMUM_LOADING_TIME)
+            if (pairs.fromGroup.available.isEmpty()) {
+                analyticsEventHandler.send(
+                    SendWithSwapAnalyticEvents.NoticeCanNotSwapToken(
+                        fromToken = params.initialCurrency,
+                        toTokenSymbol = params.token.symbol,
+                    ),
+                )
+            }
             uiState.update(
                 SwapChooseContentStateTransformer(
                     pairs = pairs,
@@ -103,6 +119,23 @@ internal class SwapChooseTokenNetworkModel @Inject constructor(
 
     private fun onSwapTokenClick(swapCurrencies: SwapCurrencies, cryptoCurrency: CryptoCurrency) {
         val prevSelectedCurrency = params.selectedCurrency?.network
+        analyticsEventHandler.send(
+            CommonSendAnalyticEvents.TokenChosen(
+                categoryName = params.analyticsCategoryName,
+                token = cryptoCurrency.symbol,
+                blockchain = cryptoCurrency.network.name,
+            ),
+        )
+        if (params.isSearchedToken) {
+            analyticsEventHandler.send(
+                CommonManageTokensAnalyticEvents.TokenSearched(
+                    categoryName = params.analyticsCategoryName,
+                    token = cryptoCurrency.symbol,
+                    blockchain = cryptoCurrency.network.name,
+                    isTokenChosen = true,
+                ),
+            )
+        }
         if (prevSelectedCurrency == null || cryptoCurrency.network == prevSelectedCurrency) {
             params.onResult(swapCurrencies, cryptoCurrency)
         } else {
