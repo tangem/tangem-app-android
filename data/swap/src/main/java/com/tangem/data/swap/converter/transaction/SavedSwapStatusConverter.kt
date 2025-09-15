@@ -6,9 +6,9 @@ import com.tangem.domain.swap.models.SwapStatus
 import com.tangem.domain.swap.models.SwapStatusModel
 import com.tangem.utils.converter.TwoWayConverter
 
-internal class SavedSwapStatusConverter : TwoWayConverter<SwapStatusDTO, SwapStatusModel> {
+internal class SavedSwapStatusConverter : TwoWayConverter<SwapStatusModel, SwapStatusDTO> {
 
-    override fun convert(value: SwapStatusDTO) = SwapStatusModel(
+    override fun convertBack(value: SwapStatusDTO) = SwapStatusModel(
         providerId = value.providerId,
         status = SwapStatus.entries.firstOrNull {
             it.name.lowercase() == value.status?.name?.lowercase()
@@ -22,7 +22,7 @@ internal class SavedSwapStatusConverter : TwoWayConverter<SwapStatusDTO, SwapSta
         averageDuration = value.averageDuration,
     )
 
-    override fun convertBack(value: SwapStatusModel) = SwapStatusDTO(
+    override fun convert(value: SwapStatusModel) = SwapStatusDTO(
         providerId = value.providerId,
         status = SavedSwapStatus.entries.firstOrNull {
             it.name.lowercase() == value.status?.name?.lowercase()

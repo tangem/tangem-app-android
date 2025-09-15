@@ -1,6 +1,7 @@
 package com.tangem.feature.swap.domain.api
 
 import arrow.core.Either
+import com.tangem.domain.express.models.ExpressOperationType
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -64,6 +65,7 @@ interface SwapRepository {
         providerId: String,
         rateType: RateType,
         toAddress: String,
+        expressOperationType: ExpressOperationType,
         refundAddress: String? = null, // for cex only
         refundExtraId: String? = null, // for cex only
     ): Either<ExpressDataError, SwapDataModel>

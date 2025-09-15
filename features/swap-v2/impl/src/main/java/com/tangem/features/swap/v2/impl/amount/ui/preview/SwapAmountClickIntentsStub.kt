@@ -12,6 +12,8 @@ internal object SwapAmountClickIntentsStub : SwapAmountClickIntents {
 
     override fun onSeparatorClick() {}
 
+    override fun onProviderClick() {}
+
     override fun onAmountValueChange(value: String) {}
 
     override fun onAmountPasteTriggerDismiss() {}

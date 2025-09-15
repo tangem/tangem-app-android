@@ -21,6 +21,7 @@ import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.card.repository.CardSdkConfigRepository
+import com.tangem.domain.core.wallets.UserWalletsListRepository
 import com.tangem.domain.feedback.GetCardInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.onboarding.SaveTwinsOnboardingShownUseCase
@@ -31,7 +32,9 @@ import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.repository.WalletsRepository
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
+import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.operations.attestation.CardArtworksProvider
 import com.tangem.tap.domain.scanCard.CardScanningFeatureToggles
 import com.tangem.tap.domain.walletconnect2.domain.LegacyWalletConnectRepository
@@ -77,4 +80,7 @@ data class DaggerGraphState(
     val cardArworksProvider: CardArtworksProvider? = null,
     val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory? = null,
     val userTokensResponseStore: UserTokensResponseStore? = null,
+    val userWalletsListRepository: UserWalletsListRepository? = null,
+    val hotWalletFeatureToggles: HotWalletFeatureToggles? = null,
+    val tangemHotSdk: TangemHotSdk? = null,
 ) : StateType

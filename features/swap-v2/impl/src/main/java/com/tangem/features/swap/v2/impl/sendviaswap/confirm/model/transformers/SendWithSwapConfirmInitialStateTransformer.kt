@@ -15,6 +15,7 @@ internal class SendWithSwapConfirmInitialStateTransformer(
             showTapHelp = isShowTapHelp,
             sendingFooter = TextReference.EMPTY,
             notifications = persistentListOf(),
+            tosUM = null,
         )
     }
 }
