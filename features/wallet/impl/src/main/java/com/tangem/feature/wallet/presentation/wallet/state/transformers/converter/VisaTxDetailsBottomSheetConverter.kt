@@ -2,13 +2,13 @@ package com.tangem.feature.wallet.presentation.wallet.state.transformers.convert
 
 import com.tangem.core.ui.extensions.capitalize
 import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
-import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.visa.model.VisaCurrency
 import com.tangem.domain.visa.model.VisaTxDetails
-import com.tangem.feature.wallet.presentation.wallet.state.model.VisaTxDetailsBottomSheetConfig
 import com.tangem.feature.wallet.child.wallet.model.intents.VisaWalletIntents
+import com.tangem.feature.wallet.presentation.wallet.state.model.VisaTxDetailsBottomSheetConfig
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.toImmutableList
 import org.joda.time.DateTimeZone
@@ -71,11 +71,12 @@ internal class VisaTxDetailsBottomSheetConverter(
     }
 
     private fun formatFiatAmount(amount: BigDecimal, fiatCurrency: Currency): String {
-        return BigDecimalFormatter.formatFiatAmount(
-            fiatAmount = amount,
-            fiatCurrencyCode = fiatCurrency.currencyCode,
-            fiatCurrencySymbol = fiatCurrency.symbol,
-        )
+        return amount.format {
+            fiat(
+                fiatCurrencyCode = fiatCurrency.currencyCode,
+                fiatCurrencySymbol = fiatCurrency.symbol,
+            )
+        }
     }
 
     private companion object {

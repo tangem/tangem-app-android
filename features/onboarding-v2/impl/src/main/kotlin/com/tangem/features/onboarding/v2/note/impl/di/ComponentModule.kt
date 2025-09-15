@@ -5,7 +5,6 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.features.onboarding.v2.note.api.OnboardingNoteComponent
 import com.tangem.features.onboarding.v2.note.impl.DefaultOnboardingNoteComponent
 import com.tangem.features.onboarding.v2.note.impl.child.create.model.OnboardingNoteCreateWalletModel
-import com.tangem.features.onboarding.v2.note.impl.child.topup.model.OnboardingNoteTopUpModel
 import com.tangem.features.onboarding.v2.note.impl.model.OnboardingNoteModel
 import dagger.Binds
 import dagger.Module
@@ -37,9 +36,4 @@ internal interface ModelModule {
     @IntoMap
     @ClassKey(OnboardingNoteCreateWalletModel::class)
     fun provideNoteCreateWalletModel(model: OnboardingNoteCreateWalletModel): Model
-
-    @Binds
-    @IntoMap
-    @ClassKey(OnboardingNoteTopUpModel::class)
-    fun provideNoteTopUpModel(model: OnboardingNoteTopUpModel): Model
 }

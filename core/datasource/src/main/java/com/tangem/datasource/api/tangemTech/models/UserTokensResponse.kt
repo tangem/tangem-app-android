@@ -16,6 +16,7 @@ data class UserTokensResponse(
     @JsonClass(generateAdapter = true)
     data class Token(
         @Json(name = "id") val id: String? = null,
+        @Json(name = "accountId") val accountId: String? = null,
         @Json(name = "networkId") val networkId: String,
         @Json(name = "derivationPath") val derivationPath: String? = null,
         @Json(name = "name") val name: String,
