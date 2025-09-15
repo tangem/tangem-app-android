@@ -9,22 +9,28 @@ import com.tangem.common.ui.amountScreen.converters.AmountReduceByTransformer
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.navigationButtons.NavigationButton
 import com.tangem.common.ui.navigationButtons.NavigationUM
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.Basic
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.express.models.ExpressOperationType
 import com.tangem.domain.express.models.ExpressProviderType
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.settings.IsSendTapHelpEnabledUseCase
 import com.tangem.domain.swap.models.SwapDirection.Companion.withSwapDirection
 import com.tangem.domain.tokens.IsAmountSubtractAvailableUseCase
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.EstimateFeeUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.features.send.v2.api.SendNotificationsComponent
 import com.tangem.features.send.v2.api.SendNotificationsComponent.Params.NotificationData
+import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
+import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents.SendScreenSource
 import com.tangem.features.send.v2.api.callbacks.FeeSelectorModelCallback
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
@@ -43,8 +49,11 @@ import com.tangem.features.swap.v2.impl.notifications.SwapNotificationsComponent
 import com.tangem.features.swap.v2.impl.notifications.SwapNotificationsUpdateListener
 import com.tangem.features.swap.v2.impl.notifications.SwapNotificationsUpdateTrigger
 import com.tangem.features.swap.v2.impl.sendviaswap.SendWithSwapRoute
+import com.tangem.features.swap.v2.impl.sendviaswap.analytics.SendWithSwapAnalyticEvents
 import com.tangem.features.swap.v2.impl.sendviaswap.confirm.SendWithSwapConfirmComponent
 import com.tangem.features.swap.v2.impl.sendviaswap.confirm.model.transformers.SendWithSwapConfirmInitialStateTransformer
+import com.tangem.features.swap.v2.impl.sendviaswap.confirm.model.transformers.SendWithSwapConfirmSendingStateTransformer
+import com.tangem.features.swap.v2.impl.sendviaswap.confirm.model.transformers.SendWithSwapConfirmSentStateTransformer
 import com.tangem.features.swap.v2.impl.sendviaswap.confirm.model.transformers.SendWithSwapConfirmationNotificationsTransformer
 import com.tangem.features.swap.v2.impl.sendviaswap.entity.SendWithSwapUM
 import com.tangem.lib.crypto.BlockchainFeeUtils.patchTransactionFeeForSwap
@@ -73,6 +82,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
     private val feeSelectorReloadTrigger: FeeSelectorReloadTrigger,
     private val swapAlertFactory: SwapAlertFactory,
     private val appRouter: AppRouter,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     swapTransactionSenderFactory: SwapTransactionSender.Factory,
     paramsContainer: ParamsContainer,
 ) : Model(), FeeSelectorModelCallback, SendNotificationsComponent.ModelCallback {
@@ -134,6 +144,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
         configConfirmNavigation()
         initialState()
         subscribeOnNotificationUpdates()
+        subscribeOnTapHelpUpdates()
     }
 
     override fun onFeeResult(feeSelectorUM: FeeSelectorUM) {
@@ -185,10 +196,22 @@ internal class SendWithSwapConfirmModel @Inject constructor(
     }
 
     fun showEditAmount() {
+        analyticsEventHandler.send(
+            CommonSendAnalyticEvents.ScreenReopened(
+                categoryName = params.analyticsCategoryName,
+                source = SendScreenSource.Amount,
+            ),
+        )
         router.push(SendWithSwapRoute.Amount(isEditMode = true))
     }
 
     fun showEditDestination() {
+        analyticsEventHandler.send(
+            CommonSendAnalyticEvents.ScreenReopened(
+                categoryName = params.analyticsCategoryName,
+                source = SendScreenSource.Address,
+            ),
+        )
         router.push(SendWithSwapRoute.Destination(isEditMode = true))
     }
 
@@ -220,10 +243,12 @@ internal class SendWithSwapConfirmModel @Inject constructor(
     private fun onSendClick() {
         val provider = confirmData.quote?.provider ?: return
         modelScope.launch {
+            uiState.transformerUpdate(SendWithSwapConfirmSendingStateTransformer(true))
             swapTransactionSender.sendTransaction(
                 confirmData = confirmData,
                 isAmountSubtractAvailable = isAmountSubtractAvailable,
                 onExpressError = { expressError ->
+                    uiState.transformerUpdate(SendWithSwapConfirmSendingStateTransformer(false))
                     swapAlertFactory.getGenericErrorState(
                         expressError = expressError,
                         onFailedTxEmailClick = {
@@ -240,6 +265,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                     )
                 },
                 onSendError = { error ->
+                    uiState.transformerUpdate(SendWithSwapConfirmSendingStateTransformer(false))
                     swapAlertFactory.getSendTransactionErrorState(
                         error = error,
                         onFailedTxEmailClick = {
@@ -260,20 +286,18 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                         txHash = txHash,
                         networkId = primaryCurrencyStatus.currency.network.id,
                     ).getOrNull().orEmpty()
-
-                    uiState.update {
-                        it.copy(
-                            confirmUM = ConfirmUM.Success(
-                                isPrimaryButtonEnabled = true,
-                                transactionDate = timestamp,
-                                txUrl = txUrl,
-                                provider = provider,
-                                swapDataModel = data,
-                            ),
-                        )
-                    }
+                    sendSuccessAnalytics()
+                    uiState.transformerUpdate(
+                        SendWithSwapConfirmSentStateTransformer(
+                            timestamp = timestamp,
+                            txUrl = txUrl,
+                            provider = provider,
+                            swapDataModel = data,
+                        ),
+                    )
                     router.replaceAll(SendWithSwapRoute.Success)
                 },
+                expressOperationType = ExpressOperationType.SEND_WITH_SWAP,
             )
         }
     }
@@ -292,7 +316,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
         val confirmUM = uiState.value.confirmUM
 
         modelScope.launch {
-            val isShowTapHelp = isSendTapHelpEnabledUseCase().getOrElse { false }
+            val isShowTapHelp = isSendTapHelpEnabledUseCase.invokeSync().getOrElse { false }
             if (confirmUM is ConfirmUM.Empty) {
                 uiState.update {
                     it.copy(
@@ -306,11 +330,24 @@ internal class SendWithSwapConfirmModel @Inject constructor(
         }
     }
 
+    private fun subscribeOnTapHelpUpdates() {
+        isSendTapHelpEnabledUseCase().getOrNull()
+            ?.onEach { showTapHelp ->
+                uiState.update {
+                    val confirmUM = it.confirmUM as? ConfirmUM.Content
+                    it.copy(confirmUM = confirmUM?.copy(showTapHelp = showTapHelp) ?: it.confirmUM)
+                }
+            }?.launchIn(modelScope)
+    }
+
     private fun updateConfirmNotifications() {
         modelScope.launch {
             sendNotificationsUpdateTrigger.triggerUpdate(
                 data = NotificationData(
-                    destinationAddress = confirmData.enteredDestination.orEmpty(),
+                    destinationAddress = when (val currency = primaryCurrencyStatus.currency) {
+                        is CryptoCurrency.Token -> currency.contractAddress
+                        is CryptoCurrency.Coin -> "0"
+                    },
                     memo = null,
                     amountValue = confirmData.enteredAmount.orZero(),
                     reduceAmountBy = confirmData.reduceAmountBy,
@@ -348,6 +385,33 @@ internal class SendWithSwapConfirmModel @Inject constructor(
         }.launchIn(modelScope)
     }
 
+    private fun sendSuccessAnalytics() {
+        val selectedProvider = confirmData.quote?.provider ?: return
+        val fromCurrency = confirmData.fromCryptoCurrencyStatus?.currency ?: return
+        val toCurrency = confirmData.toCryptoCurrencyStatus?.currency ?: return
+        val feeSelectorUM = uiState.value.feeSelectorUM as? FeeSelectorUM.Content ?: return
+        val feeType = feeSelectorUM.toAnalyticType()
+
+        analyticsEventHandler.send(
+            SendWithSwapAnalyticEvents.TransactionScreenOpened(
+                providerName = selectedProvider.name,
+                feeType = feeType,
+                fromToken = fromCurrency,
+                toToken = toCurrency,
+            ),
+        )
+        analyticsEventHandler.send(
+            Basic.TransactionSent(
+                sentFrom = AnalyticsParam.TxSentFrom.SendWithSwap(
+                    blockchain = fromCurrency.network.name,
+                    token = fromCurrency.symbol,
+                    feeType = feeType,
+                ),
+                memoType = Basic.TransactionSent.MemoType.Null,
+            ),
+        )
+    }
+
     private fun configConfirmNavigation() {
         combine(
             flow = uiState,
@@ -357,6 +421,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
             it.second is SendWithSwapRoute.Confirm
         }.onEach { (state, _) ->
             val confirmUM = state.confirmUM
+            val isReadyToSend = confirmUM is ConfirmUM.Content && !confirmUM.isTransactionInProcess
             params.callback.onResult(
                 state.copy(
                     navigationUM = NavigationUM.Content(
@@ -365,8 +430,18 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                         backIconRes = R.drawable.ic_back_24,
                         backIconClick = router::pop,
                         primaryButton = NavigationButton(
-                            textReference = resourceReference(R.string.common_send),
+                            textReference = when (confirmUM) {
+                                is ConfirmUM.Success -> resourceReference(R.string.common_close)
+                                is ConfirmUM.Content -> if (confirmUM.isTransactionInProcess) {
+                                    resourceReference(R.string.send_sending)
+                                } else {
+                                    resourceReference(R.string.common_send)
+                                }
+                                else -> resourceReference(R.string.common_send)
+                            },
                             iconRes = R.drawable.ic_tangem_24,
+                            isIconVisible = isReadyToSend,
+                            isHapticClick = isReadyToSend,
                             isEnabled = confirmUM.isPrimaryButtonEnabled,
                             onClick = {
                                 when (confirmUM) {
