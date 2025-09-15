@@ -115,6 +115,7 @@ dependencies {
     implementation(projects.features.sendV2.api)
     implementation(projects.features.kyc.api)
     implementation(projects.features.tokenRecieve.api)
+    implementation(projects.features.yieldSupply.api)
 
     /** Common modules */
     implementation(projects.common)
