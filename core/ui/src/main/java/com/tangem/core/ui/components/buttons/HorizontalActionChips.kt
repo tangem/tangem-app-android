@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
@@ -21,6 +22,7 @@ import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.TokenDetailsScreenTestTags
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -32,7 +34,9 @@ fun HorizontalActionChips(
     contentPadding: PaddingValues = PaddingValues(TangemTheme.dimens.spacing0),
 ) {
     LazyRow(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .testTag(TokenDetailsScreenTestTags.HORIZONTAL_ACTION_CHIPS),
         horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing8),
         verticalAlignment = Alignment.CenterVertically,
         contentPadding = contentPadding,
