@@ -10,6 +10,7 @@ import com.reown.walletkit.client.Wallet
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.data.walletconnect.utils.WC_TAG
 import com.tangem.data.walletconnect.utils.WcSdkSessionConverter
+import com.tangem.data.walletconnect.utils.getDappOriginUrl
 import com.tangem.domain.blockaid.BlockAidVerifier
 import com.tangem.domain.walletconnect.WcAnalyticEvents
 import com.tangem.domain.walletconnect.model.*
@@ -112,7 +113,7 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
                     wallet = sessionForApprove.wallet,
                     sdkModel = WcSdkSessionConverter.convert(
                         value = WcSdkSessionConverter.Input(
-                            originUrl = sdkVerifyContext.origin,
+                            originUrl = sdkVerifyContext.getDappOriginUrl(),
                             session = settledSession.session,
                         ),
                     ),
