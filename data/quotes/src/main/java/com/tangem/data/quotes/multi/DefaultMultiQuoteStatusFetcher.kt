@@ -8,6 +8,7 @@ import com.tangem.data.quotes.store.QuotesStatusesStore
 import com.tangem.data.quotes.store.setSourceAsCache
 import com.tangem.data.quotes.store.setSourceAsOnlyCache
 import com.tangem.data.quotes.utils.QuotesUnsupportedCurrenciesIdAdapter
+import com.tangem.datasource.api.tangemTech.models.QuotesResponse
 import com.tangem.datasource.appcurrency.AppCurrencyResponseStore
 import com.tangem.domain.core.utils.catchOn
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -58,6 +59,7 @@ internal class DefaultMultiQuoteStatusFetcher @Inject constructor(
             fields = setOf(Field.PRICE, Field.PRICE_CHANGE_24H),
         )
             .getOrElse { error("Cause: $it") }
+            .addSkippedIfHas(ids = replacementIdsResult.idsForRequest)
 
         val updatedResponse = QuotesUnsupportedCurrenciesIdAdapter.getResponseWithUnsupportedCurrencies(
             response = response,
@@ -83,5 +85,17 @@ internal class DefaultMultiQuoteStatusFetcher @Inject constructor(
         }
 
         return appCurrencyId
+    }
+
+    private fun QuotesResponse.addSkippedIfHas(ids: Set<String>): QuotesResponse {
+        val skippedIds = ids.filterNot(quotes.keys::contains).ifEmpty {
+            return this
+        }
+
+        Timber.d("Some quotes are missing from the server response: $skippedIds")
+
+        val emptyQuotes = skippedIds.associateWith { QuotesResponse.Quote.EMPTY }
+
+        return copy(quotes = quotes + emptyQuotes)
     }
 }

@@ -134,6 +134,7 @@
   <string name="common_confirm">Підтвердити</string>
   <string name="common_connecting">Підключення</string>
   <string name="common_continue">Продовжити</string>
+  <string name="common_convert">Конвертувати</string>
   <string name="common_copy">Копіювати</string>
   <string name="common_copy_address">Скопіювати адресу</string>
   <string name="common_create">Створити</string>
@@ -173,6 +174,7 @@
   <string name="common_generate_addresses">Синхронізувати адреси</string>
   <string name="common_go_to_provider">Перейти до провайдера</string>
   <string name="common_go_to_token">Перейти до токену</string>
+  <string name="common_got_it">Зrozуміло</string>
   <string name="common_hide">Приховати</string>
   <string name="common_hour">година</string>
   <string name="common_import">Імпортувати</string>
@@ -196,7 +198,7 @@
   <string name="common_origin_ring">Основне кільце</string>
   <string name="common_passphrase">Парольна фраза</string>
   <string name="common_paste">Вставити</string>
-  <string name="common_privacy_policy">Політикою конфіденційності</string>
+  <string name="common_privacy_policy">Політикою конфіденційності</string>
   <string name="common_range">%1$s-%2$s</string>
   <string name="common_range_with_space">%1$s — %2$s</string>
   <string name="common_read_more">Детальніше</string>
@@ -230,7 +232,7 @@
   <string name="common_support">Підтримка</string>
   <string name="common_swap">Обмін</string>
   <string name="common_terms_and_conditions">умови участі</string>
-  <string name="common_terms_of_use">Умовами використання</string>
+  <string name="common_terms_of_use">Умовами використання</string>
   <string name="common_today">Сьогодні</string>
   <plurals name="common_tokens_count">
     <item quantity="one">%d токен</item>
@@ -302,6 +304,13 @@
   <string name="details_title">Деталі</string>
   <string name="disclaimer_error_loading">Перевірте підключення до інтернету або змініть мережу</string>
   <string name="disclaimer_title">Умови використання</string>
+  <string name="domain_receive_assets_default_address">Основна адреса</string>
+  <string name="domain_receive_assets_legacy_address">Legacy адреса</string>
+  <string name="domain_receive_assets_navigation_title">Отримати активи</string>
+  <string name="domain_receive_assets_network_name_address">%s адреса</string>
+  <string name="domain_receive_assets_onboarding_description">Надсилання активів в інші мережі призведе до безповоротної втрати.</string>
+  <string name="domain_receive_assets_onboarding_network_name">%s мережа</string>
+  <string name="domain_receive_assets_onboarding_title">Надсилайте кошти, використовуючи лише</string>
   <string name="email_preface_wc_error">Привіт, команда підтримки, я зіткнувся з помилкою з кодом: %s</string>
   <string name="email_subject_wc_error">Помилка WalletConnect</string>
   <string name="error_wrong_wallet_tapped">Ви використали картку або кільце від іншого гаманця. Прикладіть картку або кільце, пов\'язану з цим гаманцем.</string>
@@ -321,7 +330,7 @@
   <string name="express_exchange_by">Обмін через %s</string>
   <string name="express_exchange_notification_failed_text">Щоб повернути ваші кошти, відвідайте сайт провайдера</string>
   <string name="express_exchange_notification_failed_title">Операція не виконана провайдером</string>
-  <string name="express_exchange_notification_long_transaction_time_text">Ваш обмін триває довше, ніж очікувалося. Будь ласка, зверніться до служби підтримки постачальника послуг, для уточнення.</string>
+  <string name="express_exchange_notification_long_transaction_time_text">Ваш обмін триває довше, ніж зазвичай, але ваші кошти повністю в безпеці та будуть доставлені. Якщо ви хвилюєтесь, ви завжди можете звернутися до служби підтримки провайдера.</string>
   <string name="express_exchange_notification_long_transaction_time_title">Тривалий час транзакції</string>
   <string name="express_exchange_notification_refund_text">Сума транзакції була повернута в %1$s на ваш гаманець відповідно до правил OKX або мосту обміну. %2$s</string>
   <string name="express_exchange_notification_refund_title">Сума була повернута в %1$s (%2$s мережі)</string>
@@ -355,7 +364,7 @@
   <string name="express_fetch_best_rates">Шукаємо найвигідніший курс...</string>
   <string name="express_floating_rate">Плаваюча ставка</string>
   <string name="express_legal_one_placeholder">Використовуючи сервіс обміну, ви погоджуєтеся з його %s</string>
-  <string name="express_legal_two_placeholders">Використовуючи сервіс обміну, ви погоджуєтеся з його %1$s та %2$s</string>
+  <string name="express_legal_two_placeholders">Використовуючи сервіс обміну, ви погоджуєтеся з його %1$s та %2$s.</string>
   <string name="express_more_providers_soon">Незабаром з\'являться нові провайдери.\nСлідкуйте за новинами!</string>
   <string name="express_provider">Провайдер</string>
   <string name="express_provider_best_rate">Найкращий курс</string>
@@ -828,6 +837,7 @@
   <string name="send_alert_fee_too_low_text">Ви вказали комісію нижче рекомендованої, це може спричинити затримку вашої транзакції. Продовжити?</string>
   <string name="send_alert_transaction_failed_text">Причина: %1$s\nКод: %2$s</string>
   <string name="send_alert_transaction_failed_title">Транзакція не завершена</string>
+  <string name="send_amount_convert_to_another_token">Конвертувати в інший токен</string>
   <string name="send_amount_label">Сума</string>
   <string name="send_bitcoin_custom_fee_footer">Ви можете встановити розмір комісії за транзакцію, налаштувавши значення в полі Satoshi per vByte.</string>
   <string name="send_custom_amount_fee_footer">Комісія, яка буде стягнута за вашу транзакцію. Ви можете встановити власне значення.</string>
@@ -840,6 +850,7 @@
   <string name="send_date_format">%1$s, %2$s</string>
   <string name="send_destination_tag_field">Тег призначення</string>
   <string name="send_enter_address_field">Введіть адресу</string>
+  <string name="send_enter_address_field_ens">Ім’я ENS або адреса</string>
   <string name="send_error_address_same_as_wallet">Адреса збігається з адресою гаманця</string>
   <string name="send_error_dust_amount_format">Мінімальна сума: %s</string>
   <string name="send_error_dust_change_format">Мінімальна решта: %s</string>
@@ -851,7 +862,7 @@
   <string name="send_extras_hint_memo">Memo</string>
   <string name="send_fee_unreachable_error_text">Перевірте підключення до мережі</string>
   <string name="send_fee_unreachable_error_title">Інформація щодо комісії в мережі недоступна</string>
-  <string name="send_from_wallet_android">Із</string>
+  <string name="send_from_title">Ви надсилаєте</string>
   <string name="send_gas_limit">Ліміт газу</string>
   <string name="send_gas_limit_footer">Це максимальна кількість газу, яка буде витрачена на здійснення транзакції чи контракту. Ліміт газу запобігає несподіваним або необмеженим стягненням під час виконання транзакції.</string>
   <string name="send_gas_price">Вартість газу</string>
@@ -891,7 +902,7 @@
   <string name="send_recent_transactions">Останні</string>
   <string name="send_recipient">Одержувач</string>
   <string name="send_recipient_address_error">Недійсна адреса</string>
-  <string name="send_recipient_address_footer">Переконайтеся, що адреса гаманця одержувача знаходиться в мережі %s, щоб уникнути втрати ваших токенів</string>
+  <string name="send_recipient_address_footer">Переконайтеся, що адреса отримувача знаходиться **в мережі %s**, щоб уникнути втрати ваших коштів.</string>
   <string name="send_recipient_label">Надіслати до</string>
   <string name="send_recipient_memo_footer">Memo/ Тег призначення — це унікальний ідентифікатор для розрізнення транзакцій, надісланих тому самому одержувачу в тій самій мережі. Застереження: відсутність тегу може призвести до втрати коштів.</string>
   <string name="send_recipient_memo_footer_v2">Мемо / Destination Tag — це код, що розділяє транзакції до спільного одержувача в криптовалютній мережі.</string>
@@ -902,7 +913,7 @@
   <string name="send_sending">Надсилання...</string>
   <string name="send_summary_tap_hint">Торкніться будь-якого поля, щоб змінити його</string>
   <string name="send_summary_title">Надіслати %s</string>
-  <string name="send_summary_transaction_description">Ви надсилаєте **%1$s**, включно з комісію мережі %2$s</string>
+  <string name="send_summary_transaction_description">Ви надсилаєте **%1$s**, включно з комісію мережі %2$s.</string>
   <string name="send_summary_transaction_description_no_fiat_fee">Ви надсилаєте **%1$s** і %2$s</string>
   <string name="send_summary_transaction_description_prefix">Ви надсилаєте **%1$s**</string>
   <string name="send_summary_transaction_description_suffix_fee_covered">комісія мережі буде покрита, використовуючи %1$s енергію</string>
@@ -916,7 +927,21 @@
   <string name="send_validation_invalid_amount">Недопустима сума</string>
   <string name="send_validation_invalid_fee">Комісія перевищує залишок</string>
   <string name="send_validation_invalid_total">Сума, що відправляється, перевищує залишок</string>
+  <string name="send_with_swap_change_token_alert_message">Ви впевнені, що хочете змінити токен отримання? Це призведе до скидання раніше введених даних.</string>
+  <string name="send_with_swap_change_token_alert_title">Зміна токену</string>
+  <string name="send_with_swap_confirm_title">Обмін та надсилання</string>
+  <string name="send_with_swap_convert_token_alert_message">Продовжити обмін? Це очистить ваші попередні дані.</string>
+  <string name="send_with_swap_convert_token_alert_title">Підтвердити конвертацію</string>
+  <string name="send_with_swap_correct_recipient_network_notification_message">Надсилання будь-якої іншої валюти призведе до її незворотної втрати.</string>
+  <string name="send_with_swap_correct_recipient_network_notification_title">Виберіть правильну мережу одержувача</string>
   <string name="send_with_swap_notification_text">Виберіть будь-який токен. Той, кому ви його надішлете, отримає саме те, що ви обрали — без жодних ускладнень.</string>
+  <string name="send_with_swap_recipient_amount_success_title">Буде отримано</string>
+  <string name="send_with_swap_recipient_amount_text">Отримувачу</string>
+  <string name="send_with_swap_recipient_amount_title">Сума для отримання</string>
+  <string name="send_with_swap_recipient_get_amount">До отримання %s</string>
+  <string name="send_with_swap_remove_convert_alert_message">Ви впевнені, що хочете скасувати конвертацію? Ваші попередні дані будуть видалені.</string>
+  <string name="send_with_swap_remove_convert_alert_title">Прибрати конвертацію</string>
+  <string name="send_with_swap_title">Надіслати з обміном</string>
   <string name="sent_transaction_sent_title">Трансакцію надіслано</string>
   <string name="settings_card_settings_footer">Підготуйтеся до сканування кільця або картки, яку ви хочете налаштувати.</string>
   <string name="settings_forget_wallet">Забути гаманець</string>
@@ -989,7 +1014,7 @@
   <string name="staking_notification_ton_activate_account">Щоб почати стейкінг в TON, спочатку здійсніть вихідну транзакцію на будь-яку суму — це активує ваш гаманець.</string>
   <string name="staking_notification_ton_extra_reserve_info">До 0.2 TON може знадобитися додатково мережевої комісії для завершення транзакції. Невикористана частина буде повернута.</string>
   <string name="staking_notification_ton_extra_reserve_is_required">Для виконання операції потребується додатково 0.2 TON, крім мережевої комісії. Будь ласка, поповніть баланс.</string>
-  <string name="staking_notification_ton_extra_reserve_title">Зарезервовано 0.2 TON</string>
+  <string name="staking_notification_ton_extra_reserve_title">Потрібен резерв TON</string>
   <string name="staking_notification_ton_have_to_unstake_all_text">Ця дія закриє інші позиції або переведе їх у статус виведення, відповідно до правил мережі.</string>
   <string name="staking_notification_ton_have_to_unstake_all_title">Статус позицій</string>
   <string name="staking_notification_unlock_text">Розблокуйте свої кошти, щоб вивести їх зі стейкінгу. Розблокування займе %s.</string>
@@ -1070,6 +1095,7 @@
   <string name="swap_story_second_title">Найкращі тарифи</string>
   <string name="swap_story_third_subtitle">Просто та зручно — обмін токенів в декілька дотиків</string>
   <string name="swap_story_third_title">Легше, ніж будь-коли</string>
+  <string name="swap_via_provider">Обмін через провайдера</string>
   <string name="swapping_alert_cex_description">Сума включає: \n• комісію постачальника послуг\n• комісію мережі за відправлення %s з біржі назад на адресу користувача.</string>
   <string name="swapping_alert_cex_description_with_slippage">У суму входить:\n- комісія провайдера\n- мережева комісія за відправку %1$s з біржі назад на адресу користувача. \n\nПроскакування провайдера становить до %2$s</string>
   <string name="swapping_alert_dex_description">Сума включає комісію постачальника послуг.</string>
@@ -1148,6 +1174,7 @@
   <string name="twins_recreate_toolbar">Tangem Twin</string>
   <string name="twins_recreate_warning">Ця дія є незворотною. Ви не матимете доступу до старого гаманця.</string>
   <string name="twins_scan_twin_with_number">Прикладіть twin-картку з номером %s та не прибирайте її до завершення операції</string>
+  <string name="unexpected_error_description">Спробуйте ще раз пізніше. Якщо проблема залишиться, зверніться до служби підтримки.</string>
   <string name="universal_error">Виникла помилка. Код помилки: %s. Спробуйте, будь ласка, знову. Якщо проблема знову виникає — зверніться до нашої служби підтримки.</string>
   <string name="unlock_wallet_description_full">Використовуйте %s або відскануйте картку/кільце, щоб отримати доступ до свого гаманця</string>
   <string name="unsupported_wc_version">Не вдалося встановити з\'єднання: Цей dApp використовує Wallet Connect версії 1.0, яка не підтримується. Будь ласка, переконайтеся, що dApp підтримує Wallet Connect версії 2.0 для успішного підключення.</string>
@@ -1298,6 +1325,7 @@
   <string name="warning_some_networks_unreachable_message">Проведіть пальцем вниз для оновлення або спробуйте пізніше.</string>
   <string name="warning_some_networks_unreachable_title">Деякі мережі недоступні</string>
   <string name="warning_some_token_balances_not_updated">Деякі баланси токенів не вдалося оновити</string>
+  <string name="warning_stellar_token_trustline_not_enough_xlm">Недостатньо %s. Поповніть свій XLM-рахунок, щоб відкрити trustline.</string>
   <string name="warning_testnet_card_message">Це картка Testnet. Вона не може обробляти транзакції і повинна використовуватися лише для тестування та розробки.</string>
   <string name="warning_testnet_card_title">Лише для цілей тестування</string>
   <string name="warning_token_balance_not_updated">Баланс може бути застарілим. Оновіть сторінку.</string>
@@ -1358,6 +1386,7 @@
   <string name="wc_errors_proposal_expired_subtitle">Будь ласка, згенеруйте новий URI та спробуйте ще раз</string>
   <string name="wc_errors_proposal_expired_title">Термін для з’єднання минув</string>
   <string name="wc_estimated_wallet_changes">Прогнозовані зміни</string>
+  <string name="wc_fee_suggested">Пропоновано %s</string>
   <string name="wc_insufficient_warning_subtitle">Поповніть баланс, щоб покрити комісію мережі</string>
   <string name="wc_insufficient_warning_title">Недостатньо %1$s</string>
   <string name="wc_missing_required_network_description">Додайте %s мережі до вашого портфелю для цього гаманця</string>
@@ -1365,10 +1394,12 @@
   <string name="wc_new_connection">Нове з\'єднання</string>
   <string name="wc_no_sessions_desc">Підключайте свій гаманець до різних dApps</string>
   <string name="wc_no_sessions_title">Немає підключень</string>
+  <string name="wc_no_wallet_changes_detected">Змін у гаманці не виявлено</string>
   <string name="wc_notification_security_risk_subtitle">Виявлено потенційні ризики або шкідливу активність. Підключення чи підпис транзакцій можуть призвести до втрати коштів.</string>
   <string name="wc_notification_security_risk_title">Відомий ризик безпеки</string>
   <string name="wc_qr_scan_hint">Відкрийте програму Web3 та виберіть опцію WalletConnect</string>
   <string name="wc_request_from">Запит від</string>
+  <string name="wc_send_anyway">Підписати все одно</string>
   <string name="wc_signature_type">Тип підпису</string>
   <string name="wc_specify_networks_subtitle">Для підключення dApp потрібна принаймні одна мережа</string>
   <string name="wc_specify_networks_title">Вкажіть вибрані мережі</string>

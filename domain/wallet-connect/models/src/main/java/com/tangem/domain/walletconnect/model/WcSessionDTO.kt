@@ -8,6 +8,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 data class WcSessionDTO(
     val topic: String,
     val walletId: UserWalletId,
+    val url: String?,
     val securityStatus: CheckDAppResult = CheckDAppResult.FAILED_TO_VERIFY,
     val connectingTime: Long? = null,
 )

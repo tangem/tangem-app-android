@@ -24,6 +24,7 @@ internal object MockNetworks {
         hasFiatFeeRate = true,
         canHandleTokens = true,
         transactionExtrasType = Network.TransactionExtrasType.NONE,
+        nameResolvingType = Network.NameResolvingType.NONE,
     )
 
     val network2 = Network(
@@ -37,6 +38,7 @@ internal object MockNetworks {
         hasFiatFeeRate = true,
         canHandleTokens = true,
         transactionExtrasType = Network.TransactionExtrasType.NONE,
+        nameResolvingType = Network.NameResolvingType.NONE,
     )
 
     val network3 = Network(
@@ -50,6 +52,7 @@ internal object MockNetworks {
         hasFiatFeeRate = true,
         canHandleTokens = true,
         transactionExtrasType = Network.TransactionExtrasType.NONE,
+        nameResolvingType = Network.NameResolvingType.NONE,
     )
 
     val verifiedNetworksStatuses: NonEmptySet<NetworkStatus>
