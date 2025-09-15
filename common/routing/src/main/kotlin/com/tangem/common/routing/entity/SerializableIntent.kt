@@ -14,6 +14,7 @@ data class SerializableIntent(
     val packageValue: String?,
     val component: String?,
     val flags: Int,
+    // CAUTION: works wrong with SerializableBundle constructor(bundle: Bundle), need to be removed
     val extras: SerializableBundle?,
 ) {
 

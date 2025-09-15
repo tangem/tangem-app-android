@@ -11,19 +11,17 @@ import com.tangem.common.routing.utils.popTo
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
+import com.tangem.domain.card.analytics.ParamCardCurrencyConverter
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.legacy.UserWalletsListManager.Lockable.UnlockType
 import com.tangem.domain.wallets.legacy.unlockIfLockable
 import com.tangem.tap.*
-import com.tangem.tap.common.analytics.converters.ParamCardCurrencyConverter
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.AppState
-import com.tangem.tap.features.intentHandler.handlers.BackgroundScanIntentHandler
 import com.tangem.tap.features.intentHandler.handlers.WalletConnectLinkIntentHandler
 import com.tangem.tap.proxy.redux.DaggerGraphState
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
 import timber.log.Timber
@@ -44,7 +42,7 @@ internal class WelcomeMiddleware {
     private fun handleAction(action: WelcomeAction, state: WelcomeState) {
         mainScope.launch {
             when (action) {
-                is WelcomeAction.ProceedWithIntent -> proceedWithIntent(action.intent, scope = this)
+                is WelcomeAction.ProceedWithIntent -> proceedWithIntent(action.intent)
                 is WelcomeAction.ProceedWithBiometrics -> proceedWithBiometrics(
                     afterUnlockIntent = action.afterUnlockIntent ?: state.intent,
                 )
@@ -55,7 +53,7 @@ internal class WelcomeMiddleware {
         }
     }
 
-    private suspend fun proceedWithIntent(initialIntent: Intent, scope: CoroutineScope) {
+    private suspend fun proceedWithIntent(initialIntent: Intent) {
         Timber.d(
             """
                 Proceeding with intent
@@ -63,15 +61,12 @@ internal class WelcomeMiddleware {
             """.trimIndent(),
         )
 
-        val handler = BackgroundScanIntentHandler(
-            scope = scope,
-            hasSavedUserWalletsProvider = { true },
-        )
-        val isBackgroundScanHandled = handler.handleIntent(initialIntent, isFromForeground = false)
         val hasUncompletedBackup = backupService.hasIncompletedBackup
 
-        if (!isBackgroundScanHandled && !hasUncompletedBackup) {
+        if (!hasUncompletedBackup) {
             store.dispatchWithMain(WelcomeAction.ProceedWithBiometrics(initialIntent))
+        } else {
+            store.dispatchWithMain(WelcomeAction.ProceedWithCard)
         }
     }
 
@@ -139,7 +134,7 @@ internal class WelcomeMiddleware {
     }
 
     private fun sendSignedInAnalyticsEvent(userWallet: UserWallet, signInType: Basic.SignedIn.SignInType) {
-        // TODO [REDACTED_TASK_KEY]
+        // TODO [REDACTED_TASK_KEY] [Hot Wallet] Analytics
 
         if (userWallet !is UserWallet.Cold) {
             return

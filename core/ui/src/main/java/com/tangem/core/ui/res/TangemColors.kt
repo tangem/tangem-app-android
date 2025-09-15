@@ -16,6 +16,7 @@ class TangemColors internal constructor(
     control: Control,
     stroke: Stroke,
     field: Field,
+    overlay: Overlay,
 ) {
     var text by mutableStateOf(text)
         private set
@@ -31,6 +32,7 @@ class TangemColors internal constructor(
         private set
     var field by mutableStateOf(field)
         private set
+    var overlay by mutableStateOf(overlay)
 
     @Stable
     class Text internal constructor(
@@ -220,6 +222,22 @@ class TangemColors internal constructor(
         }
     }
 
+    @Stable
+    class Overlay internal constructor(
+        primary: Color,
+        secondary: Color,
+    ) {
+        var primary by mutableStateOf(primary)
+            private set
+        var secondary by mutableStateOf(secondary)
+            private set
+
+        fun update(other: Overlay) {
+            primary = other.primary
+            secondary = other.secondary
+        }
+    }
+
     fun update(other: TangemColors) {
         text.update(other.text)
         icon.update(other.icon)
@@ -228,5 +246,6 @@ class TangemColors internal constructor(
         control.update(other.control)
         stroke.update(other.stroke)
         field.update(other.field)
+        overlay.update(other.overlay)
     }
 }

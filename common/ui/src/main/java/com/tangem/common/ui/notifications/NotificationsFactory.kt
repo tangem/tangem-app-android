@@ -11,7 +11,7 @@ import com.tangem.core.ui.format.bigdecimal.uncapped
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.transaction.error.GetFeeError
@@ -354,7 +354,11 @@ object NotificationsFactory {
                 onReduceClick = onReduceClick,
             )
             is BlockchainSdkError.DestinationTagRequired -> addRequireDestinationTagErrorNotification()
-            null -> minAdaValue?.let {
+            is BlockchainSdkError.Solana.DestinationRentExemption -> addRentExemptionDestinationNotification(
+                rentExemptionAmount = validationError.rentAmount,
+            )
+            null,
+            -> minAdaValue?.let {
                 add(
                     NotificationUM.Cardano.MinAdaValueCharged(
                         tokenName = cryptoCurrency.name,
@@ -437,6 +441,14 @@ object NotificationsFactory {
     fun MutableList<NotificationUM>.addRentExemptionNotification(rentWarning: CryptoCurrencyWarning.Rent?) {
         if (rentWarning == null) return
         add(NotificationUM.Solana.RentInfo(rentWarning))
+    }
+
+    fun MutableList<NotificationUM>.addRentExemptionDestinationNotification(rentExemptionAmount: BigDecimal) {
+        add(
+            NotificationUM.Solana.RentExemptionDestination(
+                rentExemptionAmount = rentExemptionAmount,
+            ),
+        )
     }
 
     fun MutableList<NotificationUM>.addHighFeeWarningNotification(
