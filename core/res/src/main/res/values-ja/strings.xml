@@ -1657,7 +1657,7 @@
   <string name="yield_module_promo_screen_self_custodial_subtitle">Aaveは世界中で何百万人もの人々に信頼されています。総貸付額は104億ドルです。</string>
   <string name="yield_module_promo_screen_self_custodial_title">分散型・自己管理型</string>
   <string name="yield_module_promo_screen_terms_disclaimer">サービスを使用することにより、プロバイダーに同意したものとみなされます</string>
-  <string name="yield_module_promo_screen_title">年間%s%の収益</string>
+  <string name="yield_module_promo_screen_title">年間%s%%の収益</string>
   <string name="yield_module_promo_screen_variable_rate_info">Aave • 変動金利</string>
   <string name="yield_module_provider">Aave</string>
   <string name="yield_module_rate_info_sheet_chart_average">平均%s</string>
