@@ -34,9 +34,11 @@ import com.tangem.features.staking.api.StakingComponent
 import com.tangem.features.swap.SwapComponent
 import com.tangem.features.swap.v2.api.SendWithSwapComponent
 import com.tangem.features.tangempay.components.TangemPayDetailsComponent
+import com.tangem.features.tangempay.components.TangemPayOnboardingComponent
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.wallet.WalletEntryComponent
 import com.tangem.features.walletconnect.components.WalletConnectEntryComponent
+import com.tangem.features.yield.supply.api.YieldSupplyPromoComponent
 import com.tangem.tap.features.details.ui.appcurrency.api.AppCurrencySelectorComponent
 import com.tangem.tap.features.details.ui.appsettings.api.AppSettingsComponent
 import com.tangem.tap.features.details.ui.cardsettings.api.CardSettingsComponent
@@ -45,7 +47,6 @@ import com.tangem.tap.features.details.ui.resetcard.api.ResetCardComponent
 import com.tangem.tap.features.details.ui.securitymode.api.SecurityModeComponent
 import com.tangem.tap.features.welcome.component.WelcomeComponent
 import com.tangem.tap.routing.component.RoutingComponent.Child
-import com.tangem.features.tangempay.components.TangemPayOnboardingComponent
 import dagger.hilt.android.scopes.ActivityScoped
 import javax.inject.Inject
 import com.tangem.features.walletconnect.components.WalletConnectEntryComponent as RedesignedWalletConnectComponent
@@ -105,6 +106,7 @@ internal class ChildFactory @Inject constructor(
     private val sendEntryPointComponentFactory: SendEntryPointComponent.Factory,
     private val tangemPayDetailsComponentFactory: TangemPayDetailsComponent.Factory,
     private val tangemPayOnboardingComponentFactory: TangemPayOnboardingComponent.Factory,
+    private val yieldSupplyPromoComponentFactory: YieldSupplyPromoComponent.Factory,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
 ) {
 
@@ -598,6 +600,13 @@ internal class ChildFactory @Inject constructor(
                     context = context,
                     params = TangemPayOnboardingComponent.Params(route.deeplink),
                     componentFactory = tangemPayOnboardingComponentFactory,
+                )
+            }
+            is AppRoute.YieldSupplyPromo -> {
+                createComponentChild(
+                    context = context,
+                    params = YieldSupplyPromoComponent.Params(route.userWalletId, route.cryptoCurrency),
+                    componentFactory = yieldSupplyPromoComponentFactory,
                 )
             }
         }
