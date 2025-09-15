@@ -1,5 +1,7 @@
 package com.tangem.data.staking.single
 
+import arrow.core.Option
+import arrow.core.some
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.domain.models.staking.YieldBalance
@@ -34,9 +36,7 @@ internal class DefaultSingleYieldBalanceProducer @AssistedInject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
 ) : SingleYieldBalanceProducer {
 
-    override val fallback: YieldBalance by lazy {
-        YieldBalance.Error(stakingId = params.stakingId)
-    }
+    override val fallback: Option<YieldBalance> = YieldBalance.Error(stakingId = params.stakingId).some()
 
     override fun produce(): Flow<YieldBalance> {
         Timber.i("Producing yield balance for params:\n$params")
