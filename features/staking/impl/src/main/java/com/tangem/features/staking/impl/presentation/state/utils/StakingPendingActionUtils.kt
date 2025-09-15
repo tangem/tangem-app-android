@@ -3,9 +3,9 @@ package com.tangem.features.staking.impl.presentation.state.utils
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.domain.staking.model.stakekit.BalanceType
-import com.tangem.domain.staking.model.stakekit.PendingAction
-import com.tangem.domain.staking.model.stakekit.action.StakingActionType
+import com.tangem.domain.models.staking.BalanceType
+import com.tangem.domain.models.staking.PendingAction
+import com.tangem.domain.models.staking.action.StakingActionType
 import com.tangem.features.staking.impl.presentation.state.BalanceState
 import com.tangem.lib.crypto.BlockchainUtils.isBSC
 import com.tangem.lib.crypto.BlockchainUtils.isCardano
