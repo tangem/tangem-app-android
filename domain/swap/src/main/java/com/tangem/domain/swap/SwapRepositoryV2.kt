@@ -1,15 +1,13 @@
 package com.tangem.domain.swap
 
+import com.tangem.domain.express.models.ExpressOperationType
 import com.tangem.domain.express.models.ExpressProvider
 import com.tangem.domain.express.models.ExpressProviderType
 import com.tangem.domain.express.models.ExpressRateType
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.swap.models.SwapDataModel
-import com.tangem.domain.swap.models.SwapPairModel
-import com.tangem.domain.swap.models.SwapQuoteModel
-import com.tangem.domain.swap.models.SwapStatusModel
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.swap.models.*
 import java.math.BigDecimal
 
 /**
@@ -25,12 +23,14 @@ interface SwapRepositoryV2 {
      * @param initialCurrency           currency being swapped (either to or from)
      * @param cryptoCurrencyStatusList  list of currencies might be swapped
      * @param filterProviderTypes       filters only specified provider types, if empty returns providers as is
+     * @param swapTxType                swap tx type
      */
     suspend fun getPairs(
         userWallet: UserWallet,
         initialCurrency: CryptoCurrency,
         cryptoCurrencyStatusList: List<CryptoCurrencyStatus>,
         filterProviderTypes: List<ExpressProviderType>,
+        swapTxType: SwapTxType,
     ): List<SwapPairModel>
 
     /**
@@ -43,6 +43,7 @@ interface SwapRepositoryV2 {
         initialCurrency: CryptoCurrency,
         cryptoCurrencyList: List<CryptoCurrency>,
         filterProviderTypes: List<ExpressProviderType>,
+        swapTxType: SwapTxType,
     ): List<SwapPairModel>
 
     /**
@@ -74,6 +75,7 @@ interface SwapRepositoryV2 {
      * @param toAddress                 destination address
      * @param expressProvider           selected swap provider
      * @param rateType                  selected provider rate type
+     * @param expressOperationType      operation type swap or send with swap
      */
     suspend fun getSwapData(
         userWallet: UserWallet,
@@ -83,6 +85,7 @@ interface SwapRepositoryV2 {
         toAddress: String,
         expressProvider: ExpressProvider,
         rateType: ExpressRateType,
+        expressOperationType: ExpressOperationType,
     ): SwapDataModel
 
     /**
