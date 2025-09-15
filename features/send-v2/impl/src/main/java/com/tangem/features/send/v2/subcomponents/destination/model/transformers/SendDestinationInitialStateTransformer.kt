@@ -22,6 +22,10 @@ internal class SendDestinationInitialStateTransformer(
             Network.TransactionExtrasType.MEMO -> R.string.send_extras_hint_memo
             Network.TransactionExtrasType.DESTINATION_TAG -> R.string.send_destination_tag_field
         }
+        val placeholder = when (cryptoCurrency.network.nameResolvingType) {
+            Network.NameResolvingType.NONE -> resourceReference(R.string.send_enter_address_field)
+            Network.NameResolvingType.ENS -> resourceReference(R.string.send_enter_address_field_ens)
+        }
         return DestinationUM.Content(
             isPrimaryButtonEnabled = false,
             isInitialized = isInitialized,
@@ -32,7 +36,7 @@ internal class SendDestinationInitialStateTransformer(
                     keyboardType = KeyboardType.Text,
                 ),
                 error = null,
-                placeholder = resourceReference(R.string.send_enter_address_field),
+                placeholder = placeholder,
                 label = resourceReference(R.string.send_recipient),
                 isValuePasted = false,
             ),
@@ -56,6 +60,7 @@ internal class SendDestinationInitialStateTransformer(
             networkName = cryptoCurrency.network.name,
             isValidating = false,
             isRedesignEnabled = isRedesignEnabled,
+            isRecentHidden = false,
         )
     }
 }
