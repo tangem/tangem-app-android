@@ -104,6 +104,7 @@ internal class PreviewOnboardingManageTokensComponent(
                 hasFiatFeeRate = false,
                 canHandleTokens = false,
                 transactionExtrasType = Network.TransactionExtrasType.NONE,
+                nameResolvingType = Network.NameResolvingType.NONE,
             ),
             name = "NETWORK$networkIndex",
             type = "N$networkIndex",

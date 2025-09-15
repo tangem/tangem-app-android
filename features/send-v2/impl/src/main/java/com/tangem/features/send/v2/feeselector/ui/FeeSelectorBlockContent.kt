@@ -39,6 +39,7 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.features.send.v2.api.entity.*
 import com.tangem.features.send.v2.impl.R
+import com.tangem.utils.extensions.isSingleItem
 import kotlinx.collections.immutable.persistentListOf
 import java.math.BigDecimal
 
@@ -118,12 +119,11 @@ private fun FeeSelectorStaticPart(onReadMoreClick: () -> Unit, modifier: Modifie
             text = annotatedString,
             modifier = Modifier
                 .padding(start = TangemTheme.dimens.spacing6)
-                .size(TangemTheme.dimens.size16),
+                .size(TangemTheme.dimens.size16)
+                .clip(CircleShape),
             content = { contentModifier ->
                 Icon(
-                    modifier = contentModifier
-                        .size(TangemTheme.dimens.size16)
-                        .clip(CircleShape),
+                    modifier = contentModifier.size(TangemTheme.dimens.size16),
                     painter = painterResource(id = R.drawable.ic_token_info_24),
                     contentDescription = null,
                     tint = TangemTheme.colors.icon.informative,
@@ -176,12 +176,14 @@ private fun FeeContent(state: FeeSelectorUM.Content, modifier: Modifier = Modifi
             textAlign = TextAlign.End,
             modifier = Modifier.padding(start = TangemTheme.dimens.spacing4),
         )
-        Icon(
-            modifier = Modifier.size(width = 18.dp, height = 24.dp),
-            painter = painterResource(id = R.drawable.ic_select_18_24),
-            contentDescription = null,
-            tint = TangemTheme.colors.icon.informative,
-        )
+        if (!state.feeItems.isSingleItem()) {
+            Icon(
+                modifier = Modifier.size(width = 18.dp, height = 24.dp),
+                painter = painterResource(id = R.drawable.ic_select_18_24),
+                contentDescription = null,
+                tint = TangemTheme.colors.icon.informative,
+            )
+        }
     }
 }
 
@@ -220,7 +222,7 @@ private class FeeSelectorUMProvider : PreviewParameterProvider<FeeSelectorUM> {
         ),
         FeeSelectorUM.Content(
             isPrimaryButtonEnabled = false,
-            feeItems = persistentListOf(maxFeeItem),
+            feeItems = persistentListOf(lowFeeItem, maxFeeItem),
             selectedFeeItem = maxFeeItem,
             feeExtraInfo = FeeExtraInfo(
                 isFeeApproximate = false,

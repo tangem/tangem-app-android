@@ -2,6 +2,7 @@ package com.tangem.tap.features.details.ui.appsettings
 
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.tap.features.details.ui.appsettings.AppSettingsScreenState.Item
 import com.tangem.wallet.R
@@ -27,6 +28,39 @@ internal class AppSettingsItemsFactory {
             id = ID_SAVE_WALLETS_SWITCH,
             title = resourceReference(R.string.app_settings_saved_wallet),
             description = resourceReference(R.string.app_settings_saved_wallet_footer),
+            isEnabled = isEnabled,
+            isChecked = isChecked,
+            onCheckedChange = onCheckedChange,
+        )
+    }
+
+    fun createUseBiometricsSwitch(
+        isChecked: Boolean,
+        isEnabled: Boolean,
+        onCheckedChange: (Boolean) -> Unit,
+    ): Item.Switch {
+        return Item.Switch(
+            id = ID_USE_BIOMETRICS_SWITCH,
+            title = resourceReference(R.string.app_settings_enable_biometrics_title),
+            description = resourceReference(
+                R.string.app_settings_biometrics_footer,
+                wrappedList(resourceReference(R.string.common_biometrics)),
+            ),
+            isEnabled = isEnabled,
+            isChecked = isChecked,
+            onCheckedChange = onCheckedChange,
+        )
+    }
+
+    fun createRequireAccessCodeSwitch(
+        isChecked: Boolean,
+        isEnabled: Boolean,
+        onCheckedChange: (Boolean) -> Unit,
+    ): Item.Switch {
+        return Item.Switch(
+            id = ID_REQUIRE_ACCESS_CODE_SWITCH,
+            title = resourceReference(R.string.app_settings_require_access_code),
+            description = resourceReference(R.string.app_settings_require_access_code_footer),
             isEnabled = isEnabled,
             isChecked = isChecked,
             onCheckedChange = onCheckedChange,
@@ -96,5 +130,7 @@ internal class AppSettingsItemsFactory {
         const val ID_FLIP_TO_HIDE_BALANCE_SWITCH = "flip_to_hide_balance_switch"
         const val ID_SELECT_APP_CURRENCY_BUTTON = "select_app_currency_button"
         const val ID_SELECT_THEME_MODE_BUTTON = "select_theme_mode_button"
+        const val ID_USE_BIOMETRICS_SWITCH = "use_biometrics_switch"
+        const val ID_REQUIRE_ACCESS_CODE_SWITCH = "require_access_code_switch"
     }
 }
