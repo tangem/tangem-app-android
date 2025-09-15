@@ -3,26 +3,26 @@ package com.tangem.features.send.v2.send.confirm.model.transformers
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
-import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.models.AmountFieldModel
+import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.features.send.v2.api.entity.CustomFeeFieldUM
 import com.tangem.features.send.v2.common.ui.state.ConfirmUM
-import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeUM
 import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeSelectorUM
 import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeType
-import com.tangem.features.send.v2.api.entity.CustomFeeFieldUM
+import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeUM
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.Test
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.util.Locale
-import org.junit.jupiter.api.BeforeAll
 
 class SendConfirmationNotificationsTransformerTest {
 
@@ -205,6 +205,8 @@ class SendConfirmationNotificationsTransformerTest {
             isRedesignEnabled = false,
             title = mockk(relaxed = true),
             availableBalance = mockk(relaxed = true),
+            availableBalanceCrypto = mockk(relaxed = true),
+            availableBalanceFiat = mockk(relaxed = true),
             tokenName = mockk(relaxed = true),
             tokenIconState = mockk(relaxed = true),
             segmentedButtonConfig = persistentListOf(),

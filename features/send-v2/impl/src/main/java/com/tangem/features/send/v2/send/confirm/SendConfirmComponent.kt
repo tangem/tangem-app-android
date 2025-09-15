@@ -11,9 +11,9 @@ import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.features.send.v2.api.FeeSelectorBlockComponent
 import com.tangem.features.send.v2.api.SendNotificationsComponent
 import com.tangem.features.send.v2.api.SendNotificationsComponent.Params.NotificationData
@@ -72,6 +72,7 @@ internal class SendConfirmComponent(
             userWalletId = params.userWallet.walletId,
             cryptoCurrency = params.cryptoCurrencyStatus.currency,
             cryptoCurrencyStatusFlow = params.cryptoCurrencyStatusFlow,
+            isBalanceHidingFlow = params.isBalanceHidingFlow,
         ),
         onResult = model::onAmountResult,
         onClick = model::showEditAmount,
@@ -104,6 +105,7 @@ internal class SendConfirmComponent(
             cryptoCurrencyStatus = params.cryptoCurrencyStatus,
             feeStateConfiguration = model.feeStateConfiguration,
             feeDisplaySource = FeeSelectorParams.FeeDisplaySource.Screen,
+            analyticsCategoryName = params.analyticsCategoryName,
         ),
         onResult = model::onFeeResult,
     )

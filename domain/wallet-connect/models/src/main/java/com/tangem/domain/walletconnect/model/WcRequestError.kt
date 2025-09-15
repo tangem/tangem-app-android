@@ -49,8 +49,8 @@ sealed class WcRequestError {
             is SendTransactionError.NetworkError -> message
             is SendTransactionError.DataError -> message
             is SendTransactionError.UnknownError -> ex?.message
-            is SendTransactionError.TangemSdkError,
-            SendTransactionError.DemoCardError,
+            is SendTransactionError.TangemSdkError -> "TangemSdkError code: ${this.code}"
+            SendTransactionError.DemoCardError -> "DemoCardError"
             SendTransactionError.UserCancelledError,
             is SendTransactionError.CreateAccountUnderfunded,
             -> null
