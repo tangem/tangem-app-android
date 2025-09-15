@@ -1,15 +1,11 @@
 package com.tangem.features.onboarding.v2.visa.impl.child.choosewallet.ui
 
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -19,9 +15,9 @@ import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.components.rows.RowContentContainer
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.outsetBorder
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.selectedBorder
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -112,17 +108,7 @@ private fun SelectableChainRow(
     RowContentContainer(
         modifier = modifier
             .heightIn(min = 48.dp)
-            .outsetBorder(
-                color = if (selected) TangemTheme.colors.icon.accent.copy(alpha = 0.15f) else Color.Transparent,
-                width = 5.dp,
-                shape = RoundedCornerShape(size = 18.dp),
-            )
-            .clip(TangemTheme.shapes.roundedCornersXMedium)
-            .border(
-                width = 1.dp,
-                color = if (selected) TangemTheme.colors.icon.accent else Color.Transparent,
-                shape = TangemTheme.shapes.roundedCornersXMedium,
-            )
+            .selectedBorder(selected)
             .clickable(onClick = onClick)
             .padding(12.dp),
         icon = {
@@ -163,7 +149,7 @@ private fun Preview() {
                     ),
                 ),
                 selectedOption = SelectableChainRowUM(
-                    event = OnboardingVisaChooseWalletComponent.Params.Event.OtherWallet,
+                    event = OnboardingVisaChooseWalletComponent.Params.Event.TangemWallet,
                     icon = R.drawable.ic_tangem_24,
                     text = TextReference.Str("Tangem Wallet"),
                 ),
