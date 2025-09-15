@@ -6,6 +6,7 @@ import com.tangem.domain.models.scan.ScanResponse
 import kotlinx.coroutines.CoroutineScope
 import org.rekotlin.Action
 
+@Suppress("BooleanPropertyNaming")
 sealed class DetailsAction : Action {
 
     data class PrepareScreen(

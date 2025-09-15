@@ -34,7 +34,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.routing.component.RoutingComponent
 import com.tangem.tap.routing.transitions.RoutingTransitionAnimationFactory
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "ReusedModifierInstance")
 @OptIn(ExperimentalDecomposeApi::class)
 @Composable
 internal fun RootContent(

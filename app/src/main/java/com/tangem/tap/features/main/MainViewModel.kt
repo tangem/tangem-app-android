@@ -359,6 +359,7 @@ internal class MainViewModel @Inject constructor(
         listenToFlipsUseCase.changeUpdateEnabled(isUpdateEnabled = true)
     }
 
+    @Suppress("NullableToStringCall")
     private fun sendKeyboardIdentifierEvent() {
         viewModelScope.launch {
             val keyboardId = keyboardValidator.getKeyboardId()
