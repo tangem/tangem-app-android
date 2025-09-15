@@ -42,6 +42,7 @@ dependencies {
     implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.transaction.models)
+    implementation(projects.domain.express.models)
 
     /** Data */
     implementation(projects.data.common)

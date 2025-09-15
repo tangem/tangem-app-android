@@ -1,6 +1,7 @@
 package com.tangem.tap.domain.tasks.visa
 
 import arrow.core.getOrElse
+import com.tangem.blockchain.blockchains.ethereum.EthereumUtils.toKeccak
 import com.tangem.blockchain.common.UnmarshalHelper
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.Card
@@ -10,27 +11,24 @@ import com.tangem.common.core.CardSession
 import com.tangem.common.core.CardSessionRunnable
 import com.tangem.common.core.CompletionCallback
 import com.tangem.common.core.TangemSdkError
-import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toDecompressedPublicKey
 import com.tangem.common.extensions.toHexString
 import com.tangem.core.error.ext.tangemError
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
-import com.tangem.domain.card.common.util.derivationStyleProvider
+import com.tangem.domain.wallets.derivations.derivationStyleProvider
 import com.tangem.domain.card.common.visa.VisaUtilities
 import com.tangem.domain.card.common.visa.VisaWalletPublicKeyUtility
 import com.tangem.domain.card.common.visa.VisaWalletPublicKeyUtility.findKeyWithoutDerivation
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.visa.error.VisaActivationError
-import com.tangem.domain.visa.model.VisaDataForApprove
 import com.tangem.domain.visa.model.VisaSignedDataByCustomerWallet
-import com.tangem.domain.visa.model.sign
 import com.tangem.operations.ScanTask
 import com.tangem.operations.derivation.DeriveWalletPublicKeyTask
 import com.tangem.operations.sign.SignHashCommand
 
 class VisaCustomerWalletApproveTask(
-    private val visaDataForApprove: VisaDataForApprove,
+    private val visaDataForApprove: Input,
 ) : CardSessionRunnable<VisaSignedDataByCustomerWallet> {
 
     override fun run(session: CardSession, callback: CompletionCallback<VisaSignedDataByCustomerWallet>) {
@@ -44,7 +42,7 @@ class VisaCustomerWalletApproveTask(
             return
         }
 
-        if (visaDataForApprove.customerWalletCardId != null && card.cardId != visaDataForApprove.customerWalletCardId) {
+        if (visaDataForApprove.cardId != null && card.cardId != visaDataForApprove.cardId) {
             callback(CompletionResult.Failure(VisaActivationError.CardIdNotMatched.tangemError))
             return
         }
@@ -153,6 +151,12 @@ class VisaCustomerWalletApproveTask(
         )
     }
 
+    // TODO: [REDACTED_TASK_KEY] - Get this public function from Blockchain SDK
+    private fun hashPersonalMessage(message: ByteArray): ByteArray {
+        val prefix = "\u0019Ethereum Signed Message:\n${message.size}".toByteArray()
+        return (prefix + message).toKeccak()
+    }
+
     private fun signApproveData(
         targetWalletPublicKey: ByteArray,
         derivationPath: DerivationPath?,
@@ -160,10 +164,11 @@ class VisaCustomerWalletApproveTask(
         session: CardSession,
         callback: CompletionCallback<VisaSignedDataByCustomerWallet>,
     ) {
-        val hashToSign = visaDataForApprove.dataToSign.hashToSign.hexToBytes()
+        val content = "Tangem Pay wants to sign in with your account. Nonce: ${visaDataForApprove.hashToSign}"
+        val hash = hashPersonalMessage(content.toByteArray(Charsets.UTF_8))
 
         val signTask = SignHashCommand(
-            hash = hashToSign,
+            hash = hash,
             walletPublicKey = targetWalletPublicKey,
             derivationPath = derivationPath,
         )
@@ -173,7 +178,7 @@ class VisaCustomerWalletApproveTask(
                 is CompletionResult.Success -> {
                     val rsvSignature = UnmarshalHelper.unmarshalSignatureExtended(
                         signature = result.data.signature,
-                        hash = hashToSign,
+                        hash = hash,
                         publicKey = extendedPublicKey?.publicKey?.toDecompressedPublicKey()
                             ?: targetWalletPublicKey.toDecompressedPublicKey(),
                     ).asRSVLegacyEVM().toHexString().lowercase()
@@ -181,10 +186,7 @@ class VisaCustomerWalletApproveTask(
                     scanCard(
                         session = session,
                         callback = callback,
-                        signedData = visaDataForApprove.dataToSign.sign(
-                            signature = rsvSignature,
-                            customerWalletAddress = visaDataForApprove.targetAddress,
-                        ),
+                        signedData = visaDataForApprove.sign(rsvSignature, visaDataForApprove.targetAddress),
                     )
                 }
                 is CompletionResult.Failure -> {
@@ -211,4 +213,11 @@ class VisaCustomerWalletApproveTask(
             }
         }
     }
+
+    data class Input(
+        val cardId: String? = null,
+        val targetAddress: String,
+        val hashToSign: String,
+        val sign: (signature: String, customerWalletAddress: String) -> VisaSignedDataByCustomerWallet,
+    )
 }

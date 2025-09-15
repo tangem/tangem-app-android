@@ -9,7 +9,6 @@ import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.childStack
-import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.decompose.value.subscribe
 import com.arkivanov.essenty.instancekeeper.getOrCreateSimple
@@ -20,12 +19,12 @@ import com.tangem.core.decompose.navigation.inner.InnerNavigation
 import com.tangem.core.decompose.navigation.inner.InnerNavigationState
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.features.onboarding.v2.done.api.OnboardingDoneComponent
 import com.tangem.features.onboarding.v2.impl.R
 import com.tangem.features.onboarding.v2.note.api.OnboardingNoteComponent
 import com.tangem.features.onboarding.v2.note.impl.child.create.OnboardingNoteCreateWalletComponent
-import com.tangem.features.onboarding.v2.note.impl.child.topup.OnboardingNoteTopUpComponent
-import com.tangem.features.onboarding.v2.note.impl.model.OnboardingNoteModel
 import com.tangem.features.onboarding.v2.note.impl.model.OnboardingNoteCommonState
+import com.tangem.features.onboarding.v2.note.impl.model.OnboardingNoteModel
 import com.tangem.features.onboarding.v2.note.impl.route.ONBOARDING_NOTE_STEPS_COUNT
 import com.tangem.features.onboarding.v2.note.impl.route.OnboardingNoteRoute
 import dagger.assisted.Assisted
@@ -39,6 +38,7 @@ import kotlinx.coroutines.flow.StateFlow
 internal class DefaultOnboardingNoteComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
     @Assisted val params: OnboardingNoteComponent.Params,
+    val onboardingDoneComponentFactory: OnboardingDoneComponent.Factory,
 ) : OnboardingNoteComponent, AppComponentContext by context {
 
     private val model: OnboardingNoteModel = getOrCreateModel(params)
@@ -58,7 +58,7 @@ internal class DefaultOnboardingNoteComponent @AssistedInject constructor(
             key = "innerStack",
             source = model.stackNavigation,
             serializer = null,
-            initialConfiguration = model.initialRoute,
+            initialConfiguration = OnboardingNoteRoute.CreateWallet,
             handleBackButton = true,
             childFactory = { configuration, factoryContext ->
                 createChild(
@@ -98,15 +98,8 @@ internal class DefaultOnboardingNoteComponent @AssistedInject constructor(
                     childParams = childParams,
                     onWalletCreated = { userWallet ->
                         model.onWalletCreated(userWallet)
-                        model.stackNavigation.push(OnboardingNoteRoute.TopUp)
+                        params.onDone()
                     },
-                ),
-            )
-            OnboardingNoteRoute.TopUp -> OnboardingNoteTopUpComponent(
-                appComponentContext = factoryContext,
-                params = OnboardingNoteTopUpComponent.Params(
-                    childParams = childParams,
-                    onDone = { params.onDone() },
                 ),
             )
         }

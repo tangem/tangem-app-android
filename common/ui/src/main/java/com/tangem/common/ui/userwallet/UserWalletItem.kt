@@ -3,7 +3,9 @@ package com.tangem.common.ui.userwallet
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -22,6 +24,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.tangem.common.ui.R
@@ -30,6 +33,9 @@ import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.block.BlockCard
 import com.tangem.core.ui.components.block.TangemBlockCardColors
+import com.tangem.core.ui.components.label.Label
+import com.tangem.core.ui.components.label.entity.LabelStyle
+import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.components.text.applyBladeBrush
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
@@ -67,8 +73,10 @@ fun UserWalletItem(
                 balance = state.balance,
             )
 
+            state.label?.let { Label(it) }
+
             when (state.endIcon) {
-                UserWalletItemUM.EndIcon.None -> {}
+                UserWalletItemUM.EndIcon.None -> Unit
                 UserWalletItemUM.EndIcon.Arrow -> {
                     Icon(
                         imageVector = ImageVector.vectorResource(R.drawable.ic_chevron_right_24),
@@ -179,6 +187,19 @@ fun CardImage(imageState: UserWalletItemUM.ImageState, modifier: Modifier = Modi
                 radius = TangemTheme.dimens.size2,
             )
         }
+        is UserWalletItemUM.ImageState.MobileWallet -> {
+            Image(
+                modifier = Modifier
+                    .size(36.dp)
+                    .background(
+                        color = TangemTheme.colors.field.focused,
+                        shape = RoundedCornerShape(10.dp),
+                    )
+                    .padding(6.dp),
+                imageVector = ImageVector.vectorResource(R.drawable.ic_mobile_wallet_icon_24),
+                contentDescription = null,
+            )
+        }
         is UserWalletItemUM.ImageState.Image -> {
             val verifiedArtwork = imageState.artwork.verifiedArtwork
             if (verifiedArtwork != null) {
@@ -257,6 +278,18 @@ private fun Preview_UserWalletItem(
 private class UserWalletItemUMPreviewProvider : PreviewParameterProvider<UserWalletItemUM> {
     override val values: Sequence<UserWalletItemUM>
         get() = sequenceOf(
+            UserWalletItemUM(
+                id = UserWalletId("user_wallet_0".encodeToByteArray()),
+                name = stringReference("Mobile Wallet"),
+                information = getInformation(cardCount = 1),
+                balance = UserWalletItemUM.Balance.Locked,
+                label = LabelUM(
+                    text = resourceReference(R.string.hw_backup_no_backup),
+                    style = LabelStyle.WARNING,
+                ),
+                isEnabled = true,
+                onClick = {},
+            ),
             UserWalletItemUM(
                 id = UserWalletId("user_wallet_1".encodeToByteArray()),
                 name = stringReference("My Wallet"),
@@ -344,6 +377,18 @@ private class UserWalletItemUMPreviewProvider : PreviewParameterProvider<UserWal
                     value = "1.2345 BTC",
                     isFlickering = false,
                 ),
+                isEnabled = true,
+                onClick = {},
+            ),
+            UserWalletItemUM(
+                id = UserWalletId("user_wallet_3".encodeToByteArray()),
+                name = stringReference("Multi Card"),
+                information = UserWalletItemUM.Information.Failed,
+                balance = UserWalletItemUM.Balance.Loaded(
+                    value = "1.2345 BTC",
+                    isFlickering = false,
+                ),
+                imageState = UserWalletItemUM.ImageState.MobileWallet,
                 isEnabled = true,
                 onClick = {},
             ),
