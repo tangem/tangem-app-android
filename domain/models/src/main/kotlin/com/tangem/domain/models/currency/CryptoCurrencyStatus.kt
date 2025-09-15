@@ -6,6 +6,7 @@ import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.serialization.SerializedBigDecimal
 import com.tangem.domain.models.staking.YieldBalance
+import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import kotlinx.serialization.Serializable
 
 /**
@@ -57,6 +58,12 @@ data class CryptoCurrencyStatus(
 
         /** Staking yield balance */
         val yieldBalance: YieldBalance? get() = null
+
+        /**
+         * !!! DO NOT CONFUSE with STAKING YIELD BALANCE
+         * Yield supply status
+         */
+        val yieldSupplyStatus: YieldSupplyStatus? get() = null
 
         /** Sources */
         val sources: Sources get() = Sources()
@@ -157,6 +164,7 @@ data class CryptoCurrencyStatus(
         override val fiatRate: SerializedBigDecimal,
         override val priceChange: SerializedBigDecimal,
         override val yieldBalance: YieldBalance?,
+        override val yieldSupplyStatus: YieldSupplyStatus?,
         override val hasCurrentNetworkTransactions: Boolean,
         override val pendingTransactions: Set<TxInfo>,
         override val networkAddress: NetworkAddress,
@@ -184,6 +192,7 @@ data class CryptoCurrencyStatus(
         override val fiatRate: SerializedBigDecimal?,
         override val priceChange: SerializedBigDecimal?,
         override val yieldBalance: YieldBalance?,
+        override val yieldSupplyStatus: YieldSupplyStatus?,
         override val hasCurrentNetworkTransactions: Boolean,
         override val pendingTransactions: Set<TxInfo>,
         override val networkAddress: NetworkAddress,
@@ -205,6 +214,7 @@ data class CryptoCurrencyStatus(
     data class NoQuote(
         override val amount: SerializedBigDecimal,
         override val yieldBalance: YieldBalance?,
+        override val yieldSupplyStatus: YieldSupplyStatus?,
         override val hasCurrentNetworkTransactions: Boolean,
         override val pendingTransactions: Set<TxInfo>,
         override val networkAddress: NetworkAddress,
