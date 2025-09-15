@@ -57,7 +57,7 @@ internal class DisclaimerModel @Inject constructor(
             } else {
                 neverToInitiallyAskPermissionUseCase(PUSH_PERMISSION)
                 neverRequestPermissionUseCase(PUSH_PERMISSION)
-                router.replaceAll(AppRoute.Home)
+                router.replaceAll(AppRoute.Home())
             }
         }
     }

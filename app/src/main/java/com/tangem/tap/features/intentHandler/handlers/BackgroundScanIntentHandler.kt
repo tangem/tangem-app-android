@@ -4,21 +4,12 @@ import android.content.Intent
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.os.Build
-import com.tangem.tap.common.extensions.dispatchOnMain
-import com.tangem.tap.features.home.redux.HomeAction
-import com.tangem.tap.features.intentHandler.IntentHandler
-import com.tangem.tap.features.intentHandler.AffectsNavigation
-import com.tangem.tap.features.welcome.redux.WelcomeAction
-import com.tangem.tap.store
-import kotlinx.coroutines.CoroutineScope
+import com.tangem.common.routing.entity.InitScreenLaunchMode
 
 /**
 [REDACTED_AUTHOR]
  */
-class BackgroundScanIntentHandler(
-    private val hasSavedUserWalletsProvider: () -> Boolean,
-    private val scope: CoroutineScope,
-) : IntentHandler, AffectsNavigation {
+class BackgroundScanIntentHandler {
 
     private val nfcActions = arrayOf(
         NfcAdapter.ACTION_NDEF_DISCOVERED,
@@ -26,8 +17,15 @@ class BackgroundScanIntentHandler(
         NfcAdapter.ACTION_TAG_DISCOVERED,
     )
 
-    override fun handleIntent(intent: Intent?, isFromForeground: Boolean): Boolean {
-        if (isFromForeground) return true
+    fun getInitScreenLaunchMode(intent: Intent?): InitScreenLaunchMode {
+        return if (shouldOpenScanCard(intent)) {
+            InitScreenLaunchMode.WithCardScan
+        } else {
+            InitScreenLaunchMode.Standard
+        }
+    }
+
+    private fun shouldOpenScanCard(intent: Intent?): Boolean {
         if (intent == null || intent.action !in nfcActions) return false
 
         val tag: Tag? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -36,15 +34,9 @@ class BackgroundScanIntentHandler(
             @Suppress("DEPRECATION")
             intent.getParcelableExtra(NfcAdapter.EXTRA_TAG)
         }
-        if (tag == null) return false
 
         intent.action = null
-        if (hasSavedUserWalletsProvider.invoke()) {
-            store.dispatchOnMain(WelcomeAction.ProceedWithCard)
-        } else {
-            store.dispatchOnMain(HomeAction.ReadCard(scope = scope))
-        }
 
-        return true
+        return tag != null
     }
 }

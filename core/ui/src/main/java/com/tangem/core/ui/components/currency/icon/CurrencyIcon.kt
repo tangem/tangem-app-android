@@ -13,6 +13,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.CircleShimmer
 import com.tangem.core.ui.res.TangemTheme
@@ -28,11 +29,16 @@ import com.tangem.core.ui.utils.getGreyScaleColorFilter
  * @param shouldDisplayNetwork specifies whether to display network badge
  */
 @Composable
-fun CurrencyIcon(state: CurrencyIconState, modifier: Modifier = Modifier, shouldDisplayNetwork: Boolean = true) {
+fun CurrencyIcon(
+    state: CurrencyIconState,
+    modifier: Modifier = Modifier,
+    shouldDisplayNetwork: Boolean = true,
+    iconSize: Dp = 36.dp,
+) {
     BaseContainer(modifier = modifier) {
         val iconModifier = Modifier
             .align(Alignment.Center)
-            .size(TangemTheme.dimens.size36)
+            .size(iconSize)
 
         when (state) {
             is CurrencyIconState.Loading -> LoadingIcon(modifier = iconModifier)
