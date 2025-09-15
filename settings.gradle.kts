@@ -350,6 +350,7 @@ include(":domain:swap")
 include(":domain:swap:models")
 include(":domain:wallet-manager")
 include(":domain:wallet-manager:models")
+include(":domain:yield-supply")
 // endregion Domain modules
 
 // region Data modules
@@ -383,5 +384,6 @@ include(":data:blockaid")
 include(":data:swap")
 include(":data:express")
 include(":data:wallet-manager")
+include(":data:yield-supply")
 // endregion Data modules
 include(":features:tangempay:onboarding")
