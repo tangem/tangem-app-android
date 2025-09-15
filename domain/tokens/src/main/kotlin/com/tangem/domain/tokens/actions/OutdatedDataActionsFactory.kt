@@ -2,9 +2,9 @@ package com.tangem.domain.tokens.actions
 
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.staking.model.StakingAvailability
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState.ActionState
 import com.tangem.domain.walletmanager.WalletManagersFacade

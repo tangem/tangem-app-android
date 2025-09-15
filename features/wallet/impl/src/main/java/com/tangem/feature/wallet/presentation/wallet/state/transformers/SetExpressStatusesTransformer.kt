@@ -1,16 +1,16 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers
 
 import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheetConfig
+import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.onramp.model.cache.OnrampTransaction
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateUM
+import com.tangem.domain.onramp.model.cache.OnrampTransaction
+import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.SingleWalletOnrampTransactionConverter
-import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import kotlinx.collections.immutable.toPersistentList
 import timber.log.Timber
 

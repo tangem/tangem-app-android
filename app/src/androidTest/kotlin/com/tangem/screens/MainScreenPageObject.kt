@@ -39,6 +39,11 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
         hasText(getResourceString(R.string.common_generate_addresses))
     }
 
+    val buyButton: KNode = child {
+        hasTestTag(MainScreenTestTags.MULTI_CURRENCY_ACTION_BUTTON)
+        hasText(getResourceString(R.string.common_buy))
+    }
+
     /**
      * Find token list item with title and address
      */

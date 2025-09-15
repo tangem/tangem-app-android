@@ -18,9 +18,10 @@ import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
-import com.tangem.core.ui.utils.BigDecimalFormatter
+import com.tangem.core.ui.format.bigdecimal.price
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
@@ -164,11 +165,12 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                 type = percentChangeType.toChartType(),
                 xAxisFormatter = MarketsDateTimeFormatters.getChartXFormatterByInterval(PriceChangeInterval.H24),
                 yAxisFormatter = { value ->
-                    BigDecimalFormatter.formatFiatPriceUncapped(
-                        fiatAmount = value,
-                        fiatCurrencyCode = currentAppCurrency.value.code,
-                        fiatCurrencySymbol = currentAppCurrency.value.symbol,
-                    )
+                    value.format {
+                        fiat(
+                            fiatCurrencyCode = currentAppCurrency.value.code,
+                            fiatCurrencySymbol = currentAppCurrency.value.symbol,
+                        ).price()
+                    }
                 },
             )
         }
@@ -196,11 +198,12 @@ internal class MarketsTokenDetailsModel @Inject constructor(
     val state = MutableStateFlow(
         MarketsTokenDetailsUM(
             tokenName = params.token.name,
-            priceText = BigDecimalFormatter.formatFiatPriceUncapped(
-                fiatAmount = params.token.tokenQuotes.currentPrice,
-                fiatCurrencyCode = currentAppCurrency.value.code,
-                fiatCurrencySymbol = currentAppCurrency.value.symbol,
-            ),
+            priceText = params.token.tokenQuotes.currentPrice.format {
+                fiat(
+                    fiatCurrencyCode = currentAppCurrency.value.code,
+                    fiatCurrencySymbol = currentAppCurrency.value.symbol,
+                ).price()
+            },
             dateTimeText = resourceReference(R.string.common_today),
             priceChangePercentText = params.token.tokenQuotes.h24Percent?.format { percent() },
             priceChangeType = params.token.tokenQuotes.h24Percent.percentChangeType(),
@@ -403,7 +406,12 @@ internal class MarketsTokenDetailsModel @Inject constructor(
 
         state.update {
             it.copy(
-                priceText = newInfo.quotes.currentPrice.formatAsPrice(currentAppCurrency.value),
+                priceText = newInfo.quotes.currentPrice.format {
+                    fiat(
+                        fiatCurrencySymbol = currentAppCurrency.value.symbol,
+                        fiatCurrencyCode = currentAppCurrency.value.code,
+                    ).price()
+                },
                 priceChangePercentText = newInfo.quotes.getFormattedPercentByInterval(
                     interval = it.selectedInterval,
                 ),
@@ -490,7 +498,12 @@ internal class MarketsTokenDetailsModel @Inject constructor(
             )
         } ?: getDefaultDateTimeString(currentState.selectedInterval)
 
-        val priceText = (price ?: currentQuotes.value.currentPrice).formatAsPrice(currentAppCurrency.value)
+        val priceText = (price ?: currentQuotes.value.currentPrice).format {
+            fiat(
+                fiatCurrencySymbol = currentAppCurrency.value.symbol,
+                fiatCurrencyCode = currentAppCurrency.value.code,
+            ).price()
+        }
 
         val percent = price?.let {
             getChangePercentBetween(

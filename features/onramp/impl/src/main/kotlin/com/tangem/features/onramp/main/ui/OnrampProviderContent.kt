@@ -13,12 +13,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import com.tangem.core.ui.extensions.appendSpace
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.test.BuyTokenDetailsScreenTestTags
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.main.entity.OnrampProviderBlockUM
 import com.tangem.features.onramp.paymentmethod.ui.PaymentMethodIcon
@@ -60,6 +62,7 @@ private fun OnrampProviderBlock(state: OnrampProviderBlockUM.Content, modifier: 
                 },
                 color = TangemTheme.colors.text.tertiary,
                 style = TangemTheme.typography.body2,
+                modifier = Modifier.testTag(BuyTokenDetailsScreenTestTags.PROVIDER_TITLE),
             )
             Text(
                 text = buildAnnotatedString {
@@ -69,6 +72,7 @@ private fun OnrampProviderBlock(state: OnrampProviderBlockUM.Content, modifier: 
                 },
                 style = TangemTheme.typography.caption2,
                 color = TangemTheme.colors.text.tertiary,
+                modifier = Modifier.testTag(BuyTokenDetailsScreenTestTags.PROVIDER_TEXT),
             )
         }
         AnimatedVisibility(
@@ -108,6 +112,7 @@ private fun OnrampProviderLoading(modifier: Modifier = Modifier) {
             text = stringResourceSafe(id = R.string.express_provider),
             style = TangemTheme.typography.subtitle2,
             color = TangemTheme.colors.text.tertiary,
+            modifier = Modifier.testTag(BuyTokenDetailsScreenTestTags.PROVIDER_LOADING_TITLE),
         )
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -122,6 +127,7 @@ private fun OnrampProviderLoading(modifier: Modifier = Modifier) {
                 text = stringResourceSafe(id = R.string.express_fetch_best_rates),
                 style = TangemTheme.typography.body2,
                 color = TangemTheme.colors.text.tertiary,
+                modifier = Modifier.testTag(BuyTokenDetailsScreenTestTags.PROVIDER_LOADING_TEXT),
             )
         }
     }

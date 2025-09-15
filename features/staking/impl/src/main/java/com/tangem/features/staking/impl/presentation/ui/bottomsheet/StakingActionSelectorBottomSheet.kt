@@ -17,8 +17,8 @@ import com.tangem.core.ui.components.inputrow.InputRowDefault
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.domain.staking.model.stakekit.PendingAction
-import com.tangem.domain.staking.model.stakekit.action.StakingActionType
+import com.tangem.domain.models.staking.PendingAction
+import com.tangem.domain.models.staking.action.StakingActionType
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.bottomsheet.StakingActionSelectionBottomSheetConfig
 import com.tangem.features.staking.impl.presentation.state.utils.getPendingActionTitle
