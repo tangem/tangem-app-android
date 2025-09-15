@@ -16,11 +16,7 @@ import com.tangem.data.walletconnect.pair.WcPairSdkDelegate
 import com.tangem.data.walletconnect.utils.WcSdkSessionConverter
 import com.tangem.domain.blockaid.BlockAidVerifier
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.walletconnect.model.WcPairError
-import com.tangem.domain.walletconnect.model.WcPairRequest
-import com.tangem.domain.walletconnect.model.WcSession
-import com.tangem.domain.walletconnect.model.WcSessionApprove
-import com.tangem.domain.walletconnect.repository.WcSessionsManager
+import com.tangem.domain.walletconnect.model.*
 import com.tangem.domain.walletconnect.usecase.pair.WcPairState
 import io.mockk.coEvery
 import io.mockk.coVerifyOrder
@@ -32,7 +28,6 @@ import org.junit.Test
 
 internal class DefaultWcPairUseCaseTest {
 
-    private val sessionsManager: WcSessionsManager = mockk<WcSessionsManager>()
     private val associateNetworksDelegate: AssociateNetworksDelegate = mockk<AssociateNetworksDelegate>()
     private val caipNamespaceDelegate: CaipNamespaceDelegate = mockk<CaipNamespaceDelegate>()
     private val analytics: AnalyticsEventHandler = mockk<AnalyticsEventHandler>(relaxed = true)
@@ -83,11 +78,6 @@ internal class DefaultWcPairUseCaseTest {
             namespaces = mapOf(),
         )
 
-    private val sdkApproveSuccess: Wallet.Model.SettledSessionResponse.Result
-        get() = Wallet.Model.SettledSessionResponse.Result(
-            session = sdkSession,
-        )
-
     private val sdkSession: Wallet.Model.Session
         get() = Wallet.Model.Session(
             pairingTopic = "",
@@ -115,7 +105,6 @@ internal class DefaultWcPairUseCaseTest {
         )
 
     private fun useCaseFactory() = DefaultWcPairUseCase(
-        sessionsManager = sessionsManager,
         associateNetworksDelegate = associateNetworksDelegate,
         caipNamespaceDelegate = caipNamespaceDelegate,
         sdkDelegate = sdkDelegate,
@@ -155,12 +144,11 @@ internal class DefaultWcPairUseCaseTest {
     @Test
     fun `success pair and approve flow`() = runTest {
         val approveLoading = WcPairState.Approving.Loading(sessionForApprove)
-        val sessionForSave = sdkSession.sessionForSave
-        val result = WcPairState.Approving.Result(sessionForApprove, sessionForSave.right())
+        val appMetaData = sdkSession.sessionForSave.sdkModel.appMetaData
+        val result = WcPairState.Approving.Result(sessionForApprove, appMetaData.right())
 
         coEvery { sdkDelegate.pair(url) } returns (sdkProposal to sdkVerifyContext).right()
-        coEvery { sdkDelegate.approve(sdkApprove) } returns sdkApproveSuccess.right()
-        coEvery { sessionsManager.saveSession(any()) } returns Unit
+        coEvery { sdkDelegate.approve(any(), any()) } returns Unit.right()
         coEvery { blockAidVerifier.verifyDApp(any()) } returns Either.catch { CheckDAppResult.SAFE }
 
         val useCase = useCaseFactory()
@@ -177,8 +165,7 @@ internal class DefaultWcPairUseCaseTest {
 
             assertEquals(approveLoading, awaitItem())
             coVerifyOrder {
-                sdkDelegate.approve(sdkApprove)
-                sessionsManager.saveSession(any())
+                sdkDelegate.approve(any(), any())
             }
             val actual: WcPairState = awaitItem()
             assert(actual is WcPairState.Approving.Result)
@@ -250,7 +237,7 @@ internal class DefaultWcPairUseCaseTest {
         val approveLoading = WcPairState.Approving.Loading(sessionForApprove)
         val error = WcPairError.ApprovalFailed("error").left()
         coEvery { sdkDelegate.pair(url) } returns (sdkProposal to sdkVerifyContext).right()
-        coEvery { sdkDelegate.approve(sdkApprove) } returns error
+        coEvery { sdkDelegate.approve(any(), any()) } returns error
         coEvery { sdkDelegate.rejectSession(sdkApprove.proposerPublicKey) } returns Unit
         coEvery { blockAidVerifier.verifyDApp(any()) } returns Either.catch { CheckDAppResult.SAFE }
 
@@ -269,7 +256,7 @@ internal class DefaultWcPairUseCaseTest {
 
             assertEquals(approveLoading, awaitItem())
             coVerifyOrder {
-                sdkDelegate.approve(sdkApprove)
+                sdkDelegate.approve(any(), any())
                 sdkDelegate.rejectSession(sdkApprove.proposerPublicKey)
             }
             assertEquals(errorResult, awaitItem())
