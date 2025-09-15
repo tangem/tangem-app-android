@@ -30,8 +30,10 @@ dependencies {
     implementation(projects.domain.manageTokens)
     implementation(projects.domain.tokens)
     implementation(projects.domain.tokens.models)
+    implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.swap.models)
+    implementation(projects.domain.notifications)
 
     /* AndroidX */
     implementation(deps.androidx.activity.compose)
@@ -41,7 +43,6 @@ dependencies {
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
     implementation(deps.compose.foundation)
-    implementation(deps.compose.material) // For button colors
     implementation(deps.compose.material3)
     implementation(deps.compose.shimmer)
 

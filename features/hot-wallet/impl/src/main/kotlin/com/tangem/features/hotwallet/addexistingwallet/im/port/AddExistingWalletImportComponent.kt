@@ -7,6 +7,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.hotwallet.addexistingwallet.im.port.model.AddExistingWalletImportModel
 import com.tangem.features.hotwallet.addexistingwallet.im.port.ui.AddExistingWalletImportContent
 import dagger.assisted.Assisted
@@ -28,7 +29,7 @@ internal class AddExistingWalletImportComponent @AssistedInject constructor(
     }
 
     interface ModelCallbacks {
-        fun onWalletImported()
+        fun onWalletImported(userWalletId: UserWalletId)
     }
 
     data class Params(

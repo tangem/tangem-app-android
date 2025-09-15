@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -15,6 +16,7 @@ import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.extensions.appendColored
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.test.BuyTokenDetailsScreenTestTags
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.main.entity.OnrampMainComponentUM
 import com.tangem.features.onramp.main.entity.OnrampProviderBlockUM
@@ -77,6 +79,7 @@ private fun OnrampTosText(provider: OnrampProviderBlockUM.Content?) {
                     color = TangemTheme.colors.text.tertiary,
                     textAlign = TextAlign.Center,
                 ),
+                modifier = Modifier.testTag(BuyTokenDetailsScreenTestTags.TOS_BLOCK),
                 onClick = { offset ->
                     clickableAnnotation.getStringAnnotations(
                         tag = TERMS_OF_USE_KEY,
