@@ -12,3 +12,14 @@ data class WcSessionDTO(
     val securityStatus: CheckDAppResult = CheckDAppResult.FAILED_TO_VERIFY,
     val connectingTime: Long? = null,
 )
+
+/**
+ * keep in mind that [WcSessionDTO.topic] will be empty
+ * you must associate it with SdkSession by [pairingTopic]
+ */
+@JsonClass(generateAdapter = true)
+data class WcPendingApprovalSessionDTO(
+    val pairingTopic: String,
+    val session: WcSessionDTO,
+    val expiredTime: Long,
+)
