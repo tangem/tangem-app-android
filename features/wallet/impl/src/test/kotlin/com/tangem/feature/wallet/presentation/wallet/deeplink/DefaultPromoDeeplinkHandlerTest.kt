@@ -1,3 +1,5 @@
+@file:Suppress("FunctionSignature")
+
 package com.tangem.feature.wallet.presentation.wallet.deeplink
 
 import arrow.core.Either
@@ -10,8 +12,8 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
-import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.network.NetworkStatus
@@ -19,6 +21,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
+import com.tangem.domain.wallets.PromoCodeActivationResult
 import com.tangem.domain.wallets.models.GetUserWalletError
 import com.tangem.domain.wallets.models.errors.ActivatePromoCodeError
 import com.tangem.domain.wallets.usecase.ActivateBitcoinPromocodeUseCase
@@ -26,15 +29,10 @@ import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.feature.wallet.deeplink.DefaultPromoDeeplinkHandler
 import com.tangem.feature.wallet.deeplink.analytics.PromoActivationAnalytics
 import com.tangem.feature.wallet.impl.R
-import io.mockk.MockKAnnotations
-import io.mockk.coEvery
-import io.mockk.coVerify
-import io.mockk.every
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import io.mockk.*
 import io.mockk.impl.annotations.MockK
-import io.mockk.just
-import io.mockk.mockk
-import io.mockk.runs
-import io.mockk.verify
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flow
@@ -46,9 +44,6 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
 import timber.log.Timber
-import com.tangem.domain.wallets.PromoCodeActivationResult
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class DefaultPromoDeeplinkHandlerTest {
@@ -361,80 +356,82 @@ class DefaultPromoDeeplinkHandlerTest {
     }
 
     @Test
-    fun `GIVEN BTC status but currencies without BTC WHEN findBitcoinAddress THEN no bitcoin address dialog is shown`() = runTest {
-        val queryParams = mapOf(DeeplinkConst.PROMO_CODE_KEY to "PROMO123")
-        val userWallet = mockUserWallet("ABCDEF")
-        every { getSelectedWalletSyncUseCase.invoke() } returns Either.Right(userWallet)
-        val btcStatus = buildNetworkStatus(rawNetworkId = Blockchain.Bitcoin.id, address = "bc1qxyz")
-        coEvery { multiNetworkStatusSupplier.invoke(any()) } returns flowOf(setOf(btcStatus))
-        val ethOnly = buildCryptoCurrency(rawNetworkId = "ethereum")
-        coEvery { multiWalletCryptoCurrenciesSupplier.getSyncOrNull(any()) } returns setOf(ethOnly)
-        val dispatcherProvider = testDispatcherProvider(testScheduler)
+    fun `GIVEN BTC status but currencies without BTC WHEN findBitcoinAddress THEN no bitcoin address dialog is shown`() =
+        runTest {
+            val queryParams = mapOf(DeeplinkConst.PROMO_CODE_KEY to "PROMO123")
+            val userWallet = mockUserWallet("ABCDEF")
+            every { getSelectedWalletSyncUseCase.invoke() } returns Either.Right(userWallet)
+            val btcStatus = buildNetworkStatus(rawNetworkId = Blockchain.Bitcoin.id, address = "bc1qxyz")
+            coEvery { multiNetworkStatusSupplier.invoke(any()) } returns flowOf(setOf(btcStatus))
+            val ethOnly = buildCryptoCurrency(rawNetworkId = "ethereum")
+            coEvery { multiWalletCryptoCurrenciesSupplier.getSyncOrNull(any()) } returns setOf(ethOnly)
+            val dispatcherProvider = testDispatcherProvider(testScheduler)
 
-        DefaultPromoDeeplinkHandler(
-            scope = this,
-            queryParams = queryParams,
-            uiMessageSender = uiMessageSender,
-            multiNetworkStatusSupplier = multiNetworkStatusSupplier,
-            multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
-            activateBitcoinPromocodeUseCase = activateBitcoinPromocodeUseCase,
-            getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
-            analyticsEventsHandler = analyticsEventHandler,
-            dispatchers = dispatcherProvider,
-        )
+            DefaultPromoDeeplinkHandler(
+                scope = this,
+                queryParams = queryParams,
+                uiMessageSender = uiMessageSender,
+                multiNetworkStatusSupplier = multiNetworkStatusSupplier,
+                multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
+                activateBitcoinPromocodeUseCase = activateBitcoinPromocodeUseCase,
+                getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
+                analyticsEventsHandler = analyticsEventHandler,
+                dispatchers = dispatcherProvider,
+            )
 
-        advanceUntilIdle()
+            advanceUntilIdle()
 
-        val sent = messages.last { it is DialogMessage } as DialogMessage
-        Truth.assertThat(sent.title).isEqualTo(resourceReference(R.string.bitcoin_promo_no_address_title))
-        Truth.assertThat(sent.message).isEqualTo(resourceReference(R.string.bitcoin_promo_no_address))
-    }
+            val sent = messages.last { it is DialogMessage } as DialogMessage
+            Truth.assertThat(sent.title).isEqualTo(resourceReference(R.string.bitcoin_promo_no_address_title))
+            Truth.assertThat(sent.message).isEqualTo(resourceReference(R.string.bitcoin_promo_no_address))
+        }
 
     @Test
-    fun `GIVEN multiple statuses emissions and currencies without BTC WHEN findBitcoinAddress THEN no bitcoin address dialog is shown`() = runTest {
-        val promoCode = "PROMO123"
-        val queryParams = mapOf(DeeplinkConst.PROMO_CODE_KEY to promoCode)
-        val userWallet = mockUserWallet("ABCDEF")
-        every { getSelectedWalletSyncUseCase.invoke() } returns Either.Right(userWallet)
+    fun `GIVEN multiple statuses emissions and currencies without BTC WHEN findBitcoinAddress THEN no bitcoin address dialog is shown`() =
+        runTest {
+            val promoCode = "PROMO123"
+            val queryParams = mapOf(DeeplinkConst.PROMO_CODE_KEY to promoCode)
+            val userWallet = mockUserWallet("ABCDEF")
+            every { getSelectedWalletSyncUseCase.invoke() } returns Either.Right(userWallet)
 
-        val ethStatus = buildNetworkStatus(rawNetworkId = "ethereum", address = "0x123")
-        val btcStatus = buildNetworkStatus(rawNetworkId = Blockchain.Bitcoin.id, address = "bc1qxyz")
-        coEvery { multiNetworkStatusSupplier.invoke(any()) } returns flow {
-            emit(emptySet())
-            emit(setOf(ethStatus))
-            emit(setOf(ethStatus, btcStatus))
-        }
+            val ethStatus = buildNetworkStatus(rawNetworkId = "ethereum", address = "0x123")
+            val btcStatus = buildNetworkStatus(rawNetworkId = Blockchain.Bitcoin.id, address = "bc1qxyz")
+            coEvery { multiNetworkStatusSupplier.invoke(any()) } returns flow {
+                emit(emptySet())
+                emit(setOf(ethStatus))
+                emit(setOf(ethStatus, btcStatus))
+            }
 
-        val ethOnly = buildCryptoCurrency(rawNetworkId = "ethereum")
-        coEvery { multiWalletCryptoCurrenciesSupplier.getSyncOrNull(any()) } returns setOf(ethOnly)
+            val ethOnly = buildCryptoCurrency(rawNetworkId = "ethereum")
+            coEvery { multiWalletCryptoCurrenciesSupplier.getSyncOrNull(any()) } returns setOf(ethOnly)
 
-        val dispatcherProvider = testDispatcherProvider(testScheduler)
+            val dispatcherProvider = testDispatcherProvider(testScheduler)
 
-        DefaultPromoDeeplinkHandler(
-            scope = this,
-            queryParams = queryParams,
-            uiMessageSender = uiMessageSender,
-            multiNetworkStatusSupplier = multiNetworkStatusSupplier,
-            multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
-            activateBitcoinPromocodeUseCase = activateBitcoinPromocodeUseCase,
-            getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
-            analyticsEventsHandler = analyticsEventHandler,
-            dispatchers = dispatcherProvider,
-        )
-
-        advanceUntilIdle()
-
-        val sent = messages.last { it is DialogMessage } as DialogMessage
-        Truth.assertThat(sent.title).isEqualTo(resourceReference(R.string.bitcoin_promo_no_address_title))
-        Truth.assertThat(sent.message).isEqualTo(resourceReference(R.string.bitcoin_promo_no_address))
-
-        verify(exactly = 1) { analyticsEventHandler.send(PromoActivationAnalytics.PromoDeepLinkActivationStart) }
-        verify(exactly = 1) {
-            analyticsEventHandler.send(
-                PromoActivationAnalytics.PromoActivation(PromoCodeActivationResult.NoBitcoinAddress),
+            DefaultPromoDeeplinkHandler(
+                scope = this,
+                queryParams = queryParams,
+                uiMessageSender = uiMessageSender,
+                multiNetworkStatusSupplier = multiNetworkStatusSupplier,
+                multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
+                activateBitcoinPromocodeUseCase = activateBitcoinPromocodeUseCase,
+                getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
+                analyticsEventsHandler = analyticsEventHandler,
+                dispatchers = dispatcherProvider,
             )
+
+            advanceUntilIdle()
+
+            val sent = messages.last { it is DialogMessage } as DialogMessage
+            Truth.assertThat(sent.title).isEqualTo(resourceReference(R.string.bitcoin_promo_no_address_title))
+            Truth.assertThat(sent.message).isEqualTo(resourceReference(R.string.bitcoin_promo_no_address))
+
+            verify(exactly = 1) { analyticsEventHandler.send(PromoActivationAnalytics.PromoDeepLinkActivationStart) }
+            verify(exactly = 1) {
+                analyticsEventHandler.send(
+                    PromoActivationAnalytics.PromoActivation(PromoCodeActivationResult.NoBitcoinAddress),
+                )
+            }
         }
-    }
 
     @Test
     fun `GIVEN two BTC statuses with different derivation AND two BTC currencies WHEN activate THEN activated`() =
@@ -492,267 +489,275 @@ class DefaultPromoDeeplinkHandlerTest {
         }
 
     @Test
-    fun `GIVEN two BTC statuses with different derivation AND one matching BTC currency WHEN activate THEN activated`() = runTest {
-        val promoCode = "PROMO123"
-        val queryParams = mapOf(DeeplinkConst.PROMO_CODE_KEY to promoCode)
-        val userWallet = mockUserWallet("ABCDEF")
-        every { getSelectedWalletSyncUseCase.invoke() } returns Either.Right(userWallet)
+    fun `GIVEN two BTC statuses with different derivation AND one matching BTC currency WHEN activate THEN activated`() =
+        runTest {
+            val promoCode = "PROMO123"
+            val queryParams = mapOf(DeeplinkConst.PROMO_CODE_KEY to promoCode)
+            val userWallet = mockUserWallet("ABCDEF")
+            every { getSelectedWalletSyncUseCase.invoke() } returns Either.Right(userWallet)
 
-        val dpCard = Network.DerivationPath.Card("m/44'/0'/0'")
-        val dpCustom = Network.DerivationPath.Custom("m/84'/0'/0'")
+            val dpCard = Network.DerivationPath.Card("m/44'/0'/0'")
+            val dpCustom = Network.DerivationPath.Custom("m/84'/0'/0'")
 
-        val btcStatusCard = buildNetworkStatus(
-            rawNetworkId = Blockchain.Bitcoin.id,
-            address = "bc1qcard",
-            derivationPath = dpCard,
-        )
-        val btcStatusCustom = buildNetworkStatus(
-            rawNetworkId = Blockchain.Bitcoin.id,
-            address = "bc1qcustom",
-            derivationPath = dpCustom,
-        )
-        coEvery { multiNetworkStatusSupplier.invoke(any()) } returns flowOf(setOf(btcStatusCard, btcStatusCustom))
-
-        val btcCoinCard = buildCryptoCurrency(rawNetworkId = Blockchain.Bitcoin.id, derivationPath = dpCard)
-        coEvery { multiWalletCryptoCurrenciesSupplier.getSyncOrNull(any()) } returns setOf(btcCoinCard)
-
-        coEvery { activateBitcoinPromocodeUseCase.invoke("bc1qcard", promoCode) } returns Either.Right("ok")
-
-        val dispatcherProvider = testDispatcherProvider(testScheduler)
-
-        DefaultPromoDeeplinkHandler(
-            scope = this,
-            queryParams = queryParams,
-            uiMessageSender = uiMessageSender,
-            multiNetworkStatusSupplier = multiNetworkStatusSupplier,
-            multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
-            activateBitcoinPromocodeUseCase = activateBitcoinPromocodeUseCase,
-            getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
-            analyticsEventsHandler = analyticsEventHandler,
-            dispatchers = dispatcherProvider,
-        )
-
-        advanceUntilIdle()
-
-        val sent = messages.last { it is DialogMessage } as DialogMessage
-        Truth.assertThat(sent.title).isEqualTo(resourceReference(R.string.bitcoin_promo_activation_success_title))
-        Truth.assertThat(sent.message).isEqualTo(resourceReference(R.string.bitcoin_promo_activation_success))
-
-        coVerify(exactly = 1) { activateBitcoinPromocodeUseCase.invoke("bc1qcard", promoCode) }
-        coVerify(exactly = 0) { activateBitcoinPromocodeUseCase.invoke("bc1qcustom", promoCode) }
-
-        verify(exactly = 1) { analyticsEventHandler.send(PromoActivationAnalytics.PromoDeepLinkActivationStart) }
-        verify(exactly = 1) {
-            analyticsEventHandler.send(
-                PromoActivationAnalytics.PromoActivation(PromoCodeActivationResult.Activated),
+            val btcStatusCard = buildNetworkStatus(
+                rawNetworkId = Blockchain.Bitcoin.id,
+                address = "bc1qcard",
+                derivationPath = dpCard,
             )
+            val btcStatusCustom = buildNetworkStatus(
+                rawNetworkId = Blockchain.Bitcoin.id,
+                address = "bc1qcustom",
+                derivationPath = dpCustom,
+            )
+            coEvery { multiNetworkStatusSupplier.invoke(any()) } returns flowOf(setOf(btcStatusCard, btcStatusCustom))
+
+            val btcCoinCard = buildCryptoCurrency(rawNetworkId = Blockchain.Bitcoin.id, derivationPath = dpCard)
+            coEvery { multiWalletCryptoCurrenciesSupplier.getSyncOrNull(any()) } returns setOf(btcCoinCard)
+
+            coEvery { activateBitcoinPromocodeUseCase.invoke("bc1qcard", promoCode) } returns Either.Right("ok")
+
+            val dispatcherProvider = testDispatcherProvider(testScheduler)
+
+            DefaultPromoDeeplinkHandler(
+                scope = this,
+                queryParams = queryParams,
+                uiMessageSender = uiMessageSender,
+                multiNetworkStatusSupplier = multiNetworkStatusSupplier,
+                multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
+                activateBitcoinPromocodeUseCase = activateBitcoinPromocodeUseCase,
+                getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
+                analyticsEventsHandler = analyticsEventHandler,
+                dispatchers = dispatcherProvider,
+            )
+
+            advanceUntilIdle()
+
+            val sent = messages.last { it is DialogMessage } as DialogMessage
+            Truth.assertThat(sent.title).isEqualTo(resourceReference(R.string.bitcoin_promo_activation_success_title))
+            Truth.assertThat(sent.message).isEqualTo(resourceReference(R.string.bitcoin_promo_activation_success))
+
+            coVerify(exactly = 1) { activateBitcoinPromocodeUseCase.invoke("bc1qcard", promoCode) }
+            coVerify(exactly = 0) { activateBitcoinPromocodeUseCase.invoke("bc1qcustom", promoCode) }
+
+            verify(exactly = 1) { analyticsEventHandler.send(PromoActivationAnalytics.PromoDeepLinkActivationStart) }
+            verify(exactly = 1) {
+                analyticsEventHandler.send(
+                    PromoActivationAnalytics.PromoActivation(PromoCodeActivationResult.Activated),
+                )
+            }
         }
-    }
 
     @Test
-    fun `GIVEN two BTC statuses with different derivation AND no BTC currencies WHEN findBitcoinAddress THEN no bitcoin address dialog is shown`() = runTest {
-        val promoCode = "PROMO123"
-        val queryParams = mapOf(DeeplinkConst.PROMO_CODE_KEY to promoCode)
-        val userWallet = mockUserWallet("ABCDEF")
-        every { getSelectedWalletSyncUseCase.invoke() } returns Either.Right(userWallet)
+    fun `GIVEN two BTC statuses with different derivation AND no BTC currencies WHEN findBitcoinAddress THEN no bitcoin address dialog is shown`() =
+        runTest {
+            val promoCode = "PROMO123"
+            val queryParams = mapOf(DeeplinkConst.PROMO_CODE_KEY to promoCode)
+            val userWallet = mockUserWallet("ABCDEF")
+            every { getSelectedWalletSyncUseCase.invoke() } returns Either.Right(userWallet)
 
-        val dpCard = Network.DerivationPath.Card("m/44'/0'/0'")
-        val dpCustom = Network.DerivationPath.Custom("m/84'/0'/0'")
+            val dpCard = Network.DerivationPath.Card("m/44'/0'/0'")
+            val dpCustom = Network.DerivationPath.Custom("m/84'/0'/0'")
 
-        val btcStatusCard = buildNetworkStatus(
-            rawNetworkId = Blockchain.Bitcoin.id,
-            address = "bc1qcard",
-            derivationPath = dpCard,
-        )
-        val btcStatusCustom = buildNetworkStatus(
-            rawNetworkId = Blockchain.Bitcoin.id,
-            address = "bc1qcustom",
-            derivationPath = dpCustom,
-        )
-        coEvery { multiNetworkStatusSupplier.invoke(any()) } returns flowOf(setOf(btcStatusCard, btcStatusCustom))
-
-        coEvery { multiWalletCryptoCurrenciesSupplier.getSyncOrNull(any()) } returns emptySet()
-
-        val dispatcherProvider = testDispatcherProvider(testScheduler)
-
-        DefaultPromoDeeplinkHandler(
-            scope = this,
-            queryParams = queryParams,
-            uiMessageSender = uiMessageSender,
-            multiNetworkStatusSupplier = multiNetworkStatusSupplier,
-            multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
-            activateBitcoinPromocodeUseCase = activateBitcoinPromocodeUseCase,
-            getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
-            analyticsEventsHandler = analyticsEventHandler,
-            dispatchers = dispatcherProvider,
-        )
-
-        advanceUntilIdle()
-
-        val sent = messages.last { it is DialogMessage } as DialogMessage
-        Truth.assertThat(sent.title).isEqualTo(resourceReference(R.string.bitcoin_promo_no_address_title))
-        Truth.assertThat(sent.message).isEqualTo(resourceReference(R.string.bitcoin_promo_no_address))
-
-        coVerify(exactly = 0) { activateBitcoinPromocodeUseCase.invoke(any(), any()) }
-
-        verify(exactly = 1) { analyticsEventHandler.send(PromoActivationAnalytics.PromoDeepLinkActivationStart) }
-        verify(exactly = 1) {
-            analyticsEventHandler.send(
-                PromoActivationAnalytics.PromoActivation(PromoCodeActivationResult.NoBitcoinAddress),
+            val btcStatusCard = buildNetworkStatus(
+                rawNetworkId = Blockchain.Bitcoin.id,
+                address = "bc1qcard",
+                derivationPath = dpCard,
             )
+            val btcStatusCustom = buildNetworkStatus(
+                rawNetworkId = Blockchain.Bitcoin.id,
+                address = "bc1qcustom",
+                derivationPath = dpCustom,
+            )
+            coEvery { multiNetworkStatusSupplier.invoke(any()) } returns flowOf(setOf(btcStatusCard, btcStatusCustom))
+
+            coEvery { multiWalletCryptoCurrenciesSupplier.getSyncOrNull(any()) } returns emptySet()
+
+            val dispatcherProvider = testDispatcherProvider(testScheduler)
+
+            DefaultPromoDeeplinkHandler(
+                scope = this,
+                queryParams = queryParams,
+                uiMessageSender = uiMessageSender,
+                multiNetworkStatusSupplier = multiNetworkStatusSupplier,
+                multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
+                activateBitcoinPromocodeUseCase = activateBitcoinPromocodeUseCase,
+                getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
+                analyticsEventsHandler = analyticsEventHandler,
+                dispatchers = dispatcherProvider,
+            )
+
+            advanceUntilIdle()
+
+            val sent = messages.last { it is DialogMessage } as DialogMessage
+            Truth.assertThat(sent.title).isEqualTo(resourceReference(R.string.bitcoin_promo_no_address_title))
+            Truth.assertThat(sent.message).isEqualTo(resourceReference(R.string.bitcoin_promo_no_address))
+
+            coVerify(exactly = 0) { activateBitcoinPromocodeUseCase.invoke(any(), any()) }
+
+            verify(exactly = 1) { analyticsEventHandler.send(PromoActivationAnalytics.PromoDeepLinkActivationStart) }
+            verify(exactly = 1) {
+                analyticsEventHandler.send(
+                    PromoActivationAnalytics.PromoActivation(PromoCodeActivationResult.NoBitcoinAddress),
+                )
+            }
         }
-    }
 
     @Test
-    fun `GIVEN two BTC currencies first derivation mismatched AND one matching status WHEN findBitcoinAddress THEN no bitcoin address dialog is shown`() = runTest {
-        val promoCode = "PROMO123"
-        val queryParams = mapOf(DeeplinkConst.PROMO_CODE_KEY to promoCode)
-        val userWallet = mockUserWallet("ABCDEF")
-        every { getSelectedWalletSyncUseCase.invoke() } returns Either.Right(userWallet)
+    fun `GIVEN two BTC currencies first derivation mismatched AND one matching status WHEN findBitcoinAddress THEN no bitcoin address dialog is shown`() =
+        runTest {
+            val promoCode = "PROMO123"
+            val queryParams = mapOf(DeeplinkConst.PROMO_CODE_KEY to promoCode)
+            val userWallet = mockUserWallet("ABCDEF")
+            every { getSelectedWalletSyncUseCase.invoke() } returns Either.Right(userWallet)
 
-        val dpCard = Network.DerivationPath.Card("m/44'/0'/0'")
-        val dpCustom = Network.DerivationPath.Custom("m/84'/0'/0'")
+            val dpCard = Network.DerivationPath.Card("m/44'/0'/0'")
+            val dpCustom = Network.DerivationPath.Custom("m/84'/0'/0'")
 
-        val btcStatusCard = buildNetworkStatus(
-            rawNetworkId = Blockchain.Bitcoin.id,
-            address = "bc1qcard",
-            derivationPath = dpCard,
-        )
-        coEvery { multiNetworkStatusSupplier.invoke(any()) } returns flowOf(setOf(btcStatusCard))
-
-        val btcCoinCustom = buildCryptoCurrency(rawNetworkId = Blockchain.Bitcoin.id, derivationPath = dpCustom)
-        val btcCoinCard = buildCryptoCurrency(rawNetworkId = Blockchain.Bitcoin.id, derivationPath = dpCard)
-        coEvery { multiWalletCryptoCurrenciesSupplier.getSyncOrNull(any()) } returns setOf(btcCoinCustom, btcCoinCard)
-
-        val dispatcherProvider = testDispatcherProvider(testScheduler)
-
-        DefaultPromoDeeplinkHandler(
-            scope = this,
-            queryParams = queryParams,
-            uiMessageSender = uiMessageSender,
-            multiNetworkStatusSupplier = multiNetworkStatusSupplier,
-            multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
-            activateBitcoinPromocodeUseCase = activateBitcoinPromocodeUseCase,
-            getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
-            analyticsEventsHandler = analyticsEventHandler,
-            dispatchers = dispatcherProvider,
-        )
-
-        advanceUntilIdle()
-
-        val sent = messages.last { it is DialogMessage } as DialogMessage
-        Truth.assertThat(sent.title).isEqualTo(resourceReference(R.string.bitcoin_promo_no_address_title))
-        Truth.assertThat(sent.message).isEqualTo(resourceReference(R.string.bitcoin_promo_no_address))
-
-        coVerify(exactly = 0) { activateBitcoinPromocodeUseCase.invoke(any(), any()) }
-
-        verify(exactly = 1) { analyticsEventHandler.send(PromoActivationAnalytics.PromoDeepLinkActivationStart) }
-        verify(exactly = 1) {
-            analyticsEventHandler.send(
-                PromoActivationAnalytics.PromoActivation(PromoCodeActivationResult.NoBitcoinAddress),
+            val btcStatusCard = buildNetworkStatus(
+                rawNetworkId = Blockchain.Bitcoin.id,
+                address = "bc1qcard",
+                derivationPath = dpCard,
             )
+            coEvery { multiNetworkStatusSupplier.invoke(any()) } returns flowOf(setOf(btcStatusCard))
+
+            val btcCoinCustom = buildCryptoCurrency(rawNetworkId = Blockchain.Bitcoin.id, derivationPath = dpCustom)
+            val btcCoinCard = buildCryptoCurrency(rawNetworkId = Blockchain.Bitcoin.id, derivationPath = dpCard)
+            coEvery { multiWalletCryptoCurrenciesSupplier.getSyncOrNull(any()) } returns setOf(
+                btcCoinCustom,
+                btcCoinCard,
+            )
+
+            val dispatcherProvider = testDispatcherProvider(testScheduler)
+
+            DefaultPromoDeeplinkHandler(
+                scope = this,
+                queryParams = queryParams,
+                uiMessageSender = uiMessageSender,
+                multiNetworkStatusSupplier = multiNetworkStatusSupplier,
+                multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
+                activateBitcoinPromocodeUseCase = activateBitcoinPromocodeUseCase,
+                getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
+                analyticsEventsHandler = analyticsEventHandler,
+                dispatchers = dispatcherProvider,
+            )
+
+            advanceUntilIdle()
+
+            val sent = messages.last { it is DialogMessage } as DialogMessage
+            Truth.assertThat(sent.title).isEqualTo(resourceReference(R.string.bitcoin_promo_no_address_title))
+            Truth.assertThat(sent.message).isEqualTo(resourceReference(R.string.bitcoin_promo_no_address))
+
+            coVerify(exactly = 0) { activateBitcoinPromocodeUseCase.invoke(any(), any()) }
+
+            verify(exactly = 1) { analyticsEventHandler.send(PromoActivationAnalytics.PromoDeepLinkActivationStart) }
+            verify(exactly = 1) {
+                analyticsEventHandler.send(
+                    PromoActivationAnalytics.PromoActivation(PromoCodeActivationResult.NoBitcoinAddress),
+                )
+            }
         }
-    }
 
     @Test
-    fun `GIVEN only BTC status with CUSTOM derivation AND only BTC currency with CARD derivation WHEN findBitcoinAddress THEN no bitcoin address dialog is shown`() = runTest {
-        val promoCode = "PROMO123"
-        val queryParams = mapOf(DeeplinkConst.PROMO_CODE_KEY to promoCode)
-        val userWallet = mockUserWallet("ABCDEF")
-        every { getSelectedWalletSyncUseCase.invoke() } returns Either.Right(userWallet)
+    fun `GIVEN only BTC status with CUSTOM derivation AND only BTC currency with CARD derivation WHEN findBitcoinAddress THEN no bitcoin address dialog is shown`() =
+        runTest {
+            val promoCode = "PROMO123"
+            val queryParams = mapOf(DeeplinkConst.PROMO_CODE_KEY to promoCode)
+            val userWallet = mockUserWallet("ABCDEF")
+            every { getSelectedWalletSyncUseCase.invoke() } returns Either.Right(userWallet)
 
-        val dpCard = Network.DerivationPath.Card("m/44'/0'/0'")
-        val dpCustom = Network.DerivationPath.Custom("m/84'/0'/0'")
+            val dpCard = Network.DerivationPath.Card("m/44'/0'/0'")
+            val dpCustom = Network.DerivationPath.Custom("m/84'/0'/0'")
 
-        val btcStatusCustom = buildNetworkStatus(
-            rawNetworkId = Blockchain.Bitcoin.id,
-            address = "bc1qcustom",
-            derivationPath = dpCustom,
-        )
-        coEvery { multiNetworkStatusSupplier.invoke(any()) } returns flowOf(setOf(btcStatusCustom))
-
-        val btcCoinCard = buildCryptoCurrency(rawNetworkId = Blockchain.Bitcoin.id, derivationPath = dpCard)
-        coEvery { multiWalletCryptoCurrenciesSupplier.getSyncOrNull(any()) } returns setOf(btcCoinCard)
-
-        val dispatcherProvider = testDispatcherProvider(testScheduler)
-
-        DefaultPromoDeeplinkHandler(
-            scope = this,
-            queryParams = queryParams,
-            uiMessageSender = uiMessageSender,
-            multiNetworkStatusSupplier = multiNetworkStatusSupplier,
-            multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
-            activateBitcoinPromocodeUseCase = activateBitcoinPromocodeUseCase,
-            getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
-            analyticsEventsHandler = analyticsEventHandler,
-            dispatchers = dispatcherProvider,
-        )
-
-        advanceUntilIdle()
-
-        val sent = messages.last { it is DialogMessage } as DialogMessage
-        Truth.assertThat(sent.title).isEqualTo(resourceReference(R.string.bitcoin_promo_no_address_title))
-        Truth.assertThat(sent.message).isEqualTo(resourceReference(R.string.bitcoin_promo_no_address))
-
-        coVerify(exactly = 0) { activateBitcoinPromocodeUseCase.invoke(any(), any()) }
-
-        verify(exactly = 1) { analyticsEventHandler.send(PromoActivationAnalytics.PromoDeepLinkActivationStart) }
-        verify(exactly = 1) {
-            analyticsEventHandler.send(
-                PromoActivationAnalytics.PromoActivation(PromoCodeActivationResult.NoBitcoinAddress),
+            val btcStatusCustom = buildNetworkStatus(
+                rawNetworkId = Blockchain.Bitcoin.id,
+                address = "bc1qcustom",
+                derivationPath = dpCustom,
             )
+            coEvery { multiNetworkStatusSupplier.invoke(any()) } returns flowOf(setOf(btcStatusCustom))
+
+            val btcCoinCard = buildCryptoCurrency(rawNetworkId = Blockchain.Bitcoin.id, derivationPath = dpCard)
+            coEvery { multiWalletCryptoCurrenciesSupplier.getSyncOrNull(any()) } returns setOf(btcCoinCard)
+
+            val dispatcherProvider = testDispatcherProvider(testScheduler)
+
+            DefaultPromoDeeplinkHandler(
+                scope = this,
+                queryParams = queryParams,
+                uiMessageSender = uiMessageSender,
+                multiNetworkStatusSupplier = multiNetworkStatusSupplier,
+                multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
+                activateBitcoinPromocodeUseCase = activateBitcoinPromocodeUseCase,
+                getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
+                analyticsEventsHandler = analyticsEventHandler,
+                dispatchers = dispatcherProvider,
+            )
+
+            advanceUntilIdle()
+
+            val sent = messages.last { it is DialogMessage } as DialogMessage
+            Truth.assertThat(sent.title).isEqualTo(resourceReference(R.string.bitcoin_promo_no_address_title))
+            Truth.assertThat(sent.message).isEqualTo(resourceReference(R.string.bitcoin_promo_no_address))
+
+            coVerify(exactly = 0) { activateBitcoinPromocodeUseCase.invoke(any(), any()) }
+
+            verify(exactly = 1) { analyticsEventHandler.send(PromoActivationAnalytics.PromoDeepLinkActivationStart) }
+            verify(exactly = 1) {
+                analyticsEventHandler.send(
+                    PromoActivationAnalytics.PromoActivation(PromoCodeActivationResult.NoBitcoinAddress),
+                )
+            }
         }
-    }
 
     @Test
-    fun `GIVEN only BTC status with CARD derivation AND only BTC currency with CUSTOM derivation WHEN findBitcoinAddress THEN no bitcoin address dialog is shown`() = runTest {
-        val promoCode = "PROMO123"
-        val queryParams = mapOf(DeeplinkConst.PROMO_CODE_KEY to promoCode)
-        val userWallet = mockUserWallet("ABCDEF")
-        every { getSelectedWalletSyncUseCase.invoke() } returns Either.Right(userWallet)
+    fun `GIVEN only BTC status with CARD derivation AND only BTC currency with CUSTOM derivation WHEN findBitcoinAddress THEN no bitcoin address dialog is shown`() =
+        runTest {
+            val promoCode = "PROMO123"
+            val queryParams = mapOf(DeeplinkConst.PROMO_CODE_KEY to promoCode)
+            val userWallet = mockUserWallet("ABCDEF")
+            every { getSelectedWalletSyncUseCase.invoke() } returns Either.Right(userWallet)
 
-        val dpCard = Network.DerivationPath.Card("m/44'/0'/0'")
-        val dpCustom = Network.DerivationPath.Custom("m/84'/0'/0'")
+            val dpCard = Network.DerivationPath.Card("m/44'/0'/0'")
+            val dpCustom = Network.DerivationPath.Custom("m/84'/0'/0'")
 
-        val btcStatusCard = buildNetworkStatus(
-            rawNetworkId = Blockchain.Bitcoin.id,
-            address = "bc1qcard",
-            derivationPath = dpCard,
-        )
-        coEvery { multiNetworkStatusSupplier.invoke(any()) } returns flowOf(setOf(btcStatusCard))
-
-        val btcCoinCustom = buildCryptoCurrency(rawNetworkId = Blockchain.Bitcoin.id, derivationPath = dpCustom)
-        coEvery { multiWalletCryptoCurrenciesSupplier.getSyncOrNull(any()) } returns setOf(btcCoinCustom)
-
-        val dispatcherProvider = testDispatcherProvider(testScheduler)
-
-        DefaultPromoDeeplinkHandler(
-            scope = this,
-            queryParams = queryParams,
-            uiMessageSender = uiMessageSender,
-            multiNetworkStatusSupplier = multiNetworkStatusSupplier,
-            multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
-            activateBitcoinPromocodeUseCase = activateBitcoinPromocodeUseCase,
-            getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
-            analyticsEventsHandler = analyticsEventHandler,
-            dispatchers = dispatcherProvider,
-        )
-
-        advanceUntilIdle()
-
-        val sent = messages.last { it is DialogMessage } as DialogMessage
-        Truth.assertThat(sent.title).isEqualTo(resourceReference(R.string.bitcoin_promo_no_address_title))
-        Truth.assertThat(sent.message).isEqualTo(resourceReference(R.string.bitcoin_promo_no_address))
-
-        coVerify(exactly = 0) { activateBitcoinPromocodeUseCase.invoke(any(), any()) }
-
-        verify(exactly = 1) { analyticsEventHandler.send(PromoActivationAnalytics.PromoDeepLinkActivationStart) }
-        verify(exactly = 1) {
-            analyticsEventHandler.send(
-                PromoActivationAnalytics.PromoActivation(PromoCodeActivationResult.NoBitcoinAddress),
+            val btcStatusCard = buildNetworkStatus(
+                rawNetworkId = Blockchain.Bitcoin.id,
+                address = "bc1qcard",
+                derivationPath = dpCard,
             )
+            coEvery { multiNetworkStatusSupplier.invoke(any()) } returns flowOf(setOf(btcStatusCard))
+
+            val btcCoinCustom = buildCryptoCurrency(rawNetworkId = Blockchain.Bitcoin.id, derivationPath = dpCustom)
+            coEvery { multiWalletCryptoCurrenciesSupplier.getSyncOrNull(any()) } returns setOf(btcCoinCustom)
+
+            val dispatcherProvider = testDispatcherProvider(testScheduler)
+
+            DefaultPromoDeeplinkHandler(
+                scope = this,
+                queryParams = queryParams,
+                uiMessageSender = uiMessageSender,
+                multiNetworkStatusSupplier = multiNetworkStatusSupplier,
+                multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
+                activateBitcoinPromocodeUseCase = activateBitcoinPromocodeUseCase,
+                getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
+                analyticsEventsHandler = analyticsEventHandler,
+                dispatchers = dispatcherProvider,
+            )
+
+            advanceUntilIdle()
+
+            val sent = messages.last { it is DialogMessage } as DialogMessage
+            Truth.assertThat(sent.title).isEqualTo(resourceReference(R.string.bitcoin_promo_no_address_title))
+            Truth.assertThat(sent.message).isEqualTo(resourceReference(R.string.bitcoin_promo_no_address))
+
+            coVerify(exactly = 0) { activateBitcoinPromocodeUseCase.invoke(any(), any()) }
+
+            verify(exactly = 1) { analyticsEventHandler.send(PromoActivationAnalytics.PromoDeepLinkActivationStart) }
+            verify(exactly = 1) {
+                analyticsEventHandler.send(
+                    PromoActivationAnalytics.PromoActivation(PromoCodeActivationResult.NoBitcoinAddress),
+                )
+            }
         }
-    }
 
     private fun mockUserWallet(id: String): UserWallet {
         val userWallet = mockk<UserWallet>(relaxed = true)
@@ -777,6 +782,7 @@ class DefaultPromoDeeplinkHandlerTest {
             hasFiatFeeRate = false,
             canHandleTokens = false,
             transactionExtrasType = Network.TransactionExtrasType.NONE,
+            nameResolvingType = Network.NameResolvingType.NONE,
         )
 
         val value = NetworkStatus.Verified(
@@ -807,6 +813,7 @@ class DefaultPromoDeeplinkHandlerTest {
             hasFiatFeeRate = false,
             canHandleTokens = false,
             transactionExtrasType = Network.TransactionExtrasType.NONE,
+            nameResolvingType = Network.NameResolvingType.NONE,
         )
 
         val value = NetworkStatus.Unreachable(address = null)
@@ -830,6 +837,7 @@ class DefaultPromoDeeplinkHandlerTest {
             hasFiatFeeRate = false,
             canHandleTokens = false,
             transactionExtrasType = Network.TransactionExtrasType.NONE,
+            nameResolvingType = Network.NameResolvingType.NONE,
         )
 
         return CryptoCurrency.Coin(
