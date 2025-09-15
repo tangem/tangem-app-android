@@ -5,7 +5,7 @@ import com.tangem.core.ui.extensions.getTintForTokenIcon
 import com.tangem.core.ui.extensions.networkIconResId
 import com.tangem.core.ui.extensions.tryGetBackgroundForTokenIcon
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.utils.converter.Converter
 
 /**
