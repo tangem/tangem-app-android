@@ -3,7 +3,7 @@ package com.tangem.features.send.v2.subcomponents.fee.model
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.core.ui.utils.parseToBigDecimal
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeSelectorUM
 import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeType
 import com.tangem.utils.extensions.isZero

@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import com.tangem.core.ui.components.block.model.BlockUM
+import com.tangem.core.ui.components.label.Label
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 
@@ -38,6 +39,7 @@ fun BlockItem(model: BlockUM, modifier: Modifier = Modifier) {
             )
 
             Text(
+                modifier = Modifier.weight(1f),
                 text = model.text.resolveReference(),
                 style = TangemTheme.typography.subtitle1,
                 color = when (model.accentType) {
@@ -48,6 +50,8 @@ fun BlockItem(model: BlockUM, modifier: Modifier = Modifier) {
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
+
+            model.label?.let { Label(it) }
         }
     }
 }

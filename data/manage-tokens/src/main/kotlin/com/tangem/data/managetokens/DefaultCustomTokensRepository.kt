@@ -22,8 +22,8 @@ import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
 import com.tangem.domain.managetokens.repository.CustomTokensRepository
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.models.wallet.requireColdWallet
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
@@ -247,26 +247,43 @@ internal class DefaultCustomTokensRepository(
         val userWallet = requireNotNull(userWalletsStore.getSyncOrNull(userWalletId)) {
             "User wallet [$userWalletId] not found while getting supported networks"
         }
-        val scanResponse = userWallet.requireColdWallet().scanResponse // TODO [REDACTED_TASK_KEY]
 
-        Blockchain.entries
-            .mapNotNull { blockchain ->
-                val canHandleBlockchain = scanResponse.card.canHandleBlockchain(
-                    blockchain,
-                    scanResponse.cardTypesResolver,
-                    excludedBlockchains,
-                )
+        when (userWallet) {
+            is UserWallet.Hot -> {
+                Blockchain.entries.mapNotNull {
+                    // TODO: refactor [REDACTED_JIRA]\
+                    if (it.isTestnet() || it in excludedBlockchains) return@mapNotNull null
 
-                if (canHandleBlockchain) {
                     networkFactory.create(
-                        blockchain = blockchain,
+                        blockchain = it,
                         extraDerivationPath = null,
                         userWallet = userWallet,
                     )
-                } else {
-                    null
                 }
             }
+            is UserWallet.Cold -> {
+                val scanResponse = userWallet.scanResponse
+
+                Blockchain.entries
+                    .mapNotNull { blockchain ->
+                        val canHandleBlockchain = scanResponse.card.canHandleBlockchain(
+                            blockchain,
+                            scanResponse.cardTypesResolver,
+                            excludedBlockchains,
+                        )
+
+                        if (canHandleBlockchain) {
+                            networkFactory.create(
+                                blockchain = blockchain,
+                                extraDerivationPath = null,
+                                userWallet = userWallet,
+                            )
+                        } else {
+                            null
+                        }
+                    }
+            }
+        }
     }
 
     override fun createDerivationPath(rawPath: String): Network.DerivationPath {

@@ -2,15 +2,15 @@ package com.tangem.domain.tokens
 
 import arrow.core.Either
 import com.tangem.domain.card.common.util.cardTypesResolver
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.tokens.error.CurrencyStatusError
-import com.tangem.domain.tokens.error.mapper.mapToCurrencyError
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.operations.BaseCurrencyStatusOperations
-import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isMultiCurrency
+import com.tangem.domain.tokens.error.CurrencyStatusError
+import com.tangem.domain.tokens.error.mapper.mapToCurrencyError
+import com.tangem.domain.tokens.operations.BaseCurrencyStatusOperations
+import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
 
