@@ -2,6 +2,8 @@ package com.tangem.features.markets.portfolio.impl.model
 
 import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
+import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.activate
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -15,24 +17,32 @@ import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.card.HasMissedDerivationsUseCase
 import com.tangem.domain.managetokens.CheckCurrencyUnsupportedUseCase
 import com.tangem.domain.managetokens.model.CurrencyUnsupportedState
 import com.tangem.domain.markets.SaveMarketTokensUseCase
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.models.ArtworkModel
+import com.tangem.domain.models.ReceiveAddressModel
+import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isMultiCurrency
+import com.tangem.domain.tokens.GetViewedTokenReceiveWarningUseCase
+import com.tangem.domain.transaction.usecase.GetEnsNameUseCase
 import com.tangem.domain.wallets.usecase.GetCardImageUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
+import com.tangem.domain.wallets.usecase.HasMissedDerivationsUseCase
 import com.tangem.features.markets.impl.R
 import com.tangem.features.markets.portfolio.api.MarketsPortfolioComponent
 import com.tangem.features.markets.portfolio.impl.analytics.PortfolioAnalyticsEvent
 import com.tangem.features.markets.portfolio.impl.loader.PortfolioData
 import com.tangem.features.markets.portfolio.impl.loader.PortfolioDataLoader
 import com.tangem.features.markets.portfolio.impl.ui.state.MyPortfolioUM
+import com.tangem.features.markets.portfolio.impl.ui.state.TokenActionsBSContentUM
+import com.tangem.features.tokenreceive.TokenReceiveFeatureToggle
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -43,7 +53,7 @@ import kotlinx.coroutines.sync.withLock
 import timber.log.Timber
 import javax.inject.Inject
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 @Stable
 @ModelScoped
 internal class MarketsPortfolioModel @Inject constructor(
@@ -60,6 +70,9 @@ internal class MarketsPortfolioModel @Inject constructor(
     private val getCardImageUseCase: GetCardImageUseCase,
     private val addToPortfolioManager: AddToPortfolioManager,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val tokenReceiveFeatureToggle: TokenReceiveFeatureToggle,
+    private val getViewedTokenReceiveWarningUseCase: GetViewedTokenReceiveWarningUseCase,
+    private val getEnsNameUseCase: GetEnsNameUseCase,
 ) : Model() {
 
     val state: StateFlow<MyPortfolioUM> get() = _state
@@ -79,6 +92,8 @@ internal class MarketsPortfolioModel @Inject constructor(
     private val selectedMultiWalletIdFlow = MutableStateFlow<UserWalletId?>(value = null)
 
     private val portfolioBSVisibilityModelFlow = MutableStateFlow(value = PortfolioBSVisibilityModel())
+
+    val bottomSheetNavigation: SlotNavigation<TokenReceiveConfig> = SlotNavigation()
 
     private val currentAppCurrency = getSelectedAppCurrencyUseCase()
         .map { maybeAppCurrency ->
@@ -128,7 +143,11 @@ internal class MarketsPortfolioModel @Inject constructor(
         tokenActionsHandler = tokenActionsIntentsFactory.create(
             currentAppCurrency = Provider { currentAppCurrency.value },
             updateTokenReceiveBSConfig = { updateBlock ->
-                updateTokensState { it.copy(tokenReceiveBSConfig = updateBlock(it.tokenReceiveBSConfig)) }
+                if (tokenReceiveFeatureToggle.isNewTokenReceiveEnabled.not()) {
+                    updateTokensState {
+                        it.copy(tokenReceiveBSConfig = updateBlock(it.tokenReceiveBSConfig))
+                    }
+                }
             },
             onHandleQuickAction = { handledAction ->
                 analyticsEventHandler.send(
@@ -137,6 +156,9 @@ internal class MarketsPortfolioModel @Inject constructor(
                         blockchainName = handledAction.cryptoCurrencyData.status.currency.network.name,
                     ),
                 )
+                if (tokenReceiveFeatureToggle.isNewTokenReceiveEnabled) {
+                    configureReceiveAddresses(handledAction)
+                }
             },
         ),
         updateTokens = { updateBlock ->
@@ -357,6 +379,54 @@ internal class MarketsPortfolioModel @Inject constructor(
         _state.update { stateToUpdate ->
             val tokensState = stateToUpdate as? MyPortfolioUM.Tokens ?: return@update stateToUpdate
             block(tokensState)
+        }
+    }
+
+    private fun configureReceiveAddresses(quickAction: TokenActionsHandler.HandledQuickAction) {
+        when (quickAction.action) {
+            TokenActionsBSContentUM.Action.Receive -> {
+                val addresses = quickAction.cryptoCurrencyData.status.value.networkAddress ?: return
+                val cryptoCurrency = quickAction.cryptoCurrencyData.status.currency
+                modelScope.launch {
+                    val ensName = getEnsNameUseCase.invoke(
+                        userWalletId = quickAction.cryptoCurrencyData.userWallet.walletId,
+                        network = cryptoCurrency.network,
+                        address = addresses.defaultAddress.value,
+                    )
+
+                    val receiveAddresses = buildList {
+                        ensName?.let { ens ->
+                            add(
+                                ReceiveAddressModel(
+                                    nameService = ReceiveAddressModel.NameService.Ens,
+                                    value = ens,
+                                ),
+                            )
+                        }
+                        addresses.availableAddresses.map { address ->
+                            add(
+                                ReceiveAddressModel(
+                                    nameService = when (address.type) {
+                                        NetworkAddress.Address.Type.Primary -> ReceiveAddressModel.NameService.Default
+                                        NetworkAddress.Address.Type.Secondary -> ReceiveAddressModel.NameService.Legacy
+                                    },
+                                    value = address.value,
+                                ),
+                            )
+                        }
+                    }
+                    val tokenConfig = TokenReceiveConfig(
+                        shouldShowWarning = cryptoCurrency.name !in getViewedTokenReceiveWarningUseCase(),
+                        cryptoCurrency = cryptoCurrency,
+                        userWalletId = quickAction.cryptoCurrencyData.userWallet.walletId,
+                        showMemoDisclaimer = cryptoCurrency.network.transactionExtrasType != Network
+                            .TransactionExtrasType.NONE,
+                        receiveAddress = receiveAddresses,
+                    )
+                    bottomSheetNavigation.activate(tokenConfig)
+                }
+            }
+            else -> Unit
         }
     }
 }

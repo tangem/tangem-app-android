@@ -1,80 +1,76 @@
 package com.tangem.features.send.v2.entrypoint.model
 
-import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
+import com.tangem.common.ui.notifications.NotificationId
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
-import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.navigation.Router
+import com.tangem.domain.notifications.ShouldShowNotificationUseCase
+import com.tangem.features.managetokens.component.ChooseManagedTokensComponent
 import com.tangem.features.send.v2.api.SendComponent
-import com.tangem.features.send.v2.api.SendEntryPointComponent
+import com.tangem.features.send.v2.entrypoint.SendEntryRoute
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountUpdateTrigger
 import com.tangem.features.swap.v2.api.SendWithSwapComponent
-import com.tangem.features.swap.v2.api.choosetoken.SwapChooseTokenNetworkListener
 import com.tangem.features.swap.v2.api.subcomponents.SwapAmountUpdateTrigger
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.coroutines.JobHolder
-import com.tangem.utils.coroutines.saveIn
 import jakarta.inject.Inject
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+@Suppress("LongParameterList")
 @ModelScoped
 internal class SendEntryPointModel @Inject constructor(
-    paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
-    val appRouter: AppRouter,
-    private val swapChooseTokenNetworkListener: SwapChooseTokenNetworkListener,
+    val router: Router,
     private val sendAmountUpdateTrigger: SendAmountUpdateTrigger,
     private val swapAmountUpdateTrigger: SwapAmountUpdateTrigger,
-) : Model(), SendComponent.ModelCallback, SendWithSwapComponent.ModelCallback {
+    private val shouldShowNotificationUseCase: ShouldShowNotificationUseCase,
+) : Model(),
+    SendComponent.ModelCallback,
+    SendWithSwapComponent.ModelCallback,
+    ChooseManagedTokensComponent.ModelCallback {
 
-    private val params: SendEntryPointComponent.Params = paramsContainer.require()
+    private var lastSavedAmount = ""
+    private var isEnterInFiat = false
 
-    val sendEntryPointState: StateFlow<SendEntryPoint>
-    field = MutableStateFlow(SendEntryPoint.SendVanilla)
-
-    private var swapChooseTokenListenerJobHolder = JobHolder()
-
-    override fun onConvertToAnotherToken(lastAmount: String) {
-        appRouter.push(
-            AppRoute.ChooseManagedTokens(
-                userWalletId = params.userWalletId,
-                initialCurrency = params.cryptoCurrency,
-                selectedCurrency = null,
-                source = AppRoute.ChooseManagedTokens.Source.SendViaSwap,
-            ),
-        )
-        observeChooseSelectToken(lastAmount)
-    }
-
-    override fun onCloseSwap(lastAmount: String) {
+    override fun onConvertToAnotherToken(lastAmount: String, isEnterInFiatSelected: Boolean) {
+        lastSavedAmount = lastAmount
+        isEnterInFiat = isEnterInFiatSelected
         modelScope.launch {
-            if (lastAmount.isNotBlank()) {
-                sendAmountUpdateTrigger.triggerUpdateAmount(lastAmount)
-            }
-            triggerScreenUpdate(SendEntryPoint.SendVanilla)
+            val showSendViaSwapNotification = shouldShowNotificationUseCase(
+                NotificationId.SendViaSwapTokenSelectorNotification.key,
+            )
+            router.push(
+                SendEntryRoute.ChooseToken(
+                    showSendViaSwapNotification = showSendViaSwapNotification,
+                ),
+            )
         }
     }
 
-    private fun observeChooseSelectToken(lastAmount: String) {
-        swapChooseTokenNetworkListener.swapChooseTokenNetworkResultFlow
-            .onEach { currency ->
-                if (lastAmount.isNotBlank()) {
-                    swapAmountUpdateTrigger.triggerUpdateAmount(lastAmount)
-                }
-                triggerScreenUpdate(SendEntryPoint.SendWithSwap)
-            }
-            .launchIn(modelScope)
-            .saveIn(swapChooseTokenListenerJobHolder)
+    override fun onCloseSwap(lastAmount: String, isEnterInFiatSelected: Boolean) {
+        lastSavedAmount = lastAmount
+        isEnterInFiat = isEnterInFiatSelected
+        modelScope.launch {
+            sendAmountUpdateTrigger.triggerUpdateAmount(lastAmount, isEnterInFiat)
+            router.replaceAll(SendEntryRoute.Send)
+        }
     }
 
-    private fun triggerScreenUpdate(entry: SendEntryPoint) {
-        swapChooseTokenListenerJobHolder.cancel()
-        sendEntryPointState.update { entry }
+    @Suppress("MagicNumber")
+    override fun onResult() {
+        modelScope.launch {
+            swapAmountUpdateTrigger.triggerUpdateAmount(lastSavedAmount, isEnterInFiat)
+            // Workaround in order to execute correct exit animation on SendEntryRoute.ChooseToken
+            router.pop()
+            delay(10L)
+            router.replaceAll(SendEntryRoute.SendWithSwap)
+        }
     }
-}
 
-enum class SendEntryPoint {
-    SendVanilla,
-    SendWithSwap,
+    override fun onBack() {
+        modelScope.launch {
+            sendAmountUpdateTrigger.triggerUpdateAmount(lastSavedAmount, isEnterInFiat)
+            router.pop()
+        }
+    }
 }
