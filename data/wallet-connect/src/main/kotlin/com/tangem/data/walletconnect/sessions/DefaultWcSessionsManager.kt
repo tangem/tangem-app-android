@@ -6,10 +6,7 @@ import arrow.core.right
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.data.walletconnect.utils.WC_TAG
-import com.tangem.data.walletconnect.utils.WcNetworksConverter
-import com.tangem.data.walletconnect.utils.WcSdkObserver
-import com.tangem.data.walletconnect.utils.WcSdkSessionConverter
+import com.tangem.data.walletconnect.utils.*
 import com.tangem.datasource.local.walletconnect.WalletConnectStore
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.walletconnect.WcAnalyticEvents
@@ -18,10 +15,12 @@ import com.tangem.domain.walletconnect.model.WcSessionDTO
 import com.tangem.domain.walletconnect.repository.WcSessionsManager
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
-import org.joda.time.DateTime
+import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import kotlin.coroutines.resume
 
@@ -32,7 +31,7 @@ internal class DefaultWcSessionsManager(
     private val dispatchers: CoroutineDispatcherProvider,
     private val wcNetworksConverter: WcNetworksConverter,
     private val analytics: AnalyticsEventHandler,
-    private val scope: CoroutineScope,
+    private val scope: WcScope,
 ) : WcSessionsManager, WcSdkObserver {
 
     private val onSessionDelete = Channel<Wallet.Model.SessionDelete>(capacity = Channel.BUFFERED)
@@ -53,18 +52,6 @@ internal class DefaultWcSessionsManager(
     override fun onWcSdkInit() {
         listenOnSessionDelete()
         extendSessions()
-    }
-
-    override suspend fun saveSession(session: WcSession) {
-        store.saveSession(
-            WcSessionDTO(
-                topic = session.sdkModel.topic,
-                walletId = session.wallet.walletId,
-                url = session.sdkModel.appMetaData.url,
-                securityStatus = session.securityStatus,
-                connectingTime = session.connectingTime ?: DateTime.now().millis,
-            ),
-        )
     }
 
     override suspend fun removeSession(session: WcSession): Either<Throwable, Unit> {
@@ -91,7 +78,16 @@ internal class DefaultWcSessionsManager(
         inStore: Set<WcSessionDTO>,
         wallets: List<UserWallet>,
     ): List<WcSession> {
-        val wcSessions = inStore.mapNotNull { storeSession ->
+        // if the WcSdk `onSessionSettleResponse` callback arrives late, merge pending approvals with WcSdk sessions
+        val savedPending = store.pendingApproval.first()
+            .mapNotNullTo(mutableSetOf()) { savedPendingSession ->
+                val sdkSession = inSdk
+                    .find { sdkSession -> sdkSession.pairingTopic == savedPendingSession.pairingTopic }
+                    ?: return@mapNotNullTo null
+                savedPendingSession.session.copy(topic = sdkSession.topic)
+            }
+
+        val wcSessions = savedPending.plus(inStore).mapNotNull { storeSession ->
             val wallet = wallets.find { it.walletId == storeSession.walletId } ?: return@mapNotNull null
             val sdkSession = inSdk.find { it.topic == storeSession.topic } ?: return@mapNotNull null
             val networks = wcNetworksConverter.findWalletNetworks(wallet, sdkSession)

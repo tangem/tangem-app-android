@@ -17,6 +17,7 @@ import com.tangem.data.walletconnect.respond.WcRespondService
 import com.tangem.data.walletconnect.sessions.DefaultWcSessionsManager
 import com.tangem.data.walletconnect.utils.WcNamespaceConverter
 import com.tangem.data.walletconnect.utils.WcNetworksConverter
+import com.tangem.data.walletconnect.utils.WcScope
 import com.tangem.datasource.di.SdkMoshi
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.datasource.local.walletconnect.WalletConnectStore
@@ -36,8 +37,6 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
 import javax.inject.Singleton
 
 @Module
@@ -80,7 +79,10 @@ internal object WalletConnectDataModule {
 
     @Provides
     @Singleton
-    fun sdkDelegate(): WcPairSdkDelegate = WcPairSdkDelegate()
+    fun sdkDelegate(wcScope: WcScope, store: WalletConnectStore): WcPairSdkDelegate = WcPairSdkDelegate(
+        scope = wcScope,
+        store = store,
+    )
 
     @Provides
     @Singleton
@@ -90,21 +92,25 @@ internal object WalletConnectDataModule {
         getWallets: GetWalletsUseCase,
         wcNetworksConverter: WcNetworksConverter,
         analytics: AnalyticsEventHandler,
+        wcScope: WcScope,
     ): DefaultWcSessionsManager {
-        val scope = CoroutineScope(SupervisorJob() + dispatchers.io)
         return DefaultWcSessionsManager(
             store = store,
             dispatchers = dispatchers,
             getWallets = getWallets,
             wcNetworksConverter = wcNetworksConverter,
             analytics = analytics,
-            scope = scope,
+            scope = wcScope,
         )
     }
 
     @Provides
     @Singleton
     fun wcSessionsManager(default: DefaultWcSessionsManager): WcSessionsManager = default
+
+    @Provides
+    @Singleton
+    fun wcScope(dispatchers: CoroutineDispatcherProvider): WcScope = WcScope(dispatchers)
 
     @Provides
     @Singleton
