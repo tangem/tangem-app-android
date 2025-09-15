@@ -1,6 +1,7 @@
 package com.tangem.tests
 
 import com.tangem.common.BaseTestCase
+import com.tangem.common.constants.TestConstants.TOTAL_BALANCE
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.scenarios.OpenMainScreenScenario
 import com.tangem.screens.*
@@ -17,7 +18,7 @@ class HideTokenTest : BaseTestCase() {
     @Test
     fun hideWalletTokenByHideButtonTest() {
         val tokenTitle = "Polygon"
-        val balance = "<$0.01"
+        val balance = TOTAL_BALANCE
         setupHooks().run {
             step("Open 'Main Screen'") {
                 scenario(OpenMainScreenScenario(composeTestRule))
