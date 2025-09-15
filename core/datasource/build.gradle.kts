@@ -52,6 +52,7 @@ dependencies {
     /** Coroutines */
     implementation(deps.kotlin.coroutines)
     implementation(deps.kotlin.coroutines.rx2)
+    implementation(deps.kotlin.datetime)
 
     /** Logging */
     implementation(deps.timber)
@@ -76,7 +77,7 @@ dependencies {
 
     /** Chucker */
     debugImplementation(deps.chucker)
-    mockedImplementation(deps.chuckerStub)
+    mockedImplementation(deps.chucker)
     externalImplementation(deps.chuckerStub)
     internalImplementation(deps.chuckerStub)
     releaseImplementation(deps.chuckerStub)

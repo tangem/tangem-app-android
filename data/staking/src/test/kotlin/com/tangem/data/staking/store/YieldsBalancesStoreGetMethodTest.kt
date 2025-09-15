@@ -6,8 +6,8 @@ import com.tangem.common.test.datastore.MockStateDataStore
 import com.tangem.common.test.utils.getEmittedValues
 import com.tangem.data.staking.toDomain
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
+import com.tangem.domain.models.staking.YieldBalance
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
