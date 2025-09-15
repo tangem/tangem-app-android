@@ -170,7 +170,7 @@ private fun FeeSelectorItems(
                             ).fee(canBeLower = state.feeExtraInfo.isFeeApproximate)
                         },
                     ),
-                    postDot = if (feeFiatRateUM != null) {
+                    postDot = if (state.feeExtraInfo.isFeeConvertibleToFiat && feeFiatRateUM != null) {
                         getFiatReference(
                             value = item.fee.amount.value,
                             rate = feeFiatRateUM.rate,

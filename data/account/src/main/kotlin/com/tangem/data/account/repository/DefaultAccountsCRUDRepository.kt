@@ -5,15 +5,17 @@ import arrow.core.raise.option
 import arrow.core.toOption
 import com.tangem.data.account.converter.AccountConverterFactoryContainer
 import com.tangem.data.account.converter.ArchivedAccountConverter
-import com.tangem.data.account.converter.SaveWalletAccountsResponseConverter
 import com.tangem.data.account.store.AccountsResponseStore
 import com.tangem.data.account.store.AccountsResponseStoreFactory
 import com.tangem.data.account.store.ArchivedAccountsStore
 import com.tangem.data.account.store.ArchivedAccountsStoreFactory
+import com.tangem.data.common.account.WalletAccountsSaver
+import com.tangem.data.common.cache.etag.ETagsStore
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.datasource.utils.getSyncOrNull
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.models.ArchivedAccount
 import com.tangem.domain.account.repository.AccountsCRUDRepository
@@ -23,24 +25,23 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
 /**
 [REDACTED_AUTHOR]
  */
+@Suppress("LongParameterList")
 internal class DefaultAccountsCRUDRepository(
     private val tangemTechApi: TangemTechApi,
+    private val walletAccountsSaver: WalletAccountsSaver,
     private val accountsResponseStoreFactory: AccountsResponseStoreFactory,
     private val archivedAccountsStoreFactory: ArchivedAccountsStoreFactory,
     private val userWalletsStore: UserWalletsStore,
+    private val eTagsStore: ETagsStore,
     private val convertersContainer: AccountConverterFactoryContainer,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : AccountsCRUDRepository {
-
-    private val saveAccountsMutex = Mutex()
 
     override suspend fun getAccountListSync(userWalletId: UserWalletId): Option<AccountList> = option {
         val accountListResponse = getAccountsResponseSync(userWalletId = userWalletId)
@@ -85,7 +86,10 @@ internal class DefaultAccountsCRUDRepository(
 
     override suspend fun fetchArchivedAccounts(userWalletId: UserWalletId) {
         val response = withContext(dispatchers.io) {
-            tangemTechApi.getWalletArchivedAccounts(walletId = userWalletId.stringValue).getOrThrow()
+            tangemTechApi.getWalletArchivedAccounts(
+                walletId = userWalletId.stringValue,
+                eTag = getETag(userWalletId),
+            ).getOrThrow()
         }
 
         val store = getArchivedAccountsStore(userWalletId = userWalletId)
@@ -97,30 +101,15 @@ internal class DefaultAccountsCRUDRepository(
     }
 
     override suspend fun saveAccounts(accountList: AccountList) {
-        saveAccountsMutex.withLock {
-            val store = getAccountsResponseStore(userWalletId = accountList.userWallet.walletId)
+        val userWalletId = accountList.userWallet.walletId
 
-            store.data.firstOrNull()?.wallet?.version ?: 0
-            val body = SaveWalletAccountsResponseConverter.convert(value = accountList)
+        val converter = convertersContainer.getWalletAccountsResponseCF.create(userWallet = accountList.userWallet)
+        val accountsResponse = converter.convert(value = accountList)
 
-            withContext(dispatchers.io) {
-                tangemTechApi.saveWalletAccounts(
-                    walletId = accountList.userWallet.walletId.stringValue,
-                    eTag = "", // TODO("[REDACTED_JIRA]")
-                    body = body,
-                )
-                    .getOrThrow()
-            }
-
-            val converter = convertersContainer.getWalletAccountsResponseCF.create(userWallet = accountList.userWallet)
-
-            val accountsResponse = converter.convert(value = accountList)
-
-            store.updateData { accountsResponse }
-        }
+        walletAccountsSaver.pushAndStore(userWalletId = userWalletId, response = accountsResponse)
     }
 
-    override suspend fun getTotalAccountsCount(userWalletId: UserWalletId): Option<Int> = option {
+    override suspend fun getTotalAccountsCountSync(userWalletId: UserWalletId): Option<Int> = option {
         val accountListResponse = getAccountsResponseSync(userWalletId = userWalletId)
 
         ensureNotNull(accountListResponse)
@@ -128,13 +117,26 @@ internal class DefaultAccountsCRUDRepository(
         return accountListResponse.wallet.totalAccounts.toOption()
     }
 
+    override fun getTotalAccountsCount(userWalletId: UserWalletId): Flow<Option<Int>> {
+        return getAccountsResponseStore(userWalletId = userWalletId).data
+            .map { it?.wallet?.totalAccounts.toOption() }
+    }
+
     override fun getUserWallet(userWalletId: UserWalletId): UserWallet {
         return userWalletsStore.getSyncStrict(userWalletId)
     }
 
+    override fun getUserWallets(): Flow<List<UserWallet>> = userWalletsStore.userWallets
+
+    override fun getUserWalletsSync(): List<UserWallet> = userWalletsStore.userWalletsSync
+
+    private suspend fun getETag(userWalletId: UserWalletId): String? {
+        return eTagsStore.getSyncOrNull(userWalletId = userWalletId, key = ETagsStore.Key.WalletAccounts)
+    }
+
     private suspend fun getAccountsResponseSync(userWalletId: UserWalletId): GetWalletAccountsResponse? {
         val store = getAccountsResponseStore(userWalletId = userWalletId)
-        return store.data.firstOrNull()
+        return store.getSyncOrNull()
     }
 
     private fun getAccountsResponseStore(userWalletId: UserWalletId): AccountsResponseStore {

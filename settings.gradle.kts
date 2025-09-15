@@ -263,8 +263,8 @@ include(":features:hot-wallet:api")
 include(":features:hot-wallet:impl")
 
 include(":features:kyc:api")
-//TODO disable for release because of the permissions
-// include(":features:kyc:impl")
+include(":features:kyc:impl")
+include(":features:kyc:mock")
 
 include(":features:tangempay:main:api")
 include(":features:tangempay:main:impl")
@@ -287,8 +287,8 @@ include(":features:account:impl")
 include(":features:token-recieve:api")
 include(":features:token-recieve:impl")
 
-include(":features:yield-lending:api")
-include(":features:yield-lending:impl")
+include(":features:yield-supply:api")
+include(":features:yield-supply:impl")
 // endregion Feature modules
 
 // region Domain modules

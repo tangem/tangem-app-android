@@ -256,8 +256,11 @@ dependencies {
     implementation(projects.features.hotWallet.api)
     implementation(projects.features.hotWallet.impl)
     implementation(projects.features.kyc.api)
-    //TODO disable for release because of the permissions
-    // implementation(projects.features.kyc.impl)
+    debugImplementation(projects.features.kyc.impl)
+    internalImplementation(projects.features.kyc.impl)
+    mockedImplementation(projects.features.kyc.impl)
+    releaseImplementation(projects.features.kyc.mock)
+    externalImplementation(projects.features.kyc.mock)
     implementation(projects.features.welcome.api)
     implementation(projects.features.welcome.impl)
     implementation(projects.features.createWalletSelection.api)
@@ -274,6 +277,8 @@ dependencies {
     implementation(projects.features.tangempay.onboarding.impl)
     implementation(projects.features.tokenRecieve.api)
     implementation(projects.features.tokenRecieve.impl)
+    implementation(projects.features.yieldSupply.api)
+    implementation(projects.features.yieldSupply.impl)
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)

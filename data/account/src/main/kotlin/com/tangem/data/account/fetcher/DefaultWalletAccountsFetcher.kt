@@ -21,6 +21,8 @@ import com.tangem.datasource.utils.getSyncOrNull
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
  * Default implementation of [WalletAccountsFetcher] and [WalletAccountsSaver]
@@ -34,7 +36,8 @@ import kotlinx.coroutines.withContext
  *
 [REDACTED_AUTHOR]
  */
-internal class DefaultWalletAccountsFetcher(
+@Singleton
+internal class DefaultWalletAccountsFetcher @Inject constructor(
     private val tangemTechApi: TangemTechApi,
     private val accountsResponseStoreFactory: AccountsResponseStoreFactory,
     private val userTokensSaver: UserTokensSaver,

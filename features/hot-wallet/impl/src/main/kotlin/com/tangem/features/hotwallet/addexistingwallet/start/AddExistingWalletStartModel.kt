@@ -63,15 +63,27 @@ internal class AddExistingWalletStartModel @Inject constructor(
     private val params: AddExistingWalletStartComponent.Params = paramsContainer.require()
 
     internal val uiState: StateFlow<AddExistingWalletStartUM>
-        field = MutableStateFlow(
-            AddExistingWalletStartUM(
-                isScanInProgress = false,
-                onBackClick = params.callbacks::onBackClick,
-                onImportPhraseClick = params.callbacks::onImportPhraseClick,
-                onScanCardClick = ::onScanClick,
-                onBuyCardClick = ::onShopClick,
-            ),
-        )
+    field = MutableStateFlow(
+        AddExistingWalletStartUM(
+            showWantToPurchaseBlock = false,
+            isScanInProgress = false,
+            onBackClick = params.callbacks::onBackClick,
+            onImportPhraseClick = params.callbacks::onImportPhraseClick,
+            onScanCardClick = ::onScanClick,
+            onBuyCardClick = ::onShopClick,
+        ),
+    )
+
+    init {
+        showWantToPurchaseBlockWithDelay()
+    }
+
+    private fun showWantToPurchaseBlockWithDelay() {
+        modelScope.launch {
+            delay(SHOW_WANT_TO_PURCHASE_BLOCK_DELAY)
+            uiState.update { it.copy(showWantToPurchaseBlock = true) }
+        }
+    }
 
     private fun onShopClick() {
         analyticsEventHandler.send(IntroductionProcess.ButtonBuyCards)
@@ -134,7 +146,14 @@ internal class AddExistingWalletStartModel @Inject constructor(
                 setLoading(false)
                 when (it) {
                     is SaveWalletError.DataError -> Timber.e(it.toString(), "Unable to save user wallet")
-                    is SaveWalletError.WalletAlreadySaved -> appRouter.replaceAll(AppRoute.Wallet)
+                    is SaveWalletError.WalletAlreadySaved -> {
+                        userWalletsListRepository.unlock(
+                            userWalletId = userWallet.walletId,
+                            unlockMethod = UserWalletsListRepository.UnlockMethod.Scan(scanResponse),
+                        ).onRight {
+                            appRouter.replaceAll(AppRoute.Wallet)
+                        }
+                    }
                 }
             },
             ifRight = {
@@ -179,5 +198,9 @@ internal class AddExistingWalletStartModel @Inject constructor(
                 title = resourceReference(id = R.string.common_error),
             ),
         )
+    }
+
+    companion object {
+        private const val SHOW_WANT_TO_PURCHASE_BLOCK_DELAY = 3000L
     }
 }

@@ -70,6 +70,17 @@ internal class CreateWalletSelectionModel @Inject constructor(
             ),
         )
 
+    init {
+        showAlreadyHaveWalletWithDelay()
+    }
+
+    private fun showAlreadyHaveWalletWithDelay() {
+        modelScope.launch {
+            delay(SHOW_ALREADY_HAVE_WALLET_DELAY)
+            uiState.update { it.copy(showAlreadyHaveWallet = true) }
+        }
+    }
+
     private fun onMobileWalletClick() {
         router.push(AppRoute.CreateMobileWallet)
     }
@@ -129,13 +140,20 @@ internal class CreateWalletSelectionModel @Inject constructor(
             return
         }
 
-        saveWalletUseCase(userWallet).fold(
+        saveWalletUseCase(userWallet = userWallet).fold(
             ifLeft = {
                 delay(HIDE_PROGRESS_DELAY)
                 setLoading(false)
                 when (it) {
                     is SaveWalletError.DataError -> Timber.e(it.toString(), "Unable to save user wallet")
-                    is SaveWalletError.WalletAlreadySaved -> appRouter.replaceAll(AppRoute.Wallet)
+                    is SaveWalletError.WalletAlreadySaved -> {
+                        userWalletsListRepository.unlock(
+                            userWalletId = userWallet.walletId,
+                            unlockMethod = UserWalletsListRepository.UnlockMethod.Scan(scanResponse),
+                        ).onRight {
+                            appRouter.replaceAll(AppRoute.Wallet)
+                        }
+                    }
                 }
             },
             ifRight = {
@@ -180,5 +198,9 @@ internal class CreateWalletSelectionModel @Inject constructor(
                 title = resourceReference(id = R.string.common_error),
             ),
         )
+    }
+
+    companion object {
+        private const val SHOW_ALREADY_HAVE_WALLET_DELAY = 3000L
     }
 }

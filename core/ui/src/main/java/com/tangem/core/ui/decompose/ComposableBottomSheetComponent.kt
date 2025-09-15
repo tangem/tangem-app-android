@@ -11,3 +11,12 @@ interface ComposableBottomSheetComponent {
     @Composable
     fun BottomSheet()
 }
+
+fun getEmptyComposableBottomSheetComponent() = EmptyComposableBottomSheetComponent
+
+object EmptyComposableBottomSheetComponent : ComposableBottomSheetComponent {
+    override fun dismiss() {}
+
+    @Composable
+    override fun BottomSheet() {}
+}
