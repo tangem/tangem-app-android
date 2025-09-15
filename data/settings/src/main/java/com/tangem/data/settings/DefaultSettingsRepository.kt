@@ -5,12 +5,14 @@ import com.tangem.datasource.api.tangemTech.models.GeoResponse
 import com.tangem.datasource.local.logs.AppLogsStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.datasource.local.preferences.utils.get
 import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
 import com.tangem.datasource.local.preferences.utils.store
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.settings.usercountry.models.GB_COUNTRY
 import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.withContext
@@ -56,7 +58,14 @@ internal class DefaultSettingsRepository(
         appLogsStore.deleteDeprecatedLogs(maxSize)
     }
 
-    override suspend fun isSendTapHelpPreviewEnabled(): Boolean {
+    override fun isSendTapHelpPreviewEnabled(): Flow<Boolean> {
+        return appPreferencesStore.get(
+            key = PreferencesKeys.SEND_TAP_HELP_PREVIEW_KEY,
+            default = true,
+        )
+    }
+
+    override suspend fun isSendTapHelpPreviewEnabledSync(): Boolean {
         return appPreferencesStore.getSyncOrDefault(
             key = PreferencesKeys.SEND_TAP_HELP_PREVIEW_KEY,
             default = true,

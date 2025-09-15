@@ -1,5 +1,6 @@
 package com.tangem.tap.di.domain
 
+import com.tangem.data.wallets.hot.TangemHotWalletSigner
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
@@ -9,9 +10,9 @@ import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.transaction.FeeRepository
 import com.tangem.domain.transaction.TransactionRepository
+import com.tangem.domain.transaction.WalletAddressServiceRepository
 import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.tap.domain.hot.TangemHotWalletSigner
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -181,8 +182,13 @@ internal object TransactionDomainModule {
     fun providePrepareForSendUseCase(
         transactionRepository: TransactionRepository,
         cardSdkConfigRepository: CardSdkConfigRepository,
+        tangemHotWalletSignerFactory: TangemHotWalletSigner.Factory,
     ): PrepareForSendUseCase {
-        return PrepareForSendUseCase(transactionRepository, cardSdkConfigRepository)
+        return PrepareForSendUseCase(
+            transactionRepository = transactionRepository,
+            cardSdkConfigRepository = cardSdkConfigRepository,
+            getHotTransactionSigner = { tangemHotWalletSignerFactory.create(it) },
+        )
     }
 
     @Provides
@@ -199,8 +205,13 @@ internal object TransactionDomainModule {
     fun provideSignUseCase(
         walletManagersFacade: WalletManagersFacade,
         cardSdkConfigRepository: CardSdkConfigRepository,
+        tangemHotWalletSignerFactory: TangemHotWalletSigner.Factory,
     ): SignUseCase {
-        return SignUseCase(cardSdkConfigRepository, walletManagersFacade)
+        return SignUseCase(
+            cardSdkConfigRepository = cardSdkConfigRepository,
+            walletManagersFacade = walletManagersFacade,
+            getHotTransactionSigner = { tangemHotWalletSignerFactory.create(it) },
+        )
     }
 
     @Provides
@@ -209,5 +220,25 @@ internal object TransactionDomainModule {
         transactionRepository: TransactionRepository,
     ): CreateNFTTransferTransactionUseCase {
         return CreateNFTTransferTransactionUseCase(transactionRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetEnsNameUseCase(
+        walletManagersFacade: WalletManagersFacade,
+        walletAddressServiceRepository: WalletAddressServiceRepository,
+    ): GetEnsNameUseCase {
+        return GetEnsNameUseCase(
+            walletManagersFacade = walletManagersFacade,
+            walletAddressServiceRepository = walletAddressServiceRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetReverseResolvedEnsAddressUseCase(
+        walletAddressServiceRepository: WalletAddressServiceRepository,
+    ): GetReverseResolvedEnsAddressUseCase {
+        return GetReverseResolvedEnsAddressUseCase(walletAddressServiceRepository)
     }
 }

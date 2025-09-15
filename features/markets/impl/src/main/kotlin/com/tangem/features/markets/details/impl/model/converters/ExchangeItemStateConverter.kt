@@ -5,7 +5,9 @@ import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.utils.BigDecimalFormatter
+import com.tangem.core.ui.format.bigdecimal.fiat
+import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.format.bigdecimal.price
 import com.tangem.domain.markets.TokenMarketExchange
 import com.tangem.domain.markets.TokenMarketExchange.TrustScore
 import com.tangem.features.markets.impl.R
@@ -29,11 +31,12 @@ internal object ExchangeItemStateConverter : Converter<TokenMarketExchange, Toke
             ),
             titleState = TokenItemState.TitleState.Content(text = stringReference(value.name)),
             fiatAmountState = TokenItemState.FiatAmountState.Content(
-                text = BigDecimalFormatter.formatFiatPriceUncapped(
-                    fiatAmount = value.volumeInUsd,
-                    fiatCurrencyCode = "USD",
-                    fiatCurrencySymbol = "$",
-                ),
+                text = value.volumeInUsd.format {
+                    fiat(
+                        fiatCurrencyCode = "USD",
+                        fiatCurrencySymbol = "$",
+                    ).price()
+                },
             ),
             subtitleState = TokenItemState.SubtitleState.TextContent(
                 value = stringReference(value = if (value.isCentralized) "CEX" else "DEX"),

@@ -9,15 +9,14 @@ import com.tangem.common.ui.amountScreen.models.AmountSegmentedButtonsConfig
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.utils.Provider
+import com.tangem.utils.StringsSigns.DOT
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.isNullOrZero
 import kotlinx.collections.immutable.persistentListOf
@@ -58,6 +57,8 @@ class AmountStateConverter(
         return AmountState.Data(
             title = value.title,
             availableBalance = resourceReference(R.string.common_crypto_fiat_format, wrappedList(crypto, fiat)),
+            availableBalanceCrypto = stringReference(crypto),
+            availableBalanceFiat = stringReference(fiat),
             tokenName = stringReference(status.currency.name),
             tokenIconState = iconStateConverter.convert(status),
             amountTextField = amountFieldConverter.convert(value.value),
@@ -94,7 +95,9 @@ class AmountStateConverter(
  * @property maxEnterAmount max enter amount data
  * @property cryptoCurrencyStatus current cryptocurrency status
  * @property iconStateConverter currency icon converter
+ * @property isBalanceHidden is balance hidden status
  */
+@Suppress("LongParameterList")
 class AmountStateConverterV2(
     private val clickIntents: AmountScreenClickIntents,
     private val appCurrency: AppCurrency,
@@ -102,6 +105,7 @@ class AmountStateConverterV2(
     private val maxEnterAmount: EnterAmountBoundary,
     private val iconStateConverter: CryptoCurrencyToIconStateConverter,
     private val isRedesignEnabled: Boolean,
+    private val isBalanceHidden: Boolean,
 ) : Converter<AmountParameters, AmountState> {
 
     private val amountFieldConverter by lazy(LazyThreadSafetyMode.NONE) {
@@ -117,12 +121,32 @@ class AmountStateConverterV2(
         val crypto = maxEnterAmount.amount.format { crypto(cryptoCurrencyStatus.currency) }
         val noFeeRate = cryptoCurrencyStatus.value.fiatRate.isNullOrZero()
 
+        if (cryptoCurrencyStatus.value is CryptoCurrencyStatus.Loading) {
+            return AmountState.Empty(
+                isRedesignEnabled = isRedesignEnabled,
+            )
+        }
+
         return AmountState.Data(
             title = value.title,
             availableBalance = if (isRedesignEnabled) {
-                resourceReference(R.string.common_balance, wrappedList(crypto))
+                combinedReference(
+                    stringReference(crypto),
+                    stringReference(" $DOT "),
+                    stringReference(fiat),
+                ).orMaskWithStars(isBalanceHidden)
             } else {
                 resourceReference(R.string.common_crypto_fiat_format, wrappedList(crypto, fiat))
+                    .orMaskWithStars(isBalanceHidden)
+            },
+            availableBalanceCrypto = stringReference(crypto).orMaskWithStars(isBalanceHidden),
+            availableBalanceFiat = if (isBalanceHidden) {
+                TextReference.EMPTY
+            } else {
+                combinedReference(
+                    stringReference(" $DOT "),
+                    stringReference(fiat),
+                )
             },
             tokenName = stringReference(cryptoCurrencyStatus.currency.name),
             tokenIconState = iconStateConverter.convert(cryptoCurrencyStatus.currency),
