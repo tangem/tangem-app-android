@@ -1,9 +1,11 @@
 package com.tangem.data.pay.di
 
 import com.tangem.data.pay.repository.DefaultKycRepository
+import com.tangem.data.pay.repository.DefaultTangemPayTxHistoryRepository
 import com.tangem.data.pay.usecase.DefaultKycStartInfoUseCase
 import com.tangem.domain.pay.repository.KycRepository
 import com.tangem.domain.pay.usecase.KycStartInfoUseCase
+import com.tangem.domain.tangempay.repository.TangemPayTxHistoryRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -21,4 +23,8 @@ internal interface TangemPayDataModule {
     @Binds
     @Singleton
     fun bindKycStartInfoUseCase(useCase: DefaultKycStartInfoUseCase): KycStartInfoUseCase
+
+    @Binds
+    @Singleton
+    fun bindTangemPayTxHistoryRepository(repository: DefaultTangemPayTxHistoryRepository): TangemPayTxHistoryRepository
 }
