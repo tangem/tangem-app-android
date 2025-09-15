@@ -277,7 +277,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
     ) {
         addIf(
             element = WalletNotification.Warning.YeildSupplyApprove,
-            condition = tokenList.hasNetworksWithLendingsWithoutApprove(),
+            condition = tokenList.hasTokensWithActivatedSupplyWithoutApprove(),
         )
     }
 
@@ -311,7 +311,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
         return tokenList.flattenCurrencies().any { it.value is CryptoCurrencyStatus.Unreachable }
     }
 
-    private fun Lce<TokenListError, TokenList>.hasNetworksWithLendingsWithoutApprove(): Boolean {
+    private fun Lce<TokenListError, TokenList>.hasTokensWithActivatedSupplyWithoutApprove(): Boolean {
         val tokenList = getOrNull(isPartialContentAccepted = false) ?: return false
         val yieldSupplyEnabled = yieldSupplyFeatureToggles.isYieldSupplyFeatureEnabled
         return yieldSupplyEnabled && tokenList.flattenCurrencies().any {
