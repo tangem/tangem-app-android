@@ -35,10 +35,8 @@ internal class OnboardingNoteModel @Inject constructor(
     @Suppress("UnusedPrivateMember")
     private val params = paramsContainer.require<OnboardingNoteComponent.Params>()
 
-    val initialRoute = initializeRoute()
-
     private val _innerNavigationState =
-        MutableStateFlow(OnboardingNoteInnerNavigationState(stackSize = initialRoute.stepNum()))
+        MutableStateFlow(OnboardingNoteInnerNavigationState(stackSize = OnboardingNoteRoute.CreateWallet.stepNum()))
 
     val innerNavigationState = _innerNavigationState.asStateFlow()
 
@@ -76,15 +74,6 @@ internal class OnboardingNoteModel @Inject constructor(
     fun onWalletCreated(userWallet: UserWallet) {
         commonUiState.update {
             it.copy(userWallet = userWallet)
-        }
-    }
-
-    private fun initializeRoute(): OnboardingNoteRoute {
-        val card = params.scanResponse.card
-        return if (card.wallets.isEmpty()) {
-            OnboardingNoteRoute.CreateWallet
-        } else {
-            OnboardingNoteRoute.TopUp
         }
     }
 

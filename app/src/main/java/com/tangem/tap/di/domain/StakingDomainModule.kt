@@ -94,12 +94,12 @@ internal object StakingDomainModule {
     @Provides
     @Singleton
     fun provideFetchStakingYieldBalanceUseCase(
-        stakingErrorResolver: StakingErrorResolver,
         singleYieldBalanceFetcher: SingleYieldBalanceFetcher,
+        stakingIdFactory: StakingIdFactory,
     ): FetchStakingYieldBalanceUseCase {
         return FetchStakingYieldBalanceUseCase(
-            stakingErrorResolver = stakingErrorResolver,
             singleYieldBalanceFetcher = singleYieldBalanceFetcher,
+            stakingIdFactory = stakingIdFactory,
         )
     }
 
@@ -175,18 +175,6 @@ internal object StakingDomainModule {
 
     @Provides
     @Singleton
-    fun provideIsApproveNeededUseCase(
-        stakingRepository: StakingRepository,
-        stakingErrorResolver: StakingErrorResolver,
-    ): IsApproveNeededUseCase {
-        return IsApproveNeededUseCase(
-            stakingRepository = stakingRepository,
-            stakingErrorResolver = stakingErrorResolver,
-        )
-    }
-
-    @Provides
-    @Singleton
     fun provideGetConstructedStakingTransactionUseCase(
         stakingRepository: StakingRepository,
         stakingErrorResolver: StakingErrorResolver,
@@ -211,12 +199,6 @@ internal object StakingDomainModule {
 
     @Provides
     @Singleton
-    fun provideGetStakingIntegrationIdUseCase(stakingRepository: StakingRepository): GetStakingIntegrationIdUseCase {
-        return GetStakingIntegrationIdUseCase(stakingRepository)
-    }
-
-    @Provides
-    @Singleton
     fun provideCheckAccountInitializedUseCase(
         walletManagersFacade: WalletManagersFacade,
     ): CheckAccountInitializedUseCase {
@@ -225,9 +207,13 @@ internal object StakingDomainModule {
 
     @Provides
     @Singleton
-    fun provideGetActionRequirementAmountUseCase(
-        stakingRepository: StakingRepository,
-    ): GetActionRequirementAmountUseCase {
-        return GetActionRequirementAmountUseCase(stakingRepository)
+    fun provideGetActionRequirementAmountUseCase(): GetActionRequirementAmountUseCase {
+        return GetActionRequirementAmountUseCase()
+    }
+
+    @Provides
+    @Singleton
+    fun provideStakingIdFactory(walletManagersFacade: WalletManagersFacade): StakingIdFactory {
+        return StakingIdFactory(walletManagersFacade = walletManagersFacade)
     }
 }

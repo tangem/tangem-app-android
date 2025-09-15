@@ -43,9 +43,9 @@ fun GiveTxPermissionBottomSheet(config: TangemBottomSheetConfig) {
         config = config,
         containerColor = TangemTheme.colors.background.secondary,
         titleText = resourceReference(R.string.give_permission_title),
-        titleAction = TopAppBarButtonUM(
+        titleAction = TopAppBarButtonUM.Icon(
             iconRes = R.drawable.ic_information_24,
-            onIconClicked = { isPermissionAlertShow = true },
+            onClicked = { isPermissionAlertShow = true },
         ),
         content = { content: GiveTxPermissionBottomSheetConfig ->
             GiveTxPermissionBottomSheetContent(content = content)
