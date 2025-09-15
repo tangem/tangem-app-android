@@ -362,4 +362,22 @@ internal enum class Wallet2CobrandImage(
         cards3ResId = R.drawable.ill_ghoad_card3_120_106,
         batchIds = setOf("AF89"),
     ),
+
+    BlushSky(
+        cards2ResId = R.drawable.ill_blush_sky_card2_120_106,
+        cards3ResId = R.drawable.ill_blush_sky_card3_120_106,
+        batchIds = setOf("AF990020", "AF990021", "AF990022"),
+    ),
+
+    ElectraSea(
+        cards2ResId = R.drawable.ill_electra_sea_card2_120_106,
+        cards3ResId = R.drawable.ill_electra_sea_card3_120_106,
+        batchIds = setOf("AF990023", "AF990024", "AF990025"),
+    ),
+
+    HyperBlue(
+        cards2ResId = R.drawable.ill_hyperblue_card2_120_106,
+        cards3ResId = R.drawable.ill_hyperblue_card3_120_106,
+        batchIds = setOf("AF990026", "AF990027", "AF990028"),
+    ),
 }
