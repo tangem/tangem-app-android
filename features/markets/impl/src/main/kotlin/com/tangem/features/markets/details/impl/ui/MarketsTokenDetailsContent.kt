@@ -58,8 +58,8 @@ internal fun MarketsTokenDetailsContent(
     onBackClick: () -> Unit,
     onHeaderSizeChange: (Dp) -> Unit,
     backButtonEnabled: Boolean,
-    portfolioBlock: @Composable ((Modifier) -> Unit)?,
     modifier: Modifier = Modifier,
+    portfolioBlock: @Composable ((Modifier) -> Unit)?,
 ) {
     Content(
         modifier = modifier,
@@ -88,8 +88,8 @@ private fun Content(
     onBackClick: () -> Unit,
     onHeaderSizeChange: (Dp) -> Unit,
     backButtonEnabled: Boolean,
-    portfolioBlock: @Composable ((Modifier) -> Unit)?,
     modifier: Modifier = Modifier,
+    portfolioBlock: @Composable ((Modifier) -> Unit)?,
 ) {
     val density = LocalDensity.current
     val bottomBarHeight = with(density) { WindowInsets.systemBars.getBottom(this).toDp() }

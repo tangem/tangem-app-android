@@ -56,7 +56,7 @@ internal class TokenReceiveModel @Inject constructor(
     val stackNavigation = StackNavigation<TokenReceiveRoutes>()
 
     internal val state: StateFlow<TokenReceiveUM>
-    field = MutableStateFlow<TokenReceiveUM>(tokenReceiveStateFactory.getInitialState(getTokenName()))
+        field = MutableStateFlow<TokenReceiveUM>(tokenReceiveStateFactory.getInitialState(getTokenName()))
 
     init {
         modelScope.launch {

@@ -23,18 +23,18 @@ internal class TokenReceiveQrCodeModel @Inject constructor(
     private val params = paramsContainer.require<TokenReceiveQrCodeComponent.TokenReceiveQrCodeParams>()
 
     internal val state: StateFlow<QrCodeUM>
-    field = MutableStateFlow<QrCodeUM>(
-        QrCodeUM(
-            network = params.cryptoCurrency.network.name,
-            addressValue = params.address.value,
-            addressName = TextReference.Str("${params.cryptoCurrency.name} (${params.cryptoCurrency.symbol})"),
-            onCopyClick = {
-                params.callback.onCopyClick(
-                    address = params.address,
-                    source = TokenReceiveCopyActionSource.QR,
-                )
-            },
-            onShareClick = params.callback::onShareClick,
-        ),
-    )
+        field = MutableStateFlow<QrCodeUM>(
+            QrCodeUM(
+                network = params.cryptoCurrency.network.name,
+                addressValue = params.address.value,
+                addressName = TextReference.Str("${params.cryptoCurrency.name} (${params.cryptoCurrency.symbol})"),
+                onCopyClick = {
+                    params.callback.onCopyClick(
+                        address = params.address,
+                        source = TokenReceiveCopyActionSource.QR,
+                    )
+                },
+                onShareClick = params.callback::onShareClick,
+            ),
+        )
 }

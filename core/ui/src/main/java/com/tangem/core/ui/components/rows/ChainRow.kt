@@ -53,10 +53,10 @@ fun ChainRow(model: ChainRowUM, modifier: Modifier = Modifier, action: @Composab
 
 @Composable
 inline fun ChainRowContainer(
+    modifier: Modifier = Modifier,
     icon: @Composable BoxScope.() -> Unit,
     text: @Composable BoxScope.() -> Unit,
     action: @Composable BoxScope.() -> Unit,
-    modifier: Modifier = Modifier,
 ) {
     RowContentContainer(
         modifier = modifier

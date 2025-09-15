@@ -30,7 +30,7 @@ internal class TangemPayDetailsModel @Inject constructor(
 ) : Model() {
 
     val uiState: StateFlow<TangemPayDetailsUM>
-    field = MutableStateFlow(getInitialState())
+        field = MutableStateFlow(getInitialState())
 
     private val refreshStateJobHolder = JobHolder()
 
