@@ -74,12 +74,7 @@ internal class WcEthSendTransactionUseCase @AssistedInject constructor(
                     logoUrl = tokenInfo.logoUrl,
                     chainId = tokenInfo.chainId,
                 )
-                BlockAidTransactionCheck.Result.Approval(
-                    result = result,
-                    approval = this,
-                    tokenInfo = tokenInfo,
-                    isMutable = true,
-                )
+                BlockAidTransactionCheck.Result.Approval(result = result)
             }
         }
 
