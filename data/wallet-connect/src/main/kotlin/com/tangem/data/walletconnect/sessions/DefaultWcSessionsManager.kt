@@ -70,6 +70,7 @@ internal class DefaultWcSessionsManager(
             WcSessionDTO(
                 topic = session.sdkModel.topic,
                 walletId = session.wallet.walletId,
+                url = session.sdkModel.appMetaData.url,
                 securityStatus = session.securityStatus,
                 connectingTime = session.connectingTime ?: DateTime.now().millis,
             ),
@@ -105,8 +106,15 @@ internal class DefaultWcSessionsManager(
             .map { walletId ->
                 flow {
                     emit(
-                        legacyStore.loadSessions(walletId.stringValue).map {
-                            WcSessionDTO(it.topic, walletId, CheckDAppResult.FAILED_TO_VERIFY)
+                        legacyStore.loadSessions(walletId.stringValue).mapNotNull { legacySession ->
+                            val url =
+                                inSdk.find { it.topic == legacySession.topic }?.metaData?.url ?: return@mapNotNull null
+                            WcSessionDTO(
+                                topic = legacySession.topic,
+                                walletId = walletId,
+                                url = url,
+                                securityStatus = CheckDAppResult.FAILED_TO_VERIFY,
+                            )
                         },
                     )
                 }
@@ -130,9 +138,15 @@ internal class DefaultWcSessionsManager(
             val wallet = wallets.find { it.walletId == storeSession.walletId } ?: return@mapNotNull null
             val sdkSession = inSdk.find { it.topic == storeSession.topic } ?: return@mapNotNull null
             val networks = wcNetworksConverter.findWalletNetworks(wallet, sdkSession)
+            val originUrl = storeSession.url ?: sdkSession.metaData?.url ?: ""
             WcSession(
                 wallet = wallet,
-                sdkModel = WcSdkSessionConverter.convert(sdkSession),
+                sdkModel = WcSdkSessionConverter.convert(
+                    value = WcSdkSessionConverter.Input(
+                        originUrl = originUrl,
+                        session = sdkSession,
+                    ),
+                ),
                 securityStatus = storeSession.securityStatus,
                 networks = networks,
                 connectingTime = storeSession.connectingTime,

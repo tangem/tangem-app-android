@@ -1,10 +1,13 @@
 package com.tangem.domain.models
 
+import kotlinx.serialization.Serializable
+
 /**
  * Source of the status of any loaded data
  *
 [REDACTED_AUTHOR]
  */
+@Serializable
 enum class StatusSource {
 
     /**
