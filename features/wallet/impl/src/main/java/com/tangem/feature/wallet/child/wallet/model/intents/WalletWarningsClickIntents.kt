@@ -178,7 +178,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
                     .onLeft {
                         val selectedUserWallet = getSelectedUserWallet() ?: return@onLeft
                         val method = when (selectedUserWallet) {
-                            is UserWallet.Cold -> UserWalletsListRepository.UnlockMethod.Scan
+                            is UserWallet.Cold -> UserWalletsListRepository.UnlockMethod.Scan()
                             is UserWallet.Hot -> UserWalletsListRepository.UnlockMethod.AccessCode
                         }
                         userWalletsListRepository.unlock(stateHolder.getSelectedWalletId(), method)
