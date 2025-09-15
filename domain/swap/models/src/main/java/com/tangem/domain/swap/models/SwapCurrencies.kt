@@ -1,7 +1,7 @@
 package com.tangem.domain.swap.models
 
 import com.tangem.domain.express.models.ExpressProvider
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 
 /**
  * Model of currencies available to swap
