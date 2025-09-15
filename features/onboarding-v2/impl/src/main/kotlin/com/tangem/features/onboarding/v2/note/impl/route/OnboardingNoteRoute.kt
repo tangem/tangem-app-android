@@ -7,9 +7,6 @@ internal sealed class OnboardingNoteRoute {
 
     @Serializable
     data object CreateWallet : OnboardingNoteRoute()
-
-    @Serializable
-    data object TopUp : OnboardingNoteRoute()
 }
 
-internal const val ONBOARDING_NOTE_STEPS_COUNT = 3
+internal const val ONBOARDING_NOTE_STEPS_COUNT = 1
