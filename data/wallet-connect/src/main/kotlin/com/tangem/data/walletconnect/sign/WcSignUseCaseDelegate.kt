@@ -8,6 +8,7 @@ import com.tangem.data.walletconnect.sign.SignStateConverter.toSigning
 import com.tangem.domain.walletconnect.WcAnalyticEvents
 import com.tangem.domain.walletconnect.model.WcRequestError
 import com.tangem.domain.walletconnect.model.WcRequestError.Companion.code
+import com.tangem.domain.walletconnect.model.WcRequestError.Companion.message
 import com.tangem.domain.walletconnect.usecase.method.WcSignState
 import com.tangem.domain.walletconnect.usecase.method.WcSignStep
 import kotlinx.coroutines.Job
@@ -63,22 +64,16 @@ internal class WcSignUseCaseDelegate<MiddleAction, SignModel>(
             }
             .onEach { state ->
                 val step = state.domainStep as? WcSignStep.Result ?: return@onEach
-                val event = step.result.fold(
-                    ifLeft = { error ->
-                        WcAnalyticEvents.SignatureRequestFailed(
-                            rawRequest = context.rawSdkRequest,
-                            network = context.network,
-                            errorCode = error.code() ?: error::class.simpleName.orEmpty(),
-                        )
-                    },
-                    ifRight = {
-                        WcAnalyticEvents.SignatureRequestHandled(
-                            rawRequest = context.rawSdkRequest,
-                            network = context.network,
-                        )
-                    },
-                )
-                analytics.send(event)
+                step.result.leftOrNull()?.let { error ->
+                    val errorMessage = error.message() ?: ""
+                    val event = WcAnalyticEvents.SignatureRequestFailed(
+                        rawRequest = context.rawSdkRequest,
+                        network = context.network,
+                        errorCode = error.code() ?: error::class.simpleName.orEmpty(),
+                        errorMessage = errorMessage,
+                    )
+                    analytics.send(event)
+                }
             }
 
         var signJob: Job? = null

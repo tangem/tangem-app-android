@@ -9,14 +9,15 @@ import com.tangem.domain.express.models.ExpressProvider
 import com.tangem.domain.express.models.ExpressProviderType
 import com.tangem.domain.express.models.ExpressRateType
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.swap.models.SwapCurrencies
 import com.tangem.domain.swap.models.SwapDirection
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountFieldUM
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountType
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
+import com.tangem.utils.StringsSigns
 import kotlinx.collections.immutable.persistentListOf
 import java.math.BigDecimal
 
@@ -39,6 +40,7 @@ internal data object SwapAmountContentPreview {
                 hasFiatFeeRate = false,
                 canHandleTokens = false,
                 transactionExtrasType = Network.TransactionExtrasType.NONE,
+                nameResolvingType = Network.NameResolvingType.NONE,
 
             ),
             name = "Bitcoin",
@@ -68,6 +70,7 @@ internal data object SwapAmountContentPreview {
         quoteAmountValue = stringReference("123"),
         rate = stringReference("1 USD ≈ 123.123 POL"),
         diffPercent = SwapQuoteUM.Content.DifferencePercent.Best,
+        isSingleProvider = false,
     )
 
     val emptyState = SwapAmountUM.Content(
@@ -87,6 +90,8 @@ internal data object SwapAmountContentPreview {
         secondaryCryptoCurrencyStatus = cryptoCurrencyStatus,
         swapRateType = ExpressRateType.Float,
         appCurrency = AppCurrency.Default,
+        showBestRateAnimation = false,
+        showFCAWarning = false,
     )
 
     val defaultState = SwapAmountUM.Content(
@@ -96,10 +101,12 @@ internal data object SwapAmountContentPreview {
                 availableBalance = stringReference("Balance: 100 BTC"),
             ),
             title = stringReference("Tether"),
-            subtitle = stringReference("Balance: 100 BTC"),
+            subtitleLeft = stringReference("11 101,123123456 BTC"),
+            subtitleRight = stringReference(" ${StringsSigns.DOT} 1 212,12 $"),
             priceImpact = null,
             isClickEnabled = false,
-            subtitleEllipsis = TextEllipsis.OffsetEnd(3),
+            subtitleEllipsisLeft = TextEllipsis.OffsetEnd(3),
+            subtitleEllipsisRight = TextEllipsis.OffsetEnd(1),
         ),
         secondaryAmount = SwapAmountFieldUM.Content(
             amountType = SwapAmountType.To,
@@ -109,9 +116,11 @@ internal data object SwapAmountContentPreview {
             ),
             title = stringReference("Shiba Inu"),
             priceImpact = stringReference("(-10%)"),
-            subtitle = TextReference.EMPTY,
+            subtitleLeft = TextReference.EMPTY,
+            subtitleRight = TextReference.EMPTY,
             isClickEnabled = false,
-            subtitleEllipsis = TextEllipsis.OffsetEnd(3),
+            subtitleEllipsisLeft = TextEllipsis.End,
+            subtitleEllipsisRight = TextEllipsis.End,
         ),
         appCurrency = AppCurrency.Default,
         swapDirection = SwapDirection.Direct,
@@ -123,5 +132,7 @@ internal data object SwapAmountContentPreview {
         secondaryCryptoCurrencyStatus = cryptoCurrencyStatus,
         swapRateType = ExpressRateType.Float,
         isPrimaryButtonEnabled = true,
+        showBestRateAnimation = false,
+        showFCAWarning = true,
     )
 }

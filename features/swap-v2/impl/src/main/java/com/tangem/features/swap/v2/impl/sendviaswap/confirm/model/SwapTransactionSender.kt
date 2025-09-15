@@ -3,14 +3,16 @@ package com.tangem.features.swap.v2.impl.sendviaswap.confirm.model
 import arrow.core.getOrElse
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.domain.express.models.ExpressError
+import com.tangem.domain.express.models.ExpressOperationType
 import com.tangem.domain.express.models.ExpressProvider
 import com.tangem.domain.express.models.ExpressProviderType
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.models.SwapDataModel
 import com.tangem.domain.swap.models.SwapDataTransactionModel
+import com.tangem.domain.swap.models.SwapTxType
 import com.tangem.domain.swap.usecase.GetSwapDataUseCase
 import com.tangem.domain.swap.usecase.SwapTransactionSentUseCase
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
@@ -39,6 +41,7 @@ internal class SwapTransactionSender @AssistedInject constructor(
         onSendSuccess: (String, Long, SwapDataModel) -> Unit,
         onExpressError: (ExpressError) -> Unit,
         onSendError: (SendTransactionError?) -> Unit,
+        expressOperationType: ExpressOperationType,
     ) {
         val provider = confirmData.quote?.provider ?: return
 
@@ -49,6 +52,7 @@ internal class SwapTransactionSender @AssistedInject constructor(
                 onExpressError = onExpressError,
                 onSendSuccess = onSendSuccess,
                 onSendError = onSendError,
+                expressOperationType = expressOperationType,
             )
             ExpressProviderType.DEX,
             ExpressProviderType.DEX_BRIDGE,
@@ -66,6 +70,7 @@ internal class SwapTransactionSender @AssistedInject constructor(
         onSendSuccess: (String, Long, SwapDataModel) -> Unit,
         onExpressError: (ExpressError) -> Unit,
         onSendError: (SendTransactionError?) -> Unit,
+        expressOperationType: ExpressOperationType,
     ) {
         val fromStatus = confirmData.fromCryptoCurrencyStatus ?: return
         val toStatus = confirmData.toCryptoCurrencyStatus ?: return
@@ -91,6 +96,7 @@ internal class SwapTransactionSender @AssistedInject constructor(
             toAddress = destination,
             expressProvider = provider,
             rateType = rateType,
+            expressOperationType,
         ).getOrElse { onExpressError(it); return }
 
         createAndSendCexTransaction(
@@ -158,6 +164,7 @@ internal class SwapTransactionSender @AssistedInject constructor(
                     provider = provider,
                     txHash = txHash,
                     timestamp = timestamp,
+                    swapTxType = SwapTxType.SendWithSwap,
                 )
                 onSendSuccess(txHash, timestamp, swapData)
             },
