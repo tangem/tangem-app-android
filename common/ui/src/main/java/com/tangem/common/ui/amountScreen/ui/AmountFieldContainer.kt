@@ -15,11 +15,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.R
 import com.tangem.common.ui.amountScreen.models.AmountState
-import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.atoms.text.EllipsisText
 import com.tangem.core.ui.components.atoms.text.TextEllipsis
@@ -29,6 +29,7 @@ import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.test.StakingSendScreenTestTags
 
 private const val AMOUNT_FIELD_KEY = "amountFieldKey"
 
@@ -52,7 +53,8 @@ internal fun LazyListScope.amountField(
                 style = TangemTheme.typography.subtitle2,
                 color = TangemTheme.colors.text.tertiary,
                 modifier = Modifier
-                    .padding(top = TangemTheme.dimens.spacing14),
+                    .padding(top = TangemTheme.dimens.spacing14)
+                    .testTag(StakingSendScreenTestTags.AMOUNT_CONTAINER_TITLE),
             )
 
             val balance = amountState.availableBalance.orMaskWithStars(isBalanceHidden).resolveReference()
@@ -66,7 +68,8 @@ internal fun LazyListScope.amountField(
                     color = TangemTheme.colors.text.tertiary,
                     textAlign = TextAlign.Center,
                     modifier = Modifier
-                        .padding(top = TangemTheme.dimens.spacing2),
+                        .padding(top = TangemTheme.dimens.spacing2)
+                        .testTag(StakingSendScreenTestTags.AMOUNT_CONTAINER_TEXT),
                 )
             }
             CurrencyIcon(
@@ -113,7 +116,7 @@ internal fun LazyListScope.amountFieldV2(
                 } else {
                     Text(
                         text = amountState.title.resolveReference(),
-                        style = TangemTheme.typography.caption2,
+                        style = TangemTheme.typography.subtitle2,
                         color = TangemTheme.colors.text.tertiary,
                     )
                 }
@@ -155,8 +158,10 @@ private fun AmountInfo(amountUM: AmountState, onMaxAmountClick: () -> Unit, modi
                 bottom = 16.dp,
             ),
         )
-        AmountInfoMain(amountUM = amountUM)
-        SpacerWMax()
+        AmountInfoMain(
+            amountUM = amountUM,
+            modifier = Modifier.weight(1f),
+        )
         Text(
             text = stringResourceSafe(R.string.send_max_amount),
             style = TangemTheme.typography.caption1,
@@ -164,7 +169,7 @@ private fun AmountInfo(amountUM: AmountState, onMaxAmountClick: () -> Unit, modi
             modifier = Modifier
                 .padding(end = 16.dp)
                 .clip(RoundedCornerShape(16.dp))
-                .background(TangemTheme.colors.background.secondary)
+                .background(TangemTheme.colors.button.secondary)
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = ripple(),
@@ -205,12 +210,21 @@ private fun AmountInfoMain(amountUM: AmountState, modifier: Modifier = Modifier)
                     color = TangemTheme.colors.text.primary1,
                     maxLines = 1,
                 )
-                EllipsisText(
-                    text = amountUM.availableBalance.resolveReference(),
-                    style = TangemTheme.typography.caption2,
-                    color = TangemTheme.colors.text.tertiary,
-                    ellipsis = TextEllipsis.OffsetEnd(amountUM.amountTextField.cryptoAmount.currencySymbol.length),
-                )
+                Row {
+                    EllipsisText(
+                        text = amountUM.availableBalanceCrypto.resolveReference(),
+                        style = TangemTheme.typography.caption2,
+                        color = TangemTheme.colors.text.tertiary,
+                        ellipsis = TextEllipsis.OffsetEnd(amountUM.amountTextField.cryptoAmount.currencySymbol.length),
+                        modifier = Modifier.weight(1f, fill = false),
+                    )
+                    EllipsisText(
+                        text = amountUM.availableBalanceFiat.resolveReference(),
+                        style = TangemTheme.typography.caption2,
+                        color = TangemTheme.colors.text.tertiary,
+                        ellipsis = TextEllipsis.OffsetEnd(amountUM.amountTextField.fiatAmount.currencySymbol.length),
+                    )
+                }
             }
         }
     }

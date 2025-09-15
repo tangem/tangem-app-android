@@ -1,6 +1,6 @@
 package com.tangem.features.onramp.swap.availablepairs.entity.transformers
 
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.features.onramp.swap.availablepairs.entity.converters.LoadingTokenListItemConverter
 import com.tangem.features.onramp.tokenlist.entity.TokenListUM
 import com.tangem.features.onramp.tokenlist.entity.TokenListUMTransformer
