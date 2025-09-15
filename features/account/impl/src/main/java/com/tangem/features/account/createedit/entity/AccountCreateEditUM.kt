@@ -49,6 +49,7 @@ internal data class AccountCreateEditUM(
 
     data class Button(
         val isButtonEnabled: Boolean,
+        val showProgress: Boolean,
         val onConfirmClick: () -> Unit,
         val text: TextReference,
     )
