@@ -1,13 +1,13 @@
 package com.tangem.domain.swap.usecase
 
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.SwapTransactionRepository
 import com.tangem.domain.swap.models.SwapCurrencies
 import com.tangem.domain.swap.models.SwapCurrenciesGroup
 import com.tangem.domain.swap.models.SwapDirection
 import com.tangem.domain.swap.models.getGroupWithDirection
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.utils.extensions.orZero
 
 /**
