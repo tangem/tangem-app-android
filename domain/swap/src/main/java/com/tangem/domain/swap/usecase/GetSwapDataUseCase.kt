@@ -2,14 +2,15 @@ package com.tangem.domain.swap.usecase
 
 import arrow.core.Either
 import com.tangem.domain.express.models.ExpressError
+import com.tangem.domain.express.models.ExpressOperationType
 import com.tangem.domain.express.models.ExpressProvider
 import com.tangem.domain.express.models.ExpressRateType
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.SwapErrorResolver
 import com.tangem.domain.swap.SwapRepositoryV2
 import com.tangem.domain.swap.models.SwapDataModel
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 
 @Suppress("LongParameterList")
 class GetSwapDataUseCase(
@@ -25,6 +26,7 @@ class GetSwapDataUseCase(
         toAddress: String,
         expressProvider: ExpressProvider,
         rateType: ExpressRateType,
+        expressOperationType: ExpressOperationType,
     ): Either<ExpressError, SwapDataModel> = Either.catch {
         swapRepositoryV2.getSwapData(
             userWallet = userWallet,
@@ -34,6 +36,7 @@ class GetSwapDataUseCase(
             toAddress = toAddress,
             expressProvider = expressProvider,
             rateType = rateType,
+            expressOperationType = expressOperationType,
         )
     }.mapLeft { throwable ->
         swapErrorResolver.resolve(throwable)

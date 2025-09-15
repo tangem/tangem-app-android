@@ -47,7 +47,7 @@ internal enum class BuildType(
         configFields = listOf(
             BuildConfigField.Environment(value = "dev"),
             BuildConfigField.LogEnabled(isEnabled = true),
-            BuildConfigField.TesterMenuAvailability(isEnabled = false),
+            BuildConfigField.TesterMenuAvailability(isEnabled = true),
             BuildConfigField.MockDataSource(isEnabled = true),
         ),
     ),
