@@ -3,13 +3,13 @@ package com.tangem.common.ui.amountScreen.converters.field
 import com.tangem.common.ui.R
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.utils.StringsSigns.DOT
 import com.tangem.utils.transformer.Transformer
 
 /**
@@ -25,6 +25,7 @@ class AmountBoundaryUpdateTransformer(
     private val maxEnterAmount: EnterAmountBoundary,
     private val appCurrency: AppCurrency,
     private val isRedesignEnabled: Boolean,
+    private val isBalanceHidden: Boolean,
 ) : Transformer<AmountState> {
 
     override fun transform(prevState: AmountState): AmountState {
@@ -34,13 +35,26 @@ class AmountBoundaryUpdateTransformer(
         val crypto = maxEnterAmount.amount.format { crypto(cryptoCurrencyStatus.currency) }
 
         val availableBalance = if (isRedesignEnabled) {
-            resourceReference(R.string.common_balance, wrappedList(crypto))
+            combinedReference(
+                stringReference(crypto),
+                stringReference(" $DOT "),
+                stringReference(fiat),
+            )
         } else {
             resourceReference(R.string.common_crypto_fiat_format, wrappedList(crypto, fiat))
         }
 
         return prevState.copy(
-            availableBalance = availableBalance,
+            availableBalance = availableBalance.orMaskWithStars(isBalanceHidden),
+            availableBalanceCrypto = stringReference(crypto).orMaskWithStars(isBalanceHidden),
+            availableBalanceFiat = if (isBalanceHidden) {
+                TextReference.EMPTY
+            } else {
+                combinedReference(
+                    stringReference(" $DOT "),
+                    stringReference(fiat),
+                )
+            },
         )
     }
 }

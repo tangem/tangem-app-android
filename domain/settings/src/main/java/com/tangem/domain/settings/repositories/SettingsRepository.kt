@@ -1,6 +1,7 @@
 package com.tangem.domain.settings.repositories
 
 import com.tangem.domain.settings.usercountry.models.UserCountry
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
 @Suppress("TooManyFunctions")
@@ -16,7 +17,9 @@ interface SettingsRepository {
 
     fun deleteDeprecatedLogs(maxSize: Int)
 
-    suspend fun isSendTapHelpPreviewEnabled(): Boolean
+    fun isSendTapHelpPreviewEnabled(): Flow<Boolean>
+
+    suspend fun isSendTapHelpPreviewEnabledSync(): Boolean
 
     suspend fun setSendTapHelpPreviewAvailability(isEnabled: Boolean)
 
@@ -24,8 +27,10 @@ interface SettingsRepository {
 
     suspend fun setShouldOpenWelcomeScreenOnResume(value: Boolean)
 
+    @Deprecated("Use walletsRepository.requireAccessCode instead")
     suspend fun shouldSaveAccessCodes(): Boolean
 
+    @Deprecated("Use walletsRepository.requireAccessCode instead")
     suspend fun setShouldSaveAccessCodes(value: Boolean)
 
     suspend fun incrementAppLaunchCounter()

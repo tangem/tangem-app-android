@@ -18,7 +18,9 @@ import com.tangem.domain.appcurrency.extenstions.unwrap
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.exchange.RampStateManager
+import com.tangem.domain.express.models.ExpressOperationType
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.models.wallet.UserWallet
@@ -26,7 +28,6 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.quotes.QuotesRepository
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.tokens.*
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.FeePaidCurrency
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
 import com.tangem.domain.tokens.repository.CurrenciesRepository
@@ -288,6 +289,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                         selectedFee = selectedFee,
                         amount = amount,
                         isBalanceWithoutFeeEnough = isBalanceWithoutFeeEnough,
+                        expressOperationType = ExpressOperationType.SWAP,
                     )
                 }
                 ExchangeProviderType.CEX -> {
@@ -314,6 +316,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         selectedFee: FeeType,
         amount: SwapAmount,
         isBalanceWithoutFeeEnough: Boolean,
+        expressOperationType: ExpressOperationType,
     ): Pair<SwapProvider, SwapState> {
         val maybeQuotes = repository.findBestQuote(
             userWallet = userWallet,
@@ -350,6 +353,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 toToken = toToken,
                 amount = amount,
                 selectedFee = selectedFee,
+                expressOperationType = expressOperationType,
             )
         } else {
             provider to getQuotesState(
@@ -496,6 +500,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         amountToSwap: String,
         includeFeeInAmount: IncludeFeeInAmount,
         fee: TxFee,
+        expressOperationType: ExpressOperationType,
     ): SwapTransactionState {
         Timber.i(
             """
@@ -530,6 +535,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                     amount = amountToSwapWithFee,
                     txFee = fee,
                     swapProvider = swapProvider,
+                    expressOperationType = expressOperationType,
                 )
             }
             ExchangeProviderType.DEX, ExchangeProviderType.DEX_BRIDGE -> {
@@ -677,6 +683,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         amount: SwapAmount,
         txFee: TxFee,
         swapProvider: SwapProvider,
+        expressOperationType: ExpressOperationType,
     ): SwapTransactionState {
         val exchangeData = repository.getExchangeData(
             userWallet = userWallet,
@@ -690,9 +697,10 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             toDecimals = currencyToGet.currency.decimals,
             providerId = swapProvider.providerId,
             rateType = RateType.FLOAT,
+            expressOperationType = expressOperationType,
             toAddress = currencyToGet.value.networkAddress?.defaultAddress?.value.orEmpty(),
             refundAddress = currencyToSend.value.networkAddress?.defaultAddress?.value,
-            refundExtraId = null, // currently always null
+            refundExtraId = null, // currently always null,
         ).getOrElse { return SwapTransactionState.Error.ExpressError(it) }
 
         val exchangeDataCex =
@@ -1162,6 +1170,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         toToken: CryptoCurrencyStatus,
         amount: SwapAmount,
         selectedFee: FeeType,
+        expressOperationType: ExpressOperationType,
     ): SwapState {
         return repository.getExchangeData(
             userWallet = userWallet,
@@ -1177,6 +1186,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             rateType = RateType.FLOAT,
             toAddress = toToken.value.networkAddress?.defaultAddress?.value.orEmpty(),
             refundAddress = fromToken.value.networkAddress?.defaultAddress?.value,
+            expressOperationType = expressOperationType,
         ).fold(
             ifRight = { swapData ->
                 val transaction = swapData.transaction as ExpressTransactionModel.DEX
