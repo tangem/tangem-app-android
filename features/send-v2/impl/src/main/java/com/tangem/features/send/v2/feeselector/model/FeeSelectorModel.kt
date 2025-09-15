@@ -3,22 +3,31 @@ package com.tangem.features.send.v2.feeselector.model
 import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
 import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.blockchain.common.AmountType
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.settings.NeverShowTapHelpUseCase
 import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
+import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
+import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents.NonceInserted
+import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents.SendScreenSource
 import com.tangem.features.send.v2.api.callbacks.FeeSelectorModelCallback
 import com.tangem.features.send.v2.api.entity.FeeItem
+import com.tangem.features.send.v2.api.entity.FeeNonce
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.features.send.v2.api.params.FeeSelectorParams
 import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorCheckReloadListener
 import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorCheckReloadTrigger
 import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorReloadListener
+import com.tangem.features.send.v2.api.subcomponents.feeSelector.analytics.CommonSendFeeAnalyticEvents
+import com.tangem.features.send.v2.api.subcomponents.feeSelector.analytics.CommonSendFeeAnalyticEvents.GasPriceInserter
 import com.tangem.features.send.v2.feeselector.model.transformers.*
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.transformer.update
@@ -38,11 +47,13 @@ internal class FeeSelectorModel @Inject constructor(
     private val urlOpener: UrlOpener,
     private val isFeeApproximateUseCase: IsFeeApproximateUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
+    private val neverShowTapHelpUseCase: NeverShowTapHelpUseCase,
     private val feeSelectorReloadListener: FeeSelectorReloadListener,
     private val feeSelectorCheckReloadListener: FeeSelectorCheckReloadListener,
     private val feeSelectorCheckReloadTrigger: FeeSelectorCheckReloadTrigger,
     private val feeSelectorAlertFactory: FeeSelectorAlertFactory,
     override val dispatchers: CoroutineDispatcherProvider,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model(), FeeSelectorIntents, FeeSelectorModelCallback {
 
     private val params = paramsContainer.require<FeeSelectorParams>()
@@ -112,6 +123,11 @@ internal class FeeSelectorModel @Inject constructor(
     }
 
     override fun onFeeItemSelected(feeItem: FeeItem) {
+        if (feeItem is FeeItem.Custom) {
+            analyticsEventHandler.send(
+                CommonSendFeeAnalyticEvents.CustomFeeButtonClicked(categoryName = params.analyticsCategoryName),
+            )
+        }
         uiState.update(FeeItemSelectedTransformer(feeItem))
     }
 
@@ -132,12 +148,49 @@ internal class FeeSelectorModel @Inject constructor(
     }
 
     override fun onDoneClick() {
+        val feeSelectorUM = uiState.value as? FeeSelectorUM.Content ?: return
+        analyticsEventHandler.send(
+            CommonSendFeeAnalyticEvents.SelectedFee(
+                categoryName = params.analyticsCategoryName,
+                feeType = feeSelectorUM.toAnalyticType(),
+            ),
+        )
+        val isCustomFeeEdited = feeSelectorUM.selectedFeeItem.fee.amount.value != feeSelectorUM.fees.normal.amount.value
+        if (feeSelectorUM.selectedFeeItem is FeeItem.Custom && isCustomFeeEdited) {
+            analyticsEventHandler.send(GasPriceInserter(categoryName = params.analyticsCategoryName))
+        }
+        if (feeSelectorUM.feeNonce is FeeNonce.Nonce) {
+            analyticsEventHandler.send(
+                NonceInserted(
+                    categoryName = params.analyticsCategoryName,
+                    token = params.feeCryptoCurrencyStatus.currency.symbol,
+                    blockchain = params.feeCryptoCurrencyStatus.currency.network.name,
+                ),
+            )
+        }
+
         (params as? FeeSelectorParams.FeeSelectorDetailsParams)?.callback?.onFeeResult(uiState.value)
     }
 
     override fun onFeeResult(feeSelectorUM: FeeSelectorUM) {
         uiState.value = feeSelectorUM
         feeSelectorBottomSheet.dismiss()
+    }
+
+    fun showFeeSelector() {
+        analyticsEventHandler.send(
+            CommonSendAnalyticEvents.FeeScreenOpened(categoryName = params.analyticsCategoryName),
+        )
+        analyticsEventHandler.send(
+            CommonSendAnalyticEvents.ScreenReopened(
+                categoryName = params.analyticsCategoryName,
+                source = SendScreenSource.Fee,
+            ),
+        )
+        modelScope.launch {
+            neverShowTapHelpUseCase()
+            feeSelectorBottomSheet.activate(Unit)
+        }
     }
 
     private fun subscribeOnFeeReloadTriggerUpdates() {
