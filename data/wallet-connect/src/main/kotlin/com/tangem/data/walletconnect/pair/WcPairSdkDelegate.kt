@@ -7,6 +7,7 @@ import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import com.tangem.data.walletconnect.utils.WC_TAG
 import com.tangem.data.walletconnect.utils.WcSdkObserver
+import com.tangem.data.walletconnect.utils.getDappOriginUrl
 import com.tangem.domain.walletconnect.model.WcPairError
 import com.tangem.domain.walletconnect.model.WcPairError.ApprovalFailed
 import kotlinx.coroutines.*
@@ -112,7 +113,7 @@ internal class WcPairSdkDelegate : WcSdkObserver {
         sessionProposal: Wallet.Model.SessionProposal,
         verifyContext: Wallet.Model.VerifyContext,
     ) {
-        val sessionProposalWithRealUrl = sessionProposal.copy(url = verifyContext.origin)
+        val sessionProposalWithRealUrl = sessionProposal.copy(url = verifyContext.getDappOriginUrl())
         // Triggered when wallet receives the session proposal sent by a Dapp
         onSessionProposal.trySend(sessionProposalWithRealUrl to verifyContext)
     }
