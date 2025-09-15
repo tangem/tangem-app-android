@@ -1,16 +1,20 @@
 package com.tangem.data.walletconnect.request
 
 import com.reown.walletkit.client.Wallet
+import com.tangem.common.extensions.calculateSha256
+import com.tangem.common.extensions.toHexString
 import com.tangem.data.walletconnect.respond.WcRespondService
 import com.tangem.data.walletconnect.utils.WC_TAG
 import com.tangem.data.walletconnect.utils.WcSdkObserver
 import com.tangem.data.walletconnect.utils.WcSdkSessionRequestConverter
+import com.tangem.data.walletconnect.utils.getDappOriginUrl
 import com.tangem.domain.walletconnect.WcRequestService
 import com.tangem.domain.walletconnect.model.WcMethodName
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.*
+import org.joda.time.DateTime
+import org.joda.time.Duration
 import timber.log.Timber
 
 internal class DefaultWcRequestService(
@@ -18,8 +22,12 @@ internal class DefaultWcRequestService(
     private val respondService: WcRespondService,
 ) : WcSdkObserver, WcRequestService {
 
+    private val expireDuration = Duration.standardSeconds(120)
+    private val cachedRequest = MutableStateFlow<Set<Pair<Long, String>>>(setOf())
     private val _wcRequest: Channel<Pair<WcMethodName, WcSdkSessionRequest>> = Channel(Channel.BUFFERED)
     override val wcRequest: Flow<Pair<WcMethodName, WcSdkSessionRequest>> = _wcRequest.receiveAsFlow()
+        .filter { filterDuplicateRequest(request = it.second) }
+        .onEach { saveRequest(request = it.second) }
 
     override fun onSessionRequest(
         sessionRequest: Wallet.Model.SessionRequest,
@@ -28,7 +36,7 @@ internal class DefaultWcRequestService(
         // Triggered when a Dapp sends SessionRequest to sign a transaction or a message
         val sr = WcSdkSessionRequestConverter.convert(
             WcSdkSessionRequestConverter.Input(
-                originUrl = verifyContext.origin,
+                originUrl = verifyContext.getDappOriginUrl(),
                 sessionRequest = sessionRequest,
             ),
         )
@@ -41,5 +49,26 @@ internal class DefaultWcRequestService(
             if (name.raw.startsWith("wallet_")) return
         }
         _wcRequest.trySend(name to sr)
+    }
+
+    private fun filterDuplicateRequest(request: WcSdkSessionRequest): Boolean {
+        val hash = request.request.params.calculateSha256().toHexString()
+        val now = DateTime.now().millis
+        val expiredMillis = now - expireDuration.millis
+        val cachedRequest = cachedRequest.updateAndGet {
+            it.filterTo(mutableSetOf()) { (millis, _) -> millis > expiredMillis }
+        }
+
+        val noHaveCached = cachedRequest.none { (_, hashParams) -> hash == hashParams }
+        if (!noHaveCached) {
+            Timber.tag(WC_TAG).i("filter request $request")
+        }
+        return noHaveCached
+    }
+
+    private fun saveRequest(request: WcSdkSessionRequest) {
+        val hash = request.request.params.calculateSha256().toHexString()
+        val now = DateTime.now().millis
+        cachedRequest.update { it + (now to hash) }
     }
 }
