@@ -37,6 +37,11 @@ dependencies {
     implementation(tangemDeps.hot.core)
     // endregion
 
+    /** Other libraries */
+    implementation(platform(deps.firebase.bom))
+    implementation(deps.firebase.analytics)
+    implementation(deps.timber)
+
     // region DI
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)

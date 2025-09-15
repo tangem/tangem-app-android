@@ -18,6 +18,16 @@ interface VisaAuthRepository {
         cardWalletAddress: String,
     ): Either<VisaApiError, VisaAuthChallenge.Wallet>
 
+    suspend fun getCustomerWalletAuthChallenge(
+        customerWalletAddress: String,
+    ): Either<VisaApiError, VisaAuthChallenge.Wallet>
+
+    suspend fun getTokenWithCustomerWallet(
+        sessionId: String,
+        signature: String,
+        nonce: String,
+    ): Either<VisaApiError, String>
+
     suspend fun getAccessTokens(signedChallenge: VisaAuthSignedChallenge): Either<VisaApiError, VisaAuthTokens>
 
     suspend fun refreshAccessTokens(refreshToken: VisaAuthTokens.RefreshToken): Either<VisaApiError, VisaAuthTokens>
