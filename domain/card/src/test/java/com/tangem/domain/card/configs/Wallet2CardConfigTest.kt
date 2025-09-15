@@ -164,6 +164,8 @@ class Wallet2CardConfigTest {
         Blockchain.ZkLinkNovaTestnet to EllipticCurve.Secp256k1,
         Blockchain.Pepecoin to EllipticCurve.Secp256k1,
         Blockchain.PepecoinTestnet to EllipticCurve.Secp256k1,
+        Blockchain.Hyperliquid to EllipticCurve.Secp256k1,
+        Blockchain.HyperliquidTestnet to EllipticCurve.Secp256k1,
     )
 
     @Test

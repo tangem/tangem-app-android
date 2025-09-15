@@ -13,11 +13,9 @@ import com.arkivanov.decompose.extensions.compose.stack.animation.plus
 import com.arkivanov.decompose.extensions.compose.stack.animation.slide
 import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.arkivanov.decompose.router.stack.ChildStack
+import com.tangem.common.ui.navigationButtons.NavigationPrimaryButton
 import com.tangem.common.ui.navigationButtons.NavigationUM
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
-import com.tangem.core.ui.components.buttons.common.TangemButton
-import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
-import com.tangem.core.ui.components.buttons.common.TangemButtonsDefaults
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
@@ -57,20 +55,14 @@ internal fun SendWithSwapContent(
         ) {
             it.instance.Content(Modifier.weight(1f))
         }
-        // TODO refactor [REDACTED_TASK_KEY]
-        val primaryButton = navigationUM.primaryButton
-        Row(modifier = Modifier.padding(16.dp)) {
-            TangemButton(
-                modifier = Modifier.fillMaxWidth(),
-                text = primaryButton.textReference.resolveReference(),
-                icon = primaryButton.iconRes?.let {
-                    TangemButtonIconPosition.End(it)
-                } ?: TangemButtonIconPosition.None,
-                enabled = primaryButton.isEnabled,
-                onClick = primaryButton.onClick,
-                showProgress = false,
-                colors = TangemButtonsDefaults.primaryButtonColors,
-                textStyle = TangemTheme.typography.subtitle1,
+        if (stackState.active.configuration != SendWithSwapRoute.Success) {
+            NavigationPrimaryButton(
+                navigationUM.primaryButton,
+                modifier = Modifier.padding(
+                    start = 16.dp,
+                    end = 16.dp,
+                    bottom = 16.dp,
+                ),
             )
         }
     }
