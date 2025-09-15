@@ -80,6 +80,7 @@ internal fun AccountCreateEditContent(state: AccountCreateEditUM, modifier: Modi
                 .fillMaxWidth()
                 .padding(16.dp),
             enabled = state.buttonState.isButtonEnabled,
+            showProgress = state.buttonState.showProgress,
             text = state.buttonState.text.resolveReference(),
             onClick = state.buttonState.onConfirmClick,
         )
@@ -309,6 +310,7 @@ private class PreviewStateProvider : CollectionPreviewParameterProvider<AccountC
             ),
             buttonState = AccountCreateEditUM.Button(
                 isButtonEnabled = false,
+                showProgress = false,
                 onConfirmClick = {},
                 text = stringReference("Add account"),
             ),
@@ -342,6 +344,7 @@ private class PreviewStateProvider : CollectionPreviewParameterProvider<AccountC
             ),
             buttonState = AccountCreateEditUM.Button(
                 isButtonEnabled = false,
+                showProgress = false,
                 onConfirmClick = {},
                 text = stringReference("Save"),
             ),
