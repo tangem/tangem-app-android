@@ -14,7 +14,7 @@ import javax.inject.Singleton
  * Different from another triggers because it takes raw string instead of BigDecimal
  */
 interface SwapAmountUpdateListener {
-    val updateAmountTriggerFlow: Flow<String>
+    val updateAmountTriggerFlow: Flow<Pair<String, Boolean>>
 
     val reloadQuotesTriggerFlow: Flow<Unit>
 }
@@ -44,8 +44,8 @@ internal class DefaultSwapAmountUpdateTrigger @Inject constructor() :
     SwapAmountReduceTrigger,
     SwapAmountReduceListener {
 
-    override val updateAmountTriggerFlow: SharedFlow<String>
-    field = MutableSharedFlow<String>()
+    override val updateAmountTriggerFlow: SharedFlow<Pair<String, Boolean>>
+    field = MutableSharedFlow<Pair<String, Boolean>>()
 
     override val reduceToTriggerFlow: SharedFlow<BigDecimal>
     field = MutableSharedFlow<BigDecimal>()
@@ -59,8 +59,8 @@ internal class DefaultSwapAmountUpdateTrigger @Inject constructor() :
     override val reloadQuotesTriggerFlow: Flow<Unit>
     field = MutableSharedFlow<Unit>()
 
-    override suspend fun triggerUpdateAmount(amountValue: String) {
-        updateAmountTriggerFlow.emit(amountValue)
+    override suspend fun triggerUpdateAmount(amountValue: String, isEnterInFiatSelected: Boolean) {
+        updateAmountTriggerFlow.emit(amountValue to isEnterInFiatSelected)
     }
 
     override suspend fun triggerQuoteReload() {
