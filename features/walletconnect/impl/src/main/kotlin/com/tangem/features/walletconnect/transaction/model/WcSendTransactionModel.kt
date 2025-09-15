@@ -5,6 +5,7 @@ import arrow.core.Either
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.pushNew
+import com.domain.blockaid.models.dapp.CheckDAppResult
 import com.domain.blockaid.models.transaction.SimulationResult
 import com.domain.blockaid.models.transaction.ValidationResult
 import com.tangem.blockchain.common.TransactionData
@@ -21,11 +22,11 @@ import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUMV2
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.core.lce.Lce
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.tokens.GetNetworkCoinStatusUseCase
 import com.tangem.domain.tokens.error.CurrencyStatusError
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.SendTransactionError.UserCancelledError
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
@@ -94,6 +95,8 @@ internal class WcSendTransactionModel @Inject constructor(
     private var sign: () -> Unit = {}
     private val feeReloadState = MutableStateFlow(false)
     private val signatureReceivedAnalyticsSendState = MutableStateFlow(false)
+    private val securityStatusState =
+        MutableStateFlow<Lce<Throwable, BlockAidTransactionCheck.Result>>(Lce.Loading(partialContent = null))
 
     init {
         @Suppress("UnusedPrivateMember")
@@ -130,6 +133,7 @@ internal class WcSendTransactionModel @Inject constructor(
                         .collectLatest { (signState, securityCheck) ->
                             if (signingIsDone(signState, useCase)) return@collectLatest
 
+                            securityStatusState.value = securityCheck
                             sendSignatureReceivedAnalytics(useCase, securityCheck)
 
                             this@WcSendTransactionModel.signState = signState
@@ -372,6 +376,12 @@ internal class WcSendTransactionModel @Inject constructor(
                 false
             }
             is Either.Right<String> -> {
+                val event = WcAnalyticEvents.SignatureRequestHandled(
+                    rawRequest = useCase.rawSdkRequest,
+                    network = useCase.network,
+                    securityStatus = securityStatusState.value.toCheckDAppResult(),
+                )
+                analytics.send(event)
                 showSuccessSignMessage()
                 router.pop()
                 true
@@ -408,9 +418,22 @@ internal class WcSendTransactionModel @Inject constructor(
                 rawRequest = useCase.rawSdkRequest,
                 network = useCase.network,
                 emulationStatus = emulationStatus,
+                securityStatus = securityCheck.toCheckDAppResult(),
             ),
         )
 
         signatureReceivedAnalyticsSendState.value = true
+    }
+
+    private fun Lce<Throwable, BlockAidTransactionCheck.Result>.toCheckDAppResult(): CheckDAppResult {
+        return when (this) {
+            is Lce.Content -> when (this.content.result.validation) {
+                ValidationResult.SAFE -> CheckDAppResult.SAFE
+                ValidationResult.UNSAFE, ValidationResult.WARNING -> CheckDAppResult.UNSAFE
+                ValidationResult.FAILED_TO_VALIDATE -> CheckDAppResult.FAILED_TO_VERIFY
+            }
+            is Lce.Error -> CheckDAppResult.FAILED_TO_VERIFY
+            is Lce.Loading -> CheckDAppResult.FAILED_TO_VERIFY
+        }
     }
 }

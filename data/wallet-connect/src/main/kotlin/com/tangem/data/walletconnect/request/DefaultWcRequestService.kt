@@ -26,7 +26,12 @@ internal class DefaultWcRequestService(
         verifyContext: Wallet.Model.VerifyContext,
     ) {
         // Triggered when a Dapp sends SessionRequest to sign a transaction or a message
-        val sr = WcSdkSessionRequestConverter.convert(sessionRequest)
+        val sr = WcSdkSessionRequestConverter.convert(
+            WcSdkSessionRequestConverter.Input(
+                originUrl = verifyContext.origin,
+                sessionRequest = sessionRequest,
+            ),
+        )
         Timber.tag(WC_TAG).i("handle request $sr")
         val name = requestConverters.firstNotNullOfOrNull { it.toWcMethodName(sr) }
             ?: WcMethodName.Unsupported(sr.request.method)
