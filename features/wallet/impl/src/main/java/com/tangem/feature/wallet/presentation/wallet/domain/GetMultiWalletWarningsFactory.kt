@@ -31,6 +31,7 @@ import com.tangem.domain.wallets.usecase.SeedPhraseNotificationUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
+import com.tangem.features.yield.supply.api.YieldSupplyFeatureToggles
 import com.tangem.lib.crypto.BlockchainUtils.isBitcoin
 import com.tangem.utils.coroutines.combine6
 import com.tangem.utils.extensions.addIf
@@ -54,6 +55,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
     private val getCryptoCurrenciesUseCase: GetCryptoCurrenciesUseCase,
     private val onrampSepaAvailableUseCase: OnrampSepaAvailableUseCase,
     private val getOnrampCountryUseCase: GetOnrampCountryUseCase,
+    private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles,
 ) {
 
     fun create(userWallet: UserWallet, clickIntents: WalletClickIntents): Flow<ImmutableList<WalletNotification>> {
@@ -81,6 +83,8 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
                 addInformationalNotifications(userWallet, cardTypesResolver, maybeTokenList, clickIntents)
 
                 addWarningNotifications(cardTypesResolver, maybeTokenList, isNeedToBackup, clickIntents)
+
+                addYieldSupplyNotifications(maybeTokenList)
 
                 val hasCriticalOrWarning = any { notification ->
                     notification is WalletNotification.Critical || notification is WalletNotification.Warning
@@ -268,6 +272,15 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
         )
     }
 
+    private fun MutableList<WalletNotification>.addYieldSupplyNotifications(
+        tokenList: Lce<TokenListError, TokenList>,
+    ) {
+        addIf(
+            element = WalletNotification.Warning.YeildSupplyApprove,
+            condition = tokenList.hasNetworksWithLendingsWithoutApprove(),
+        )
+    }
+
     private fun MutableList<WalletNotification>.addWarningNotifications(
         cardTypesResolver: CardTypesResolver?,
         tokenList: Lce<TokenListError, TokenList>,
@@ -296,6 +309,14 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
         val tokenList = getOrNull(isPartialContentAccepted = false) ?: return false
 
         return tokenList.flattenCurrencies().any { it.value is CryptoCurrencyStatus.Unreachable }
+    }
+
+    private fun Lce<TokenListError, TokenList>.hasNetworksWithLendingsWithoutApprove(): Boolean {
+        val tokenList = getOrNull(isPartialContentAccepted = false) ?: return false
+        val yieldSupplyEnabled = yieldSupplyFeatureToggles.isYieldSupplyFeatureEnabled
+        return yieldSupplyEnabled && tokenList.flattenCurrencies().any {
+            it.value.yieldSupplyStatus?.isAllowedToSpend == false
+        }
     }
 
     private fun MutableList<WalletNotification>.addRateTheAppNotification(
