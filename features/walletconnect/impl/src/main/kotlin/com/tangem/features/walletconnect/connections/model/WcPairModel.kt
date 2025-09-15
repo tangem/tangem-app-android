@@ -23,6 +23,7 @@ import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.walletconnect.WcAnalyticEvents
 import com.tangem.domain.walletconnect.model.*
+import com.tangem.domain.walletconnect.model.sdkcopy.WcAppMetaData
 import com.tangem.domain.walletconnect.usecase.pair.WcPairState
 import com.tangem.domain.walletconnect.usecase.pair.WcPairUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
@@ -96,7 +97,8 @@ internal class WcPairModel @Inject constructor(
                         appInfoUiState.transformerUpdate(
                             WcConnectButtonProgressTransformer(showProgress = false),
                         )
-                        pairState.result
+                        pairState
+                            .result
                             .onLeft(::processError)
                             .onRight(::processSuccessfullyConnected)
                         router.pop()
@@ -203,12 +205,12 @@ internal class WcPairModel @Inject constructor(
         stackNavigation.pushNew(WcAppInfoRoutes.Alert.Verified(appName))
     }
 
-    private fun processSuccessfullyConnected(session: WcSession) {
+    private fun processSuccessfullyConnected(session: WcAppMetaData) {
         messageSender.send(
             SnackbarMessage(
                 message = resourceReference(
                     id = R.string.wc_connected_to,
-                    formatArgs = wrappedList(session.sdkModel.appMetaData.name),
+                    formatArgs = wrappedList(session.name),
                 ),
             ),
         )
