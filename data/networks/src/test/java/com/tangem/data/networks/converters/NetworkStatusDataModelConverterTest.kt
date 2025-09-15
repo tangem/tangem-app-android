@@ -11,6 +11,7 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.network.NetworkStatus.Amount
+import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -59,6 +60,22 @@ internal class NetworkStatusDataModelConverterTest {
                         ) to Amount.NotFound,
                     ),
                     pendingTransactions = mapOf(), // doesn't matter
+                    yieldSupplyStatuses = mapOf(
+                        ID(
+                            prefix = Prefix.COIN_PREFIX,
+                            body = Body.NetworkId(rawId = "BCH"),
+                            suffix = ID.Suffix.RawID(rawId = "bitcoin-cash"),
+                        ) to YieldSupplyStatus(
+                            isActive = false,
+                            isInitialized = false,
+                            isAllowedToSpend = false,
+                        ),
+                        ID(
+                            prefix = Prefix.COIN_PREFIX,
+                            body = Body.NetworkId(rawId = "BTC"),
+                            suffix = ID.Suffix.RawID(rawId = "bitcoin"),
+                        ) to null,
+                    ),
                     source = StatusSource.ACTUAL, // doesn't matter
                 ),
             ),
@@ -76,6 +93,13 @@ internal class NetworkStatusDataModelConverterTest {
                     ),
                 ),
                 amounts = mapOf("coin⟨BCH⟩bitcoin-cash" to BigDecimal.ZERO),
+                yieldSupplyStatuses = mapOf(
+                    "coin⟨BCH⟩bitcoin-cash" to NetworkStatusDM.YieldSupplyStatus(
+                        isActive = false,
+                        isInitialized = false,
+                        isAllowedToSpend = false,
+                    ),
+                ),
             ),
         ),
         // endregion
