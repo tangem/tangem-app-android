@@ -3,6 +3,7 @@ package com.tangem.common.ui.tokens
 import com.tangem.common.ui.R
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
+import com.tangem.core.ui.components.icons.IconTint
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.components.marketprice.utils.PriceChangeConverter
 import com.tangem.core.ui.components.token.state.TokenItemState
@@ -220,13 +221,12 @@ class TokenItemStateConverter(
                             if (!status.getStakedBalance().isZero()) {
                                 TokenItemState.FiatAmountState.Content.IconUM(
                                     iconRes = R.drawable.ic_staking_24,
-                                    useAccentColor = true,
+                                    tint = IconTint.Accent,
                                 ).let(::add)
                             }
                             if (status.value.sources.total == StatusSource.ONLY_CACHE) {
                                 TokenItemState.FiatAmountState.Content.IconUM(
                                     iconRes = R.drawable.ic_error_sync_24,
-                                    useAccentColor = false,
                                 ).let(::add)
                             }
                         }.toImmutableList(),
