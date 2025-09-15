@@ -12,12 +12,12 @@ import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.features.send.v2.api.subcomponents.feeSelector.utils.FeeCalculationUtils
-import com.tangem.features.send.v2.common.analytics.CommonSendAnalyticEvents
+import com.tangem.features.send.v2.api.utils.formatFooterFiatFee
+import com.tangem.features.send.v2.api.utils.getTronTokenFeeSendingText
 import com.tangem.features.send.v2.common.ui.state.ConfirmUM
-import com.tangem.features.send.v2.common.utils.formatFooterFiatFee
-import com.tangem.features.send.v2.common.utils.getTronTokenFeeSendingText
 import com.tangem.features.send.v2.impl.R
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.toPersistentList

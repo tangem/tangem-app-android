@@ -10,5 +10,7 @@ import com.tangem.domain.settings.repositories.SettingsRepository
  */
 class IsSendTapHelpEnabledUseCase(private val settingsRepository: SettingsRepository) {
 
-    suspend operator fun invoke() = Either.catch { settingsRepository.isSendTapHelpPreviewEnabled() }
+    operator fun invoke() = Either.catch { settingsRepository.isSendTapHelpPreviewEnabled() }
+
+    suspend fun invokeSync() = Either.catch { settingsRepository.isSendTapHelpPreviewEnabledSync() }
 }

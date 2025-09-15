@@ -17,7 +17,7 @@ import com.tangem.core.ui.extensions.clickableSingle
 import com.tangem.core.ui.extensions.conditional
 import com.tangem.core.ui.res.TangemTheme
 
-internal const val DISABLED_COLORS_ALPHA = 0.5f
+private const val DISABLED_COLORS_ALPHA = 0.5f
 
 @Suppress("LongParameterList")
 @Composable
