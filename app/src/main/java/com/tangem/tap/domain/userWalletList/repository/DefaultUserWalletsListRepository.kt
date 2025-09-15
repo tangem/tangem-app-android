@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.raise.either
 import arrow.core.right
+import com.tangem.common.CompletionResult
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.common.flatMap
@@ -210,6 +211,7 @@ internal class DefaultUserWalletsListRepository(
         }
     }
 
+    @Suppress("CyclomaticComplexMethod")
     override suspend fun unlock(
         userWalletId: UserWalletId,
         unlockMethod: UserWalletsListRepository.UnlockMethod,
@@ -257,31 +259,33 @@ internal class DefaultUserWalletsListRepository(
                         raise(UnlockWalletError.UnableToUnlock)
                     }
             }
-            UserWalletsListRepository.UnlockMethod.Scan -> {
+            is UserWalletsListRepository.UnlockMethod.Scan -> {
                 if (userWallet !is UserWallet.Cold) {
                     raise(UnlockWalletError.UnableToUnlock)
                 }
 
-                tangemSdkManagerProvider().scanProduct()
-                    .doOnSuccess { scanResponse ->
-                        val expectedId = UserWalletIdBuilder.scanResponse(scanResponse).build()
-
-                        if (expectedId != userWallet.walletId) {
-                            raise(UnlockWalletError.ScannedCardWalletNotMatched)
-                        }
-
-                        val encryptionKey = UserWalletEncryptionKey(
-                            walletId = userWallet.walletId,
-                            encryptionKey = scanResponse.encryptionKey ?: raise(UnlockWalletError.UnableToUnlock),
-                        )
-
-                        sensitiveInformationRepository.getAll(listOf(encryptionKey))
-                            .doOnSuccess { sensitiveInfo -> updateWallets { it?.updateWith(sensitiveInfo) } }
-                            .doOnFailure { error -> raise(UnlockWalletError.UnableToUnlock) }
+                val scanResponse = unlockMethod.scanResponse ?: run {
+                    val res = tangemSdkManagerProvider().scanProduct()
+                    when (res) {
+                        is CompletionResult.Failure -> raise(UnlockWalletError.UserCancelled)
+                        is CompletionResult.Success -> res.data
                     }
-                    .doOnFailure {
-                        raise(UnlockWalletError.UserCancelled)
-                    }
+                }
+
+                val expectedId = UserWalletIdBuilder.scanResponse(scanResponse).build()
+
+                if (expectedId != userWallet.walletId) {
+                    raise(UnlockWalletError.ScannedCardWalletNotMatched)
+                }
+
+                val encryptionKey = UserWalletEncryptionKey(
+                    walletId = userWallet.walletId,
+                    encryptionKey = scanResponse.encryptionKey ?: raise(UnlockWalletError.UnableToUnlock),
+                )
+
+                sensitiveInformationRepository.getAll(listOf(encryptionKey))
+                    .doOnSuccess { sensitiveInfo -> updateWallets { it?.updateWith(sensitiveInfo) } }
+                    .doOnFailure { error -> raise(UnlockWalletError.UnableToUnlock) }
             }
         }
     }
