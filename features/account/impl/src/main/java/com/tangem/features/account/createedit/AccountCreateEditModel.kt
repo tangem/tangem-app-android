@@ -2,6 +2,7 @@ package com.tangem.features.account.createedit
 
 import com.tangem.common.ui.account.AccountNameUM
 import com.tangem.common.ui.account.toDomain
+import androidx.annotation.StringRes
 import com.tangem.common.ui.account.toUM
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
@@ -12,8 +13,10 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
+import com.tangem.core.ui.message.ToastMessage
 import com.tangem.core.ui.utils.showErrorDialog
 import com.tangem.domain.account.usecase.AddCryptoPortfolioUseCase
 import com.tangem.domain.account.usecase.GetUnoccupiedAccountIndexUseCase
@@ -25,6 +28,7 @@ import com.tangem.features.account.AccountCreateEditComponent
 import com.tangem.features.account.createedit.entity.AccountCreateEditUM
 import com.tangem.features.account.createedit.entity.AccountCreateEditUMBuilder
 import com.tangem.features.account.createedit.entity.AccountCreateEditUMBuilder.Companion.portfolioIcon
+import com.tangem.features.account.createedit.entity.AccountCreateEditUMBuilder.Companion.toggleProgress
 import com.tangem.features.account.createedit.entity.AccountCreateEditUMBuilder.Companion.updateButton
 import com.tangem.features.account.createedit.entity.AccountCreateEditUMBuilder.Companion.updateColorSelect
 import com.tangem.features.account.createedit.entity.AccountCreateEditUMBuilder.Companion.updateDerivationIndex
@@ -98,12 +102,20 @@ internal class AccountCreateEditModel @Inject constructor(
         val index = state.account.derivationInfo.index ?: return
         val derivationIndex = DerivationIndex(value = index).getOrNull() ?: return
 
-        addCryptoPortfolioUseCase(
+        uiState.value = uiState.value.toggleProgress(showProgress = true)
+        val result = addCryptoPortfolioUseCase(
             userWalletId = params.userWalletId,
             accountName = name,
             icon = icon,
             derivationIndex = derivationIndex,
         )
+        uiState.value = uiState.value.toggleProgress(showProgress = false)
+        result
+            .onLeft { showMessage(it.toString()) }
+            .onRight {
+                showMessage(R.string.account_create_success_message)
+                router.pop()
+            }
     }
 
     private suspend fun editCryptoPortfolio(params: AccountCreateEditComponent.Params.Edit) {
@@ -112,11 +124,28 @@ internal class AccountCreateEditModel @Inject constructor(
         val icon = state.account.portfolioIcon.toDomain()
         val isNewName = name != params.account.accountName
         val isNewIcon = icon != params.account.portfolioIcon
-        updateCryptoPortfolioUseCase(
+        uiState.value = uiState.value.toggleProgress(showProgress = true)
+        val result = updateCryptoPortfolioUseCase(
             icon = if (isNewIcon) icon else null,
             accountName = if (isNewName) name else null,
             accountId = params.account.accountId,
         )
+        uiState.value = uiState.value.toggleProgress(showProgress = false)
+        result
+            .onLeft { showMessage(it.toString()) }
+            .onRight {
+                showMessage(R.string.account_edit_success_message)
+                router.pop()
+            }
+    }
+
+    private fun showMessage(@StringRes id: Int) {
+        val message = resourceReference(id)
+        messageSender.send(ToastMessage(message = message))
+    }
+
+    private fun showMessage(text: String) {
+        messageSender.send(ToastMessage(message = stringReference(text)))
     }
 
     private fun onCloseClick() = unsaveChangeDialog()
