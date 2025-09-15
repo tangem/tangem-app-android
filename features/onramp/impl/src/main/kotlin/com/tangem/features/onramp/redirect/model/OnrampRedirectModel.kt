@@ -54,9 +54,8 @@ internal class OnrampRedirectModel @Inject constructor(
                 resourceReference(R.string.common_buy),
                 stringReference(" ${params.cryptoCurrency.name}"),
             ),
-            startButtonUM = TopAppBarButtonUM(
-                iconRes = R.drawable.ic_close_24,
-                onIconClicked = appRouter::pop,
+            startButtonUM = TopAppBarButtonUM.Back(
+                onBackClicked = appRouter::pop,
                 enabled = true,
             ),
         ),

@@ -3,6 +3,9 @@ package com.tangem.features.markets.details.impl.model.state
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.event.triggeredEvent
+import com.tangem.core.ui.format.bigdecimal.fiat
+import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.format.bigdecimal.price
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.PriceChangeInterval
 import com.tangem.domain.markets.TokenMarketInfo
@@ -57,7 +60,12 @@ internal class QuotesStateUpdater(
 
         state.update { stateToUpdate ->
             stateToUpdate.copy(
-                priceText = newQuotes.currentPrice.formatAsPrice(currentAppCurrency()),
+                priceText = newQuotes.currentPrice.format {
+                    fiat(
+                        fiatCurrencySymbol = currentAppCurrency().symbol,
+                        fiatCurrencyCode = currentAppCurrency().code,
+                    ).price()
+                },
                 priceChangePercentText = newQuotes.getFormattedPercentByInterval(
                     interval = stateToUpdate.selectedInterval,
                 ),
