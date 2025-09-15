@@ -6,8 +6,16 @@ import com.tangem.core.ui.extensions.TextReference
 internal data class AccountDetailsUM(
     val accountName: TextReference,
     val accountIcon: CryptoPortfolioIconUM,
+    val archiveMode: ArchiveMode,
     val onCloseClick: () -> Unit,
     val onAccountEditClick: () -> Unit,
     val onManageTokensClick: () -> Unit,
-    val onArchiveAccountClick: () -> Unit,
-)
+) {
+
+    sealed interface ArchiveMode {
+        data object None : ArchiveMode
+        data class Available(
+            val onArchiveAccountClick: () -> Unit,
+        ) : ArchiveMode
+    }
+}
