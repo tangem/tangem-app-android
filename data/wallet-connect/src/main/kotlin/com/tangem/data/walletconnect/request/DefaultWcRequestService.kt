@@ -7,6 +7,7 @@ import com.tangem.data.walletconnect.respond.WcRespondService
 import com.tangem.data.walletconnect.utils.WC_TAG
 import com.tangem.data.walletconnect.utils.WcSdkObserver
 import com.tangem.data.walletconnect.utils.WcSdkSessionRequestConverter
+import com.tangem.data.walletconnect.utils.getDappOriginUrl
 import com.tangem.domain.walletconnect.WcRequestService
 import com.tangem.domain.walletconnect.model.WcMethodName
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
@@ -35,7 +36,7 @@ internal class DefaultWcRequestService(
         // Triggered when a Dapp sends SessionRequest to sign a transaction or a message
         val sr = WcSdkSessionRequestConverter.convert(
             WcSdkSessionRequestConverter.Input(
-                originUrl = verifyContext.origin,
+                originUrl = verifyContext.getDappOriginUrl(),
                 sessionRequest = sessionRequest,
             ),
         )
