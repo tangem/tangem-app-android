@@ -33,6 +33,7 @@ private fun handlePrepareScreen(action: DetailsAction.PrepareScreen): DetailsSta
     )
 }
 
+@Suppress("LongMethod", "CyclomaticComplexMethod")
 private fun handlePrivacyAction(action: DetailsAction.AppSettings, state: DetailsState): DetailsState {
     return when (action) {
         is DetailsAction.AppSettings.SwitchPrivacySetting -> state.copy(
@@ -45,6 +46,14 @@ private fun handlePrivacyAction(action: DetailsAction.AppSettings, state: Detail
                     isInProgress = true,
                     saveWallets = true, // User can't enable access codes saving without wallets saving
                     saveAccessCodes = action.enable,
+                )
+                AppSetting.RequireAccessCode -> state.appSettingsState.copy(
+                    isInProgress = true,
+                    requireAccessCode = action.enable,
+                )
+                AppSetting.BiometricAuthentication -> state.appSettingsState.copy(
+                    isInProgress = true,
+                    useBiometricAuthentication = action.enable,
                 )
             },
         )
@@ -62,6 +71,14 @@ private fun handlePrivacyAction(action: DetailsAction.AppSettings, state: Detail
                 AppSetting.SaveAccessCode -> state.appSettingsState.copy(
                     isInProgress = false,
                     saveAccessCodes = action.prevState,
+                )
+                AppSetting.RequireAccessCode -> state.appSettingsState.copy(
+                    isInProgress = false,
+                    requireAccessCode = action.prevState,
+                )
+                AppSetting.BiometricAuthentication -> state.appSettingsState.copy(
+                    isInProgress = false,
+                    needEnrollBiometrics = action.prevState,
                 )
             },
         )
