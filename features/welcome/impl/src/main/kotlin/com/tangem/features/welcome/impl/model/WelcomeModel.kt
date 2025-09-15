@@ -208,7 +208,7 @@ internal class WelcomeModel @Inject constructor(
         }
 
         val unlockMethod = when (userWallet) {
-            is UserWallet.Cold -> UserWalletsListRepository.UnlockMethod.Scan
+            is UserWallet.Cold -> UserWalletsListRepository.UnlockMethod.Scan()
             is UserWallet.Hot -> {
                 uiState.value = WelcomeUM.Empty
                 UserWalletsListRepository.UnlockMethod.AccessCode
