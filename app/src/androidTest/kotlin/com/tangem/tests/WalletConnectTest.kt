@@ -2,11 +2,12 @@ package com.tangem.tests
 
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.TOTAL_BALANCE
+import com.tangem.common.extensions.SwipeDirection
 import com.tangem.common.extensions.clickWithAssertion
-import com.tangem.common.extensions.swipeUp
+import com.tangem.common.extensions.swipeVertical
 import com.tangem.common.utils.getWcUri
-import com.tangem.screens.*
 import com.tangem.scenarios.*
+import com.tangem.screens.*
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
@@ -140,7 +141,7 @@ class WalletConnectTest : BaseTestCase() {
                 device.uiDevice.pressRecentApps()
             }
             step("Stop app by swipe") {
-                swipeUp(startHeightRatio = 0.8f)
+                swipeVertical(SwipeDirection.UP, startHeightRatio = 0.8f)
             }
             step("Create WC session buy deeplink") {
                 openAppByDeepLink(deepLinkUri)
