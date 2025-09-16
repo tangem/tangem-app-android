@@ -164,8 +164,8 @@ internal class CustomTokenFormModel @Inject constructor(
         isAlreadyAdded: Boolean,
         isCustom: Boolean,
     ) = modelScope.launch {
-        val needToAddDerivation = useCasesFacade.hasMissedDerivationsUseCase(
-            networksWithDerivationPath = mapOf(currency.network.backendId to getDerivationPath().value),
+        val needColdWalletInteraction = useCasesFacade.needColdWalletInteraction(
+            network = mapOf(currency.network.backendId to getDerivationPath().value),
         )
 
         state.update { state ->
@@ -177,7 +177,7 @@ internal class CustomTokenFormModel @Inject constructor(
                     clearNotifications = true,
                     clearFieldErrors = true,
                     disableSecondaryFields = !isCustom,
-                    needToAddDerivation = needToAddDerivation,
+                    walletInteractionIcon = R.drawable.ic_tangem_24.takeIf { needColdWalletInteraction },
                 )
 
             if (fillForm) {
