@@ -261,7 +261,7 @@ private fun MenuItem(text: TextReference, imageVector: ImageVector, onClick: () 
 private fun TitleText(text: String, modifier: Modifier = Modifier) {
     Text(
         text = text,
-        modifier = modifier,
+        modifier = modifier.testTag(MainScreenTestTags.CARD_TITLE),
         color = TangemTheme.colors.text.tertiary,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
@@ -375,7 +375,9 @@ private fun Image(@DrawableRes id: Int?, modifier: Modifier = Modifier) {
         Image(
             painter = painterResource(id = imageRes),
             contentDescription = null,
-            modifier = Modifier.width(width = TangemTheme.dimens.size120),
+            modifier = Modifier
+                .width(width = TangemTheme.dimens.size120)
+                .testTag(MainScreenTestTags.CARD_IMAGE),
             contentScale = ContentScale.FillWidth,
         )
     }
