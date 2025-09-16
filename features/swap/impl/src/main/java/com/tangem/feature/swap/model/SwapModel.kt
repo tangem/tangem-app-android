@@ -126,6 +126,7 @@ internal class SwapModel @Inject constructor(
     private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
 
     private val stateBuilder = StateBuilder(
+        userWalletProvider = Provider { userWallet },
         actions = createUiActions(),
         isBalanceHiddenProvider = Provider { isBalanceHidden },
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
