@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.state.model
 
+import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.notifications.NotificationConfig
@@ -152,7 +153,11 @@ sealed class WalletNotification(val config: NotificationConfig) {
         ),
     ) {
 
-        data class MissingAddresses(val missingAddressesCount: Int, val onGenerateClick: () -> Unit) : Informational(
+        data class MissingAddresses(
+            @DrawableRes val tangemIcon: Int?,
+            val missingAddressesCount: Int,
+            val onGenerateClick: () -> Unit,
+        ) : Informational(
             title = resourceReference(id = R.string.warning_missing_derivation_title),
             subtitle = pluralReference(
                 id = R.plurals.warning_missing_derivation_message,
@@ -161,7 +166,7 @@ sealed class WalletNotification(val config: NotificationConfig) {
             ),
             buttonsState = NotificationConfig.ButtonsState.PrimaryButtonConfig(
                 text = resourceReference(id = R.string.common_generate_addresses),
-                iconResId = R.drawable.ic_tangem_24,
+                iconResId = tangemIcon,
                 onClick = onGenerateClick,
             ),
         )

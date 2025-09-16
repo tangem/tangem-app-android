@@ -76,7 +76,7 @@ internal class AddToPortfolioBSContentUMFactory(
                         alreadyAddedNetworks = alreadyAddedNetworks,
                         onNetworkSwitchClick = onNetworkSwitchClick,
                     ).convert(value = token),
-                    isScanCardNotificationVisible = portfolioUIData.hasMissedDerivations,
+                    isScanCardNotificationVisible = portfolioUIData.needColdWalletInteraction,
                     continueButtonEnabled = portfolioUIData.addToPortfolioData.isUserAddedNetworks(
                         userWalletId = selectedWallet.walletId,
                     ),
