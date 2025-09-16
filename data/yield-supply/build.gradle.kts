@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "com.tangem.data.transaction"
+    namespace = "com.tangem.data.yield.supply"
 }
 
 tasks.withType<Test>().configureEach {
@@ -18,21 +18,18 @@ dependencies {
 
     /** Tangem SDKs */
     implementation(tangemDeps.blockchain)
-    implementation(tangemDeps.card.core)
 
     /** Core */
     implementation(projects.core.datasource)
     implementation(projects.core.utils)
 
     /** Domain */
-    implementation(projects.libs.blockchainSdk)
-    implementation(projects.domain.legacy)
+    implementation(projects.domain.yieldSupply)
     implementation(projects.domain.walletManager)
-    implementation(projects.domain.wallets.models)
-    implementation(projects.domain.tokens.models)
-    implementation(projects.domain.transaction.models)
-    implementation(projects.domain.transaction)
-    implementation(projects.domain.demo)
+    implementation(projects.domain.legacy)
+
+    implementation(projects.libs.blockchainSdk)
+
 
     /** DI */
     implementation(deps.hilt.android)
