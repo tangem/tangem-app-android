@@ -1623,6 +1623,7 @@
   <string name="wc_alert_wrong_card_title">We\'ve got some kind of problem</string>
   <string name="wc_all_dapps_disconnected">All dApps disconnected</string>
   <string name="wc_allow_to_spend">Allow to spend</string>
+  <string name="wc_approve_description">By approving, you allow dApp or Smart contract to use tokens in future transactions.</string>
   <string name="wc_common_address">Address</string>
   <string name="wc_common_connect">Connect</string>
   <string name="wc_common_loading">Loading</string>
@@ -1711,7 +1712,6 @@
   <string name="yield_module_earn_sheet_current_apy_title">Current APY</string>
   <string name="yield_module_earn_sheet_my_funds_title">My Funds</string>
   <string name="yield_module_earn_sheet_provider_description">Your %1$s is now deposited in Aave and earning interest. You hold a%2$s token, which represents your balance and grows over time. When you top up, funds go to Aave to earn interest, minus a transaction fee.</string>
-  <string name="yield_module_earn_sheet_status_active">Active</string>
   <string name="yield_module_earn_sheet_title">Earn</string>
   <string name="yield_module_earn_sheet_total_earnings_title">Total earnings</string>
   <string name="yield_module_earn_sheet_transfers_title">Transfers to Aave</string>
@@ -1733,7 +1733,7 @@
   <string name="yield_module_promo_screen_how_it_works_button_title">How it works?</string>
   <string name="yield_module_promo_screen_self_custodial_subtitle">Aave is trusted by millions worldwide. Total lended value is $10.4B.</string>
   <string name="yield_module_promo_screen_self_custodial_title">Decentralized and self-custodial</string>
-  <string name="yield_module_promo_screen_terms_disclaimer">By using service, you agree with provider %1$s and %2$s</string>
+  <string name="yield_module_promo_screen_terms_disclaimer">By using service, you agree with provider\n%1$s and %2$s</string>
   <string name="yield_module_promo_screen_title">Earn %s%% yearly</string>
   <string name="yield_module_promo_screen_variable_rate_info">Aave • Variable Interest Rate</string>
   <string name="yield_module_provider">Aave</string>
@@ -1747,6 +1747,8 @@
   <string name="yield_module_start_earning_sheet_description">Your %s will be supplied to Aave and will stay instantly available</string>
   <string name="yield_module_start_earning_sheet_fee_policy">See fee policy</string>
   <string name="yield_module_start_earning_sheet_next_deposits">Your next deposits will be automatically supplied to Aave.</string>
+  <string name="yield_module_status_active">Active</string>
+  <string name="yield_module_status_paused">Paused</string>
   <string name="yield_module_stop_earning">Stop earning</string>
   <string name="yield_module_stop_earning_sheet_description">Turning off will withdraw your funds from Aave, return them to %s in your wallet, and stop earning rewards.</string>
   <string name="yield_module_stop_earning_sheet_fee_note">The network fee will be deducted from the amount you withdraw.</string>
