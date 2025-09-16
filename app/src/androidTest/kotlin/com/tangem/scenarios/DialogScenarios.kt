@@ -2,11 +2,19 @@ package com.tangem.scenarios
 
 import com.tangem.common.BaseTestCase
 import com.tangem.screens.AlreadyUsedWalletDialogPageObject
+import com.tangem.screens.AlreadyUsedWalletDialogPageObject.cancelButton
+import com.tangem.screens.AlreadyUsedWalletDialogPageObject.message
+import com.tangem.screens.AlreadyUsedWalletDialogPageObject.requestSupportButton
+import com.tangem.screens.AlreadyUsedWalletDialogPageObject.thisIsMyWalletButton
+import com.tangem.screens.AlreadyUsedWalletDialogPageObject.title
 import com.tangem.screens.ScanWarningDialogPageObject
 import com.tangem.screens.onFailedTransactionDialog
 import io.qameta.allure.kotlin.Allure.step
 
 fun BaseTestCase.checkFailedTransactionDialog() {
+    step("Assert failed transaction dialog is displayed") {
+        onFailedTransactionDialog { dialogContainer.assertIsDisplayed() }
+    }
     step("Assert failed transaction dialog title is displayed") {
         onFailedTransactionDialog { title.assertIsDisplayed() }
     }
@@ -47,7 +55,7 @@ fun checkAlreadyUsedWalletDialog() {
         AlreadyUsedWalletDialogPageObject { message.isDisplayed() }
     }
     step("Assert 'This is my wallet' button is displayed") {
-        AlreadyUsedWalletDialogPageObject { message.isDisplayed() }
+        AlreadyUsedWalletDialogPageObject { thisIsMyWalletButton.isDisplayed() }
     }
     step("Assert 'Cancel' button is displayed") {
         AlreadyUsedWalletDialogPageObject { cancelButton.isDisplayed() }
