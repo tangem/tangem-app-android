@@ -4,12 +4,14 @@ import androidx.test.internal.runner.junit4.statement.UiThreadStatement.runOnUiT
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.RECIPIENT_ADDRESS
 import com.tangem.common.constants.TestConstants.TOTAL_BALANCE
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.redux.StateDialog
 import com.tangem.scenarios.*
 import com.tangem.screens.*
+import com.tangem.screens.AlreadyUsedWalletDialogPageObject.requestSupportButton
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.sdk.mocks.MockProvider
 import com.tangem.tap.store
@@ -17,7 +19,6 @@ import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.Allure
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
-import org.junit.Ignore
 import org.junit.Test
 
 @HiltAndroidTest
@@ -92,10 +93,15 @@ class FeedbackTest : BaseTestCase() {
                 onSendAddressScreen { nextButton.clickWithAssertion() }
             }
             step("Click 'Send' button") {
-                onSendConfirmScreen { sendButton.clickWithAssertion() }
+                onSendConfirmScreen {
+                    sendButton.assertIsEnabled()
+                    sendButton.performClick()
+                }
             }
             step("Check 'Failed transaction' dialog") {
-                checkFailedTransactionDialog()
+                flakySafely(WAIT_UNTIL_TIMEOUT) {
+                    checkFailedTransactionDialog()
+                }
             }
             step("Click on 'Support' button") {
                 onFailedTransactionDialog { supportButton.performClick() }
@@ -145,7 +151,6 @@ class FeedbackTest : BaseTestCase() {
 
     @AllureId("3986")
     @DisplayName("Send feedback: from scan already used wallet alert dialog")
-    @Ignore("TODO On CI Already used wallet doesn't displayed")
     @Test
     fun sendFeedbackAfterScanAlreadyUsedWalletTest() {
         setupHooks(
