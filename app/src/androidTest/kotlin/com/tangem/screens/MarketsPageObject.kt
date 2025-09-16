@@ -3,9 +3,11 @@ package com.tangem.screens
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.tangem.common.BaseTestCase
+import com.tangem.common.constants.TestConstants.MARKETS_MAIN_NETWORK_SUFFIX
 import com.tangem.common.utils.LazyListItemNode
-import com.tangem.core.ui.test.BaseSearchBarTestTags
-import com.tangem.core.ui.test.SelectCountryBottomSheetTestTags
+import com.tangem.core.ui.test.BaseButtonTestTags
+import com.tangem.core.ui.test.MarketsTestTags
+import com.tangem.core.ui.test.TopAppBarTestTags
 import com.tangem.core.ui.utils.LazyListItemPositionSemantics
 import com.tangem.features.onramp.impl.R
 import io.github.kakaocup.compose.node.element.ComposeScreen
@@ -13,16 +15,14 @@ import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onCompose
 import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.compose.node.element.lazylist.KLazyListNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
-import androidx.compose.ui.test.hasTestTag as withTestTag
 import androidx.compose.ui.test.hasText as withText
 
-class SelectCountryPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
-    ComposeScreen<SelectCountryPageObject>(semanticsProvider = semanticsProvider) {
-
+class MarketsPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
+    ComposeScreen<MarketsPageObject>(semanticsProvider = semanticsProvider) {
 
     private val lazyList = KLazyListNode(
         semanticsProvider = semanticsProvider,
-        viewBuilderAction = { hasTestTag(SelectCountryBottomSheetTestTags.LAZY_LIST) },
+        viewBuilderAction = { hasTestTag(MarketsTestTags.TOKENS_LIST) },
         itemTypeBuilder = { itemType(::LazyListItemNode) },
         positionMatcher = { position ->
             SemanticsMatcher.expectValue(
@@ -32,28 +32,29 @@ class SelectCountryPageObject(semanticsProvider: SemanticsNodeInteractionsProvid
         }
     )
 
-    val searchBar: KNode = child {
-        hasTestTag(BaseSearchBarTestTags.SEARCH_BAR)
+    val addToPortfolioButton: KNode = child {
+        hasTestTag(BaseButtonTestTags.TEXT)
+        hasText(getResourceString(R.string.common_add_to_portfolio))
         useUnmergedTree = true
     }
 
-    fun countryWithNameAndIcon(name: String): KNode {
-        return lazyList.child<KNode> {
-            hasText(name)
-            hasAnySibling(withTestTag(SelectCountryBottomSheetTestTags.COUNTRY_ICON))
-            useUnmergedTree = true
-        }
+    val mainNetworkSwitch: KNode = child<KNode> {
+        hasAnyDescendant(withText(MARKETS_MAIN_NETWORK_SUFFIX))
+        useUnmergedTree = true
+    }.child { hasTestTag(MarketsTestTags.ADD_TO_PORTFOLIO_SWITCH) }
+
+    val topBarBackButton: KNode = child {
+        hasTestTag(TopAppBarTestTags.CLOSE_BUTTON)
+        useUnmergedTree = true
     }
 
-    fun unavailableCountryWithNameAndIcon(name: String): KNode {
+    fun tokenWithTitle(title: String): KNode {
         return lazyList.child<KNode> {
-            hasText(name)
-            hasAnySibling(withText(getResourceString(R.string.onramp_country_unavailable)))
-            hasAnySibling(withTestTag(SelectCountryBottomSheetTestTags.UNAVAILABLE_COUNTRY_ICON))
+            hasText(title)
             useUnmergedTree = true
         }
     }
 }
 
-internal fun BaseTestCase.onSelectCountryBottomSheet(function: SelectCountryPageObject.() -> Unit) =
+internal fun BaseTestCase.onMarketsScreen(function: MarketsPageObject.() -> Unit) =
     onComposeScreen(composeTestRule, function)
