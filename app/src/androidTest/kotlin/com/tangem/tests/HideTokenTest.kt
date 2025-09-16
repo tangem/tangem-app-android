@@ -3,9 +3,9 @@ package com.tangem.tests
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.TOTAL_BALANCE
 import com.tangem.common.extensions.clickWithAssertion
-import com.tangem.screens.*
 import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.synchronizeAddresses
+import com.tangem.screens.*
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
@@ -33,7 +33,7 @@ class HideTokenTest : BaseTestCase() {
             step("Assert 'Token details screen' open") {
                 onTokenDetailsScreen { screenContainer.assertIsDisplayed() }
             }
-            step("Click 'More button'") {
+            step("Click 'More' button") {
                 onTokenDetailsTopBar { moreButton.clickWithAssertion() }
             }
             step("Click 'Hide token' button") {
