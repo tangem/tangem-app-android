@@ -45,7 +45,7 @@ class YieldSupplyEstimateEnterFeeUseCase(
                     ).normal,
                 )
             } else {
-                transaction.copy(fee = withCalculatedFee.first().fee?.fixFee(cryptoCurrency))
+                transaction.copy(fee = withCalculatedFee.firstOrNull()?.fee?.fixFee(cryptoCurrency))
             }
         }
 
