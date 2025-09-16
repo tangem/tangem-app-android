@@ -12,9 +12,8 @@ import com.tangem.domain.managetokens.model.exceptoin.FindTokenException
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
-import com.tangem.domain.wallets.usecase.BackendId
+import com.tangem.domain.wallets.usecase.ColdWalletAndHasMissedDerivationsUseCase
 import com.tangem.domain.wallets.usecase.DerivePublicKeysUseCase
-import com.tangem.domain.wallets.usecase.HasMissedDerivationsUseCase
 import com.tangem.features.managetokens.component.AddCustomTokenMode
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -22,24 +21,23 @@ import dagger.assisted.AssistedInject
 
 @Suppress("LongParameterList")
 internal class CustomTokenFormUseCasesFacade @AssistedInject constructor(
-    private val hasMissedDerivationsUseCase: HasMissedDerivationsUseCase,
     private val addCryptoCurrenciesUseCase: AddCryptoCurrenciesUseCase,
     private val derivePublicKeysUseCase: DerivePublicKeysUseCase,
     private val validateTokenFormUseCase: ValidateTokenFormUseCase,
     private val createCryptoCurrencyUseCase: CreateCryptoCurrencyUseCase,
     private val findTokenUseCase: FindTokenUseCase,
     private val checkIsCurrencyNotAddedUseCase: CheckIsCurrencyNotAddedUseCase,
+    private val coldWalletAndHasMissedDerivationsUseCase: ColdWalletAndHasMissedDerivationsUseCase,
     @Assisted private val mode: AddCustomTokenMode,
 ) {
 
-    suspend fun hasMissedDerivationsUseCase(networksWithDerivationPath: Map<BackendId, String?>): Boolean =
-        when (mode) {
-            is AddCustomTokenMode.Account -> TODO("Account")
-            is AddCustomTokenMode.Wallet -> hasMissedDerivationsUseCase.invoke(
-                userWalletId = mode.userWalletId,
-                networksWithDerivationPath = networksWithDerivationPath,
-            )
-        }
+    suspend fun needColdWalletInteraction(network: Map<String, String?>): Boolean = when (mode) {
+        is AddCustomTokenMode.Account -> TODO("Account")
+        is AddCustomTokenMode.Wallet -> coldWalletAndHasMissedDerivationsUseCase.invoke(
+            userWalletId = mode.userWalletId,
+            networksWithDerivationPath = network,
+        )
+    }
 
     suspend fun addCryptoCurrenciesUseCase(currency: CryptoCurrency): Either<Throwable, Unit> = when (mode) {
         is AddCustomTokenMode.Account -> TODO("Account")
