@@ -23,6 +23,7 @@ dependencies {
 
     // region Project - Domain
     api(projects.domain.account)
+    api(projects.domain.card)
     api(projects.domain.models)
     // endregion
 
