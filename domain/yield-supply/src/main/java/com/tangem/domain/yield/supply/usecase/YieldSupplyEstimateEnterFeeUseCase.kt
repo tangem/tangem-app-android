@@ -1,13 +1,16 @@
 package com.tangem.domain.yield.supply.usecase
 
 import arrow.core.Either
+import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyEnterCallData
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.transaction.FeeRepository
 import com.tangem.domain.transaction.error.FeeErrorResolver
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.utils.extensions.isSingleItem
 
 class YieldSupplyEstimateEnterFeeUseCase(
     private val feeRepository: FeeRepository,
@@ -18,19 +21,36 @@ class YieldSupplyEstimateEnterFeeUseCase(
         cryptoCurrency: CryptoCurrency,
         transactionDataList: List<TransactionData.Uncompiled>,
     ): Either<GetFeeError, List<TransactionData.Uncompiled>> = Either.catch {
-        transactionDataList.mapIndexed { index, transaction ->
-            val fee = feeRepository.calculateFee(
-                userWallet = userWallet,
-                cryptoCurrency = cryptoCurrency,
-                transactionData = transaction,
-            ).normal
+        val withCalculatedFee = transactionDataList.filter {
+            (it.extras as? EthereumTransactionExtras)?.callData !is EthereumYieldSupplyEnterCallData
+        }.map { transaction ->
+            transaction.copy(
+                fee = feeRepository.calculateFee(
+                    userWallet = userWallet,
+                    cryptoCurrency = cryptoCurrency,
+                    transactionData = transaction,
+                ).normal,
+            )
+        }
 
-            if (index == transactionDataList.lastIndex) { // todo yield supply replace with check for contract
-                transaction.copy(fee = fee.fixFee(cryptoCurrency))
+        val withEstimatedCalculatedFee = transactionDataList.filter {
+            (it.extras as? EthereumTransactionExtras)?.callData is EthereumYieldSupplyEnterCallData
+        }.map { transaction ->
+            if (transactionDataList.isSingleItem()) {
+                transaction.copy(
+                    fee = feeRepository.calculateFee(
+                        userWallet = userWallet,
+                        cryptoCurrency = cryptoCurrency,
+                        transactionData = transaction,
+                    ).normal,
+                )
             } else {
-                transaction.copy(fee = fee)
+                transaction.copy(fee = withCalculatedFee.first().fee?.fixFee(cryptoCurrency))
             }
         }
+
+        // Transactions order must be preserved
+        withCalculatedFee + withEstimatedCalculatedFee
     }.mapLeft(feeErrorResolver::resolve)
 
     private fun Fee.fixFee(cryptoCurrency: CryptoCurrency) = when (this) {
