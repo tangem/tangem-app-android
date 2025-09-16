@@ -34,6 +34,7 @@
     <application
         android:name="com.tangem.tap.TangemHiltApplication"
         android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
         android:enableOnBackInvokedCallback="true"
         android:fullBackupContent="false"
         android:hardwareAccelerated="true"
@@ -45,7 +46,7 @@
         android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="true"
         tools:ignore="GoogleAppIndexingWarning"
-        tools:replace="android:allowBackup, android:fullBackupContent, android:label, android:largeHeap">
+        tools:replace="android:allowBackup, android:dataExtractionRules, android:fullBackupContent, android:label, android:largeHeap">
 
         <!--
             property to make the "android:screenOrientation" work on API <37
