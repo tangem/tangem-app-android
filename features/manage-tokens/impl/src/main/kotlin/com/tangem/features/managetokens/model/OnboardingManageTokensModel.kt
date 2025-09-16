@@ -216,12 +216,12 @@ internal class OnboardingManageTokensModel @Inject constructor(
                 .flatten()
                 .toSet()
                 .associate { it.backendId to null }
-            val hasMissedDerivations = useCasesFacade.hasMissedDerivationsUseCase(network = network)
+            val showTangemIcon = useCasesFacade.needColdWalletInteraction(network = network)
             state.update { state ->
                 state.copy(
                     actionButtonConfig = OnboardingManageTokensUM.ActionButtonConfig.Continue(
                         onClick = ::saveChanges,
-                        showTangemIcon = hasMissedDerivations,
+                        showTangemIcon = showTangemIcon,
                     ),
                 )
             }
