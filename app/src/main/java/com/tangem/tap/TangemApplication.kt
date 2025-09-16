@@ -63,6 +63,7 @@ import com.tangem.tap.common.analytics.AnalyticsFactory
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
 import com.tangem.tap.common.analytics.handlers.BlockchainExceptionHandler
 import com.tangem.tap.common.analytics.handlers.amplitude.AmplitudeAnalyticsHandler
+import com.tangem.tap.common.analytics.handlers.appsflyer.AppsFlyerAnalyticsHandler
 import com.tangem.tap.common.analytics.handlers.firebase.FirebaseAnalyticsHandler
 import com.tangem.tap.common.images.createCoilImageLoader
 import com.tangem.tap.common.log.TangemAppLoggerInitializer
@@ -405,6 +406,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
         val factory = AnalyticsFactory()
         factory.addHandlerBuilder(AmplitudeAnalyticsHandler.Builder())
         factory.addHandlerBuilder(FirebaseAnalyticsHandler.Builder())
+        factory.addHandlerBuilder(AppsFlyerAnalyticsHandler.Builder())
 
         factory.addFilter(oneTimeEventFilter)
 
