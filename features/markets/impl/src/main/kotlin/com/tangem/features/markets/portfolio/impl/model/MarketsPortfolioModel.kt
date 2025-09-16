@@ -32,8 +32,8 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.tokens.GetViewedTokenReceiveWarningUseCase
 import com.tangem.domain.transaction.usecase.GetEnsNameUseCase
+import com.tangem.domain.wallets.usecase.ColdWalletAndHasMissedDerivationsUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
-import com.tangem.domain.wallets.usecase.HasMissedDerivationsUseCase
 import com.tangem.features.markets.impl.R
 import com.tangem.features.markets.portfolio.api.MarketsPortfolioComponent
 import com.tangem.features.markets.portfolio.impl.analytics.PortfolioAnalyticsEvent
@@ -65,7 +65,7 @@ internal class MarketsPortfolioModel @Inject constructor(
     private val checkCurrencyUnsupportedUseCase: CheckCurrencyUnsupportedUseCase,
     private val getSelectedWalletUseCase: GetSelectedWalletUseCase,
     private val portfolioDataLoader: PortfolioDataLoader,
-    private val hasMissedDerivationsUseCase: HasMissedDerivationsUseCase,
+    private val coldWalletAndHasMissedDerivationsUseCase: ColdWalletAndHasMissedDerivationsUseCase,
     private val saveMarketTokensUseCase: SaveMarketTokensUseCase,
     private val addToPortfolioManager: AddToPortfolioManager,
     private val analyticsEventHandler: AnalyticsEventHandler,
@@ -232,18 +232,18 @@ internal class MarketsPortfolioModel @Inject constructor(
                     portfolioBSVisibilityModel = portfolioBSVisibilityModel,
                     selectedWalletId = selectedWalletId,
                     addToPortfolioData = addToPortfolioData,
-                    hasMissedDerivations = hasMissedDerivations(selectedWalletId, addToPortfolioData),
+                    needColdWalletInteraction = needColdWalletInteraction(selectedWalletId, addToPortfolioData),
                 )
             },
         )
     }
 
-    private suspend fun hasMissedDerivations(
+    private suspend fun needColdWalletInteraction(
         selectedWalletId: UserWalletId?,
         addToPortfolioData: AddToPortfolioManager.AddToPortfolioData,
     ): Boolean {
         return if (selectedWalletId != null) {
-            hasMissedDerivationsUseCase.invoke(
+            coldWalletAndHasMissedDerivationsUseCase.invoke(
                 userWalletId = selectedWalletId,
                 networksWithDerivationPath = addToPortfolioData.addedNetworks[selectedWalletId].orEmpty()
                     .associate { it.networkId to null },

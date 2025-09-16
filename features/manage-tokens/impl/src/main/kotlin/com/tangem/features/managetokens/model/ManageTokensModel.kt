@@ -150,7 +150,7 @@ internal class ManageTokensModel @Inject constructor(
             hasChanges = false,
             saveChanges = ::saveChanges,
             loadMore = ::loadMoreItems,
-            needToAddDerivations = false,
+            needToInteractWithColdWallet = false,
             isSavingInProgress = false,
         )
     }
@@ -271,12 +271,12 @@ internal class ManageTokensModel @Inject constructor(
                 .flatten()
                 .toSet()
                 .associate { it.backendId to null }
-            val hasMissedDerivations = useCasesFacade.hasMissedDerivationsUseCase(networks)
+            val needToInteractWithColdWallet = useCasesFacade.needColdWalletInteraction(networks)
 
             state.update { state ->
                 state.copySealed(
                     hasChanges = currenciesToAdd.isNotEmpty() || currenciesToRemove.isNotEmpty(),
-                    needToAddDerivations = hasMissedDerivations,
+                    needToInteractWithColdWallet = needToInteractWithColdWallet,
                 )
             }
         }
