@@ -1,5 +1,6 @@
 package com.tangem.features.managetokens.entity.customtoken
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.text.KeyboardOptions
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.TextReference
@@ -15,7 +16,7 @@ internal data class CustomTokenFormUM(
     val notifications: PersistentList<NotificationUM> = persistentListOf(),
     val canAddToken: Boolean = false,
     val isValidating: Boolean = false,
-    val needToAddDerivation: Boolean = false,
+    @DrawableRes val walletInteractionIcon: Int? = null,
     val saveToken: () -> Unit,
 ) {
 
