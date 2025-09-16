@@ -55,7 +55,11 @@ internal class TokenDetailsStateFactory(
     }
 
     private val notificationConverter by lazy {
-        TokenDetailsNotificationConverter(clickIntents = clickIntents)
+        TokenDetailsNotificationConverter(
+            userWalletId = userWalletId,
+            getUserWalletUseCase = getUserWalletUseCase,
+            clickIntents = clickIntents,
+        )
     }
 
     private val tokenDetailsLoadedBalanceConverter by lazy {
