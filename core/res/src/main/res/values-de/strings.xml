@@ -280,7 +280,7 @@
   <string name="common_origin_ring">Primärring</string>
   <string name="common_passphrase">Passphrase</string>
   <string name="common_paste">Einfügen</string>
-  <string name="common_privacy_policy">Datenschutzbestimmungen</string>
+  <string name="common_privacy_policy">Datenschutzrichtlinie</string>
   <string name="common_range">%1$s-%2$s</string>
   <string name="common_range_with_space">%1$s — %2$s</string>
   <string name="common_read_more">Weiterlesen</string>
@@ -317,6 +317,7 @@
   <string name="common_supported_networks">Unterstützte Netzwerke</string>
   <string name="common_swap">Tauschen</string>
   <string name="common_tangem">Tangem</string>
+  <string name="common_tangem_wallet">Tangem Wallet</string>
   <string name="common_terms_and_conditions">Allgemeine Geschäftsbedingungen</string>
   <string name="common_terms_of_use">Nutzungsbedingungen</string>
   <string name="common_today">Heute</string>
@@ -418,7 +419,7 @@
   <string name="express_exchange_by">Getauscht von %s</string>
   <string name="express_exchange_notification_failed_text">Besuche die Website des Anbieters, um dein Geld zurückzuerhalten</string>
   <string name="express_exchange_notification_failed_title">Fehler beim Vorgang durch Anbieter</string>
-  <string name="express_exchange_notification_long_transaction_time_text">Dein Wechsel dauert länger als erwartet. Wende Dich für Hilfe bitte an den Support Deines Anbieters.</string>
+  <string name="express_exchange_notification_long_transaction_time_text">Dein Swap dauert länger als üblich, aber Dein Geld ist absolut sicher und wird geliefert. Bei Fragen kannst Du Dich an das Support-Team des Anbieters wenden.</string>
   <string name="express_exchange_notification_long_transaction_time_title">Lange Transaktionszeit</string>
   <string name="express_exchange_notification_refund_text">Der Transaktionsbetrag wurde aufgrund von OKX- oder Bridge-Regeln in %1$s auf deine Wallet zurückerstattet. %2$s</string>
   <string name="express_exchange_notification_refund_title">Der Betrag wurde in %1$s (%2$s Netzwerk) zurückerstattet.</string>
