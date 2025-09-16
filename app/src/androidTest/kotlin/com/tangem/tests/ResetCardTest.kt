@@ -7,7 +7,6 @@ import com.tangem.tap.domain.sdk.mocks.content.BackupWalletMockContent
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
-import org.junit.Ignore
 import org.junit.Test
 
 @HiltAndroidTest
@@ -61,7 +60,6 @@ class ResetCardTest : BaseTestCase() {
 
     @AllureId("3974")
     @DisplayName("Reset card: reset Wallet 2.0 card with backup")
-    @Ignore("toDo [REDACTED_TASK_KEY]: On CI Already used wallet dialog doesn't displayed")
     @Test
     fun resetWallet2CardWithBackupTest() {
         setupHooks().run {
