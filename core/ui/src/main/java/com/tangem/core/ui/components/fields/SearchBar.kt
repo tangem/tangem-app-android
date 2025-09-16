@@ -38,7 +38,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.test.SelectCountryBottomSheetTestTags
+import com.tangem.core.ui.test.BaseSearchBarTestTags
 
 @Composable
 fun SearchBar(
@@ -64,7 +64,7 @@ fun SearchBar(
                 }
             }
             .focusRequester(focusRequester)
-            .testTag(SelectCountryBottomSheetTestTags.SEARCH_BAR),
+            .testTag(BaseSearchBarTestTags.SEARCH_BAR),
         enabled = enabled,
         value = state.query,
         onValueChange = state.onQueryChange,
