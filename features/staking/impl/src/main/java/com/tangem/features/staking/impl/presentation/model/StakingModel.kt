@@ -223,6 +223,7 @@ internal class StakingModel @Inject constructor(
         subscribeOnSelectedAppCurrency()
         subscribeOnBalanceHiding()
         subscribeOnCurrencyStatusUpdates()
+        stateController.initializeWithUserWallet(userWallet)
     }
 
     override fun onDestroy() {
@@ -607,6 +608,7 @@ internal class StakingModel @Inject constructor(
     override fun showApprovalBottomSheet() {
         stateController.update(
             ShowApprovalBottomSheetTransformer(
+                userWallet = userWallet,
                 appCurrencyProvider = Provider { appCurrency },
                 cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
                 feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,

@@ -138,6 +138,7 @@ internal fun WcSendTransactionModalBottomSheet(
                 activeButtonText = resourceReference(R.string.common_send),
                 isLoading = state.isLoading,
                 enabled = state.sendEnabled,
+                walletInteractionIcon = state.walletInteractionIcon,
                 validationResult = state.transactionValidationResult,
             )
         },
