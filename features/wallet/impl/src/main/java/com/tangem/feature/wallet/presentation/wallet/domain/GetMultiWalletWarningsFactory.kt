@@ -3,6 +3,7 @@
 package com.tangem.feature.wallet.presentation.wallet.domain
 
 import arrow.core.getOrElse
+import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.ui.components.notifications.NotificationConfig.ButtonsState
 import com.tangem.core.ui.components.notifications.NotificationConfig.IconTint
@@ -76,7 +77,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
 
                 addSepaPromoNotification(userWallet, clickIntents, shouldShowSepaBanner)
 
-                addInformationalNotifications(cardTypesResolver, maybeTokenList, clickIntents)
+                addInformationalNotifications(userWallet, cardTypesResolver, maybeTokenList, clickIntents)
 
                 addWarningNotifications(cardTypesResolver, maybeTokenList, isNeedToBackup, clickIntents)
 
@@ -177,6 +178,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
     }
 
     private fun MutableList<WalletNotification>.addInformationalNotifications(
+        userWallet: UserWallet,
         cardTypesResolver: CardTypesResolver?,
         maybeTokenList: Lce<TokenListError, TokenList>,
         clickIntents: WalletClickIntents,
@@ -186,10 +188,11 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
             condition = cardTypesResolver != null && isDemoCardUseCase(cardId = cardTypesResolver.getCardId()),
         )
 
-        addMissingAddressesNotification(maybeTokenList, clickIntents)
+        addMissingAddressesNotification(userWallet, maybeTokenList, clickIntents)
     }
 
     private fun MutableList<WalletNotification>.addMissingAddressesNotification(
+        userWallet: UserWallet,
         maybeTokenList: Lce<TokenListError, TokenList>,
         clickIntents: WalletClickIntents,
     ) {
@@ -198,6 +201,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
 
         addIf(
             element = WalletNotification.Informational.MissingAddresses(
+                tangemIcon = walletInterationIcon(userWallet),
                 missingAddressesCount = currencies.count(),
                 onGenerateClick = {
                     clickIntents.onGenerateMissedAddressesClick(missedAddressCurrencies = currencies)
