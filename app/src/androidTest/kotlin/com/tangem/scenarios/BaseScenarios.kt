@@ -4,6 +4,7 @@ import com.tangem.common.BaseTestCase
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.screens.*
+import com.tangem.screens.AlreadyUsedWalletDialogPageObject.thisIsMyWalletButton
 import com.tangem.tap.domain.sdk.mocks.MockContent
 import com.tangem.tap.domain.sdk.mocks.MockProvider
 import io.qameta.allure.kotlin.Allure.step
@@ -27,6 +28,7 @@ fun BaseTestCase.openMainScreen(
     }
     if (alreadyActivatedDialogIsShown) {
         step("Click on 'This is my wallet' button") {
+            composeTestRule.waitForIdle()
             AlreadyUsedWalletDialogPageObject { thisIsMyWalletButton.click() }
         }
     }
