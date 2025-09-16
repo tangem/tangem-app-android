@@ -1,5 +1,6 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory
 
+import arrow.core.getOrElse
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.core.ui.extensions.resourceReference
@@ -7,9 +8,11 @@ import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.shorted
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.tokens.model.warnings.HederaWarnings
 import com.tangem.domain.tokens.model.warnings.KaspaWarnings
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsNotification
@@ -23,6 +26,8 @@ import timber.log.Timber
 import java.math.BigDecimal
 
 internal class TokenDetailsNotificationConverter(
+    private val userWalletId: UserWalletId,
+    private val getUserWalletUseCase: GetUserWalletUseCase,
     private val clickIntents: TokenDetailsClickIntents,
 ) : Converter<Set<CryptoCurrencyWarning>, ImmutableList<TokenDetailsNotification>> {
 
@@ -131,6 +136,8 @@ internal class TokenDetailsNotificationConverter(
                 onOpenClick = clickIntents::onOpenTrustlineClick,
             )
             is KaspaWarnings.IncompleteTransaction -> KaspaIncompleteTransactionWarning(
+                userWallet = getUserWalletUseCase.invoke(userWalletId)
+                    .getOrElse { error("Cannot find user wallet with id: ${userWalletId.stringValue}") },
                 currency = warning.currency,
                 amount = warning.amount.format { crypto(symbol = "", decimals = warning.currencyDecimals) },
                 currencySymbol = warning.currencySymbol,
