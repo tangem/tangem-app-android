@@ -4,17 +4,17 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.tangem.common.BaseTestCase
-import com.tangem.core.ui.test.BaseButtonTestTags
 import com.tangem.common.utils.LazyListItemNode
+import com.tangem.core.ui.test.BaseButtonTestTags
 import com.tangem.core.ui.test.NotificationTestTags
 import com.tangem.core.ui.test.TokenDetailsScreenTestTags
-import com.tangem.features.tokendetails.impl.R
 import com.tangem.core.ui.utils.LazyListItemPositionSemantics
+import com.tangem.features.tokendetails.impl.R
 import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
-import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.github.kakaocup.compose.node.element.lazylist.KLazyListNode
+import io.github.kakaocup.kakao.common.utilities.getResourceString
 import androidx.compose.ui.test.hasText as withText
 
 class TokenDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
@@ -156,7 +156,6 @@ class TokenDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvide
         hasText(getResourceString(R.string.common_buy_currency, feeCurrencySymbol))
         useUnmergedTree = true
     }
-
 }
 
 internal fun BaseTestCase.onTokenDetailsScreen(function: TokenDetailsPageObject.() -> Unit) =
