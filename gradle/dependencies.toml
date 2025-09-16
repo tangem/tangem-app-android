@@ -46,6 +46,7 @@ compose-lifecycle-runtime = "2.7.0"
 # endregion Compose
 
 # region Other libraries
+appsflyer = "6.17.3"
 amplitude = "2.36.1"
 armadillo = "0.9.0"
 coil = "2.1.0"
@@ -233,6 +234,7 @@ test-orchestrator = { module = "androidx.test:orchestrator", version.ref = "orch
 # endregion Test
 
 # region Other
+appsflyer = { module = "com.appsflyer:af-android-sdk", version.ref = "appsflyer" }
 amplitude = { module = "com.amplitude:android-sdk", version.ref = "amplitude" }
 armadillo = { module = "at.favre.lib:armadillo", version.ref = "armadillo" }
 coil = { module = "io.coil-kt:coil", version.ref = "coil" }
