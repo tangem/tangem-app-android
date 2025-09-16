@@ -1,6 +1,7 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.ui.components
 
 import android.content.res.Configuration
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Surface
@@ -148,39 +149,42 @@ private fun CryptoBalance(
             ),
         )
         is TokenDetailsBalanceBlockState.Content -> {
-            when (state.yieldSupplyState) {
-                is TokenDetailsYieldSupplyState.Active -> {
-                    Row(
-                        modifier = modifier,
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    ) {
-                        Icon(
-                            modifier = Modifier.size(TangemTheme.dimens.size16),
-                            painter = painterResource(id = R.drawable.ic_exchange_horizontal_24),
-                            tint = TangemTheme.colors.icon.inactive,
-                            contentDescription = null,
-                        )
-                        Text(
-                            text = state.displayCryptoBalance.orMaskWithStars(isBalanceHidden),
-                            style = TangemTheme.typography.caption2.applyBladeBrush(
-                                isEnabled = state.isBalanceFlickering,
-                                textColor = TangemTheme.colors.text.tertiary,
-                            ),
-                        )
-                        Icon(
-                            modifier = Modifier
-                                .size(TangemTheme.dimens.size16)
-                                .clickable { state.yieldSupplyState.yieldInfoClick() },
-                            painter = painterResource(id = R.drawable.ic_information_24),
-                            tint = TangemTheme.colors.icon.inactive,
-                            contentDescription = null,
-                        )
+            Crossfade(
+                modifier = modifier,
+                targetState = state.yieldSupplyState,
+            ) { yieldSupplyState ->
+                when (yieldSupplyState) {
+                    is TokenDetailsYieldSupplyState.Active -> {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            Icon(
+                                modifier = Modifier.size(TangemTheme.dimens.size16),
+                                painter = painterResource(id = R.drawable.ic_exchange_horizontal_24),
+                                tint = TangemTheme.colors.icon.inactive,
+                                contentDescription = null,
+                            )
+                            Text(
+                                text = state.displayCryptoBalance.orMaskWithStars(isBalanceHidden),
+                                style = TangemTheme.typography.caption2.applyBladeBrush(
+                                    isEnabled = state.isBalanceFlickering,
+                                    textColor = TangemTheme.colors.text.tertiary,
+                                ),
+                            )
+                            Icon(
+                                modifier = Modifier
+                                    .size(TangemTheme.dimens.size16)
+                                    .clickable {
+                                        (state.yieldSupplyState as TokenDetailsYieldSupplyState.Active).yieldInfoClick()
+                                    },
+                                painter = painterResource(id = R.drawable.ic_information_24),
+                                tint = TangemTheme.colors.icon.inactive,
+                                contentDescription = null,
+                            )
+                        }
                     }
-                }
-                is TokenDetailsYieldSupplyState.Empty -> {
-                    Text(
-                        modifier = modifier,
+                    is TokenDetailsYieldSupplyState.Empty -> Text(
                         text = state.displayCryptoBalance.orMaskWithStars(isBalanceHidden),
                         style = TangemTheme.typography.caption2.applyBladeBrush(
                             isEnabled = state.isBalanceFlickering,
