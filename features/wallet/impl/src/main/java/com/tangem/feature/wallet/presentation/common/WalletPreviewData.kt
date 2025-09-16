@@ -35,6 +35,7 @@ internal object WalletPreviewData {
             additionalInfo = WalletAdditionalInfo(
                 hideable = false,
                 content = TextReference.Str("3 cards • Seed phrase3 cards • Seed phrasephrasephrasephrase"),
+                type = WalletAdditionalInfo.WalletType.Cold,
             ),
             imageResId = R.drawable.ill_wallet2_cards3_120_106,
             dropDownItems = persistentListOf(),

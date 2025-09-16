@@ -105,7 +105,11 @@ internal class SetVisaInfoTransformer(
             },
         )
 
-        return WalletAdditionalInfo(hideable = true, infoContent)
+        return WalletAdditionalInfo(
+            hideable = true,
+            content = infoContent,
+            type = null,
+        )
     }
 
     private fun getRefreshTokenExpiredState(prevState: WalletState.Visa.Content): WalletState {

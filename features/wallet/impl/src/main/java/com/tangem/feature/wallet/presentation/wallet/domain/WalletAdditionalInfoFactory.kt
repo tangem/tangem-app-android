@@ -50,6 +50,7 @@ internal object WalletAdditionalInfoFactory {
                     backedUp.not() -> DIVIDER + TextReference.Res(R.string.hw_backup_no_backup)
                     else -> TextReference.Str("")
                 },
+            type = WalletAdditionalInfo.WalletType.Hot,
         )
     }
 
@@ -60,6 +61,7 @@ internal object WalletAdditionalInfoFactory {
                 content = getBackupInfoWithDivider(
                     backupCardsCount = getCardsCount(),
                 ) + TextReference.Res(R.string.common_locked),
+                type = WalletAdditionalInfo.WalletType.Cold,
             )
         } else {
             val cardTypeResolver = scanResponse.cardTypesResolver
@@ -78,6 +80,7 @@ internal object WalletAdditionalInfoFactory {
                 content = getBackupInfoWithDivider(backupCardsCount = getCardsCount()) + TextReference.Res(
                     id = R.string.common_seed_phrase,
                 ),
+                type = WalletAdditionalInfo.WalletType.Cold,
             )
         } else {
             getBackupInfo(backupCardsCount = getCardsCount())
@@ -99,7 +102,11 @@ internal object WalletAdditionalInfoFactory {
             TextReference.EMPTY
         }
 
-        return WalletAdditionalInfo(hideable = false, content = content)
+        return WalletAdditionalInfo(
+            hideable = false,
+            content = content,
+            type = WalletAdditionalInfo.WalletType.Cold,
+        )
     }
 
     private fun getBackupInfoTextReference(count: Int): TextReference {
@@ -112,12 +119,20 @@ internal object WalletAdditionalInfoFactory {
 
     private fun UserWallet.Cold.resolveSingleCurrencyInfo(currencyAmount: BigDecimal?): WalletAdditionalInfo {
         return if (isLocked) {
-            WalletAdditionalInfo(hideable = false, content = TextReference.Res(R.string.common_locked))
+            WalletAdditionalInfo(
+                hideable = false,
+                content = TextReference.Res(R.string.common_locked),
+                type = WalletAdditionalInfo.WalletType.Cold,
+            )
         } else {
             val blockchain = scanResponse.cardTypesResolver.getBlockchain()
             val amount = currencyAmount?.format { crypto(blockchain.currency, blockchain.decimals()) }
 
-            WalletAdditionalInfo(hideable = true, content = TextReference.Str(value = amount.orEmpty()))
+            WalletAdditionalInfo(
+                hideable = true,
+                content = TextReference.Str(value = amount.orEmpty()),
+                type = WalletAdditionalInfo.WalletType.Cold,
+            )
         }
     }
 }

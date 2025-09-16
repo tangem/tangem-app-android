@@ -366,7 +366,7 @@ internal class WalletModel @Inject constructor(
             is WalletsUpdateActionResolver.Action.RenameWallets -> {
                 stateHolder.update(transformer = RenameWalletsTransformer(renamedWallets = action.renamedWallets))
             }
-            is WalletsUpdateActionResolver.Action.ReloadWarningsForWallets -> {
+            is WalletsUpdateActionResolver.Action.ReloadWallets -> {
                 reloadWarnings(action)
             }
             WalletsUpdateActionResolver.Action.EmptyWallets -> {
@@ -378,7 +378,7 @@ internal class WalletModel @Inject constructor(
         }
     }
 
-    private fun reloadWarnings(action: WalletsUpdateActionResolver.Action.ReloadWarningsForWallets) {
+    private fun reloadWarnings(action: WalletsUpdateActionResolver.Action.ReloadWallets) {
         action.wallets.forEach {
             walletScreenContentLoader.load(
                 userWallet = it,

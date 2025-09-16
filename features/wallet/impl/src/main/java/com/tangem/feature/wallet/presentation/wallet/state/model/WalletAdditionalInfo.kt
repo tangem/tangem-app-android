@@ -7,4 +7,10 @@ import com.tangem.core.ui.extensions.TextReference
 data class WalletAdditionalInfo(
     val hideable: Boolean,
     val content: TextReference,
-)
+    val type: WalletType?,
+) {
+    enum class WalletType {
+        Hot,
+        Cold,
+    }
+}
