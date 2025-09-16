@@ -27,7 +27,7 @@ internal fun CustomTokenFormUM.updateWithProgress(
     showProgress: Boolean,
     isWasFilled: Boolean = this.tokenForm?.wasFilled ?: false,
     canAddToken: Boolean = this.canAddToken,
-    needToAddDerivation: Boolean = false,
+    walletInteractionIcon: Int? = this.walletInteractionIcon,
     clearNotifications: Boolean = false,
     clearFieldErrors: Boolean = false,
     disableSecondaryFields: Boolean = false,
@@ -35,7 +35,7 @@ internal fun CustomTokenFormUM.updateWithProgress(
     return copy(
         isValidating = showProgress,
         canAddToken = canAddToken,
-        needToAddDerivation = needToAddDerivation,
+        walletInteractionIcon = walletInteractionIcon,
         notifications = if (clearNotifications) persistentListOf() else notifications,
     ).updateTokenForm {
         val updatedFields = fields.mapValues { (key, field) ->
