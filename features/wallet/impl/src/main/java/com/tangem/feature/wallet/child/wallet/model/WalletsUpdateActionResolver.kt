@@ -64,6 +64,9 @@ internal class WalletsUpdateActionResolver @Inject constructor(
         selectedWallet: UserWallet,
     ): Action {
         return when {
+            isHotWalletUpgraded(state, wallets) -> {
+                getHotWalletsUpgradedAction(state, wallets)
+            }
             isWalletsCountChanged(state, wallets) -> {
                 getChangeWalletsListAction(state, wallets, selectedWallet)
             }
@@ -89,6 +92,19 @@ internal class WalletsUpdateActionResolver @Inject constructor(
             it is UserWallet.Hot && it.backedUp == incompleteActivationWalletIds.contains(it.walletId)
         }
         return walletsToUpdate.isNotEmpty()
+    }
+
+    private fun isHotWalletUpgraded(state: WalletScreenState, wallets: List<UserWallet>): Boolean {
+        val previousWallet = state
+            .wallets
+            .getOrNull(state.selectedWalletIndex)
+        return when (previousWallet) {
+            is WalletState.MultiCurrency -> {
+                val wallet = wallets.firstOrNull { it.walletId == previousWallet.walletCardState.id }
+                previousWallet.type == WalletState.MultiCurrency.WalletType.Hot && wallet is UserWallet.Cold
+            }
+            else -> false
+        }
     }
 
     private fun isWalletsCountChanged(state: WalletScreenState, wallets: List<UserWallet>): Boolean {
@@ -160,14 +176,22 @@ internal class WalletsUpdateActionResolver @Inject constructor(
     private fun getHotWalletsBackedUpAction(
         state: WalletScreenState,
         wallets: List<UserWallet>,
-    ): Action.ReloadWarningsForWallets {
+    ): Action.ReloadWallets {
         val incompleteActivationWalletIds = state.incompleteActivationWalletIds()
 
         val walletsToUpdate = wallets.filter {
             it is UserWallet.Hot && it.backedUp == incompleteActivationWalletIds.contains(it.walletId)
         }
 
-        return Action.ReloadWarningsForWallets(walletsToUpdate)
+        return Action.ReloadWallets(walletsToUpdate)
+    }
+
+    private fun getHotWalletsUpgradedAction(
+        state: WalletScreenState,
+        wallets: List<UserWallet>,
+    ): Action.ReloadWallets {
+        val walletsToUpdate = wallets.filter { it.walletId == state.getPrevSelectedWallet().id }
+        return Action.ReloadWallets(walletsToUpdate)
     }
 
     private fun getRenameWalletsAction(state: WalletScreenState, wallets: List<UserWallet>): Action.RenameWallets {
@@ -358,7 +382,7 @@ internal class WalletsUpdateActionResolver @Inject constructor(
             }
         }
 
-        data class ReloadWarningsForWallets(
+        data class ReloadWallets(
             val wallets: List<UserWallet>,
         ) : Action()
 
