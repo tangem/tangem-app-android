@@ -136,6 +136,20 @@ internal object WalletsDomainModule {
 
     @Provides
     @Singleton
+    fun providesIsWalletAlreadySavedUseCase(
+        userWalletsListManager: UserWalletsListManager,
+        userWalletsListRepository: UserWalletsListRepository,
+        hotWalletFeatureToggles: HotWalletFeatureToggles,
+    ): IsWalletAlreadySavedUseCase {
+        return IsWalletAlreadySavedUseCase(
+            userWalletsListManager = userWalletsListManager,
+            userWalletsListRepository = userWalletsListRepository,
+            useNewRepository = hotWalletFeatureToggles.isHotWalletEnabled,
+        )
+    }
+
+    @Provides
+    @Singleton
     fun providesOpenBuyTangemCardUseCase(): GenerateBuyTangemCardLinkUseCase {
         return GenerateBuyTangemCardLinkUseCase()
     }
