@@ -30,7 +30,6 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.nft.DisableWalletNFTUseCase
 import com.tangem.domain.nft.EnableWalletNFTUseCase
 import com.tangem.domain.nft.GetWalletNFTEnabledUseCase
-import com.tangem.domain.notifications.GetIsHuaweiDeviceWithoutGoogleServicesUseCase
 import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.settings.repositories.PermissionRepository
 import com.tangem.domain.wallets.usecase.*
@@ -78,7 +77,6 @@ internal class WalletSettingsModel @Inject constructor(
     private val settingsManager: SettingsManager,
     private val permissionsRepository: PermissionRepository,
     private val notificationsRepository: NotificationsRepository,
-    private val getIsHuaweiDeviceWithoutGoogleServicesUseCase: GetIsHuaweiDeviceWithoutGoogleServicesUseCase,
     private val isUpgradeWalletNotificationEnabledUseCase: IsUpgradeWalletNotificationEnabledUseCase,
     private val dismissUpgradeWalletNotificationUseCase: DismissUpgradeWalletNotificationUseCase,
     private val unlockHotWalletContextualUseCase: UnlockHotWalletContextualUseCase,
@@ -130,7 +128,6 @@ internal class WalletSettingsModel @Inject constructor(
                 is UserWallet.Hot -> wallet.backedUp
                 is UserWallet.Cold -> true
             }
-            val isNeedShowNotifications = !getIsHuaweiDeviceWithoutGoogleServicesUseCase()
             state.update { value ->
                 value.copy(
                     items = buildItems(
@@ -138,7 +135,7 @@ internal class WalletSettingsModel @Inject constructor(
                         cardItem = cardItem,
                         isNFTEnabled = nftEnabled,
                         isNotificationsEnabled = notificationsEnabled,
-                        isNotificationsFeatureEnabled = isNeedShowNotifications,
+                        isNotificationsFeatureEnabled = true,
                         isNotificationsPermissionGranted = isNotificationsPermissionGranted(),
                         isUpgradeNotificationEnabled = isUpgradeNotificationEnabled,
                     ),
@@ -274,10 +271,6 @@ internal class WalletSettingsModel @Inject constructor(
     private fun onCheckedNotificationsChange(isChecked: Boolean) {
         modelScope.launch {
             if (isChecked) {
-                if (getIsHuaweiDeviceWithoutGoogleServicesUseCase()) {
-                    showHuaweiDialog()
-                    return@launch
-                }
                 state.update { value ->
                     value.copy(
                         requestPushNotificationsPermission = true,
@@ -288,21 +281,6 @@ internal class WalletSettingsModel @Inject constructor(
                 analyticsEventHandler.send(PushNotificationAnalyticEvents.NotificationsEnabled(false))
             }
         }
-    }
-
-    private fun showHuaweiDialog() {
-        val message = DialogMessage(
-            message = resourceReference(R.string.wallet_settings_push_notifications_huawei_warning),
-            firstActionBuilder = {
-                EventMessageAction(
-                    title = resourceReference(R.string.common_ok),
-                    warning = true,
-                    onClick = {},
-                )
-            },
-        )
-
-        messageSender.send(message)
     }
 
     private fun onNotificationsDescriptionClick() {

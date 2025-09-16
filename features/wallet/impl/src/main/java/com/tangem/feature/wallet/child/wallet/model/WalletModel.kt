@@ -227,7 +227,6 @@ internal class WalletModel @Inject constructor(
                     "isHuaweiDevice $isHuaweiDevice",
             )
             if (!isBiometricsEnabled) return@launch
-            if (isHuaweiDevice) return@launch
             if (!shouldShowBottomSheet) return@launch
 
             delay(timeMillis = 1_800)
