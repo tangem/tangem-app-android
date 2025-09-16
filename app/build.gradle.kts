@@ -354,6 +354,7 @@ dependencies {
     implementation(deps.coil.gif)
     implementation(deps.coil.svg)
     implementation(deps.amplitude)
+    implementation(deps.appsflyer)
     implementation(deps.spongecastle.core)
     implementation(deps.lottie)
     implementation(deps.compose.accompanist.appCompatTheme)
