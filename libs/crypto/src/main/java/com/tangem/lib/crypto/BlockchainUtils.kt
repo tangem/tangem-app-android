@@ -77,10 +77,16 @@ object BlockchainUtils {
         return blockchain == Blockchain.TON || blockchain == Blockchain.TONTestnet
     }
 
-    fun isSupportedNetworkId(blockchainId: String, excludedBlockchains: ExcludedBlockchains): Boolean {
+    fun isSupportedNetworkId(
+        blockchainId: String,
+        excludedBlockchains: ExcludedBlockchains,
+        hotExcludedBlockchains: Set<Blockchain>,
+        hasOnlyHotWallets: Boolean = false,
+    ): Boolean {
         val blockchain = Blockchain.fromNetworkId(blockchainId)
 
-        return blockchain != null && blockchain !in excludedBlockchains
+        return blockchain != null && blockchain !in excludedBlockchains &&
+            (hasOnlyHotWallets.not() || blockchain !in hotExcludedBlockchains)
     }
 
     fun isArbitrum(blockchainId: String): Boolean {
