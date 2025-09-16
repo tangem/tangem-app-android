@@ -15,6 +15,7 @@ import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.card.common.extensions.canHandleBlockchain
+import com.tangem.domain.card.common.extensions.hotWalletExcludedBlockchains
 import com.tangem.domain.card.common.extensions.supportedBlockchains
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.managetokens.model.AddCustomTokenForm
@@ -252,7 +253,9 @@ internal class DefaultCustomTokensRepository(
             is UserWallet.Hot -> {
                 Blockchain.entries.mapNotNull {
                     // TODO: refactor [REDACTED_JIRA]\
-                    if (it.isTestnet() || it in excludedBlockchains) return@mapNotNull null
+                    if (it.isTestnet() || it in excludedBlockchains || it in hotWalletExcludedBlockchains) {
+                        return@mapNotNull null
+                    }
 
                     networkFactory.create(
                         blockchain = it,
