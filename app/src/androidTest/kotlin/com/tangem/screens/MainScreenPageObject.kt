@@ -7,9 +7,10 @@ import androidx.compose.ui.test.hasAnyAncestor
 import com.tangem.common.BaseTestCase
 import com.tangem.common.extensions.hasLazyListItemPosition
 import com.tangem.common.utils.LazyListItemNode
+import com.tangem.core.ui.test.BaseButtonTestTags
 import com.tangem.core.ui.test.MainScreenTestTags
-import com.tangem.core.ui.test.TokenElementsTestTags
 import com.tangem.core.ui.test.NotificationTestTags
+import com.tangem.core.ui.test.TokenElementsTestTags
 import com.tangem.core.ui.utils.LazyListItemPositionSemantics
 import com.tangem.feature.wallet.impl.R
 import io.github.kakaocup.compose.node.element.ComposeScreen
@@ -73,6 +74,24 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
         useUnmergedTree = true
     }
 
+    val seedPhraseNotificationIcon: KNode = child {
+        hasAnySibling(withText(getResourceString(R.string.warning_seedphrase_issue_title)))
+        hasTestTag(NotificationTestTags.ICON)
+        useUnmergedTree = true
+    }
+
+    val seedPhraseNotificationTitle: KNode = child {
+        hasTestTag(NotificationTestTags.TITLE)
+        hasText(getResourceString(R.string.warning_seedphrase_issue_title))
+        useUnmergedTree = true
+    }
+
+    val seedPhraseNotificationMessage: KNode = child {
+        hasTestTag(NotificationTestTags.MESSAGE)
+        hasText(getResourceString(R.string.warning_seedphrase_issue_message))
+        useUnmergedTree = true
+    }
+
     val totalBalanceContainer: KNode = child {
         hasTestTag(MainScreenTestTags.WALLET_LIST_ITEM)
     }
@@ -89,6 +108,18 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
 
     val totalBalanceText: KNode = child {
         hasParent(withTestTag(MainScreenTestTags.WALLET_BALANCE))
+    }
+
+    val notificationYesButton: KNode = child {
+        hasTestTag(BaseButtonTestTags.TEXT)
+        hasText(getResourceString(R.string.common_yes))
+        useUnmergedTree = true
+    }
+
+    val notificationNoButton: KNode = child {
+        hasTestTag(BaseButtonTestTags.TEXT)
+        hasText(getResourceString(R.string.common_no))
+        useUnmergedTree = true
     }
 
     /**
