@@ -176,7 +176,7 @@ private fun CryptoBalance(
                                 modifier = Modifier
                                     .size(TangemTheme.dimens.size16)
                                     .clickable {
-                                        (state.yieldSupplyState as TokenDetailsYieldSupplyState.Active).yieldInfoClick()
+                                        yieldSupplyState.yieldInfoClick()
                                     },
                                 painter = painterResource(id = R.drawable.ic_information_24),
                                 tint = TangemTheme.colors.icon.inactive,
