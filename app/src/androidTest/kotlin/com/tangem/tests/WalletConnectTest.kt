@@ -16,7 +16,7 @@ import org.junit.Test
 @HiltAndroidTest
 class WalletConnectTest : BaseTestCase() {
 
-    @AllureId("3833")
+    @AllureId("3958")
     @DisplayName("WC (React App): open session from deeplink on main screen")
     @Ignore("TODO [REDACTED_JIRA] React app deeplink doesn't work")
     @Test
@@ -65,7 +65,7 @@ class WalletConnectTest : BaseTestCase() {
         }
     }
 
-    @AllureId("3834")
+    @AllureId("3959")
     @DisplayName("WC (React App): open session from deeplink not on main screen")
     @Ignore("TODO [REDACTED_JIRA] React app deeplink doesn't work")
     @Test
@@ -120,7 +120,7 @@ class WalletConnectTest : BaseTestCase() {
         }
     }
 
-    @AllureId("886")
+    @AllureId("3957")
     @DisplayName("WC (React App): open session from deeplink ")
     @Ignore("TODO [REDACTED_JIRA] React app deeplink doesn't work")
     @Test
