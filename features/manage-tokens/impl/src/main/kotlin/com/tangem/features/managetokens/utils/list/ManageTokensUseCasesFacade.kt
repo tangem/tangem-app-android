@@ -8,7 +8,7 @@ import com.tangem.domain.managetokens.model.ManageTokensListConfig
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.wallets.usecase.HasMissedDerivationsUseCase
+import com.tangem.domain.wallets.usecase.ColdWalletAndHasMissedDerivationsUseCase
 import com.tangem.features.managetokens.component.ManageTokensMode
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -21,7 +21,7 @@ internal class ManageTokensUseCasesFacade @AssistedInject constructor(
     private val checkHasLinkedTokensUseCase: CheckHasLinkedTokensUseCase,
     private val removeCustomCurrencyUseCase: RemoveCustomManagedCryptoCurrencyUseCase,
     private val checkCurrencyUnsupportedUseCase: CheckCurrencyUnsupportedUseCase,
-    private val hasMissedDerivationsUseCase: HasMissedDerivationsUseCase,
+    private val coldWalletAndHasMissedDerivationsUseCase: ColdWalletAndHasMissedDerivationsUseCase,
     private val saveManagedTokensUseCase: SaveManagedTokensUseCase,
     @Assisted private val mode: ManageTokensMode,
 ) {
@@ -79,9 +79,9 @@ internal class ManageTokensUseCasesFacade @AssistedInject constructor(
         }
     }
 
-    suspend fun hasMissedDerivationsUseCase(network: Map<String, Nothing?>): Boolean = when (mode) {
+    suspend fun needColdWalletInteraction(network: Map<String, Nothing?>): Boolean = when (mode) {
         is ManageTokensMode.Account -> TODO("Account")
-        is ManageTokensMode.Wallet -> hasMissedDerivationsUseCase.invoke(
+        is ManageTokensMode.Wallet -> coldWalletAndHasMissedDerivationsUseCase.invoke(
             userWalletId = mode.userWalletId,
             networksWithDerivationPath = network,
         )
