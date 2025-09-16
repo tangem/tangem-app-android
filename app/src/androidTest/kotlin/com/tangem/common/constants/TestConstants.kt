@@ -6,4 +6,6 @@ object TestConstants {
     const val RECIPIENT_ADDRESS = "0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0"
 
     const val WAIT_UNTIL_TIMEOUT = 20_000L
+
+    const val MARKETS_MAIN_NETWORK_SUFFIX = "MAIN"
 }
