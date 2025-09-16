@@ -42,6 +42,7 @@ dependencies {
     implementation(projects.domain.tokens)
     implementation(projects.domain.transaction.models)
     implementation(projects.domain.transaction)
+    implementation(projects.domain.yieldSupply)
 
     /** Compose */
     implementation(deps.compose.foundation)
