@@ -11,7 +11,6 @@ import com.tangem.domain.card.models.TwinKey
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.models.wallet.requireColdWallet
 import com.tangem.domain.transaction.TransactionRepository
 import com.tangem.domain.transaction.error.SendTransactionError
 
@@ -57,8 +56,8 @@ class PrepareAndSignUseCase(
         }
     }
 
-    private fun createSigner(userWallet: UserWallet) : TransactionSigner {
-        return when(userWallet) {
+    private fun createSigner(userWallet: UserWallet): TransactionSigner {
+        return when (userWallet) {
             is UserWallet.Hot -> getHotTransactionSigner(userWallet)
             is UserWallet.Cold -> createColdSigner(userWallet)
         }
