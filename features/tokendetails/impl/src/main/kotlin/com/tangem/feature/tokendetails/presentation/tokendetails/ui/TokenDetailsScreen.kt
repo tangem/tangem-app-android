@@ -6,7 +6,7 @@ import androidx.compose.foundation.lazy.*
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
@@ -14,8 +14,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.paging.compose.LazyPagingItems
-import androidx.paging.compose.collectAsLazyPagingItems
 import com.tangem.common.ui.bottomsheet.chooseaddress.ChooseAddressBottomSheet
 import com.tangem.common.ui.bottomsheet.chooseaddress.ChooseAddressBottomSheetConfig
 import com.tangem.common.ui.bottomsheet.receive.TokenReceiveBottomSheet
@@ -26,8 +24,6 @@ import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefres
 import com.tangem.core.ui.components.marketprice.MarketPriceBlock
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.notifications.Notification
-import com.tangem.core.ui.components.transactions.state.TxHistoryState
-import com.tangem.core.ui.components.transactions.txHistoryItems
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.TokenDetailsScreenTestTags
@@ -46,7 +42,6 @@ import com.tangem.features.txhistory.component.TxHistoryComponent
 import com.tangem.features.txhistory.entity.TxHistoryUM
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlin.reflect.KProperty
 
 // TODO: Split to blocks [REDACTED_JIRA]
 @Suppress("LongMethod")
@@ -63,11 +58,6 @@ internal fun TokenDetailsScreen(
         contentWindowInsets = ScaffoldDefaults.contentWindowInsets.exclude(WindowInsets.navigationBars),
         containerColor = TangemTheme.colors.background.secondary,
     ) { scaffoldPaddings ->
-        val txHistoryItems = if (state.txHistoryState is TxHistoryState.Content) {
-            state.txHistoryState.contentItems.collectAsLazyPagingItems()
-        } else {
-            null
-        }
         val listState = rememberLazyListState()
         val txHistoryComponentState by txHistoryComponent.txHistoryState.collectAsStateWithLifecycle()
         val betweenItemsPadding = TangemTheme.dimens.spacing12
@@ -160,14 +150,7 @@ internal fun TokenDetailsScreen(
                     modifier = itemModifier,
                 )
 
-                txHistoryItems(
-                    listState = listState,
-                    txHistoryComponent = txHistoryComponent,
-                    txHistoryComponentState = txHistoryComponentState,
-                    txHistoryState = state.txHistoryState,
-                    txHistoryItems = txHistoryItems,
-                    isBalanceHidden = state.isBalanceHidden,
-                )
+                with(txHistoryComponent) { txHistoryContent(listState = listState, state = txHistoryComponentState) }
             }
         }
 
@@ -188,28 +171,6 @@ internal fun TokenDetailsScreen(
         }
     }
 }
-
-@Suppress("LongParameterList")
-private fun LazyListScope.txHistoryItems(
-    listState: LazyListState,
-    txHistoryComponent: TxHistoryComponent,
-    txHistoryComponentState: TxHistoryUM?,
-    txHistoryState: TxHistoryState,
-    txHistoryItems: LazyPagingItems<TxHistoryState.TxHistoryItemState>?,
-    isBalanceHidden: Boolean,
-) {
-    if (txHistoryComponentState != null) {
-        with(txHistoryComponent) { txHistoryContent(listState = listState, state = txHistoryComponentState) }
-    } else {
-        txHistoryItems(
-            state = txHistoryState,
-            isBalanceHidden = isBalanceHidden,
-            txHistoryItems = txHistoryItems,
-        )
-    }
-}
-
-private inline operator fun <T> State<T>?.getValue(thisObj: Any?, property: KProperty<*>): T? = this?.value
 
 // region Preview
 @Preview(showBackground = true, widthDp = 360)

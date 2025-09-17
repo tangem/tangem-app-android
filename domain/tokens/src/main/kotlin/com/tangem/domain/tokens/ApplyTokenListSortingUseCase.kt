@@ -18,7 +18,6 @@ import kotlinx.coroutines.withContext
 class ApplyTokenListSortingUseCase(
     private val currenciesRepository: CurrenciesRepository,
     private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
-    private val tokensFeatureToggles: TokensFeatureToggles,
     private val dispatchers: CoroutineDispatcherProvider,
 ) {
 
@@ -88,14 +87,10 @@ class ApplyTokenListSortingUseCase(
     private suspend fun Raise<TokenListSortingError>.getCurrencies(userWalletId: UserWalletId): List<CryptoCurrency> {
         val tokens = catch(
             block = {
-                if (tokensFeatureToggles.isWalletBalanceFetcherEnabled) {
-                    multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
-                        params = MultiWalletCryptoCurrenciesProducer.Params(userWalletId),
-                    )
-                        .orEmpty()
-                } else {
-                    currenciesRepository.getMultiCurrencyWalletCurrenciesSync(userWalletId, refresh = false)
-                }
+                multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
+                    params = MultiWalletCryptoCurrenciesProducer.Params(userWalletId),
+                )
+                    .orEmpty()
             },
             catch = { raise(TokenListSortingError.DataError(it)) },
         )
