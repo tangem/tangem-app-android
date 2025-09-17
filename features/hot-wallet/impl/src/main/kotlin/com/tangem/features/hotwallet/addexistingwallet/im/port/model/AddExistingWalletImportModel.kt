@@ -80,7 +80,7 @@ internal class AddExistingWalletImportModel @Inject constructor(
     }
 
     internal val uiState: StateFlow<AddExistingWalletImportUM>
-    field = MutableStateFlow(importSeedPhraseUiStateBuilder.getState())
+        field = MutableStateFlow(importSeedPhraseUiStateBuilder.getState())
 
     @Suppress("UnusedPrivateMember")
     private fun importWallet(mnemonic: Mnemonic, passphrase: String?) {
