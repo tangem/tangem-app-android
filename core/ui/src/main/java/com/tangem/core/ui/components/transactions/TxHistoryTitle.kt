@@ -9,12 +9,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.TransactionHistoryBlockTestTags
 
 /**
  * Transactions block title
@@ -38,10 +40,13 @@ fun TxHistoryTitle(onExploreClick: () -> Unit, modifier: Modifier = Modifier) {
             text = stringResourceSafe(id = R.string.common_transactions),
             color = TangemTheme.colors.text.tertiary,
             style = TangemTheme.typography.subtitle2,
+            modifier = Modifier.testTag(TransactionHistoryBlockTestTags.TITLE_TEXT),
         )
 
         Row(
-            modifier = Modifier.clickable(onClick = onExploreClick),
+            modifier = Modifier
+                .clickable(onClick = onExploreClick)
+                .testTag(TransactionHistoryBlockTestTags.EXPLORER_ICON),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing2),
         ) {
@@ -55,6 +60,7 @@ fun TxHistoryTitle(onExploreClick: () -> Unit, modifier: Modifier = Modifier) {
                 text = stringResourceSafe(id = R.string.common_explorer),
                 color = TangemTheme.colors.text.tertiary,
                 style = TangemTheme.typography.subtitle2,
+                modifier = Modifier.testTag(TransactionHistoryBlockTestTags.EXPLORER_TEXT),
             )
         }
     }
