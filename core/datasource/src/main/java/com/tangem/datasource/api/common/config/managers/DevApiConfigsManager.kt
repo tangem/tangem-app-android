@@ -26,10 +26,10 @@ internal class DevApiConfigsManager(
 ) : MutableApiConfigsManager() {
 
     override val configs: StateFlow<Map<ApiConfig, ApiEnvironment>>
-    field = MutableStateFlow(value = getInitialConfigs())
+        field = MutableStateFlow(value = getInitialConfigs())
 
     override val isInitialized: StateFlow<Boolean>
-    field = MutableStateFlow(value = false)
+        field = MutableStateFlow(value = false)
 
     override fun initialize() {
         isInitialized.value = false
