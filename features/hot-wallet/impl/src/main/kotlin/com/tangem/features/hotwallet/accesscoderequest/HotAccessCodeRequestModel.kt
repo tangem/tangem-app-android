@@ -43,7 +43,7 @@ internal class HotAccessCodeRequestModel @Inject constructor(
         )
 
     val uiState: StateFlow<HotAccessCodeRequestUM>
-    field = MutableStateFlow(getInitialState())
+        field = MutableStateFlow(getInitialState())
 
     suspend fun show(attemptRequest: HotWalletPasswordRequester.AttemptRequest) {
         if (userWalletExists(attemptRequest.hotWalletId).not()) {

@@ -25,11 +25,11 @@ internal class YieldSupplyDepositedWarningModel @Inject constructor(
     private val iconStateConverter by lazy(::CryptoCurrencyToIconStateConverter)
 
     internal val state: StateFlow<YieldSupplyDepositedWarningUM>
-    field = MutableStateFlow(
-        YieldSupplyDepositedWarningUM(
-            iconState = iconStateConverter.convert(params.cryptoCurrency),
-            onWarningAcknowledged = params.modelCallback::onYieldSupplyWarningAcknowledged,
-            network = params.cryptoCurrency.name,
-        ),
-    )
+        field = MutableStateFlow(
+            YieldSupplyDepositedWarningUM(
+                iconState = iconStateConverter.convert(params.cryptoCurrency),
+                onWarningAcknowledged = params.modelCallback::onYieldSupplyWarningAcknowledged,
+                network = params.cryptoCurrency.name,
+            ),
+        )
 }

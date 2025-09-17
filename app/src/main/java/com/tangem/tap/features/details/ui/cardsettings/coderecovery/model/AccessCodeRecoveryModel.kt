@@ -43,8 +43,8 @@ internal class AccessCodeRecoveryModel @Inject constructor(
         )
 
         return AccessCodeRecoveryScreenState(
-            enabledOnCard = isEnabled,
-            enabledSelection = isEnabled,
+            isEnabledOnCard = isEnabled,
+            isEnabledSelection = isEnabled,
             isSaveChangesEnabled = false,
             onSaveChangesClick = ::saveChanges,
             onOptionClick = ::selectOption,
@@ -52,7 +52,7 @@ internal class AccessCodeRecoveryModel @Inject constructor(
     }
 
     private fun saveChanges() = modelScope.launch {
-        val isEnabled = screenState.value.enabledSelection
+        val isEnabled = screenState.value.isEnabledSelection
 
         tangemSdkManager
             .setAccessCodeRecoveryEnabled(scannedScanResponse.card.cardId, isEnabled)
@@ -78,10 +78,10 @@ internal class AccessCodeRecoveryModel @Inject constructor(
     }
 
     private fun selectOption(isEnabled: Boolean) {
-        screenState.update {
-            it.copy(
-                enabledSelection = isEnabled,
-                isSaveChangesEnabled = isEnabled != it.enabledOnCard,
+        screenState.update { state ->
+            state.copy(
+                isEnabledSelection = isEnabled,
+                isSaveChangesEnabled = isEnabled != state.isEnabledOnCard,
             )
         }
     }

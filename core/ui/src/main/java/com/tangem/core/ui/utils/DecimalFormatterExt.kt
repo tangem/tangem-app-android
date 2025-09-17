@@ -64,9 +64,7 @@ fun DecimalFormat.getValidatedNumberWithFixedDecimals(text: String, decimals: In
         val beforeDecimal = filteredChars.substringBefore(decimalSeparator)
         val afterDecimal = filteredChars.substringAfter(decimalSeparator)
         decimals.getWithIntegerDecimals(beforeDecimal, decimalSeparator, afterDecimal)
-    }
-    // If there is no dot, just take all digits
-    else {
+    } else { // If there is no dot, just take all digits
         filteredChars
     }
 }
@@ -87,9 +85,7 @@ fun DecimalFormat.formatWithThousands(text: String, decimals: Int): String {
             .reversed()
         val afterDecimal = localizedText.substringAfter(decimalSeparator)
         decimals.getWithIntegerDecimals(beforeDecimal, decimalSeparator, afterDecimal)
-    }
-    // If there is no dot, just take all digits
-    else {
+    } else { // If there is no dot, just take all digits
         localizedText.reversed()
             .chunked(TEXT_CHUNK_THOUSAND)
             .joinToString(thousandsSeparator.toString())
