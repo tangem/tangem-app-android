@@ -81,7 +81,7 @@ internal class ChooseManagedTokensModel @Inject constructor(
 
     val bottomSheetNavigation: SlotNavigation<ChooseManageTokensBottomSheetConfig> = SlotNavigation()
     val uiState: StateFlow<ChooseManagedTokenUM>
-    field = MutableStateFlow<ChooseManagedTokenUM>(createReadContentModel())
+        field = MutableStateFlow<ChooseManagedTokenUM>(createReadContentModel())
 
     init {
         manageTokensListManager.uiItems
