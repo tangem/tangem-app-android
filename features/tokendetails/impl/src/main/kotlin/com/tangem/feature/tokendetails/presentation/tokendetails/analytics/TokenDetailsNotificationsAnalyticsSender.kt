@@ -38,7 +38,7 @@ internal class TokenDetailsNotificationsAnalyticsSender(
                 currency = cryptoCurrency,
             )
             is TokenDetailsNotification.SwapPromo -> TokenSwapPromoAnalyticsEvent.NoticePromotionBanner(
-                programName = TokenSwapPromoAnalyticsEvent.ProgramName.Empty, // Use it on new promo action
+                program = TokenSwapPromoAnalyticsEvent.Program.Empty, // Use it on new promo action
                 source = AnalyticsParam.ScreensSources.Token,
             )
             is TokenDetailsNotification.KaspaIncompleteTransactionWarning -> TokenDetailsAnalyticsEvent.Notice.Reveal(
