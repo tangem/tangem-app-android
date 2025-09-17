@@ -4,7 +4,6 @@ import android.os.Bundle
 import com.tangem.common.routing.bundle.RouteBundleParams
 import com.tangem.common.routing.bundle.bundle
 import com.tangem.common.routing.entity.InitScreenLaunchMode
-import com.tangem.common.routing.entity.SerializableIntent
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.feedback.models.WalletMetaInfo
@@ -32,9 +31,6 @@ sealed class AppRoute(val path: String) : Route {
     data class Welcome(
         @Deprecated("No longer used, will be removed in future releases")
         val launchMode: InitScreenLaunchMode = InitScreenLaunchMode.Standard,
-        // we still have this param to be handled by WalletConnectLinkIntentHandler in WelcomeMiddleware
-        @Deprecated("No longer used, will be removed in future releases")
-        val intent: SerializableIntent? = null,
     ) : AppRoute(path = "/welcome"), RouteBundleParams {
 
         override fun getBundle(): Bundle = bundle(serializer())
