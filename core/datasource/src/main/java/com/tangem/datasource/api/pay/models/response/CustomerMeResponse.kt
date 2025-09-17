@@ -13,9 +13,9 @@ data class CustomerMeResponse(
         @Json(name = "id") val id: String,
         @Json(name = "state") val state: String,
         @Json(name = "createdAt") val createdAt: String,
-        @Json(name = "product_instance") val productInstance: ProductInstance,
-        @Json(name = "payment_account") val paymentAccount: PaymentAccount,
-        @Json(name = "kyc") val kyc: Kyc,
+        @Json(name = "product_instance") val productInstance: ProductInstance?,
+        @Json(name = "payment_account") val paymentAccount: PaymentAccount?,
+        @Json(name = "kyc") val kyc: Kyc?,
     )
 
     @JsonClass(generateAdapter = true)
