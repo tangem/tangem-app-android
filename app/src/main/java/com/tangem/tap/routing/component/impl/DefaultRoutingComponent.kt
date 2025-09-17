@@ -9,6 +9,7 @@ import com.arkivanov.decompose.value.subscribe
 import com.arkivanov.essenty.lifecycle.subscribe
 import com.google.android.material.snackbar.Snackbar
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.entity.InitScreenLaunchMode
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
@@ -17,27 +18,36 @@ import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.domain.card.repository.CardRepository
+import com.tangem.domain.core.wallets.UserWalletsListRepository
+import com.tangem.domain.models.wallet.isLocked
+import com.tangem.domain.onboarding.repository.OnboardingRepository
 import com.tangem.features.hotwallet.HotAccessCodeRequestComponent
 import com.tangem.features.hotwallet.accesscoderequest.proxy.HotWalletPasswordRequesterProxy
 import com.tangem.features.walletconnect.components.WcRoutingComponent
 import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.hot.sdk.android.create
 import com.tangem.tap.common.SnackbarHandler
+import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.features.hot.TangemHotSDKProxy
+import com.tangem.tap.features.onboarding.products.wallet.redux.BackupDialog
 import com.tangem.tap.routing.RootContent
 import com.tangem.tap.routing.component.RoutingComponent
 import com.tangem.tap.routing.component.RoutingComponent.Child
 import com.tangem.tap.routing.configurator.AppRouterConfig
 import com.tangem.tap.routing.utils.ChildFactory
 import com.tangem.tap.routing.utils.DeepLinkFactory
+import com.tangem.tap.store
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.launch
 
 @Suppress("LongParameterList")
 internal class DefaultRoutingComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
     @Assisted val initialStack: List<AppRoute>?,
+    @Assisted val launchMode: InitScreenLaunchMode,
     private val childFactory: ChildFactory,
     private val appRouterConfig: AppRouterConfig,
     private val uiDependencies: UiDependencies,
@@ -46,6 +56,9 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     private val tangemHotSDKProxy: TangemHotSDKProxy,
     private val hotAccessCodeRequestComponentFactory: HotAccessCodeRequestComponent.Factory,
     private val hotAccessCodeRequesterProxy: HotWalletPasswordRequesterProxy,
+    private val userWalletsListRepository: UserWalletsListRepository,
+    private val cardRepository: CardRepository,
+    private val onboardingRepository: OnboardingRepository,
 ) : RoutingComponent,
     AppComponentContext by context,
     SnackbarHandler {
@@ -87,6 +100,42 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
         }
 
         configureProxies()
+        initializeInitialNavigation()
+    }
+
+    private fun initializeInitialNavigation() {
+        if (initialStack.isNullOrEmpty()) {
+            componentScope.launch {
+                val initialRoute = resolveInitialRoute()
+                router.replaceAll(initialRoute)
+            }
+        }
+    }
+
+    private suspend fun resolveInitialRoute(): AppRoute {
+        val userWallets = userWalletsListRepository.userWalletsSync()
+
+        return when {
+            userWallets.isEmpty() -> {
+                val shouldShowTos = !cardRepository.isTangemTOSAccepted()
+                if (shouldShowTos) {
+                    AppRoute.Disclaimer(isTosAccepted = false)
+                } else {
+                    AppRoute.Home(launchMode = launchMode)
+                }
+            }
+            userWallets.any { it.isLocked } -> {
+                AppRoute.Welcome(
+                    launchMode = launchMode,
+                )
+            }
+            else -> {
+                AppRoute.Wallet
+            }
+        }.also {
+            appRouterConfig.isInitialized.value = true
+            checkForUnfinishedBackup()
+        }
     }
 
     @Composable
@@ -131,7 +180,6 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
         messageSender.send(SnackbarMessage(message = TextReference.EMPTY))
     }
 
-    // TODO: Find correct initial route here: [REDACTED_JIRA]
     private fun getInitialStackOrInit(): List<AppRoute> = if (initialStack.isNullOrEmpty()) {
         listOf(AppRoute.Initial)
     } else {
@@ -153,6 +201,17 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
 
     @AssistedFactory
     interface Factory : RoutingComponent.Factory {
-        override fun create(context: AppComponentContext, initialStack: List<AppRoute>?): DefaultRoutingComponent
+        override fun create(
+            context: AppComponentContext,
+            initialStack: List<AppRoute>?,
+            launchMode: InitScreenLaunchMode,
+        ): DefaultRoutingComponent
+    }
+
+    private fun checkForUnfinishedBackup() {
+        componentScope.launch(dispatchers.main) {
+            val onboardingScanResponse = onboardingRepository.getUnfinishedFinalizeOnboarding() ?: return@launch
+            store.dispatch(GlobalAction.ShowDialog(BackupDialog.UnfinishedBackupFound(onboardingScanResponse)))
+        }
     }
 }

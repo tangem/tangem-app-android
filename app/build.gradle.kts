@@ -11,7 +11,12 @@ plugins {
     alias(deps.plugins.firebase.crashlytics)
     alias(deps.plugins.firebase.perf)
     alias(deps.plugins.ksp)
+    id(deps.plugins.agconnect.get().pluginId)
     id("configuration")
+}
+
+agcp {
+    manifest = false
 }
 
 android {
@@ -53,12 +58,35 @@ android {
             keyPassword = keystoreProperties["key_password"] as String
         }
     }
+    
+    flavorDimensions += "services"
+    
+    productFlavors {
+        create("google") {
+            dimension = "services"
+            buildConfigField("String", "FLAVOR_NAME", "\"google\"")
+        }
+        create("huawei") {
+            dimension = "services"
+            buildConfigField("String", "FLAVOR_NAME", "\"huawei\"")
+        }
+    }
+
+    buildTypes {
+        debug {
+            buildConfigField("String", "BUILD_TYPE", "\"debug\"")
+        }
+        release {
+            buildConfigField("String", "BUILD_TYPE", "\"release\"")
+        }
+    }
 
 }
 
 configurations.all {
     exclude(group = "org.bouncycastle", module = "bcprov-jdk15to18")
     exclude(group = "com.github.komputing.kethereum")
+    exclude(group = "com.android.tools.build", module = "gradle")
 
     resolutionStrategy {
         dependencySubstitution {
@@ -121,11 +149,11 @@ dependencies {
     implementation(projects.domain.quotes)
     implementation(projects.domain.notifications)
     implementation(projects.domain.notifications.models)
-    implementation(projects.domain.notifications.toggles)
     implementation(projects.domain.swap.models)
     implementation(projects.domain.swap)
     implementation(projects.domain.walletManager)
     implementation(projects.domain.walletManager.models)
+    implementation(projects.domain.yieldSupply)
 
     implementation(projects.common)
     implementation(projects.common.routing)
@@ -174,6 +202,7 @@ dependencies {
     implementation(projects.data.notifications)
     implementation(projects.data.swap)
     implementation(projects.data.walletManager)
+    implementation(projects.data.yieldSupply)
 
     /** Features */
     implementation(projects.features.referral.impl)
@@ -229,8 +258,11 @@ dependencies {
     implementation(projects.features.hotWallet.api)
     implementation(projects.features.hotWallet.impl)
     implementation(projects.features.kyc.api)
-    //TODO disable for release because of the permissions
-    // implementation(projects.features.kyc.impl)
+    debugImplementation(projects.features.kyc.impl)
+    internalImplementation(projects.features.kyc.impl)
+    mockedImplementation(projects.features.kyc.impl)
+    releaseImplementation(projects.features.kyc.mock)
+    externalImplementation(projects.features.kyc.mock)
     implementation(projects.features.welcome.api)
     implementation(projects.features.welcome.impl)
     implementation(projects.features.createWalletSelection.api)
@@ -243,8 +275,12 @@ dependencies {
     implementation(projects.features.tangempay.details.impl)
     implementation(projects.features.tangempay.main.api)
     implementation(projects.features.tangempay.main.impl)
+    implementation(projects.features.tangempay.onboarding.api)
+    implementation(projects.features.tangempay.onboarding.impl)
     implementation(projects.features.tokenRecieve.api)
     implementation(projects.features.tokenRecieve.impl)
+    implementation(projects.features.yieldSupply.api)
+    implementation(projects.features.yieldSupply.impl)
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)
@@ -318,7 +354,7 @@ dependencies {
     implementation(deps.coil.gif)
     implementation(deps.coil.svg)
     implementation(deps.amplitude)
-    implementation(deps.kotsonGson)
+    implementation(deps.appsflyer)
     implementation(deps.spongecastle.core)
     implementation(deps.lottie)
     implementation(deps.compose.accompanist.appCompatTheme)
@@ -379,4 +415,9 @@ dependencies {
         // excludes version 9999.0-empty-to-avoid-conflict-with-guava
         exclude(group = "com.google.guava", module = "listenablefuture")
     }
+
+    /** Huawei flavor-specific dependencies */
+    "huaweiImplementation"(deps.huawei.push)
+    "huaweiImplementation"(deps.agconnect.agcp)
+    "huaweiImplementation"(deps.agconnect.core)
 }

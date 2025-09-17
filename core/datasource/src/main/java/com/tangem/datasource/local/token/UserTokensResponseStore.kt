@@ -17,4 +17,6 @@ interface UserTokensResponseStore {
     suspend fun getSyncOrNull(userWalletId: UserWalletId): UserTokensResponse?
 
     suspend fun store(userWalletId: UserWalletId, response: UserTokensResponse)
+
+    suspend fun clear(userWalletId: UserWalletId)
 }

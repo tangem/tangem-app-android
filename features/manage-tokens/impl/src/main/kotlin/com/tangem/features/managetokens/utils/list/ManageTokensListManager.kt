@@ -9,13 +9,14 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.DialogMessage
-import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
-import com.tangem.domain.managetokens.*
-import com.tangem.domain.managetokens.model.*
+import com.tangem.domain.managetokens.model.CurrencyUnsupportedState
+import com.tangem.domain.managetokens.model.ManageTokensListBatchingContext
+import com.tangem.domain.managetokens.model.ManageTokensUpdateAction
+import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.managetokens.analytics.ManageTokensAnalyticEvent
+import com.tangem.features.managetokens.component.ManageTokensMode
 import com.tangem.features.managetokens.component.ManageTokensSource
 import com.tangem.features.managetokens.entity.item.CurrencyItemUM
 import com.tangem.features.managetokens.impl.R
@@ -24,7 +25,6 @@ import com.tangem.pagination.Batch
 import com.tangem.pagination.BatchAction
 import com.tangem.pagination.BatchListState
 import com.tangem.pagination.PaginationStatus
-import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -42,20 +42,17 @@ import timber.log.Timber
 
 @Suppress("LongParameterList", "LargeClass")
 internal class ManageTokensListManager @AssistedInject constructor(
-    private val getManagedTokensUseCase: GetManagedTokensUseCase,
-    private val getDistinctManagedTokensUseCase: GetDistinctManagedCurrenciesUseCase,
-    private val checkHasLinkedTokensUseCase: CheckHasLinkedTokensUseCase,
-    private val removeCustomCurrencyUseCase: RemoveCustomManagedCryptoCurrencyUseCase,
-    private val checkCurrencyUnsupportedUseCase: CheckCurrencyUnsupportedUseCase,
     private val messageSender: UiMessageSender,
     private val dispatchers: CoroutineDispatcherProvider,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val clipboardManager: ClipboardManager,
+    manageTokensWarningDelegateFactory: ManageTokensWarningDelegate.Factory,
+    @Assisted private val useCasesFacade: ManageTokensUseCasesFacade,
+    @Assisted private val source: ManageTokensSource,
+    @Assisted private val mode: ManageTokensMode,
+    @Assisted private val scope: CoroutineScope,
     @Assisted private val onCurrencySelect: (ManagedCryptoCurrency.Token) -> Unit = {},
 ) : ManageTokensUiActions {
-
-    private lateinit var scope: CoroutineScope
-    private lateinit var source: ManageTokensSource
 
     private val jobHolder = JobHolder()
     private val actionsFlow: MutableSharedFlow<ManageTokensBatchAction> = MutableSharedFlow(
@@ -63,16 +60,18 @@ internal class ManageTokensListManager @AssistedInject constructor(
         onBufferOverflow = BufferOverflow.DROP_OLDEST,
     )
 
-    private val state: MutableStateFlow<ManageTokensListState> = MutableStateFlow(ManageTokensListState())
+    private val state: MutableStateFlow<ManageTokensListState> =
+        MutableStateFlow(ManageTokensListState(mode = mode))
 
+    private val manageTokensWarningDelegate: ManageTokensWarningDelegate = manageTokensWarningDelegateFactory
+        .create(mode, source, this)
     private val changedCurrenciesManager = ChangedCurrenciesManager()
     private val uiManager = ManageTokensUiManager(
         state = state,
-        messageSender = messageSender,
+        manageTokensWarningDelegate = manageTokensWarningDelegate,
         dispatchers = dispatchers,
         actions = this,
-        scopeProvider = Provider { scope },
-        sourceProvider = Provider { source },
+        scope = scope,
     )
 
     val currenciesToAdd: StateFlow<ChangedCurrencies> = changedCurrenciesManager.currenciesToAdd.asStateFlow()
@@ -84,62 +83,61 @@ internal class ManageTokensListManager @AssistedInject constructor(
         .distinctUntilChanged()
     val uiItems: Flow<ImmutableList<CurrencyItemUM>> = uiManager.items
 
-    suspend fun launchPagination(source: ManageTokensSource, userWalletId: UserWalletId?) = coroutineScope {
-        scope = this
-        this@ManageTokensListManager.source = source
-
-        val batchFlow = getManagedTokensUseCase(
+    suspend fun launchPagination() = coroutineScope {
+        val loadUserTokensFromRemote = when (mode) {
+            is ManageTokensMode.Wallet -> source == ManageTokensSource.ONBOARDING
+            is ManageTokensMode.Account,
+            ManageTokensMode.None,
+            -> false
+        }
+        val batchFlow = useCasesFacade.getManagedTokensUseCase(
             context = ManageTokensListBatchingContext(
                 actionsFlow = actionsFlow,
                 coroutineScope = this,
             ),
             // only for onboarding case, change carefully and check repository implementation
-            loadUserTokensFromRemote = userWalletId != null && source == ManageTokensSource.ONBOARDING,
+            loadUserTokensFromRemote = loadUserTokensFromRemote,
         )
 
         batchFlow.state
-            .onEach { state -> updateState(state, userWalletId) }
+            .onEach { state -> updateState(state) }
             .flowOn(dispatchers.default)
             .launchIn(scope = this)
             .saveIn(jobHolder)
 
         // Initial load
-        reload(userWalletId)
+        reload()
     }
 
-    suspend fun reload(userWalletId: UserWalletId?) {
-        state.value = ManageTokensListState()
+    suspend fun reload() {
+        state.value = ManageTokensListState(mode = mode)
         actionsFlow.emit(
             BatchAction.Reload(
-                requestParams = ManageTokensListConfig(userWalletId, searchText = null),
+                requestParams = useCasesFacade.manageTokensListConfig(searchText = null),
             ),
         )
     }
 
-    suspend fun loadMore(userWalletId: UserWalletId?, query: String) {
+    suspend fun loadMore(query: String) {
         actionsFlow.emit(
             BatchAction.LoadMore(
-                requestParams = ManageTokensListConfig(userWalletId, query),
+                requestParams = useCasesFacade.manageTokensListConfig(query),
             ),
         )
     }
 
-    suspend fun search(userWalletId: UserWalletId?, query: String) {
-        state.value = ManageTokensListState(searchQuery = query)
+    suspend fun search(query: String) {
+        state.value = ManageTokensListState(mode = mode, searchQuery = query)
         actionsFlow.emit(
             BatchAction.Reload(
-                requestParams = ManageTokensListConfig(
-                    userWalletId = userWalletId,
+                requestParams = useCasesFacade.manageTokensListConfig(
                     searchText = query,
                 ),
             ),
         )
     }
 
-    private fun updateState(
-        batchListState: BatchListState<Int, List<ManagedCryptoCurrency>>,
-        userWalletId: UserWalletId?,
-    ) {
+    private fun updateState(batchListState: BatchListState<Int, List<ManagedCryptoCurrency>>) {
         state.update { state ->
             state.copy(
                 status = batchListState.status,
@@ -154,7 +152,6 @@ internal class ManageTokensListManager @AssistedInject constructor(
         ) {
             state.update { state ->
                 state.copy(
-                    userWalletId = userWalletId,
                     currencyBatches = emptyList(),
                     uiBatches = listOf(
                         Batch(
@@ -170,7 +167,7 @@ internal class ManageTokensListManager @AssistedInject constructor(
 
         scope.launch {
             state.update { state ->
-                val newBatches = getDistinctManagedTokensUseCase(batchListState.data)
+                val newBatches = useCasesFacade.getDistinctManagedTokensUseCase(batchListState.data)
                 val currentBatches = state.currencyBatches
 
                 // Distinct until changed
@@ -181,9 +178,13 @@ internal class ManageTokensListManager @AssistedInject constructor(
                     return@launch
                 }
 
-                val canEditItems = userWalletId != null
+                val canEditItems = when (state.mode) {
+                    is ManageTokensMode.Account,
+                    is ManageTokensMode.Wallet,
+                    -> true
+                    ManageTokensMode.None -> false
+                }
                 state.copy(
-                    userWalletId = userWalletId,
                     currencyBatches = newBatches,
                     uiBatches = uiManager.createOrUpdateUiBatches(newBatches, canEditItems),
                     canEditItems = canEditItems,
@@ -216,10 +217,10 @@ internal class ManageTokensListManager @AssistedInject constructor(
         sendSelectCurrencyAnalyticsEvent(currency, isSelected = false)
     }
 
-    override fun removeCustomCurrency(userWalletId: UserWalletId, currency: ManagedCryptoCurrency.Custom) {
+    override fun removeCustomCurrency(currency: ManagedCryptoCurrency.Custom) {
         scope.launch {
-            removeCustomCurrencyUseCase.invoke(userWalletId, currency)
-                .onRight { reload(userWalletId) }
+            useCasesFacade.removeCustomCurrencyUseCase(currency)
+                .onRight { reload() }
                 .onLeft { Timber.e(it) }
         }
     }
@@ -258,9 +259,8 @@ internal class ManageTokensListManager @AssistedInject constructor(
         actionsFlow.tryEmit(action)
     }
 
-    override suspend fun checkHasLinkedTokens(userWalletId: UserWalletId, network: Network): Boolean {
-        return checkHasLinkedTokensUseCase(
-            userWalletId = userWalletId,
+    override suspend fun checkHasLinkedTokens(network: Network): Boolean {
+        return useCasesFacade.checkHasLinkedTokensUseCase(
             network = network,
             tempAddedTokens = changedCurrenciesManager.currenciesToAdd.value,
             tempRemovedTokens = changedCurrenciesManager.currenciesToRemove.value,
@@ -269,7 +269,7 @@ internal class ManageTokensListManager @AssistedInject constructor(
                 it,
                 """
                     Failed to check linked tokens
-                    |- User wallet ID: $userWalletId
+                    |- Mode: $mode
                     |- Network ID: ${network.id}
                 """.trimIndent(),
             )
@@ -286,18 +286,16 @@ internal class ManageTokensListManager @AssistedInject constructor(
     }
 
     override suspend fun checkCurrencyUnsupportedState(
-        userWalletId: UserWalletId,
         sourceNetwork: ManagedCryptoCurrency.SourceNetwork,
     ): CurrencyUnsupportedState? {
-        return checkCurrencyUnsupportedUseCase(
-            userWalletId = userWalletId,
+        return useCasesFacade.checkCurrencyUnsupportedUseCase(
             sourceNetwork = sourceNetwork,
         ).getOrElse {
             Timber.e(
                 it,
                 """
                     Failed to check currency unsupported state
-                    |- User wallet ID: $userWalletId
+                    |- Mode: $mode
                     |- Source Network: $sourceNetwork
                 """.trimIndent(),
             )
@@ -359,8 +357,7 @@ internal class ManageTokensListManager @AssistedInject constructor(
         if (currency !is ManagedCryptoCurrency.Token) return@launch
 
         if (isSelected) {
-            val userWalletId = state.value.userWalletId
-            val unsupportedState = userWalletId?.let { checkCurrencyUnsupportedState(it, source) }
+            val unsupportedState = checkCurrencyUnsupportedState(source)
             if (unsupportedState != null) {
                 showUnsupportedWarning(unsupportedState)
             } else {
@@ -368,7 +365,7 @@ internal class ManageTokensListManager @AssistedInject constructor(
             }
         } else {
             if (checkNeedToShowRemoveNetworkWarning(currency, source.network)) {
-                showRemoveNetworkWarning(
+                manageTokensWarningDelegate.showRemoveNetworkWarning(
                     currency = currency,
                     network = source.network,
                     isCoin = source is ManagedCryptoCurrency.SourceNetwork.Main,
@@ -404,67 +401,6 @@ internal class ManageTokensListManager @AssistedInject constructor(
         messageSender.send(message)
     }
 
-    private suspend fun showRemoveNetworkWarning(
-        currency: ManagedCryptoCurrency,
-        network: Network,
-        isCoin: Boolean,
-        onConfirm: () -> Unit,
-    ) {
-        val userWalletId = state.value.userWalletId
-        val hasLinkedTokens = if (userWalletId == null || !isCoin) {
-            false
-        } else {
-            checkHasLinkedTokens(userWalletId, network)
-        }
-        val canHideWithoutConfirming = source == ManageTokensSource.ONBOARDING
-
-        if (hasLinkedTokens) {
-            showLinkedTokensWarning(currency, network)
-        } else if (canHideWithoutConfirming) {
-            onConfirm()
-        } else {
-            showHideTokenWarning(currency, onConfirm)
-        }
-    }
-
-    private fun showLinkedTokensWarning(currency: ManagedCryptoCurrency, network: Network) {
-        val message = DialogMessage(
-            title = resourceReference(
-                id = R.string.token_details_unable_hide_alert_title,
-                formatArgs = wrappedList(currency.name),
-            ),
-            message = resourceReference(
-                id = R.string.token_details_unable_hide_alert_message,
-                formatArgs = wrappedList(
-                    currency.name,
-                    currency.symbol,
-                    network.name,
-                ),
-            ),
-        )
-        messageSender.send(message)
-    }
-
-    private fun showHideTokenWarning(currency: ManagedCryptoCurrency, onConfirm: () -> Unit) {
-        val message = DialogMessage(
-            title = resourceReference(
-                id = R.string.token_details_hide_alert_title,
-                formatArgs = wrappedList(currency.name),
-            ),
-            message = resourceReference(R.string.token_details_hide_alert_message),
-            firstActionBuilder = {
-                EventMessageAction(
-                    title = resourceReference(R.string.token_details_hide_alert_hide),
-                    warning = true,
-                    onClick = onConfirm,
-                )
-            },
-            secondActionBuilder = { cancelAction() },
-        )
-
-        messageSender.send(message)
-    }
-
     private fun Batch<Int, List<ManagedCryptoCurrency>>.currencyIndexById(id: ManagedCryptoCurrency.ID): Int {
         return data
             .indexOfFirst { it.id == id }
@@ -474,6 +410,12 @@ internal class ManageTokensListManager @AssistedInject constructor(
 
     @AssistedFactory
     interface Factory {
-        fun create(onCurrencySelect: (ManagedCryptoCurrency.Token) -> Unit = {}): ManageTokensListManager
+        fun create(
+            scope: CoroutineScope,
+            mode: ManageTokensMode,
+            source: ManageTokensSource,
+            useCasesFacade: ManageTokensUseCasesFacade,
+            onCurrencySelect: (ManagedCryptoCurrency.Token) -> Unit = {},
+        ): ManageTokensListManager
     }
 }
