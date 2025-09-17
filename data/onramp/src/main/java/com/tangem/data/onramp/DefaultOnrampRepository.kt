@@ -261,7 +261,7 @@ internal class DefaultOnrampRepository(
         storeOnrampPairs(pairs = onrampPairs.await(), providers = providers.await())
     }
 
-    override suspend fun hasMercuryoSepaMethod(
+    override suspend fun hasSepaMethod(
         userWallet: UserWallet,
         currency: OnrampCurrency,
         country: OnrampCountry,
@@ -278,7 +278,7 @@ internal class DefaultOnrampRepository(
                                 appPreferencesStore = appPreferencesStore,
                             ),
                             body = OnrampPairsRequest(
-                                fromCurrencyCode = currency.code,
+                                fromCurrencyCode = EUR_CURRENCY_CODE,
                                 countryCode = country.code,
                                 to = listOf(
                                     OnrampDestinationDTO(
@@ -599,5 +599,6 @@ internal class DefaultOnrampRepository(
         const val REDIRECT_URL = "https://tangem.com/onramp"
 
         const val SEPA_METHOD_ID = "sepa"
+        const val EUR_CURRENCY_CODE = "EUR"
     }
 }
