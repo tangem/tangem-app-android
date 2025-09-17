@@ -1,5 +1,7 @@
 package com.tangem.tap.di.hot
 
+import com.tangem.data.wallets.hot.DefaultHotWalletAccessor
+import com.tangem.domain.wallets.hot.HotWalletAccessor
 import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.tap.features.hot.TangemHotSDKProxy
 import dagger.Binds
@@ -15,4 +17,8 @@ internal interface TangemHotSdkModule {
     @Binds
     @Singleton
     fun bindTangemHotSdk(proxy: TangemHotSDKProxy): TangemHotSdk
+
+    @Binds
+    @Singleton
+    fun bindHotWalletAccessor(default: DefaultHotWalletAccessor): HotWalletAccessor
 }

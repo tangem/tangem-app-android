@@ -1,6 +1,7 @@
 package com.tangem.feature.referral.ui
 
 import android.content.res.Configuration
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,7 +16,11 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.referral.presentation.R
 
 @Composable
-internal fun NonParticipateBottomBlock(onAgreementClick: () -> Unit, onParticipateClick: () -> Unit) {
+internal fun NonParticipateBottomBlock(
+    @DrawableRes buttonIconRes: Int?,
+    onAgreementClick: () -> Unit,
+    onParticipateClick: () -> Unit,
+) {
     Column {
         AgreementText(
             firstPartResId = R.string.referral_tos_not_enroled_prefix,
@@ -24,7 +29,7 @@ internal fun NonParticipateBottomBlock(onAgreementClick: () -> Unit, onParticipa
 
         PrimaryButtonIconEnd(
             text = stringResourceSafe(id = R.string.referral_button_participate),
-            iconResId = R.drawable.ic_tangem_24,
+            iconResId = buttonIconRes,
             onClick = onParticipateClick,
             modifier = Modifier
                 .fillMaxWidth()
@@ -39,7 +44,7 @@ internal fun NonParticipateBottomBlock(onAgreementClick: () -> Unit, onParticipa
 private fun Preview_NonParticipateBottomBlock() {
     TangemThemePreview {
         Column(Modifier.background(TangemTheme.colors.background.primary)) {
-            NonParticipateBottomBlock(onAgreementClick = {}, onParticipateClick = {})
+            NonParticipateBottomBlock(buttonIconRes = null, onAgreementClick = {}, onParticipateClick = {})
         }
     }
 }
