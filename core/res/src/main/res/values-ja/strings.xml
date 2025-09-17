@@ -197,6 +197,7 @@
   <string name="common_camera_denied_alert_message">カメラへのアクセスを許可していません。プライバシー設定を調整してください。</string>
   <string name="common_cancel">キャンセル</string>
   <string name="common_change">変更</string>
+  <string name="common_choose_account">アカウントを選択</string>
   <string name="common_choose_action">アクションを選択</string>
   <string name="common_choose_network">ネットワークを選択</string>
   <string name="common_choose_token">トークンを選択</string>
@@ -1247,6 +1248,14 @@
   <string name="swapping_to_title">受け取る</string>
   <string name="swapping_token_list_title">トークンを選択</string>
   <string name="swapping_token_not_available">利用不可</string>
+  <string name="tangempay_onboarding_get_card_button_text">カードをGET</string>
+  <string name="tangempay_onboarding_pay_description">ウォレットに追加して、どこでもスマートフォンで支払いができます。</string>
+  <string name="tangempay_onboarding_pay_title">Apple Pay &amp; Google Pay</string>
+  <string name="tangempay_onboarding_purchases_description">USDC残高を使用して、毎日のお買い物をシームレスに支払います。</string>
+  <string name="tangempay_onboarding_purchases_title">日常の買い物</string>
+  <string name="tangempay_onboarding_security_description">カードの詳細は保護されており、アプリ内で完全に制御できます。</string>
+  <string name="tangempay_onboarding_security_title">内蔵セキュリティ</string>
+  <string name="tangempay_onboarding_title">無料のCryptoカード\nを数分で入手しましょう</string>
   <string name="this_is_my_wallet_title">これは私のウォレットです</string>
   <string name="toast_balances_hidden">残高非表示</string>
   <string name="toast_balances_shown">残高表示</string>
@@ -1634,7 +1643,6 @@
   <string name="yield_module_earn_sheet_current_apy_title">現在のAPY</string>
   <string name="yield_module_earn_sheet_my_funds_title">私の資金</string>
   <string name="yield_module_earn_sheet_provider_description">あなたの%1$sはAaveに預けられ、利息が付きます。あなたは%2$sトークンを保有しており、これは残高を表し、時間の経過とともに増加します。入金すると、資金はAaveに預け入れられ、取引手数料を差し引いた利息が付きます。</string>
-  <string name="yield_module_earn_sheet_status_active">アクティブ</string>
   <string name="yield_module_earn_sheet_title">利回りを得る</string>
   <string name="yield_module_earn_sheet_total_earnings_title">総収益</string>
   <string name="yield_module_earn_sheet_transfers_title">Aaveへの送金</string>
@@ -1656,8 +1664,8 @@
   <string name="yield_module_promo_screen_how_it_works_button_title">使い方</string>
   <string name="yield_module_promo_screen_self_custodial_subtitle">Aaveは世界中で何百万人もの人々に信頼されています。総貸付額は104億ドルです。</string>
   <string name="yield_module_promo_screen_self_custodial_title">分散型・自己管理型</string>
-  <string name="yield_module_promo_screen_terms_disclaimer">サービスを使用することにより、プロバイダーに同意したものとみなされます</string>
-  <string name="yield_module_promo_screen_title">年間%s%の収益</string>
+  <string name="yield_module_promo_screen_terms_disclaimer">サービスを利用することにより、プロバイダー\n %1$sおよび%2$sに同意したことになります</string>
+  <string name="yield_module_promo_screen_title">年間%s%%の収益</string>
   <string name="yield_module_promo_screen_variable_rate_info">Aave • 変動金利</string>
   <string name="yield_module_provider">Aave</string>
   <string name="yield_module_rate_info_sheet_chart_average">平均%s</string>
@@ -1670,6 +1678,7 @@
   <string name="yield_module_start_earning_sheet_description">%sはAaveに供給され、すぐに利用可能になります</string>
   <string name="yield_module_start_earning_sheet_fee_policy">手数料ポリシーを見る</string>
   <string name="yield_module_start_earning_sheet_next_deposits">次回の入金は自動的にAaveに供給されます。</string>
+  <string name="yield_module_status_active">アクティブ</string>
   <string name="yield_module_stop_earning">収益を停止する</string>
   <string name="yield_module_stop_earning_sheet_description">オフにすると、Aaveから資金が引き出され、ウォレットの%sに戻され、報酬の獲得が停止されます。</string>
   <string name="yield_module_stop_earning_sheet_fee_note">出金金額からネットワーク手数料が差し引かれます。</string>
