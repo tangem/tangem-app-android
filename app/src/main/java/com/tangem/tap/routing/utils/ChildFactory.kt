@@ -155,7 +155,6 @@ internal class ChildFactory @Inject constructor(
                         context = context,
                         params = WelcomeComponent.Params(
                             launchMode = route.launchMode,
-                            intent = route.intent,
                         ),
                         componentFactory = welcomeComponentFactory,
                     )
