@@ -24,11 +24,10 @@ import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.balancehiding.ListenToFlipsUseCase
 import com.tangem.domain.balancehiding.UpdateBalanceHidingSettingsUseCase
 import com.tangem.domain.common.LogConfig
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.notifications.GetApplicationIdUseCase
 import com.tangem.domain.notifications.SendPushTokenUseCase
 import com.tangem.domain.notifications.models.ApplicationId
-import com.tangem.domain.notifications.toggles.NotificationsFeatureToggles
-import com.tangem.domain.onboarding.repository.OnboardingRepository
 import com.tangem.domain.onramp.FetchHotCryptoUseCase
 import com.tangem.domain.promo.GetStoryContentUseCase
 import com.tangem.domain.promo.models.StoryContentIds
@@ -37,18 +36,16 @@ import com.tangem.domain.settings.DeleteDeprecatedLogsUseCase
 import com.tangem.domain.settings.IncrementAppLaunchCounterUseCase
 import com.tangem.domain.settings.usercountry.FetchUserCountryUseCase
 import com.tangem.domain.staking.FetchStakingTokensUseCase
-import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.usecase.AssociateWalletsWithApplicationIdUseCase
 import com.tangem.domain.wallets.usecase.GetSavedWalletsCountUseCase
+import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.domain.wallets.usecase.UpdateRemoteWalletsInfoUseCase
 import com.tangem.feature.swap.analytics.StoriesEvents
 import com.tangem.tap.common.extensions.setContext
-import com.tangem.tap.common.redux.global.GlobalAction
-import com.tangem.tap.features.onboarding.products.wallet.redux.BackupDialog
 import com.tangem.tap.network.exchangeServices.ExchangeService
 import com.tangem.tap.network.exchangeServices.moonpay.MoonPayService
 import com.tangem.tap.proxy.AppStateHolder
-import com.tangem.tap.store
+import com.tangem.tap.routing.configurator.AppRouterConfig
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.wallet.BuildConfig
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -69,7 +66,6 @@ internal class MainViewModel @Inject constructor(
     deleteDeprecatedLogsUseCase: DeleteDeprecatedLogsUseCase,
     private val incrementAppLaunchCounterUseCase: IncrementAppLaunchCounterUseCase,
     private val blockchainSDKFactory: BlockchainSDKFactory,
-    private val userWalletsListManager: UserWalletsListManager,
     private val dispatchers: CoroutineDispatcherProvider,
     private val fetchStakingTokensUseCase: FetchStakingTokensUseCase,
     private val fetchUserCountryUseCase: FetchUserCountryUseCase,
@@ -79,8 +75,6 @@ internal class MainViewModel @Inject constructor(
     private val getStoryContentUseCase: GetStoryContentUseCase,
     private val imagePreloader: ImagePreloader,
     private val fetchHotCryptoUseCase: FetchHotCryptoUseCase,
-    private val onboardingRepository: OnboardingRepository,
-    private val notificationsToggles: NotificationsFeatureToggles,
     private val getApplicationIdUseCase: GetApplicationIdUseCase,
     private val subscribeOnWalletsUseCase: GetSavedWalletsCountUseCase,
     private val associateWalletsWithApplicationIdUseCase: AssociateWalletsWithApplicationIdUseCase,
@@ -90,6 +84,8 @@ internal class MainViewModel @Inject constructor(
     private val multiQuoteUpdater: MultiQuoteUpdater,
     private val appStateHolder: AppStateHolder,
     private val environmentConfigStorage: EnvironmentConfigStorage,
+    private val getSelectedWalletUseCase: GetSelectedWalletUseCase,
+    private val appRouterConfig: AppRouterConfig,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
 ) : ViewModel() {
 
@@ -140,13 +136,6 @@ internal class MainViewModel @Inject constructor(
         multiQuoteUpdater.unsubscribe()
     }
 
-    fun checkForUnfinishedBackup() {
-        viewModelScope.launch(dispatchers.main) {
-            val onboardingScanResponse = onboardingRepository.getUnfinishedFinalizeOnboarding() ?: return@launch
-            store.dispatch(GlobalAction.ShowDialog(BackupDialog.UnfinishedBackupFound(onboardingScanResponse)))
-        }
-    }
-
     /** Loading the resources needed to run the application */
     private fun loadApplicationResources() {
         viewModelScope.launch {
@@ -159,6 +148,9 @@ internal class MainViewModel @Inject constructor(
             }
 
             prepareSelectedWalletFeedback()
+
+            // await while initial route stack is initialized
+            appRouterConfig.isInitialized.first { it }
 
             isSplashScreenShown = false
         }
@@ -185,13 +177,16 @@ internal class MainViewModel @Inject constructor(
     }
 
     private fun prepareSelectedWalletFeedback() {
-        userWalletsListManager.selectedUserWallet
-            .distinctUntilChanged()
-            .onEach { userWallet ->
-                Analytics.setContext(userWallet)
+        getSelectedWalletUseCase.invoke()
+            .mapLeft { emptyFlow<UserWallet>() }
+            .onRight {
+                it.distinctUntilChanged()
+                    .onEach { userWallet ->
+                        Analytics.setContext(userWallet)
+                    }
+                    .flowOn(dispatchers.io)
+                    .launchIn(viewModelScope)
             }
-            .flowOn(dispatchers.io)
-            .launchIn(viewModelScope)
     }
 
     private suspend fun fetchStakingTokens() {
@@ -214,7 +209,7 @@ internal class MainViewModel @Inject constructor(
             apiKey = environmentConfig.moonPayApiKey,
             secretKey = environmentConfig.moonPayApiSecretKey,
             logEnabled = LogConfig.network.moonPayService,
-            userWalletProvider = { userWalletsListManager.selectedUserWalletSync },
+            userWalletProvider = { getSelectedWalletUseCase.sync().getOrNull() },
         )
     }
 
@@ -411,18 +406,20 @@ internal class MainViewModel @Inject constructor(
     }
 
     private suspend fun initPushNotifications() {
-        if (notificationsToggles.isNotificationsEnabled) {
-            getApplicationIdUseCase().onRight { applicationId ->
+        getApplicationIdUseCase()
+            .onRight { applicationId ->
                 sendPushTokenUseCase(applicationId = applicationId)
                 associateWalletsWithApplicationId(applicationId = applicationId)
                 updateRemoteWalletsInfoUseCase(applicationId = applicationId)
-            }.onLeft { Timber.e(it.toString()) }
-        }
+            }
+            .onLeft(Timber::e)
     }
 
     private fun associateWalletsWithApplicationId(applicationId: ApplicationId) {
-        subscribeOnWalletsUseCase().onEach { wallets ->
-            associateWalletsWithApplicationIdUseCase(applicationId, wallets)
-        }.launchIn(viewModelScope)
+        subscribeOnWalletsUseCase()
+            .onEach { wallets ->
+                associateWalletsWithApplicationIdUseCase(applicationId, wallets)
+            }
+            .launchIn(viewModelScope)
     }
 }
