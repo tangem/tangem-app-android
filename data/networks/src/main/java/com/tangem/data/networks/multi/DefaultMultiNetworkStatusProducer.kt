@@ -1,5 +1,7 @@
 package com.tangem.data.networks.multi
 
+import arrow.core.Option
+import arrow.core.some
 import com.tangem.data.common.network.NetworkFactory
 import com.tangem.data.networks.store.NetworksStatusesStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
@@ -29,8 +31,7 @@ internal class DefaultMultiNetworkStatusProducer @AssistedInject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
 ) : MultiNetworkStatusProducer {
 
-    override val fallback: Set<NetworkStatus>
-        get() = setOf()
+    override val fallback: Option<Set<NetworkStatus>> = emptySet<NetworkStatus>().some()
 
     override fun produce(): Flow<Set<NetworkStatus>> {
         return networksStatusesStore.get(userWalletId = params.userWalletId)
