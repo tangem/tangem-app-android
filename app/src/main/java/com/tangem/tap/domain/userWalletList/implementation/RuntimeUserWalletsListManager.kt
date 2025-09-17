@@ -74,11 +74,13 @@ internal class RuntimeUserWalletsListManager : UserWalletsListManager {
             ?.takeIf { it.walletId == userWalletId }
             ?: walletNotFound()
 
-        state.updateAndGet { prevState ->
-            prevState.copy(
-                userWallet = update(wallet),
-            )
-        }.userWallet!!
+        requireNotNull(
+            state.updateAndGet { prevState ->
+                prevState.copy(
+                    userWallet = update(wallet),
+                )
+            }.userWallet,
+        ) { "User wallet is null after update" }
     }
 
     override suspend fun delete(userWalletIds: List<UserWalletId>): CompletionResult<Unit> = clear()
