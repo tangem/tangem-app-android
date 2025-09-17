@@ -4,6 +4,7 @@ import arrow.core.getOrElse
 import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheetConfig
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isLocked
@@ -16,6 +17,7 @@ import com.tangem.domain.tokens.TokensAction
 import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.feature.wallet.presentation.account.AccountDependencies
 import com.tangem.feature.wallet.presentation.wallet.domain.OnrampStatusFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.unwrap
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
@@ -45,6 +47,10 @@ internal interface WalletContentClickIntents {
     fun onTokenItemClick(currencyStatus: CryptoCurrencyStatus)
 
     fun onTokenItemLongClick(cryptoCurrencyStatus: CryptoCurrencyStatus)
+
+    fun onAccountExpandClick(account: Account)
+
+    fun onAccountCollapseClick(account: Account)
 
     fun onTransactionClick(txHash: String)
 
@@ -78,6 +84,7 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
     private val walletEventSender: WalletEventSender,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
+    private val accountDependencies: AccountDependencies,
 ) : BaseWalletClickIntents(), WalletContentClickIntents {
 
     override fun onDetailsClick() {
@@ -155,6 +162,16 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
                     showActionsBottomSheet(it, userWallet)
                 }
         }
+    }
+
+    override fun onAccountExpandClick(account: Account) {
+        val userWalletId = stateHolder.getSelectedWalletId()
+        accountDependencies.expandedAccountsHolder.expandAccount(userWalletId, account.accountId)
+    }
+
+    override fun onAccountCollapseClick(account: Account) {
+        val userWalletId = stateHolder.getSelectedWalletId()
+        accountDependencies.expandedAccountsHolder.collapseAccount(userWalletId, account.accountId)
     }
 
     private fun showActionsBottomSheet(tokenActionsState: TokenActionsState, userWallet: UserWallet) {
