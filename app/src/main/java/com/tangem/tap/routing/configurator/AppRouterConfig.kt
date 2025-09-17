@@ -11,7 +11,7 @@ internal interface AppRouterConfig {
     var routerScope: CoroutineScope?
     var componentRouter: Router?
     var stack: List<AppRoute>?
-    val isInitialized: MutableStateFlow<Boolean>
+    val initializedState: MutableStateFlow<Boolean>
 
     // TODO: Replace with UI message handler: [REDACTED_JIRA]
     var snackbarHandler: SnackbarHandler?

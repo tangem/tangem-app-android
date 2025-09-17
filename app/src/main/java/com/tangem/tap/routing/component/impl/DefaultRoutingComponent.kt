@@ -133,7 +133,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
                 AppRoute.Wallet
             }
         }.also {
-            appRouterConfig.isInitialized.value = true
+            appRouterConfig.initializedState.value = true
             checkForUnfinishedBackup()
         }
     }
@@ -141,13 +141,13 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     @Composable
     override fun Content(modifier: Modifier) {
         RootContent(
-            modifier = modifier,
             stack = stack,
+            backHandler = backHandler,
             uiDependencies = uiDependencies,
+            onBack = router::pop,
+            modifier = modifier,
             wcContent = { wcRoutingComponent.Content(it) },
             hotAccessCodeContent = { hotAccessCodeRequestComponent.Content(it) },
-            backHandler = backHandler,
-            onBack = router::pop,
         )
     }
 

@@ -60,7 +60,7 @@ internal class AccountCreateEditModel @Inject constructor(
     private val umBuilder = AccountCreateEditUMBuilder(params)
 
     val uiState: StateFlow<AccountCreateEditUM>
-    field = MutableStateFlow(value = getInitialState())
+        field = MutableStateFlow(value = getInitialState())
 
     init {
         if (params is AccountCreateEditComponent.Params.Create) {

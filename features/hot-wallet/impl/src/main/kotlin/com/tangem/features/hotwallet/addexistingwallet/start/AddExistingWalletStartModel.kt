@@ -63,16 +63,16 @@ internal class AddExistingWalletStartModel @Inject constructor(
     private val params: AddExistingWalletStartComponent.Params = paramsContainer.require()
 
     internal val uiState: StateFlow<AddExistingWalletStartUM>
-    field = MutableStateFlow(
-        AddExistingWalletStartUM(
-            showWantToPurchaseBlock = false,
-            isScanInProgress = false,
-            onBackClick = params.callbacks::onBackClick,
-            onImportPhraseClick = params.callbacks::onImportPhraseClick,
-            onScanCardClick = ::onScanClick,
-            onBuyCardClick = ::onShopClick,
-        ),
-    )
+        field = MutableStateFlow(
+            AddExistingWalletStartUM(
+                showWantToPurchaseBlock = false,
+                isScanInProgress = false,
+                onBackClick = params.callbacks::onBackClick,
+                onImportPhraseClick = params.callbacks::onImportPhraseClick,
+                onScanCardClick = ::onScanClick,
+                onBuyCardClick = ::onShopClick,
+            ),
+        )
 
     init {
         showWantToPurchaseBlockWithDelay()
