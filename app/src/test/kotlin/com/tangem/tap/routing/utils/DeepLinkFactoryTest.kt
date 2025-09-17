@@ -12,6 +12,7 @@ import com.tangem.features.onramp.deeplink.SellDeepLinkHandler
 import com.tangem.features.onramp.deeplink.SwapDeepLinkHandler
 import com.tangem.features.send.v2.api.deeplink.SellRedirectDeepLinkHandler
 import com.tangem.features.staking.api.deeplink.StakingDeepLinkHandler
+import com.tangem.features.tangempay.deeplink.OnboardVisaDeepLinkHandler
 import com.tangem.features.tokendetails.deeplink.TokenDetailsDeepLinkHandler
 import com.tangem.features.wallet.deeplink.PromoDeeplinkHandler
 import com.tangem.features.wallet.deeplink.WalletDeepLinkHandler
@@ -73,6 +74,10 @@ class DeepLinkFactoryTest {
         every { create(any(), any()) } returns mockk()
     }
 
+    private val onboardVisaDeepLink = mockk<OnboardVisaDeepLinkHandler.Factory>(relaxed = true) {
+        every { create(any()) } returns mockk()
+    }
+
     private val cardSdkProvider = mockk<CardSdkProvider>(relaxed = true) {
         every { sdk.uiVisibility() } returns MutableStateFlow(false)
     }
@@ -97,6 +102,7 @@ class DeepLinkFactoryTest {
         sellDeepLink = sellDeepLinkFactory,
         swapDeepLink = swapDeepLinkFactory,
         promoDeepLink = promoDeepLinkFactory,
+        onboardVisaDeepLink = onboardVisaDeepLink,
     )
 
     @OptIn(ExperimentalCoroutinesApi::class)
