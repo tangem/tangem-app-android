@@ -11,6 +11,12 @@ ksp = "2.1.10-1.0.30"
 firebasePerf = "1.4.2"
 # endregion Classpath
 
+# region AppGallery
+agconnect = "1.9.1.304"
+huaweiServices = "6.9.0.301"
+huaweiPush = "6.11.0.300"
+# endregion AppGallery
+
 # region AndroidX
 androidxActivityCompose = "1.8.0"
 androidxAppCompat = "1.5.1"
@@ -40,6 +46,7 @@ compose-lifecycle-runtime = "2.7.0"
 # endregion Compose
 
 # region Other libraries
+appsflyer = "6.17.3"
 amplitude = "2.36.1"
 armadillo = "0.9.0"
 coil = "2.1.0"
@@ -57,7 +64,6 @@ hilt-work = "1.0.0"
 hilt-compilerx = "1.0.0"
 jodatime = "2.12.1"
 kotlin-immutable-collections = "0.3.5"
-kotsonGsonExt = "2.5.0"
 lottie = "3.4.0"
 lottie-compose = "6.6.0"
 moshi = "1.15.1"
@@ -130,6 +136,7 @@ detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 room = { id = "androidx.room", version.ref = "room" }
 kotlin-compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+agconnect = { id = "com.huawei.agconnect", version.ref = "agconnect" }
 
 [libraries]
 # region Classpath
@@ -190,6 +197,15 @@ firebase-messaging = { module = "com.google.firebase:firebase-messaging-ktx" }
 firebase-perf = { module = "com.google.firebase:firebase-perf" }
 # endregion Firebase
 
+# region AppGallery
+agconnect-agcp = { module = "com.huawei.agconnect:agcp", version.ref = "agconnect" }
+agconnect-core = { module = "com.huawei.agconnect:agconnect-core", version.ref = "agconnect" }
+agconnect-crash = { module = "com.huawei.agconnect:agconnect-crash", version.ref = "agconnect" }
+huawei-base = { module = "com.huawei.hms:base", version.ref = "huaweiServices" }
+huawei-analytics = { module = "com.huawei.hms:hianalytics", version.ref = "huaweiServices" }
+huawei-push = { module = "com.huawei.hms:push", version.ref = "huaweiPush" }
+# endregion AppGallery
+
 # region Detekt
 detekt-compose = { module = "ru.kode:detekt-rules-compose", version.ref = "detektComposeRules" }
 detekt-formatting = { module = "io.gitlab.arturbosch.detekt:detekt-formatting", version.ref = "detekt" }
@@ -218,6 +234,7 @@ test-orchestrator = { module = "androidx.test:orchestrator", version.ref = "orch
 # endregion Test
 
 # region Other
+appsflyer = { module = "com.appsflyer:af-android-sdk", version.ref = "appsflyer" }
 amplitude = { module = "com.amplitude:android-sdk", version.ref = "amplitude" }
 armadillo = { module = "at.favre.lib:armadillo", version.ref = "armadillo" }
 coil = { module = "io.coil-kt:coil", version.ref = "coil" }
@@ -236,7 +253,6 @@ hilt-core = { module = "com.google.dagger:hilt-core", version.ref = "hilt" }
 hilt-kapt = { module = "com.google.dagger:hilt-compiler", version.ref = "hilt" }
 hilt-compilerx = { module = "androidx.hilt:hilt-compiler", version.ref = "hilt-compilerx" }
 jodatime = { module = "joda-time:joda-time", version.ref = "jodatime" }
-kotsonGson = { module = "com.github.salomonbrys.kotson:kotson", version.ref = "kotsonGsonExt" }
 lottie = { module = "com.airbnb.android:lottie", version.ref = "lottie" }
 lottie-compose = { module = "com.airbnb.android:lottie-compose", version.ref = "lottie-compose" }
 material = { module = "com.google.android.material:material", version.ref = "googleMaterialComponent" }
