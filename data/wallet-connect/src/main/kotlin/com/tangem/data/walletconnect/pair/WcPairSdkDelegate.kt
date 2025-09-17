@@ -6,25 +6,45 @@ import arrow.core.right
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import com.tangem.data.walletconnect.utils.WC_TAG
+import com.tangem.data.walletconnect.utils.WcScope
 import com.tangem.data.walletconnect.utils.WcSdkObserver
+import com.tangem.datasource.local.walletconnect.WalletConnectStore
 import com.tangem.data.walletconnect.utils.getDappOriginUrl
 import com.tangem.domain.walletconnect.model.WcPairError
 import com.tangem.domain.walletconnect.model.WcPairError.ApprovalFailed
+import com.tangem.domain.walletconnect.model.WcPendingApprovalSessionDTO
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.*
 import timber.log.Timber
 import kotlin.coroutines.resume
 import kotlin.time.Duration.Companion.seconds
 
-internal class WcPairSdkDelegate : WcSdkObserver {
+internal class WcPairSdkDelegate(
+    private val scope: WcScope,
+    private val store: WalletConnectStore,
+) : WcSdkObserver {
 
     private val onSessionProposal = Channel<Pair<Wallet.Model.SessionProposal, Wallet.Model.VerifyContext>>()
     private val onSdkErrorCallback = Channel<Wallet.Model.Error>()
-    private val onSessionSettleResponse = Channel<Wallet.Model.SettledSessionResponse>()
+    private val onSessionSettleCallback = Channel<Wallet.Model.SettledSessionResponse>()
+
+    init {
+        onSessionSettleCallback.receiveAsFlow()
+            .filterIsInstance<Wallet.Model.SettledSessionResponse.Result>()
+            .buffer()
+            .onEach { settledResponse ->
+                val savedPending = store.pendingApproval.first()
+                val settledSession = settledResponse.session
+                val savedPendingSession = savedPending
+                    .find { it.pairingTopic == settledSession.pairingTopic }
+                    ?: return@onEach
+                store.saveSession(savedPendingSession.session.copy(topic = settledSession.topic))
+                store.removePendingApproval(setOf(savedPendingSession))
+            }
+            .launchIn(scope)
+    }
 
     suspend fun pair(
         url: String,
@@ -56,42 +76,19 @@ internal class WcPairSdkDelegate : WcSdkObserver {
     }.first()
 
     suspend fun approve(
+        pendingSessionForSave: WcPendingApprovalSessionDTO,
         sessionApprove: Wallet.Params.SessionApprove,
-    ): Either<WcPairError, Wallet.Model.SettledSessionResponse.Result> = coroutineScope {
-        val approveCallback = async { withTimeout(CALLBACK_TIMEOUT.seconds) { approveCallback() } }
-        val approveCall = async { sdkApprove(sessionApprove) }
-        approveCall.await()
-            .onLeft {
-                approveCallback.cancel()
-                return@coroutineScope it.left()
-            }
-        return@coroutineScope approveCallback.await().fold(
-            ifLeft = { it.left() },
-            ifRight = { result ->
-                when (result) {
-                    is Wallet.Model.SettledSessionResponse.Result -> result.right()
-                    is Wallet.Model.SettledSessionResponse.Error -> ApprovalFailed(result.errorMessage).left()
-                }
+    ): Either<WcPairError, Unit> = coroutineScope {
+        val forSave = setOf(pendingSessionForSave)
+        store.savePendingApproval(forSave)
+        sdkApprove(sessionApprove).fold(
+            ifRight = { Unit.right() },
+            ifLeft = {
+                store.removePendingApproval(forSave)
+                it.left()
             },
         )
     }
-
-    private suspend fun approveCallback() = callbackFlow<Either<WcPairError, Wallet.Model.SettledSessionResponse>> {
-        // wait first onSessionSettleResponse callback
-        launch {
-            val settledSessionResponse = onSessionSettleResponse.receiveAsFlow().first()
-            trySend(settledSessionResponse.right())
-            channel.close()
-        }
-        // OR
-        // wait first onError callback
-        launch {
-            val error = onSdkErrorCallback.receiveAsFlow().first()
-            trySend(error.throwable.toApproveError())
-            channel.close()
-        }
-        awaitClose()
-    }.first()
 
     fun rejectSession(proposerPublicKey: String) {
         Timber.tag(WC_TAG).i("reject session proposerPublicKey = $proposerPublicKey")
@@ -120,7 +117,7 @@ internal class WcPairSdkDelegate : WcSdkObserver {
 
     override fun onSessionSettleResponse(settleSessionResponse: Wallet.Model.SettledSessionResponse) {
         // Triggered when wallet receives the session settlement response from Dapp
-        onSessionSettleResponse.trySend(settleSessionResponse)
+        onSessionSettleCallback.trySend(settleSessionResponse)
     }
 
     private suspend fun sdkApprove(sessionApprove: Wallet.Params.SessionApprove): Either<WcPairError, Unit> {
