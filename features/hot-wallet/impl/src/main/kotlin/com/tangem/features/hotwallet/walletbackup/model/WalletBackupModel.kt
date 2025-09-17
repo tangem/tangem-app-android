@@ -33,24 +33,24 @@ internal class WalletBackupModel @Inject constructor(
     private val params: WalletBackupComponent.Params = paramsContainer.require()
 
     val uiState: StateFlow<WalletBackupUM>
-    field = MutableStateFlow(
-        WalletBackupUM(
-            onBackClick = { router.pop() },
-            recoveryPhraseOption = LabelUM(
-                text = resourceReference(R.string.hw_backup_no_backup),
-                style = LabelStyle.WARNING,
+        field = MutableStateFlow(
+            WalletBackupUM(
+                onBackClick = { router.pop() },
+                recoveryPhraseOption = LabelUM(
+                    text = resourceReference(R.string.hw_backup_no_backup),
+                    style = LabelStyle.WARNING,
+                ),
+                googleDriveOption = LabelUM(
+                    text = resourceReference(R.string.common_coming_soon),
+                    style = LabelStyle.REGULAR,
+                ),
+                googleDriveStatus = BackupStatus.ComingSoon,
+                onRecoveryPhraseClick = ::onRecoveryPhraseClick,
+                onGoogleDriveClick = { },
+                onHardwareWalletClick = ::onHardwareWalletClick,
+                backedUp = false,
             ),
-            googleDriveOption = LabelUM(
-                text = resourceReference(R.string.common_coming_soon),
-                style = LabelStyle.REGULAR,
-            ),
-            googleDriveStatus = BackupStatus.ComingSoon,
-            onRecoveryPhraseClick = ::onRecoveryPhraseClick,
-            onGoogleDriveClick = { },
-            onHardwareWalletClick = ::onHardwareWalletClick,
-            backedUp = false,
-        ),
-    )
+        )
 
     init {
         getWalletUseCase.invoke(params.userWalletId)
