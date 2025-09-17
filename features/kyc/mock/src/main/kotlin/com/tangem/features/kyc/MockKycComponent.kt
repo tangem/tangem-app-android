@@ -8,7 +8,7 @@ import dagger.assisted.AssistedInject
 /**
  * Mocking it for release/external builds to exclude SumSub dependency
  */
-class MockKycComponent @AssistedInject constructor(
+internal class MockKycComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
 ) : KycComponent, AppComponentContext by appComponentContext {
 
