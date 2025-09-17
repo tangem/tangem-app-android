@@ -24,6 +24,7 @@ import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.domain.settings.usercountry.models.needApplyFCARestrictions
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.onramp.model.OnrampCurrency
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.onramp.main.OnrampMainComponent
 import com.tangem.features.onramp.main.entity.*
@@ -55,6 +56,8 @@ internal class OnrampMainComponentModel @Inject constructor(
     private val fetchQuotesUseCase: OnrampFetchQuotesUseCase,
     private val getOnrampQuotesUseCase: GetOnrampQuotesUseCase,
     private val fetchPairsUseCase: OnrampFetchPairsUseCase,
+    private val onrampSaveDefaultCurrencyUseCase: OnrampSaveDefaultCurrencyUseCase,
+    private val onrampGetDefaultCurrencyUseCase: OnrampGetDefaultCurrencyUseCase,
     private val amountInputManager: InputManager,
     private val messageSender: UiMessageSender,
     private val urlOpener: UrlOpener,
@@ -66,6 +69,7 @@ internal class OnrampMainComponentModel @Inject constructor(
     private val params: OnrampMainComponent.Params = paramsContainer.require()
 
     private var isSepaLaunched = false
+    private var currencyToRestore: OnrampCurrency? = null
 
     val userWallet = getWalletsUseCase.invokeSync().first { it.walletId == params.userWalletId }
 
@@ -100,6 +104,11 @@ internal class OnrampMainComponentModel @Inject constructor(
 
         modelScope.launch {
             clearOnrampCacheUseCase()
+
+            if (params.launchSepa) {
+                currencyToRestore = onrampGetDefaultCurrencyUseCase.invoke().getOrNull()
+                onrampSaveDefaultCurrencyUseCase.invoke(EUR_CURRENCY)
+            }
         }
 
         sendScreenOpenAnalytics()
@@ -294,6 +303,13 @@ internal class OnrampMainComponentModel @Inject constructor(
     override fun onDestroy() {
         modelScope.launch { clearOnrampCacheUseCase.invoke() }
         quotesTaskScheduler.cancelTask()
+
+        modelScope.launch {
+            if (params.launchSepa) {
+                currencyToRestore?.let { onrampSaveDefaultCurrencyUseCase.invoke(it) }
+            }
+        }
+
         super.onDestroy()
     }
 
@@ -440,5 +456,13 @@ internal class OnrampMainComponentModel @Inject constructor(
         const val UPDATE_DELAY = 10_000L
 
         const val SEPA_METHOD_ID = "sepa"
+
+        val EUR_CURRENCY = OnrampCurrency(
+            code = "EUR",
+            name = "Euro",
+            unit = "€",
+            precision = 2,
+            image = "https://s3.eu-central-1.amazonaws.com/tangem.api/express/Currencies/EUR.png",
+        )
     }
 }
