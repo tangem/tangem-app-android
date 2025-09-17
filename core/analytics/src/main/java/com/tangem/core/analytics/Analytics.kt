@@ -1,6 +1,7 @@
 package com.tangem.core.analytics
 
 import com.tangem.common.extensions.calculateSha256
+import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toHexString
 import com.tangem.core.analytics.api.*
 import com.tangem.core.analytics.models.AnalyticsEvent
@@ -60,9 +61,11 @@ object Analytics : GlobalAnalyticsEventHandler {
         return paramsInterceptors.remove(interceptorId)
     }
 
-    override fun setUserId(userId: String) {
+    override fun setUserId(userWalletId: String) {
         analyticsScope.launch {
-            val userIdHash = userId.calculateSha256().toHexString()
+            val userIdHash = userWalletId.hexToBytes()
+                .calculateSha256()
+                .toHexString()
 
             analyticsMutex.withLock {
                 analyticsHandlers.filterIsInstance<AnalyticsUserIdHandler>()
