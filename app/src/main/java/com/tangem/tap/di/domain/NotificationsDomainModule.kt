@@ -1,11 +1,8 @@
 package com.tangem.tap.di.domain
 
-import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.domain.notifications.*
 import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.notifications.repository.PushNotificationsRepository
-import com.tangem.domain.notifications.toggles.NotificationsFeatureToggles
-import com.tangem.tap.domain.notifications.DefaultNotificationsFeatureToggles
 import com.tangem.utils.notifications.PushNotificationsTokenProvider
 import dagger.Module
 import dagger.Provides
@@ -77,12 +74,6 @@ internal object NotificationsDomainModule {
         return SetShouldShowNotificationUseCase(
             notificationsRepository = notificationsRepository,
         )
-    }
-
-    @Provides
-    @Singleton
-    fun provideNotificationsFeatureToggles(featureTogglesManager: FeatureTogglesManager): NotificationsFeatureToggles {
-        return DefaultNotificationsFeatureToggles(featureTogglesManager = featureTogglesManager)
     }
 
     @Provides

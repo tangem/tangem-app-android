@@ -172,6 +172,7 @@ class FeeCalculationUtilsTest {
                 hasCurrentNetworkTransactions = false,
                 pendingTransactions = emptySet(),
                 networkAddress = mockk(relaxed = true),
+                yieldSupplyStatus = null,
                 sources = CryptoCurrencyStatus.Sources(),
             )
         } else {
