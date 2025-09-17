@@ -100,8 +100,8 @@ sumsub = "1.35.1"
 # endregion Other libraries
 
 # region Tools
-detektComposeRules = "1.3.0"
-detekt = "1.22.0"
+detektComposeRules = "1.4.0"
+detekt = "1.23.8"
 # endregion Tools
 
 # region Testing
