@@ -13,6 +13,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onEach
 
 internal class MultiWalletWarningsSubscriber(
@@ -30,6 +31,11 @@ internal class MultiWalletWarningsSubscriber(
             .distinctUntilChanged()
             .onEach { warnings ->
                 val displayedState = stateHolder.getWalletState(userWallet.walletId)
+
+                // Wait until the wallet appears in the list
+                stateHolder.uiState.first {
+                    it.wallets.any { walletState -> walletState.walletCardState.id == userWallet.walletId }
+                }
 
                 stateHolder.update(SetWarningsTransformer(userWallet.walletId, warnings))
                 walletWarningsAnalyticsSender.send(displayedState, warnings)

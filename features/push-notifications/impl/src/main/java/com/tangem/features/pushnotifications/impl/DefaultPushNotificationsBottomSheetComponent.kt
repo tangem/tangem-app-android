@@ -1,8 +1,6 @@
 package com.tangem.features.pushnotifications.impl
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -38,7 +36,6 @@ internal class DefaultPushNotificationsBottomSheetComponent @AssistedInject cons
 
     @Composable
     override fun BottomSheet() {
-        val state by model.state.collectAsState()
         val bottomSheetConfig = remember(key1 = this) {
             TangemBottomSheetConfig(
                 isShown = true,
@@ -55,7 +52,6 @@ internal class DefaultPushNotificationsBottomSheetComponent @AssistedInject cons
                 onLaterClick = model::onLaterClick,
                 onAllowPermission = model::onAllowPermission,
                 onDenyPermission = model::onDenyPermission,
-                showNotificationsInfo = state.showInfoAboutNotifications,
             )
         }
     }
