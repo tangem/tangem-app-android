@@ -5,8 +5,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.ComponentContext
-import com.arkivanov.decompose.router.slot.childSlot
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
+import com.arkivanov.decompose.router.slot.childSlot
 import com.arkivanov.decompose.router.slot.dismiss
 import com.arkivanov.essenty.lifecycle.subscribe
 import com.tangem.core.decompose.context.AppComponentContext
@@ -23,6 +23,7 @@ import com.tangem.features.markets.token.block.TokenMarketBlockComponent
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
 import com.tangem.features.txhistory.component.TxHistoryComponent
+import com.tangem.features.yield.supply.api.YieldSupplyComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -34,6 +35,7 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
     tokenMarketBlockComponentFactory: TokenMarketBlockComponent.Factory,
     txHistoryComponentFactory: TxHistoryComponent.Factory,
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
+    yieldSupplyComponentFactory: YieldSupplyComponent.Factory,
 ) : TokenDetailsComponent, AppComponentContext by appComponentContext {
 
     private val model: TokenDetailsModel = getOrCreateModel(params)
@@ -67,6 +69,14 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
         )
     }
 
+    private val yieldSupplyComponent = yieldSupplyComponentFactory.create(
+        context = child("tokenYieldSupplyComponent"),
+        params = YieldSupplyComponent.Params(
+            userWalletId = params.userWalletId,
+            cryptoCurrency = params.currency,
+        ),
+    )
+
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
@@ -76,6 +86,7 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
             state = state,
             tokenMarketBlockComponent = tokenMarketBlockComponent,
             txHistoryComponent = txHistoryComponent,
+            yieldSupplyComponent = yieldSupplyComponent,
         )
         bottomSheet.child?.instance?.BottomSheet()
     }
