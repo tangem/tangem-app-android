@@ -1,18 +1,10 @@
 package com.tangem.feature.wallet.child.wallet.model.intents
 
 import com.tangem.core.decompose.di.ModelScoped
-import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
-import com.tangem.domain.appcurrency.extenstions.unwrap
-import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.exchange.RampStateManager
-import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.onramp.FetchHotCryptoUseCase
 import com.tangem.domain.settings.NeverToShowWalletsScrollPreview
-import com.tangem.domain.tokens.FetchCardTokenListUseCase
-import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
-import com.tangem.domain.tokens.FetchTokenListUseCase
-import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.domain.wallets.usecase.SelectWalletUseCase
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
@@ -23,7 +15,6 @@ import com.tangem.feature.wallet.presentation.wallet.loaders.WalletScreenContent
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetRefreshStateTransformer
-import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetTokenListErrorTransformer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -43,12 +34,7 @@ internal class WalletClickIntents @Inject constructor(
     private val walletScreenContentLoader: WalletScreenContentLoader,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val selectWalletUseCase: SelectWalletUseCase,
-    private val fetchTokenListUseCase: FetchTokenListUseCase,
     private val walletContentFetcher: WalletContentFetcher,
-    private val tokensFeatureToggles: TokensFeatureToggles,
-    private val fetchCardTokenListUseCase: FetchCardTokenListUseCase,
-    private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
-    private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val neverToShowWalletsScrollPreview: NeverToShowWalletsScrollPreview,
     private val rampStateManager: RampStateManager,
     private val fetchHotCryptoUseCase: FetchHotCryptoUseCase,
@@ -88,7 +74,7 @@ internal class WalletClickIntents @Inject constructor(
             stateHolder.update { it.copy(selectedWalletIndex = index) }
 
             maybeUserWallet.onRight {
-                if (tokensFeatureToggles.isWalletBalanceFetcherEnabled && !it.isLocked) {
+                if (!it.isLocked) {
                     launch { walletContentFetcher(userWalletId = it.walletId) }
                 }
 
@@ -131,28 +117,7 @@ internal class WalletClickIntents @Inject constructor(
         )
 
         modelScope.launch {
-            if (tokensFeatureToggles.isWalletBalanceFetcherEnabled) {
-                walletContentFetcher(userWalletId = userWallet.walletId, forceUpdate = true)
-            } else {
-                val isSingleWalletWithToken = userWallet is UserWallet.Cold &&
-                    userWallet.cardTypesResolver.isSingleWalletWithToken()
-
-                val maybeFetchResult = if (isSingleWalletWithToken) {
-                    fetchCardTokenListUseCase(userWalletId = userWallet.walletId, refresh = true)
-                } else {
-                    fetchTokenListUseCase(userWalletId = userWallet.walletId)
-                }
-
-                maybeFetchResult.onLeft {
-                    stateHolder.update(
-                        SetTokenListErrorTransformer(
-                            selectedWallet = userWallet,
-                            error = it,
-                            appCurrency = getSelectedAppCurrencyUseCase.unwrap(),
-                        ),
-                    )
-                }
-            }
+            walletContentFetcher(userWalletId = userWallet.walletId, forceUpdate = true)
 
             buildList {
                 async { rampStateManager.fetchSellServiceData() }.let(::add)
@@ -177,11 +142,7 @@ internal class WalletClickIntents @Inject constructor(
         )
 
         modelScope.launch {
-            if (tokensFeatureToggles.isWalletBalanceFetcherEnabled) {
-                walletContentFetcher(userWalletId = userWallet.walletId, forceUpdate = true)
-            } else {
-                fetchCurrencyStatusUseCase(userWallet.walletId, refresh = true)
-            }
+            walletContentFetcher(userWalletId = userWallet.walletId, forceUpdate = true)
 
             onrampStatusFactory.updateOnrmapTransactionStatuses(userWallet)
             walletScreenContentLoader.load(

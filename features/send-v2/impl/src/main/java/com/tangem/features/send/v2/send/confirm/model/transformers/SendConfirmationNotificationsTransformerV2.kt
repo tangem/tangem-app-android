@@ -71,7 +71,9 @@ internal class SendConfirmationNotificationsTransformerV2(
         val fiatAmountValue = amountUM.amountTextField.fiatAmount.value
         val fiatFeeValue = feeSelectorUM.feeFiatRateUM?.rate?.let { fee.amount.value?.multiply(it) }
 
-        val fiatSendingValue = if (feeSelectorUM.feeFiatRateUM != null) {
+        val isFeeConvertibleToFiat = feeSelectorUM.feeExtraInfo.isFeeConvertibleToFiat
+
+        val fiatSendingValue = if (isFeeConvertibleToFiat) {
             fiatFeeValue?.let { fiatAmountValue?.plus(it) }
         } else {
             fiatAmountValue
@@ -85,7 +87,7 @@ internal class SendConfirmationNotificationsTransformerV2(
         }
         val fiatFee = formatFooterFiatFee(
             amount = fee.amount.copy(value = fiatFeeValue),
-            isFeeConvertibleToFiat = feeSelectorUM.feeFiatRateUM != null,
+            isFeeConvertibleToFiat = isFeeConvertibleToFiat,
             isFeeApproximate = feeSelectorUM.feeExtraInfo.isFeeApproximate,
             appCurrency = appCurrency,
         )
@@ -98,7 +100,7 @@ internal class SendConfirmationNotificationsTransformerV2(
             )
         } else {
             resourceReference(
-                id = if (feeSelectorUM.feeFiatRateUM != null) {
+                id = if (isFeeConvertibleToFiat) {
                     R.string.send_summary_transaction_description
                 } else {
                     R.string.send_summary_transaction_description_no_fiat_fee
