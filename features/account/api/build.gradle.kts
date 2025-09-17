@@ -13,7 +13,12 @@ dependencies {
     /* Project - Core */
     implementation(projects.core.decompose)
     implementation(projects.core.ui)
+    implementation(projects.common.ui)
 
     /* Project - Domain */
     implementation(projects.domain.models)
+    implementation(projects.domain.core)
+    implementation(projects.domain.appCurrency.models)
+    implementation(projects.domain.tokens)
+    implementation(projects.domain.tokens.models)
 }
