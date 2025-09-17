@@ -83,7 +83,7 @@ internal class DefaultVisaAuthRemoteDataSource @Inject constructor(
         sessionId: String,
         signature: String,
         nonce: String,
-    ): Either<VisaApiError, String> = withContext(dispatchers.io) {
+    ): Either<VisaApiError, VisaAuthTokens> = withContext(dispatchers.io) {
         request {
             visaAuthApi.getTokenByCustomerWallet(
                 GetTokenByCustomerWalletRequest(
@@ -93,7 +93,28 @@ internal class DefaultVisaAuthRemoteDataSource @Inject constructor(
                 ),
             ).getOrThrow()
         }.map { response ->
-            "Bearer ${response.result.accessToken}"
+            VisaAuthTokens(
+                response.result.accessToken,
+                VisaAuthTokens.RefreshToken(
+                    response.result.refreshToken,
+                    VisaAuthTokens.RefreshToken.Type.CardWallet,
+                ),
+            )
+        }
+    }
+
+    override suspend fun refreshCustomerWalletAuthTokens(
+        refreshToken: VisaAuthTokens.RefreshToken,
+    ): Either<VisaApiError, VisaAuthTokens> = withContext(dispatchers.io) {
+        request {
+            visaAuthApi.refreshCustomerWalletAccessToken(
+                RefreshCustomerWalletAccessTokenRequest(refreshToken = refreshToken.value),
+            ).getOrThrow()
+        }.map { response ->
+            VisaAuthTokens(
+                accessToken = response.result.accessToken,
+                refreshToken = refreshToken.copy(value = response.result.refreshToken),
+            )
         }
     }
 
@@ -157,24 +178,25 @@ internal class DefaultVisaAuthRemoteDataSource @Inject constructor(
         }
     }
 
-    override suspend fun exchangeAccessToken(tokens: VisaAuthTokens): Either<VisaApiError, VisaAuthTokens> {
-        return request {
-            visaAuthApi.exchangeAccessToken(
-                ExchangeAccessTokenRequest(
-                    accessToken = tokens.accessToken,
-                    refreshToken = tokens.refreshToken.value,
-                ),
-            ).getOrThrow()
-        }.map { response ->
-            VisaAuthTokens(
-                accessToken = response.result.accessToken,
-                refreshToken = VisaAuthTokens.RefreshToken(
-                    value = response.result.refreshToken,
-                    authType = VisaAuthTokens.RefreshToken.Type.CardWallet,
-                ),
-            )
+    override suspend fun exchangeAccessToken(tokens: VisaAuthTokens): Either<VisaApiError, VisaAuthTokens> =
+        withContext(dispatchers.io) {
+            request {
+                visaAuthApi.exchangeAccessToken(
+                    ExchangeAccessTokenRequest(
+                        accessToken = tokens.accessToken,
+                        refreshToken = tokens.refreshToken.value,
+                    ),
+                ).getOrThrow()
+            }.map { response ->
+                VisaAuthTokens(
+                    accessToken = response.result.accessToken,
+                    refreshToken = VisaAuthTokens.RefreshToken(
+                        value = response.result.refreshToken,
+                        authType = VisaAuthTokens.RefreshToken.Type.CardWallet,
+                    ),
+                )
+            }
         }
-    }
 
     private suspend fun <T : Any> request(requestBlock: suspend () -> T): Either<VisaApiError, T> {
         return runCatching {
