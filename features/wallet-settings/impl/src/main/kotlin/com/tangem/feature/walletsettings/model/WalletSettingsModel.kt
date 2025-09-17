@@ -1,6 +1,7 @@
 package com.tangem.feature.walletsettings.model
 
 import android.os.Build
+import arrow.core.Either
 import arrow.core.getOrElse
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
@@ -15,11 +16,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.settings.SettingsManager
-import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUMV2
-import com.tangem.core.ui.components.bottomsheets.message.icon
-import com.tangem.core.ui.components.bottomsheets.message.infoBlock
-import com.tangem.core.ui.components.bottomsheets.message.onClick
-import com.tangem.core.ui.components.bottomsheets.message.secondaryButton
+import com.tangem.core.ui.components.bottomsheets.message.*
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
@@ -29,14 +26,12 @@ import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.nft.DisableWalletNFTUseCase
 import com.tangem.domain.nft.EnableWalletNFTUseCase
 import com.tangem.domain.nft.GetWalletNFTEnabledUseCase
-import com.tangem.domain.notifications.GetIsHuaweiDeviceWithoutGoogleServicesUseCase
 import com.tangem.domain.notifications.repository.NotificationsRepository
-import com.tangem.domain.notifications.toggles.NotificationsFeatureToggles
 import com.tangem.domain.settings.repositories.PermissionRepository
-import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.usecase.*
 import com.tangem.feature.walletsettings.analytics.Settings
 import com.tangem.feature.walletsettings.analytics.WalletSettingsAnalyticEvents
@@ -46,8 +41,11 @@ import com.tangem.feature.walletsettings.entity.NetworksAvailableForNotification
 import com.tangem.feature.walletsettings.entity.WalletSettingsItemUM
 import com.tangem.feature.walletsettings.entity.WalletSettingsUM
 import com.tangem.feature.walletsettings.impl.R
+import com.tangem.feature.walletsettings.utils.AccountItemsDelegate
 import com.tangem.feature.walletsettings.utils.ItemsBuilder
+import com.tangem.feature.walletsettings.utils.WalletCardItemDelegate
 import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
+import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
@@ -56,35 +54,38 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 @ModelScoped
 internal class WalletSettingsModel @Inject constructor(
-    getWalletUseCase: GetUserWalletUseCase,
     paramsContainer: ParamsContainer,
     private val router: Router,
     private val messageSender: UiMessageSender,
     private val deleteWalletUseCase: DeleteWalletUseCase,
     private val itemsBuilder: ItemsBuilder,
+    private val accountItemsDelegate: AccountItemsDelegate,
     override val dispatchers: CoroutineDispatcherProvider,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val analyticsContextProxy: AnalyticsContextProxy,
-    private val getShouldSaveUserWalletsSyncUseCase: ShouldSaveUserWalletsSyncUseCase,
+    walletCardItemDelegateFactory: WalletCardItemDelegate.Factory,
     private val isDemoCardUseCase: IsDemoCardUseCase,
     getWalletNFTEnabledUseCase: GetWalletNFTEnabledUseCase,
     private val enableWalletNFTUseCase: EnableWalletNFTUseCase,
     private val disableWalletNFTUseCase: DisableWalletNFTUseCase,
-    private val notificationsToggles: NotificationsFeatureToggles,
     getWalletNotificationsEnabledUseCase: GetWalletNotificationsEnabledUseCase,
+    private val getUserWalletUseCase: GetUserWalletUseCase,
     private val setNotificationsEnabledUseCase: SetNotificationsEnabledUseCase,
     private val settingsManager: SettingsManager,
     private val permissionsRepository: PermissionRepository,
     private val notificationsRepository: NotificationsRepository,
-    private val getIsHuaweiDeviceWithoutGoogleServicesUseCase: GetIsHuaweiDeviceWithoutGoogleServicesUseCase,
+    private val isUpgradeWalletNotificationEnabledUseCase: IsUpgradeWalletNotificationEnabledUseCase,
+    private val dismissUpgradeWalletNotificationUseCase: DismissUpgradeWalletNotificationUseCase,
+    private val unlockHotWalletContextualUseCase: UnlockHotWalletContextualUseCase,
 ) : Model() {
 
     val params: WalletSettingsComponent.Params = paramsContainer.require()
     val dialogNavigation = SlotNavigation<DialogConfig>()
     val bottomSheetNavigation: SlotNavigation<NetworksAvailableForNotificationBSConfig> = SlotNavigation()
+    private val walletCardItemDelegate = walletCardItemDelegateFactory.create(dialogNavigation)
 
     val state: MutableStateFlow<WalletSettingsUM> = MutableStateFlow(
         value = WalletSettingsUM(
@@ -93,6 +94,7 @@ internal class WalletSettingsModel @Inject constructor(
             requestPushNotificationsPermission = false,
             onPushNotificationPermissionGranted = ::onPushNotificationPermissionGranted,
             isWalletBackedUp = true,
+            walletUpgradeDismissed = false,
         ),
     )
 
@@ -116,34 +118,35 @@ internal class WalletSettingsModel @Inject constructor(
         }
 
     init {
-        combine(
-            getWalletUseCase.invokeFlow(params.userWalletId).distinctUntilChanged(),
+        fun combineUI(wallet: UserWallet) = combine(
             getWalletNFTEnabledUseCase.invoke(params.userWalletId),
             getWalletNotificationsEnabledUseCase(params.userWalletId),
-        ) { maybeWallet, nftEnabled, notificationsEnabled ->
-            val wallet = maybeWallet.getOrNull() ?: return@combine
-            val isRenameWalletAvailable = getShouldSaveUserWalletsSyncUseCase()
+            isUpgradeWalletNotificationEnabledUseCase(params.userWalletId),
+            walletCardItemDelegate.cardItemFlow(wallet),
+        ) { nftEnabled, notificationsEnabled, isUpgradeNotificationEnabled, cardItem ->
             val isWalletBackedUp = when (wallet) {
                 is UserWallet.Hot -> wallet.backedUp
                 is UserWallet.Cold -> true
             }
-            val isNeedShowNotifications = notificationsToggles.isNotificationsEnabled &&
-                !getIsHuaweiDeviceWithoutGoogleServicesUseCase()
             state.update { value ->
                 value.copy(
                     items = buildItems(
                         userWallet = wallet,
-                        dialogNavigation = dialogNavigation,
-                        isRenameWalletAvailable = isRenameWalletAvailable,
+                        cardItem = cardItem,
                         isNFTEnabled = nftEnabled,
                         isNotificationsEnabled = notificationsEnabled,
-                        isNotificationsFeatureEnabled = isNeedShowNotifications,
+                        isNotificationsFeatureEnabled = true,
                         isNotificationsPermissionGranted = isNotificationsPermissionGranted(),
+                        isUpgradeNotificationEnabled = isUpgradeNotificationEnabled,
                     ),
                     isWalletBackedUp = isWalletBackedUp,
                 )
             }
         }
+        getUserWalletUseCase.invokeFlow(params.userWalletId)
+            .distinctUntilChanged()
+            .filterIsInstance<Either.Right<UserWallet>>()
+            .flatMapLatest { combineUI(it.value) }
             .launchIn(modelScope)
     }
 
@@ -159,12 +162,12 @@ internal class WalletSettingsModel @Inject constructor(
 
     private fun buildItems(
         userWallet: UserWallet,
-        dialogNavigation: SlotNavigation<DialogConfig>,
-        isRenameWalletAvailable: Boolean,
+        cardItem: WalletSettingsItemUM.CardBlock,
         isNFTEnabled: Boolean,
         isNotificationsFeatureEnabled: Boolean,
         isNotificationsEnabled: Boolean,
         isNotificationsPermissionGranted: Boolean,
+        isUpgradeNotificationEnabled: Boolean,
     ): PersistentList<WalletSettingsItemUM> {
         val isMultiCurrency = when (userWallet) {
             is UserWallet.Cold -> userWallet.isMultiCurrency
@@ -172,7 +175,7 @@ internal class WalletSettingsModel @Inject constructor(
         }
         return itemsBuilder.buildItems(
             userWallet = userWallet,
-            userWalletName = userWallet.name,
+            cardItem = cardItem,
             isReferralAvailable = when (userWallet) {
                 is UserWallet.Cold -> userWallet.cardTypesResolver.isTangemWallet()
                 is UserWallet.Hot -> false
@@ -182,8 +185,6 @@ internal class WalletSettingsModel @Inject constructor(
                 is UserWallet.Hot -> false
             },
             isManageTokensAvailable = isMultiCurrency,
-            isRenameWalletAvailable = isRenameWalletAvailable,
-            renameWallet = { openRenameWalletDialog(userWallet, dialogNavigation) },
             isNFTFeatureEnabled = isMultiCurrency,
             isNFTEnabled = isNFTEnabled,
             onCheckedNFTChange = ::onCheckedNFTChange,
@@ -215,16 +216,11 @@ internal class WalletSettingsModel @Inject constructor(
             onCheckedNotificationsChanged = ::onCheckedNotificationsChange,
             onNotificationsDescriptionClick = ::onNotificationsDescriptionClick,
             onAccessCodeClick = ::onAccessCodeClick,
+            walletUpgradeDismissed = isUpgradeNotificationEnabled,
+            onUpgradeWalletClick = ::onUpgradeWalletClick,
+            onDismissUpgradeWalletClick = ::onDismissUpgradeWalletClick,
+            accountsUM = with(accountItemsDelegate) { listOf() }, // todo account
         )
-    }
-
-    private fun openRenameWalletDialog(userWallet: UserWallet, dialogNavigation: SlotNavigation<DialogConfig>) {
-        val config = DialogConfig.RenameWallet(
-            userWalletId = userWallet.walletId,
-            currentName = userWallet.name,
-        )
-
-        dialogNavigation.activate(config)
     }
 
     private fun forgetWallet() = modelScope.launch {
@@ -275,10 +271,6 @@ internal class WalletSettingsModel @Inject constructor(
     private fun onCheckedNotificationsChange(isChecked: Boolean) {
         modelScope.launch {
             if (isChecked) {
-                if (getIsHuaweiDeviceWithoutGoogleServicesUseCase()) {
-                    showHuaweiDialog()
-                    return@launch
-                }
                 state.update { value ->
                     value.copy(
                         requestPushNotificationsPermission = true,
@@ -289,21 +281,6 @@ internal class WalletSettingsModel @Inject constructor(
                 analyticsEventHandler.send(PushNotificationAnalyticEvents.NotificationsEnabled(false))
             }
         }
-    }
-
-    private fun showHuaweiDialog() {
-        val message = DialogMessage(
-            message = resourceReference(R.string.wallet_settings_push_notifications_huawei_warning),
-            firstActionBuilder = {
-                EventMessageAction(
-                    title = resourceReference(R.string.common_ok),
-                    warning = true,
-                    onClick = {},
-                )
-            },
-        )
-
-        messageSender.send(message)
     }
 
     private fun onNotificationsDescriptionClick() {
@@ -364,7 +341,45 @@ internal class WalletSettingsModel @Inject constructor(
         if (!state.value.isWalletBackedUp) {
             messageSender.send(makeBackupAtFirstAlertBS)
         } else {
-            router.push(AppRoute.UpdateAccessCode(params.userWalletId))
+            unlockWalletIfNeedAndProceed {
+                router.push(AppRoute.UpdateAccessCode(params.userWalletId))
+            }
+        }
+    }
+
+    private fun onUpgradeWalletClick() {
+        unlockWalletIfNeedAndProceed {
+            router.push(AppRoute.UpgradeWallet(params.userWalletId))
+        }
+    }
+
+    private fun onDismissUpgradeWalletClick() {
+        modelScope.launch {
+            dismissUpgradeWalletNotificationUseCase.invoke(params.userWalletId)
+        }
+    }
+
+    private fun unlockWalletIfNeedAndProceed(action: () -> Unit) {
+        val userWallet = getUserWalletUseCase(params.userWalletId)
+            .getOrElse { error("User wallet with id ${params.userWalletId} not found") }
+        if (userWallet is UserWallet.Hot) {
+            val hotWalletId = userWallet.hotWalletId
+            when (hotWalletId.authType) {
+                HotWalletId.AuthType.NoPassword -> {
+                    action()
+                }
+                HotWalletId.AuthType.Password,
+                HotWalletId.AuthType.Biometry,
+                -> modelScope.launch {
+                    unlockHotWalletContextualUseCase.invoke(hotWalletId)
+                        .onLeft {
+                            Timber.e(it, "Unable to unlock wallet with id ${params.userWalletId}")
+                        }
+                        .onRight {
+                            action()
+                        }
+                }
+            }
         }
     }
 }

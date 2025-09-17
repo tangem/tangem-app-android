@@ -13,7 +13,7 @@ class GetOnrampCountriesUseCase(
     private val errorResolver: OnrampErrorResolver,
 ) {
 
-    suspend operator fun invoke(): EitherFlow<OnrampError, List<OnrampCountry>> {
+    operator fun invoke(): EitherFlow<OnrampError, List<OnrampCountry>> {
         return onrampRepository.getCountries().map {
             Either.catch { it }.mapLeft(errorResolver::resolve)
         }

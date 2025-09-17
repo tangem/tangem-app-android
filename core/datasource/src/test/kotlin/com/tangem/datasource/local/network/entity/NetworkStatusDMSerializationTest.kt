@@ -42,7 +42,10 @@ class NetworkStatusDMSerializationTest {
                     { "value": "0x123456", "type": "primary" },
                     { "value": "0xabcdef", "type": "secondary" }
                 ],
-                "amounts": { "ETH": "1.2345" }
+                "amounts": { "ETH": "1.2345" },
+                "yield_supply_statuses": { 
+                    "ETH": { "is_active": false, "is_initialized": false, "is_allowed_to_spend": false }
+                }
             }
         """.trimIndent()
 
@@ -62,6 +65,13 @@ class NetworkStatusDMSerializationTest {
                 NetworkStatusDM.Address("0xabcdef", NetworkStatusDM.Address.Type.Secondary),
             ),
             amounts = mapOf("ETH" to BigDecimal("1.2345")),
+            yieldSupplyStatuses = mapOf(
+                "ETH" to NetworkStatusDM.YieldSupplyStatus(
+                    isActive = false,
+                    isInitialized = false,
+                    isAllowedToSpend = false,
+                ),
+            ),
         )
 
         Truth.assertThat(result).isEqualTo(expected)
@@ -82,6 +92,13 @@ class NetworkStatusDMSerializationTest {
                 NetworkStatusDM.Address("0xabcdef", NetworkStatusDM.Address.Type.Secondary),
             ),
             amounts = mapOf("ETH" to BigDecimal("1.2345")),
+            yieldSupplyStatuses = mapOf(
+                "ETH" to NetworkStatusDM.YieldSupplyStatus(
+                    isActive = false,
+                    isInitialized = false,
+                    isAllowedToSpend = false,
+                ),
+            ),
         )
 
         // Act
@@ -100,7 +117,10 @@ class NetworkStatusDMSerializationTest {
                     { "value": "0x123456", "type": "primary" },
                     { "value": "0xabcdef", "type": "secondary" }
                 ],
-                "amounts": { "ETH": "1.2345" }
+                "amounts": { "ETH": "1.2345" },
+                "yield_supply_statuses": { 
+                    "ETH": { "is_active": false, "is_initialized": false, "is_allowed_to_spend": false }
+                }
             }
         """.stripJsonWhitespace()
 
