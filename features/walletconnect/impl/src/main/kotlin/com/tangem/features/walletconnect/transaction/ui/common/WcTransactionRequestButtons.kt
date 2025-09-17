@@ -1,5 +1,6 @@
 package com.tangem.features.walletconnect.transaction.ui.common
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -16,11 +17,13 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.walletconnect.impl.R
 
+@Suppress("LongParameterList")
 @Composable
 internal fun WcTransactionRequestButtons(
     activeButtonText: TextReference,
     isLoading: Boolean,
     validationResult: ValidationResult?,
+    @DrawableRes walletInteractionIcon: Int?,
     onDismiss: () -> Unit,
     onClickActiveButton: () -> Unit,
     modifier: Modifier = Modifier,
@@ -52,7 +55,7 @@ internal fun WcTransactionRequestButtons(
                         .weight(1f),
                     text = activeButtonText.resolveReference(),
                     onClick = onClickActiveButton,
-                    iconResId = R.drawable.ic_tangem_24,
+                    iconResId = walletInteractionIcon,
                     showProgress = isLoading,
                     enabled = enabled,
                 )
